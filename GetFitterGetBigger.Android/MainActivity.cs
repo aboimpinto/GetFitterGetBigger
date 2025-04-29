@@ -1,7 +1,9 @@
-﻿using Android.App;
-using Android.Content.PM;
-using Avalonia;
+﻿using Avalonia;
 using Avalonia.Android;
+using Android.App;
+using Android.Content.PM;
+using Android.OS;
+using Android.Views;
 
 namespace GetFitterGetBigger.Android;
 
@@ -17,5 +19,11 @@ public class MainActivity : AvaloniaMainActivity<App>
     {
         return base.CustomizeAppBuilder(builder)
             .WithInterFont();
+    }
+
+    protected override void OnCreate(Bundle? savedInstanceState)
+    {
+        base.OnCreate(savedInstanceState);
+        Window.SetSoftInputMode(SoftInput.AdjustResize);
     }
 }

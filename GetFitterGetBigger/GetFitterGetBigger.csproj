@@ -21,4 +21,11 @@
     </PackageReference>
     <PackageReference Include="CommunityToolkit.Mvvm" />
   </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Infrastructure\Olimpo.NavigationManager\Olimpo.NavigationManager.csproj" />
+    <ProjectReference Include="..\Infrastructure\CherylUI\CherylUI.csproj" />
+    <ProjectReference Include="..\Infrastructure\Olimpo.Controls\Olimpo.Controls.csproj" />
+    <ProjectReference Include="..\Infrastructure\Olimpo.EventAggregatorManager\EventAggregatorManager.csproj" />
+  </ItemGroup>
 </Project>
