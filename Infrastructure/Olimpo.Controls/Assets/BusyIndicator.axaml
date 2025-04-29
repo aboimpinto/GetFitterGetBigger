@@ -1,0 +1,45 @@
+<Styles 
+  xmlns="https://github.com/avaloniaui"
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+  xmlns:i="clr-namespace:Avalonia.Xaml.Interactivity;assembly=Avalonia.Xaml.Interactivity"
+  xmlns:ir="clr-namespace:Avalonia.Xaml.Interactions.Responsive;assembly=Avalonia.Xaml.Interactions.Responsive"
+  xmlns:controls="using:Olimpo.Controls">
+  
+  <Style Selector="controls|BusyIndicator">
+    <Setter Property="Template">
+      <ControlTemplate>
+        <Grid>
+
+          <ContentControl 
+            Content="{TemplateBinding Content}" />
+
+          <controls:ProgressRing 
+            Width="80" 
+            Height="80"
+            IsActive="True"
+            HorizontalAlignment="Center"
+            VerticalAlignment="Center"
+            Foreground="White" />
+
+        </Grid>
+      </ControlTemplate>
+    </Setter>
+  </Style>
+
+  <Style Selector="controls|BusyIndicator[IsBusy=True] controls|ProgressRing">
+    <Setter Property="Opacity" Value="1" />
+  </Style>
+
+  <Style Selector="controls|BusyIndicator[IsBusy=False] controls|ProgressRing">
+    <Setter Property="Opacity" Value="0" />
+  </Style>
+
+  <Style Selector="controls|BusyIndicator[IsBusy=True] ContentControl">
+    <Setter Property="Opacity" Value="0.1" />
+  </Style>
+
+  <Style Selector="controls|BusyIndicator[IsBusy=False] ContentControl">
+    <Setter Property="Opacity" Value="1" />
+  </Style>
+
+</Styles>

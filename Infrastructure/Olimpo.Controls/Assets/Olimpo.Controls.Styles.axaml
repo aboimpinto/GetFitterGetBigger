@@ -1,0 +1,9 @@
+<Styles 
+  xmlns="https://github.com/avaloniaui"
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+  <StyleInclude Source="avares://Olimpo.Controls/Assets/IconButtonStyle.axaml"/>
+  <StyleInclude Source="avares://Olimpo.Controls/Assets/IconStyle.axaml"/>
+  <StyleInclude Source="avares://Olimpo.Controls/Assets/BusyIndicator.axaml"/>
+  <StyleInclude Source="avares://Olimpo.Controls/Assets/ProgressRing.axaml"/>
+</Styles>
