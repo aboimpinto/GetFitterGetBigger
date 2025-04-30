@@ -1,0 +1,85 @@
+<UserControl 
+  xmlns="https://github.com/avaloniaui"
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+  xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+  xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+  xmlns:controls="using:Olimpo.Controls"
+  mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+  x:Class="GetFitterGetBigger.Views.DashboardView">
+  
+
+  <Grid RowDefinitions="Auto Auto 30 * 100 Auto">
+
+    <Grid Grid.Row="0" ColumnDefinitions="Auto *">
+      <controls:IconButton
+        Grid.Row="0"
+        Data="{StaticResource HamburgerMenu}"
+        Command="{Binding ToggleHamburgerMenuCommand}" />        
+    </Grid>
+
+    <Grid Grid.Row="1">
+      <Image Source="{Binding ImageSource}" />
+    </Grid>
+
+    <StackPanel Grid.Row="3" Orientation="Vertical" VerticalAlignment="Top" >
+
+      <Button Command="{Binding WorkoutShortcutCommand}">
+        <Button.Template>
+          <ControlTemplate>
+            <Grid ColumnDefinitions="100 *" Margin="0 0 0 20">
+              <controls:IconButton
+                Grid.Column="0"
+                Data="{StaticResource Workout}"
+                Foreground="#047872" />
+
+              <TextBlock 
+                Grid.Column="1"
+                Text="Workouts" 
+                HorizontalAlignment="Left" 
+                VerticalAlignment="Center" 
+                FontSize="32"
+                FontWeight="Bold"
+                Foreground="#047872" />
+            </Grid>
+          </ControlTemplate>
+        </Button.Template>
+      </Button>
+
+
+      <Grid ColumnDefinitions="100 *" Margin="0 0 0 20">
+        <controls:IconButton
+          Grid.Column="0"
+          Data="{StaticResource Nutrition}"
+          Foreground="#c27803" />
+
+        <TextBlock 
+          Grid.Column="1"
+          Text="Nutrition" 
+          HorizontalAlignment="Left" 
+          VerticalAlignment="Center" 
+          FontSize="32"
+          FontWeight="Bold"
+          Foreground="#c27803" />
+      </Grid>
+
+      <Grid ColumnDefinitions="100 *">
+        <controls:IconButton
+          Grid.Column="0"
+          Data="{StaticResource Analysis}"
+          Foreground="#4a7abc" />
+
+        <TextBlock 
+          Grid.Column="1"
+          Text="Analysis" 
+          HorizontalAlignment="Left" 
+          VerticalAlignment="Center" 
+          FontSize="32"
+          FontWeight="Bold"
+          Foreground="#4a7abc" />
+      </Grid>
+
+    </StackPanel>
+
+  </Grid>
+
+</UserControl>

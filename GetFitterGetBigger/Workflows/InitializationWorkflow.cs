@@ -1,4 +1,6 @@
+using System;
 using System.Threading.Tasks;
+using Avalonia.Threading;
 using Olimpo;
 using Olimpo.NavigationManager;
 using GetFitterGetBigger.Events;
@@ -22,6 +24,16 @@ public class InitializationWorkflow:
 
     public async Task HandleAsync(StartBootstrappingEvent message)
     {
-        await this._navigationManager.NavigateAsync("SplashViewModel");
+        await Dispatcher.UIThread.InvokeAsync(async () => 
+        {
+            await this._navigationManager.NavigateAsync("SplashViewModel");
+        });
+
+        await Task.Delay(TimeSpan.FromSeconds(1));
+
+        await Dispatcher.UIThread.InvokeAsync(async () => 
+        {
+            await this._navigationManager.NavigateAsync("DashboardViewModel");
+        });
     }
 }

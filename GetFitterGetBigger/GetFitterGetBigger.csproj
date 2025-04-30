@@ -3,11 +3,17 @@
     <TargetFramework>net9.0</TargetFramework>
     <Nullable>enable</Nullable>
     <LangVersion>latest</LangVersion>
-    <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
+    <AvaloniaUseCompiledBindingsByDefault>false</AvaloniaUseCompiledBindingsByDefault>
   </PropertyGroup>
   
   <ItemGroup>
     <AvaloniaResource Include="Assets\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Assets\TryGetStrongPlan.png" />
+    <EmbeddedResource Include="Assets\TryOurDietPlan.png" />
+    <EmbeddedResource Include="Assets\TryReadyForBeachPlan.png" />
   </ItemGroup>
 
   <ItemGroup>

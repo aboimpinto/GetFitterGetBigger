@@ -11,9 +11,19 @@
         <navigationManager:ViewLocator/>
     </Application.DataTemplates>
 
+    <Application.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceInclude Source='avares://Olimpo.Controls/Assets/IconResources.axaml'/>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </Application.Resources>
+
     <Application.Styles>
         <FluentTheme />
 
         <StyleInclude Source="avares://CherylUI/Index.axaml" />
+
+        <StyleInclude Source="avares://Olimpo.Controls/Assets/Olimpo.Controls.Styles.axaml"/>
     </Application.Styles>
 </Application>

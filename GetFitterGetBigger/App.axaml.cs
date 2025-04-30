@@ -19,7 +19,7 @@ public partial class App : Application
         AvaloniaXamlLoader.Load(this);
     }
 
-    public override void OnFrameworkInitializationCompleted()
+    public override async void OnFrameworkInitializationCompleted()
     {
         var viewModel = ServiceCollectionManager.ServiceProvider.GetService<ViewModelBase>("MainViewModel");
 
@@ -43,7 +43,7 @@ public partial class App : Application
 
         if (viewModel is ILoadableViewModel loadableViewModel)
         {
-            loadableViewModel.LoadAsync().Wait();
+            await loadableViewModel.LoadAsync();
         }
 
         base.OnFrameworkInitializationCompleted();
@@ -73,6 +73,8 @@ public partial class App : Application
 
         serviceCollection.AddScoped<ViewModelBase, MainViewModel>("MainViewModel");
         serviceCollection.AddScoped<ViewModelBase, SplashViewModel>("SplashViewModel");
+        serviceCollection.AddScoped<ViewModelBase, DashboardViewModel>("DashboardViewModel");
+        serviceCollection.AddScoped<ViewModelBase, WorkoutsViewModel>("WorkoutsViewModel");
 
         serviceCollection.AddSingleton<IInitializationWorkflow, InitializationWorkflow>();
 

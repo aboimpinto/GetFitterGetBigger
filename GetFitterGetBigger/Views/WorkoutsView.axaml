@@ -1,0 +1,162 @@
+<UserControl 
+  xmlns="https://github.com/avaloniaui"
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+  xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+  xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+  xmlns:controls="using:Olimpo.Controls"
+  mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+  x:Class="GetFitterGetBigger.Views.WorkoutsView">
+  
+  <Grid RowDefinitions="Auto 50 Auto 50 Auto 100 Auto">
+
+    <Grid Grid.Row="0" ColumnDefinitions="Auto *">
+      <controls:IconButton
+        Grid.Row="0"
+        Data="{StaticResource HamburgerMenu}"
+        Command="{Binding ToggleHamburgerMenuCommand}"
+        VerticalAlignment="Center"
+        HorizontalAlignment="Center" />
+
+      <TextBlock 
+        Grid.Column="1" 
+        Text="Workouts"
+        VerticalAlignment="Center"
+        HorizontalAlignment="Left"
+        FontSize="28"
+        FontWeight="Bold"
+        Margin="10 0 0 0" 
+        Foreground="#047872" />
+    </Grid>
+
+    <Grid Grid.Row="2" RowDefinitions="35 10 30 50 35 10 30 50 35 10 *" ColumnDefinitions="320 35">
+      <!-- Workout of the Day -->
+      <TextBlock 
+        Grid.Row="0" 
+        Grid.Column="0"
+        Text="Workout of the Day"
+        VerticalAlignment="Center"
+        HorizontalAlignment="Center"
+        FontSize="28"
+        FontWeight="Bold" />
+
+      <TextBlock 
+        Grid.Row="2" 
+        Grid.Column="0"
+        Text="Pushups / Abs / Squats"
+        VerticalAlignment="Center"
+        HorizontalAlignment="Center"
+        FontSize="20"/>
+
+      <controls:IconButton
+        Grid.Row="0"
+        Grid.RowSpan="3"
+        Grid.Column="1"
+        Foreground="#047872"
+        Data="{StaticResource NavigateForward}"
+        VerticalAlignment="Center"
+        HorizontalAlignment="Center" />
+      
+      <!-- Planned Workout --> 
+      <TextBlock 
+        Grid.Row="4" 
+        Grid.Column="0"
+        Text="Planned Workout"
+        VerticalAlignment="Center"
+        HorizontalAlignment="Center"
+        FontSize="28"
+        FontWeight="Bold" />
+
+      <TextBlock 
+        Grid.Row="6" 
+        Grid.Column="0"
+        Text="Only available for subscribers"
+        VerticalAlignment="Center"
+        HorizontalAlignment="Center"
+        FontSize="20"/>
+
+      <controls:IconButton
+        Grid.Row="4"
+        Grid.RowSpan="3"
+        Grid.Column="1"
+        Foreground="#047872"
+        Data="{StaticResource NavigateForward}"
+        VerticalAlignment="Center"
+        HorizontalAlignment="Center" />
+
+      <!-- Choose Workout -->
+      <TextBlock 
+        Grid.Row="8" 
+        Grid.Column="0"
+        Text="Choose Workout"
+        VerticalAlignment="Center"
+        HorizontalAlignment="Center"
+        FontSize="28"
+        FontWeight="Bold" />
+
+      <WrapPanel Grid.Row="10" Grid.Column="0" Orientation="Horizontal">
+
+        <Border Background="#047872" Width="60" Height="35" CornerRadius="8" Margin="10">
+          <TextBlock 
+            Text="HIIT" 
+            VerticalAlignment="Center" 
+            HorizontalAlignment="Center" 
+            Foreground="White"
+            FontSize="16"
+            FontWeight="Bold" />
+        </Border>
+
+        <Border Background="#047872" Width="100" Height="35" CornerRadius="8" Margin="10">
+          <TextBlock 
+            Text="Shoulders" 
+            VerticalAlignment="Center" 
+            HorizontalAlignment="Center" 
+            Foreground="White"
+            FontSize="16"
+            FontWeight="Bold" />
+        </Border>
+
+        <Border Background="#047872" Width="60" Height="35" CornerRadius="8" Margin="10">
+          <TextBlock 
+            Text="Legs" 
+            VerticalAlignment="Center" 
+            HorizontalAlignment="Center" 
+            Foreground="White"
+            FontSize="16"
+            FontWeight="Bold" />
+        </Border>
+
+        <Border Background="#047872" Width="60" Height="35" CornerRadius="8" Margin="10">
+          <TextBlock 
+            Text="Arms" 
+            VerticalAlignment="Center" 
+            HorizontalAlignment="Center" 
+            Foreground="White"
+            FontSize="16"
+            FontWeight="Bold" />
+        </Border>
+
+        <Border Background="#047872" Width="60" Height="35" CornerRadius="8" Margin="10">
+          <TextBlock 
+            Text="Abs" 
+            VerticalAlignment="Center" 
+            HorizontalAlignment="Center" 
+            Foreground="White"
+            FontSize="16"
+            FontWeight="Bold" />
+        </Border>
+
+        <Border Background="#047872" Width="60" Height="35" CornerRadius="8" Margin="10">
+          <TextBlock 
+            Text="Back" 
+            VerticalAlignment="Center" 
+            HorizontalAlignment="Center" 
+            Foreground="White"
+            FontSize="16"
+            FontWeight="Bold" />
+        </Border>
+
+      </WrapPanel>
+    </Grid>
+  </Grid>
+
+</UserControl>
