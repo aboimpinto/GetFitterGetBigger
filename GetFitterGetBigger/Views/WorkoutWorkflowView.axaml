@@ -11,7 +11,7 @@
       Grid.Row="0" 
       Text="{Binding WorkoutTime}"
       VerticalAlignment="Center"
-      HorizontalAlignment="Center"
+      HorizontalAlignment="Right"
       FontSize="32"
       FontWeight="Bold" />
   </Grid>

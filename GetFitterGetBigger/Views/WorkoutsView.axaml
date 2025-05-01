@@ -42,7 +42,7 @@
       <TextBlock 
         Grid.Row="2" 
         Grid.Column="0"
-        Text="Pushups / Abs / Squats"
+        Text="{Binding WorkoutOfTheDayCaption}"
         VerticalAlignment="Center"
         HorizontalAlignment="Center"
         FontSize="20"/>

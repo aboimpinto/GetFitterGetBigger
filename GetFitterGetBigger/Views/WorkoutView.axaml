@@ -27,7 +27,7 @@
 
     <TextBlock 
       Grid.Row="3" 
-      Text="Pushups / Abs / Squats"
+      Text="{Binding WorkoutCaption}"
       VerticalAlignment="Center"
       HorizontalAlignment="Center"
       FontSize="22"
@@ -43,7 +43,7 @@
 
     <TextBlock 
       Grid.Row="6" 
-      Text="No equipment need"
+      Text="{Binding WorkoutPreparationSteps}"
       VerticalAlignment="Center"
       HorizontalAlignment="Center"
       FontSize="22"
@@ -57,7 +57,16 @@
       FontSize="28"
       FontWeight="Bold" />
 
-    <StackPanel Orientation="Vertical" Grid.Row="9">
+    <TextBlock 
+        Grid.Row="9"
+        Text="{Binding OverallCoachNotes}]"
+        TextWrapping="Wrap"
+        VerticalAlignment="Center"
+        HorizontalAlignment="Left"
+        FontSize="16"
+        FontWeight="Bold" />
+
+    <!-- <StackPanel Orientation="Vertical" Grid.Row="9">
       <TextBlock 
         Text="* Rest 2 minutes between sets"
         VerticalAlignment="Center"
@@ -70,8 +79,8 @@
         VerticalAlignment="Center"
         HorizontalAlignment="Left"
         FontSize="16"
-        FontWeight="Bold" />
-    </StackPanel>
+        FontWeight="Bold"/>
+    </StackPanel> -->
 
     <Grid 
       Grid.Row="10"

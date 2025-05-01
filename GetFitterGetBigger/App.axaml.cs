@@ -71,6 +71,8 @@ public partial class App : Application
             .RegisterEventAggregator()
             .RegisterNavigationManager();
 
+        serviceCollection.AddSingleton<IAppCaching, AppCaching>();
+
         serviceCollection.AddScoped<ViewModelBase, MainViewModel>("MainViewModel");
         serviceCollection.AddScoped<ViewModelBase, SplashViewModel>("SplashViewModel");
         serviceCollection.AddScoped<ViewModelBase, DashboardViewModel>("DashboardViewModel");
