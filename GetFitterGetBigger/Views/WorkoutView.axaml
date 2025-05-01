@@ -1,0 +1,95 @@
+<UserControl 
+  xmlns="https://github.com/avaloniaui"
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+  xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+  xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+  xmlns:controls="using:Olimpo.Controls"
+  mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+  x:Class="GetFitterGetBigger.Views.WorkoutView">
+  
+  <Grid RowDefinitions="Auto 50 35 30 50 35 30 50 35 Auto 200 *">
+    <Grid Grid.Row="0" ColumnDefinitions="Auto *">
+      <controls:IconButton
+        Grid.Row="0"
+        Data="{StaticResource ArrowLeftCicle}"
+        Command="{Binding BackMenuCommand}"
+        VerticalAlignment="Center"
+        HorizontalAlignment="Center" />
+    </Grid>
+
+    <TextBlock 
+      Grid.Row="2" 
+      Text="Workout"
+      VerticalAlignment="Center"
+      HorizontalAlignment="Center"
+      FontSize="28"
+      FontWeight="Bold" />
+
+    <TextBlock 
+      Grid.Row="3" 
+      Text="Pushups / Abs / Squats"
+      VerticalAlignment="Center"
+      HorizontalAlignment="Center"
+      FontSize="22"
+      FontWeight="Bold" />
+
+    <TextBlock 
+      Grid.Row="5" 
+      Text="Preparation"
+      VerticalAlignment="Center"
+      HorizontalAlignment="Center"
+      FontSize="28"
+      FontWeight="Bold" />
+
+    <TextBlock 
+      Grid.Row="6" 
+      Text="No equipment need"
+      VerticalAlignment="Center"
+      HorizontalAlignment="Center"
+      FontSize="22"
+      FontWeight="Bold" />
+
+    <TextBlock 
+      Grid.Row="8" 
+      Text="Overall coach notes"
+      VerticalAlignment="Center"
+      HorizontalAlignment="Center"
+      FontSize="28"
+      FontWeight="Bold" />
+
+    <StackPanel Orientation="Vertical" Grid.Row="9">
+      <TextBlock 
+        Text="* Rest 2 minutes between sets"
+        VerticalAlignment="Center"
+        HorizontalAlignment="Left"
+        FontSize="16"
+        FontWeight="Bold" />
+
+      <TextBlock 
+        Text="* Keep good form and full range of motion"
+        VerticalAlignment="Center"
+        HorizontalAlignment="Left"
+        FontSize="16"
+        FontWeight="Bold" />
+    </StackPanel>
+
+    <Grid 
+      Grid.Row="10"
+      Grid.ColumnDefinitions="* 10 *" 
+      VerticalAlignment="Center">
+
+      <Button 
+        Grid.Column="0"
+        Content="Cancel"
+        Background="#047872"
+        Command="{Binding CancelCommand}" />
+
+      <Button 
+        Grid.Column="2"
+        Content="Start"
+        Background="#047872"
+        Command="{Binding StartCommand}" />
+    </Grid>
+  </Grid>
+
+</UserControl>

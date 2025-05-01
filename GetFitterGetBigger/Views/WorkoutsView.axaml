@@ -54,7 +54,8 @@
         Foreground="#047872"
         Data="{StaticResource NavigateForward}"
         VerticalAlignment="Center"
-        HorizontalAlignment="Center" />
+        HorizontalAlignment="Center"
+        Command="{Binding WorkoutOfTheDayCommand}" />
       
       <!-- Planned Workout --> 
       <TextBlock 

@@ -75,6 +75,8 @@ public partial class App : Application
         serviceCollection.AddScoped<ViewModelBase, SplashViewModel>("SplashViewModel");
         serviceCollection.AddScoped<ViewModelBase, DashboardViewModel>("DashboardViewModel");
         serviceCollection.AddScoped<ViewModelBase, WorkoutsViewModel>("WorkoutsViewModel");
+        serviceCollection.AddScoped<ViewModelBase, WorkoutViewModel>("WorkoutViewModel");
+        serviceCollection.AddScoped<ViewModelBase, WorkoutWorkflowViewModel>("WorkoutWorkflowViewModel");
 
         serviceCollection.AddSingleton<IInitializationWorkflow, InitializationWorkflow>();
 
