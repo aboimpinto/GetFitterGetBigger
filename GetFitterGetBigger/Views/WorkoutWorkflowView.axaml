@@ -6,14 +6,44 @@
   mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
   x:Class="GetFitterGetBigger.Views.WorkoutWorkflowView">
   
-  <Grid RowDefinitions="Auto *">
+  <Grid RowDefinitions="Auto * Auto">
     <TextBlock 
       Grid.Row="0" 
       Text="{Binding WorkoutTime}"
       VerticalAlignment="Center"
       HorizontalAlignment="Right"
       FontSize="32"
-      FontWeight="Bold" />
+      FontWeight="Bold"
+      IsVisible="{Binding !IsWorkoutFinished}" />
+
+    <ContentControl
+      Grid.Row="1" 
+      Margin="10"
+      HorizontalAlignment="Stretch" 
+      VerticalAlignment="Stretch"
+      Content="{Binding CurrentWorkoutSet}" />
+
+    <Grid Grid.Row="2" ColumnDefinitions="* 10 *" IsVisible="{Binding !IsWorkoutFinished}">
+      <Button 
+        Grid.Column="0"
+        Content="Cancel"
+        Background="#047872"
+        Command="{Binding CancelWorkoutCommand}" />
+
+      <Button 
+        Grid.Column="2"
+        Content="{Binding NextButtonCaption}"
+        Background="#047872"
+        Command="{Binding NextWorkoutSetCommand}" />
+    </Grid>
+
+    <Button 
+        Grid.Row="2"
+        Content="Close Workout Summary"
+        Background="#047872"
+        Command="{Binding CloseWorkoutSummaryCommand}"
+        IsVisible="{Binding IsWorkoutFinished}" />
+
   </Grid>
   
 </UserControl>

@@ -5,6 +5,7 @@ using Olimpo;
 using Olimpo.NavigationManager;
 using GetFitterGetBigger.Events;
 using GetFitterGetBigger.Model;
+using System.Collections.Generic;
 
 namespace GetFitterGetBigger.Workflows;
 
@@ -33,7 +34,7 @@ public class InitializationWorkflow:
             await this._navigationManager.NavigateAsync("SplashViewModel");
         });
 
-        var pushupsCrunchesAndSquatsWorkout = this.BuildPushupsCrunchesAndSquatsWorkout();
+        var pushupsCrunchesAndSquatsWorkout = BuildPushupsCrunchesAndSquatsWorkout();
         this._appCaching.Workouts.Add(pushupsCrunchesAndSquatsWorkout);
         this._appCaching.WorkoutOfTheDay = pushupsCrunchesAndSquatsWorkout;
 
@@ -45,14 +46,43 @@ public class InitializationWorkflow:
         });
     }
 
-    public Workout BuildPushupsCrunchesAndSquatsWorkout()
+    public static Workout BuildPushupsCrunchesAndSquatsWorkout()
     {
+        var roundOneExerciseScheme = new List<ExerciseWorkoutRound>
+        {
+            new RepBaseExerciseWorkoutRound(1, 1, ExerciseType.Pushups, 10, 1),
+            new RepBaseExerciseWorkoutRound(2, 1, ExerciseType.Crunches, 10, 2),
+            new RepBaseExerciseWorkoutRound(3, 1, ExerciseType.Squats, 10, 3)
+        };
+
+        var roundTwoExerciseScheme = new List<ExerciseWorkoutRound>
+        {
+            new RepBaseExerciseWorkoutRound(4, 2, ExerciseType.Pushups, 10, 1),
+            new RepBaseExerciseWorkoutRound(5, 2, ExerciseType.Crunches, 10, 2),
+            new RepBaseExerciseWorkoutRound(6, 2, ExerciseType.Squats, 10, 3)
+        };
+
+        var roundThreeExerciseScheme = new List<ExerciseWorkoutRound>
+        {
+            new RepBaseExerciseWorkoutRound(7, 3, ExerciseType.Pushups, 10, 1),
+            new RepBaseExerciseWorkoutRound(8, 3, ExerciseType.Crunches, 10, 2),
+            new RepBaseExerciseWorkoutRound(9, 3, ExerciseType.Squats, 10, 3)
+        };
+
+        var roundScheme = new List<WorkoutRounds>
+        {
+            new(1, 1, [.. roundOneExerciseScheme], 1),
+            new(2, 1, [.. roundTwoExerciseScheme], 2),
+            new(3, 1, [.. roundThreeExerciseScheme], 3),
+
+        };
+
         return new Workout(
             1, 
             "Pushups / Crunches / Squats",
             "No equipment need",
             "* Rest 2 minutes between sets\n* Keep good form and full range of motion",
             WorkoutType.HIIT, 
-            []);
+            [.. roundScheme]);
     }
 }

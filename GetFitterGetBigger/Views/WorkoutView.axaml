@@ -66,22 +66,6 @@
         FontSize="16"
         FontWeight="Bold" />
 
-    <!-- <StackPanel Orientation="Vertical" Grid.Row="9">
-      <TextBlock 
-        Text="* Rest 2 minutes between sets"
-        VerticalAlignment="Center"
-        HorizontalAlignment="Left"
-        FontSize="16"
-        FontWeight="Bold" />
-
-      <TextBlock 
-        Text="* Keep good form and full range of motion"
-        VerticalAlignment="Center"
-        HorizontalAlignment="Left"
-        FontSize="16"
-        FontWeight="Bold"/>
-    </StackPanel> -->
-
     <Grid 
       Grid.Row="10"
       Grid.ColumnDefinitions="* 10 *" 

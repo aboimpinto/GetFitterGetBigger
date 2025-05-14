@@ -6,28 +6,30 @@ public record Workout(
     string PreparationSteps,
     string CoachNotes,
     WorkoutType WorkoutType,
-    WorkoutSet[] WorkoutSets);
+    WorkoutRounds[] WorkoutRounds);
 
-public record WorkoutSet(
+public record WorkoutRounds(
     int WorkoutSetId,
     int WorkoutId,
-    ExerciseWorkoutSet[] ExerciseWorkoutSets,
+    ExerciseWorkoutRound[] ExerciseWorkoutRound,
     int Order
 );
 
-public record ExerciseWorkoutSet;
+public abstract record ExerciseWorkoutRound;
 
-public record RepBaseExerciseWorkoutSet(
+public record RepBaseExerciseWorkoutRound(
+    int RepBaseExerciseWorkoutId,
     int WorkoutSetId,
     ExerciseType ExerciseType,
     int NbrReps,
-    int Order) : ExerciseWorkoutSet;
+    int Order) : ExerciseWorkoutRound;
 
-public record TimeBaseExerciseWorkoutSet(
+public record TimeBaseExerciseWorkoutRound(
+    int TimeBaseExerciseWorkoutId,
     int WorkoutSetId,
     ExerciseType ExerciseType,
     int TimeInSeconds,
-    int Order) : ExerciseWorkoutSet;
+    int Order) : ExerciseWorkoutRound;
 
 public enum ExerciseType
 {

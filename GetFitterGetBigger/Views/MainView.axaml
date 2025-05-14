@@ -10,20 +10,11 @@
   x:DataType="vm:MainViewModel">
   
   <controls:InteractiveContainer>
-
     <ContentControl
       Margin="10"
       HorizontalAlignment="Stretch" 
       VerticalAlignment="Stretch"
       Content="{Binding CurrentOperation}" />
-
   </controls:InteractiveContainer>
-
-  <!-- 
-  <TextBlock 
-    Text="{Binding Greeting}" 
-    HorizontalAlignment="Center" 
-    VerticalAlignment="Center"/> 
-  -->
 
 </UserControl>
