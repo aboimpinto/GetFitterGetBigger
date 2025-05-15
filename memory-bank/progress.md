@@ -5,8 +5,13 @@
 - Defined the project brief and product context.
 - Established the system architecture and key technical decisions.
 - Set up the development environment and dependencies.
+- Implemented the  `ILoadableViewModel` Interface and when the LoadAsync is called, initiate a Observable.Interval with 1 second delay and update the Time field  with the  format "00:00" in the TimeBaseExerciseViewModel.
+- When the time reach the end raise the event TimedSetFinishedEvent, using the IEventAggregator interface.
+- In the constructor, the field Time should be initialized with the string "00:00"
 
 ## What's Left to Build:
+- Fix the Olimpo.EventAggregatorManager namespace issue.
+- Add timed set into the WorkoutWorkflow.
 - Implement user authentication and authorization.
 - Develop the workout planning module.
 - Develop the nutritional guidance module.

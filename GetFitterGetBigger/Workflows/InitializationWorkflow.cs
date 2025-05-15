@@ -1,11 +1,11 @@
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Avalonia.Threading;
 using Olimpo;
 using Olimpo.NavigationManager;
 using GetFitterGetBigger.Events;
 using GetFitterGetBigger.Model;
-using System.Collections.Generic;
 
 namespace GetFitterGetBigger.Workflows;
 
@@ -52,21 +52,24 @@ public class InitializationWorkflow:
         {
             new RepBaseExerciseWorkoutRound(1, 1, ExerciseType.Pushups, 10, 1),
             new RepBaseExerciseWorkoutRound(2, 1, ExerciseType.Crunches, 10, 2),
-            new RepBaseExerciseWorkoutRound(3, 1, ExerciseType.Squats, 10, 3)
+            new RepBaseExerciseWorkoutRound(3, 1, ExerciseType.Squats, 10, 3),
+            new TimeBaseExerciseWorkoutRound(4, 1, ExerciseType.Rest, 5, 4)
         };
 
         var roundTwoExerciseScheme = new List<ExerciseWorkoutRound>
         {
             new RepBaseExerciseWorkoutRound(4, 2, ExerciseType.Pushups, 10, 1),
             new RepBaseExerciseWorkoutRound(5, 2, ExerciseType.Crunches, 10, 2),
-            new RepBaseExerciseWorkoutRound(6, 2, ExerciseType.Squats, 10, 3)
+            new RepBaseExerciseWorkoutRound(6, 2, ExerciseType.Squats, 10, 3),
+            new TimeBaseExerciseWorkoutRound(7, 2, ExerciseType.Rest, 5, 4)
         };
 
         var roundThreeExerciseScheme = new List<ExerciseWorkoutRound>
         {
-            new RepBaseExerciseWorkoutRound(7, 3, ExerciseType.Pushups, 10, 1),
-            new RepBaseExerciseWorkoutRound(8, 3, ExerciseType.Crunches, 10, 2),
-            new RepBaseExerciseWorkoutRound(9, 3, ExerciseType.Squats, 10, 3)
+            new RepBaseExerciseWorkoutRound(8, 3, ExerciseType.Pushups, 10, 1),
+            new RepBaseExerciseWorkoutRound(9, 3, ExerciseType.Crunches, 10, 2),
+            new RepBaseExerciseWorkoutRound(10, 3, ExerciseType.Squats, 10, 3),
+            new TimeBaseExerciseWorkoutRound(11, 3, ExerciseType.Rest, 5, 4)
         };
 
         var roundScheme = new List<WorkoutRounds>

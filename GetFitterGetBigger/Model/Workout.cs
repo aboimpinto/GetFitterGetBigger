@@ -33,6 +33,7 @@ public record TimeBaseExerciseWorkoutRound(
 
 public enum ExerciseType
 {
+    Rest,
     Pushups,
     Crunches,
     Squats

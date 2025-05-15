@@ -14,12 +14,14 @@ namespace GetFitterGetBigger.ViewModels;
 
 public partial class WorkoutWorkflowViewModel(
     IAppCaching appCaching,
-    INavigationManager navigationManager) : 
-    ViewModelBase, 
+    INavigationManager navigationManager,
+    IEventAggregator eventAggregator) :
+    ViewModelBase,
     ILoadableViewModel
 {
     private readonly IAppCaching _appCaching = appCaching;
     private readonly INavigationManager _navigationManager = navigationManager;
+    private readonly IEventAggregator _eventAggregator = eventAggregator;
     private int _seconds = 0;
     private int _minutes = 0;
     private int _hour = 0;
@@ -67,7 +69,7 @@ public partial class WorkoutWorkflowViewModel(
     }
 
     [RelayCommand]
-    private void NextWorkoutSet()
+    private async Task NextWorkoutSet()
     {
         if (this.IsWorkoutFinished)
         {
@@ -92,7 +94,7 @@ public partial class WorkoutWorkflowViewModel(
         }
         else
         {
-            this.CurrentWorkoutSet = this.LoadWorkoutSetExercice(this._workoutWorkflowStep);
+            this.CurrentWorkoutSet = await this.LoadWorkoutSetExercice(this._workoutWorkflowStep);
         }
     }
 
@@ -135,7 +137,7 @@ public partial class WorkoutWorkflowViewModel(
         });
     }
 
-    private void StartWorkoutWorkflow()
+    private async Task StartWorkoutWorkflow()
     {
         this._workflow = this._appCaching.Workouts
             .Single(x => x.WorkoutId == this._workoutId);
@@ -171,10 +173,10 @@ public partial class WorkoutWorkflowViewModel(
             ))]; // Execute the query and put results in a list
 
         this._workoutWorkflowStep = 0;
-        this.CurrentWorkoutSet = this.LoadWorkoutSetExercice(this._workoutWorkflowStep);
+        this.CurrentWorkoutSet = await this.LoadWorkoutSetExercice(this._workoutWorkflowStep);
     }
 
-    private ViewModelBase LoadWorkoutSetExercice(int index)
+    private async Task<ViewModelBase> LoadWorkoutSetExercice(int index)
     {
         var workoutStep = this._workoutSequence[index];
 
@@ -182,9 +184,14 @@ public partial class WorkoutWorkflowViewModel(
         ViewModelBase viewModelBase = workoutStep.Exercise switch
         {
             RepBaseExerciseWorkoutRound => new RepBaseExerciseViewModel(workoutStep),
-            TimeBaseExerciseWorkoutRound => new TimeBaseExerciseViewModel(),
+            TimeBaseExerciseWorkoutRound => new TimeBaseExerciseViewModel(workoutStep, this._eventAggregator),
             _ => throw new InvalidOperationException()
         };
+
+        if (viewModelBase is ILoadableViewModel model)
+        {
+            await model.LoadAsync();
+        }
 
         return viewModelBase;
     }
