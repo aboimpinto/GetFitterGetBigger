@@ -59,9 +59,78 @@ public class ExampleViewModel : ViewModelBase
 }
 ```
 
+### Handling Back Button Navigation
+ViewModels can implement custom logic for the physical back button press (e.g., on Android devices or a UWP back button) by implementing the `IHandlesBackButton` interface. The application's shell or platform-specific code is responsible for checking this interface on the `CurrentViewModel` and coordinating the response.
+
+1. Implementing `IHandlesBackButton`
+
+A ViewModel that needs to customize the back button behavior should implement the `IHandlesBackButton` interface.
+
+* `Task<bool> OnBackButtonPressedAsync()`: This method is called by the application's platform code when the system back button is pressed and the current ViewModel implements this interface.
+    * Return `true` if the back navigation was fully handled by the ViewModel and no further (default) back navigation should occur.
+    * Return `false` if the ViewModel did not handle the back press (or wishes to allow default back navigation to proceed via `INavigationManager.GoBackAsync()`).
+
+```csharp
+public interface IHandlesBackButton
+{
+    /// <summary>
+    /// Called when the system back button is pressed, allowing the ViewModel to handle it.
+    /// </summary>
+    /// <returns>
+    /// Task
+    /// </returns>
+    Task<bool> OnBackButtonPressedAsync();
+}
+
+// Example ViewModel
+public class ConfirmExitViewModel : 
+    ViewModelBase, 
+    ILoadableViewModel, 
+    IHandlesBackButton
+{
+    private readonly INavigationManager _navigationManager;
+
+    public ConfirmExitViewModel(INavigationManager navigationManager)
+    {
+        this._navigationManager = navigationManager;
+    }
+
+    public Task LoadAsync()
+    {
+        // Load data
+        return Task.CompletedTask;
+    }
+
+    public async Task OnBackButtonPressedAsync()
+    {
+        // At this point check if the Back is possible like, by example, if there is unsaved changes.
+
+        await this._navigationManager.NavigateAsync("BackViewModel");
+    }
+}
+```
+
+2. Connecting to System Back Button in Platform Code
+
+Your application's platform-specific code (e.g., in `MainActivity.cs` for Android, or `App.axaml.cs` / relevant `Window` for desktop/mobile Avalonia apps) needs to:
+
+* Capture the system back button event.
+* Obtain the `INavigationManager` instance.
+* Access `navigationManager.CurrentViewModel`.
+* Check if `CurrentViewModel` implements `IHandlesBackButton`.
+* If it does, await its `OnBackButtonPressedAsync()` method.
+
+> **Note**: Proper asynchronous handling in `OnBackPressed` (which is void) on Android requires care. You might launch a `Task` and not await it directly, or use an event-based mechanism if `OnBackButtonPressedAsync` involves lengthy operations or UI interactions that shouldn't block `OnBackPressed`. For simple logic, await might appear to work but can have subtleties.
+
 **How it Works:**
 
 1.  Views are associated with ViewModels.
 2.  `NavigationManager` navigates to a specified ViewModel.
 3.  `ViewLocator` creates the corresponding View.
 4.  If the ViewModel implements `ILoadableViewModel`, `LoadAsync` is called.
+5. When a system back button press is detected by the platform code (e.g., Activity, Window): 
+    * **a.** The platform code retrieves the `INavigationManager` instance and its `CurrentViewModel`. 
+    * **b.** It checks if the `CurrentViewModel` implements `IHandlesBackButton`. 
+    * **c.** If it does, the platform code calls `OnBackButtonPressedAsync()` on the Current ViewModel that navigates to a defined ViewModel by the developer.
+    * **d.** If the `CurrentViewModel` does not implement `IHandlesBackButton` the behaviour is the default for this case.
+    * **e.** The `NavigationManager`'s `HandleBackButtonAsync` method will return `false` if the `CurrentViewModel` does not implement `IHandlesBackButton`, indicating that the back button press was not handled.

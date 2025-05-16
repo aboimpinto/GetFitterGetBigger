@@ -10,4 +10,6 @@ public interface INavigationManager
     void RegisterNavigatableView(INavigatableView navigatable);
 
     Task<bool> NavigateAsync(string viewToNavigate, IDictionary<string, object> parameters = null);
+
+    Task<bool> HandleBackButtonAsync();
 }
