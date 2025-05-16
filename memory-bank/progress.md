@@ -30,3 +30,4 @@ The project is in the initial stages of development. The memory bank has been in
 ## Evolution of Project Decisions:
 - The initial decision to use Avalonia UI for cross-platform development has been validated by the availability of mature UI components and tooling.
 - The decision to use SQLite for local data storage has been confirmed based on its simplicity and performance.
+- Implemented the IHandlesBackButton interface in the NavigationManager.
