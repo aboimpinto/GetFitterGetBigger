@@ -3,6 +3,7 @@
   xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
   xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
   xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+  xmlns:adc="using:Avalonia.Data.Converters"
   mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
   x:Class="GetFitterGetBigger.Views.WorkoutWorkflowView">
   
@@ -23,7 +24,13 @@
       VerticalAlignment="Stretch"
       Content="{Binding CurrentWorkoutSet}" />
 
-    <Grid Grid.Row="2" ColumnDefinitions="* 10 *" IsVisible="{Binding !IsWorkoutFinished}">
+    <Grid Grid.Row="2" ColumnDefinitions="* 10 *">
+      <Grid.IsVisible>
+        <MultiBinding Converter="{x:Static adc:BoolConverters.And}">
+            <Binding Path="!IsWorkoutFinished"/>
+            <Binding Path="!IsTimeBasedSet"/>
+        </MultiBinding>
+      </Grid.IsVisible>
       <Button 
         Grid.Column="0"
         Content="Cancel"

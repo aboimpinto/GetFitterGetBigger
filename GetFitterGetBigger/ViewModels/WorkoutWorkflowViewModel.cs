@@ -9,19 +9,18 @@ using GetFitterGetBigger.Model;
 using Olimpo;
 using Olimpo.NavigationManager;
 using ReactiveUI;
+using GetFitterGetBigger.Events;
 
 namespace GetFitterGetBigger.ViewModels;
 
-public partial class WorkoutWorkflowViewModel(
-    IAppCaching appCaching,
-    INavigationManager navigationManager,
-    IEventAggregator eventAggregator) :
+public partial class WorkoutWorkflowViewModel :
     ViewModelBase,
-    ILoadableViewModel
+    ILoadableViewModel,
+    IHandle<TimedSetFinishedEvent>
 {
-    private readonly IAppCaching _appCaching = appCaching;
-    private readonly INavigationManager _navigationManager = navigationManager;
-    private readonly IEventAggregator _eventAggregator = eventAggregator;
+    private readonly IAppCaching _appCaching;
+    private readonly INavigationManager _navigationManager;
+    private readonly IEventAggregator _eventAggregator;
     private int _seconds = 0;
     private int _minutes = 0;
     private int _hour = 0;
@@ -30,6 +29,18 @@ public partial class WorkoutWorkflowViewModel(
     private List<WorkoutStep> _workoutSequence; // Field to store the ordered steps
     private int _workoutId;
     private int _workoutWorkflowStep;
+
+    public WorkoutWorkflowViewModel(
+        IAppCaching appCaching,
+        INavigationManager navigationManager,
+        IEventAggregator eventAggregator)
+    {
+        this._appCaching = appCaching;
+        this._navigationManager = navigationManager;
+        this._eventAggregator = eventAggregator;
+
+        this._eventAggregator.Subscribe(this);
+    }
 
     [ObservableProperty]
     private string _workoutTime = string.Empty;
@@ -43,17 +54,26 @@ public partial class WorkoutWorkflowViewModel(
     [ObservableProperty]
     private bool _isWorkoutFinished;
 
-    public Task LoadAsync(IDictionary<string, object>? parameters = null)
+    [ObservableProperty]
+    private bool _isTimeBasedSet = false;
+
+    public async Task LoadAsync(IDictionary<string, object>? parameters = null)
     {
         this._workoutId = int.Parse(parameters["WorkoutId"].ToString());
 
         this.IsWorkoutFinished = false;
-        this.StartWorkoutTimer();        
+        this.StartWorkoutTimer();
 
-        this.StartWorkoutWorkflow();
+        await this.StartWorkoutWorkflow();
 
-        return Task.CompletedTask;
+        if (this._workoutSequence.Count > 0)
+        {
+            await this.LoadWorkoutSetExercice(0);
+        }
+
+        return;
     }
+    
 
     [RelayCommand]
     private async Task CancelWorkout()
@@ -188,12 +208,50 @@ public partial class WorkoutWorkflowViewModel(
             _ => throw new InvalidOperationException()
         };
 
+        this.IsTimeBasedSet = viewModelBase is TimeBaseExerciseViewModel;
+
         if (viewModelBase is ILoadableViewModel model)
         {
             await model.LoadAsync();
         }
 
         return viewModelBase;
+    }
+
+    public void Handle(TimedSetFinishedEvent message)
+    {
+        if (this.IsWorkoutFinished)
+        {
+            return;
+        }
+
+        this._workoutWorkflowStep ++;
+
+        this.NextButtonCaption = (this._workoutWorkflowStep == this._workoutSequence.Count - 1) ?
+            "Finish" : 
+            "Next >";
+
+        if (this._workoutWorkflowStep >= this._workoutSequence.Count)
+        {
+            // the end of the Workout is reached. Stop the watch
+            this._workoutTimeLoop.Dispose();
+            this.IsWorkoutFinished = true;
+
+            this.CurrentWorkoutSet = new WorkoutSummaryViewModel(
+                this._workflow.Name, 
+                this.WorkoutTime);
+        }
+        else
+        {
+            this.LoadNextWorkoutSet();
+        }
+
+        this.IsTimeBasedSet = false;
+    }
+
+    private async void LoadNextWorkoutSet()
+    {
+        this.CurrentWorkoutSet = await this.LoadWorkoutSetExercice(this._workoutWorkflowStep);
     }
 }
 

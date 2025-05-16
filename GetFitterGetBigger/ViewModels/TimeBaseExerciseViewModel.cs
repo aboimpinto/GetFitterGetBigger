@@ -1,12 +1,12 @@
-using CommunityToolkit.Mvvm.ComponentModel;
-using GetFitterGetBigger.Model;
-using Olimpo.NavigationManager;
 using System;
+using System.Collections.Generic;
 using System.Reactive.Linq;
 using System.Threading.Tasks;
-using GetFitterGetBigger.Events;
+using CommunityToolkit.Mvvm.ComponentModel;
 using Olimpo;
-using System.Collections.Generic;
+using Olimpo.NavigationManager;
+using GetFitterGetBigger.Events;
+using GetFitterGetBigger.Model;
 
 namespace GetFitterGetBigger.ViewModels;
 
@@ -42,13 +42,17 @@ public partial class TimeBaseExerciseViewModel :
         this.SetInfo = this._workoutStep.SetInfo;
         this.ExerciseInfo = this._workoutStep.ExerciseInfo;
 
-        this.Time = "00:00";
+        this.Time = string.Empty;
     }
 
     public Task LoadAsync(IDictionary<string, object>? parameters = null)
     {
         var timeInSeconds = ((TimeBaseExerciseWorkoutRound)this._workoutStep.Exercise).TimeInSeconds;
         var currentTime = timeInSeconds;
+
+        var minutes = currentTime / 60;
+        var seconds = currentTime % 60;
+        Time = string.Format("{0:00}:{1:00}", minutes, seconds);
 
         this._timerSubscription = Observable.Interval(TimeSpan.FromSeconds(1))
             .TakeWhile(_ => currentTime >= 0)

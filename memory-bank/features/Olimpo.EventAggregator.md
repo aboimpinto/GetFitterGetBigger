@@ -33,6 +33,8 @@ public class MySubscriber : IHandle<MyMessage>
     }
 }
 
+// When the class Handles an Event from EventAggregator, it's necessary to have in contructor the eventAggregator.Subscribe(this).
+
 // Publisher
 public class MyPublisher
 {

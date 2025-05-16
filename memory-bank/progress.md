@@ -8,16 +8,18 @@
 - Implemented the  `ILoadableViewModel` Interface and when the LoadAsync is called, initiate a Observable.Interval with 1 second delay and update the Time field  with the  format "00:00" in the TimeBaseExerciseViewModel.
 - When the time reach the end raise the event TimedSetFinishedEvent, using the IEventAggregator interface.
 - In the constructor, the field Time should be initialized with the string "00:00"
+- Fix the Olimpo.EventAggregatorManager namespace issue.
+- Implement the interface IHandle<TimedSetFinishedEvent> in the WorkoutWorkflowViewModel and in the method implementation, increase the WorkoutWorflowStep and load the step.
+- When a timed based set is reached, hide the button area in the view. Have in consideration when the user reach the end of the workout, there is a button for that also. When the event TimedSetFinishedEvent is received, make the buttons area visible again.
 
 ## What's Left to Build:
-- Fix the Olimpo.EventAggregatorManager namespace issue.
-- Add timed set into the WorkoutWorkflow.
-- Implement user authentication and authorization.
-- Develop the workout planning module.
-- Develop the nutritional guidance module.
-- Develop the progress tracking module.
-- Design and implement the user interface.
-- Test and deploy the application.
+- [PARTIAL] Add timed set into the WorkoutWorkflow.
+- [DELAYED] Implement user authentication and authorization.
+- [DELAYED] Develop the workout planning module.
+- [DELAYED] Develop the nutritional guidance module.
+- [DELAYED] Develop the progress tracking module.
+- [DELAYED] Design and implement the user interface.
+- [DELAYED] Test and deploy the application.
 
 ## Current Status:
 The project is in the initial stages of development. The memory bank has been initialized and the core files have been created.
