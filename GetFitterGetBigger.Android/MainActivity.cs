@@ -77,46 +77,43 @@ public class MainActivity : AvaloniaMainActivity<App>, INavigatableView
 
     public override void OnBackPressed()
     {
-        var navigationManager = ServiceCollectionManager.ServiceProvider.GetService<INavigationManager>();
-        if (navigationManager != null)
+        IHandlesBackButton? alternativeHandler = Avalonia.Application.Current switch
         {
-            // Try to get the ViewModel from the MainView's DataContext
-            if (Avalonia.Application.Current?.ApplicationLifetime is ISingleViewApplicationLifetime singleViewLifetime)
             {
-                if (singleViewLifetime.MainView != null)
+                ApplicationLifetime: ISingleViewApplicationLifetime
                 {
-                    var currentViewModel = singleViewLifetime.MainView.DataContext as ViewModelBase;
-                    System.Diagnostics.Debug.WriteLine($"Current ViewModel: {currentViewModel?.GetType().FullName}");
-
-                    var currentOperation = ((INavigatableView)currentViewModel).CurrentOperation;
-                    if (currentOperation is IHandlesBackButton handlesBackButton)
+                    MainView:
                     {
-                        handlesBackButton.OnBackButtonPressedAsync();
-                        return;
-                    }
-                    else
-                    {
-                        base.OnBackPressed();
+                        DataContext: INavigatableView
+                        {
+                            CurrentOperation: IHandlesBackButton hbh
+                        }
                     }
                 }
-                else
-                {
-                    System.Diagnostics.Debug.WriteLine("MainView is null");
-                    base.OnBackPressed();
-                }
-            }
-            else
-            {
-                System.Diagnostics.Debug.WriteLine("Not a single view application lifetime");
-                base.OnBackPressed();
-            }
-        }
-        else
+            } => hbh,
+            _ => null
+        };
+
+        Action backPressAction = (alternativeHandler != null)
+            ? new Action(() => alternativeHandler.OnBackButtonPressedAsync())
+            : new Action(() => base.OnBackPressed());
+
+        string viewModelTypeName = "Unknown or N/A";
+        if (alternativeHandler != null)
         {
-            System.Diagnostics.Debug.WriteLine("NavigationManager is null");
-            base.OnBackPressed();
+            var dataContextForLog = (Avalonia.Application.Current?.ApplicationLifetime as ISingleViewApplicationLifetime)
+                                    ?.MainView
+                                    ?.DataContext;
+            viewModelTypeName = dataContextForLog?.GetType().FullName ?? "DataContext non-null, but type unknown";
         }
 
+        System.Diagnostics.Debug.WriteLine(
+            alternativeHandler != null
+                ? $"Custom back navigation: Handler {alternativeHandler.GetType().FullName} found. ViewModel Context Type: {viewModelTypeName}."
+                : "Default back navigation: No custom handler found (pattern did not match)."
+        );
 
+        backPressAction();
+        return;
     }
 }
