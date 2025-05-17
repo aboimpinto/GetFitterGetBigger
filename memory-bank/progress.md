@@ -20,6 +20,7 @@
 - [DELAYED] Develop the progress tracking module.
 - [DELAYED] Design and implement the user interface.
 - [DELAYED] Test and deploy the application.
+- [COMPLETE] Disable the lock device when the application is running.
 
 ## Current Status:
 The project is in the initial stages of development. The memory bank has been initialized and the core files have been created.

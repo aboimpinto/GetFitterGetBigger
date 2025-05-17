@@ -10,6 +10,9 @@ using Olimpo;
 using Olimpo.NavigationManager;
 using System.Diagnostics;
 using Microsoft.Extensions.DependencyInjection;
+using Android.Content;
+using Android.OS;
+using System;
 
 namespace GetFitterGetBigger.Android;
 
@@ -21,6 +24,7 @@ namespace GetFitterGetBigger.Android;
     ConfigurationChanges = ConfigChanges.Orientation | ConfigChanges.ScreenSize | ConfigChanges.UiMode)]
 public class MainActivity : AvaloniaMainActivity<App>, INavigatableView
 {
+    private PowerManager.WakeLock wakeLock;
     private ViewModelBase _currentOperation;
 
     public ViewModelBase CurrentOperation
@@ -39,6 +43,36 @@ public class MainActivity : AvaloniaMainActivity<App>, INavigatableView
     {
         base.OnCreate(savedInstanceState);
         Window.SetSoftInputMode(SoftInput.AdjustResize);
+    }
+
+    protected override void OnResume()
+    {
+        base.OnResume();
+        try
+        {
+            PowerManager powerManager = (PowerManager)GetSystemService(Context.PowerService);
+            wakeLock = powerManager?.NewWakeLock(WakeLockFlags.ScreenBright, "GetFitterGetBigger:WakeLock");
+            wakeLock?.Acquire();
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Error acquiring WakeLock: {ex}");
+            // Handle the exception appropriately, e.g., log it or display an error message
+        }
+    }
+
+    protected override void OnPause()
+    {
+        base.OnPause();
+        try
+        {
+            wakeLock?.Release();
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Error releasing WakeLock: {ex}");
+            // Handle the exception appropriately
+        }
     }
 
     public override void OnBackPressed()
@@ -83,6 +117,6 @@ public class MainActivity : AvaloniaMainActivity<App>, INavigatableView
             base.OnBackPressed();
         }
 
-        
+
     }
 }
