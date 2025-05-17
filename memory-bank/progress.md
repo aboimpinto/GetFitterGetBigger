@@ -14,6 +14,7 @@
 
 ## What's Left to Build:
 - [PARTIAL] Add timed set into the WorkoutWorkflow.
+- [PARTIAL] Add WeightRepBase View
 - [DELAYED] Implement user authentication and authorization.
 - [DELAYED] Develop the workout planning module.
 - [DELAYED] Develop the nutritional guidance module.

@@ -171,6 +171,7 @@ public partial class WorkoutWorkflowViewModel :
             {
                     RepBaseExerciseWorkoutRound repEx => repEx.Order,
                     TimeBaseExerciseWorkoutRound timeEx => timeEx.Order,
+                    WeightedRepBaseExerciseWorkoutRound weightRepExercice => weightRepExercice.Order,
                     _ => int.MaxValue
                 })
             .Select((item, index) => new WorkoutStep( // 5. Project using the WorkoutStep constructor
@@ -180,12 +181,14 @@ public partial class WorkoutWorkflowViewModel :
                 {
                     RepBaseExerciseWorkoutRound repEx => $"Set {index + 1}", // index + 1 gives 1-based set number
                     TimeBaseExerciseWorkoutRound timeEx => $"Set {index + 1}", // index + 1 gives 1-based set number
+                    WeightedRepBaseExerciseWorkoutRound weightRepExercice => $"Set {index + 1}",
                     _ => $"Set {index + 1} | Unknown Exercise"
                 },
                 ExerciseInfo: item.Exercise switch
                 {
                     RepBaseExerciseWorkoutRound repEx => $"{repEx.ExerciseType}", 
                     TimeBaseExerciseWorkoutRound timeEx => $"{timeEx.ExerciseType}",
+                    WeightedRepBaseExerciseWorkoutRound weightRepExercice => $"{weightRepExercice.ExerciseType}",
                     _ => $"Unknown Exercise"
                 },
                 Round: item.Round, // Pass the round object
@@ -205,6 +208,7 @@ public partial class WorkoutWorkflowViewModel :
         {
             RepBaseExerciseWorkoutRound => new RepBaseExerciseViewModel(workoutStep),
             TimeBaseExerciseWorkoutRound => new TimeBaseExerciseViewModel(workoutStep, this._eventAggregator),
+            WeightedRepBaseExerciseWorkoutRound => new WeightedRepBaseExerciseViewModel(workoutStep),
             _ => throw new InvalidOperationException()
         };
 
