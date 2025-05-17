@@ -29,14 +29,4 @@ public class NavigationManager : INavigationManager
 
         return true;
     }
-
-    public async Task<bool> HandleBackButtonAsync()
-    {
-        if (this._navigatableView.CurrentOperation is IHandlesBackButton backButtonHandler)
-        {
-            return await backButtonHandler.OnBackButtonPressedAsync();
-        }
-
-        return false;
-    }
 }

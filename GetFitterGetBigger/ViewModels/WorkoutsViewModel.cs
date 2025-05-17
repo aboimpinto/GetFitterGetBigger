@@ -11,7 +11,8 @@ public partial class WorkoutsViewModel(
     INavigationManager navigationManager,
     IAppCaching appCaching) 
     : ViewModelBase,
-    ILoadableViewModel
+    ILoadableViewModel,
+    IHandlesBackButton
 {
     private readonly INavigationManager _navigationManager = navigationManager;
     private readonly IAppCaching _appCaching = appCaching;
@@ -24,6 +25,11 @@ public partial class WorkoutsViewModel(
         this.WorkoutOfTheDayCaption = this._appCaching.WorkoutOfTheDay.Name;
 
         return Task.CompletedTask;
+    }
+
+    public async Task OnBackButtonPressedAsync()
+    {
+        await this._navigationManager.NavigateAsync("DashboardViewModel");
     }
 
     [RelayCommand]

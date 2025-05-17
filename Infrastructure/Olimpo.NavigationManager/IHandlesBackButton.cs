@@ -10,5 +10,5 @@ public interface IHandlesBackButton
     /// <returns>
     /// Task
     /// </returns>
-    Task<bool> OnBackButtonPressedAsync();
+    Task OnBackButtonPressedAsync();
 }

@@ -24,5 +24,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\GetFitterGetBigger\GetFitterGetBigger.csproj" />
+    <ProjectReference Include="..\Infrastructure\Olimpo.NavigationManager\Olimpo.NavigationManager.csproj" />
   </ItemGroup>
 </Project>

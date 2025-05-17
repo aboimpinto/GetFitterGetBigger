@@ -6,7 +6,6 @@
 
 *   `INavigationManager`: Interface defining core navigation functions.
 *   `NavigationManager`: Implements `INavigationManager`, handling navigation logic.
-*   `INavigatableView`: Interface for Views to register with the `NavigationManager`.
 *   `ViewLocator`: Dynamically creates Views based on ViewModel type, following the convention `MyViewModel` -> `MyView`.
 *   `ViewModelBase`: Base class for ViewModels, inheriting from `ObservableObject` for data binding support.
 *   `ILoadableViewModel`: Interface with a `LoadAsync` method, called before navigation for ViewModel initialization.
@@ -16,9 +15,6 @@
 ### Registration
 
 To register `Olimpo.NavigationManager` with the `ServiceCollection`, use the `AddNavigationManager` extension method provided by the `NavigationManagerServiceCollectionExtensions` class.
-
-
-### Registering Navigatable ViewModels
 
 To make a `ViewModel` navigatable, you must register it in the `ServiceCollection` with a string key. This string key is used for navigation calls such as `NavigateAsync("AnotherViewModel")`.
 
@@ -116,8 +112,8 @@ Your application's platform-specific code (e.g., in `MainActivity.cs` for Androi
 
 * Capture the system back button event.
 * Obtain the `INavigationManager` instance.
-* Access `navigationManager.CurrentViewModel`.
-* Check if `CurrentViewModel` implements `IHandlesBackButton`.
+* Access the `MainView`'s `DataContext` to get the current `ViewModel`.
+* Check if the `ViewModel` implements `IHandlesBackButton`.
 * If it does, await its `OnBackButtonPressedAsync()` method.
 
 > **Note**: Proper asynchronous handling in `OnBackPressed` (which is void) on Android requires care. You might launch a `Task` and not await it directly, or use an event-based mechanism if `OnBackButtonPressedAsync` involves lengthy operations or UI interactions that shouldn't block `OnBackPressed`. For simple logic, await might appear to work but can have subtleties.
@@ -134,3 +130,5 @@ Your application's platform-specific code (e.g., in `MainActivity.cs` for Androi
     * **c.** If it does, the platform code calls `OnBackButtonPressedAsync()` on the Current ViewModel that navigates to a defined ViewModel by the developer.
     * **d.** If the `CurrentViewModel` does not implement `IHandlesBackButton` the behaviour is the default for this case.
     * **e.** The `NavigationManager`'s `HandleBackButtonAsync` method will return `false` if the `CurrentViewModel` does not implement `IHandlesBackButton`, indicating that the back button press was not handled.
+
+**Note:** While the `INavigationManager` is still used for navigation between views, it's no longer directly involved in accessing the ViewModel in the `OnBackPressed` method of `MainActivity.cs`. The `ViewModel` is now accessed through the `MainView`'s `DataContext`.
