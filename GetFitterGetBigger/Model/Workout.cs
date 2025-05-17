@@ -1,5 +1,6 @@
 namespace GetFitterGetBigger.Model;
 
+
 public record Workout(
     int WorkoutId,
     string Name,
@@ -24,19 +25,51 @@ public record RepBaseExerciseWorkoutRound(
     int NbrReps,
     int Order) : ExerciseWorkoutRound;
 
+public record WeightedRepBaseExerciseWorkoutRound(
+    int RepBaseExerciseWorkoutId,
+    int WorkoutSetId,
+    WeightExerciseType ExerciseType,
+    int NbrReps,
+    WeightedEquipment Equipment,
+    string Weight,
+    int Order,
+    string CoachNotes = "") : ExerciseWorkoutRound;
+
 public record TimeBaseExerciseWorkoutRound(
     int TimeBaseExerciseWorkoutId,
     int WorkoutSetId,
     ExerciseType ExerciseType,
     int TimeInSeconds,
-    int Order) : ExerciseWorkoutRound;
+    int Order,
+    string CoacheNotes = "") : ExerciseWorkoutRound;
 
 public enum ExerciseType
 {
     Rest,
     Pushups,
     Crunches,
-    Squats
+    AirSquats,
+    WalkingLudges
+}
+
+public enum WeightExerciseType
+{
+    Squats,
+    BulgarianSplitSquat,
+    DeadLift,
+    SumoDeadLift,
+    Ludges
+}
+
+public enum WeightedEquipment
+{
+    Barbell,
+    Dumbbell,
+}
+
+public enum NonWeightedEquipment
+{
+    JumpRope
 }
 
 public enum WorkoutType

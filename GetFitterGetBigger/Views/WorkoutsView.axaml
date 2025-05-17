@@ -67,13 +67,20 @@
         FontSize="28"
         FontWeight="Bold" />
 
-      <TextBlock 
-        Grid.Row="6" 
-        Grid.Column="0"
-        Text="Only available for subscribers"
-        VerticalAlignment="Center"
-        HorizontalAlignment="Center"
-        FontSize="20"/>
+      <StackPanel Grid.Row="6" Grid.Column="0" Orientation="Vertical">
+        <TextBlock 
+          Text="{Binding WorkoutActivePlan}"
+          VerticalAlignment="Center"
+          HorizontalAlignment="Center"
+          FontSize="20" 
+          Margin="0 0 10 0" />
+
+        <TextBlock 
+          Text="{Binding ActivePlanWorkoutName}"
+          VerticalAlignment="Center"
+          HorizontalAlignment="Center"
+          FontSize="28" />
+      </StackPanel>
 
       <controls:IconButton
         Grid.Row="4"
@@ -82,7 +89,8 @@
         Foreground="#047872"
         Data="{StaticResource NavigateForward}"
         VerticalAlignment="Center"
-        HorizontalAlignment="Center" />
+        HorizontalAlignment="Center"
+        Command="{Binding PlanedWorkoutCommand}" />
 
       <!-- Choose Workout -->
       <TextBlock 

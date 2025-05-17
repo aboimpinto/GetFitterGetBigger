@@ -79,6 +79,7 @@ public partial class App : Application
         serviceCollection.AddScoped<ViewModelBase, WorkoutsViewModel>("WorkoutsViewModel");
         serviceCollection.AddScoped<ViewModelBase, WorkoutViewModel>("WorkoutViewModel");
         serviceCollection.AddScoped<ViewModelBase, WorkoutWorkflowViewModel>("WorkoutWorkflowViewModel");
+        serviceCollection.AddScoped<ViewModelBase, WeightedRepBaseExerciseViewModel>("WeightedRepBaseExerciseViewModel");
 
         serviceCollection.AddSingleton<IInitializationWorkflow, InitializationWorkflow>();
 
