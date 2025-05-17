@@ -20,7 +20,6 @@
 - [DELAYED] Develop the progress tracking module.
 - [DELAYED] Design and implement the user interface.
 - [DELAYED] Test and deploy the application.
-- [COMPLETE] Disable the lock device when the application is running.
 
 ## Current Status:
 The project is in the initial stages of development. The memory bank has been initialized and the core files have been created.
@@ -33,3 +32,4 @@ The project is in the initial stages of development. The memory bank has been in
 - The decision to use SQLite for local data storage has been confirmed based on its simplicity and performance.
 - Implemented the IHandlesBackButton interface in the NavigationManager.
 - [COMPLETE] Implemented access to the MainView's ViewModel from MainActivity on back click.
+- [COMPLETE] Disable the lock device when the application is running.
