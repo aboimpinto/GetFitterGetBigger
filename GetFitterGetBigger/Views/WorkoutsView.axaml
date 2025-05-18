@@ -8,20 +8,6 @@
   x:Class="GetFitterGetBigger.Views.WorkoutsView">
   
   <UserControl.Styles>
-    <Style Selector="Border.GlassCard">
-      <Setter Property="Background" Value="#08FFFFFF" /> 
-      <Setter Property="BorderBrush" Value="#14FFFFFF" /> 
-      <Setter Property="BorderThickness" Value="1"/>
-      <Setter Property="CornerRadius" Value="12"/>
-      <Setter Property="Padding" Value="16"/> 
-    </Style>
-
-    <Style Selector="TextBlock.ScreenTitle">
-      <Setter Property="FontSize" Value="20"/>
-      <Setter Property="FontWeight" Value="Bold"/>
-      <Setter Property="Foreground" Value="{StaticResource Sky400Brush}"/>
-    </Style>
-
     <Style Selector="TextBlock.SectionTitle">
         <Setter Property="FontSize" Value="18"/>
         <Setter Property="FontWeight" Value="SemiBold"/>
@@ -51,46 +37,28 @@
         <Setter Property="Cursor" Value="Hand"/>
       </Style>
       
-      <Style Selector="TextBlock.CategoryButtonIcon">
-        <Setter Property="FontFamily" Value="Segoe MDL2 Assets" /> 
-        <Setter Property="FontSize" Value="28" />
-        <Setter Property="Margin" Value="0,0,0,8" />
+      <Style Selector="Button.ShortcutButton">
+        <Setter Property="Background" Value="{StaticResource Slate700Brush}"/>
+        <Setter Property="Foreground" Value="{StaticResource Slate100Brush}"/>
+        <Setter Property="Padding" Value="10"/>
+        <Setter Property="CornerRadius" Value="12"/>
+        <Setter Property="HorizontalAlignment" Value="Stretch"/>
+        <Setter Property="VerticalAlignment" Value="Stretch"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="BorderBrush" Value="{StaticResource Slate600Brush}"/>
+        <Setter Property="Margin" Value="0 0 0 7" />
       </Style>
-      
-      <Style Selector="TextBlock.CategoryButtonText">
+
+      <Style Selector="TextBlock.ShortcutButtonText">
         <Setter Property="FontSize" Value="14"/>
         <Setter Property="FontWeight" Value="SemiBold"/>
         <Setter Property="Foreground" Value="{StaticResource Slate100Brush}"/>
       </Style>
       
-      <Style Selector="TextBlock.CategoryButtonSubtext">
+      <Style Selector="TextBlock.ShortcutButtonSubText">
         <Setter Property="FontSize" Value="12"/>
         <Setter Property="Foreground" Value="{StaticResource Slate400Brush}"/>
-      </Style>
-
-      <Style Selector="Button.IconButton">
-        <Setter Property="Background" Value="{StaticResource TransparentBrush}"/>
-        <Setter Property="Foreground" Value="{StaticResource Slate300Brush}"/>
-        <Setter Property="BorderThickness" Value="0"/>
-        <Setter Property="Padding" Value="4"/>
-        <Setter Property="VerticalAlignment" Value="Center"/>
-        <Setter Property="Cursor" Value="Hand"/>
-      </Style>
-
-      <Style Selector="Button.PlayButton">
-        <Setter Property="Background" Value="{StaticResource TransparentBrush}"/>
-        <Setter Property="Foreground" Value="{StaticResource Slate300Brush}"/>
-        <Setter Property="BorderThickness" Value="0"/>
-        <Setter Property="Padding" Value="8"/>
-        <Setter Property="Cursor" Value="Hand"/>
-      </Style>
-
-      <Style Selector="Button.CategoryButton">
-        <!-- <Setter Property="Classes" Value="GlassCard"/>  -->
-        <Setter Property="Padding" Value="16"/>
-        <Setter Property="HorizontalContentAlignment" Value="Center"/>
-        <Setter Property="VerticalContentAlignment" Value="Center"/>
-        <Setter Property="Cursor" Value="Hand"/>
       </Style>
   </UserControl.Styles>
 
@@ -258,7 +226,12 @@
             <StackPanel Spacing="12">
               <Grid ColumnDefinitions="*,Auto">
                 <TextBlock Text="Choose Your Workout" Classes="SectionTitle"/>
-                <TextBlock Grid.Column="1" Text="See All" Classes="LinkText" ToolTip.Tip="Browse all available workouts"/>
+                <TextBlock 
+                  Grid.Column="1" 
+                  Classes="LinkText" 
+                  Text="See All" 
+                  ToolTip.Tip="Browse all available workouts"
+                  VerticalAlignment="Center" />
               </Grid>
 
               <UniformGrid Columns="3" Rows="2"> <!-- Gap="16" -->
@@ -277,12 +250,12 @@
                         HorizontalAlignment="Center" />
                       <TextBlock 
                         Text="HIIT" 
-                        Classes="CategoryButtonText"
+                        Classes="ShortcutButtonText"
                         TextWrapping="Wrap"
                         HorizontalAlignment="Center" />
                       <TextBlock 
                         Text="High Intensity" 
-                        Classes="CategoryButtonSubtext"
+                        Classes="ShortcutButtonSubText"
                         TextWrapping="Wrap"
                         HorizontalAlignment="Center" />
                     </StackPanel>
@@ -303,12 +276,12 @@
                         HorizontalAlignment="Center" />
                       <TextBlock 
                         Text="Arms" 
-                        Classes="CategoryButtonText"
+                        Classes="ShortcutButtonText"
                         TextWrapping="Wrap"
                         HorizontalAlignment="Center" />
                       <TextBlock 
                         Text="Biceps, Triceps" 
-                        Classes="CategoryButtonSubtext"
+                        Classes="ShortcutButtonSubText"
                         TextWrapping="Wrap"
                         HorizontalAlignment="Center" />
                     </StackPanel>
@@ -329,12 +302,12 @@
                         HorizontalAlignment="Center" />
                       <TextBlock 
                         Text="Legs" 
-                        Classes="CategoryButtonText"
+                        Classes="ShortcutButtonText"
                         TextWrapping="Wrap"
                         HorizontalAlignment="Center" />
                       <TextBlock 
                         Text="Quads, Glutes" 
-                        Classes="CategoryButtonSubtext"
+                        Classes="ShortcutButtonSubText"
                         TextWrapping="Wrap"
                         HorizontalAlignment="Center" />
                     </StackPanel>
@@ -355,12 +328,12 @@
                         HorizontalAlignment="Center" />
                       <TextBlock 
                         Text="Abs &amp; Core" 
-                        Classes="CategoryButtonText"
+                        Classes="ShortcutButtonText"
                         TextWrapping="Wrap"
                         HorizontalAlignment="Center" />
                       <TextBlock 
                         Text="Core Strength" 
-                        Classes="CategoryButtonSubtext"
+                        Classes="ShortcutButtonSubText"
                         TextWrapping="Wrap"
                         HorizontalAlignment="Center" />
                     </StackPanel>
@@ -381,12 +354,12 @@
                         HorizontalAlignment="Center" />
                       <TextBlock 
                         Text="Shoulders" 
-                        Classes="CategoryButtonText"
+                        Classes="ShortcutButtonText"
                         TextWrapping="Wrap"
                         HorizontalAlignment="Center" />
                       <TextBlock 
                         Text="Deltoids" 
-                        Classes="CategoryButtonSubtext"
+                        Classes="ShortcutButtonSubText"
                         TextWrapping="Wrap"
                         HorizontalAlignment="Center" />
                     </StackPanel>
@@ -407,26 +380,17 @@
                         HorizontalAlignment="Center" />
                       <TextBlock 
                         Text="Back" 
-                        Classes="CategoryButtonText"
+                        Classes="ShortcutButtonText"
                         TextWrapping="Wrap"
                         HorizontalAlignment="Center" />
                       <TextBlock 
                         Text="Lats, Traps" 
-                        Classes="CategoryButtonSubtext"
+                        Classes="ShortcutButtonSubText"
                         TextWrapping="Wrap"
                         HorizontalAlignment="Center" />
                     </StackPanel>
                   </Border>
                 </Button>
-                
-
-                <!-- 
-                <Button Classes="CategoryButton">
-                  <StackPanel>
-                    <TextBlock Classes="CategoryButtonIcon" Text="&#xE77B;" Foreground="{StaticResource Pink400Brush}"/> <TextBlock Classes="CategoryButtonText" Text="Back"/>
-                    <TextBlock Classes="CategoryButtonSubtext" Text="Lats, Traps"/>
-                  </StackPanel>
-                </Button> -->
               </UniformGrid>
 
               <TextBlock Text="More categories unlocked as you progress!" Classes="SmallMutedText" TextAlignment="Center" Margin="0,8,0,0"/>
@@ -438,166 +402,4 @@
       </DockPanel>
     </Border>
   </Panel>
-
-
-  <!-- <Grid RowDefinitions="Auto 50 Auto 50 Auto 100 Auto">
-
-    <Grid Grid.Row="0" ColumnDefinitions="Auto *">
-      <controls:IconButton
-        Grid.Row="0"
-        Data="{StaticResource HamburgerMenu}"
-        Command="{Binding ToggleHamburgerMenuCommand}"
-        VerticalAlignment="Center"
-        HorizontalAlignment="Center" />
-
-      <TextBlock 
-        Grid.Column="1" 
-        Text="Workouts"
-        VerticalAlignment="Center"
-        HorizontalAlignment="Left"
-        FontSize="28"
-        FontWeight="Bold"
-        Margin="10 0 0 0" 
-        Foreground="#047872" />
-    </Grid>
-
-    <Grid Grid.Row="2" RowDefinitions="35 10 30 50 35 10 30 50 35 10 *" ColumnDefinitions="320 35">
-      
-      <TextBlock 
-        Grid.Row="0" 
-        Grid.Column="0"
-        Text="Workout of the Day"
-        VerticalAlignment="Center"
-        HorizontalAlignment="Center"
-        FontSize="28"
-        FontWeight="Bold" />
-
-      <TextBlock 
-        Grid.Row="2" 
-        Grid.Column="0"
-        Text="{Binding WorkoutOfTheDayCaption}"
-        VerticalAlignment="Center"
-        HorizontalAlignment="Center"
-        FontSize="20"/>
-
-      <controls:IconButton
-        Grid.Row="0"
-        Grid.RowSpan="3"
-        Grid.Column="1"
-        Foreground="#047872"
-        Data="{StaticResource NavigateForward}"
-        VerticalAlignment="Center"
-        HorizontalAlignment="Center"
-        Command="{Binding WorkoutOfTheDayCommand}" />
-      
-      
-      <TextBlock 
-        Grid.Row="4" 
-        Grid.Column="0"
-        Text="Planned Workout"
-        VerticalAlignment="Center"
-        HorizontalAlignment="Center"
-        FontSize="28"
-        FontWeight="Bold" />
-
-      <StackPanel Grid.Row="6" Grid.Column="0" Orientation="Vertical">
-        <TextBlock 
-          Text="{Binding WorkoutActivePlan}"
-          VerticalAlignment="Center"
-          HorizontalAlignment="Center"
-          FontSize="20" 
-          Margin="0 0 10 0" />
-
-        <TextBlock 
-          Text="{Binding ActivePlanWorkoutName}"
-          VerticalAlignment="Center"
-          HorizontalAlignment="Center"
-          FontSize="28" />
-      </StackPanel>
-
-      <controls:IconButton
-        Grid.Row="4"
-        Grid.RowSpan="3"
-        Grid.Column="1"
-        Foreground="#047872"
-        Data="{StaticResource NavigateForward}"
-        VerticalAlignment="Center"
-        HorizontalAlignment="Center"
-        Command="{Binding PlanedWorkoutCommand}" />
-
-      <TextBlock 
-        Grid.Row="8" 
-        Grid.Column="0"
-        Text="Choose Workout"
-        VerticalAlignment="Center"
-        HorizontalAlignment="Center"
-        FontSize="28"
-        FontWeight="Bold" />
-
-      <WrapPanel Grid.Row="10" Grid.Column="0" Orientation="Horizontal">
-
-        <Border Background="#047872" Width="60" Height="35" CornerRadius="8" Margin="10">
-          <TextBlock 
-            Text="HIIT" 
-            VerticalAlignment="Center" 
-            HorizontalAlignment="Center" 
-            Foreground="White"
-            FontSize="16"
-            FontWeight="Bold" />
-        </Border>
-
-        <Border Background="#047872" Width="100" Height="35" CornerRadius="8" Margin="10">
-          <TextBlock 
-            Text="Shoulders" 
-            VerticalAlignment="Center" 
-            HorizontalAlignment="Center" 
-            Foreground="White"
-            FontSize="16"
-            FontWeight="Bold" />
-        </Border>
-
-        <Border Background="#047872" Width="60" Height="35" CornerRadius="8" Margin="10">
-          <TextBlock 
-            Text="Legs" 
-            VerticalAlignment="Center" 
-            HorizontalAlignment="Center" 
-            Foreground="White"
-            FontSize="16"
-            FontWeight="Bold" />
-        </Border>
-
-        <Border Background="#047872" Width="60" Height="35" CornerRadius="8" Margin="10">
-          <TextBlock 
-            Text="Arms" 
-            VerticalAlignment="Center" 
-            HorizontalAlignment="Center" 
-            Foreground="White"
-            FontSize="16"
-            FontWeight="Bold" />
-        </Border>
-
-        <Border Background="#047872" Width="60" Height="35" CornerRadius="8" Margin="10">
-          <TextBlock 
-            Text="Abs" 
-            VerticalAlignment="Center" 
-            HorizontalAlignment="Center" 
-            Foreground="White"
-            FontSize="16"
-            FontWeight="Bold" />
-        </Border>
-
-        <Border Background="#047872" Width="60" Height="35" CornerRadius="8" Margin="10">
-          <TextBlock 
-            Text="Back" 
-            VerticalAlignment="Center" 
-            HorizontalAlignment="Center" 
-            Foreground="White"
-            FontSize="16"
-            FontWeight="Bold" />
-        </Border>
-
-      </WrapPanel>
-    </Grid>
-  </Grid> -->
-
 </UserControl>

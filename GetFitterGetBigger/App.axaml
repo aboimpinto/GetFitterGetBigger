@@ -26,7 +26,6 @@
         <!-- <StyleInclude Source="avares://CherylUI/Index.axaml" /> -->
 
         <StyleInclude Source="avares://Olimpo.Controls/Assets/Olimpo.Controls.Styles.axaml"/>
-        <StyleInclude Source="/Assets/GetFitterGetBiggerStyles.axaml"/>
-        <StyleInclude Source="avares://GetFitterGetBigger/Assets/WorkoutsViewStyles.axaml"/>
+        <StyleInclude Source="/Assets/CommonStyles.axaml"/>
     </Application.Styles>
 </Application>

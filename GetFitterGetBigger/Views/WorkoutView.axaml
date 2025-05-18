@@ -7,6 +7,11 @@
   mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
   x:Class="GetFitterGetBigger.Views.WorkoutView">
   
+  <UserControl.Styles>
+    
+  </UserControl.Styles>
+
+  <!-- 
   <Grid RowDefinitions="Auto 50 35 30 50 35 30 50 35 Auto 200 *">
     <Grid Grid.Row="0" ColumnDefinitions="Auto *">
       <controls:IconButton
@@ -83,6 +88,7 @@
         Background="#047872"
         Command="{Binding StartCommand}" />
     </Grid>
-  </Grid>
+  </Grid> 
+  -->
 
 </UserControl>

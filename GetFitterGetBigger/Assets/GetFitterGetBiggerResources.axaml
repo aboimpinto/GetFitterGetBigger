@@ -25,6 +25,7 @@
   <Color x:Key="Teal400Color">#2DD4BF</Color>
   <Color x:Key="Indigo400Color">#818CF8</Color>
   <Color x:Key="Pink400Color">#F472B6</Color>
+  
   <SolidColorBrush x:Key="Slate900Brush" Color="{StaticResource Slate900Color}"/>
   <SolidColorBrush x:Key="Slate800Brush" Color="{StaticResource Slate800Color}"/>
   <SolidColorBrush x:Key="Slate700Brush" Color="{StaticResource Slate700Color}"/>
