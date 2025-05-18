@@ -73,8 +73,8 @@
       ClipToBounds="True">
             
       <DockPanel LastChildFill="True">
-        <Border DockPanel.Dock="Top" Background="#D91E293B" Padding="16,12" BorderThickness="0,0,0,1" BorderBrush="{StaticResource Slate700Brush}">
-          <Grid ColumnDefinitions="Auto,*,Auto">
+        <Border DockPanel.Dock="Top" Background="#D91E293B" Padding="16,12" BorderThickness="0 0 0 1" BorderBrush="{StaticResource Slate700Brush}">
+          <Grid ColumnDefinitions="Auto * Auto">
             <controls:IconButton
               Data="{StaticResource ArrowLeftCicle}"
               Command="{Binding BackMenuCommand}"

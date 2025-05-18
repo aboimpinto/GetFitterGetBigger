@@ -9,6 +9,7 @@
   <Color x:Key="Slate500Color">#64748B</Color>
   <Color x:Key="Slate400Color">#94A3B8</Color>
   <Color x:Key="Slate300Color">#CBD5E1</Color>
+  <Color x:Key="Slate200Color">#E2E8F0</Color>
   <Color x:Key="Slate100Color">#F1F5F9</Color>
   <Color x:Key="Sky500Color">#0EA5E9</Color>
   <Color x:Key="Sky400Color">#38BDF8</Color>
@@ -33,6 +34,7 @@
   <SolidColorBrush x:Key="Slate500Brush" Color="{StaticResource Slate500Color}"/>
   <SolidColorBrush x:Key="Slate400Brush" Color="{StaticResource Slate400Color}"/>
   <SolidColorBrush x:Key="Slate300Brush" Color="{StaticResource Slate300Color}"/>
+  <SolidColorBrush x:Key="Slate200Brush" Color="{StaticResource Slate200Color}"/>
   <SolidColorBrush x:Key="Slate100Brush" Color="{StaticResource Slate100Color}"/>
   <SolidColorBrush x:Key="Sky500Brush" Color="{StaticResource Sky500Color}"/>
   <SolidColorBrush x:Key="Sky400Brush" Color="{StaticResource Sky400Color}"/>
