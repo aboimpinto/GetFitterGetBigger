@@ -17,7 +17,14 @@
   <Color x:Key="TransparentColor">Transparent</Color>
   <Color x:Key="Orange500Color">#F97316</Color>
   <Color x:Key="Green500Color">#22C55E</Color>
+  <Color x:Key="Green400Color">#4ADE80</Color>
   <Color x:Key="Purple500Color">#A855F7</Color>
+  <Color x:Key="Orange400Color">#FB923C</Color>
+  <Color x:Key="Red400Color">#F87171</Color>
+  <Color x:Key="Yellow400Color">#FACC15</Color>
+  <Color x:Key="Teal400Color">#2DD4BF</Color>
+  <Color x:Key="Indigo400Color">#818CF8</Color>
+  <Color x:Key="Pink400Color">#F472B6</Color>
   <SolidColorBrush x:Key="Slate900Brush" Color="{StaticResource Slate900Color}"/>
   <SolidColorBrush x:Key="Slate800Brush" Color="{StaticResource Slate800Color}"/>
   <SolidColorBrush x:Key="Slate700Brush" Color="{StaticResource Slate700Color}"/>
@@ -34,5 +41,12 @@
   <SolidColorBrush x:Key="Orange500Brush" Color="{StaticResource Orange500Color}"/>
   <SolidColorBrush x:Key="Green500Brush" Color="{StaticResource Green500Color}"/>
   <SolidColorBrush x:Key="Purple500Brush" Color="{StaticResource Purple500Color}"/>
+  <SolidColorBrush x:Key="Green400Brush" Color="{StaticResource Green400Color}"/>
+  <SolidColorBrush x:Key="Orange400Brush" Color="{StaticResource Orange400Color}"/>
+  <SolidColorBrush x:Key="Red400Brush" Color="{StaticResource Red400Color}"/>
+  <SolidColorBrush x:Key="Yellow400Brush" Color="{StaticResource Yellow400Color}"/>
+  <SolidColorBrush x:Key="Teal400Brush" Color="{StaticResource Teal400Color}"/>
+  <SolidColorBrush x:Key="Indigo400Brush" Color="{StaticResource Indigo400Color}"/>
+  <SolidColorBrush x:Key="Pink400Brush" Color="{StaticResource Pink400Color}"/>
 
 </ResourceDictionary>

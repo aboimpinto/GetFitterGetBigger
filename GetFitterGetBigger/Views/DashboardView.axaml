@@ -144,7 +144,8 @@
                   <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
                     <controls:IconButton
                       Data="{StaticResource Workout}"
-                      Foreground="{StaticResource Sky400Brush}" />
+                      Foreground="{StaticResource Sky400Brush}"
+                      Command="{Binding WorkoutShortcutCommand}" />
                     <TextBlock 
                       Text="Workouts" 
                       Classes="ShortcutButtonText"/>

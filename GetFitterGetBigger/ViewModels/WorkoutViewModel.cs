@@ -36,7 +36,7 @@ public partial class WorkoutViewModel(
         this._selectedWorkout = this._appCaching.Workouts
             .Single(x => x.WorkoutId == this._workoutId);
 
-        this.WorkoutCaption = this._selectedWorkout.Name;
+        this.WorkoutCaption = this._selectedWorkout.Title;
         this.WorkoutPreparationSteps = this._selectedWorkout.PreparationSteps;
         this.OverallCoachNotes = this._selectedWorkout.CoachNotes;
 

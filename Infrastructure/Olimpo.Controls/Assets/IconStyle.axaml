@@ -11,6 +11,7 @@
 
   <Style Selector="controls|Icon">
     <Setter Property="Background" Value="Transparent" />
+    <Setter Property="Foreground" Value="White" />
     <Setter Property="Width" Value="32" />
     <Setter Property="Height" Value="32" />
     <Setter Property="HorizontalAlignment" Value="Center" />
@@ -22,7 +23,7 @@
           <Viewbox Width="{TemplateBinding Width}" Height="{TemplateBinding Height}">
             <Path 
               Data="{TemplateBinding Data}"
-              Fill="White" />
+              Fill="{TemplateBinding Foreground}" />
           </Viewbox>
         </Border>
       </ControlTemplate>
@@ -52,12 +53,14 @@
     <Setter Property="Margin" Value="0,0,0,0" />
   </Style>
 
+  <!-- 
   <Style Selector="controls|Icon:pointerover /template/ Path">
     <Setter Property="Fill" Value="White" />
   </Style>
 
   <Style Selector="controls|Icon:pointerover /template/ Border">
     <Setter Property="RenderTransform" Value="scale(1.2)" />
-  </Style> 
+  </Style>  
+  -->
   
 </Styles>

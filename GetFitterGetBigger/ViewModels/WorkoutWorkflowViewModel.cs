@@ -109,7 +109,7 @@ public partial class WorkoutWorkflowViewModel :
             this.IsWorkoutFinished = true;
 
             this.CurrentWorkoutSet = new WorkoutSummaryViewModel(
-                this._workflow.Name, 
+                this._workflow.Title, 
                 this.WorkoutTime);
         }
         else
@@ -175,7 +175,7 @@ public partial class WorkoutWorkflowViewModel :
                     _ => int.MaxValue
                 })
             .Select((item, index) => new WorkoutStep( // 5. Project using the WorkoutStep constructor
-                WorkoutCaption: this._workflow.Name,
+                WorkoutCaption: this._workflow.Title,
                 RoundInfo: $"Round {item.Round.Order}", // Use the round's order
                 SetInfo: item.Exercise switch // Use the exercise details, but the *global index* for Set number
                 {
@@ -242,7 +242,7 @@ public partial class WorkoutWorkflowViewModel :
             this.IsWorkoutFinished = true;
 
             this.CurrentWorkoutSet = new WorkoutSummaryViewModel(
-                this._workflow.Name, 
+                this._workflow.Title, 
                 this.WorkoutTime);
         }
         else

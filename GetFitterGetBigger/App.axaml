@@ -27,5 +27,6 @@
 
         <StyleInclude Source="avares://Olimpo.Controls/Assets/Olimpo.Controls.Styles.axaml"/>
         <StyleInclude Source="/Assets/GetFitterGetBiggerStyles.axaml"/>
+        <StyleInclude Source="avares://GetFitterGetBigger/Assets/WorkoutsViewStyles.axaml"/>
     </Application.Styles>
 </Application>

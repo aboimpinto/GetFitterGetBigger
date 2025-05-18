@@ -1,7 +1,9 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Avalonia.Controls.Primitives;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using GetFitterGetBigger.Model;
 using Olimpo;
 using Olimpo.NavigationManager;
 
@@ -18,6 +20,12 @@ public partial class WorkoutsViewModel(
     private readonly IAppCaching _appCaching = appCaching;
 
     [ObservableProperty]
+    private Workout _workoutOfTheDaySummary;
+
+    [ObservableProperty]
+    private Workout _activePlanWorkout;
+
+    [ObservableProperty]
     private string _workoutOfTheDayCaption = string.Empty;
 
     [ObservableProperty]
@@ -28,14 +36,15 @@ public partial class WorkoutsViewModel(
 
     public Task LoadAsync(IDictionary<string, object>? parameters = null)
     {
-        this.WorkoutOfTheDayCaption = this._appCaching.WorkoutOfTheDay.Name;
+        this.WorkoutOfTheDaySummary = this._appCaching.WorkoutOfTheDay;
+        this.ActivePlanWorkout = this._appCaching.ActivePlanWorkout;
         this.WorkoutActivePlan = this._appCaching.ActivePlan;
-        this.ActivePlanWorkoutName = this._appCaching.ActivePlanWorkout.Name;
 
         return Task.CompletedTask;
     }
 
-    public async Task OnBackButtonPressedAsync()
+    [RelayCommand]
+    private async Task BackMenu()
     {
         await this._navigationManager.NavigateAsync("DashboardViewModel");
     }
@@ -60,5 +69,10 @@ public partial class WorkoutsViewModel(
         };
 
         await this._navigationManager.NavigateAsync("WorkoutViewModel", parameters);
+    }
+
+    public async Task OnBackButtonPressedAsync()
+    {
+        await this.BackMenu();
     }
 }

@@ -13,6 +13,7 @@
 - When a timed based set is reached, hide the button area in the view. Have in consideration when the user reach the end of the workout, there is a button for that also. When the event TimedSetFinishedEvent is received, make the buttons area visible again.
 
 ## What's Left to Build:
+- [ONGOING] Refactor the WorkoutsView.
 - [PARTIAL] Add timed set into the WorkoutWorkflow.
 - [PARTIAL] Add WeightRepBase View
 - [DELAYED] Implement user authentication and authorization.

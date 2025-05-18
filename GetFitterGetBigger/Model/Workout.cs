@@ -3,7 +3,9 @@ namespace GetFitterGetBigger.Model;
 
 public record Workout(
     int WorkoutId,
-    string Name,
+    string Title,
+    string SubTitle,
+    string Description,
     string PreparationSteps,
     string CoachNotes,
     WorkoutType WorkoutType,

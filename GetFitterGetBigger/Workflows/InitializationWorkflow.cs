@@ -88,7 +88,9 @@ public class InitializationWorkflow :
 
         return new Workout(
             1,
+            "Full Body Blitz",
             "Pushups / Crunches / Squats",
+            "A quick and effective routine to energize your day. Ready to go!",
             "No equipment need",
             "* Rest 2 minutes between sets\n* Keep good form and full range of motion",
             WorkoutType.HIIT,
@@ -131,7 +133,9 @@ public class InitializationWorkflow :
 
         return new Workout(
             2,
-            "Legs I",
+            "Legs I - Foundation",
+            "Focus: Quads, Hamstrings, Glutes",
+            "Part of your 8-week strength building program. Keep up the great work!",
             "Barbell, Weights and Dumbbells",
             "* Proper rest between sets.",
             WorkoutType.LowerBody,
