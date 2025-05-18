@@ -7,7 +7,101 @@
   mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
   x:Class="GetFitterGetBigger.Views.DashboardView">
   
+  <Panel Background="{StaticResource Slate900Brush}">
 
+        <Border MaxWidth="390" Height="800"
+                Background="{StaticResource Slate800Brush}"
+                CornerRadius="24" BorderBrush="{StaticResource Slate700Brush}"
+                BorderThickness="1"
+                HorizontalAlignment="Center" VerticalAlignment="Center"
+                ClipToBounds="True">
+
+            <DockPanel LastChildFill="True">
+
+                <Border DockPanel.Dock="Top" Padding="15,10" Background="{StaticResource Slate800Brush}">
+                    <Grid ColumnDefinitions="Auto,*">
+                        <Button Classes="HamburgerButton" ToolTip.Tip="Open Menu"/>
+                        <TextBlock Grid.Column="1" Text="Get Fitter Get Bigger"
+                                   Foreground="{StaticResource Slate300Brush}"
+                                   FontSize="18" FontWeight="SemiBold"
+                                   VerticalAlignment="Center" HorizontalAlignment="Center" Margin="0,0,30,0"/>
+                    </Grid>
+                </Border>
+
+                <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                    <StackPanel Spacing="20" Margin="15">
+
+                        <TextBlock Text="Discover Our Plans" FontSize="20" FontWeight="Bold" Foreground="{StaticResource Slate100Brush}" Margin="0,0,0,10"/>
+                        <Border CornerRadius="16" Height="200" ClipToBounds="True">
+                            <Panel>
+                                <Image Source="/Assets/TryGetStrongPlan.png" Stretch="UniformToFill" />
+                                <Border Background="#A0000000" VerticalAlignment="Bottom" Padding="15">
+                                    <StackPanel>
+                                        <TextBlock Text="TRY OUR GET STRONG PLAN" Classes="CarouselTitle"/>
+                                        <TextBlock Text="Achieve your strength goals with expert guidance." Classes="CarouselSubtitle"/>
+                                        <Button Content="Learn More and Buy" Background="{StaticResource Orange500Brush}" Foreground="{StaticResource WhiteBrush}"
+                                                HorizontalAlignment="Left" Padding="10,5" CornerRadius="8" Margin="0,10,0,0" FontWeight="SemiBold" Cursor="Hand"/>
+                                    </StackPanel>
+                                </Border>
+                                <StackPanel Orientation="Horizontal" Spacing="5" HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="0,0,0,5">
+                                    <Ellipse Fill="{StaticResource WhiteBrush}" Width="8" Height="8"/>
+                                    <Ellipse Fill="{StaticResource Slate500Brush}" Width="8" Height="8"/>
+                                    <Ellipse Fill="{StaticResource Slate500Brush}" Width="8" Height="8"/>
+                                </StackPanel>
+                            </Panel>
+                            </Border>
+
+                        <TextBlock Text="Quick Actions" FontSize="20" FontWeight="Bold" Foreground="{StaticResource Slate100Brush}" Margin="0,15,0,10"/>
+                        <Grid ColumnDefinitions="* * *" RowDefinitions="Auto,Auto">  <!-- Gap="12" -->
+                            <Button Classes="ShortcutButton" Grid.Row="0" Grid.Column="0" ToolTip.Tip="Start or manage your workouts">
+                                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                                    <TextBlock Text="&#xE702;" Classes="ShortcutButtonIcon" Foreground="{StaticResource Sky500Brush}"/> <TextBlock Text="Workouts" Classes="ShortcutButtonText"/>
+                                </StackPanel>
+                            </Button>
+                            <Button Classes="ShortcutButton" Grid.Row="0" Grid.Column="1" ToolTip.Tip="Track your meals and nutrition">
+                                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                                    <TextBlock Text="&#xEAD3;" Classes="ShortcutButtonIcon" Foreground="{StaticResource Green500Brush}"/> <TextBlock Text="Nutrition" Classes="ShortcutButtonText"/>
+                                </StackPanel>
+                            </Button>
+                            <Button Classes="ShortcutButton" Grid.Row="0" Grid.Column="2" ToolTip.Tip="View your progress and achievements">
+                                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                                    <TextBlock Text="&#xE71F;" Classes="ShortcutButtonIcon" Foreground="{StaticResource Orange500Brush}"/> <TextBlock Text="Progress" Classes="ShortcutButtonText"/>
+                                </StackPanel>
+                            </Button>
+
+                            <Button Classes="ShortcutButton" Grid.Row="1" Grid.Column="0" ToolTip.Tip="Plan your meals for the week">
+                                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                                    <TextBlock Text="&#xE716;" Classes="ShortcutButtonIcon" Foreground="{StaticResource Sky400Brush}"/> <TextBlock Text="Meal Plan" Classes="ShortcutButtonText"/>
+                                </StackPanel>
+                            </Button>
+                            <Button Classes="ShortcutButton" Grid.Row="1" Grid.Column="1" ToolTip.Tip="Browse exercises and techniques">
+                                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                                    <TextBlock Text="&#xE721;" Classes="ShortcutButtonIcon" Foreground="{StaticResource Purple500Brush}"/> <TextBlock Text="Exercise Lib" Classes="ShortcutButtonText"/>
+                                </StackPanel>
+                            </Button>
+                            <Button Classes="ShortcutButton" Grid.Row="1" Grid.Column="2" ToolTip.Tip="Join challenges and connect with others">
+                                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                                    <TextBlock Text="&#xE718;" Classes="ShortcutButtonIcon" Foreground="{StaticResource Slate100Brush}"/> <TextBlock Text="Community" Classes="ShortcutButtonText"/>
+                                </StackPanel>
+                            </Button>
+                        </Grid>
+                         <Border Background="{StaticResource Slate700Brush}" CornerRadius="12" Padding="15" Margin="0,20,0,0">
+                            <StackPanel>
+                                <TextBlock Text="🔥 Your Next Workout: Full Body Blast" FontSize="16" FontWeight="SemiBold" Foreground="{StaticResource WhiteBrush}" Margin="0,0,0,5"/>
+                                <TextBlock Text="Scheduled for Today at 5:00 PM. Are you ready?" FontSize="13" Foreground="{StaticResource Slate300Brush}" Margin="0,0,0,10"/>
+                                <Button Content="View Workout" Background="{StaticResource Sky500Brush}" Foreground="{StaticResource WhiteBrush}"
+                                        HorizontalAlignment="Stretch" Padding="10,8" CornerRadius="8" FontWeight="SemiBold" Cursor="Hand"/>
+                            </StackPanel>
+                        </Border>
+
+                    </StackPanel>
+                </ScrollViewer>
+            </DockPanel>
+        </Border>
+    </Panel>
+
+
+  <!-- 
   <Grid RowDefinitions="Auto Auto 30 * 100 Auto">
 
     <Grid Grid.Row="0" ColumnDefinitions="Auto *">
@@ -80,6 +174,7 @@
 
     </StackPanel>
 
-  </Grid>
+  </Grid> 
+  -->
 
 </UserControl>
