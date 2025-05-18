@@ -9,47 +9,106 @@
   
   <Panel Background="{StaticResource Slate900Brush}">
 
-        <Border MaxWidth="390" Height="800"
-                Background="{StaticResource Slate800Brush}"
-                CornerRadius="24" BorderBrush="{StaticResource Slate700Brush}"
-                BorderThickness="1"
-                HorizontalAlignment="Center" VerticalAlignment="Center"
-                ClipToBounds="True">
+    <Border 
+      MaxWidth="390" Height="800"
+      Background="{StaticResource Slate800Brush}"
+      CornerRadius="24" BorderBrush="{StaticResource Slate700Brush}"
+      BorderThickness="1"
+      HorizontalAlignment="Center" 
+      VerticalAlignment="Center"
+      ClipToBounds="True">
 
-            <DockPanel LastChildFill="True">
+      <DockPanel LastChildFill="True">
 
-                <Border DockPanel.Dock="Top" Padding="15,10" Background="{StaticResource Slate800Brush}">
-                    <Grid ColumnDefinitions="Auto,*">
-                        <Button Classes="HamburgerButton" ToolTip.Tip="Open Menu"/>
-                        <TextBlock Grid.Column="1" Text="Get Fitter Get Bigger"
-                                   Foreground="{StaticResource Slate300Brush}"
-                                   FontSize="18" FontWeight="SemiBold"
-                                   VerticalAlignment="Center" HorizontalAlignment="Center" Margin="0,0,30,0"/>
-                    </Grid>
-                </Border>
+        <Border DockPanel.Dock="Top" Padding="15,10" Background="{StaticResource Slate800Brush}">
+          <Grid ColumnDefinitions="Auto,*">
+            <Button Classes="HamburgerButton" ToolTip.Tip="Open Menu"/>
+            <TextBlock 
+              Grid.Column="1" Text="Get Fitter Get Bigger"
+              Foreground="{StaticResource Slate300Brush}"
+              FontSize="18" FontWeight="SemiBold"
+              VerticalAlignment="Center" 
+              HorizontalAlignment="Center" 
+              Margin="0,0,30,0"/>
+          </Grid>
+        </Border>
 
-                <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
-                    <StackPanel Spacing="20" Margin="15">
+        <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+          <StackPanel Spacing="20" Margin="15">
+            <TextBlock 
+              Text="Discover Our Plans" 
+              FontSize="20" 
+              FontWeight="Bold" 
+              Foreground="{StaticResource Slate100Brush}" 
+              Margin="0 0 0 10"/>
 
-                        <TextBlock Text="Discover Our Plans" FontSize="20" FontWeight="Bold" Foreground="{StaticResource Slate100Brush}" Margin="0,0,0,10"/>
-                        <Border CornerRadius="16" Height="200" ClipToBounds="True">
-                            <Panel>
-                                <Image Source="/Assets/TryGetStrongPlan.png" Stretch="UniformToFill" />
-                                <Border Background="#A0000000" VerticalAlignment="Bottom" Padding="15">
-                                    <StackPanel>
-                                        <TextBlock Text="TRY OUR GET STRONG PLAN" Classes="CarouselTitle"/>
-                                        <TextBlock Text="Achieve your strength goals with expert guidance." Classes="CarouselSubtitle"/>
-                                        <Button Content="Learn More and Buy" Background="{StaticResource Orange500Brush}" Foreground="{StaticResource WhiteBrush}"
-                                                HorizontalAlignment="Left" Padding="10,5" CornerRadius="8" Margin="0,10,0,0" FontWeight="SemiBold" Cursor="Hand"/>
-                                    </StackPanel>
-                                </Border>
-                                <StackPanel Orientation="Horizontal" Spacing="5" HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="0,0,0,5">
-                                    <Ellipse Fill="{StaticResource WhiteBrush}" Width="8" Height="8"/>
-                                    <Ellipse Fill="{StaticResource Slate500Brush}" Width="8" Height="8"/>
-                                    <Ellipse Fill="{StaticResource Slate500Brush}" Width="8" Height="8"/>
-                                </StackPanel>
-                            </Panel>
-                            </Border>
+              <Border CornerRadius="16" Height="200" ClipToBounds="True">
+                <Panel>
+                  <TransitioningContentControl Content="{Binding ImageSource}" IsTransitionReversed="False">
+                    <TransitioningContentControl.PageTransition>
+                      <PageSlide Orientation="Horizontal" Duration="0:00:00.500" />
+                    </TransitioningContentControl.PageTransition>
+
+                    <TransitioningContentControl.ContentTemplate>
+                      <DataTemplate DataType="Bitmap">
+                        <Image Source="{Binding}" Stretch="UniformToFill" />
+                      </DataTemplate>
+                    </TransitioningContentControl.ContentTemplate>
+                  </TransitioningContentControl>
+
+                  <TransitioningContentControl Content="{Binding CarouselInfo}" IsTransitionReversed="True" VerticalAlignment="Bottom" Padding="15">
+                    <TransitioningContentControl.PageTransition>
+                      <PageSlide Orientation="Horizontal" Duration="0:00:00.500" />
+                    </TransitioningContentControl.PageTransition>
+
+                    <TransitioningContentControl.ContentTemplate>
+                      <DataTemplate>
+                        <Border Background="#A0000000" CornerRadius="8" Padding="5">
+                          <StackPanel>
+                            <TextBlock Classes="CarouselTitle" Text="{Binding Title}" />
+                            <TextBlock Classes="CarouselSubtitle" Text="{Binding SubTitle}" />
+                            <Button 
+                              Content="Learn More and Buy" 
+                              Background="{StaticResource Orange500Brush}" 
+                              Foreground="{StaticResource WhiteBrush}"
+                              HorizontalAlignment="Left" 
+                              Padding="10 5" 
+                              CornerRadius="8" 
+                              Margin="0,10,0,0" 
+                              FontWeight="SemiBold" 
+                              Cursor="Hand"/>
+                          </StackPanel>
+                        </Border>
+                      </DataTemplate>
+                    </TransitioningContentControl.ContentTemplate>
+                  </TransitioningContentControl>
+
+                  <!-- 
+                  <Border Background="#A0000000" VerticalAlignment="Bottom" Padding="15">
+                    <StackPanel>
+                      <TextBlock Text="TRY OUR GET STRONG PLAN" Classes="CarouselTitle"/>
+                      <TextBlock Text="Achieve your strength goals with expert guidance." Classes="CarouselSubtitle"/>
+                      <Button 
+                        Content="Learn More and Buy" 
+                        Background="{StaticResource Orange500Brush}" 
+                        Foreground="{StaticResource WhiteBrush}"
+                        HorizontalAlignment="Left" 
+                        Padding="10,5" 
+                        CornerRadius="8" 
+                        Margin="0,10,0,0" 
+                        FontWeight="SemiBold" 
+                        Cursor="Hand"/>
+                    </StackPanel>
+                  </Border> 
+                  -->
+
+                  <StackPanel Orientation="Horizontal" Spacing="5" HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="0,0,0,5">
+                    <Ellipse Fill="{StaticResource WhiteBrush}" Width="8" Height="8"/>
+                    <Ellipse Fill="{StaticResource Slate500Brush}" Width="8" Height="8"/>
+                    <Ellipse Fill="{StaticResource Slate500Brush}" Width="8" Height="8"/>
+                  </StackPanel>
+                </Panel>
+              </Border>
 
                         <TextBlock Text="Quick Actions" FontSize="20" FontWeight="Bold" Foreground="{StaticResource Slate100Brush}" Margin="0,15,0,10"/>
                         <Grid ColumnDefinitions="* * *" RowDefinitions="Auto,Auto">  <!-- Gap="12" -->

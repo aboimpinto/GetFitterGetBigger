@@ -19,30 +19,36 @@ public partial class DashboardViewModel : ViewModelBase
     [ObservableProperty]
     private Bitmap _imageSource;
 
+    [ObservableProperty]
+    private CarouselInfoRecord _carouselInfo;
+
     public DashboardViewModel(INavigationManager navigationManager)
     {
         this._navigationManager = navigationManager;
 
-        this.ImageSource = LoadImageFromAssets("Assets/TryGetStrongPlan.png");
+        this.CarouselInfo = LoadTryGetStrongPlan();
+        this.ImageSource = LoadImageFromAssets(this.CarouselInfo.ImageSource);
 
         Observable
             .Interval(TimeSpan.FromSeconds(3))
-            .Subscribe(x => 
+            .Subscribe(x =>
             {
-                this._currentImage ++;
+                this._currentImage++;
 
                 if (this._currentImage > this._imageRotationCount)
                 {
                     this._currentImage = 1;
                 }
 
-                this.ImageSource = this._currentImage switch
+                this.CarouselInfo = this._currentImage switch
                 {
-                    1 => LoadImageFromAssets("Assets/TryGetStrongPlan.png"),
-                    2 => LoadImageFromAssets("Assets/TryOurDietPlan.png"),
-                    3 => LoadImageFromAssets("Assets/TryReadyForBeachPlan.png"),
-                    _ => LoadImageFromAssets("Assets/TryGetStrongPlan.png")
+                    1 => LoadTryGetStrongPlan(),
+                    2 => LoadTryGetDietPlan(),
+                    3 => LoadTryReadyForBeachPlan(),
+                    _ => LoadTryGetStrongPlan()
                 };
+
+                this.ImageSource = LoadImageFromAssets(this.CarouselInfo.ImageSource);
             });
 
     }
@@ -86,4 +92,24 @@ public partial class DashboardViewModel : ViewModelBase
             throw new InvalidOperationException();
         }
     }
+
+    private static CarouselInfoRecord LoadTryGetStrongPlan() =>
+        new(
+            "TRY OUR GET STRONG PLAN",
+            "Achieve your strength goals with expert guidance.",
+            "Assets/TryGetStrongPlan.png", 1);
+
+    private static CarouselInfoRecord LoadTryGetDietPlan() =>
+        new(
+            "TRY OUR DIET PLAN",
+            "You Fitness journey starts in the Kitchen.",
+            "Assets/TryOurDietPlan.png", 2);
+
+    private static CarouselInfoRecord LoadTryReadyForBeachPlan() =>
+        new(
+            "TRY OUR READY FOR BEACH PLAN",
+            "Ready to wear bikini this year?",
+            "Assets/TryReadyForBeachPlan.png", 3);
 }
+
+public record CarouselInfoRecord(string Title, string SubTitle, string ImageSource, int Order);
