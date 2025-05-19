@@ -7,7 +7,7 @@ public record Workout(
     string SubTitle,
     string Description,
     string PreparationSteps,
-    string CoachNotes,
+    string[] CoachNotes,
     WorkoutType WorkoutType,
     WorkoutRounds[] WorkoutRounds);
 

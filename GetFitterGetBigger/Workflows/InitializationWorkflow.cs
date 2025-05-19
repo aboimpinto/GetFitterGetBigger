@@ -92,7 +92,7 @@ public class InitializationWorkflow :
             "Pushups / Crunches / Squats",
             "A quick and effective routine to energize your day. Ready to go!",
             "No equipment need",
-            "* Rest 2 minutes between sets\n* Keep good form and full range of motion",
+            ["Rest 2 minutes between rounds.", "Control the negative movement.", "Stay hydrated! Drink water before, during, and after."],
             WorkoutType.HIIT,
             [.. roundScheme]);
     }
@@ -137,7 +137,7 @@ public class InitializationWorkflow :
             "Focus: Quads, Hamstrings, Glutes",
             "Part of your 8-week strength building program. Keep up the great work!",
             "Barbell, Weights and Dumbbells",
-            "* Proper rest between sets.",
+            ["Rest 2 minutes between rounds.", "Control the negative movement.", "Stay hydrated! Drink water before, during, and after."],
             WorkoutType.LowerBody,
             [.. roundScheme]);
     }

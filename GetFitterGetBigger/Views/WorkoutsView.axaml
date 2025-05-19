@@ -67,13 +67,14 @@
       MaxWidth="390" 
       Height="800"
       Background="{StaticResource Slate800Brush}"
-      CornerRadius="0" BorderThickness="0"
+      CornerRadius="0" 
+      BorderThickness="0"
       HorizontalAlignment="Center" 
       VerticalAlignment="Center"
       ClipToBounds="True">
             
       <DockPanel LastChildFill="True">
-        <Border DockPanel.Dock="Top" Background="#D91E293B" Padding="16,12" BorderThickness="0 0 0 1" BorderBrush="{StaticResource Slate700Brush}">
+        <Border DockPanel.Dock="Top" Background="#D91E293B" Padding="16 12" BorderThickness="0 0 0 1" BorderBrush="{StaticResource Slate700Brush}">
           <Grid ColumnDefinitions="Auto * Auto">
             <controls:IconButton
               Data="{StaticResource ArrowLeftCicle}"

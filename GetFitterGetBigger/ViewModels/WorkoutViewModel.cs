@@ -6,6 +6,7 @@ using CommunityToolkit.Mvvm.Input;
 using Olimpo;
 using Olimpo.NavigationManager;
 using GetFitterGetBigger.Model;
+using System.Collections.ObjectModel;
 
 namespace GetFitterGetBigger.ViewModels;
 
@@ -21,13 +22,16 @@ public partial class WorkoutViewModel(
     private Workout _selectedWorkout;
 
     [ObservableProperty]
-    private string _workoutCaption = string.Empty;
+    private string _workoutTitle = string.Empty;
+
+    [ObservableProperty]
+    private string _workoutSubTitle = string.Empty;
 
     [ObservableProperty]
     private string _workoutPreparationSteps = string.Empty;
 
     [ObservableProperty]
-    private string _overallCoachNotes = string.Empty;
+    private ObservableCollection<string> _overallCoachNotes = [];
 
     public Task LoadAsync(IDictionary<string, object>? parameters = null)
     {
@@ -36,9 +40,10 @@ public partial class WorkoutViewModel(
         this._selectedWorkout = this._appCaching.Workouts
             .Single(x => x.WorkoutId == this._workoutId);
 
-        this.WorkoutCaption = this._selectedWorkout.Title;
+        this.WorkoutTitle = this._selectedWorkout.Title;
+        this.WorkoutSubTitle = this._selectedWorkout.Description;
         this.WorkoutPreparationSteps = this._selectedWorkout.PreparationSteps;
-        this.OverallCoachNotes = this._selectedWorkout.CoachNotes;
+        this.OverallCoachNotes = new ObservableCollection<string>(this._selectedWorkout.CoachNotes);
 
         return Task.CompletedTask;
     }
