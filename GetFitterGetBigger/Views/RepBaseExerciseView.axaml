@@ -10,9 +10,20 @@
     <StackPanel Spacing="20" HorizontalAlignment="Stretch">
         
       <StackPanel Spacing="4" Margin="0,10,0,0">
-        <TextBlock Classes="ExerciseTitle" Text="{Binding ExerciseInfo}" HorizontalAlignment="Center" />
-        <TextBlock Classes="RepCount" Text="10 Reps" HorizontalAlignment="Center" />
-        <TextBlock Classes="MutedText" Text="Exercise 1 of 3 this round" TextAlignment="Center" FontWeight="Medium" HorizontalAlignment="Center"/>
+        <TextBlock 
+          Classes="ExerciseTitle" 
+          Text="{Binding ExerciseInfo}" 
+          HorizontalAlignment="Center" />
+        <TextBlock 
+          Classes="RepCount" 
+          Text="{Binding Reps}" 
+          HorizontalAlignment="Center" />
+        <TextBlock 
+          Classes="MutedText" 
+          Text="{Binding ExercisesProgress}" 
+          TextAlignment="Center" 
+          FontWeight="Medium" 
+          HorizontalAlignment="Center"/>
       </StackPanel>
 
       <Border 

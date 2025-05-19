@@ -6,8 +6,7 @@
   xmlns:converters="using:GetFitterGetBigger.Views.Converters"
   xmlns:controls="using:Olimpo.Controls"
   mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-  x:Class="GetFitterGetBigger.Views.DashboardView"
-  FontFamily="Inter">
+  x:Class="GetFitterGetBigger.Views.DashboardView">
 
   <UserControl.Resources>
     <converters:ObjectToBrushConverter 

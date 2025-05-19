@@ -194,17 +194,31 @@ public partial class WorkoutWorkflowViewModel :
             .Single(x => x.WorkoutId == this._workoutId);
             
         this._workoutSequence = [.. this._workflow.WorkoutRounds // Assign the result to the field
-            .OrderBy(round => round.Order) // 1. Order rounds
-            .SelectMany(round => { // 2. Start flattening, but first, get the count of exercises for the current round
+            .OrderBy(round => round.Order) // 1. Order rounds (outer sequence)
+            .SelectMany(round => { // 2. Process each round to flatten exercises
                 var exercisesInThisSpecificRound = round.ExerciseWorkoutRound.Length; // Get count of exercises in this round
+
                 return round.ExerciseWorkoutRound
-                    .Select(ex => new { // Create an intermediate anonymous object
-                        Round = round, // Keep the round object
-                        Exercise = ex, // Keep the exercise object
-                        TotalExercisesInThisRound = exercisesInThisSpecificRound // Store the count for this round
+                    // Order exercises *within this current round* based on their 'Order' property
+                    .OrderBy(ex => ex switch
+                    {
+                        RepBaseExerciseWorkoutRound repEx => repEx.Order,
+                        TimeBaseExerciseWorkoutRound timeEx => timeEx.Order,
+                        WeightedRepBaseExerciseWorkoutRound weightRepExercice => weightRepExercice.Order,
+                        _ => int.MaxValue // Fallback for unknown types, though ideally types are exhaustive
+                    })
+                    // Select each exercise along with its 0-based index *within this ordered round*
+                    .Select((ex, indexInRound) => new { // 'indexInRound' is the 0-based index within this round's exercises
+                        Round = round,                            // Keep the round object
+                        Exercise = ex,                          // Keep the exercise object
+                        TotalExercisesInThisRound = exercisesInThisSpecificRound, // Store the count of exercises for this round
+                        LocalExerciseIndex = indexInRound + 1     // Calculate 1-based exercise index within this round
                     });
             })
-            .OrderBy(item => item.Round.Order) // 3. Ensure global order by Round first (using the 'Order' from the original WorkoutRounds)
+            // The items are now anonymous objects containing Round, Exercise, TotalExercisesInThisRound, and LocalExerciseIndex.
+            // The sequence from SelectMany is ordered by round (from step 1), and within each round, exercises are ordered (from the inner OrderBy).
+            // These next OrderBy/ThenBy calls ensure the final global ordering is strictly enforced before the final projection.
+            .OrderBy(item => item.Round.Order) // 3. Ensure global order by Round first
             .ThenBy(item => item.Exercise switch // 4. Then ensure global order by Exercise Order within the round
             {
                 RepBaseExerciseWorkoutRound repEx => repEx.Order,
@@ -212,18 +226,19 @@ public partial class WorkoutWorkflowViewModel :
                 WeightedRepBaseExerciseWorkoutRound weightRepExercice => weightRepExercice.Order,
                 _ => int.MaxValue
             })
-            .Select((item, index) => new WorkoutStep( // 5. Project using the WorkoutStep constructor
+            .Select((item, globalIndex) => new WorkoutStep( // 5. Project using the WorkoutStep constructor
                 WorkoutCaption: this._workflow.Title,
                 RoundIndex: item.Round.Order, // Use the round's order from the original WorkoutRounds
                 RoundInfo: $"Round {item.Round.Order}",
                 ExercisesInRound: item.TotalExercisesInThisRound, // Use the calculated total exercises for this round
-                ExerciseIndex: 1,
+                ExerciseIndex: item.LocalExerciseIndex, // <<<< Use the calculated 1-based index of the exercise within its round
                 SetInfo: item.Exercise switch
                 {
-                    RepBaseExerciseWorkoutRound repEx => $"Set {index + 1}", // index + 1 gives 1-based set number (overall exercise sequence)
-                    TimeBaseExerciseWorkoutRound timeEx => $"Set {index + 1}",
-                    WeightedRepBaseExerciseWorkoutRound weightRepExercice => $"Set {index + 1}",
-                    _ => $"Set {index + 1} | Unknown Exercise"
+                    // globalIndex + 1 gives 1-based set number (overall exercise sequence in the entire workout)
+                    RepBaseExerciseWorkoutRound repEx => $"Set {globalIndex + 1}",
+                    TimeBaseExerciseWorkoutRound timeEx => $"Set {globalIndex + 1}",
+                    WeightedRepBaseExerciseWorkoutRound weightRepExercice => $"Set {globalIndex + 1}",
+                    _ => $"Set {globalIndex + 1} | Unknown Exercise"
                 },
                 ExerciseInfo: item.Exercise switch
                 {
