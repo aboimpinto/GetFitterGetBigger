@@ -18,6 +18,9 @@ public partial class WorkoutWorkflowViewModel :
     ILoadableViewModel,
     IHandle<TimedSetFinishedEvent>
 {
+    // Define a type for the intermediate result
+    public record RoundExercise(WorkoutRounds Round, ExerciseWorkoutRound Exercise);
+
     private readonly IAppCaching _appCaching;
     private readonly INavigationManager _navigationManager;
     private readonly IEventAggregator _eventAggregator;
@@ -29,21 +32,11 @@ public partial class WorkoutWorkflowViewModel :
     private List<WorkoutStep> _workoutSequence; // Field to store the ordered steps
     private int _workoutId;
     private int _workoutWorkflowStep;
-
-    public WorkoutWorkflowViewModel(
-        IAppCaching appCaching,
-        INavigationManager navigationManager,
-        IEventAggregator eventAggregator)
-    {
-        this._appCaching = appCaching;
-        this._navigationManager = navigationManager;
-        this._eventAggregator = eventAggregator;
-
-        this._eventAggregator.Subscribe(this);
-    }
+    private int _totalRounds;
+    private Dictionary<int, string> _roundExercises;
 
     [ObservableProperty]
-    private string _workoutTime = string.Empty;
+    private string _workoutTime = "Overall: 00:00";
 
     [ObservableProperty]
     private ViewModelBase _currentWorkoutSet;
@@ -57,6 +50,30 @@ public partial class WorkoutWorkflowViewModel :
     [ObservableProperty]
     private bool _isTimeBasedSet = false;
 
+    [ObservableProperty]
+    private int _roundProgress = 0;
+
+    [ObservableProperty]
+    private string _roundDescription = string.Empty;
+
+    [ObservableProperty]
+    private string _roundExerciseSummary = string.Empty;
+
+    [ObservableProperty]
+    private string _workoutTitle = string.Empty;
+
+    public WorkoutWorkflowViewModel(
+        IAppCaching appCaching,
+        INavigationManager navigationManager,
+        IEventAggregator eventAggregator)
+    {
+        this._appCaching = appCaching;
+        this._navigationManager = navigationManager;
+        this._eventAggregator = eventAggregator;
+
+        this._eventAggregator.Subscribe(this);
+    }
+
     public async Task LoadAsync(IDictionary<string, object>? parameters = null)
     {
         this._workoutId = int.Parse(parameters["WorkoutId"].ToString());
@@ -65,6 +82,7 @@ public partial class WorkoutWorkflowViewModel :
         this.StartWorkoutTimer();
 
         await this.StartWorkoutWorkflow();
+        this.UpdateRoundProgress();
 
         if (this._workoutSequence.Count > 0)
         {
@@ -96,10 +114,10 @@ public partial class WorkoutWorkflowViewModel :
             return;
         }
 
-        this._workoutWorkflowStep ++;
+        this._workoutWorkflowStep++;
 
         this.NextButtonCaption = (this._workoutWorkflowStep == this._workoutSequence.Count - 1) ?
-            "Finish" : 
+            "Finish" :
             "Next >";
 
         if (this._workoutWorkflowStep >= this._workoutSequence.Count)
@@ -109,13 +127,15 @@ public partial class WorkoutWorkflowViewModel :
             this.IsWorkoutFinished = true;
 
             this.CurrentWorkoutSet = new WorkoutSummaryViewModel(
-                this._workflow.Title, 
+                this._workflow.Title,
                 this.WorkoutTime);
         }
         else
         {
             this.CurrentWorkoutSet = await this.LoadWorkoutSetExercice(this._workoutWorkflowStep);
         }
+
+        this.UpdateRoundProgress();
     }
 
     [RelayCommand]
@@ -123,36 +143,47 @@ public partial class WorkoutWorkflowViewModel :
     {
         await this._navigationManager.NavigateAsync("DashboardViewModel");
     }
-    
+
+    private void UpdateRoundProgress()
+    {
+        decimal roundProgress = (this._workoutSequence[this._workoutWorkflowStep].RoundIndex * 100) / this._totalRounds;
+        this.RoundProgress = (int)roundProgress;
+
+        this.RoundDescription = $"Round {this._workoutSequence[this._workoutWorkflowStep].RoundIndex} of {this._totalRounds}";
+
+        this.RoundExerciseSummary = $"This Round: {this._roundExercises[this._workoutSequence[this._workoutWorkflowStep].RoundIndex]}";
+
+        this.WorkoutTitle = this._workoutSequence[this._workoutWorkflowStep].WorkoutCaption;
+    }
 
     private void StartWorkoutTimer()
     {
-        this.WorkoutTime = $"{this._minutes.ToString("00")}:{this._seconds.ToString("00")}";
+        this.WorkoutTime = $"Overall: {this._minutes.ToString("00")}:{this._seconds.ToString("00")}";
 
         var loop = Observable
             .Interval(TimeSpan.FromSeconds(1))
             .ObserveOn(RxApp.MainThreadScheduler);
 
-        this._workoutTimeLoop = loop.Subscribe(x => 
+        this._workoutTimeLoop = loop.Subscribe(x =>
         {
-            this._seconds ++;
+            this._seconds++;
 
             if (this._seconds > 59)
             {
                 this._seconds = 0;
-                this._minutes ++;
+                this._minutes++;
             }
 
             if (this._minutes > 59)
             {
                 this._minutes = 0;
-                this._hour ++;
+                this._hour++;
             }
 
             this.WorkoutTime = this._hour switch
             {
-                0 => $"{this._minutes.ToString("00")}:{this._seconds.ToString("00")}",
-                _ => $"{this._hour.ToString("00")}:{this._minutes.ToString("00")}:{this._seconds.ToString("00")}"
+                0 => $"Overall: {this._minutes.ToString("00")}:{this._seconds.ToString("00")}",
+                _ => $"Overall: {this._hour.ToString("00")}:{this._minutes.ToString("00")}:{this._seconds.ToString("00")}"
             };
         });
     }
@@ -169,13 +200,14 @@ public partial class WorkoutWorkflowViewModel :
             .OrderBy(item => item.Round.Order) // 3. Ensure global order by Round first
             .ThenBy(item => item.Exercise switch // 4. Then ensure global order by Exercise Order within the round
             {
-                    RepBaseExerciseWorkoutRound repEx => repEx.Order,
-                    TimeBaseExerciseWorkoutRound timeEx => timeEx.Order,
-                    WeightedRepBaseExerciseWorkoutRound weightRepExercice => weightRepExercice.Order,
-                    _ => int.MaxValue
-                })
+                RepBaseExerciseWorkoutRound repEx => repEx.Order,
+                TimeBaseExerciseWorkoutRound timeEx => timeEx.Order,
+                WeightedRepBaseExerciseWorkoutRound weightRepExercice => weightRepExercice.Order,
+                _ => int.MaxValue
+            })
             .Select((item, index) => new WorkoutStep( // 5. Project using the WorkoutStep constructor
                 WorkoutCaption: this._workflow.Title,
+                RoundIndex: item.Round.Order,
                 RoundInfo: $"Round {item.Round.Order}", // Use the round's order
                 SetInfo: item.Exercise switch // Use the exercise details, but the *global index* for Set number
                 {
@@ -196,6 +228,23 @@ public partial class WorkoutWorkflowViewModel :
             ))]; // Execute the query and put results in a list
 
         this._workoutWorkflowStep = 0;
+
+        // 1. Get the number of rounds
+        this._totalRounds = this._workflow.WorkoutRounds.Length;
+
+        // 2. Create a dictionary of exercises for each round
+        this._roundExercises = this._workflow.WorkoutRounds
+            .ToDictionary(
+                round => round.Order,
+                round => string.Join(", ", round.ExerciseWorkoutRound.Select<ExerciseWorkoutRound, string>(ex => ex switch
+                {
+                    RepBaseExerciseWorkoutRound repEx => repEx.ExerciseType.ToString(),
+                    TimeBaseExerciseWorkoutRound timeEx => timeEx.ExerciseType.ToString(),
+                    WeightedRepBaseExerciseWorkoutRound weightRepEx => weightRepEx.ExerciseType.ToString(),
+                    _ => "Unknown Exercise"
+                }))
+            );
+
         this.CurrentWorkoutSet = await this.LoadWorkoutSetExercice(this._workoutWorkflowStep);
     }
 
@@ -206,7 +255,7 @@ public partial class WorkoutWorkflowViewModel :
         // Explicitly type the variable before the target-typed switch expression
         ViewModelBase viewModelBase = workoutStep.Exercise switch
         {
-            RepBaseExerciseWorkoutRound => new RepBaseExerciseViewModel(workoutStep),
+            RepBaseExerciseWorkoutRound => new RepBaseExerciseViewModel(workoutStep, this._appCaching),
             TimeBaseExerciseWorkoutRound => new TimeBaseExerciseViewModel(workoutStep, this._eventAggregator),
             WeightedRepBaseExerciseWorkoutRound => new WeightedRepBaseExerciseViewModel(workoutStep),
             _ => throw new InvalidOperationException()
@@ -229,10 +278,10 @@ public partial class WorkoutWorkflowViewModel :
             return;
         }
 
-        this._workoutWorkflowStep ++;
+        this._workoutWorkflowStep++;
 
         this.NextButtonCaption = (this._workoutWorkflowStep == this._workoutSequence.Count - 1) ?
-            "Finish" : 
+            "Finish" :
             "Next >";
 
         if (this._workoutWorkflowStep >= this._workoutSequence.Count)
@@ -242,7 +291,7 @@ public partial class WorkoutWorkflowViewModel :
             this.IsWorkoutFinished = true;
 
             this.CurrentWorkoutSet = new WorkoutSummaryViewModel(
-                this._workflow.Title, 
+                this._workflow.Title,
                 this.WorkoutTime);
         }
         else
@@ -251,6 +300,7 @@ public partial class WorkoutWorkflowViewModel :
         }
 
         this.IsTimeBasedSet = false;
+        this.UpdateRoundProgress();
     }
 
     private async void LoadNextWorkoutSet()
@@ -262,6 +312,7 @@ public partial class WorkoutWorkflowViewModel :
 // Define a record to hold the structured workout step information
 public record WorkoutStep(
     string WorkoutCaption,
+    int RoundIndex,
     string RoundInfo,
     string SetInfo,
     string ExerciseInfo,

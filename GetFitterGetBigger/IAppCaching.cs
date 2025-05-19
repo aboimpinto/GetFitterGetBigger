@@ -5,6 +5,8 @@ namespace GetFitterGetBigger;
 
 public interface IAppCaching
 {
+    IDictionary<ExerciseType, string> ExerciseImages { get; }
+
     IList<Workout> Workouts { get; }
 
     Workout WorkoutOfTheDay { get; set; }

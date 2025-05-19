@@ -1,3 +1,4 @@
+using Avalonia.Media.Imaging;
 using CommunityToolkit.Mvvm.ComponentModel;
 using GetFitterGetBigger.Model;
 using Olimpo.NavigationManager;
@@ -24,7 +25,10 @@ public partial class RepBaseExerciseViewModel :
     [ObservableProperty]
     private string _reps = string.Empty;
 
-    public RepBaseExerciseViewModel(WorkoutStep workoutStep)
+    [ObservableProperty]
+    private Bitmap _imageSource;
+
+    public RepBaseExerciseViewModel(WorkoutStep workoutStep, IAppCaching appCaching)
     {
         this._workoutStep = workoutStep;
 
@@ -34,5 +38,10 @@ public partial class RepBaseExerciseViewModel :
         this.ExerciseInfo = this._workoutStep.ExerciseInfo;
 
         this.Reps = string.Format("{0} Reps", ((RepBaseExerciseWorkoutRound)this._workoutStep.Exercise).NbrReps.ToString());
+
+        var imageForExercise = appCaching.ExerciseImages[((RepBaseExerciseWorkoutRound)workoutStep.Exercise).ExerciseType];
+
+        this.ImageSource = ImageManipulation
+            .LoadImageFromAssets(imageForExercise);
     }
 }

@@ -34,6 +34,8 @@ public class InitializationWorkflow :
             await this._navigationManager.NavigateAsync("SplashViewModel");
         });
 
+        this.BuildExercisesImagesList();
+
         var pushupsCrunchesAndSquatsWorkout = BuildPushupsCrunchesAndSquatsWorkout();
         this._appCaching.Workouts.Add(pushupsCrunchesAndSquatsWorkout);
 
@@ -50,6 +52,13 @@ public class InitializationWorkflow :
         {
             await this._navigationManager.NavigateAsync("DashboardViewModel");
         });
+    }
+
+    private void BuildExercisesImagesList()
+    {
+        this._appCaching.ExerciseImages.Add(ExerciseType.AirSquats, "/Assets/AirSquat.jpeg");
+        this._appCaching.ExerciseImages.Add(ExerciseType.Pushups, "avares://GetFitterGetBigger/Assets/Pushup.jpeg");
+        this._appCaching.ExerciseImages.Add(ExerciseType.Crunches, "/Assets/Crunch.jpeg");
     }
 
     public static Workout BuildPushupsCrunchesAndSquatsWorkout()

@@ -11,9 +11,15 @@
   </ItemGroup>
 
   <ItemGroup>
+  </ItemGroup>
+
+  <ItemGroup>
     <EmbeddedResource Include="Assets\TryGetStrongPlan.png" />
     <EmbeddedResource Include="Assets\TryOurDietPlan.png" />
     <EmbeddedResource Include="Assets\TryReadyForBeachPlan.png" />
+    <EmbeddedResource Include="Assets\AirSquat.jpeg" />
+    <EmbeddedResource Include="Assets\Pushup.jpeg" />
+    <EmbeddedResource Include="Assets\Crunch.jpeg" />
   </ItemGroup>
 
   <ItemGroup>

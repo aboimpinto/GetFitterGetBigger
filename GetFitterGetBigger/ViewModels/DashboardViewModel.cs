@@ -1,6 +1,5 @@
 using System;
 using System.Reactive.Linq;
-using System.Reflection;
 using System.Threading.Tasks;
 using Avalonia.Media.Imaging;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -27,7 +26,7 @@ public partial class DashboardViewModel : ViewModelBase
         this._navigationManager = navigationManager;
 
         this.CarouselInfo = LoadTryGetStrongPlan();
-        this.ImageSource = LoadImageFromAssets(this.CarouselInfo.ImageSource);
+        this.ImageSource = ImageManipulation.LoadImageFromAssets(this.CarouselInfo.ImageSource);
 
         Observable
             .Interval(TimeSpan.FromSeconds(3))
@@ -48,7 +47,7 @@ public partial class DashboardViewModel : ViewModelBase
                     _ => LoadTryGetStrongPlan()
                 };
 
-                this.ImageSource = LoadImageFromAssets(this.CarouselInfo.ImageSource);
+                this.ImageSource = ImageManipulation.LoadImageFromAssets(this.CarouselInfo.ImageSource);
             });
 
     }
@@ -63,34 +62,6 @@ public partial class DashboardViewModel : ViewModelBase
     private async Task WorkoutShortcut()
     {
         await this._navigationManager.NavigateAsync("WorkoutsViewModel");
-    }
-
-    private static Bitmap LoadImageFromAssets(string path)
-    {
-        try
-        {
-            var assembly = Assembly.GetExecutingAssembly();
-            using (var stream = assembly.GetManifestResourceStream(assembly.GetName().Name + "." + path.Replace('/', '.')))
-            {
-                if (stream != null)
-                {
-                    return new Bitmap(stream);
-                }
-                else
-                {
-                    // Handle the case where the image is not found
-                    // You might want to log an error or set a default image
-                    System.Diagnostics.Debug.WriteLine($"Error: Image not found at '{path}'");
-                    throw new InvalidOperationException();
-                }
-            }
-        }
-        catch (Exception ex)
-        {
-            // Handle any potential exceptions during image loading
-            System.Diagnostics.Debug.WriteLine($"Error loading image: {ex.Message}");
-            throw new InvalidOperationException();
-        }
     }
 
     private static CarouselInfoRecord LoadTryGetStrongPlan() =>
