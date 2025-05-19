@@ -87,8 +87,8 @@
       Background="{StaticResource Slate800Brush}"
       CornerRadius="24" BorderBrush="{StaticResource Slate700Brush}"
       BorderThickness="1"
-      HorizontalAlignment="Center" 
-      VerticalAlignment="Center"
+      HorizontalAlignment="Stretch" 
+      VerticalAlignment="Stretch"
       ClipToBounds="True">
 
       <DockPanel LastChildFill="True">

@@ -36,7 +36,7 @@ public record WeightedRepBaseExerciseWorkoutRound(
     WeightedEquipment Equipment,
     string Weight,
     int Order,
-    string CoachNotes = "") : ExerciseWorkoutRound;
+    string[] CoachNotes) : ExerciseWorkoutRound;
 
 public record TimeBaseExerciseWorkoutRound(
     int TimeBaseExerciseWorkoutId,
@@ -44,7 +44,7 @@ public record TimeBaseExerciseWorkoutRound(
     ExerciseType ExerciseType,
     int TimeInSeconds,
     int Order,
-    string CoacheNotes = "") : ExerciseWorkoutRound;
+    string[] CoacheNotes) : ExerciseWorkoutRound;
 
 public enum ExerciseType
 {

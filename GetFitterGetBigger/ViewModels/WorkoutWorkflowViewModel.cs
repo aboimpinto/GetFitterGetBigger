@@ -192,7 +192,7 @@ public partial class WorkoutWorkflowViewModel :
     {
         this._workflow = this._appCaching.Workouts
             .Single(x => x.WorkoutId == this._workoutId);
-            
+
         this._workoutSequence = [.. this._workflow.WorkoutRounds // Assign the result to the field
             .OrderBy(round => round.Order) // 1. Order rounds (outer sequence)
             .SelectMany(round => { // 2. Process each round to flatten exercises
@@ -248,7 +248,14 @@ public partial class WorkoutWorkflowViewModel :
                     _ => $"Unknown Exercise"
                 },
                 Round: item.Round, // Pass the original round object
-                Exercise: item.Exercise // Pass the exercise object
+                Exercise: item.Exercise, // Pass the exercise object
+                CoachNotes: item.Exercise switch // Populate CoachNotes based on the specific exercise type
+                {
+                    RepBaseExerciseWorkoutRound repEx => repEx.CoachNotes,
+                    WeightedRepBaseExerciseWorkoutRound weightedRepEx => weightedRepEx.CoachNotes,
+                    TimeBaseExerciseWorkoutRound timeEx => timeEx.CoacheNotes, // Using "CoacheNotes" as per your model for this type
+                    _ => [] // Default to an empty array if the type is unknown or doesn't have coach notes defined in this switch
+                }
             ))];
 
         this._workoutWorkflowStep = 0;
@@ -343,4 +350,5 @@ public record WorkoutStep(
     int ExercisesInRound,
     int ExerciseIndex,
     WorkoutRounds Round,
-    ExerciseWorkoutRound Exercise);
+    ExerciseWorkoutRound Exercise,
+    string[] CoachNotes);

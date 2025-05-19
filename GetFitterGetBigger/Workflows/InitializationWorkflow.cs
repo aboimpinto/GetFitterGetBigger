@@ -66,25 +66,25 @@ public class InitializationWorkflow :
         var roundOneExerciseScheme = new List<ExerciseWorkoutRound>
         {
             new RepBaseExerciseWorkoutRound(1, 1, ExerciseType.Pushups, 10, 1, ["Body Straight Line", "Elbows Track Back", "Chest Towards Floor"]),
-            new RepBaseExerciseWorkoutRound(2, 1, ExerciseType.Crunches, 10, 2, ["Lift With Abs, Not Neck", "Shoulder Blades Off Floor", "Shoulder Blades Off Floor"]),
+            new RepBaseExerciseWorkoutRound(2, 1, ExerciseType.Crunches, 10, 2, ["Lift With Abs, Not Neck", "Shoulder Blades Off Floor", "Control The Movement"]),
             new RepBaseExerciseWorkoutRound(3, 1, ExerciseType.AirSquats, 10, 3, ["Keep chest up", "Weight in heels", "Go below parallel"]),
-            new TimeBaseExerciseWorkoutRound(4, 1, ExerciseType.Rest, 5, 4)
+            new TimeBaseExerciseWorkoutRound(4, 1, ExerciseType.Rest, 5, 4, [])
         };
 
         var roundTwoExerciseScheme = new List<ExerciseWorkoutRound>
         {
             new RepBaseExerciseWorkoutRound(4, 2, ExerciseType.Pushups, 10, 1, ["Body Straight Line", "Elbows Track Back", "Chest Towards Floor"]),
-            new RepBaseExerciseWorkoutRound(5, 2, ExerciseType.Crunches, 10, 2, ["Lift With Abs, Not Neck", "Shoulder Blades Off Floor", "Shoulder Blades Off Floor"]),
+            new RepBaseExerciseWorkoutRound(5, 2, ExerciseType.Crunches, 10, 2, ["Lift With Abs, Not Neck", "Shoulder Blades Off Floor", "Control The Movement"]),
             new RepBaseExerciseWorkoutRound(6, 2, ExerciseType.AirSquats, 10, 3, ["Keep chest up", "Weight in heels", "Go below parallel"]),
-            new TimeBaseExerciseWorkoutRound(7, 2, ExerciseType.Rest, 5, 4)
+            new TimeBaseExerciseWorkoutRound(7, 2, ExerciseType.Rest, 5, 4, [])
         };
 
         var roundThreeExerciseScheme = new List<ExerciseWorkoutRound>
         {
             new RepBaseExerciseWorkoutRound(8, 3, ExerciseType.Pushups, 10, 1, ["Body Straight Line", "Elbows Track Back", "Chest Towards Floor"]),
-            new RepBaseExerciseWorkoutRound(9, 3, ExerciseType.Crunches, 10, 2, ["Lift With Abs, Not Neck", "Shoulder Blades Off Floor", "Shoulder Blades Off Floor"]),
+            new RepBaseExerciseWorkoutRound(9, 3, ExerciseType.Crunches, 10, 2, ["Lift With Abs, Not Neck", "Shoulder Blades Off Floor", "Control The Movement"]),
             new RepBaseExerciseWorkoutRound(10, 3, ExerciseType.AirSquats, 10, 3, ["Keep chest up", "Weight in heels", "Go below parallel"]),
-            new TimeBaseExerciseWorkoutRound(11, 3, ExerciseType.Rest, 5, 4)
+            new TimeBaseExerciseWorkoutRound(11, 3, ExerciseType.Rest, 5, 4, [])
         };
 
         var roundScheme = new List<WorkoutRounds>
@@ -110,22 +110,22 @@ public class InitializationWorkflow :
     {
         var roundOneExerciseScheme = new List<ExerciseWorkoutRound>
         {
-            new WeightedRepBaseExerciseWorkoutRound(1, 1, WeightExerciseType.Squats, 10, WeightedEquipment.Barbell, "40", 1),
-            new TimeBaseExerciseWorkoutRound(2, 1, ExerciseType.Rest, 5, 2, "Add 10kg place on each side."),
-            new WeightedRepBaseExerciseWorkoutRound(3, 1, WeightExerciseType.Squats, 10, WeightedEquipment.Barbell, "60", 3),
-            new TimeBaseExerciseWorkoutRound(4, 1, ExerciseType.Rest, 5, 4, "Add 10kg place on each side."),
-            new WeightedRepBaseExerciseWorkoutRound(5, 1, WeightExerciseType.Squats, 10, WeightedEquipment.Barbell, "80", 5),
-            new TimeBaseExerciseWorkoutRound(6, 1, ExerciseType.Rest, 5, 6, "Add 10kg place on each side.")
+            new WeightedRepBaseExerciseWorkoutRound(1, 1, WeightExerciseType.Squats, 10, WeightedEquipment.Barbell, "40", 1, []),
+            new TimeBaseExerciseWorkoutRound(2, 1, ExerciseType.Rest, 5, 2, ["Add 10kg place on each side."]),
+            new WeightedRepBaseExerciseWorkoutRound(3, 1, WeightExerciseType.Squats, 10, WeightedEquipment.Barbell, "60", 3, []),
+            new TimeBaseExerciseWorkoutRound(4, 1, ExerciseType.Rest, 5, 4, ["Add 10kg place on each side."]),
+            new WeightedRepBaseExerciseWorkoutRound(5, 1, WeightExerciseType.Squats, 10, WeightedEquipment.Barbell, "80", 5, []),
+            new TimeBaseExerciseWorkoutRound(6, 1, ExerciseType.Rest, 5, 6, ["Add 10kg place on each side."])
         };
 
         var roundTwoExerciseScheme = new List<ExerciseWorkoutRound>
         {
-            new WeightedRepBaseExerciseWorkoutRound(7, 2, WeightExerciseType.BulgarianSplitSquat, 20, WeightedEquipment.Dumbbell, "10", 1, "10 reps each leg"),
-            new TimeBaseExerciseWorkoutRound(8, 2, ExerciseType.Rest, 5, 2),
-            new WeightedRepBaseExerciseWorkoutRound(9, 2, WeightExerciseType.Squats, 20, WeightedEquipment.Dumbbell, "10", 3, "10 reps each leg"),
-            new TimeBaseExerciseWorkoutRound(10, 2, ExerciseType.Rest, 5, 4),
-            new WeightedRepBaseExerciseWorkoutRound(11, 2, WeightExerciseType.Squats, 20, WeightedEquipment.Dumbbell, "10", 5, "10 reps each leg"),
-            new TimeBaseExerciseWorkoutRound(12, 2, ExerciseType.Rest, 5, 6)
+            new WeightedRepBaseExerciseWorkoutRound(7, 2, WeightExerciseType.BulgarianSplitSquat, 20, WeightedEquipment.Dumbbell, "10", 1, ["10 reps each leg"]),
+            new TimeBaseExerciseWorkoutRound(8, 2, ExerciseType.Rest, 5, 2, []),
+            new WeightedRepBaseExerciseWorkoutRound(9, 2, WeightExerciseType.Squats, 20, WeightedEquipment.Dumbbell, "10", 3, ["10 reps each leg"]),
+            new TimeBaseExerciseWorkoutRound(10, 2, ExerciseType.Rest, 5, 4, []),
+            new WeightedRepBaseExerciseWorkoutRound(11, 2, WeightExerciseType.Squats, 20, WeightedEquipment.Dumbbell, "10", 5, ["10 reps each leg"]),
+            new TimeBaseExerciseWorkoutRound(12, 2, ExerciseType.Rest, 5, 6, [])
         };
 
         var roundThreeExerciseScheme = new List<ExerciseWorkoutRound>

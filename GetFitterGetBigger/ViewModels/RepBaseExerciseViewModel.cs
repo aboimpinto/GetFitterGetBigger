@@ -1,3 +1,4 @@
+using System.Collections.ObjectModel;
 using Avalonia.Media.Imaging;
 using CommunityToolkit.Mvvm.ComponentModel;
 using GetFitterGetBigger.Model;
@@ -5,7 +6,7 @@ using Olimpo.NavigationManager;
 
 namespace GetFitterGetBigger.ViewModels;
 
-public partial class RepBaseExerciseViewModel : 
+public partial class RepBaseExerciseViewModel :
     ViewModelBase
 {
     private readonly WorkoutStep _workoutStep;
@@ -31,6 +32,9 @@ public partial class RepBaseExerciseViewModel :
     [ObservableProperty]
     private string _exercisesProgress = string.Empty;
 
+    [ObservableProperty]
+    private ObservableCollection<string> _exerciseCoachNotes = [];
+
     public RepBaseExerciseViewModel(WorkoutStep workoutStep, IAppCaching appCaching)
     {
         this._workoutStep = workoutStep;
@@ -39,6 +43,8 @@ public partial class RepBaseExerciseViewModel :
         this.RoundInfo = this._workoutStep.RoundInfo;
         this.SetInfo = this._workoutStep.SetInfo;
         this.ExerciseInfo = this._workoutStep.ExerciseInfo;
+
+        this.ExerciseCoachNotes = new ObservableCollection<string>(this._workoutStep.CoachNotes);
 
         this.Reps = string.Format("{0} Reps", ((RepBaseExerciseWorkoutRound)this._workoutStep.Exercise).NbrReps.ToString());
 
