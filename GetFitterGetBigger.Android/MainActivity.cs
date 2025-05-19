@@ -5,13 +5,9 @@ using Android.App;
 using Android.Content.PM;
 using Android.OS;
 using Android.Views;
-using AndroidX.Annotations;
-using Olimpo;
 using Olimpo.NavigationManager;
 using System.Diagnostics;
-using Microsoft.Extensions.DependencyInjection;
 using Android.Content;
-using Android.OS;
 using System;
 
 namespace GetFitterGetBigger.Android;

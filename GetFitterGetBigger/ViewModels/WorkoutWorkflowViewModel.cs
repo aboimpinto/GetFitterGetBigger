@@ -195,9 +195,16 @@ public partial class WorkoutWorkflowViewModel :
             
         this._workoutSequence = [.. this._workflow.WorkoutRounds // Assign the result to the field
             .OrderBy(round => round.Order) // 1. Order rounds
-            .SelectMany(round => round.ExerciseWorkoutRound // 2. Flatten, keeping round and exercise info together
-                .Select(ex => new { Round = round, Exercise = ex })) 
-            .OrderBy(item => item.Round.Order) // 3. Ensure global order by Round first
+            .SelectMany(round => { // 2. Start flattening, but first, get the count of exercises for the current round
+                var exercisesInThisSpecificRound = round.ExerciseWorkoutRound.Length; // Get count of exercises in this round
+                return round.ExerciseWorkoutRound
+                    .Select(ex => new { // Create an intermediate anonymous object
+                        Round = round, // Keep the round object
+                        Exercise = ex, // Keep the exercise object
+                        TotalExercisesInThisRound = exercisesInThisSpecificRound // Store the count for this round
+                    });
+            })
+            .OrderBy(item => item.Round.Order) // 3. Ensure global order by Round first (using the 'Order' from the original WorkoutRounds)
             .ThenBy(item => item.Exercise switch // 4. Then ensure global order by Exercise Order within the round
             {
                 RepBaseExerciseWorkoutRound repEx => repEx.Order,
@@ -207,25 +214,27 @@ public partial class WorkoutWorkflowViewModel :
             })
             .Select((item, index) => new WorkoutStep( // 5. Project using the WorkoutStep constructor
                 WorkoutCaption: this._workflow.Title,
-                RoundIndex: item.Round.Order,
-                RoundInfo: $"Round {item.Round.Order}", // Use the round's order
-                SetInfo: item.Exercise switch // Use the exercise details, but the *global index* for Set number
+                RoundIndex: item.Round.Order, // Use the round's order from the original WorkoutRounds
+                RoundInfo: $"Round {item.Round.Order}",
+                ExercisesInRound: item.TotalExercisesInThisRound, // Use the calculated total exercises for this round
+                ExerciseIndex: 1,
+                SetInfo: item.Exercise switch
                 {
-                    RepBaseExerciseWorkoutRound repEx => $"Set {index + 1}", // index + 1 gives 1-based set number
-                    TimeBaseExerciseWorkoutRound timeEx => $"Set {index + 1}", // index + 1 gives 1-based set number
+                    RepBaseExerciseWorkoutRound repEx => $"Set {index + 1}", // index + 1 gives 1-based set number (overall exercise sequence)
+                    TimeBaseExerciseWorkoutRound timeEx => $"Set {index + 1}",
                     WeightedRepBaseExerciseWorkoutRound weightRepExercice => $"Set {index + 1}",
                     _ => $"Set {index + 1} | Unknown Exercise"
                 },
                 ExerciseInfo: item.Exercise switch
                 {
-                    RepBaseExerciseWorkoutRound repEx => $"{repEx.ExerciseType}", 
+                    RepBaseExerciseWorkoutRound repEx => $"{repEx.ExerciseType}",
                     TimeBaseExerciseWorkoutRound timeEx => $"{timeEx.ExerciseType}",
                     WeightedRepBaseExerciseWorkoutRound weightRepExercice => $"{weightRepExercice.ExerciseType}",
                     _ => $"Unknown Exercise"
                 },
-                Round: item.Round, // Pass the round object
+                Round: item.Round, // Pass the original round object
                 Exercise: item.Exercise // Pass the exercise object
-            ))]; // Execute the query and put results in a list
+            ))];
 
         this._workoutWorkflowStep = 0;
 
@@ -316,5 +325,7 @@ public record WorkoutStep(
     string RoundInfo,
     string SetInfo,
     string ExerciseInfo,
+    int ExercisesInRound,
+    int ExerciseIndex,
     WorkoutRounds Round,
     ExerciseWorkoutRound Exercise);

@@ -15,138 +15,89 @@
         </LinearGradientBrush>
     </Panel.Background>
 
-        <Border 
-          MaxWidth="390" 
-          Height="800"
-          Background="{StaticResource Slate800Brush}"
-          CornerRadius="24"
-          Padding="20" 
-          BorderBrush="{StaticResource Slate700Brush}"
-          BorderThickness="2"
-          HorizontalAlignment="Center" 
-          VerticalAlignment="Center"
-          ClipToBounds="True">
+    <Border 
+      Background="{StaticResource Slate800Brush}"
+      CornerRadius="24"
+      Padding="20" 
+      BorderBrush="{StaticResource Slate700Brush}"
+      BorderThickness="2"
+      HorizontalAlignment="Center" 
+      VerticalAlignment="Center"
+      ClipToBounds="True">
 
-          <DockPanel LastChildFill="True">
+      <DockPanel LastChildFill="True">
 
-            <StackPanel DockPanel.Dock="Top" Margin="0,0,0,24" Spacing="8">
-              <Grid ColumnDefinitions="* Auto">
-                <TextBlock 
-                  Text="{Binding WorkoutTitle}" 
-                  Classes="H1" 
-                  VerticalAlignment="Center"/>
+        <StackPanel DockPanel.Dock="Top" Margin="0 0 0 24" Spacing="8">
+          <Grid ColumnDefinitions="* Auto">
+            <TextBlock 
+              Text="{Binding WorkoutTitle}" 
+              Classes="H1" 
+              VerticalAlignment="Center"/>
 
-                <Button 
-                  Grid.Column="1" 
-                  Background="Transparent" 
-                  BorderThickness="0" 
-                  Foreground="{StaticResource Slate400Brush}" 
-                  ToolTip.Tip="Pause Workout" 
-                  Padding="0">
-
-                  <TextBlock 
-                    Text="❚❚" 
-                    FontSize="18" 
-                    VerticalAlignment="Center"/>
-                </Button>
-              </Grid>
-
-              <StackPanel Spacing="4">
-                <Grid ColumnDefinitions="*,Auto">
-                  <TextBlock 
-                    Text="{Binding RoundDescription}" 
-                    Classes="MutedText" 
-                    FontWeight="Medium"/>
-
-                  <TextBlock 
-                    Grid.Column="1" 
-                    Text="{Binding WorkoutTime}" 
-                    Classes="SmallMutedText" 
-                    Foreground="{StaticResource Sky400Brush}" 
-                    FontFamily="Consolas,Monospace"/>
-                </Grid>
-                
-                <ProgressBar 
-                  Value="{Binding RoundProgress}" 
-                  Minimum="0" 
-                  Maximum="100" 
-                  Height="10" 
-                  CornerRadius="5"
-                  Background="{StaticResource Slate700Brush}" 
-                  Foreground="{StaticResource Sky500Brush}"/>
-              </StackPanel>
+            <Button 
+              Grid.Column="1" 
+              Background="Transparent" 
+              BorderThickness="0" 
+              Foreground="{StaticResource Slate400Brush}" 
+              ToolTip.Tip="Pause Workout" 
+              Padding="0">
 
               <TextBlock 
-                Text="{Binding RoundExerciseSummary}" 
+                Text="❚❚" 
+                FontSize="18" 
+                VerticalAlignment="Center"/>
+            </Button>
+          </Grid>
+
+          <StackPanel Spacing="4">
+            <Grid ColumnDefinitions="* Auto">
+              <TextBlock 
+                Text="{Binding RoundDescription}" 
+                Classes="MutedText" 
+                FontWeight="Medium"/>
+
+              <TextBlock 
+                Grid.Column="1" 
+                Text="{Binding WorkoutTime}" 
                 Classes="SmallMutedText" 
-                TextTrimming="CharacterEllipsis"/>
-            </StackPanel>
+                Foreground="{StaticResource Sky400Brush}" 
+                FontFamily="Consolas,Monospace"/>
+            </Grid>
+            
+            <ProgressBar 
+              Value="{Binding RoundProgress}" 
+              Minimum="0" 
+              Maximum="100" 
+              Height="10" 
+              CornerRadius="5"
+              Background="{StaticResource Slate700Brush}" 
+              Foreground="{StaticResource Sky500Brush}"/>
+          </StackPanel>
 
-                <StackPanel DockPanel.Dock="Bottom" Margin="0,16,0,0" Spacing="12" VerticalAlignment="Bottom">
-                    <Button 
-                      Classes="Primary" 
-                      Content="Next Exercise  ➔" 
-                      Command="{Binding NextWorkoutSetCommand}" /> 
+          <TextBlock 
+            Text="{Binding RoundExerciseSummary}" 
+            Classes="SmallMutedText" 
+            TextTrimming="CharacterEllipsis"/>
+        </StackPanel>
 
-                    <Button 
-                      Classes="Secondary" 
-                      Content="Skip Exercise"
-                      Command="{Binding CancelWorkoutCommand}" />
-                </StackPanel>
+        <StackPanel DockPanel.Dock="Bottom" Margin="0,16,0,0" Spacing="12" VerticalAlignment="Bottom">
+          <Button 
+            Classes="Primary" 
+            Content="Next Exercise  ➔" 
+            Command="{Binding NextWorkoutSetCommand}" /> 
 
-                <ContentControl
-                  Margin="0 0 0 10"
-                  HorizontalAlignment="Stretch" 
-                  VerticalAlignment="Stretch"
-                  Content="{Binding CurrentWorkoutSet}" />
-            </DockPanel>
-        </Border>
-    </Panel>
+          <Button 
+            Classes="Secondary" 
+            Content="Skip Exercise"
+            Command="{Binding CancelWorkoutCommand}" />
+        </StackPanel>
 
-  <!-- <Grid RowDefinitions="Auto * Auto">
-    <TextBlock 
-      Grid.Row="0" 
-      Text="{Binding WorkoutTime}"
-      VerticalAlignment="Center"
-      HorizontalAlignment="Right"
-      FontSize="32"
-      FontWeight="Bold"
-      IsVisible="{Binding !IsWorkoutFinished}" />
-
-    <ContentControl
-      Grid.Row="1" 
-      Margin="10"
-      HorizontalAlignment="Stretch" 
-      VerticalAlignment="Stretch"
-      Content="{Binding CurrentWorkoutSet}" />
-
-    <Grid Grid.Row="2" ColumnDefinitions="* 10 *">
-      <Grid.IsVisible>
-        <MultiBinding Converter="{x:Static adc:BoolConverters.And}">
-            <Binding Path="!IsWorkoutFinished"/>
-            <Binding Path="!IsTimeBasedSet"/>
-        </MultiBinding>
-      </Grid.IsVisible>
-      <Button 
-        Grid.Column="0"
-        Content="Cancel"
-        Background="#047872"
-        Command="{Binding CancelWorkoutCommand}" />
-
-      <Button 
-        Grid.Column="2"
-        Content="{Binding NextButtonCaption}"
-        Background="#047872"
-        Command="{Binding NextWorkoutSetCommand}" />
-    </Grid>
-
-    <Button 
-        Grid.Row="2"
-        Content="Close Workout Summary"
-        Background="#047872"
-        Command="{Binding CloseWorkoutSummaryCommand}"
-        IsVisible="{Binding IsWorkoutFinished}" />
-
-  </Grid> -->
-  
+        <ContentControl
+          Margin="0 0 0 10"
+          HorizontalAlignment="Stretch" 
+          VerticalAlignment="Stretch"
+          Content="{Binding CurrentWorkoutSet}" />
+        </DockPanel>
+    </Border>
+  </Panel>  
 </UserControl>

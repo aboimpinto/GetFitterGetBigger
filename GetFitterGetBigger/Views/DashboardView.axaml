@@ -85,7 +85,6 @@
   
   <Panel Background="{StaticResource Slate900Brush}">
     <Border 
-      MaxWidth="390" Height="800"
       Background="{StaticResource Slate800Brush}"
       CornerRadius="24" BorderBrush="{StaticResource Slate700Brush}"
       BorderThickness="1"
