@@ -25,7 +25,8 @@ public record RepBaseExerciseWorkoutRound(
     int WorkoutSetId,
     ExerciseType ExerciseType,
     int NbrReps,
-    int Order) : ExerciseWorkoutRound;
+    int Order,
+    string[] CoachNotes) : ExerciseWorkoutRound;
 
 public record WeightedRepBaseExerciseWorkoutRound(
     int RepBaseExerciseWorkoutId,

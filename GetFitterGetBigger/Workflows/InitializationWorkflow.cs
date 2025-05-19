@@ -57,7 +57,7 @@ public class InitializationWorkflow :
     private void BuildExercisesImagesList()
     {
         this._appCaching.ExerciseImages.Add(ExerciseType.AirSquats, "/Assets/AirSquat.jpeg");
-        this._appCaching.ExerciseImages.Add(ExerciseType.Pushups, "avares://GetFitterGetBigger/Assets/Pushup.jpeg");
+        this._appCaching.ExerciseImages.Add(ExerciseType.Pushups, "/Assets/Pushup.jpeg");
         this._appCaching.ExerciseImages.Add(ExerciseType.Crunches, "/Assets/Crunch.jpeg");
     }
 
@@ -65,25 +65,25 @@ public class InitializationWorkflow :
     {
         var roundOneExerciseScheme = new List<ExerciseWorkoutRound>
         {
-            new RepBaseExerciseWorkoutRound(1, 1, ExerciseType.Pushups, 10, 1),
-            new RepBaseExerciseWorkoutRound(2, 1, ExerciseType.Crunches, 10, 2),
-            new RepBaseExerciseWorkoutRound(3, 1, ExerciseType.AirSquats, 10, 3),
+            new RepBaseExerciseWorkoutRound(1, 1, ExerciseType.Pushups, 10, 1, ["Body Straight Line", "Elbows Track Back", "Chest Towards Floor"]),
+            new RepBaseExerciseWorkoutRound(2, 1, ExerciseType.Crunches, 10, 2, ["Lift With Abs, Not Neck", "Shoulder Blades Off Floor", "Shoulder Blades Off Floor"]),
+            new RepBaseExerciseWorkoutRound(3, 1, ExerciseType.AirSquats, 10, 3, ["Keep chest up", "Weight in heels", "Go below parallel"]),
             new TimeBaseExerciseWorkoutRound(4, 1, ExerciseType.Rest, 5, 4)
         };
 
         var roundTwoExerciseScheme = new List<ExerciseWorkoutRound>
         {
-            new RepBaseExerciseWorkoutRound(4, 2, ExerciseType.Pushups, 10, 1),
-            new RepBaseExerciseWorkoutRound(5, 2, ExerciseType.Crunches, 10, 2),
-            new RepBaseExerciseWorkoutRound(6, 2, ExerciseType.AirSquats, 10, 3),
+            new RepBaseExerciseWorkoutRound(4, 2, ExerciseType.Pushups, 10, 1, ["Body Straight Line", "Elbows Track Back", "Chest Towards Floor"]),
+            new RepBaseExerciseWorkoutRound(5, 2, ExerciseType.Crunches, 10, 2, ["Lift With Abs, Not Neck", "Shoulder Blades Off Floor", "Shoulder Blades Off Floor"]),
+            new RepBaseExerciseWorkoutRound(6, 2, ExerciseType.AirSquats, 10, 3, ["Keep chest up", "Weight in heels", "Go below parallel"]),
             new TimeBaseExerciseWorkoutRound(7, 2, ExerciseType.Rest, 5, 4)
         };
 
         var roundThreeExerciseScheme = new List<ExerciseWorkoutRound>
         {
-            new RepBaseExerciseWorkoutRound(8, 3, ExerciseType.Pushups, 10, 1),
-            new RepBaseExerciseWorkoutRound(9, 3, ExerciseType.Crunches, 10, 2),
-            new RepBaseExerciseWorkoutRound(10, 3, ExerciseType.AirSquats, 10, 3),
+            new RepBaseExerciseWorkoutRound(8, 3, ExerciseType.Pushups, 10, 1, ["Body Straight Line", "Elbows Track Back", "Chest Towards Floor"]),
+            new RepBaseExerciseWorkoutRound(9, 3, ExerciseType.Crunches, 10, 2, ["Lift With Abs, Not Neck", "Shoulder Blades Off Floor", "Shoulder Blades Off Floor"]),
+            new RepBaseExerciseWorkoutRound(10, 3, ExerciseType.AirSquats, 10, 3, ["Keep chest up", "Weight in heels", "Go below parallel"]),
             new TimeBaseExerciseWorkoutRound(11, 3, ExerciseType.Rest, 5, 4)
         };
 
@@ -130,7 +130,7 @@ public class InitializationWorkflow :
 
         var roundThreeExerciseScheme = new List<ExerciseWorkoutRound>
         {
-            new RepBaseExerciseWorkoutRound(8, 3, ExerciseType.WalkingLudges, 50, 1),
+            new RepBaseExerciseWorkoutRound(8, 3, ExerciseType.WalkingLudges, 50, 1, []),
         };
 
         var roundScheme = new List<WorkoutRounds>
