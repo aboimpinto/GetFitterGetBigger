@@ -39,7 +39,7 @@ public partial class CountdownViewModel(IEventAggregator eventAggregator) :
                     this._countdownSubscription.Dispose();
                     this.CountdownString = string.Empty;
 
-                    await this._eventAggregator.PublishAsync(new RestFinisedEvent());
+                    await this._eventAggregator.PublishAsync(new InitialCountDownFinishedEvent());
                 }
                 else if (this._remainingSeconds == 1)
                 {

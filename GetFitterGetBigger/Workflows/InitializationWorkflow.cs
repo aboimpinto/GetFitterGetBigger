@@ -68,7 +68,7 @@ public class InitializationWorkflow :
             new RepBaseExerciseWorkoutRound(1, 1, ExerciseType.Pushups, 10, 1, ["Body Straight Line", "Elbows Track Back", "Chest Towards Floor"]),
             new RepBaseExerciseWorkoutRound(2, 1, ExerciseType.Crunches, 10, 2, ["Lift With Abs, Not Neck", "Shoulder Blades Off Floor", "Control The Movement"]),
             new RepBaseExerciseWorkoutRound(3, 1, ExerciseType.AirSquats, 10, 3, ["Keep chest up", "Weight in heels", "Go below parallel"]),
-            new TimeBaseExerciseWorkoutRound(4, 1, ExerciseType.Rest, 30, 4, [])
+            new TimeBaseExerciseWorkoutRound(4, 1, ExerciseType.Rest, 5, 4, [])
         };
 
         var roundTwoExerciseScheme = new List<ExerciseWorkoutRound>

@@ -11,7 +11,9 @@ using GetFitterGetBigger.Model;
 namespace GetFitterGetBigger.ViewModels;
 
 public partial class TimeBaseExerciseViewModel :
-    ViewModelBase, ILoadableViewModel
+    ViewModelBase,
+    ILoadableViewModel,
+    ISkipableExercise
 {
     private readonly WorkoutStep _workoutStep;
     private readonly IEventAggregator _eventAggregator;
@@ -70,6 +72,12 @@ public partial class TimeBaseExerciseViewModel :
                 }
             });
 
+        return Task.CompletedTask;
+    }
+
+    public Task SkipIt()
+    {
+        this._timerSubscription.Dispose();
         return Task.CompletedTask;
     }
 }

@@ -10,14 +10,15 @@ using Olimpo;
 using Olimpo.NavigationManager;
 using GetFitterGetBigger.Events;
 using GetFitterGetBigger.Model;
+using Avalonia.Controls.Templates;
 
 namespace GetFitterGetBigger.ViewModels;
 
 public partial class WorkoutWorkflowViewModel :
     ViewModelBase,
     ILoadableViewModel,
-    IHandle<TimedSetFinishedEvent>,
-    IHandleAsync<RestFinisedEvent>
+    IHandleAsync<TimedSetFinishedEvent>,
+    IHandleAsync<InitialCountDownFinishedEvent>
 {
     // Define a type for the intermediate result
     public record RoundExercise(WorkoutRounds Round, ExerciseWorkoutRound Exercise);
@@ -43,7 +44,7 @@ public partial class WorkoutWorkflowViewModel :
     private ViewModelBase _currentWorkoutSet;
     
     [ObservableProperty]
-    private string _nextButtonCaption = "Next >";
+    private string _nextButtonCaption = "Next Exercise ➔";
 
     [ObservableProperty]
     private bool _isWorkoutFinished;
@@ -64,7 +65,7 @@ public partial class WorkoutWorkflowViewModel :
     private string _workoutTitle = string.Empty;
 
     [ObservableProperty]
-    private bool _isNextExerciceVisible = true;
+    private bool _isNextExerciseVisible = true;
 
     public WorkoutWorkflowViewModel(
         IAppCaching appCaching,
@@ -83,17 +84,17 @@ public partial class WorkoutWorkflowViewModel :
         this._workoutId = int.Parse(parameters["WorkoutId"].ToString());
 
         this.IsWorkoutFinished = false;
-        this.StartWorkoutTimer();
+        this.IsNextExerciseVisible = false;
+        this.WorkoutTime = string.Empty;
+        this.RoundExerciseSummary = string.Empty;
+        this.RoundDescription = string.Empty;
+        this.WorkoutTime = string.Empty;
+        this.WorkoutTitle = string.Empty;
+        this._workoutWorkflowStep = 0;
 
-        await this.StartWorkoutWorkflow();
-        this.UpdateRoundProgress();
-
-        if (this._workoutSequence.Count > 0)
-        {
-            await this.LoadWorkoutSetExercice(0);
-        }
-
-        return;
+        var countdownViewModel = new CountdownViewModel(this._eventAggregator);
+        this.CurrentWorkoutSet = countdownViewModel;
+        await countdownViewModel.LoadAsync();
     }
     
     [RelayCommand]
@@ -117,15 +118,21 @@ public partial class WorkoutWorkflowViewModel :
             return;
         }
 
+        if (this.CurrentWorkoutSet is ISkipableExercise skipableViewModel)
+        {
+            await skipableViewModel.SkipIt();
+        }
+
         this._workoutWorkflowStep++;
 
         this.NextButtonCaption = (this._workoutWorkflowStep == this._workoutSequence.Count - 1) ?
             "Finish" :
-            "Next >";
+            "Next Exercise ➔";
 
         if (this._workoutWorkflowStep >= this._workoutSequence.Count)
         {
             // the end of the Workout is reached. Stop the watch
+            this.IsNextExerciseVisible = false;
             this._workoutTimeLoop.Dispose();
             this.IsWorkoutFinished = true;
 
@@ -283,11 +290,6 @@ public partial class WorkoutWorkflowViewModel :
                     _ => "Unknown Exercise"
                 }))
             );
-
-        this.IsNextExerciceVisible = false;
-        var countdownViewModel = new CountdownViewModel(this._eventAggregator);
-        this.CurrentWorkoutSet = countdownViewModel;
-        await countdownViewModel.LoadAsync();
     }
 
     private async Task<ViewModelBase> LoadWorkoutSetExercice(int index)
@@ -313,13 +315,24 @@ public partial class WorkoutWorkflowViewModel :
         return viewModelBase;
     }
 
-    public async Task HandleAsync(RestFinisedEvent message)
+    public async Task HandleAsync(InitialCountDownFinishedEvent message)
     {
-        this.IsNextExerciceVisible = true;
+        this.IsWorkoutFinished = false;
+        this.StartWorkoutTimer();
+
+        await this.StartWorkoutWorkflow();
+        this.UpdateRoundProgress();
+
+        if (this._workoutSequence.Count > 0)
+        {
+            await this.LoadWorkoutSetExercice(0);
+        }
+
+        this.IsNextExerciseVisible = true;
         this.CurrentWorkoutSet = await this.LoadWorkoutSetExercice(this._workoutWorkflowStep);
     }
 
-    public void Handle(TimedSetFinishedEvent message)
+    public async Task HandleAsync(TimedSetFinishedEvent message)
     {
         if (this.IsWorkoutFinished)
         {
@@ -330,11 +343,12 @@ public partial class WorkoutWorkflowViewModel :
 
         this.NextButtonCaption = (this._workoutWorkflowStep == this._workoutSequence.Count - 1) ?
             "Finish" :
-            "Next >";
+            "Next Exercise ➔";
 
         if (this._workoutWorkflowStep >= this._workoutSequence.Count)
         {
             // the end of the Workout is reached. Stop the watch
+            this.IsNextExerciseVisible = false;
             this._workoutTimeLoop.Dispose();
             this.IsWorkoutFinished = true;
 

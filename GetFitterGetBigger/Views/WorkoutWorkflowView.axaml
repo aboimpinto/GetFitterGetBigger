@@ -74,12 +74,18 @@
             TextTrimming="CharacterEllipsis"/>
         </StackPanel>
 
-        <StackPanel DockPanel.Dock="Bottom" Margin="0,16,0,0" Spacing="12" VerticalAlignment="Bottom">
+        <StackPanel DockPanel.Dock="Bottom" Margin="0 16 0 0" Spacing="12" VerticalAlignment="Bottom">
           <Button 
             Classes="Primary" 
-            Content="Next Exercise  ➔" 
+            Content="{Binding NextButtonCaption}" 
             Command="{Binding NextWorkoutSetCommand}"
-            IsVisible="{Binding IsNextExerciceVisible}" /> 
+            IsVisible="{Binding IsNextExerciseVisible}" /> 
+
+            <Button 
+              Classes="Primary" 
+              Content="Finish Workout" 
+              Command="{Binding CloseWorkoutSummaryCommand}"
+              IsVisible="{Binding IsWorkoutFinished}" /> 
         </StackPanel>
 
         <ContentControl

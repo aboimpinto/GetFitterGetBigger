@@ -1,6 +1,6 @@
 namespace GetFitterGetBigger.Events;
 
-public class RestFinisedEvent
+public class InitialCountDownFinishedEvent
 {
     
 }
