@@ -91,6 +91,10 @@ public partial class WorkoutWorkflowViewModel :
         this.WorkoutTime = string.Empty;
         this.WorkoutTitle = string.Empty;
         this._workoutWorkflowStep = 0;
+        this._totalRounds = 0;
+        this._seconds = 0;
+        this._minutes = 0;
+        this._hour = 0;
 
         var countdownViewModel = new CountdownViewModel(this._eventAggregator);
         this.CurrentWorkoutSet = countdownViewModel;
