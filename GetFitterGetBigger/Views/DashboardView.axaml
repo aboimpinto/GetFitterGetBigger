@@ -68,13 +68,6 @@
         <Setter Property="Margin" Value="0,8,0,0"/>
     </Style>
 
-    <Style Selector="TextBlock.ShortcutButtonIcon">
-      <Setter Property="FontSize" Value="28"/> 
-      <Setter Property="FontFamily" Value="Segoe MDL2 Assets"/> 
-      <Setter Property="TextAlignment" Value="Center"/>
-      <Setter Property="Foreground" Value="{StaticResource Sky400Brush}"/>
-    </Style>
-
     <Style Selector="TextBlock.RepCount">
       <Setter Property="FontSize" Value="28"/> <Setter Property="FontWeight" Value="SemiBold"/>
       <Setter Property="Foreground" Value="{StaticResource Sky400Brush}"/>

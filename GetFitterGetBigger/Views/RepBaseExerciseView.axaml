@@ -7,6 +7,23 @@
   mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
   x:Class="GetFitterGetBigger.Views.RepBaseExerciseView">
   
+  <UserControl.Styles>
+    <Style Selector="TextBlock.ExerciseTitle">
+      <Setter Property="FontSize" Value="40"/>
+      <Setter Property="FontWeight" Value="ExtraBold"/>
+      <Setter Property="Foreground" Value="{StaticResource WhiteBrush}"/>
+      <Setter Property="TextWrapping" Value="Wrap"/>
+      <Setter Property="TextAlignment" Value="Center"/>
+    </Style>
+
+    <Style Selector="TextBlock.RepCount">
+      <Setter Property="FontSize" Value="28"/>
+      <Setter Property="FontWeight" Value="SemiBold"/>
+      <Setter Property="Foreground" Value="{StaticResource Sky400Brush}"/>
+      <Setter Property="TextAlignment" Value="Center"/>
+    </Style>
+  </UserControl.Styles> 
+
   <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Margin="0,0,0,10">
     <StackPanel Spacing="20" HorizontalAlignment="Stretch">
         

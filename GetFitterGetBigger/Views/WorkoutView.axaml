@@ -73,11 +73,6 @@
       <Setter Property="HorizontalAlignment" Value="Stretch"/>
       <Setter Property="Cursor" Value="Hand"/>
     </Style>
-
-    <Style Selector="TextBlock.Icon">
-      <Setter Property="FontFamily" Value="Segoe MDL2 Assets"/>
-      <Setter Property="VerticalAlignment" Value="Center"/>
-    </Style>
   </UserControl.Styles>
 
   <Panel>
