@@ -82,10 +82,11 @@
     </Style>
   </UserControl.Styles>
   
-  <Panel Background="{StaticResource Slate900Brush}">
+  <Panel>
     <Border 
       Background="{StaticResource Slate800Brush}"
-      CornerRadius="24" BorderBrush="{StaticResource Slate700Brush}"
+      CornerRadius="24" 
+      BorderBrush="{StaticResource Slate700Brush}"
       BorderThickness="1"
       HorizontalAlignment="Stretch" 
       VerticalAlignment="Stretch"
@@ -93,8 +94,8 @@
 
       <DockPanel LastChildFill="True">
 
-        <Border DockPanel.Dock="Top" Padding="15,10" Background="{StaticResource Slate800Brush}">
-          <Grid ColumnDefinitions="Auto,*">
+        <Border DockPanel.Dock="Top" Padding="15 10" Background="{StaticResource Slate800Brush}" CornerRadius="24" >
+          <Grid ColumnDefinitions="Auto *">
             <Button Classes="HamburgerButton" ToolTip.Tip="Open Menu"/>
             <TextBlock 
               Grid.Column="1" Text="Get Fitter Get Bigger"
@@ -195,7 +196,7 @@
               Foreground="{StaticResource Slate100Brush}" 
               Margin="0,15,0,10"/>
 
-            <Grid ColumnDefinitions="* * *" RowDefinitions="Auto Auto">  <!-- Gap="12" -->
+            <Grid ColumnDefinitions="* * *" RowDefinitions="Auto Auto"> 
               <Button 
                 Classes="ShortcutButton" 
                 Grid.Row="0" 
@@ -335,7 +336,7 @@
                   Cursor="Hand"/>
               </StackPanel>
             </Border>
-          </StackPanel>
+          </StackPanel> 
         </ScrollViewer>
       </DockPanel>
     </Border>

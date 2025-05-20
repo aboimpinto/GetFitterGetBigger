@@ -9,19 +9,12 @@
   x:Class="GetFitterGetBigger.Views.WorkoutWorkflowView">
 
   <Panel>
-    <Panel.Background>
-      <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
-        <GradientStop Color="{StaticResource Slate900Color}" Offset="0.0"/>
-        <GradientStop Color="{StaticResource Slate800Color}" Offset="1.0"/>
-      </LinearGradientBrush>
-    </Panel.Background>
-
     <Border 
       Background="{StaticResource Slate800Brush}"
       CornerRadius="24"
-      Padding="20" 
+      Padding="15 10" 
       BorderBrush="{StaticResource Slate700Brush}"
-      BorderThickness="2"
+      BorderThickness="1"
       HorizontalAlignment="Stretch" 
       VerticalAlignment="Stretch"
       ClipToBounds="True">
