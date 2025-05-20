@@ -5,18 +5,19 @@ using System.Reactive.Linq;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using GetFitterGetBigger.Model;
+using ReactiveUI;
 using Olimpo;
 using Olimpo.NavigationManager;
-using ReactiveUI;
 using GetFitterGetBigger.Events;
+using GetFitterGetBigger.Model;
 
 namespace GetFitterGetBigger.ViewModels;
 
 public partial class WorkoutWorkflowViewModel :
     ViewModelBase,
     ILoadableViewModel,
-    IHandle<TimedSetFinishedEvent>
+    IHandle<TimedSetFinishedEvent>,
+    IHandleAsync<RestFinisedEvent>
 {
     // Define a type for the intermediate result
     public record RoundExercise(WorkoutRounds Round, ExerciseWorkoutRound Exercise);
@@ -62,6 +63,9 @@ public partial class WorkoutWorkflowViewModel :
     [ObservableProperty]
     private string _workoutTitle = string.Empty;
 
+    [ObservableProperty]
+    private bool _isNextExerciceVisible = true;
+
     public WorkoutWorkflowViewModel(
         IAppCaching appCaching,
         INavigationManager navigationManager,
@@ -92,7 +96,6 @@ public partial class WorkoutWorkflowViewModel :
         return;
     }
     
-
     [RelayCommand]
     private async Task CancelWorkout()
     {
@@ -146,6 +149,11 @@ public partial class WorkoutWorkflowViewModel :
 
     private void UpdateRoundProgress()
     {
+        if (this._workoutWorkflowStep >= this._workoutSequence.Count)
+        {
+            return;
+        }
+
         decimal roundProgress = (this._workoutSequence[this._workoutWorkflowStep].RoundIndex * 100) / this._totalRounds;
         this.RoundProgress = (int)roundProgress;
 
@@ -276,7 +284,10 @@ public partial class WorkoutWorkflowViewModel :
                 }))
             );
 
-        this.CurrentWorkoutSet = await this.LoadWorkoutSetExercice(this._workoutWorkflowStep);
+        this.IsNextExerciceVisible = false;
+        var countdownViewModel = new CountdownViewModel(this._eventAggregator);
+        this.CurrentWorkoutSet = countdownViewModel;
+        await countdownViewModel.LoadAsync();
     }
 
     private async Task<ViewModelBase> LoadWorkoutSetExercice(int index)
@@ -300,6 +311,12 @@ public partial class WorkoutWorkflowViewModel :
         }
 
         return viewModelBase;
+    }
+
+    public async Task HandleAsync(RestFinisedEvent message)
+    {
+        this.IsNextExerciceVisible = true;
+        this.CurrentWorkoutSet = await this.LoadWorkoutSetExercice(this._workoutWorkflowStep);
     }
 
     public void Handle(TimedSetFinishedEvent message)

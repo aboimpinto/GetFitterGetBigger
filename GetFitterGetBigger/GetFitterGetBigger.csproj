@@ -20,6 +20,7 @@
     <EmbeddedResource Include="Assets\AirSquat.jpeg" />
     <EmbeddedResource Include="Assets\Pushup.jpeg" />
     <EmbeddedResource Include="Assets\Crunch.jpeg" />
+    <EmbeddedResource Include="Assets\Resting.jpeg" />
   </ItemGroup>
 
   <ItemGroup>

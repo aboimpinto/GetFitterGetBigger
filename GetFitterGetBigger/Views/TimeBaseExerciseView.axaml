@@ -6,7 +6,138 @@
   mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
   x:Class="GetFitterGetBigger.Views.TimeBaseExerciseView">
 
- <Grid RowDefinitions="50 50 50 50 50 50 *">
+  <!-- 
+  <UserControl.Styles>
+    <Style Selector="Border.GlassCard">
+      <Setter Property="Background" Value="#80334155" /> 
+      <Setter Property="BorderBrush" Value="#99475569" /> 
+      <Setter Property="BorderThickness" Value="1"/>
+      <Setter Property="CornerRadius" Value="12"/>
+    </Style>
+
+    <Style Selector="TextBlock.HeaderTitle">
+      <Setter Property="FontSize" Value="20"/>
+      <Setter Property="FontWeight" Value="Bold"/>
+      <Setter Property="Foreground" Value="{StaticResource Sky400Brush}"/>
+    </Style>
+
+    <Style Selector="TextBlock.HeaderDetail">
+      <Setter Property="FontSize" Value="14"/>
+      <Setter Property="FontWeight" Value="Medium"/>
+      <Setter Property="Foreground" Value="{StaticResource Slate300Brush}"/>
+    </Style>
+
+    <Style Selector="TextBlock.HeaderOverallTime">
+      <Setter Property="FontSize" Value="12"/>
+      <Setter Property="FontFamily" Value="Consolas, Monospace"/> 
+      <Setter Property="Foreground" Value="{StaticResource Sky400Brush}"/>
+    </Style>
+
+    <Style Selector="TextBlock.HeaderNextExercise">
+      <Setter Property="FontSize" Value="12"/>
+      <Setter Property="Foreground" Value="{StaticResource Slate400Brush}"/>
+      <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+    </Style>
+
+    <Style Selector="TextBlock.RestTitle">
+      <Setter Property="FontSize" Value="56"/> 
+      <Setter Property="FontWeight" Value="ExtraBold"/>
+      <Setter Property="Foreground" Value="{StaticResource Sky400Brush}"/>
+      <Setter Property="TextAlignment" Value="Center"/>
+    </Style>
+
+    <Style Selector="TextBlock.RestTimer">
+      <Setter Property="FontSize" Value="72"/> 
+      <Setter Property="FontFamily" Value="Consolas, Monospace"/>
+      <Setter Property="FontWeight" Value="Bold"/>
+      <Setter Property="Foreground" Value="{StaticResource WhiteBrush}"/>
+      <Setter Property="TextAlignment" Value="Center"/>
+    </Style>
+
+    <Style Selector="TextBlock.RestSubtitle">
+      <Setter Property="FontSize" Value="14"/>
+      <Setter Property="Foreground" Value="{StaticResource Slate300Brush}"/>
+      <Setter Property="TextAlignment" Value="Center"/>
+    </Style>
+
+    <Style Selector="TextBlock.MotivationalText">
+      <Setter Property="FontSize" Value="12"/>
+      <Setter Property="Foreground" Value="{StaticResource Slate400Brush}"/>
+      <Setter Property="FontStyle" Value="Italic"/>
+      <Setter Property="TextAlignment" Value="Center"/>
+      <Setter Property="TextWrapping" Value="Wrap"/>
+    </Style>
+
+    <Style Selector="Button.HeaderButton">
+      <Setter Property="Background" Value="{StaticResource TransparentBrush}"/>
+      <Setter Property="Foreground" Value="{StaticResource Slate400Brush}"/>
+      <Setter Property="BorderThickness" Value="0"/>
+      <Setter Property="Padding" Value="4"/>
+      <Setter Property="VerticalAlignment" Value="Center"/>
+      <Setter Property="Cursor" Value="Hand"/>
+    </Style>
+
+    <Style Selector="Button.PrimaryAction">
+      <Setter Property="Background" Value="{StaticResource Sky500Brush}"/>
+      <Setter Property="Foreground" Value="{StaticResource WhiteBrush}"/>
+      <Setter Property="FontSize" Value="18"/> 
+      <Setter Property="FontWeight" Value="SemiBold"/>
+      <Setter Property="Padding" Value="16,14"/> 
+      <Setter Property="CornerRadius" Value="12"/>
+      <Setter Property="HorizontalAlignment" Value="Stretch"/>
+      <Setter Property="Cursor" Value="Hand"/>
+    </Style>
+
+    <Style Selector="Button.SecondaryAction">
+      <Setter Property="Background" Value="{StaticResource Slate600Brush}"/>
+      <Setter Property="Foreground" Value="{StaticResource Slate200Brush}"/>
+      <Setter Property="FontSize" Value="16"/> 
+      <Setter Property="FontWeight" Value="Medium"/>
+      <Setter Property="Padding" Value="12,10"/> 
+      <Setter Property="CornerRadius" Value="12"/>
+      <Setter Property="HorizontalAlignment" Value="Stretch"/>
+      <Setter Property="Cursor" Value="Hand"/>
+    </Style>
+
+    <Style Selector="TextBlock.Icon">
+      <Setter Property="FontFamily" Value="Segoe MDL2 Assets"/> 
+      <Setter Property="VerticalAlignment" Value="Center"/>
+    </Style>
+  </UserControl.Styles> 
+  -->
+
+  <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+    <StackPanel Spacing="4" HorizontalAlignment="Stretch" VerticalAlignment="Center" TextBlock.TextAlignment="Center">
+      <TextBlock 
+        Text="REST" 
+        Classes="RestTitle" /> 
+      <TextBlock 
+        Text="{Binding Time}" 
+        Classes="RestTimer" /> 
+      <TextBlock 
+        Text="Take a breather. Stay focused." 
+        Classes="RestSubtitle" /> 
+        
+      <Border 
+        Classes="GlassCard" 
+        Width="280" 
+        Height="210" > 
+        <Image 
+          Source="/Assets/Resting.jpeg"
+          Stretch="UniformToFill"
+          HorizontalAlignment="Center" 
+          VerticalAlignment="Center"/>
+      </Border>
+        
+      <TextBlock 
+        Text="&quot;The body achieves what the mind believes.&quot;" 
+        Classes="MotivationalText" 
+        Padding="0,0,16,16"/> 
+    </StackPanel>
+  </ScrollViewer>
+
+
+ <!-- <Grid RowDefinitions="50 50 50 50 50 50 *">
     <TextBlock 
       Grid.Row="1" 
       Text="{Binding WorkoutName}"
@@ -46,5 +177,5 @@
       HorizontalAlignment="Center"
       FontSize="28"
       FontWeight="Bold" />
-  </Grid>
+  </Grid> -->
 </UserControl>
