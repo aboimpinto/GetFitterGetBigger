@@ -20,6 +20,7 @@
   <Color x:Key="Green500Color">#22C55E</Color>
   <Color x:Key="Green400Color">#4ADE80</Color>
   <Color x:Key="Purple500Color">#A855F7</Color>
+  <Color x:Key="Purple400Color">#C084FC</Color>
   <Color x:Key="Orange400Color">#FB923C</Color>
   <Color x:Key="Red400Color">#F87171</Color>
   <Color x:Key="Yellow400Color">#FACC15</Color>
@@ -44,6 +45,7 @@
   <SolidColorBrush x:Key="Orange500Brush" Color="{StaticResource Orange500Color}"/>
   <SolidColorBrush x:Key="Green500Brush" Color="{StaticResource Green500Color}"/>
   <SolidColorBrush x:Key="Purple500Brush" Color="{StaticResource Purple500Color}"/>
+  <SolidColorBrush x:Key="Purple400Brush" Color="{StaticResource Purple400Color}"/>
   <SolidColorBrush x:Key="Green400Brush" Color="{StaticResource Green400Color}"/>
   <SolidColorBrush x:Key="Orange400Brush" Color="{StaticResource Orange400Color}"/>
   <SolidColorBrush x:Key="Red400Brush" Color="{StaticResource Red400Color}"/>
