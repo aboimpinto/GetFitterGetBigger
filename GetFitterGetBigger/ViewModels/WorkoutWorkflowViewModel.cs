@@ -224,7 +224,8 @@ public partial class WorkoutWorkflowViewModel :
                         RepBaseExerciseWorkoutRound repEx => repEx.Order,
                         TimeBaseExerciseWorkoutRound timeEx => timeEx.Order,
                         WeightedRepBaseExerciseWorkoutRound weightRepExercice => weightRepExercice.Order,
-                        _ => int.MaxValue // Fallback for unknown types, though ideally types are exhaustive
+                        RestExerciseWorkoutRound restEx => restEx.Order, // Added RestExerciseWorkoutRound
+                        _ => int.MaxValue // Fallback for unknown types
                     })
                     // Select each exercise along with its 0-based index *within this ordered round*
                     .Select((ex, indexInRound) => new { // 'indexInRound' is the 0-based index within this round's exercises
@@ -234,15 +235,13 @@ public partial class WorkoutWorkflowViewModel :
                         LocalExerciseIndex = indexInRound + 1     // Calculate 1-based exercise index within this round
                     });
             })
-            // The items are now anonymous objects containing Round, Exercise, TotalExercisesInThisRound, and LocalExerciseIndex.
-            // The sequence from SelectMany is ordered by round (from step 1), and within each round, exercises are ordered (from the inner OrderBy).
-            // These next OrderBy/ThenBy calls ensure the final global ordering is strictly enforced before the final projection.
             .OrderBy(item => item.Round.Order) // 3. Ensure global order by Round first
             .ThenBy(item => item.Exercise switch // 4. Then ensure global order by Exercise Order within the round
             {
                 RepBaseExerciseWorkoutRound repEx => repEx.Order,
                 TimeBaseExerciseWorkoutRound timeEx => timeEx.Order,
                 WeightedRepBaseExerciseWorkoutRound weightRepExercice => weightRepExercice.Order,
+                RestExerciseWorkoutRound restEx => restEx.Order, // Added RestExerciseWorkoutRound
                 _ => int.MaxValue
             })
             .Select((item, globalIndex) => new WorkoutStep( // 5. Project using the WorkoutStep constructor
@@ -250,20 +249,22 @@ public partial class WorkoutWorkflowViewModel :
                 RoundIndex: item.Round.Order, // Use the round's order from the original WorkoutRounds
                 RoundInfo: $"Round {item.Round.Order}",
                 ExercisesInRound: item.TotalExercisesInThisRound, // Use the calculated total exercises for this round
-                ExerciseIndex: item.LocalExerciseIndex, // <<<< Use the calculated 1-based index of the exercise within its round
+                ExerciseIndex: item.LocalExerciseIndex, // Use the calculated 1-based index of the exercise within its round
                 SetInfo: item.Exercise switch
                 {
                     // globalIndex + 1 gives 1-based set number (overall exercise sequence in the entire workout)
                     RepBaseExerciseWorkoutRound repEx => $"Set {globalIndex + 1}",
                     TimeBaseExerciseWorkoutRound timeEx => $"Set {globalIndex + 1}",
                     WeightedRepBaseExerciseWorkoutRound weightRepExercice => $"Set {globalIndex + 1}",
+                    RestExerciseWorkoutRound restEx => $"Set {globalIndex + 1}", // Added RestExerciseWorkoutRound
                     _ => $"Set {globalIndex + 1} | Unknown Exercise"
                 },
                 ExerciseInfo: item.Exercise switch
                 {
                     RepBaseExerciseWorkoutRound repEx => $"{repEx.ExerciseType}",
-                    TimeBaseExerciseWorkoutRound timeEx => $"{timeEx.ExerciseType}",
+                    TimeBaseExerciseWorkoutRound timeEx => $"{timeEx.ExerciseType}", // Assuming TimeBaseExerciseWorkoutRound has an ExerciseType for its info
                     WeightedRepBaseExerciseWorkoutRound weightRepExercice => $"{weightRepExercice.ExerciseType}",
+                    RestExerciseWorkoutRound _ => "REST", // Added RestExerciseWorkoutRound, specific output "REST"
                     _ => $"Unknown Exercise"
                 },
                 Round: item.Round, // Pass the original round object
@@ -272,8 +273,9 @@ public partial class WorkoutWorkflowViewModel :
                 {
                     RepBaseExerciseWorkoutRound repEx => repEx.CoachNotes,
                     WeightedRepBaseExerciseWorkoutRound weightedRepEx => weightedRepEx.CoachNotes,
-                    TimeBaseExerciseWorkoutRound timeEx => timeEx.CoacheNotes, // Using "CoacheNotes" as per your model for this type
-                    _ => [] // Default to an empty array if the type is unknown or doesn't have coach notes defined in this switch
+                    TimeBaseExerciseWorkoutRound timeEx => timeEx.CoacheNotes, // Using "CoacheNotes" as per your model
+                    RestExerciseWorkoutRound restEx => restEx.CoacheNotes, // Added RestExerciseWorkoutRound, using "CoacheNotes"
+                    _ => [] // Default to an empty array
                 }
             ))];
 
@@ -304,12 +306,15 @@ public partial class WorkoutWorkflowViewModel :
         ViewModelBase viewModelBase = workoutStep.Exercise switch
         {
             RepBaseExerciseWorkoutRound => new RepBaseExerciseViewModel(workoutStep, this._appCaching),
+            RestExerciseWorkoutRound => new RestViewModel(workoutStep, this._eventAggregator),
             TimeBaseExerciseWorkoutRound => new TimeBaseExerciseViewModel(workoutStep, this._eventAggregator),
             WeightedRepBaseExerciseWorkoutRound => new WeightedRepBaseExerciseViewModel(workoutStep),
             _ => throw new InvalidOperationException()
         };
 
-        this.IsTimeBasedSet = viewModelBase is TimeBaseExerciseViewModel;
+        this.IsTimeBasedSet =
+            viewModelBase is TimeBaseExerciseViewModel ||
+             viewModelBase is RestViewModel;
 
         if (viewModelBase is ILoadableViewModel model)
         {

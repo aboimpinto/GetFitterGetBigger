@@ -46,6 +46,13 @@ public record TimeBaseExerciseWorkoutRound(
     int Order,
     string[] CoacheNotes) : ExerciseWorkoutRound;
 
+public record RestExerciseWorkoutRound(
+    int TimeBaseExerciseWorkoutId,
+    int WorkoutSetId,
+    int TimeInSeconds,
+    int Order,
+    string[] CoacheNotes) : ExerciseWorkoutRound;
+
 public enum ExerciseType
 {
     Rest,

@@ -1,0 +1,115 @@
+<UserControl 
+  xmlns="https://github.com/avaloniaui"
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+  xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+  xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+  mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+  x:Class="GetFitterGetBigger.Views.RestView">
+
+  <UserControl.Styles>
+    <Style Selector="TextBlock.HeaderTitle">
+      <Setter Property="FontSize" Value="20"/>
+      <Setter Property="FontWeight" Value="Bold"/>
+      <Setter Property="Foreground" Value="{StaticResource Sky400Brush}"/>
+    </Style>
+
+    <Style Selector="TextBlock.HeaderDetail">
+      <Setter Property="FontSize" Value="14"/>
+      <Setter Property="FontWeight" Value="Medium"/>
+      <Setter Property="Foreground" Value="{StaticResource Slate300Brush}"/>
+    </Style>
+
+    <Style Selector="TextBlock.HeaderOverallTime">
+      <Setter Property="FontSize" Value="12"/>
+      <Setter Property="FontFamily" Value="Consolas, Monospace"/> 
+      <Setter Property="Foreground" Value="{StaticResource Sky400Brush}"/>
+    </Style>
+
+    <Style Selector="TextBlock.HeaderNextExercise">
+      <Setter Property="FontSize" Value="12"/>
+      <Setter Property="Foreground" Value="{StaticResource Slate400Brush}"/>
+      <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+    </Style>
+
+    <Style Selector="TextBlock.RestTitle">
+      <Setter Property="FontSize" Value="56"/> 
+      <Setter Property="FontWeight" Value="ExtraBold"/>
+      <Setter Property="Foreground" Value="{StaticResource Sky400Brush}"/>
+      <Setter Property="TextAlignment" Value="Center"/>
+    </Style>
+
+    <Style Selector="TextBlock.RestTimer">
+      <Setter Property="FontSize" Value="72"/> 
+      <Setter Property="FontFamily" Value="Consolas, Monospace"/>
+      <Setter Property="FontWeight" Value="Bold"/>
+      <Setter Property="Foreground" Value="{StaticResource WhiteBrush}"/>
+      <Setter Property="TextAlignment" Value="Center"/>
+    </Style>
+
+    <Style Selector="TextBlock.RestSubtitle">
+      <Setter Property="FontSize" Value="14"/>
+      <Setter Property="Foreground" Value="{StaticResource Slate300Brush}"/>
+      <Setter Property="TextAlignment" Value="Center"/>
+    </Style>
+
+    <Style Selector="TextBlock.MotivationalText">
+      <Setter Property="FontSize" Value="12"/>
+      <Setter Property="Foreground" Value="{StaticResource Slate400Brush}"/>
+      <Setter Property="FontStyle" Value="Italic"/>
+      <Setter Property="TextAlignment" Value="Center"/>
+      <Setter Property="TextWrapping" Value="Wrap"/>
+    </Style>
+
+    <Style Selector="Button.HeaderButton">
+      <Setter Property="Background" Value="{StaticResource TransparentBrush}"/>
+      <Setter Property="Foreground" Value="{StaticResource Slate400Brush}"/>
+      <Setter Property="BorderThickness" Value="0"/>
+      <Setter Property="Padding" Value="4"/>
+      <Setter Property="VerticalAlignment" Value="Center"/>
+      <Setter Property="Cursor" Value="Hand"/>
+    </Style>
+
+    <Style Selector="Button.PrimaryAction">
+      <Setter Property="Background" Value="{StaticResource Sky500Brush}"/>
+      <Setter Property="Foreground" Value="{StaticResource WhiteBrush}"/>
+      <Setter Property="FontSize" Value="18"/> 
+      <Setter Property="FontWeight" Value="SemiBold"/>
+      <Setter Property="Padding" Value="16,14"/> 
+      <Setter Property="CornerRadius" Value="12"/>
+      <Setter Property="HorizontalAlignment" Value="Stretch"/>
+      <Setter Property="Cursor" Value="Hand"/>
+    </Style>
+  </UserControl.Styles>
+
+
+  <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+    <StackPanel Spacing="4" HorizontalAlignment="Stretch" VerticalAlignment="Center" TextBlock.TextAlignment="Center">
+      <TextBlock 
+        Text="REST" 
+        Classes="RestTitle" /> 
+      <TextBlock 
+        Text="{Binding Time}" 
+        Classes="RestTimer" /> 
+      <TextBlock 
+        Text="Take a breather. Stay focused." 
+        Classes="RestSubtitle" /> 
+        
+      <Border 
+        Classes="GlassCard" 
+        Width="280" 
+        Height="210" > 
+        <Image 
+          Source="/Assets/Resting.jpeg"
+          Stretch="UniformToFill"
+          HorizontalAlignment="Center" 
+          VerticalAlignment="Center"/>
+      </Border>
+        
+      <TextBlock 
+        Text="&quot;The body achieves what the mind believes.&quot;" 
+        Classes="MotivationalText" 
+        Padding="0 0 16 16"/> 
+    </StackPanel>
+  </ScrollViewer>
+
+</UserControl>

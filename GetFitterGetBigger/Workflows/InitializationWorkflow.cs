@@ -39,12 +39,12 @@ public class InitializationWorkflow :
         var pushupsCrunchesAndSquatsWorkout = BuildPushupsCrunchesAndSquatsWorkout();
         this._appCaching.Workouts.Add(pushupsCrunchesAndSquatsWorkout);
 
-        var legsOne = BuildLegsOneWorkout();
-        this._appCaching.Workouts.Add(legsOne);
+        var legBurningOne = BuildLegsOneWorkout();
+        this._appCaching.Workouts.Add(legBurningOne);
 
         this._appCaching.WorkoutOfTheDay = pushupsCrunchesAndSquatsWorkout;
         this._appCaching.ActivePlan = "Get Stronger Plan";
-        this._appCaching.ActivePlanWorkout = legsOne;
+        this._appCaching.ActivePlanWorkout = legBurningOne;
 
         await Task.Delay(TimeSpan.FromSeconds(1));
 
@@ -68,7 +68,7 @@ public class InitializationWorkflow :
             new RepBaseExerciseWorkoutRound(1, 1, ExerciseType.Pushups, 10, 1, ["Body Straight Line", "Elbows Track Back", "Chest Towards Floor"]),
             new RepBaseExerciseWorkoutRound(2, 1, ExerciseType.Crunches, 10, 2, ["Lift With Abs, Not Neck", "Shoulder Blades Off Floor", "Control The Movement"]),
             new RepBaseExerciseWorkoutRound(3, 1, ExerciseType.AirSquats, 10, 3, ["Keep chest up", "Weight in heels", "Go below parallel"]),
-            new TimeBaseExerciseWorkoutRound(4, 1, ExerciseType.Rest, 5, 4, [])
+            new RestExerciseWorkoutRound(4, 1, 5, 4, [])
         };
 
         var roundTwoExerciseScheme = new List<ExerciseWorkoutRound>
@@ -76,7 +76,7 @@ public class InitializationWorkflow :
             new RepBaseExerciseWorkoutRound(4, 2, ExerciseType.Pushups, 10, 1, ["Body Straight Line", "Elbows Track Back", "Chest Towards Floor"]),
             new RepBaseExerciseWorkoutRound(5, 2, ExerciseType.Crunches, 10, 2, ["Lift With Abs, Not Neck", "Shoulder Blades Off Floor", "Control The Movement"]),
             new RepBaseExerciseWorkoutRound(6, 2, ExerciseType.AirSquats, 10, 3, ["Keep chest up", "Weight in heels", "Go below parallel"]),
-            new TimeBaseExerciseWorkoutRound(7, 2, ExerciseType.Rest, 5, 4, [])
+            new RestExerciseWorkoutRound(7, 2, 5, 4, [])
         };
 
         var roundThreeExerciseScheme = new List<ExerciseWorkoutRound>
@@ -84,7 +84,7 @@ public class InitializationWorkflow :
             new RepBaseExerciseWorkoutRound(8, 3, ExerciseType.Pushups, 10, 1, ["Body Straight Line", "Elbows Track Back", "Chest Towards Floor"]),
             new RepBaseExerciseWorkoutRound(9, 3, ExerciseType.Crunches, 10, 2, ["Lift With Abs, Not Neck", "Shoulder Blades Off Floor", "Control The Movement"]),
             new RepBaseExerciseWorkoutRound(10, 3, ExerciseType.AirSquats, 10, 3, ["Keep chest up", "Weight in heels", "Go below parallel"]),
-            new TimeBaseExerciseWorkoutRound(11, 3, ExerciseType.Rest, 5, 4, [])
+            new RestExerciseWorkoutRound(11, 3, 5, 4, [])
         };
 
         var roundScheme = new List<WorkoutRounds>
@@ -142,7 +142,7 @@ public class InitializationWorkflow :
 
         return new Workout(
             2,
-            "Legs I - Foundation",
+            "Leg burning I - Foundation",
             "Focus: Quads, Hamstrings, Glutes",
             "Part of your 8-week strength building program. Keep up the great work!",
             "Barbell, Weights and Dumbbells",
