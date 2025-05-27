@@ -92,66 +92,9 @@
                 </DataTemplate>
               </ItemsControl.ItemTemplate>
             </ItemsControl>
-
-            <!-- 
-            <StackPanel 
-              Spacing="2" 
-              HorizontalAlignment="Center"> 
-              <TextBlock Text="• Keep chest up" Classes="FormCueItem" HorizontalAlignment="Left"/>
-              <TextBlock Text="• Weight in heels" Classes="FormCueItem" HorizontalAlignment="Left"/>
-              <TextBlock Text="• Go below parallel" Classes="FormCueItem" HorizontalAlignment="Left"/>
-            </StackPanel> -->
           </StackPanel>
         </UniformGrid>
-
-
       </Border>
-      
-      
     </StackPanel>
   </ScrollViewer>
-
-
-  <!-- <Grid RowDefinitions="50 50 50 50 50 50 *">
-    <TextBlock 
-      Grid.Row="1" 
-      Text="{Binding WorkoutName}"
-      VerticalAlignment="Center"
-      HorizontalAlignment="Center"
-      FontSize="22"
-      FontWeight="Bold" />
-
-    <TextBlock 
-      Grid.Row="2" 
-      Text="{Binding RoundInfo}"
-      VerticalAlignment="Center"
-      HorizontalAlignment="Center"
-      FontSize="18"
-      FontWeight="Bold" />
-
-    <TextBlock 
-      Grid.Row="3" 
-      Text="{Binding SetInfo}"
-      VerticalAlignment="Center"
-      HorizontalAlignment="Center"
-      FontSize="18"
-      FontWeight="Bold" />
-
-    <TextBlock 
-      Grid.Row="4" 
-      Text="{Binding ExerciseInfo}"
-      VerticalAlignment="Center"
-      HorizontalAlignment="Center"
-      FontSize="18"
-      FontWeight="Bold" />
-
-    <TextBlock 
-      Grid.Row="5" 
-      Text="{Binding Reps}"
-      VerticalAlignment="Center"
-      HorizontalAlignment="Center"
-      FontSize="18"
-      FontWeight="Bold" />
-  </Grid> -->
-
 </UserControl>

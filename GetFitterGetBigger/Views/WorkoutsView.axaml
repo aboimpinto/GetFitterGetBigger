@@ -218,7 +218,8 @@
                       ToolTip.Tip="Start Legs I workout"
                       Foreground="{StaticResource Green400Brush}"
                       VerticalAlignment="Top"
-                      HorizontalAlignment="Right" />
+                      HorizontalAlignment="Right"
+                      Command="{Binding PlanedWorkoutCommand}" />
                   </Grid>
 
                   <Rectangle Height="1" Fill="{StaticResource Slate700Brush}" Margin="0,4,0,4"/>

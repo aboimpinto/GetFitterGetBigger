@@ -21,6 +21,9 @@
     <EmbeddedResource Include="Assets\Pushup.jpeg" />
     <EmbeddedResource Include="Assets\Crunch.jpeg" />
     <EmbeddedResource Include="Assets\Resting.jpeg" />
+    <EmbeddedResource Include="Assets\BarbellSquat.jpeg" />
+    <EmbeddedResource Include="Assets\BulgarianSplitSquats.jpg" />
+    <EmbeddedResource Include="Assets\WalkingLudges.jpeg" />
   </ItemGroup>
 
   <ItemGroup>

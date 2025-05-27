@@ -7,6 +7,8 @@ public interface IAppCaching
 {
     IDictionary<ExerciseType, string> ExerciseImages { get; }
 
+    IDictionary<WeightExerciseType, string> WeightExerciseImages { get; }
+
     IList<Workout> Workouts { get; }
 
     Workout WorkoutOfTheDay { get; set; }

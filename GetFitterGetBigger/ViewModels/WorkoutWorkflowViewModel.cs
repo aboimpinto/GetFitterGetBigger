@@ -308,7 +308,7 @@ public partial class WorkoutWorkflowViewModel :
             RepBaseExerciseWorkoutRound => new RepBaseExerciseViewModel(workoutStep, this._appCaching),
             RestExerciseWorkoutRound => new RestViewModel(workoutStep, this._eventAggregator),
             TimeBaseExerciseWorkoutRound => new TimeBaseExerciseViewModel(workoutStep, this._eventAggregator),
-            WeightedRepBaseExerciseWorkoutRound => new WeightedRepBaseExerciseViewModel(workoutStep),
+            WeightedRepBaseExerciseWorkoutRound => new WeightedRepBaseExerciseViewModel(workoutStep, this._appCaching),
             _ => throw new InvalidOperationException()
         };
 

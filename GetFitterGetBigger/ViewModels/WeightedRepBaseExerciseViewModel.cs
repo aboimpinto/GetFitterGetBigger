@@ -1,3 +1,5 @@
+using System.Collections.ObjectModel;
+using Avalonia.Media.Imaging;
 using CommunityToolkit.Mvvm.ComponentModel;
 using GetFitterGetBigger.Model;
 using Olimpo.NavigationManager;
@@ -23,7 +25,13 @@ public partial class WeightedRepBaseExerciseViewModel : ViewModelBase
     [ObservableProperty]
     private string _reps = string.Empty;
 
-    public WeightedRepBaseExerciseViewModel(WorkoutStep workoutStep)
+    [ObservableProperty]
+    private Bitmap _imageSource;
+
+    [ObservableProperty]
+    private ObservableCollection<string> _exerciseCoachNotes = [];
+
+    public WeightedRepBaseExerciseViewModel(WorkoutStep workoutStep, IAppCaching appCaching)
     {
         this._workoutStep = workoutStep;
 
@@ -35,5 +43,11 @@ public partial class WeightedRepBaseExerciseViewModel : ViewModelBase
         this.Reps = string.Format("{0} Reps - {1}Kg",
             ((WeightedRepBaseExerciseWorkoutRound)this._workoutStep.Exercise).NbrReps.ToString(),
             ((WeightedRepBaseExerciseWorkoutRound)this._workoutStep.Exercise).Weight.ToString());
+
+        this.ExerciseCoachNotes = new ObservableCollection<string>(this._workoutStep.CoachNotes);
+
+        var imageForExercise = appCaching.WeightExerciseImages[((WeightedRepBaseExerciseWorkoutRound)workoutStep.Exercise).ExerciseType];
+        this.ImageSource = ImageManipulation
+            .LoadImageFromAssets(imageForExercise);
     }
 }
