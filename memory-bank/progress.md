@@ -11,9 +11,9 @@
 - Fix the Olimpo.EventAggregatorManager namespace issue.
 - Implement the interface IHandle<TimedSetFinishedEvent> in the WorkoutWorkflowViewModel and in the method implementation, increase the WorkoutWorflowStep and load the step.
 - When a timed based set is reached, hide the button area in the view. Have in consideration when the user reach the end of the workout, there is a button for that also. When the event TimedSetFinishedEvent is received, make the buttons area visible again.
+- Implemented the new feature where the user can click on the back button in the device and the app can navigate to the previous opened screen.
 
 ## What's Left to Build:
-- [ONGOING] Refactor the WorkoutsView.
 - [PARTIAL] Add timed set into the WorkoutWorkflow.
 - [PARTIAL] Add WeightRepBase View
 - [DELAYED] Implement user authentication and authorization.
@@ -22,6 +22,8 @@
 - [DELAYED] Develop the progress tracking module.
 - [DELAYED] Design and implement the user interface.
 - [DELAYED] Test and deploy the application.
+- [COMPLETED] Update the 'NavigationOptions' class to include 'ViewName' and 'Parameters' properties.
+- [COMPLETED] Modify the 'NavigateAsync' method to use the updated 'NavigationOptions' class.
 
 ## Current Status:
 The project is in the initial stages of development. The memory bank has been initialized and the core files have been created.
@@ -36,3 +38,4 @@ The project is in the initial stages of development. The memory bank has been in
 - [COMPLETED] Implemented access to the MainView's ViewModel from MainActivity on back click.
 - [COMPLETED] Disable the lock device when the application is running.
 - [COMPLETED] Refactor OnBackPressed in MainActivity.cs
+- [COMPLETED] Refactor the WorkoutsView.
