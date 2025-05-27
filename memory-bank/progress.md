@@ -22,8 +22,6 @@
 - [DELAYED] Develop the progress tracking module.
 - [DELAYED] Design and implement the user interface.
 - [DELAYED] Test and deploy the application.
-- [COMPLETED] Update the 'NavigationOptions' class to include 'ViewName' and 'Parameters' properties.
-- [COMPLETED] Modify the 'NavigateAsync' method to use the updated 'NavigationOptions' class.
 
 ## Current Status:
 The project is in the initial stages of development. The memory bank has been initialized and the core files have been created.
@@ -39,3 +37,5 @@ The project is in the initial stages of development. The memory bank has been in
 - [COMPLETED] Disable the lock device when the application is running.
 - [COMPLETED] Refactor OnBackPressed in MainActivity.cs
 - [COMPLETED] Refactor the WorkoutsView.
+- [COMPLETED] Update the 'NavigationOptions' class to include 'ViewName' and 'Parameters' properties.
+- [COMPLETED] Modify the 'NavigateAsync' method to use the updated 'NavigationOptions' class.
