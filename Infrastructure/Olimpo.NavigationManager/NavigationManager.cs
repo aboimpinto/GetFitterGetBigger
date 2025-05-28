@@ -6,6 +6,7 @@ namespace Olimpo.NavigationManager;
 
 public class NavigationManager : INavigationManager
 {
+    private Stack<NavigationHistoryEntry> _navigationHistory = new();
     private INavigatableView _navigatableView;
 
     public string LastShownView { get; private set; }
@@ -15,13 +16,22 @@ public class NavigationManager : INavigationManager
         this._navigatableView = navigatable;
     }
 
+    public async Task GoBackAsync()
+    {
+        if (this._navigationHistory.Count > 1)
+        {
+            this._navigationHistory.Pop();
+            var previousEntry = this._navigationHistory.Peek();
+            await this.NavigateAsync(previousEntry.ViewName, previousEntry.Parameters);
+        }
+    }
+
     public async Task<bool> NavigateAsync(string viewToNavigate, IDictionary<string, object>? parameters = null)
     {
-        var options = new NavigationOptions
-        {
-            ViewName = viewToNavigate,
-            Parameters = parameters ?? new Dictionary<string, object>()
-        };
+        var options = new NavigationOptions(
+            viewToNavigate,
+            true,
+            parameters ?? new Dictionary<string, object>());
 
         return await this.NavigateAsync(options);
     }
@@ -31,27 +41,40 @@ public class NavigationManager : INavigationManager
         // TODO [AboimPinto] 04.03.20222: Would be nice to inject the weak references to the ViewModels and create one reference each time it is needed
         var viewModel = ServiceCollectionManager.ServiceProvider.GetService<ViewModelBase>(options.ViewName);
 
-        if (viewModel is ILoadableViewModel)
+        if (viewModel is ILoadableViewModel model)
         {
-            await ((ILoadableViewModel)viewModel).LoadAsync(options.Parameters);
+            await model.LoadAsync(options.Parameters);
         }
 
         this._navigatableView.CurrentOperation = viewModel;
         this.LastShownView = options.ViewName;
 
+        if (options.AddToHistory)
+        {
+            var navigationHistoryEntry = NavigationHistoryEntryHandler.CreateNew(options.ViewName, options.Parameters);
+            this._navigationHistory.Push(navigationHistoryEntry);
+        }
+
         return true;
     }
 
-    public class NavigationOptions
+    public record NavigationOptions
     {
-        public string ViewName { get; set; } = string.Empty;
-        public IDictionary<string, object> Parameters { get; set;  } = new Dictionary<string, object>();
-        public bool AddToHistory { get; set; } = true;
-        public string? EntryPointIdentifier { get; set; } = null;
-        public string? CustomBackNavigationTarget { get; set; } = null;
-        public bool SkipInBackNavigation { get; set; } = false;
-        public Func<Task<bool>>? RequiresConfirmationOnBack { get; set; } = null;
-        // Potentially a flag to indicate if the ViewModel instance should be cached
-        // public bool CacheViewModelInstance { get; set; } = false;
+        public string ViewName { get; init; }
+        public bool AddToHistory { get; init; }
+        public IDictionary<string, object> Parameters { get; init; }
+
+        public NavigationOptions(string viewName, bool addToHistory = true)
+            : this(viewName, addToHistory, new Dictionary<string, object>()) {}
+
+        public NavigationOptions(
+            string viewName,
+            bool addToHistory,
+            IDictionary<string, object> viewParameters)
+        {
+            this.ViewName = viewName;
+            this.AddToHistory = addToHistory;
+            this.Parameters = viewParameters;
+        }
     }
 }

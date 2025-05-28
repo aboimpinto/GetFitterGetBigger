@@ -6,6 +6,7 @@ using Olimpo;
 using Olimpo.NavigationManager;
 using GetFitterGetBigger.Events;
 using GetFitterGetBigger.Model;
+using static Olimpo.NavigationManager.NavigationManager;
 
 namespace GetFitterGetBigger.Workflows;
 
@@ -31,7 +32,7 @@ public class InitializationWorkflow :
     {
         await Dispatcher.UIThread.InvokeAsync(async () =>
         {
-            await this._navigationManager.NavigateAsync("SplashViewModel");
+            await this._navigationManager.NavigateAsync(new NavigationOptions("SplashViewModel", false));
         });
 
         this.BuildExercisesImagesList();

@@ -14,8 +14,14 @@
 - Implemented the new feature where the user can click on the back button in the device and the app can navigate to the previous opened screen.
 
 ## What's Left to Build:
-- [PARTIAL] Add timed set into the WorkoutWorkflow.
-- [PARTIAL] Add WeightRepBase View
+- Implement the GoBack feature in the Olimpo.NavigationManager:
+  1. Update the 'NavigationManager' class to include a new method called 'GoBack' that handles the navigation back to the previous screen.
+  2. Modify the 'NavigateAsync' method to store the current screen in a stack or list to keep track of the navigation history.
+  3. Implement the logic in the 'GoBack' method to retrieve the previous screen from the navigation history and navigate back to it.
+  4. Update the 'NavigationManagerServiceCollectionExtensions' class to register the new 'GoBack' method in the service collection.
+  5. Test the GoBack feature to ensure it works as expected.
+
+## Delayed Tasks
 - [DELAYED] Implement user authentication and authorization.
 - [DELAYED] Develop the workout planning module.
 - [DELAYED] Develop the nutritional guidance module.
@@ -33,9 +39,13 @@ The project is in the initial stages of development. The memory bank has been in
 - The initial decision to use Avalonia UI for cross-platform development has been validated by the availability of mature UI components and tooling.
 - The decision to use SQLite for local data storage has been confirmed based on its simplicity and performance.
 - Implemented the IHandlesBackButton interface in the NavigationManager.
+- [COMPLETED] Add timed set into the WorkoutWorkflow.
+- [COMPLETED] Add timed set into the WorkoutWorkflow.
+- [COMPLETED] Add WeightRepBase View
 - [COMPLETED] Implemented access to the MainView's ViewModel from MainActivity on back click.
 - [COMPLETED] Disable the lock device when the application is running.
 - [COMPLETED] Refactor OnBackPressed in MainActivity.cs
 - [COMPLETED] Refactor the WorkoutsView.
 - [COMPLETED] Update the 'NavigationOptions' class to include 'ViewName' and 'Parameters' properties.
 - [COMPLETED] Modify the 'NavigateAsync' method to use the updated 'NavigationOptions' class.
+- [COMPLETED] Modify the 'NavigateAsync' method to add the option to add the View to History.

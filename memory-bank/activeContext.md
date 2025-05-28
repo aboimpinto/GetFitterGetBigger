@@ -41,3 +41,4 @@ Initializing the memory bank and setting up the project structure.
 - [Olimpo.NavigationManager](features/Olimpo.NavigationManager.md) - Facilitates navigation between views using a ViewModel-first approach
 - [Olimpo.EventAggregator](features/Olimpo.EventAggregator.md) - Decouples modules by allowing them to communicate via messages
 - [Olimpo.Bootstrapper](features/Olimpo.Bootstrapper.md) - Initializes and configures the application at startup
+- [NavigationManager] Added the option to add the View to History in the `NavigateAsync` method.
