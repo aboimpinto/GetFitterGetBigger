@@ -12,14 +12,9 @@
 - Implement the interface IHandle<TimedSetFinishedEvent> in the WorkoutWorkflowViewModel and in the method implementation, increase the WorkoutWorflowStep and load the step.
 - When a timed based set is reached, hide the button area in the view. Have in consideration when the user reach the end of the workout, there is a button for that also. When the event TimedSetFinishedEvent is received, make the buttons area visible again.
 - Implemented the new feature where the user can click on the back button in the device and the app can navigate to the previous opened screen.
+- Implemented the GoBack feature in the Olimpo.NavigationManager: The navigation history now correctly stores and retrieves previous screens, allowing users to navigate back as expected.
 
 ## What's Left to Build:
-- Implement the GoBack feature in the Olimpo.NavigationManager:
-  1. Update the 'NavigationManager' class to include a new method called 'GoBack' that handles the navigation back to the previous screen.
-  2. Modify the 'NavigateAsync' method to store the current screen in a stack or list to keep track of the navigation history.
-  3. Implement the logic in the 'GoBack' method to retrieve the previous screen from the navigation history and navigate back to it.
-  4. Update the 'NavigationManagerServiceCollectionExtensions' class to register the new 'GoBack' method in the service collection.
-  5. Test the GoBack feature to ensure it works as expected.
 
 ## Delayed Tasks
 - [DELAYED] Implement user authentication and authorization.
