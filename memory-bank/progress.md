@@ -23,6 +23,9 @@
 - [DELAYED] Develop the progress tracking module.
 - [DELAYED] Design and implement the user interface.
 - [DELAYED] Test and deploy the application.
+- [DELAYED] Implement the `WorkoutDatabase` and `WorkoutRepository` components for WorkoutPersistency.
+- [DELAYED] Implement the internet connection check, workout data download, data persistence, data loading, versioning, error handling, and security considerations for WorkoutsRetrival.
+- [DELAYED] Implement the workout summary screen, workout progression logic, and workout completion summary for WorkoutWorkflow.
 
 ## Current Status:
 The project is in the initial stages of development. The memory bank has been initialized and the core files have been created.
