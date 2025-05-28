@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace Olimpo.NavigationManager;
@@ -16,14 +17,26 @@ public class NavigationManager : INavigationManager
         this._navigatableView = navigatable;
     }
 
-    public async Task GoBackAsync()
+    public async Task<bool> GoBackAsync()
     {
         if (this._navigationHistory.Count > 1)
         {
-            this._navigationHistory.Pop();
             var previousEntry = this._navigationHistory.Peek();
-            await this.NavigateAsync(previousEntry.ViewName, previousEntry.Parameters);
+            if (previousEntry.ViewName == LastShownView)
+            {
+                this._navigationHistory.Pop();
+                previousEntry = this._navigationHistory.Peek();
+                await this.NavigateAsync(previousEntry.ViewName, previousEntry.Parameters);
+            }
+            else
+            {
+                await this.NavigateAsync(previousEntry.ViewName, previousEntry.Parameters);
+            }
+            
+            return true;
         }
+
+        return false;
     }
 
     public async Task<bool> NavigateAsync(string viewToNavigate, IDictionary<string, object>? parameters = null)
@@ -52,7 +65,23 @@ public class NavigationManager : INavigationManager
         if (options.AddToHistory)
         {
             var navigationHistoryEntry = NavigationHistoryEntryHandler.CreateNew(options.ViewName, options.Parameters);
-            this._navigationHistory.Push(navigationHistoryEntry);
+
+            if (this._navigationHistory.Any())
+            {
+                var currentHistoryEntry = this._navigationHistory.Peek();
+                if (currentHistoryEntry.ViewName == options.ViewName)
+                {
+                    // DO NOTHING
+                }
+                else
+                {
+                    this._navigationHistory.Push(navigationHistoryEntry);
+                }
+            }
+            else
+            {
+                this._navigationHistory.Push(navigationHistoryEntry);   
+            }
         }
 
         return true;

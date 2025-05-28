@@ -7,6 +7,7 @@ using Olimpo;
 using Olimpo.NavigationManager;
 using GetFitterGetBigger.Model;
 using System.Collections.ObjectModel;
+using static Olimpo.NavigationManager.NavigationManager;
 
 namespace GetFitterGetBigger.ViewModels;
 
@@ -14,7 +15,8 @@ public partial class WorkoutViewModel(
     INavigationManager navigationManager,
     IAppCaching appCaching) :
     ViewModelBase,
-    ILoadableViewModel
+    ILoadableViewModel,
+    IHandlesBackButton
 {
     private readonly INavigationManager _navigationManager = navigationManager;
     private readonly IAppCaching _appCaching = appCaching;
@@ -48,16 +50,21 @@ public partial class WorkoutViewModel(
         return Task.CompletedTask;
     }
 
+    public async Task OnBackButtonPressedAsync()
+    {
+        await this._navigationManager.GoBackAsync();
+    }
+
     [RelayCommand]
     private async Task BackMenu()
     {
-        await this._navigationManager.NavigateAsync("WorkoutsViewModel");
+        await this._navigationManager.GoBackAsync();
     }
 
     [RelayCommand]
     private async Task Cancel()
     {
-        await this._navigationManager.NavigateAsync("WorkoutsViewModel");
+        await this._navigationManager.GoBackAsync();
     }
     
     [RelayCommand]
@@ -68,6 +75,7 @@ public partial class WorkoutViewModel(
             ["WorkoutId"] = this._selectedWorkout.WorkoutId
         };
 
-        await this._navigationManager.NavigateAsync("WorkoutWorkflowViewModel", parameters);
+        var navigationOptions = new NavigationOptions("WorkoutWorkflowViewModel", false, parameters);
+        await this._navigationManager.NavigateAsync(navigationOptions);
     }
 }

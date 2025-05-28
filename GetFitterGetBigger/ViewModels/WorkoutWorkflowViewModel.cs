@@ -10,13 +10,13 @@ using Olimpo;
 using Olimpo.NavigationManager;
 using GetFitterGetBigger.Events;
 using GetFitterGetBigger.Model;
-using Avalonia.Controls.Templates;
 
 namespace GetFitterGetBigger.ViewModels;
 
 public partial class WorkoutWorkflowViewModel :
     ViewModelBase,
     ILoadableViewModel,
+    IHandlesBackButton,
     IHandleAsync<TimedSetFinishedEvent>,
     IHandleAsync<InitialCountDownFinishedEvent>
 {
@@ -377,6 +377,11 @@ public partial class WorkoutWorkflowViewModel :
     private async void LoadNextWorkoutSet()
     {
         this.CurrentWorkoutSet = await this.LoadWorkoutSetExercice(this._workoutWorkflowStep);
+    }
+
+    public async Task OnBackButtonPressedAsync()
+    {
+        await this._navigationManager.GoBackAsync();
     }
 }
 

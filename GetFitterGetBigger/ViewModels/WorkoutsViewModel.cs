@@ -6,6 +6,7 @@ using CommunityToolkit.Mvvm.Input;
 using GetFitterGetBigger.Model;
 using Olimpo;
 using Olimpo.NavigationManager;
+using static Olimpo.NavigationManager.NavigationManager;
 
 namespace GetFitterGetBigger.ViewModels;
 
@@ -46,7 +47,7 @@ public partial class WorkoutsViewModel(
     [RelayCommand]
     private async Task BackMenu()
     {
-        await this._navigationManager.NavigateAsync("DashboardViewModel");
+        await this._navigationManager.GoBackAsync();
     }
 
     [RelayCommand]
@@ -57,7 +58,8 @@ public partial class WorkoutsViewModel(
             ["WorkoutId"] = this._appCaching.WorkoutOfTheDay.WorkoutId
         };
 
-        await this._navigationManager.NavigateAsync("WorkoutViewModel", parameters);
+        var navigationOptions = new NavigationOptions("WorkoutViewModel", false, parameters);
+        await this._navigationManager.NavigateAsync(navigationOptions);
     }
 
     [RelayCommand]

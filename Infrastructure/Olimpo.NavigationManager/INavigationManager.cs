@@ -13,4 +13,6 @@ public interface INavigationManager
     Task<bool> NavigateAsync(string viewToNavigate, IDictionary<string, object> parameters = null);
 
     Task<bool> NavigateAsync(NavigationOptions options);
+
+    Task<bool> GoBackAsync();
 }
