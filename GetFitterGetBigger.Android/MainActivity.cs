@@ -28,6 +28,7 @@ public class MainActivity : AvaloniaMainActivity<App>, INavigatableView
         get => _currentOperation;
         set => _currentOperation = value;
     }
+    public bool WithBackTransaction { get; set; }
 
     protected override AppBuilder CustomizeAppBuilder(AppBuilder builder)
     {
