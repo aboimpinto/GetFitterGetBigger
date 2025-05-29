@@ -58,7 +58,7 @@ public partial class WorkoutsViewModel(
             ["WorkoutId"] = this._appCaching.WorkoutOfTheDay.WorkoutId
         };
 
-        var navigationOptions = new NavigationOptions("WorkoutViewModel", false, parameters);
+        var navigationOptions = new NavigationOptions("WorkoutViewModel", false, false, parameters);
         await this._navigationManager.NavigateAsync(navigationOptions);
     }
 

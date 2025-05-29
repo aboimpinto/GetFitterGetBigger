@@ -75,7 +75,7 @@ public partial class WorkoutViewModel(
             ["WorkoutId"] = this._selectedWorkout.WorkoutId
         };
 
-        var navigationOptions = new NavigationOptions("WorkoutWorkflowViewModel", false, parameters);
+        var navigationOptions = new NavigationOptions("WorkoutWorkflowViewModel", false, false, parameters);
         await this._navigationManager.NavigateAsync(navigationOptions);
     }
 }

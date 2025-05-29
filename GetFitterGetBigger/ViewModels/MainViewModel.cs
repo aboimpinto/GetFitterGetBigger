@@ -20,6 +20,9 @@ public partial class MainViewModel :
     [ObservableProperty]
     public ViewModelBase _currentOperation;
 
+    [ObservableProperty]
+    public bool _withBackTransaction;
+
     public MainViewModel(
         IInitializationWorkflow initializationWorkflow,
         INavigationManager navigationManager,
@@ -30,6 +33,8 @@ public partial class MainViewModel :
         this._eventAggregator = eventAggregator;
 
         this._navigationManager.RegisterNavigatableView(this);
+
+        this.WithBackTransaction = false;
     }
 
     public async Task LoadAsync(IDictionary<string, object>? parameters = null)

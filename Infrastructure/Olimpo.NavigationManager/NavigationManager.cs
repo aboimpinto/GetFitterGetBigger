@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -26,11 +25,21 @@ public class NavigationManager : INavigationManager
             {
                 this._navigationHistory.Pop();
                 previousEntry = this._navigationHistory.Peek();
-                await this.NavigateAsync(previousEntry.ViewName, previousEntry.Parameters);
+                var navigationOptions = new NavigationOptions(
+                    previousEntry.ViewName,
+                    false,
+                    true,
+                    previousEntry.Parameters);
+                await this.NavigateAsync(navigationOptions);
             }
             else
             {
-                await this.NavigateAsync(previousEntry.ViewName, previousEntry.Parameters);
+                var navigationOptions = new NavigationOptions(
+                    previousEntry.ViewName,
+                    false,
+                    true,
+                    previousEntry.Parameters);
+                await this.NavigateAsync(navigationOptions);
             }
             
             return true;
@@ -44,6 +53,7 @@ public class NavigationManager : INavigationManager
         var options = new NavigationOptions(
             viewToNavigate,
             true,
+            false,
             parameters ?? new Dictionary<string, object>());
 
         return await this.NavigateAsync(options);
@@ -60,6 +70,7 @@ public class NavigationManager : INavigationManager
         }
 
         this._navigatableView.CurrentOperation = viewModel;
+        this._navigatableView.WithBackTransaction = options.WithBackTransaction;
         this.LastShownView = options.ViewName;
 
         if (options.AddToHistory)
@@ -91,18 +102,24 @@ public class NavigationManager : INavigationManager
     {
         public string ViewName { get; init; }
         public bool AddToHistory { get; init; }
+        public bool WithBackTransaction { get; init; }
         public IDictionary<string, object> Parameters { get; init; }
 
-        public NavigationOptions(string viewName, bool addToHistory = true)
-            : this(viewName, addToHistory, new Dictionary<string, object>()) {}
+        public NavigationOptions(
+            string viewName,
+            bool addToHistory = true,
+            bool withBackTransaction = false)
+            : this(viewName, addToHistory, withBackTransaction, new Dictionary<string, object>()) {}
 
         public NavigationOptions(
             string viewName,
             bool addToHistory,
+            bool WithBackTransaction, 
             IDictionary<string, object> viewParameters)
         {
             this.ViewName = viewName;
             this.AddToHistory = addToHistory;
+            this.WithBackTransaction = WithBackTransaction;
             this.Parameters = viewParameters;
         }
     }
