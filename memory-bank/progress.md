@@ -13,6 +13,7 @@
 - When a timed based set is reached, hide the button area in the view. Have in consideration when the user reach the end of the workout, there is a button for that also. When the event TimedSetFinishedEvent is received, make the buttons area visible again.
 - Implemented the new feature where the user can click on the back button in the device and the app can navigate to the previous opened screen.
 - Implemented the GoBack feature in the Olimpo.NavigationManager: The navigation history now correctly stores and retrieves previous screens, allowing users to navigate back as expected.
+- Implemented forward and backward navigation transitions: When navigating forward, a forward transition is applied, and when navigating back, a backward transition is applied.
 
 ## What's Left to Build:
 
