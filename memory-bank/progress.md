@@ -17,6 +17,12 @@
 
 ## What's Left to Build:
 
+- [NEW] Implement Backend API Integration:
+  - Create API client for server communication
+  - Implement offline JSON storage for workouts
+  - Develop synchronization mechanism for offline/online transitions
+  - Add UI components for connectivity status and sync progress
+
 ## Delayed Tasks
 - [DELAYED] Implement user authentication and authorization.
 - [DELAYED] Develop the workout planning module.

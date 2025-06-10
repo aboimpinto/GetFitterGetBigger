@@ -1,23 +1,24 @@
 # Active Context
 
 ## Current Work Focus:
-Initializing the memory bank and setting up the project structure.
+Planning and documenting the Backend API Integration feature to enable server communication, offline storage, and data synchronization.
 
 ## Recent Changes:
-- Created the `memory-bank` directory.
-- Created the `projectbrief.md` file.
-- Created the `productContext.md` file.
-- Updated the `Olimpo.NavigationManager.md` file with new examples and details on registering navigatable ViewModels and navigating using string identifiers.
+- Created the `BackendApiIntegration.md` file in the features directory.
+- Updated the `progress.md` file with the new Backend API Integration feature.
+- Updated the `activeContext.md` file to reflect the current focus on Backend API Integration.
 
 ## Next Steps:
-- Create the remaining core files: `systemPatterns.md`, `techContext.md`, and `progress.md`.
-- Define the system architecture and key technical decisions.
-- Set up the development environment and dependencies.
+- Begin implementation of the API Client Module.
+- Define the API service interfaces and models.
+- Implement basic connectivity monitoring.
+- Create the authentication flow.
 
 ## Active Decisions and Considerations:
-- Choosing the right architecture for the application.
-- Selecting the appropriate technologies and frameworks.
-- Defining the data model and database schema.
+- Choosing the appropriate approach for offline storage using JSON files.
+- Determining the best strategy for detecting network state changes across platforms.
+- Designing a robust synchronization mechanism that handles conflicts and errors.
+- Deciding on the user experience for offline mode and synchronization status.
 
 ## Important Patterns and Preferences:
 - Using a modular architecture to promote code reusability and maintainability.
@@ -37,6 +38,7 @@ Initializing the memory bank and setting up the project structure.
 - Corrected the property name from `Seconds` to `TimeInSeconds` to match the `TimeBaseExerciseWorkoutRound` class.
 
 ## Active Features:
+- [Backend API Integration](features/BackendApiIntegration.md) - Handles server communication, offline storage, and data synchronization
 - [Workouts Retrieval](features/WorkoutsRetrival.md) - Retrieve and initializes the available workouts at startup
 - [Olimpo.NavigationManager](features/Olimpo.NavigationManager.md) - Facilitates navigation between views using a ViewModel-first approach
 - [Olimpo.EventAggregator](features/Olimpo.EventAggregator.md) - Decouples modules by allowing them to communicate via messages
