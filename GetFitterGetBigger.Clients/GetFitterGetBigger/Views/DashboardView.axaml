@@ -1,0 +1,337 @@
+<UserControl 
+  xmlns="https://github.com/avaloniaui"
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+  xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+  xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+  xmlns:converters="using:GetFitterGetBigger.Views.Converters"
+  xmlns:controls="using:Olimpo.Controls"
+  mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+  x:Class="GetFitterGetBigger.Views.DashboardView">
+
+  <UserControl.Resources>
+    <converters:ObjectToBrushConverter 
+      x:Key="ObjectToBrushConverter"
+      ActiveBrush="{StaticResource WhiteBrush}"
+      InactiveBrush="{StaticResource Slate500Brush}"/>
+  </UserControl.Resources>
+
+  <UserControl.Styles>
+    <Style Selector="Button.HamburgerButton">
+      <Setter Property="Background" Value="{StaticResource TransparentBrush}"/>
+      <Setter Property="Foreground" Value="{StaticResource Slate300Brush}"/>
+      <Setter Property="BorderThickness" Value="0"/>
+      <Setter Property="Padding" Value="8"/>
+      <Setter Property="VerticalAlignment" Value="Center"/>
+      <Setter Property="Cursor" Value="Hand"/>
+      <Setter Property="ContentTemplate">
+        <DataTemplate>
+          <StackPanel Spacing="4">
+            <Rectangle Fill="{Binding $parent[Button].Foreground}" Height="2" Width="20"/>
+            <Rectangle Fill="{Binding $parent[Button].Foreground}" Height="2" Width="20"/>
+            <Rectangle Fill="{Binding $parent[Button].Foreground}" Height="2" Width="20"/>
+          </StackPanel>
+        </DataTemplate>
+      </Setter>
+    </Style>
+
+    <Style Selector="TextBlock.CarouselTitle">
+      <Setter Property="FontSize" Value="18"/>
+      <Setter Property="FontWeight" Value="Bold"/>
+      <Setter Property="Foreground" Value="{StaticResource WhiteBrush}"/>
+      <Setter Property="TextWrapping" Value="Wrap"/>
+      <Setter Property="Margin" Value="0,0,0,5"/>
+    </Style>
+
+    <Style Selector="TextBlock.CarouselSubtitle">
+      <Setter Property="FontSize" Value="12"/>
+      <Setter Property="Foreground" Value="{StaticResource Slate300Brush}"/>
+      <Setter Property="TextWrapping" Value="Wrap"/>
+    </Style>
+
+    <Style Selector="Button.ShortcutButton">
+      <Setter Property="Background" Value="{StaticResource Slate700Brush}"/>
+      <Setter Property="Foreground" Value="{StaticResource Slate100Brush}"/>
+      <Setter Property="Padding" Value="10"/>
+      <Setter Property="CornerRadius" Value="12"/>
+      <Setter Property="HorizontalAlignment" Value="Stretch"/>
+      <Setter Property="VerticalAlignment" Value="Stretch"/>
+      <Setter Property="Cursor" Value="Hand"/>
+      <Setter Property="BorderThickness" Value="1"/>
+      <Setter Property="BorderBrush" Value="{StaticResource Slate600Brush}"/>
+      <Setter Property="Margin" Value="0 0 0 10" />
+    </Style>
+
+    <Style Selector="TextBlock.ShortcutButtonText">
+        <Setter Property="FontSize" Value="13"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="TextAlignment" Value="Center"/>
+        <Setter Property="Margin" Value="0,8,0,0"/>
+    </Style>
+
+    <Style Selector="TextBlock.RepCount">
+      <Setter Property="FontSize" Value="28"/> <Setter Property="FontWeight" Value="SemiBold"/>
+      <Setter Property="Foreground" Value="{StaticResource Sky400Brush}"/>
+      <Setter Property="TextAlignment" Value="Center"/>
+    </Style>
+  </UserControl.Styles>
+  
+  <Panel>
+    <Border 
+      Background="{StaticResource Slate800Brush}"
+      CornerRadius="24" 
+      BorderBrush="{StaticResource Slate700Brush}"
+      BorderThickness="1"
+      HorizontalAlignment="Stretch" 
+      VerticalAlignment="Stretch"
+      ClipToBounds="True">
+
+      <DockPanel LastChildFill="True">
+
+        <Border DockPanel.Dock="Top" Padding="15 10" Background="{StaticResource Slate800Brush}" CornerRadius="24" >
+          <Grid ColumnDefinitions="Auto *">
+            <Button Classes="HamburgerButton" ToolTip.Tip="Open Menu"/>
+            <TextBlock 
+              Grid.Column="1" Text="Get Fitter Get Bigger"
+              Foreground="{StaticResource Slate300Brush}"
+              FontSize="18" FontWeight="SemiBold"
+              VerticalAlignment="Center" 
+              HorizontalAlignment="Center" 
+              Margin="0,0,30,0"/>
+          </Grid>
+        </Border>
+
+        <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+          <StackPanel Spacing="20" Margin="15">
+            <TextBlock 
+              Text="Discover Our Plans" 
+              FontSize="20" 
+              FontWeight="Bold" 
+              Foreground="{StaticResource Slate100Brush}" 
+              Margin="0 0 0 10"/>
+
+            <Border CornerRadius="16" Height="200" ClipToBounds="True">
+              <Panel>
+                <TransitioningContentControl Content="{Binding ImageSource}" IsTransitionReversed="False">
+                  <TransitioningContentControl.PageTransition>
+                    <PageSlide Orientation="Horizontal" Duration="0:00:00.500" />
+                  </TransitioningContentControl.PageTransition>
+
+                  <TransitioningContentControl.ContentTemplate>
+                    <DataTemplate DataType="Bitmap">
+                      <Image Source="{Binding}" Stretch="UniformToFill" />
+                    </DataTemplate>
+                  </TransitioningContentControl.ContentTemplate>
+                </TransitioningContentControl>
+
+                <TransitioningContentControl Content="{Binding CarouselInfo}" IsTransitionReversed="True" VerticalAlignment="Bottom" Padding="15">
+                  <TransitioningContentControl.PageTransition>
+                    <PageSlide Orientation="Horizontal" Duration="0:00:00.500" />
+                  </TransitioningContentControl.PageTransition>
+
+                  <TransitioningContentControl.ContentTemplate>
+                    <DataTemplate>
+                      <Border Background="#A0000000" CornerRadius="8" Padding="5">
+                        <StackPanel>
+                          <TextBlock Classes="CarouselTitle" Text="{Binding Title}" />
+                          <TextBlock Classes="CarouselSubtitle" Text="{Binding SubTitle}" />
+                          <Button 
+                            Content="Learn More and Buy" 
+                            Background="{StaticResource Orange500Brush}" 
+                            Foreground="{StaticResource WhiteBrush}"
+                            HorizontalAlignment="Left" 
+                            Padding="10 5" 
+                            CornerRadius="8" 
+                            Margin="0,10,0,0" 
+                            FontWeight="SemiBold" 
+                            Cursor="Hand"/>
+                        </StackPanel>
+                      </Border>
+                    </DataTemplate>
+                  </TransitioningContentControl.ContentTemplate>
+                </TransitioningContentControl>
+
+                <StackPanel Orientation="Horizontal" Spacing="5" HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="0,0,0,5">
+                  <Ellipse Width="8" Height="8">
+                    <Ellipse.Fill>
+                      <Binding Path="CarouselInfo.Order" Converter="{StaticResource ObjectToBrushConverter}" ConverterParameter="1">
+                        <Binding.FallbackValue>
+                          <StaticResource ResourceKey="Slate500Brush"/>
+                        </Binding.FallbackValue>
+                      </Binding>
+                    </Ellipse.Fill>
+                  </Ellipse>
+                  <Ellipse Width="8" Height="8">
+                    <Ellipse.Fill>
+                      <Binding Path="CarouselInfo.Order" Converter="{StaticResource ObjectToBrushConverter}" ConverterParameter="2">
+                        <Binding.FallbackValue>
+                          <StaticResource ResourceKey="Slate500Brush"/>
+                        </Binding.FallbackValue>
+                      </Binding>
+                    </Ellipse.Fill>
+                  </Ellipse>
+                  <Ellipse Width="8" Height="8">
+                    <Ellipse.Fill>
+                      <Binding Path="CarouselInfo.Order" Converter="{StaticResource ObjectToBrushConverter}" ConverterParameter="3">
+                        <Binding.FallbackValue>
+                          <StaticResource ResourceKey="Slate500Brush"/>
+                        </Binding.FallbackValue>
+                      </Binding>
+                    </Ellipse.Fill>
+                  </Ellipse>
+                </StackPanel>
+              </Panel>
+            </Border>
+
+            <TextBlock 
+              Text="Quick Actions" 
+              FontSize="20" 
+              FontWeight="Bold" 
+              Foreground="{StaticResource Slate100Brush}" 
+              Margin="0,15,0,10"/>
+
+            <Grid ColumnDefinitions="* * *" RowDefinitions="Auto Auto"> 
+              <Button 
+                Classes="ShortcutButton" 
+                Grid.Row="0" 
+                Grid.Column="0" 
+                Command="{Binding WorkoutShortcutCommand}"
+                ToolTip.Tip="Start or manage your workouts"
+                HorizontalAlignment="Center" 
+                VerticalAlignment="Center"
+                Width="94">
+                <Border Background="#00000000">
+                  <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                    <controls:IconButton
+                      Data="{StaticResource Workout}"
+                      Foreground="{StaticResource Sky400Brush}"
+                      Command="{Binding WorkoutShortcutCommand}" />
+                    <TextBlock 
+                      Text="Workouts" 
+                      Classes="ShortcutButtonText"/>
+                  </StackPanel>
+                </Border>
+              </Button>
+
+              <Button 
+                Classes="ShortcutButton" 
+                Grid.Row="0" 
+                Grid.Column="1" 
+                ToolTip.Tip="Track your meals and nutrition"
+                HorizontalAlignment="Center" 
+                VerticalAlignment="Center"
+                Width="94">
+                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                  <controls:IconButton
+                    Data="{StaticResource Nutrition}"
+                    Foreground="{StaticResource Green500Brush}" />
+                  <TextBlock 
+                    Text="Nutrition" 
+                    Classes="ShortcutButtonText"/>
+                </StackPanel>
+              </Button>
+              
+              <Button 
+                Classes="ShortcutButton" 
+                Grid.Row="0" 
+                Grid.Column="2" 
+                ToolTip.Tip="View your progress and achievements" 
+                HorizontalAlignment="Center" 
+                VerticalAlignment="Center" 
+                Width="94">
+                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                  <controls:IconButton
+                    Data="{StaticResource Analysis}"
+                    Foreground="{StaticResource Orange500Brush}" />
+                  <TextBlock 
+                    Text="Progress" 
+                    Classes="ShortcutButtonText"/>
+                </StackPanel>
+              </Button>
+
+              <Button 
+                Classes="ShortcutButton" 
+                Grid.Row="1" 
+                Grid.Column="0" 
+                ToolTip.Tip="Plan your meals for the week"
+                HorizontalAlignment="Center" 
+                VerticalAlignment="Center"
+                Width="94">
+                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                  <controls:IconButton
+                    Data="{StaticResource Meals}"
+                    Foreground="{StaticResource Yellow400Brush}" />
+                  <TextBlock 
+                    Text="Meal Plan" 
+                    Classes="ShortcutButtonText"/>
+                </StackPanel>
+              </Button>
+              
+              <Button 
+                Classes="ShortcutButton" 
+                Grid.Row="1" 
+                Grid.Column="1" 
+                ToolTip.Tip="Browse exercises and techniques"
+                HorizontalAlignment="Center" 
+                VerticalAlignment="Center"
+                Width="94">
+                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                  <controls:IconButton
+                    Data="{StaticResource Exercises}"
+                    Foreground="{StaticResource Purple500Brush}" />
+                  <TextBlock 
+                    Text="Exercises" 
+                    Classes="ShortcutButtonText"/>
+                </StackPanel>
+              </Button>
+              
+              <Button 
+                Classes="ShortcutButton" 
+                Grid.Row="1" 
+                Grid.Column="2" 
+                ToolTip.Tip="Join challenges and connect with others" 
+                HorizontalAlignment="Center" 
+                VerticalAlignment="Center"
+                Width="94">
+                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                  <controls:IconButton
+                    Data="{StaticResource Community}"
+                    Foreground="{StaticResource Slate100Brush}" />
+                  <TextBlock 
+                    Text="Community" 
+                    Classes="ShortcutButtonText"/>
+                </StackPanel>
+              </Button>
+            </Grid>
+
+            <Border Background="{StaticResource Slate700Brush}" CornerRadius="12" Padding="15" Margin="0,20,0,0">
+              <StackPanel>
+                <TextBlock 
+                  Text="🔥 Your Next Workout: Full Body Blast" 
+                  FontSize="14" 
+                  FontWeight="SemiBold" 
+                  Foreground="{StaticResource WhiteBrush}" 
+                  Margin="0,0,0,5"/>
+
+                <TextBlock 
+                  Text="Scheduled for Today at 5:00 PM. Are you ready?" 
+                  FontSize="11" 
+                  Foreground="{StaticResource Slate300Brush}" 
+                  Margin="0,0,0,10"/>
+
+                <Button 
+                  Content="View Workout" 
+                  Background="{StaticResource Sky500Brush}" 
+                  Foreground="{StaticResource WhiteBrush}"
+                  HorizontalAlignment="Stretch" 
+                  Padding="10 8" 
+                  CornerRadius="8" 
+                  FontWeight="SemiBold" 
+                  Cursor="Hand"/>
+              </StackPanel>
+            </Border>
+          </StackPanel> 
+        </ScrollViewer>
+      </DockPanel>
+    </Border>
+  </Panel>
+</UserControl>

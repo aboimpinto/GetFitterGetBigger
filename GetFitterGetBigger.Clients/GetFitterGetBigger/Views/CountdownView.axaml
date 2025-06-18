@@ -1,0 +1,62 @@
+<UserControl 
+  xmlns="https://github.com/avaloniaui"
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+  xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+  xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+  mc:Ignorable="d" 
+  d:DesignWidth="800" 
+  d:DesignHeight="450"
+  x:Class="GetFitterGetBigger.Views.CountdownView">
+  
+  <UserControl.Styles>
+    <Style Selector="TextBlock.triggered">
+      <Style.Animations>
+        <Animation Duration="0:0:1" IterationCount="4" Easing="SineEaseOut">
+          <KeyFrame Cue="0%">
+            <Setter Property="Opacity" Value="1"/>
+          </KeyFrame>
+          
+          <KeyFrame Cue="20%">
+            <Setter Property="Opacity" Value="0.7"/>
+          </KeyFrame>
+          
+          <KeyFrame Cue="80%">
+            <Setter Property="Opacity" Value="0.3"/>
+          </KeyFrame>
+
+          <KeyFrame Cue="100%">
+            <Setter Property="Opacity" Value="0"/>
+          </KeyFrame>
+
+          <KeyFrame Cue="0%">
+            <Setter Property="ScaleTransform.ScaleX" Value="1"/>
+            <Setter Property="ScaleTransform.ScaleY" Value="1"/>
+          </KeyFrame>
+
+          <KeyFrame Cue="100%">
+            <Setter Property="ScaleTransform.ScaleX" Value="30"/>
+            <Setter Property="ScaleTransform.ScaleY" Value="30"/>
+          </KeyFrame>
+        </Animation>
+      </Style.Animations>
+    </Style>
+  </UserControl.Styles>
+
+  <Border 
+    Background="{StaticResource Slate800Brush}"
+    CornerRadius="24"
+    Padding="20" 
+    BorderBrush="{StaticResource Slate700Brush}"
+    BorderThickness="2"
+    HorizontalAlignment="Stretch" 
+    VerticalAlignment="Stretch"
+    ClipToBounds="True">
+
+    <TextBlock 
+        Classes.triggered="{Binding AnimationOn}" 
+        Text="{Binding CountdownString}" 
+        HorizontalAlignment="Center" 
+        VerticalAlignment="Center" />
+  </Border>
+
+</UserControl>

@@ -1,0 +1,57 @@
+<ResourceDictionary 
+  xmlns="https://github.com/avaloniaui"
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+  
+  <Color x:Key="Slate900Color">#0F172A</Color>
+  <Color x:Key="Slate800Color">#1E293B</Color>
+  <Color x:Key="Slate700Color">#334155</Color>
+  <Color x:Key="Slate600Color">#475569</Color>
+  <Color x:Key="Slate500Color">#64748B</Color>
+  <Color x:Key="Slate400Color">#94A3B8</Color>
+  <Color x:Key="Slate300Color">#CBD5E1</Color>
+  <Color x:Key="Slate200Color">#E2E8F0</Color>
+  <Color x:Key="Slate100Color">#F1F5F9</Color>
+  <Color x:Key="Sky500Color">#0EA5E9</Color>
+  <Color x:Key="Sky400Color">#38BDF8</Color>
+  <Color x:Key="Sky600Color">#0284C7</Color>
+  <Color x:Key="WhiteColor">#FFFFFF</Color>
+  <Color x:Key="TransparentColor">Transparent</Color>
+  <Color x:Key="Orange500Color">#F97316</Color>
+  <Color x:Key="Green500Color">#22C55E</Color>
+  <Color x:Key="Green400Color">#4ADE80</Color>
+  <Color x:Key="Purple500Color">#A855F7</Color>
+  <Color x:Key="Purple400Color">#C084FC</Color>
+  <Color x:Key="Orange400Color">#FB923C</Color>
+  <Color x:Key="Red400Color">#F87171</Color>
+  <Color x:Key="Yellow400Color">#FACC15</Color>
+  <Color x:Key="Teal400Color">#2DD4BF</Color>
+  <Color x:Key="Indigo400Color">#818CF8</Color>
+  <Color x:Key="Pink400Color">#F472B6</Color>
+  
+  <SolidColorBrush x:Key="Slate900Brush" Color="{StaticResource Slate900Color}"/>
+  <SolidColorBrush x:Key="Slate800Brush" Color="{StaticResource Slate800Color}"/>
+  <SolidColorBrush x:Key="Slate700Brush" Color="{StaticResource Slate700Color}"/>
+  <SolidColorBrush x:Key="Slate600Brush" Color="{StaticResource Slate600Color}"/>
+  <SolidColorBrush x:Key="Slate500Brush" Color="{StaticResource Slate500Color}"/>
+  <SolidColorBrush x:Key="Slate400Brush" Color="{StaticResource Slate400Color}"/>
+  <SolidColorBrush x:Key="Slate300Brush" Color="{StaticResource Slate300Color}"/>
+  <SolidColorBrush x:Key="Slate200Brush" Color="{StaticResource Slate200Color}"/>
+  <SolidColorBrush x:Key="Slate100Brush" Color="{StaticResource Slate100Color}"/>
+  <SolidColorBrush x:Key="Sky500Brush" Color="{StaticResource Sky500Color}"/>
+  <SolidColorBrush x:Key="Sky400Brush" Color="{StaticResource Sky400Color}"/>
+  <SolidColorBrush x:Key="Sky600Brush" Color="{StaticResource Sky600Color}"/>
+  <SolidColorBrush x:Key="WhiteBrush" Color="{StaticResource WhiteColor}"/>
+  <SolidColorBrush x:Key="TransparentBrush" Color="{StaticResource TransparentColor}"/>
+  <SolidColorBrush x:Key="Orange500Brush" Color="{StaticResource Orange500Color}"/>
+  <SolidColorBrush x:Key="Green500Brush" Color="{StaticResource Green500Color}"/>
+  <SolidColorBrush x:Key="Purple500Brush" Color="{StaticResource Purple500Color}"/>
+  <SolidColorBrush x:Key="Purple400Brush" Color="{StaticResource Purple400Color}"/>
+  <SolidColorBrush x:Key="Green400Brush" Color="{StaticResource Green400Color}"/>
+  <SolidColorBrush x:Key="Orange400Brush" Color="{StaticResource Orange400Color}"/>
+  <SolidColorBrush x:Key="Red400Brush" Color="{StaticResource Red400Color}"/>
+  <SolidColorBrush x:Key="Yellow400Brush" Color="{StaticResource Yellow400Color}"/>
+  <SolidColorBrush x:Key="Teal400Brush" Color="{StaticResource Teal400Color}"/>
+  <SolidColorBrush x:Key="Indigo400Brush" Color="{StaticResource Indigo400Color}"/>
+  <SolidColorBrush x:Key="Pink400Brush" Color="{StaticResource Pink400Color}"/>
+
+</ResourceDictionary>

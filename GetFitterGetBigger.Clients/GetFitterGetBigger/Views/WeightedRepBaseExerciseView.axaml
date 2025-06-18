@@ -1,0 +1,144 @@
+<UserControl 
+  xmlns="https://github.com/avaloniaui"
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+  xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+  xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+  xmlns:controls="using:Olimpo.Controls"
+  mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+  x:Class="GetFitterGetBigger.Views.WeightedRepBaseExerciseView">
+
+  <UserControl.Styles>
+    <Style Selector="TextBlock.ExerciseTitle">
+      <Setter Property="FontSize" Value="40"/>
+      <Setter Property="FontWeight" Value="ExtraBold"/>
+      <Setter Property="Foreground" Value="{StaticResource WhiteBrush}"/>
+      <Setter Property="TextWrapping" Value="Wrap"/>
+      <Setter Property="TextAlignment" Value="Center"/>
+    </Style>
+
+    <Style Selector="TextBlock.RepCount">
+      <Setter Property="FontSize" Value="28"/>
+      <Setter Property="FontWeight" Value="SemiBold"/>
+      <Setter Property="Foreground" Value="{StaticResource Sky400Brush}"/>
+      <Setter Property="TextAlignment" Value="Center"/>
+    </Style>
+  </UserControl.Styles> 
+
+  <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Margin="0,0,0,10">
+    <StackPanel Spacing="20" HorizontalAlignment="Stretch">
+        
+      <StackPanel Spacing="4" Margin="0,10,0,0">
+        <TextBlock 
+          Classes="ExerciseTitle" 
+          Text="{Binding ExerciseInfo}" 
+          HorizontalAlignment="Center" />
+        <TextBlock 
+          Classes="RepCount" 
+          Text="{Binding Reps}"
+          HorizontalAlignment="Center" />
+        <TextBlock 
+          Classes="MutedText" 
+          Text="{Binding ExercisesProgress}" 
+          TextAlignment="Center" 
+          FontWeight="Medium" 
+          HorizontalAlignment="Center"/>
+      </StackPanel>
+
+      <Border 
+        MinHeight="180" 
+        Background="#AA2A303C" 
+        CornerRadius="8"
+        BorderBrush="#55FFFFFF" 
+        BorderThickness="1"> 
+
+        <UniformGrid Columns="2" Rows="1">
+          <Image 
+            Source="{Binding ImageSource}"
+            Stretch="UniformToFill"
+            HorizontalAlignment="Center" 
+            VerticalAlignment="Center"
+            Margin="5 5 0 0" />
+
+          <StackPanel Spacing="6" HorizontalAlignment="Center" Margin="0 20 0 0">
+            <TextBlock Text="Key Form Cues:" Classes="FormCueTitle"/>
+
+            <ItemsControl ItemsSource="{Binding ExerciseCoachNotes}">
+              <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                  <StackPanel Spacing="2" HorizontalAlignment="Center" />
+                </ItemsPanelTemplate>
+              </ItemsControl.ItemsPanel>
+
+              <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                  <Grid ColumnDefinitions="20 5 *">
+                    <controls:Icon 
+                      Grid.Column="0"
+                      Data="{StaticResource Check}" 
+                      Foreground="{StaticResource Sky400Brush}" 
+                      Margin="0 2 0 0" 
+                      VerticalAlignment="Top"
+                      HorizontalAlignment="Center"
+                      Height="16"
+                      Width="16" />
+                    <TextBlock 
+                      Grid.Column="2"
+                      Text="{Binding}" 
+                      VerticalAlignment="Center"
+                      HorizontalAlignment="Left"
+                      Classes="FormCueItem"
+                      TextWrapping="Wrap" />
+                  </Grid>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+          </StackPanel>
+        </UniformGrid>
+      </Border>
+    </StackPanel>
+  </ScrollViewer>
+
+  <!-- 
+  <Grid RowDefinitions="50 50 50 50 50 50 *">
+    <TextBlock 
+      Grid.Row="1" 
+      Text="{Binding WorkoutName}"
+      VerticalAlignment="Center"
+      HorizontalAlignment="Center"
+      FontSize="22"
+      FontWeight="Bold" />
+
+    <TextBlock 
+      Grid.Row="2" 
+      Text="{Binding RoundInfo}"
+      VerticalAlignment="Center"
+      HorizontalAlignment="Center"
+      FontSize="18"
+      FontWeight="Bold" />
+
+    <TextBlock 
+      Grid.Row="3" 
+      Text="{Binding SetInfo}"
+      VerticalAlignment="Center"
+      HorizontalAlignment="Center"
+      FontSize="18"
+      FontWeight="Bold" />
+
+    <TextBlock 
+      Grid.Row="4" 
+      Text="{Binding ExerciseInfo}"
+      VerticalAlignment="Center"
+      HorizontalAlignment="Center"
+      FontSize="18"
+      FontWeight="Bold" />
+
+    <TextBlock 
+      Grid.Row="5" 
+      Text="{Binding Reps}"
+      VerticalAlignment="Center"
+      HorizontalAlignment="Center"
+      FontSize="18"
+      FontWeight="Bold" />
+  </Grid> -->
+
+</UserControl>

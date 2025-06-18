@@ -1,0 +1,411 @@
+<UserControl 
+  xmlns="https://github.com/avaloniaui"
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+  xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+  xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+  xmlns:controls="using:Olimpo.Controls"
+  mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+  x:Class="GetFitterGetBigger.Views.WorkoutsView">
+  
+  <UserControl.Styles>
+    <Style Selector="TextBlock.SectionTitle">
+        <Setter Property="FontSize" Value="18"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="Foreground" Value="{StaticResource Slate100Brush}"/>
+      </Style>
+
+      <Style Selector="TextBlock.CardTitle">
+        <Setter Property="FontSize" Value="16"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="Foreground" Value="{StaticResource WhiteBrush}"/>
+      </Style>
+
+      <Style Selector="TextBlock.CardSubtitle">
+        <Setter Property="FontSize" Value="14"/>
+        <Setter Property="Foreground" Value="{StaticResource Slate300Brush}"/>
+      </Style>
+      
+      <Style Selector="TextBlock.SmallMutedText">
+        <Setter Property="FontSize" Value="12"/>
+        <Setter Property="Foreground" Value="{StaticResource Slate400Brush}"/>
+      </Style>
+      
+      <Style Selector="TextBlock.LinkText">
+        <Setter Property="FontSize" Value="12"/>
+        <Setter Property="FontWeight" Value="Medium"/>
+        <Setter Property="Foreground" Value="{StaticResource Sky400Brush}"/>
+        <Setter Property="Cursor" Value="Hand"/>
+      </Style>
+      
+      <Style Selector="Button.ShortcutButton">
+        <Setter Property="Background" Value="{StaticResource Slate700Brush}"/>
+        <Setter Property="Foreground" Value="{StaticResource Slate100Brush}"/>
+        <Setter Property="Padding" Value="10"/>
+        <Setter Property="CornerRadius" Value="12"/>
+        <Setter Property="HorizontalAlignment" Value="Stretch"/>
+        <Setter Property="VerticalAlignment" Value="Stretch"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="BorderBrush" Value="{StaticResource Slate600Brush}"/>
+        <Setter Property="Margin" Value="0 0 0 7" />
+      </Style>
+
+      <Style Selector="TextBlock.ShortcutButtonText">
+        <Setter Property="FontSize" Value="14"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="Foreground" Value="{StaticResource Slate100Brush}"/>
+      </Style>
+      
+      <Style Selector="TextBlock.ShortcutButtonSubText">
+        <Setter Property="FontSize" Value="12"/>
+        <Setter Property="Foreground" Value="{StaticResource Slate400Brush}"/>
+      </Style>
+  </UserControl.Styles>
+
+  <Panel>
+    <Border 
+      Background="{StaticResource Slate800Brush}"
+      CornerRadius="24" 
+      BorderThickness="0"
+      HorizontalAlignment="Stretch" 
+      VerticalAlignment="Stretch"
+      ClipToBounds="True">
+            
+      <DockPanel LastChildFill="True">
+        <Border 
+          DockPanel.Dock="Top" 
+          Background="#D91E293B" 
+          Padding="15 10" 
+          BorderThickness="0 0 0 1" 
+          BorderBrush="{StaticResource Slate700Brush}">
+
+          <Grid ColumnDefinitions="Auto * Auto">
+            <controls:IconButton
+              Data="{StaticResource ArrowLeftCicle}"
+              Command="{Binding BackMenuCommand}"
+              ToolTip.Tip="Go Back"
+              Foreground="{StaticResource Slate300Brush}"
+              Background="{StaticResource TransparentBrush}" />
+
+            <TextBlock 
+              Grid.Column="1" 
+              Text="Workouts" 
+              Classes="ScreenTitle" 
+              VerticalAlignment="Center" 
+              HorizontalAlignment="Left" 
+              Margin="12 0 0 0"/>
+          </Grid>
+        </Border>
+
+        <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+          <StackPanel Spacing="28" Margin="20"> 
+            <StackPanel Spacing="12">
+              <Grid ColumnDefinitions="*,Auto">
+                <TextBlock Text="Workout of the Day" Classes="SectionTitle"/>
+                <TextBlock Grid.Column="1" Text="Changes Daily" Classes="SmallMutedText" VerticalAlignment="Center" />
+              </Grid>
+
+              <Border Classes="GlassCard">
+                <Border.Resources>
+                  <Style x:Key="WotDDetailsStyle" Selector="TextBlock.WotDDetails">
+                    <Setter Property="Margin" Value="0 12 0 0"/>
+                    <Setter Property="FontSize" Value="12"/>
+                    <Setter Property="Foreground" Value="{StaticResource Slate400Brush}"/>
+                  </Style>
+                </Border.Resources>
+
+                <Grid ColumnDefinitions="Auto * Auto" RowDefinitions="Auto Auto Auto" VerticalAlignment="Center">
+                  <Border 
+                    Grid.Row="0" 
+                    Grid.RowSpan="2" 
+                    Background="#330EA5E9" 
+                    CornerRadius="8" 
+                    Width="48" 
+                    Height="48" 
+                    Margin="0 0 16 0"
+                    VerticalAlignment="Center">
+
+                    <controls:Icon 
+                      Data="{StaticResource Flash}"
+                      Foreground="{StaticResource Sky400Brush}"
+                      HorizontalAlignment="Center" 
+                      VerticalAlignment="Center" />
+                  </Border>
+
+                  <TextBlock 
+                    Grid.Row="0"
+                    Grid.Column="1" 
+                    Text="{Binding WorkoutOfTheDaySummary.Title}" 
+                    Classes="CardTitle" />
+
+                  <TextBlock 
+                    Grid.Column="1" 
+                    Grid.Row="1" 
+                    Text="{Binding WorkoutOfTheDaySummary.SubTitle}" 
+                    TextWrapping="Wrap"
+                    Classes="CardSubtitle" 
+                    TextTrimming="CharacterEllipsis" />
+                  
+                  <controls:IconButton
+                    Grid.Column="2" 
+                    Grid.RowSpan="2"
+                    Command="{Binding WorkoutOfTheDayCommand}"
+                    Data="{StaticResource Play}"
+                    ToolTip.Tip="Start workout"
+                    Foreground="{StaticResource Sky400Brush}"
+                    VerticalAlignment="Top"
+                    HorizontalAlignment="Right" />
+                  
+                  <TextBlock 
+                    Grid.Row="2" 
+                    Grid.Column="0"
+                    Grid.ColumnSpan="3" 
+                    Text="{Binding WorkoutOfTheDaySummary.Description}" 
+                    TextWrapping="Wrap"
+                    VerticalAlignment="Bottom"
+                    Classes="SmallMutedText WotDDetails" 
+                    Margin="0 12 0 0"/>
+                </Grid>
+              </Border>
+            </StackPanel>
+
+            <StackPanel Spacing="12">
+              <Grid ColumnDefinitions="*,Auto">
+                <TextBlock 
+                  Text="Next Planned Workout" 
+                  Classes="SectionTitle"/>
+                <TextBlock 
+                  Grid.Column="1" 
+                  Text="View Plan" 
+                  Classes="LinkText" 
+                  ToolTip.Tip="View your full training plan"
+                  VerticalAlignment="Center" />
+              </Grid>
+
+              <Border Classes="GlassCard">
+                <StackPanel Spacing="12">
+                  <Grid ColumnDefinitions="Auto * Auto" VerticalAlignment="Top">
+                    <Border Grid.RowSpan="2" Background="#3322C55E" CornerRadius="8" Width="48" Height="48" Margin="0 0 16 0" VerticalAlignment="Top">
+                      <controls:Icon 
+                        Data="{StaticResource PlannedWorkout}"
+                        Foreground="{StaticResource Green400Brush}"
+                        HorizontalAlignment="Center" 
+                        VerticalAlignment="Center" />
+                    </Border>
+                    
+                    <StackPanel Grid.Column="1" Spacing="2">
+                      <Border Background="{StaticResource Green500Brush}" CornerRadius="10" Padding="6,2" HorizontalAlignment="Left">
+                        <TextBlock 
+                          Text="{Binding WorkoutActivePlan}" 
+                          FontSize="10" 
+                          FontWeight="SemiBold" 
+                          Foreground="{StaticResource WhiteBrush}"/>
+                      </Border>
+
+                      <TextBlock 
+                        Classes="CardTitle" 
+                        Text="{Binding ActivePlanWorkout.Title}" />
+                      <TextBlock 
+                        Classes="CardSubtitle"
+                        Text="{Binding ActivePlanWorkout.SubTitle}" 
+                        TextWrapping="Wrap"/>
+                    </StackPanel>
+
+                    <controls:IconButton
+                      Grid.Column="2" 
+                      Grid.RowSpan="2"
+                      Data="{StaticResource Play}"
+                      ToolTip.Tip="Start Legs I workout"
+                      Foreground="{StaticResource Green400Brush}"
+                      VerticalAlignment="Top"
+                      HorizontalAlignment="Right"
+                      Command="{Binding PlanedWorkoutCommand}" />
+                  </Grid>
+
+                  <Rectangle Height="1" Fill="{StaticResource Slate700Brush}" Margin="0,4,0,4"/>
+
+                  <TextBlock Text="{Binding ActivePlanWorkout.Description}" Classes="SmallMutedText"/>
+                </StackPanel>
+              </Border>
+            </StackPanel>
+
+            <StackPanel Spacing="12">
+              <Grid ColumnDefinitions="*,Auto">
+                <TextBlock Text="Choose Your Workout" Classes="SectionTitle"/>
+                <TextBlock 
+                  Grid.Column="1" 
+                  Classes="LinkText" 
+                  Text="See All" 
+                  ToolTip.Tip="Browse all available workouts"
+                  VerticalAlignment="Center" />
+              </Grid>
+
+              <UniformGrid Columns="3" Rows="2"> <!-- Gap="16" -->
+
+                <Button 
+                  Classes="ShortcutButton" 
+                  HorizontalAlignment="Center" 
+                  VerticalAlignment="Center"
+                  Width="94"
+                  Height="92">
+                  <Border Background="#00000000">
+                    <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                      <controls:IconButton
+                        Data="{StaticResource HIIT}"
+                        Foreground="{StaticResource Orange400Brush}"
+                        HorizontalAlignment="Center" />
+                      <TextBlock 
+                        Text="HIIT" 
+                        Classes="ShortcutButtonText"
+                        TextWrapping="Wrap"
+                        HorizontalAlignment="Center" />
+                      <TextBlock 
+                        Text="High Intensity" 
+                        Classes="ShortcutButtonSubText"
+                        TextWrapping="Wrap"
+                        HorizontalAlignment="Center" />
+                    </StackPanel>
+                  </Border>
+                </Button>
+
+                <Button 
+                  Classes="ShortcutButton" 
+                  HorizontalAlignment="Center" 
+                  VerticalAlignment="Center"
+                  Width="94"
+                  Height="92">
+                  <Border Background="#00000000">
+                    <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                      <controls:IconButton
+                        Data="{StaticResource ARMS}"
+                        Foreground="{StaticResource Red400Brush}"
+                        HorizontalAlignment="Center" />
+                      <TextBlock 
+                        Text="Arms" 
+                        Classes="ShortcutButtonText"
+                        TextWrapping="Wrap"
+                        HorizontalAlignment="Center" />
+                      <TextBlock 
+                        Text="Biceps, Triceps" 
+                        Classes="ShortcutButtonSubText"
+                        TextWrapping="Wrap"
+                        HorizontalAlignment="Center" />
+                    </StackPanel>
+                  </Border>
+                </Button>
+
+                <Button 
+                  Classes="ShortcutButton" 
+                  HorizontalAlignment="Center" 
+                  VerticalAlignment="Center"
+                  Width="94"
+                  Height="92">
+                  <Border Background="#00000000">
+                    <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                      <controls:IconButton
+                        Data="{StaticResource LEGS}"
+                        Foreground="{StaticResource Yellow400Brush}"
+                        HorizontalAlignment="Center" />
+                      <TextBlock 
+                        Text="Legs" 
+                        Classes="ShortcutButtonText"
+                        TextWrapping="Wrap"
+                        HorizontalAlignment="Center" />
+                      <TextBlock 
+                        Text="Quads, Glutes" 
+                        Classes="ShortcutButtonSubText"
+                        TextWrapping="Wrap"
+                        HorizontalAlignment="Center" />
+                    </StackPanel>
+                  </Border>
+                </Button>
+
+                <Button 
+                  Classes="ShortcutButton" 
+                  HorizontalAlignment="Center" 
+                  VerticalAlignment="Center"
+                  Width="94"
+                  Height="92">
+                  <Border Background="#00000000">
+                    <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                      <controls:IconButton
+                        Data="{StaticResource ABS}"
+                        Foreground="{StaticResource Teal400Brush}"
+                        HorizontalAlignment="Center" />
+                      <TextBlock 
+                        Text="Abs &amp; Core" 
+                        Classes="ShortcutButtonText"
+                        TextWrapping="Wrap"
+                        HorizontalAlignment="Center" />
+                      <TextBlock 
+                        Text="Core Strength" 
+                        Classes="ShortcutButtonSubText"
+                        TextWrapping="Wrap"
+                        HorizontalAlignment="Center" />
+                    </StackPanel>
+                  </Border>
+                </Button>
+
+                <Button 
+                  Classes="ShortcutButton" 
+                  HorizontalAlignment="Center" 
+                  VerticalAlignment="Center"
+                  Width="94"
+                  Height="92">
+                  <Border Background="#00000000">
+                    <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                      <controls:IconButton
+                        Data="{StaticResource SHOULDERS}"
+                        Foreground="{StaticResource Indigo400Brush}"
+                        HorizontalAlignment="Center" />
+                      <TextBlock 
+                        Text="Shoulders" 
+                        Classes="ShortcutButtonText"
+                        TextWrapping="Wrap"
+                        HorizontalAlignment="Center" />
+                      <TextBlock 
+                        Text="Deltoids" 
+                        Classes="ShortcutButtonSubText"
+                        TextWrapping="Wrap"
+                        HorizontalAlignment="Center" />
+                    </StackPanel>
+                  </Border>
+                </Button>
+
+                <Button 
+                  Classes="ShortcutButton" 
+                  HorizontalAlignment="Center" 
+                  VerticalAlignment="Center"
+                  Width="94"
+                  Height="92">
+                  <Border Background="#00000000">
+                    <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                      <controls:IconButton
+                        Data="{StaticResource BACK}"
+                        Foreground="{StaticResource Indigo400Brush}"
+                        HorizontalAlignment="Center" />
+                      <TextBlock 
+                        Text="Back" 
+                        Classes="ShortcutButtonText"
+                        TextWrapping="Wrap"
+                        HorizontalAlignment="Center" />
+                      <TextBlock 
+                        Text="Lats, Traps" 
+                        Classes="ShortcutButtonSubText"
+                        TextWrapping="Wrap"
+                        HorizontalAlignment="Center" />
+                    </StackPanel>
+                  </Border>
+                </Button>
+              </UniformGrid>
+
+              <TextBlock Text="More categories unlocked as you progress!" Classes="SmallMutedText" TextAlignment="Center" Margin="0,8,0,0"/>
+            </StackPanel>
+
+            <Panel Height="32"/> 
+          </StackPanel>
+        </ScrollViewer>
+      </DockPanel>
+    </Border>
+  </Panel>
+</UserControl>

@@ -1,0 +1,356 @@
+<UserControl 
+  xmlns="https://github.com/avaloniaui"
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+  xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+  xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+  xmlns:controls="using:Olimpo.Controls"
+  mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+  x:Class="GetFitterGetBigger.Views.WorkoutView">
+  
+  <UserControl.Styles>
+    <Style Selector="TextBlock.WorkoutNameTitle">
+      <Setter Property="FontSize" Value="28"/> 
+      <Setter Property="FontWeight" Value="ExtraBold"/>
+      <Setter Property="Foreground" Value="{StaticResource WhiteBrush}"/>
+      <Setter Property="TextAlignment" Value="Center"/>
+    </Style>
+
+    <Style Selector="TextBlock.WorkoutNameSubtitle">
+      <Setter Property="FontSize" Value="16"/> 
+      <Setter Property="Foreground" Value="{StaticResource Sky400Brush}"/>
+      <Setter Property="TextAlignment" Value="Center"/>
+    </Style>
+
+    <Style Selector="TextBlock.SectionHeader">
+      <Setter Property="FontSize" Value="18"/> 
+      <Setter Property="FontWeight" Value="SemiBold"/>
+      <Setter Property="Foreground" Value="{StaticResource Slate100Brush}"/>
+      <Setter Property="Margin" Value="0,0,0,8"/>
+    </Style>
+
+    <Style Selector="TextBlock.CoachNoteText">
+      <Setter Property="FontSize" Value="14"/> 
+      <Setter Property="Foreground" Value="{StaticResource Slate200Brush}"/>
+      <Setter Property="TextWrapping" Value="Wrap"/>
+    </Style>
+
+    <Style Selector="TextBlock.ExerciseCardText">
+      <Setter Property="FontSize" Value="12"/> 
+      <Setter Property="FontWeight" Value="Medium"/>
+      <Setter Property="Foreground" Value="{StaticResource Slate100Brush}"/>
+      <Setter Property="TextAlignment" Value="Center"/>
+      <Setter Property="Padding" Value="8,4"/> 
+      <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+    </Style>
+
+    <Style Selector="Button.HeaderButton">
+      <Setter Property="Background" Value="{StaticResource TransparentBrush}"/>
+      <Setter Property="Foreground" Value="{StaticResource Slate300Brush}"/>
+      <Setter Property="BorderThickness" Value="0"/>
+      <Setter Property="Padding" Value="4"/>
+      <Setter Property="VerticalAlignment" Value="Center"/>
+      <Setter Property="Cursor" Value="Hand"/>
+    </Style>
+
+    <Style Selector="Button.PrimaryAction">
+      <Setter Property="Background" Value="{StaticResource Sky500Brush}"/>
+      <Setter Property="Foreground" Value="{StaticResource WhiteBrush}"/>
+      <Setter Property="FontSize" Value="16"/>
+      <Setter Property="FontWeight" Value="SemiBold"/>
+      <Setter Property="Padding" Value="14"/> 
+      <Setter Property="CornerRadius" Value="12"/>
+      <Setter Property="HorizontalAlignment" Value="Stretch"/>
+      <Setter Property="Cursor" Value="Hand"/>
+    </Style>
+
+    <Style Selector="Button.SecondaryAction">
+      <Setter Property="Background" Value="{StaticResource Slate600Brush}"/>
+      <Setter Property="Foreground" Value="{StaticResource Slate100Brush}"/>
+      <Setter Property="FontSize" Value="16"/>
+      <Setter Property="FontWeight" Value="SemiBold"/>
+      <Setter Property="Padding" Value="14"/>
+      <Setter Property="CornerRadius" Value="12"/>
+      <Setter Property="HorizontalAlignment" Value="Stretch"/>
+      <Setter Property="Cursor" Value="Hand"/>
+    </Style>
+  </UserControl.Styles>
+
+  <Panel>
+    <Border 
+      Background="{StaticResource Slate800Brush}"
+      CornerRadius="24"
+      BorderThickness="0"
+      HorizontalAlignment="Stretch" 
+      VerticalAlignment="Stretch"
+      ClipToBounds="True">
+            
+      <DockPanel LastChildFill="True">
+        <Border 
+          DockPanel.Dock="Top" 
+          Background="#CC1E293B" 
+          Padding="15 10" 
+          BorderThickness="0 0 0 1" 
+          BorderBrush="{StaticResource Slate700Brush}">
+          <Grid ColumnDefinitions="Auto * Auto">
+            <controls:IconButton
+              Data="{StaticResource ArrowLeftCicle}"
+              Command="{Binding BackMenuCommand}"
+              ToolTip.Tip="Go Back"
+              Foreground="{StaticResource Slate300Brush}"
+              Background="{StaticResource TransparentBrush}" />
+
+            <TextBlock 
+              Grid.Column="1" 
+              Text="Workout Summary" 
+              Classes="ScreenTitle" 
+              VerticalAlignment="Center" 
+              HorizontalAlignment="Left" 
+              Margin="12 0 0 0"/>
+          </Grid>
+        </Border>
+
+        <Border DockPanel.Dock="Bottom" Padding="20" BorderThickness="0 1 0 0" BorderBrush="{StaticResource Slate700Brush}" Background="{StaticResource Slate800Brush}">
+          <Grid ColumnDefinitions="* *"> <!-- Gap="16" -->
+            <Button 
+              Grid.Column="0" 
+              Content="Cancel" 
+              Classes="SecondaryAction"
+              Command="{Binding CancelCommand}"
+              Height="72"
+              Width="140"
+              HorizontalAlignment="Left"
+              VerticalAlignment="Center"
+              VerticalContentAlignment="Center"
+              HorizontalContentAlignment="Center"
+              Margin="5 0 0 0" />
+            
+            <Button 
+              Grid.Column="1" 
+              Classes="PrimaryAction" 
+              Command="{Binding StartCommand}"
+              Height="72" 
+              Width="140" 
+              HorizontalAlignment="Right" 
+              VerticalAlignment="Center" 
+              VerticalContentAlignment="Center"
+              Margin="0 0 5 0">
+
+              <StackPanel Orientation="Vertical" Spacing="6">
+                <TextBlock Text="Start Workout" HorizontalAlignment="Center" />
+                <controls:Icon 
+                  Data="{StaticResource ArrowRight}" 
+                  HorizontalAlignment="Center"
+                  Height="16"
+                  Width="16" />
+              </StackPanel>
+            </Button>
+          </Grid>
+        </Border>
+
+        <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Margin="0 0 0 0">
+          <StackPanel Spacing="28" Margin="20">
+            <StackPanel TextBlock.TextAlignment="Center">
+              <TextBlock 
+                Classes="WorkoutNameTitle"
+                Text="{Binding WorkoutTitle}" />
+              <TextBlock 
+                Classes="WorkoutNameSubtitle" 
+                Text="{Binding WorkoutSubTitle}"
+                TextWrapping="Wrap" />
+            </StackPanel>
+
+            <StackPanel>
+              <TextBlock 
+                Classes="SectionHeader" 
+                Text="Preparation" />
+
+              <Border Classes="GlassCard">
+                <StackPanel Orientation="Horizontal" Spacing="12">
+                  <Border Background="#330EA5E9" CornerRadius="8" Width="40" Height="40"> 
+                    <controls:Icon 
+                      Data="{StaticResource Equipment}" 
+                      Foreground="{StaticResource Sky400Brush}"
+                      Height="22" 
+                      Width="22" />
+                  </Border>
+                  <StackPanel VerticalAlignment="Center">
+                    <TextBlock 
+                      Text="Equipment" 
+                      FontWeight="Medium" 
+                      Foreground="{StaticResource Slate100Brush}"/>
+                    <TextBlock 
+                      Text="{Binding WorkoutPreparationSteps}" 
+                      FontSize="14" 
+                      Foreground="{StaticResource Slate300Brush}"/>
+                  </StackPanel>
+                </StackPanel>
+              </Border>
+            </StackPanel>
+
+            <StackPanel>
+              <TextBlock Text="Overall Coach Notes" Classes="SectionHeader"/>
+
+              <Border Classes="GlassCard">
+                <ItemsControl ItemsSource="{Binding OverallCoachNotes}">
+                  <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <StackPanel Orientation="Vertical" Spacing="16"/>
+                    </ItemsPanelTemplate>
+                  </ItemsControl.ItemsPanel>
+
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                      <Grid ColumnDefinitions="20 10 *">
+                        <controls:Icon 
+                          Grid.Column="0"
+                          Data="{StaticResource Check}" 
+                          Foreground="{StaticResource Sky400Brush}" 
+                          Margin="0 2 0 0" 
+                          VerticalAlignment="Top"
+                          HorizontalAlignment="Center"
+                          Height="16"
+                          Width="16" />
+                        <TextBlock 
+                          Grid.Column="2"
+                          Text="{Binding}]" 
+                          VerticalAlignment="Top"
+                          HorizontalAlignment="Left"
+                          Classes="CoachNoteText" />
+                      </Grid>
+                    </DataTemplate>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
+              </Border>
+            </StackPanel>
+
+                <!-- <StackPanel>
+                    <TextBlock Text="Exercises in this Workout" Classes="SectionHeader" Margin="0,0,0,12"/>
+                    <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
+                        <ItemsControl Name="ExerciseItems">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <StackPanel Orientation="Horizontal" Spacing="16"/>
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Width="128" Background="{StaticResource Slate700Brush}" CornerRadius="8" ClipToBounds="True">
+                                        <StackPanel>
+                                            <Image Source="{Binding ImageUrl}" Height="96" Stretch="UniformToFill"/>
+                                            <TextBlock Text="{Binding Name}" Classes="ExerciseCardText"/>
+                                        </StackPanel>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                            <ItemsControl.ItemsSource>
+                                <x:Array Type="system:Object">
+                                    <x:Arguments>
+                                        <system:String>https://placehold.co/200x150/334155/94A3B8?text=Pushups</system:String>
+                                        <system:String>Pushups</system:String>
+                                    </x:Arguments>
+                                    <x:Arguments>
+                                        <system:String>https://placehold.co/200x150/334155/94A3B8?text=Air+Squats</system:String>
+                                        <system:String>Air Squats</system:String>
+                                    </x:Arguments>
+                                    <x:Arguments>
+                                        <system:String>https://placehold.co/200x150/334155/94A3B8?text=Plank</system:String>
+                                        <system:String>Plank</system:String>
+                                    </x:Arguments>
+                                    <x:Arguments>
+                                        <system:String>https://placehold.co/200x150/334155/94A3B8?text=Lunges</system:String>
+                                        <system:String>Lunges</system:String>
+                                    </x:Arguments>
+                                </x:Array>
+                            </ItemsControl.ItemsSource>
+                        </ItemsControl>
+                    </ScrollViewer>
+                </StackPanel> -->
+            <Panel Height="16"/> 
+          </StackPanel>
+        </ScrollViewer>
+      </DockPanel>
+    </Border>
+  </Panel>
+
+
+  <!-- 
+  <Grid RowDefinitions="Auto 50 35 30 50 35 30 50 35 Auto 200 *">
+    <Grid Grid.Row="0" ColumnDefinitions="Auto *">
+      <controls:IconButton
+        Grid.Row="0"
+        Data="{StaticResource ArrowLeftCicle}"
+        Command="{Binding BackMenuCommand}"
+        VerticalAlignment="Center"
+        HorizontalAlignment="Center" />
+    </Grid>
+
+    <TextBlock 
+      Grid.Row="2" 
+      Text="Workout"
+      VerticalAlignment="Center"
+      HorizontalAlignment="Center"
+      FontSize="28"
+      FontWeight="Bold" />
+
+    <TextBlock 
+      Grid.Row="3" 
+      Text="{Binding WorkoutCaption}"
+      VerticalAlignment="Center"
+      HorizontalAlignment="Center"
+      FontSize="22"
+      FontWeight="Bold" />
+
+    <TextBlock 
+      Grid.Row="5" 
+      Text="Preparation"
+      VerticalAlignment="Center"
+      HorizontalAlignment="Center"
+      FontSize="28"
+      FontWeight="Bold" />
+
+    <TextBlock 
+      Grid.Row="6" 
+      Text="{Binding WorkoutPreparationSteps}"
+      VerticalAlignment="Center"
+      HorizontalAlignment="Center"
+      FontSize="22"
+      FontWeight="Bold" />
+
+    <TextBlock 
+      Grid.Row="8" 
+      Text="Overall coach notes"
+      VerticalAlignment="Center"
+      HorizontalAlignment="Center"
+      FontSize="28"
+      FontWeight="Bold" />
+
+    <TextBlock 
+        Grid.Row="9"
+        Text="{Binding OverallCoachNotes}]"
+        TextWrapping="Wrap"
+        VerticalAlignment="Center"
+        HorizontalAlignment="Left"
+        FontSize="16"
+        FontWeight="Bold" />
+
+    <Grid 
+      Grid.Row="10"
+      Grid.ColumnDefinitions="* 10 *" 
+      VerticalAlignment="Center">
+
+      <Button 
+        Grid.Column="0"
+        Content="Cancel"
+        Background="#047872"
+        Command="{Binding CancelCommand}" />
+
+      <Button 
+        Grid.Column="2"
+        Content="Start"
+        Background="#047872"
+        Command="{Binding StartCommand}" />
+    </Grid>
+  </Grid> 
+  -->
+
+</UserControl>

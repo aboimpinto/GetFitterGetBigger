@@ -1,0 +1,245 @@
+<UserControl 
+  xmlns="https://github.com/avaloniaui"
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+  xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+  xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+  xmlns:controls="using:Olimpo.Controls"
+  mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+  x:Class="GetFitterGetBigger.Views.WorkoutSummaryView">
+
+  <UserControl.Styles>
+    <!-- 
+    <Style Selector="Border.GlassCard">
+      <Setter Property="Background" Value="#99334155" /> 
+      <Setter Property="BorderBrush" Value="#B3475569" /> 
+      <Setter Property="BorderThickness" Value="1"/>
+      <Setter Property="CornerRadius" Value="12"/>
+      <Setter Property="Padding" Value="16"/>
+    </Style> 
+    -->
+
+    <Style Selector="Border.StatItem">
+      <!-- <Setter Property="Classes" Value="GlassCard"/> -->
+      <Setter Property="Padding" Value="12"/> 
+      <Setter Property="TextBlock.TextAlignment" Value="Center"/>
+    </Style>
+
+    <Style Selector="TextBlock.StatValue">
+      <Setter Property="FontSize" Value="24"/> <Setter Property="FontWeight" Value="Bold"/>
+      <Setter Property="Foreground" Value="{StaticResource Sky400Brush}"/>
+      <Setter Property="Margin" Value="0,0,0,2"/> 
+    </Style>
+
+    <Style Selector="TextBlock.StatLabel">
+      <Setter Property="FontSize" Value="12"/> <Setter Property="Foreground" Value="{StaticResource Slate300Brush}"/>
+    </Style>
+
+    <Style Selector="TextBlock.ScreenHeaderTitle">
+      <Setter Property="FontSize" Value="20"/>
+      <Setter Property="FontWeight" Value="Bold"/>
+      <Setter Property="Foreground" Value="{StaticResource Sky400Brush}"/>
+      <Setter Property="HorizontalAlignment" Value="Center"/>
+    </Style>
+
+    <Style Selector="TextBlock.CompletionTitle">
+      <Setter Property="FontSize" Value="24"/> 
+      <Setter Property="FontWeight" Value="ExtraBold"/>
+      <Setter Property="Foreground" Value="{StaticResource WhiteBrush}"/>
+      <Setter Property="TextAlignment" Value="Center"/>
+    </Style>
+
+    <Style Selector="TextBlock.CompletionSubtitle">
+      <Setter Property="FontSize" Value="16"/> 
+      <Setter Property="Foreground" Value="{StaticResource Slate300Brush}"/>
+      <Setter Property="TextAlignment" Value="Center"/>
+    </Style>
+
+    <Style Selector="TextBlock.SectionHeader">
+      <Setter Property="FontSize" Value="18"/> 
+      <Setter Property="FontWeight" Value="SemiBold"/>
+      <Setter Property="Foreground" Value="{StaticResource Slate100Brush}"/>
+      <Setter Property="Margin" Value="0,0,0,12"/> 
+    </Style>
+
+    <Style Selector="TextBlock.AchievementText">
+      <Setter Property="FontSize" Value="14"/>
+      <Setter Property="Foreground" Value="{StaticResource Slate200Brush}"/>
+      <Setter Property="VerticalAlignment" Value="Center"/>
+    </Style>
+
+    <Style Selector="Button.FooterButton">
+      <Setter Property="Foreground" Value="{StaticResource Slate100Brush}"/>
+      <Setter Property="FontSize" Value="16"/>
+      <Setter Property="FontWeight" Value="SemiBold"/>
+      <Setter Property="Padding" Value="14"/> 
+      <Setter Property="CornerRadius" Value="12"/>
+      <Setter Property="HorizontalAlignment" Value="Stretch"/>
+      <Setter Property="HorizontalContentAlignment" Value="Center"/>
+      <Setter Property="Cursor" Value="Hand"/>
+    </Style>
+
+    <Style Selector="Button.FooterButton.Primary">
+      <Setter Property="Background" Value="{StaticResource Sky500Brush}"/>
+      <Setter Property="Foreground" Value="{StaticResource WhiteBrush}"/>
+    </Style>
+
+    <Style Selector="Button.FooterButton.Secondary">
+      <Setter Property="Background" Value="{StaticResource Slate600Brush}"/>
+    </Style>
+
+    <Style Selector="TextBlock.Icon">
+      <Setter Property="FontFamily" Value="Segoe MDL2 Assets"/> 
+      <Setter Property="VerticalAlignment" Value="Center"/>
+      <Setter Property="HorizontalAlignment" Value="Center"/>
+    </Style>
+  </UserControl.Styles>
+
+  <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" ZIndex="10">
+    <StackPanel Spacing="24"> 
+      <StackPanel TextBlock.TextAlignment="Center" Margin="0,16,0,0"> 
+        <controls:Icon Data="{StaticResource Trophy}" Width="36" Height="36" Foreground="{StaticResource Yellow400Brush}" />
+
+        <TextBlock Text="Full Body Blitz Done!" Classes="CompletionTitle"/>
+        <TextBlock Text="Awesome effort, you crushed it!" Classes="CompletionSubtitle"/>
+      </StackPanel>
+
+      <StackPanel>
+        <TextBlock Text="Your Performance" Classes="SectionHeader"/>
+        <UniformGrid Columns="2"> 
+          <Border Classes="StatItem GlassCard">
+            <StackPanel>
+              <TextBlock Text="25:32" Classes="StatValue"/>
+              <TextBlock Text="Total Time" Classes="StatLabel"/>
+            </StackPanel>
+          </Border>
+
+          <Border Classes="StatItem GlassCard">
+            <StackPanel>
+              <TextBlock Text="03:00" Classes="StatValue"/>
+              <TextBlock Text="Resting Time" Classes="StatLabel"/>
+            </StackPanel>
+          </Border>
+          
+          <Border Classes="StatItem GlassCard">
+            <StackPanel>
+              <TextBlock Text="150" Classes="StatValue"/>
+              <TextBlock Text="Total Reps" Classes="StatLabel"/>
+            </StackPanel>
+          </Border>
+
+          <Border Classes="StatItem GlassCard">
+            <StackPanel>
+              <TextBlock Text="9.0s" Classes="StatValue"/>
+              <TextBlock Text="Avg/Rep" Classes="StatLabel"/>
+            </StackPanel>
+          </Border>
+
+          <Border Classes="StatItem GlassCard">
+            <StackPanel>
+              <TextBlock Classes="StatValue">
+                  <Run Text="1250"/>
+                  <Run Text="kg" FontSize="12"/>
+              </TextBlock>
+              <TextBlock Text="Total Weight" Classes="StatLabel"/>
+            </StackPanel>
+          </Border>
+
+          <Border Classes="StatItem GlassCard">
+            <StackPanel>
+              <TextBlock Classes="StatValue">
+                <Run Text="8.3"/>
+                <Run Text="kg" FontSize="12"/>
+              </TextBlock>
+              <TextBlock Text="Avg Weight/Rep" Classes="StatLabel"/>
+            </StackPanel>
+          </Border>
+        </UniformGrid>
+      </StackPanel>
+
+      <StackPanel>
+        <TextBlock Text="Community Snapshot" Classes="SectionHeader"/>
+        <Border Classes="GlassCard">
+          <Grid ColumnDefinitions="Auto * Auto" RowDefinitions="Auto Auto" VerticalAlignment="Center">
+              <Border Background="#33A855F7" CornerRadius="8" Width="48" Height="48" Margin="0 0 16 0"> 
+                <controls:Icon
+                  Data="{StaticResource Community}"
+                  Foreground="{StaticResource Purple400Brush}"
+                  Height="22"
+                  Width="22" />
+              </Border>
+              
+              <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                  <TextBlock FontWeight="SemiBold" Foreground="{StaticResource WhiteBrush}">
+                    <Run Text="Your Rank: "/>
+                    <Run Text="#23" Foreground="{StaticResource Purple400Brush}"/>
+                    <Run Text=" (Top 15%)" FontSize="12"/>
+                  </TextBlock>
+                  <TextBlock 
+                    Text="Based on workout completion time." 
+                    FontSize="14" 
+                    Foreground="{StaticResource Slate300Brush}"
+                    TextWrapping="Wrap" />
+              </StackPanel>
+
+              <controls:Icon
+                Grid.Column="2"
+                Data="{StaticResource NavigateForward}"
+                Foreground="{StaticResource Slate400Brush}"
+                Height="16"
+                Width="16" />
+
+              <TextBlock Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="3" 
+                Classes="CommunityDetails" 
+                Text="Keep pushing to climb the leaderboard! Ranking rules may vary."
+                Margin="0 12 0 0"
+                FontSize="12"
+                Foreground="{StaticResource Slate400Brush}" />
+          </Grid>
+        </Border>
+      </StackPanel>
+
+      <StackPanel>
+        <TextBlock Text="Achievements" Classes="SectionHeader"/>
+        
+        <Border Classes="GlassCard">
+          <StackPanel Spacing="8">
+            <StackPanel Orientation="Horizontal" Spacing="12">
+              <controls:Icon
+                Data="{StaticResource Star}"
+                Foreground="{StaticResource Yellow400Brush}"
+                Height="20"
+                Width="20" />
+
+              <Grid RowDefinitions="Auto Auto">
+                <TextBlock 
+                  Grid.Row="0" 
+                  Classes="AchievementText" 
+                  Text="New Personal Best: " />
+                  
+                <TextBlock 
+                  Grid.Row="1" 
+                  Classes="AchievementText" 
+                  Text="Total Weight Moved!" 
+                  TextWrapping="Wrap" 
+                  FontWeight="SemiBold" 
+                  Foreground="{StaticResource WhiteBrush}" />
+              </Grid>  
+            </StackPanel>
+
+            <StackPanel Orientation="Horizontal" Spacing="12">
+              <controls:Icon
+                Data="{StaticResource HIIT}"
+                Foreground="{StaticResource Orange400Brush}"
+                Height="16"
+                Width="16" />
+              <TextBlock Text="5 Day Workout Streak!" Classes="AchievementText" TextWrapping="Wrap" />
+            </StackPanel>
+          </StackPanel>
+        </Border>
+      </StackPanel>
+
+      <Panel Height="16"/> 
+    </StackPanel>
+  </ScrollViewer>
+
+</UserControl>

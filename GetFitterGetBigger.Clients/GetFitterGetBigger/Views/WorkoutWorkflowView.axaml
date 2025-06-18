@@ -1,0 +1,99 @@
+<UserControl 
+  xmlns="https://github.com/avaloniaui"
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+  xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+  xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+  xmlns:adc="using:Avalonia.Data.Converters"
+  xmlns:anim="using:Avalonia.Animation"
+  mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+  x:Class="GetFitterGetBigger.Views.WorkoutWorkflowView">
+
+  <Panel>
+    <Border 
+      Background="{StaticResource Slate800Brush}"
+      CornerRadius="24"
+      Padding="15 10" 
+      BorderBrush="{StaticResource Slate700Brush}"
+      BorderThickness="1"
+      HorizontalAlignment="Stretch" 
+      VerticalAlignment="Stretch"
+      ClipToBounds="True">
+
+      <DockPanel LastChildFill="True">
+
+        <StackPanel DockPanel.Dock="Top" Margin="0 0 0 24" Spacing="8">
+          <Grid ColumnDefinitions="* Auto">
+            <TextBlock 
+              Text="{Binding WorkoutTitle}" 
+              Classes="H1" 
+              VerticalAlignment="Center"/>
+
+            <Button 
+              Grid.Column="1" 
+              Background="Transparent" 
+              BorderThickness="0" 
+              Foreground="{StaticResource Slate400Brush}" 
+              ToolTip.Tip="Pause Workout" 
+              Padding="0">
+
+              <TextBlock 
+                Text="❚❚" 
+                FontSize="18" 
+                VerticalAlignment="Center"/>
+            </Button>
+          </Grid>
+
+          <StackPanel Spacing="4">
+            <Grid ColumnDefinitions="* Auto">
+              <TextBlock 
+                Text="{Binding RoundDescription}" 
+                Classes="MutedText" 
+                FontWeight="Medium"/>
+
+              <TextBlock 
+                Grid.Column="1" 
+                Text="{Binding WorkoutTime}" 
+                Classes="SmallMutedText" 
+                Foreground="{StaticResource Sky400Brush}" 
+                FontFamily="Consolas,Monospace"/>
+            </Grid>
+            
+            <ProgressBar 
+              Value="{Binding RoundProgress}" 
+              Minimum="0" 
+              Maximum="100" 
+              Height="10" 
+              CornerRadius="5"
+              Background="{StaticResource Slate700Brush}" 
+              Foreground="{StaticResource Sky500Brush}"/>
+          </StackPanel>
+
+          <TextBlock 
+            Text="{Binding RoundExerciseSummary}" 
+            Classes="SmallMutedText" 
+            TextTrimming="CharacterEllipsis"/>
+        </StackPanel>
+
+        <StackPanel DockPanel.Dock="Bottom" Margin="0 16 0 0" Spacing="12" VerticalAlignment="Bottom">
+          <Button 
+            Classes="Primary" 
+            Content="{Binding NextButtonCaption}" 
+            Command="{Binding NextWorkoutSetCommand}"
+            IsVisible="{Binding IsNextExerciseVisible}" /> 
+
+            <Button 
+              Classes="Primary" 
+              Content="Finish Workout" 
+              Command="{Binding CloseWorkoutSummaryCommand}"
+              IsVisible="{Binding IsWorkoutFinished}" /> 
+        </StackPanel>
+
+        <ContentControl
+          Margin="0 0 0 10"
+          HorizontalAlignment="Stretch" 
+          VerticalAlignment="Stretch"
+          Content="{Binding CurrentWorkoutSet}" />
+        </DockPanel>
+    </Border>
+  </Panel>  
+</UserControl>
