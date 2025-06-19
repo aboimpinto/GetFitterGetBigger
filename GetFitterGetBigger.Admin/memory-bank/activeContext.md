@@ -43,12 +43,18 @@ The project has been initialized with the standard Blazor template, which includ
    - ✅ Implemented responsive design patterns
    - ✅ Fixed build process issues and documented solutions
 
-2. **API Configuration Setup**
+2. **~~HTTPS in Development~~ (COMPLETED)**
+   - ✅ Configured HTTPS profile as default in launchSettings.json
+   - ✅ Enabled HSTS in development environment
+   - ✅ Added Kestrel certificate configuration
+   - ✅ Created documentation for HTTPS setup and troubleshooting
+
+3. **API Configuration Setup**
    - Implement configuration for API endpoint URL
    - Create service layer for composing endpoint addresses
    - Establish patterns for API communication
 
-3. **Core Models**
+4. **Core Models**
    - Define data models for exercises, workouts, and plans
    - Create DTOs for API communication
    - Implement validation logic
