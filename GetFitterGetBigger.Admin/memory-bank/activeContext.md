@@ -103,6 +103,11 @@ The project has been initialized with the standard Blazor template, which includ
    - Provide immediate feedback for user actions
    - Implement consistent design patterns
 
+4. **Testing Approach**
+   - If automated browser testing fails twice, request manual testing from the user
+   - Collect user feedback on UI/UX issues that may not be visible in automated tests
+   - Focus on critical user flows for thorough testing
+
 ## Project Insights
 
 ### Key Learnings
