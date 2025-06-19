@@ -32,6 +32,8 @@ The GetFitterGetBigger Admin Application is in the **initial setup phase**. The 
    - Tailwind CSS installed and configured
    - Build process set up for CSS generation
    - Responsive design utilities available
+   - Fixed build process issues with PostCSS plugin
+   - Created documentation for troubleshooting Tailwind integration
 
 4. **Dashboard UI**
    - Modern admin dashboard implemented
@@ -93,7 +95,7 @@ The GetFitterGetBigger Admin Application is in the **initial setup phase**. The 
 
 ## Known Issues
 
-- No significant issues at this early stage
+- ~~Tailwind CSS build process issue~~ (RESOLVED): Fixed issue with PostCSS plugin by updating to use Tailwind CLI directly
 - Project is following standard Blazor patterns and practices
 - Browser testing limitations: The embedded browser in the development environment may not fully render all UI elements. For comprehensive testing, use a standard browser and provide feedback on any issues.
 
@@ -105,6 +107,7 @@ The GetFitterGetBigger Admin Application is in the **initial setup phase**. The 
    - Blazor selected for its C# integration and component model
    - .NET 9.0 chosen as the latest stable platform
    - Tailwind CSS identified as the styling framework
+   - Tailwind CSS build process updated to use CLI directly instead of PostCSS plugin
 
 2. **Architecture**
    - API-first approach for data operations
