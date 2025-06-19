@@ -61,10 +61,12 @@ The project has been initialized with the standard Blazor template, which includ
 
 ### Upcoming Tasks
 
-1. **Authentication**
-   - Implement user authentication against the API
-   - Set up authorization policies
-   - Create login/logout functionality
+1. **~~Authentication~~ (IMPLEMENTED)**
+   - ✅ Implemented Google and Facebook authentication
+   - ✅ Set up authorization policies
+   - ✅ Created login/logout functionality
+   - ✅ Added user profile display with email and profile picture
+   - ✅ Implemented automatic redirection to login for unauthenticated users
 
 2. **Exercise Management**
    - Create exercise list view

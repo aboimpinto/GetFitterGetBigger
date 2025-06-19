@@ -112,7 +112,14 @@ Tailwind CSS was chosen as the styling framework:
 
 ## Critical Implementation Paths
 
-1. **API Communication Layer**
+1. **Authentication System**
+   - External authentication providers (Google, Facebook)
+   - Cookie-based authentication
+   - Authorization policies
+   - User profile management
+   - Secure routing with automatic redirection
+
+2. **API Communication Layer**
    - HTTP client configuration
    - Authentication handling
    - Request/response processing

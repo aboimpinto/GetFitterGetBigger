@@ -58,6 +58,10 @@ The GetFitterGetBigger Admin Application is built using the following technologi
 ### External Packages
 - **Microsoft.AspNetCore.Components.WebAssembly**: Core Blazor WebAssembly framework
 - **Microsoft.Extensions.Http**: HTTP client factory for API communication
+- **Microsoft.AspNetCore.Authentication.Google**: Google authentication provider
+- **Microsoft.AspNetCore.Authentication.Facebook**: Facebook authentication provider
+- **Microsoft.AspNetCore.Authentication.Cookies**: Cookie-based authentication
+- **Microsoft.AspNetCore.Authorization**: Authorization policies and handlers
 - **Tailwind CSS**: Styling framework
 - Additional NuGet packages as required for specific functionality
 
@@ -67,6 +71,31 @@ The GetFitterGetBigger Admin Application is built using the following technologi
 - Shared models and DTOs for data consistency
 
 ## Tool Usage Patterns
+
+### Authentication System [NEW]
+
+The authentication system uses external providers and cookie-based authentication:
+
+1. **External Authentication Providers**
+   - Google and Facebook OAuth integration
+   - Configuration in appsettings.json
+   - Claims mapping for user information
+
+2. **Authentication Flow**
+   - Redirect to login page for unauthenticated users
+   - External provider authentication
+   - Cookie-based session management
+   - Automatic redirection to original requested URL
+
+3. **Authorization**
+   - Policy-based authorization
+   - Route protection with AuthorizeRouteView
+   - Custom authorization handlers
+
+4. **User Profile**
+   - Display of user information (email, profile picture)
+   - Logout functionality
+   - Profile information stored in claims
 
 ### Tailwind CSS Integration [NEW]
 
