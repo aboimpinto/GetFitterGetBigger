@@ -12,6 +12,12 @@
     </None>
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.Cookies" Version="2.3.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.Facebook" Version="9.0.6" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.Google" Version="9.0.6" />
+  </ItemGroup>
+
   <Target Name="BuildTailwindCSS" BeforeTargets="Build">
     <Exec Command="npm run css:build" ContinueOnError="true" />
   </Target>
