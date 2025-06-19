@@ -67,6 +67,10 @@ The project has been initialized with the standard Blazor template, which includ
    - ✅ Created login/logout functionality
    - ✅ Added user profile display with email and profile picture
    - ✅ Implemented automatic redirection to login for unauthenticated users
+   - ✅ Fixed profile picture retrieval from authentication providers
+   - ✅ Improved logout functionality with direct endpoint access
+   - ✅ Secured authentication credentials using .NET User Secrets
+   - ✅ Created documentation for authentication setup and credential management
 
 2. **Exercise Management**
    - Create exercise list view
