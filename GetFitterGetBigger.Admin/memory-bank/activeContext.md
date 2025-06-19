@@ -1,86 +1,52 @@
 # Active Context
 
+This file provides a high-level overview of the current state of the GetFitterGetBigger Admin Application. For detailed information about specific features, please refer to the feature documentation in the `memory-bank/features/` directory.
+
 ## Current Work Focus
 
 The GetFitterGetBigger Admin Application is in the initial setup and architecture phase. The focus is on establishing the foundational structure and key integrations before implementing specific features.
 
 ### Active Development Areas
 
-1. **Project Structure**
-   - Basic Blazor application structure is in place
-   - Default components and pages are set up
-   - Core configuration files are established
-
-2. **Tailwind CSS Integration**
-   - Integration of Tailwind CSS with Blazor has been completed
-   - This establishes the styling foundation for all future UI development
-   - Enables consistent design patterns across the application
-   - Fixed issues with Tailwind CSS build process and configuration
-   - Created documentation for troubleshooting Tailwind integration issues
-
-3. **API Configuration**
+1. **API Configuration** - [Details](/memory-bank/features/api-configuration/overview.md)
    - Setting up the configuration-based API connection
    - Establishing patterns for endpoint composition
    - Creating the service layer for API communication
 
+2. **Core Models**
+   - Defining data models for exercises, workouts, and plans
+   - Creating DTOs for API communication
+   - Implementing validation logic
+
 ## Recent Changes
 
-The project has been initialized with the standard Blazor template, which includes:
+1. **Authentication** - [Details](/memory-bank/features/authentication/overview.md)
+   - Implemented Google and Facebook authentication
+   - Set up authorization policies
+   - Created login/logout functionality
+   - Added user profile display
 
-- Basic project structure
-- Default routing
-- Sample pages (Home, Counter, Weather)
-- Basic layout components
+2. **Tailwind CSS Integration** - [Details](/memory-bank/features/tailwind-css/overview.md)
+   - Installed and configured Tailwind CSS
+   - Set up build process for CSS generation
+   - Fixed build process issues and documented solutions
 
-## Next Steps
+3. **HTTPS in Development** - [Details](/memory-bank/features/https-development/overview.md)
+   - Configured HTTPS profile as default in launchSettings.json
+   - Enabled HSTS in development environment
+   - Added Kestrel certificate configuration
 
-### Immediate Tasks
+## Next Priorities
 
-1. **~~Tailwind CSS Integration~~ (COMPLETED)**
-   - ✅ Installed and configured Tailwind CSS
-   - ✅ Set up build process for CSS generation
-   - ✅ Created base component styles using Tailwind utilities
-   - ✅ Implemented responsive design patterns
-   - ✅ Fixed build process issues and documented solutions
-
-2. **~~HTTPS in Development~~ (COMPLETED)**
-   - ✅ Configured HTTPS profile as default in launchSettings.json
-   - ✅ Enabled HSTS in development environment
-   - ✅ Added Kestrel certificate configuration
-   - ✅ Created documentation for HTTPS setup and troubleshooting
-
-3. **API Configuration Setup**
+1. **Complete API Configuration** - [Tasks](/memory-bank/features/api-configuration/tasks.md)
    - Implement configuration for API endpoint URL
    - Create service layer for composing endpoint addresses
    - Establish patterns for API communication
 
-4. **Core Models**
-   - Define data models for exercises, workouts, and plans
-   - Create DTOs for API communication
-   - Implement validation logic
-
-### Upcoming Tasks
-
-1. **~~Authentication~~ (IMPLEMENTED)**
-   - ✅ Implemented Google and Facebook authentication
-   - ✅ Set up authorization policies
-   - ✅ Created login/logout functionality
-   - ✅ Added user profile display with email and profile picture
-   - ✅ Implemented automatic redirection to login for unauthenticated users
-   - ✅ Fixed profile picture retrieval from authentication providers
-   - ✅ Improved logout functionality with direct endpoint access
-   - ✅ Secured authentication credentials using .NET User Secrets
-   - ✅ Created documentation for authentication setup and credential management
-
-2. **Exercise Management**
+2. **Begin Exercise Management** - [Tasks](/memory-bank/features/exercise-management/tasks.md)
+   - Define data models for exercises
    - Create exercise list view
    - Implement exercise creation/editing
-   - Add categorization and filtering
-
-3. **Workout Builder**
-   - Design workout builder interface
-   - Implement exercise selection and sequencing
-   - Create workout templates
 
 ## Active Decisions and Considerations
 
@@ -118,40 +84,18 @@ The project has been initialized with the standard Blazor template, which includ
    - Provide immediate feedback for user actions
    - Implement consistent design patterns
 
-4. **Testing Approach**
-   - If automated browser testing fails twice, request manual testing from the user
-   - Collect user feedback on UI/UX issues that may not be visible in automated tests
-   - Focus on critical user flows for thorough testing
+## Feature Status Overview
 
-## Project Insights
+For a complete overview of all features and their current status, see the [Feature Status Dashboard](/memory-bank/features/feature-status.md).
 
-### Key Learnings
+### Implemented Features
+- [Authentication](/memory-bank/features/authentication/overview.md)
+- [HTTPS in Development](/memory-bank/features/https-development/overview.md)
+- [Tailwind CSS Integration](/memory-bank/features/tailwind-css/overview.md)
 
-- Blazor provides a productive environment for C# developers to create web applications
-- The component model aligns well with the modular nature of the application
-- Tailwind CSS offers flexibility while maintaining design consistency
-- Tailwind CSS integration with Blazor requires specific configuration and build process setup
-- Proper documentation of technical issues and solutions is essential for future maintenance
+### In Progress Features
+- [API Configuration](/memory-bank/features/api-configuration/overview.md)
 
-### Important Patterns
-
-1. **Service-Based API Communication**
-   - Typed HTTP clients for different API areas
-   - Interface-based services for testability
-   - Consistent error handling
-
-2. **Component Composition**
-   - Small, focused components
-   - Clear component interfaces (parameters, callbacks)
-   - Reusable UI patterns
-
-3. **Configuration Management**
-   - Environment-specific settings
-   - Feature flags for progressive rollout
-   - Centralized configuration access
-
-4. **Tailwind CSS Integration**
-   - Direct use of Tailwind CLI for CSS processing
-   - Local CSS file references instead of CDN
-   - Proper package versioning and dependency management
-   - Documentation of common issues and solutions
+### Planned Features
+- [Exercise Management](/memory-bank/features/exercise-management/overview.md)
+- [Workout Builder](/memory-bank/features/workout-builder/overview.md)
