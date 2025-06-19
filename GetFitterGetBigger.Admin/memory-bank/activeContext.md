@@ -1,0 +1,129 @@
+# Active Context
+
+## Current Work Focus
+
+The GetFitterGetBigger Admin Application is in the initial setup and architecture phase. The focus is on establishing the foundational structure and key integrations before implementing specific features.
+
+### Active Development Areas
+
+1. **Project Structure**
+   - Basic Blazor application structure is in place
+   - Default components and pages are set up
+   - Core configuration files are established
+
+2. **Tailwind CSS Integration [NEW]**
+   - Integration of Tailwind CSS with Blazor is the current priority
+   - This will establish the styling foundation for all future UI development
+   - Will enable consistent design patterns across the application
+
+3. **API Configuration**
+   - Setting up the configuration-based API connection
+   - Establishing patterns for endpoint composition
+   - Creating the service layer for API communication
+
+## Recent Changes
+
+The project has been initialized with the standard Blazor template, which includes:
+
+- Basic project structure
+- Default routing
+- Sample pages (Home, Counter, Weather)
+- Basic layout components
+
+## Next Steps
+
+### Immediate Tasks
+
+1. **Tailwind CSS Integration [NEW]**
+   - Install and configure Tailwind CSS
+   - Set up build process for CSS generation
+   - Create base component styles using Tailwind utilities
+   - Implement responsive design patterns
+
+2. **API Configuration Setup**
+   - Implement configuration for API endpoint URL
+   - Create service layer for composing endpoint addresses
+   - Establish patterns for API communication
+
+3. **Core Models**
+   - Define data models for exercises, workouts, and plans
+   - Create DTOs for API communication
+   - Implement validation logic
+
+### Upcoming Tasks
+
+1. **Authentication**
+   - Implement user authentication against the API
+   - Set up authorization policies
+   - Create login/logout functionality
+
+2. **Exercise Management**
+   - Create exercise list view
+   - Implement exercise creation/editing
+   - Add categorization and filtering
+
+3. **Workout Builder**
+   - Design workout builder interface
+   - Implement exercise selection and sequencing
+   - Create workout templates
+
+## Active Decisions and Considerations
+
+### Architecture Decisions
+
+1. **API-First Approach**
+   - All data operations will go through the API
+   - No direct database access from the Admin application
+   - Business logic primarily resides in the API layer
+
+2. **Component Structure**
+   - UI components will follow a hierarchical structure
+   - Reusable components will be created for common patterns
+   - State will be managed through services and cascading parameters
+
+3. **Configuration Strategy**
+   - Environment-specific configurations in appsettings files
+   - API endpoint URL configured centrally
+   - Feature flags for progressive implementation
+
+### Design Considerations
+
+1. **Responsive Design**
+   - Application must work well on various screen sizes
+   - Primary focus on desktop/laptop for admin users
+   - Tailwind's responsive utilities will be leveraged
+
+2. **Performance**
+   - Minimize initial load time
+   - Implement efficient data loading patterns
+   - Use pagination for large datasets
+
+3. **User Experience**
+   - Create intuitive workflows for content creation
+   - Provide immediate feedback for user actions
+   - Implement consistent design patterns
+
+## Project Insights
+
+### Key Learnings
+
+- Blazor provides a productive environment for C# developers to create web applications
+- The component model aligns well with the modular nature of the application
+- Tailwind CSS offers flexibility while maintaining design consistency
+
+### Important Patterns
+
+1. **Service-Based API Communication**
+   - Typed HTTP clients for different API areas
+   - Interface-based services for testability
+   - Consistent error handling
+
+2. **Component Composition**
+   - Small, focused components
+   - Clear component interfaces (parameters, callbacks)
+   - Reusable UI patterns
+
+3. **Configuration Management**
+   - Environment-specific settings
+   - Feature flags for progressive rollout
+   - Centralized configuration access
