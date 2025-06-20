@@ -4,6 +4,8 @@
 
 The GetFitterGetBigger Admin Application is part of the GetFitterGetBigger ecosystem, designed to streamline the relationship between Personal Trainers (PTs) and their clients. This application serves as the management interface for PTs to create, organize, and assign exercises, workouts, and training plans to their clients.
 
+> For a comprehensive overview of the entire ecosystem, please refer to the [Shared Memory Bank](/Shared/memory-bank/projectbrief.md).
+
 ## Core Requirements
 
 1. **Exercise Management**

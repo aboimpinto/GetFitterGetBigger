@@ -1,44 +1,45 @@
-# Project Brief: GetFitterGetBigger
+# GetFitterGetBigger API Application
 
-## Overview
-GetFitterGetBigger is a comprehensive fitness application ecosystem designed to connect Personal Trainers with clients through technology. The system consists of three main components:
+## Project Brief
 
-1. **API Application** (This Project)
-   - C# Minimal API with Swagger
-   - Central data processing hub
-   - Handles all database operations
+> For a comprehensive overview of the entire ecosystem, please refer to the [Shared Memory Bank](/Shared/memory-bank/projectbrief.md).
 
-2. **Mobile Application**
-   - Client-facing interface
-   - Used by fitness enthusiasts to perform workouts
-   - Connects to the API for all data operations
+The GetFitterGetBigger API Application is the central data processing hub of the GetFitterGetBigger ecosystem. It is built as a C# Minimal API with Swagger documentation and handles all database operations for both the Admin and Client applications.
 
-3. **Admin Application**
-   - Trainer-facing interface
-   - Used by Personal Trainers to create and manage fitness content
-   - Connects to the API for all data operations
+## Core Responsibilities
 
-## Purpose
-The purpose of this ecosystem is to provide a seamless platform where:
-- Personal Trainers can create, organize, and distribute workout plans and exercises
-- Clients can access personalized workout routines and track their fitness progress
-- All data is centrally managed and secured through the API layer
+1. **Data Persistence**
+   - Handle all database operations
+   - Ensure data integrity and consistency
+   - Implement proper validation and error handling
 
-## Target Users
-1. **Fitness Clients**
-   - Access the system through the mobile application
-   - Perform workouts created by their trainers
-   - Track progress and fitness achievements
+2. **Authentication & Authorization**
+   - Manage user authentication
+   - Implement role-based authorization
+   - Secure sensitive data and operations
 
-2. **Personal Trainers**
-   - Access the system through the admin application
-   - Create and manage exercises, workouts, and fitness plans
-   - Monitor client progress and adjust plans accordingly
+3. **Business Logic**
+   - Implement core business rules
+   - Process data from both Admin and Client applications
+   - Ensure consistent application of business logic
 
-## Key Features (Anticipated)
-- Exercise library management
-- Workout creation and scheduling
-- Fitness plan development
-- Progress tracking
-- User authentication and authorization
-- Data synchronization between applications
+4. **Communication Hub**
+   - Provide standardized endpoints for all applications
+   - Enable data exchange between Admin and Client applications
+   - Facilitate real-time updates when necessary
+
+## Key Features
+
+- **Exercise Management**: Store and retrieve exercise data
+- **Workout Creation**: Process and store workout configurations
+- **Training Plan Development**: Manage comprehensive training plans
+- **Progress Tracking**: Record and analyze client progress
+- **User Management**: Handle user registration, authentication, and profiles
+- **Data Synchronization**: Ensure consistent data across all applications
+
+## Scope Boundaries
+
+- The API handles all data persistence and business logic
+- It does not implement any user interfaces
+- It serves as the exclusive communication channel between applications and the database
+- It enforces data validation and business rules for all operations

@@ -1,6 +1,8 @@
 # Technical Context
 
-## Technology Stack
+> For a comprehensive overview of the technology stack across the entire ecosystem, please refer to the [Shared Memory Bank](/Shared/memory-bank/techContext.md).
+
+## Admin-Specific Technology Stack
 
 The GetFitterGetBigger Admin Application is built using the following technologies:
 
@@ -17,11 +19,6 @@ The GetFitterGetBigger Admin Application is built using the following technologi
 - **HttpClient**: For API communication
 - **System.Text.Json**: For JSON serialization/deserialization
 - **IConfiguration**: For managing application settings
-
-### Development Tools
-- **Visual Studio / VS Code**: Primary development environments
-- **Git**: Version control
-- **NuGet**: Package management
 
 ## Development Setup
 
@@ -72,7 +69,7 @@ The GetFitterGetBigger Admin Application is built using the following technologi
 
 ## Tool Usage Patterns
 
-### Authentication System [NEW]
+### Authentication System
 
 The authentication system uses external providers and cookie-based authentication:
 
@@ -97,7 +94,7 @@ The authentication system uses external providers and cookie-based authenticatio
    - Logout functionality
    - Profile information stored in claims
 
-### Tailwind CSS Integration [NEW]
+### Tailwind CSS Integration
 
 The integration of Tailwind CSS with Blazor requires specific setup and usage patterns:
 
