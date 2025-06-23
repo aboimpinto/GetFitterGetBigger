@@ -15,3 +15,12 @@ This API serves as the central data processing hub for the GetFitterGetBigger ec
 - Provide endpoints for workout management
 - Support exercise and workout plan creation by trainers
 - Enable clients to access and track their fitness activities
+
+## Database Model Implementation
+A standardized approach for implementing database models using Entity Framework Core has been documented in `databaseModelPattern.md`. Key aspects include:
+
+- Entities implemented as C# records with immutable properties
+- Specialized ID types for each entity (e.g., WorkoutId, ExerciseId) that wrap GUIDs
+- Static Handler classes within each entity for creation and manipulation
+- Consistent coding standards including underscore prefix for private fields and explicit `this.` qualifier usage
+- DbContext configuration for handling specialized ID types

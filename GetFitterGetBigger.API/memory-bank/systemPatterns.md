@@ -32,8 +32,12 @@ The GetFitterGetBigger API Application serves as the central hub for all data op
 
 - **Data Transfer Objects (DTOs)**: For transferring data between API and client applications
 - **Entity Models**: For database representation
+  - **Record-Based Entities**: Using C# records for immutable entity models
+  - **Specialized ID Types**: Type-safe ID wrappers around GUIDs with domain-specific string representation
+  - **Handler Pattern**: Static Handler classes within entities for creation and manipulation
 - **Data Validation**: Input validation at API boundaries
 - **Shared Models**: Using models from the Shared project for consistency
+- **Entity Framework Core**: For ORM-based database access with specialized ID type conversions
 
 ## API Endpoint Organization
 

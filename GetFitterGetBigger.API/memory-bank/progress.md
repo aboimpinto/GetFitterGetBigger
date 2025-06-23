@@ -7,23 +7,25 @@
 ## Completed Items
 - Project structure established
 - Basic documentation created
+- Documented database model implementation pattern using Entity Framework Core
+- Established coding standards for the project
 
 ## In Progress
 - Gathering requirements and context for the API development
-- Documenting system architecture and patterns
 
 ## Next Steps
 - Review existing codebase to understand current implementation
 - Identify key API endpoints needed for both client applications
-- Define data models for the fitness domain
+- Implement data models following the documented database model pattern
 - Implement core API functionality
 - Set up authentication and authorization
 - Develop and test API endpoints
 - Document API with Swagger
 
 ## Open Questions
-- Database technology selection
+- Database technology selection (SQL Server anticipated)
 - Authentication mechanism
-- Detailed requirements for exercise and workout data models
+- Specific entity requirements for the fitness domain
 - Specific features required for the mobile and admin applications
 - Deployment strategy
+- Integration details with the UnitOfWork pattern

@@ -14,8 +14,12 @@ The GetFitterGetBigger API Application is built using the following technologies
 
 ### Data Access
 - **Entity Framework Core**: ORM for database access
+  - **Record-Based Entities**: Using C# records for entity models
+  - **Specialized ID Types**: Type-safe GUID wrappers with domain-specific string representation
+  - **Handler Pattern**: Static Handler classes for entity creation and manipulation
 - **SQL Server** (anticipated): For data storage
 - **Repository Pattern**: For data access abstraction
+- **UnitOfWork Pattern**: For transaction management (planned integration)
 
 ### Security
 - **JWT Authentication**: For secure authentication
