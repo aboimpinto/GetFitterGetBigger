@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using GetFitterGetBigger.API.Models.Enums;
 using GetFitterGetBigger.API.Models.SpecializedIds;
 
 namespace GetFitterGetBigger.API.Models.Entities;
@@ -12,11 +11,13 @@ public record Exercise
     public string Description { get; init; } = string.Empty;
     public string Instructions { get; init; } = string.Empty;
     public string? VideoUrl { get; init; }
-    public DifficultyLevel Difficulty { get; init; } = DifficultyLevel.Beginner;
-    public KineticChainType KineticChain { get; init; } = KineticChainType.Compound;
+    public DifficultyLevelId DifficultyLevelId { get; init; }
+    public KineticChainTypeId KineticChainTypeId { get; init; }
     public bool IsUnilateral { get; init; } = false;
     
     // Navigation properties
+    public DifficultyLevel? DifficultyLevel { get; init; }
+    public KineticChainType? KineticChainType { get; init; }
     public ICollection<ExerciseMovementPattern> MovementPatterns { get; init; } = new List<ExerciseMovementPattern>();
     public ICollection<ExerciseTargetedMuscle> TargetedMuscles { get; init; } = new List<ExerciseTargetedMuscle>();
     public ICollection<ExerciseEquipment> Equipment { get; init; } = new List<ExerciseEquipment>();
@@ -32,8 +33,8 @@ public record Exercise
             string description, 
             string instructions, 
             string? videoUrl, 
-            DifficultyLevel difficulty, 
-            KineticChainType kineticChain, 
+            DifficultyLevelId difficultyLevelId, 
+            KineticChainTypeId kineticChainTypeId, 
             bool isUnilateral)
         {
             if (string.IsNullOrEmpty(name))
@@ -48,8 +49,8 @@ public record Exercise
                 Description = description,
                 Instructions = instructions,
                 VideoUrl = videoUrl,
-                Difficulty = difficulty,
-                KineticChain = kineticChain,
+                DifficultyLevelId = difficultyLevelId,
+                KineticChainTypeId = kineticChainTypeId,
                 IsUnilateral = isUnilateral
             };
         }
@@ -60,8 +61,8 @@ public record Exercise
             string description, 
             string instructions, 
             string? videoUrl, 
-            DifficultyLevel difficulty, 
-            KineticChainType kineticChain, 
+            DifficultyLevelId difficultyLevelId, 
+            KineticChainTypeId kineticChainTypeId, 
             bool isUnilateral) =>
             
             new()
@@ -71,8 +72,8 @@ public record Exercise
                 Description = description,
                 Instructions = instructions,
                 VideoUrl = videoUrl,
-                Difficulty = difficulty,
-                KineticChain = kineticChain,
+                DifficultyLevelId = difficultyLevelId,
+                KineticChainTypeId = kineticChainTypeId,
                 IsUnilateral = isUnilateral
             };
     }
