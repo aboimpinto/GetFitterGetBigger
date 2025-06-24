@@ -389,6 +389,12 @@ The database model implementation will integrate with an existing UnitOfWork pat
 
 To maintain consistency across the codebase, the following coding standards should be followed:
 
+### File Organization
+
+- **One Class Per File**: Each file should contain only one class or enum (Single Responsibility Principle)
+- **Enum Location**: All enums should be placed in the Models/Enums directory
+- **ID Types Location**: Specialized ID types should be placed in the Models/SpecializedIds directory
+
 ### Naming Conventions
 
 - **Private Fields**: Use underscore prefix
@@ -425,6 +431,24 @@ To maintain consistency across the codebase, the following coding standards shou
   - Helps avoid naming conflicts
   - Makes the code more self-documenting
   - Consistent style across the codebase
+
+### Static Methods
+
+- **Mark methods as static when they don't reference instance members:**
+  - Methods that don't access instance fields, properties, or methods should be marked as static
+  - This includes configuration methods that only operate on parameters passed to them
+  - Example:
+    ```csharp
+    private static void ConfigureSpecializedIdTypes(ModelBuilder modelBuilder)
+    {
+        // Method implementation that doesn't reference any instance members
+    }
+    ```
+  - Benefits:
+    - Clearly communicates that the method doesn't depend on instance state
+    - Prevents accidental use of instance members
+    - Can improve performance in some cases
+    - Makes the code more self-documenting
 
 ### Example of Consistent Style
 

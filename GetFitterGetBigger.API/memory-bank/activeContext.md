@@ -24,3 +24,16 @@ A standardized approach for implementing database models using Entity Framework 
 - Static Handler classes within each entity for creation and manipulation
 - Consistent coding standards including underscore prefix for private fields and explicit `this.` qualifier usage
 - DbContext configuration for handling specialized ID types
+- Each file should contain only one class or enum (Single Responsibility Principle)
+- Enums are placed in the Models/Enums directory
+- Specialized ID types are placed in the Models/SpecializedIds directory
+- All unused using directives should be removed before considering a task complete
+- Handler.Create methods should use expression-bodied members with target-typed new expressions:
+  ```csharp
+  public static Entity Create(...) =>
+      new()
+      {
+          Property = value,
+          ...
+      };
+  ```
