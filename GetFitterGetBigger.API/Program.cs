@@ -1,9 +1,14 @@
-using System;
+using Microsoft.EntityFrameworkCore;
+using GetFitterGetBigger.API.Models;
+using GetFitterGetBigger.API;
 
 var builder = WebApplication.CreateBuilder(args);
 
-
 // Add services to the container.
+// Add DbContext
+builder.Services.AddDbContext<FitnessDbContext>(options =>
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 // Add NSwag services

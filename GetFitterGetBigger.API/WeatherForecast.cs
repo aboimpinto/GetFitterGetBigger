@@ -1,3 +1,5 @@
+namespace GetFitterGetBigger.API;
+
 public class WeatherForecast
 {
     public string GetWeatherForecast(string city)
