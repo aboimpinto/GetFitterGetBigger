@@ -48,6 +48,29 @@ The GetFitterGetBigger Admin Application is in the **initial setup phase**. The 
    - Development certificate configuration in place
    - Comprehensive documentation created for setup and troubleshooting
 
+## Proposed Features
+
+### ReferenceDataService with Caching
+
+To provide a centralized and efficient way to access API reference data, a new service will be created.
+
+*   **Architecture:**
+    1.  **Interface (`IReferenceDataService`):** Defines the contract for the service, with methods like `Task<IEnumerable<ReferenceDataDto>> GetDifficultyLevelsAsync()`.
+    2.  **Implementation (`ReferenceDataService`):** A class that implements the interface.
+    3.  **Dependency Injection:** The service will be registered as a **singleton** in `Program.cs` to ensure a single instance handles the cache for all components and users.
+
+*   **Client-Side Caching:** The service will implement a robust client-side cache to minimize network requests to the API.
+    *   **Mechanism:** It will use `IMemoryCache` for in-memory storage of reference table data.
+    *   **Dual Invalidation Strategy:**
+        1.  **Time-Based Expiration:** Each cached item will have an expiration time based on its volatility (e.g., 24 hours for static data like `BodyParts`, 30 minutes for dynamic data like `Equipment`).
+        2.  **Explicit Refresh:** The `IReferenceDataService` will expose a public method (e.g., `Task InvalidateCacheAsync(string key)`) that can be triggered by a UI element, such as a "Refresh Data" button, to force a fetch of the latest data from the API.
+
+## New Tasks
+
+*   **Task:** Implement ReferenceDataService with Caching
+    *   **Description:** Implement the `IReferenceDataService` and `ReferenceDataService` as outlined in the "Proposed Features" section. This includes setting up the singleton registration, implementing the caching logic with `IMemoryCache`, and providing methods for both time-based and explicit cache invalidation.
+    *   **Status:** `[SUBMITTED]`
+
 ## What's Left to Build
 
 ### Foundation Components

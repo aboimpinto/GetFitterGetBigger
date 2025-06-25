@@ -15,6 +15,23 @@
 - Implemented the GoBack feature in the Olimpo.NavigationManager: The navigation history now correctly stores and retrieves previous screens, allowing users to navigate back as expected.
 - Implemented forward and backward navigation transitions: When navigating forward, a forward transition is applied, and when navigating back, a backward transition is applied.
 
+## Proposed Features
+
+### Client-Side Caching for Reference Data
+
+To improve performance, reduce network usage, and provide a better offline experience, a client-side caching strategy for API reference data will be implemented.
+
+*   **Mechanism:** A suitable caching library for Avalonia/mobile development (e.g., Akavache, or a custom service using `System.Runtime.Caching`) will be used to store the data locally. A dedicated service will be responsible for managing this cache.
+*   **Dual Invalidation Strategy:**
+    1.  **Time-Based Expiration:** The cached data will have a default expiration time that varies based on the data's volatility. For example, static data like `BodyParts` can be cached for 24 hours, while more dynamic data like `Equipment` might be cached for only 30-60 minutes.
+    2.  **Explicit Refresh:** The application will provide a mechanism for the user to manually refresh the reference data, such as a "Check for updates" button in the settings screen. This action will clear the cache and force a new fetch from the API.
+
+## New Tasks
+
+*   **Task:** Implement Client-Side Caching for Reference Data
+    *   **Description:** Implement the client-side caching strategy as outlined in the "Proposed Features" section. This includes selecting a caching library/mechanism, creating a service to manage the cache, and implementing both time-based and explicit cache invalidation.
+    *   **Status:** `[SUBMITTED]`
+
 ## What's Left to Build:
 
 ## Delayed Tasks
