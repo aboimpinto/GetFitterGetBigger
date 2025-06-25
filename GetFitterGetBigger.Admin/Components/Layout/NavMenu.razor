@@ -50,26 +50,5 @@
     </nav>
 
     <div class="mt-auto">
-        <button @onclick="LogoutUser" class="w-full flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 hover:text-white rounded-md transition-colors">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H3" />
-            </svg>
-            Logout
-        </button>
     </div>
 </div>
-
-@using GetFitterGetBigger.Admin.Services.Authentication
-@code {
-    [Inject]
-    private IAuthService AuthService { get; set; } = default!;
-
-    [Inject]
-    private NavigationManager NavigationManager { get; set; } = default!;
-
-    private async Task LogoutUser()
-    {
-        await AuthService.LogoutAsync();
-        NavigationManager.NavigateTo("/", forceLoad: true);
-    }
-}
