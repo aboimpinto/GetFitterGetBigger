@@ -50,7 +50,7 @@ namespace GetFitterGetBigger.API.Services.Implementations
             var token = _jwtService.GenerateToken(user);
             var claims = user.Claims
                 .Where(c => c.ExpirationDate == null || c.ExpirationDate > DateTime.UtcNow)
-                .Select(c => new ClaimInfo(c.Id.ToString(), c.ExpirationDate, c.Resource))
+                .Select(c => new ClaimInfo(c.Id.ToString(), c.ClaimType, c.ExpirationDate, c.Resource))
                 .ToList();
 
             await unitOfWork.CommitAsync();
