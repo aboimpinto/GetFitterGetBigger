@@ -1,7 +1,9 @@
 @using GetFitterGetBigger.Admin.Models.Authentication
 @using GetFitterGetBigger.Admin.Services.Authentication
 @inject IAuthService AuthService
+@inject IAuthorizationStateService AuthorizationStateService
 @inject NavigationManager NavigationManager
+@implements IDisposable
 
 @if (isLoading)
 {
@@ -33,6 +35,16 @@ else if (currentUser != null)
             </button>
         </div>
     </div>
+    <div class="ml-4 text-sm" title="@(AuthorizationStateService.IsReady ? AuthorizationStateService.ClaimId : "")">
+        @if (AuthorizationStateService.IsReady)
+        {
+            <span class="text-green-500">Ready</span>
+        }
+        else
+        {
+            <span class="text-red-500">Not Ready</span>
+        }
+    </div>
 }
 else
 {
@@ -45,7 +57,12 @@ else
 
     protected override async Task OnInitializedAsync()
     {
+        AuthorizationStateService.OnChange += StateHasChanged;
         currentUser = await AuthService.GetCurrentUserAsync();
+        if (currentUser != null)
+        {
+            await AuthorizationStateService.InitializeAsync();
+        }
         isLoading = false;
     }
 
@@ -53,5 +70,10 @@ else
     {
         await AuthService.LogoutAsync();
         NavigationManager.NavigateTo("/", forceLoad: true);
+    }
+
+    public void Dispose()
+    {
+        AuthorizationStateService.OnChange -= StateHasChanged;
     }
 }

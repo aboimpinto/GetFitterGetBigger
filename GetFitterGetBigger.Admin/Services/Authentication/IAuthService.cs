@@ -31,5 +31,12 @@ namespace GetFitterGetBigger.Admin.Services.Authentication
         /// </summary>
         /// <returns>The authentication state</returns>
         Task<AuthenticationState> GetAuthenticationStateAsync();
+
+        /// <summary>
+        /// Gets the claims from the server
+        /// </summary>
+        /// <param name="request">The request containing the user's email</param>
+        /// <returns>The claims response</returns>
+        Task<ClaimResponse?> GetClaimsAsync(ClaimRequest request);
     }
 }

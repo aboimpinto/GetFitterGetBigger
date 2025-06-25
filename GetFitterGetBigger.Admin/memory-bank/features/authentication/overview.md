@@ -24,6 +24,31 @@ The Authentication feature provides user login/logout functionality using extern
 ## Documentation
 - [Authentication Setup Guide](/docs/authentication-setup.md)
 
+## API Endpoints
+
+### POST /api/Auth/login
+
+- **Description**: Retrieves a JWT and claims for an authenticated user.
+- **Request Body**:
+  ```json
+  {
+    "email": "string"
+  }
+  ```
+- **Response Body**:
+  ```json
+  {
+    "token": "string",
+    "claims": [
+      {
+        "claimId": "string",
+        "expirationDate": "string",
+        "resource": "string"
+      }
+    ]
+  }
+  ```
+
 ## Implementation History
 | Date | Description | Commit | PR |
 |------|-------------|--------|-----|

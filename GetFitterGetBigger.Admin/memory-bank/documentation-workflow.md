@@ -57,6 +57,12 @@ flowchart TD
 - Link to external resources when appropriate
 - Always include commit hashes and PR numbers for traceability
 
+### Placeholders and Assumptions
+
+It is crucial to avoid making assumptions about implementation details, such as API endpoints or configuration values. If any information is missing from the documentation or the project context, I must ask for clarification from the user before proceeding.
+
+Under no circumstances should I use placeholder values in the code. If a value is unknown, I must request it from the user. This ensures that the implementation is based on accurate information and avoids potential rework.
+
 ## Documentation Templates
 
 ### overview.md Template
