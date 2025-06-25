@@ -1,0 +1,22 @@
+@page "/login-redirect/{provider}"
+@inject NavigationManager NavigationManager
+@inject IHttpContextAccessor HttpContextAccessor
+@using Microsoft.AspNetCore.Authentication
+
+@code {
+    [Parameter]
+    public string Provider { get; set; } = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var properties = new AuthenticationProperties
+        {
+            RedirectUri = NavigationManager.BaseUri
+        };
+
+        if (HttpContextAccessor.HttpContext is not null)
+        {
+            await HttpContextAccessor.HttpContext.ChallengeAsync(Provider, properties);
+        }
+    }
+}
