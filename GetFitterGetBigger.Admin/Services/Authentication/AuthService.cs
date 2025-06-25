@@ -13,18 +13,22 @@ namespace GetFitterGetBigger.Admin.Services.Authentication
     {
         private readonly AuthenticationStateProvider _authenticationStateProvider;
         private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly HttpClient _httpClient;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="AuthService"/> class
         /// </summary>
         /// <param name="authenticationStateProvider">The authentication state provider</param>
         /// <param name="httpContextAccessor">The HTTP context accessor</param>
+        /// <param name="httpClient">The HTTP client</param>
         public AuthService(
             AuthenticationStateProvider authenticationStateProvider,
-            IHttpContextAccessor httpContextAccessor)
+            IHttpContextAccessor httpContextAccessor,
+            HttpClient httpClient)
         {
             _authenticationStateProvider = authenticationStateProvider;
             _httpContextAccessor = httpContextAccessor;
+            _httpClient = httpClient;
         }
 
         /// <inheritdoc/>
@@ -68,6 +72,14 @@ namespace GetFitterGetBigger.Admin.Services.Authentication
         public Task<AuthenticationState> GetAuthenticationStateAsync()
         {
             return _authenticationStateProvider.GetAuthenticationStateAsync();
+        }
+
+        /// <inheritdoc/>
+        public async Task<ClaimResponse?> GetClaimsAsync(ClaimRequest request)
+        {
+            var response = await _httpClient.PostAsJsonAsync("api/Auth/login", request);
+            response.EnsureSuccessStatusCode();
+            return await response.Content.ReadFromJsonAsync<ClaimResponse>();
         }
     }
 }

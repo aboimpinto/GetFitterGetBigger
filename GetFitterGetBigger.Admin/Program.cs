@@ -86,7 +86,13 @@ builder.Services.AddScoped<IAuthorizationHandler, RedirectToLoginHandler>();
 builder.Services.AddScoped<IAuthorizationRequirement, AuthorizationRequirement>();
 
 // Add auth service
-builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddHttpClient<IAuthService, AuthService>(client =>
+{
+    client.BaseAddress = new Uri(builder.Configuration["ApiBaseUrl"] ?? "http://localhost:5214");
+});
+
+// Add authorization state service
+builder.Services.AddScoped<IAuthorizationStateService, AuthorizationStateService>();
 
 // Add MemoryCache for caching reference data
 builder.Services.AddMemoryCache();
