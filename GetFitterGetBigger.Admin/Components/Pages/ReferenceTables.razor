@@ -1,0 +1,37 @@
+@page "/referencetables"
+@using GetFitterGetBigger.Admin.Models
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize]
+
+<PageTitle>Reference Tables - GetFitterGetBigger Admin</PageTitle>
+
+<div class="bg-white rounded-lg shadow-md p-6">
+    <h2 class="text-2xl font-semibold text-gray-800 mb-4">Reference Tables</h2>
+    <p class="text-gray-600 mb-6">
+        Manage the core reference data used throughout the application.
+    </p>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        @foreach (var table in ReferenceTablesList)
+        {
+            <div class="bg-gray-50 p-4 rounded-lg border border-gray-200 hover:shadow-lg transition-shadow">
+                <h3 class="text-lg font-medium text-gray-800 mb-2">@table.DisplayName</h3>
+                <a href="/referencetables/@table.Name" class="text-blue-600 hover:text-blue-800 font-medium">View Items →</a>
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    private List<ReferenceTableModel> ReferenceTablesList = new List<ReferenceTableModel>
+    {
+        new ReferenceTableModel { Name = "BodyParts", DisplayName = "Body Parts", EndPoint = "/api/ReferenceTables/BodyParts" },
+        new ReferenceTableModel { Name = "DifficultyLevels", DisplayName = "Difficulty Levels", EndPoint = "/api/ReferenceTables/DifficultyLevels" },
+        new ReferenceTableModel { Name = "Equipment", DisplayName = "Equipment", EndPoint = "/api/ReferenceTables/Equipment" },
+        new ReferenceTableModel { Name = "KineticChainTypes", DisplayName = "Kinetic Chain Types", EndPoint = "/api/ReferenceTables/KineticChainTypes" },
+        new ReferenceTableModel { Name = "MetricTypes", DisplayName = "Metric Types", EndPoint = "/api/ReferenceTables/MetricTypes" },
+        new ReferenceTableModel { Name = "MovementPatterns", DisplayName = "Movement Patterns", EndPoint = "/api/ReferenceTables/MovementPatterns" },
+        new ReferenceTableModel { Name = "MuscleGroups", DisplayName = "Muscle Groups", EndPoint = "/api/ReferenceTables/MuscleGroups" },
+        new ReferenceTableModel { Name = "MuscleRoles", DisplayName = "Muscle Roles", EndPoint = "/api/ReferenceTables/MuscleRoles" }
+    };
+}

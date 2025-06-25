@@ -88,6 +88,12 @@ builder.Services.AddScoped<IAuthorizationRequirement, AuthorizationRequirement>(
 // Add auth service
 builder.Services.AddScoped<IAuthService, AuthService>();
 
+// Add MemoryCache for caching reference data
+builder.Services.AddMemoryCache();
+
+// Add HttpClient for ReferenceDataService
+builder.Services.AddHttpClient<GetFitterGetBigger.Admin.Services.IReferenceDataService, GetFitterGetBigger.Admin.Services.ReferenceDataService>();
+
 // Add controllers
 builder.Services.AddControllers();
 

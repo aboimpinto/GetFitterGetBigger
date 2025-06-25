@@ -1,0 +1,95 @@
+@page "/referencetables/{TableName}"
+@using GetFitterGetBigger.Admin.Models.Dtos
+@using GetFitterGetBigger.Admin.Services
+@using Microsoft.AspNetCore.Authorization
+@inject IReferenceDataService ReferenceDataService
+@attribute [Authorize]
+
+<PageTitle>@DisplayName - GetFitterGetBigger Admin</PageTitle>
+
+<div class="mb-4">
+    <a href="/referencetables" class="inline-flex items-center text-blue-600 hover:text-blue-800">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+        </svg>
+        Back to Reference Tables
+    </a>
+</div>
+
+<div class="bg-white rounded-lg shadow-md p-6">
+    <div class="flex justify-between items-center mb-4">
+        <h2 class="text-2xl font-semibold text-gray-800">@DisplayName</h2>
+        <button class="bg-gray-300 text-gray-500 font-bold py-2 px-4 rounded cursor-not-allowed" disabled>
+            Add New
+        </button>
+    </div>
+
+    @if (items == null)
+    {
+        <p class="text-gray-600"><em>Loading...</em></p>
+    }
+    else
+    {
+        <div class="overflow-x-auto">
+            <table class="min-w-full bg-white">
+                <thead class="bg-gray-100">
+                    <tr>
+                        <th class="py-3 px-6 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Value</th>
+                        <th class="py-3 px-6 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
+                    </tr>
+                </thead>
+                <tbody class="text-gray-700">
+                    @foreach (var item in items)
+                    {
+                        <tr class="border-b border-gray-200 hover:bg-gray-50">
+                            <td class="py-4 px-6">@item.Value</td>
+                            <td class="py-4 px-6">@item.Description</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter]
+    public string TableName { get; set; }
+
+    private IEnumerable<ReferenceDataDto> items;
+    private string DisplayName { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        SetDisplayName();
+        
+        items = TableName switch
+        {
+            "BodyParts" => await ReferenceDataService.GetBodyPartsAsync(),
+            "DifficultyLevels" => await ReferenceDataService.GetDifficultyLevelsAsync(),
+            "Equipment" => await ReferenceDataService.GetEquipmentAsync(),
+            "KineticChainTypes" => await ReferenceDataService.GetKineticChainTypesAsync(),
+            "MetricTypes" => await ReferenceDataService.GetMetricTypesAsync(),
+            "MovementPatterns" => await ReferenceDataService.GetMovementPatternsAsync(),
+            "MuscleGroups" => await ReferenceDataService.GetMuscleGroupsAsync(),
+            "MuscleRoles" => await ReferenceDataService.GetMuscleRolesAsync(),
+            _ => new List<ReferenceDataDto>()
+        };
+    }
+
+    private void SetDisplayName()
+    {
+        DisplayName = TableName switch
+        {
+            "BodyParts" => "Body Parts",
+            "DifficultyLevels" => "Difficulty Levels",
+            "Equipment" => "Equipment",
+            "KineticChainTypes" => "Kinetic Chain Types",
+            "MetricTypes" => "Metric Types",
+            "MovementPatterns" => "Movement Patterns",
+            "MuscleGroups" => "Muscle Groups",
+            "MuscleRoles" => "Muscle Roles",
+            _ => TableName
+        };
+    }
+}
