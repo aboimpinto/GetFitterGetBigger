@@ -12,7 +12,8 @@ The GetFitterGetBigger ecosystem is currently in various stages of development a
    - Validating that the memory bank update script correctly propagates changes
 
 2. **Shared Models Enhancement**
-   - Refining the Exercise and Workout models to support all required features
+   - **Define Exercise Model:** Create the `Exercise.cs` model and related DTOs to support the new Exercise Management feature. This includes properties for `name`, `description`, `instructions`, `difficulty`, `video_url`, `image_url`, and `is_unilateral`.
+   - Refining the Workout model to support all required features
    - Adding XML documentation to all model properties
    - Ensuring models meet the needs of all components
 

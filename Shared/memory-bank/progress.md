@@ -39,10 +39,11 @@ The GetFitterGetBigger ecosystem is in various stages of development across its 
 ## What's Left to Build
 
 ### Shared Models Enhancements
+- **Exercise Model and DTOs:** Define the `Exercise` model and the DTOs required for API communication, as specified in the `api-docs/exercises.md` documentation.
 - User profile and authentication models
 - Training plan models
 - Progress tracking models
-- Additional exercise and workout properties
+- Additional workout properties
 - Comprehensive validation attributes
 
 ### API Documentation Completion

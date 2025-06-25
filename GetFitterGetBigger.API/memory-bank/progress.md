@@ -83,6 +83,10 @@ To improve performance and reduce database load, a server-side caching mechanism
 
 ## New Tasks
 
+*   **Task:** Implement Exercise Management Feature (API)
+    *   **Description:** Implement the `Exercise` entity, repository, service, and controller as detailed in the `features/exercise-management.md` document. This includes creating the database table, implementing all business logic, and exposing the necessary API endpoints.
+    *   **Status:** `[SUBMITTED]`
+
 *   **Task:** Implement Server-Side Caching for Reference Tables
     *   **Description:** Implement the server-side caching strategy as outlined in the "Proposed Features" section. This includes using `IMemoryCache` in the reference table controllers and implementing the cache invalidation logic for dynamic tables.
     *   **Status:** `[SUBMITTED]`

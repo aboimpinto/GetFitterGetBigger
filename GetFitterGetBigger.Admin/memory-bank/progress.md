@@ -137,6 +137,10 @@ To centralize data fetching and caching, a `ReferenceDataService` should be impl
 
 ## New Tasks
 
+*   **Task:** Implement Exercise Management Feature (Admin)
+    *   **Description:** Implement the UI and client-side services for the Exercise Management feature as detailed in the `features/exercise-management/overview.md` document. This includes the exercise dashboard, list, create/edit modal, and the `ExerciseService` for API communication.
+    *   **Status:** `[SUBMITTED]`
+
 *   **Task:** Implement ReferenceDataService for API Communication
     *   **Description:** Implement the `IReferenceDataService` and `ReferenceDataService` as detailed in the "Reference Data API Integration Guide". This includes configuring the `HttpClient`, implementing methods for all reference table endpoints, and setting up the specified caching strategy.
     *   **Status:** `[SUBMITTED]`
