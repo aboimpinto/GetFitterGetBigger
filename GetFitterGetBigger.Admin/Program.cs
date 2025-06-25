@@ -94,9 +94,6 @@ builder.Services.AddMemoryCache();
 // Add HttpClient for ReferenceDataService
 builder.Services.AddHttpClient<GetFitterGetBigger.Admin.Services.IReferenceDataService, GetFitterGetBigger.Admin.Services.ReferenceDataService>();
 
-// Add controllers
-builder.Services.AddControllers();
-
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -122,7 +119,6 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapStaticAssets();
-app.MapControllers();
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
 
