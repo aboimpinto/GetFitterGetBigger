@@ -14,6 +14,7 @@ public class FitnessDbContext : DbContext
     public DbSet<Equipment> Equipment => Set<Equipment>();
     public DbSet<MetricType> MetricTypes => Set<MetricType>();
     public DbSet<User> Users => Set<User>();
+    public DbSet<Claim> Claims => Set<Claim>();
     public DbSet<WorkoutLog> WorkoutLogs => Set<WorkoutLog>();
     public DbSet<WorkoutLogSet> WorkoutLogSets => Set<WorkoutLogSet>();
     
@@ -91,6 +92,23 @@ public class FitnessDbContext : DbContext
         // User ID
         modelBuilder.Entity<User>()
             .Property(u => u.Id)
+            .HasConversion(
+                id => (Guid)id,
+                guid => UserId.From(guid));
+
+        modelBuilder.Entity<User>()
+            .HasIndex(u => u.Email)
+            .IsUnique();
+                
+        // Claim ID
+        modelBuilder.Entity<Claim>()
+            .Property(c => c.Id)
+            .HasConversion(
+                id => (Guid)id,
+                guid => ClaimId.From(guid));
+
+        modelBuilder.Entity<Claim>()
+            .Property(c => c.UserId)
             .HasConversion(
                 id => (Guid)id,
                 guid => UserId.From(guid));
@@ -292,6 +310,12 @@ public class FitnessDbContext : DbContext
     
     private static void ConfigureOneToManyRelationships(ModelBuilder modelBuilder)
     {
+        // User to Claim (one-to-many)
+        modelBuilder.Entity<Claim>()
+            .HasOne(c => c.User)
+            .WithMany(u => u.Claims)
+            .HasForeignKey(c => c.UserId);
+
         // User to WorkoutLog (one-to-many)
         modelBuilder.Entity<WorkoutLog>()
             .HasOne(wl => wl.User)
