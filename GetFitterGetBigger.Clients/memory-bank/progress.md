@@ -40,6 +40,23 @@ The following table maps each reference data type to its specific API endpoint p
 | MuscleGroups        | `/api/ReferenceTables/MuscleGroups`        |
 | MuscleRoles         | `/api/ReferenceTables/MuscleRoles`         |
 
+### Response JSON Structure
+
+All API calls will return a JSON object (or an array of them) with the following structure. A `ReferenceDataDto.cs` class should be created in the shared models project to represent this structure.
+
+*   **`id`** (string): A structured identifier formatted as `"<referencetable>-<guid>"`.
+*   **`value`** (string): The display name or value of the item.
+*   **`description`** (string): An optional description.
+
+**Example Response:**
+```json
+{
+  "id": "kineticchaintype-f5d5a2de-9c4e-4b87-b8c3-5d1e17d0b1f4",
+  "value": "Compound",
+  "description": "Exercises that work multiple muscle groups"
+}
+```
+
 ### Implementation Proposal: Caching Service
 
 To ensure good performance and support offline scenarios, a dedicated service should be created to fetch and cache this reference data.

@@ -73,6 +73,23 @@ The following table maps each reference data type to its specific API endpoint p
 | MuscleGroups        | `/api/ReferenceTables/MuscleGroups`        |
 | MuscleRoles         | `/api/ReferenceTables/MuscleRoles`         |
 
+### Response JSON Structure
+
+All reference table endpoints return a JSON object (or an array of objects) with the following structure, which corresponds to the `ReferenceDataDto` class in the shared project.
+
+*   **`id`** (string): A structured identifier formatted as `"<referencetable>-<guid>"`.
+*   **`value`** (string): The display name or value of the item.
+*   **`description`** (string): An optional description.
+
+**Example Response:**
+```json
+{
+  "id": "kineticchaintype-f5d5a2de-9c4e-4b87-b8c3-5d1e17d0b1f4",
+  "value": "Compound",
+  "description": "Exercises that work multiple muscle groups"
+}
+```
+
 ### Implementation Proposal: `ReferenceDataService`
 
 To centralize data fetching and caching, a `ReferenceDataService` should be implemented.
