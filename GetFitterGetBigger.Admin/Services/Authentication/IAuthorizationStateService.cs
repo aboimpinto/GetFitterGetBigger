@@ -1,13 +1,9 @@
-using System;
-using System.Threading.Tasks;
+namespace GetFitterGetBigger.Admin.Services.Authentication;
 
-namespace GetFitterGetBigger.Admin.Services.Authentication
+public interface IAuthorizationStateService
 {
-    public interface IAuthorizationStateService
-    {
-        bool IsReady { get; }
-        string? ClaimId { get; }
-        event Action? OnChange;
-        Task InitializeAsync();
-    }
+    bool UserHasAdminAccess { get; }
+    bool IsReady { get; }
+    event Action? OnChange;
+    Task InitializeAsync();
 }

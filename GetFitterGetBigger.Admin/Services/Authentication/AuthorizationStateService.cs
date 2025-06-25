@@ -1,14 +1,16 @@
 using GetFitterGetBigger.Admin.Models.Authentication;
-using System;
-using System.Threading.Tasks;
+using System.Security.Claims;
 
 namespace GetFitterGetBigger.Admin.Services.Authentication
 {
     public class AuthorizationStateService : IAuthorizationStateService
     {
         private readonly IAuthService _authService;
+        private List<Models.Authentication.Claim> _userClaims = new();
+
         public bool IsReady { get; private set; }
-        public string? ClaimId { get; private set; }
+        public bool UserHasAdminAccess => _userClaims.Any(c => c.ClaimType == "Admin-Tier");
+
         public event Action? OnChange;
 
         public AuthorizationStateService(IAuthService authService)
@@ -25,27 +27,20 @@ namespace GetFitterGetBigger.Admin.Services.Authentication
                 try
                 {
                     var response = await _authService.GetClaimsAsync(request);
-                    if (response?.Claims?.Count > 0)
+                    if (response?.Claims != null)
                     {
-                        IsReady = true;
-                        // Taking the first claim as the primary one.
-                        ClaimId = response.Claims[0].ClaimId;
+                        _userClaims = response.Claims;
                     }
-                    else
-                    {
-                        IsReady = false;
-                        ClaimId = string.Empty;
-                    }
-                    NotifyStateChanged();
                 }
                 catch (Exception)
                 {
                     // Handle error, maybe log it
-                    IsReady = false;
-                    ClaimId = string.Empty;
-                    NotifyStateChanged();
+                    _userClaims = new List<Models.Authentication.Claim>();
                 }
             }
+            
+            IsReady = true;
+            NotifyStateChanged();
         }
 
         private void NotifyStateChanged() => OnChange?.Invoke();

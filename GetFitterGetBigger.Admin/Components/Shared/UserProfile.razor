@@ -35,7 +35,7 @@ else if (currentUser != null)
             </button>
         </div>
     </div>
-    <div class="ml-4 text-sm" title="@(AuthorizationStateService.IsReady ? AuthorizationStateService.ClaimId : "")">
+    <div class="ml-4 text-sm">
         @if (AuthorizationStateService.IsReady)
         {
             <span class="text-green-500">Ready</span>

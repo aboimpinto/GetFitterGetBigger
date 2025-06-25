@@ -1,4 +1,7 @@
 ﻿@inherits LayoutComponentBase
+@using GetFitterGetBigger.Admin.Services.Authentication
+@inject IAuthorizationStateService AuthorizationStateService
+@implements IDisposable
 
 <div class="flex min-h-screen bg-gray-100">
     <div class="w-64 bg-gray-800 text-white">
@@ -16,7 +19,21 @@
         </header>
 
         <main class="flex-1 bg-gray-100 p-6">
-            @Body
+            @if (AuthorizationStateService.IsReady)
+            {
+                @if (AuthorizationStateService.UserHasAdminAccess)
+                {
+                    @Body
+                }
+                else
+                {
+                    <ForbiddenAccess />
+                }
+            }
+            else
+            {
+                <p>Loading...</p>
+            }
         </main>
     </div>
 </div>
@@ -26,3 +43,16 @@
     <a href="." class="text-blue-600 hover:text-blue-800 ml-2">Reload</a>
     <span class="float-right cursor-pointer" onclick="this.parentNode.style.display='none'">🗙</span>
 </div>
+
+@code {
+    protected override async Task OnInitializedAsync()
+    {
+        AuthorizationStateService.OnChange += StateHasChanged;
+        await AuthorizationStateService.InitializeAsync();
+    }
+
+    public void Dispose()
+    {
+        AuthorizationStateService.OnChange -= StateHasChanged;
+    }
+}
