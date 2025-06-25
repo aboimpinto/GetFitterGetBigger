@@ -62,11 +62,11 @@ Tailwind CSS was chosen as the styling framework:
 ## Critical Implementation Paths
 
 1. **Authentication System**
-   - External authentication providers (Google, Facebook)
-   - Cookie-based authentication
-   - Authorization policies
-   - User profile management
-   - Secure routing with automatic redirection
+   - **Federated Authentication**: External providers (Google, Facebook) handle the initial user login.
+   - **API-Driven Sessions**: The client exchanges the user's email for a JWT from the API, which is used for all subsequent requests. This includes a sliding expiration mechanism. [Details](/memory-bank/features/api-authentication-flow.md)
+   - **Authorization Policies**: Client-side and server-side policies control access to features.
+   - **User Profile Management**: Handled via API interactions.
+   - **Secure Routing**: Automatic redirection to the login page for unauthorized access or expired sessions.
 
 2. **API Communication Layer**
    - HTTP client configuration

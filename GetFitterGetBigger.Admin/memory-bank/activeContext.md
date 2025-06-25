@@ -97,5 +97,6 @@ For a complete overview of all features and their current status, see the [Featu
 - [API Configuration](/memory-bank/features/api-configuration/overview.md)
 
 ### Planned Features
+- [API Authentication Flow](/memory-bank/features/api-authentication-flow.md)
 - [Exercise Management](/memory-bank/features/exercise-management/overview.md)
 - [Workout Builder](/memory-bank/features/workout-builder/overview.md)

@@ -27,6 +27,7 @@ The GetFitterGetBigger API Application serves as the central hub for all data op
 - **RESTful API**: For standardized communication between clients and server
 - **Request-Response**: Standard HTTP communication pattern
 - **JWT Authentication**: For secure authentication and authorization
+- **Federated Authentication and Claims-Based Authorization**: A detailed system for handling user identity and permissions via federated providers and a local claims store. [Details](/memory-bank/features/federated-authentication.md)
 
 ## Data Patterns
 

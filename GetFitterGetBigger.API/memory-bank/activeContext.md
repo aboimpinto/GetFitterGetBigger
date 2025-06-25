@@ -131,6 +131,9 @@ The API endpoints return reference data using a standardized `ReferenceDataDto` 
 
 Internal properties like `DisplayOrder` and `IsActive` are intentionally excluded from the DTO to maintain a clean API contract and hide implementation details from clients.
 
+## Planned Features
+- **Federated Authentication and Claims-Based Authorization**: A comprehensive system to manage user identity and access control. [Details](/memory-bank/features/federated-authentication.md)
+
 Example response:
 
 ```json
