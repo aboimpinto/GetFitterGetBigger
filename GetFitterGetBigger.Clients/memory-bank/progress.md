@@ -15,21 +15,44 @@
 - Implemented the GoBack feature in the Olimpo.NavigationManager: The navigation history now correctly stores and retrieves previous screens, allowing users to navigate back as expected.
 - Implemented forward and backward navigation transitions: When navigating forward, a forward transition is applied, and when navigating back, a backward transition is applied.
 
-## Proposed Features
+## Reference Data API Integration Guide
 
-### Client-Side Caching for Reference Data
+This section outlines how the Client application should connect to and consume the Reference Tables API.
 
-To improve performance, reduce network usage, and provide a better offline experience, a client-side caching strategy for API reference data will be implemented.
+### API Connection Details
 
-*   **Mechanism:** A suitable caching library for Avalonia/mobile development (e.g., Akavache, or a custom service using `System.Runtime.Caching`) will be used to store the data locally. A dedicated service will be responsible for managing this cache.
-*   **Dual Invalidation Strategy:**
-    1.  **Time-Based Expiration:** The cached data will have a default expiration time that varies based on the data's volatility. For example, static data like `BodyParts` can be cached for 24 hours, while more dynamic data like `Equipment` might be cached for only 30-60 minutes.
-    2.  **Explicit Refresh:** The application will provide a mechanism for the user to manually refresh the reference data, such as a "Check for updates" button in the settings screen. This action will clear the cache and force a new fetch from the API.
+*   **Development Base URL:** `http://localhost:5214`
+
+This URL will be the base for all API requests during development.
+
+### Endpoint Mapping
+
+The following table maps each reference data type to its specific API endpoint path.
+
+| Reference Table     | API Endpoint Path                          |
+|---------------------|--------------------------------------------|
+| BodyParts           | `/api/ReferenceTables/BodyParts`           |
+| DifficultyLevels    | `/api/ReferenceTables/DifficultyLevels`    |
+| Equipment           | `/api/ReferenceTables/Equipment`           |
+| KineticChainTypes   | `/api/ReferenceTables/KineticChainTypes`   |
+| MetricTypes         | `/api/ReferenceTables/MetricTypes`         |
+| MovementPatterns    | `/api/ReferenceTables/MovementPatterns`    |
+| MuscleGroups        | `/api/ReferenceTables/MuscleGroups`        |
+| MuscleRoles         | `/api/ReferenceTables/MuscleRoles`         |
+
+### Implementation Proposal: Caching Service
+
+To ensure good performance and support offline scenarios, a dedicated service should be created to fetch and cache this reference data.
+
+*   **Mechanism:** Use a mobile-friendly caching library like Akavache or a custom implementation to store the API responses locally.
+*   **Caching Strategy:**
+    *   **Time-Based:** Cache data with an expiration time appropriate to its volatility (e.g., long for static data, short for dynamic data).
+    *   **Explicit:** Provide a user-facing mechanism, like a "refresh" button in the app's settings, to manually clear the cache and fetch fresh data.
 
 ## New Tasks
 
-*   **Task:** Implement Client-Side Caching for Reference Data
-    *   **Description:** Implement the client-side caching strategy as outlined in the "Proposed Features" section. This includes selecting a caching library/mechanism, creating a service to manage the cache, and implementing both time-based and explicit cache invalidation.
+*   **Task:** Implement API Service for Reference Data
+    *   **Description:** Create a service that can fetch and cache data from the Reference Tables API, as detailed in the "Reference Data API Integration Guide". The implementation should include the full endpoint mapping and the specified caching strategy.
     *   **Status:** `[SUBMITTED]`
 
 ## What's Left to Build:

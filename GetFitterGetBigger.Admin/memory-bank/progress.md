@@ -48,27 +48,80 @@ The GetFitterGetBigger Admin Application is in the **initial setup phase**. The 
    - Development certificate configuration in place
    - Comprehensive documentation created for setup and troubleshooting
 
-## Proposed Features
+## Reference Data API Integration Guide
 
-### ReferenceDataService with Caching
+This section outlines how the Admin application should connect to and consume the Reference Tables API.
 
-To provide a centralized and efficient way to access API reference data, a new service will be created.
+### API Connection Details
+
+*   **Development Base URL:** `http://localhost:5214`
+
+This URL should be configured in `appsettings.Development.json` to be used by the `HttpClient` service.
+
+### Endpoint Mapping
+
+The following table maps each reference data type to its specific API endpoint path.
+
+| Reference Table     | API Endpoint Path                          |
+|---------------------|--------------------------------------------|
+| BodyParts           | `/api/ReferenceTables/BodyParts`           |
+| DifficultyLevels    | `/api/ReferenceTables/DifficultyLevels`    |
+| Equipment           | `/api/ReferenceTables/Equipment`           |
+| KineticChainTypes   | `/api/ReferenceTables/KineticChainTypes`   |
+| MetricTypes         | `/api/ReferenceTables/MetricTypes`         |
+| MovementPatterns    | `/api/ReferenceTables/MovementPatterns`    |
+| MuscleGroups        | `/api/ReferenceTables/MuscleGroups`        |
+| MuscleRoles         | `/api/ReferenceTables/MuscleRoles`         |
+
+### Implementation Proposal: `ReferenceDataService`
+
+To centralize data fetching and caching, a `ReferenceDataService` should be implemented.
 
 *   **Architecture:**
-    1.  **Interface (`IReferenceDataService`):** Defines the contract for the service, with methods like `Task<IEnumerable<ReferenceDataDto>> GetDifficultyLevelsAsync()`.
-    2.  **Implementation (`ReferenceDataService`):** A class that implements the interface.
-    3.  **Dependency Injection:** The service will be registered as a **singleton** in `Program.cs` to ensure a single instance handles the cache for all components and users.
+    *   Create an `IReferenceDataService` interface.
+    *   Create a `ReferenceDataService` class that implements the interface.
+    *   Register the service as a singleton in `Program.cs` to manage a shared cache.
 
-*   **Client-Side Caching:** The service will implement a robust client-side cache to minimize network requests to the API.
-    *   **Mechanism:** It will use `IMemoryCache` for in-memory storage of reference table data.
-    *   **Dual Invalidation Strategy:**
-        1.  **Time-Based Expiration:** Each cached item will have an expiration time based on its volatility (e.g., 24 hours for static data like `BodyParts`, 30 minutes for dynamic data like `Equipment`).
-        2.  **Explicit Refresh:** The `IReferenceDataService` will expose a public method (e.g., `Task InvalidateCacheAsync(string key)`) that can be triggered by a UI element, such as a "Refresh Data" button, to force a fetch of the latest data from the API.
+*   **Example Usage:**
+    ```csharp
+    public class ReferenceDataService : IReferenceDataService
+    {
+        private readonly HttpClient _httpClient;
+        private readonly IMemoryCache _cache;
+        private const string ApiBaseUrl = "http://localhost:5214"; // Should be injected from IConfiguration
+
+        public ReferenceDataService(HttpClient httpClient, IMemoryCache cache)
+        {
+            _httpClient = httpClient;
+            _cache = cache;
+        }
+
+        public async Task<IEnumerable<ReferenceDataDto>> GetDifficultyLevelsAsync()
+        {
+            const string cacheKey = "DifficultyLevels";
+            if (!_cache.TryGetValue(cacheKey, out IEnumerable<ReferenceDataDto> cachedData))
+            {
+                var requestUrl = $"{ApiBaseUrl}/api/ReferenceTables/DifficultyLevels";
+                cachedData = await _httpClient.GetFromJsonAsync<IEnumerable<ReferenceDataDto>>(requestUrl);
+                
+                // Cache with a long expiration for static data
+                _cache.Set(cacheKey, cachedData, TimeSpan.FromHours(24));
+            }
+            return cachedData;
+        }
+
+        // ... methods for other reference tables
+    }
+    ```
+
+*   **Caching Strategy:**
+    *   **Time-Based:** Use long expiration for static data (e.g., `BodyParts`) and shorter expiration for dynamic data (e.g., `Equipment`).
+    *   **Explicit:** The service should include a method to manually invalidate cache keys, which can be triggered by UI actions.
 
 ## New Tasks
 
-*   **Task:** Implement ReferenceDataService with Caching
-    *   **Description:** Implement the `IReferenceDataService` and `ReferenceDataService` as outlined in the "Proposed Features" section. This includes setting up the singleton registration, implementing the caching logic with `IMemoryCache`, and providing methods for both time-based and explicit cache invalidation.
+*   **Task:** Implement ReferenceDataService for API Communication
+    *   **Description:** Implement the `IReferenceDataService` and `ReferenceDataService` as detailed in the "Reference Data API Integration Guide". This includes configuring the `HttpClient`, implementing methods for all reference table endpoints, and setting up the specified caching strategy.
     *   **Status:** `[SUBMITTED]`
 
 ## What's Left to Build
