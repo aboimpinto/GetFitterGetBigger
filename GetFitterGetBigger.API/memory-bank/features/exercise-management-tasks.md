@@ -19,6 +19,7 @@
   - DeleteAsync(id) - with reference check logic
   - ExistsAsync(name) - for uniqueness validation
   - HasReferencesAsync(id) - check for workout references `[Implemented: afefa7ae]`
+- **Task 2.3:** Write unit tests for ExerciseRepository `[Implemented: c11ca457]`
 
 ### DTOs
 - **Task 3.1:** Create ExerciseDto for responses `[Implemented: 570698a5]`
@@ -34,6 +35,7 @@
   - Name uniqueness check
   - Deletion logic (soft vs hard delete)
   - Mapping between entities and DTOs `[Implemented: 593bc7b0]`
+- **Task 4.3:** Write unit tests for ExerciseService `[Implemented: c11ca457]`
 
 ### Controller
 - **Task 5.1:** Create ExercisesController with:
