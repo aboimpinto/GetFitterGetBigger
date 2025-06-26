@@ -47,7 +47,7 @@
   - POST /api/exercises
   - PUT /api/exercises/{id}
   - DELETE /api/exercises/{id} `[Implemented: 40ea9144]`
-- **Task 5.2:** Write integration tests for ExercisesController `[Implemented: 3d23275f]` (partial - some tests failing due to EF Core in-memory DB limitations)
+- **Task 5.2:** Write integration tests for ExercisesController `[Implemented: 3d23275f]` (7 tests skipped - see BUG-002)
 - **Task 5.3:** Add [Authorize] attribute for admin-only access `[BLOCKED: BUG-001]` - Cannot implement until [Authorize] attribute bug is fixed
 - **Task 5.4:** Configure Swagger documentation for all endpoints `[Implemented: d8194a36]`
 

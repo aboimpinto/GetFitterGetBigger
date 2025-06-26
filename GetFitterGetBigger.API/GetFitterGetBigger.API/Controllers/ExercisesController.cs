@@ -80,8 +80,33 @@ public class ExercisesController : ControllerBase
     /// <summary>
     /// Creates a new exercise
     /// </summary>
+    /// <remarks>
+    /// Sample request:
+    /// 
+    ///     POST /api/exercises
+    ///     {
+    ///         "name": "Barbell Back Squat",
+    ///         "description": "A compound lower body exercise targeting quads and glutes",
+    ///         "instructions": "1. Position bar on upper back\n2. Squat down to parallel\n3. Drive up through heels",
+    ///         "videoUrl": "https://example.com/squat-video.mp4",
+    ///         "imageUrl": "https://example.com/squat-image.jpg",
+    ///         "isUnilateral": false,
+    ///         "difficultyId": "difficultylevel-8a8adb1d-24d2-4979-a5a6-0d760e6da24b",
+    ///         "muscleGroups": [
+    ///             {
+    ///                 "muscleGroupId": "musclegroup-ccddeeff-0011-2233-4455-667788990011",
+    ///                 "muscleRoleId": "musclerole-abcdef12-3456-7890-abcd-ef1234567890"
+    ///             }
+    ///         ],
+    ///         "equipmentIds": ["equipment-33445566-7788-99aa-bbcc-ddeeff001122"],
+    ///         "bodyPartIds": ["bodypart-7c5a2d6e-e87e-4c8a-9f1d-9eb734f3df3c"],
+    ///         "movementPatternIds": ["movementpattern-99aabbcc-ddee-ff00-1122-334455667788"]
+    ///     }
+    /// 
+    /// Note: The exercise ID will be generated automatically and returned in the response
+    /// </remarks>
     /// <param name="request">The exercise creation request</param>
-    /// <returns>The created exercise</returns>
+    /// <returns>The created exercise with its generated ID</returns>
     /// <response code="201">Returns the newly created exercise</response>
     /// <response code="400">If the request is invalid</response>
     /// <response code="409">If an exercise with the same name already exists</response>
@@ -118,8 +143,34 @@ public class ExercisesController : ControllerBase
     /// <summary>
     /// Updates an existing exercise
     /// </summary>
-    /// <param name="id">The ID of the exercise to update</param>
-    /// <param name="request">The exercise update request</param>
+    /// <remarks>
+    /// Sample request:
+    /// 
+    ///     PUT /api/exercises/exercise-12345678-1234-1234-1234-123456789012
+    ///     {
+    ///         "name": "Updated Barbell Back Squat",
+    ///         "description": "A compound lower body exercise targeting quads and glutes",
+    ///         "instructions": "1. Position bar on upper back\n2. Squat down to parallel\n3. Drive up through heels",
+    ///         "videoUrl": "https://example.com/squat-video.mp4",
+    ///         "imageUrl": "https://example.com/squat-image.jpg",
+    ///         "isUnilateral": false,
+    ///         "isActive": true,
+    ///         "difficultyId": "difficultylevel-8a8adb1d-24d2-4979-a5a6-0d760e6da24b",
+    ///         "muscleGroups": [
+    ///             {
+    ///                 "muscleGroupId": "musclegroup-ccddeeff-0011-2233-4455-667788990011",
+    ///                 "muscleRoleId": "musclerole-abcdef12-3456-7890-abcd-ef1234567890"
+    ///             }
+    ///         ],
+    ///         "equipmentIds": ["equipment-33445566-7788-99aa-bbcc-ddeeff001122"],
+    ///         "bodyPartIds": ["bodypart-7c5a2d6e-e87e-4c8a-9f1d-9eb734f3df3c"],
+    ///         "movementPatternIds": ["movementpattern-99aabbcc-ddee-ff00-1122-334455667788"]
+    ///     }
+    /// 
+    /// Note: The exercise ID is taken from the URL path, not from the request body
+    /// </remarks>
+    /// <param name="id">The ID of the exercise to update (from URL path)</param>
+    /// <param name="request">The exercise update request containing all fields to update</param>
     /// <returns>The updated exercise</returns>
     /// <response code="200">Returns the updated exercise</response>
     /// <response code="400">If the request is invalid</response>
@@ -164,14 +215,21 @@ public class ExercisesController : ControllerBase
     /// <summary>
     /// Deletes an exercise
     /// </summary>
-    /// <param name="id">The ID of the exercise to delete</param>
+    /// <remarks>
+    /// Sample request:
+    /// 
+    ///     DELETE /api/exercises/exercise-12345678-1234-1234-1234-123456789012
+    /// 
+    /// Note: The exercise ID is taken from the URL path. No request body is needed.
+    /// 
+    /// Deletion behavior:
+    /// - If the exercise has references (e.g., in workout logs), it will be soft deleted (marked as inactive)
+    /// - If the exercise has no references, it will be permanently deleted from the database
+    /// </remarks>
+    /// <param name="id">The ID of the exercise to delete (from URL path)</param>
     /// <returns>No content if successful</returns>
     /// <response code="204">If the exercise was successfully deleted</response>
     /// <response code="404">If the exercise is not found</response>
-    /// <remarks>
-    /// If the exercise has references (e.g., in workout logs), it will be soft deleted (marked as inactive).
-    /// If the exercise has no references, it will be permanently deleted from the database.
-    /// </remarks>
     [HttpDelete("{id}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
