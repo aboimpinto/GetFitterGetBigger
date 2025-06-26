@@ -90,8 +90,8 @@ public class ExerciseService : IExerciseService
         // Validate unique name
         using (var readOnlyUow = _unitOfWorkProvider.CreateReadOnly())
         {
-            var repository = readOnlyUow.GetRepository<IExerciseRepository>();
-            if (await repository.ExistsAsync(request.Name))
+            var readRepository = readOnlyUow.GetRepository<IExerciseRepository>();
+            if (await readRepository.ExistsAsync(request.Name))
             {
                 throw new InvalidOperationException($"An exercise with the name '{request.Name}' already exists.");
             }
@@ -139,8 +139,8 @@ public class ExerciseService : IExerciseService
         // Validate unique name (excluding current exercise)
         using (var readOnlyUow = _unitOfWorkProvider.CreateReadOnly())
         {
-            var repository = readOnlyUow.GetRepository<IExerciseRepository>();
-            if (await repository.ExistsAsync(request.Name, exerciseId))
+            var readRepository = readOnlyUow.GetRepository<IExerciseRepository>();
+            if (await readRepository.ExistsAsync(request.Name, exerciseId))
             {
                 throw new InvalidOperationException($"An exercise with the name '{request.Name}' already exists.");
             }
@@ -361,7 +361,7 @@ public class ExerciseService : IExerciseService
                 {
                     Id = emg.MuscleGroup?.Id.ToString() ?? string.Empty,
                     Value = emg.MuscleGroup?.Name ?? string.Empty,
-                    Description = emg.MuscleGroup?.Description
+                    Description = null
                 },
                 Role = new ReferenceDataDto
                 {
@@ -379,7 +379,7 @@ public class ExerciseService : IExerciseService
             {
                 Id = ee.Equipment?.Id.ToString() ?? string.Empty,
                 Value = ee.Equipment?.Name ?? string.Empty,
-                Description = ee.Equipment?.Description
+                Description = null
             });
         }
         

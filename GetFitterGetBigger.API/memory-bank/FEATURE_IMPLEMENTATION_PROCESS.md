@@ -23,13 +23,19 @@ This document outlines the standard process for implementing new features in the
 
 ### 3. Implementation Phase
 - Execute tasks sequentially from the task tracking file
-- After completing each task:
-  - Update the task status in the tracking file from `[ReadyToDevelop]` to `[Implemented: <git-commit-hash>]`
-  - Include comprehensive unit tests
-  - Ensure all tests pass before proceeding
-  - Commit the task tracking file update along with the implementation
+- **For EVERY task implementation:**
+  1. Write the implementation code
+  2. **MANDATORY: Write unit tests for the implemented code**
+  3. **MANDATORY: Run `dotnet build` to ensure compilation succeeds**
+  4. **MANDATORY: Run `dotnet test` to ensure all tests pass**
+  5. Only after build and tests pass, commit the changes
+  6. Update the task status in the tracking file from `[ReadyToDevelop]` to `[Implemented: <git-commit-hash>]`
 - Follow existing code conventions and patterns
 - The task tracking file serves as both documentation and audit trail
+- **IMPORTANT**: Never move to the next task if:
+  - The build is failing
+  - Tests are not written
+  - Any test is failing
 
 ### 4. Test Development & Handling
 - Write unit tests for all new functionality
@@ -70,6 +76,17 @@ After user explicitly states feature acceptance:
 - User maintains control over deployment and merge decisions
 - Clear audit trail through commit hashes and bug tracking
 - Supports both continuous and interrupted development workflows
+
+## Implementation Verification Checklist
+
+Before marking any task as `[Implemented]`, verify:
+
+- [ ] Implementation code is complete
+- [ ] Unit tests are written for the new code
+- [ ] `dotnet build` runs without errors
+- [ ] `dotnet test` runs with all tests passing
+- [ ] Code follows project conventions
+- [ ] No commented-out code or debug statements
 
 ## Task Tracking File Template
 
