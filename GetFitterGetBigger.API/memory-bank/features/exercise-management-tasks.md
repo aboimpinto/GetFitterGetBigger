@@ -1,0 +1,64 @@
+# Exercise Management CRUD Implementation Tasks
+
+## Feature Branch: `feature/exercise-management-crud`
+
+### Database & Entity Setup
+- **Task 1.1:** Create ExerciseId specialized ID type `[Implemented: 621e03ac]`
+- **Task 1.2:** Create Exercise entity with all required fields `[Implemented: 1bc29d90]`
+- **Task 1.3:** Add many-to-many relationships with MuscleGroups, Equipment, BodyParts, MovementPatterns `[Implemented: 118f35f0]`
+- **Task 1.4:** Update FitnessDbContext with Exercises DbSet and entity configuration `[Implemented: d69c598b]`
+- **Task 1.5:** Create and apply database migration `[Implemented: fec70845]`
+
+### Repository Layer
+- **Task 2.1:** Create IExerciseRepository interface with pagination and filtering methods `[Implemented: 42f3e48b]`
+- **Task 2.2:** Implement ExerciseRepository with:
+  - GetPagedAsync(pageNumber, pageSize, filterParams)
+  - GetByIdAsync(id)
+  - AddAsync(exercise)
+  - UpdateAsync(exercise)
+  - DeleteAsync(id) - with reference check logic
+  - ExistsAsync(name) - for uniqueness validation
+  - HasReferencesAsync(id) - check for workout references `[Implemented: afefa7ae]`
+
+### DTOs
+- **Task 3.1:** Create ExerciseDto for responses `[ReadyToDevelop]`
+- **Task 3.2:** Create CreateExerciseRequest DTO `[ReadyToDevelop]`
+- **Task 3.3:** Create UpdateExerciseRequest DTO `[ReadyToDevelop]`
+- **Task 3.4:** Create ExerciseFilterParams DTO for filtering `[ReadyToDevelop]`
+- **Task 3.5:** Create PagedResponse<T> DTO for pagination `[ReadyToDevelop]`
+
+### Service Layer
+- **Task 4.1:** Create IExerciseService interface `[ReadyToDevelop]`
+- **Task 4.2:** Implement ExerciseService with:
+  - Business rule validation
+  - Name uniqueness check
+  - Deletion logic (soft vs hard delete)
+  - Mapping between entities and DTOs `[ReadyToDevelop]`
+
+### Controller
+- **Task 5.1:** Create ExercisesController with:
+  - GET /api/exercises?page=1&pageSize=10&name=squat (paginated list with filters)
+  - GET /api/exercises/{id}
+  - POST /api/exercises
+  - PUT /api/exercises/{id}
+  - DELETE /api/exercises/{id} `[ReadyToDevelop]`
+- **Task 5.2:** Add [Authorize] attribute for admin-only access `[ReadyToDevelop]`
+- **Task 5.3:** Configure Swagger documentation for all endpoints `[ReadyToDevelop]`
+
+### Testing
+- **Task 6.1:** Create unit tests for ExerciseRepository `[ReadyToDevelop]`
+- **Task 6.2:** Create unit tests for ExerciseService `[ReadyToDevelop]`
+- **Task 6.3:** Create integration tests for ExercisesController `[ReadyToDevelop]`
+- **Task 6.4:** Create tests for pagination logic `[ReadyToDevelop]`
+- **Task 6.5:** Create tests for filtering logic `[ReadyToDevelop]`
+- **Task 6.6:** Create tests for deletion business rules `[ReadyToDevelop]`
+
+### Documentation
+- **Task 7.1:** Update memory-bank/features/exercise-management.md with implementation details `[ReadyToDevelop]`
+- **Task 7.2:** Document API endpoints in Swagger `[ReadyToDevelop]`
+
+## Notes
+- All tasks should be completed in the feature branch before merging to master
+- Each task should include comprehensive unit tests
+- Follow existing code patterns and conventions
+- Update this file with commit hashes as tasks are completed
