@@ -66,23 +66,20 @@
 - Ensured all reference data controllers return data in a consistent format using ReferenceDataDto
 - Created comprehensive documentation of the UnitOfWork pattern in unitOfWorkPattern.md
 - Updated tests to handle empty database scenarios, making them more robust for different environments
-- Implemented JWT authentication and authorization (Note: A bug regarding test run is still open and will be fixed later.)
+- Restored JWT authentication system after accidental removal
+  - Restored AuthController with login endpoint
+  - Restored authentication DTOs (AuthenticationRequest, AuthenticationResponse, ClaimInfo)
+  - Restored AuthService and JwtService implementations
+  - Configured JWT settings in appsettings
+  - JWT tokens are generated but authorization is not enforced (Note: A bug regarding authorization enforcement is still open)
 
 ## In Progress
 
-### Authentication System Restoration
-- **Description:** Restore the JWT authentication system that was accidentally removed during cleanup. The system will generate JWT tokens and return user claims, but will NOT enforce authorization yet.
-- **Todo List:**
-  1. ✅ Analyze what authentication components exist vs what was removed
-  2. ✅ Restore AuthController with login endpoint
-  3. ✅ Restore DTOs (AuthenticationRequest, AuthenticationResponse, ClaimInfo)
-  4. ✅ Restore AuthService and IAuthService
-  5. ✅ Restore JwtService and IJwtService
-  6. ✅ Add JWT configuration back to appsettings
-  7. ✅ Register auth services in DI container
-  8. ✅ Test authentication endpoint returns JWT and claims
-  9. ✅ Do NOT add [Authorize] attributes yet
-- **Status:** COMPLETED - Authentication system restored and working. JWT tokens are generated but not enforced.
+### Server-Side Caching for Reference Tables
+- **Description:** Implement server-side caching for reference table endpoints to improve performance and reduce database load.
+- **Feature Document:** `features/server-side-caching.md`
+- **Branch:** `feature/server-side-caching`
+- **Status:** `[IN PROGRESS]`
 
 ### Other Tasks
 - Implementing repositories and services for the remaining non-reference data entities
@@ -106,7 +103,7 @@ To improve performance and reduce database load, a server-side caching mechanism
 
 *   **Task:** Implement Server-Side Caching for Reference Tables
     *   **Description:** Implement the server-side caching strategy as outlined in the "Proposed Features" section. This includes using `IMemoryCache` in the reference table controllers and implementing the cache invalidation logic for dynamic tables.
-    *   **Status:** `[SUBMITTED]`
+    *   **Status:** `[IN PROGRESS]` - See `features/server-side-caching.md`
 
 ## Next Steps
 - Implement repositories and controllers for the remaining entities (Exercise, User, WorkoutLog, etc.)
