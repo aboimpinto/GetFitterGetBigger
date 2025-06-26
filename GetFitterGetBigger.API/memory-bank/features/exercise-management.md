@@ -6,6 +6,13 @@ This feature enables the creation and management of exercises, which are the fun
 
 This document outlines the API and database-level implementation for the Exercise Management feature.
 
+### Key Features:
+- Full CRUD operations (Create, Read, Update, Delete)
+- Pagination support (default 10 items per page, configurable)
+- Filtering capabilities (by name and other fields)
+- Soft delete with conditional hard delete
+- Admin-only access via authorization
+
 ---
 
 ## 2. Database Schema
@@ -31,9 +38,15 @@ Represents a single exercise in the system.
 | `IsActive`     | `bool`           | Required, Default: `true`                 | A flag for soft-deleting exercises.                                         |
 | `DifficultyId` | `DifficultyLevelId` | Foreign Key to `DifficultyLevels` table | The skill level required for the exercise (e.g., 'Beginner', 'Advanced').   |
 
-### Open Questions
+### Many-to-Many Relationships
 
-- **Relationships to other reference tables:** Should the `Exercise` entity have many-to-many relationships with other reference tables like `MuscleGroups`, `Equipment`, `BodyParts`, and `MovementPatterns`? This would allow for more advanced filtering and categorization.
+The `Exercise` entity will have many-to-many relationships with the following reference tables:
+- `MuscleGroups` (via `ExerciseMuscleGroups` join table)
+- `Equipment` (via `ExerciseEquipment` join table)
+- `BodyParts` (via `ExerciseBodyParts` join table)
+- `MovementPatterns` (via `ExerciseMovementPatterns` join table)
+
+These relationships enable advanced filtering and categorization of exercises.
 
 ---
 
@@ -41,23 +54,62 @@ Represents a single exercise in the system.
 
 A new `ExercisesController` will be created to expose endpoints for managing exercises.
 
-- `GET /api/exercises`: Get a paginated list of exercises with filtering.
-- `GET /api/exercises/{id}`: Get a single exercise by its ID.
-- `POST /api/exercises`: Create a new exercise.
-- `PUT /api/exercises/{id}`: Update an existing exercise.
-- `DELETE /api/exercises/{id}`: Deactivate (soft delete) an exercise.
+### Endpoints:
 
-The implementation will follow the patterns established in the `api-docs/exercises.md` file.
+#### GET /api/exercises
+Get a paginated list of exercises with filtering.
+- Query Parameters:
+  - `page` (int, default: 1): Page number
+  - `pageSize` (int, default: 10): Items per page
+  - `name` (string, optional): Filter by exercise name (case-insensitive, partial match)
+  - `difficultyId` (string, optional): Filter by difficulty level
+  - `muscleGroupIds` (string[], optional): Filter by muscle groups
+  - `equipmentIds` (string[], optional): Filter by equipment
+  - `movementPatternIds` (string[], optional): Filter by movement patterns
+  - `isActive` (bool, default: true): Include inactive exercises
+- Response: `PagedResponse<ExerciseDto>`
+
+#### GET /api/exercises/{id}
+Get a single exercise by its ID.
+- Response: `ExerciseDto`
+
+#### POST /api/exercises
+Create a new exercise.
+- Request Body: `CreateExerciseRequest`
+- Response: `ExerciseDto`
+- Authorization: Admin only
+
+#### PUT /api/exercises/{id}
+Update an existing exercise.
+- Request Body: `UpdateExerciseRequest`
+- Response: `ExerciseDto`
+- Authorization: Admin only
+
+#### DELETE /api/exercises/{id}
+Delete an exercise (soft or hard delete based on references).
+- Response: 204 No Content
+- Authorization: Admin only
+- Business Rule: Hard delete only if no workout references exist
 
 ---
 
 ## 4. Business Logic
 
-- **Uniqueness:** The `Name` of the exercise must be unique. The service layer will enforce this constraint.
-- **Deletion:** When a `DELETE` request is received, the system will first check if the exercise is part of any existing `Workout`.
-  - If it is, the exercise will be marked as inactive (`IsActive = false`).
-  - If it is not, the exercise can be permanently deleted from the database. (Note: This rule may be refined later).
-- **Dependencies:** The `Exercise` entity will have a dependency on the `DifficultyLevels` reference table.
+- **Uniqueness:** The `Name` of the exercise must be unique (case-insensitive). The service layer will enforce this constraint.
+- **Deletion Rules:**
+  - Check if exercise is referenced in any WorkoutLog or UserExercise (when these entities exist)
+  - If referenced: Soft delete only (`IsActive = false`)
+  - If not referenced: Hard delete from database
+- **Validation Rules:**
+  - Name: Required, max 200 characters, unique
+  - Description: Required, max 1000 characters
+  - Instructions: Required, max 5000 characters
+  - VideoUrl/ImageUrl: Optional, must be valid URLs when provided
+  - At least one MuscleGroup must be specified
+  - DifficultyLevel must exist in reference table
+- **Dependencies:** 
+  - DifficultyLevels reference table
+  - MuscleGroups, Equipment, BodyParts, MovementPatterns for categorization
 
 ---
 

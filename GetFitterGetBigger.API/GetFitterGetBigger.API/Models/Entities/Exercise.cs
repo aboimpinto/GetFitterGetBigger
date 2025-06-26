@@ -11,70 +11,113 @@ public record Exercise
     public string Description { get; init; } = string.Empty;
     public string Instructions { get; init; } = string.Empty;
     public string? VideoUrl { get; init; }
-    public DifficultyLevelId DifficultyLevelId { get; init; }
-    public KineticChainTypeId KineticChainTypeId { get; init; }
-    public bool IsUnilateral { get; init; } = false;
+    public string? ImageUrl { get; init; }
+    public bool IsUnilateral { get; init; }
+    public bool IsActive { get; init; } = true;
+    public DifficultyLevelId DifficultyId { get; init; }
     
     // Navigation properties
-    public DifficultyLevel? DifficultyLevel { get; init; }
-    public KineticChainType? KineticChainType { get; init; }
-    public ICollection<ExerciseMovementPattern> MovementPatterns { get; init; } = new List<ExerciseMovementPattern>();
-    public ICollection<ExerciseTargetedMuscle> TargetedMuscles { get; init; } = new List<ExerciseTargetedMuscle>();
-    public ICollection<ExerciseEquipment> Equipment { get; init; } = new List<ExerciseEquipment>();
-    public ICollection<ExerciseMetricSupport> SupportedMetrics { get; init; } = new List<ExerciseMetricSupport>();
-    public ICollection<WorkoutLogSet> WorkoutLogSets { get; init; } = new List<WorkoutLogSet>();
+    public DifficultyLevel? Difficulty { get; init; }
     
+    // Many-to-many relationships
+    public ICollection<ExerciseMuscleGroup> ExerciseMuscleGroups { get; init; } = new List<ExerciseMuscleGroup>();
+    public ICollection<ExerciseEquipment> ExerciseEquipment { get; init; } = new List<ExerciseEquipment>();
+    public ICollection<ExerciseBodyPart> ExerciseBodyParts { get; init; } = new List<ExerciseBodyPart>();
+    public ICollection<ExerciseMovementPattern> ExerciseMovementPatterns { get; init; } = new List<ExerciseMovementPattern>();
+    
+    // Private constructor to force usage of Handler
     private Exercise() { }
     
     public static class Handler
     {
         public static Exercise CreateNew(
-            string name, 
-            string description, 
-            string instructions, 
-            string? videoUrl, 
-            DifficultyLevelId difficultyLevelId, 
-            KineticChainTypeId kineticChainTypeId, 
-            bool isUnilateral)
+            string name,
+            string description,
+            string instructions,
+            string? videoUrl,
+            string? imageUrl,
+            bool isUnilateral,
+            DifficultyLevelId difficultyId)
         {
-            if (string.IsNullOrEmpty(name))
+            // Validation logic
+            if (string.IsNullOrWhiteSpace(name))
             {
                 throw new ArgumentException("Name cannot be empty", nameof(name));
             }
             
-            return new()
+            if (string.IsNullOrWhiteSpace(description))
+            {
+                throw new ArgumentException("Description cannot be empty", nameof(description));
+            }
+            
+            if (string.IsNullOrWhiteSpace(instructions))
+            {
+                throw new ArgumentException("Instructions cannot be empty", nameof(instructions));
+            }
+            
+            if (name.Length > 200)
+            {
+                throw new ArgumentException("Name cannot exceed 200 characters", nameof(name));
+            }
+            
+            if (description.Length > 1000)
+            {
+                throw new ArgumentException("Description cannot exceed 1000 characters", nameof(description));
+            }
+            
+            if (instructions.Length > 5000)
+            {
+                throw new ArgumentException("Instructions cannot exceed 5000 characters", nameof(instructions));
+            }
+            
+            // Validate URLs if provided
+            if (!string.IsNullOrEmpty(videoUrl) && !Uri.IsWellFormedUriString(videoUrl, UriKind.Absolute))
+            {
+                throw new ArgumentException("Video URL must be a valid absolute URL", nameof(videoUrl));
+            }
+            
+            if (!string.IsNullOrEmpty(imageUrl) && !Uri.IsWellFormedUriString(imageUrl, UriKind.Absolute))
+            {
+                throw new ArgumentException("Image URL must be a valid absolute URL", nameof(imageUrl));
+            }
+            
+            return new Exercise
             {
                 Id = ExerciseId.New(),
-                Name = name,
-                Description = description,
-                Instructions = instructions,
-                VideoUrl = videoUrl,
-                DifficultyLevelId = difficultyLevelId,
-                KineticChainTypeId = kineticChainTypeId,
-                IsUnilateral = isUnilateral
+                Name = name.Trim(),
+                Description = description.Trim(),
+                Instructions = instructions.Trim(),
+                VideoUrl = videoUrl?.Trim(),
+                ImageUrl = imageUrl?.Trim(),
+                IsUnilateral = isUnilateral,
+                IsActive = true,
+                DifficultyId = difficultyId
             };
         }
         
         public static Exercise Create(
             ExerciseId id,
-            string name, 
-            string description, 
-            string instructions, 
-            string? videoUrl, 
-            DifficultyLevelId difficultyLevelId, 
-            KineticChainTypeId kineticChainTypeId, 
-            bool isUnilateral) =>
-            
-            new()
+            string name,
+            string description,
+            string instructions,
+            string? videoUrl,
+            string? imageUrl,
+            bool isUnilateral,
+            bool isActive,
+            DifficultyLevelId difficultyId)
+        {
+            return new Exercise
             {
                 Id = id,
                 Name = name,
                 Description = description,
                 Instructions = instructions,
                 VideoUrl = videoUrl,
-                DifficultyLevelId = difficultyLevelId,
-                KineticChainTypeId = kineticChainTypeId,
-                IsUnilateral = isUnilateral
+                ImageUrl = imageUrl,
+                IsUnilateral = isUnilateral,
+                IsActive = isActive,
+                DifficultyId = difficultyId
             };
+        }
     }
 }
