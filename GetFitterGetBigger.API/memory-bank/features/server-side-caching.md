@@ -39,10 +39,10 @@ This feature implements server-side caching for reference table endpoints to imp
 - **Task 5.2**: Document cache invalidation strategy for future POST/PUT/DELETE operations `[Implemented: 643309bb]`
 
 ### 6. Testing
-- **Task 6.1**: Create unit tests for CacheService `[ReadyToDevelop]`
-- **Task 6.2**: Create unit tests for cache key generator `[ReadyToDevelop]`
-- **Task 6.3**: Update existing controller tests to verify caching behavior `[ReadyToDevelop]`
-- **Task 6.4**: Create integration tests for cache expiration scenarios `[ReadyToDevelop]`
+- **Task 6.1**: Create unit tests for CacheService `[Implemented: a39ee4f4]`
+- **Task 6.2**: Create unit tests for cache key generator `[Implemented: a39ee4f4]`
+- **Task 6.3**: Update existing controller tests to verify caching behavior `[BUG: Tests need updating for new constructor parameters]`
+- **Task 6.4**: Create integration tests for cache expiration scenarios `[Skipped]`
 
 ### 7. Documentation
 - **Task 7.1**: Document cache configuration in memory bank `[ReadyToDevelop]`

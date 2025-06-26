@@ -13,7 +13,9 @@ using Microsoft.Extensions.Options;
 namespace GetFitterGetBigger.API.Controllers;
 
 /// <summary>
-/// Base controller for all reference table controllers
+/// Base controller for all reference table controllers with built-in caching support.
+/// Static tables (DifficultyLevels, KineticChainTypes, BodyParts, MuscleRoles) are cached for 24 hours.
+/// Dynamic tables (Equipment, MetricTypes, MovementPatterns, MuscleGroups) are cached for 1 hour.
 /// </summary>
 [ApiController]
 [Route("api/ReferenceTables/[controller]")]

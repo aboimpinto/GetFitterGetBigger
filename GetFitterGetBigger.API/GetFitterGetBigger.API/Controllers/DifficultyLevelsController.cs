@@ -31,7 +31,7 @@ public class DifficultyLevelsController : ReferenceTablesBaseController
     }
 
     /// <summary>
-    /// Gets all active difficulty levels
+    /// Gets all active difficulty levels (cached for 24 hours)
     /// </summary>
     /// <returns>A collection of active difficulty levels</returns>
     [HttpGet]
