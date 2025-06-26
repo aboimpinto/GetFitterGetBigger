@@ -72,28 +72,21 @@
   - Restored AuthService and JwtService implementations
   - Configured JWT settings in appsettings
   - JWT tokens are generated but authorization is not enforced (Note: A bug regarding authorization enforcement is still open)
+- Implemented server-side caching for reference tables
+  - Added IMemoryCache configuration to reduce database load
+  - Static tables (DifficultyLevels, KineticChainTypes, BodyParts, MuscleRoles) cached for 24 hours
+  - Dynamic tables (Equipment, MetricTypes, MovementPatterns, MuscleGroups) cached for 1 hour
+  - All reference table controllers now use caching infrastructure
+  - Created comprehensive cache invalidation strategy for future CRUD operations
+  - Added cache configuration to appsettings.json
+  - Created cache service with error resilience and logging
 
 ## In Progress
-
-### Server-Side Caching for Reference Tables
-- **Description:** Implement server-side caching for reference table endpoints to improve performance and reduce database load.
-- **Feature Document:** `features/server-side-caching.md`
-- **Branch:** `feature/server-side-caching`
-- **Status:** `[IN PROGRESS]`
 
 ### Other Tasks
 - Implementing repositories and services for the remaining non-reference data entities
 
 ## Proposed Features
-
-### Server-Side Caching for Reference Tables
-
-To improve performance and reduce database load, a server-side caching mechanism will be implemented directly within the API for the reference table endpoints.
-
-*   **Mechanism:** The implementation will use `IMemoryCache` provided by ASP.NET Core. Controllers responsible for reference data will query the cache before falling back to a database query.
-*   **Cache Invalidation Strategy:**
-    *   **Static Tables:** Data for tables that rarely or never change (e.g., `BodyParts`, `DifficultyLevels`) will be cached with a long-term expiration (e.g., 24 hours).
-    *   **Dynamic Tables:** For tables that are updated more frequently (e.g., `Equipment`), a shorter cache duration will be used. Crucially, any API endpoint that modifies this data (e.g., via `POST`, `PUT`, `DELETE`) will be responsible for explicitly invalidating the corresponding cache key. This ensures that clients always receive fresh data after a modification.
 
 ## New Tasks
 
@@ -103,7 +96,7 @@ To improve performance and reduce database load, a server-side caching mechanism
 
 *   **Task:** Implement Server-Side Caching for Reference Tables
     *   **Description:** Implement the server-side caching strategy as outlined in the "Proposed Features" section. This includes using `IMemoryCache` in the reference table controllers and implementing the cache invalidation logic for dynamic tables.
-    *   **Status:** `[IN PROGRESS]` - See `features/server-side-caching.md`
+    *   **Status:** `[COMPLETED]` - Merged to master
 
 ## Next Steps
 - Implement repositories and controllers for the remaining entities (Exercise, User, WorkoutLog, etc.)
