@@ -77,12 +77,27 @@ After user explicitly states feature acceptance:
 - `[Implemented: <hash>]` - Task completed with reference commit
 - `[BUG: <reason>]` - Known issue requiring future resolution
 - `[Skipped]` - Task deferred or determined unnecessary
+- `[INCOMPLETE: <reason>]` - Task cannot be completed due to external dependency or bug
+- `[BLOCKED: BUG-<id>]` - Task blocked by a specific bug that needs to be fixed first
 
 ## Important Notes
 - This process ensures code quality through comprehensive testing
 - User maintains control over deployment and merge decisions
 - Clear audit trail through commit hashes and bug tracking
 - Supports both continuous and interrupted development workflows
+
+## Handling Blocked Features
+When a feature cannot be completed due to external dependencies:
+1. Mark the blocking task as `[BLOCKED: BUG-<id>]` with reference to the bug
+2. Create a bug entry in the appropriate tracking location with:
+   - Bug ID and description
+   - Link back to the blocked feature task
+   - Expected resolution approach
+3. Mark the overall feature as `[INCOMPLETE]` at the end of the feature file
+4. When the bug is fixed:
+   - Update the blocked task to `[Implemented: <hash>]`
+   - Remove the `[INCOMPLETE]` status from the feature
+   - Add note about bug resolution
 
 ## Implementation Verification Checklist
 

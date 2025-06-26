@@ -12,6 +12,7 @@ using Swashbuckle.AspNetCore.SwaggerGen;
 using System.Reflection;
 using GetFitterGetBigger.API.Swagger;
 using GetFitterGetBigger.API.Configuration;
+using System.IO;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -79,7 +80,8 @@ builder.Services.AddSwaggerGen(options =>
     options.SwaggerDoc("v1", new OpenApiInfo
     {
         Title = "GetFitterGetBigger API",
-        Version = "v1"
+        Version = "v1",
+        Description = "API for fitness tracking and exercise management"
     });
 
     // Add a custom document filter to group reference table controllers
@@ -87,6 +89,14 @@ builder.Services.AddSwaggerGen(options =>
     
     // Add a custom operation filter to add controller name to operation ID
     options.OperationFilter<GetFitterGetBigger.API.Swagger.ControllerNameOperationFilter>();
+    
+    // Include XML comments
+    var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+    var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+    if (File.Exists(xmlPath))
+    {
+        options.IncludeXmlComments(xmlPath);
+    }
 });
 
 var app = builder.Build();

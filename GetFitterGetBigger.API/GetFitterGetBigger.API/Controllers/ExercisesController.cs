@@ -13,6 +13,7 @@ namespace GetFitterGetBigger.API.Controllers;
 [ApiController]
 [Route("api/[controller]")]
 [Produces("application/json")]
+[Tags("Exercises")]
 public class ExercisesController : ControllerBase
 {
     private readonly IExerciseService _exerciseService;

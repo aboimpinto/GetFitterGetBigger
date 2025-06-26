@@ -47,8 +47,8 @@
   - POST /api/exercises
   - PUT /api/exercises/{id}
   - DELETE /api/exercises/{id} `[Implemented: 40ea9144]`
-- **Task 5.2:** Write integration tests for ExercisesController `[ReadyToDevelop]`
-- **Task 5.3:** Add [Authorize] attribute for admin-only access `[ReadyToDevelop]`
+- **Task 5.2:** Write integration tests for ExercisesController `[Implemented: 3d23275f]` (partial - some tests failing due to EF Core in-memory DB limitations)
+- **Task 5.3:** Add [Authorize] attribute for admin-only access `[BLOCKED: BUG-001]` - Cannot implement until [Authorize] attribute bug is fixed
 - **Task 5.4:** Configure Swagger documentation for all endpoints `[ReadyToDevelop]`
 
 ### Documentation
@@ -60,3 +60,7 @@
 - Each task should include comprehensive unit tests
 - Follow existing code patterns and conventions
 - Update this file with commit hashes as tasks are completed
+
+## Feature Status: [INCOMPLETE]
+- **Reason**: Task 5.3 is blocked by BUG-001 ([Authorize] attribute not working correctly)
+- **See**: [/memory-bank/BUGS.md#BUG-001](../BUGS.md#bug-001-authorize-attribute-not-working-correctly)
