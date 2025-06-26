@@ -21,11 +21,11 @@
   - HasReferencesAsync(id) - check for workout references `[Implemented: afefa7ae]`
 
 ### DTOs
-- **Task 3.1:** Create ExerciseDto for responses `[ReadyToDevelop]`
-- **Task 3.2:** Create CreateExerciseRequest DTO `[ReadyToDevelop]`
-- **Task 3.3:** Create UpdateExerciseRequest DTO `[ReadyToDevelop]`
-- **Task 3.4:** Create ExerciseFilterParams DTO for filtering `[ReadyToDevelop]`
-- **Task 3.5:** Create PagedResponse<T> DTO for pagination `[ReadyToDevelop]`
+- **Task 3.1:** Create ExerciseDto for responses `[Implemented: 570698a5]`
+- **Task 3.2:** Create CreateExerciseRequest DTO `[Implemented: 570698a5]`
+- **Task 3.3:** Create UpdateExerciseRequest DTO `[Implemented: 570698a5]`
+- **Task 3.4:** Create ExerciseFilterParams DTO for filtering `[Implemented: 570698a5]`
+- **Task 3.5:** Create PagedResponse<T> DTO for pagination `[Implemented: 570698a5]`
 
 ### Service Layer
 - **Task 4.1:** Create IExerciseService interface `[ReadyToDevelop]`
