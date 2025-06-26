@@ -60,6 +60,10 @@ builder.Services.AddTransient<IMovementPatternRepository, MovementPatternReposit
 builder.Services.AddTransient<IMuscleGroupRepository, MuscleGroupRepository>();
 builder.Services.AddTransient<IUserRepository, UserRepository>();
 builder.Services.AddTransient<IClaimRepository, ClaimRepository>();
+builder.Services.AddTransient<IExerciseRepository, ExerciseRepository>();
+
+// Register services
+builder.Services.AddTransient<IExerciseService, ExerciseService>();
 
 // Register authentication services
 builder.Services.AddTransient<IJwtService, JwtService>();
