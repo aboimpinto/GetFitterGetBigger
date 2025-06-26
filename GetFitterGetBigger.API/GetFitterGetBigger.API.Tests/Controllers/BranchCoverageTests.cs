@@ -5,8 +5,12 @@ using GetFitterGetBigger.API.DTOs;
 using GetFitterGetBigger.API.Models;
 using GetFitterGetBigger.API.Models.Entities;
 using GetFitterGetBigger.API.Models.SpecializedIds;
+using GetFitterGetBigger.API.Services.Interfaces;
+using GetFitterGetBigger.API.Configuration;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
+using Microsoft.Extensions.Logging;
 using Moq;
 using Olimpo.EntityFramework.Persistency;
 using Xunit;
@@ -37,7 +41,12 @@ public class BranchCoverageTests : IClassFixture<ApiTestFixture>
     public void MapToDto_EntityWithoutIdProperty_ThrowsInvalidOperationException()
     {
         // This test requires a special test class to verify the defensive programming
-        var controller = new TestReferenceControllerForEdgeCases(_fixture.Services.GetRequiredService<IUnitOfWorkProvider<FitnessDbContext>>());
+        var unitOfWorkProvider = _fixture.Services.GetRequiredService<IUnitOfWorkProvider<FitnessDbContext>>();
+        var cacheService = _fixture.Services.GetRequiredService<ICacheService>();
+        var cacheConfiguration = _fixture.Services.GetRequiredService<IOptions<CacheConfiguration>>();
+        var logger = _fixture.Services.GetRequiredService<ILogger<ReferenceTablesBaseController>>();
+        
+        var controller = new TestReferenceControllerForEdgeCases(unitOfWorkProvider, cacheService, cacheConfiguration, logger);
         
         var entityWithoutId = new BrokenReferenceData { Value = "Test", Description = "Test" };
 
@@ -51,7 +60,12 @@ public class BranchCoverageTests : IClassFixture<ApiTestFixture>
     [Fact]
     public void MapToDto_EntityWithNullId_ThrowsInvalidOperationException()
     {
-        var controller = new TestReferenceControllerForEdgeCases(_fixture.Services.GetRequiredService<IUnitOfWorkProvider<FitnessDbContext>>());
+        var unitOfWorkProvider = _fixture.Services.GetRequiredService<IUnitOfWorkProvider<FitnessDbContext>>();
+        var cacheService = _fixture.Services.GetRequiredService<ICacheService>();
+        var cacheConfiguration = _fixture.Services.GetRequiredService<IOptions<CacheConfiguration>>();
+        var logger = _fixture.Services.GetRequiredService<ILogger<ReferenceTablesBaseController>>();
+        
+        var controller = new TestReferenceControllerForEdgeCases(unitOfWorkProvider, cacheService, cacheConfiguration, logger);
         
         var entityWithNullId = new ReferenceDataWithNullableId { Id = null, Value = "Test", Description = "Test" };
 
@@ -185,9 +199,12 @@ public class BranchCoverageTests : IClassFixture<ApiTestFixture>
     // Test controller that exposes MapToDto for testing
     private class TestReferenceControllerForEdgeCases : ReferenceTablesBaseController
     {
-        // TODO: Update constructor to match new base controller signature with caching
-        public TestReferenceControllerForEdgeCases(IUnitOfWorkProvider<FitnessDbContext> unitOfWorkProvider) 
-            : base(unitOfWorkProvider)
+        public TestReferenceControllerForEdgeCases(
+            IUnitOfWorkProvider<FitnessDbContext> unitOfWorkProvider,
+            ICacheService cacheService,
+            IOptions<CacheConfiguration> cacheConfiguration,
+            ILogger<ReferenceTablesBaseController> logger) 
+            : base(unitOfWorkProvider, cacheService, cacheConfiguration, logger)
         {
         }
 

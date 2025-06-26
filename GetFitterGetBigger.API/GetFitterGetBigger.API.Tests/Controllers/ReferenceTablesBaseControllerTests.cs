@@ -3,21 +3,27 @@ using GetFitterGetBigger.API.DTOs;
 using GetFitterGetBigger.API.Models;
 using GetFitterGetBigger.API.Models.Entities;
 using GetFitterGetBigger.API.Models.SpecializedIds;
+using GetFitterGetBigger.API.Services.Interfaces;
+using GetFitterGetBigger.API.Configuration;
+using Microsoft.Extensions.Options;
+using Microsoft.Extensions.Logging;
 using Moq;
 using Olimpo.EntityFramework.Persistency;
 using Xunit;
 
 namespace GetFitterGetBigger.API.Tests.Controllers;
 
-[Trait("Category", "Skip")]
 public class ReferenceTablesBaseControllerTests
 {
     // Test implementation of ReferenceTablesBaseController for testing
     private class TestReferenceController : ReferenceTablesBaseController
     {
-        // TODO: Update constructor to match new base controller signature with caching
-        public TestReferenceController(IUnitOfWorkProvider<FitnessDbContext> unitOfWorkProvider) 
-            : base(unitOfWorkProvider)
+        public TestReferenceController(
+            IUnitOfWorkProvider<FitnessDbContext> unitOfWorkProvider,
+            ICacheService cacheService,
+            IOptions<CacheConfiguration> cacheConfiguration,
+            ILogger<ReferenceTablesBaseController> logger) 
+            : base(unitOfWorkProvider, cacheService, cacheConfiguration, logger)
         {
         }
 
@@ -30,11 +36,38 @@ public class ReferenceTablesBaseControllerTests
 
     private readonly TestReferenceController _controller;
     private readonly Mock<IUnitOfWorkProvider<FitnessDbContext>> _mockUnitOfWorkProvider;
+    private readonly Mock<ICacheService> _mockCacheService;
+    private readonly Mock<IOptions<CacheConfiguration>> _mockCacheConfiguration;
+    private readonly Mock<ILogger<ReferenceTablesBaseController>> _mockLogger;
 
     public ReferenceTablesBaseControllerTests()
     {
         _mockUnitOfWorkProvider = new Mock<IUnitOfWorkProvider<FitnessDbContext>>();
-        _controller = new TestReferenceController(_mockUnitOfWorkProvider.Object);
+        _mockCacheService = new Mock<ICacheService>();
+        _mockCacheConfiguration = new Mock<IOptions<CacheConfiguration>>();
+        _mockLogger = new Mock<ILogger<ReferenceTablesBaseController>>();
+        
+        // Setup default cache configuration
+        var cacheConfig = new CacheConfiguration
+        {
+            StaticTables = new TableCacheConfiguration
+            {
+                DurationInHours = 24,
+                Tables = new List<string> { "DifficultyLevels", "KineticChainTypes", "BodyParts", "MuscleRoles" }
+            },
+            DynamicTables = new TableCacheConfiguration
+            {
+                DurationInHours = 1,
+                Tables = new List<string> { "Equipment", "MetricTypes", "MovementPatterns", "MuscleGroups" }
+            }
+        };
+        _mockCacheConfiguration.Setup(x => x.Value).Returns(cacheConfig);
+        
+        _controller = new TestReferenceController(
+            _mockUnitOfWorkProvider.Object,
+            _mockCacheService.Object,
+            _mockCacheConfiguration.Object,
+            _mockLogger.Object);
     }
 
     [Fact]

@@ -74,7 +74,7 @@ public class CacheKeyGeneratorTests
         string? value = null;
 
         // Act
-        var result = CacheKeyGenerator.GetByValueKey(tableName, value);
+        var result = CacheKeyGenerator.GetByValueKey(tableName, value!);
 
         // Assert
         Assert.Equal("ReferenceTable:MetricTypes:GetByValue:", result);
