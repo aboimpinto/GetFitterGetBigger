@@ -28,12 +28,12 @@
 - **Task 3.5:** Create PagedResponse<T> DTO for pagination `[Implemented: 570698a5]`
 
 ### Service Layer
-- **Task 4.1:** Create IExerciseService interface `[ReadyToDevelop]`
+- **Task 4.1:** Create IExerciseService interface `[Implemented: 593bc7b0]`
 - **Task 4.2:** Implement ExerciseService with:
   - Business rule validation
   - Name uniqueness check
   - Deletion logic (soft vs hard delete)
-  - Mapping between entities and DTOs `[ReadyToDevelop]`
+  - Mapping between entities and DTOs `[Implemented: 593bc7b0]`
 
 ### Controller
 - **Task 5.1:** Create ExercisesController with:
