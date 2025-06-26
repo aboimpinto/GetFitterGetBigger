@@ -1,4 +1,10 @@
-# [BUG] - Authorization is not working as expected in Development with Swagger
+# Task Tracking
+
+For new feature implementations, please refer to [FEATURE_IMPLEMENTATION_PROCESS.md](../memory-bank/FEATURE_IMPLEMENTATION_PROCESS.md) for the standard development workflow.
+
+## Current Issues
+
+### [BUG] - Authorization is not working as expected in Development with Swagger
 
 ## Description
 
