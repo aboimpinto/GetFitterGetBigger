@@ -11,12 +11,20 @@ using Microsoft.OpenApi.Models;
 using Swashbuckle.AspNetCore.SwaggerGen;
 using System.Reflection;
 using GetFitterGetBigger.API.Swagger;
+using GetFitterGetBigger.API.Configuration;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 // Add Memory Cache
 builder.Services.AddMemoryCache();
+
+// Configure cache settings
+builder.Services.Configure<CacheConfiguration>(
+    builder.Configuration.GetSection("CacheConfiguration"));
+
+// Register cache service
+builder.Services.AddSingleton<ICacheService, CacheService>();
 
 // Add controllers with JSON options
 builder.Services.AddControllers()
