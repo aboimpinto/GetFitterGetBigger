@@ -258,7 +258,7 @@ public class FitnessDbContext : DbContext
                 
         modelBuilder.Entity<ExerciseTargetedMuscle>()
             .HasOne(etm => etm.Exercise)
-            .WithMany(e => e.TargetedMuscles)
+            .WithMany()
             .HasForeignKey(etm => etm.ExerciseId);
             
         modelBuilder.Entity<ExerciseTargetedMuscle>()
@@ -289,7 +289,7 @@ public class FitnessDbContext : DbContext
                 
         modelBuilder.Entity<ExerciseEquipment>()
             .HasOne(ee => ee.Exercise)
-            .WithMany(e => e.Equipment)
+            .WithMany(e => e.ExerciseEquipment)
             .HasForeignKey(ee => ee.ExerciseId);
             
         modelBuilder.Entity<ExerciseEquipment>()
@@ -315,7 +315,7 @@ public class FitnessDbContext : DbContext
                 
         modelBuilder.Entity<ExerciseMetricSupport>()
             .HasOne(ems => ems.Exercise)
-            .WithMany(e => e.SupportedMetrics)
+            .WithMany()
             .HasForeignKey(ems => ems.ExerciseId);
             
         modelBuilder.Entity<ExerciseMetricSupport>()
@@ -410,7 +410,7 @@ public class FitnessDbContext : DbContext
         // Exercise to WorkoutLogSet (one-to-many)
         modelBuilder.Entity<WorkoutLogSet>()
             .HasOne(wls => wls.Exercise)
-            .WithMany(e => e.WorkoutLogSets)
+            .WithMany()
             .HasForeignKey(wls => wls.ExerciseId);
             
         // DifficultyLevel to Exercise (one-to-many)
