@@ -185,6 +185,7 @@ public class BranchCoverageTests : IClassFixture<ApiTestFixture>
     // Test controller that exposes MapToDto for testing
     private class TestReferenceControllerForEdgeCases : ReferenceTablesBaseController
     {
+        // TODO: Update constructor to match new base controller signature with caching
         public TestReferenceControllerForEdgeCases(IUnitOfWorkProvider<FitnessDbContext> unitOfWorkProvider) 
             : base(unitOfWorkProvider)
         {

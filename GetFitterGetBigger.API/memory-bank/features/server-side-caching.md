@@ -35,8 +35,8 @@ This feature implements server-side caching for reference table endpoints to imp
 - **Task 4.8**: Update MuscleGroupsController to use caching (dynamic table) `[Implemented: ea200b91]`
 
 ### 5. Cache Invalidation (for future CRUD operations)
-- **Task 5.1**: Create cache invalidation methods in base controller `[ReadyToDevelop]`
-- **Task 5.2**: Document cache invalidation strategy for future POST/PUT/DELETE operations `[ReadyToDevelop]`
+- **Task 5.1**: Create cache invalidation methods in base controller `[Implemented: d5a58196]`
+- **Task 5.2**: Document cache invalidation strategy for future POST/PUT/DELETE operations `[Implemented: 643309bb]`
 
 ### 6. Testing
 - **Task 6.1**: Create unit tests for CacheService `[ReadyToDevelop]`
