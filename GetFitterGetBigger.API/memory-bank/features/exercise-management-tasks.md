@@ -52,8 +52,8 @@
 - **Task 5.4:** Configure Swagger documentation for all endpoints `[Implemented: d8194a36]`
 
 ### Documentation
-- **Task 6.1:** Update memory-bank/features/exercise-management.md with implementation details `[ReadyToDevelop]`
-- **Task 6.2:** Document API endpoints in Swagger `[ReadyToDevelop]`
+- **Task 6.1:** Update memory-bank/features/exercise-management.md with implementation details `[Implemented: 79cbe207]`
+- **Task 6.2:** Document API endpoints in Swagger `[Implemented: d8194a36]` - Completed as part of Task 5.4
 
 ## Notes
 - All tasks should be completed in the feature branch before merging to master
