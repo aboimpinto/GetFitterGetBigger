@@ -131,8 +131,6 @@ The API endpoints return reference data using a standardized `ReferenceDataDto` 
 
 Internal properties like `DisplayOrder` and `IsActive` are intentionally excluded from the DTO to maintain a clean API contract and hide implementation details from clients.
 
-## Planned Features
-- **Federated Authentication and Claims-Based Authorization**: A comprehensive system to manage user identity and access control. [Details](/memory-bank/features/federated-authentication.md)
 
 Example response:
 
@@ -145,6 +143,9 @@ Example response:
 ```
 
 The `ReferenceTablesBaseController` provides a common `MapToDto` method that handles the conversion from entity objects to DTOs, ensuring consistent formatting of IDs and property selection across all reference data endpoints.
+
+## Implemented Features for Next PI
+- **JWT Authentication and Authorization**: Implemented secure authentication and authorization using JWT tokens. (Note: A bug regarding test run is still open and will be fixed later.)
 
 For non-ReferenceDataBase entities, the controllers implement their own mapping to ReferenceDataDto to maintain a consistent API contract:
 

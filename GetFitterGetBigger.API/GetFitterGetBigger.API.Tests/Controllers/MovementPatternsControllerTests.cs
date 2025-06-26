@@ -14,10 +14,7 @@ public class MovementPatternsControllerTests : IClassFixture<ApiTestFixture>
     public MovementPatternsControllerTests(ApiTestFixture fixture)
     {
         _fixture = fixture;
-        _client = fixture.CreateClient(new WebApplicationFactoryClientOptions
-        {
-            AllowAutoRedirect = false
-        });
+        _client = fixture.CreateAuthenticatedClient();
     }
 
     [Fact]

@@ -1,3 +1,4 @@
+
 using Microsoft.EntityFrameworkCore;
 using GetFitterGetBigger.API.Models;
 using GetFitterGetBigger.API;
@@ -10,16 +11,28 @@ using Microsoft.OpenApi.Models;
 using Swashbuckle.AspNetCore.SwaggerGen;
 using System.Reflection;
 using GetFitterGetBigger.API.Swagger;
-using GetFitterGetBigger.API.Middleware;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using System.IdentityModel.Tokens.Jwt;
+using GetFitterGetBigger.API.Models.Entities;
+using GetFitterGetBigger.API.Models.SpecializedIds;
+using GetFitterGetBigger.API.Middleware;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Authorization;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 // Add controllers with JSON options
-builder.Services.AddControllers()
+builder.Services.AddControllers(options =>
+    {
+        // Add DevelopmentAllowAnonymousFilter globally if in Development environment
+        if (builder.Environment.IsDevelopment())
+        {
+            options.Filters.Add<DevelopmentAllowAnonymousFilter>();
+        }
+    })
     .AddJsonOptions(options =>
     {
         // Configure JSON serialization to handle records with private constructors
@@ -76,8 +89,28 @@ builder.Services.AddAuthentication(options =>
         ValidIssuer = builder.Configuration["Jwt:Issuer"],
         ValidateAudience = true,
         ValidAudience = builder.Configuration["Jwt:Audience"],
+        NameClaimType = System.Security.Claims.ClaimTypes.NameIdentifier,
         ValidateLifetime = true,
         ClockSkew = TimeSpan.Zero
+    };
+    options.Events = new JwtBearerEvents
+    {
+        OnTokenValidated = context =>
+        {
+            var jwtService = context.HttpContext.RequestServices.GetRequiredService<IJwtService>();
+            var claims = context.Principal.Claims;
+            var userIdClaim = claims.FirstOrDefault(c => c.Type == System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            var emailClaim = claims.FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.Email)?.Value;
+
+            if (userIdClaim != null && emailClaim != null && UserId.TryParse(userIdClaim, out var userId))
+            {
+                var user = new User { Id = userId, Email = emailClaim };
+                var newToken = jwtService.GenerateToken(user);
+                context.Response.Headers.Append("X-Refreshed-Token", newToken);
+            }
+            
+            return Task.CompletedTask;
+        }
     };
 });
 
@@ -127,10 +160,10 @@ app
     .WithName("GetWeatherForecast");
 
 // Map controllers
+// Always add authentication middleware
 app.UseAuthentication();
 app.UseAuthorization();
 
-app.UseMiddleware<JwtMiddleware>();
 
 app.MapControllers();
 

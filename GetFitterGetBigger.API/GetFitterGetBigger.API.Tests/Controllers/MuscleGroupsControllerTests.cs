@@ -14,10 +14,7 @@ public class MuscleGroupsControllerTests : IClassFixture<ApiTestFixture>
     public MuscleGroupsControllerTests(ApiTestFixture fixture)
     {
         _fixture = fixture;
-        _client = fixture.CreateClient(new WebApplicationFactoryClientOptions
-        {
-            AllowAutoRedirect = false
-        });
+        _client = fixture.CreateAuthenticatedClient();
     }
 
     [Fact]

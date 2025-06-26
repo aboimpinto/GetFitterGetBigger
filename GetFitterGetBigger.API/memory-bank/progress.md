@@ -66,6 +66,7 @@
 - Ensured all reference data controllers return data in a consistent format using ReferenceDataDto
 - Created comprehensive documentation of the UnitOfWork pattern in unitOfWorkPattern.md
 - Updated tests to handle empty database scenarios, making them more robust for different environments
+- Implemented JWT authentication and authorization (Note: A bug regarding test run is still open and will be fixed later.)
 
 ## In Progress
 - Implementing repositories and services for the remaining non-reference data entities
@@ -101,7 +102,6 @@ To improve performance and reduce database load, a server-side caching mechanism
 - Implement additional reference data repositories as needed
 
 ## Open Questions
-- Authentication mechanism
 - Specific features required for the mobile and admin applications
 - Deployment strategy
 - Additional entities needed for workout templates and programs

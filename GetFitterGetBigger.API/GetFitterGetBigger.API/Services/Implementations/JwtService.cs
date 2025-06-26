@@ -28,7 +28,7 @@ namespace GetFitterGetBigger.API.Services.Implementations
             {
                 Subject = new ClaimsIdentity(new[]
                 {
-                    new System.Security.Claims.Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
+                    new System.Security.Claims.Claim(System.Security.Claims.ClaimTypes.NameIdentifier, user.Id.ToString()),
                     new System.Security.Claims.Claim(JwtRegisteredClaimNames.Email, user.Email)
                 }),
                 Expires = DateTime.UtcNow.AddHours(1),
@@ -40,27 +40,35 @@ namespace GetFitterGetBigger.API.Services.Implementations
             return tokenHandler.WriteToken(token);
         }
 
-        public ClaimsPrincipal? GetPrincipalFromToken(string token)
+        public ClaimsPrincipal? ValidateToken(string token)
         {
-            var keyString = _configuration["Jwt:Key"] ?? throw new InvalidOperationException("JWT Key not configured.");
-            var tokenValidationParameters = new TokenValidationParameters
-            {
-                ValidateAudience = false,
-                ValidateIssuer = false,
-                ValidateIssuerSigningKey = true,
-                IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(keyString)),
-                ValidateLifetime = false
-            };
-
             var tokenHandler = new JwtSecurityTokenHandler();
-            var principal = tokenHandler.ValidateToken(token, tokenValidationParameters, out var securityToken);
+            var keyString = _configuration["Jwt:Key"] ?? throw new InvalidOperationException("JWT Key not configured.");
+            var key = Encoding.ASCII.GetBytes(keyString);
 
-            if (securityToken is not JwtSecurityToken jwtSecurityToken || !jwtSecurityToken.Header.Alg.Equals(SecurityAlgorithms.HmacSha256, StringComparison.InvariantCultureIgnoreCase))
+            try
+            {
+                tokenHandler.ValidateToken(token, new TokenValidationParameters
+                {
+                    ValidateIssuerSigningKey = true,
+                    IssuerSigningKey = new SymmetricSecurityKey(key),
+                    ValidateIssuer = true,
+                    ValidIssuer = _configuration["Jwt:Issuer"],
+                    ValidateAudience = true,
+                    ValidAudience = _configuration["Jwt:Audience"],
+                    ClockSkew = TimeSpan.Zero
+                }, out SecurityToken validatedToken);
+
+                var jwtToken = (JwtSecurityToken)validatedToken;
+                var claimsIdentity = new ClaimsIdentity(jwtToken.Claims);
+                var claimsPrincipal = new ClaimsPrincipal(claimsIdentity);
+
+                return claimsPrincipal;
+            }
+            catch
             {
                 return null;
             }
-
-            return principal;
         }
     }
 }

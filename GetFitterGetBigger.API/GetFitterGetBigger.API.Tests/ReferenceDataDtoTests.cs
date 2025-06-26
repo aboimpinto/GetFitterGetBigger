@@ -14,10 +14,7 @@ public class ReferenceDataDtoTests : IClassFixture<ApiTestFixture>
     public ReferenceDataDtoTests(ApiTestFixture fixture)
     {
         _fixture = fixture;
-        _client = fixture.CreateClient(new WebApplicationFactoryClientOptions
-        {
-            AllowAutoRedirect = false
-        });
+        _client = fixture.CreateAuthenticatedClient();
     }
 
     [Theory]

@@ -14,10 +14,7 @@ public class DifficultyLevelsControllerTests : IClassFixture<ApiTestFixture>
     public DifficultyLevelsControllerTests(ApiTestFixture fixture)
     {
         _fixture = fixture;
-        _client = fixture.CreateClient(new WebApplicationFactoryClientOptions
-        {
-            AllowAutoRedirect = false
-        });
+        _client = fixture.CreateAuthenticatedClient();
     }
 
     [Fact]

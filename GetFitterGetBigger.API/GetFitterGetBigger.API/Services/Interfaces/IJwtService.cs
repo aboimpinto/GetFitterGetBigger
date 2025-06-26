@@ -7,6 +7,6 @@ namespace GetFitterGetBigger.API.Services.Interfaces
     public interface IJwtService
     {
         string GenerateToken(User user);
-        ClaimsPrincipal? GetPrincipalFromToken(string token);
+        ClaimsPrincipal? ValidateToken(string token);
     }
 }

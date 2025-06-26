@@ -14,10 +14,7 @@ public class KineticChainTypesControllerTests : IClassFixture<ApiTestFixture>
     public KineticChainTypesControllerTests(ApiTestFixture fixture)
     {
         _fixture = fixture;
-        _client = fixture.CreateClient(new WebApplicationFactoryClientOptions
-        {
-            AllowAutoRedirect = false
-        });
+        _client = fixture.CreateAuthenticatedClient();
     }
 
     [Fact]
