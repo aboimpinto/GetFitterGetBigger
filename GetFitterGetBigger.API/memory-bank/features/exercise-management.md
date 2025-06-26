@@ -113,13 +113,66 @@ Delete an exercise (soft or hard delete based on references).
 
 ---
 
-## 5. Implementation Tasks
+## 5. Implementation Details
 
-- Create the `ExerciseId` specialized ID type.
-- Create the `Exercise` entity record.
-- Update `FitnessDbContext` with the `Exercises` DbSet and configure the entity.
-- Create and apply a new database migration.
-- Implement `IExerciseRepository` and `ExerciseRepository`.
-- Implement `IExerciseService` and `ExerciseService` to contain business logic.
-- Implement the `ExercisesController` with all the required endpoints.
-- Add unit and integration tests for the new repositories, services, and controllers.
+### Completed Components
+
+#### 5.1 Database Layer
+- **ExerciseId** (`Models/SpecializedIds/ExerciseId.cs`): Specialized ID type following the pattern with `exercise-{guid}` format
+- **Exercise Entity** (`Models/Entities/Exercise.cs`): Record type with Handler pattern for creation and validation
+- **Join Entities**: 
+  - `ExerciseMuscleGroup` (includes MuscleRole for Primary/Secondary/Stabilizer classification)
+  - `ExerciseEquipment`
+  - `ExerciseBodyPart`
+  - `ExerciseMovementPattern`
+- **Database Migration**: Created with all necessary tables and foreign key relationships
+
+#### 5.2 Repository Layer
+- **IExerciseRepository** (`Repositories/Interfaces/IExerciseRepository.cs`): Interface defining all data access operations
+- **ExerciseRepository** (`Repositories/Implementations/ExerciseRepository.cs`): Implementation with:
+  - Paginated queries with Include for all related entities
+  - Filtering by name, difficulty, muscle groups, equipment, etc.
+  - Existence checks for name uniqueness validation
+  - Reference checking for deletion logic (temporarily simplified due to missing entities)
+
+#### 5.3 Service Layer
+- **IExerciseService** (`Services/Interfaces/IExerciseService.cs`): Business logic interface
+- **ExerciseService** (`Services/Implementations/ExerciseService.cs`): Implementation with:
+  - Name uniqueness validation
+  - Proper ID parsing and validation
+  - Relationship management for many-to-many associations
+  - Soft vs hard delete logic based on references
+  - DTO mapping (simplified due to in-memory DB limitations in tests)
+
+#### 5.4 API Layer
+- **ExercisesController** (`Controllers/ExercisesController.cs`): RESTful API with:
+  - Full CRUD operations
+  - Comprehensive error handling and logging
+  - Proper HTTP status codes
+  - XML documentation for all endpoints
+  - Swagger integration with Tags attribute
+
+#### 5.5 DTOs
+- **ExerciseDto**: Response DTO with all exercise details and related entities
+- **CreateExerciseRequest**: Request DTO for creating exercises with validation attributes
+- **UpdateExerciseRequest**: Request DTO for updating exercises
+- **ExerciseFilterParams**: Query parameters for filtering and pagination
+- **PagedResponse<T>**: Generic pagination wrapper
+- **MuscleGroupWithRoleDto**: Special DTO for muscle groups with their roles
+
+### Testing
+- **Repository Tests** (11 tests): Cover all data access operations
+- **Service Tests** (8 tests): Cover business logic and validation
+- **Controller Integration Tests** (13 tests): Cover API endpoints
+  - Note: Some tests failing due to EF Core in-memory database limitations
+
+### Known Issues and TODOs
+1. **[BUG-001]**: [Authorize] attribute not working - blocking admin-only access implementation
+2. **Repository.HasReferencesAsync**: Temporarily returns false as WorkoutLogSet entity not fully configured
+3. **Service DTO Mapping**: Simplified to avoid reloading entities due to in-memory DB test issues
+4. **Missing Entities**: WorkoutLog, UserExercise references not yet implemented
+
+### Configuration
+- **Dependency Injection**: All services and repositories registered in Program.cs
+- **Swagger**: Configured to include XML comments and group exercises endpoints
+- **XML Documentation**: Enabled in project file for API documentation

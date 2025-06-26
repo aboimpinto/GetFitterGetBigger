@@ -49,7 +49,7 @@
   - DELETE /api/exercises/{id} `[Implemented: 40ea9144]`
 - **Task 5.2:** Write integration tests for ExercisesController `[Implemented: 3d23275f]` (partial - some tests failing due to EF Core in-memory DB limitations)
 - **Task 5.3:** Add [Authorize] attribute for admin-only access `[BLOCKED: BUG-001]` - Cannot implement until [Authorize] attribute bug is fixed
-- **Task 5.4:** Configure Swagger documentation for all endpoints `[ReadyToDevelop]`
+- **Task 5.4:** Configure Swagger documentation for all endpoints `[Implemented: d8194a36]`
 
 ### Documentation
 - **Task 6.1:** Update memory-bank/features/exercise-management.md with implementation details `[ReadyToDevelop]`
