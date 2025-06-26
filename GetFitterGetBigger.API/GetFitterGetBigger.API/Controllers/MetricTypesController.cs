@@ -5,26 +5,31 @@ using GetFitterGetBigger.API.Models.SpecializedIds;
 using GetFitterGetBigger.API.Repositories.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using Olimpo.EntityFramework.Persistency;
+using GetFitterGetBigger.API.Services.Interfaces;
+using GetFitterGetBigger.API.Configuration;
+using Microsoft.Extensions.Options;
 
 namespace GetFitterGetBigger.API.Controllers;
 
 /// <summary>
 /// Controller for retrieving metric type data
 /// </summary>
-[ApiController]
-[Route("api/ReferenceTables/[controller]")]
-public class MetricTypesController : ControllerBase
+public class MetricTypesController : ReferenceTablesBaseController
 {
-    private readonly IUnitOfWorkProvider<FitnessDbContext> _unitOfWorkProvider;
-
     /// <summary>
     /// Initializes a new instance of the <see cref="MetricTypesController"/> class
     /// </summary>
     /// <param name="unitOfWorkProvider">The unit of work provider</param>
+    /// <param name="cacheService">The cache service</param>
+    /// <param name="cacheConfiguration">The cache configuration</param>
+    /// <param name="logger">The logger</param>
     public MetricTypesController(
-        IUnitOfWorkProvider<FitnessDbContext> unitOfWorkProvider)
+        IUnitOfWorkProvider<FitnessDbContext> unitOfWorkProvider,
+        ICacheService cacheService,
+        IOptions<CacheConfiguration> cacheConfiguration,
+        ILogger<MetricTypesController> logger)
+        : base(unitOfWorkProvider, cacheService, cacheConfiguration, logger)
     {
-        _unitOfWorkProvider = unitOfWorkProvider;
     }
 
     /// <summary>
@@ -35,9 +40,12 @@ public class MetricTypesController : ControllerBase
     [ProducesResponseType(StatusCodes.Status200OK)]
     public async Task<IActionResult> GetAll()
     {
-        using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
-        var repository = unitOfWork.GetRepository<IMetricTypeRepository>();
-        var metricTypes = await repository.GetAllAsync();
+        var metricTypes = await GetAllWithCacheAsync(async () =>
+        {
+            using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
+            var repository = unitOfWork.GetRepository<IMetricTypeRepository>();
+            return await repository.GetAllAsync();
+        });
         
         // Map to DTOs
         var result = metricTypes.Select(mt => new ReferenceDataDto
@@ -66,9 +74,12 @@ public class MetricTypesController : ControllerBase
             return BadRequest($"Invalid ID format. Expected format: 'metrictype-{{guid}}', got: '{id}'");
         }
         
-        using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
-        var repository = unitOfWork.GetRepository<IMetricTypeRepository>();
-        var metricType = await repository.GetByIdAsync(metricTypeId);
+        var metricType = await GetByIdWithCacheAsync(id, async () =>
+        {
+            using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
+            var repository = unitOfWork.GetRepository<IMetricTypeRepository>();
+            return await repository.GetByIdAsync(metricTypeId);
+        });
         
         if (metricType == null)
             return NotFound();
@@ -114,9 +125,12 @@ public class MetricTypesController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetByValue(string value)
     {
-        using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
-        var repository = unitOfWork.GetRepository<IMetricTypeRepository>();
-        var metricType = await repository.GetByNameAsync(value);
+        var metricType = await GetByValueWithCacheAsync(value, async () =>
+        {
+            using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
+            var repository = unitOfWork.GetRepository<IMetricTypeRepository>();
+            return await repository.GetByNameAsync(value);
+        });
         
         if (metricType == null)
             return NotFound();

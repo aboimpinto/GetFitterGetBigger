@@ -3,6 +3,9 @@ using GetFitterGetBigger.API.Models.SpecializedIds;
 using GetFitterGetBigger.API.Repositories.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using Olimpo.EntityFramework.Persistency;
+using GetFitterGetBigger.API.Services.Interfaces;
+using GetFitterGetBigger.API.Configuration;
+using Microsoft.Extensions.Options;
 
 namespace GetFitterGetBigger.API.Controllers;
 
@@ -15,9 +18,15 @@ public class DifficultyLevelsController : ReferenceTablesBaseController
     /// Initializes a new instance of the <see cref="DifficultyLevelsController"/> class
     /// </summary>
     /// <param name="unitOfWorkProvider">The unit of work provider</param>
+    /// <param name="cacheService">The cache service</param>
+    /// <param name="cacheConfiguration">The cache configuration</param>
+    /// <param name="logger">The logger</param>
     public DifficultyLevelsController(
-        IUnitOfWorkProvider<FitnessDbContext> unitOfWorkProvider)
-        : base(unitOfWorkProvider)
+        IUnitOfWorkProvider<FitnessDbContext> unitOfWorkProvider,
+        ICacheService cacheService,
+        IOptions<CacheConfiguration> cacheConfiguration,
+        ILogger<DifficultyLevelsController> logger)
+        : base(unitOfWorkProvider, cacheService, cacheConfiguration, logger)
     {
     }
 
@@ -29,9 +38,12 @@ public class DifficultyLevelsController : ReferenceTablesBaseController
     [ProducesResponseType(StatusCodes.Status200OK)]
     public async Task<IActionResult> GetDifficultyLevels()
     {
-        using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
-        var repository = unitOfWork.GetRepository<IDifficultyLevelRepository>();
-        var difficultyLevels = await repository.GetAllActiveAsync();
+        var difficultyLevels = await GetAllWithCacheAsync(async () =>
+        {
+            using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
+            var repository = unitOfWork.GetRepository<IDifficultyLevelRepository>();
+            return await repository.GetAllActiveAsync();
+        });
         
         // Map to DTOs
         var result = difficultyLevels.Select(MapToDto);
@@ -56,11 +68,15 @@ public class DifficultyLevelsController : ReferenceTablesBaseController
             return BadRequest($"Invalid ID format. Expected format: 'difficultylevel-{{guid}}', got: '{id}'");
         }
         
-        using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
-        var repository = unitOfWork.GetRepository<IDifficultyLevelRepository>();
-        var difficultyLevel = await repository.GetByIdAsync(difficultyLevelId);
+        var difficultyLevel = await GetByIdWithCacheAsync(id, async () =>
+        {
+            using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
+            var repository = unitOfWork.GetRepository<IDifficultyLevelRepository>();
+            var entity = await repository.GetByIdAsync(difficultyLevelId);
+            return (entity != null && entity.IsActive) ? entity : null;
+        });
         
-        if (difficultyLevel == null || !difficultyLevel.IsActive)
+        if (difficultyLevel == null)
             return NotFound();
             
         // Map to DTO
@@ -79,9 +95,12 @@ public class DifficultyLevelsController : ReferenceTablesBaseController
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetDifficultyLevelByValue(string value)
     {
-        using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
-        var repository = unitOfWork.GetRepository<IDifficultyLevelRepository>();
-        var difficultyLevel = await repository.GetByValueAsync(value);
+        var difficultyLevel = await GetByValueWithCacheAsync(value, async () =>
+        {
+            using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
+            var repository = unitOfWork.GetRepository<IDifficultyLevelRepository>();
+            return await repository.GetByValueAsync(value);
+        });
         
         if (difficultyLevel == null)
             return NotFound();

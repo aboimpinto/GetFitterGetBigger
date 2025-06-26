@@ -3,6 +3,9 @@ using GetFitterGetBigger.API.Models.SpecializedIds;
 using GetFitterGetBigger.API.Repositories.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using Olimpo.EntityFramework.Persistency;
+using GetFitterGetBigger.API.Services.Interfaces;
+using GetFitterGetBigger.API.Configuration;
+using Microsoft.Extensions.Options;
 
 namespace GetFitterGetBigger.API.Controllers;
 
@@ -15,9 +18,15 @@ public class KineticChainTypesController : ReferenceTablesBaseController
     /// Initializes a new instance of the <see cref="KineticChainTypesController"/> class
     /// </summary>
     /// <param name="unitOfWorkProvider">The unit of work provider</param>
+    /// <param name="cacheService">The cache service</param>
+    /// <param name="cacheConfiguration">The cache configuration</param>
+    /// <param name="logger">The logger</param>
     public KineticChainTypesController(
-        IUnitOfWorkProvider<FitnessDbContext> unitOfWorkProvider)
-        : base(unitOfWorkProvider)
+        IUnitOfWorkProvider<FitnessDbContext> unitOfWorkProvider,
+        ICacheService cacheService,
+        IOptions<CacheConfiguration> cacheConfiguration,
+        ILogger<KineticChainTypesController> logger)
+        : base(unitOfWorkProvider, cacheService, cacheConfiguration, logger)
     {
     }
 
@@ -29,9 +38,12 @@ public class KineticChainTypesController : ReferenceTablesBaseController
     [ProducesResponseType(StatusCodes.Status200OK)]
     public async Task<IActionResult> GetKineticChainTypes()
     {
-        using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
-        var repository = unitOfWork.GetRepository<IKineticChainTypeRepository>();
-        var kineticChainTypes = await repository.GetAllActiveAsync();
+        var kineticChainTypes = await GetAllWithCacheAsync(async () =>
+        {
+            using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
+            var repository = unitOfWork.GetRepository<IKineticChainTypeRepository>();
+            return await repository.GetAllActiveAsync();
+        });
         
         // Map to DTOs
         var result = kineticChainTypes.Select(MapToDto);
@@ -56,11 +68,15 @@ public class KineticChainTypesController : ReferenceTablesBaseController
             return BadRequest($"Invalid ID format. Expected format: 'kineticchaintype-{{guid}}', got: '{id}'");
         }
         
-        using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
-        var repository = unitOfWork.GetRepository<IKineticChainTypeRepository>();
-        var kineticChainType = await repository.GetByIdAsync(kineticChainTypeId);
+        var kineticChainType = await GetByIdWithCacheAsync(id, async () =>
+        {
+            using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
+            var repository = unitOfWork.GetRepository<IKineticChainTypeRepository>();
+            var entity = await repository.GetByIdAsync(kineticChainTypeId);
+            return (entity != null && entity.IsActive) ? entity : null;
+        });
         
-        if (kineticChainType == null || !kineticChainType.IsActive)
+        if (kineticChainType == null)
             return NotFound();
             
         // Map to DTO
@@ -79,9 +95,12 @@ public class KineticChainTypesController : ReferenceTablesBaseController
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetKineticChainTypeByValue(string value)
     {
-        using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
-        var repository = unitOfWork.GetRepository<IKineticChainTypeRepository>();
-        var kineticChainType = await repository.GetByValueAsync(value);
+        var kineticChainType = await GetByValueWithCacheAsync(value, async () =>
+        {
+            using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
+            var repository = unitOfWork.GetRepository<IKineticChainTypeRepository>();
+            return await repository.GetByValueAsync(value);
+        });
         
         if (kineticChainType == null)
             return NotFound();

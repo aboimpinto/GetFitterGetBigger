@@ -3,6 +3,9 @@ using GetFitterGetBigger.API.Models.SpecializedIds;
 using GetFitterGetBigger.API.Repositories.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using Olimpo.EntityFramework.Persistency;
+using GetFitterGetBigger.API.Services.Interfaces;
+using GetFitterGetBigger.API.Configuration;
+using Microsoft.Extensions.Options;
 
 namespace GetFitterGetBigger.API.Controllers;
 
@@ -15,9 +18,15 @@ public class BodyPartsController : ReferenceTablesBaseController
     /// Initializes a new instance of the <see cref="BodyPartsController"/> class
     /// </summary>
     /// <param name="unitOfWorkProvider">The unit of work provider</param>
+    /// <param name="cacheService">The cache service</param>
+    /// <param name="cacheConfiguration">The cache configuration</param>
+    /// <param name="logger">The logger</param>
     public BodyPartsController(
-        IUnitOfWorkProvider<FitnessDbContext> unitOfWorkProvider)
-        : base(unitOfWorkProvider)
+        IUnitOfWorkProvider<FitnessDbContext> unitOfWorkProvider,
+        ICacheService cacheService,
+        IOptions<CacheConfiguration> cacheConfiguration,
+        ILogger<BodyPartsController> logger)
+        : base(unitOfWorkProvider, cacheService, cacheConfiguration, logger)
     {
     }
 
@@ -29,9 +38,12 @@ public class BodyPartsController : ReferenceTablesBaseController
     [ProducesResponseType(StatusCodes.Status200OK)]
     public async Task<IActionResult> GetBodyParts()
     {
-        using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
-        var repository = unitOfWork.GetRepository<IBodyPartRepository>();
-        var bodyParts = await repository.GetAllActiveAsync();
+        var bodyParts = await GetAllWithCacheAsync(async () =>
+        {
+            using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
+            var repository = unitOfWork.GetRepository<IBodyPartRepository>();
+            return await repository.GetAllActiveAsync();
+        });
         
         // Map to DTOs
         var result = bodyParts.Select(MapToDto);
@@ -56,11 +68,15 @@ public class BodyPartsController : ReferenceTablesBaseController
             return BadRequest($"Invalid ID format. Expected format: 'bodypart-{{guid}}', got: '{id}'");
         }
         
-        using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
-        var repository = unitOfWork.GetRepository<IBodyPartRepository>();
-        var bodyPart = await repository.GetByIdAsync(bodyPartId);
+        var bodyPart = await GetByIdWithCacheAsync(id, async () =>
+        {
+            using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
+            var repository = unitOfWork.GetRepository<IBodyPartRepository>();
+            var entity = await repository.GetByIdAsync(bodyPartId);
+            return (entity != null && entity.IsActive) ? entity : null;
+        });
         
-        if (bodyPart == null || !bodyPart.IsActive)
+        if (bodyPart == null)
             return NotFound();
             
         // Map to DTO
@@ -79,9 +95,12 @@ public class BodyPartsController : ReferenceTablesBaseController
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetBodyPartByValue(string value)
     {
-        using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
-        var repository = unitOfWork.GetRepository<IBodyPartRepository>();
-        var bodyPart = await repository.GetByValueAsync(value);
+        var bodyPart = await GetByValueWithCacheAsync(value, async () =>
+        {
+            using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
+            var repository = unitOfWork.GetRepository<IBodyPartRepository>();
+            return await repository.GetByValueAsync(value);
+        });
         
         if (bodyPart == null)
             return NotFound();

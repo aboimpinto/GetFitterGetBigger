@@ -20,9 +20,9 @@ This feature implements server-side caching for reference table endpoints to imp
 - **Task 2.4**: Create CacheConfiguration class for table-specific cache settings `[Implemented: 18671a46]`
 
 ### 3. Modify Base Controller
-- **Task 3.1**: Inject ICacheService into ReferenceTablesBaseController `[ReadyToDevelop]`
-- **Task 3.2**: Add protected methods for cache operations in base controller `[ReadyToDevelop]`
-- **Task 3.3**: Implement cache duration logic based on table type `[ReadyToDevelop]`
+- **Task 3.1**: Inject ICacheService into ReferenceTablesBaseController `[Implemented: d5a58196]`
+- **Task 3.2**: Add protected methods for cache operations in base controller `[Implemented: d5a58196]`
+- **Task 3.3**: Implement cache duration logic based on table type `[Implemented: d5a58196]`
 
 ### 4. Update Reference Table Controllers
 - **Task 4.1**: Update DifficultyLevelsController to use caching (static table) `[ReadyToDevelop]`

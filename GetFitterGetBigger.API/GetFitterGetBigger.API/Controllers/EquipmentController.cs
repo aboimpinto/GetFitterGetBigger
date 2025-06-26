@@ -5,26 +5,31 @@ using GetFitterGetBigger.API.Models.SpecializedIds;
 using GetFitterGetBigger.API.Repositories.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using Olimpo.EntityFramework.Persistency;
+using GetFitterGetBigger.API.Services.Interfaces;
+using GetFitterGetBigger.API.Configuration;
+using Microsoft.Extensions.Options;
 
 namespace GetFitterGetBigger.API.Controllers;
 
 /// <summary>
 /// Controller for retrieving equipment data
 /// </summary>
-[ApiController]
-[Route("api/ReferenceTables/[controller]")]
-public class EquipmentController : ControllerBase
+public class EquipmentController : ReferenceTablesBaseController
 {
-    private readonly IUnitOfWorkProvider<FitnessDbContext> _unitOfWorkProvider;
-
     /// <summary>
     /// Initializes a new instance of the <see cref="EquipmentController"/> class
     /// </summary>
     /// <param name="unitOfWorkProvider">The unit of work provider</param>
+    /// <param name="cacheService">The cache service</param>
+    /// <param name="cacheConfiguration">The cache configuration</param>
+    /// <param name="logger">The logger</param>
     public EquipmentController(
-        IUnitOfWorkProvider<FitnessDbContext> unitOfWorkProvider)
+        IUnitOfWorkProvider<FitnessDbContext> unitOfWorkProvider,
+        ICacheService cacheService,
+        IOptions<CacheConfiguration> cacheConfiguration,
+        ILogger<EquipmentController> logger)
+        : base(unitOfWorkProvider, cacheService, cacheConfiguration, logger)
     {
-        _unitOfWorkProvider = unitOfWorkProvider;
     }
 
     /// <summary>
@@ -35,9 +40,12 @@ public class EquipmentController : ControllerBase
     [ProducesResponseType(StatusCodes.Status200OK)]
     public async Task<IActionResult> GetAll()
     {
-        using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
-        var repository = unitOfWork.GetRepository<IEquipmentRepository>();
-        var equipment = await repository.GetAllAsync();
+        var equipment = await GetAllWithCacheAsync(async () =>
+        {
+            using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
+            var repository = unitOfWork.GetRepository<IEquipmentRepository>();
+            return await repository.GetAllAsync();
+        });
         
         // Map to DTOs
         var result = equipment.Select(e => new ReferenceDataDto
@@ -66,9 +74,12 @@ public class EquipmentController : ControllerBase
             return BadRequest($"Invalid ID format. Expected format: 'equipment-{{guid}}', got: '{id}'");
         }
         
-        using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
-        var repository = unitOfWork.GetRepository<IEquipmentRepository>();
-        var equipment = await repository.GetByIdAsync(equipmentId);
+        var equipment = await GetByIdWithCacheAsync(id, async () =>
+        {
+            using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
+            var repository = unitOfWork.GetRepository<IEquipmentRepository>();
+            return await repository.GetByIdAsync(equipmentId);
+        });
         
         if (equipment == null)
             return NotFound();
@@ -114,9 +125,12 @@ public class EquipmentController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetByValue(string value)
     {
-        using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
-        var repository = unitOfWork.GetRepository<IEquipmentRepository>();
-        var equipment = await repository.GetByNameAsync(value);
+        var equipment = await GetByValueWithCacheAsync(value, async () =>
+        {
+            using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
+            var repository = unitOfWork.GetRepository<IEquipmentRepository>();
+            return await repository.GetByNameAsync(value);
+        });
         
         if (equipment == null)
             return NotFound();

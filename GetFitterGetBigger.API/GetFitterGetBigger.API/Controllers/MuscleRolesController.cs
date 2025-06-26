@@ -3,6 +3,9 @@ using GetFitterGetBigger.API.Models.SpecializedIds;
 using GetFitterGetBigger.API.Repositories.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using Olimpo.EntityFramework.Persistency;
+using GetFitterGetBigger.API.Services.Interfaces;
+using GetFitterGetBigger.API.Configuration;
+using Microsoft.Extensions.Options;
 
 namespace GetFitterGetBigger.API.Controllers;
 
@@ -15,9 +18,15 @@ public class MuscleRolesController : ReferenceTablesBaseController
     /// Initializes a new instance of the <see cref="MuscleRolesController"/> class
     /// </summary>
     /// <param name="unitOfWorkProvider">The unit of work provider</param>
+    /// <param name="cacheService">The cache service</param>
+    /// <param name="cacheConfiguration">The cache configuration</param>
+    /// <param name="logger">The logger</param>
     public MuscleRolesController(
-        IUnitOfWorkProvider<FitnessDbContext> unitOfWorkProvider)
-        : base(unitOfWorkProvider)
+        IUnitOfWorkProvider<FitnessDbContext> unitOfWorkProvider,
+        ICacheService cacheService,
+        IOptions<CacheConfiguration> cacheConfiguration,
+        ILogger<MuscleRolesController> logger)
+        : base(unitOfWorkProvider, cacheService, cacheConfiguration, logger)
     {
     }
 
@@ -29,9 +38,12 @@ public class MuscleRolesController : ReferenceTablesBaseController
     [ProducesResponseType(StatusCodes.Status200OK)]
     public async Task<IActionResult> GetMuscleRoles()
     {
-        using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
-        var repository = unitOfWork.GetRepository<IMuscleRoleRepository>();
-        var muscleRoles = await repository.GetAllActiveAsync();
+        var muscleRoles = await GetAllWithCacheAsync(async () =>
+        {
+            using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
+            var repository = unitOfWork.GetRepository<IMuscleRoleRepository>();
+            return await repository.GetAllActiveAsync();
+        });
         
         // Map to DTOs
         var result = muscleRoles.Select(MapToDto);
@@ -56,11 +68,15 @@ public class MuscleRolesController : ReferenceTablesBaseController
             return BadRequest($"Invalid ID format. Expected format: 'musclerole-{{guid}}', got: '{id}'");
         }
         
-        using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
-        var repository = unitOfWork.GetRepository<IMuscleRoleRepository>();
-        var muscleRole = await repository.GetByIdAsync(muscleRoleId);
+        var muscleRole = await GetByIdWithCacheAsync(id, async () =>
+        {
+            using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
+            var repository = unitOfWork.GetRepository<IMuscleRoleRepository>();
+            var entity = await repository.GetByIdAsync(muscleRoleId);
+            return (entity != null && entity.IsActive) ? entity : null;
+        });
         
-        if (muscleRole == null || !muscleRole.IsActive)
+        if (muscleRole == null)
             return NotFound();
             
         // Map to DTO
@@ -79,9 +95,12 @@ public class MuscleRolesController : ReferenceTablesBaseController
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetMuscleRoleByValue(string value)
     {
-        using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
-        var repository = unitOfWork.GetRepository<IMuscleRoleRepository>();
-        var muscleRole = await repository.GetByValueAsync(value);
+        var muscleRole = await GetByValueWithCacheAsync(value, async () =>
+        {
+            using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
+            var repository = unitOfWork.GetRepository<IMuscleRoleRepository>();
+            return await repository.GetByValueAsync(value);
+        });
         
         if (muscleRole == null)
             return NotFound();
