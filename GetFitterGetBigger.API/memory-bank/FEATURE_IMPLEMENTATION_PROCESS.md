@@ -13,6 +13,7 @@ This document outlines the standard process for implementing new features in the
 - The task file must include:
   - Feature branch name at the top
   - Tasks organized by logical categories (Database, Repository, Service, Controller, etc.)
+  - **Unit test tasks immediately following each implementation task** (e.g., Task 2.1: Create Repository, Task 2.2: Write tests for Repository)
   - Clear description of what each task entails
   - Space for commit hashes to be added as tasks are completed
 
@@ -25,17 +26,23 @@ This document outlines the standard process for implementing new features in the
 - Execute tasks sequentially from the task tracking file
 - **For EVERY task implementation:**
   1. Write the implementation code
-  2. **MANDATORY: Write unit tests for the implemented code**
-  3. **MANDATORY: Run `dotnet build` to ensure compilation succeeds**
-  4. **MANDATORY: Run `dotnet test` to ensure all tests pass**
-  5. Only after build and tests pass, commit the changes
-  6. Update the task status in the tracking file from `[ReadyToDevelop]` to `[Implemented: <git-commit-hash>]`
+  2. **MANDATORY: Write unit tests for the implemented code in the immediately following task**
+  3. **MANDATORY: Keep build warnings to a minimum** (address nullable reference warnings, unused variables, etc.)
+  4. **MANDATORY: Run `dotnet build` to ensure compilation succeeds with minimal warnings**
+  5. **MANDATORY: Run `dotnet test` to ensure ALL tests pass (100% green)**
+  6. Only after build succeeds and ALL tests pass, commit the changes
+  7. Update the task status in the tracking file from `[ReadyToDevelop]` to `[Implemented: <git-commit-hash>]`
 - Follow existing code conventions and patterns
 - The task tracking file serves as both documentation and audit trail
-- **IMPORTANT**: Never move to the next task if:
-  - The build is failing
-  - Tests are not written
-  - Any test is failing
+- **CRITICAL RULES**:
+  - **NO broken builds between tasks** - each task must leave the codebase in a working state
+  - **ALL tests must be green** after implementing a task (no skipped, no failures)
+  - **Tests are written immediately after implementation** (not deferred to a later phase)
+  - Never move to the next task if:
+    - The build is failing
+    - Build warnings are excessive
+    - Tests are not written
+    - Any test is failing
 
 ### 4. Test Development & Handling
 - Write unit tests for all new functionality
@@ -82,11 +89,13 @@ After user explicitly states feature acceptance:
 Before marking any task as `[Implemented]`, verify:
 
 - [ ] Implementation code is complete
-- [ ] Unit tests are written for the new code
+- [ ] Unit tests are written for the new code (in the immediately following task)
 - [ ] `dotnet build` runs without errors
-- [ ] `dotnet test` runs with all tests passing
+- [ ] Build warnings are minimal (no nullable reference warnings, unused variables, etc.)
+- [ ] `dotnet test` runs with ALL tests passing (100% green, no skipped tests)
 - [ ] Code follows project conventions
 - [ ] No commented-out code or debug statements
+- [ ] The codebase is in a working state (no broken functionality)
 
 ## Task Tracking File Template
 
@@ -96,21 +105,33 @@ Before marking any task as `[Implemented]`, verify:
 ## Feature Branch: `feature/[branch-name]`
 
 ### Category 1 (e.g., Database & Entity Setup)
-- **Task 1.1:** [Task description] `[ReadyToDevelop]`
-- **Task 1.2:** [Task description] `[ReadyToDevelop]`
+- **Task 1.1:** Create [Entity] with required fields `[ReadyToDevelop]`
+- **Task 1.2:** Create [Entity] unit tests `[ReadyToDevelop]`
+- **Task 1.3:** Update DbContext configuration `[ReadyToDevelop]`
 
 ### Category 2 (e.g., Repository Layer)
-- **Task 2.1:** [Task description] `[ReadyToDevelop]`
-- **Task 2.2:** [Task description with subtasks]
-  - Subtask detail 1
-  - Subtask detail 2 `[ReadyToDevelop]`
+- **Task 2.1:** Create I[Name]Repository interface `[ReadyToDevelop]`
+- **Task 2.2:** Implement [Name]Repository with:
+  - Method1 implementation
+  - Method2 implementation `[ReadyToDevelop]`
+- **Task 2.3:** Write unit tests for [Name]Repository including:
+  - Test scenario 1
+  - Test scenario 2 `[ReadyToDevelop]`
 
-### Testing
-- **Task X.1:** [Test description] `[ReadyToDevelop]`
+### Category 3 (e.g., Service Layer)
+- **Task 3.1:** Create I[Name]Service interface `[ReadyToDevelop]`
+- **Task 3.2:** Implement [Name]Service with business logic `[ReadyToDevelop]`
+- **Task 3.3:** Write unit tests for [Name]Service `[ReadyToDevelop]`
+
+### Category 4 (e.g., Controller)
+- **Task 4.1:** Create [Name]Controller with endpoints `[ReadyToDevelop]`
+- **Task 4.2:** Write integration tests for [Name]Controller `[ReadyToDevelop]`
+- **Task 4.3:** Add authorization and Swagger docs `[ReadyToDevelop]`
 
 ## Notes
-- Additional implementation notes
-- Dependencies or considerations
+- Each implementation task must be immediately followed by its test task
+- No task is complete until build passes and all tests are green
+- Keep build warnings to minimum
 ```
 
 ## Example Task Status Updates
