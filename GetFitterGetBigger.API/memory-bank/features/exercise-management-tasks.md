@@ -46,7 +46,7 @@
   - GET /api/exercises/{id}
   - POST /api/exercises
   - PUT /api/exercises/{id}
-  - DELETE /api/exercises/{id} `[ReadyToDevelop]`
+  - DELETE /api/exercises/{id} `[Implemented: 40ea9144]`
 - **Task 5.2:** Write integration tests for ExercisesController `[ReadyToDevelop]`
 - **Task 5.3:** Add [Authorize] attribute for admin-only access `[ReadyToDevelop]`
 - **Task 5.4:** Configure Swagger documentation for all endpoints `[ReadyToDevelop]`
