@@ -1,0 +1,82 @@
+using System;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+
+namespace GetFitterGetBigger.API.DTOs;
+
+/// <summary>
+/// Request DTO for updating an existing exercise
+/// </summary>
+public class UpdateExerciseRequest
+{
+    /// <summary>
+    /// The name of the exercise
+    /// </summary>
+    [Required(ErrorMessage = "Exercise name is required")]
+    [StringLength(200, ErrorMessage = "Exercise name cannot exceed 200 characters")]
+    public string Name { get; set; } = string.Empty;
+    
+    /// <summary>
+    /// A concise summary of the exercise
+    /// </summary>
+    [Required(ErrorMessage = "Description is required")]
+    [StringLength(1000, ErrorMessage = "Description cannot exceed 1000 characters")]
+    public string Description { get; set; } = string.Empty;
+    
+    /// <summary>
+    /// Detailed, step-by-step instructions for performing the movement
+    /// </summary>
+    [Required(ErrorMessage = "Instructions are required")]
+    [StringLength(5000, ErrorMessage = "Instructions cannot exceed 5000 characters")]
+    public string Instructions { get; set; } = string.Empty;
+    
+    /// <summary>
+    /// A link to a hosted video demonstrating the exercise
+    /// </summary>
+    [Url(ErrorMessage = "Video URL must be a valid URL")]
+    public string? VideoUrl { get; set; }
+    
+    /// <summary>
+    /// A link to a hosted image of the exercise
+    /// </summary>
+    [Url(ErrorMessage = "Image URL must be a valid URL")]
+    public string? ImageUrl { get; set; }
+    
+    /// <summary>
+    /// Indicates if the exercise is performed on one side of the body at a time
+    /// </summary>
+    public bool IsUnilateral { get; set; }
+    
+    /// <summary>
+    /// Indicates if the exercise is active
+    /// </summary>
+    public bool IsActive { get; set; }
+    
+    /// <summary>
+    /// The ID of the difficulty level
+    /// </summary>
+    [Required(ErrorMessage = "Difficulty level is required")]
+    public string DifficultyId { get; set; } = string.Empty;
+    
+    /// <summary>
+    /// The muscle groups targeted by the exercise with their roles
+    /// </summary>
+    [Required(ErrorMessage = "At least one muscle group must be specified")]
+    [MinLength(1, ErrorMessage = "At least one muscle group must be specified")]
+    public List<MuscleGroupWithRoleRequest> MuscleGroups { get; set; } = new();
+    
+    /// <summary>
+    /// The IDs of equipment required for the exercise
+    /// </summary>
+    public List<string> EquipmentIds { get; set; } = new();
+    
+    /// <summary>
+    /// The IDs of movement patterns associated with the exercise
+    /// </summary>
+    public List<string> MovementPatternIds { get; set; } = new();
+    
+    /// <summary>
+    /// The IDs of body parts involved in the exercise
+    /// </summary>
+    public List<string> BodyPartIds { get; set; } = new();
+}
