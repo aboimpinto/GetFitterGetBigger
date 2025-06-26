@@ -5,34 +5,16 @@ using GetFitterGetBigger.API;
 using Olimpo.EntityFramework.Persistency;
 using GetFitterGetBigger.API.Repositories.Interfaces;
 using GetFitterGetBigger.API.Repositories.Implementations;
-using GetFitterGetBigger.API.Services.Implementations;
-using GetFitterGetBigger.API.Services.Interfaces;
 using Microsoft.OpenApi.Models;
 using Swashbuckle.AspNetCore.SwaggerGen;
 using System.Reflection;
 using GetFitterGetBigger.API.Swagger;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.IdentityModel.Tokens;
-using System.Text;
-using System.IdentityModel.Tokens.Jwt;
-using GetFitterGetBigger.API.Models.Entities;
-using GetFitterGetBigger.API.Models.SpecializedIds;
-using GetFitterGetBigger.API.Middleware;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Authorization;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 // Add controllers with JSON options
-builder.Services.AddControllers(options =>
-    {
-        // Add DevelopmentAllowAnonymousFilter globally if in Development environment
-        if (builder.Environment.IsDevelopment())
-        {
-            options.Filters.Add<DevelopmentAllowAnonymousFilter>();
-        }
-    })
+builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
         // Configure JSON serialization to handle records with private constructors
@@ -65,57 +47,9 @@ builder.Services.AddTransient<IMovementPatternRepository, MovementPatternReposit
 builder.Services.AddTransient<IMuscleGroupRepository, MuscleGroupRepository>();
 builder.Services.AddTransient<IUserRepository, UserRepository>();
 builder.Services.AddTransient<IClaimRepository, ClaimRepository>();
-
-// Register services
-builder.Services.AddScoped<IJwtService, JwtService>();
-builder.Services.AddScoped<IAuthService, AuthService>();
-
-// Configure JWT Authentication
-var key = Encoding.ASCII.GetBytes(builder.Configuration["Jwt:Key"] ?? throw new InvalidOperationException("JWT Key not configured."));
-builder.Services.AddAuthentication(options =>
-{
-    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-})
-.AddJwtBearer(options =>
-{
-    options.RequireHttpsMetadata = false;
-    options.SaveToken = true;
-    options.TokenValidationParameters = new TokenValidationParameters
-    {
-        ValidateIssuerSigningKey = true,
-        IssuerSigningKey = new SymmetricSecurityKey(key),
-        ValidateIssuer = true,
-        ValidIssuer = builder.Configuration["Jwt:Issuer"],
-        ValidateAudience = true,
-        ValidAudience = builder.Configuration["Jwt:Audience"],
-        NameClaimType = System.Security.Claims.ClaimTypes.NameIdentifier,
-        ValidateLifetime = true,
-        ClockSkew = TimeSpan.Zero
-    };
-    options.Events = new JwtBearerEvents
-    {
-        OnTokenValidated = context =>
-        {
-            var jwtService = context.HttpContext.RequestServices.GetRequiredService<IJwtService>();
-            var claims = context.Principal.Claims;
-            var userIdClaim = claims.FirstOrDefault(c => c.Type == System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-            var emailClaim = claims.FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.Email)?.Value;
-
-            if (userIdClaim != null && emailClaim != null && UserId.TryParse(userIdClaim, out var userId))
-            {
-                var user = new User { Id = userId, Email = emailClaim };
-                var newToken = jwtService.GenerateToken(user);
-                context.Response.Headers.Append("X-Refreshed-Token", newToken);
-            }
-            
-            return Task.CompletedTask;
-        }
-    };
-});
-
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
+
 
 // Add Swagger services
 builder.Services.AddSwaggerGen(options =>
@@ -125,7 +59,7 @@ builder.Services.AddSwaggerGen(options =>
         Title = "GetFitterGetBigger API",
         Version = "v1"
     });
-    
+
     // Add a custom document filter to group reference table controllers
     options.DocumentFilter<GetFitterGetBigger.API.Swagger.ReferenceTablesDocumentFilter>();
     
@@ -151,20 +85,7 @@ if (app.Environment.IsDevelopment())
     });
 }
 
-app
-    .MapGet("/weatherforecast/{city}", (string city) => {
-        WeatherForecast forecast = new();
-        string weather = forecast.GetWeatherForecast(city);
-        return weather;
-    })
-    .WithName("GetWeatherForecast");
-
 // Map controllers
-// Always add authentication middleware
-app.UseAuthentication();
-app.UseAuthorization();
-
-
 app.MapControllers();
 
 app.Run();

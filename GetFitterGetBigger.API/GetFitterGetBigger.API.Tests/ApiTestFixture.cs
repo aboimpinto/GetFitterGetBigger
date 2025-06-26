@@ -1,39 +1,27 @@
 
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
-using GetFitterGetBigger.API.DTOs;
 using GetFitterGetBigger.API.Models;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 
 namespace GetFitterGetBigger.API.Tests;
 
 public class ApiTestFixture : WebApplicationFactory<Program>
 {
-    public HttpClient CreateAuthenticatedClient()
-    {
-        var client = CreateClient();
-        var token = GetJwtToken(client).Result;
-        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
-        return client;
-    }
 
-    private async Task<string> GetJwtToken(HttpClient client)
+    protected override IHost CreateHost(IHostBuilder builder)
     {
-        var request = new AuthenticationRequest("test@example.com");
-        var response = await client.PostAsJsonAsync("/api/auth/login", request);
-        response.EnsureSuccessStatusCode();
-        var authResponse = await response.Content.ReadFromJsonAsync<AuthenticationResponse>();
-        return authResponse.Token;
-    }
+        builder.ConfigureHostConfiguration(config =>
+        {
+            config.AddJsonFile("appsettings.Testing.json", optional: false, reloadOnChange: false);
+        });
 
-    protected override void ConfigureWebHost(IWebHostBuilder builder)
-    {
-        builder.UseEnvironment("Testing");
-        
-        builder.ConfigureServices(services =>
+        builder.ConfigureServices((context, services) =>
         {
             // Remove all DbContext registrations
             var descriptors = services.Where(
@@ -49,7 +37,7 @@ public class ApiTestFixture : WebApplicationFactory<Program>
             // Remove Npgsql registrations
             var npgsqlDescriptors = services.Where(
                 d => d.ServiceType.FullName?.Contains("Npgsql") == true).ToList();
-                
+
             foreach (var descriptor in npgsqlDescriptors)
             {
                 services.Remove(descriptor);
@@ -61,23 +49,29 @@ public class ApiTestFixture : WebApplicationFactory<Program>
                 options.UseInMemoryDatabase($"InMemoryDbForTesting_{Guid.NewGuid()}");
                 options.ConfigureWarnings(w => w.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.InMemoryEventId.TransactionIgnoredWarning));
             });
-
-            // Build the service provider
-            var sp = services.BuildServiceProvider();
-
-            // Create a scope to obtain a reference to the database context
-            using (var scope = sp.CreateScope())
-            {
-                var scopedServices = scope.ServiceProvider;
-                var db = scopedServices.GetRequiredService<FitnessDbContext>();
-
-                // Ensure the database is created
-                db.Database.EnsureCreated();
-
-                // Seed the database with test data
-                SeedTestData(db);
-            }
         });
+
+        var host = base.CreateHost(builder);
+
+        // Seed the database after the host is created
+        using (var scope = host.Services.CreateScope())
+        {
+            var services = scope.ServiceProvider;
+            var db = services.GetRequiredService<FitnessDbContext>();
+            
+            // Ensure the database is created
+            db.Database.EnsureCreated();
+            
+            // Seed the database with test data
+            SeedTestData(db);
+        }
+
+        return host;
+    }
+
+    protected override void ConfigureWebHost(IWebHostBuilder builder)
+    {
+        builder.UseEnvironment("Testing");
     }
 
     private void SeedTestData(FitnessDbContext context)
@@ -285,4 +279,3 @@ public class ApiTestFixture : WebApplicationFactory<Program>
         context.SaveChanges();
     }
 }
-

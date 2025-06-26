@@ -14,7 +14,7 @@ public class MovementPatternsControllerTests : IClassFixture<ApiTestFixture>
     public MovementPatternsControllerTests(ApiTestFixture fixture)
     {
         _fixture = fixture;
-        _client = fixture.CreateAuthenticatedClient();
+        _client = fixture.CreateClient();
     }
 
     [Fact]

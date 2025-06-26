@@ -16,6 +16,13 @@ namespace GetFitterGetBigger.API.Repositories.Implementations
                 .FirstOrDefaultAsync(u => u.Email == email);
         }
 
+        public async Task<User?> GetUserByIdAsync(Models.SpecializedIds.UserId userId)
+        {
+            return await Context.Users
+                .Include(u => u.Claims)
+                .FirstOrDefaultAsync(u => u.Id == userId);
+        }
+
         public async Task<User> AddUserAsync(User user)
         {
             await Context.Users.AddAsync(user);

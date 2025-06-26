@@ -14,7 +14,7 @@ public class EquipmentControllerTests : IClassFixture<ApiTestFixture>
     public EquipmentControllerTests(ApiTestFixture fixture)
     {
         _fixture = fixture;
-        _client = fixture.CreateAuthenticatedClient();
+        _client = fixture.CreateClient();
     }
 
     [Fact]

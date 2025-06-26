@@ -14,7 +14,7 @@ public class ReferenceDataDtoTests : IClassFixture<ApiTestFixture>
     public ReferenceDataDtoTests(ApiTestFixture fixture)
     {
         _fixture = fixture;
-        _client = fixture.CreateAuthenticatedClient();
+        _client = fixture.CreateClient();
     }
 
     [Theory]

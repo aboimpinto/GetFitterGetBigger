@@ -15,7 +15,7 @@ public class BodyPartsControllerTests : IClassFixture<ApiTestFixture>
     public BodyPartsControllerTests(ApiTestFixture fixture)
     {
         _fixture = fixture;
-        _client = fixture.CreateAuthenticatedClient();
+        _client = fixture.CreateClient();
     }
 
     [Fact]

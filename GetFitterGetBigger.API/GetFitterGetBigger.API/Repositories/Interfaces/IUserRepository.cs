@@ -8,6 +8,7 @@ namespace GetFitterGetBigger.API.Repositories.Interfaces
     public interface IUserRepository : IRepository
     {
         Task<User?> GetUserByEmailAsync(string email);
+        Task<User?> GetUserByIdAsync(UserId userId);
         Task<User> AddUserAsync(User user);
     }
 }

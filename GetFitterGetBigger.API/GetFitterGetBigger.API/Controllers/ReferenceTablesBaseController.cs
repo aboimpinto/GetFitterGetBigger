@@ -1,4 +1,3 @@
-using Microsoft.AspNetCore.Authorization;
 using GetFitterGetBigger.API.DTOs;
 using GetFitterGetBigger.API.Models;
 using GetFitterGetBigger.API.Models.Entities;
@@ -12,7 +11,6 @@ namespace GetFitterGetBigger.API.Controllers;
 /// <summary>
 /// Base controller for all reference table controllers
 /// </summary>
-[Authorize]
 [ApiController]
 [Route("api/ReferenceTables/[controller]")]
 public abstract class ReferenceTablesBaseController : ControllerBase

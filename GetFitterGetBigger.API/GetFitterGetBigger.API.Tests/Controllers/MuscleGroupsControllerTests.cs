@@ -14,7 +14,7 @@ public class MuscleGroupsControllerTests : IClassFixture<ApiTestFixture>
     public MuscleGroupsControllerTests(ApiTestFixture fixture)
     {
         _fixture = fixture;
-        _client = fixture.CreateAuthenticatedClient();
+        _client = fixture.CreateClient();
     }
 
     [Fact]
