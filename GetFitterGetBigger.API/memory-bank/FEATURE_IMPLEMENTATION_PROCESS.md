@@ -7,8 +7,14 @@ This document outlines the standard process for implementing new features in the
 ### 1. Feature Analysis & Planning
 - User provides detailed feature requirements and specifications
 - Create a comprehensive implementation plan with granular tasks
-- Each task is marked with status `[ReadyToDevelop]`
+- **MANDATORY**: Create a task tracking file at `memory-bank/features/[feature-name]-tasks.md`
+- Each task must be marked with status `[ReadyToDevelop]`
 - Tasks should be specific, actionable, and independently verifiable
+- The task file must include:
+  - Feature branch name at the top
+  - Tasks organized by logical categories (Database, Repository, Service, Controller, etc.)
+  - Clear description of what each task entails
+  - Space for commit hashes to be added as tasks are completed
 
 ### 2. Branch Creation
 - Create a dedicated feature branch from master
@@ -16,12 +22,14 @@ This document outlines the standard process for implementing new features in the
 - All development work occurs in this isolated branch
 
 ### 3. Implementation Phase
-- Execute tasks sequentially from the implementation plan
+- Execute tasks sequentially from the task tracking file
 - After completing each task:
-  - Mark as `[Implemented: <git-commit-hash>]`
+  - Update the task status in the tracking file from `[ReadyToDevelop]` to `[Implemented: <git-commit-hash>]`
   - Include comprehensive unit tests
   - Ensure all tests pass before proceeding
+  - Commit the task tracking file update along with the implementation
 - Follow existing code conventions and patterns
+- The task tracking file serves as both documentation and audit trail
 
 ### 4. Test Development & Handling
 - Write unit tests for all new functionality
@@ -62,3 +70,35 @@ After user explicitly states feature acceptance:
 - User maintains control over deployment and merge decisions
 - Clear audit trail through commit hashes and bug tracking
 - Supports both continuous and interrupted development workflows
+
+## Task Tracking File Template
+
+```markdown
+# [Feature Name] Implementation Tasks
+
+## Feature Branch: `feature/[branch-name]`
+
+### Category 1 (e.g., Database & Entity Setup)
+- **Task 1.1:** [Task description] `[ReadyToDevelop]`
+- **Task 1.2:** [Task description] `[ReadyToDevelop]`
+
+### Category 2 (e.g., Repository Layer)
+- **Task 2.1:** [Task description] `[ReadyToDevelop]`
+- **Task 2.2:** [Task description with subtasks]
+  - Subtask detail 1
+  - Subtask detail 2 `[ReadyToDevelop]`
+
+### Testing
+- **Task X.1:** [Test description] `[ReadyToDevelop]`
+
+## Notes
+- Additional implementation notes
+- Dependencies or considerations
+```
+
+## Example Task Status Updates
+
+- `[ReadyToDevelop]` - Initial status for all tasks
+- `[Implemented: a1b2c3d4]` - Task completed with commit hash
+- `[BUG: Complex mocking scenario]` - Known issue to be addressed later
+- `[Skipped]` - Task determined unnecessary during implementation
