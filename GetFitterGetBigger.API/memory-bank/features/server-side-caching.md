@@ -25,14 +25,14 @@ This feature implements server-side caching for reference table endpoints to imp
 - **Task 3.3**: Implement cache duration logic based on table type `[Implemented: d5a58196]`
 
 ### 4. Update Reference Table Controllers
-- **Task 4.1**: Update DifficultyLevelsController to use caching (static table) `[ReadyToDevelop]`
-- **Task 4.2**: Update KineticChainTypesController to use caching (static table) `[ReadyToDevelop]`
-- **Task 4.3**: Update BodyPartsController to use caching (static table) `[ReadyToDevelop]`
-- **Task 4.4**: Update MuscleRolesController to use caching (static table) `[ReadyToDevelop]`
-- **Task 4.5**: Update EquipmentController to use caching (dynamic table) `[ReadyToDevelop]`
-- **Task 4.6**: Update MetricTypesController to use caching (dynamic table) `[ReadyToDevelop]`
-- **Task 4.7**: Update MovementPatternsController to use caching (dynamic table) `[ReadyToDevelop]`
-- **Task 4.8**: Update MuscleGroupsController to use caching (dynamic table) `[ReadyToDevelop]`
+- **Task 4.1**: Update DifficultyLevelsController to use caching (static table) `[Implemented: ea200b91]`
+- **Task 4.2**: Update KineticChainTypesController to use caching (static table) `[Implemented: ea200b91]`
+- **Task 4.3**: Update BodyPartsController to use caching (static table) `[Implemented: ea200b91]`
+- **Task 4.4**: Update MuscleRolesController to use caching (static table) `[Implemented: ea200b91]`
+- **Task 4.5**: Update EquipmentController to use caching (dynamic table) `[Implemented: ea200b91]`
+- **Task 4.6**: Update MetricTypesController to use caching (dynamic table) `[Implemented: ea200b91]`
+- **Task 4.7**: Update MovementPatternsController to use caching (dynamic table) `[Implemented: ea200b91]`
+- **Task 4.8**: Update MuscleGroupsController to use caching (dynamic table) `[Implemented: ea200b91]`
 
 ### 5. Cache Invalidation (for future CRUD operations)
 - **Task 5.1**: Create cache invalidation methods in base controller `[ReadyToDevelop]`
