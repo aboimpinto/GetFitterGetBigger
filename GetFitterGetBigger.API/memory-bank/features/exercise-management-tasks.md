@@ -19,7 +19,10 @@
   - DeleteAsync(id) - with reference check logic
   - ExistsAsync(name) - for uniqueness validation
   - HasReferencesAsync(id) - check for workout references `[Implemented: afefa7ae]`
-- **Task 2.3:** Write unit tests for ExerciseRepository `[Implemented: c11ca457]`
+- **Task 2.3:** Write unit tests for ExerciseRepository including:
+  - Tests for pagination logic
+  - Tests for filtering logic
+  - Tests for deletion business rules `[Implemented: c11ca457]`
 
 ### DTOs
 - **Task 3.1:** Create ExerciseDto for responses `[Implemented: 570698a5]`
@@ -44,20 +47,13 @@
   - POST /api/exercises
   - PUT /api/exercises/{id}
   - DELETE /api/exercises/{id} `[ReadyToDevelop]`
-- **Task 5.2:** Add [Authorize] attribute for admin-only access `[ReadyToDevelop]`
-- **Task 5.3:** Configure Swagger documentation for all endpoints `[ReadyToDevelop]`
-
-### Testing
-- **Task 6.1:** Create unit tests for ExerciseRepository `[ReadyToDevelop]`
-- **Task 6.2:** Create unit tests for ExerciseService `[ReadyToDevelop]`
-- **Task 6.3:** Create integration tests for ExercisesController `[ReadyToDevelop]`
-- **Task 6.4:** Create tests for pagination logic `[ReadyToDevelop]`
-- **Task 6.5:** Create tests for filtering logic `[ReadyToDevelop]`
-- **Task 6.6:** Create tests for deletion business rules `[ReadyToDevelop]`
+- **Task 5.2:** Write integration tests for ExercisesController `[ReadyToDevelop]`
+- **Task 5.3:** Add [Authorize] attribute for admin-only access `[ReadyToDevelop]`
+- **Task 5.4:** Configure Swagger documentation for all endpoints `[ReadyToDevelop]`
 
 ### Documentation
-- **Task 7.1:** Update memory-bank/features/exercise-management.md with implementation details `[ReadyToDevelop]`
-- **Task 7.2:** Document API endpoints in Swagger `[ReadyToDevelop]`
+- **Task 6.1:** Update memory-bank/features/exercise-management.md with implementation details `[ReadyToDevelop]`
+- **Task 6.2:** Document API endpoints in Swagger `[ReadyToDevelop]`
 
 ## Notes
 - All tasks should be completed in the feature branch before merging to master
