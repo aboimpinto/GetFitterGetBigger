@@ -69,6 +69,22 @@
 - Implemented JWT authentication and authorization (Note: A bug regarding test run is still open and will be fixed later.)
 
 ## In Progress
+
+### Authentication System Restoration
+- **Description:** Restore the JWT authentication system that was accidentally removed during cleanup. The system will generate JWT tokens and return user claims, but will NOT enforce authorization yet.
+- **Todo List:**
+  1. ✅ Analyze what authentication components exist vs what was removed
+  2. ✅ Restore AuthController with login endpoint
+  3. ✅ Restore DTOs (AuthenticationRequest, AuthenticationResponse, ClaimInfo)
+  4. ✅ Restore AuthService and IAuthService
+  5. ✅ Restore JwtService and IJwtService
+  6. ✅ Add JWT configuration back to appsettings
+  7. ✅ Register auth services in DI container
+  8. ✅ Test authentication endpoint returns JWT and claims
+  9. ✅ Do NOT add [Authorize] attributes yet
+- **Status:** COMPLETED - Authentication system restored and working. JWT tokens are generated but not enforced.
+
+### Other Tasks
 - Implementing repositories and services for the remaining non-reference data entities
 
 ## Proposed Features

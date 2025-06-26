@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RunSettings>
+  <DataCollectionRunSettings>
+    <DataCollectors>
+      <DataCollector friendlyName="XPlat Code Coverage">
+        <Configuration>
+          <Format>cobertura</Format>
+          <Exclude>
+            <!-- Exclude all entity classes -->
+            [*]GetFitterGetBigger.API.Models.Entities.*
+            <!-- Exclude migrations -->
+            [*]GetFitterGetBigger.API.Migrations.*
+            <!-- Exclude auto-generated code -->
+            [*]*.Designer.cs
+            <!-- Exclude Swagger filters -->
+            [*]GetFitterGetBigger.API.Swagger.*
+            <!-- Exclude DTOs (simple data objects) -->
+            [*]GetFitterGetBigger.API.DTOs.ReferenceDataDto
+            <!-- Exclude design time factories -->
+            [*]GetFitterGetBigger.API.Models.DesignTimeDbContextFactory
+          </Exclude>
+          <ExcludeByAttribute>
+            <Attribute>Obsolete</Attribute>
+            <Attribute>GeneratedCodeAttribute</Attribute>
+            <Attribute>CompilerGeneratedAttribute</Attribute>
+            <Attribute>ExcludeFromCodeCoverage</Attribute>
+            <Attribute>ExcludeFromCodeCoverageAttribute</Attribute>
+          </ExcludeByAttribute>
+        </Configuration>
+      </DataCollector>
+    </DataCollectors>
+  </DataCollectionRunSettings>
+</RunSettings>

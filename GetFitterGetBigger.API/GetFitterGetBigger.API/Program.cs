@@ -5,6 +5,8 @@ using GetFitterGetBigger.API;
 using Olimpo.EntityFramework.Persistency;
 using GetFitterGetBigger.API.Repositories.Interfaces;
 using GetFitterGetBigger.API.Repositories.Implementations;
+using GetFitterGetBigger.API.Services.Interfaces;
+using GetFitterGetBigger.API.Services.Implementations;
 using Microsoft.OpenApi.Models;
 using Swashbuckle.AspNetCore.SwaggerGen;
 using System.Reflection;
@@ -47,6 +49,11 @@ builder.Services.AddTransient<IMovementPatternRepository, MovementPatternReposit
 builder.Services.AddTransient<IMuscleGroupRepository, MuscleGroupRepository>();
 builder.Services.AddTransient<IUserRepository, UserRepository>();
 builder.Services.AddTransient<IClaimRepository, ClaimRepository>();
+
+// Register authentication services
+builder.Services.AddTransient<IJwtService, JwtService>();
+builder.Services.AddTransient<IAuthService, AuthService>();
+
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 

@@ -1,0 +1,8 @@
+<Project>
+  <PropertyGroup>
+    <CollectCoverage>true</CollectCoverage>
+    <CoverletOutputFormat>cobertura</CoverletOutputFormat>
+    <Exclude>[GetFitterGetBigger.API]GetFitterGetBigger.API.Models.Entities.*,[GetFitterGetBigger.API]GetFitterGetBigger.API.Migrations.*,[GetFitterGetBigger.API]GetFitterGetBigger.API.Swagger.*,[GetFitterGetBigger.API]GetFitterGetBigger.API.Models.DesignTimeDbContextFactory</Exclude>
+    <ExcludeByFile>**/Migrations/*.cs,**/obj/**,**/bin/**</ExcludeByFile>
+  </PropertyGroup>
+</Project>
