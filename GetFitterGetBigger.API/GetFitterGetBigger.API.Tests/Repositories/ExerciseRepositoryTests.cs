@@ -85,6 +85,29 @@ namespace GetFitterGetBigger.API.Tests.Repositories
         }
 
         [Fact]
+        public async Task GetPagedAsync_WithIncludeInactive_ReturnsAllExercises()
+        {
+            // Arrange
+            var difficultyId = _context.DifficultyLevels.First().Id;
+            var activeExercise = Exercise.Handler.CreateNew(
+                "Active Exercise", "Active description", "Active instructions", null, null, false, difficultyId);
+            var inactiveExercise = Exercise.Handler.Create(
+                ExerciseId.New(), "Inactive Exercise", "Inactive description", "N/A", null, null, false, false, difficultyId);
+            
+            _context.Exercises.AddRange(activeExercise, inactiveExercise);
+            await _context.SaveChangesAsync();
+
+            // Act
+            var (exercises, totalCount) = await _repository.GetPagedAsync(1, 10, includeInactive: true);
+
+            // Assert
+            Assert.Equal(2, totalCount);
+            Assert.Equal(2, exercises.Count());
+            Assert.Contains(exercises, e => e.IsActive);
+            Assert.Contains(exercises, e => !e.IsActive);
+        }
+
+        [Fact]
         public async Task GetPagedAsync_WithNameFilter_ReturnsMatchingExercises()
         {
             // Arrange

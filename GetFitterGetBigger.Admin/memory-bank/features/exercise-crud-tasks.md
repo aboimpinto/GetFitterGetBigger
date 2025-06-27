@@ -17,7 +17,7 @@
 
 ### Components - Exercise List
 - **Task 3.1:** Create ExerciseList component with table layout `[Implemented: d2c30ce2]`
-- **Task 3.2:** Write component tests for ExerciseList `[ReadyToDevelop]`
+- **Task 3.2:** Write component tests for ExerciseList `[Implemented: 5261195e]`
 - **Task 3.3:** Add pagination component to ExerciseList `[Implemented: d2c30ce2]`
 - **Task 3.4:** Add filtering UI (name search, difficulty filter, muscle group filter) `[Implemented: d2c30ce2]`
 - **Task 3.5:** Write tests for filtering and pagination `[ReadyToDevelop]`
