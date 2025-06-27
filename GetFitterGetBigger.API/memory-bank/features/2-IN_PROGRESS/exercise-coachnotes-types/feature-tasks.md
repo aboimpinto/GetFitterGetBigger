@@ -120,12 +120,12 @@
 ### Phase 8: Integration Tests
 
 #### 8.1 Create Integration Tests
-- **Task 8.1.1:** Update Exercise creation integration tests with CoachNotes `[ReadyToDevelop]`
-- **Task 8.1.2:** Update Exercise update integration tests with CoachNotes changes `[ReadyToDevelop]`
-- **Task 8.1.3:** Test CoachNotes synchronization scenarios `[ReadyToDevelop]`
-- **Task 8.1.4:** Add integration tests for ExerciseTypes assignment `[ReadyToDevelop]`
-- **Task 8.1.5:** Add integration tests for Rest exclusivity rule `[ReadyToDevelop]`
-- **Task 8.1.6:** Test complete workflow and CoachNotes ordering `[ReadyToDevelop]`
+- **Task 8.1.1:** Update Exercise creation integration tests with CoachNotes `[Implemented: 53a41580]`
+- **Task 8.1.2:** Update Exercise update integration tests with CoachNotes changes `[Implemented: 53a41580]`
+- **Task 8.1.3:** Test CoachNotes synchronization scenarios `[Implemented: 53a41580]`
+- **Task 8.1.4:** Add integration tests for ExerciseTypes assignment `[Implemented: 53a41580]`
+- **Task 8.1.5:** Add integration tests for Rest exclusivity rule `[Implemented: 53a41580]`
+- **Task 8.1.6:** Test complete workflow and CoachNotes ordering `[Implemented: 53a41580]`
 
 ### Phase 9: Database Migration
 
