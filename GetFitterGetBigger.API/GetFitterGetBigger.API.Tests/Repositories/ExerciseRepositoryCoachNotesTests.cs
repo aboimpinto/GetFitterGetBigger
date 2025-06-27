@@ -77,11 +77,10 @@ namespace GetFitterGetBigger.API.Tests.Repositories
             Assert.NotNull(result);
             Assert.Equal(3, result.CoachNotes.Count);
             
-            // Verify notes are present (ordering is done at service level, not repository)
-            var notes = result.CoachNotes.OrderBy(n => n.Order).ToList();
-            Assert.Equal("Keep your back straight", notes[0].Text);
-            Assert.Equal("Lower until thighs are parallel", notes[1].Text);
-            Assert.Equal("Stand with feet shoulder-width apart", notes[2].Text);
+            // Verify notes are present with correct content and order values
+            Assert.Contains(result.CoachNotes, n => n.Text == "Keep your back straight" && n.Order == 0);
+            Assert.Contains(result.CoachNotes, n => n.Text == "Lower until thighs are parallel" && n.Order == 1);
+            Assert.Contains(result.CoachNotes, n => n.Text == "Stand with feet shoulder-width apart" && n.Order == 2);
         }
 
         [Fact]
