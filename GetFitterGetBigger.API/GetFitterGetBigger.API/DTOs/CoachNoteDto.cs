@@ -1,3 +1,5 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace GetFitterGetBigger.API.DTOs;
 
 /// <summary>
@@ -34,10 +36,13 @@ public class CoachNoteRequest
     /// <summary>
     /// The instructional text of the coach note
     /// </summary>
+    [Required(ErrorMessage = "Coach note text is required")]
+    [MaxLength(1000, ErrorMessage = "Coach note text cannot exceed 1000 characters")]
     public string Text { get; set; } = string.Empty;
     
     /// <summary>
     /// The display order of the coach note
     /// </summary>
+    [Range(0, int.MaxValue, ErrorMessage = "Order must be a non-negative number")]
     public int Order { get; set; }
 }

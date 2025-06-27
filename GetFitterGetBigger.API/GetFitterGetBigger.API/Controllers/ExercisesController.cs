@@ -87,7 +87,20 @@ public class ExercisesController : ControllerBase
     ///     {
     ///         "name": "Barbell Back Squat",
     ///         "description": "A compound lower body exercise targeting quads and glutes",
-    ///         "instructions": "1. Position bar on upper back\n2. Squat down to parallel\n3. Drive up through heels",
+    ///         "coachNotes": [
+    ///             {
+    ///                 "text": "Keep your chest up and core engaged",
+    ///                 "order": 1
+    ///             },
+    ///             {
+    ///                 "text": "Drive through the heels, not the toes",
+    ///                 "order": 2
+    ///             }
+    ///         ],
+    ///         "exerciseTypeIds": [
+    ///             "exercisetype-11223344-5566-7788-99aa-bbccddeeff00",
+    ///             "exercisetype-22334455-6677-8899-aabb-ccddeeff0011"
+    ///         ],
     ///         "videoUrl": "https://example.com/squat-video.mp4",
     ///         "imageUrl": "https://example.com/squat-image.jpg",
     ///         "isUnilateral": false,
@@ -103,7 +116,11 @@ public class ExercisesController : ControllerBase
     ///         "movementPatternIds": ["movementpattern-99aabbcc-ddee-ff00-1122-334455667788"]
     ///     }
     /// 
-    /// Note: The exercise ID will be generated automatically and returned in the response
+    /// Notes:
+    /// - The exercise ID will be generated automatically and returned in the response
+    /// - CoachNotes are ordered instruction items that replace the previous single Instructions field
+    /// - ExerciseTypeIds specify the types (Warmup, Workout, Cooldown, Rest)
+    /// - If "Rest" type is included, it must be the only type (business rule)
     /// </remarks>
     /// <param name="request">The exercise creation request</param>
     /// <returns>The created exercise with its generated ID</returns>
@@ -133,6 +150,11 @@ public class ExercisesController : ControllerBase
             _logger.LogWarning("Attempted to create duplicate exercise: {Name}", request.Name);
             return Conflict(new { error = ex.Message });
         }
+        catch (InvalidOperationException ex) when (ex.Message.Contains("Rest"))
+        {
+            _logger.LogWarning("Rest exclusivity rule violation: {Error}", ex.Message);
+            return BadRequest(new { error = ex.Message });
+        }
         catch (ArgumentException ex)
         {
             _logger.LogWarning("Invalid exercise creation request: {Error}", ex.Message);
@@ -150,7 +172,21 @@ public class ExercisesController : ControllerBase
     ///     {
     ///         "name": "Updated Barbell Back Squat",
     ///         "description": "A compound lower body exercise targeting quads and glutes",
-    ///         "instructions": "1. Position bar on upper back\n2. Squat down to parallel\n3. Drive up through heels",
+    ///         "coachNotes": [
+    ///             {
+    ///                 "id": "coachnote-87654321-4321-4321-4321-210987654321",
+    ///                 "text": "Keep your chest up and core engaged (updated)",
+    ///                 "order": 1
+    ///             },
+    ///             {
+    ///                 "text": "New note: Watch knee tracking",
+    ///                 "order": 2
+    ///             }
+    ///         ],
+    ///         "exerciseTypeIds": [
+    ///             "exercisetype-11223344-5566-7788-99aa-bbccddeeff00",
+    ///             "exercisetype-22334455-6677-8899-aabb-ccddeeff0011"
+    ///         ],
     ///         "videoUrl": "https://example.com/squat-video.mp4",
     ///         "imageUrl": "https://example.com/squat-image.jpg",
     ///         "isUnilateral": false,
@@ -167,7 +203,12 @@ public class ExercisesController : ControllerBase
     ///         "movementPatternIds": ["movementpattern-99aabbcc-ddee-ff00-1122-334455667788"]
     ///     }
     /// 
-    /// Note: The exercise ID is taken from the URL path, not from the request body
+    /// Notes:
+    /// - The exercise ID is taken from the URL path, not from the request body
+    /// - CoachNotes can include IDs for existing notes (to update) or no ID for new notes
+    /// - CoachNotes not included in the request will be deleted
+    /// - ExerciseTypeIds completely replace the existing types
+    /// - If "Rest" type is included, it must be the only type (business rule)
     /// </remarks>
     /// <param name="id">The ID of the exercise to update (from URL path)</param>
     /// <param name="request">The exercise update request containing all fields to update</param>
@@ -209,6 +250,11 @@ public class ExercisesController : ControllerBase
         {
             _logger.LogWarning("Exercise not found for update: {Id}", id);
             return NotFound();
+        }
+        catch (InvalidOperationException ex) when (ex.Message.Contains("Rest"))
+        {
+            _logger.LogWarning("Rest exclusivity rule violation: {Error}", ex.Message);
+            return BadRequest(new { error = ex.Message });
         }
     }
 
