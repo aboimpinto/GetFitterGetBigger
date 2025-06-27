@@ -91,12 +91,12 @@
                             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                                 <a href="/exercises/@exercise.Id/edit" class="hover:text-blue-600">@exercise.Name</a>
                             </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">@exercise.DifficultyName</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">@exercise.Difficulty?.Value</td>
                             <td class="px-6 py-4 text-sm text-gray-500">
-                                @string.Join(", ", exercise.PrimaryMuscleGroups)
+                                @string.Join(", ", exercise.MuscleGroups.Where(mg => mg.Role?.Value == "Primary").Select(mg => mg.MuscleGroup?.Value ?? ""))
                             </td>
                             <td class="px-6 py-4 text-sm text-gray-500">
-                                @string.Join(", ", exercise.Equipment)
+                                @string.Join(", ", exercise.Equipment.Select(e => e.Value))
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                 @if (exercise.IsUnilateral)

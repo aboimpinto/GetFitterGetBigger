@@ -58,10 +58,23 @@ namespace GetFitterGetBigger.Admin.Models.Dtos
     {
         public string Id { get; set; } = string.Empty;
         public string Name { get; set; } = string.Empty;
-        public string DifficultyName { get; set; } = string.Empty;
+        public string Description { get; set; } = string.Empty;
+        public string Instructions { get; set; } = string.Empty;
+        public string? VideoUrl { get; set; }
+        public string? ImageUrl { get; set; }
         public bool IsUnilateral { get; set; }
-        public List<string> PrimaryMuscleGroups { get; set; } = new();
-        public List<string> Equipment { get; set; } = new();
+        public bool IsActive { get; set; }
+        public ReferenceDataDto? Difficulty { get; set; }
+        public List<MuscleGroupListItemDto> MuscleGroups { get; set; } = new();
+        public List<ReferenceDataDto> Equipment { get; set; } = new();
+        public List<ReferenceDataDto> MovementPatterns { get; set; } = new();
+        public List<ReferenceDataDto> BodyParts { get; set; } = new();
+    }
+
+    public class MuscleGroupListItemDto
+    {
+        public ReferenceDataDto? MuscleGroup { get; set; }
+        public ReferenceDataDto? Role { get; set; }
     }
 
     public class ExercisePagedResultDto
