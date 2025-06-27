@@ -92,13 +92,17 @@
                                     value="@(model.DifficultyId == Guid.Empty ? "" : model.DifficultyId.ToString())"
                                     @onchange="@((ChangeEventArgs e) => SetDifficultyId(e.Value?.ToString()))"
                                     required
-                                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 @(GetFieldClass("Difficulty"))">
                                 <option value="">Select difficulty</option>
                                 @foreach (var difficulty in StateService.DifficultyLevels)
                                 {
                                     <option value="@difficulty.Id">@difficulty.Value</option>
                                 }
                             </select>
+                            @if (validationErrors.ContainsKey("Difficulty"))
+                            {
+                                <p class="mt-1 text-sm text-red-600">@validationErrors["Difficulty"]</p>
+                            }
                         </div>
 
                         <div class="flex items-center">
@@ -116,9 +120,9 @@
                     <h3 class="text-lg font-medium text-gray-900 mb-4">Muscle Groups <span class="text-red-500">*</span></h3>
                     <p class="text-sm text-gray-600 mb-4">Select muscle groups and assign their roles</p>
                     
-                    @if (!muscleGroupAssignments.Any())
+                    @if (validationErrors.ContainsKey("MuscleGroups"))
                     {
-                        <p class="text-sm text-red-600 mb-2">At least one muscle group is required</p>
+                        <p class="text-sm text-red-600 mb-2">@validationErrors["MuscleGroups"]</p>
                     }
 
                     <div class="space-y-2 mb-4">
@@ -287,7 +291,16 @@
         }
     }
 
-    private ExerciseCreateDto model = new();
+    private ExerciseCreateDto model = new()
+    {
+        Name = string.Empty,
+        Description = string.Empty,
+        Instructions = string.Empty,
+        DifficultyId = Guid.Empty,
+        IsUnilateral = false,
+        ImageUrl = null,
+        VideoUrl = null
+    };
     private List<MuscleGroupRoleAssignmentDto> muscleGroupAssignments = new();
     private HashSet<string> selectedEquipmentIds = new();
     private HashSet<string> selectedBodyPartIds = new();
@@ -476,6 +489,16 @@
     {
         validationErrors.Clear();
         Console.WriteLine("[ExerciseForm] Validating form...");
+        Console.WriteLine($"[ExerciseForm] Model Name: '{model.Name}'");
+        Console.WriteLine($"[ExerciseForm] Model Description: '{model.Description}'");
+        Console.WriteLine($"[ExerciseForm] Model Instructions: '{model.Instructions}'");
+        Console.WriteLine($"[ExerciseForm] Model DifficultyId: {model.DifficultyId}");
+        Console.WriteLine($"[ExerciseForm] Muscle Groups Count: {muscleGroupAssignments.Count}");
+        
+        for (int i = 0; i < muscleGroupAssignments.Count; i++)
+        {
+            Console.WriteLine($"[ExerciseForm] Muscle Group {i}: Id={muscleGroupAssignments[i].MuscleGroupId}, Role='{muscleGroupAssignments[i].Role}'");
+        }
 
         if (string.IsNullOrWhiteSpace(model.Name))
             validationErrors["Name"] = "Exercise name is required";
@@ -508,6 +531,9 @@
         {
             Console.WriteLine($"[ExerciseForm] Validation error - {error.Key}: {error.Value}");
         }
+
+        // Update UI to show validation errors
+        StateHasChanged();
 
         return !validationErrors.Any();
     }
