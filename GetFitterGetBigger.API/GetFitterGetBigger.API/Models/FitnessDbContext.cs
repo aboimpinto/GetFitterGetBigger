@@ -9,6 +9,7 @@ public class FitnessDbContext : DbContext
 {
     // Core entities
     public DbSet<Exercise> Exercises => Set<Exercise>();
+    public DbSet<CoachNote> CoachNotes => Set<CoachNote>();
     public DbSet<MovementPattern> MovementPatterns => Set<MovementPattern>();
     public DbSet<MuscleGroup> MuscleGroups => Set<MuscleGroup>();
     public DbSet<Equipment> Equipment => Set<Equipment>();
@@ -60,6 +61,19 @@ public class FitnessDbContext : DbContext
         // Exercise ID
         modelBuilder.Entity<Exercise>()
             .Property(e => e.Id)
+            .HasConversion(
+                id => (Guid)id,
+                guid => ExerciseId.From(guid));
+                
+        // CoachNote ID
+        modelBuilder.Entity<CoachNote>()
+            .Property(cn => cn.Id)
+            .HasConversion(
+                id => (Guid)id,
+                guid => CoachNoteId.From(guid));
+                
+        modelBuilder.Entity<CoachNote>()
+            .Property(cn => cn.ExerciseId)
             .HasConversion(
                 id => (Guid)id,
                 guid => ExerciseId.From(guid));
@@ -205,6 +219,16 @@ public class FitnessDbContext : DbContext
             .Property(e => e.Instructions)
             .HasMaxLength(5000)
             .IsRequired();
+            
+        // Configure CoachNote entity constraints
+        modelBuilder.Entity<CoachNote>()
+            .Property(cn => cn.Text)
+            .HasMaxLength(1000)
+            .IsRequired();
+            
+        modelBuilder.Entity<CoachNote>()
+            .HasIndex(cn => new { cn.ExerciseId, cn.Order })
+            .HasDatabaseName("IX_CoachNote_ExerciseId_Order");
                 
         modelBuilder.Entity<MuscleGroup>()
             .Property(mg => mg.BodyPartId)
@@ -425,6 +449,14 @@ public class FitnessDbContext : DbContext
             .HasOne(e => e.Difficulty)
             .WithMany(dl => dl.Exercises)
             .HasForeignKey(e => e.DifficultyId);
+            
+        // Exercise to CoachNote (one-to-many)
+        // TODO: Uncomment when Exercise.CoachNotes property is added in Phase 3
+        // modelBuilder.Entity<CoachNote>()
+        //     .HasOne(cn => cn.Exercise)
+        //     .WithMany(e => e.CoachNotes)
+        //     .HasForeignKey(cn => cn.ExerciseId)
+        //     .OnDelete(DeleteBehavior.Cascade);
             
         // BodyPart to MuscleGroup (one-to-many)
         modelBuilder.Entity<MuscleGroup>()
