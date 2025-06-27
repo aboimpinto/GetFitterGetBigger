@@ -62,6 +62,9 @@ builder.Services.AddMemoryCache();
 // Add HttpClient for ReferenceDataService
 builder.Services.AddHttpClient<GetFitterGetBigger.Admin.Services.IReferenceDataService, GetFitterGetBigger.Admin.Services.ReferenceDataService>();
 
+// Add HttpClient for ExerciseService
+builder.Services.AddHttpClient<GetFitterGetBigger.Admin.Services.IExerciseService, GetFitterGetBigger.Admin.Services.ExerciseService>();
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
