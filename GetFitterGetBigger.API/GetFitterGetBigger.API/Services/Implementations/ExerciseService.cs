@@ -184,13 +184,23 @@ public class ExerciseService : IExerciseService
             throw new ArgumentException($"Invalid exercise ID: {id}");
         }
         
-        // Validate unique name (excluding current exercise)
+        // Get existing exercise first
+        Exercise? existingExercise;
         using (var readOnlyUow = _unitOfWorkProvider.CreateReadOnly())
         {
             var readRepository = readOnlyUow.GetRepository<IExerciseRepository>();
+            
+            // Validate unique name (excluding current exercise)
             if (await readRepository.ExistsAsync(request.Name, exerciseId))
             {
                 throw new InvalidOperationException($"An exercise with the name '{request.Name}' already exists.");
+            }
+            
+            // Get the existing exercise
+            existingExercise = await readRepository.GetByIdAsync(exerciseId);
+            if (existingExercise == null)
+            {
+                throw new InvalidOperationException($"Exercise with ID {id} not found.");
             }
         }
         
@@ -200,7 +210,7 @@ public class ExerciseService : IExerciseService
             throw new ArgumentException($"Invalid difficulty ID: {request.DifficultyId}");
         }
         
-        // Create updated exercise entity
+        // Create updated exercise entity, using existing values for nullable fields if not provided
         var exercise = Exercise.Handler.Create(
             exerciseId,
             request.Name,
@@ -208,8 +218,8 @@ public class ExerciseService : IExerciseService
             request.Instructions,
             request.VideoUrl,
             request.ImageUrl,
-            request.IsUnilateral,
-            request.IsActive,
+            request.IsUnilateral ?? existingExercise.IsUnilateral,
+            request.IsActive ?? existingExercise.IsActive,
             difficultyId);
         
         // Add relationships

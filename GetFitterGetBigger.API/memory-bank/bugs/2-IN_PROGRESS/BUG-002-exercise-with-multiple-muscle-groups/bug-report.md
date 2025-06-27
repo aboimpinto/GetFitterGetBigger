@@ -2,10 +2,13 @@
 
 ## Bug ID: BUG-002
 ## Reported: 2025-01-27
-## Status: OPEN
+## Status: FIXED
 ## Severity: High
 ## Affected Version: Current
-## Fixed Version: [TBD]
+## Fixed Version: Current
+
+## Note
+The empty results issue was actually caused by BUG-003 (exercises being set to IsActive=false during updates). The multiple muscle groups issue has been fixed with AsSplitQuery().
 
 ## Description
 When an exercise has two or more muscle groups associated with it, the exercise does not appear in the list returned by the GET /api/Exercises endpoint. This is a critical issue as many exercises target multiple muscle groups.
