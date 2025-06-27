@@ -5,15 +5,15 @@
 ### API Service Layer
 - **Task 1.1:** Create IExerciseService interface with all CRUD methods `[Implemented: 6ced60eb]`
 - **Task 1.2:** Implement ExerciseService with API integration for all endpoints `[Implemented: 5842933f]`
-- **Task 1.3:** Write unit tests for ExerciseService `[ReadyToDevelop]`
-- **Task 1.4:** Create ReferenceTableService for fetching reference data (difficulty, muscle groups, equipment, etc.) `[ReadyToDevelop]`
-- **Task 1.5:** Write unit tests for ReferenceTableService `[ReadyToDevelop]`
+- **Task 1.3:** Write unit tests for ExerciseService `[Implemented: 2888723d]`
+- **Task 1.4:** Create ReferenceTableService for fetching reference data (difficulty, muscle groups, equipment, etc.) `[Skipped - Already exists as ReferenceDataService]`
+- **Task 1.5:** Write unit tests for ReferenceTableService `[Skipped - Already exists in ReferenceDataServiceTests]`
 
 ### State Management
-- **Task 2.1:** Create ExerciseContext for state management `[ReadyToDevelop]`
+- **Task 2.1:** Create ExerciseStateService for state management `[ReadyToDevelop]`
 - **Task 2.2:** Implement exercise list state with pagination and filtering `[ReadyToDevelop]`
-- **Task 2.3:** Implement reference table caching in context `[ReadyToDevelop]`
-- **Task 2.4:** Write tests for ExerciseContext `[ReadyToDevelop]`
+- **Task 2.3:** Implement reference table caching in state service `[ReadyToDevelop]`
+- **Task 2.4:** Write tests for ExerciseStateService `[ReadyToDevelop]`
 
 ### Components - Exercise List
 - **Task 3.1:** Create ExerciseList component with table layout `[ReadyToDevelop]`

@@ -1,0 +1,39 @@
+using GetFitterGetBigger.Admin.Models.Dtos;
+
+namespace GetFitterGetBigger.Admin.Services
+{
+    public interface IExerciseStateService
+    {
+        event Action? OnChange;
+        
+        // List state
+        ExercisePagedResultDto? CurrentPage { get; }
+        ExerciseFilterDto CurrentFilter { get; }
+        bool IsLoading { get; }
+        string? ErrorMessage { get; }
+        
+        // Selected exercise state
+        ExerciseDto? SelectedExercise { get; }
+        bool IsLoadingExercise { get; }
+        
+        // Reference data state
+        IEnumerable<ReferenceDataDto> DifficultyLevels { get; }
+        IEnumerable<ReferenceDataDto> MuscleGroups { get; }
+        IEnumerable<ReferenceDataDto> MuscleRoles { get; }
+        IEnumerable<ReferenceDataDto> Equipment { get; }
+        IEnumerable<ReferenceDataDto> BodyParts { get; }
+        IEnumerable<ReferenceDataDto> MovementPatterns { get; }
+        bool IsLoadingReferenceData { get; }
+        
+        // Methods
+        Task InitializeAsync();
+        Task LoadExercisesAsync(ExerciseFilterDto? filter = null);
+        Task LoadExerciseByIdAsync(Guid id);
+        Task CreateExerciseAsync(ExerciseCreateDto exercise);
+        Task UpdateExerciseAsync(Guid id, ExerciseUpdateDto exercise);
+        Task DeleteExerciseAsync(Guid id);
+        Task RefreshCurrentPageAsync();
+        void ClearSelectedExercise();
+        void ClearError();
+    }
+}
