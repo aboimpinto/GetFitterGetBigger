@@ -6,12 +6,13 @@
 
 #### 1.1 Create Strongly-Typed IDs
 - **Task 1.1.1:** Create `CoachNoteId` in `SpecializedIds` namespace (format: "coachnote-{guid}") `[Implemented: ac470a0e]`
-- **Task 1.1.2:** Create unit tests for `CoachNoteId` `[Implemented: ac470a0e]`
+- **Task 1.1.2:** Create unit tests for `CoachNoteId` `[Implemented: f45f3e9f]`
 - **Task 1.1.3:** Create `ExerciseTypeId` in `SpecializedIds` namespace (format: "exercisetype-{guid}") `[Implemented: ac470a0e]`
-- **Task 1.1.4:** Create unit tests for `ExerciseTypeId` `[Implemented: ac470a0e]`
+- **Task 1.1.4:** Create unit tests for `ExerciseTypeId` `[Implemented: f45f3e9f]`
 
 #### 1.2 Create ExerciseType Reference Table
 - **Task 1.2.1:** Create `ExerciseType.cs` entity extending `ReferenceDataBase` `[Implemented: ac470a0e]`
+- **Task 1.2.1a:** Create unit tests for `ExerciseType` entity `[Implemented: f45f3e9f]`
 - **Task 1.2.2:** Create `IExerciseTypeRepository` interface `[Implemented: ac470a0e]`
 - **Task 1.2.3:** Implement `ExerciseTypeRepository` `[Implemented: ac470a0e]`
 - **Task 1.2.4:** Create unit tests for `ExerciseTypeRepository` `[Implemented: ac470a0e]`
@@ -27,7 +28,7 @@
   - Text (string, max 1000)
   - Order (int)
   - Navigation property to Exercise `[Implemented: cd4c0b01]`
-- **Task 2.1.2:** Create unit tests for `CoachNote` entity `[Implemented: cd4c0b01]`
+- **Task 2.1.2:** Create unit tests for `CoachNote` entity `[Implemented: f45f3e9f]`
 - **Task 2.1.3:** Add CoachNote DbSet to `FitnessDbContext` `[Implemented: cd4c0b01]`
 - **Task 2.1.4:** Configure CoachNote in `OnModelCreating`:
   - Configure CoachNoteId value conversion
@@ -54,6 +55,7 @@
 
 #### 3.2 Create Junction Table
 - **Task 3.2.1:** Create `ExerciseExerciseType` entity for many-to-many relationship `[Implemented: 1184a541]`
+- **Task 3.2.1a:** Create unit tests for `ExerciseExerciseType` entity `[Implemented: f45f3e9f]`
 - **Task 3.2.2:** Configure junction table in `FitnessDbContext` `[Implemented: 1184a541]`
 
 ### Phase 4: Update DTOs
@@ -90,30 +92,30 @@
 ### Phase 6: Update Service Layer
 
 #### 6.1 Update Exercise Service
-- **Task 6.1.1:** Create validation method for Rest exclusivity rule `[ReadyToDevelop]`
-- **Task 6.1.2:** Create unit tests for Rest exclusivity validation `[ReadyToDevelop]`
+- **Task 6.1.1:** Create validation method for Rest exclusivity rule `[Implemented: f45f3e9f]`
+- **Task 6.1.2:** Create unit tests for Rest exclusivity validation `[Implemented: f45f3e9f]`
 - **Task 6.1.3:** Update `CreateAsync`:
   - Remove Instructions handling
   - Add CoachNotes creation logic
   - Add ExerciseTypes assignment
-  - Implement Rest exclusivity validation `[ReadyToDevelop]`
-- **Task 6.1.4:** Create unit tests for `CreateAsync` with CoachNotes and ExerciseTypes `[ReadyToDevelop]`
+  - Implement Rest exclusivity validation `[Implemented: f45f3e9f]`
+- **Task 6.1.4:** Create unit tests for `CreateAsync` with CoachNotes and ExerciseTypes `[Implemented: f45f3e9f]`
 - **Task 6.1.5:** Update `UpdateAsync`:
   - Remove Instructions handling
   - Implement CoachNotes synchronization logic
   - Update ExerciseTypes assignment
-  - Implement Rest exclusivity validation `[ReadyToDevelop]`
-- **Task 6.1.6:** Create unit tests for `UpdateAsync` with CoachNotes synchronization `[ReadyToDevelop]`
-- **Task 6.1.7:** Update `MapToDto` to map CoachNotes and ExerciseTypes `[ReadyToDevelop]`
-- **Task 6.1.8:** Create unit tests for `MapToDto` with new properties `[ReadyToDevelop]`
+  - Implement Rest exclusivity validation `[Implemented: f45f3e9f]`
+- **Task 6.1.6:** Create unit tests for `UpdateAsync` with CoachNotes synchronization `[Implemented: 5977d7de]`
+- **Task 6.1.7:** Update `MapToDto` to map CoachNotes and ExerciseTypes `[Implemented: f45f3e9f]`
+- **Task 6.1.8:** Create unit tests for `MapToDto` with new properties `[Implemented: 5977d7de]`
 
 ### Phase 7: Update Controller
 
 #### 7.1 Update Exercises Controller
-- **Task 7.1.1:** Update API documentation for Create endpoint `[ReadyToDevelop]`
-- **Task 7.1.2:** Update API documentation for Update endpoint `[ReadyToDevelop]`
-- **Task 7.1.3:** Update example requests in XML comments `[ReadyToDevelop]`
-- **Task 7.1.4:** Add validation attributes if needed `[ReadyToDevelop]`
+- **Task 7.1.1:** Update API documentation for Create endpoint `[Implemented: 5977d7de]`
+- **Task 7.1.2:** Update API documentation for Update endpoint `[Implemented: 5977d7de]`
+- **Task 7.1.3:** Update example requests in XML comments `[Implemented: 5977d7de]`
+- **Task 7.1.4:** Add validation attributes if needed `[Implemented: 5977d7de]`
 
 ### Phase 8: Integration Tests
 

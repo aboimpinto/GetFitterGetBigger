@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<coverage line-rate="0.8295" branch-rate="0.5972" version="1.9" timestamp="1751057187" lines-covered="2000" lines-valid="2411" branches-covered="301" branches-valid="504">
+<coverage line-rate="0.8267" branch-rate="0.5972" version="1.9" timestamp="1751057660" lines-covered="2000" lines-valid="2419" branches-covered="301" branches-valid="504">
   <sources>
     <source>/home/esqueleto/myWork/GetFitterGetBigger/GetFitterGetBigger.API/</source>
   </sources>
@@ -270,7 +270,7 @@
         </class>
       </classes>
     </package>
-    <package name="GetFitterGetBigger.API" line-rate="0.8271999999999999" branch-rate="0.5959" complexity="759">
+    <package name="GetFitterGetBigger.API" line-rate="0.8244" branch-rate="0.5959" complexity="759">
       <classes>
         <class name="Program" filename="GetFitterGetBigger.API/Program.cs" line-rate="0.5866" branch-rate="0.3333" complexity="6">
           <methods>
@@ -6040,48 +6040,48 @@
           <methods>
             <method name="get_Id" signature="()" line-rate="1" branch-rate="1" complexity="1">
               <lines>
-                <line number="11" hits="77" branch="False" />
+                <line number="13" hits="77" branch="False" />
               </lines>
             </method>
             <method name="get_Text" signature="()" line-rate="1" branch-rate="1" complexity="1">
               <lines>
-                <line number="16" hits="87" branch="False" />
+                <line number="18" hits="87" branch="False" />
               </lines>
             </method>
             <method name="get_Order" signature="()" line-rate="1" branch-rate="1" complexity="1">
               <lines>
-                <line number="21" hits="52" branch="False" />
+                <line number="23" hits="52" branch="False" />
               </lines>
             </method>
           </methods>
           <lines>
-            <line number="11" hits="77" branch="False" />
-            <line number="16" hits="87" branch="False" />
-            <line number="21" hits="52" branch="False" />
+            <line number="13" hits="77" branch="False" />
+            <line number="18" hits="87" branch="False" />
+            <line number="23" hits="52" branch="False" />
           </lines>
         </class>
         <class name="GetFitterGetBigger.API.DTOs.CoachNoteRequest" filename="GetFitterGetBigger.API/DTOs/CoachNoteDto.cs" line-rate="1" branch-rate="1" complexity="3">
           <methods>
             <method name="get_Id" signature="()" line-rate="1" branch-rate="1" complexity="1">
               <lines>
-                <line number="32" hits="42" branch="False" />
+                <line number="34" hits="42" branch="False" />
               </lines>
             </method>
             <method name="get_Text" signature="()" line-rate="1" branch-rate="1" complexity="1">
               <lines>
-                <line number="37" hits="105" branch="False" />
+                <line number="41" hits="105" branch="False" />
               </lines>
             </method>
             <method name="get_Order" signature="()" line-rate="1" branch-rate="1" complexity="1">
               <lines>
-                <line number="42" hits="72" branch="False" />
+                <line number="47" hits="72" branch="False" />
               </lines>
             </method>
           </methods>
           <lines>
-            <line number="32" hits="42" branch="False" />
-            <line number="37" hits="105" branch="False" />
-            <line number="42" hits="72" branch="False" />
+            <line number="34" hits="42" branch="False" />
+            <line number="41" hits="105" branch="False" />
+            <line number="47" hits="72" branch="False" />
           </lines>
         </class>
         <class name="GetFitterGetBigger.API.DTOs.CreateExerciseRequest" filename="GetFitterGetBigger.API/DTOs/CreateExerciseRequest.cs" line-rate="1" branch-rate="1" complexity="12">
@@ -7206,90 +7206,98 @@
             <line number="31" hits="9" branch="False" />
           </lines>
         </class>
-        <class name="GetFitterGetBigger.API.Controllers.ExercisesController/&lt;CreateExercise&gt;d__5" filename="GetFitterGetBigger.API/Controllers/ExercisesController.cs" line-rate="0.4117" branch-rate="0.5" complexity="2">
+        <class name="GetFitterGetBigger.API.Controllers.ExercisesController/&lt;CreateExercise&gt;d__5" filename="GetFitterGetBigger.API/Controllers/ExercisesController.cs" line-rate="0.3333" branch-rate="0.5" complexity="2">
           <methods>
-            <method name="MoveNext" signature="()" line-rate="0.4117" branch-rate="0.5" complexity="2">
+            <method name="MoveNext" signature="()" line-rate="0.3333" branch-rate="0.5" complexity="2">
               <lines>
-                <line number="118" hits="2" branch="False" />
-                <line number="119" hits="2" branch="True" condition-coverage="50% (1/2)">
+                <line number="135" hits="2" branch="False" />
+                <line number="136" hits="2" branch="True" condition-coverage="50% (1/2)">
                   <conditions>
                     <condition number="36" type="jump" coverage="50%" />
                   </conditions>
                 </line>
-                <line number="120" hits="0" branch="False" />
-                <line number="121" hits="0" branch="False" />
-                <line number="124" hits="2" branch="False" />
-                <line number="127" hits="2" branch="False" />
-                <line number="128" hits="2" branch="False" />
-                <line number="129" hits="2" branch="False" />
-                <line number="131" hits="0" branch="False" />
-                <line number="132" hits="0" branch="False" />
-                <line number="133" hits="0" branch="False" />
-                <line number="134" hits="0" branch="False" />
-                <line number="136" hits="0" branch="False" />
                 <line number="137" hits="0" branch="False" />
                 <line number="138" hits="0" branch="False" />
-                <line number="139" hits="0" branch="False" />
                 <line number="141" hits="2" branch="False" />
+                <line number="144" hits="2" branch="False" />
+                <line number="145" hits="2" branch="False" />
+                <line number="146" hits="2" branch="False" />
+                <line number="148" hits="0" branch="False" />
+                <line number="149" hits="0" branch="False" />
+                <line number="150" hits="0" branch="False" />
+                <line number="151" hits="0" branch="False" />
+                <line number="153" hits="0" branch="False" />
+                <line number="154" hits="0" branch="False" />
+                <line number="155" hits="0" branch="False" />
+                <line number="156" hits="0" branch="False" />
+                <line number="158" hits="0" branch="False" />
+                <line number="159" hits="0" branch="False" />
+                <line number="160" hits="0" branch="False" />
+                <line number="161" hits="0" branch="False" />
+                <line number="163" hits="2" branch="False" />
               </lines>
             </method>
           </methods>
           <lines>
-            <line number="118" hits="2" branch="False" />
-            <line number="119" hits="2" branch="True" condition-coverage="50% (1/2)">
+            <line number="135" hits="2" branch="False" />
+            <line number="136" hits="2" branch="True" condition-coverage="50% (1/2)">
               <conditions>
                 <condition number="36" type="jump" coverage="50%" />
               </conditions>
             </line>
-            <line number="120" hits="0" branch="False" />
-            <line number="121" hits="0" branch="False" />
-            <line number="124" hits="2" branch="False" />
-            <line number="127" hits="2" branch="False" />
-            <line number="128" hits="2" branch="False" />
-            <line number="129" hits="2" branch="False" />
-            <line number="131" hits="0" branch="False" />
-            <line number="132" hits="0" branch="False" />
-            <line number="133" hits="0" branch="False" />
-            <line number="134" hits="0" branch="False" />
-            <line number="136" hits="0" branch="False" />
             <line number="137" hits="0" branch="False" />
             <line number="138" hits="0" branch="False" />
-            <line number="139" hits="0" branch="False" />
             <line number="141" hits="2" branch="False" />
+            <line number="144" hits="2" branch="False" />
+            <line number="145" hits="2" branch="False" />
+            <line number="146" hits="2" branch="False" />
+            <line number="148" hits="0" branch="False" />
+            <line number="149" hits="0" branch="False" />
+            <line number="150" hits="0" branch="False" />
+            <line number="151" hits="0" branch="False" />
+            <line number="153" hits="0" branch="False" />
+            <line number="154" hits="0" branch="False" />
+            <line number="155" hits="0" branch="False" />
+            <line number="156" hits="0" branch="False" />
+            <line number="158" hits="0" branch="False" />
+            <line number="159" hits="0" branch="False" />
+            <line number="160" hits="0" branch="False" />
+            <line number="161" hits="0" branch="False" />
+            <line number="163" hits="2" branch="False" />
           </lines>
         </class>
         <class name="GetFitterGetBigger.API.Controllers.ExercisesController/&lt;DeleteExercise&gt;d__7" filename="GetFitterGetBigger.API/Controllers/ExercisesController.cs" line-rate="0.875" branch-rate="0.5" complexity="2">
           <methods>
             <method name="MoveNext" signature="()" line-rate="0.875" branch-rate="0.5" complexity="2">
               <lines>
-                <line number="237" hits="1" branch="False" />
-                <line number="238" hits="1" branch="False" />
-                <line number="240" hits="1" branch="False" />
-                <line number="242" hits="1" branch="True" condition-coverage="50% (1/2)">
+                <line number="283" hits="1" branch="False" />
+                <line number="284" hits="1" branch="False" />
+                <line number="286" hits="1" branch="False" />
+                <line number="288" hits="1" branch="True" condition-coverage="50% (1/2)">
                   <conditions>
                     <condition number="194" type="jump" coverage="50%" />
                   </conditions>
                 </line>
-                <line number="243" hits="1" branch="False" />
-                <line number="244" hits="1" branch="False" />
-                <line number="247" hits="0" branch="False" />
-                <line number="248" hits="1" branch="False" />
+                <line number="289" hits="1" branch="False" />
+                <line number="290" hits="1" branch="False" />
+                <line number="293" hits="0" branch="False" />
+                <line number="294" hits="1" branch="False" />
               </lines>
             </method>
           </methods>
           <lines>
-            <line number="237" hits="1" branch="False" />
-            <line number="238" hits="1" branch="False" />
-            <line number="240" hits="1" branch="False" />
-            <line number="242" hits="1" branch="True" condition-coverage="50% (1/2)">
+            <line number="283" hits="1" branch="False" />
+            <line number="284" hits="1" branch="False" />
+            <line number="286" hits="1" branch="False" />
+            <line number="288" hits="1" branch="True" condition-coverage="50% (1/2)">
               <conditions>
                 <condition number="194" type="jump" coverage="50%" />
               </conditions>
             </line>
-            <line number="243" hits="1" branch="False" />
-            <line number="244" hits="1" branch="False" />
-            <line number="247" hits="0" branch="False" />
-            <line number="248" hits="1" branch="False" />
+            <line number="289" hits="1" branch="False" />
+            <line number="290" hits="1" branch="False" />
+            <line number="293" hits="0" branch="False" />
+            <line number="294" hits="1" branch="False" />
           </lines>
         </class>
         <class name="GetFitterGetBigger.API.Controllers.ExercisesController/&lt;GetExercise&gt;d__4" filename="GetFitterGetBigger.API/Controllers/ExercisesController.cs" line-rate="0.875" branch-rate="0.5" complexity="2">
@@ -7360,64 +7368,72 @@
             <line number="54" hits="1" branch="False" />
           </lines>
         </class>
-        <class name="GetFitterGetBigger.API.Controllers.ExercisesController/&lt;UpdateExercise&gt;d__6" filename="GetFitterGetBigger.API/Controllers/ExercisesController.cs" line-rate="0.5238" branch-rate="0.5" complexity="2">
+        <class name="GetFitterGetBigger.API.Controllers.ExercisesController/&lt;UpdateExercise&gt;d__6" filename="GetFitterGetBigger.API/Controllers/ExercisesController.cs" line-rate="0.44" branch-rate="0.5" complexity="2">
           <methods>
-            <method name="MoveNext" signature="()" line-rate="0.5238" branch-rate="0.5" complexity="2">
+            <method name="MoveNext" signature="()" line-rate="0.44" branch-rate="0.5" complexity="2">
               <lines>
-                <line number="185" hits="1" branch="False" />
-                <line number="186" hits="1" branch="True" condition-coverage="50% (1/2)">
+                <line number="226" hits="1" branch="False" />
+                <line number="227" hits="1" branch="True" condition-coverage="50% (1/2)">
                   <conditions>
                     <condition number="36" type="jump" coverage="50%" />
                   </conditions>
                 </line>
-                <line number="187" hits="0" branch="False" />
-                <line number="188" hits="0" branch="False" />
-                <line number="191" hits="1" branch="False" />
-                <line number="194" hits="1" branch="False" />
-                <line number="195" hits="1" branch="False" />
-                <line number="196" hits="0" branch="False" />
-                <line number="198" hits="0" branch="False" />
-                <line number="199" hits="0" branch="False" />
-                <line number="200" hits="0" branch="False" />
-                <line number="201" hits="0" branch="False" />
-                <line number="203" hits="1" branch="False" />
-                <line number="204" hits="0" branch="False" />
-                <line number="205" hits="0" branch="False" />
-                <line number="206" hits="0" branch="False" />
-                <line number="208" hits="1" branch="False" />
-                <line number="209" hits="1" branch="False" />
-                <line number="210" hits="1" branch="False" />
-                <line number="211" hits="1" branch="False" />
-                <line number="213" hits="1" branch="False" />
+                <line number="228" hits="0" branch="False" />
+                <line number="229" hits="0" branch="False" />
+                <line number="232" hits="1" branch="False" />
+                <line number="235" hits="1" branch="False" />
+                <line number="236" hits="1" branch="False" />
+                <line number="237" hits="0" branch="False" />
+                <line number="239" hits="0" branch="False" />
+                <line number="240" hits="0" branch="False" />
+                <line number="241" hits="0" branch="False" />
+                <line number="242" hits="0" branch="False" />
+                <line number="244" hits="1" branch="False" />
+                <line number="245" hits="0" branch="False" />
+                <line number="246" hits="0" branch="False" />
+                <line number="247" hits="0" branch="False" />
+                <line number="249" hits="1" branch="False" />
+                <line number="250" hits="1" branch="False" />
+                <line number="251" hits="1" branch="False" />
+                <line number="252" hits="1" branch="False" />
+                <line number="254" hits="0" branch="False" />
+                <line number="255" hits="0" branch="False" />
+                <line number="256" hits="0" branch="False" />
+                <line number="257" hits="0" branch="False" />
+                <line number="259" hits="1" branch="False" />
               </lines>
             </method>
           </methods>
           <lines>
-            <line number="185" hits="1" branch="False" />
-            <line number="186" hits="1" branch="True" condition-coverage="50% (1/2)">
+            <line number="226" hits="1" branch="False" />
+            <line number="227" hits="1" branch="True" condition-coverage="50% (1/2)">
               <conditions>
                 <condition number="36" type="jump" coverage="50%" />
               </conditions>
             </line>
-            <line number="187" hits="0" branch="False" />
-            <line number="188" hits="0" branch="False" />
-            <line number="191" hits="1" branch="False" />
-            <line number="194" hits="1" branch="False" />
-            <line number="195" hits="1" branch="False" />
-            <line number="196" hits="0" branch="False" />
-            <line number="198" hits="0" branch="False" />
-            <line number="199" hits="0" branch="False" />
-            <line number="200" hits="0" branch="False" />
-            <line number="201" hits="0" branch="False" />
-            <line number="203" hits="1" branch="False" />
-            <line number="204" hits="0" branch="False" />
-            <line number="205" hits="0" branch="False" />
-            <line number="206" hits="0" branch="False" />
-            <line number="208" hits="1" branch="False" />
-            <line number="209" hits="1" branch="False" />
-            <line number="210" hits="1" branch="False" />
-            <line number="211" hits="1" branch="False" />
-            <line number="213" hits="1" branch="False" />
+            <line number="228" hits="0" branch="False" />
+            <line number="229" hits="0" branch="False" />
+            <line number="232" hits="1" branch="False" />
+            <line number="235" hits="1" branch="False" />
+            <line number="236" hits="1" branch="False" />
+            <line number="237" hits="0" branch="False" />
+            <line number="239" hits="0" branch="False" />
+            <line number="240" hits="0" branch="False" />
+            <line number="241" hits="0" branch="False" />
+            <line number="242" hits="0" branch="False" />
+            <line number="244" hits="1" branch="False" />
+            <line number="245" hits="0" branch="False" />
+            <line number="246" hits="0" branch="False" />
+            <line number="247" hits="0" branch="False" />
+            <line number="249" hits="1" branch="False" />
+            <line number="250" hits="1" branch="False" />
+            <line number="251" hits="1" branch="False" />
+            <line number="252" hits="1" branch="False" />
+            <line number="254" hits="0" branch="False" />
+            <line number="255" hits="0" branch="False" />
+            <line number="256" hits="0" branch="False" />
+            <line number="257" hits="0" branch="False" />
+            <line number="259" hits="1" branch="False" />
           </lines>
         </class>
         <class name="GetFitterGetBigger.API.Controllers.KineticChainTypesController" filename="GetFitterGetBigger.API/Controllers/KineticChainTypesController.cs" line-rate="1" branch-rate="1" complexity="1">
