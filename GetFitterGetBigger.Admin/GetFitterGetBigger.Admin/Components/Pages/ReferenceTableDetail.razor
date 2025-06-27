@@ -59,37 +59,55 @@
     private IEnumerable<ReferenceDataDto> items = Enumerable.Empty<ReferenceDataDto>();
     private string DisplayName { get; set; } = string.Empty;
 
+    // Dictionary mapping table names to their data fetching methods
+    private readonly Dictionary<string, Func<Task<IEnumerable<ReferenceDataDto>>>> _dataFetchers = new();
+
+    // Dictionary mapping table names to display names
+    private static readonly Dictionary<string, string> _displayNames = new()
+    {
+        ["BodyParts"] = "Body Parts",
+        ["DifficultyLevels"] = "Difficulty Levels",
+        ["Equipment"] = "Equipment",
+        ["KineticChainTypes"] = "Kinetic Chain Types",
+        ["MetricTypes"] = "Metric Types",
+        ["MovementPatterns"] = "Movement Patterns",
+        ["MuscleGroups"] = "Muscle Groups",
+        ["MuscleRoles"] = "Muscle Roles"
+    };
+
+    protected override void OnInitialized()
+    {
+        // Initialize data fetchers dictionary
+        _dataFetchers["BodyParts"] = ReferenceDataService.GetBodyPartsAsync;
+        _dataFetchers["DifficultyLevels"] = ReferenceDataService.GetDifficultyLevelsAsync;
+        _dataFetchers["Equipment"] = ReferenceDataService.GetEquipmentAsync;
+        _dataFetchers["KineticChainTypes"] = ReferenceDataService.GetKineticChainTypesAsync;
+        _dataFetchers["MetricTypes"] = ReferenceDataService.GetMetricTypesAsync;
+        _dataFetchers["MovementPatterns"] = ReferenceDataService.GetMovementPatternsAsync;
+        _dataFetchers["MuscleGroups"] = ReferenceDataService.GetMuscleGroupsAsync;
+        _dataFetchers["MuscleRoles"] = ReferenceDataService.GetMuscleRolesAsync;
+    }
+
     protected override async Task OnInitializedAsync()
     {
         SetDisplayName();
-        
-        items = TableName switch
+        await LoadDataAsync();
+    }
+
+    private async Task LoadDataAsync()
+    {
+        if (_dataFetchers.TryGetValue(TableName, out var fetcher))
         {
-            "BodyParts" => await ReferenceDataService.GetBodyPartsAsync(),
-            "DifficultyLevels" => await ReferenceDataService.GetDifficultyLevelsAsync(),
-            "Equipment" => await ReferenceDataService.GetEquipmentAsync(),
-            "KineticChainTypes" => await ReferenceDataService.GetKineticChainTypesAsync(),
-            "MetricTypes" => await ReferenceDataService.GetMetricTypesAsync(),
-            "MovementPatterns" => await ReferenceDataService.GetMovementPatternsAsync(),
-            "MuscleGroups" => await ReferenceDataService.GetMuscleGroupsAsync(),
-            "MuscleRoles" => await ReferenceDataService.GetMuscleRolesAsync(),
-            _ => new List<ReferenceDataDto>()
-        };
+            items = await fetcher();
+        }
+        else
+        {
+            items = new List<ReferenceDataDto>();
+        }
     }
 
     private void SetDisplayName()
     {
-        DisplayName = TableName switch
-        {
-            "BodyParts" => "Body Parts",
-            "DifficultyLevels" => "Difficulty Levels",
-            "Equipment" => "Equipment",
-            "KineticChainTypes" => "Kinetic Chain Types",
-            "MetricTypes" => "Metric Types",
-            "MovementPatterns" => "Movement Patterns",
-            "MuscleGroups" => "Muscle Groups",
-            "MuscleRoles" => "Muscle Roles",
-            _ => TableName
-        };
+        DisplayName = _displayNames.TryGetValue(TableName, out var name) ? name : TableName;
     }
 }

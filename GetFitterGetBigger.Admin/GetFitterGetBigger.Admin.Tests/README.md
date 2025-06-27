@@ -85,17 +85,37 @@ var claims = new ClaimBuilder()
 
 ## Running Tests
 
-### Run all tests
+### Recommended: Use the test scripts (automatically generates HTML coverage report)
+
+**For Linux/macOS:**
+```bash
+./test.sh
+```
+
+**For Windows PowerShell:**
+```powershell
+./test.ps1
+```
+
+These scripts will:
+1. Run all tests
+2. Show pass/fail results
+3. Automatically generate HTML coverage report
+4. Display coverage summary
+
+### Manual commands
+
+**Run all tests (without HTML report):**
 ```bash
 dotnet test
 ```
 
-### Run tests with filter
+**Run tests with filter:**
 ```bash
 dotnet test --filter "FullyQualifiedName~AuthServiceTests"
 ```
 
-### Run tests with code coverage
+**Run tests with code coverage:**
 ```bash
 dotnet test --collect:"XPlat Code Coverage"
 ```

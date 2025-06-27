@@ -19,21 +19,10 @@
         </header>
 
         <main class="flex-1 bg-gray-100 p-6">
-            @if (AuthorizationStateService.IsReady)
-            {
-                @if (AuthorizationStateService.UserHasAdminAccess)
-                {
-                    @Body
-                }
-                else
-                {
-                    <ForbiddenAccess />
-                }
+            @{
+                RenderFragment content = GetMainContent();
             }
-            else
-            {
-                <p>Loading...</p>
-            }
+            @content
         </main>
     </div>
 </div>
@@ -49,6 +38,21 @@
     {
         AuthorizationStateService.OnChange += StateHasChanged;
         await AuthorizationStateService.InitializeAsync();
+    }
+
+    private RenderFragment GetMainContent()
+    {
+        if (!AuthorizationStateService.IsReady)
+        {
+            return builder => builder.AddContent(0, "Loading...");
+        }
+
+        if (!AuthorizationStateService.UserHasAdminAccess)
+        {
+            return builder => builder.AddContent(0, new ForbiddenAccess());
+        }
+
+        return Body ?? (builder => { });
     }
 
     public void Dispose()

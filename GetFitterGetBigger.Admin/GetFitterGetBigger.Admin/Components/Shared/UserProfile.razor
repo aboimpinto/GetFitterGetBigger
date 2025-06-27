@@ -1,55 +1,16 @@
 @using GetFitterGetBigger.Admin.Models.Authentication
 @using GetFitterGetBigger.Admin.Services.Authentication
+@using GetFitterGetBigger.Admin.Services.UI
 @inject IAuthService AuthService
 @inject IAuthorizationStateService AuthorizationStateService
+@inject IUserProfileDisplayService DisplayService
 @inject NavigationManager NavigationManager
 @implements IDisposable
 
-@if (isLoading)
-{
-    <div class="flex items-center">
-        <div class="animate-pulse h-8 w-8 bg-gray-300 rounded-full"></div>
-        <div class="animate-pulse h-4 w-16 bg-gray-300 ml-2 rounded"></div>
-    </div>
+@{
+    var content = GetContent();
 }
-else if (currentUser != null)
-{
-    <div class="flex items-center">
-        @if (!string.IsNullOrEmpty(currentUser.ProfilePictureUrl))
-        {
-            <img src="@currentUser.ProfilePictureUrl" alt="Profile" class="h-8 w-8 rounded-full" />
-        }
-        else
-        {
-            <div class="h-8 w-8 rounded-full bg-gray-500 flex items-center justify-center text-white">
-                @(string.IsNullOrEmpty(currentUser.DisplayName) ? "?" : currentUser.DisplayName[0])
-            </div>
-        }
-        
-        <div class="ml-2 flex items-center">
-            <span class="text-sm text-gray-700 mr-3">@(string.IsNullOrEmpty(currentUser.DisplayName) ? currentUser.Email : currentUser.DisplayName)</span>
-            <button @onclick="LogoutUser" @onclick:preventDefault class="text-gray-500 hover:text-gray-700" title="Logout">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                </svg>
-            </button>
-        </div>
-    </div>
-    <div class="ml-4 text-sm">
-        @if (AuthorizationStateService.IsReady)
-        {
-            <span class="text-green-500">Ready</span>
-        }
-        else
-        {
-            <span class="text-red-500">Not Ready</span>
-        }
-    </div>
-}
-else
-{
-    <a href="/login" class="text-gray-600 hover:text-gray-900">Login</a>
-}
+@content
 
 @code {
     private AuthUser? currentUser;
@@ -64,6 +25,110 @@ else
             await AuthorizationStateService.InitializeAsync();
         }
         isLoading = false;
+    }
+
+    private RenderFragment GetContent()
+    {
+        if (isLoading)
+        {
+            return GetLoadingContent();
+        }
+        
+        if (currentUser != null)
+        {
+            return GetUserContent();
+        }
+        
+        return GetLoginContent();
+    }
+
+    private RenderFragment GetLoadingContent()
+    {
+        return builder =>
+        {
+            builder.OpenElement(0, "div");
+            builder.AddAttribute(1, "class", "flex items-center");
+            
+            builder.OpenElement(2, "div");
+            builder.AddAttribute(3, "class", "animate-pulse h-8 w-8 bg-gray-300 rounded-full");
+            builder.CloseElement();
+            
+            builder.OpenElement(4, "div");
+            builder.AddAttribute(5, "class", "animate-pulse h-4 w-16 bg-gray-300 ml-2 rounded");
+            builder.CloseElement();
+            
+            builder.CloseElement();
+        };
+    }
+
+    private RenderFragment GetUserContent()
+    {
+        return builder =>
+        {
+            builder.OpenElement(0, "div");
+            builder.AddAttribute(1, "class", "flex items-center");
+            
+            // Profile picture or initial
+            if (DisplayService.HasProfilePicture(currentUser!))
+            {
+                builder.OpenElement(2, "img");
+                builder.AddAttribute(3, "src", currentUser!.ProfilePictureUrl);
+                builder.AddAttribute(4, "alt", "Profile");
+                builder.AddAttribute(5, "class", "h-8 w-8 rounded-full");
+                builder.CloseElement();
+            }
+            else
+            {
+                builder.OpenElement(6, "div");
+                builder.AddAttribute(7, "class", "h-8 w-8 rounded-full bg-gray-500 flex items-center justify-center text-white");
+                builder.AddContent(8, DisplayService.GetProfileInitial(currentUser!));
+                builder.CloseElement();
+            }
+            
+            // Name and logout button
+            builder.OpenElement(9, "div");
+            builder.AddAttribute(10, "class", "ml-2 flex items-center");
+            
+            builder.OpenElement(11, "span");
+            builder.AddAttribute(12, "class", "text-sm text-gray-700 mr-3");
+            builder.AddContent(13, DisplayService.GetDisplayName(currentUser!));
+            builder.CloseElement();
+            
+            builder.OpenElement(14, "button");
+            builder.AddAttribute(15, "class", "text-gray-500 hover:text-gray-700");
+            builder.AddAttribute(16, "title", "Logout");
+            builder.AddAttribute(17, "onclick", EventCallback.Factory.Create(this, LogoutUser));
+            builder.AddMarkupContent(18, @"<svg xmlns=""http://www.w3.org/2000/svg"" class=""h-5 w-5"" fill=""none"" viewBox=""0 0 24 24"" stroke=""currentColor"">
+                    <path stroke-linecap=""round"" stroke-linejoin=""round"" stroke-width=""2"" d=""M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"" />
+                </svg>");
+            builder.CloseElement();
+            
+            builder.CloseElement();
+            builder.CloseElement();
+            
+            // Status
+            builder.OpenElement(19, "div");
+            builder.AddAttribute(20, "class", "ml-4 text-sm");
+            
+            builder.OpenElement(21, "span");
+            builder.AddAttribute(22, "class", DisplayService.GetStatusCssClass(AuthorizationStateService.IsReady));
+            builder.AddContent(23, DisplayService.GetStatusText(AuthorizationStateService.IsReady));
+            builder.CloseElement();
+            
+            builder.CloseElement();
+        };
+    }
+
+    private RenderFragment GetLoginContent()
+    {
+        return builder =>
+        {
+            builder.OpenElement(0, "a");
+            builder.AddAttribute(1, "href", "/login");
+            builder.AddAttribute(2, "class", "text-gray-600 hover:text-gray-900");
+            builder.AddContent(3, "Login");
+            builder.CloseElement();
+        };
     }
 
     private async Task LogoutUser()

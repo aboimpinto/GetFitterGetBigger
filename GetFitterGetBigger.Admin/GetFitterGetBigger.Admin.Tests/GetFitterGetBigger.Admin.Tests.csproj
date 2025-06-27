@@ -11,6 +11,10 @@
     <CoverletOutputFormat>cobertura</CoverletOutputFormat>
     <CoverletOutput>./TestResults/</CoverletOutput>
     <ExcludeByFile>**/*.g.cs</ExcludeByFile>
+    <!-- Exclude auto-generated code -->
+    <ExcludeByAttribute>CompilerGenerated,GeneratedCode</ExcludeByAttribute>
+    <!-- Exclude Blazor components which are hard to unit test -->
+    <Exclude>[GetFitterGetBigger.Admin]*.Components.*</Exclude>
   </PropertyGroup>
 
   <ItemGroup>

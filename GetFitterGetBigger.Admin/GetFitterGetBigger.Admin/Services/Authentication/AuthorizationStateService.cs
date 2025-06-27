@@ -20,27 +20,35 @@ namespace GetFitterGetBigger.Admin.Services.Authentication
 
         public async Task InitializeAsync()
         {
-            var user = await _authService.GetCurrentUserAsync();
-            if (user != null)
-            {
-                var request = new ClaimRequest { Email = user.Email };
-                try
-                {
-                    var response = await _authService.GetClaimsAsync(request);
-                    if (response?.Claims != null)
-                    {
-                        _userClaims = response.Claims;
-                    }
-                }
-                catch (Exception)
-                {
-                    // Handle error, maybe log it
-                    _userClaims = new List<Models.Authentication.Claim>();
-                }
-            }
-            
+            await LoadUserClaimsAsync();
             IsReady = true;
             NotifyStateChanged();
+        }
+
+        private async Task LoadUserClaimsAsync()
+        {
+            var user = await _authService.GetCurrentUserAsync();
+            if (user == null)
+            {
+                return;
+            }
+
+            _userClaims = await FetchUserClaimsAsync(user.Email);
+        }
+
+        private async Task<List<Models.Authentication.Claim>> FetchUserClaimsAsync(string email)
+        {
+            try
+            {
+                var request = new ClaimRequest { Email = email };
+                var response = await _authService.GetClaimsAsync(request);
+                return response?.Claims ?? new List<Models.Authentication.Claim>();
+            }
+            catch (Exception)
+            {
+                // Handle error, maybe log it
+                return new List<Models.Authentication.Claim>();
+            }
         }
 
         private void NotifyStateChanged() => OnChange?.Invoke();

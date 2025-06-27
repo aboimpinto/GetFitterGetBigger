@@ -1,11 +1,11 @@
 using GetFitterGetBigger.Admin.Components;
 using GetFitterGetBigger.Admin.Services.Authentication;
+using GetFitterGetBigger.Admin.Services.Configuration;
+using GetFitterGetBigger.Admin.Services.UI;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.Google;
-using Microsoft.AspNetCore.Authentication.Facebook;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Components.Authorization;
-using System.Security.Claims;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -16,59 +16,18 @@ builder.Services.AddRazorComponents()
 // Add HTTP context accessor
 builder.Services.AddHttpContextAccessor();
 
+// Add authentication configuration service
+builder.Services.AddSingleton<IAuthenticationConfigurationService, AuthenticationConfigurationService>();
+
 // Add authentication
-builder.Services.AddAuthentication(options =>
+var authBuilder = builder.Services.AddAuthentication(options =>
 {
     options.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
     options.DefaultChallengeScheme = GoogleDefaults.AuthenticationScheme;
-})
-.AddCookie(options =>
-{
-    options.LoginPath = "/login";
-    options.LogoutPath = "/api/auth/logout";
-})
-.AddGoogle(options =>
-{
-    options.ClientId = builder.Configuration["Authentication:Google:ClientId"] ?? "YOUR_GOOGLE_CLIENT_ID";
-    options.ClientSecret = builder.Configuration["Authentication:Google:ClientSecret"] ?? "YOUR_GOOGLE_CLIENT_SECRET";
-    options.SaveTokens = true;
-    options.Scope.Add("profile");
-    options.Scope.Add("email");
-    
-    // Map the Google profile picture to the picture claim
-    options.Events.OnCreatingTicket = context =>
-    {
-        // Extract the picture URL from the user info
-        if (context.User.TryGetProperty("picture", out var picture))
-        {
-            context.Identity?.AddClaim(new System.Security.Claims.Claim("picture", picture.ToString()));
-        }
-        
-        return Task.CompletedTask;
-    };
-})
-.AddFacebook(options =>
-{
-    options.AppId = builder.Configuration["Authentication:Facebook:AppId"] ?? "YOUR_FACEBOOK_APP_ID";
-    options.AppSecret = builder.Configuration["Authentication:Facebook:AppSecret"] ?? "YOUR_FACEBOOK_APP_SECRET";
-    options.SaveTokens = true;
-    options.Scope.Add("email");
-    options.Scope.Add("public_profile");
-    
-    // Map the Facebook profile picture to the picture claim
-    options.Events.OnCreatingTicket = context =>
-    {
-        // Facebook profile picture URL format
-        var id = context.Principal?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        if (!string.IsNullOrEmpty(id))
-        {
-            var pictureUrl = $"https://graph.facebook.com/{id}/picture?type=normal";
-            context.Identity?.AddClaim(new System.Security.Claims.Claim("picture", pictureUrl));
-        }
-        
-        return Task.CompletedTask;
-    };
 });
+
+var authConfigService = new AuthenticationConfigurationService();
+authConfigService.ConfigureAuthenticationOptions(authBuilder, builder.Configuration);
 
 // Add authorization
 builder.Services.AddAuthorization(options =>
@@ -93,6 +52,9 @@ builder.Services.AddHttpClient<IAuthService, AuthService>(client =>
 
 // Add authorization state service
 builder.Services.AddScoped<IAuthorizationStateService, AuthorizationStateService>();
+
+// Add UI services
+builder.Services.AddScoped<IUserProfileDisplayService, UserProfileDisplayService>();
 
 // Add MemoryCache for caching reference data
 builder.Services.AddMemoryCache();

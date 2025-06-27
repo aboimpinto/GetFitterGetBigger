@@ -22,15 +22,15 @@ namespace GetFitterGetBigger.Admin.Tests.Builders
             return this;
         }
 
-        public AuthUserBuilder WithDisplayName(string displayName)
+        public AuthUserBuilder WithDisplayName(string? displayName)
         {
-            _displayName = displayName;
+            _displayName = displayName ?? string.Empty;
             return this;
         }
 
-        public AuthUserBuilder WithProfilePictureUrl(string url)
+        public AuthUserBuilder WithProfilePictureUrl(string? url)
         {
-            _profilePictureUrl = url;
+            _profilePictureUrl = url ?? string.Empty;
             return this;
         }
 
