@@ -154,19 +154,14 @@
                     </div>
                     
                     <div class="flex items-center space-x-2">
-                        <button type="button" @onclick="AddMuscleGroup" @onclick:preventDefault="true"
-                                class="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700">
+                        <button type="button" @onclick="AddMuscleGroup" 
+                                class="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors">
+                            <svg class="w-4 h-4 inline-block mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                            </svg>
                             Add Muscle Group
                         </button>
-                        <button type="button" @onclick="@(() => AddMuscleGroup())" @onclick:preventDefault="true"
-                                class="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700">
-                            Add (Lambda)
-                        </button>
-                        <button type="button" @onclick="TestClick" @onclick:preventDefault="true"
-                                class="px-3 py-1 bg-purple-600 text-white rounded hover:bg-purple-700">
-                            Test Click
-                        </button>
-                        <span class="text-sm text-gray-500">Current: @muscleGroupAssignments.Count</span>
+                        <span class="text-sm text-gray-500">Total: @muscleGroupAssignments.Count</span>
                     </div>
                 </div>
 
@@ -283,7 +278,6 @@
         get => _totalMuscleGroupsNeeded;
         set
         {
-            Console.WriteLine($"Dropdown changed to: {value}");
             _totalMuscleGroupsNeeded = value;
             AdjustMuscleGroups();
         }
@@ -356,24 +350,10 @@
         }
     }
 
-    private void TestClick()
-    {
-        Console.WriteLine("[ExerciseForm] TestClick method called!");
-    }
-
     private void AddMuscleGroup()
     {
-        Console.WriteLine($"[ExerciseForm] AddMuscleGroup called. Current count: {muscleGroupAssignments.Count}");
-        try
-        {
-            muscleGroupAssignments.Add(new MuscleGroupRoleAssignmentDto());
-            Console.WriteLine($"[ExerciseForm] After add. New count: {muscleGroupAssignments.Count}");
-            InvokeAsync(StateHasChanged);
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"[ExerciseForm] Error in AddMuscleGroup: {ex.Message}");
-        }
+        muscleGroupAssignments.Add(new MuscleGroupRoleAssignmentDto());
+        StateHasChanged();
     }
 
     private void RemoveMuscleGroup(MuscleGroupRoleAssignmentDto assignment)
@@ -405,7 +385,6 @@
     {
         int currentCount = muscleGroupAssignments.Count;
         int targetCount = _totalMuscleGroupsNeeded;
-        Console.WriteLine($"AdjustMuscleGroups: current={currentCount}, target={targetCount}");
 
         if (targetCount > currentCount)
         {
@@ -413,7 +392,6 @@
             for (int i = currentCount; i < targetCount; i++)
             {
                 muscleGroupAssignments.Add(new MuscleGroupRoleAssignmentDto());
-                Console.WriteLine($"Added muscle group. New count: {muscleGroupAssignments.Count}");
             }
         }
         else if (targetCount < currentCount)
@@ -422,7 +400,6 @@
             while (muscleGroupAssignments.Count > targetCount && muscleGroupAssignments.Count > 0)
             {
                 muscleGroupAssignments.RemoveAt(muscleGroupAssignments.Count - 1);
-                Console.WriteLine($"Removed muscle group. New count: {muscleGroupAssignments.Count}");
             }
         }
 
