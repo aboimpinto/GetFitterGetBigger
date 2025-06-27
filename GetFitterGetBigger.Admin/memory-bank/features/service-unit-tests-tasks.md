@@ -9,13 +9,13 @@
 - **Task 1.4:** Write tests for test infrastructure components `[Implemented: 2da79a6a]`
 
 ### Category 2: AuthService Tests
-- **Task 2.1:** Create AuthServiceTests class with test setup `[ReadyToDevelop]`
-- **Task 2.2:** Write tests for GetCurrentUserAsync method scenarios `[ReadyToDevelop]`
-- **Task 2.3:** Write tests for IsAuthenticatedAsync method `[ReadyToDevelop]`
-- **Task 2.4:** Write tests for LogoutAsync method `[ReadyToDevelop]`
-- **Task 2.5:** Write tests for GetAuthenticationStateAsync method `[ReadyToDevelop]`
-- **Task 2.6:** Write tests for GetClaimsAsync method with various responses `[ReadyToDevelop]`
-- **Task 2.7:** Write tests for error handling scenarios in AuthService `[ReadyToDevelop]`
+- **Task 2.1:** Create AuthServiceTests class with test setup `[Implemented: a1b53791]`
+- **Task 2.2:** Write tests for GetCurrentUserAsync method scenarios `[Implemented: a1b53791]`
+- **Task 2.3:** Write tests for IsAuthenticatedAsync method `[Implemented: a1b53791]`
+- **Task 2.4:** Write tests for LogoutAsync method `[Implemented: a1b53791]`
+- **Task 2.5:** Write tests for GetAuthenticationStateAsync method `[Implemented: a1b53791]`
+- **Task 2.6:** Write tests for GetClaimsAsync method with various responses `[Implemented: a1b53791]`
+- **Task 2.7:** Write tests for error handling scenarios in AuthService `[Implemented: a1b53791]`
 
 ### Category 3: ReferenceDataService Tests
 - **Task 3.1:** Create ReferenceDataServiceTests class with test setup `[ReadyToDevelop]`
