@@ -1,26 +1,26 @@
 # Task List: Exercise CoachNotes and TypeOfExercise
 
-## Phase 1: Create Reference Table Infrastructure
+## Phase 1: Create Reference Table Infrastructure [COMPLETED - ac470a0e]
 
 ### 1.1 Create Strongly-Typed IDs
-- [ ] Create `CoachNoteId` in `SpecializedIds` namespace (format: "coachnote-{guid}")
-- [ ] Create unit tests for `CoachNoteId`
-- [ ] Create `ExerciseTypeId` in `SpecializedIds` namespace (format: "exercisetype-{guid}")
-- [ ] Create unit tests for `ExerciseTypeId`
-- [ ] Implement standard methods: `New()`, `From()`, `TryParse()`, `ToString()`
-- [ ] Add implicit conversion to `Guid` for EF Core compatibility
+- [x] Create `CoachNoteId` in `SpecializedIds` namespace (format: "coachnote-{guid}")
+- [x] Create unit tests for `CoachNoteId`
+- [x] Create `ExerciseTypeId` in `SpecializedIds` namespace (format: "exercisetype-{guid}")
+- [x] Create unit tests for `ExerciseTypeId`
+- [x] Implement standard methods: `New()`, `From()`, `TryParse()`, `ToString()`
+- [x] Add implicit conversion to `Guid` for EF Core compatibility
 
 ### 1.2 Create ExerciseType Reference Table
-- [ ] Create `ExerciseType.cs` entity extending `ReferenceDataBase`
-- [ ] Use `ExerciseTypeId` as the ID type
-- [ ] Add ExerciseType values: Warmup, Workout, Cooldown, Rest
-- [ ] Create `IExerciseTypeRepository` interface
-- [ ] Implement `ExerciseTypeRepository`
-- [ ] Create unit tests for `ExerciseTypeRepository`
-- [ ] Add ExerciseType DbSet to `FitnessDbContext`
-- [ ] Configure ExerciseType in `OnModelCreating`
-- [ ] Create migration for ExerciseType table
-- [ ] Add seed data for ExerciseType values
+- [x] Create `ExerciseType.cs` entity extending `ReferenceDataBase`
+- [x] Use `ExerciseTypeId` as the ID type
+- [x] Add ExerciseType values: Warmup, Workout, Cooldown, Rest
+- [x] Create `IExerciseTypeRepository` interface
+- [x] Implement `ExerciseTypeRepository`
+- [x] Create unit tests for `ExerciseTypeRepository`
+- [x] Add ExerciseType DbSet to `FitnessDbContext`
+- [x] Configure ExerciseType in `OnModelCreating`
+- [x] Create migration for ExerciseType table
+- [x] Add seed data for ExerciseType values
 
 ## Phase 2: Create CoachNote Entity
 
