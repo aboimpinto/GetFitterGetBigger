@@ -68,6 +68,9 @@ builder.Services.AddHttpClient<GetFitterGetBigger.Admin.Services.IExerciseServic
 // Add ExerciseStateService
 builder.Services.AddScoped<GetFitterGetBigger.Admin.Services.IExerciseStateService, GetFitterGetBigger.Admin.Services.ExerciseStateService>();
 
+// Add NavigationService
+builder.Services.AddScoped<GetFitterGetBigger.Admin.Services.INavigationService, GetFitterGetBigger.Admin.Services.NavigationService>();
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

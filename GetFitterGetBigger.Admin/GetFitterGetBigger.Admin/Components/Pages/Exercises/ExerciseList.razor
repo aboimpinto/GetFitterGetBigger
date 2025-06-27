@@ -16,9 +16,9 @@
             <h2 class="text-2xl font-semibold text-gray-800">Exercises</h2>
             <p class="text-gray-600">Manage exercise library and configurations</p>
         </div>
-        <a href="/exercises/new" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors inline-block">
+        <button @onclick="NavigateToCreate" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors">
             New Exercise
-        </a>
+        </button>
     </div>
 
     @if (StateService.ErrorMessage != null)
@@ -90,7 +90,7 @@
                     {
                         <tr class="hover:bg-gray-50">
                             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                                <a href="/exercises/@exercise.Id/edit" class="hover:text-blue-600">@exercise.Name</a>
+                                <a @onclick="() => NavigateToEdit(exercise.Id)" @onclick:preventDefault="true" href="#" class="hover:text-blue-600 cursor-pointer">@exercise.Name</a>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm">
                                 @if (exercise.IsActive)
@@ -124,8 +124,8 @@
                                 }
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                <a href="/exercises/@exercise.Id" class="text-blue-600 hover:text-blue-900 mr-3">View</a>
-                                <a href="/exercises/@exercise.Id/edit" class="text-indigo-600 hover:text-indigo-900">Edit</a>
+                                <a @onclick="() => NavigateToView(exercise.Id)" @onclick:preventDefault="true" href="#" class="text-blue-600 hover:text-blue-900 mr-3 cursor-pointer">View</a>
+                                <a @onclick="() => NavigateToEdit(exercise.Id)" @onclick:preventDefault="true" href="#" class="text-indigo-600 hover:text-indigo-900 cursor-pointer">Edit</a>
                             </td>
                         </tr>
                     }
@@ -178,7 +178,22 @@
     protected override async Task OnInitializedAsync()
     {
         StateService.OnChange += StateHasChanged;
-        await StateService.InitializeAsync();
+        
+        // Check if we have a stored page to return to
+        if (StateService.HasStoredPage)
+        {
+            await StateService.LoadExercisesWithStoredPageAsync();
+            
+            // Restore filter UI values from current filter
+            filterName = StateService.CurrentFilter.Name ?? "";
+            filterDifficulty = StateService.CurrentFilter.DifficultyId ?? "";
+            filterMuscleGroup = StateService.CurrentFilter.MuscleGroupIds?.FirstOrDefault() ?? "";
+        }
+        else
+        {
+            // Clear state when navigating from elsewhere (not from exercise forms)
+            await StateService.InitializeAsync();
+        }
     }
 
     private async Task ApplyFilter()
@@ -230,6 +245,7 @@
     {
         try
         {
+            StateService.StoreReturnPage();
             Navigation.NavigateTo("/exercises/new", forceLoad: false);
         }
         catch (Exception ex)
@@ -240,11 +256,13 @@
 
     private void NavigateToView(string id)
     {
+        StateService.StoreReturnPage();
         Navigation.NavigateTo($"/exercises/{id}");
     }
 
     private void NavigateToEdit(string id)
     {
+        StateService.StoreReturnPage();
         Navigation.NavigateTo($"/exercises/{id}/edit");
     }
 

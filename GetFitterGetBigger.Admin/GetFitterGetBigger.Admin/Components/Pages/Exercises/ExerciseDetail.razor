@@ -240,6 +240,8 @@
 
     private void NavigateToEdit()
     {
+        // Note: Page state is already stored when navigating from list to detail
+        // No need to store again here since we want to preserve the original list page
         Navigation.NavigateTo($"/exercises/{Id}/edit");
     }
 

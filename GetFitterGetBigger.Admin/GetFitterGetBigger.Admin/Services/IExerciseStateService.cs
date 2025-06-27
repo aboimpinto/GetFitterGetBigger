@@ -35,5 +35,9 @@ namespace GetFitterGetBigger.Admin.Services
         Task RefreshCurrentPageAsync();
         void ClearSelectedExercise();
         void ClearError();
+        void StoreReturnPage();
+        void ClearStoredPage();
+        bool HasStoredPage { get; }
+        Task LoadExercisesWithStoredPageAsync();
     }
 }

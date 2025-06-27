@@ -61,11 +61,16 @@
 - **Task 7.6:** Add confirmation dialog for delete operations `[Implemented: 9802e42d]`
 - **Task 7.7:** Write tests for loading and error states `[ReadyToDevelop]`
 
+### Page State Management
+- **Task 8.1:** Implement page state persistence when navigating to/from exercise forms `[Implemented: current]`
+- **Task 8.2:** Return to same list page after save/cancel from add/edit forms `[Implemented: current]`
+- **Task 8.3:** Reset to page 1 when navigating away and back to exercises `[Implemented: current]`
+
 ### Integration Testing
-- **Task 8.1:** Write end-to-end tests for create exercise flow `[ReadyToDevelop]`
-- **Task 8.2:** Write end-to-end tests for edit exercise flow `[ReadyToDevelop]`
-- **Task 8.3:** Write end-to-end tests for delete exercise flow `[ReadyToDevelop]`
-- **Task 8.4:** Write end-to-end tests for list filtering and pagination `[ReadyToDevelop]`
+- **Task 9.1:** Write end-to-end tests for create exercise flow `[ReadyToDevelop]`
+- **Task 9.2:** Write end-to-end tests for edit exercise flow `[ReadyToDevelop]`
+- **Task 9.3:** Write end-to-end tests for delete exercise flow `[ReadyToDevelop]`
+- **Task 9.4:** Write end-to-end tests for list filtering and pagination `[ReadyToDevelop]`
 
 ## Notes
 - Each implementation task must be immediately followed by its test task

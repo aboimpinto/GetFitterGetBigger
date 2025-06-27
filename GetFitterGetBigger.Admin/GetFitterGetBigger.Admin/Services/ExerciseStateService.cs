@@ -27,6 +27,10 @@ namespace GetFitterGetBigger.Admin.Services
         public IEnumerable<ReferenceDataDto> BodyParts { get; private set; } = Enumerable.Empty<ReferenceDataDto>();
         public IEnumerable<ReferenceDataDto> MovementPatterns { get; private set; } = Enumerable.Empty<ReferenceDataDto>();
         public bool IsLoadingReferenceData { get; private set; }
+        
+        // Page state management
+        private ExerciseFilterDto? _storedFilter;
+        public bool HasStoredPage => _storedFilter != null;
 
         public ExerciseStateService(IExerciseService exerciseService, IReferenceDataService referenceDataService)
         {
@@ -223,5 +227,39 @@ namespace GetFitterGetBigger.Admin.Services
         }
 
         private void NotifyStateChanged() => OnChange?.Invoke();
+        
+        public void StoreReturnPage()
+        {
+            // Create a deep copy of the current filter to preserve state
+            _storedFilter = new ExerciseFilterDto
+            {
+                Name = CurrentFilter.Name,
+                DifficultyId = CurrentFilter.DifficultyId,
+                MuscleGroupIds = CurrentFilter.MuscleGroupIds?.ToList(),
+                EquipmentIds = CurrentFilter.EquipmentIds?.ToList(),
+                IsActive = CurrentFilter.IsActive,
+                Page = CurrentFilter.Page,
+                PageSize = CurrentFilter.PageSize
+            };
+        }
+        
+        public void ClearStoredPage()
+        {
+            _storedFilter = null;
+        }
+        
+        public async Task LoadExercisesWithStoredPageAsync()
+        {
+            if (_storedFilter != null)
+            {
+                var filter = _storedFilter;
+                _storedFilter = null; // Clear after use
+                await LoadExercisesAsync(filter);
+            }
+            else
+            {
+                await LoadExercisesAsync();
+            }
+        }
     }
 }
