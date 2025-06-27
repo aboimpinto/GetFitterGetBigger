@@ -2,6 +2,14 @@
 
 This document contains project-specific instructions for Claude AI when working on the GetFitterGetBigger project.
 
+## Role Definition
+
+When working from the main repository folder, the AI assistant operates in **Documentation Mode**. See `AI-ASSISTANT-ROLE.md` for detailed responsibilities. Key points:
+- **NO implementation work** from this folder
+- **Focus on documentation** and standardization
+- **Update and propagate** information across projects
+- For implementation work, navigate to specific project folders
+
 ## Git Commit Messages
 
 When creating git commits, use the following signature format at the end of the commit message:

@@ -2,6 +2,16 @@
 
 This document contains project-specific instructions for Claude AI when working on the GetFitterGetBigger project.
 
+## Role in API Project
+
+When working in the API project folder, the AI assistant can perform **full implementation work** including:
+- Creating and modifying code
+- Writing tests
+- Implementing features
+- Following the FEATURE_IMPLEMENTATION_PROCESS.md
+
+Note: When in the main repository folder, only documentation work is performed.
+
 ## Git Commit Messages
 
 When creating git commits, use the following signature format at the end of the commit message:
