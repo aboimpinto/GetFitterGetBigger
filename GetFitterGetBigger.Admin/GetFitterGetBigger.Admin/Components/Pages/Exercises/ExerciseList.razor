@@ -15,11 +15,8 @@
             <h2 class="text-2xl font-semibold text-gray-800">Exercises</h2>
             <p class="text-gray-600">Manage exercise library and configurations</p>
         </div>
-        <button @onclick="NavigateToCreate" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors">
+        <a href="/exercises/new" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors inline-block">
             New Exercise
-        </button>
-        <a href="/exercises/new" class="ml-2 bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-lg transition-colors inline-block">
-            New Exercise (Link)
         </a>
     </div>
 
@@ -89,8 +86,10 @@
                 <tbody class="bg-white divide-y divide-gray-200">
                     @foreach (var exercise in StateService.CurrentPage.Items)
                     {
-                        <tr class="hover:bg-gray-50 cursor-pointer" @onclick="() => NavigateToEdit(exercise.Id)">
-                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">@exercise.Name</td>
+                        <tr class="hover:bg-gray-50">
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                <a href="/exercises/@exercise.Id/edit" class="hover:text-blue-600">@exercise.Name</a>
+                            </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">@exercise.DifficultyName</td>
                             <td class="px-6 py-4 text-sm text-gray-500">
                                 @string.Join(", ", exercise.PrimaryMuscleGroups)
@@ -109,10 +108,8 @@
                                 }
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                <button @onclick:stopPropagation="true" @onclick="() => NavigateToView(exercise.Id)" 
-                                        class="text-blue-600 hover:text-blue-900 mr-3">View</button>
-                                <button @onclick:stopPropagation="true" @onclick="() => NavigateToEdit(exercise.Id)" 
-                                        class="text-indigo-600 hover:text-indigo-900">Edit</button>
+                                <a href="/exercises/@exercise.Id" class="text-blue-600 hover:text-blue-900 mr-3">View</a>
+                                <a href="/exercises/@exercise.Id/edit" class="text-indigo-600 hover:text-indigo-900">Edit</a>
                             </td>
                         </tr>
                     }
