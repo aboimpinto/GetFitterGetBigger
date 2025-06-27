@@ -39,7 +39,7 @@ namespace GetFitterGetBigger.Admin.Services
             return result ?? new ExercisePagedResultDto();
         }
 
-        public async Task<ExerciseDto?> GetExerciseByIdAsync(Guid id)
+        public async Task<ExerciseDto?> GetExerciseByIdAsync(string id)
         {
             var cacheKey = $"exercise_{id}";
             
@@ -96,7 +96,7 @@ namespace GetFitterGetBigger.Admin.Services
             }
         }
 
-        public async Task UpdateExerciseAsync(Guid id, ExerciseUpdateDto exercise)
+        public async Task UpdateExerciseAsync(string id, ExerciseUpdateDto exercise)
         {
             var requestUrl = $"{_apiBaseUrl}/api/exercises/{id}";
             var content = new StringContent(
@@ -111,7 +111,7 @@ namespace GetFitterGetBigger.Admin.Services
             _cache.Remove($"exercise_{id}");
         }
 
-        public async Task DeleteExerciseAsync(Guid id)
+        public async Task DeleteExerciseAsync(string id)
         {
             var requestUrl = $"{_apiBaseUrl}/api/exercises/{id}";
             var response = await _httpClient.DeleteAsync(requestUrl);
@@ -131,8 +131,8 @@ namespace GetFitterGetBigger.Admin.Services
             if (!string.IsNullOrWhiteSpace(filter.Name))
                 query["name"] = filter.Name;
             
-            if (filter.DifficultyId.HasValue)
-                query["difficultyId"] = filter.DifficultyId.Value.ToString();
+            if (!string.IsNullOrWhiteSpace(filter.DifficultyId))
+                query["difficultyId"] = filter.DifficultyId;
             
             if (filter.IsActive.HasValue)
                 query["isActive"] = filter.IsActive.Value.ToString();
@@ -141,7 +141,7 @@ namespace GetFitterGetBigger.Admin.Services
             {
                 foreach (var id in filter.MuscleGroupIds)
                 {
-                    query.Add("muscleGroupIds", id.ToString());
+                    query.Add("muscleGroupIds", id);
                 }
             }
             
@@ -149,7 +149,7 @@ namespace GetFitterGetBigger.Admin.Services
             {
                 foreach (var id in filter.EquipmentIds)
                 {
-                    query.Add("equipmentIds", id.ToString());
+                    query.Add("equipmentIds", id);
                 }
             }
             

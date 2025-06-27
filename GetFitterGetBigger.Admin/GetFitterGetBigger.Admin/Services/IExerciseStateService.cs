@@ -28,10 +28,10 @@ namespace GetFitterGetBigger.Admin.Services
         // Methods
         Task InitializeAsync();
         Task LoadExercisesAsync(ExerciseFilterDto? filter = null);
-        Task LoadExerciseByIdAsync(Guid id);
+        Task LoadExerciseByIdAsync(string id);
         Task CreateExerciseAsync(ExerciseCreateDto exercise);
-        Task UpdateExerciseAsync(Guid id, ExerciseUpdateDto exercise);
-        Task DeleteExerciseAsync(Guid id);
+        Task UpdateExerciseAsync(string id, ExerciseUpdateDto exercise);
+        Task DeleteExerciseAsync(string id);
         Task RefreshCurrentPageAsync();
         void ClearSelectedExercise();
         void ClearError();

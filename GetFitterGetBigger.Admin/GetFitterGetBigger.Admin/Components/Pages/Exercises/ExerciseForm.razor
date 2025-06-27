@@ -1,5 +1,5 @@
 @page "/exercises/new"
-@page "/exercises/{Id:guid}/edit"
+@page "/exercises/{Id}/edit"
 @using GetFitterGetBigger.Admin.Models.Dtos
 @using GetFitterGetBigger.Admin.Services
 @using Microsoft.AspNetCore.Authorization
@@ -136,7 +136,7 @@
                         {
                             var index = i; // Capture for closure
                             <div class="flex items-center space-x-2 bg-gray-50 p-2 rounded">
-                                <select value="@(muscleGroupAssignments[index].MuscleGroupId == Guid.Empty ? "" : muscleGroupAssignments[index].MuscleGroupId.ToString())"
+                                <select value="@muscleGroupAssignments[index].MuscleGroupId"
                                         @onchange="@((ChangeEventArgs e) => SetMuscleGroupId(index, e.Value?.ToString()))"
                                         class="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
                                     <option value="">Select muscle group</option>
@@ -279,31 +279,23 @@
 </div>
 
 @code {
-    [Parameter] public Guid? Id { get; set; }
+    [Parameter] public string? Id { get; set; }
 
-    private bool IsEditMode => Id.HasValue;
+    private bool IsEditMode => !string.IsNullOrEmpty(Id);
     private bool isLoading = true;
     private bool isSubmitting = false;
     private int muscleGroupsToAdd = 1;
     private int _totalMuscleGroupsNeeded = 1;
     
-    private string difficultyIdString = "";
     private string _difficultyIdString
     {
-        get => difficultyIdString;
+        get => model.DifficultyId;
         set
         {
-            difficultyIdString = value;
+            model.DifficultyId = value ?? string.Empty;
             Console.WriteLine($"[ExerciseForm] Difficulty dropdown changed to: '{value}'");
-            if (!string.IsNullOrEmpty(value) && Guid.TryParse(value, out var guidValue))
-            {
-                model.DifficultyId = guidValue;
-                Console.WriteLine($"[ExerciseForm] Set model.DifficultyId to {guidValue}");
-            }
-            else
-            {
-                model.DifficultyId = Guid.Empty;
-            }
+            Console.WriteLine($"[ExerciseForm] Set model.DifficultyId to '{value}'");
+            StateHasChanged();
         }
     }
 
@@ -322,7 +314,7 @@
         Name = string.Empty,
         Description = string.Empty,
         Instructions = string.Empty,
-        DifficultyId = Guid.Empty,
+        DifficultyId = string.Empty,
         IsUnilateral = false,
         ImageUrl = null,
         VideoUrl = null
@@ -376,7 +368,7 @@
 
     private async Task LoadExerciseForEdit()
     {
-        await StateService.LoadExerciseByIdAsync(Id!.Value);
+        await StateService.LoadExerciseByIdAsync(Id!);
         
         if (StateService.SelectedExercise != null)
         {
@@ -388,7 +380,7 @@
                 Name = exercise.Name,
                 Description = exercise.Description,
                 Instructions = exercise.Instructions,
-                DifficultyId = exercise.Difficulty?.Id != null ? Guid.Parse(exercise.Difficulty.Id) : Guid.Empty,
+                DifficultyId = exercise.Difficulty?.Id ?? string.Empty,
                 IsUnilateral = exercise.IsUnilateral,
                 ImageUrl = exercise.ImageUrl,
                 VideoUrl = exercise.VideoUrl
@@ -397,7 +389,7 @@
             // Map muscle groups
             muscleGroupAssignments = exercise.MuscleGroups.Select(mg => new MuscleGroupRoleAssignmentDto
             {
-                MuscleGroupId = Guid.Parse(mg.Id.ToString()),
+                MuscleGroupId = mg.Id,
                 Role = mg.Role
             }).ToList();
 
@@ -423,16 +415,8 @@
         Console.WriteLine($"[ExerciseForm] SetMuscleGroupId called - index: {index}, value: '{value}'");
         if (index >= 0 && index < muscleGroupAssignments.Count)
         {
-            if (!string.IsNullOrEmpty(value) && Guid.TryParse(value, out var guidValue))
-            {
-                muscleGroupAssignments[index].MuscleGroupId = guidValue;
-                Console.WriteLine($"[ExerciseForm] Set muscle group {index} to {guidValue}");
-            }
-            else
-            {
-                muscleGroupAssignments[index].MuscleGroupId = Guid.Empty;
-                Console.WriteLine($"[ExerciseForm] Failed to parse muscle group ID: '{value}'");
-            }
+            muscleGroupAssignments[index].MuscleGroupId = value ?? string.Empty;
+            Console.WriteLine($"[ExerciseForm] Set muscle group {index} to '{value}'");
             StateHasChanged();
         }
     }
@@ -449,16 +433,8 @@
     private void SetDifficultyId(string? value)
     {
         Console.WriteLine($"[ExerciseForm] SetDifficultyId called with value: '{value}'");
-        if (!string.IsNullOrEmpty(value) && Guid.TryParse(value, out var guidValue))
-        {
-            model.DifficultyId = guidValue;
-            Console.WriteLine($"[ExerciseForm] Set difficulty to {guidValue}");
-        }
-        else
-        {
-            model.DifficultyId = Guid.Empty;
-            Console.WriteLine($"[ExerciseForm] Failed to parse difficulty ID: '{value}'");
-        }
+        model.DifficultyId = value ?? string.Empty;
+        Console.WriteLine($"[ExerciseForm] Set difficulty to '{value}'");
         StateHasChanged();
     }
 
@@ -566,12 +542,12 @@
         else if (model.Instructions.Length > 5000)
             validationErrors["Instructions"] = "Instructions must be 5000 characters or less";
 
-        if (model.DifficultyId == Guid.Empty)
+        if (string.IsNullOrWhiteSpace(model.DifficultyId))
             validationErrors["Difficulty"] = "Difficulty level is required";
 
         // Validate muscle groups
         var validMuscleGroups = muscleGroupAssignments
-            .Where(mg => mg.MuscleGroupId != Guid.Empty && !string.IsNullOrWhiteSpace(mg.Role))
+            .Where(mg => !string.IsNullOrWhiteSpace(mg.MuscleGroupId) && !string.IsNullOrWhiteSpace(mg.Role))
             .ToList();
         
         if (!validMuscleGroups.Any())
@@ -601,12 +577,12 @@
         {
             // Prepare the model
             model.MuscleGroupsWithRoles = muscleGroupAssignments
-                .Where(mg => mg.MuscleGroupId != Guid.Empty && !string.IsNullOrWhiteSpace(mg.Role))
+                .Where(mg => !string.IsNullOrWhiteSpace(mg.MuscleGroupId) && !string.IsNullOrWhiteSpace(mg.Role))
                 .ToList();
             
-            model.EquipmentIds = selectedEquipmentIds.Select(Guid.Parse).ToList();
-            model.BodyPartIds = selectedBodyPartIds.Select(Guid.Parse).ToList();
-            model.MovementPatternIds = selectedMovementPatternIds.Select(Guid.Parse).ToList();
+            model.EquipmentIds = selectedEquipmentIds.ToList();
+            model.BodyPartIds = selectedBodyPartIds.ToList();
+            model.MovementPatternIds = selectedMovementPatternIds.ToList();
 
             if (IsEditMode)
             {
@@ -633,7 +609,7 @@
                 Console.WriteLine($"[ExerciseForm] UPDATE JSON to POST to /api/exercises/{Id}:");
                 Console.WriteLine(updateJson);
                 
-                await StateService.UpdateExerciseAsync(Id!.Value, updateDto);
+                await StateService.UpdateExerciseAsync(Id!, updateDto);
             }
             else
             {

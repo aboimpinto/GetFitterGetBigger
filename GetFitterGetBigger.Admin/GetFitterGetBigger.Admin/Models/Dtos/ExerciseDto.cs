@@ -2,7 +2,7 @@ namespace GetFitterGetBigger.Admin.Models.Dtos
 {
     public class ExerciseDto
     {
-        public Guid Id { get; set; }
+        public string Id { get; set; } = string.Empty;
         public string Name { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
         public string Instructions { get; set; } = string.Empty;
@@ -18,7 +18,7 @@ namespace GetFitterGetBigger.Admin.Models.Dtos
 
     public class MuscleGroupWithRoleDto
     {
-        public Guid Id { get; set; }
+        public string Id { get; set; } = string.Empty;
         public string Name { get; set; } = string.Empty;
         public string Role { get; set; } = string.Empty;
     }
@@ -28,14 +28,14 @@ namespace GetFitterGetBigger.Admin.Models.Dtos
         public string Name { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
         public string Instructions { get; set; } = string.Empty;
-        public Guid DifficultyId { get; set; }
+        public string DifficultyId { get; set; } = string.Empty;
         public bool IsUnilateral { get; set; }
         public string? ImageUrl { get; set; }
         public string? VideoUrl { get; set; }
         public List<MuscleGroupRoleAssignmentDto> MuscleGroupsWithRoles { get; set; } = new();
-        public List<Guid> EquipmentIds { get; set; } = new();
-        public List<Guid> BodyPartIds { get; set; } = new();
-        public List<Guid> MovementPatternIds { get; set; } = new();
+        public List<string> EquipmentIds { get; set; } = new();
+        public List<string> BodyPartIds { get; set; } = new();
+        public List<string> MovementPatternIds { get; set; } = new();
     }
 
     public class ExerciseUpdateDto : ExerciseCreateDto
@@ -44,13 +44,13 @@ namespace GetFitterGetBigger.Admin.Models.Dtos
 
     public class MuscleGroupRoleAssignmentDto
     {
-        public Guid MuscleGroupId { get; set; }
+        public string MuscleGroupId { get; set; } = string.Empty;
         public string Role { get; set; } = string.Empty;
     }
 
     public class ExerciseListDto
     {
-        public Guid Id { get; set; }
+        public string Id { get; set; } = string.Empty;
         public string Name { get; set; } = string.Empty;
         public string DifficultyName { get; set; } = string.Empty;
         public bool IsUnilateral { get; set; }
@@ -70,9 +70,9 @@ namespace GetFitterGetBigger.Admin.Models.Dtos
     public class ExerciseFilterDto
     {
         public string? Name { get; set; }
-        public Guid? DifficultyId { get; set; }
-        public List<Guid>? MuscleGroupIds { get; set; }
-        public List<Guid>? EquipmentIds { get; set; }
+        public string? DifficultyId { get; set; }
+        public List<string>? MuscleGroupIds { get; set; }
+        public List<string>? EquipmentIds { get; set; }
         public bool? IsActive { get; set; }
         public int Page { get; set; } = 1;
         public int PageSize { get; set; } = 10;

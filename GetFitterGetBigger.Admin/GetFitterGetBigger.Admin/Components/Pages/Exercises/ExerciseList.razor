@@ -171,8 +171,8 @@
         var filter = new ExerciseFilterDto
         {
             Name = string.IsNullOrWhiteSpace(filterName) ? null : filterName,
-            DifficultyId = string.IsNullOrWhiteSpace(filterDifficulty) ? null : Guid.Parse(filterDifficulty),
-            MuscleGroupIds = string.IsNullOrWhiteSpace(filterMuscleGroup) ? null : new List<Guid> { Guid.Parse(filterMuscleGroup) },
+            DifficultyId = string.IsNullOrWhiteSpace(filterDifficulty) ? null : filterDifficulty,
+            MuscleGroupIds = string.IsNullOrWhiteSpace(filterMuscleGroup) ? null : new List<string> { filterMuscleGroup },
             Page = 1,
             PageSize = StateService.CurrentFilter.PageSize
         };
@@ -223,12 +223,12 @@
         }
     }
 
-    private void NavigateToView(Guid id)
+    private void NavigateToView(string id)
     {
         Navigation.NavigateTo($"/exercises/{id}");
     }
 
-    private void NavigateToEdit(Guid id)
+    private void NavigateToEdit(string id)
     {
         Navigation.NavigateTo($"/exercises/{id}/edit");
     }

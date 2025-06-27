@@ -66,7 +66,7 @@ namespace GetFitterGetBigger.Admin.Services
             }
         }
 
-        public async Task LoadExerciseByIdAsync(Guid id)
+        public async Task LoadExerciseByIdAsync(string id)
         {
             try
             {
@@ -114,7 +114,7 @@ namespace GetFitterGetBigger.Admin.Services
             }
         }
 
-        public async Task UpdateExerciseAsync(Guid id, ExerciseUpdateDto exercise)
+        public async Task UpdateExerciseAsync(string id, ExerciseUpdateDto exercise)
         {
             try
             {
@@ -139,7 +139,7 @@ namespace GetFitterGetBigger.Admin.Services
             }
         }
 
-        public async Task DeleteExerciseAsync(Guid id)
+        public async Task DeleteExerciseAsync(string id)
         {
             try
             {

@@ -1,4 +1,4 @@
-@page "/exercises/{Id:guid}"
+@page "/exercises/{Id}"
 @using GetFitterGetBigger.Admin.Models.Dtos
 @using GetFitterGetBigger.Admin.Services
 @using Microsoft.AspNetCore.Authorization
@@ -215,7 +215,7 @@
 }
 
 @code {
-    [Parameter] public Guid Id { get; set; }
+    [Parameter] public string Id { get; set; } = string.Empty;
 
     private bool showDeleteConfirmation = false;
     private bool isDeleting = false;
