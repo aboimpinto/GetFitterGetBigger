@@ -15,7 +15,7 @@ Retrieves a paginated and filterable list of all exercises.
 
 - **Endpoint:** `GET /api/exercises`
 - **Authentication:** Bearer token required.
-- **Authorization:** Required `PT-Tier` or `Admin` claim.
+- **Authorization:** Required `PT-Tier` or `Admin-Tier` claim.
 
 ### Query Parameters
 
@@ -84,7 +84,7 @@ Creates a new exercise.
 
 - **Endpoint:** `POST /api/exercises`
 - **Authentication:** Bearer token required.
-- **Authorization:** Required `PT-Tier` or `Admin` claim.
+- **Authorization:** Required `PT-Tier` or `Admin-Tier` claim.
 
 ### Request Body
 
@@ -113,7 +113,7 @@ Updates an existing exercise.
 
 - **Endpoint:** `PUT /api/exercises/{id}`
 - **Authentication:** Bearer token required.
-- **Authorization:** Required `PT-Tier` or `Admin` claim.
+- **Authorization:** Required `PT-Tier` or `Admin-Tier` claim.
 
 ### Request Body
 
@@ -131,7 +131,7 @@ Marks an exercise as inactive. If the exercise is not associated with any workou
 
 - **Endpoint:** `DELETE /api/exercises/{id}`
 - **Authentication:** Bearer token required.
-- **Authorization:** Required `PT-Tier` or `Admin` claim.
+- **Authorization:** Required `PT-Tier` or `Admin-Tier` claim.
 
 ### Success Response (204 No Content)
 
