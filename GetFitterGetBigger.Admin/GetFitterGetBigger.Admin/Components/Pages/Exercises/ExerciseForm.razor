@@ -93,16 +93,9 @@
                                     required
                                     class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 @(GetFieldClass("Difficulty"))">
                                 <option value="">Select difficulty</option>
-                                @if (StateService.DifficultyLevels != null)
+                                @foreach (var difficulty in StateService.DifficultyLevels)
                                 {
-                                    @foreach (var difficulty in StateService.DifficultyLevels)
-                                    {
-                                        <option value="@difficulty.Id">@difficulty.Value (ID: @difficulty.Id)</option>
-                                    }
-                                }
-                                else
-                                {
-                                    <option value="">Loading difficulties...</option>
+                                    <option value="@difficulty.Id">@difficulty.Value</option>
                                 }
                             </select>
                             @if (validationErrors.ContainsKey("Difficulty"))
@@ -293,8 +286,6 @@
         set
         {
             model.DifficultyId = value ?? string.Empty;
-            Console.WriteLine($"[ExerciseForm] Difficulty dropdown changed to: '{value}'");
-            Console.WriteLine($"[ExerciseForm] Set model.DifficultyId to '{value}'");
             StateHasChanged();
         }
     }
@@ -334,24 +325,6 @@
             await StateService.InitializeAsync();
         }
 
-        // Log reference data to debug
-        Console.WriteLine($"[ExerciseForm] Difficulty Levels count: {StateService.DifficultyLevels?.Count() ?? 0}");
-        if (StateService.DifficultyLevels != null)
-        {
-            foreach (var diff in StateService.DifficultyLevels)
-            {
-                Console.WriteLine($"[ExerciseForm] Difficulty: Id='{diff.Id}', Value='{diff.Value}'");
-            }
-        }
-        
-        Console.WriteLine($"[ExerciseForm] Muscle Groups count: {StateService.MuscleGroups?.Count() ?? 0}");
-        if (StateService.MuscleGroups != null)
-        {
-            foreach (var mg in StateService.MuscleGroups)
-            {
-                Console.WriteLine($"[ExerciseForm] Muscle Group: Id='{mg.Id}', Value='{mg.Value}'");
-            }
-        }
 
         if (IsEditMode)
         {
@@ -412,11 +385,9 @@
 
     private void SetMuscleGroupId(int index, string? value)
     {
-        Console.WriteLine($"[ExerciseForm] SetMuscleGroupId called - index: {index}, value: '{value}'");
         if (index >= 0 && index < muscleGroupAssignments.Count)
         {
             muscleGroupAssignments[index].MuscleGroupId = value ?? string.Empty;
-            Console.WriteLine($"[ExerciseForm] Set muscle group {index} to '{value}'");
             StateHasChanged();
         }
     }
@@ -432,9 +403,7 @@
 
     private void SetDifficultyId(string? value)
     {
-        Console.WriteLine($"[ExerciseForm] SetDifficultyId called with value: '{value}'");
         model.DifficultyId = value ?? string.Empty;
-        Console.WriteLine($"[ExerciseForm] Set difficulty to '{value}'");
         StateHasChanged();
     }
 
@@ -515,17 +484,6 @@
     private bool ValidateForm()
     {
         validationErrors.Clear();
-        Console.WriteLine("[ExerciseForm] Validating form...");
-        Console.WriteLine($"[ExerciseForm] Model Name: '{model.Name}'");
-        Console.WriteLine($"[ExerciseForm] Model Description: '{model.Description}'");
-        Console.WriteLine($"[ExerciseForm] Model Instructions: '{model.Instructions}'");
-        Console.WriteLine($"[ExerciseForm] Model DifficultyId: {model.DifficultyId}");
-        Console.WriteLine($"[ExerciseForm] Muscle Groups Count: {muscleGroupAssignments.Count}");
-        
-        for (int i = 0; i < muscleGroupAssignments.Count; i++)
-        {
-            Console.WriteLine($"[ExerciseForm] Muscle Group {i}: Id={muscleGroupAssignments[i].MuscleGroupId}, Role='{muscleGroupAssignments[i].Role}'");
-        }
 
         if (string.IsNullOrWhiteSpace(model.Name))
             validationErrors["Name"] = "Exercise name is required";
@@ -552,12 +510,6 @@
         
         if (!validMuscleGroups.Any())
             validationErrors["MuscleGroups"] = "At least one muscle group with a role is required";
-
-        Console.WriteLine($"[ExerciseForm] Validation errors count: {validationErrors.Count}");
-        foreach (var error in validationErrors)
-        {
-            Console.WriteLine($"[ExerciseForm] Validation error - {error.Key}: {error.Value}");
-        }
 
         // Update UI to show validation errors
         StateHasChanged();
@@ -601,25 +553,11 @@
                     MovementPatternIds = model.MovementPatternIds
                 };
                 
-                // Log the JSON for testing
-                var updateJson = System.Text.Json.JsonSerializer.Serialize(updateDto, new System.Text.Json.JsonSerializerOptions 
-                { 
-                    WriteIndented = true 
-                });
-                Console.WriteLine($"[ExerciseForm] UPDATE JSON to POST to /api/exercises/{Id}:");
-                Console.WriteLine(updateJson);
                 
                 await StateService.UpdateExerciseAsync(Id!, updateDto);
             }
             else
             {
-                // Log the JSON for testing
-                var createJson = System.Text.Json.JsonSerializer.Serialize(model, new System.Text.Json.JsonSerializerOptions 
-                { 
-                    WriteIndented = true 
-                });
-                Console.WriteLine("[ExerciseForm] CREATE JSON to POST to /api/exercises:");
-                Console.WriteLine(createJson);
                 
                 await StateService.CreateExerciseAsync(model);
             }
@@ -627,9 +565,8 @@
             // Navigate back to list
             Navigation.NavigateTo("/exercises");
         }
-        catch (Exception ex)
+        catch
         {
-            Console.WriteLine($"[ExerciseForm] Error submitting form: {ex.Message}");
             // Error is handled by StateService
             isSubmitting = false;
         }
