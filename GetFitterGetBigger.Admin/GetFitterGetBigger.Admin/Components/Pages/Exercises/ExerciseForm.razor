@@ -316,6 +316,25 @@
             await StateService.InitializeAsync();
         }
 
+        // Log reference data to debug
+        Console.WriteLine($"[ExerciseForm] Difficulty Levels count: {StateService.DifficultyLevels?.Count ?? 0}");
+        if (StateService.DifficultyLevels != null)
+        {
+            foreach (var diff in StateService.DifficultyLevels)
+            {
+                Console.WriteLine($"[ExerciseForm] Difficulty: Id='{diff.Id}', Value='{diff.Value}'");
+            }
+        }
+        
+        Console.WriteLine($"[ExerciseForm] Muscle Groups count: {StateService.MuscleGroups?.Count ?? 0}");
+        if (StateService.MuscleGroups != null)
+        {
+            foreach (var mg in StateService.MuscleGroups)
+            {
+                Console.WriteLine($"[ExerciseForm] Muscle Group: Id='{mg.Id}', Value='{mg.Value}'");
+            }
+        }
+
         if (IsEditMode)
         {
             await LoadExerciseForEdit();
@@ -375,15 +394,18 @@
 
     private void SetMuscleGroupId(int index, string? value)
     {
+        Console.WriteLine($"[ExerciseForm] SetMuscleGroupId called - index: {index}, value: '{value}'");
         if (index >= 0 && index < muscleGroupAssignments.Count)
         {
             if (!string.IsNullOrEmpty(value) && Guid.TryParse(value, out var guidValue))
             {
                 muscleGroupAssignments[index].MuscleGroupId = guidValue;
+                Console.WriteLine($"[ExerciseForm] Set muscle group {index} to {guidValue}");
             }
             else
             {
                 muscleGroupAssignments[index].MuscleGroupId = Guid.Empty;
+                Console.WriteLine($"[ExerciseForm] Failed to parse muscle group ID: '{value}'");
             }
             StateHasChanged();
         }
@@ -400,13 +422,16 @@
 
     private void SetDifficultyId(string? value)
     {
+        Console.WriteLine($"[ExerciseForm] SetDifficultyId called with value: '{value}'");
         if (!string.IsNullOrEmpty(value) && Guid.TryParse(value, out var guidValue))
         {
             model.DifficultyId = guidValue;
+            Console.WriteLine($"[ExerciseForm] Set difficulty to {guidValue}");
         }
         else
         {
             model.DifficultyId = Guid.Empty;
+            Console.WriteLine($"[ExerciseForm] Failed to parse difficulty ID: '{value}'");
         }
         StateHasChanged();
     }
