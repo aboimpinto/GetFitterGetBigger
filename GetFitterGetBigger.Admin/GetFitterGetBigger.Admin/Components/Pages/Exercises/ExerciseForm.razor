@@ -153,17 +153,19 @@
                     
                     <div class="mb-4">
                         <label class="block text-sm font-medium text-gray-700 mb-1">
-                            Number of muscle groups to add:
+                            Total muscle groups needed:
                         </label>
                         <div class="flex items-center space-x-2">
-                            <input type="number" min="0" max="5" @bind="muscleGroupsToAdd" 
-                                   class="w-20 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
-                            <button type="button" @onclick="@AddMultipleMuscleGroups"
-                                    class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
-                                Add Muscle Groups
-                            </button>
-                            <span class="text-sm text-gray-500">Current count: @muscleGroupAssignments.Count</span>
+                            <select @bind="totalMuscleGroupsNeeded" @bind:event="onchange"
+                                    class="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                @for (int i = 1; i <= 10; i++)
+                                {
+                                    <option value="@i">@i muscle group@(i > 1 ? "s" : "")</option>
+                                }
+                            </select>
+                            <span class="text-sm text-gray-500">Current: @muscleGroupAssignments.Count</span>
                         </div>
+                        <p class="text-xs text-gray-600 mt-1">Change the dropdown to add/remove muscle groups</p>
                     </div>
                 </div>
 
@@ -273,6 +275,18 @@
     private bool isLoading = true;
     private bool isSubmitting = false;
     private int muscleGroupsToAdd = 1;
+    private int _totalMuscleGroupsNeeded = 1;
+
+    private int totalMuscleGroupsNeeded
+    {
+        get => _totalMuscleGroupsNeeded;
+        set
+        {
+            Console.WriteLine($"Dropdown changed to: {value}");
+            _totalMuscleGroupsNeeded = value;
+            AdjustMuscleGroups();
+        }
+    }
 
     private ExerciseCreateDto model = new();
     private List<MuscleGroupRoleAssignmentDto> muscleGroupAssignments = new();
@@ -371,6 +385,34 @@
             muscleGroupAssignments.Add(new MuscleGroupRoleAssignmentDto());
         }
         muscleGroupsToAdd = 1; // Reset
+        StateHasChanged();
+    }
+
+    private void AdjustMuscleGroups()
+    {
+        int currentCount = muscleGroupAssignments.Count;
+        int targetCount = _totalMuscleGroupsNeeded;
+        Console.WriteLine($"AdjustMuscleGroups: current={currentCount}, target={targetCount}");
+
+        if (targetCount > currentCount)
+        {
+            // Add muscle groups
+            for (int i = currentCount; i < targetCount; i++)
+            {
+                muscleGroupAssignments.Add(new MuscleGroupRoleAssignmentDto());
+                Console.WriteLine($"Added muscle group. New count: {muscleGroupAssignments.Count}");
+            }
+        }
+        else if (targetCount < currentCount)
+        {
+            // Remove muscle groups from the end
+            while (muscleGroupAssignments.Count > targetCount && muscleGroupAssignments.Count > 0)
+            {
+                muscleGroupAssignments.RemoveAt(muscleGroupAssignments.Count - 1);
+                Console.WriteLine($"Removed muscle group. New count: {muscleGroupAssignments.Count}");
+            }
+        }
+
         StateHasChanged();
     }
 
