@@ -53,7 +53,7 @@
         var uri = NavigationManager.ToAbsoluteUri(NavigationManager.Uri);
         if (QueryHelpers.ParseQuery(uri.Query).TryGetValue("returnUrl", out var param))
         {
-            returnUrl = param.First();
+            returnUrl = param.FirstOrDefault() ?? "/";
         }
     }
 }

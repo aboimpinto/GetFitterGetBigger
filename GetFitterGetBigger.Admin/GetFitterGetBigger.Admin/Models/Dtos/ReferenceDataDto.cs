@@ -5,12 +5,12 @@ namespace GetFitterGetBigger.Admin.Models.Dtos
     public class ReferenceDataDto
     {
         [JsonPropertyName("id")]
-        public string Id { get; set; }
+        public required string Id { get; set; }
 
         [JsonPropertyName("value")]
-        public string Value { get; set; }
+        public required string Value { get; set; }
 
         [JsonPropertyName("description")]
-        public string Description { get; set; }
+        public required string Description { get; set; }
     }
 }

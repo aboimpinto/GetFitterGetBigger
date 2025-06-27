@@ -54,10 +54,10 @@
 
 @code {
     [Parameter]
-    public string TableName { get; set; }
+    public string TableName { get; set; } = string.Empty;
 
-    private IEnumerable<ReferenceDataDto> items;
-    private string DisplayName { get; set; }
+    private IEnumerable<ReferenceDataDto> items = Enumerable.Empty<ReferenceDataDto>();
+    private string DisplayName { get; set; } = string.Empty;
 
     protected override async Task OnInitializedAsync()
     {

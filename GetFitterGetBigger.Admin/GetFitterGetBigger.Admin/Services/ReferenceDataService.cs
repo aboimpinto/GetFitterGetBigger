@@ -16,18 +16,21 @@ namespace GetFitterGetBigger.Admin.Services
             _httpClient = httpClient;
             _cache = cache;
             _configuration = configuration;
-            _apiBaseUrl = _configuration["ApiBaseUrl"];
+            _apiBaseUrl = _configuration["ApiBaseUrl"] ?? string.Empty;
         }
 
         private async Task<IEnumerable<ReferenceDataDto>> GetDataAsync(string endpoint, string cacheKey)
         {
-            if (!_cache.TryGetValue(cacheKey, out IEnumerable<ReferenceDataDto> cachedData))
+            if (!_cache.TryGetValue(cacheKey, out IEnumerable<ReferenceDataDto>? cachedData))
             {
                 var requestUrl = $"{_apiBaseUrl}{endpoint}";
                 cachedData = await _httpClient.GetFromJsonAsync<IEnumerable<ReferenceDataDto>>(requestUrl);
-                _cache.Set(cacheKey, cachedData, TimeSpan.FromHours(24));
+                if (cachedData != null)
+                {
+                    _cache.Set(cacheKey, cachedData, TimeSpan.FromHours(24));
+                }
             }
-            return cachedData;
+            return cachedData ?? Enumerable.Empty<ReferenceDataDto>();
         }
 
         public Task<IEnumerable<ReferenceDataDto>> GetBodyPartsAsync() => GetDataAsync("/api/ReferenceTables/BodyParts", "BodyParts");
