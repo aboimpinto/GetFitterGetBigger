@@ -122,9 +122,9 @@
                         @for (int i = 0; i < muscleGroupAssignments.Count; i++)
                         {
                             var index = i; // Capture for closure
-                            var assignment = muscleGroupAssignments[index];
                             <div class="flex items-center space-x-2 bg-gray-50 p-2 rounded">
-                                <select @bind="assignment.MuscleGroupId" 
+                                <select value="@(muscleGroupAssignments[index].MuscleGroupId == Guid.Empty ? "" : muscleGroupAssignments[index].MuscleGroupId.ToString())"
+                                        @onchange="@((ChangeEventArgs e) => SetMuscleGroupId(index, e.Value?.ToString()))"
                                         class="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
                                     <option value="">Select muscle group</option>
                                     @foreach (var muscleGroup in StateService.MuscleGroups)
@@ -132,7 +132,8 @@
                                         <option value="@muscleGroup.Id">@muscleGroup.Value</option>
                                     }
                                 </select>
-                                <select @bind="assignment.Role"
+                                <select value="@muscleGroupAssignments[index].Role"
+                                        @onchange="@((ChangeEventArgs e) => SetMuscleGroupRole(index, e.Value?.ToString()))"
                                         class="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
                                     <option value="">Select role</option>
                                     @foreach (var role in StateService.MuscleRoles)
@@ -354,6 +355,31 @@
     {
         muscleGroupAssignments.Add(new MuscleGroupRoleAssignmentDto());
         StateHasChanged();
+    }
+
+    private void SetMuscleGroupId(int index, string? value)
+    {
+        if (index >= 0 && index < muscleGroupAssignments.Count)
+        {
+            if (!string.IsNullOrEmpty(value) && Guid.TryParse(value, out var guidValue))
+            {
+                muscleGroupAssignments[index].MuscleGroupId = guidValue;
+            }
+            else
+            {
+                muscleGroupAssignments[index].MuscleGroupId = Guid.Empty;
+            }
+            StateHasChanged();
+        }
+    }
+
+    private void SetMuscleGroupRole(int index, string? value)
+    {
+        if (index >= 0 && index < muscleGroupAssignments.Count && !string.IsNullOrEmpty(value))
+        {
+            muscleGroupAssignments[index].Role = value;
+            StateHasChanged();
+        }
     }
 
     private void RemoveMuscleGroup(MuscleGroupRoleAssignmentDto assignment)
