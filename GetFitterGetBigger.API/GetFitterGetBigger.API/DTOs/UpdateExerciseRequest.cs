@@ -45,12 +45,12 @@ public class UpdateExerciseRequest
     /// <summary>
     /// Indicates if the exercise is performed on one side of the body at a time
     /// </summary>
-    public bool IsUnilateral { get; set; }
+    public bool? IsUnilateral { get; set; }
     
     /// <summary>
     /// Indicates if the exercise is active
     /// </summary>
-    public bool IsActive { get; set; }
+    public bool? IsActive { get; set; }
     
     /// <summary>
     /// The ID of the difficulty level

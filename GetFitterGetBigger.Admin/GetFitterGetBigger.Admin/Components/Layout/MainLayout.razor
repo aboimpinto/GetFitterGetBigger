@@ -1,6 +1,9 @@
 ﻿@inherits LayoutComponentBase
 @using GetFitterGetBigger.Admin.Services.Authentication
+@using GetFitterGetBigger.Admin.Services
 @inject IAuthorizationStateService AuthorizationStateService
+@inject INavigationService NavigationService
+@inject NavigationManager Navigation
 @implements IDisposable
 
 <div class="flex min-h-screen bg-gray-100">
@@ -38,6 +41,9 @@
     {
         AuthorizationStateService.OnChange += StateHasChanged;
         await AuthorizationStateService.InitializeAsync();
+        
+        // Initialize navigation tracking
+        NavigationService.Initialize(Navigation);
     }
 
     private RenderFragment GetMainContent()

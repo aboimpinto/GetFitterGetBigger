@@ -1,0 +1,70 @@
+@* Loading skeleton for ExerciseList table *@
+
+<div class="animate-pulse">
+    <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th class="px-6 py-3 text-left">
+                        <div class="h-4 bg-gray-300 rounded w-20"></div>
+                    </th>
+                    <th class="px-6 py-3 text-left">
+                        <div class="h-4 bg-gray-300 rounded w-24"></div>
+                    </th>
+                    <th class="px-6 py-3 text-left">
+                        <div class="h-4 bg-gray-300 rounded w-32"></div>
+                    </th>
+                    <th class="px-6 py-3 text-left">
+                        <div class="h-4 bg-gray-300 rounded w-24"></div>
+                    </th>
+                    <th class="px-6 py-3 text-left">
+                        <div class="h-4 bg-gray-300 rounded w-20"></div>
+                    </th>
+                    <th class="px-6 py-3 text-left">
+                        <div class="h-4 bg-gray-300 rounded w-16"></div>
+                    </th>
+                </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+                @for (int i = 0; i < 5; i++)
+                {
+                    <tr>
+                        <td class="px-6 py-4">
+                            <div class="h-4 bg-gray-200 rounded w-40"></div>
+                        </td>
+                        <td class="px-6 py-4">
+                            <div class="h-4 bg-gray-200 rounded w-24"></div>
+                        </td>
+                        <td class="px-6 py-4">
+                            <div class="h-4 bg-gray-200 rounded w-48"></div>
+                        </td>
+                        <td class="px-6 py-4">
+                            <div class="h-4 bg-gray-200 rounded w-32"></div>
+                        </td>
+                        <td class="px-6 py-4">
+                            <div class="h-4 bg-gray-200 rounded w-12"></div>
+                        </td>
+                        <td class="px-6 py-4">
+                            <div class="flex space-x-2">
+                                <div class="h-4 bg-gray-200 rounded w-12"></div>
+                                <div class="h-4 bg-gray-200 rounded w-12"></div>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    
+    <!-- Pagination skeleton -->
+    <div class="mt-4 flex items-center justify-between">
+        <div class="h-4 bg-gray-200 rounded w-48"></div>
+        <div class="flex space-x-2">
+            <div class="h-8 bg-gray-200 rounded w-20"></div>
+            <div class="h-8 bg-gray-200 rounded w-8"></div>
+            <div class="h-8 bg-gray-200 rounded w-8"></div>
+            <div class="h-8 bg-gray-200 rounded w-8"></div>
+            <div class="h-8 bg-gray-200 rounded w-20"></div>
+        </div>
+    </div>
+</div>
