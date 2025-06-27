@@ -3,6 +3,7 @@
 @using GetFitterGetBigger.Admin.Services
 @using Microsoft.AspNetCore.Authorization
 @attribute [Authorize]
+@rendermode InteractiveServer
 @inject IExerciseStateService StateService
 @inject NavigationManager Navigation
 @implements IDisposable

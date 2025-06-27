@@ -4,8 +4,10 @@
 @using GetFitterGetBigger.Admin.Services
 @using Microsoft.AspNetCore.Authorization
 @attribute [Authorize]
+@rendermode InteractiveServer
 @inject IExerciseStateService StateService
 @inject NavigationManager Navigation
+@implements IDisposable
 
 <PageTitle>@(IsEditMode ? "Edit Exercise" : "New Exercise") - GetFitterGetBigger Admin</PageTitle>
 
@@ -151,21 +153,20 @@
                         }
                     </div>
                     
-                    <div class="mb-4">
-                        <label class="block text-sm font-medium text-gray-700 mb-1">
-                            Total muscle groups needed:
-                        </label>
-                        <div class="flex items-center space-x-2">
-                            <select @bind="totalMuscleGroupsNeeded" @bind:event="onchange"
-                                    class="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
-                                @for (int i = 1; i <= 10; i++)
-                                {
-                                    <option value="@i">@i muscle group@(i > 1 ? "s" : "")</option>
-                                }
-                            </select>
-                            <span class="text-sm text-gray-500">Current: @muscleGroupAssignments.Count</span>
-                        </div>
-                        <p class="text-xs text-gray-600 mt-1">Change the dropdown to add/remove muscle groups</p>
+                    <div class="flex items-center space-x-2">
+                        <button type="button" @onclick="AddMuscleGroup" @onclick:preventDefault="true"
+                                class="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700">
+                            Add Muscle Group
+                        </button>
+                        <button type="button" @onclick="@(() => AddMuscleGroup())" @onclick:preventDefault="true"
+                                class="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700">
+                            Add (Lambda)
+                        </button>
+                        <button type="button" @onclick="TestClick" @onclick:preventDefault="true"
+                                class="px-3 py-1 bg-purple-600 text-white rounded hover:bg-purple-700">
+                            Test Click
+                        </button>
+                        <span class="text-sm text-gray-500">Current: @muscleGroupAssignments.Count</span>
                     </div>
                 </div>
 
@@ -355,12 +356,24 @@
         }
     }
 
+    private void TestClick()
+    {
+        Console.WriteLine("[ExerciseForm] TestClick method called!");
+    }
+
     private void AddMuscleGroup()
     {
-        Console.WriteLine($"AddMuscleGroup called. Current count: {muscleGroupAssignments.Count}");
-        muscleGroupAssignments.Add(new MuscleGroupRoleAssignmentDto());
-        Console.WriteLine($"After add. New count: {muscleGroupAssignments.Count}");
-        StateHasChanged();
+        Console.WriteLine($"[ExerciseForm] AddMuscleGroup called. Current count: {muscleGroupAssignments.Count}");
+        try
+        {
+            muscleGroupAssignments.Add(new MuscleGroupRoleAssignmentDto());
+            Console.WriteLine($"[ExerciseForm] After add. New count: {muscleGroupAssignments.Count}");
+            InvokeAsync(StateHasChanged);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[ExerciseForm] Error in AddMuscleGroup: {ex.Message}");
+        }
     }
 
     private void RemoveMuscleGroup(MuscleGroupRoleAssignmentDto assignment)
