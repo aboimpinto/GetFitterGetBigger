@@ -323,6 +323,47 @@ namespace GetFitterGetBigger.API.Tests.Repositories
             Assert.Null(deletedExercise);
         }
 
+        [Fact]
+        public async Task GetPagedAsync_WithMultipleMuscleGroups_ReturnsExercise()
+        {
+            // Arrange
+            var difficultyId = _context.DifficultyLevels.First().Id;
+            var chestMuscleId = _context.MuscleGroups.First().Id;
+            var muscleRoleId = _context.MuscleRoles.First().Id;
+            
+            // Create a second muscle group (Triceps)
+            var tricepsMuscle = MuscleGroup.Handler.Create(
+                MuscleGroupId.New(), "Triceps", _context.BodyParts.First().Id);
+            _context.MuscleGroups.Add(tricepsMuscle);
+            await _context.SaveChangesAsync();
+            
+            // Create exercise
+            var exercise = Exercise.Handler.CreateNew(
+                "Bench Press Multi", "Compound chest exercise", "Lie on bench and press", 
+                null, null, false, difficultyId);
+            
+            _context.Exercises.Add(exercise);
+            await _context.SaveChangesAsync();
+            
+            // Add multiple muscle groups to the exercise
+            var chestAssociation = ExerciseMuscleGroup.Handler.Create(
+                exercise.Id, chestMuscleId, muscleRoleId);
+            var tricepsAssociation = ExerciseMuscleGroup.Handler.Create(
+                exercise.Id, tricepsMuscle.Id, muscleRoleId);
+            
+            _context.ExerciseMuscleGroups.AddRange(chestAssociation, tricepsAssociation);
+            await _context.SaveChangesAsync();
+
+            // Act
+            var (exercises, totalCount) = await _repository.GetPagedAsync(1, 10);
+
+            // Assert
+            Assert.Equal(1, totalCount);
+            Assert.Single(exercises);
+            Assert.Equal("Bench Press Multi", exercises.First().Name);
+            Assert.Equal(2, exercises.First().ExerciseMuscleGroups.Count);
+        }
+
         public void Dispose()
         {
             _context.Dispose();

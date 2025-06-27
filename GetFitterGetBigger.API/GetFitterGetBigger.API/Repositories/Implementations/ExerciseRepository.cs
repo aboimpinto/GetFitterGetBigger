@@ -38,6 +38,7 @@ public class ExerciseRepository : RepositoryBase<FitnessDbContext>, IExerciseRep
                 .ThenInclude(emp => emp.MovementPattern)
             .Include(e => e.ExerciseBodyParts)
                 .ThenInclude(ebp => ebp.BodyPart)
+            .AsSplitQuery()
             .AsNoTracking();
         
         // Apply filters
@@ -114,6 +115,7 @@ public class ExerciseRepository : RepositoryBase<FitnessDbContext>, IExerciseRep
                 .ThenInclude(emp => emp.MovementPattern)
             .Include(e => e.ExerciseBodyParts)
                 .ThenInclude(ebp => ebp.BodyPart)
+            .AsSplitQuery()
             .AsNoTracking()
             .FirstOrDefaultAsync(e => e.Id == id);
         
