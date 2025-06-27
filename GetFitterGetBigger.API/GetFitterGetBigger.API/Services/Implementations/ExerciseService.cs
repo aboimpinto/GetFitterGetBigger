@@ -57,14 +57,6 @@ public class ExerciseService : IExerciseService
         // Map to DTOs
         var exerciseDtos = exercises.Select(MapToDto).ToList();
         
-        // Diagnostic logging
-        _logger.LogInformation($"GetPagedAsync - Total exercises from repository: {exercises.Count()}");
-        _logger.LogInformation($"GetPagedAsync - Total count from repository: {totalCount}");
-        foreach (var exercise in exercises.Take(5))
-        {
-            _logger.LogInformation($"Exercise: {exercise.Name}, MuscleGroups: {exercise.ExerciseMuscleGroups?.Count ?? 0}");
-        }
-        
         return new PagedResponse<ExerciseDto>(
             exerciseDtos,
             filterParams.Page,
