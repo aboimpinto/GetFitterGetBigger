@@ -278,6 +278,41 @@ public class ApiTestFixture : WebApplicationFactory<Program>
             );
         }
 
+        // Seed ExerciseTypes
+        if (!context.ExerciseTypes.Any())
+        {
+            context.ExerciseTypes.AddRange(
+                ExerciseType.Handler.Create(
+                    ExerciseTypeId.From(Guid.Parse("11223344-5566-7788-99aa-bbccddeeff00")),
+                    "Warmup",
+                    "Exercises for warming up",
+                    1,
+                    true
+                ),
+                ExerciseType.Handler.Create(
+                    ExerciseTypeId.From(Guid.Parse("22334455-6677-8899-aabb-ccddeeff0011")),
+                    "Workout",
+                    "Main workout exercises",
+                    2,
+                    true
+                ),
+                ExerciseType.Handler.Create(
+                    ExerciseTypeId.From(Guid.Parse("33445566-7788-99aa-bbcc-ddeeff001122")),
+                    "Cooldown",
+                    "Exercises for cooling down",
+                    3,
+                    true
+                ),
+                ExerciseType.Handler.Create(
+                    ExerciseTypeId.From(Guid.Parse("44556677-8899-aabb-ccdd-eeff00112233")),
+                    "Rest",
+                    "Rest period",
+                    4,
+                    true
+                )
+            );
+        }
+
         context.SaveChanges();
     }
 }
