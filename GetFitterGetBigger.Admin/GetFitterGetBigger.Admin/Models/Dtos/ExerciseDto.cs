@@ -32,7 +32,7 @@ namespace GetFitterGetBigger.Admin.Models.Dtos
         public bool IsUnilateral { get; set; }
         public string? ImageUrl { get; set; }
         public string? VideoUrl { get; set; }
-        public List<MuscleGroupRoleAssignmentDto> MuscleGroupsWithRoles { get; set; } = new();
+        public List<MuscleGroupApiDto> MuscleGroups { get; set; } = new();
         public List<string> EquipmentIds { get; set; } = new();
         public List<string> BodyPartIds { get; set; } = new();
         public List<string> MovementPatternIds { get; set; } = new();
@@ -40,6 +40,12 @@ namespace GetFitterGetBigger.Admin.Models.Dtos
 
     public class ExerciseUpdateDto : ExerciseCreateDto
     {
+    }
+
+    public class MuscleGroupApiDto
+    {
+        public string MuscleGroupId { get; set; } = string.Empty;
+        public string MuscleRoleId { get; set; } = string.Empty;
     }
 
     public class MuscleGroupRoleAssignmentDto

@@ -527,9 +527,18 @@
 
         try
         {
-            // Prepare the model
-            model.MuscleGroupsWithRoles = muscleGroupAssignments
+            // Prepare the model - convert role names to role IDs for API
+            model.MuscleGroups = muscleGroupAssignments
                 .Where(mg => !string.IsNullOrWhiteSpace(mg.MuscleGroupId) && !string.IsNullOrWhiteSpace(mg.Role))
+                .Select(mg => {
+                    var roleId = StateService.MuscleRoles.FirstOrDefault(r => r.Value == mg.Role)?.Id ?? string.Empty;
+                    return new MuscleGroupApiDto
+                    {
+                        MuscleGroupId = mg.MuscleGroupId,
+                        MuscleRoleId = roleId
+                    };
+                })
+                .Where(mg => !string.IsNullOrWhiteSpace(mg.MuscleRoleId)) // Only include if we found the role ID
                 .ToList();
             
             model.EquipmentIds = selectedEquipmentIds.ToList();
@@ -547,7 +556,7 @@
                     IsUnilateral = model.IsUnilateral,
                     ImageUrl = model.ImageUrl,
                     VideoUrl = model.VideoUrl,
-                    MuscleGroupsWithRoles = model.MuscleGroupsWithRoles,
+                    MuscleGroups = model.MuscleGroups,
                     EquipmentIds = model.EquipmentIds,
                     BodyPartIds = model.BodyPartIds,
                     MovementPatternIds = model.MovementPatternIds
