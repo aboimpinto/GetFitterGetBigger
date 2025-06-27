@@ -13,7 +13,7 @@
 - **Task 2.1:** Create ExerciseStateService for state management `[Implemented: 4d6aeec9]`
 - **Task 2.2:** Implement exercise list state with pagination and filtering `[Implemented: 4d6aeec9]`
 - **Task 2.3:** Implement reference table caching in state service `[Implemented: 4d6aeec9]`
-- **Task 2.4:** Write tests for ExerciseStateService `[ReadyToDevelop]`
+- **Task 2.4:** Write tests for ExerciseStateService `[Implemented: c5b6c469]`
 
 ### Components - Exercise List
 - **Task 3.1:** Create ExerciseList component with table layout `[ReadyToDevelop]`

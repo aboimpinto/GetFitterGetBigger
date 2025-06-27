@@ -1,0 +1,234 @@
+@page "/exercises"
+@using GetFitterGetBigger.Admin.Models.Dtos
+@using GetFitterGetBigger.Admin.Services
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize]
+@inject IExerciseStateService StateService
+@inject NavigationManager Navigation
+@implements IDisposable
+
+<PageTitle>Exercises - GetFitterGetBigger Admin</PageTitle>
+
+<div class="bg-white rounded-lg shadow-md p-6">
+    <div class="flex justify-between items-center mb-6">
+        <div>
+            <h2 class="text-2xl font-semibold text-gray-800">Exercises</h2>
+            <p class="text-gray-600">Manage exercise library and configurations</p>
+        </div>
+        <button @onclick="NavigateToCreate" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors">
+            New Exercise
+        </button>
+    </div>
+
+    @if (StateService.ErrorMessage != null)
+    {
+        <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4">
+            <p>@StateService.ErrorMessage</p>
+            <button @onclick="StateService.ClearError" class="text-sm underline mt-1">Dismiss</button>
+        </div>
+    }
+
+    <div class="mb-4 grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Search by name</label>
+            <input type="text" @bind="filterName" @bind:event="oninput" @onkeyup="@(async (e) => { if (e.Key == "Enter") await ApplyFilter(); })"
+                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                   placeholder="Exercise name...">
+        </div>
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Difficulty</label>
+            <select @bind="filterDifficulty" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <option value="">All Difficulties</option>
+                @foreach (var difficulty in StateService.DifficultyLevels)
+                {
+                    <option value="@difficulty.Id">@difficulty.Value</option>
+                }
+            </select>
+        </div>
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Muscle Group</label>
+            <select @bind="filterMuscleGroup" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <option value="">All Muscle Groups</option>
+                @foreach (var muscleGroup in StateService.MuscleGroups)
+                {
+                    <option value="@muscleGroup.Id">@muscleGroup.Value</option>
+                }
+            </select>
+        </div>
+        <div class="flex items-end">
+            <button @onclick="ApplyFilter" class="bg-gray-600 hover:bg-gray-700 text-white font-medium py-2 px-4 rounded-md transition-colors mr-2">
+                Apply Filter
+            </button>
+            <button @onclick="ClearFilter" class="bg-gray-400 hover:bg-gray-500 text-white font-medium py-2 px-4 rounded-md transition-colors">
+                Clear
+            </button>
+        </div>
+    </div>
+
+    @if (StateService.IsLoading)
+    {
+        <div class="flex justify-center py-8">
+            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        </div>
+    }
+    else if (StateService.CurrentPage?.Items.Any() == true)
+    {
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Difficulty</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Primary Muscles</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Equipment</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Unilateral</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    @foreach (var exercise in StateService.CurrentPage.Items)
+                    {
+                        <tr class="hover:bg-gray-50 cursor-pointer" @onclick="() => NavigateToEdit(exercise.Id)">
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">@exercise.Name</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">@exercise.DifficultyName</td>
+                            <td class="px-6 py-4 text-sm text-gray-500">
+                                @string.Join(", ", exercise.PrimaryMuscleGroups)
+                            </td>
+                            <td class="px-6 py-4 text-sm text-gray-500">
+                                @string.Join(", ", exercise.Equipment)
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                @if (exercise.IsUnilateral)
+                                {
+                                    <span class="text-green-600">Yes</span>
+                                }
+                                else
+                                {
+                                    <span class="text-gray-400">No</span>
+                                }
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                <button @onclick:stopPropagation="true" @onclick="() => NavigateToView(exercise.Id)" 
+                                        class="text-blue-600 hover:text-blue-900 mr-3">View</button>
+                                <button @onclick:stopPropagation="true" @onclick="() => NavigateToEdit(exercise.Id)" 
+                                        class="text-indigo-600 hover:text-indigo-900">Edit</button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        @if (StateService.CurrentPage.TotalPages > 1)
+        {
+            <div class="mt-4 flex items-center justify-between">
+                <div class="text-sm text-gray-700">
+                    Showing @((StateService.CurrentFilter.Page - 1) * StateService.CurrentFilter.PageSize + 1) to 
+                    @(Math.Min(StateService.CurrentFilter.Page * StateService.CurrentFilter.PageSize, StateService.CurrentPage.TotalCount)) 
+                    of @StateService.CurrentPage.TotalCount results
+                </div>
+                <div class="flex space-x-2">
+                    <button @onclick="GoToPreviousPage" disabled="@(StateService.CurrentFilter.Page <= 1)"
+                            class="px-3 py-1 text-sm border rounded-md @(StateService.CurrentFilter.Page <= 1 ? "bg-gray-100 text-gray-400 cursor-not-allowed" : "bg-white text-gray-700 hover:bg-gray-50")">
+                        Previous
+                    </button>
+                    @for (int i = Math.Max(1, StateService.CurrentFilter.Page - 2); i <= Math.Min(StateService.CurrentPage.TotalPages, StateService.CurrentFilter.Page + 2); i++)
+                    {
+                        var pageNumber = i;
+                        <button @onclick="() => GoToPage(pageNumber)"
+                                class="px-3 py-1 text-sm border rounded-md @(pageNumber == StateService.CurrentFilter.Page ? "bg-blue-600 text-white" : "bg-white text-gray-700 hover:bg-gray-50")">
+                            @pageNumber
+                        </button>
+                    }
+                    <button @onclick="GoToNextPage" disabled="@(StateService.CurrentFilter.Page >= StateService.CurrentPage.TotalPages)"
+                            class="px-3 py-1 text-sm border rounded-md @(StateService.CurrentFilter.Page >= StateService.CurrentPage.TotalPages ? "bg-gray-100 text-gray-400 cursor-not-allowed" : "bg-white text-gray-700 hover:bg-gray-50")">
+                        Next
+                    </button>
+                </div>
+            </div>
+        }
+    }
+    else
+    {
+        <div class="text-center py-8 text-gray-500">
+            No exercises found. Create your first exercise to get started.
+        </div>
+    }
+</div>
+
+@code {
+    private string filterName = "";
+    private string filterDifficulty = "";
+    private string filterMuscleGroup = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        StateService.OnChange += StateHasChanged;
+        await StateService.InitializeAsync();
+    }
+
+    private async Task ApplyFilter()
+    {
+        var filter = new ExerciseFilterDto
+        {
+            Name = string.IsNullOrWhiteSpace(filterName) ? null : filterName,
+            DifficultyId = string.IsNullOrWhiteSpace(filterDifficulty) ? null : Guid.Parse(filterDifficulty),
+            MuscleGroupIds = string.IsNullOrWhiteSpace(filterMuscleGroup) ? null : new List<Guid> { Guid.Parse(filterMuscleGroup) },
+            Page = 1,
+            PageSize = StateService.CurrentFilter.PageSize
+        };
+
+        await StateService.LoadExercisesAsync(filter);
+    }
+
+    private async Task ClearFilter()
+    {
+        filterName = "";
+        filterDifficulty = "";
+        filterMuscleGroup = "";
+        await StateService.LoadExercisesAsync(new ExerciseFilterDto { Page = 1, PageSize = StateService.CurrentFilter.PageSize });
+    }
+
+    private async Task GoToPage(int page)
+    {
+        var filter = StateService.CurrentFilter;
+        filter.Page = page;
+        await StateService.LoadExercisesAsync(filter);
+    }
+
+    private async Task GoToPreviousPage()
+    {
+        if (StateService.CurrentFilter.Page > 1)
+        {
+            await GoToPage(StateService.CurrentFilter.Page - 1);
+        }
+    }
+
+    private async Task GoToNextPage()
+    {
+        if (StateService.CurrentPage != null && StateService.CurrentFilter.Page < StateService.CurrentPage.TotalPages)
+        {
+            await GoToPage(StateService.CurrentFilter.Page + 1);
+        }
+    }
+
+    private void NavigateToCreate()
+    {
+        Navigation.NavigateTo("/exercises/new");
+    }
+
+    private void NavigateToView(Guid id)
+    {
+        Navigation.NavigateTo($"/exercises/{id}");
+    }
+
+    private void NavigateToEdit(Guid id)
+    {
+        Navigation.NavigateTo($"/exercises/{id}/edit");
+    }
+
+    public void Dispose()
+    {
+        StateService.OnChange -= StateHasChanged;
+    }
+}
