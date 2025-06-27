@@ -18,13 +18,13 @@
 - **Task 2.7:** Write tests for error handling scenarios in AuthService `[Implemented: a1b53791]`
 
 ### Category 3: ReferenceDataService Tests
-- **Task 3.1:** Create ReferenceDataServiceTests class with test setup `[ReadyToDevelop]`
-- **Task 3.2:** Write tests for GetBodyPartsAsync with caching behavior `[ReadyToDevelop]`
-- **Task 3.3:** Write tests for GetDifficultyLevelsAsync with caching behavior `[ReadyToDevelop]`
-- **Task 3.4:** Write tests for all other reference data methods `[ReadyToDevelop]`
-- **Task 3.5:** Write tests for cache expiration and refresh scenarios `[ReadyToDevelop]`
-- **Task 3.6:** Write tests for HTTP error handling in ReferenceDataService `[ReadyToDevelop]`
-- **Task 3.7:** Write tests for null/empty response handling `[ReadyToDevelop]`
+- **Task 3.1:** Create ReferenceDataServiceTests class with test setup `[Implemented: 6e310ca7]`
+- **Task 3.2:** Write tests for GetBodyPartsAsync with caching behavior `[Implemented: 6e310ca7]`
+- **Task 3.3:** Write tests for GetDifficultyLevelsAsync with caching behavior `[Implemented: 6e310ca7]`
+- **Task 3.4:** Write tests for all other reference data methods `[Implemented: 6e310ca7]`
+- **Task 3.5:** Write tests for cache expiration and refresh scenarios `[Implemented: 6e310ca7]`
+- **Task 3.6:** Write tests for HTTP error handling in ReferenceDataService `[Implemented: 6e310ca7]`
+- **Task 3.7:** Write tests for null/empty response handling `[Implemented: 6e310ca7]`
 
 ### Category 4: AuthorizationStateService Tests
 - **Task 4.1:** Create AuthorizationStateServiceTests class with test setup `[ReadyToDevelop]`
