@@ -107,7 +107,6 @@ public class ExerciseService : IExerciseService
         var exercise = Exercise.Handler.CreateNew(
             request.Name,
             request.Description,
-            request.Instructions,
             request.VideoUrl,
             request.ImageUrl,
             request.IsUnilateral,
@@ -132,7 +131,7 @@ public class ExerciseService : IExerciseService
             Id = exercise.Id.ToString(),
             Name = exercise.Name,
             Description = exercise.Description,
-            Instructions = exercise.Instructions,
+            Instructions = request.Instructions, // TODO: Replace with CoachNotes
             VideoUrl = exercise.VideoUrl,
             ImageUrl = exercise.ImageUrl,
             IsUnilateral = exercise.IsUnilateral,
@@ -215,7 +214,6 @@ public class ExerciseService : IExerciseService
             exerciseId,
             request.Name,
             request.Description,
-            request.Instructions,
             request.VideoUrl,
             request.ImageUrl,
             request.IsUnilateral ?? existingExercise.IsUnilateral,
@@ -241,7 +239,7 @@ public class ExerciseService : IExerciseService
             Id = exercise.Id.ToString(),
             Name = exercise.Name,
             Description = exercise.Description,
-            Instructions = exercise.Instructions,
+            Instructions = request.Instructions, // TODO: Replace with CoachNotes
             VideoUrl = exercise.VideoUrl,
             ImageUrl = exercise.ImageUrl,
             IsUnilateral = exercise.IsUnilateral,
@@ -313,7 +311,6 @@ public class ExerciseService : IExerciseService
                 exercise.Id,
                 exercise.Name,
                 exercise.Description,
-                exercise.Instructions,
                 exercise.VideoUrl,
                 exercise.ImageUrl,
                 exercise.IsUnilateral,
@@ -445,7 +442,7 @@ public class ExerciseService : IExerciseService
             Id = exercise.Id.ToString(),
             Name = exercise.Name,
             Description = exercise.Description,
-            Instructions = exercise.Instructions,
+            Instructions = string.Empty, // TODO: Replace with CoachNotes
             VideoUrl = exercise.VideoUrl,
             ImageUrl = exercise.ImageUrl,
             IsUnilateral = exercise.IsUnilateral,

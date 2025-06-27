@@ -9,7 +9,6 @@ public record Exercise
     public ExerciseId Id { get; init; }
     public string Name { get; init; } = string.Empty;
     public string Description { get; init; } = string.Empty;
-    public string Instructions { get; init; } = string.Empty;
     public string? VideoUrl { get; init; }
     public string? ImageUrl { get; init; }
     public bool IsUnilateral { get; init; }
@@ -18,6 +17,8 @@ public record Exercise
     
     // Navigation properties
     public DifficultyLevel? Difficulty { get; init; }
+    public ICollection<CoachNote> CoachNotes { get; init; } = new List<CoachNote>();
+    public ICollection<ExerciseExerciseType> ExerciseExerciseTypes { get; init; } = new List<ExerciseExerciseType>();
     
     // Many-to-many relationships
     public ICollection<ExerciseMuscleGroup> ExerciseMuscleGroups { get; init; } = new List<ExerciseMuscleGroup>();
@@ -33,7 +34,6 @@ public record Exercise
         public static Exercise CreateNew(
             string name,
             string description,
-            string instructions,
             string? videoUrl,
             string? imageUrl,
             bool isUnilateral,
@@ -50,11 +50,6 @@ public record Exercise
                 throw new ArgumentException("Description cannot be empty", nameof(description));
             }
             
-            if (string.IsNullOrWhiteSpace(instructions))
-            {
-                throw new ArgumentException("Instructions cannot be empty", nameof(instructions));
-            }
-            
             if (name.Length > 200)
             {
                 throw new ArgumentException("Name cannot exceed 200 characters", nameof(name));
@@ -63,11 +58,6 @@ public record Exercise
             if (description.Length > 1000)
             {
                 throw new ArgumentException("Description cannot exceed 1000 characters", nameof(description));
-            }
-            
-            if (instructions.Length > 5000)
-            {
-                throw new ArgumentException("Instructions cannot exceed 5000 characters", nameof(instructions));
             }
             
             // Validate URLs if provided
@@ -86,7 +76,6 @@ public record Exercise
                 Id = ExerciseId.New(),
                 Name = name.Trim(),
                 Description = description.Trim(),
-                Instructions = instructions.Trim(),
                 VideoUrl = videoUrl?.Trim(),
                 ImageUrl = imageUrl?.Trim(),
                 IsUnilateral = isUnilateral,
@@ -99,7 +88,6 @@ public record Exercise
             ExerciseId id,
             string name,
             string description,
-            string instructions,
             string? videoUrl,
             string? imageUrl,
             bool isUnilateral,
@@ -111,7 +99,6 @@ public record Exercise
                 Id = id,
                 Name = name,
                 Description = description,
-                Instructions = instructions,
                 VideoUrl = videoUrl,
                 ImageUrl = imageUrl,
                 IsUnilateral = isUnilateral,

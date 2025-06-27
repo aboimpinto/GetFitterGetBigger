@@ -226,7 +226,6 @@ namespace GetFitterGetBigger.API.Tests.Services
                 exerciseId,
                 "Original Exercise",
                 "Original Description",
-                "Original Instructions",
                 null,  // videoUrl
                 null,  // imageUrl
                 false, // isUnilateral
@@ -240,7 +239,6 @@ namespace GetFitterGetBigger.API.Tests.Services
                 exerciseId,
                 "Updated Exercise",
                 "Updated Description",
-                "Updated Instructions",
                 null,  // videoUrl
                 null,  // imageUrl
                 false, // isUnilateral
@@ -335,7 +333,6 @@ namespace GetFitterGetBigger.API.Tests.Services
             var exercise = Exercise.Handler.CreateNew(
                 name,
                 "Test Description",
-                "Test Instructions",
                 null,
                 null,
                 false,

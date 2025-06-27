@@ -66,11 +66,11 @@ namespace GetFitterGetBigger.API.Tests.Repositories
             // Arrange
             var difficultyId = _context.DifficultyLevels.First().Id;
             var exercise1 = Exercise.Handler.CreateNew(
-                "Push-up", "Basic push-up", "Get in plank position", null, null, false, difficultyId);
+                "Push-up", "Basic push-up", null, null, false, difficultyId);
             var exercise2 = Exercise.Handler.CreateNew(
-                "Pull-up", "Basic pull-up", "Hang from bar", null, null, false, difficultyId);
+                "Pull-up", "Basic pull-up", null, null, false, difficultyId);
             var inactiveExercise = Exercise.Handler.Create(
-                ExerciseId.New(), "Inactive", "Inactive exercise", "N/A", null, null, false, false, difficultyId);
+                ExerciseId.New(), "Inactive", "Inactive exercise", null, null, false, false, difficultyId);
             
             _context.Exercises.AddRange(exercise1, exercise2, inactiveExercise);
             await _context.SaveChangesAsync();
@@ -90,9 +90,9 @@ namespace GetFitterGetBigger.API.Tests.Repositories
             // Arrange
             var difficultyId = _context.DifficultyLevels.First().Id;
             var activeExercise = Exercise.Handler.CreateNew(
-                "Active Exercise", "Active description", "Active instructions", null, null, false, difficultyId);
+                "Active Exercise", "Active description", null, null, false, difficultyId);
             var inactiveExercise = Exercise.Handler.Create(
-                ExerciseId.New(), "Inactive Exercise", "Inactive description", "N/A", null, null, false, false, difficultyId);
+                ExerciseId.New(), "Inactive Exercise", "Inactive description", null, null, false, false, difficultyId);
             
             _context.Exercises.AddRange(activeExercise, inactiveExercise);
             await _context.SaveChangesAsync();
@@ -113,11 +113,11 @@ namespace GetFitterGetBigger.API.Tests.Repositories
             // Arrange
             var difficultyId = _context.DifficultyLevels.First().Id;
             var exercise1 = Exercise.Handler.CreateNew(
-                "Bench Press", "Chest exercise", "Lie on bench", null, null, false, difficultyId);
+                "Bench Press", "Chest exercise", null, null, false, difficultyId);
             var exercise2 = Exercise.Handler.CreateNew(
-                "Overhead Press", "Shoulder exercise", "Stand upright", null, null, false, difficultyId);
+                "Overhead Press", "Shoulder exercise", null, null, false, difficultyId);
             var exercise3 = Exercise.Handler.CreateNew(
-                "Squat", "Leg exercise", "Stand with feet apart", null, null, false, difficultyId);
+                "Squat", "Leg exercise", null, null, false, difficultyId);
             
             _context.Exercises.AddRange(exercise1, exercise2, exercise3);
             await _context.SaveChangesAsync();
@@ -138,7 +138,7 @@ namespace GetFitterGetBigger.API.Tests.Repositories
             for (int i = 1; i <= 15; i++)
             {
                 var exercise = Exercise.Handler.CreateNew(
-                    $"Exercise {i:D2}", $"Description {i}", $"Instructions {i}", null, null, false, difficultyId);
+                    $"Exercise {i:D2}", $"Description {i}", null, null, false, difficultyId);
                 _context.Exercises.Add(exercise);
             }
             await _context.SaveChangesAsync();
@@ -163,7 +163,7 @@ namespace GetFitterGetBigger.API.Tests.Repositories
             var equipmentId = _context.Equipment.First().Id;
             
             var exercise = Exercise.Handler.CreateNew(
-                "Bench Press", "Chest exercise", "Lie on bench", null, null, false, difficultyId);
+                "Bench Press", "Chest exercise", null, null, false, difficultyId);
             
             _context.Exercises.Add(exercise);
             await _context.SaveChangesAsync();
@@ -193,7 +193,7 @@ namespace GetFitterGetBigger.API.Tests.Repositories
             // Arrange
             var difficultyId = _context.DifficultyLevels.First().Id;
             var exercise = Exercise.Handler.CreateNew(
-                "Unique Exercise Name", "Description", "Instructions", null, null, false, difficultyId);
+                "Unique Exercise Name", "Description", null, null, false, difficultyId);
             
             _context.Exercises.Add(exercise);
             await _context.SaveChangesAsync();
@@ -212,7 +212,7 @@ namespace GetFitterGetBigger.API.Tests.Repositories
             // Arrange
             var difficultyId = _context.DifficultyLevels.First().Id;
             var exercise = Exercise.Handler.CreateNew(
-                "Existing Exercise", "Description", "Instructions", null, null, false, difficultyId);
+                "Existing Exercise", "Description", null, null, false, difficultyId);
             
             _context.Exercises.Add(exercise);
             await _context.SaveChangesAsync();
@@ -230,7 +230,7 @@ namespace GetFitterGetBigger.API.Tests.Repositories
             // Arrange
             var difficultyId = _context.DifficultyLevels.First().Id;
             var exercise = Exercise.Handler.CreateNew(
-                "My Exercise", "Description", "Instructions", null, null, false, difficultyId);
+                "My Exercise", "Description", null, null, false, difficultyId);
             
             _context.Exercises.Add(exercise);
             await _context.SaveChangesAsync();
@@ -250,7 +250,7 @@ namespace GetFitterGetBigger.API.Tests.Repositories
             // Arrange
             var difficultyId = _context.DifficultyLevels.First().Id;
             var exercise = Exercise.Handler.CreateNew(
-                "Exercise", "Description", "Instructions", null, null, false, difficultyId);
+                "Exercise", "Description", null, null, false, difficultyId);
             
             _context.Exercises.Add(exercise);
             await _context.SaveChangesAsync();
@@ -268,7 +268,7 @@ namespace GetFitterGetBigger.API.Tests.Repositories
             // Arrange
             var difficultyId = _context.DifficultyLevels.First().Id;
             var exercise = Exercise.Handler.CreateNew(
-                "New Exercise", "Description", "Instructions", null, null, false, difficultyId);
+                "New Exercise", "Description", null, null, false, difficultyId);
 
             // Act
             var result = await _repository.AddAsync(exercise);
@@ -286,13 +286,13 @@ namespace GetFitterGetBigger.API.Tests.Repositories
             // Arrange
             var difficultyId = _context.DifficultyLevels.First().Id;
             var exercise = Exercise.Handler.CreateNew(
-                "Original Name", "Description", "Instructions", null, null, false, difficultyId);
+                "Original Name", "Description", null, null, false, difficultyId);
             
             _context.Exercises.Add(exercise);
             await _context.SaveChangesAsync();
 
             var updatedExercise = Exercise.Handler.Create(
-                exercise.Id, "Updated Name", "Updated Description", "Updated Instructions", 
+                exercise.Id, "Updated Name", "Updated Description", 
                 null, null, false, true, difficultyId);
 
             // Act
@@ -309,7 +309,7 @@ namespace GetFitterGetBigger.API.Tests.Repositories
             // Arrange
             var difficultyId = _context.DifficultyLevels.First().Id;
             var exercise = Exercise.Handler.CreateNew(
-                "To Delete", "Description", "Instructions", null, null, false, difficultyId);
+                "To Delete", "Description", null, null, false, difficultyId);
             
             _context.Exercises.Add(exercise);
             await _context.SaveChangesAsync();
@@ -339,7 +339,7 @@ namespace GetFitterGetBigger.API.Tests.Repositories
             
             // Create exercise
             var exercise = Exercise.Handler.CreateNew(
-                "Bench Press Multi", "Compound chest exercise", "Lie on bench and press", 
+                "Bench Press Multi", "Compound chest exercise", 
                 null, null, false, difficultyId);
             
             _context.Exercises.Add(exercise);

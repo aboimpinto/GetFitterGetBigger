@@ -33,6 +33,7 @@ public class FitnessDbContext : DbContext
     public DbSet<ExerciseMetricSupport> ExerciseMetricSupport => Set<ExerciseMetricSupport>();
     public DbSet<ExerciseMuscleGroup> ExerciseMuscleGroups => Set<ExerciseMuscleGroup>();
     public DbSet<ExerciseBodyPart> ExerciseBodyParts => Set<ExerciseBodyPart>();
+    public DbSet<ExerciseExerciseType> ExerciseExerciseTypes => Set<ExerciseExerciseType>();
     
     public FitnessDbContext(DbContextOptions<FitnessDbContext> options) 
         : base(options)
@@ -213,11 +214,6 @@ public class FitnessDbContext : DbContext
         modelBuilder.Entity<Exercise>()
             .Property(e => e.Description)
             .HasMaxLength(1000)
-            .IsRequired();
-            
-        modelBuilder.Entity<Exercise>()
-            .Property(e => e.Instructions)
-            .HasMaxLength(5000)
             .IsRequired();
             
         // Configure CoachNote entity constraints
@@ -416,6 +412,32 @@ public class FitnessDbContext : DbContext
             .HasOne(ebp => ebp.BodyPart)
             .WithMany()
             .HasForeignKey(ebp => ebp.BodyPartId);
+            
+        // Exercise to ExerciseType (many-to-many)
+        modelBuilder.Entity<ExerciseExerciseType>()
+            .HasKey(eet => new { eet.ExerciseId, eet.ExerciseTypeId });
+            
+        modelBuilder.Entity<ExerciseExerciseType>()
+            .Property(eet => eet.ExerciseId)
+            .HasConversion(
+                id => (Guid)id,
+                guid => ExerciseId.From(guid));
+                
+        modelBuilder.Entity<ExerciseExerciseType>()
+            .Property(eet => eet.ExerciseTypeId)
+            .HasConversion(
+                id => (Guid)id,
+                guid => ExerciseTypeId.From(guid));
+                
+        modelBuilder.Entity<ExerciseExerciseType>()
+            .HasOne(eet => eet.Exercise)
+            .WithMany(e => e.ExerciseExerciseTypes)
+            .HasForeignKey(eet => eet.ExerciseId);
+            
+        modelBuilder.Entity<ExerciseExerciseType>()
+            .HasOne(eet => eet.ExerciseType)
+            .WithMany()
+            .HasForeignKey(eet => eet.ExerciseTypeId);
     }
     
     private static void ConfigureOneToManyRelationships(ModelBuilder modelBuilder)
@@ -451,12 +473,15 @@ public class FitnessDbContext : DbContext
             .HasForeignKey(e => e.DifficultyId);
             
         // Exercise to CoachNote (one-to-many)
-        // TODO: Uncomment when Exercise.CoachNotes property is added in Phase 3
-        // modelBuilder.Entity<CoachNote>()
-        //     .HasOne(cn => cn.Exercise)
-        //     .WithMany(e => e.CoachNotes)
-        //     .HasForeignKey(cn => cn.ExerciseId)
-        //     .OnDelete(DeleteBehavior.Cascade);
+        modelBuilder.Entity<CoachNote>()
+            .HasOne(cn => cn.Exercise)
+            .WithMany(e => e.CoachNotes)
+            .HasForeignKey(cn => cn.ExerciseId)
+            .OnDelete(DeleteBehavior.Cascade);
+            
+        // Add composite index for CoachNote
+        modelBuilder.Entity<CoachNote>()
+            .HasIndex(cn => new { cn.ExerciseId, cn.Order });
             
         // BodyPart to MuscleGroup (one-to-many)
         modelBuilder.Entity<MuscleGroup>()

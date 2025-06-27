@@ -329,7 +329,6 @@ public class ExercisesControllerTests : IClassFixture<ApiTestFixture>
             Exercise.Handler.CreateNew(
                 "Barbell Back Squat",
                 "A compound lower body exercise",
-                "Position bar on upper back\nSquat down to parallel\nDrive up through heels",
                 "https://example.com/squat-video.mp4",
                 "https://example.com/squat-image.jpg",
                 false,
@@ -338,7 +337,6 @@ public class ExercisesControllerTests : IClassFixture<ApiTestFixture>
             Exercise.Handler.CreateNew(
                 "Dumbbell Bicep Curl",
                 "An isolation exercise for biceps",
-                "Hold dumbbells at sides\nCurl up to shoulders\nLower with control",
                 null,
                 null,
                 true,
@@ -347,7 +345,6 @@ public class ExercisesControllerTests : IClassFixture<ApiTestFixture>
             Exercise.Handler.CreateNew(
                 "Push-up",
                 "A bodyweight upper body exercise",
-                "Start in plank position\nLower chest to floor\nPush back up",
                 "https://example.com/pushup-video.mp4",
                 null,
                 false,

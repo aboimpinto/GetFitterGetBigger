@@ -109,7 +109,7 @@ public class CacheService : ICacheService
                 await SetAsync(key, value, expiration);
             }
 
-            return value;
+            return value!;
         }
         catch (Exception ex)
         {

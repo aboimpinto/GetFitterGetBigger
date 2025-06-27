@@ -122,12 +122,19 @@ public abstract class ReferenceTablesBaseController : ControllerBase
         var cacheKey = CacheKeyGenerator.GetByIdKey(tableName, id);
         var cacheDuration = GetCacheDuration();
 
-        var result = await _cacheService.GetOrCreateAsync(
-            cacheKey,
-            async () => await getByIdFunc() ?? null as TEntity,
-            cacheDuration);
+        // Try to get from cache first
+        var cached = await _cacheService.GetAsync<TEntity>(cacheKey);
+        if (cached != null)
+            return cached;
 
-        return result;
+        // If not in cache, get from database
+        var entity = await getByIdFunc();
+        if (entity != null)
+        {
+            await _cacheService.SetAsync(cacheKey, entity, cacheDuration);
+        }
+
+        return entity;
     }
 
     /// <summary>
@@ -145,12 +152,19 @@ public abstract class ReferenceTablesBaseController : ControllerBase
         var cacheKey = CacheKeyGenerator.GetByValueKey(tableName, value);
         var cacheDuration = GetCacheDuration();
 
-        var result = await _cacheService.GetOrCreateAsync(
-            cacheKey,
-            async () => await getByValueFunc() ?? null as TEntity,
-            cacheDuration);
+        // Try to get from cache first
+        var cached = await _cacheService.GetAsync<TEntity>(cacheKey);
+        if (cached != null)
+            return cached;
 
-        return result;
+        // If not in cache, get from database
+        var entity = await getByValueFunc();
+        if (entity != null)
+        {
+            await _cacheService.SetAsync(cacheKey, entity, cacheDuration);
+        }
+
+        return entity;
     }
 
     /// <summary>

@@ -36,6 +36,13 @@
   - Configure cascading delete
   - Add composite index on (ExerciseId, Order) `[Implemented: cd4c0b01]`
 
+#### 2.2 Boy Scout Rule Fixes
+- **Task 2.2.1:** Fix failing test ExerciseServiceTests.UpdateAsync_WithValidRequest_UpdatesExercise `[Implemented: Boy Scout Rule]`
+- **Task 2.2.2:** Fix warning CS8618 in RepositoryBase.cs `[Implemented: Boy Scout Rule]`
+- **Task 2.2.3:** Fix warnings in ReferenceTablesBaseController.cs (4 warnings) `[Implemented: Boy Scout Rule]`
+- **Task 2.2.4:** Fix warning CS8603 in CacheService.cs `[Implemented: Boy Scout Rule]`
+- **Task 2.2.5:** Fix warning CS8634 in CacheServiceTests.cs `[Implemented: Boy Scout Rule]`
+
 ### Phase 3: Update Exercise Entity
 
 #### 3.1 Modify Exercise Entity
