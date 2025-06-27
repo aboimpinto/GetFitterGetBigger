@@ -1,160 +1,146 @@
-# Task List: Exercise CoachNotes and TypeOfExercise
+# Exercise CoachNotes and TypeOfExercise Implementation Tasks
 
-## Phase 1: Create Reference Table Infrastructure [COMPLETED - ac470a0e]
+## Feature Branch: `feature/exercise-coachnotes-types`
 
-### 1.1 Create Strongly-Typed IDs
-- [x] Create `CoachNoteId` in `SpecializedIds` namespace (format: "coachnote-{guid}")
-- [x] Create unit tests for `CoachNoteId`
-- [x] Create `ExerciseTypeId` in `SpecializedIds` namespace (format: "exercisetype-{guid}")
-- [x] Create unit tests for `ExerciseTypeId`
-- [x] Implement standard methods: `New()`, `From()`, `TryParse()`, `ToString()`
-- [x] Add implicit conversion to `Guid` for EF Core compatibility
+### Phase 1: Create Reference Table Infrastructure
 
-### 1.2 Create ExerciseType Reference Table
-- [x] Create `ExerciseType.cs` entity extending `ReferenceDataBase`
-- [x] Use `ExerciseTypeId` as the ID type
-- [x] Add ExerciseType values: Warmup, Workout, Cooldown, Rest
-- [x] Create `IExerciseTypeRepository` interface
-- [x] Implement `ExerciseTypeRepository`
-- [x] Create unit tests for `ExerciseTypeRepository`
-- [x] Add ExerciseType DbSet to `FitnessDbContext`
-- [x] Configure ExerciseType in `OnModelCreating`
-- [x] Create migration for ExerciseType table
-- [x] Add seed data for ExerciseType values
+#### 1.1 Create Strongly-Typed IDs
+- **Task 1.1.1:** Create `CoachNoteId` in `SpecializedIds` namespace (format: "coachnote-{guid}") `[Implemented: ac470a0e]`
+- **Task 1.1.2:** Create unit tests for `CoachNoteId` `[Implemented: ac470a0e]`
+- **Task 1.1.3:** Create `ExerciseTypeId` in `SpecializedIds` namespace (format: "exercisetype-{guid}") `[Implemented: ac470a0e]`
+- **Task 1.1.4:** Create unit tests for `ExerciseTypeId` `[Implemented: ac470a0e]`
 
-## Phase 2: Create CoachNote Entity
+#### 1.2 Create ExerciseType Reference Table
+- **Task 1.2.1:** Create `ExerciseType.cs` entity extending `ReferenceDataBase` `[Implemented: ac470a0e]`
+- **Task 1.2.2:** Create `IExerciseTypeRepository` interface `[Implemented: ac470a0e]`
+- **Task 1.2.3:** Implement `ExerciseTypeRepository` `[Implemented: ac470a0e]`
+- **Task 1.2.4:** Create unit tests for `ExerciseTypeRepository` `[Implemented: ac470a0e]`
+- **Task 1.2.5:** Configure ExerciseType in DbContext (DbSet, ID conversion, seed data) `[Implemented: ac470a0e]`
+- **Task 1.2.6:** Register repository in dependency injection `[Implemented: ac470a0e]`
 
-### 2.1 Create CoachNote Entity and Infrastructure
-- [ ] Create `CoachNote.cs` entity with:
+### Phase 2: Create CoachNote Entity
+
+#### 2.1 Create CoachNote Entity and Infrastructure
+- **Task 2.1.1:** Create `CoachNote.cs` entity with:
   - Id (CoachNoteId)
   - ExerciseId (ExerciseId) 
   - Text (string, max 1000)
   - Order (int)
-  - Navigation property to Exercise
-- [ ] Create unit tests for `CoachNote` entity
-- [ ] Add CoachNote DbSet to `FitnessDbContext`
-- [ ] Configure CoachNote in `OnModelCreating`:
+  - Navigation property to Exercise `[ReadyToDevelop]`
+- **Task 2.1.2:** Create unit tests for `CoachNote` entity `[ReadyToDevelop]`
+- **Task 2.1.3:** Add CoachNote DbSet to `FitnessDbContext` `[ReadyToDevelop]`
+- **Task 2.1.4:** Configure CoachNote in `OnModelCreating`:
   - Configure CoachNoteId value conversion
   - Configure ExerciseId value conversion
   - Set up foreign key to Exercise
   - Configure cascading delete
-  - Add composite index on (ExerciseId, Order)
-- [ ] Create migration for CoachNote table
+  - Add composite index on (ExerciseId, Order) `[ReadyToDevelop]`
 
-## Phase 3: Update Exercise Entity
+### Phase 3: Update Exercise Entity
 
-### 3.1 Modify Exercise Entity
-- [ ] Remove `Instructions` property from Exercise entity
-- [ ] Add `CoachNotes` navigation collection
-- [ ] Add `ExerciseTypes` navigation collection
-- [ ] Update entity validation attributes
+#### 3.1 Modify Exercise Entity
+- **Task 3.1.1:** Remove `Instructions` property from Exercise entity `[ReadyToDevelop]`
+- **Task 3.1.2:** Add `CoachNotes` navigation collection `[ReadyToDevelop]`
+- **Task 3.1.3:** Add `ExerciseTypes` navigation collection `[ReadyToDevelop]`
+- **Task 3.1.4:** Update entity validation attributes `[ReadyToDevelop]`
+- **Task 3.1.5:** Update Exercise entity tests `[ReadyToDevelop]`
 
-### 3.2 Create Junction Table
-- [ ] Create `ExerciseExerciseType` entity for many-to-many relationship
-- [ ] Configure junction table in `FitnessDbContext`
-- [ ] Create migration for junction table
+#### 3.2 Create Junction Table
+- **Task 3.2.1:** Create `ExerciseExerciseType` entity for many-to-many relationship `[ReadyToDevelop]`
+- **Task 3.2.2:** Configure junction table in `FitnessDbContext` `[ReadyToDevelop]`
 
-## Phase 4: Update DTOs
+### Phase 4: Update DTOs
 
-### 4.1 Create New DTOs
-- [ ] Create `CoachNoteDto` with Id (string), Text, and Order properties
-- [ ] Create `ExerciseTypeDto` extending from reference data base DTO
-- [ ] Ensure DTOs use string format for IDs (e.g., "coachnote-{guid}")
+#### 4.1 Create New DTOs
+- **Task 4.1.1:** Create `CoachNoteDto` with Id (string), Text, and Order properties `[ReadyToDevelop]`
+- **Task 4.1.2:** Create `ExerciseTypeDto` extending from reference data base DTO `[ReadyToDevelop]`
+- **Task 4.1.3:** Create unit tests for new DTOs `[ReadyToDevelop]`
 
-### 4.2 Update Existing DTOs
-- [ ] Update `ExerciseDto`:
+#### 4.2 Update Existing DTOs
+- **Task 4.2.1:** Update `ExerciseDto`:
   - Remove `Instructions` property
   - Add `CoachNotes` collection property
-  - Add `ExerciseTypes` collection property
-- [ ] Update `CreateExerciseRequest`:
+  - Add `ExerciseTypes` collection property `[ReadyToDevelop]`
+- **Task 4.2.2:** Update `CreateExerciseRequest`:
   - Remove `Instructions` property and validation
   - Add `CoachNotes` collection (array of text and order, no IDs needed)
-  - Add `ExerciseTypeIds` collection (string[])
-- [ ] Update `UpdateExerciseRequest`:
+  - Add `ExerciseTypeIds` collection (string[]) `[ReadyToDevelop]`
+- **Task 4.2.3:** Update `UpdateExerciseRequest`:
   - Remove `Instructions` property and validation
   - Add `CoachNotes` collection (with optional IDs for existing notes)
-  - Add `ExerciseTypeIds` collection (string[])
-  - CoachNotes without IDs are treated as new additions
+  - Add `ExerciseTypeIds` collection (string[]) `[ReadyToDevelop]`
+- **Task 4.2.4:** Update DTO tests `[ReadyToDevelop]`
 
-## Phase 5: Update Repository Layer
+### Phase 5: Update Repository Layer
 
-### 5.1 Update Exercise Repository
-- [ ] Update `GetByIdAsync` to include CoachNotes and ExerciseTypes
-- [ ] Update `GetAllAsync` to include related data
-- [ ] Update `GetPagedAsync` to include related data
-- [ ] Ensure CoachNotes are ordered by Order field in all queries
+#### 5.1 Update Exercise Repository
+- **Task 5.1.1:** Update `GetByIdAsync` to include CoachNotes and ExerciseTypes `[ReadyToDevelop]`
+- **Task 5.1.2:** Update `GetAllAsync` to include related data `[ReadyToDevelop]`
+- **Task 5.1.3:** Update `GetPagedAsync` to include related data `[ReadyToDevelop]`
+- **Task 5.1.4:** Ensure CoachNotes are ordered by Order field in all queries `[ReadyToDevelop]`
+- **Task 5.1.5:** Update repository tests for new includes `[ReadyToDevelop]`
 
-## Phase 6: Update Service Layer
+### Phase 6: Update Service Layer
 
-### 6.1 Update Exercise Service
-- [ ] Create validation method for Rest exclusivity rule
-- [ ] Create unit tests for Rest exclusivity validation
-- [ ] Update `CreateAsync`:
+#### 6.1 Update Exercise Service
+- **Task 6.1.1:** Create validation method for Rest exclusivity rule `[ReadyToDevelop]`
+- **Task 6.1.2:** Create unit tests for Rest exclusivity validation `[ReadyToDevelop]`
+- **Task 6.1.3:** Update `CreateAsync`:
   - Remove Instructions handling
-  - Add CoachNotes creation logic (create new CoachNotes as part of Exercise)
+  - Add CoachNotes creation logic
   - Add ExerciseTypes assignment
-  - Implement Rest exclusivity validation
-- [ ] Create unit tests for `CreateAsync` with CoachNotes and ExerciseTypes
-- [ ] Update `UpdateAsync`:
+  - Implement Rest exclusivity validation `[ReadyToDevelop]`
+- **Task 6.1.4:** Create unit tests for `CreateAsync` with CoachNotes and ExerciseTypes `[ReadyToDevelop]`
+- **Task 6.1.5:** Update `UpdateAsync`:
   - Remove Instructions handling
-  - Implement CoachNotes synchronization logic:
-    - Delete removed CoachNotes
-    - Update existing CoachNotes (match by ID)
-    - Add new CoachNotes
-    - Preserve ordering
+  - Implement CoachNotes synchronization logic
   - Update ExerciseTypes assignment
-  - Implement Rest exclusivity validation
-- [ ] Create unit tests for `UpdateAsync` with CoachNotes synchronization
-- [ ] Update `MapToDto` to map CoachNotes and ExerciseTypes
-- [ ] Create unit tests for `MapToDto` with new properties
-- [ ] Test CoachNotes ordering is preserved
+  - Implement Rest exclusivity validation `[ReadyToDevelop]`
+- **Task 6.1.6:** Create unit tests for `UpdateAsync` with CoachNotes synchronization `[ReadyToDevelop]`
+- **Task 6.1.7:** Update `MapToDto` to map CoachNotes and ExerciseTypes `[ReadyToDevelop]`
+- **Task 6.1.8:** Create unit tests for `MapToDto` with new properties `[ReadyToDevelop]`
 
-## Phase 7: Update Controller
+### Phase 7: Update Controller
 
-### 7.1 Update Exercises Controller
-- [ ] Update API documentation for Create endpoint
-- [ ] Update API documentation for Update endpoint
-- [ ] Update example requests in XML comments
-- [ ] Add validation attributes if needed
+#### 7.1 Update Exercises Controller
+- **Task 7.1.1:** Update API documentation for Create endpoint `[ReadyToDevelop]`
+- **Task 7.1.2:** Update API documentation for Update endpoint `[ReadyToDevelop]`
+- **Task 7.1.3:** Update example requests in XML comments `[ReadyToDevelop]`
+- **Task 7.1.4:** Add validation attributes if needed `[ReadyToDevelop]`
 
-## Phase 8: Integration Tests
+### Phase 8: Integration Tests
 
-### 8.1 Create Integration Tests
-- [ ] Update Exercise creation integration tests with CoachNotes
-- [ ] Update Exercise update integration tests with CoachNotes changes
-- [ ] Test CoachNotes synchronization scenarios:
-  - Adding new CoachNotes to existing exercise
-  - Removing CoachNotes from exercise
-  - Updating CoachNote text and order
-  - Reordering CoachNotes
-- [ ] Add integration tests for ExerciseTypes assignment
-- [ ] Add integration tests for Rest exclusivity rule
-- [ ] Test complete workflow: Create exercise with CoachNotes and Types
-- [ ] Test CoachNotes ordering in API responses
+#### 8.1 Create Integration Tests
+- **Task 8.1.1:** Update Exercise creation integration tests with CoachNotes `[ReadyToDevelop]`
+- **Task 8.1.2:** Update Exercise update integration tests with CoachNotes changes `[ReadyToDevelop]`
+- **Task 8.1.3:** Test CoachNotes synchronization scenarios `[ReadyToDevelop]`
+- **Task 8.1.4:** Add integration tests for ExerciseTypes assignment `[ReadyToDevelop]`
+- **Task 8.1.5:** Add integration tests for Rest exclusivity rule `[ReadyToDevelop]`
+- **Task 8.1.6:** Test complete workflow and CoachNotes ordering `[ReadyToDevelop]`
 
-## Phase 9: Database Migration
+### Phase 9: Database Migration
 
-### 9.1 Create Complete Migration
-- [ ] Generate migration for all changes
-- [ ] Review migration for correctness
-- [ ] Create data migration script for existing Instructions (if needed)
+#### 9.1 Create Complete Migration
+- **Task 9.1.1:** Generate migration for all changes `[ReadyToDevelop]`
+- **Task 9.1.2:** Review migration for correctness `[ReadyToDevelop]`
+- **Task 9.1.3:** Create data migration script for existing Instructions (if needed) `[ReadyToDevelop]`
 
-## Phase 10: Documentation and Final Steps
+### Phase 10: Documentation and Final Steps
 
-### 10.1 Update Documentation
-- [ ] Update API documentation
-- [ ] Update Swagger annotations
-- [ ] Create/update relevant memory bank documents
+#### 10.1 Update Documentation
+- **Task 10.1.1:** Update API documentation `[ReadyToDevelop]`
+- **Task 10.1.2:** Update Swagger annotations `[ReadyToDevelop]`
+- **Task 10.1.3:** Create/update relevant memory bank documents `[ReadyToDevelop]`
 
-### 10.2 Quality Assurance
-- [ ] Run all tests
-- [ ] Run linting
-- [ ] Run type checking
-- [ ] Manual testing of all endpoints
-- [ ] Verify database constraints
+#### 10.2 Quality Assurance
+- **Task 10.2.1:** Run all tests `[ReadyToDevelop]`
+- **Task 10.2.2:** Run linting `[ReadyToDevelop]`
+- **Task 10.2.3:** Run type checking `[ReadyToDevelop]`
+- **Task 10.2.4:** Manual testing of all endpoints `[ReadyToDevelop]`
+- **Task 10.2.5:** Verify database constraints `[ReadyToDevelop]`
 
 ## Notes
-- Each phase should be completed and tested before moving to the next
-- The Rest exclusivity rule must be enforced at the service layer
-- Consider performance implications of loading related data
-- Ensure backward compatibility considerations are documented
+- Each implementation task must be immediately followed by its test task
+- No task is complete until build passes and all tests are green
+- Keep build warnings to minimum
+- Migration creation is deferred until all entity changes are complete
