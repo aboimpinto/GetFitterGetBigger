@@ -26,15 +26,15 @@
   - ExerciseId (ExerciseId) 
   - Text (string, max 1000)
   - Order (int)
-  - Navigation property to Exercise `[ReadyToDevelop]`
-- **Task 2.1.2:** Create unit tests for `CoachNote` entity `[ReadyToDevelop]`
-- **Task 2.1.3:** Add CoachNote DbSet to `FitnessDbContext` `[ReadyToDevelop]`
+  - Navigation property to Exercise `[Implemented: cd4c0b01]`
+- **Task 2.1.2:** Create unit tests for `CoachNote` entity `[Implemented: cd4c0b01]`
+- **Task 2.1.3:** Add CoachNote DbSet to `FitnessDbContext` `[Implemented: cd4c0b01]`
 - **Task 2.1.4:** Configure CoachNote in `OnModelCreating`:
   - Configure CoachNoteId value conversion
   - Configure ExerciseId value conversion
   - Set up foreign key to Exercise
   - Configure cascading delete
-  - Add composite index on (ExerciseId, Order) `[ReadyToDevelop]`
+  - Add composite index on (ExerciseId, Order) `[Implemented: cd4c0b01]`
 
 ### Phase 3: Update Exercise Entity
 
