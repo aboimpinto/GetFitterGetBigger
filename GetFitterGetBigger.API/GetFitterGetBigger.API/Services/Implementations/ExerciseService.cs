@@ -151,8 +151,9 @@ public class ExerciseService : IExerciseService
             }
         }
         
-        // Add exercise types
-        foreach (var exerciseTypeIdStr in request.ExerciseTypeIds)
+        // Add exercise types (deduplicate first)
+        var uniqueExerciseTypeIds = request.ExerciseTypeIds.Distinct();
+        foreach (var exerciseTypeIdStr in uniqueExerciseTypeIds)
         {
             if (ExerciseTypeId.TryParse(exerciseTypeIdStr, out var exerciseTypeId))
             {
@@ -189,8 +190,8 @@ public class ExerciseService : IExerciseService
             ExerciseTypes = exercise.ExerciseExerciseTypes.Select(eet => new ReferenceDataDto
             {
                 Id = eet.ExerciseTypeId.ToString(),
-                Value = "Unknown", // We don't have the value without loading
-                Description = null
+                Value = eet.ExerciseType?.Value ?? "Unknown",
+                Description = eet.ExerciseType?.Description
             }).ToList(),
             VideoUrl = exercise.VideoUrl,
             ImageUrl = exercise.ImageUrl,
@@ -199,36 +200,41 @@ public class ExerciseService : IExerciseService
             Difficulty = new ReferenceDataDto
             {
                 Id = exercise.DifficultyId.ToString(),
-                Value = "Unknown", // We don't have the value without loading
-                Description = null
+                Value = exercise.Difficulty?.Value ?? "Unknown",
+                Description = exercise.Difficulty?.Description
             },
             MuscleGroups = exercise.ExerciseMuscleGroups.Select(emg => new MuscleGroupWithRoleDto
             {
                 MuscleGroup = new ReferenceDataDto
                 {
                     Id = emg.MuscleGroupId.ToString(),
-                    Value = "Unknown"
+                    Value = emg.MuscleGroup?.Name ?? "Unknown",
+                    Description = null
                 },
                 Role = new ReferenceDataDto
                 {
                     Id = emg.MuscleRoleId.ToString(),
-                    Value = "Unknown"
+                    Value = emg.MuscleRole?.Value ?? "Unknown",
+                    Description = emg.MuscleRole?.Description
                 }
             }).ToList(),
             Equipment = exercise.ExerciseEquipment.Select(ee => new ReferenceDataDto
             {
                 Id = ee.EquipmentId.ToString(),
-                Value = "Unknown"
+                Value = ee.Equipment?.Name ?? "Unknown",
+                Description = null
             }).ToList(),
             MovementPatterns = exercise.ExerciseMovementPatterns.Select(emp => new ReferenceDataDto
             {
                 Id = emp.MovementPatternId.ToString(),
-                Value = "Unknown"
+                Value = emp.MovementPattern?.Name ?? "Unknown",
+                Description = emp.MovementPattern?.Description
             }).ToList(),
             BodyParts = exercise.ExerciseBodyParts.Select(ebp => new ReferenceDataDto
             {
                 Id = ebp.BodyPartId.ToString(),
-                Value = "Unknown"
+                Value = ebp.BodyPart?.Value ?? "Unknown",
+                Description = ebp.BodyPart?.Description
             }).ToList()
         };
     }
@@ -308,8 +314,9 @@ public class ExerciseService : IExerciseService
             }
         }
         
-        // Update exercise types
-        foreach (var exerciseTypeIdStr in request.ExerciseTypeIds)
+        // Update exercise types (deduplicate first)
+        var uniqueExerciseTypeIds = request.ExerciseTypeIds.Distinct();
+        foreach (var exerciseTypeIdStr in uniqueExerciseTypeIds)
         {
             if (ExerciseTypeId.TryParse(exerciseTypeIdStr, out var exerciseTypeId))
             {
@@ -346,8 +353,8 @@ public class ExerciseService : IExerciseService
             ExerciseTypes = exercise.ExerciseExerciseTypes.Select(eet => new ReferenceDataDto
             {
                 Id = eet.ExerciseTypeId.ToString(),
-                Value = "Unknown", // We don't have the value without loading
-                Description = null
+                Value = eet.ExerciseType?.Value ?? "Unknown",
+                Description = eet.ExerciseType?.Description
             }).ToList(),
             VideoUrl = exercise.VideoUrl,
             ImageUrl = exercise.ImageUrl,
@@ -364,28 +371,33 @@ public class ExerciseService : IExerciseService
                 MuscleGroup = new ReferenceDataDto
                 {
                     Id = emg.MuscleGroupId.ToString(),
-                    Value = "Unknown"
+                    Value = emg.MuscleGroup?.Name ?? "Unknown",
+                    Description = null
                 },
                 Role = new ReferenceDataDto
                 {
                     Id = emg.MuscleRoleId.ToString(),
-                    Value = "Unknown"
+                    Value = emg.MuscleRole?.Value ?? "Unknown",
+                    Description = emg.MuscleRole?.Description
                 }
             }).ToList(),
             Equipment = exercise.ExerciseEquipment.Select(ee => new ReferenceDataDto
             {
                 Id = ee.EquipmentId.ToString(),
-                Value = "Unknown"
+                Value = ee.Equipment?.Name ?? "Unknown",
+                Description = null
             }).ToList(),
             MovementPatterns = exercise.ExerciseMovementPatterns.Select(emp => new ReferenceDataDto
             {
                 Id = emp.MovementPatternId.ToString(),
-                Value = "Unknown"
+                Value = emp.MovementPattern?.Name ?? "Unknown",
+                Description = emp.MovementPattern?.Description
             }).ToList(),
             BodyParts = exercise.ExerciseBodyParts.Select(ebp => new ReferenceDataDto
             {
                 Id = ebp.BodyPartId.ToString(),
-                Value = "Unknown"
+                Value = ebp.BodyPart?.Value ?? "Unknown",
+                Description = ebp.BodyPart?.Description
             }).ToList()
         };
     }
