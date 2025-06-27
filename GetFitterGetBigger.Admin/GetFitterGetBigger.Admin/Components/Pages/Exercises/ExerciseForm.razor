@@ -31,7 +31,7 @@
     }
     else
     {
-        <form @onsubmit="HandleSubmit" @onsubmit:preventDefault="true">
+        <EditForm Model="@model" OnValidSubmit="@HandleSubmit">
             <div class="space-y-6">
                 <!-- Basic Information -->
                 <div class="border-b pb-6">
@@ -146,11 +146,15 @@
                         }
                     </div>
                     
-                    <button type="button" @onclick="@(() => AddMuscleGroup())"
-                            class="text-blue-600 hover:text-blue-800 text-sm font-medium">
-                        + Add Muscle Group
-                    </button>
-                    <span class="ml-2 text-sm text-gray-500">(Count: @muscleGroupAssignments.Count)</span>
+                    <div class="flex items-center space-x-4">
+                        <a href="javascript:void(0)" @onclick="@AddMuscleGroup" @onclick:preventDefault="true"
+                           class="text-blue-600 hover:text-blue-800 text-sm font-medium cursor-pointer">
+                            + Add Muscle Group
+                        </a>
+                        <input type="button" value="Add (Alternative)" @onclick="@AddMuscleGroup"
+                               class="px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 cursor-pointer" />
+                        <span class="text-sm text-gray-500">(Count: @muscleGroupAssignments.Count)</span>
+                    </div>
                 </div>
 
                 <!-- Equipment -->
@@ -248,7 +252,7 @@
                     </button>
                 </div>
             </div>
-        </form>
+        </EditForm>
     }
 </div>
 
