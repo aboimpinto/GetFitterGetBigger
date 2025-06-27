@@ -143,10 +143,16 @@ If bug won't be addressed:
 - **Task 2.1:** [Specific fix action] [TODO]
 - **Task 2.2:** [Additional fix if needed] [TODO]
 
-#### 3. Verification
-- **Task 3.1:** Run all related tests [TODO]
-- **Task 3.2:** Create manual test script [TODO]
-- **Task 3.3:** Update documentation [TODO]
+#### 3. Boy Scout Cleanup (MANDATORY)
+- **Task 3.1:** Fix any failing tests found during work [TODO]
+- **Task 3.2:** Fix all build warnings in touched files [TODO]
+- **Task 3.3:** Clean up code smells in modified files [TODO]
+
+#### 4. Verification
+- **Task 4.1:** Run ALL tests (must be 100% green) [TODO]
+- **Task 4.2:** Verify zero build warnings [TODO]
+- **Task 4.3:** Create manual test script [TODO]
+- **Task 4.4:** Update documentation [TODO]
 
 ### Test Scripts
 - `test-[bug-name].sh` - Manual verification script
@@ -180,6 +186,16 @@ Bugs in `1-OPEN` should be triaged based on:
 3. **Fix Implementation**: Write minimum code to pass test
 4. **All Tests Green**: No test should be skipped or failing
 5. **Regression Tests**: Add tests to prevent recurrence
+
+### Boy Scout Rule - MANDATORY
+When fixing ANY bug, you MUST:
+1. **Fix ALL failing tests** in the codebase, not just bug-related ones
+2. **Fix ALL build warnings** encountered during your work
+3. **Clean up code** in any files you touch
+4. **Update outdated documentation** you encounter
+5. **Remove dead code** and improve code quality
+
+**NO EXCEPTIONS**: If you find a failing test or warning while fixing a bug, it becomes YOUR responsibility to fix it. The codebase must be in a better state after your bug fix than before.
 
 ### Test Scripts
 Each bug folder MUST contain:

@@ -220,7 +220,38 @@ namespace GetFitterGetBigger.API.Tests.Services
 
             var difficultyId = DifficultyLevelId.New();
             var difficulty = DifficultyLevel.Handler.Create(difficultyId, "Beginner", "For beginners", 1, true);
-            var updatedExercise = CreateTestExercise("Updated Exercise", difficultyId, difficulty);
+            
+            // Create existing exercise with the same ID we're updating
+            var existingExercise = Exercise.Handler.Create(
+                exerciseId,
+                "Original Exercise",
+                "Original Description",
+                "Original Instructions",
+                null,  // videoUrl
+                null,  // imageUrl
+                false, // isUnilateral
+                false, // isActive
+                difficultyId);
+            
+            // Set up the navigation property
+            var existingExerciseWithDifficulty = existingExercise with { Difficulty = difficulty };
+            
+            var updatedExercise = Exercise.Handler.Create(
+                exerciseId,
+                "Updated Exercise",
+                "Updated Description",
+                "Updated Instructions",
+                null,  // videoUrl
+                null,  // imageUrl
+                false, // isUnilateral
+                true,  // isActive
+                difficultyId);
+                
+            var updatedExerciseWithDifficulty = updatedExercise with { Difficulty = difficulty };
+
+            _mockExerciseRepository
+                .Setup(r => r.GetByIdAsync(exerciseId))
+                .ReturnsAsync(existingExerciseWithDifficulty);
 
             _mockExerciseRepository
                 .Setup(r => r.ExistsAsync(It.IsAny<string>(), It.IsAny<ExerciseId?>()))
@@ -228,7 +259,7 @@ namespace GetFitterGetBigger.API.Tests.Services
 
             _mockExerciseRepository
                 .Setup(r => r.UpdateAsync(It.IsAny<Exercise>()))
-                .ReturnsAsync(updatedExercise);
+                .ReturnsAsync(updatedExerciseWithDifficulty);
 
             // Act
             var result = await _service.UpdateAsync(exerciseId.ToString(), request);

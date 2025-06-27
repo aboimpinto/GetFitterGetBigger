@@ -38,11 +38,15 @@ This document outlines the standard process for implementing new features in the
   - **NO broken builds between tasks** - each task must leave the codebase in a working state
   - **ALL tests must be green** after implementing a task (no skipped, no failures)
   - **Tests are written immediately after implementation** (not deferred to a later phase)
+  - **BOY SCOUT RULE**: Always leave the code better than you found it
+    - Fix ANY failing tests, even if unrelated to your changes
+    - Fix ALL build warnings encountered during your work
+    - This is YOUR responsibility - no exceptions
   - Never move to the next task if:
     - The build is failing
     - Build warnings are excessive
     - Tests are not written
-    - Any test is failing
+    - Any test is failing (including pre-existing failures)
 
 ### 4. Test Development & Handling
 - Write unit tests for all new functionality
@@ -99,6 +103,25 @@ When a feature cannot be completed due to external dependencies:
    - Remove the `[INCOMPLETE]` status from the feature
    - Add note about bug resolution
 
+## Boy Scout Rule - Leave Code Better Than You Found It
+
+**THIS IS MANDATORY - NO EXCEPTIONS**
+
+When working on any task, you MUST:
+1. **Fix ALL failing tests** - even if they were failing before you started
+2. **Fix ALL build warnings** - reduce technical debt with every commit
+3. **Clean up any code smells** you encounter in files you're working with
+4. **Update outdated comments** or documentation you come across
+5. **Remove commented-out code** that's no longer needed
+
+This applies to:
+- Feature implementation
+- Bug fixes
+- Documentation updates
+- ANY code changes
+
+**Remember**: If you encounter a failing test or warning, it becomes YOUR responsibility to fix it before completing your task.
+
 ## Implementation Verification Checklist
 
 Before marking any task as `[Implemented]`, verify:
@@ -108,6 +131,8 @@ Before marking any task as `[Implemented]`, verify:
 - [ ] `dotnet build` runs without errors
 - [ ] Build warnings are minimal (no nullable reference warnings, unused variables, etc.)
 - [ ] `dotnet test` runs with ALL tests passing (100% green, no skipped tests)
+- [ ] ALL pre-existing test failures have been fixed
+- [ ] ALL build warnings in touched files have been addressed
 - [ ] Code follows project conventions
 - [ ] No commented-out code or debug statements
 - [ ] The codebase is in a working state (no broken functionality)

@@ -41,7 +41,6 @@ public class CoachNoteTests
     }
     
     [Theory]
-    [InlineData(null)]
     [InlineData("")]
     [InlineData("   ")]
     public void CreateNew_EmptyText_ThrowsArgumentException(string text)
@@ -53,6 +52,19 @@ public class CoachNoteTests
         // Act & Assert
         var exception = Assert.Throws<ArgumentException>(() => 
             CoachNote.Handler.CreateNew(exerciseId, text, order));
+        Assert.Equal("Text cannot be empty (Parameter 'text')", exception.Message);
+    }
+    
+    [Fact]
+    public void CreateNew_NullText_ThrowsArgumentException()
+    {
+        // Arrange
+        var exerciseId = ExerciseId.New();
+        var order = 1;
+        
+        // Act & Assert
+        var exception = Assert.Throws<ArgumentException>(() => 
+            CoachNote.Handler.CreateNew(exerciseId, null!, order));
         Assert.Equal("Text cannot be empty (Parameter 'text')", exception.Message);
     }
     
@@ -121,7 +133,6 @@ public class CoachNoteTests
     }
     
     [Theory]
-    [InlineData(null)]
     [InlineData("")]
     [InlineData("   ")]
     public void UpdateText_EmptyText_ThrowsArgumentException(string newText)
@@ -132,6 +143,18 @@ public class CoachNoteTests
         // Act & Assert
         var exception = Assert.Throws<ArgumentException>(() => 
             CoachNote.Handler.UpdateText(original, newText));
+        Assert.Equal("Text cannot be empty (Parameter 'newText')", exception.Message);
+    }
+    
+    [Fact]
+    public void UpdateText_NullText_ThrowsArgumentException()
+    {
+        // Arrange
+        var original = CoachNote.Handler.CreateNew(ExerciseId.New(), "Original text", 1);
+        
+        // Act & Assert
+        var exception = Assert.Throws<ArgumentException>(() => 
+            CoachNote.Handler.UpdateText(original, null!));
         Assert.Equal("Text cannot be empty (Parameter 'newText')", exception.Message);
     }
     
