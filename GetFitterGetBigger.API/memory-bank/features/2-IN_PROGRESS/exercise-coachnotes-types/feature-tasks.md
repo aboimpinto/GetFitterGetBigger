@@ -59,24 +59,24 @@
 ### Phase 4: Update DTOs
 
 #### 4.1 Create New DTOs
-- **Task 4.1.1:** Create `CoachNoteDto` with Id (string), Text, and Order properties `[ReadyToDevelop]`
-- **Task 4.1.2:** Create `ExerciseTypeDto` extending from reference data base DTO `[ReadyToDevelop]`
-- **Task 4.1.3:** Create unit tests for new DTOs `[ReadyToDevelop]`
+- **Task 4.1.1:** Create `CoachNoteDto` with Id (string), Text, and Order properties `[Implemented: 806c8d8a]`
+- **Task 4.1.2:** Create `ExerciseTypeDto` extending from reference data base DTO `[Implemented: 806c8d8a]`
+- **Task 4.1.3:** Create unit tests for new DTOs `[Implemented: 806c8d8a]`
 
 #### 4.2 Update Existing DTOs
 - **Task 4.2.1:** Update `ExerciseDto`:
   - Remove `Instructions` property
   - Add `CoachNotes` collection property
-  - Add `ExerciseTypes` collection property `[ReadyToDevelop]`
+  - Add `ExerciseTypes` collection property `[Implemented: 806c8d8a]`
 - **Task 4.2.2:** Update `CreateExerciseRequest`:
   - Remove `Instructions` property and validation
   - Add `CoachNotes` collection (array of text and order, no IDs needed)
-  - Add `ExerciseTypeIds` collection (string[]) `[ReadyToDevelop]`
+  - Add `ExerciseTypeIds` collection (string[]) `[Implemented: 806c8d8a]`
 - **Task 4.2.3:** Update `UpdateExerciseRequest`:
   - Remove `Instructions` property and validation
   - Add `CoachNotes` collection (with optional IDs for existing notes)
-  - Add `ExerciseTypeIds` collection (string[]) `[ReadyToDevelop]`
-- **Task 4.2.4:** Update DTO tests `[ReadyToDevelop]`
+  - Add `ExerciseTypeIds` collection (string[]) `[Implemented: 806c8d8a]`
+- **Task 4.2.4:** Update DTO tests `[Implemented: 806c8d8a]`
 
 ### Phase 5: Update Repository Layer
 
