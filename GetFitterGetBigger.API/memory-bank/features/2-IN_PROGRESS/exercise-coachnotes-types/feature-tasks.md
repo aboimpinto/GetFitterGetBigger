@@ -81,11 +81,11 @@
 ### Phase 5: Update Repository Layer
 
 #### 5.1 Update Exercise Repository
-- **Task 5.1.1:** Update `GetByIdAsync` to include CoachNotes and ExerciseTypes `[ReadyToDevelop]`
-- **Task 5.1.2:** Update `GetAllAsync` to include related data `[ReadyToDevelop]`
-- **Task 5.1.3:** Update `GetPagedAsync` to include related data `[ReadyToDevelop]`
-- **Task 5.1.4:** Ensure CoachNotes are ordered by Order field in all queries `[ReadyToDevelop]`
-- **Task 5.1.5:** Update repository tests for new includes `[ReadyToDevelop]`
+- **Task 5.1.1:** Update `GetByIdAsync` to include CoachNotes and ExerciseTypes `[Implemented: ef023cb9]`
+- **Task 5.1.2:** Update `GetAllAsync` to include related data `[Implemented: ef023cb9]`
+- **Task 5.1.3:** Update `GetPagedAsync` to include related data `[Implemented: ef023cb9]`
+- **Task 5.1.4:** Ensure CoachNotes are ordered by Order field in all queries `[Implemented: ef023cb9]`
+- **Task 5.1.5:** Update repository tests for new includes `[Implemented: ef023cb9]`
 
 ### Phase 6: Update Service Layer
 

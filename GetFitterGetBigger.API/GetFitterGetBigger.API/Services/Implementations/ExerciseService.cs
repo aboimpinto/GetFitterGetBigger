@@ -83,6 +83,30 @@ public class ExerciseService : IExerciseService
     }
     
     /// <summary>
+    /// Validates that if any exercise type is "Rest", it must be the only type assigned
+    /// </summary>
+    private void ValidateRestExclusivity(IEnumerable<string> exerciseTypeIds)
+    {
+        if (exerciseTypeIds == null || !exerciseTypeIds.Any())
+            return;
+            
+        var typeIds = exerciseTypeIds.ToList();
+        if (typeIds.Count <= 1)
+            return;
+            
+        // Check if any of the IDs is for a "Rest" type
+        // We need to parse the IDs and check if any has "Rest" value
+        // For now, we'll check if the ID contains "rest" (case-insensitive)
+        // TODO: This should ideally check against the actual ExerciseType entity value
+        var hasRestType = typeIds.Any(id => id.ToLowerInvariant().Contains("rest"));
+        
+        if (hasRestType)
+        {
+            throw new InvalidOperationException("Exercise type 'Rest' cannot be combined with other exercise types.");
+        }
+    }
+    
+    /// <summary>
     /// Creates a new exercise
     /// </summary>
     public async Task<ExerciseDto> CreateAsync(CreateExerciseRequest request)
@@ -103,6 +127,9 @@ public class ExerciseService : IExerciseService
             throw new ArgumentException($"Invalid difficulty ID: {request.DifficultyId}");
         }
         
+        // Validate exercise types
+        ValidateRestExclusivity(request.ExerciseTypeIds);
+        
         // Create the exercise entity
         var exercise = Exercise.Handler.CreateNew(
             request.Name,
@@ -111,6 +138,28 @@ public class ExerciseService : IExerciseService
             request.ImageUrl,
             request.IsUnilateral,
             difficultyId);
+        
+        // Add coach notes
+        if (request.CoachNotes != null)
+        {
+            var order = 1;
+            foreach (var noteRequest in request.CoachNotes.OrderBy(cn => cn.Order))
+            {
+                var coachNote = CoachNote.Handler.CreateNew(exercise.Id, noteRequest.Text, order);
+                exercise.CoachNotes.Add(coachNote);
+                order++;
+            }
+        }
+        
+        // Add exercise types
+        foreach (var exerciseTypeIdStr in request.ExerciseTypeIds)
+        {
+            if (ExerciseTypeId.TryParse(exerciseTypeIdStr, out var exerciseTypeId))
+            {
+                exercise.ExerciseExerciseTypes.Add(
+                    ExerciseExerciseType.Handler.Create(exercise.Id, exerciseTypeId));
+            }
+        }
         
         // Add relationships
         AddRelationshipsToExercise(exercise, request);
@@ -131,8 +180,18 @@ public class ExerciseService : IExerciseService
             Id = exercise.Id.ToString(),
             Name = exercise.Name,
             Description = exercise.Description,
-            CoachNotes = new List<CoachNoteDto>(), // TODO: Populate from entity
-            ExerciseTypes = new List<ReferenceDataDto>(), // TODO: Populate from entity
+            CoachNotes = exercise.CoachNotes.OrderBy(cn => cn.Order).Select(cn => new CoachNoteDto
+            {
+                Id = cn.Id.ToString(),
+                Text = cn.Text,
+                Order = cn.Order
+            }).ToList(),
+            ExerciseTypes = exercise.ExerciseExerciseTypes.Select(eet => new ReferenceDataDto
+            {
+                Id = eet.ExerciseTypeId.ToString(),
+                Value = "Unknown", // We don't have the value without loading
+                Description = null
+            }).ToList(),
             VideoUrl = exercise.VideoUrl,
             ImageUrl = exercise.ImageUrl,
             IsUnilateral = exercise.IsUnilateral,
@@ -210,6 +269,9 @@ public class ExerciseService : IExerciseService
             throw new ArgumentException($"Invalid difficulty ID: {request.DifficultyId}");
         }
         
+        // Validate exercise types
+        ValidateRestExclusivity(request.ExerciseTypeIds);
+        
         // Create updated exercise entity, using existing values for nullable fields if not provided
         var exercise = Exercise.Handler.Create(
             exerciseId,
@@ -220,6 +282,41 @@ public class ExerciseService : IExerciseService
             request.IsUnilateral ?? existingExercise.IsUnilateral,
             request.IsActive ?? existingExercise.IsActive,
             difficultyId);
+        
+        // Synchronize coach notes
+        if (request.CoachNotes != null)
+        {
+            var order = 1;
+            foreach (var noteRequest in request.CoachNotes.OrderBy(cn => cn.Order))
+            {
+                if (!string.IsNullOrEmpty(noteRequest.Id))
+                {
+                    // Existing note - preserve ID
+                    if (CoachNoteId.TryParse(noteRequest.Id, out var coachNoteId))
+                    {
+                        var coachNote = CoachNote.Handler.Create(coachNoteId, exercise.Id, noteRequest.Text, order);
+                        exercise.CoachNotes.Add(coachNote);
+                    }
+                }
+                else
+                {
+                    // New note
+                    var coachNote = CoachNote.Handler.CreateNew(exercise.Id, noteRequest.Text, order);
+                    exercise.CoachNotes.Add(coachNote);
+                }
+                order++;
+            }
+        }
+        
+        // Update exercise types
+        foreach (var exerciseTypeIdStr in request.ExerciseTypeIds)
+        {
+            if (ExerciseTypeId.TryParse(exerciseTypeIdStr, out var exerciseTypeId))
+            {
+                exercise.ExerciseExerciseTypes.Add(
+                    ExerciseExerciseType.Handler.Create(exercise.Id, exerciseTypeId));
+            }
+        }
         
         // Add relationships
         AddRelationshipsToExercise(exercise, request);
@@ -240,8 +337,18 @@ public class ExerciseService : IExerciseService
             Id = exercise.Id.ToString(),
             Name = exercise.Name,
             Description = exercise.Description,
-            CoachNotes = new List<CoachNoteDto>(), // TODO: Populate from entity
-            ExerciseTypes = new List<ReferenceDataDto>(), // TODO: Populate from entity
+            CoachNotes = exercise.CoachNotes.OrderBy(cn => cn.Order).Select(cn => new CoachNoteDto
+            {
+                Id = cn.Id.ToString(),
+                Text = cn.Text,
+                Order = cn.Order
+            }).ToList(),
+            ExerciseTypes = exercise.ExerciseExerciseTypes.Select(eet => new ReferenceDataDto
+            {
+                Id = eet.ExerciseTypeId.ToString(),
+                Value = "Unknown", // We don't have the value without loading
+                Description = null
+            }).ToList(),
             VideoUrl = exercise.VideoUrl,
             ImageUrl = exercise.ImageUrl,
             IsUnilateral = exercise.IsUnilateral,
@@ -444,8 +551,18 @@ public class ExerciseService : IExerciseService
             Id = exercise.Id.ToString(),
             Name = exercise.Name,
             Description = exercise.Description,
-            CoachNotes = new List<CoachNoteDto>(), // TODO: Populate from entity
-            ExerciseTypes = new List<ReferenceDataDto>(), // TODO: Populate from entity
+            CoachNotes = exercise.CoachNotes.OrderBy(cn => cn.Order).Select(cn => new CoachNoteDto
+            {
+                Id = cn.Id.ToString(),
+                Text = cn.Text,
+                Order = cn.Order
+            }).ToList(),
+            ExerciseTypes = exercise.ExerciseExerciseTypes.Select(eet => new ReferenceDataDto
+            {
+                Id = eet.ExerciseType?.Id.ToString() ?? string.Empty,
+                Value = eet.ExerciseType?.Value ?? string.Empty,
+                Description = eet.ExerciseType?.Description
+            }).ToList(),
             VideoUrl = exercise.VideoUrl,
             ImageUrl = exercise.ImageUrl,
             IsUnilateral = exercise.IsUnilateral,
