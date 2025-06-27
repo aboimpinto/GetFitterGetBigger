@@ -8,6 +8,7 @@ namespace GetFitterGetBigger.Admin.Models.Dtos
         public string Instructions { get; set; } = string.Empty;
         public ReferenceDataDto? Difficulty { get; set; }
         public bool IsUnilateral { get; set; }
+        public bool IsActive { get; set; }
         public string? ImageUrl { get; set; }
         public string? VideoUrl { get; set; }
         public List<MuscleGroupWithRoleDto> MuscleGroups { get; set; } = new();
@@ -29,6 +30,7 @@ namespace GetFitterGetBigger.Admin.Models.Dtos
         public string Instructions { get; set; } = string.Empty;
         public string DifficultyId { get; set; } = string.Empty;
         public bool IsUnilateral { get; set; }
+        public bool IsActive { get; set; } = true;
         public string? ImageUrl { get; set; }
         public string? VideoUrl { get; set; }
         public List<MuscleGroupApiDto> MuscleGroups { get; set; } = new();

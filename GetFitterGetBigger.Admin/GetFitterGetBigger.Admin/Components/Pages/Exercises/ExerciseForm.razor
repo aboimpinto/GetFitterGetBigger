@@ -104,12 +104,21 @@
                             }
                         </div>
 
-                        <div class="flex items-center">
-                            <input type="checkbox" id="isUnilateral" @bind="model.IsUnilateral"
-                                   class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
-                            <label for="isUnilateral" class="ml-2 block text-sm text-gray-700">
-                                Is Unilateral (works one side at a time)
-                            </label>
+                        <div class="space-y-4">
+                            <div class="flex items-center">
+                                <input type="checkbox" id="isUnilateral" @bind="model.IsUnilateral"
+                                       class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                                <label for="isUnilateral" class="ml-2 block text-sm text-gray-700">
+                                    Is Unilateral (works one side at a time)
+                                </label>
+                            </div>
+                            <div class="flex items-center">
+                                <input type="checkbox" id="isActive" @bind="model.IsActive"
+                                       class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                                <label for="isActive" class="ml-2 block text-sm text-gray-700">
+                                    Is Active (available for use)
+                                </label>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -355,6 +364,7 @@
                 Instructions = exercise.Instructions,
                 DifficultyId = exercise.Difficulty?.Id ?? string.Empty,
                 IsUnilateral = exercise.IsUnilateral,
+                IsActive = exercise.IsActive,
                 ImageUrl = exercise.ImageUrl,
                 VideoUrl = exercise.VideoUrl
             };
@@ -554,6 +564,7 @@
                     Instructions = model.Instructions,
                     DifficultyId = model.DifficultyId,
                     IsUnilateral = model.IsUnilateral,
+                    IsActive = model.IsActive,
                     ImageUrl = model.ImageUrl,
                     VideoUrl = model.VideoUrl,
                     MuscleGroups = model.MuscleGroups,

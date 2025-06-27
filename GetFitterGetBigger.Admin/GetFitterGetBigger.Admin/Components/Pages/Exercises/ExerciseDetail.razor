@@ -43,6 +43,18 @@
                                 Unilateral
                             </span>
                         }
+                        @if (exercise.IsActive)
+                        {
+                            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-emerald-100 text-emerald-800">
+                                Active
+                            </span>
+                        }
+                        else
+                        {
+                            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-800">
+                                Inactive
+                            </span>
+                        }
                     </div>
                 </div>
                 <div class="flex space-x-2">
