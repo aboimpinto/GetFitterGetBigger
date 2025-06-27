@@ -362,8 +362,8 @@
             // Map muscle groups
             muscleGroupAssignments = exercise.MuscleGroups.Select(mg => new MuscleGroupRoleAssignmentDto
             {
-                MuscleGroupId = mg.Id,
-                Role = mg.Role
+                MuscleGroupId = mg.MuscleGroup?.Id ?? string.Empty,
+                Role = mg.Role?.Value ?? string.Empty
             }).ToList();
 
             // Map equipment

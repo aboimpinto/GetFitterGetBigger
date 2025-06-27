@@ -18,9 +18,8 @@ namespace GetFitterGetBigger.Admin.Models.Dtos
 
     public class MuscleGroupWithRoleDto
     {
-        public string Id { get; set; } = string.Empty;
-        public string Name { get; set; } = string.Empty;
-        public string Role { get; set; } = string.Empty;
+        public ReferenceDataDto? MuscleGroup { get; set; }
+        public ReferenceDataDto? Role { get; set; }
     }
 
     public class ExerciseCreateDto
