@@ -1,0 +1,270 @@
+@page "/exercises/{Id:guid}"
+@using GetFitterGetBigger.Admin.Models.Dtos
+@using GetFitterGetBigger.Admin.Services
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize]
+@inject IExerciseStateService StateService
+@inject NavigationManager Navigation
+@implements IDisposable
+
+<PageTitle>@(StateService.SelectedExercise?.Name ?? "Exercise") - GetFitterGetBigger Admin</PageTitle>
+
+<div class="bg-white rounded-lg shadow-md p-6 max-w-5xl mx-auto">
+    @if (StateService.ErrorMessage != null)
+    {
+        <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4">
+            <p>@StateService.ErrorMessage</p>
+            <button @onclick="StateService.ClearError" class="text-sm underline mt-1">Dismiss</button>
+        </div>
+    }
+
+    @if (StateService.IsLoadingExercise)
+    {
+        <div class="flex justify-center py-8">
+            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        </div>
+    }
+    else if (StateService.SelectedExercise != null)
+    {
+        var exercise = StateService.SelectedExercise;
+        
+        <div class="mb-6">
+            <div class="flex justify-between items-start">
+                <div>
+                    <h2 class="text-3xl font-semibold text-gray-800">@exercise.Name</h2>
+                    <div class="mt-2 flex items-center space-x-4">
+                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
+                            @exercise.Difficulty?.Value
+                        </span>
+                        @if (exercise.IsUnilateral)
+                        {
+                            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                                Unilateral
+                            </span>
+                        }
+                    </div>
+                </div>
+                <div class="flex space-x-2">
+                    <button @onclick="() => NavigateToEdit()" 
+                            class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700">
+                        Edit
+                    </button>
+                    <button @onclick="ShowDeleteConfirmation" 
+                            class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700">
+                        Delete
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="space-y-6">
+            <!-- Description -->
+            <div class="bg-gray-50 p-4 rounded-lg">
+                <h3 class="text-lg font-medium text-gray-900 mb-2">Description</h3>
+                <p class="text-gray-700">@exercise.Description</p>
+            </div>
+
+            <!-- Instructions -->
+            <div class="bg-gray-50 p-4 rounded-lg">
+                <h3 class="text-lg font-medium text-gray-900 mb-2">Instructions</h3>
+                <div class="text-gray-700 whitespace-pre-wrap">@exercise.Instructions</div>
+            </div>
+
+            <!-- Muscle Groups -->
+            <div>
+                <h3 class="text-lg font-medium text-gray-900 mb-2">Muscle Groups</h3>
+                <div class="space-y-2">
+                    @foreach (var muscleGroup in exercise.MuscleGroups.OrderBy(mg => mg.Role))
+                    {
+                        <div class="flex items-center space-x-2">
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium 
+                                       @(muscleGroup.Role == "Primary" ? "bg-red-100 text-red-800" : 
+                                         muscleGroup.Role == "Secondary" ? "bg-orange-100 text-orange-800" : 
+                                         "bg-gray-100 text-gray-800")">
+                                @muscleGroup.Role
+                            </span>
+                            <span class="text-gray-700">@muscleGroup.Name</span>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <!-- Equipment -->
+            @if (exercise.Equipment.Any())
+            {
+                <div>
+                    <h3 class="text-lg font-medium text-gray-900 mb-2">Equipment</h3>
+                    <div class="flex flex-wrap gap-2">
+                        @foreach (var equipment in exercise.Equipment)
+                        {
+                            <span class="inline-flex items-center px-3 py-1 rounded-md text-sm bg-gray-200 text-gray-700">
+                                @equipment.Value
+                            </span>
+                        }
+                    </div>
+                </div>
+            }
+
+            <!-- Body Parts -->
+            @if (exercise.BodyParts.Any())
+            {
+                <div>
+                    <h3 class="text-lg font-medium text-gray-900 mb-2">Body Parts</h3>
+                    <div class="flex flex-wrap gap-2">
+                        @foreach (var bodyPart in exercise.BodyParts)
+                        {
+                            <span class="inline-flex items-center px-3 py-1 rounded-md text-sm bg-purple-100 text-purple-700">
+                                @bodyPart.Value
+                            </span>
+                        }
+                    </div>
+                </div>
+            }
+
+            <!-- Movement Patterns -->
+            @if (exercise.MovementPatterns.Any())
+            {
+                <div>
+                    <h3 class="text-lg font-medium text-gray-900 mb-2">Movement Patterns</h3>
+                    <div class="flex flex-wrap gap-2">
+                        @foreach (var pattern in exercise.MovementPatterns)
+                        {
+                            <span class="inline-flex items-center px-3 py-1 rounded-md text-sm bg-teal-100 text-teal-700">
+                                @pattern.Value
+                            </span>
+                        }
+                    </div>
+                </div>
+            }
+
+            <!-- Media -->
+            @if (!string.IsNullOrWhiteSpace(exercise.ImageUrl) || !string.IsNullOrWhiteSpace(exercise.VideoUrl))
+            {
+                <div>
+                    <h3 class="text-lg font-medium text-gray-900 mb-2">Media</h3>
+                    <div class="space-y-2">
+                        @if (!string.IsNullOrWhiteSpace(exercise.ImageUrl))
+                        {
+                            <div>
+                                <span class="text-sm font-medium text-gray-700">Image: </span>
+                                <a href="@exercise.ImageUrl" target="_blank" class="text-blue-600 hover:text-blue-800 underline">
+                                    @exercise.ImageUrl
+                                </a>
+                            </div>
+                        }
+                        @if (!string.IsNullOrWhiteSpace(exercise.VideoUrl))
+                        {
+                            <div>
+                                <span class="text-sm font-medium text-gray-700">Video: </span>
+                                <a href="@exercise.VideoUrl" target="_blank" class="text-blue-600 hover:text-blue-800 underline">
+                                    @exercise.VideoUrl
+                                </a>
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+        </div>
+
+        <div class="mt-8 flex justify-between">
+            <button @onclick="NavigateToList" class="text-gray-600 hover:text-gray-800">
+                ← Back to Exercises
+            </button>
+        </div>
+    }
+    else
+    {
+        <div class="text-center py-8">
+            <p class="text-gray-500">Exercise not found.</p>
+            <button @onclick="NavigateToList" class="mt-4 text-blue-600 hover:text-blue-800">
+                Back to Exercises
+            </button>
+        </div>
+    }
+</div>
+
+<!-- Delete Confirmation Modal -->
+@if (showDeleteConfirmation)
+{
+    <div class="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center z-50">
+        <div class="bg-white rounded-lg shadow-xl max-w-md w-full mx-4 p-6">
+            <h3 class="text-lg font-medium text-gray-900 mb-4">Confirm Delete</h3>
+            <p class="text-gray-700 mb-6">
+                Are you sure you want to delete "@StateService.SelectedExercise?.Name"? This action cannot be undone.
+            </p>
+            <div class="flex justify-end space-x-3">
+                <button @onclick="CancelDelete" 
+                        class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">
+                    Cancel
+                </button>
+                <button @onclick="ConfirmDelete" disabled="@isDeleting"
+                        class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 disabled:opacity-50">
+                    @if (isDeleting)
+                    {
+                        <span>Deleting...</span>
+                    }
+                    else
+                    {
+                        <span>Delete</span>
+                    }
+                </button>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public Guid Id { get; set; }
+
+    private bool showDeleteConfirmation = false;
+    private bool isDeleting = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        StateService.OnChange += StateHasChanged;
+        await StateService.LoadExerciseByIdAsync(Id);
+    }
+
+    private void NavigateToEdit()
+    {
+        Navigation.NavigateTo($"/exercises/{Id}/edit");
+    }
+
+    private void NavigateToList()
+    {
+        Navigation.NavigateTo("/exercises");
+    }
+
+    private void ShowDeleteConfirmation()
+    {
+        showDeleteConfirmation = true;
+    }
+
+    private void CancelDelete()
+    {
+        showDeleteConfirmation = false;
+    }
+
+    private async Task ConfirmDelete()
+    {
+        isDeleting = true;
+        StateHasChanged();
+
+        try
+        {
+            await StateService.DeleteExerciseAsync(Id);
+            Navigation.NavigateTo("/exercises");
+        }
+        catch
+        {
+            // Error is handled by StateService
+            isDeleting = false;
+            showDeleteConfirmation = false;
+        }
+    }
+
+    public void Dispose()
+    {
+        StateService.OnChange -= StateHasChanged;
+    }
+}

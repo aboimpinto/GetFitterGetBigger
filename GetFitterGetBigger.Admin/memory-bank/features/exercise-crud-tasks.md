@@ -25,18 +25,18 @@
 - **Task 3.7:** Add click-to-edit functionality on exercise rows `[Implemented: d2c30ce2]`
 
 ### Components - Exercise Form
-- **Task 4.1:** Create ExerciseForm component structure `[ReadyToDevelop]`
-- **Task 4.2:** Add basic fields (name, description, instructions) with validation `[ReadyToDevelop]`
+- **Task 4.1:** Create ExerciseForm component structure `[Implemented: be30369a]`
+- **Task 4.2:** Add basic fields (name, description, instructions) with validation `[Implemented: be30369a]`
 - **Task 4.3:** Write tests for basic field validation `[ReadyToDevelop]`
-- **Task 4.4:** Add difficulty dropdown populated from reference table `[ReadyToDevelop]`
-- **Task 4.5:** Add isUnilateral checkbox field `[ReadyToDevelop]`
-- **Task 4.6:** Add muscle groups multi-select with role assignment (Primary/Secondary/Stabilizer) `[ReadyToDevelop]`
+- **Task 4.4:** Add difficulty dropdown populated from reference table `[Implemented: be30369a]`
+- **Task 4.5:** Add isUnilateral checkbox field `[Implemented: be30369a]`
+- **Task 4.6:** Add muscle groups multi-select with role assignment (Primary/Secondary/Stabilizer) `[Implemented: be30369a]`
 - **Task 4.7:** Write tests for muscle group selection `[ReadyToDevelop]`
-- **Task 4.8:** Add equipment multi-select dropdown `[ReadyToDevelop]`
-- **Task 4.9:** Add body parts multi-select dropdown `[ReadyToDevelop]`
-- **Task 4.10:** Add movement patterns multi-select dropdown `[ReadyToDevelop]`
-- **Task 4.11:** Add optional image and video URL fields `[ReadyToDevelop]`
-- **Task 4.12:** Implement form submission for create/update `[ReadyToDevelop]`
+- **Task 4.8:** Add equipment multi-select dropdown `[Implemented: be30369a]`
+- **Task 4.9:** Add body parts multi-select dropdown `[Implemented: be30369a]`
+- **Task 4.10:** Add movement patterns multi-select dropdown `[Implemented: be30369a]`
+- **Task 4.11:** Add optional image and video URL fields `[Implemented: be30369a]`
+- **Task 4.12:** Implement form submission for create/update `[Implemented: be30369a]`
 - **Task 4.13:** Write comprehensive tests for ExerciseForm `[ReadyToDevelop]`
 
 ### Components - Exercise Detail/View
