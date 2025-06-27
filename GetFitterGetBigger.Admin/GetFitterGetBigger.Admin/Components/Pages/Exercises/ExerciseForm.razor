@@ -475,6 +475,7 @@
     private bool ValidateForm()
     {
         validationErrors.Clear();
+        Console.WriteLine("[ExerciseForm] Validating form...");
 
         if (string.IsNullOrWhiteSpace(model.Name))
             validationErrors["Name"] = "Exercise name is required";
@@ -501,6 +502,12 @@
         
         if (!validMuscleGroups.Any())
             validationErrors["MuscleGroups"] = "At least one muscle group with a role is required";
+
+        Console.WriteLine($"[ExerciseForm] Validation errors count: {validationErrors.Count}");
+        foreach (var error in validationErrors)
+        {
+            Console.WriteLine($"[ExerciseForm] Validation error - {error.Key}: {error.Value}");
+        }
 
         return !validationErrors.Any();
     }
@@ -541,18 +548,35 @@
                     MovementPatternIds = model.MovementPatternIds
                 };
                 
+                // Log the JSON for testing
+                var updateJson = System.Text.Json.JsonSerializer.Serialize(updateDto, new System.Text.Json.JsonSerializerOptions 
+                { 
+                    WriteIndented = true 
+                });
+                Console.WriteLine($"[ExerciseForm] UPDATE JSON to POST to /api/exercises/{Id}:");
+                Console.WriteLine(updateJson);
+                
                 await StateService.UpdateExerciseAsync(Id!.Value, updateDto);
             }
             else
             {
+                // Log the JSON for testing
+                var createJson = System.Text.Json.JsonSerializer.Serialize(model, new System.Text.Json.JsonSerializerOptions 
+                { 
+                    WriteIndented = true 
+                });
+                Console.WriteLine("[ExerciseForm] CREATE JSON to POST to /api/exercises:");
+                Console.WriteLine(createJson);
+                
                 await StateService.CreateExerciseAsync(model);
             }
 
             // Navigate back to list
             Navigation.NavigateTo("/exercises");
         }
-        catch
+        catch (Exception ex)
         {
+            Console.WriteLine($"[ExerciseForm] Error submitting form: {ex.Message}");
             // Error is handled by StateService
             isSubmitting = false;
         }
