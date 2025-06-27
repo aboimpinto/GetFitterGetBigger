@@ -133,7 +133,7 @@ namespace GetFitterGetBigger.API.Tests.Services
             {
                 Name = "New Exercise",
                 Description = "Description",
-                Instructions = "Instructions",
+                CoachNotes = new List<CoachNoteRequest> { new() { Text = "Instructions", Order = 0 } },
                 IsUnilateral = false,
                 DifficultyId = "difficultylevel-" + Guid.NewGuid(),
                 MuscleGroups = new List<MuscleGroupWithRoleRequest>
@@ -175,7 +175,7 @@ namespace GetFitterGetBigger.API.Tests.Services
             {
                 Name = "Duplicate Exercise",
                 Description = "Description",
-                Instructions = "Instructions",
+                CoachNotes = new List<CoachNoteRequest> { new() { Text = "Instructions", Order = 0 } },
                 DifficultyId = "difficultylevel-" + Guid.NewGuid(),
                 MuscleGroups = new List<MuscleGroupWithRoleRequest>
                 {
@@ -205,7 +205,7 @@ namespace GetFitterGetBigger.API.Tests.Services
             {
                 Name = "Updated Exercise",
                 Description = "Updated Description",
-                Instructions = "Updated Instructions",
+                CoachNotes = new List<CoachNoteRequest> { new() { Text = "Updated Instructions", Order = 0 } },
                 IsActive = true,
                 DifficultyId = "difficultylevel-" + Guid.NewGuid(),
                 MuscleGroups = new List<MuscleGroupWithRoleRequest>

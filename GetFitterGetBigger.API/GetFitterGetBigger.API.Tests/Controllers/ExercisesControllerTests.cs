@@ -124,7 +124,11 @@ public class ExercisesControllerTests : IClassFixture<ApiTestFixture>
         {
             Name = "Test Exercise",
             Description = "Test Description",
-            Instructions = "Step 1\nStep 2",
+            CoachNotes = new List<CoachNoteRequest> 
+            {
+                new() { Text = "Step 1", Order = 0 },
+                new() { Text = "Step 2", Order = 1 }
+            },
             VideoUrl = "https://example.com/video.mp4",
             ImageUrl = "https://example.com/image.jpg",
             DifficultyId = "difficultylevel-8a8adb1d-24d2-4979-a5a6-0d760e6da24b",
@@ -166,7 +170,7 @@ public class ExercisesControllerTests : IClassFixture<ApiTestFixture>
         {
             Name = existingExercise.Name,
             Description = "Test Description",
-            Instructions = "Step 1",
+            CoachNotes = new List<CoachNoteRequest> { new() { Text = "Step 1", Order = 0 } },
             DifficultyId = "difficultylevel-8a8adb1d-24d2-4979-a5a6-0d760e6da24b",
             MuscleGroups = new List<MuscleGroupWithRoleRequest> { new() { MuscleGroupId = "musclegroup-ccddeeff-0011-2233-4455-667788990011", MuscleRoleId = "musclerole-abcdef12-3456-7890-abcd-ef1234567890" } }
         };
@@ -186,7 +190,7 @@ public class ExercisesControllerTests : IClassFixture<ApiTestFixture>
         {
             Name = "", // Invalid - empty name
             Description = "Test Description",
-            Instructions = ""
+            CoachNotes = new List<CoachNoteRequest>()
         };
 
         // Act
@@ -207,7 +211,11 @@ public class ExercisesControllerTests : IClassFixture<ApiTestFixture>
         {
             Name = "Updated Exercise Name",
             Description = "Updated Description",
-            Instructions = "Updated Step 1\nUpdated Step 2",
+            CoachNotes = new List<CoachNoteRequest> 
+            {
+                new() { Text = "Updated Step 1", Order = 0 },
+                new() { Text = "Updated Step 2", Order = 1 }
+            },
             VideoUrl = "https://example.com/updated-video.mp4",
             ImageUrl = "https://example.com/updated-image.jpg",
             DifficultyId = "difficultylevel-9c7b59a4-bcd8-48a6-971a-cd67b0a7ab5a",
@@ -246,7 +254,7 @@ public class ExercisesControllerTests : IClassFixture<ApiTestFixture>
         {
             Name = "Updated Name",
             Description = "Updated Description",
-            Instructions = "Step 1",
+            CoachNotes = new List<CoachNoteRequest> { new() { Text = "Step 1", Order = 0 } },
             DifficultyId = "difficultylevel-8a8adb1d-24d2-4979-a5a6-0d760e6da24b",
             MuscleGroups = new List<MuscleGroupWithRoleRequest> { new() { MuscleGroupId = "musclegroup-ccddeeff-0011-2233-4455-667788990011", MuscleRoleId = "musclerole-abcdef12-3456-7890-abcd-ef1234567890" } }
         };
@@ -270,7 +278,7 @@ public class ExercisesControllerTests : IClassFixture<ApiTestFixture>
         {
             Name = exercise2.Name, // Try to update exercise1 with exercise2's name
             Description = "Updated Description",
-            Instructions = "Step 1",
+            CoachNotes = new List<CoachNoteRequest> { new() { Text = "Step 1", Order = 0 } },
             DifficultyId = exercise1.DifficultyId.ToString(),
             MuscleGroups = new List<MuscleGroupWithRoleRequest> { new() { MuscleGroupId = "musclegroup-ccddeeff-0011-2233-4455-667788990011", MuscleRoleId = "musclerole-abcdef12-3456-7890-abcd-ef1234567890" } }
         };

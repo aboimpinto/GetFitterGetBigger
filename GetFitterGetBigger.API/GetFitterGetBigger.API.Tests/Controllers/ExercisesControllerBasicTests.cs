@@ -28,7 +28,11 @@ public class ExercisesControllerBasicTests : IClassFixture<ApiTestFixture>
         {
             Name = "Test Exercise " + Guid.NewGuid(),
             Description = "Test Description",
-            Instructions = "Test Instructions",
+            CoachNotes = new List<CoachNoteRequest> 
+            {
+                new() { Text = "Step 1: Starting position", Order = 0 },
+                new() { Text = "Step 2: Execute movement", Order = 1 }
+            },
             DifficultyId = "difficultylevel-8a8adb1d-24d2-4979-a5a6-0d760e6da24b",
             MuscleGroups = new List<MuscleGroupWithRoleRequest> 
             { 
@@ -87,7 +91,7 @@ public class ExercisesControllerBasicTests : IClassFixture<ApiTestFixture>
         {
             Name = "", // Invalid - empty name
             Description = "Test Description",
-            Instructions = "Test"
+            CoachNotes = new List<CoachNoteRequest> { new() { Text = "Test", Order = 0 } }
         };
 
         // Act

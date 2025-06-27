@@ -46,15 +46,15 @@
 ### Phase 3: Update Exercise Entity
 
 #### 3.1 Modify Exercise Entity
-- **Task 3.1.1:** Remove `Instructions` property from Exercise entity `[ReadyToDevelop]`
-- **Task 3.1.2:** Add `CoachNotes` navigation collection `[ReadyToDevelop]`
-- **Task 3.1.3:** Add `ExerciseTypes` navigation collection `[ReadyToDevelop]`
-- **Task 3.1.4:** Update entity validation attributes `[ReadyToDevelop]`
-- **Task 3.1.5:** Update Exercise entity tests `[ReadyToDevelop]`
+- **Task 3.1.1:** Remove `Instructions` property from Exercise entity `[Implemented: 1184a541]`
+- **Task 3.1.2:** Add `CoachNotes` navigation collection `[Implemented: 1184a541]`
+- **Task 3.1.3:** Add `ExerciseTypes` navigation collection `[Implemented: 1184a541]`
+- **Task 3.1.4:** Update entity validation attributes `[Implemented: 1184a541]`
+- **Task 3.1.5:** Update Exercise entity tests `[Implemented: 1184a541]`
 
 #### 3.2 Create Junction Table
-- **Task 3.2.1:** Create `ExerciseExerciseType` entity for many-to-many relationship `[ReadyToDevelop]`
-- **Task 3.2.2:** Configure junction table in `FitnessDbContext` `[ReadyToDevelop]`
+- **Task 3.2.1:** Create `ExerciseExerciseType` entity for many-to-many relationship `[Implemented: 1184a541]`
+- **Task 3.2.2:** Configure junction table in `FitnessDbContext` `[Implemented: 1184a541]`
 
 ### Phase 4: Update DTOs
 

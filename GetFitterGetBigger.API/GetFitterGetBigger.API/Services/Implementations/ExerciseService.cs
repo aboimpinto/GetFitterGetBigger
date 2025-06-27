@@ -131,7 +131,8 @@ public class ExerciseService : IExerciseService
             Id = exercise.Id.ToString(),
             Name = exercise.Name,
             Description = exercise.Description,
-            Instructions = request.Instructions, // TODO: Replace with CoachNotes
+            CoachNotes = new List<CoachNoteDto>(), // TODO: Populate from entity
+            ExerciseTypes = new List<ReferenceDataDto>(), // TODO: Populate from entity
             VideoUrl = exercise.VideoUrl,
             ImageUrl = exercise.ImageUrl,
             IsUnilateral = exercise.IsUnilateral,
@@ -239,7 +240,8 @@ public class ExerciseService : IExerciseService
             Id = exercise.Id.ToString(),
             Name = exercise.Name,
             Description = exercise.Description,
-            Instructions = request.Instructions, // TODO: Replace with CoachNotes
+            CoachNotes = new List<CoachNoteDto>(), // TODO: Populate from entity
+            ExerciseTypes = new List<ReferenceDataDto>(), // TODO: Populate from entity
             VideoUrl = exercise.VideoUrl,
             ImageUrl = exercise.ImageUrl,
             IsUnilateral = exercise.IsUnilateral,
@@ -442,7 +444,8 @@ public class ExerciseService : IExerciseService
             Id = exercise.Id.ToString(),
             Name = exercise.Name,
             Description = exercise.Description,
-            Instructions = string.Empty, // TODO: Replace with CoachNotes
+            CoachNotes = new List<CoachNoteDto>(), // TODO: Populate from entity
+            ExerciseTypes = new List<ReferenceDataDto>(), // TODO: Populate from entity
             VideoUrl = exercise.VideoUrl,
             ImageUrl = exercise.ImageUrl,
             IsUnilateral = exercise.IsUnilateral,

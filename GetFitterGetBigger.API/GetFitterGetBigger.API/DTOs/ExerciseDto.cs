@@ -24,9 +24,14 @@ public class ExerciseDto
     public string Description { get; set; } = string.Empty;
     
     /// <summary>
-    /// Detailed, step-by-step instructions for performing the movement
+    /// Ordered list of coach notes providing step-by-step instructions
     /// </summary>
-    public string Instructions { get; set; } = string.Empty;
+    public List<CoachNoteDto> CoachNotes { get; set; } = new();
+    
+    /// <summary>
+    /// The types of this exercise (Warmup, Workout, Cooldown, Rest)
+    /// </summary>
+    public List<ReferenceDataDto> ExerciseTypes { get; set; } = new();
     
     /// <summary>
     /// A link to a hosted video demonstrating the exercise

@@ -24,11 +24,14 @@ public class CreateExerciseRequest
     public string Description { get; set; } = string.Empty;
     
     /// <summary>
-    /// Detailed, step-by-step instructions for performing the movement
+    /// Ordered list of coach notes providing step-by-step instructions
     /// </summary>
-    [Required(ErrorMessage = "Instructions are required")]
-    [StringLength(5000, ErrorMessage = "Instructions cannot exceed 5000 characters")]
-    public string Instructions { get; set; } = string.Empty;
+    public List<CoachNoteRequest> CoachNotes { get; set; } = new();
+    
+    /// <summary>
+    /// The IDs of exercise types (Warmup, Workout, Cooldown, Rest)
+    /// </summary>
+    public List<string> ExerciseTypeIds { get; set; } = new();
     
     /// <summary>
     /// A link to a hosted video demonstrating the exercise
