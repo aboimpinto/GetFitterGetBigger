@@ -55,6 +55,7 @@ builder.Services.AddTransient<IDifficultyLevelRepository, DifficultyLevelReposit
 builder.Services.AddTransient<IKineticChainTypeRepository, KineticChainTypeRepository>();
 builder.Services.AddTransient<IBodyPartRepository, BodyPartRepository>();
 builder.Services.AddTransient<IMuscleRoleRepository, MuscleRoleRepository>();
+builder.Services.AddTransient<IExerciseTypeRepository, ExerciseTypeRepository>();
 builder.Services.AddTransient<IEquipmentRepository, EquipmentRepository>();
 builder.Services.AddTransient<IMetricTypeRepository, MetricTypeRepository>();
 builder.Services.AddTransient<IMovementPatternRepository, MovementPatternRepository>();

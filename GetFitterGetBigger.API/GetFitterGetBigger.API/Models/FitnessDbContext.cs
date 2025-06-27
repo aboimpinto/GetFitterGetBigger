@@ -23,6 +23,7 @@ public class FitnessDbContext : DbContext
     public DbSet<KineticChainType> KineticChainTypes => Set<KineticChainType>();
     public DbSet<BodyPart> BodyParts => Set<BodyPart>();
     public DbSet<MuscleRole> MuscleRoles => Set<MuscleRole>();
+    public DbSet<ExerciseType> ExerciseTypes => Set<ExerciseType>();
     
     // Linking entities
     public DbSet<ExerciseMovementPattern> ExerciseMovementPatterns => Set<ExerciseMovementPattern>();
@@ -153,6 +154,12 @@ public class FitnessDbContext : DbContext
             .HasConversion(
                 id => (Guid)id,
                 guid => MuscleRoleId.From(guid));
+                
+        modelBuilder.Entity<ExerciseType>()
+            .Property(et => et.Id)
+            .HasConversion(
+                id => (Guid)id,
+                guid => ExerciseTypeId.From(guid));
                 
         // Foreign key ID conversions
         modelBuilder.Entity<WorkoutLog>()
@@ -530,6 +537,34 @@ public class FitnessDbContext : DbContext
                 "Stabilizer",
                 "A muscle that helps stabilize the body during the exercise",
                 3,
+                true)
+        );
+        
+        // Seed ExerciseTypes
+        modelBuilder.Entity<ExerciseType>().HasData(
+            ExerciseType.Handler.Create(
+                ExerciseTypeId.From(Guid.Parse("a1b2c3d4-5e6f-7a8b-9c0d-1e2f3a4b5c6d")),
+                "Warmup",
+                "Exercises performed to prepare the body for more intense activity",
+                1,
+                true),
+            ExerciseType.Handler.Create(
+                ExerciseTypeId.From(Guid.Parse("b2c3d4e5-6f7a-8b9c-0d1e-2f3a4b5c6d7e")),
+                "Workout",
+                "Main exercises that form the core of the training session",
+                2,
+                true),
+            ExerciseType.Handler.Create(
+                ExerciseTypeId.From(Guid.Parse("c3d4e5f6-7a8b-9c0d-1e2f-3a4b5c6d7e8f")),
+                "Cooldown",
+                "Exercises performed to help the body recover after intense activity",
+                3,
+                true),
+            ExerciseType.Handler.Create(
+                ExerciseTypeId.From(Guid.Parse("d4e5f6a7-8b9c-0d1e-2f3a-4b5c6d7e8f9a")),
+                "Rest",
+                "Periods of rest between exercises or sets",
+                4,
                 true)
         );
     }
