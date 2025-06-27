@@ -317,7 +317,7 @@
         }
 
         // Log reference data to debug
-        Console.WriteLine($"[ExerciseForm] Difficulty Levels count: {StateService.DifficultyLevels?.Count ?? 0}");
+        Console.WriteLine($"[ExerciseForm] Difficulty Levels count: {StateService.DifficultyLevels?.Count() ?? 0}");
         if (StateService.DifficultyLevels != null)
         {
             foreach (var diff in StateService.DifficultyLevels)
@@ -326,7 +326,7 @@
             }
         }
         
-        Console.WriteLine($"[ExerciseForm] Muscle Groups count: {StateService.MuscleGroups?.Count ?? 0}");
+        Console.WriteLine($"[ExerciseForm] Muscle Groups count: {StateService.MuscleGroups?.Count() ?? 0}");
         if (StateService.MuscleGroups != null)
         {
             foreach (var mg in StateService.MuscleGroups)
