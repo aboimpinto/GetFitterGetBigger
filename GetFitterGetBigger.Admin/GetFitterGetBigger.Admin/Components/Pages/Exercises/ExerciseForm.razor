@@ -1,0 +1,462 @@
+@page "/exercises/new"
+@page "/exercises/{Id:guid}/edit"
+@using GetFitterGetBigger.Admin.Models.Dtos
+@using GetFitterGetBigger.Admin.Services
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize]
+@inject IExerciseStateService StateService
+@inject NavigationManager Navigation
+
+<PageTitle>@(IsEditMode ? "Edit Exercise" : "New Exercise") - GetFitterGetBigger Admin</PageTitle>
+
+<div class="bg-white rounded-lg shadow-md p-6 max-w-4xl mx-auto">
+    <div class="mb-6">
+        <h2 class="text-2xl font-semibold text-gray-800">@(IsEditMode ? "Edit Exercise" : "Create New Exercise")</h2>
+        <p class="text-gray-600">@(IsEditMode ? "Update exercise details and configuration" : "Add a new exercise to the library")</p>
+    </div>
+
+    @if (StateService.ErrorMessage != null)
+    {
+        <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4">
+            <p>@StateService.ErrorMessage</p>
+            <button @onclick="StateService.ClearError" class="text-sm underline mt-1">Dismiss</button>
+        </div>
+    }
+
+    @if (isLoading)
+    {
+        <div class="flex justify-center py-8">
+            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        </div>
+    }
+    else
+    {
+        <form @onsubmit="HandleSubmit" @onsubmit:preventDefault="true">
+            <div class="space-y-6">
+                <!-- Basic Information -->
+                <div class="border-b pb-6">
+                    <h3 class="text-lg font-medium text-gray-900 mb-4">Basic Information</h3>
+                    
+                    <div class="grid grid-cols-1 gap-6">
+                        <div>
+                            <label for="name" class="block text-sm font-medium text-gray-700 mb-1">
+                                Exercise Name <span class="text-red-500">*</span>
+                            </label>
+                            <input type="text" id="name" @bind="model.Name" required maxlength="200"
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 @(GetFieldClass("Name"))">
+                            @if (validationErrors.ContainsKey("Name"))
+                            {
+                                <p class="mt-1 text-sm text-red-600">@validationErrors["Name"]</p>
+                            }
+                        </div>
+
+                        <div>
+                            <label for="description" class="block text-sm font-medium text-gray-700 mb-1">
+                                Description <span class="text-red-500">*</span>
+                            </label>
+                            <textarea id="description" @bind="model.Description" required maxlength="1000" rows="3"
+                                      class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 @(GetFieldClass("Description"))"></textarea>
+                            @if (validationErrors.ContainsKey("Description"))
+                            {
+                                <p class="mt-1 text-sm text-red-600">@validationErrors["Description"]</p>
+                            }
+                        </div>
+
+                        <div>
+                            <label for="instructions" class="block text-sm font-medium text-gray-700 mb-1">
+                                Instructions <span class="text-red-500">*</span>
+                            </label>
+                            <textarea id="instructions" @bind="model.Instructions" required maxlength="5000" rows="6"
+                                      class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 @(GetFieldClass("Instructions"))"
+                                      placeholder="1. Starting position...&#10;2. Movement...&#10;3. Return to start..."></textarea>
+                            @if (validationErrors.ContainsKey("Instructions"))
+                            {
+                                <p class="mt-1 text-sm text-red-600">@validationErrors["Instructions"]</p>
+                            }
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Exercise Configuration -->
+                <div class="border-b pb-6">
+                    <h3 class="text-lg font-medium text-gray-900 mb-4">Exercise Configuration</h3>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label for="difficulty" class="block text-sm font-medium text-gray-700 mb-1">
+                                Difficulty Level <span class="text-red-500">*</span>
+                            </label>
+                            <select id="difficulty" @bind="model.DifficultyId" required
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                <option value="">Select difficulty</option>
+                                @foreach (var difficulty in StateService.DifficultyLevels)
+                                {
+                                    <option value="@difficulty.Id">@difficulty.Value</option>
+                                }
+                            </select>
+                        </div>
+
+                        <div class="flex items-center">
+                            <input type="checkbox" id="isUnilateral" @bind="model.IsUnilateral"
+                                   class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                            <label for="isUnilateral" class="ml-2 block text-sm text-gray-700">
+                                Is Unilateral (works one side at a time)
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Muscle Groups -->
+                <div class="border-b pb-6">
+                    <h3 class="text-lg font-medium text-gray-900 mb-4">Muscle Groups <span class="text-red-500">*</span></h3>
+                    <p class="text-sm text-gray-600 mb-4">Select muscle groups and assign their roles</p>
+                    
+                    @if (!muscleGroupAssignments.Any())
+                    {
+                        <p class="text-sm text-red-600 mb-2">At least one muscle group is required</p>
+                    }
+
+                    <div class="space-y-2 mb-4">
+                        @foreach (var assignment in muscleGroupAssignments)
+                        {
+                            <div class="flex items-center space-x-2 bg-gray-50 p-2 rounded">
+                                <select @bind="assignment.MuscleGroupId" 
+                                        class="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    <option value="">Select muscle group</option>
+                                    @foreach (var muscleGroup in StateService.MuscleGroups)
+                                    {
+                                        <option value="@muscleGroup.Id">@muscleGroup.Value</option>
+                                    }
+                                </select>
+                                <select @bind="assignment.Role"
+                                        class="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    <option value="">Select role</option>
+                                    @foreach (var role in StateService.MuscleRoles)
+                                    {
+                                        <option value="@role.Value">@role.Value</option>
+                                    }
+                                </select>
+                                <button type="button" @onclick="() => RemoveMuscleGroup(assignment)"
+                                        class="text-red-600 hover:text-red-800">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                    </svg>
+                                </button>
+                            </div>
+                        }
+                    </div>
+                    
+                    <button type="button" @onclick="AddMuscleGroup"
+                            class="text-blue-600 hover:text-blue-800 text-sm font-medium">
+                        + Add Muscle Group
+                    </button>
+                </div>
+
+                <!-- Equipment -->
+                <div class="border-b pb-6">
+                    <h3 class="text-lg font-medium text-gray-900 mb-4">Equipment</h3>
+                    <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
+                        @foreach (var equipment in StateService.Equipment)
+                        {
+                            <label class="flex items-center">
+                                <input type="checkbox" 
+                                       checked="@selectedEquipmentIds.Contains(equipment.Id)"
+                                       @onchange="@(() => ToggleEquipment(equipment.Id))"
+                                       class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                                <span class="ml-2 text-sm text-gray-700">@equipment.Value</span>
+                            </label>
+                        }
+                    </div>
+                </div>
+
+                <!-- Body Parts -->
+                <div class="border-b pb-6">
+                    <h3 class="text-lg font-medium text-gray-900 mb-4">Body Parts</h3>
+                    <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
+                        @foreach (var bodyPart in StateService.BodyParts)
+                        {
+                            <label class="flex items-center">
+                                <input type="checkbox" 
+                                       checked="@selectedBodyPartIds.Contains(bodyPart.Id)"
+                                       @onchange="@(() => ToggleBodyPart(bodyPart.Id))"
+                                       class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                                <span class="ml-2 text-sm text-gray-700">@bodyPart.Value</span>
+                            </label>
+                        }
+                    </div>
+                </div>
+
+                <!-- Movement Patterns -->
+                <div class="border-b pb-6">
+                    <h3 class="text-lg font-medium text-gray-900 mb-4">Movement Patterns</h3>
+                    <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
+                        @foreach (var pattern in StateService.MovementPatterns)
+                        {
+                            <label class="flex items-center">
+                                <input type="checkbox" 
+                                       checked="@selectedMovementPatternIds.Contains(pattern.Id)"
+                                       @onchange="@(() => ToggleMovementPattern(pattern.Id))"
+                                       class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                                <span class="ml-2 text-sm text-gray-700">@pattern.Value</span>
+                            </label>
+                        }
+                    </div>
+                </div>
+
+                <!-- Media URLs -->
+                <div class="pb-6">
+                    <h3 class="text-lg font-medium text-gray-900 mb-4">Media (Optional)</h3>
+                    
+                    <div class="grid grid-cols-1 gap-6">
+                        <div>
+                            <label for="imageUrl" class="block text-sm font-medium text-gray-700 mb-1">
+                                Image URL
+                            </label>
+                            <input type="url" id="imageUrl" @bind="model.ImageUrl"
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                   placeholder="https://example.com/exercise-image.jpg">
+                        </div>
+
+                        <div>
+                            <label for="videoUrl" class="block text-sm font-medium text-gray-700 mb-1">
+                                Video URL
+                            </label>
+                            <input type="url" id="videoUrl" @bind="model.VideoUrl"
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                   placeholder="https://example.com/exercise-video.mp4">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Form Actions -->
+                <div class="flex justify-end space-x-4">
+                    <button type="button" @onclick="Cancel"
+                            class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">
+                        Cancel
+                    </button>
+                    <button type="submit" disabled="@isSubmitting"
+                            class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50">
+                        @if (isSubmitting)
+                        {
+                            <span>Saving...</span>
+                        }
+                        else
+                        {
+                            <span>@(IsEditMode ? "Update Exercise" : "Create Exercise")</span>
+                        }
+                    </button>
+                </div>
+            </div>
+        </form>
+    }
+</div>
+
+@code {
+    [Parameter] public Guid? Id { get; set; }
+
+    private bool IsEditMode => Id.HasValue;
+    private bool isLoading = true;
+    private bool isSubmitting = false;
+
+    private ExerciseCreateDto model = new();
+    private List<MuscleGroupRoleAssignmentDto> muscleGroupAssignments = new();
+    private HashSet<string> selectedEquipmentIds = new();
+    private HashSet<string> selectedBodyPartIds = new();
+    private HashSet<string> selectedMovementPatternIds = new();
+    private Dictionary<string, string> validationErrors = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        StateService.OnChange += StateHasChanged;
+        
+        if (StateService.DifficultyLevels?.Any() != true)
+        {
+            await StateService.InitializeAsync();
+        }
+
+        if (IsEditMode)
+        {
+            await LoadExerciseForEdit();
+        }
+        else
+        {
+            // Add one empty muscle group assignment for new exercises
+            muscleGroupAssignments.Add(new MuscleGroupRoleAssignmentDto());
+        }
+
+        isLoading = false;
+    }
+
+    private async Task LoadExerciseForEdit()
+    {
+        await StateService.LoadExerciseByIdAsync(Id!.Value);
+        
+        if (StateService.SelectedExercise != null)
+        {
+            var exercise = StateService.SelectedExercise;
+            
+            // Map to edit model
+            model = new ExerciseCreateDto
+            {
+                Name = exercise.Name,
+                Description = exercise.Description,
+                Instructions = exercise.Instructions,
+                DifficultyId = exercise.Difficulty?.Id != null ? Guid.Parse(exercise.Difficulty.Id) : Guid.Empty,
+                IsUnilateral = exercise.IsUnilateral,
+                ImageUrl = exercise.ImageUrl,
+                VideoUrl = exercise.VideoUrl
+            };
+
+            // Map muscle groups
+            muscleGroupAssignments = exercise.MuscleGroups.Select(mg => new MuscleGroupRoleAssignmentDto
+            {
+                MuscleGroupId = Guid.Parse(mg.Id.ToString()),
+                Role = mg.Role
+            }).ToList();
+
+            // Map equipment
+            selectedEquipmentIds = exercise.Equipment.Select(e => e.Id).ToHashSet();
+            
+            // Map body parts
+            selectedBodyPartIds = exercise.BodyParts.Select(bp => bp.Id).ToHashSet();
+            
+            // Map movement patterns
+            selectedMovementPatternIds = exercise.MovementPatterns.Select(mp => mp.Id).ToHashSet();
+        }
+    }
+
+    private void AddMuscleGroup()
+    {
+        muscleGroupAssignments.Add(new MuscleGroupRoleAssignmentDto());
+    }
+
+    private void RemoveMuscleGroup(MuscleGroupRoleAssignmentDto assignment)
+    {
+        muscleGroupAssignments.Remove(assignment);
+    }
+
+    private void ToggleEquipment(string equipmentId)
+    {
+        if (selectedEquipmentIds.Contains(equipmentId))
+            selectedEquipmentIds.Remove(equipmentId);
+        else
+            selectedEquipmentIds.Add(equipmentId);
+    }
+
+    private void ToggleBodyPart(string bodyPartId)
+    {
+        if (selectedBodyPartIds.Contains(bodyPartId))
+            selectedBodyPartIds.Remove(bodyPartId);
+        else
+            selectedBodyPartIds.Add(bodyPartId);
+    }
+
+    private void ToggleMovementPattern(string patternId)
+    {
+        if (selectedMovementPatternIds.Contains(patternId))
+            selectedMovementPatternIds.Remove(patternId);
+        else
+            selectedMovementPatternIds.Add(patternId);
+    }
+
+    private bool ValidateForm()
+    {
+        validationErrors.Clear();
+
+        if (string.IsNullOrWhiteSpace(model.Name))
+            validationErrors["Name"] = "Exercise name is required";
+        else if (model.Name.Length > 200)
+            validationErrors["Name"] = "Exercise name must be 200 characters or less";
+
+        if (string.IsNullOrWhiteSpace(model.Description))
+            validationErrors["Description"] = "Description is required";
+        else if (model.Description.Length > 1000)
+            validationErrors["Description"] = "Description must be 1000 characters or less";
+
+        if (string.IsNullOrWhiteSpace(model.Instructions))
+            validationErrors["Instructions"] = "Instructions are required";
+        else if (model.Instructions.Length > 5000)
+            validationErrors["Instructions"] = "Instructions must be 5000 characters or less";
+
+        if (model.DifficultyId == Guid.Empty)
+            validationErrors["Difficulty"] = "Difficulty level is required";
+
+        // Validate muscle groups
+        var validMuscleGroups = muscleGroupAssignments
+            .Where(mg => mg.MuscleGroupId != Guid.Empty && !string.IsNullOrWhiteSpace(mg.Role))
+            .ToList();
+        
+        if (!validMuscleGroups.Any())
+            validationErrors["MuscleGroups"] = "At least one muscle group with a role is required";
+
+        return !validationErrors.Any();
+    }
+
+    private async Task HandleSubmit()
+    {
+        if (!ValidateForm())
+            return;
+
+        isSubmitting = true;
+        StateHasChanged();
+
+        try
+        {
+            // Prepare the model
+            model.MuscleGroupsWithRoles = muscleGroupAssignments
+                .Where(mg => mg.MuscleGroupId != Guid.Empty && !string.IsNullOrWhiteSpace(mg.Role))
+                .ToList();
+            
+            model.EquipmentIds = selectedEquipmentIds.Select(Guid.Parse).ToList();
+            model.BodyPartIds = selectedBodyPartIds.Select(Guid.Parse).ToList();
+            model.MovementPatternIds = selectedMovementPatternIds.Select(Guid.Parse).ToList();
+
+            if (IsEditMode)
+            {
+                var updateDto = new ExerciseUpdateDto
+                {
+                    Name = model.Name,
+                    Description = model.Description,
+                    Instructions = model.Instructions,
+                    DifficultyId = model.DifficultyId,
+                    IsUnilateral = model.IsUnilateral,
+                    ImageUrl = model.ImageUrl,
+                    VideoUrl = model.VideoUrl,
+                    MuscleGroupsWithRoles = model.MuscleGroupsWithRoles,
+                    EquipmentIds = model.EquipmentIds,
+                    BodyPartIds = model.BodyPartIds,
+                    MovementPatternIds = model.MovementPatternIds
+                };
+                
+                await StateService.UpdateExerciseAsync(Id!.Value, updateDto);
+            }
+            else
+            {
+                await StateService.CreateExerciseAsync(model);
+            }
+
+            // Navigate back to list
+            Navigation.NavigateTo("/exercises");
+        }
+        catch
+        {
+            // Error is handled by StateService
+            isSubmitting = false;
+        }
+    }
+
+    private void Cancel()
+    {
+        Navigation.NavigateTo("/exercises");
+    }
+
+    private string GetFieldClass(string fieldName)
+    {
+        return validationErrors.ContainsKey(fieldName) ? "border-red-500" : "";
+    }
+
+    public void Dispose()
+    {
+        StateService.OnChange -= StateHasChanged;
+    }
+}

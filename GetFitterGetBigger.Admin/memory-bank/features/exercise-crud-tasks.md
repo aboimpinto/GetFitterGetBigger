@@ -16,13 +16,13 @@
 - **Task 2.4:** Write tests for ExerciseStateService `[Implemented: c5b6c469]`
 
 ### Components - Exercise List
-- **Task 3.1:** Create ExerciseList component with table layout `[ReadyToDevelop]`
+- **Task 3.1:** Create ExerciseList component with table layout `[Implemented: d2c30ce2]`
 - **Task 3.2:** Write component tests for ExerciseList `[ReadyToDevelop]`
-- **Task 3.3:** Add pagination component to ExerciseList `[ReadyToDevelop]`
-- **Task 3.4:** Add filtering UI (name search, difficulty filter, muscle group filter) `[ReadyToDevelop]`
+- **Task 3.3:** Add pagination component to ExerciseList `[Implemented: d2c30ce2]`
+- **Task 3.4:** Add filtering UI (name search, difficulty filter, muscle group filter) `[Implemented: d2c30ce2]`
 - **Task 3.5:** Write tests for filtering and pagination `[ReadyToDevelop]`
-- **Task 3.6:** Add "New Exercise" button with navigation `[ReadyToDevelop]`
-- **Task 3.7:** Add click-to-edit functionality on exercise rows `[ReadyToDevelop]`
+- **Task 3.6:** Add "New Exercise" button with navigation `[Implemented: d2c30ce2]`
+- **Task 3.7:** Add click-to-edit functionality on exercise rows `[Implemented: d2c30ce2]`
 
 ### Components - Exercise Form
 - **Task 4.1:** Create ExerciseForm component structure `[ReadyToDevelop]`
