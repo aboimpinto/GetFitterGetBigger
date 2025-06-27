@@ -146,10 +146,11 @@
                         }
                     </div>
                     
-                    <button type="button" @onclick="AddMuscleGroup"
+                    <button type="button" @onclick="@(() => AddMuscleGroup())"
                             class="text-blue-600 hover:text-blue-800 text-sm font-medium">
                         + Add Muscle Group
                     </button>
+                    <span class="ml-2 text-sm text-gray-500">(Count: @muscleGroupAssignments.Count)</span>
                 </div>
 
                 <!-- Equipment -->
@@ -327,12 +328,16 @@
 
     private void AddMuscleGroup()
     {
+        Console.WriteLine($"AddMuscleGroup called. Current count: {muscleGroupAssignments.Count}");
         muscleGroupAssignments.Add(new MuscleGroupRoleAssignmentDto());
+        Console.WriteLine($"After add. New count: {muscleGroupAssignments.Count}");
+        StateHasChanged();
     }
 
     private void RemoveMuscleGroup(MuscleGroupRoleAssignmentDto assignment)
     {
         muscleGroupAssignments.Remove(assignment);
+        StateHasChanged();
     }
 
     private void ToggleEquipment(string equipmentId)
