@@ -27,12 +27,12 @@
 - **Task 3.7:** Write tests for null/empty response handling `[Implemented: 6e310ca7]`
 
 ### Category 4: AuthorizationStateService Tests
-- **Task 4.1:** Create AuthorizationStateServiceTests class with test setup `[ReadyToDevelop]`
-- **Task 4.2:** Write tests for InitializeAsync with authenticated user `[ReadyToDevelop]`
-- **Task 4.3:** Write tests for InitializeAsync with unauthenticated user `[ReadyToDevelop]`
-- **Task 4.4:** Write tests for UserHasAdminAccess property logic `[ReadyToDevelop]`
-- **Task 4.5:** Write tests for error handling in claim retrieval `[ReadyToDevelop]`
-- **Task 4.6:** Write tests for OnChange event notification `[ReadyToDevelop]`
+- **Task 4.1:** Create AuthorizationStateServiceTests class with test setup `[Implemented: eaa32af2]`
+- **Task 4.2:** Write tests for InitializeAsync with authenticated user `[Implemented: eaa32af2]`
+- **Task 4.3:** Write tests for InitializeAsync with unauthenticated user `[Implemented: eaa32af2]`
+- **Task 4.4:** Write tests for UserHasAdminAccess property logic `[Implemented: eaa32af2]`
+- **Task 4.5:** Write tests for error handling in claim retrieval `[Implemented: eaa32af2]`
+- **Task 4.6:** Write tests for OnChange event notification `[Implemented: eaa32af2]`
 
 ### Category 5: CustomAuthStateProvider Tests
 - **Task 5.1:** Create CustomAuthStateProviderTests class with test setup `[ReadyToDevelop]`
