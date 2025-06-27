@@ -88,12 +88,23 @@ public class ExerciseRepository : RepositoryBase<FitnessDbContext>, IExerciseRep
         // Get total count before pagination
         var totalCount = await query.CountAsync();
         
+        // Log query information
+        var logQuery = query.ToQueryString();
+        Console.WriteLine($"[ExerciseRepository] Query count: {totalCount}");
+        Console.WriteLine($"[ExerciseRepository] Generated SQL: {logQuery}");
+        
         // Apply pagination
         var exercises = await query
             .OrderBy(e => e.Name)
             .Skip((pageNumber - 1) * pageSize)
             .Take(pageSize)
             .ToListAsync();
+        
+        Console.WriteLine($"[ExerciseRepository] Exercises retrieved: {exercises.Count}");
+        foreach (var ex in exercises)
+        {
+            Console.WriteLine($"[ExerciseRepository] Exercise: {ex.Name}, IsActive: {ex.IsActive}, MuscleGroups: {ex.ExerciseMuscleGroups?.Count ?? 0}");
+        }
         
         return (exercises, totalCount);
     }
