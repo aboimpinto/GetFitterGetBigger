@@ -40,25 +40,25 @@
 - **Task 4.13:** Write comprehensive tests for ExerciseForm `[ReadyToDevelop]`
 
 ### Components - Exercise Detail/View
-- **Task 5.1:** Create ExerciseDetail component for viewing single exercise `[ReadyToDevelop]`
-- **Task 5.2:** Add edit and delete buttons with proper authorization `[ReadyToDevelop]`
+- **Task 5.1:** Create ExerciseDetail component for viewing single exercise `[Implemented: 9802e42d]`
+- **Task 5.2:** Add edit and delete buttons with proper authorization `[Implemented: 9802e42d]`
 - **Task 5.3:** Write tests for ExerciseDetail component `[ReadyToDevelop]`
 
 ### Pages & Routing
-- **Task 6.1:** Create ExercisesPage container component `[ReadyToDevelop]`
-- **Task 6.2:** Create ExerciseEditPage for add/edit functionality `[ReadyToDevelop]`
-- **Task 6.3:** Create ExerciseDetailPage for viewing single exercise `[ReadyToDevelop]`
-- **Task 6.4:** Configure React Router routes for exercise pages `[ReadyToDevelop]`
-- **Task 6.5:** Update navigation menu to highlight active Exercise menu item `[ReadyToDevelop]`
+- **Task 6.1:** Create ExercisesPage container component `[Skipped - Using @page directive in Blazor]`
+- **Task 6.2:** Create ExerciseEditPage for add/edit functionality `[Skipped - Using @page directive in ExerciseForm]`
+- **Task 6.3:** Create ExerciseDetailPage for viewing single exercise `[Skipped - Using @page directive in ExerciseDetail]`
+- **Task 6.4:** Configure React Router routes for exercise pages `[Skipped - Blazor routing via @page]`
+- **Task 6.5:** Update navigation menu to highlight active Exercise menu item `[Skipped - Already exists in NavMenu]`
 - **Task 6.6:** Write integration tests for page navigation `[ReadyToDevelop]`
 
 ### UI/UX Polish
 - **Task 7.1:** Add loading skeletons for exercise list `[ReadyToDevelop]`
-- **Task 7.2:** Add loading states for form submissions `[ReadyToDevelop]`
-- **Task 7.3:** Implement error handling with user-friendly messages `[ReadyToDevelop]`
-- **Task 7.4:** Add success notifications for CRUD operations `[ReadyToDevelop]`
-- **Task 7.5:** Ensure responsive design for mobile/tablet/desktop `[ReadyToDevelop]`
-- **Task 7.6:** Add confirmation dialog for delete operations `[ReadyToDevelop]`
+- **Task 7.2:** Add loading states for form submissions `[Implemented: be30369a]`
+- **Task 7.3:** Implement error handling with user-friendly messages `[Implemented: d2c30ce2]`
+- **Task 7.4:** Add success notifications for CRUD operations `[Skipped - Navigate after success]`
+- **Task 7.5:** Ensure responsive design for mobile/tablet/desktop `[Implemented: d2c30ce2]`
+- **Task 7.6:** Add confirmation dialog for delete operations `[Implemented: 9802e42d]`
 - **Task 7.7:** Write tests for loading and error states `[ReadyToDevelop]`
 
 ### Integration Testing
