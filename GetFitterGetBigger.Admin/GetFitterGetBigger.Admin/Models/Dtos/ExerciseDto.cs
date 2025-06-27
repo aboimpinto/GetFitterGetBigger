@@ -1,0 +1,80 @@
+namespace GetFitterGetBigger.Admin.Models.Dtos
+{
+    public class ExerciseDto
+    {
+        public Guid Id { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public string Description { get; set; } = string.Empty;
+        public string Instructions { get; set; } = string.Empty;
+        public ReferenceDataDto? Difficulty { get; set; }
+        public bool IsUnilateral { get; set; }
+        public string? ImageUrl { get; set; }
+        public string? VideoUrl { get; set; }
+        public List<MuscleGroupWithRoleDto> MuscleGroups { get; set; } = new();
+        public List<ReferenceDataDto> Equipment { get; set; } = new();
+        public List<ReferenceDataDto> BodyParts { get; set; } = new();
+        public List<ReferenceDataDto> MovementPatterns { get; set; } = new();
+    }
+
+    public class MuscleGroupWithRoleDto
+    {
+        public Guid Id { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public string Role { get; set; } = string.Empty;
+    }
+
+    public class ExerciseCreateDto
+    {
+        public string Name { get; set; } = string.Empty;
+        public string Description { get; set; } = string.Empty;
+        public string Instructions { get; set; } = string.Empty;
+        public Guid DifficultyId { get; set; }
+        public bool IsUnilateral { get; set; }
+        public string? ImageUrl { get; set; }
+        public string? VideoUrl { get; set; }
+        public List<MuscleGroupRoleAssignmentDto> MuscleGroupsWithRoles { get; set; } = new();
+        public List<Guid> EquipmentIds { get; set; } = new();
+        public List<Guid> BodyPartIds { get; set; } = new();
+        public List<Guid> MovementPatternIds { get; set; } = new();
+    }
+
+    public class ExerciseUpdateDto : ExerciseCreateDto
+    {
+    }
+
+    public class MuscleGroupRoleAssignmentDto
+    {
+        public Guid MuscleGroupId { get; set; }
+        public string Role { get; set; } = string.Empty;
+    }
+
+    public class ExerciseListDto
+    {
+        public Guid Id { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public string DifficultyName { get; set; } = string.Empty;
+        public bool IsUnilateral { get; set; }
+        public List<string> PrimaryMuscleGroups { get; set; } = new();
+        public List<string> Equipment { get; set; } = new();
+    }
+
+    public class ExercisePagedResultDto
+    {
+        public List<ExerciseListDto> Items { get; set; } = new();
+        public int TotalCount { get; set; }
+        public int PageNumber { get; set; }
+        public int PageSize { get; set; }
+        public int TotalPages => (int)Math.Ceiling(TotalCount / (double)PageSize);
+    }
+
+    public class ExerciseFilterDto
+    {
+        public string? Name { get; set; }
+        public Guid? DifficultyId { get; set; }
+        public List<Guid>? MuscleGroupIds { get; set; }
+        public List<Guid>? EquipmentIds { get; set; }
+        public bool? IsActive { get; set; }
+        public int Page { get; set; } = 1;
+        public int PageSize { get; set; } = 10;
+    }
+}
