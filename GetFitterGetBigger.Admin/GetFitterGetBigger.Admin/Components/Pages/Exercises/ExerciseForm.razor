@@ -89,14 +89,20 @@
                                 Difficulty Level <span class="text-red-500">*</span>
                             </label>
                             <select id="difficulty" 
-                                    value="@(model.DifficultyId == Guid.Empty ? "" : model.DifficultyId.ToString())"
-                                    @onchange="@((ChangeEventArgs e) => SetDifficultyId(e.Value?.ToString()))"
+                                    @bind="_difficultyIdString"
                                     required
                                     class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 @(GetFieldClass("Difficulty"))">
                                 <option value="">Select difficulty</option>
-                                @foreach (var difficulty in StateService.DifficultyLevels)
+                                @if (StateService.DifficultyLevels != null)
                                 {
-                                    <option value="@difficulty.Id">@difficulty.Value</option>
+                                    @foreach (var difficulty in StateService.DifficultyLevels)
+                                    {
+                                        <option value="@difficulty.Id">@difficulty.Value (ID: @difficulty.Id)</option>
+                                    }
+                                }
+                                else
+                                {
+                                    <option value="">Loading difficulties...</option>
                                 }
                             </select>
                             @if (validationErrors.ContainsKey("Difficulty"))
@@ -280,6 +286,26 @@
     private bool isSubmitting = false;
     private int muscleGroupsToAdd = 1;
     private int _totalMuscleGroupsNeeded = 1;
+    
+    private string difficultyIdString = "";
+    private string _difficultyIdString
+    {
+        get => difficultyIdString;
+        set
+        {
+            difficultyIdString = value;
+            Console.WriteLine($"[ExerciseForm] Difficulty dropdown changed to: '{value}'");
+            if (!string.IsNullOrEmpty(value) && Guid.TryParse(value, out var guidValue))
+            {
+                model.DifficultyId = guidValue;
+                Console.WriteLine($"[ExerciseForm] Set model.DifficultyId to {guidValue}");
+            }
+            else
+            {
+                model.DifficultyId = Guid.Empty;
+            }
+        }
+    }
 
     private int totalMuscleGroupsNeeded
     {
