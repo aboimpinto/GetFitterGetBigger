@@ -10,9 +10,9 @@
 - **Task 1.5:** Write unit tests for ReferenceTableService `[Skipped - Already exists in ReferenceDataServiceTests]`
 
 ### State Management
-- **Task 2.1:** Create ExerciseStateService for state management `[ReadyToDevelop]`
-- **Task 2.2:** Implement exercise list state with pagination and filtering `[ReadyToDevelop]`
-- **Task 2.3:** Implement reference table caching in state service `[ReadyToDevelop]`
+- **Task 2.1:** Create ExerciseStateService for state management `[Implemented: 4d6aeec9]`
+- **Task 2.2:** Implement exercise list state with pagination and filtering `[Implemented: 4d6aeec9]`
+- **Task 2.3:** Implement reference table caching in state service `[Implemented: 4d6aeec9]`
 - **Task 2.4:** Write tests for ExerciseStateService `[ReadyToDevelop]`
 
 ### Components - Exercise List
