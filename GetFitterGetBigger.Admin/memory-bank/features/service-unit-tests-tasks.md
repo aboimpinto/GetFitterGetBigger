@@ -3,10 +3,10 @@
 ## Feature Branch: `feature/service-unit-tests`
 
 ### Category 1: Test Infrastructure Setup
-- **Task 1.1:** Create test base classes and helpers folder structure `[ReadyToDevelop]`
-- **Task 1.2:** Create MockHttpMessageHandler for HTTP client testing `[ReadyToDevelop]`
-- **Task 1.3:** Create test data builders for common DTOs `[ReadyToDevelop]`
-- **Task 1.4:** Write tests for test infrastructure components `[ReadyToDevelop]`
+- **Task 1.1:** Create test base classes and helpers folder structure `[Implemented: 2da79a6a]`
+- **Task 1.2:** Create MockHttpMessageHandler for HTTP client testing `[Implemented: 2da79a6a]`
+- **Task 1.3:** Create test data builders for common DTOs `[Implemented: 2da79a6a]`
+- **Task 1.4:** Write tests for test infrastructure components `[Implemented: 2da79a6a]`
 
 ### Category 2: AuthService Tests
 - **Task 2.1:** Create AuthServiceTests class with test setup `[ReadyToDevelop]`
