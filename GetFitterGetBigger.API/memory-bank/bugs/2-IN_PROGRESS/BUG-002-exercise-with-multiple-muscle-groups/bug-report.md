@@ -21,7 +21,7 @@ No error message - the exercise is silently excluded from the results.
 5. Actual: Exercise does not appear in the list
 
 ## Root Cause
-[To be determined after investigation]
+Entity Framework Core was generating incorrect SQL when multiple includes were performed on the same collection navigation property (ExerciseMuscleGroups). The query included the collection twice with different ThenInclude clauses, causing a Cartesian product issue that filtered out exercises with multiple related records.
 
 ## Impact
 - Users affected: All users trying to view exercises
@@ -37,4 +37,4 @@ Exercise with:
 - Associated with 2 muscle groups: Chest (Primary), Triceps (Secondary)
 
 ## Fix Summary
-[To be added after fix is implemented]
+Added `.AsSplitQuery()` to the query builder in ExerciseRepository.GetPagedAsync and GetByIdAsync methods. This instructs EF Core to split the complex query with multiple includes into separate SQL queries, avoiding the Cartesian product issue that was causing exercises with multiple muscle groups to be filtered out.
