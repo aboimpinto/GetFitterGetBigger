@@ -63,17 +63,42 @@ namespace GetFitterGetBigger.Admin.Services
 
         public async Task<ExerciseDto> CreateExerciseAsync(ExerciseCreateDto exercise)
         {
-            var requestUrl = $"{_apiBaseUrl}/api/exercises";
-            var content = new StringContent(
-                JsonSerializer.Serialize(exercise, _jsonOptions),
-                Encoding.UTF8,
-                "application/json");
-            
-            var response = await _httpClient.PostAsync(requestUrl, content);
-            response.EnsureSuccessStatusCode();
-            
-            var created = await response.Content.ReadFromJsonAsync<ExerciseDto>(_jsonOptions);
-            return created ?? throw new InvalidOperationException("Failed to create exercise");
+            try
+            {
+                var requestUrl = $"{_apiBaseUrl}/api/exercises";
+                var json = JsonSerializer.Serialize(exercise, _jsonOptions);
+                
+                Console.WriteLine($"[ExerciseService] Creating exercise at URL: {requestUrl}");
+                Console.WriteLine($"[ExerciseService] Request JSON:");
+                Console.WriteLine(json);
+                
+                var content = new StringContent(json, Encoding.UTF8, "application/json");
+                
+                var response = await _httpClient.PostAsync(requestUrl, content);
+                
+                Console.WriteLine($"[ExerciseService] Response Status: {response.StatusCode}");
+                
+                if (!response.IsSuccessStatusCode)
+                {
+                    var errorContent = await response.Content.ReadAsStringAsync();
+                    Console.WriteLine($"[ExerciseService] Error Response Body:");
+                    Console.WriteLine(errorContent);
+                }
+                
+                response.EnsureSuccessStatusCode();
+                
+                var created = await response.Content.ReadFromJsonAsync<ExerciseDto>(_jsonOptions);
+                return created ?? throw new InvalidOperationException("Failed to create exercise");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[ExerciseService] Exception in CreateExerciseAsync: {ex.GetType().Name}: {ex.Message}");
+                if (ex.InnerException != null)
+                {
+                    Console.WriteLine($"[ExerciseService] Inner Exception: {ex.InnerException.Message}");
+                }
+                throw;
+            }
         }
 
         public async Task UpdateExerciseAsync(string id, ExerciseUpdateDto exercise)
