@@ -102,11 +102,32 @@ dotnet test --collect:"XPlat Code Coverage"
 
 ## Code Coverage
 
-To generate code coverage reports:
+### Quick Start
 
-1. Install the coverage tool globally:
+We've provided scripts to automatically generate HTML coverage reports:
+
+**For Linux/macOS:**
 ```bash
-dotnet tool install -g dotnet-coverage
+./generate-coverage-report.sh
+```
+
+**For Windows PowerShell:**
+```powershell
+./generate-coverage-report.ps1
+```
+
+These scripts will:
+1. Run all tests with code coverage
+2. Generate an HTML report
+3. Open the report in your default browser
+
+### Manual Steps
+
+If you prefer to run the commands manually:
+
+1. Install ReportGenerator globally (one-time setup):
+```bash
+dotnet tool install -g dotnet-reportgenerator-globaltool
 ```
 
 2. Run tests with coverage:
@@ -114,11 +135,19 @@ dotnet tool install -g dotnet-coverage
 dotnet test --collect:"XPlat Code Coverage" --results-directory ./TestResults
 ```
 
-3. Generate HTML report (requires ReportGenerator):
+3. Generate HTML report:
 ```bash
-dotnet tool install -g dotnet-reportgenerator-globaltool
-reportgenerator -reports:TestResults/*/coverage.cobertura.xml -targetdir:coveragereport -reporttypes:Html
+reportgenerator -reports:TestResults/*/coverage.cobertura.xml -targetdir:TestResults/CoverageReport -reporttypes:Html
 ```
+
+4. Open the report:
+   - Location: `TestResults/CoverageReport/index.html`
+
+### Coverage Goals
+
+- **Target**: >80% code coverage for all services
+- **Current**: Check the latest report for current metrics
+- **Excluded**: Auto-generated files (`*.g.cs`), UI components
 
 ## Best Practices
 
