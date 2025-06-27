@@ -18,6 +18,9 @@
         <button @onclick="NavigateToCreate" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors">
             New Exercise
         </button>
+        <a href="/exercises/new" class="ml-2 bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-lg transition-colors inline-block">
+            New Exercise (Link)
+        </a>
     </div>
 
     @if (StateService.ErrorMessage != null)
@@ -212,7 +215,14 @@
 
     private void NavigateToCreate()
     {
-        Navigation.NavigateTo("/exercises/new");
+        try
+        {
+            Navigation.NavigateTo("/exercises/new", forceLoad: false);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Navigation error: {ex.Message}");
+        }
     }
 
     private void NavigateToView(Guid id)
