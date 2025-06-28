@@ -1,15 +1,19 @@
 using GetFitterGetBigger.Admin.Models.Dtos;
 
-namespace GetFitterGetBigger.Admin.Tests.Builders
+namespace GetFitterGetBigger.Admin.Builders
 {
+    /// <summary>
+    /// Builder for creating ExerciseCreateDto instances in production code.
+    /// Provides a fluent interface for constructing exercise creation DTOs.
+    /// </summary>
     public class ExerciseCreateDtoBuilder
     {
-        private string _name = "Test Exercise";
-        private string _description = "Test Description";
-        private string _instructions = "Test Instructions";
+        private string _name = string.Empty;
+        private string _description = string.Empty;
+        private string _instructions = string.Empty;
         private List<CoachNoteCreateDto> _coachNotes = new();
         private List<string> _exerciseTypeIds = new();
-        private string _difficultyId = "difficulty-intermediate";
+        private string _difficultyId = string.Empty;
         private bool _isUnilateral = false;
         private bool _isActive = true;
         private string? _imageUrl = null;
@@ -47,6 +51,12 @@ namespace GetFitterGetBigger.Admin.Tests.Builders
             return this;
         }
 
+        public ExerciseCreateDtoBuilder WithCoachNotes(List<CoachNoteCreateDto> coachNotes)
+        {
+            _coachNotes = coachNotes;
+            return this;
+        }
+
         public ExerciseCreateDtoBuilder AddCoachNote(string text, int order)
         {
             _coachNotes.Add(new CoachNoteCreateDto
@@ -60,6 +70,12 @@ namespace GetFitterGetBigger.Admin.Tests.Builders
         public ExerciseCreateDtoBuilder WithExerciseTypes(params string[] typeIds)
         {
             _exerciseTypeIds = typeIds.ToList();
+            return this;
+        }
+
+        public ExerciseCreateDtoBuilder WithExerciseTypes(List<string> typeIds)
+        {
+            _exerciseTypeIds = typeIds;
             return this;
         }
 
@@ -81,13 +97,25 @@ namespace GetFitterGetBigger.Admin.Tests.Builders
             return this;
         }
 
-        public ExerciseCreateDtoBuilder WithImageUrl(string imageUrl)
+        public ExerciseCreateDtoBuilder WithIsUnilateral(bool isUnilateral)
+        {
+            _isUnilateral = isUnilateral;
+            return this;
+        }
+
+        public ExerciseCreateDtoBuilder WithIsActive(bool isActive)
+        {
+            _isActive = isActive;
+            return this;
+        }
+
+        public ExerciseCreateDtoBuilder WithImageUrl(string? imageUrl)
         {
             _imageUrl = imageUrl;
             return this;
         }
 
-        public ExerciseCreateDtoBuilder WithVideoUrl(string videoUrl)
+        public ExerciseCreateDtoBuilder WithVideoUrl(string? videoUrl)
         {
             _videoUrl = videoUrl;
             return this;
@@ -100,6 +128,12 @@ namespace GetFitterGetBigger.Admin.Tests.Builders
                 MuscleGroupId = mg.muscleGroupId,
                 MuscleRoleId = mg.roleId
             }).ToList();
+            return this;
+        }
+
+        public ExerciseCreateDtoBuilder WithMuscleGroups(List<MuscleGroupApiDto> muscleGroups)
+        {
+            _muscleGroups = muscleGroups;
             return this;
         }
 
@@ -119,15 +153,33 @@ namespace GetFitterGetBigger.Admin.Tests.Builders
             return this;
         }
 
+        public ExerciseCreateDtoBuilder WithEquipment(List<string> equipmentIds)
+        {
+            _equipmentIds = equipmentIds;
+            return this;
+        }
+
         public ExerciseCreateDtoBuilder WithBodyParts(params string[] bodyPartIds)
         {
             _bodyPartIds = bodyPartIds.ToList();
             return this;
         }
 
+        public ExerciseCreateDtoBuilder WithBodyParts(List<string> bodyPartIds)
+        {
+            _bodyPartIds = bodyPartIds;
+            return this;
+        }
+
         public ExerciseCreateDtoBuilder WithMovementPatterns(params string[] movementPatternIds)
         {
             _movementPatternIds = movementPatternIds.ToList();
+            return this;
+        }
+
+        public ExerciseCreateDtoBuilder WithMovementPatterns(List<string> movementPatternIds)
+        {
+            _movementPatternIds = movementPatternIds;
             return this;
         }
 
@@ -150,6 +202,30 @@ namespace GetFitterGetBigger.Admin.Tests.Builders
                 BodyPartIds = _bodyPartIds,
                 MovementPatternIds = _movementPatternIds
             };
+        }
+
+        /// <summary>
+        /// Creates an ExerciseCreateDto from an existing ExerciseDto.
+        /// Useful for edit scenarios where you need to map from the retrieved DTO.
+        /// </summary>
+        public static ExerciseCreateDto FromExerciseDto(ExerciseDto exercise)
+        {
+            return new ExerciseCreateDtoBuilder()
+                .WithName(exercise.Name)
+                .WithDescription(exercise.Description)
+                .WithInstructions(exercise.Instructions)
+                .WithDifficultyId(exercise.Difficulty?.Id ?? string.Empty)
+                .WithIsUnilateral(exercise.IsUnilateral)
+                .WithIsActive(exercise.IsActive)
+                .WithImageUrl(exercise.ImageUrl)
+                .WithVideoUrl(exercise.VideoUrl)
+                .WithCoachNotes(exercise.CoachNotes.Select(cn => new CoachNoteCreateDto
+                {
+                    Text = cn.Text,
+                    Order = cn.Order
+                }).ToList())
+                .WithExerciseTypes(exercise.ExerciseTypes.Select(et => et.Id).ToList())
+                .Build();
         }
     }
 }

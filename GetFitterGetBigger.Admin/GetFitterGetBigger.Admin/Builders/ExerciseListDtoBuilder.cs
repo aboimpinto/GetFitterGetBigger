@@ -1,7 +1,11 @@
 using GetFitterGetBigger.Admin.Models.Dtos;
 
-namespace GetFitterGetBigger.Admin.Tests.Builders
+namespace GetFitterGetBigger.Admin.Builders
 {
+    /// <summary>
+    /// Builder for creating ExerciseListDto instances.
+    /// Useful for testing and creating exercise list items.
+    /// </summary>
     public class ExerciseListDtoBuilder
     {
         private string _id = Guid.NewGuid().ToString();

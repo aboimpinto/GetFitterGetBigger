@@ -3,7 +3,7 @@ using System.Text.Json;
 using FluentAssertions;
 using GetFitterGetBigger.Admin.Models.Dtos;
 using GetFitterGetBigger.Admin.Services;
-using GetFitterGetBigger.Admin.Tests.Builders;
+using GetFitterGetBigger.Admin.Builders;
 using GetFitterGetBigger.Admin.Tests.Helpers;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;
@@ -107,18 +107,12 @@ namespace GetFitterGetBigger.Admin.Tests.Services
         {
             // Arrange
             var exerciseId = Guid.NewGuid().ToString();
-            var cachedExercise = new ExerciseDto
-            {
-                Id = exerciseId,
-                Name = "Cached Exercise",
-                Description = string.Empty,
-                Instructions = string.Empty,
-                Difficulty = new ReferenceDataDto { Id = "1", Value = "Intermediate", Description = "Intermediate level" },
-                MuscleGroups = new List<MuscleGroupWithRoleDto>(),
-                Equipment = new List<ReferenceDataDto>(),
-                BodyParts = new List<ReferenceDataDto>(),
-                MovementPatterns = new List<ReferenceDataDto>()
-            };
+            var cachedExercise = new ExerciseDtoBuilder()
+                .WithId(exerciseId)
+                .WithName("Cached Exercise")
+                .WithDescription(string.Empty)
+                .WithInstructions(string.Empty)
+                .Build();
             
             _memoryCache.Set($"exercise_{exerciseId}", cachedExercise);
 
@@ -135,27 +129,18 @@ namespace GetFitterGetBigger.Admin.Tests.Services
         public async Task CreateExerciseAsync_WithValidData_ReturnsCreatedExercise()
         {
             // Arrange
-            var createDto = new ExerciseCreateDto
-            {
-                Name = "New Exercise",
-                Description = "Test description",
-                Instructions = "Test instructions",
-                DifficultyId = Guid.NewGuid().ToString(),
-                IsUnilateral = false
-            };
+            var createDto = new ExerciseCreateDtoBuilder()
+                .WithName("New Exercise")
+                .WithDescription("Test description")
+                .WithInstructions("Test instructions")
+                .WithDifficultyId(Guid.NewGuid().ToString())
+                .Build();
 
-            var createdExercise = new ExerciseDto
-            {
-                Id = Guid.NewGuid().ToString(),
-                Name = createDto.Name,
-                Description = createDto.Description,
-                Instructions = createDto.Instructions,
-                Difficulty = new ReferenceDataDto { Id = "1", Value = "Intermediate", Description = "Intermediate level" },
-                MuscleGroups = new List<MuscleGroupWithRoleDto>(),
-                Equipment = new List<ReferenceDataDto>(),
-                BodyParts = new List<ReferenceDataDto>(),
-                MovementPatterns = new List<ReferenceDataDto>()
-            };
+            var createdExercise = new ExerciseDtoBuilder()
+                .WithName(createDto.Name)
+                .WithDescription(createDto.Description)
+                .WithInstructions(createDto.Instructions)
+                .Build();
 
             _httpMessageHandler.SetupResponse(HttpStatusCode.Created, createdExercise);
 
@@ -178,26 +163,20 @@ namespace GetFitterGetBigger.Admin.Tests.Services
         {
             // Arrange
             var exerciseId = Guid.NewGuid().ToString();
-            var updateDto = new ExerciseUpdateDto
-            {
-                Name = "Updated Exercise",
-                Description = "Updated description",
-                Instructions = "Updated instructions",
-                DifficultyId = Guid.NewGuid().ToString()
-            };
+            var updateDto = new ExerciseUpdateDtoBuilder()
+                .WithName("Updated Exercise")
+                .WithDescription("Updated description")
+                .WithInstructions("Updated instructions")
+                .WithDifficultyId(Guid.NewGuid().ToString())
+                .Build();
 
             // Cache an old version
-            _memoryCache.Set($"exercise_{exerciseId}", new ExerciseDto { 
-                Id = exerciseId, 
-                Name = "Old Name",
-                Description = string.Empty,
-                Instructions = string.Empty,
-                Difficulty = new ReferenceDataDto { Id = "1", Value = "Intermediate", Description = "Intermediate level" },
-                MuscleGroups = new List<MuscleGroupWithRoleDto>(),
-                Equipment = new List<ReferenceDataDto>(),
-                BodyParts = new List<ReferenceDataDto>(),
-                MovementPatterns = new List<ReferenceDataDto>()
-            });
+            _memoryCache.Set($"exercise_{exerciseId}", new ExerciseDtoBuilder()
+                .WithId(exerciseId)
+                .WithName("Old Name")
+                .WithDescription(string.Empty)
+                .WithInstructions(string.Empty)
+                .Build());
 
             _httpMessageHandler.SetupResponse(HttpStatusCode.NoContent, null);
 
@@ -223,17 +202,12 @@ namespace GetFitterGetBigger.Admin.Tests.Services
             var exerciseId = Guid.NewGuid().ToString();
             
             // Cache the exercise
-            _memoryCache.Set($"exercise_{exerciseId}", new ExerciseDto { 
-                Id = exerciseId,
-                Name = string.Empty,
-                Description = string.Empty,
-                Instructions = string.Empty,
-                Difficulty = new ReferenceDataDto { Id = "1", Value = "Intermediate", Description = "Intermediate level" },
-                MuscleGroups = new List<MuscleGroupWithRoleDto>(),
-                Equipment = new List<ReferenceDataDto>(),
-                BodyParts = new List<ReferenceDataDto>(),
-                MovementPatterns = new List<ReferenceDataDto>()
-            });
+            _memoryCache.Set($"exercise_{exerciseId}", new ExerciseDtoBuilder()
+                .WithId(exerciseId)
+                .WithName(string.Empty)
+                .WithDescription(string.Empty)
+                .WithInstructions(string.Empty)
+                .Build());
 
             _httpMessageHandler.SetupResponse(HttpStatusCode.NoContent, null);
 
@@ -260,16 +234,15 @@ namespace GetFitterGetBigger.Admin.Tests.Services
             var muscleGroupId2 = Guid.NewGuid().ToString();
             var equipmentId = Guid.NewGuid().ToString();
             
-            var filter = new ExerciseFilterDto
-            {
-                Name = "press",
-                DifficultyId = Guid.NewGuid().ToString(),
-                MuscleGroupIds = new List<string> { muscleGroupId1, muscleGroupId2 },
-                EquipmentIds = new List<string> { equipmentId },
-                IsActive = true,
-                Page = 2,
-                PageSize = 20
-            };
+            var filter = new ExerciseFilterDtoBuilder()
+                .WithName("press")
+                .WithDifficultyId(Guid.NewGuid().ToString())
+                .WithMuscleGroupIds(muscleGroupId1, muscleGroupId2)
+                .WithEquipmentIds(equipmentId)
+                .WithIsActive(true)
+                .WithPage(2)
+                .WithPageSize(20)
+                .Build();
 
             _httpMessageHandler.SetupResponse(HttpStatusCode.OK, new ExercisePagedResultDto());
 
@@ -296,7 +269,9 @@ namespace GetFitterGetBigger.Admin.Tests.Services
         public async Task CreateExerciseAsync_WhenApiFails_ThrowsHttpRequestException()
         {
             // Arrange
-            var createDto = new ExerciseCreateDto { Name = "Test" };
+            var createDto = new ExerciseCreateDtoBuilder()
+                .WithName("Test")
+                .Build();
             _httpMessageHandler.SetupResponse(HttpStatusCode.BadRequest, new { error = "Validation failed" });
 
             // Act & Assert

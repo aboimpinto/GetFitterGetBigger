@@ -1,7 +1,11 @@
 using GetFitterGetBigger.Admin.Models.Dtos;
 
-namespace GetFitterGetBigger.Admin.Tests.Builders
+namespace GetFitterGetBigger.Admin.Builders
 {
+    /// <summary>
+    /// Builder for creating ExerciseFilterDto instances.
+    /// Provides a fluent interface for constructing exercise filter parameters.
+    /// </summary>
     public class ExerciseFilterDtoBuilder
     {
         private string? _name = null;
@@ -30,27 +34,27 @@ namespace GetFitterGetBigger.Admin.Tests.Builders
             return this;
         }
 
+        public ExerciseFilterDtoBuilder WithMuscleGroupIds(List<string> muscleGroupIds)
+        {
+            _muscleGroupIds = muscleGroupIds;
+            return this;
+        }
+
         public ExerciseFilterDtoBuilder WithEquipmentIds(params string[] equipmentIds)
         {
             _equipmentIds = equipmentIds.ToList();
             return this;
         }
 
+        public ExerciseFilterDtoBuilder WithEquipmentIds(List<string> equipmentIds)
+        {
+            _equipmentIds = equipmentIds;
+            return this;
+        }
+
         public ExerciseFilterDtoBuilder WithIsActive(bool isActive)
         {
             _isActive = isActive;
-            return this;
-        }
-
-        public ExerciseFilterDtoBuilder OnlyActive()
-        {
-            _isActive = true;
-            return this;
-        }
-
-        public ExerciseFilterDtoBuilder OnlyInactive()
-        {
-            _isActive = false;
             return this;
         }
 
@@ -87,15 +91,21 @@ namespace GetFitterGetBigger.Admin.Tests.Builders
             };
         }
 
-        public static ExerciseFilterDto BuildDefault()
+        /// <summary>
+        /// Creates a default filter with no criteria.
+        /// </summary>
+        public static ExerciseFilterDto Default()
         {
             return new ExerciseFilterDtoBuilder().Build();
         }
 
-        public static ExerciseFilterDto BuildForSearch(string searchTerm)
+        /// <summary>
+        /// Creates a filter for active exercises only.
+        /// </summary>
+        public static ExerciseFilterDto ActiveOnly()
         {
             return new ExerciseFilterDtoBuilder()
-                .WithName(searchTerm)
+                .WithIsActive(true)
                 .Build();
         }
     }

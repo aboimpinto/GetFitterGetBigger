@@ -1,7 +1,11 @@
 using GetFitterGetBigger.Admin.Models.Dtos;
 
-namespace GetFitterGetBigger.Admin.Tests.Builders
+namespace GetFitterGetBigger.Admin.Builders
 {
+    /// <summary>
+    /// Builder for creating ExerciseDto instances.
+    /// Useful for testing and data transformation scenarios.
+    /// </summary>
     public class ExerciseDtoBuilder
     {
         private string _id = Guid.NewGuid().ToString();

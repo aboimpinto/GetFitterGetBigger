@@ -2,6 +2,7 @@
 @page "/exercises/{Id}/edit"
 @using GetFitterGetBigger.Admin.Models.Dtos
 @using GetFitterGetBigger.Admin.Services
+@using GetFitterGetBigger.Admin.Builders
 @using Microsoft.AspNetCore.Authorization
 @attribute [Authorize]
 @rendermode InteractiveServer
@@ -309,16 +310,12 @@
         }
     }
 
-    private ExerciseCreateDto model = new()
-    {
-        Name = string.Empty,
-        Description = string.Empty,
-        Instructions = string.Empty,
-        DifficultyId = string.Empty,
-        IsUnilateral = false,
-        ImageUrl = null,
-        VideoUrl = null
-    };
+    private ExerciseCreateDto model = new ExerciseCreateDtoBuilder()
+        .WithName(string.Empty)
+        .WithDescription(string.Empty)
+        .WithInstructions(string.Empty)
+        .WithDifficultyId(string.Empty)
+        .Build();
     private List<MuscleGroupRoleAssignmentDto> muscleGroupAssignments = new();
     private HashSet<string> selectedEquipmentIds = new();
     private HashSet<string> selectedBodyPartIds = new();
@@ -342,7 +339,7 @@
         else
         {
             // Add one empty muscle group assignment for new exercises
-            muscleGroupAssignments.Add(new MuscleGroupRoleAssignmentDto());
+            muscleGroupAssignments.Add(MuscleGroupRoleAssignmentDtoBuilder.Empty());
         }
 
         isLoading = false;
@@ -356,25 +353,16 @@
         {
             var exercise = StateService.SelectedExercise;
             
-            // Map to edit model
-            model = new ExerciseCreateDto
-            {
-                Name = exercise.Name,
-                Description = exercise.Description,
-                Instructions = exercise.Instructions,
-                DifficultyId = exercise.Difficulty?.Id ?? string.Empty,
-                IsUnilateral = exercise.IsUnilateral,
-                IsActive = exercise.IsActive,
-                ImageUrl = exercise.ImageUrl,
-                VideoUrl = exercise.VideoUrl
-            };
+            // Map to edit model using builder
+            model = ExerciseCreateDtoBuilder.FromExerciseDto(exercise);
 
             // Map muscle groups
-            muscleGroupAssignments = exercise.MuscleGroups.Select(mg => new MuscleGroupRoleAssignmentDto
-            {
-                MuscleGroupId = mg.MuscleGroup?.Id ?? string.Empty,
-                Role = mg.Role?.Value ?? string.Empty
-            }).ToList();
+            muscleGroupAssignments = exercise.MuscleGroups.Select(mg => 
+                new MuscleGroupRoleAssignmentDtoBuilder()
+                    .WithMuscleGroupId(mg.MuscleGroup?.Id ?? string.Empty)
+                    .WithRole(mg.Role?.Value ?? string.Empty)
+                    .Build()
+            ).ToList();
 
             // Map equipment
             selectedEquipmentIds = exercise.Equipment.Select(e => e.Id).ToHashSet();
@@ -389,7 +377,7 @@
 
     private void AddMuscleGroup()
     {
-        muscleGroupAssignments.Add(new MuscleGroupRoleAssignmentDto());
+        muscleGroupAssignments.Add(MuscleGroupRoleAssignmentDtoBuilder.Empty());
         StateHasChanged();
     }
 
@@ -436,7 +424,7 @@
     {
         for (int i = 0; i < muscleGroupsToAdd; i++)
         {
-            muscleGroupAssignments.Add(new MuscleGroupRoleAssignmentDto());
+            muscleGroupAssignments.Add(MuscleGroupRoleAssignmentDtoBuilder.Empty());
         }
         muscleGroupsToAdd = 1; // Reset
         StateHasChanged();
@@ -452,7 +440,7 @@
             // Add muscle groups
             for (int i = currentCount; i < targetCount; i++)
             {
-                muscleGroupAssignments.Add(new MuscleGroupRoleAssignmentDto());
+                muscleGroupAssignments.Add(MuscleGroupRoleAssignmentDtoBuilder.Empty());
             }
         }
         else if (targetCount < currentCount)
@@ -540,14 +528,10 @@
             // Prepare the model - convert role names to role IDs for API
             model.MuscleGroups = muscleGroupAssignments
                 .Where(mg => !string.IsNullOrWhiteSpace(mg.MuscleGroupId) && !string.IsNullOrWhiteSpace(mg.Role))
-                .Select(mg => {
-                    var roleId = StateService.MuscleRoles.FirstOrDefault(r => r.Value == mg.Role)?.Id ?? string.Empty;
-                    return new MuscleGroupApiDto
-                    {
-                        MuscleGroupId = mg.MuscleGroupId,
-                        MuscleRoleId = roleId
-                    };
-                })
+                .Select(mg => MuscleGroupApiDtoBuilder.FromAssignment(
+                    mg, 
+                    roleName => StateService.MuscleRoles.FirstOrDefault(r => r.Value == roleName)?.Id
+                ))
                 .Where(mg => !string.IsNullOrWhiteSpace(mg.MuscleRoleId)) // Only include if we found the role ID
                 .ToList();
             
@@ -557,21 +541,7 @@
 
             if (IsEditMode)
             {
-                var updateDto = new ExerciseUpdateDto
-                {
-                    Name = model.Name,
-                    Description = model.Description,
-                    Instructions = model.Instructions,
-                    DifficultyId = model.DifficultyId,
-                    IsUnilateral = model.IsUnilateral,
-                    IsActive = model.IsActive,
-                    ImageUrl = model.ImageUrl,
-                    VideoUrl = model.VideoUrl,
-                    MuscleGroups = model.MuscleGroups,
-                    EquipmentIds = model.EquipmentIds,
-                    BodyPartIds = model.BodyPartIds,
-                    MovementPatternIds = model.MovementPatternIds
-                };
+                var updateDto = ExerciseUpdateDtoBuilder.FromCreateDto(model);
                 
                 // Log the JSON for testing
                 var updateJson = System.Text.Json.JsonSerializer.Serialize(updateDto, new System.Text.Json.JsonSerializerOptions 

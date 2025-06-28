@@ -1,6 +1,7 @@
 using FluentAssertions;
 using GetFitterGetBigger.Admin.Models.Dtos;
 using GetFitterGetBigger.Admin.Services;
+using GetFitterGetBigger.Admin.Builders;
 using GetFitterGetBigger.Admin.Tests.Builders;
 using Moq;
 
@@ -50,22 +51,15 @@ namespace GetFitterGetBigger.Admin.Tests.Services
         public async Task LoadExercisesAsync_UpdatesCurrentPageAndNotifiesChange()
         {
             // Arrange
-            var exercises = new ExercisePagedResultDto 
-            { 
-                Items = new List<ExerciseListDto> 
-                { 
-                    new() { 
-                        Id = Guid.NewGuid().ToString(), 
-                        Name = "Test Exercise",
-                        Difficulty = new ReferenceDataDto { Id = "1", Value = "Intermediate", Description = "Intermediate level" },
-                        MuscleGroups = new List<MuscleGroupListItemDto>(),
-                        Equipment = new List<ReferenceDataDto>(),
-                        MovementPatterns = new List<ReferenceDataDto>(),
-                        BodyParts = new List<ReferenceDataDto>()
-                    } 
-                },
-                TotalCount = 1
-            };
+            var exercises = new ExercisePagedResultDtoBuilder()
+                .WithItems(
+                    new ExerciseListDtoBuilder()
+                        .WithName("Test Exercise")
+                        .WithDifficulty("Intermediate", "1")
+                        .Build()
+                )
+                .WithTotalCount(1)
+                .Build();
             var changeNotified = false;
             _stateService.OnChange += () => changeNotified = true;
 
@@ -119,17 +113,12 @@ namespace GetFitterGetBigger.Admin.Tests.Services
         {
             // Arrange
             var exerciseId = Guid.NewGuid().ToString();
-            var exercise = new ExerciseDto { 
-                Id = exerciseId, 
-                Name = "Test Exercise",
-                Description = string.Empty,
-                Instructions = string.Empty,
-                Difficulty = new ReferenceDataDto { Id = "1", Value = "Intermediate", Description = "Intermediate level" },
-                MuscleGroups = new List<MuscleGroupWithRoleDto>(),
-                Equipment = new List<ReferenceDataDto>(),
-                BodyParts = new List<ReferenceDataDto>(),
-                MovementPatterns = new List<ReferenceDataDto>()
-            };
+            var exercise = new ExerciseDtoBuilder()
+                .WithId(exerciseId)
+                .WithName("Test Exercise")
+                .WithDescription(string.Empty)
+                .WithInstructions(string.Empty)
+                .Build();
             _exerciseServiceMock.Setup(x => x.GetExerciseByIdAsync(exerciseId)).ReturnsAsync(exercise);
 
             // Act
@@ -160,18 +149,14 @@ namespace GetFitterGetBigger.Admin.Tests.Services
         public async Task CreateExerciseAsync_CreatesAndRefreshesPage()
         {
             // Arrange
-            var createDto = new ExerciseCreateDto { Name = "New Exercise" };
-            var createdExercise = new ExerciseDto { 
-                Id = Guid.NewGuid().ToString(), 
-                Name = "New Exercise",
-                Description = string.Empty,
-                Instructions = string.Empty,
-                Difficulty = new ReferenceDataDto { Id = "1", Value = "Intermediate", Description = "Intermediate level" },
-                MuscleGroups = new List<MuscleGroupWithRoleDto>(),
-                Equipment = new List<ReferenceDataDto>(),
-                BodyParts = new List<ReferenceDataDto>(),
-                MovementPatterns = new List<ReferenceDataDto>()
-            };
+            var createDto = new ExerciseCreateDtoBuilder()
+                .WithName("New Exercise")
+                .Build();
+            var createdExercise = new ExerciseDtoBuilder()
+                .WithName("New Exercise")
+                .WithDescription(string.Empty)
+                .WithInstructions(string.Empty)
+                .Build();
             
             _exerciseServiceMock.Setup(x => x.CreateExerciseAsync(createDto)).ReturnsAsync(createdExercise);
             _exerciseServiceMock.Setup(x => x.GetExercisesAsync(It.IsAny<ExerciseFilterDto>()))
@@ -191,21 +176,18 @@ namespace GetFitterGetBigger.Admin.Tests.Services
         {
             // Arrange
             var exerciseId = Guid.NewGuid().ToString();
-            var updateDto = new ExerciseUpdateDto { Name = "Updated Exercise" };
+            var updateDto = new ExerciseUpdateDtoBuilder()
+                .WithName("Updated Exercise")
+                .Build();
             
             // Load an exercise first to set SelectedExercise
             _exerciseServiceMock.Setup(x => x.GetExerciseByIdAsync(exerciseId))
-                .ReturnsAsync(new ExerciseDto { 
-                    Id = exerciseId,
-                    Name = string.Empty,
-                    Description = string.Empty,
-                    Instructions = string.Empty,
-                    Difficulty = new ReferenceDataDto { Id = "1", Value = "Intermediate", Description = "Intermediate level" },
-                    MuscleGroups = new List<MuscleGroupWithRoleDto>(),
-                    Equipment = new List<ReferenceDataDto>(),
-                    BodyParts = new List<ReferenceDataDto>(),
-                    MovementPatterns = new List<ReferenceDataDto>()
-                });
+                .ReturnsAsync(new ExerciseDtoBuilder()
+                    .WithId(exerciseId)
+                    .WithName(string.Empty)
+                    .WithDescription(string.Empty)
+                    .WithInstructions(string.Empty)
+                    .Build());
             await _stateService.LoadExerciseByIdAsync(exerciseId);
             
             _exerciseServiceMock.Setup(x => x.UpdateExerciseAsync(exerciseId, updateDto)).Returns(Task.CompletedTask);
@@ -229,17 +211,12 @@ namespace GetFitterGetBigger.Admin.Tests.Services
             
             // Load an exercise first to set SelectedExercise
             _exerciseServiceMock.Setup(x => x.GetExerciseByIdAsync(exerciseId))
-                .ReturnsAsync(new ExerciseDto { 
-                    Id = exerciseId,
-                    Name = string.Empty,
-                    Description = string.Empty,
-                    Instructions = string.Empty,
-                    Difficulty = new ReferenceDataDto { Id = "1", Value = "Intermediate", Description = "Intermediate level" },
-                    MuscleGroups = new List<MuscleGroupWithRoleDto>(),
-                    Equipment = new List<ReferenceDataDto>(),
-                    BodyParts = new List<ReferenceDataDto>(),
-                    MovementPatterns = new List<ReferenceDataDto>()
-                });
+                .ReturnsAsync(new ExerciseDtoBuilder()
+                    .WithId(exerciseId)
+                    .WithName(string.Empty)
+                    .WithDescription(string.Empty)
+                    .WithInstructions(string.Empty)
+                    .Build());
             await _stateService.LoadExerciseByIdAsync(exerciseId);
             
             _exerciseServiceMock.Setup(x => x.DeleteExerciseAsync(exerciseId)).Returns(Task.CompletedTask);
@@ -261,17 +238,12 @@ namespace GetFitterGetBigger.Admin.Tests.Services
             // Arrange
             var exerciseId = Guid.NewGuid().ToString();
             _exerciseServiceMock.Setup(x => x.GetExerciseByIdAsync(exerciseId))
-                .ReturnsAsync(new ExerciseDto { 
-                    Id = exerciseId,
-                    Name = string.Empty,
-                    Description = string.Empty,
-                    Instructions = string.Empty,
-                    Difficulty = new ReferenceDataDto { Id = "1", Value = "Intermediate", Description = "Intermediate level" },
-                    MuscleGroups = new List<MuscleGroupWithRoleDto>(),
-                    Equipment = new List<ReferenceDataDto>(),
-                    BodyParts = new List<ReferenceDataDto>(),
-                    MovementPatterns = new List<ReferenceDataDto>()
-                });
+                .ReturnsAsync(new ExerciseDtoBuilder()
+                    .WithId(exerciseId)
+                    .WithName(string.Empty)
+                    .WithDescription(string.Empty)
+                    .WithInstructions(string.Empty)
+                    .Build());
             await _stateService.LoadExerciseByIdAsync(exerciseId);
             
             var changeNotified = false;

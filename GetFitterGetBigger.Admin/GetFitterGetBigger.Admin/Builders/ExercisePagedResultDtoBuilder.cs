@@ -1,7 +1,11 @@
 using GetFitterGetBigger.Admin.Models.Dtos;
 
-namespace GetFitterGetBigger.Admin.Tests.Builders
+namespace GetFitterGetBigger.Admin.Builders
 {
+    /// <summary>
+    /// Builder for creating ExercisePagedResultDto instances.
+    /// Useful for testing and creating paginated exercise results.
+    /// </summary>
     public class ExercisePagedResultDtoBuilder
     {
         private List<ExerciseListDto> _items = new();
