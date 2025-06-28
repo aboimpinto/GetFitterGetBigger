@@ -159,48 +159,47 @@ public class ExerciseIntegrationTests : IClassFixture<SharedDatabaseTestFixture>
         Assert.Contains("Rest", content);
     }
     
-    // TODO: Fix this test - Rest type validation is checking for "rest" in ID, not actual type value
-    // [Fact]
-    // public async Task CreateExercise_WithOnlyRestType_ReturnsCreatedExercise()
-    // {
-    //     // Arrange
-    //     var request = new CreateExerciseRequest
-    //     {
-    //         Name = "Integration Test Rest Period",
-    //         Description = "Valid rest exercise",
-    //         CoachNotes = new List<CoachNoteRequest>
-    //         {
-    //             new() { Text = "Take a 60 second break", Order = 1 }
-    //         },
-    //         ExerciseTypeIds = new List<string>
-    //         {
-    //             "exercisetype-d4e5f6a7-8b9c-0d1e-2f3a-4b5c6d7e8f9a" // Rest only
-    //         },
-    //         DifficultyId = "difficultylevel-8a8adb1d-24d2-4979-a5a6-0d760e6da24b",
-    //         MuscleGroups = new List<MuscleGroupWithRoleRequest>
-    //         {
-    //             new()
-    //             {
-    //                 MuscleGroupId = "musclegroup-ccddeeff-0011-2233-4455-667788990011",
-    //                 MuscleRoleId = "musclerole-abcdef12-3456-7890-abcd-ef1234567890"
-    //             }
-    //         },
-    //         EquipmentIds = new List<string>(),
-    //         BodyPartIds = new List<string> { "bodypart-7c5a2d6e-e87e-4c8a-9f1d-9eb734f3df3c" },
-    //         MovementPatternIds = new List<string>()
-    //     };
+    [Fact]
+    public async Task CreateExercise_WithOnlyRestType_ReturnsCreatedExercise()
+    {
+        // Arrange
+        var request = new CreateExerciseRequest
+        {
+            Name = "Integration Test Rest Period",
+            Description = "Valid rest exercise",
+            CoachNotes = new List<CoachNoteRequest>
+            {
+                new() { Text = "Take a 60 second break", Order = 1 }
+            },
+            ExerciseTypeIds = new List<string>
+            {
+                "exercisetype-d4e5f6a7-8b9c-0d1e-2f3a-4b5c6d7e8f9a" // Rest only
+            },
+            DifficultyId = "difficultylevel-8a8adb1d-24d2-4979-a5a6-0d760e6da24b",
+            MuscleGroups = new List<MuscleGroupWithRoleRequest>
+            {
+                new()
+                {
+                    MuscleGroupId = "musclegroup-ccddeeff-0011-2233-4455-667788990011",
+                    MuscleRoleId = "musclerole-abcdef12-3456-7890-abcd-ef1234567890"
+                }
+            },
+            EquipmentIds = new List<string>(),
+            BodyPartIds = new List<string> { "bodypart-7c5a2d6e-e87e-4c8a-9f1d-9eb734f3df3c" },
+            MovementPatternIds = new List<string>()
+        };
         
-    //     // Act
-    //     var response = await _client.PostAsJsonAsync("/api/exercises", request);
+        // Act
+        var response = await _client.PostAsJsonAsync("/api/exercises", request);
         
-    //     // Assert
-    //     Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+        // Assert
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
         
-    //     var createdExercise = await response.Content.ReadFromJsonAsync<ExerciseDto>();
-    //     Assert.NotNull(createdExercise);
-    //     Assert.Single(createdExercise.ExerciseTypes);
-    //     Assert.Equal("exercisetype-d4e5f6a7-8b9c-0d1e-2f3a-4b5c6d7e8f9a", createdExercise.ExerciseTypes[0].Id);
-    // }
+        var createdExercise = await response.Content.ReadFromJsonAsync<ExerciseDto>();
+        Assert.NotNull(createdExercise);
+        Assert.Single(createdExercise.ExerciseTypes);
+        Assert.Equal("exercisetype-d4e5f6a7-8b9c-0d1e-2f3a-4b5c6d7e8f9a", createdExercise.ExerciseTypes[0].Id);
+    }
     
     [Fact]
     public async Task CreateExercise_WithEmptyCoachNotes_ReturnsCreatedExerciseWithNoNotes()
