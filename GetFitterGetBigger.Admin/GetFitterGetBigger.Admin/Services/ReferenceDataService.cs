@@ -36,6 +36,7 @@ namespace GetFitterGetBigger.Admin.Services
         public Task<IEnumerable<ReferenceDataDto>> GetBodyPartsAsync() => GetDataAsync("/api/ReferenceTables/BodyParts", "BodyParts");
         public Task<IEnumerable<ReferenceDataDto>> GetDifficultyLevelsAsync() => GetDataAsync("/api/ReferenceTables/DifficultyLevels", "DifficultyLevels");
         public Task<IEnumerable<ReferenceDataDto>> GetEquipmentAsync() => GetDataAsync("/api/ReferenceTables/Equipment", "Equipment");
+        public Task<IEnumerable<ReferenceDataDto>> GetExerciseTypesAsync() => GetDataAsync("/api/ReferenceTables/ExerciseTypes", "ExerciseTypes");
         public Task<IEnumerable<ReferenceDataDto>> GetKineticChainTypesAsync() => GetDataAsync("/api/ReferenceTables/KineticChainTypes", "KineticChainTypes");
         public Task<IEnumerable<ReferenceDataDto>> GetMetricTypesAsync() => GetDataAsync("/api/ReferenceTables/MetricTypes", "MetricTypes");
         public Task<IEnumerable<ReferenceDataDto>> GetMovementPatternsAsync() => GetDataAsync("/api/ReferenceTables/MovementPatterns", "MovementPatterns");

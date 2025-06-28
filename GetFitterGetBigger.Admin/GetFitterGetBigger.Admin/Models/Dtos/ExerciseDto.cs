@@ -5,7 +5,9 @@ namespace GetFitterGetBigger.Admin.Models.Dtos
         public string Id { get; set; } = string.Empty;
         public string Name { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
-        public string Instructions { get; set; } = string.Empty;
+        public string Instructions { get; set; } = string.Empty; // Deprecated - use CoachNotes instead
+        public List<CoachNoteDto> CoachNotes { get; set; } = new();
+        public List<ExerciseTypeDto> ExerciseTypes { get; set; } = new();
         public ReferenceDataDto? Difficulty { get; set; }
         public bool IsUnilateral { get; set; }
         public bool IsActive { get; set; }
@@ -27,7 +29,9 @@ namespace GetFitterGetBigger.Admin.Models.Dtos
     {
         public string Name { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
-        public string Instructions { get; set; } = string.Empty;
+        public string Instructions { get; set; } = string.Empty; // Deprecated - use CoachNotes instead
+        public List<CoachNoteCreateDto> CoachNotes { get; set; } = new();
+        public List<string> ExerciseTypeIds { get; set; } = new();
         public string DifficultyId { get; set; } = string.Empty;
         public bool IsUnilateral { get; set; }
         public bool IsActive { get; set; } = true;
@@ -60,7 +64,9 @@ namespace GetFitterGetBigger.Admin.Models.Dtos
         public string Id { get; set; } = string.Empty;
         public string Name { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
-        public string Instructions { get; set; } = string.Empty;
+        public string Instructions { get; set; } = string.Empty; // Deprecated - use CoachNotes instead
+        public List<CoachNoteDto> CoachNotes { get; set; } = new();
+        public List<ExerciseTypeDto> ExerciseTypes { get; set; } = new();
         public string? VideoUrl { get; set; }
         public string? ImageUrl { get; set; }
         public bool IsUnilateral { get; set; }
