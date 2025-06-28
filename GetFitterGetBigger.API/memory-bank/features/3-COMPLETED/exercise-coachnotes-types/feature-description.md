@@ -1,5 +1,12 @@
 # Feature: Exercise CoachNotes and TypeOfExercise
 
+## Feature ID: FEAT-002
+## Created: June 27, 2025
+## Status: COMPLETED
+## Completed: June 28, 2025
+## Final Commit: 9362a233
+## Target PI: PI-2025-Q1
+
 ## Overview
 Replace the current free-text `Instructions` field in the Exercise entity with a structured `CoachNotes` list and add `TypeOfExercise` classification to better organize and categorize exercises.
 

@@ -145,8 +145,8 @@
 - **Task 10.2.1:** Run all tests `[Implemented: 340 passed, 9 skipped]`
 - **Task 10.2.2:** Run linting `[Implemented: 0 warnings]`
 - **Task 10.2.3:** Run type checking `[Implemented: Build successful]`
-- **Task 10.2.4:** Manual testing of all endpoints `[ReadyToDevelop]`
-- **Task 10.2.5:** Verify database constraints `[ReadyToDevelop]`
+- **Task 10.2.4:** Manual testing of all endpoints `[Implemented: 9362a233]`
+- **Task 10.2.5:** Verify database constraints `[Implemented: 9362a233]`
 
 ## Notes
 - Each implementation task must be immediately followed by its test task
