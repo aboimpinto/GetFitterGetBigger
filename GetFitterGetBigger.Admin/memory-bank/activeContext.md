@@ -20,18 +20,25 @@ The GetFitterGetBigger Admin Application is in the initial setup and architectur
 
 ## Recent Changes
 
-1. **Authentication** - [Details](/memory-bank/features/authentication/overview.md)
+1. **Exercise API Structure Updates** - [Details](/memory-bank/api-exercise-structure-reference.md)
+   - Updated to paginated response with items array and metadata
+   - Coach notes now use array structure (replacing instructions)
+   - All fields use camelCase naming convention
+   - Added isActive field for soft-delete support
+   - Enhanced reference objects with value and description fields
+
+2. **Authentication** - [Details](/memory-bank/features/authentication/overview.md)
    - Implemented Google and Facebook authentication
    - Set up authorization policies
    - Created login/logout functionality
    - Added user profile display
 
-2. **Tailwind CSS Integration** - [Details](/memory-bank/features/tailwind-css/overview.md)
+3. **Tailwind CSS Integration** - [Details](/memory-bank/features/tailwind-css/overview.md)
    - Installed and configured Tailwind CSS
    - Set up build process for CSS generation
    - Fixed build process issues and documented solutions
 
-3. **HTTPS in Development** - [Details](/memory-bank/features/https-development/overview.md)
+4. **HTTPS in Development** - [Details](/memory-bank/features/https-development/overview.md)
    - Configured HTTPS profile as default in launchSettings.json
    - Enabled HSTS in development environment
    - Added Kestrel certificate configuration
@@ -44,9 +51,11 @@ The GetFitterGetBigger Admin Application is in the initial setup and architectur
    - Establish patterns for API communication
 
 2. **Begin Exercise Management** - [Tasks](/memory-bank/features/exercise-management/tasks.md)
-   - Define data models for exercises
-   - Create exercise list view
-   - Implement exercise creation/editing
+   - Update data models to match new API structure
+   - Handle paginated responses with items array
+   - Implement coach notes editor component
+   - Create exercise list view with active/inactive filter
+   - Implement exercise creation/editing with new field structure
 
 ## Active Decisions and Considerations
 

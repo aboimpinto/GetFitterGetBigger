@@ -120,3 +120,12 @@ Bearer token required in the Authorization header for all endpoints.
     *   `GET /api/ReferenceTables/MuscleRoles`: Get all active muscle roles.
     *   `GET /api/ReferenceTables/MuscleRoles/{id}`: Get a muscle role by ID.
     *   `GET /api/ReferenceTables/MuscleRoles/ByValue/{value}`: Get a muscle role by value.
+
+### ExerciseTypes
+
+*   **Volatility:** Static. Exercise types are predefined: Warmup, Workout, Cooldown, Rest.
+*   **Business Rule:** "Rest" type cannot be combined with other types.
+*   **Endpoints:**
+    *   `GET /api/ReferenceTables/ExerciseTypes`: Get all exercise types.
+    *   `GET /api/ReferenceTables/ExerciseTypes/{id}`: Get an exercise type by ID.
+    *   `GET /api/ReferenceTables/ExerciseTypes/ByValue/{value}`: Get an exercise type by value.

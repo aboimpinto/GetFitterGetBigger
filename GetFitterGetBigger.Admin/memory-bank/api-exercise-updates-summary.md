@@ -23,30 +23,60 @@ The single `instructions` text field has been replaced with a structured `coachN
 
 ### 2. New Exercise Types Feature
 
-Exercises can now be categorized by type:
+Exercises can now be categorized by type (this is a **read-only** reference table):
 - **Warmup**: Preparation exercises
 - **Workout**: Main training exercises
 - **Cooldown**: Recovery exercises
 - **Rest**: Rest periods
 
-**Business Rule**: The "Rest" type cannot be combined with other types.
+**Critical Business Rules**:
+1. Every exercise MUST have at least one exercise type
+2. The "Rest" type CANNOT be combined with other types
+3. An exercise can have either:
+   - Rest only, OR
+   - Any combination of Warmup, Workout, and Cooldown
+4. An exercise CANNOT have all four types
 
-### 3. Updated Muscle Groups Structure
+**UI Requirements**:
+- When "Rest" is selected, automatically deselect other types
+- When "Rest" is selected, disable other type options
+- Validate on client-side before API submission
 
-The muscle groups now include proper role information:
+### 3. Updated Response Structure
+
+The API now returns a paginated response with metadata:
 
 **Response Structure:**
 ```javascript
+{
+  items: [...], // Array of exercises
+  currentPage: 1,
+  pageSize: 10,
+  totalCount: 150,
+  totalPages: 15,
+  hasPreviousPage: false,
+  hasNextPage: true
+}
+```
+
+### 4. Enhanced Exercise Object Structure
+
+**Key Changes:**
+- All fields use camelCase naming (e.g., `isUnilateral`, `imageUrl`, `videoUrl`)
+- New `isActive` field for soft-delete support
+- Enhanced reference objects with `value` and `description` fields
+
+**Muscle Groups Structure:**
+```javascript
+// Response
 muscleGroups: [
   {
     muscleGroup: { id: "musclegroup-uuid", name: "Quadriceps" },
     role: { id: "musclerole-uuid", value: "Primary", name: "Primary" }
   }
 ]
-```
 
-**Request Structure:**
-```javascript
+// Request
 muscleGroups: [
   {
     muscleGroupId: "musclegroup-uuid",
@@ -55,17 +85,29 @@ muscleGroups: [
 ]
 ```
 
+**Other Reference Arrays:**
+```javascript
+// All now return objects with id and name
+equipment: [{ id: "equipment-uuid", name: "Barbell" }],
+bodyParts: [{ id: "bodypart-uuid", name: "Upper Back" }],
+movementPatterns: [{ id: "pattern-uuid", name: "Push" }]
+```
+
 ## Updated Endpoints
 
 ### Exercise Endpoints
 
 All exercise endpoints now use the new structure:
 
-1. **GET /api/exercises** - Returns exercises with coach notes and exercise types
+1. **GET /api/exercises** - Returns paginated response with items array
+   - Query params: `page`, `pageSize`, `name`, `difficultyId`, `isActive`, `muscleGroupIds[]`, `equipmentIds[]`, `exerciseTypeIds[]`
 2. **GET /api/exercises/{id}** - Returns single exercise with full details
-3. **POST /api/exercises** - Create with coach notes array and exercise type IDs
-4. **PUT /api/exercises/{id}** - Update with coach notes array and exercise type IDs
-5. **DELETE /api/exercises/{id}** - No changes
+3. **POST /api/exercises** - Create with coach notes array and reference IDs
+   - Returns 201 Created with the created exercise
+4. **PUT /api/exercises/{id}** - Update with coach notes array and reference IDs
+   - Returns 204 No Content on success
+5. **DELETE /api/exercises/{id}** - Soft-delete if referenced, hard-delete otherwise
+   - Returns 204 No Content on success
 
 ### New Reference Table Endpoints
 
@@ -88,14 +130,17 @@ All exercise endpoints now use the new structure:
 - ✅ Unit and integration tests
 
 ### Frontend (To Be Implemented)
-- [ ] Update ExerciseService to handle new structure
-- [ ] Create CoachNotesEditor component
-- [ ] Create ExerciseTypeSelector component
-- [ ] Update ExerciseForm to use new fields
-- [ ] Update ExerciseList to display exercise types
+- [ ] Update ExerciseService to handle new paginated response structure
+- [ ] Create CoachNotesEditor component for ordered instructions
+- [ ] Create ExerciseTypeSelector component with Rest type validation
+- [ ] Update ExerciseForm to use all new field names (camelCase)
+- [ ] Update ExerciseList to:
+  - Display exercise types as badges
+  - Show active/inactive status
+  - Handle new pagination metadata
 - [ ] Add validation for Rest type exclusivity
 - [ ] Update reference data loading to include new tables
-- [ ] Migrate any existing instructions display to coach notes
+- [ ] Implement filtering by isActive status
 
 ## Quick Reference
 
@@ -112,15 +157,34 @@ const newExercise = {
   exerciseTypeIds: ["exercisetype-workout-id"],
   difficultyId: "difficultylevel-intermediate-id",
   isUnilateral: false,
+  imageUrl: null,
+  videoUrl: null,
   muscleGroups: [
     {
       muscleGroupId: "musclegroup-quadriceps-id",
       muscleRoleId: "musclerole-primary-id"
+    },
+    {
+      muscleGroupId: "musclegroup-glutes-id",
+      muscleRoleId: "musclerole-secondary-id"
     }
   ],
   equipmentIds: ["equipment-barbell-id"],
-  // ... other fields
+  bodyPartIds: [],
+  movementPatternIds: ["pattern-squat-id"]
 };
+
+// POST request
+const response = await fetch('/api/exercises', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    'Authorization': `Bearer ${token}`
+  },
+  body: JSON.stringify(newExercise)
+});
+
+const createdExercise = await response.json();
 ```
 
 ### Validating Exercise Types

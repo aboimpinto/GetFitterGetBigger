@@ -64,18 +64,17 @@ async function getExercises(params = {}) {
   if (!response.ok) throw new Error(`Error: ${response.status}`);
   return response.json();
 }
+
+// Example usage:
+// const result = await getExercises({ page: 1, pageSize: 20 });
+// const exercises = result.items; // Array of exercises
+// const totalPages = result.totalPages; // For pagination UI
 ```
 
 **Response Structure**:
 ```javascript
 {
-  pagination: {
-    total: 150,
-    pages: 15,
-    currentPage: 1,
-    limit: 10
-  },
-  exercises: [
+  items: [
     {
       id: "exercise-uuid",
       name: "Barbell Back Squat",
@@ -85,9 +84,9 @@ async function getExercises(params = {}) {
         { id: "coachnote-uuid", text: "Keep your chest up and core engaged", order: 1 }
       ],
       exerciseTypes: [
-        { id: "exercisetype-uuid", value: "Workout", name: "Workout" }
+        { id: "exercisetype-uuid", value: "Workout", name: "Workout", description: "Main training exercises" }
       ],
-      difficulty: { id: "difficultylevel-uuid", name: "Intermediate" },
+      difficulty: { id: "difficultylevel-uuid", value: "Intermediate", description: "Intermediate level" },
       isUnilateral: false,
       imageUrl: "https://...",
       videoUrl: "https://...",
@@ -99,9 +98,16 @@ async function getExercises(params = {}) {
       ],
       equipment: [{ id: "equipment-uuid", name: "Barbell" }],
       bodyParts: [],
-      movementPatterns: []
+      movementPatterns: [],
+      isActive: true
     }
-  ]
+  ],
+  currentPage: 1,
+  pageSize: 10,
+  totalCount: 150,
+  totalPages: 15,
+  hasPreviousPage: false,
+  hasNextPage: true
 }
 ```
 
@@ -138,13 +144,13 @@ async function createExercise(exerciseData) {
     body: JSON.stringify({
       name: exerciseData.name,
       description: exerciseData.description,
-      coachNotes: exerciseData.coachNotes, // Array of { text, order }
+      coachNotes: exerciseData.coachNotes || [], // Array of { text, order }
       exerciseTypeIds: exerciseData.exerciseTypeIds || [],
       difficultyId: exerciseData.difficultyId,
       isUnilateral: exerciseData.isUnilateral,
       imageUrl: exerciseData.imageUrl || null,
       videoUrl: exerciseData.videoUrl || null,
-      muscleGroups: exerciseData.muscleGroups, // Required, min 1
+      muscleGroups: exerciseData.muscleGroups || [], // Array of { muscleGroupId, muscleRoleId }, min 1 required
       equipmentIds: exerciseData.equipmentIds || [],
       bodyPartIds: exerciseData.bodyPartIds || [],
       movementPatternIds: exerciseData.movementPatternIds || []
@@ -163,10 +169,7 @@ async function createExercise(exerciseData) {
     throw new Error(`Error: ${response.status}`);
   }
 
-  // Get the created exercise ID from Location header
-  const location = response.headers.get('Location');
-  const createdId = location?.split('/').pop();
-  
+  // Returns 201 Created with the created exercise
   return response.json();
 }
 ```
@@ -181,6 +184,7 @@ async function createExercise(exerciseData) {
   - Note: "Rest" type cannot be combined with other types
 - `muscleGroups`: At least one required
   - Each item needs `muscleGroupId` and `muscleRoleId`
+- `isActive`: Defaults to true when creating new exercises
 
 ### 4. Update Exercise
 
@@ -330,6 +334,7 @@ async function loadReferenceData() {
 3. **Optimistic Updates**: Update UI before API confirms
 4. **Lazy Load Images**: Use intersection observer for exercise images
 5. **Pagination**: Default to 20 items per page for admin view
+6. **Active Filter**: Consider showing only active exercises by default
 
 ## Testing Considerations
 

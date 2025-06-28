@@ -21,15 +21,19 @@ This document outlines the UI and client-side logic required for the Exercise Ma
 1.  **Exercise List:**
     *   Displays all exercises in a paginated table, sorted alphabetically by `Name` by default.
     *   Each row will have "Edit" and "Delete" buttons.
+    *   Shows exercise types as badges/tags.
+    *   Indicates active/inactive status.
 
 2.  **Filtering and Searching:**
     *   A search bar to filter exercises by `Name`.
     *   A dropdown menu to filter exercises by `Difficulty`.
-    *   Additional filter options can be added later (e.g., by muscle group, equipment).
+    *   A toggle to show/hide inactive exercises (default: show only active).
+    *   Multi-select filters for muscle groups, equipment, and exercise types.
 
 3.  **Pagination:**
-    *   A pagination control at the bottom of the table to navigate through pages of exercises.
-    *   The number of items per page will be configurable (defaulting to 10).
+    *   A pagination control showing current page, total pages, and navigation buttons.
+    *   The number of items per page will be configurable (defaulting to 20).
+    *   Display "Previous" and "Next" buttons based on `hasPreviousPage` and `hasNextPage`.
 
 4.  **Create/Edit Modal:**
     *   A modal dialog will be used for both creating and editing exercises to provide a focused user experience.
@@ -43,18 +47,30 @@ This document outlines the UI and client-side logic required for the Exercise Ma
 ## 3. Business Logic
 
 - **Data Fetching:** The page will use a dedicated service (e.g., `ExerciseService`) to fetch exercises from the API, including handling pagination and filtering parameters.
-- **State Management:** The component will manage the state of the exercise list, current page, and filter selections.
-- **Create/Update Operations:** The "Save" button in the create/edit modal will trigger a call to the `ExerciseService` to either create a new exercise or update an existing one via the API.
-- **Delete Operation:** The "Delete" button will trigger a confirmation dialog. Upon confirmation, it will call the `ExerciseService` to send a `DELETE` request to the API. The UI will then refresh the exercise list.
+  - Parse the paginated response structure with `items` array and metadata.
+  - Use `currentPage`, `pageSize`, `totalCount`, and `totalPages` for pagination UI.
+- **State Management:** The component will manage the state of the exercise list, current page, filter selections, and active/inactive toggle.
+- **Create/Update Operations:** 
+  - POST requests return 201 Created with the created exercise.
+  - PUT requests return 204 No Content on success.
+  - Handle camelCase field names (isUnilateral, imageUrl, videoUrl).
+- **Delete Operation:** 
+  - The "Delete" button will trigger a confirmation dialog.
+  - The API automatically handles soft-delete (sets isActive=false) if the exercise is referenced in workouts.
+  - Returns 204 No Content on success.
 
 ---
 
 ## 4. API Integration
 
-- The feature will communicate with the `/api/exercises` endpoints documented in `api-docs/exercises.md`.
+- The feature will communicate with the `/api/exercises` endpoints with the updated response structure.
 - It will also integrate with the `/api/ReferenceTables/ExerciseTypes` endpoints for exercise type management.
 - It will use a new `ExerciseService` (and `IExerciseService` interface) to encapsulate all API communication logic.
-- The service will handle the construction of API requests (including query parameters for filtering and pagination) and the deserialization of responses into shared DTOs.
+- The service will handle:
+  - Construction of API requests with proper field naming (camelCase).
+  - Query parameters for filtering (name, difficultyId, isActive, muscleGroupIds, equipmentIds, exerciseTypeIds).
+  - Parsing paginated responses with items array and metadata.
+  - Managing muscleGroups array with muscleGroupId and muscleRoleId.
 - Coach Notes will be managed as an ordered array within exercise requests.
 - Exercise Types will be validated to ensure "Rest" type is not combined with other types.
 

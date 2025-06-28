@@ -74,7 +74,20 @@ When creating a new exercise, provide coach notes as an array:
     { text: "Keep your chest up and core engaged", order: 1 },
     { text: "Lower yourself by bending at the knees and hips", order: 2 }
   ],
-  // ... other fields
+  exerciseTypeIds: ["exercisetype-workout-id"],
+  difficultyId: "difficultylevel-intermediate-id",
+  isUnilateral: false,
+  imageUrl: null,
+  videoUrl: null,
+  muscleGroups: [
+    {
+      muscleGroupId: "musclegroup-quadriceps-id",
+      muscleRoleId: "musclerole-primary-id"
+    }
+  ],
+  equipmentIds: ["equipment-barbell-id"],
+  bodyPartIds: [],
+  movementPatternIds: []
 }
 ```
 
@@ -194,17 +207,17 @@ For displaying coach notes in read-only mode:
 ```javascript
 const CoachNotesDisplay = ({ coachNotes }) => {
   if (!coachNotes || coachNotes.length === 0) {
-    return <p>No instructions available.</p>;
+    return <p className="text-gray-500">No instructions available.</p>;
   }
 
   const sortedNotes = [...coachNotes].sort((a, b) => a.order - b.order);
 
   return (
     <div className="coach-notes-display">
-      <h3>Instructions</h3>
-      <ol className="coach-notes-list">
+      <h3 className="text-lg font-semibold mb-2">Instructions</h3>
+      <ol className="list-decimal list-inside space-y-2">
         {sortedNotes.map((note) => (
-          <li key={note.id} className="coach-note">
+          <li key={note.id} className="text-gray-700">
             {note.text}
           </li>
         ))}
@@ -244,14 +257,30 @@ const exerciseData = {
   // ... other fields
 };
 
-// New way
+// New way - for migration
 const steps = instructionsText.split('\n').filter(step => step.trim());
 const exerciseData = {
+  name: "Exercise Name",
+  description: "Exercise description",
   coachNotes: steps.map((step, index) => ({
     text: step.trim(),
     order: index
   })),
-  // ... other fields
+  exerciseTypeIds: [],
+  difficultyId: "difficulty-id",
+  isUnilateral: false,
+  imageUrl: null,
+  videoUrl: null,
+  muscleGroups: [
+    // At least one required
+    {
+      muscleGroupId: "musclegroup-id",
+      muscleRoleId: "musclerole-id"
+    }
+  ],
+  equipmentIds: [],
+  bodyPartIds: [],
+  movementPatternIds: []
 };
 ```
 

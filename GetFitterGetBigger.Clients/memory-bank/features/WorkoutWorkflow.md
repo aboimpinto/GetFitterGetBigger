@@ -22,7 +22,8 @@ After reviewing the summary, the user can start the workout. The application wil
 * Number of repetitions to perform (for RepBaseSet).
 * Remaining time (for TimeBaseSet).
 * Current round and set number.
-* Visual aids or instructions for the exercise (if applicable).
+* Coach notes for proper form and technique.
+* Visual aids (images/videos) for the exercise (if applicable).
 
 ## 3. Set Types
 

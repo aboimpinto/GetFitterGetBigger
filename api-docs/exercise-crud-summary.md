@@ -29,49 +29,81 @@ The Exercise CRUD API enables the management of exercises, which are the fundame
 - `pageSize` (int, optional): Items per page, default is 10, max is 50
 - `name` (string, optional): Filter by exercise name (case-insensitive, partial match)
 - `difficultyId` (string, optional): Filter by difficulty level ID
-- `muscleGroupIds` (string[], optional): Filter by muscle group IDs
-- `equipmentIds` (string[], optional): Filter by equipment IDs
-- `movementPatternIds` (string[], optional): Filter by movement pattern IDs
-- `isActive` (bool, optional): Include inactive exercises, default is true
 
 **Response Structure**:
 ```json
 {
-  "pagination": {
-    "total": 150,
-    "pages": 15,
-    "currentPage": 1,
-    "limit": 10
-  },
-  "exercises": [
+  "items": [
     {
       "id": "exercise-a1b2c3d4-e5f6-7890-1234-567890abcdef",
       "name": "Barbell Back Squat",
-      "description": "A fundamental compound exercise for lower body strength.",
-      "difficulty": {
-        "id": "difficultylevel-xxx",
-        "name": "Intermediate"
-      },
+      "description": "A compound lower body exercise targeting quads and glutes",
+      "coachNotes": [
+        {
+          "id": "note-1234",
+          "text": "Keep your chest up and core engaged",
+          "order": 1
+        }
+      ],
+      "exerciseTypes": [
+        {
+          "id": "exercisetype-11223344-5566-7788-99aa-bbccddeeff00",
+          "value": "Warmup",
+          "description": "Exercise used for warming up"
+        }
+      ],
+      "videoUrl": "https://example.com/squat-video.mp4",
+      "imageUrl": "https://example.com/squat-image.jpg",
       "isUnilateral": false,
-      "imageUrl": "https://api.getfitterbigger.com/images/squat.jpeg",
-      "videoUrl": "https://api.getfitterbigger.com/videos/squat.mp4",
+      "isActive": true,
+      "difficulty": {
+        "id": "difficultylevel-8a8adb1d-24d2-4979-a5a6-0d760e6da24b",
+        "value": "Intermediate",
+        "description": "Suitable for those with some training experience"
+      },
       "muscleGroups": [
         {
-          "id": "musclegroup-xxx",
-          "name": "Quadriceps",
-          "role": "Primary"
+          "muscleGroup": {
+            "id": "musclegroup-ccddeeff-0011-2233-4455-667788990011",
+            "value": "Quadriceps",
+            "description": "Front thigh muscles"
+          },
+          "role": {
+            "id": "musclerole-abcdef12-3456-7890-abcd-ef1234567890",
+            "value": "Primary",
+            "description": "Main muscle targeted"
+          }
         }
       ],
       "equipment": [
         {
-          "id": "equipment-xxx",
-          "name": "Barbell"
+          "id": "equipment-33445566-7788-99aa-bbcc-ddeeff001122",
+          "value": "Barbell",
+          "description": "Standard olympic barbell"
         }
       ],
-      "bodyParts": [],
-      "movementPatterns": []
+      "movementPatterns": [
+        {
+          "id": "movementpattern-99aabbcc-ddee-ff00-1122-334455667788",
+          "value": "Squat",
+          "description": "Knee-dominant lower body movement"
+        }
+      ],
+      "bodyParts": [
+        {
+          "id": "bodypart-7c5a2d6e-e87e-4c8a-9f1d-9eb734f3df3c",
+          "value": "Legs",
+          "description": "Lower body"
+        }
+      ]
     }
-  ]
+  ],
+  "currentPage": 1,
+  "pageSize": 10,
+  "totalCount": 150,
+  "totalPages": 15,
+  "hasPreviousPage": false,
+  "hasNextPage": true
 }
 ```
 
@@ -84,47 +116,7 @@ The Exercise CRUD API enables the management of exercises, which are the fundame
 **Path Parameters**:
 - `id` (string, required): Exercise ID in format `exercise-{guid}`
 
-**Response Structure**:
-```json
-{
-  "id": "exercise-a1b2c3d4-e5f6-7890-1234-567890abcdef",
-  "name": "Barbell Back Squat",
-  "description": "A fundamental compound exercise for lower body strength.",
-  "instructions": "1. Stand with your feet shoulder-width apart...\n2. Place the barbell on your upper back...\n3. Lower your body until your thighs are parallel to the floor...",
-  "difficulty": {
-    "id": "difficultylevel-xxx",
-    "name": "Intermediate"
-  },
-  "isUnilateral": false,
-  "imageUrl": "https://api.getfitterbigger.com/images/squat.jpeg",
-  "videoUrl": "https://api.getfitterbigger.com/videos/squat.mp4",
-  "muscleGroups": [
-    {
-      "id": "musclegroup-xxx",
-      "name": "Quadriceps",
-      "role": "Primary"
-    },
-    {
-      "id": "musclegroup-yyy",
-      "name": "Glutes",
-      "role": "Primary"
-    }
-  ],
-  "equipment": [
-    {
-      "id": "equipment-xxx",
-      "name": "Barbell"
-    }
-  ],
-  "bodyParts": [],
-  "movementPatterns": [
-    {
-      "id": "movementpattern-xxx",
-      "name": "Squat"
-    }
-  ]
-}
-```
+**Response Structure**: Same as items in the list response, with complete details
 
 ### 3. Create Exercise (POST /api/exercises)
 
@@ -137,45 +129,54 @@ The Exercise CRUD API enables the management of exercises, which are the fundame
 **Request Body**:
 ```json
 {
-  "name": "Push-up",
-  "description": "A classic bodyweight exercise for upper body strength.",
-  "instructions": "1. Get into a high plank position...\n2. Lower your body until your chest nearly touches the floor...",
-  "difficultyId": "difficultylevel-b1c2d3e4-f5a6-b7c8-d9e0-f1a2b3c4d5e6",
-  "isUnilateral": false,
-  "imageUrl": "https://api.getfitterbigger.com/images/pushup.jpeg",
-  "videoUrl": "https://api.getfitterbigger.com/videos/pushup.mp4",
-  "muscleGroupsWithRoles": [
+  "name": "Barbell Back Squat",
+  "description": "A compound lower body exercise targeting quads and glutes",
+  "coachNotes": [
     {
-      "muscleGroupId": "musclegroup-xxx",
-      "role": "Primary"
+      "text": "Keep your chest up and core engaged",
+      "order": 1
     },
     {
-      "muscleGroupId": "musclegroup-yyy",
-      "role": "Secondary"
+      "text": "Drive through the heels, not the toes",
+      "order": 2
     }
   ],
-  "equipmentIds": [],
-  "bodyPartIds": ["bodypart-xxx"],
-  "movementPatternIds": ["movementpattern-xxx"]
+  "exerciseTypeIds": [
+    "exercisetype-11223344-5566-7788-99aa-bbccddeeff00",
+    "exercisetype-22334455-6677-8899-aabb-ccddeeff0011"
+  ],
+  "videoUrl": "https://example.com/squat-video.mp4",
+  "imageUrl": "https://example.com/squat-image.jpg",
+  "isUnilateral": false,
+  "difficultyId": "difficultylevel-8a8adb1d-24d2-4979-a5a6-0d760e6da24b",
+  "muscleGroups": [
+    {
+      "muscleGroupId": "musclegroup-ccddeeff-0011-2233-4455-667788990011",
+      "muscleRoleId": "musclerole-abcdef12-3456-7890-abcd-ef1234567890"
+    }
+  ],
+  "equipmentIds": ["equipment-33445566-7788-99aa-bbcc-ddeeff001122"],
+  "bodyPartIds": ["bodypart-7c5a2d6e-e87e-4c8a-9f1d-9eb734f3df3c"],
+  "movementPatternIds": ["movementpattern-99aabbcc-ddee-ff00-1122-334455667788"]
 }
 ```
 
 **Validation Rules**:
-- `name`: Required, max 200 characters, must be unique (case-insensitive)
-- `description`: Required, max 1000 characters
-- `instructions`: Required, max 5000 characters
-- `difficultyId`: Required, must be valid difficulty level ID
+- `name`: Required, max 100 characters
+- `description`: Required
+- `coachNotes`: Optional array, each note requires `text` and `order`
+- `exerciseTypeIds`: Optional array (Rest type cannot be combined with others)
 - `isUnilateral`: Required boolean
+- `difficultyId`: Required, must be valid difficulty level ID
 - `imageUrl`: Optional, must be valid URL when provided
 - `videoUrl`: Optional, must be valid URL when provided
-- `muscleGroupsWithRoles`: Required, at least one muscle group must be specified
-  - `role` must be one of: "Primary", "Secondary", "Stabilizer"
-- All ID arrays accept empty arrays except muscleGroupsWithRoles
+- `muscleGroups`: Optional array, each entry requires `muscleGroupId` and `muscleRoleId`
+- All other ID arrays are optional
 
 **Success Response**: 
 - Status: 201 Created
 - Location header: `/api/exercises/{new-exercise-id}`
-- Body: Same as GET single exercise response
+- Body: Complete exercise object
 
 ### 4. Update Exercise (PUT /api/exercises/{id})
 
@@ -195,7 +196,7 @@ The Exercise CRUD API enables the management of exercises, which are the fundame
 
 ### 5. Delete Exercise (DELETE /api/exercises/{id})
 
-**Purpose**: Delete an exercise (soft delete if referenced, hard delete if not)
+**Purpose**: Delete an exercise (soft delete by setting isActive = false)
 
 **Authentication**: Bearer token required
 
@@ -205,8 +206,8 @@ The Exercise CRUD API enables the management of exercises, which are the fundame
 - `id` (string, required): Exercise ID in format `exercise-{guid}`
 
 **Business Logic**:
-- If the exercise is referenced in any workouts: Soft delete (sets `isActive = false`)
-- If not referenced: Hard delete (permanently removes from database)
+- Sets `isActive = false` to maintain referential integrity
+- Exercise remains in database but is excluded from active listings
 
 **Success Response**: 
 - Status: 204 No Content
@@ -244,7 +245,7 @@ Common Status Codes:
 ### Pagination Best Practices
 - Default page size is 10, adjust based on UI requirements
 - Maximum page size is 50 to prevent performance issues
-- Always check `pagination.pages` to determine if more pages exist
+- Use `hasNextPage` and `hasPreviousPage` for navigation
 - Implement infinite scroll or traditional pagination based on UX needs
 
 ### Filtering Recommendations
@@ -270,11 +271,23 @@ Common Status Codes:
 Before implementing exercise CRUD, ensure you have loaded the following reference tables:
 - Difficulty Levels (`/api/reference-tables/difficulty-levels`)
 - Muscle Groups (`/api/reference-tables/muscle-groups`)
+- Muscle Roles (`/api/reference-tables/muscle-roles`)
 - Equipment (`/api/reference-tables/equipment`)
 - Body Parts (`/api/reference-tables/body-parts`)
 - Movement Patterns (`/api/reference-tables/movement-patterns`)
+- Exercise Types (`/api/reference-tables/exercise-types`)
 
 These reference tables provide the IDs and display names needed for creating and filtering exercises.
+
+## Key Changes from Previous Version
+
+1. **Coach Notes**: Replaced single `instructions` field with `coachNotes` array for better structure
+2. **Exercise Types**: Added support for multiple exercise types per exercise
+3. **Nested Objects**: All reference data now returns as objects with id, value, and description
+4. **Muscle Groups**: Now includes role relationship (Primary, Secondary, Stabilizer)
+5. **Pagination**: New response structure with enhanced pagination metadata
+6. **Field Naming**: Switched to camelCase (e.g., `isUnilateral` instead of `is_unilateral`)
+7. **Soft Delete**: Uses `isActive` field instead of hard deletion
 
 ## Notes for Client Implementation (Mobile, Web, Desktop)
 
@@ -286,7 +299,7 @@ These reference tables provide the IDs and display names needed for creating and
 
 ## Notes for Admin Implementation
 
-- Implement rich text editor for exercise instructions
+- Implement drag-and-drop for reordering coach notes
 - Provide bulk operations for managing multiple exercises
 - Include preview functionality for images and videos
 - Consider implementing exercise templates for common patterns
