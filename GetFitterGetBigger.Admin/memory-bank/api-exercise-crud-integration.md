@@ -5,10 +5,11 @@ This document provides all necessary information for the Admin application to im
 ## Overview
 
 The Exercise CRUD API allows Personal Trainers to:
-- Create new exercises with detailed instructions and media
+- Create new exercises with detailed coach notes and media
 - View and search through the exercise library
 - Update existing exercises
 - Delete exercises (with automatic soft-delete for referenced exercises)
+- Assign exercise types (Warmup, Workout, Cooldown, Rest) to exercises
 
 ## API Configuration
 
@@ -79,12 +80,22 @@ async function getExercises(params = {}) {
       id: "exercise-uuid",
       name: "Barbell Back Squat",
       description: "A fundamental compound exercise...",
+      coachNotes: [
+        { id: "coachnote-uuid", text: "Position the barbell on your upper back", order: 0 },
+        { id: "coachnote-uuid", text: "Keep your chest up and core engaged", order: 1 }
+      ],
+      exerciseTypes: [
+        { id: "exercisetype-uuid", value: "Workout", name: "Workout" }
+      ],
       difficulty: { id: "difficultylevel-uuid", name: "Intermediate" },
       isUnilateral: false,
       imageUrl: "https://...",
       videoUrl: "https://...",
       muscleGroups: [
-        { id: "musclegroup-uuid", name: "Quadriceps", role: "Primary" }
+        { 
+          muscleGroup: { id: "musclegroup-uuid", name: "Quadriceps" },
+          role: { id: "musclerole-uuid", value: "Primary", name: "Primary" }
+        }
       ],
       equipment: [{ id: "equipment-uuid", name: "Barbell" }],
       bodyParts: [],
@@ -127,12 +138,13 @@ async function createExercise(exerciseData) {
     body: JSON.stringify({
       name: exerciseData.name,
       description: exerciseData.description,
-      instructions: exerciseData.instructions,
+      coachNotes: exerciseData.coachNotes, // Array of { text, order }
+      exerciseTypeIds: exerciseData.exerciseTypeIds || [],
       difficultyId: exerciseData.difficultyId,
       isUnilateral: exerciseData.isUnilateral,
       imageUrl: exerciseData.imageUrl || null,
       videoUrl: exerciseData.videoUrl || null,
-      muscleGroupsWithRoles: exerciseData.muscleGroupsWithRoles, // Required, min 1
+      muscleGroups: exerciseData.muscleGroups, // Required, min 1
       equipmentIds: exerciseData.equipmentIds || [],
       bodyPartIds: exerciseData.bodyPartIds || [],
       movementPatternIds: exerciseData.movementPatternIds || []
@@ -162,9 +174,13 @@ async function createExercise(exerciseData) {
 **Validation Rules**:
 - `name`: Required, max 200 chars, unique
 - `description`: Required, max 1000 chars
-- `instructions`: Required, max 5000 chars
-- `muscleGroupsWithRoles`: At least one required
-  - Each item needs `muscleGroupId` and `role` ("Primary", "Secondary", or "Stabilizer")
+- `coachNotes`: Array of coach notes, each with:
+  - `text`: Required, max 1000 chars
+  - `order`: Required, non-negative integer
+- `exerciseTypeIds`: Array of exercise type IDs (optional)
+  - Note: "Rest" type cannot be combined with other types
+- `muscleGroups`: At least one required
+  - Each item needs `muscleGroupId` and `muscleRoleId`
 
 ### 4. Update Exercise
 
@@ -235,7 +251,13 @@ async function deleteExercise(exerciseId) {
 1. **Basic Information**:
    - Name input (with uniqueness validation)
    - Description textarea
-   - Instructions rich text editor
+   - Coach Notes section (dynamic list):
+     - Add/remove coach notes
+     - Reorder coach notes
+     - Each note has text input (max 1000 chars)
+   - Exercise Types multi-select
+     - Options: Warmup, Workout, Cooldown, Rest
+     - Validation: Rest cannot be combined with others
    - Difficulty level dropdown
    - Unilateral exercise checkbox
 
@@ -285,17 +307,19 @@ Before implementing exercise CRUD, load these reference tables:
 ```javascript
 // Load all reference data on app initialization
 async function loadReferenceData() {
-  const [difficulties, muscleGroups, equipment, bodyParts, movementPatterns] = 
+  const [difficulties, muscleGroups, muscleRoles, equipment, bodyParts, movementPatterns, exerciseTypes] = 
     await Promise.all([
       fetch(`${API_BASE_URL}/api/reference-tables/difficulty-levels`).then(r => r.json()),
       fetch(`${API_BASE_URL}/api/reference-tables/muscle-groups`).then(r => r.json()),
+      fetch(`${API_BASE_URL}/api/reference-tables/muscle-roles`).then(r => r.json()),
       fetch(`${API_BASE_URL}/api/reference-tables/equipment`).then(r => r.json()),
       fetch(`${API_BASE_URL}/api/reference-tables/body-parts`).then(r => r.json()),
-      fetch(`${API_BASE_URL}/api/reference-tables/movement-patterns`).then(r => r.json())
+      fetch(`${API_BASE_URL}/api/reference-tables/movement-patterns`).then(r => r.json()),
+      fetch(`${API_BASE_URL}/api/reference-tables/exercise-types`).then(r => r.json())
     ]);
 
   // Store in app state/context for use in forms and filters
-  return { difficulties, muscleGroups, equipment, bodyParts, movementPatterns };
+  return { difficulties, muscleGroups, muscleRoles, equipment, bodyParts, movementPatterns, exerciseTypes };
 }
 ```
 

@@ -9,6 +9,8 @@ Examples of reference tables include:
 - Difficulty Levels
 - Equipment
 - Muscle Groups
+- Muscle Roles
+- Exercise Types
 
 ## Purpose
 

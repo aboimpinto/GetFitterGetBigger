@@ -33,7 +33,9 @@ This document outlines the UI and client-side logic required for the Exercise Ma
 
 4.  **Create/Edit Modal:**
     *   A modal dialog will be used for both creating and editing exercises to provide a focused user experience.
-    *   The form will contain fields for all exercise properties: `Name`, `Description`, `Instructions`, `Difficulty`, `Image URL`, `Video URL`, and the `Is Unilateral` flag.
+    *   The form will contain fields for all exercise properties: `Name`, `Description`, `Coach Notes` (dynamic list), `Exercise Types`, `Difficulty`, `Image URL`, `Video URL`, and the `Is Unilateral` flag.
+    *   The `Coach Notes` section will allow adding, removing, and reordering instructional steps.
+    *   The `Exercise Types` field will be a multi-select dropdown (with validation for the "Rest" type).
     *   The `Difficulty` field will be a dropdown populated from the `ReferenceDataService`.
 
 ---
@@ -50,8 +52,11 @@ This document outlines the UI and client-side logic required for the Exercise Ma
 ## 4. API Integration
 
 - The feature will communicate with the `/api/exercises` endpoints documented in `api-docs/exercises.md`.
+- It will also integrate with the `/api/ReferenceTables/ExerciseTypes` endpoints for exercise type management.
 - It will use a new `ExerciseService` (and `IExerciseService` interface) to encapsulate all API communication logic.
 - The service will handle the construction of API requests (including query parameters for filtering and pagination) and the deserialization of responses into shared DTOs.
+- Coach Notes will be managed as an ordered array within exercise requests.
+- Exercise Types will be validated to ensure "Rest" type is not combined with other types.
 
 ---
 
@@ -60,7 +65,10 @@ This document outlines the UI and client-side logic required for the Exercise Ma
 - Create the main `ExerciseDashboard.razor` component.
 - Implement the `ExerciseList` component with sorting, filtering, and pagination.
 - Create the `ExerciseEditModal.razor` component with a form for all exercise fields.
+- Implement the `CoachNotesEditor` component for managing ordered instructions.
+- Implement the `ExerciseTypeSelector` component with validation logic.
 - Implement the `IExerciseService` and `ExerciseService` to handle all API communication.
+- Extend `ReferenceDataService` to include Exercise Types endpoints.
 - Register the `ExerciseService` in `Program.cs`.
 - Add the "Exercises" link to the `NavMenu.razor` component.
 - Ensure the UI is responsive and styled correctly with Tailwind CSS.
