@@ -50,3 +50,14 @@ When propagating API documentation:
 
 - Admin access: `PT-Tier` or `Admin-Tier`
 - Client access: `Free-Tier`, `WorkoutPlan-Tier` (future), `DietPlan-Tier` (future)
+
+## Project Documentation
+
+All project documentation is maintained in the `memory-bank/` folder. This includes:
+- Feature documentation and implementation details
+- API documentation and integration guides
+- Setup and configuration guides
+- Testing strategies and guidelines
+- Bug tracking and workflow processes
+
+The memory-bank serves as the central repository for all project context that AI assistants need to understand and work with the codebase effectively.
