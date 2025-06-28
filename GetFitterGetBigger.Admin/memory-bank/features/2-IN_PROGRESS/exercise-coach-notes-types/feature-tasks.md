@@ -97,3 +97,7 @@
 - All API fields now use camelCase naming convention
 - Each implementation task must be immediately followed by its test task
 - Follow existing Blazor patterns and Tailwind CSS styling
+## Boy Scout Rule (Applied during Phase 1):
+- Implement Builder pattern for all Exercise DTOs `[Implemented: 223fc351]`
+- Enhance builders with bulk operations support `[Implemented: 50457414]`
+- Move builders from test to production code `[Implemented: 14d748af]`
