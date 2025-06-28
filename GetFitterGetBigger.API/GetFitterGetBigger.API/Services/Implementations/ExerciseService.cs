@@ -85,7 +85,7 @@ public class ExerciseService : IExerciseService
     /// <summary>
     /// Validates that if any exercise type is "Rest", it must be the only type assigned
     /// </summary>
-    private void ValidateRestExclusivity(IEnumerable<string> exerciseTypeIds)
+    private async Task ValidateRestExclusivityAsync(IEnumerable<string> exerciseTypeIds, IReadOnlyUnitOfWork<FitnessDbContext> unitOfWork)
     {
         if (exerciseTypeIds == null || !exerciseTypeIds.Any())
             return;
@@ -94,11 +94,22 @@ public class ExerciseService : IExerciseService
         if (typeIds.Count <= 1)
             return;
             
-        // Check if any of the IDs is for a "Rest" type
-        // We need to parse the IDs and check if any has "Rest" value
-        // For now, we'll check if the ID contains "rest" (case-insensitive)
-        // TODO: This should ideally check against the actual ExerciseType entity value
-        var hasRestType = typeIds.Any(id => id.ToLowerInvariant().Contains("rest"));
+        // Get the actual ExerciseType entities to check their values
+        var exerciseTypeRepo = unitOfWork.GetRepository<IExerciseTypeRepository>();
+        var hasRestType = false;
+        
+        foreach (var typeIdStr in typeIds)
+        {
+            if (ExerciseTypeId.TryParse(typeIdStr, out var typeId))
+            {
+                var exerciseType = await exerciseTypeRepo.GetByIdAsync(typeId);
+                if (exerciseType != null && exerciseType.Value.ToLowerInvariant() == "rest")
+                {
+                    hasRestType = true;
+                    break;
+                }
+            }
+        }
         
         if (hasRestType)
         {
@@ -128,7 +139,10 @@ public class ExerciseService : IExerciseService
         }
         
         // Validate exercise types
-        ValidateRestExclusivity(request.ExerciseTypeIds);
+        using (var validationUow = _unitOfWorkProvider.CreateReadOnly())
+        {
+            await ValidateRestExclusivityAsync(request.ExerciseTypeIds, validationUow);
+        }
         
         // Create the exercise entity
         var exercise = Exercise.Handler.CreateNew(
@@ -142,23 +156,31 @@ public class ExerciseService : IExerciseService
         // Add coach notes
         if (request.CoachNotes != null)
         {
-            var order = 1;
-            foreach (var noteRequest in request.CoachNotes.OrderBy(cn => cn.Order))
+            foreach (var noteRequest in request.CoachNotes)
             {
-                var coachNote = CoachNote.Handler.CreateNew(exercise.Id, noteRequest.Text, order);
+                var coachNote = CoachNote.Handler.CreateNew(exercise.Id, noteRequest.Text, noteRequest.Order);
                 exercise.CoachNotes.Add(coachNote);
-                order++;
             }
         }
         
-        // Add exercise types (deduplicate first)
-        var uniqueExerciseTypeIds = request.ExerciseTypeIds.Distinct();
-        foreach (var exerciseTypeIdStr in uniqueExerciseTypeIds)
+        // Validate and add exercise types
+        using (var readOnlyUow = _unitOfWorkProvider.CreateReadOnly())
         {
-            if (ExerciseTypeId.TryParse(exerciseTypeIdStr, out var exerciseTypeId))
+            var exerciseTypeRepo = readOnlyUow.GetRepository<IExerciseTypeRepository>();
+            var uniqueExerciseTypeIds = request.ExerciseTypeIds.Distinct();
+            
+            foreach (var exerciseTypeIdStr in uniqueExerciseTypeIds)
             {
-                exercise.ExerciseExerciseTypes.Add(
-                    ExerciseExerciseType.Handler.Create(exercise.Id, exerciseTypeId));
+                if (ExerciseTypeId.TryParse(exerciseTypeIdStr, out var exerciseTypeId))
+                {
+                    // Verify the exercise type exists
+                    var exerciseType = await exerciseTypeRepo.GetByIdAsync(exerciseTypeId);
+                    if (exerciseType != null)
+                    {
+                        exercise.ExerciseExerciseTypes.Add(
+                            ExerciseExerciseType.Handler.Create(exercise.Id, exerciseTypeId));
+                    }
+                }
             }
         }
         
@@ -166,77 +188,17 @@ public class ExerciseService : IExerciseService
         AddRelationshipsToExercise(exercise, request);
         
         // Save to database
+        Exercise savedExercise;
         using (var unitOfWork = _unitOfWorkProvider.CreateWritable())
         {
             var repository = unitOfWork.GetRepository<IExerciseRepository>();
             
-            await repository.AddAsync(exercise);
+            savedExercise = await repository.AddAsync(exercise);
             await unitOfWork.CommitAsync();
         }
         
-        // For now, return a simple DTO without reloading
-        // TODO: Fix this when the in-memory database issue is resolved
-        return new ExerciseDto
-        {
-            Id = exercise.Id.ToString(),
-            Name = exercise.Name,
-            Description = exercise.Description,
-            CoachNotes = exercise.CoachNotes.OrderBy(cn => cn.Order).Select(cn => new CoachNoteDto
-            {
-                Id = cn.Id.ToString(),
-                Text = cn.Text,
-                Order = cn.Order
-            }).ToList(),
-            ExerciseTypes = exercise.ExerciseExerciseTypes.Select(eet => new ReferenceDataDto
-            {
-                Id = eet.ExerciseTypeId.ToString(),
-                Value = eet.ExerciseType?.Value ?? "Unknown",
-                Description = eet.ExerciseType?.Description
-            }).ToList(),
-            VideoUrl = exercise.VideoUrl,
-            ImageUrl = exercise.ImageUrl,
-            IsUnilateral = exercise.IsUnilateral,
-            IsActive = exercise.IsActive,
-            Difficulty = new ReferenceDataDto
-            {
-                Id = exercise.DifficultyId.ToString(),
-                Value = exercise.Difficulty?.Value ?? "Unknown",
-                Description = exercise.Difficulty?.Description
-            },
-            MuscleGroups = exercise.ExerciseMuscleGroups.Select(emg => new MuscleGroupWithRoleDto
-            {
-                MuscleGroup = new ReferenceDataDto
-                {
-                    Id = emg.MuscleGroupId.ToString(),
-                    Value = emg.MuscleGroup?.Name ?? "Unknown",
-                    Description = null
-                },
-                Role = new ReferenceDataDto
-                {
-                    Id = emg.MuscleRoleId.ToString(),
-                    Value = emg.MuscleRole?.Value ?? "Unknown",
-                    Description = emg.MuscleRole?.Description
-                }
-            }).ToList(),
-            Equipment = exercise.ExerciseEquipment.Select(ee => new ReferenceDataDto
-            {
-                Id = ee.EquipmentId.ToString(),
-                Value = ee.Equipment?.Name ?? "Unknown",
-                Description = null
-            }).ToList(),
-            MovementPatterns = exercise.ExerciseMovementPatterns.Select(emp => new ReferenceDataDto
-            {
-                Id = emp.MovementPatternId.ToString(),
-                Value = emp.MovementPattern?.Name ?? "Unknown",
-                Description = emp.MovementPattern?.Description
-            }).ToList(),
-            BodyParts = exercise.ExerciseBodyParts.Select(ebp => new ReferenceDataDto
-            {
-                Id = ebp.BodyPartId.ToString(),
-                Value = ebp.BodyPart?.Value ?? "Unknown",
-                Description = ebp.BodyPart?.Description
-            }).ToList()
-        };
+        // Map the reloaded exercise with navigation properties to DTO
+        return MapToDto(savedExercise);
     }
     
     /// <summary>
@@ -276,7 +238,10 @@ public class ExerciseService : IExerciseService
         }
         
         // Validate exercise types
-        ValidateRestExclusivity(request.ExerciseTypeIds);
+        using (var validationUow = _unitOfWorkProvider.CreateReadOnly())
+        {
+            await ValidateRestExclusivityAsync(request.ExerciseTypeIds, validationUow);
+        }
         
         // Create updated exercise entity, using existing values for nullable fields if not provided
         var exercise = Exercise.Handler.Create(
@@ -292,36 +257,44 @@ public class ExerciseService : IExerciseService
         // Synchronize coach notes
         if (request.CoachNotes != null)
         {
-            var order = 1;
-            foreach (var noteRequest in request.CoachNotes.OrderBy(cn => cn.Order))
+            foreach (var noteRequest in request.CoachNotes)
             {
                 if (!string.IsNullOrEmpty(noteRequest.Id))
                 {
                     // Existing note - preserve ID
                     if (CoachNoteId.TryParse(noteRequest.Id, out var coachNoteId))
                     {
-                        var coachNote = CoachNote.Handler.Create(coachNoteId, exercise.Id, noteRequest.Text, order);
+                        var coachNote = CoachNote.Handler.Create(coachNoteId, exercise.Id, noteRequest.Text, noteRequest.Order);
                         exercise.CoachNotes.Add(coachNote);
                     }
                 }
                 else
                 {
                     // New note
-                    var coachNote = CoachNote.Handler.CreateNew(exercise.Id, noteRequest.Text, order);
+                    var coachNote = CoachNote.Handler.CreateNew(exercise.Id, noteRequest.Text, noteRequest.Order);
                     exercise.CoachNotes.Add(coachNote);
                 }
-                order++;
             }
         }
         
-        // Update exercise types (deduplicate first)
-        var uniqueExerciseTypeIds = request.ExerciseTypeIds.Distinct();
-        foreach (var exerciseTypeIdStr in uniqueExerciseTypeIds)
+        // Validate and add exercise types
+        using (var readOnlyUow = _unitOfWorkProvider.CreateReadOnly())
         {
-            if (ExerciseTypeId.TryParse(exerciseTypeIdStr, out var exerciseTypeId))
+            var exerciseTypeRepo = readOnlyUow.GetRepository<IExerciseTypeRepository>();
+            var uniqueExerciseTypeIds = request.ExerciseTypeIds.Distinct();
+            
+            foreach (var exerciseTypeIdStr in uniqueExerciseTypeIds)
             {
-                exercise.ExerciseExerciseTypes.Add(
-                    ExerciseExerciseType.Handler.Create(exercise.Id, exerciseTypeId));
+                if (ExerciseTypeId.TryParse(exerciseTypeIdStr, out var exerciseTypeId))
+                {
+                    // Verify the exercise type exists
+                    var exerciseType = await exerciseTypeRepo.GetByIdAsync(exerciseTypeId);
+                    if (exerciseType != null)
+                    {
+                        exercise.ExerciseExerciseTypes.Add(
+                            ExerciseExerciseType.Handler.Create(exercise.Id, exerciseTypeId));
+                    }
+                }
             }
         }
         
@@ -329,77 +302,17 @@ public class ExerciseService : IExerciseService
         AddRelationshipsToExercise(exercise, request);
         
         // Update in database
+        Exercise updatedExercise;
         using (var unitOfWork = _unitOfWorkProvider.CreateWritable())
         {
             var repository = unitOfWork.GetRepository<IExerciseRepository>();
             
-            await repository.UpdateAsync(exercise);
+            updatedExercise = await repository.UpdateAsync(exercise);
             await unitOfWork.CommitAsync();
         }
         
-        // For now, return a simple DTO without reloading
-        // TODO: Fix this when the in-memory database issue is resolved
-        return new ExerciseDto
-        {
-            Id = exercise.Id.ToString(),
-            Name = exercise.Name,
-            Description = exercise.Description,
-            CoachNotes = exercise.CoachNotes.OrderBy(cn => cn.Order).Select(cn => new CoachNoteDto
-            {
-                Id = cn.Id.ToString(),
-                Text = cn.Text,
-                Order = cn.Order
-            }).ToList(),
-            ExerciseTypes = exercise.ExerciseExerciseTypes.Select(eet => new ReferenceDataDto
-            {
-                Id = eet.ExerciseTypeId.ToString(),
-                Value = eet.ExerciseType?.Value ?? "Unknown",
-                Description = eet.ExerciseType?.Description
-            }).ToList(),
-            VideoUrl = exercise.VideoUrl,
-            ImageUrl = exercise.ImageUrl,
-            IsUnilateral = exercise.IsUnilateral,
-            IsActive = exercise.IsActive,
-            Difficulty = new ReferenceDataDto
-            {
-                Id = exercise.DifficultyId.ToString(),
-                Value = "Unknown",
-                Description = null
-            },
-            MuscleGroups = exercise.ExerciseMuscleGroups.Select(emg => new MuscleGroupWithRoleDto
-            {
-                MuscleGroup = new ReferenceDataDto
-                {
-                    Id = emg.MuscleGroupId.ToString(),
-                    Value = emg.MuscleGroup?.Name ?? "Unknown",
-                    Description = null
-                },
-                Role = new ReferenceDataDto
-                {
-                    Id = emg.MuscleRoleId.ToString(),
-                    Value = emg.MuscleRole?.Value ?? "Unknown",
-                    Description = emg.MuscleRole?.Description
-                }
-            }).ToList(),
-            Equipment = exercise.ExerciseEquipment.Select(ee => new ReferenceDataDto
-            {
-                Id = ee.EquipmentId.ToString(),
-                Value = ee.Equipment?.Name ?? "Unknown",
-                Description = null
-            }).ToList(),
-            MovementPatterns = exercise.ExerciseMovementPatterns.Select(emp => new ReferenceDataDto
-            {
-                Id = emp.MovementPatternId.ToString(),
-                Value = emp.MovementPattern?.Name ?? "Unknown",
-                Description = emp.MovementPattern?.Description
-            }).ToList(),
-            BodyParts = exercise.ExerciseBodyParts.Select(ebp => new ReferenceDataDto
-            {
-                Id = ebp.BodyPartId.ToString(),
-                Value = ebp.BodyPart?.Value ?? "Unknown",
-                Description = ebp.BodyPart?.Description
-            }).ToList()
-        };
+        // Map the reloaded exercise with navigation properties to DTO
+        return MapToDto(updatedExercise);
     }
     
     /// <summary>
@@ -558,23 +471,26 @@ public class ExerciseService : IExerciseService
     
     private ExerciseDto MapToDto(Exercise exercise)
     {
+        if (exercise == null)
+            throw new ArgumentNullException(nameof(exercise));
+            
         var dto = new ExerciseDto
         {
             Id = exercise.Id.ToString(),
             Name = exercise.Name,
             Description = exercise.Description,
-            CoachNotes = exercise.CoachNotes.OrderBy(cn => cn.Order).Select(cn => new CoachNoteDto
+            CoachNotes = exercise.CoachNotes?.OrderBy(cn => cn.Order).Select(cn => new CoachNoteDto
             {
                 Id = cn.Id.ToString(),
                 Text = cn.Text,
                 Order = cn.Order
-            }).ToList(),
-            ExerciseTypes = exercise.ExerciseExerciseTypes.Select(eet => new ReferenceDataDto
+            }).ToList() ?? new List<CoachNoteDto>(),
+            ExerciseTypes = exercise.ExerciseExerciseTypes?.Select(eet => new ReferenceDataDto
             {
-                Id = eet.ExerciseType?.Id.ToString() ?? string.Empty,
+                Id = eet.ExerciseTypeId.ToString(),
                 Value = eet.ExerciseType?.Value ?? string.Empty,
                 Description = eet.ExerciseType?.Description
-            }).ToList(),
+            }).ToList() ?? new List<ReferenceDataDto>(),
             VideoUrl = exercise.VideoUrl,
             ImageUrl = exercise.ImageUrl,
             IsUnilateral = exercise.IsUnilateral,
@@ -588,56 +504,68 @@ public class ExerciseService : IExerciseService
         };
         
         // Map muscle groups with roles
-        foreach (var emg in exercise.ExerciseMuscleGroups)
+        if (exercise.ExerciseMuscleGroups != null)
         {
-            dto.MuscleGroups.Add(new MuscleGroupWithRoleDto
+            foreach (var emg in exercise.ExerciseMuscleGroups)
             {
-                MuscleGroup = new ReferenceDataDto
+                dto.MuscleGroups.Add(new MuscleGroupWithRoleDto
                 {
-                    Id = emg.MuscleGroup?.Id.ToString() ?? string.Empty,
-                    Value = emg.MuscleGroup?.Name ?? string.Empty,
-                    Description = null
-                },
-                Role = new ReferenceDataDto
-                {
-                    Id = emg.MuscleRole?.Id.ToString() ?? string.Empty,
-                    Value = emg.MuscleRole?.Value ?? string.Empty,
-                    Description = emg.MuscleRole?.Description
-                }
-            });
+                    MuscleGroup = new ReferenceDataDto
+                    {
+                        Id = emg.MuscleGroup?.Id.ToString() ?? string.Empty,
+                        Value = emg.MuscleGroup?.Name ?? string.Empty,
+                        Description = null
+                    },
+                    Role = new ReferenceDataDto
+                    {
+                        Id = emg.MuscleRole?.Id.ToString() ?? string.Empty,
+                        Value = emg.MuscleRole?.Value ?? string.Empty,
+                        Description = emg.MuscleRole?.Description
+                    }
+                });
+            }
         }
         
         // Map equipment
-        foreach (var ee in exercise.ExerciseEquipment)
+        if (exercise.ExerciseEquipment != null)
         {
-            dto.Equipment.Add(new ReferenceDataDto
+            foreach (var ee in exercise.ExerciseEquipment)
             {
-                Id = ee.Equipment?.Id.ToString() ?? string.Empty,
-                Value = ee.Equipment?.Name ?? string.Empty,
-                Description = null
-            });
+                dto.Equipment.Add(new ReferenceDataDto
+                {
+                    Id = ee.Equipment?.Id.ToString() ?? string.Empty,
+                    Value = ee.Equipment?.Name ?? string.Empty,
+                    Description = null
+                });
+            }
         }
         
         // Map movement patterns
-        foreach (var emp in exercise.ExerciseMovementPatterns)
+        if (exercise.ExerciseMovementPatterns != null)
         {
-            dto.MovementPatterns.Add(new ReferenceDataDto
+            foreach (var emp in exercise.ExerciseMovementPatterns)
             {
-                Id = emp.MovementPattern?.Id.ToString() ?? string.Empty,
-                Value = emp.MovementPattern?.Name ?? string.Empty,
-                Description = emp.MovementPattern?.Description
-            });
+                dto.MovementPatterns.Add(new ReferenceDataDto
+                {
+                    Id = emp.MovementPattern?.Id.ToString() ?? string.Empty,
+                    Value = emp.MovementPattern?.Name ?? string.Empty,
+                    Description = emp.MovementPattern?.Description
+                });
+            }
         }
         
         // Map body parts
-        foreach (var ebp in exercise.ExerciseBodyParts)
+        if (exercise.ExerciseBodyParts != null)
         {
-            dto.BodyParts.Add(new ReferenceDataDto
+            foreach (var ebp in exercise.ExerciseBodyParts)
             {
-                Id = ebp.BodyPart?.Id.ToString() ?? string.Empty,
-                Value = ebp.BodyPart?.Value ?? string.Empty,
-                Description = ebp.BodyPart?.Description
-            });
+                dto.BodyParts.Add(new ReferenceDataDto
+                {
+                    Id = ebp.BodyPart?.Id.ToString() ?? string.Empty,
+                    Value = ebp.BodyPart?.Value ?? string.Empty,
+                    Description = ebp.BodyPart?.Description
+                });
+            }
         }
         
         return dto;

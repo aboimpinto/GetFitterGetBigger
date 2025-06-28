@@ -5,12 +5,13 @@ using Xunit;
 
 namespace GetFitterGetBigger.API.Tests.IntegrationTests;
 
-public class ExerciseIntegrationTests : IClassFixture<ApiTestFixture>
+[Collection("SharedDatabase")]
+public class ExerciseIntegrationTests : IClassFixture<SharedDatabaseTestFixture>
 {
-    private readonly ApiTestFixture _fixture;
+    private readonly SharedDatabaseTestFixture _fixture;
     private readonly HttpClient _client;
     
-    public ExerciseIntegrationTests(ApiTestFixture fixture)
+    public ExerciseIntegrationTests(SharedDatabaseTestFixture fixture)
     {
         _fixture = fixture;
         _client = _fixture.CreateClient();
@@ -32,7 +33,7 @@ public class ExerciseIntegrationTests : IClassFixture<ApiTestFixture>
             },
             ExerciseTypeIds = new List<string>
             {
-                "exercisetype-22334455-6677-8899-aabb-ccddeeff0011" // Workout
+                "exercisetype-b2c3d4e5-6f7a-8b9c-0d1e-2f3a4b5c6d7e" // Workout
             },
             VideoUrl = "https://example.com/squat.mp4",
             ImageUrl = "https://example.com/squat.jpg",
@@ -72,7 +73,7 @@ public class ExerciseIntegrationTests : IClassFixture<ApiTestFixture>
         
         // Check exercise types
         Assert.Single(createdExercise.ExerciseTypes);
-        Assert.Equal("exercisetype-22334455-6677-8899-aabb-ccddeeff0011", createdExercise.ExerciseTypes[0].Id);
+        Assert.Equal("exercisetype-b2c3d4e5-6f7a-8b9c-0d1e-2f3a4b5c6d7e", createdExercise.ExerciseTypes[0].Id);
     }
     
     [Fact]
@@ -86,9 +87,9 @@ public class ExerciseIntegrationTests : IClassFixture<ApiTestFixture>
             CoachNotes = new List<CoachNoteRequest>(),
             ExerciseTypeIds = new List<string>
             {
-                "exercisetype-11223344-5566-7788-99aa-bbccddeeff00", // Warmup
-                "exercisetype-22334455-6677-8899-aabb-ccddeeff0011", // Workout
-                "exercisetype-33445566-7788-99aa-bbcc-ddeeff001122"  // Cooldown
+                "exercisetype-a1b2c3d4-5e6f-7a8b-9c0d-1e2f3a4b5c6d", // Warmup
+                "exercisetype-b2c3d4e5-6f7a-8b9c-0d1e-2f3a4b5c6d7e", // Workout
+                "exercisetype-c3d4e5f6-7a8b-9c0d-1e2f-3a4b5c6d7e8f"  // Cooldown
             },
             DifficultyId = "difficultylevel-8a8adb1d-24d2-4979-a5a6-0d760e6da24b",
             MuscleGroups = new List<MuscleGroupWithRoleRequest>
@@ -115,9 +116,9 @@ public class ExerciseIntegrationTests : IClassFixture<ApiTestFixture>
         Assert.Equal(3, createdExercise.ExerciseTypes.Count);
         
         var typeIds = createdExercise.ExerciseTypes.Select(et => et.Id).OrderBy(id => id).ToList();
-        Assert.Contains("exercisetype-11223344-5566-7788-99aa-bbccddeeff00", typeIds);
-        Assert.Contains("exercisetype-22334455-6677-8899-aabb-ccddeeff0011", typeIds);
-        Assert.Contains("exercisetype-33445566-7788-99aa-bbcc-ddeeff001122", typeIds);
+        Assert.Contains("exercisetype-a1b2c3d4-5e6f-7a8b-9c0d-1e2f3a4b5c6d", typeIds);
+        Assert.Contains("exercisetype-b2c3d4e5-6f7a-8b9c-0d1e-2f3a4b5c6d7e", typeIds);
+        Assert.Contains("exercisetype-c3d4e5f6-7a8b-9c0d-1e2f-3a4b5c6d7e8f", typeIds);
     }
     
     [Fact]
@@ -131,8 +132,8 @@ public class ExerciseIntegrationTests : IClassFixture<ApiTestFixture>
             CoachNotes = new List<CoachNoteRequest>(),
             ExerciseTypeIds = new List<string>
             {
-                "exercisetype-rest-8899-aabb-ccdd-eeff00112233", // Rest (with "rest" in ID)
-                "exercisetype-22334455-6677-8899-aabb-ccddeeff0011"  // Workout
+                "exercisetype-d4e5f6a7-8b9c-0d1e-2f3a-4b5c6d7e8f9a", // Rest (with "rest" in ID)
+                "exercisetype-b2c3d4e5-6f7a-8b9c-0d1e-2f3a4b5c6d7e"  // Workout
             },
             DifficultyId = "difficultylevel-8a8adb1d-24d2-4979-a5a6-0d760e6da24b",
             MuscleGroups = new List<MuscleGroupWithRoleRequest>
@@ -173,7 +174,7 @@ public class ExerciseIntegrationTests : IClassFixture<ApiTestFixture>
     //         },
     //         ExerciseTypeIds = new List<string>
     //         {
-    //             "exercisetype-44556677-8899-aabb-ccdd-eeff00112233" // Rest only
+    //             "exercisetype-d4e5f6a7-8b9c-0d1e-2f3a-4b5c6d7e8f9a" // Rest only
     //         },
     //         DifficultyId = "difficultylevel-8a8adb1d-24d2-4979-a5a6-0d760e6da24b",
     //         MuscleGroups = new List<MuscleGroupWithRoleRequest>
@@ -198,7 +199,7 @@ public class ExerciseIntegrationTests : IClassFixture<ApiTestFixture>
     //     var createdExercise = await response.Content.ReadFromJsonAsync<ExerciseDto>();
     //     Assert.NotNull(createdExercise);
     //     Assert.Single(createdExercise.ExerciseTypes);
-    //     Assert.Equal("exercisetype-44556677-8899-aabb-ccdd-eeff00112233", createdExercise.ExerciseTypes[0].Id);
+    //     Assert.Equal("exercisetype-d4e5f6a7-8b9c-0d1e-2f3a-4b5c6d7e8f9a", createdExercise.ExerciseTypes[0].Id);
     // }
     
     [Fact]
@@ -212,7 +213,7 @@ public class ExerciseIntegrationTests : IClassFixture<ApiTestFixture>
             CoachNotes = new List<CoachNoteRequest>(), // Empty
             ExerciseTypeIds = new List<string>
             {
-                "exercisetype-22334455-6677-8899-aabb-ccddeeff0011"
+                "exercisetype-b2c3d4e5-6f7a-8b9c-0d1e-2f3a4b5c6d7e"
             },
             DifficultyId = "difficultylevel-8a8adb1d-24d2-4979-a5a6-0d760e6da24b",
             MuscleGroups = new List<MuscleGroupWithRoleRequest>
@@ -248,7 +249,7 @@ public class ExerciseIntegrationTests : IClassFixture<ApiTestFixture>
             Name = "Update Test Exercise",
             Description = "Exercise to test updates",
             CoachNotes = new List<CoachNoteRequest>(),
-            ExerciseTypeIds = new List<string> { "exercisetype-22334455-6677-8899-aabb-ccddeeff0011" },
+            ExerciseTypeIds = new List<string> { "exercisetype-b2c3d4e5-6f7a-8b9c-0d1e-2f3a4b5c6d7e" },
             DifficultyId = "difficultylevel-8a8adb1d-24d2-4979-a5a6-0d760e6da24b",
             MuscleGroups = new List<MuscleGroupWithRoleRequest>
             {
@@ -281,7 +282,7 @@ public class ExerciseIntegrationTests : IClassFixture<ApiTestFixture>
                 new() { Text = "Second step", Order = 2 },
                 new() { Text = "Third step", Order = 3 }
             },
-            ExerciseTypeIds = new List<string> { "exercisetype-22334455-6677-8899-aabb-ccddeeff0011" },
+            ExerciseTypeIds = new List<string> { "exercisetype-b2c3d4e5-6f7a-8b9c-0d1e-2f3a4b5c6d7e" },
             DifficultyId = "difficultylevel-8a8adb1d-24d2-4979-a5a6-0d760e6da24b",
             MuscleGroups = new List<MuscleGroupWithRoleRequest>
             {
@@ -327,7 +328,7 @@ public class ExerciseIntegrationTests : IClassFixture<ApiTestFixture>
                 new() { Text = "Original first step", Order = 1 },
                 new() { Text = "Original second step", Order = 2 }
             },
-            ExerciseTypeIds = new List<string> { "exercisetype-22334455-6677-8899-aabb-ccddeeff0011" },
+            ExerciseTypeIds = new List<string> { "exercisetype-b2c3d4e5-6f7a-8b9c-0d1e-2f3a4b5c6d7e" },
             DifficultyId = "difficultylevel-8a8adb1d-24d2-4979-a5a6-0d760e6da24b",
             MuscleGroups = new List<MuscleGroupWithRoleRequest>
             {
@@ -357,7 +358,7 @@ public class ExerciseIntegrationTests : IClassFixture<ApiTestFixture>
                 new() { Text = "New second step", Order = 2 }, // New note without ID
                 new() { Text = "New third step", Order = 3 }   // Another new note
             },
-            ExerciseTypeIds = new List<string> { "exercisetype-22334455-6677-8899-aabb-ccddeeff0011" },
+            ExerciseTypeIds = new List<string> { "exercisetype-b2c3d4e5-6f7a-8b9c-0d1e-2f3a4b5c6d7e" },
             DifficultyId = "difficultylevel-8a8adb1d-24d2-4979-a5a6-0d760e6da24b",
             MuscleGroups = new List<MuscleGroupWithRoleRequest>
             {
@@ -397,8 +398,8 @@ public class ExerciseIntegrationTests : IClassFixture<ApiTestFixture>
             CoachNotes = new List<CoachNoteRequest>(),
             ExerciseTypeIds = new List<string>
             {
-                "exercisetype-11223344-5566-7788-99aa-bbccddeeff00", // Warmup
-                "exercisetype-22334455-6677-8899-aabb-ccddeeff0011"  // Workout
+                "exercisetype-a1b2c3d4-5e6f-7a8b-9c0d-1e2f3a4b5c6d", // Warmup
+                "exercisetype-b2c3d4e5-6f7a-8b9c-0d1e-2f3a4b5c6d7e"  // Workout
             },
             DifficultyId = "difficultylevel-8a8adb1d-24d2-4979-a5a6-0d760e6da24b",
             MuscleGroups = new List<MuscleGroupWithRoleRequest>
@@ -426,8 +427,8 @@ public class ExerciseIntegrationTests : IClassFixture<ApiTestFixture>
             CoachNotes = new List<CoachNoteRequest>(),
             ExerciseTypeIds = new List<string>
             {
-                "exercisetype-22334455-6677-8899-aabb-ccddeeff0011", // Workout
-                "exercisetype-33445566-7788-99aa-bbcc-ddeeff001122"  // Cooldown
+                "exercisetype-b2c3d4e5-6f7a-8b9c-0d1e-2f3a4b5c6d7e", // Workout
+                "exercisetype-c3d4e5f6-7a8b-9c0d-1e2f-3a4b5c6d7e8f"  // Cooldown
             },
             DifficultyId = "difficultylevel-8a8adb1d-24d2-4979-a5a6-0d760e6da24b",
             MuscleGroups = new List<MuscleGroupWithRoleRequest>
@@ -454,9 +455,9 @@ public class ExerciseIntegrationTests : IClassFixture<ApiTestFixture>
         Assert.Equal(2, updatedExercise.ExerciseTypes.Count);
         
         var typeIds = updatedExercise.ExerciseTypes.Select(et => et.Id).OrderBy(id => id).ToList();
-        Assert.Contains("exercisetype-22334455-6677-8899-aabb-ccddeeff0011", typeIds); // Workout
-        Assert.Contains("exercisetype-33445566-7788-99aa-bbcc-ddeeff001122", typeIds); // Cooldown
-        Assert.DoesNotContain("exercisetype-11223344-5566-7788-99aa-bbccddeeff00", typeIds); // Warmup should be removed
+        Assert.Contains("exercisetype-b2c3d4e5-6f7a-8b9c-0d1e-2f3a4b5c6d7e", typeIds); // Workout
+        Assert.Contains("exercisetype-c3d4e5f6-7a8b-9c0d-1e2f-3a4b5c6d7e8f", typeIds); // Cooldown
+        Assert.DoesNotContain("exercisetype-a1b2c3d4-5e6f-7a8b-9c0d-1e2f3a4b5c6d", typeIds); // Warmup should be removed
     }
     
     [Fact]
@@ -468,7 +469,7 @@ public class ExerciseIntegrationTests : IClassFixture<ApiTestFixture>
             Name = "Normal Exercise",
             Description = "Exercise to test Rest validation",
             CoachNotes = new List<CoachNoteRequest>(),
-            ExerciseTypeIds = new List<string> { "exercisetype-22334455-6677-8899-aabb-ccddeeff0011" }, // Workout
+            ExerciseTypeIds = new List<string> { "exercisetype-b2c3d4e5-6f7a-8b9c-0d1e-2f3a4b5c6d7e" }, // Workout
             DifficultyId = "difficultylevel-8a8adb1d-24d2-4979-a5a6-0d760e6da24b",
             MuscleGroups = new List<MuscleGroupWithRoleRequest>
             {
@@ -495,8 +496,8 @@ public class ExerciseIntegrationTests : IClassFixture<ApiTestFixture>
             CoachNotes = new List<CoachNoteRequest>(),
             ExerciseTypeIds = new List<string>
             {
-                "exercisetype-rest-8899-aabb-ccdd-eeff00112233", // Rest (with "rest" in ID)
-                "exercisetype-22334455-6677-8899-aabb-ccddeeff0011"  // Workout
+                "exercisetype-d4e5f6a7-8b9c-0d1e-2f3a-4b5c6d7e8f9a", // Rest (with "rest" in ID)
+                "exercisetype-b2c3d4e5-6f7a-8b9c-0d1e-2f3a4b5c6d7e"  // Workout
             },
             DifficultyId = "difficultylevel-8a8adb1d-24d2-4979-a5a6-0d760e6da24b",
             MuscleGroups = new List<MuscleGroupWithRoleRequest>

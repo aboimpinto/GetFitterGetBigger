@@ -8,12 +8,13 @@ namespace GetFitterGetBigger.API.Tests.IntegrationTests;
 /// <summary>
 /// Integration tests for complete exercise workflow including CoachNotes and ExerciseTypes
 /// </summary>
-public class ExerciseCompleteWorkflowTests : IClassFixture<ApiTestFixture>
+[Collection("SharedDatabase")]
+public class ExerciseCompleteWorkflowTests : IClassFixture<SharedDatabaseTestFixture>
 {
-    private readonly ApiTestFixture _fixture;
+    private readonly SharedDatabaseTestFixture _fixture;
     private readonly HttpClient _client;
     
-    public ExerciseCompleteWorkflowTests(ApiTestFixture fixture)
+    public ExerciseCompleteWorkflowTests(SharedDatabaseTestFixture fixture)
     {
         _fixture = fixture;
         _client = _fixture.CreateClient();
@@ -37,8 +38,8 @@ public class ExerciseCompleteWorkflowTests : IClassFixture<ApiTestFixture>
             },
             ExerciseTypeIds = new List<string>
             {
-                "exercisetype-11223344-5566-7788-99aa-bbccddeeff00", // Warmup
-                "exercisetype-22334455-6677-8899-aabb-ccddeeff0011"  // Workout
+                "exercisetype-a1b2c3d4-5e6f-7a8b-9c0d-1e2f3a4b5c6d", // Warmup
+                "exercisetype-b2c3d4e5-6f7a-8b9c-0d1e-2f3a4b5c6d7e"  // Workout
             },
             VideoUrl = "https://example.com/squat-tutorial.mp4",
             ImageUrl = "https://example.com/squat-form.jpg",
@@ -94,8 +95,8 @@ public class ExerciseCompleteWorkflowTests : IClassFixture<ApiTestFixture>
         // Verify ExerciseTypes
         Assert.Equal(2, createdExercise.ExerciseTypes.Count);
         var typeIds = createdExercise.ExerciseTypes.Select(et => et.Id).ToList();
-        Assert.Contains("exercisetype-11223344-5566-7788-99aa-bbccddeeff00", typeIds);
-        Assert.Contains("exercisetype-22334455-6677-8899-aabb-ccddeeff0011", typeIds);
+        Assert.Contains("exercisetype-a1b2c3d4-5e6f-7a8b-9c0d-1e2f3a4b5c6d", typeIds);
+        Assert.Contains("exercisetype-b2c3d4e5-6f7a-8b9c-0d1e-2f3a4b5c6d7e", typeIds);
         
         // Verify other properties
         Assert.Equal("https://example.com/squat-tutorial.mp4", createdExercise.VideoUrl);
@@ -123,7 +124,7 @@ public class ExerciseCompleteWorkflowTests : IClassFixture<ApiTestFixture>
                 new() { Text = "Step B", Order = 2 },
                 new() { Text = "Step D", Order = 4 }
             },
-            ExerciseTypeIds = new List<string> { "exercisetype-22334455-6677-8899-aabb-ccddeeff0011" },
+            ExerciseTypeIds = new List<string> { "exercisetype-b2c3d4e5-6f7a-8b9c-0d1e-2f3a4b5c6d7e" },
             DifficultyId = "difficultylevel-8a8adb1d-24d2-4979-a5a6-0d760e6da24b",
             MuscleGroups = new List<MuscleGroupWithRoleRequest>
             {

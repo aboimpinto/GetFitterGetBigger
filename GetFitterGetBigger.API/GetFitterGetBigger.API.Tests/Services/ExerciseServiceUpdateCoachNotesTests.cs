@@ -20,6 +20,7 @@ public class ExerciseServiceUpdateCoachNotesTests
     private readonly Mock<IReadOnlyUnitOfWork<FitnessDbContext>> _readOnlyUnitOfWorkMock;
     private readonly Mock<IWritableUnitOfWork<FitnessDbContext>> _writableUnitOfWorkMock;
     private readonly Mock<IExerciseRepository> _exerciseRepositoryMock;
+    private readonly Mock<IExerciseTypeRepository> _exerciseTypeRepositoryMock;
     private readonly ExerciseService _exerciseService;
     
     public ExerciseServiceUpdateCoachNotesTests()
@@ -28,9 +29,13 @@ public class ExerciseServiceUpdateCoachNotesTests
         _readOnlyUnitOfWorkMock = new Mock<IReadOnlyUnitOfWork<FitnessDbContext>>();
         _writableUnitOfWorkMock = new Mock<IWritableUnitOfWork<FitnessDbContext>>();
         _exerciseRepositoryMock = new Mock<IExerciseRepository>();
+        _exerciseTypeRepositoryMock = new Mock<IExerciseTypeRepository>();
         
         _readOnlyUnitOfWorkMock.Setup(uow => uow.GetRepository<IExerciseRepository>())
             .Returns(_exerciseRepositoryMock.Object);
+        
+        _readOnlyUnitOfWorkMock.Setup(uow => uow.GetRepository<IExerciseTypeRepository>())
+            .Returns(_exerciseTypeRepositoryMock.Object);
         
         _writableUnitOfWorkMock.Setup(uow => uow.GetRepository<IExerciseRepository>())
             .Returns(_exerciseRepositoryMock.Object);
@@ -350,7 +355,7 @@ public class ExerciseServiceUpdateCoachNotesTests
     }
     
     [Fact]
-    public async Task UpdateAsync_ReordersCoachNotesSequentially()
+    public async Task UpdateAsync_PreservesCoachNotesOriginalOrder()
     {
         // Arrange
         var exerciseId = ExerciseId.New();
@@ -401,12 +406,12 @@ public class ExerciseServiceUpdateCoachNotesTests
         Assert.NotNull(result);
         Assert.Equal(3, result.CoachNotes.Count);
         
-        // Verify notes are reordered sequentially starting from 1
+        // Verify notes preserve original order values and are sorted by order
         Assert.Equal("Note at 5", result.CoachNotes[0].Text);
-        Assert.Equal(1, result.CoachNotes[0].Order);
+        Assert.Equal(5, result.CoachNotes[0].Order);
         Assert.Equal("Note at 50", result.CoachNotes[1].Text);
-        Assert.Equal(2, result.CoachNotes[1].Order);
+        Assert.Equal(50, result.CoachNotes[1].Order);
         Assert.Equal("Note at 100", result.CoachNotes[2].Text);
-        Assert.Equal(3, result.CoachNotes[2].Order);
+        Assert.Equal(100, result.CoachNotes[2].Order);
     }
 }

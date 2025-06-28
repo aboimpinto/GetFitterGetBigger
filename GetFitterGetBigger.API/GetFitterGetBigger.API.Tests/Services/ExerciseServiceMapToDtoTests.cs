@@ -19,6 +19,7 @@ public class ExerciseServiceMapToDtoTests
     private readonly Mock<IUnitOfWorkProvider<FitnessDbContext>> _unitOfWorkProviderMock;
     private readonly Mock<IReadOnlyUnitOfWork<FitnessDbContext>> _readOnlyUnitOfWorkMock;
     private readonly Mock<IExerciseRepository> _exerciseRepositoryMock;
+    private readonly Mock<IExerciseTypeRepository> _exerciseTypeRepositoryMock;
     private readonly ExerciseService _exerciseService;
     
     public ExerciseServiceMapToDtoTests()
@@ -26,9 +27,13 @@ public class ExerciseServiceMapToDtoTests
         _unitOfWorkProviderMock = new Mock<IUnitOfWorkProvider<FitnessDbContext>>();
         _readOnlyUnitOfWorkMock = new Mock<IReadOnlyUnitOfWork<FitnessDbContext>>();
         _exerciseRepositoryMock = new Mock<IExerciseRepository>();
+        _exerciseTypeRepositoryMock = new Mock<IExerciseTypeRepository>();
         
         _readOnlyUnitOfWorkMock.Setup(uow => uow.GetRepository<IExerciseRepository>())
             .Returns(_exerciseRepositoryMock.Object);
+        
+        _readOnlyUnitOfWorkMock.Setup(uow => uow.GetRepository<IExerciseTypeRepository>())
+            .Returns(_exerciseTypeRepositoryMock.Object);
         
         _unitOfWorkProviderMock.Setup(p => p.CreateReadOnly())
             .Returns(_readOnlyUnitOfWorkMock.Object);

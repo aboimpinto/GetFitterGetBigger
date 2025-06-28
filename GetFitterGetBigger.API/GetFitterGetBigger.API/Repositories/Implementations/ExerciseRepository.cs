@@ -179,8 +179,20 @@ public class ExerciseRepository : RepositoryBase<FitnessDbContext>, IExerciseRep
         Context.Exercises.Add(exercise);
         await Context.SaveChangesAsync();
         
-        // Reload with all related data
-        return (await GetByIdAsync(exercise.Id))!;
+        // Load navigation properties explicitly for the join entities
+        foreach (var eet in exercise.ExerciseExerciseTypes)
+        {
+            await Context.Entry(eet)
+                .Reference(x => x.ExerciseType)
+                .LoadAsync();
+        }
+        
+        // Load Difficulty navigation property
+        await Context.Entry(exercise)
+            .Reference(e => e.Difficulty)
+            .LoadAsync();
+        
+        return exercise;
     }
     
     /// <summary>
@@ -190,6 +202,8 @@ public class ExerciseRepository : RepositoryBase<FitnessDbContext>, IExerciseRep
     {
         // First, remove all existing relationships
         var existingExercise = await Context.Exercises
+            .Include(e => e.CoachNotes)
+            .Include(e => e.ExerciseExerciseTypes)
             .Include(e => e.ExerciseMuscleGroups)
             .Include(e => e.ExerciseEquipment)
             .Include(e => e.ExerciseMovementPatterns)
@@ -202,6 +216,8 @@ public class ExerciseRepository : RepositoryBase<FitnessDbContext>, IExerciseRep
         }
         
         // Clear existing relationships
+        existingExercise.CoachNotes.Clear();
+        existingExercise.ExerciseExerciseTypes.Clear();
         existingExercise.ExerciseMuscleGroups.Clear();
         existingExercise.ExerciseEquipment.Clear();
         existingExercise.ExerciseMovementPatterns.Clear();
@@ -211,6 +227,14 @@ public class ExerciseRepository : RepositoryBase<FitnessDbContext>, IExerciseRep
         Context.Entry(existingExercise).CurrentValues.SetValues(exercise);
         
         // Add new relationships
+        foreach (var cn in exercise.CoachNotes)
+        {
+            existingExercise.CoachNotes.Add(cn);
+        }
+        foreach (var eet in exercise.ExerciseExerciseTypes)
+        {
+            existingExercise.ExerciseExerciseTypes.Add(eet);
+        }
         foreach (var emg in exercise.ExerciseMuscleGroups)
         {
             existingExercise.ExerciseMuscleGroups.Add(emg);

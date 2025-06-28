@@ -50,3 +50,55 @@ When propagating API documentation:
 
 - Admin access: `PT-Tier` or `Admin-Tier`
 - Client access: `Free-Tier`, `WorkoutPlan-Tier` (future), `DietPlan-Tier` (future)
+
+## Testing Guidelines
+
+**IMPORTANT**: When debugging test failures, ALWAYS check `/memory-bank/TESTING-QUICK-REFERENCE.md` first! It contains critical patterns learned from fixing 87 test failures, including:
+- Common ID format errors
+- Missing mock setups
+- Navigation property loading issues
+- Quick debugging checklist
+
+## Memory Bank Structure
+
+The `/memory-bank/` directory contains all project knowledge and processes:
+
+### Process Documentation
+- **`BUG_IMPLEMENTATION_PROCESS.md`** - How to fix bugs systematically
+- **`BUG_WORKFLOW_PROCESS.md`** - Bug lifecycle and folder structure
+- **`FEATURE_IMPLEMENTATION_PROCESS.md`** - How to implement new features
+- **`FEATURE_WORKFLOW_PROCESS.md`** - Feature lifecycle and states
+- **`RELEASE_PROCESS.md`** - Release management and PI planning
+
+### Quick References
+- **`TESTING-QUICK-REFERENCE.md`** ⚡ - Common test failures and solutions (CHECK FIRST!)
+- **`common-testing-errors-and-solutions.md`** - Detailed testing patterns
+- **`TestingGuidelines.md`** - Overall testing strategy
+
+### Bug Management (`/bugs/`)
+- **`1-OPEN/`** - New bugs awaiting work
+- **`2-IN_PROGRESS/`** - Bugs being actively fixed
+- **`3-FIXED/`** - Completed bug fixes
+- **`4-BLOCKED/`** - Bugs waiting on dependencies
+- **`5-WONT_FIX/`** - Bugs that won't be addressed
+
+### Feature Management (`/features/`)
+- **`1-READY_TO_DEVELOP/`** - Features ready to implement
+- **`2-IN_PROGRESS/`** - Features being developed
+- **`3-COMPLETED/`** - Finished features
+- **`4-BLOCKED/`** - Features waiting on dependencies
+- **`5-SKIPPED/`** - Features postponed
+
+### Technical Documentation
+- **`systemPatterns.md`** - Architecture patterns used
+- **`databaseModelPattern.md`** - Database design patterns
+- **`unitOfWorkPattern.md`** - Repository/UoW implementation
+- **`cache-configuration.md`** & **`cache-invalidation-strategy.md`** - Caching details
+
+### Context Files
+- **`productContext.md`** - Product vision and goals
+- **`techContext.md`** - Technical stack and decisions
+- **`projectbrief.md`** - Project overview
+- **`activeContext.md`** - Current work context
+
+**💡 Pro Tip**: When debugging, start with TESTING-QUICK-REFERENCE.md, then check relevant process docs!

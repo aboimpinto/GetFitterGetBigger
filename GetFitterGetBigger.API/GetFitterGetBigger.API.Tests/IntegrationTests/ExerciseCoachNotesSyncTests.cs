@@ -8,12 +8,13 @@ namespace GetFitterGetBigger.API.Tests.IntegrationTests;
 /// <summary>
 /// Integration tests for CoachNotes synchronization scenarios
 /// </summary>
-public class ExerciseCoachNotesSyncTests : IClassFixture<ApiTestFixture>
+[Collection("SharedDatabase")]
+public class ExerciseCoachNotesSyncTests : IClassFixture<SharedDatabaseTestFixture>
 {
-    private readonly ApiTestFixture _fixture;
+    private readonly SharedDatabaseTestFixture _fixture;
     private readonly HttpClient _client;
     
-    public ExerciseCoachNotesSyncTests(ApiTestFixture fixture)
+    public ExerciseCoachNotesSyncTests(SharedDatabaseTestFixture fixture)
     {
         _fixture = fixture;
         _client = _fixture.CreateClient();
@@ -33,7 +34,7 @@ public class ExerciseCoachNotesSyncTests : IClassFixture<ApiTestFixture>
                 new() { Text = "Step 1", Order = 1 },
                 new() { Text = "Step 2", Order = 2 }
             },
-            ExerciseTypeIds = new List<string> { "exercisetype-22334455-6677-8899-aabb-ccddeeff0011" },
+            ExerciseTypeIds = new List<string> { "exercisetype-b2c3d4e5-6f7a-8b9c-0d1e-2f3a4b5c6d7e" },
             DifficultyId = "difficultylevel-8a8adb1d-24d2-4979-a5a6-0d760e6da24b",
             MuscleGroups = new List<MuscleGroupWithRoleRequest>
             {
@@ -80,7 +81,7 @@ public class ExerciseCoachNotesSyncTests : IClassFixture<ApiTestFixture>
                 new() { Text = "Second with order 1", Order = 1 },
                 new() { Text = "Third with order 2", Order = 2 }
             },
-            ExerciseTypeIds = new List<string> { "exercisetype-22334455-6677-8899-aabb-ccddeeff0011" },
+            ExerciseTypeIds = new List<string> { "exercisetype-b2c3d4e5-6f7a-8b9c-0d1e-2f3a4b5c6d7e" },
             DifficultyId = "difficultylevel-8a8adb1d-24d2-4979-a5a6-0d760e6da24b",
             MuscleGroups = new List<MuscleGroupWithRoleRequest>
             {
@@ -120,7 +121,7 @@ public class ExerciseCoachNotesSyncTests : IClassFixture<ApiTestFixture>
                 new() { Text = "First step", Order = 1 },
                 new() { Text = "Middle step", Order = 50 }
             },
-            ExerciseTypeIds = new List<string> { "exercisetype-22334455-6677-8899-aabb-ccddeeff0011" },
+            ExerciseTypeIds = new List<string> { "exercisetype-b2c3d4e5-6f7a-8b9c-0d1e-2f3a4b5c6d7e" },
             DifficultyId = "difficultylevel-8a8adb1d-24d2-4979-a5a6-0d760e6da24b",
             MuscleGroups = new List<MuscleGroupWithRoleRequest>
             {
@@ -173,7 +174,7 @@ public class ExerciseCoachNotesSyncTests : IClassFixture<ApiTestFixture>
                 new() { Text = "Exercise 1 Note 1", Order = 1 },
                 new() { Text = "Exercise 1 Note 2", Order = 2 }
             },
-            ExerciseTypeIds = new List<string> { "exercisetype-22334455-6677-8899-aabb-ccddeeff0011" },
+            ExerciseTypeIds = new List<string> { "exercisetype-b2c3d4e5-6f7a-8b9c-0d1e-2f3a4b5c6d7e" },
             DifficultyId = "difficultylevel-8a8adb1d-24d2-4979-a5a6-0d760e6da24b",
             MuscleGroups = new List<MuscleGroupWithRoleRequest>
             {
@@ -196,7 +197,7 @@ public class ExerciseCoachNotesSyncTests : IClassFixture<ApiTestFixture>
             {
                 new() { Text = "Exercise 2 Note 1", Order = 1 }
             },
-            ExerciseTypeIds = new List<string> { "exercisetype-22334455-6677-8899-aabb-ccddeeff0011" },
+            ExerciseTypeIds = new List<string> { "exercisetype-b2c3d4e5-6f7a-8b9c-0d1e-2f3a4b5c6d7e" },
             DifficultyId = "difficultylevel-8a8adb1d-24d2-4979-a5a6-0d760e6da24b",
             MuscleGroups = new List<MuscleGroupWithRoleRequest>
             {

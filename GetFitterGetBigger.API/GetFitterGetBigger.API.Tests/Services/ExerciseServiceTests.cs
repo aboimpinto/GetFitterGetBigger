@@ -20,6 +20,7 @@ namespace GetFitterGetBigger.API.Tests.Services
         private readonly Mock<IReadOnlyUnitOfWork<FitnessDbContext>> _mockReadOnlyUnitOfWork;
         private readonly Mock<IWritableUnitOfWork<FitnessDbContext>> _mockWritableUnitOfWork;
         private readonly Mock<IExerciseRepository> _mockExerciseRepository;
+        private readonly Mock<IExerciseTypeRepository> _mockExerciseTypeRepository;
         private readonly ExerciseService _service;
 
         public ExerciseServiceTests()
@@ -28,10 +29,15 @@ namespace GetFitterGetBigger.API.Tests.Services
             _mockReadOnlyUnitOfWork = new Mock<IReadOnlyUnitOfWork<FitnessDbContext>>();
             _mockWritableUnitOfWork = new Mock<IWritableUnitOfWork<FitnessDbContext>>();
             _mockExerciseRepository = new Mock<IExerciseRepository>();
+            _mockExerciseTypeRepository = new Mock<IExerciseTypeRepository>();
 
             _mockReadOnlyUnitOfWork
                 .Setup(uow => uow.GetRepository<IExerciseRepository>())
                 .Returns(_mockExerciseRepository.Object);
+            
+            _mockReadOnlyUnitOfWork
+                .Setup(uow => uow.GetRepository<IExerciseTypeRepository>())
+                .Returns(_mockExerciseTypeRepository.Object);
 
             _mockWritableUnitOfWork
                 .Setup(uow => uow.GetRepository<IExerciseRepository>())

@@ -8,12 +8,13 @@ namespace GetFitterGetBigger.API.Tests.IntegrationTests;
 /// <summary>
 /// Integration tests for the Rest type exclusivity business rule
 /// </summary>
-public class ExerciseRestExclusivityTests : IClassFixture<ApiTestFixture>
+[Collection("SharedDatabase")]
+public class ExerciseRestExclusivityTests : IClassFixture<SharedDatabaseTestFixture>
 {
-    private readonly ApiTestFixture _fixture;
+    private readonly SharedDatabaseTestFixture _fixture;
     private readonly HttpClient _client;
     
-    public ExerciseRestExclusivityTests(ApiTestFixture fixture)
+    public ExerciseRestExclusivityTests(SharedDatabaseTestFixture fixture)
     {
         _fixture = fixture;
         _client = _fixture.CreateClient();
@@ -34,7 +35,7 @@ public class ExerciseRestExclusivityTests : IClassFixture<ApiTestFixture>
             },
             ExerciseTypeIds = new List<string>
             {
-                "exercisetype-rest-only-test" // ID containing "rest"
+                "exercisetype-d4e5f6a7-8b9c-0d1e-2f3a-4b5c6d7e8f9a" // ID containing "rest"
             },
             DifficultyId = "difficultylevel-8a8adb1d-24d2-4979-a5a6-0d760e6da24b",
             MuscleGroups = new List<MuscleGroupWithRoleRequest>
@@ -72,8 +73,8 @@ public class ExerciseRestExclusivityTests : IClassFixture<ApiTestFixture>
             CoachNotes = new List<CoachNoteRequest>(),
             ExerciseTypeIds = new List<string>
             {
-                "exercisetype-rest-type-id", // ID containing "rest"
-                "exercisetype-11223344-5566-7788-99aa-bbccddeeff00" // Warmup
+                "exercisetype-d4e5f6a7-8b9c-0d1e-2f3a-4b5c6d7e8f9a", // ID containing "rest"
+                "exercisetype-a1b2c3d4-5e6f-7a8b-9c0d-1e2f3a4b5c6d" // Warmup
             },
             DifficultyId = "difficultylevel-8a8adb1d-24d2-4979-a5a6-0d760e6da24b",
             MuscleGroups = new List<MuscleGroupWithRoleRequest>
@@ -111,8 +112,8 @@ public class ExerciseRestExclusivityTests : IClassFixture<ApiTestFixture>
             CoachNotes = new List<CoachNoteRequest>(),
             ExerciseTypeIds = new List<string>
             {
-                "exercisetype-22334455-6677-8899-aabb-ccddeeff0011", // Workout
-                "exercisetype-rest-id-test" // ID containing "rest"
+                "exercisetype-b2c3d4e5-6f7a-8b9c-0d1e-2f3a4b5c6d7e", // Workout
+                "exercisetype-d4e5f6a7-8b9c-0d1e-2f3a-4b5c6d7e8f9a" // ID containing "rest"
             },
             DifficultyId = "difficultylevel-8a8adb1d-24d2-4979-a5a6-0d760e6da24b",
             MuscleGroups = new List<MuscleGroupWithRoleRequest>
@@ -146,10 +147,10 @@ public class ExerciseRestExclusivityTests : IClassFixture<ApiTestFixture>
             CoachNotes = new List<CoachNoteRequest>(),
             ExerciseTypeIds = new List<string>
             {
-                "exercisetype-11223344-5566-7788-99aa-bbccddeeff00", // Warmup
-                "exercisetype-22334455-6677-8899-aabb-ccddeeff0011", // Workout
-                "exercisetype-33445566-7788-99aa-bbcc-ddeeff001122", // Cooldown
-                "exercisetype-rest-test-id" // Rest (with "rest" in ID)
+                "exercisetype-a1b2c3d4-5e6f-7a8b-9c0d-1e2f3a4b5c6d", // Warmup
+                "exercisetype-b2c3d4e5-6f7a-8b9c-0d1e-2f3a4b5c6d7e", // Workout
+                "exercisetype-c3d4e5f6-7a8b-9c0d-1e2f-3a4b5c6d7e8f", // Cooldown
+                "exercisetype-d4e5f6a7-8b9c-0d1e-2f3a-4b5c6d7e8f9a" // Rest (with "rest" in ID)
             },
             DifficultyId = "difficultylevel-8a8adb1d-24d2-4979-a5a6-0d760e6da24b",
             MuscleGroups = new List<MuscleGroupWithRoleRequest>
@@ -186,9 +187,9 @@ public class ExerciseRestExclusivityTests : IClassFixture<ApiTestFixture>
             CoachNotes = new List<CoachNoteRequest>(),
             ExerciseTypeIds = new List<string>
             {
-                "exercisetype-11223344-5566-7788-99aa-bbccddeeff00", // Warmup
-                "exercisetype-22334455-6677-8899-aabb-ccddeeff0011", // Workout
-                "exercisetype-33445566-7788-99aa-bbcc-ddeeff001122"  // Cooldown
+                "exercisetype-a1b2c3d4-5e6f-7a8b-9c0d-1e2f3a4b5c6d", // Warmup
+                "exercisetype-b2c3d4e5-6f7a-8b9c-0d1e-2f3a4b5c6d7e", // Workout
+                "exercisetype-c3d4e5f6-7a8b-9c0d-1e2f-3a4b5c6d7e8f"  // Cooldown
             },
             DifficultyId = "difficultylevel-8a8adb1d-24d2-4979-a5a6-0d760e6da24b",
             MuscleGroups = new List<MuscleGroupWithRoleRequest>
