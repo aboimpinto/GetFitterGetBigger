@@ -327,11 +327,15 @@ namespace GetFitterGetBigger.Admin.Tests.Services
             var squatExercise = new ExerciseListDtoBuilder()
                 .WithName("Squat")
                 .WithDescription("Full depth squat")
-                .AddCoachNote("Keep your back straight", 0)
-                .AddCoachNote("Drive through your heels", 1)
-                .AddCoachNote("Maintain knee alignment", 2)
-                .AddExerciseType("Workout", "Main workout exercise")
-                .AddExerciseType("Warmup", "Can be used for warmup")
+                .WithCoachNotes(
+                    ("Keep your back straight", 0),
+                    ("Drive through your heels", 1),
+                    ("Maintain knee alignment", 2)
+                )
+                .WithExerciseTypes(
+                    ("Workout", "Main workout exercise"),
+                    ("Warmup", "Can be used for warmup")
+                )
                 .WithDifficulty("Intermediate", "1")
                 .Build();
 
@@ -383,11 +387,15 @@ namespace GetFitterGetBigger.Admin.Tests.Services
                 .WithId("exercise-123")
                 .WithName("Deadlift")
                 .WithDescription("Conventional deadlift")
-                .WithCoachNote("Set your feet hip-width apart", 0)
-                .WithCoachNote("Engage your lats", 1)
-                .WithCoachNote("Drive hips forward at the top", 2)
-                .WithExerciseType("Workout", "Main workout exercise")
-                .WithExerciseType("Cooldown", "Cooldown exercise")
+                .WithCoachNotes(
+                    ("Set your feet hip-width apart", 0),
+                    ("Engage your lats", 1),
+                    ("Drive hips forward at the top", 2)
+                )
+                .WithExerciseTypes(
+                    ("Workout", "Main workout exercise"),
+                    ("Cooldown", "Cooldown exercise")
+                )
                 .Build();
 
             _httpMessageHandler.SetupResponse(HttpStatusCode.Created, expectedResponse);
@@ -418,9 +426,11 @@ namespace GetFitterGetBigger.Admin.Tests.Services
             var expectedExercise = new ExerciseDtoBuilder()
                 .WithId(exerciseId)
                 .WithName("Bench Press")
-                .WithCoachNote("Grip the bar slightly wider than shoulder-width", 0)
-                .WithCoachNote("Lower the bar to chest level", 1)
-                .WithExerciseType("Workout")
+                .WithCoachNotes(
+                    ("Grip the bar slightly wider than shoulder-width", 0),
+                    ("Lower the bar to chest level", 1)
+                )
+                .WithExerciseTypes(("Workout", "Main workout exercise"))
                 .Build();
 
             _httpMessageHandler.SetupResponse(HttpStatusCode.OK, expectedExercise);

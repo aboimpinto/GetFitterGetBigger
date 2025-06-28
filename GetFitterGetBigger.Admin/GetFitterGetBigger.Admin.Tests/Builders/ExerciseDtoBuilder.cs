@@ -50,6 +50,17 @@ namespace GetFitterGetBigger.Admin.Tests.Builders
             return this;
         }
 
+        public ExerciseDtoBuilder WithCoachNotes(params (string text, int order)[] notes)
+        {
+            _coachNotes = notes.Select(n => new CoachNoteDto
+            {
+                Id = Guid.NewGuid().ToString(),
+                Text = n.text,
+                Order = n.order
+            }).ToList();
+            return this;
+        }
+
         public ExerciseDtoBuilder WithCoachNote(string text, int order = 0)
         {
             _coachNotes.Add(new CoachNoteDto
@@ -64,6 +75,17 @@ namespace GetFitterGetBigger.Admin.Tests.Builders
         public ExerciseDtoBuilder WithExerciseTypes(List<ExerciseTypeDto> exerciseTypes)
         {
             _exerciseTypes = exerciseTypes;
+            return this;
+        }
+
+        public ExerciseDtoBuilder WithExerciseTypes(params (string value, string description)[] types)
+        {
+            _exerciseTypes = types.Select(t => new ExerciseTypeDto
+            {
+                Id = $"type-{t.value.ToLower()}",
+                Value = t.value,
+                Description = t.description
+            }).ToList();
             return this;
         }
 
@@ -111,6 +133,16 @@ namespace GetFitterGetBigger.Admin.Tests.Builders
         public ExerciseDtoBuilder WithMuscleGroups(List<MuscleGroupWithRoleDto> muscleGroups)
         {
             _muscleGroups = muscleGroups;
+            return this;
+        }
+
+        public ExerciseDtoBuilder WithMuscleGroups(params (string muscleName, string roleName)[] muscleGroups)
+        {
+            _muscleGroups = muscleGroups.Select(mg => new MuscleGroupWithRoleDto
+            {
+                MuscleGroup = new ReferenceDataDto { Id = Guid.NewGuid().ToString(), Value = mg.muscleName, Description = mg.muscleName },
+                Role = new ReferenceDataDto { Id = Guid.NewGuid().ToString(), Value = mg.roleName, Description = mg.roleName }
+            }).ToList();
             return this;
         }
 
