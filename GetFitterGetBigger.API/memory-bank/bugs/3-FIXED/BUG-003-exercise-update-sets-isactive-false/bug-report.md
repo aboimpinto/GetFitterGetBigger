@@ -2,10 +2,10 @@
 
 ## Bug ID: BUG-003
 ## Reported: 2025-01-27
-## Status: IN_PROGRESS
+## Status: FIXED
 ## Severity: High
 ## Affected Version: Current
-## Fixed Version: [TBD]
+## Fixed Version: Current (Implemented in ExerciseService.UpdateAsync)
 
 ## Description
 When updating an exercise through the API, if the `IsActive` field is not included in the update request (common when the Admin UI doesn't send all fields), the API sets `IsActive` to `false`. This causes exercises to disappear from the default view which filters out inactive exercises.
@@ -39,3 +39,14 @@ Any exercise update that doesn't include the IsActive field.
 2. Modified UpdateAsync to fetch the existing exercise first
 3. Use existing values for nullable fields when not provided in the request
 4. This implements proper partial update semantics
+
+## Fix Verification
+The fix has been implemented in:
+- `UpdateExerciseRequest.cs:51,56` - Both `IsUnilateral` and `IsActive` are now nullable bool? properties
+- `ExerciseService.cs:253-254` - The UpdateAsync method uses null-coalescing to preserve existing values:
+  ```csharp
+  request.IsUnilateral ?? existingExercise.IsUnilateral,
+  request.IsActive ?? existingExercise.IsActive,
+  ```
+
+This ensures that when these fields are not provided in the request (null), the existing values are preserved rather than defaulting to false.
