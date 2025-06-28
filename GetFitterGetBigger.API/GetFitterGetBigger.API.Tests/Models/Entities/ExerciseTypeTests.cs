@@ -120,17 +120,17 @@ public class ExerciseTypeTests
         var type1 = ExerciseType.Handler.Create(id, value, description, order, isActive);
         var type2 = ExerciseType.Handler.Create(id, value, description, order, isActive);
         
-        // Assert - Records with collections don't have value equality by default
-        // We need to compare properties individually
+        // Assert - Since ExerciseType is a record without collections, 
+        // two instances with the same values should be equal
         Assert.Equal(type1.Id, type2.Id);
         Assert.Equal(type1.Value, type2.Value);
         Assert.Equal(type1.Description, type2.Description);
         Assert.Equal(type1.DisplayOrder, type2.DisplayOrder);
         Assert.Equal(type1.IsActive, type2.IsActive);
         
-        // Two instances with same values but different collection references are not equal
-        Assert.NotEqual(type1, type2);
-        Assert.False(type1 == type2);
+        // Records with same values are equal
+        Assert.Equal(type1, type2);
+        Assert.True(type1 == type2);
     }
     
     [Fact]

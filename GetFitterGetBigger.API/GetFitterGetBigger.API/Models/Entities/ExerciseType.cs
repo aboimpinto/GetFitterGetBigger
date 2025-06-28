@@ -8,9 +8,6 @@ public record ExerciseType : ReferenceDataBase
 {
     public ExerciseTypeId Id { get; init; }
     
-    // Navigation properties - many-to-many relationship with Exercise
-    public ICollection<Exercise> Exercises { get; init; } = new List<Exercise>();
-    
     private ExerciseType() { }
     
     public static class Handler
