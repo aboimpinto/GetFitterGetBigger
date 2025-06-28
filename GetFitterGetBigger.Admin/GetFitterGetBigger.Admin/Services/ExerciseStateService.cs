@@ -1,4 +1,5 @@
 using GetFitterGetBigger.Admin.Models.Dtos;
+using GetFitterGetBigger.Admin.Builders;
 
 namespace GetFitterGetBigger.Admin.Services
 {
@@ -11,7 +12,7 @@ namespace GetFitterGetBigger.Admin.Services
         
         // List state
         public ExercisePagedResultDto? CurrentPage { get; private set; }
-        public ExerciseFilterDto CurrentFilter { get; private set; } = new();
+        public ExerciseFilterDto CurrentFilter { get; private set; } = ExerciseFilterBuilder.Default();
         public bool IsLoading { get; private set; }
         public string? ErrorMessage { get; private set; }
         
@@ -231,16 +232,7 @@ namespace GetFitterGetBigger.Admin.Services
         public void StoreReturnPage()
         {
             // Create a deep copy of the current filter to preserve state
-            _storedFilter = new ExerciseFilterDto
-            {
-                Name = CurrentFilter.Name,
-                DifficultyId = CurrentFilter.DifficultyId,
-                MuscleGroupIds = CurrentFilter.MuscleGroupIds?.ToList(),
-                EquipmentIds = CurrentFilter.EquipmentIds?.ToList(),
-                IsActive = CurrentFilter.IsActive,
-                Page = CurrentFilter.Page,
-                PageSize = CurrentFilter.PageSize
-            };
+            _storedFilter = ExerciseFilterBuilder.CopyFrom(CurrentFilter);
         }
         
         public void ClearStoredPage()

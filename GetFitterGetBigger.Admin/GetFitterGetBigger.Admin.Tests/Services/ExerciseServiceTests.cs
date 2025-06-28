@@ -43,40 +43,25 @@ namespace GetFitterGetBigger.Admin.Tests.Services
         public async Task GetExercisesAsync_WithFilter_ReturnsPagedResult()
         {
             // Arrange
-            var filter = new ExerciseFilterDto
-            {
-                Name = "squat",
-                Page = 1,
-                PageSize = 10
-            };
+            var filter = new ExerciseFilterDtoBuilder()
+                .WithName("squat")
+                .WithPageSize(10)
+                .Build();
 
-            var expectedResult = new ExercisePagedResultDto
-            {
-                Items = new List<ExerciseListDto>
-                {
-                    new() { 
-                        Id = Guid.NewGuid().ToString(), 
-                        Name = "Back Squat", 
-                        Difficulty = new ReferenceDataDto { Id = "1", Value = "Intermediate", Description = "Intermediate level" },
-                        MuscleGroups = new List<MuscleGroupListItemDto>(),
-                        Equipment = new List<ReferenceDataDto>(),
-                        MovementPatterns = new List<ReferenceDataDto>(),
-                        BodyParts = new List<ReferenceDataDto>()
-                    },
-                    new() { 
-                        Id = Guid.NewGuid().ToString(), 
-                        Name = "Front Squat", 
-                        Difficulty = new ReferenceDataDto { Id = "2", Value = "Advanced", Description = "Advanced level" },
-                        MuscleGroups = new List<MuscleGroupListItemDto>(),
-                        Equipment = new List<ReferenceDataDto>(),
-                        MovementPatterns = new List<ReferenceDataDto>(),
-                        BodyParts = new List<ReferenceDataDto>()
-                    }
-                },
-                TotalCount = 2,
-                PageNumber = 1,
-                PageSize = 10
-            };
+            var expectedResult = new ExercisePagedResultDtoBuilder()
+                .WithItems(
+                    new ExerciseListDtoBuilder()
+                        .WithName("Back Squat")
+                        .WithDifficulty("Intermediate", "1")
+                        .Build(),
+                    new ExerciseListDtoBuilder()
+                        .WithName("Front Squat")
+                        .WithDifficulty("Advanced", "2")
+                        .Build()
+                )
+                .WithPageNumber(1)
+                .WithPageSize(10)
+                .Build();
 
             _httpMessageHandler.SetupResponse(HttpStatusCode.OK, expectedResult);
 
@@ -96,19 +81,12 @@ namespace GetFitterGetBigger.Admin.Tests.Services
         {
             // Arrange
             var exerciseId = Guid.NewGuid().ToString();
-            var expectedExercise = new ExerciseDto
-            {
-                Id = exerciseId,
-                Name = "Bench Press",
-                Description = "A compound pushing exercise",
-                Instructions = "Lie on bench...",
-                IsUnilateral = false,
-                Difficulty = new ReferenceDataDto { Id = "1", Value = "Intermediate", Description = "Intermediate level" },
-                MuscleGroups = new List<MuscleGroupWithRoleDto>(),
-                Equipment = new List<ReferenceDataDto>(),
-                BodyParts = new List<ReferenceDataDto>(),
-                MovementPatterns = new List<ReferenceDataDto>()
-            };
+            var expectedExercise = new ExerciseDtoBuilder()
+                .WithId(exerciseId)
+                .WithName("Bench Press")
+                .WithDescription("A compound pushing exercise")
+                .WithInstructions("Lie on bench...")
+                .Build();
 
             _httpMessageHandler.SetupResponse(HttpStatusCode.OK, expectedExercise);
 
@@ -344,38 +322,23 @@ namespace GetFitterGetBigger.Admin.Tests.Services
         public async Task GetExercisesAsync_WithCoachNotesAndExerciseTypes_ReturnsCorrectData()
         {
             // Arrange
-            var filter = new ExerciseFilterDto { Page = 1, PageSize = 10 };
-            var expectedResult = new ExercisePagedResultDto
-            {
-                Items = new List<ExerciseListDto>
-                {
-                    new()
-                    {
-                        Id = Guid.NewGuid().ToString(),
-                        Name = "Squat",
-                        Description = "Full depth squat",
-                        CoachNotes = new List<CoachNoteDto>
-                        {
-                            new() { Id = "note-1", Text = "Keep your back straight", Order = 0 },
-                            new() { Id = "note-2", Text = "Drive through your heels", Order = 1 },
-                            new() { Id = "note-3", Text = "Maintain knee alignment", Order = 2 }
-                        },
-                        ExerciseTypes = new List<ExerciseTypeDto>
-                        {
-                            new() { Id = "type-1", Value = "Workout", Description = "Main workout exercise" },
-                            new() { Id = "type-2", Value = "Warmup", Description = "Can be used for warmup" }
-                        },
-                        Difficulty = new ReferenceDataDto { Id = "1", Value = "Intermediate", Description = "Intermediate level" },
-                        MuscleGroups = new List<MuscleGroupListItemDto>(),
-                        Equipment = new List<ReferenceDataDto>(),
-                        MovementPatterns = new List<ReferenceDataDto>(),
-                        BodyParts = new List<ReferenceDataDto>()
-                    }
-                },
-                TotalCount = 1,
-                PageNumber = 1,
-                PageSize = 10
-            };
+            var filter = new ExerciseFilterDtoBuilder().Build();
+            
+            var squatExercise = new ExerciseListDtoBuilder()
+                .WithName("Squat")
+                .WithDescription("Full depth squat")
+                .AddCoachNote("Keep your back straight", 0)
+                .AddCoachNote("Drive through your heels", 1)
+                .AddCoachNote("Maintain knee alignment", 2)
+                .AddExerciseType("Workout", "Main workout exercise")
+                .AddExerciseType("Warmup", "Can be used for warmup")
+                .WithDifficulty("Intermediate", "1")
+                .Build();
+
+            var expectedResult = new ExercisePagedResultDtoBuilder()
+                .WithItems(squatExercise)
+                .WithPagination(1, 10, 1)
+                .Build();
 
             _httpMessageHandler.SetupResponse(HttpStatusCode.OK, expectedResult);
 
@@ -404,23 +367,17 @@ namespace GetFitterGetBigger.Admin.Tests.Services
         public async Task CreateExerciseAsync_WithCoachNotesAndExerciseTypes_SendsCorrectData()
         {
             // Arrange
-            var createDto = new ExerciseCreateDto
-            {
-                Name = "Deadlift",
-                Description = "Conventional deadlift",
-                DifficultyId = "2",
-                CoachNotes = new List<CoachNoteCreateDto>
-                {
-                    new() { Text = "Set your feet hip-width apart", Order = 0 },
-                    new() { Text = "Engage your lats", Order = 1 },
-                    new() { Text = "Drive hips forward at the top", Order = 2 }
-                },
-                ExerciseTypeIds = new List<string> { "type-workout", "type-cooldown" },
-                MuscleGroups = new List<MuscleGroupApiDto>(),
-                EquipmentIds = new List<string>(),
-                BodyPartIds = new List<string>(),
-                MovementPatternIds = new List<string>()
-            };
+            var createDto = new ExerciseCreateDtoBuilder()
+                .WithName("Deadlift")
+                .WithDescription("Conventional deadlift")
+                .WithDifficultyId("2")
+                .WithCoachNotes(
+                    ("Set your feet hip-width apart", 0),
+                    ("Engage your lats", 1),
+                    ("Drive hips forward at the top", 2)
+                )
+                .WithExerciseTypes("type-workout", "type-cooldown")
+                .Build();
 
             var expectedResponse = new ExerciseDtoBuilder()
                 .WithId("exercise-123")

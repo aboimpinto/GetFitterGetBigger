@@ -1,6 +1,7 @@
 @page "/exercises"
 @using GetFitterGetBigger.Admin.Models.Dtos
 @using GetFitterGetBigger.Admin.Services
+@using GetFitterGetBigger.Admin.Builders
 @using Microsoft.AspNetCore.Authorization
 @attribute [Authorize]
 @rendermode InteractiveServer
@@ -198,14 +199,13 @@
 
     private async Task ApplyFilter()
     {
-        var filter = new ExerciseFilterDto
-        {
-            Name = string.IsNullOrWhiteSpace(filterName) ? null : filterName,
-            DifficultyId = string.IsNullOrWhiteSpace(filterDifficulty) ? null : filterDifficulty,
-            MuscleGroupIds = string.IsNullOrWhiteSpace(filterMuscleGroup) ? null : new List<string> { filterMuscleGroup },
-            Page = 1,
-            PageSize = StateService.CurrentFilter.PageSize
-        };
+        var filter = ExerciseFilterBuilder.FromQueryParameters(
+            name: string.IsNullOrWhiteSpace(filterName) ? null : filterName,
+            difficultyId: string.IsNullOrWhiteSpace(filterDifficulty) ? null : filterDifficulty,
+            muscleGroupIds: string.IsNullOrWhiteSpace(filterMuscleGroup) ? null : new List<string> { filterMuscleGroup },
+            page: 1,
+            pageSize: StateService.CurrentFilter.PageSize
+        );
 
         await StateService.LoadExercisesAsync(filter);
     }
@@ -215,7 +215,12 @@
         filterName = "";
         filterDifficulty = "";
         filterMuscleGroup = "";
-        await StateService.LoadExercisesAsync(new ExerciseFilterDto { Page = 1, PageSize = StateService.CurrentFilter.PageSize });
+        
+        var filter = new ExerciseFilterBuilder()
+            .WithPagination(1, StateService.CurrentFilter.PageSize)
+            .Build();
+            
+        await StateService.LoadExercisesAsync(filter);
     }
 
     private async Task GoToPage(int page)
