@@ -285,28 +285,28 @@ public class ApiTestFixture : WebApplicationFactory<Program>
                 ExerciseType.Handler.Create(
                     ExerciseTypeId.From(Guid.Parse("11223344-5566-7788-99aa-bbccddeeff00")),
                     "Warmup",
-                    "Exercises for warming up",
+                    "Exercises performed to prepare the body for more intense activity",
                     1,
                     true
                 ),
                 ExerciseType.Handler.Create(
                     ExerciseTypeId.From(Guid.Parse("22334455-6677-8899-aabb-ccddeeff0011")),
                     "Workout",
-                    "Main workout exercises",
+                    "Main exercises that form the core of the training session",
                     2,
                     true
                 ),
                 ExerciseType.Handler.Create(
                     ExerciseTypeId.From(Guid.Parse("33445566-7788-99aa-bbcc-ddeeff001122")),
                     "Cooldown",
-                    "Exercises for cooling down",
+                    "Exercises performed to help the body recover after intense activity",
                     3,
                     true
                 ),
                 ExerciseType.Handler.Create(
                     ExerciseTypeId.From(Guid.Parse("44556677-8899-aabb-ccdd-eeff00112233")),
                     "Rest",
-                    "Rest period",
+                    "Periods of rest between exercises or sets - cannot be combined with other exercise types",
                     4,
                     true
                 )

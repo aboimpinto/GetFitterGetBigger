@@ -81,10 +81,10 @@ namespace GetFitterGetBigger.API.Migrations
                 columns: new[] { "Id", "Description", "DisplayOrder", "IsActive", "Value" },
                 values: new object[,]
                 {
-                    { new Guid("a1b2c3d4-5e6f-7a8b-9c0d-1e2f3a4b5c6d"), "Exercises performed to prepare the body for more intense activity", 1, true, "Warmup" },
-                    { new Guid("b2c3d4e5-6f7a-8b9c-0d1e-2f3a4b5c6d7e"), "Main exercises that form the core of the training session", 2, true, "Workout" },
-                    { new Guid("c3d4e5f6-7a8b-9c0d-1e2f-3a4b5c6d7e8f"), "Exercises performed to help the body recover after intense activity", 3, true, "Cooldown" },
-                    { new Guid("d4e5f6a7-8b9c-0d1e-2f3a-4b5c6d7e8f9a"), "Periods of rest between exercises or sets", 4, true, "Rest" }
+                    { new Guid("11223344-5566-7788-99aa-bbccddeeff00"), "Exercises performed to prepare the body for more intense activity", 1, true, "Warmup" },
+                    { new Guid("22334455-6677-8899-aabb-ccddeeff0011"), "Main exercises that form the core of the training session", 2, true, "Workout" },
+                    { new Guid("33445566-7788-99aa-bbcc-ddeeff001122"), "Exercises performed to help the body recover after intense activity", 3, true, "Cooldown" },
+                    { new Guid("44556677-8899-aabb-ccdd-eeff00112233"), "Periods of rest between exercises or sets - cannot be combined with other exercise types", 4, true, "Rest" }
                 });
 
             migrationBuilder.CreateIndex(

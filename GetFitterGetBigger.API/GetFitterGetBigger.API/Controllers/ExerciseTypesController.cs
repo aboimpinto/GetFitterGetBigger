@@ -1,7 +1,12 @@
+using GetFitterGetBigger.API.Configuration;
+using GetFitterGetBigger.API.Models;
 using GetFitterGetBigger.API.Models.Entities;
 using GetFitterGetBigger.API.Models.SpecializedIds;
 using GetFitterGetBigger.API.Repositories.Interfaces;
+using GetFitterGetBigger.API.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
+using Olimpo.EntityFramework.Persistency;
 
 namespace GetFitterGetBigger.API.Controllers;
 
@@ -12,13 +17,21 @@ namespace GetFitterGetBigger.API.Controllers;
 [Route("api/ReferenceTables/[controller]")]
 [Produces("application/json")]
 [Tags("Reference Tables")]
-public class ExerciseTypesController : ReferenceTablesBaseController<ExerciseType, ExerciseTypeId, IExerciseTypeRepository>
+public class ExerciseTypesController : ReferenceTablesBaseController
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="ExerciseTypesController"/> class
     /// </summary>
-    /// <param name="repository">The exercise type repository</param>
-    public ExerciseTypesController(IExerciseTypeRepository repository) : base(repository)
+    /// <param name="unitOfWorkProvider">The unit of work provider</param>
+    /// <param name="cacheService">The cache service</param>
+    /// <param name="cacheConfiguration">The cache configuration</param>
+    /// <param name="logger">The logger</param>
+    public ExerciseTypesController(
+        IUnitOfWorkProvider<FitnessDbContext> unitOfWorkProvider,
+        ICacheService cacheService,
+        IOptions<CacheConfiguration> cacheConfiguration,
+        ILogger<ExerciseTypesController> logger)
+        : base(unitOfWorkProvider, cacheService, cacheConfiguration, logger)
     {
     }
     
@@ -37,9 +50,18 @@ public class ExerciseTypesController : ReferenceTablesBaseController<ExerciseTyp
     /// Note: The "Rest" type has special business rules - it cannot be combined with other exercise types
     /// </remarks>
     [HttpGet]
-    public override Task<IActionResult> GetAll()
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetAll()
     {
-        return base.GetAll();
+        var exerciseTypes = await GetAllWithCacheAsync(async () =>
+        {
+            using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
+            var repository = unitOfWork.GetRepository<IExerciseTypeRepository>();
+            return await repository.GetAllActiveAsync();
+        });
+        
+        var result = exerciseTypes.Select(MapToDto);
+        return Ok(result);
     }
     
     /// <summary>
@@ -50,9 +72,29 @@ public class ExerciseTypesController : ReferenceTablesBaseController<ExerciseTyp
     /// <response code="200">Returns the exercise type</response>
     /// <response code="404">If the exercise type is not found</response>
     [HttpGet("{id}")]
-    public override Task<IActionResult> GetById(string id)
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetById(string id)
     {
-        return base.GetById(id);
+        var exerciseType = await GetByIdWithCacheAsync(id, async () =>
+        {
+            using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
+            var repository = unitOfWork.GetRepository<IExerciseTypeRepository>();
+            
+            if (!ExerciseTypeId.TryParse(id, out var exerciseTypeId))
+            {
+                return null;
+            }
+            
+            return await repository.GetByIdAsync(exerciseTypeId);
+        });
+        
+        if (exerciseType == null)
+        {
+            return NotFound();
+        }
+        
+        return Ok(MapToDto(exerciseType));
     }
     
     /// <summary>
@@ -62,9 +104,23 @@ public class ExerciseTypesController : ReferenceTablesBaseController<ExerciseTyp
     /// <returns>The exercise type if found</returns>
     /// <response code="200">Returns the exercise type</response>
     /// <response code="404">If the exercise type is not found</response>
-    [HttpGet("by-value/{value}")]
-    public override Task<IActionResult> GetByValue(string value)
+    [HttpGet("ByValue/{value}")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetByValue(string value)
     {
-        return base.GetByValue(value);
+        var exerciseType = await GetByValueWithCacheAsync(value, async () =>
+        {
+            using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
+            var repository = unitOfWork.GetRepository<IExerciseTypeRepository>();
+            return await repository.GetByValueAsync(value);
+        });
+        
+        if (exerciseType == null)
+        {
+            return NotFound();
+        }
+        
+        return Ok(MapToDto(exerciseType));
     }
 }
