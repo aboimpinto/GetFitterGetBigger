@@ -339,5 +339,150 @@ namespace GetFitterGetBigger.Admin.Tests.Services
             // Assert
             result.Should().BeNull();
         }
+
+        [Fact]
+        public async Task GetExercisesAsync_WithCoachNotesAndExerciseTypes_ReturnsCorrectData()
+        {
+            // Arrange
+            var filter = new ExerciseFilterDto { Page = 1, PageSize = 10 };
+            var expectedResult = new ExercisePagedResultDto
+            {
+                Items = new List<ExerciseListDto>
+                {
+                    new()
+                    {
+                        Id = Guid.NewGuid().ToString(),
+                        Name = "Squat",
+                        Description = "Full depth squat",
+                        CoachNotes = new List<CoachNoteDto>
+                        {
+                            new() { Id = "note-1", Text = "Keep your back straight", Order = 0 },
+                            new() { Id = "note-2", Text = "Drive through your heels", Order = 1 },
+                            new() { Id = "note-3", Text = "Maintain knee alignment", Order = 2 }
+                        },
+                        ExerciseTypes = new List<ExerciseTypeDto>
+                        {
+                            new() { Id = "type-1", Value = "Workout", Description = "Main workout exercise" },
+                            new() { Id = "type-2", Value = "Warmup", Description = "Can be used for warmup" }
+                        },
+                        Difficulty = new ReferenceDataDto { Id = "1", Value = "Intermediate", Description = "Intermediate level" },
+                        MuscleGroups = new List<MuscleGroupListItemDto>(),
+                        Equipment = new List<ReferenceDataDto>(),
+                        MovementPatterns = new List<ReferenceDataDto>(),
+                        BodyParts = new List<ReferenceDataDto>()
+                    }
+                },
+                TotalCount = 1,
+                PageNumber = 1,
+                PageSize = 10
+            };
+
+            _httpMessageHandler.SetupResponse(HttpStatusCode.OK, expectedResult);
+
+            // Act
+            var result = await _exerciseService.GetExercisesAsync(filter);
+
+            // Assert
+            result.Should().NotBeNull();
+            result.Items.Should().HaveCount(1);
+            
+            var exercise = result.Items.First();
+            exercise.CoachNotes.Should().HaveCount(3);
+            exercise.CoachNotes[0].Text.Should().Be("Keep your back straight");
+            exercise.CoachNotes[0].Order.Should().Be(0);
+            exercise.CoachNotes[1].Text.Should().Be("Drive through your heels");
+            exercise.CoachNotes[1].Order.Should().Be(1);
+            exercise.CoachNotes[2].Text.Should().Be("Maintain knee alignment");
+            exercise.CoachNotes[2].Order.Should().Be(2);
+            
+            exercise.ExerciseTypes.Should().HaveCount(2);
+            exercise.ExerciseTypes.Should().Contain(et => et.Value == "Workout");
+            exercise.ExerciseTypes.Should().Contain(et => et.Value == "Warmup");
+        }
+
+        [Fact]
+        public async Task CreateExerciseAsync_WithCoachNotesAndExerciseTypes_SendsCorrectData()
+        {
+            // Arrange
+            var createDto = new ExerciseCreateDto
+            {
+                Name = "Deadlift",
+                Description = "Conventional deadlift",
+                DifficultyId = "2",
+                CoachNotes = new List<CoachNoteCreateDto>
+                {
+                    new() { Text = "Set your feet hip-width apart", Order = 0 },
+                    new() { Text = "Engage your lats", Order = 1 },
+                    new() { Text = "Drive hips forward at the top", Order = 2 }
+                },
+                ExerciseTypeIds = new List<string> { "type-workout", "type-cooldown" },
+                MuscleGroups = new List<MuscleGroupApiDto>(),
+                EquipmentIds = new List<string>(),
+                BodyPartIds = new List<string>(),
+                MovementPatternIds = new List<string>()
+            };
+
+            var expectedResponse = new ExerciseDtoBuilder()
+                .WithId("exercise-123")
+                .WithName("Deadlift")
+                .WithDescription("Conventional deadlift")
+                .WithCoachNote("Set your feet hip-width apart", 0)
+                .WithCoachNote("Engage your lats", 1)
+                .WithCoachNote("Drive hips forward at the top", 2)
+                .WithExerciseType("Workout", "Main workout exercise")
+                .WithExerciseType("Cooldown", "Cooldown exercise")
+                .Build();
+
+            _httpMessageHandler.SetupResponse(HttpStatusCode.Created, expectedResponse);
+
+            // Act
+            var result = await _exerciseService.CreateExerciseAsync(createDto);
+
+            // Assert
+            result.Should().NotBeNull();
+            result.CoachNotes.Should().HaveCount(3);
+            result.ExerciseTypes.Should().HaveCount(2);
+            
+            _httpMessageHandler.VerifyRequest(request =>
+            {
+                var content = request.Content?.ReadAsStringAsync().Result;
+                // The JSON serializer uses PascalCase by default
+                content.Should().Contain("CoachNotes");
+                content.Should().Contain("ExerciseTypeIds");
+                return true;
+            });
+        }
+
+        [Fact]
+        public async Task GetExerciseByIdAsync_WithCoachNotesAndExerciseTypes_ReturnsCachedData()
+        {
+            // Arrange
+            var exerciseId = Guid.NewGuid().ToString();
+            var expectedExercise = new ExerciseDtoBuilder()
+                .WithId(exerciseId)
+                .WithName("Bench Press")
+                .WithCoachNote("Grip the bar slightly wider than shoulder-width", 0)
+                .WithCoachNote("Lower the bar to chest level", 1)
+                .WithExerciseType("Workout")
+                .Build();
+
+            _httpMessageHandler.SetupResponse(HttpStatusCode.OK, expectedExercise);
+
+            // Act - First call should hit the API
+            var firstResult = await _exerciseService.GetExerciseByIdAsync(exerciseId);
+            
+            // Act - Second call should use cache
+            var secondResult = await _exerciseService.GetExerciseByIdAsync(exerciseId);
+
+            // Assert
+            firstResult.Should().NotBeNull();
+            firstResult!.CoachNotes.Should().HaveCount(2);
+            firstResult.ExerciseTypes.Should().HaveCount(1);
+            
+            secondResult.Should().BeEquivalentTo(firstResult);
+            
+            // Verify API was only called once
+            _httpMessageHandler.Requests.Should().HaveCount(1);
+        }
     }
 }

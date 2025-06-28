@@ -11,10 +11,10 @@
   - ❌ Fix all issues before moving forward (unless user explicitly asks to skip)
 
 ### Phase 1: API Model & Service Updates
-- **Task 1.1:** Update Exercise models to include coachNotes array and exerciseTypes array `[ReadyToDevelop]`
-- **Task 1.2:** Update ExerciseService to handle new API response structure with camelCase fields `[ReadyToDevelop]`
+- **Task 1.1:** Update Exercise models to include coachNotes array and exerciseTypes array `[Implemented: 6d54bc51]`
+- **Task 1.2:** Update ExerciseService to handle new API response structure with camelCase fields `[Implemented: 6d54bc51]`
 - **Task 1.3:** Write unit tests for updated ExerciseService with new data structures `[ReadyToDevelop]`
-- **Task 1.4:** Update ReferenceDataService to fetch exercise types if needed `[ReadyToDevelop]`
+- **Task 1.4:** Update ReferenceDataService to fetch exercise types if needed `[Implemented: 6d54bc51]`
 
 **CHECKPOINT 1:** 🛑 `dotnet build` MUST PASS | `dotnet test` ALL GREEN | NO WARNINGS
 
