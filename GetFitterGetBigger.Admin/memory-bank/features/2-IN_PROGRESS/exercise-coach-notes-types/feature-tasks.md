@@ -42,7 +42,7 @@
 - **Task 4.2:** Integrate ExerciseTypeSelector into ExerciseForm `[Implemented: 49f67695]`
 - **Task 4.3:** Update form validation to include new business rules `[Implemented: 49f67695]`
 - **Task 4.4:** Update form submission to send coachNotes and exerciseTypes in correct format `[Implemented: 49f67695]`
-- **Task 4.5:** Write tests for updated ExerciseForm `[Implemented: Multiple commits - ExerciseFormTests.cs]`
+- **Task 4.5:** Write tests for updated ExerciseForm `[Implemented: 407538ad + current commit]`
 
 **CHECKPOINT 4:** ✅ `dotnet build` MUST PASS | `dotnet test` ALL GREEN | NO WARNINGS
 

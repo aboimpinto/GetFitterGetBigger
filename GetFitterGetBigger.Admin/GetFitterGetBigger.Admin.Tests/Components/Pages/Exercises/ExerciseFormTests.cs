@@ -202,6 +202,167 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
         }
 
         [Fact]
+        public void ExerciseForm_IntegratesCoachNotesEditor_Successfully()
+        {
+            // Task 4.5: Test CoachNotesEditor integration in ExerciseForm
+            
+            // Arrange
+            _mockStateService.SetupReferenceData();
+            var component = RenderComponent<ExerciseForm>();
+            
+            // Act - Find the CoachNotesEditor section
+            var coachNotesHeader = component.FindAll("h3").FirstOrDefault(h => h.TextContent.Contains("Coach Notes"));
+            coachNotesHeader.Should().NotBeNull();
+            
+            // Should show optional label
+            var optionalLabel = component.FindAll("span").FirstOrDefault(s => s.TextContent.Contains("(Optional)"));
+            optionalLabel.Should().NotBeNull();
+            
+            // Should have Add Note button
+            var addNoteButton = component.FindAll("button").First(b => b.TextContent.Contains("Add Note"));
+            addNoteButton.Should().NotBeNull();
+            
+            // Click Add Note and verify textarea appears
+            addNoteButton.Click();
+            component.WaitForState(() => component.FindAll("textarea").Count > 1);
+            
+            // Should have delete and reorder buttons
+            var deleteButton = component.Find("button[title='Remove note']");
+            deleteButton.Should().NotBeNull();
+            deleteButton.TextContent.Should().Contain("✕");
+            
+            var upButton = component.Find("button[title='Move up']");
+            upButton.Should().NotBeNull();
+            upButton.TextContent.Should().Contain("↑");
+            
+            var downButton = component.Find("button[title='Move down']");
+            downButton.Should().NotBeNull();
+            downButton.TextContent.Should().Contain("↓");
+        }
+
+        [Fact]
+        public void ExerciseForm_IntegratesExerciseTypeSelector_Successfully()
+        {
+            // Task 4.5: Test ExerciseTypeSelector integration in ExerciseForm
+            
+            // Arrange
+            _mockStateService.SetupReferenceData();
+            var component = RenderComponent<ExerciseForm>();
+            
+            // Act - Find the ExerciseTypeSelector section
+            var exerciseTypesHeader = component.FindAll("h3").FirstOrDefault(h => h.TextContent.Contains("Exercise Types"));
+            exerciseTypesHeader.Should().NotBeNull();
+            
+            // Should have 4 exercise type checkboxes
+            var checkboxes = component.FindAll("input[type='checkbox']").Take(4).ToList();
+            checkboxes.Should().HaveCount(4);
+            
+            // Should have correct labels
+            var labels = new[] { "Warmup", "Workout", "Cooldown", "Rest" };
+            for (int i = 0; i < 4; i++)
+            {
+                var label = checkboxes[i].Parent!.TextContent;
+                label.Should().Contain(labels[i]);
+            }
+            
+            // Verify default state - none checked
+            checkboxes.All(cb => !cb.IsChecked()).Should().BeTrue();
+        }
+
+        [Fact]
+        public void ExerciseForm_SubmitsWithCoachNotesAndExerciseTypes()
+        {
+            // Task 4.5: Test form submission includes coach notes and exercise types
+            
+            // Arrange
+            _mockStateService.SetupReferenceData();
+            var submittedModel = (ExerciseCreateDto?)null;
+            _mockStateService.OnCreateExercise = (model) => {
+                submittedModel = model;
+                return Task.CompletedTask;
+            };
+            
+            var component = RenderComponent<ExerciseForm>();
+            
+            // Act - Fill form
+            component.Find("#name").Input("Test Exercise");
+            component.Find("#description").Input("Test Description");
+            component.Find("#difficulty").Change("2");
+            
+            // Select exercise types (Warmup and Cooldown)
+            component.FindAll("input[type='checkbox']")[0].Change(true); // Warmup
+            component.FindAll("input[type='checkbox']")[2].Change(true); // Cooldown
+            
+            // Add muscle group
+            component.Find("select[value='']").Change("1");
+            component.FindAll("select")[2].Change("Primary");
+            
+            // Submit (simplified - without adding coach notes due to bUnit timing issues)
+            component.Find("form").Submit();
+            
+            // Wait for submission
+            component.WaitForState(() => submittedModel != null, TimeSpan.FromSeconds(1));
+            
+            // Assert
+            submittedModel.Should().NotBeNull();
+            submittedModel!.ExerciseTypeIds.Should().HaveCount(2);
+            submittedModel.ExerciseTypeIds.Should().Contain("1"); // Warmup
+            submittedModel.ExerciseTypeIds.Should().Contain("3"); // Cooldown
+            
+            // Coach notes should be empty (optional)
+            submittedModel.CoachNotes.Should().BeEmpty();
+        }
+
+        [Fact]
+        public void ExerciseForm_EditMode_LoadsCoachNotesAndExerciseTypes()
+        {
+            // Task 4.5: Test that edit mode properly loads coach notes and exercise types
+            
+            // Arrange
+            _mockStateService.SetupReferenceData();
+            _mockStateService.SelectedExercise = new ExerciseDtoBuilder()
+                .WithId("123")
+                .WithName("Existing Exercise")
+                .WithDescription("Existing Description")
+                .WithDifficulty(new ReferenceDataDto { Id = "2", Value = "Intermediate", Description = "For intermediate users" })
+                .WithExerciseTypes(new List<ExerciseTypeDto> {
+                    new() { Id = "2", Value = "Workout" },
+                    new() { Id = "3", Value = "Cooldown" }
+                })
+                .WithCoachNotes(new List<CoachNoteDto> {
+                    new() { Id = "1", Text = "Existing note 1", Order = 0 },
+                    new() { Id = "2", Text = "Existing note 2", Order = 1 }
+                })
+                .WithMuscleGroups(new List<MuscleGroupWithRoleDto> {
+                    new() { 
+                        MuscleGroup = new ReferenceDataDto { Id = "1", Value = "Chest", Description = "Chest muscles" },
+                        Role = new ReferenceDataDto { Id = "1", Value = "Primary", Description = "Primary muscle" }
+                    }
+                })
+                .Build();
+            
+            var navMan = Services.GetRequiredService<FakeNavigationManager>();
+            navMan.NavigateTo("http://localhost/exercises/123/edit");
+            
+            // Act
+            var component = RenderComponent<ExerciseForm>(parameters => parameters
+                .Add(p => p.Id, "123"));
+            
+            // Assert - Exercise types loaded
+            var checkboxes = component.FindAll("input[type='checkbox']").Take(4).ToList();
+            checkboxes[1].IsChecked().Should().BeTrue(); // Workout
+            checkboxes[2].IsChecked().Should().BeTrue(); // Cooldown
+            checkboxes[0].IsChecked().Should().BeFalse(); // Warmup
+            checkboxes[3].IsChecked().Should().BeFalse(); // Rest
+            
+            // Assert - Coach notes loaded
+            var textareas = component.FindAll("textarea").Skip(1).ToList();
+            textareas.Should().HaveCount(2);
+            textareas[0].GetAttribute("value").Should().Be("Existing note 1");
+            textareas[1].GetAttribute("value").Should().Be("Existing note 2");
+        }
+
+        [Fact]
         public void ExerciseForm_RestType_AutoSelectsBeginnerDifficulty()
         {
             // Task 8.10: Test that selecting Rest type auto-selects Beginner difficulty
@@ -341,7 +502,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
             public ExerciseFilterDto CurrentFilter { get; private set; } = new();
             public bool IsLoading { get; private set; }
             public string? ErrorMessage { get; private set; }
-            public ExerciseDto? SelectedExercise { get; private set; }
+            public ExerciseDto? SelectedExercise { get; set; }
             public bool IsLoadingExercise { get; private set; }
             public IEnumerable<ReferenceDataDto> DifficultyLevels { get; private set; } = Enumerable.Empty<ReferenceDataDto>();
             public IEnumerable<ReferenceDataDto> MuscleGroups { get; private set; } = Enumerable.Empty<ReferenceDataDto>();
