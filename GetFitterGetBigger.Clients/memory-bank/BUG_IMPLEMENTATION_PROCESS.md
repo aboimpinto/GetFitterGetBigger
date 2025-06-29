@@ -153,15 +153,18 @@ When a bug cannot be fixed due to dependencies:
 - **Task 2.3:** [Web-specific fix] [TODO]
 - **Task 2.4:** [Desktop-specific fix] [TODO]
 
-### Category 3: Verification Tests
-- **Task 3.1:** Run all Mobile tests [TODO]
-- **Task 3.2:** Run all Web tests [TODO]
-- **Task 3.3:** Run all Desktop tests [TODO]
-- **Task 3.4:** Create platform test scripts for manual testing [TODO]
+### Category 3: Boy Scout Cleanup (MANDATORY)
+- **Task 3.1:** Fix any failing tests found during work [TODO]
+- **Task 3.2:** Fix all linting warnings in touched files [TODO]
+- **Task 3.3:** Clean up code smells in modified files [TODO]
 
-### Category 4: Documentation
-- **Task 4.1:** Document the fix and prevention [TODO]
-- **Task 4.2:** Update platform-specific documentation [TODO]
+### Category 4: Verification
+- **Task 4.1:** Run ALL Mobile tests (must be 100% green) [TODO]
+- **Task 4.2:** Run ALL Web tests (must be 100% green) [TODO]
+- **Task 4.3:** Run ALL Desktop tests (must be 100% green) [TODO]
+- **Task 4.4:** Verify zero linting warnings [TODO]
+- **Task 4.5:** Create platform test scripts for manual testing [TODO]
+- **Task 4.6:** Update documentation [TODO]
 
 ## Test Scripts for Manual Verification
 

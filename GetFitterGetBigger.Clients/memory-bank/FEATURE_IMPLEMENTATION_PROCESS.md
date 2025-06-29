@@ -40,6 +40,11 @@ This document outlines the standard process for implementing new features across
   6. **MANDATORY: Ensure code follows platform standards (linting, formatting)**
   7. Only after build succeeds and ALL tests pass, commit the changes
   8. Update the task status in the tracking file from `[ReadyToDevelop]` to `[Implemented: <git-commit-hash>]`
+- **For EVERY checkpoint:**
+  1. Run platform-specific builds - BUILD MUST BE SUCCESSFUL (no errors)
+  2. Run platform-specific tests - ALL TESTS MUST BE GREEN (no failures)
+  3. Verify no excessive warnings exist
+  4. **MANDATORY: Update checkpoint status from 🛑 to ✅ when all conditions pass**
 - Follow platform-specific patterns and conventions
 - The task tracking file serves as both documentation and audit trail
 - **CRITICAL RULES**:
@@ -72,10 +77,12 @@ This document outlines the standard process for implementing new features across
 
 ### 6. Feature Finalization
 After user explicitly states feature acceptance:
-1. Merge feature branch into master
-2. Create descriptive commit message summarizing all changes
-3. Push to remote repository
-4. Delete the feature branch locally
+1. Create descriptive commit message summarizing all changes
+2. Push feature branch to remote repository
+3. Merge feature branch into master locally
+4. **MANDATORY: Push the merged master branch to remote repository**
+5. Delete the feature branch locally
+6. Optionally delete the feature branch on remote
 
 ### 7. Special Conditions
 - **Platform-Specific Implementation**: Some features may not apply to all platforms

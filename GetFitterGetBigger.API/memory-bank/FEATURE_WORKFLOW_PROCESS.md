@@ -164,3 +164,22 @@ To get current feature status:
 - COMPLETED features older than 2 PIs can be archived
 - SKIPPED features older than 4 PIs can be archived
 - Archive location: `memory-bank/archive/features/[year]/`
+
+## Common Mistakes to Avoid
+
+1. **Starting work without proper folder structure**: Always create the feature folder in the appropriate state directory BEFORE starting implementation
+2. **Creating task files in wrong location**: Task files must be inside the feature folder, not directly in `memory-bank/features/`
+3. **Not moving folders between states**: Remember to move the entire feature folder as it progresses through states
+4. **Missing feature-description.md**: Both description and tasks files are required from the start
+
+### Example of Incorrect Start:
+```
+❌ memory-bank/features/my-feature-tasks.md  # Wrong location
+```
+
+### Example of Correct Start:
+```
+✅ memory-bank/features/1-READY_TO_DEVELOP/my-feature/
+   ├── feature-description.md
+   └── feature-tasks.md
+```

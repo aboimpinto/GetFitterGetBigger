@@ -1,13 +1,13 @@
 # Bug Implementation Process
 
-This document outlines the standard process for fixing bugs in the GetFitterGetBigger API project.
+This document outlines the standard process for fixing bugs in the GetFitterGetBigger API.
 
 ## Process Overview
 
 ### 1. Bug Analysis & Planning
 - User provides bug description with error details and reproduction steps
 - Create a comprehensive bug fix plan with granular tasks
-- **MANDATORY**: Create a bug tracking file at `memory-bank/bugs/BUG-[ID]-[descriptive-name].md`
+- **MANDATORY**: Create a bug tracking file at `memory-bank/bugs/BUG-[ID]-[descriptive-name]/bug-tasks.md`
 - Each task must be marked with status `[TODO]`
 - Tasks should be specific, actionable, and independently verifiable
 - The bug file must include:
@@ -64,7 +64,8 @@ This document outlines the standard process for fixing bugs in the GetFitterGetB
 ### 6. Manual Testing Phase
 - Provide user with:
   - The test script from the bug file
-  - Expected outcomes for each test
+  - Expected API behaviors
+  - Steps to verify the fix
   - Any additional verification steps
 - Wait for user acceptance before proceeding
 
@@ -102,7 +103,7 @@ When a bug cannot be fixed due to dependencies:
 ## Bug Branch: `bugfix/[descriptive-name]`
 
 ## Bug Description
-[Detailed description of the bug including full error message]
+[Detailed description of the bug including error message or console output]
 
 ## Root Cause
 [Analysis of why the bug occurs]
@@ -122,18 +123,22 @@ When a bug cannot be fixed due to dependencies:
 - **Task 2.1:** [Specific fix action] [TODO]
 - **Task 2.2:** [Additional fix if needed] [TODO]
 
-### Category 3: Verification Tests
-- **Task 3.1:** Run all related unit tests [TODO]
-- **Task 3.2:** Create test script for manual testing [TODO]
+### Category 3: Boy Scout Cleanup (MANDATORY)
+- **Task 3.1:** Fix any failing tests found during work [TODO]
+- **Task 3.2:** Fix all build warnings in touched files [TODO]
+- **Task 3.3:** Clean up code smells in modified files [TODO]
 
-### Category 4: Documentation
-- **Task 4.1:** Document the fix and prevention [TODO]
+### Category 4: Verification
+- **Task 4.1:** Run ALL tests (must be 100% green) [TODO]
+- **Task 4.2:** Verify zero build warnings [TODO]
+- **Task 4.3:** Create manual test script [TODO]
+- **Task 4.4:** Update documentation [TODO]
 
 ## Test Script for Manual Verification
 ```bash
 #!/bin/bash
 # Test script for [bug description]
-[Actual test commands]
+[Actual test commands or manual steps]
 ```
 
 ## Prevention Measures
@@ -161,6 +166,26 @@ Before marking bug as `[FIXED]`:
 - [ ] Manual test script executes successfully
 - [ ] No regression in existing functionality
 - [ ] Documentation updated with fix details
+
+## API-Specific Considerations
+
+### API Bug Fixes
+- Test across different HTTP methods
+- Verify proper status codes
+- Check error response formats
+- Test with different authentication roles
+
+### Integration Testing
+- Use test fixtures appropriately
+- Mock external dependencies
+- Test error handling paths
+- Verify database transactions
+
+### Performance
+- Ensure fix doesn't introduce performance issues
+- Check for N+1 query problems
+- Verify no memory leaks
+- Test with realistic data volumes
 
 ## Example Bug Status Updates
 

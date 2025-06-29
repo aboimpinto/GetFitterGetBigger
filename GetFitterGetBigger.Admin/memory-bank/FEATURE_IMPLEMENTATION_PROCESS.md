@@ -34,9 +34,9 @@ This document outlines the standard process for implementing new features in the
   7. Only after build succeeds and ALL tests pass, commit the changes
   8. Update the task status in the tracking file from `[ReadyToDevelop]` to `[Implemented: <git-commit-hash>]`
 - **For EVERY checkpoint:**
-  1. Run `dotnet build` - BUILD MUST BE SUCCESSFUL (no errors)
-  2. Run `dotnet test` - ALL TESTS MUST BE GREEN (no failures)
-  3. Verify no compiler warnings exist
+  1. Run `npm run build` - BUILD MUST BE SUCCESSFUL (no errors)
+  2. Run `npm test` - ALL TESTS MUST BE GREEN (no failures)
+  3. Verify no build warnings exist
   4. **MANDATORY: Update checkpoint status from 🛑 to ✅ when all conditions pass**
 - Follow existing React patterns and conventions
 - Use existing UI components and design system

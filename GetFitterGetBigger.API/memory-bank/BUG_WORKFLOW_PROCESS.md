@@ -7,6 +7,7 @@ This document defines the complete lifecycle of bugs, from discovery to resoluti
 ```
 memory-bank/bugs/
 ├── 1-OPEN/          # Newly reported bugs awaiting triage
+├── 1-TODO/          # Triaged bugs ready to work on
 ├── 2-IN_PROGRESS/   # Bugs currently being fixed
 ├── 3-FIXED/         # Bugs that have been resolved
 ├── 4-BLOCKED/       # Bugs blocked by dependencies
@@ -15,9 +16,9 @@ memory-bank/bugs/
 
 ## Bug Lifecycle
 
-### 1. Bug Discovery (OPEN)
+### 1. Bug Discovery (OPEN/TODO)
 When a bug is reported:
-1. Create a folder: `memory-bank/bugs/1-OPEN/BUG-[ID]-[short-description]/`
+1. Create a folder: `memory-bank/bugs/1-OPEN/BUG-[ID]-[short-description]/` or `1-TODO/` if already triaged
 2. Create required files in the folder:
    - `bug-report.md` - Detailed bug description and reproduction steps
    - `bug-tasks.md` - Fix implementation task list
@@ -25,7 +26,7 @@ When a bug is reported:
 
 **Folder Structure Example:**
 ```
-1-OPEN/
+1-TODO/
 └── BUG-001-exercise-isactive-column/
     ├── bug-report.md
     ├── bug-tasks.md
@@ -35,7 +36,7 @@ When a bug is reported:
 
 ### 2. Bug Fix Development (IN_PROGRESS)
 When fix development begins:
-1. Move entire bug folder from `1-OPEN` to `2-IN_PROGRESS`
+1. Move entire bug folder from `1-OPEN` or `1-TODO` to `2-IN_PROGRESS`
 2. Create bugfix branch as specified in tasks file
 3. Write failing tests FIRST (test-first approach)
 4. Implement fix to make tests pass
@@ -173,7 +174,7 @@ If bug won't be addressed:
 ## Bug Prioritization
 
 Bugs in `1-OPEN` should be triaged based on:
-- **Critical**: System down, data loss, security issue
+- **Critical**: Application unusable, data loss, security issue
 - **High**: Major feature broken, no workaround
 - **Medium**: Feature impaired, workaround exists
 - **Low**: Minor issue, cosmetic, edge case

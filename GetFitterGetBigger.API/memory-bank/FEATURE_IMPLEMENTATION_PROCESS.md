@@ -1,19 +1,19 @@
-# Feature Implementation Process
+# Feature Implementation Process - API Project
 
-This document outlines the standard process for implementing new features in the GetFitterGetBigger API project.
+This document outlines the standard process for implementing new features in the GetFitterGetBigger API.
 
 ## Process Overview
 
 ### 1. Feature Analysis & Planning
-- User provides detailed feature requirements and specifications
+- User provides detailed feature requirements and API specifications
 - Create a comprehensive implementation plan with granular tasks
 - **MANDATORY**: Create a task tracking file at `memory-bank/features/[feature-name]-tasks.md`
 - Each task must be marked with status `[ReadyToDevelop]`
 - Tasks should be specific, actionable, and independently verifiable
 - The task file must include:
   - Feature branch name at the top
-  - Tasks organized by logical categories (Database, Repository, Service, Controller, etc.)
-  - **Unit test tasks immediately following each implementation task** (e.g., Task 2.1: Create Repository, Task 2.2: Write tests for Repository)
+  - Tasks organized by logical categories (Models, Repository, Service, Controller, etc.)
+  - **Unit test tasks immediately following each implementation task**
   - Clear description of what each task entails
   - Space for commit hashes to be added as tasks are completed
 
@@ -27,49 +27,56 @@ This document outlines the standard process for implementing new features in the
 - **For EVERY task implementation:**
   1. Write the implementation code
   2. **MANDATORY: Write unit tests for the implemented code in the immediately following task**
-  3. **MANDATORY: Keep build warnings to a minimum** (address nullable reference warnings, unused variables, etc.)
+  3. **MANDATORY: Keep build warnings to a minimum** (address nullable warnings, unused variables, etc.)
   4. **MANDATORY: Run `dotnet build` to ensure compilation succeeds with minimal warnings**
   5. **MANDATORY: Run `dotnet test` to ensure ALL tests pass (100% green)**
   6. Only after build succeeds and ALL tests pass, commit the changes
   7. Update the task status in the tracking file from `[ReadyToDevelop]` to `[Implemented: <git-commit-hash>]`
-- Follow existing code conventions and patterns
+- **For EVERY checkpoint:**
+  1. Run `dotnet build` - BUILD MUST BE SUCCESSFUL (no errors)
+  2. Run `dotnet test` - ALL TESTS MUST BE GREEN (no failures)
+  3. Verify no build warnings exist
+  4. **MANDATORY: Update checkpoint status from 🛑 to ✅ when all conditions pass**
+- Follow existing API patterns and conventions
+- Use dependency injection and repository patterns
 - The task tracking file serves as both documentation and audit trail
 - **CRITICAL RULES**:
-  - **NO broken builds between tasks** - each task must leave the codebase in a working state
+  - **NO broken builds between tasks** - each task must leave the API in a working state
   - **ALL tests must be green** after implementing a task (no skipped, no failures)
   - **Tests are written immediately after implementation** (not deferred to a later phase)
-  - **BOY SCOUT RULE**: Always leave the code better than you found it
-    - Fix ANY failing tests, even if unrelated to your changes
-    - Fix ALL build warnings encountered during your work
-    - This is YOUR responsibility - no exceptions
   - Never move to the next task if:
     - The build is failing
-    - Build warnings are excessive
+    - Compiler warnings are excessive
     - Tests are not written
-    - Any test is failing (including pre-existing failures)
+    - Any test is failing
 
 ### 4. Test Development & Handling
-- Write unit tests for all new functionality
-- If a test requires more than 2-3 interactions to implement:
+- Write unit tests for all business logic
+- Write integration tests for API endpoints
+- Write repository tests for data access
+- If a test requires complex mocking or setup:
   - Create a `[BUG: <detailed-reason>]` entry
-  - Mark test with Skip/Ignore attribute
+  - Mark test with skip attribute
   - Include bug reference in test comment
-  - Example: `[Skip("BUG-001: Complex mocking scenario requires additional framework setup")]`
+  - Example: `[Fact(Skip = "BUG-001: Complex database mocking requires additional setup")]`
 
 ### 5. Manual Testing Phase (DEFAULT BEHAVIOR)
 - After all implementation tasks are complete
 - Provide user with:
   - Detailed step-by-step testing instructions
-  - Expected outcomes for each test scenario
-  - Sample data or commands if applicable
+  - Test scenarios covering all endpoints
+  - Expected API responses
+  - Sample data for testing
 - Wait for user acceptance before proceeding
 
 ### 6. Feature Finalization
 After user explicitly states feature acceptance:
-1. Merge feature branch into master
-2. Create descriptive commit message summarizing all changes
-3. Push to remote repository
-4. Delete the feature branch locally
+1. Create descriptive commit message summarizing all changes
+2. Push feature branch to remote repository
+3. Merge feature branch into master locally
+4. **MANDATORY: Push the merged master branch to remote repository**
+5. Delete the feature branch locally
+6. Optionally delete the feature branch on remote
 
 ### 7. Special Conditions
 - **Skipping Manual Tests**: Only when user explicitly requests during initial feature specification
@@ -103,24 +110,6 @@ When a feature cannot be completed due to external dependencies:
    - Remove the `[INCOMPLETE]` status from the feature
    - Add note about bug resolution
 
-## Boy Scout Rule - Leave Code Better Than You Found It
-
-**THIS IS MANDATORY - NO EXCEPTIONS**
-
-When working on any task, you MUST:
-1. **Fix ALL failing tests** - even if they were failing before you started
-2. **Fix ALL build warnings** - reduce technical debt with every commit
-3. **Clean up any code smells** you encounter in files you're working with
-4. **Update outdated comments** or documentation you come across
-5. **Remove commented-out code** that's no longer needed
-
-This applies to:
-- Feature implementation
-- Bug fixes
-- Documentation updates
-- ANY code changes
-
-**Remember**: If you encounter a failing test or warning, it becomes YOUR responsibility to fix it before completing your task.
 
 ## Implementation Verification Checklist
 
@@ -129,13 +118,11 @@ Before marking any task as `[Implemented]`, verify:
 - [ ] Implementation code is complete
 - [ ] Unit tests are written for the new code (in the immediately following task)
 - [ ] `dotnet build` runs without errors
-- [ ] Build warnings are minimal (no nullable reference warnings, unused variables, etc.)
+- [ ] Build warnings are minimal (no nullable warnings, unused variables, etc.)
 - [ ] `dotnet test` runs with ALL tests passing (100% green, no skipped tests)
-- [ ] ALL pre-existing test failures have been fixed
-- [ ] ALL build warnings in touched files have been addressed
-- [ ] Code follows project conventions
+- [ ] Code follows .NET best practices and project conventions
 - [ ] No commented-out code or debug statements
-- [ ] The codebase is in a working state (no broken functionality)
+- [ ] The API is in a working state (no broken endpoints)
 
 ## Task Tracking File Template
 
@@ -144,39 +131,72 @@ Before marking any task as `[Implemented]`, verify:
 
 ## Feature Branch: `feature/[branch-name]`
 
-### Category 1 (e.g., Database & Entity Setup)
-- **Task 1.1:** Create [Entity] with required fields `[ReadyToDevelop]`
-- **Task 1.2:** Create [Entity] unit tests `[ReadyToDevelop]`
-- **Task 1.3:** Update DbContext configuration `[ReadyToDevelop]`
+### Category 1 (e.g., Models & DTOs)
+- **Task 1.1:** Create [Name] entity model `[ReadyToDevelop]`
+- **Task 1.2:** Create [Name]Dto and request/response models `[ReadyToDevelop]`
+- **Task 1.3:** Write unit tests for DTOs `[ReadyToDevelop]`
 
 ### Category 2 (e.g., Repository Layer)
 - **Task 2.1:** Create I[Name]Repository interface `[ReadyToDevelop]`
-- **Task 2.2:** Implement [Name]Repository with:
-  - Method1 implementation
-  - Method2 implementation `[ReadyToDevelop]`
-- **Task 2.3:** Write unit tests for [Name]Repository including:
-  - Test scenario 1
-  - Test scenario 2 `[ReadyToDevelop]`
+- **Task 2.2:** Implement [Name]Repository `[ReadyToDevelop]`
+- **Task 2.3:** Write repository unit tests `[ReadyToDevelop]`
 
 ### Category 3 (e.g., Service Layer)
 - **Task 3.1:** Create I[Name]Service interface `[ReadyToDevelop]`
 - **Task 3.2:** Implement [Name]Service with business logic `[ReadyToDevelop]`
-- **Task 3.3:** Write unit tests for [Name]Service `[ReadyToDevelop]`
+- **Task 3.3:** Write service unit tests `[ReadyToDevelop]`
 
 ### Category 4 (e.g., Controller)
-- **Task 4.1:** Create [Name]Controller with endpoints `[ReadyToDevelop]`
-- **Task 4.2:** Write integration tests for [Name]Controller `[ReadyToDevelop]`
-- **Task 4.3:** Add authorization and Swagger docs `[ReadyToDevelop]`
+- **Task 4.1:** Create [Name]Controller with CRUD endpoints `[ReadyToDevelop]`
+- **Task 4.2:** Add authorization and validation `[ReadyToDevelop]`
+- **Task 4.3:** Write controller unit tests `[ReadyToDevelop]`
+- **Task 4.4:** Write integration tests for endpoints `[ReadyToDevelop]`
+
+### Category 5 (e.g., Database & Migrations)
+- **Task 5.1:** Add entity configuration `[ReadyToDevelop]`
+- **Task 5.2:** Create database migration `[ReadyToDevelop]`
+- **Task 5.3:** Add seed data if needed `[ReadyToDevelop]`
 
 ## Notes
 - Each implementation task must be immediately followed by its test task
 - No task is complete until build passes and all tests are green
 - Keep build warnings to minimum
+- Follow existing API patterns and conventions
 ```
 
 ## Example Task Status Updates
 
 - `[ReadyToDevelop]` - Initial status for all tasks
 - `[Implemented: a1b2c3d4]` - Task completed with commit hash
-- `[BUG: Complex mocking scenario]` - Known issue to be addressed later
+- `[BUG: Complex mock setup for external service]` - Known issue to be addressed later
 - `[Skipped]` - Task determined unnecessary during implementation
+
+## API-Specific Considerations
+
+### API Standards
+- Follow RESTful conventions
+- Use proper HTTP status codes
+- Implement consistent error responses
+- Document endpoints with XML comments for Swagger
+
+### Dependency Injection
+- Register all services in Program.cs
+- Use appropriate service lifetimes
+- Follow interface-based design
+
+### Database Patterns
+- Use Entity Framework Core with code-first approach
+- Implement repository pattern
+- Use unit of work pattern where appropriate
+
+### Security
+- Implement proper authentication/authorization
+- Validate all inputs
+- Sanitize data before persistence
+- Never expose internal implementation details in errors
+
+### Performance
+- Implement caching where appropriate
+- Use async/await for all I/O operations
+- Implement pagination for list endpoints
+- Consider using projection for large entities
