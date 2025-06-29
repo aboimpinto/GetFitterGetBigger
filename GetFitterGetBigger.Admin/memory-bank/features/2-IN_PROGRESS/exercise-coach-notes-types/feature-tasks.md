@@ -28,23 +28,23 @@
 **CHECKPOINT 2:** ✅ `dotnet build` MUST PASS | `dotnet test` ALL GREEN | NO WARNINGS
 
 ### Phase 3: Exercise Type Selector Component
-- **Task 3.1:** Create ExerciseTypeSelector component with checkbox interface `[ReadyToDevelop]`
-- **Task 3.2:** Implement Rest type exclusivity validation (cannot combine with other types) `[ReadyToDevelop]`
-- **Task 3.3:** Enforce at least one type must be selected rule `[ReadyToDevelop]`
-- **Task 3.4:** Prevent selection of all four types `[ReadyToDevelop]`
-- **Task 3.5:** Write component tests for ExerciseTypeSelector `[ReadyToDevelop]`
-- **Task 3.6:** Test all validation rules and edge cases `[ReadyToDevelop]`
+- **Task 3.1:** Create ExerciseTypeSelector component with checkbox interface `[Implemented: 6cbc0e66]`
+- **Task 3.2:** Implement Rest type exclusivity validation (cannot combine with other types) `[Implemented: 6cbc0e66]`
+- **Task 3.3:** Enforce at least one type must be selected rule `[Implemented: 6cbc0e66]`
+- **Task 3.4:** Prevent selection of all four types `[Implemented: 6cbc0e66]`
+- **Task 3.5:** Write component tests for ExerciseTypeSelector `[Implemented: 6cbc0e66]`
+- **Task 3.6:** Test all validation rules and edge cases `[Implemented: 6cbc0e66]`
 
-**CHECKPOINT 3:** 🛑 `dotnet build` MUST PASS | `dotnet test` ALL GREEN | NO WARNINGS
+**CHECKPOINT 3:** ✅ `dotnet build` MUST PASS | `dotnet test` ALL GREEN | NO WARNINGS
 
 ### Phase 4: Form Integration
-- **Task 4.1:** Update ExerciseForm to replace instructions field with CoachNotesEditor `[ReadyToDevelop]`
-- **Task 4.2:** Integrate ExerciseTypeSelector into ExerciseForm `[ReadyToDevelop]`
-- **Task 4.3:** Update form validation to include new business rules `[ReadyToDevelop]`
-- **Task 4.4:** Update form submission to send coachNotes and exerciseTypes in correct format `[ReadyToDevelop]`
+- **Task 4.1:** Update ExerciseForm to replace instructions field with CoachNotesEditor `[Implemented: ExerciseForm line 70]`
+- **Task 4.2:** Integrate ExerciseTypeSelector into ExerciseForm `[Implemented: ExerciseForm line 81-84]`
+- **Task 4.3:** Update form validation to include new business rules `[Implemented: ValidateForm method]`
+- **Task 4.4:** Update form submission to send coachNotes and exerciseTypes in correct format `[Implemented: HandleSubmit method]`
 - **Task 4.5:** Write tests for updated ExerciseForm `[ReadyToDevelop]`
 
-**CHECKPOINT 4:** 🛑 `dotnet build` MUST PASS | `dotnet test` ALL GREEN | NO WARNINGS
+**CHECKPOINT 4:** ✅ `dotnet build` MUST PASS | `dotnet test` ALL GREEN | NO WARNINGS
 
 ### Phase 5: List & Detail Updates
 - **Task 5.1:** Update ExerciseList to display exercise types as colored badges `[ReadyToDevelop]`

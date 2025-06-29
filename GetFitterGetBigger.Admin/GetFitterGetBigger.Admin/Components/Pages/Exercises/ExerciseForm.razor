@@ -3,6 +3,7 @@
 @using GetFitterGetBigger.Admin.Models.Dtos
 @using GetFitterGetBigger.Admin.Services
 @using GetFitterGetBigger.Admin.Builders
+@using GetFitterGetBigger.Admin.Components.Shared
 @using Microsoft.AspNetCore.Authorization
 @attribute [Authorize]
 @rendermode InteractiveServer
@@ -66,18 +67,25 @@
                         </div>
 
                         <div>
-                            <label for="instructions" class="block text-sm font-medium text-gray-700 mb-1">
-                                Instructions @if (string.IsNullOrWhiteSpace(model.Instructions)) { <span class="text-red-500">*</span> }
-                            </label>
-                            <textarea id="instructions" @bind="model.Instructions" @bind:event="oninput" required maxlength="5000" rows="6"
-                                      class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 @(GetFieldClass("Instructions"))"
-                                      placeholder="1. Starting position...&#10;2. Movement...&#10;3. Return to start..."></textarea>
-                            @if (validationErrors.ContainsKey("Instructions"))
+                            <CoachNotesEditor Notes="model.CoachNotes" NotesChanged="@((notes) => model.CoachNotes = notes)" />
+                            @if (validationErrors.ContainsKey("CoachNotes"))
                             {
-                                <p class="mt-1 text-sm text-red-600">@validationErrors["Instructions"]</p>
+                                <p class="mt-1 text-sm text-red-600">@validationErrors["CoachNotes"]</p>
                             }
                         </div>
                     </div>
+                </div>
+
+                <!-- Exercise Types -->
+                <div class="border-b pb-6">
+                    <ExerciseTypeSelector 
+                        AvailableTypes="StateService.ExerciseTypes.ToList()" 
+                        SelectedTypeIds="model.ExerciseTypeIds" 
+                        SelectedTypeIdsChanged="@((typeIds) => model.ExerciseTypeIds = typeIds)" />
+                    @if (validationErrors.ContainsKey("ExerciseTypes"))
+                    {
+                        <p class="mt-1 text-sm text-red-600">@validationErrors["ExerciseTypes"]</p>
+                    }
                 </div>
 
                 <!-- Exercise Configuration -->
@@ -315,6 +323,7 @@
         .WithDescription(string.Empty)
         .WithInstructions(string.Empty)
         .WithDifficultyId(string.Empty)
+        .WithCoachNotes(("", 0)) // Start with one empty coach note
         .Build();
     private List<MuscleGroupRoleAssignmentDto> muscleGroupAssignments = new();
     private HashSet<string> selectedEquipmentIds = new();
@@ -493,10 +502,15 @@
         else if (model.Description.Length > 1000)
             validationErrors["Description"] = "Description must be 1000 characters or less";
 
-        if (string.IsNullOrWhiteSpace(model.Instructions))
-            validationErrors["Instructions"] = "Instructions are required";
-        else if (model.Instructions.Length > 5000)
-            validationErrors["Instructions"] = "Instructions must be 5000 characters or less";
+        // Validate coach notes
+        if (!model.CoachNotes.Any() || model.CoachNotes.All(cn => string.IsNullOrWhiteSpace(cn.Text)))
+            validationErrors["CoachNotes"] = "At least one coach note is required";
+        else if (model.CoachNotes.Any(cn => cn.Text.Length > 1000))
+            validationErrors["CoachNotes"] = "Each coach note must be 1000 characters or less";
+
+        // Validate exercise types
+        if (!model.ExerciseTypeIds.Any())
+            validationErrors["ExerciseTypes"] = "At least one exercise type must be selected";
 
         if (string.IsNullOrWhiteSpace(model.DifficultyId))
             validationErrors["Difficulty"] = "Difficulty level is required";

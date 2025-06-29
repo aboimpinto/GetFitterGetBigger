@@ -36,11 +36,31 @@ namespace GetFitterGetBigger.Admin.Services
         public Task<IEnumerable<ReferenceDataDto>> GetBodyPartsAsync() => GetDataAsync("/api/ReferenceTables/BodyParts", "BodyParts");
         public Task<IEnumerable<ReferenceDataDto>> GetDifficultyLevelsAsync() => GetDataAsync("/api/ReferenceTables/DifficultyLevels", "DifficultyLevels");
         public Task<IEnumerable<ReferenceDataDto>> GetEquipmentAsync() => GetDataAsync("/api/ReferenceTables/Equipment", "Equipment");
-        public Task<IEnumerable<ReferenceDataDto>> GetExerciseTypesAsync() => GetDataAsync("/api/ReferenceTables/ExerciseTypes", "ExerciseTypes");
         public Task<IEnumerable<ReferenceDataDto>> GetKineticChainTypesAsync() => GetDataAsync("/api/ReferenceTables/KineticChainTypes", "KineticChainTypes");
         public Task<IEnumerable<ReferenceDataDto>> GetMetricTypesAsync() => GetDataAsync("/api/ReferenceTables/MetricTypes", "MetricTypes");
         public Task<IEnumerable<ReferenceDataDto>> GetMovementPatternsAsync() => GetDataAsync("/api/ReferenceTables/MovementPatterns", "MovementPatterns");
         public Task<IEnumerable<ReferenceDataDto>> GetMuscleGroupsAsync() => GetDataAsync("/api/ReferenceTables/MuscleGroups", "MuscleGroups");
         public Task<IEnumerable<ReferenceDataDto>> GetMuscleRolesAsync() => GetDataAsync("/api/ReferenceTables/MuscleRoles", "MuscleRoles");
+        
+        public async Task<IEnumerable<ExerciseTypeDto>> GetExerciseTypesAsync()
+        {
+            if (!_cache.TryGetValue("ExerciseTypes", out IEnumerable<ExerciseTypeDto>? cachedData))
+            {
+                var requestUrl = $"{_apiBaseUrl}/api/ReferenceTables/ExerciseTypes";
+                var referenceData = await _httpClient.GetFromJsonAsync<IEnumerable<ReferenceDataDto>>(requestUrl);
+                if (referenceData != null)
+                {
+                    // Convert ReferenceDataDto to ExerciseTypeDto
+                    cachedData = referenceData.Select(rd => new ExerciseTypeDto
+                    {
+                        Id = rd.Id,
+                        Value = rd.Value,
+                        Description = rd.Description
+                    });
+                    _cache.Set("ExerciseTypes", cachedData, TimeSpan.FromHours(24));
+                }
+            }
+            return cachedData ?? Enumerable.Empty<ExerciseTypeDto>();
+        }
     }
 }

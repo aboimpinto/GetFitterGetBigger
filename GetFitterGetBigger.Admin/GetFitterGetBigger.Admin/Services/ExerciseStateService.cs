@@ -27,6 +27,7 @@ namespace GetFitterGetBigger.Admin.Services
         public IEnumerable<ReferenceDataDto> Equipment { get; private set; } = Enumerable.Empty<ReferenceDataDto>();
         public IEnumerable<ReferenceDataDto> BodyParts { get; private set; } = Enumerable.Empty<ReferenceDataDto>();
         public IEnumerable<ReferenceDataDto> MovementPatterns { get; private set; } = Enumerable.Empty<ReferenceDataDto>();
+        public IEnumerable<ExerciseTypeDto> ExerciseTypes { get; private set; } = Enumerable.Empty<ExerciseTypeDto>();
         public bool IsLoadingReferenceData { get; private set; }
         
         // Page state management
@@ -197,24 +198,31 @@ namespace GetFitterGetBigger.Admin.Services
                 NotifyStateChanged();
                 
                 // Load all reference data in parallel
-                var tasks = new[]
-                {
-                    _referenceDataService.GetDifficultyLevelsAsync(),
-                    _referenceDataService.GetMuscleGroupsAsync(),
-                    _referenceDataService.GetMuscleRolesAsync(),
-                    _referenceDataService.GetEquipmentAsync(),
-                    _referenceDataService.GetBodyPartsAsync(),
-                    _referenceDataService.GetMovementPatternsAsync()
-                };
+                var difficultyTask = _referenceDataService.GetDifficultyLevelsAsync();
+                var muscleGroupsTask = _referenceDataService.GetMuscleGroupsAsync();
+                var muscleRolesTask = _referenceDataService.GetMuscleRolesAsync();
+                var equipmentTask = _referenceDataService.GetEquipmentAsync();
+                var bodyPartsTask = _referenceDataService.GetBodyPartsAsync();
+                var movementPatternsTask = _referenceDataService.GetMovementPatternsAsync();
+                var exerciseTypesTask = _referenceDataService.GetExerciseTypesAsync();
                 
-                var results = await Task.WhenAll(tasks);
+                await Task.WhenAll(
+                    difficultyTask,
+                    muscleGroupsTask,
+                    muscleRolesTask,
+                    equipmentTask,
+                    bodyPartsTask,
+                    movementPatternsTask,
+                    exerciseTypesTask
+                );
                 
-                DifficultyLevels = results[0];
-                MuscleGroups = results[1];
-                MuscleRoles = results[2];
-                Equipment = results[3];
-                BodyParts = results[4];
-                MovementPatterns = results[5];
+                DifficultyLevels = await difficultyTask;
+                MuscleGroups = await muscleGroupsTask;
+                MuscleRoles = await muscleRolesTask;
+                Equipment = await equipmentTask;
+                BodyParts = await bodyPartsTask;
+                MovementPatterns = await movementPatternsTask;
+                ExerciseTypes = await exerciseTypesTask;
             }
             catch (Exception ex)
             {

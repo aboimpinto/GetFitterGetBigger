@@ -7,7 +7,7 @@ namespace GetFitterGetBigger.Admin.Services
         Task<IEnumerable<ReferenceDataDto>> GetBodyPartsAsync();
         Task<IEnumerable<ReferenceDataDto>> GetDifficultyLevelsAsync();
         Task<IEnumerable<ReferenceDataDto>> GetEquipmentAsync();
-        Task<IEnumerable<ReferenceDataDto>> GetExerciseTypesAsync();
+        Task<IEnumerable<ExerciseTypeDto>> GetExerciseTypesAsync();
         Task<IEnumerable<ReferenceDataDto>> GetKineticChainTypesAsync();
         Task<IEnumerable<ReferenceDataDto>> GetMetricTypesAsync();
         Task<IEnumerable<ReferenceDataDto>> GetMovementPatternsAsync();
