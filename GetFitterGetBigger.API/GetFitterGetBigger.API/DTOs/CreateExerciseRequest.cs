@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using GetFitterGetBigger.API.Attributes;
 
 namespace GetFitterGetBigger.API.DTOs;
 
@@ -61,7 +60,6 @@ public class CreateExerciseRequest
     /// The muscle groups targeted by the exercise with their roles
     /// Optional for REST exercises, required for all other exercise types
     /// </summary>
-    [ConditionalRequiredMuscleGroups]
     public List<MuscleGroupWithRoleRequest> MuscleGroups { get; set; } = new();
     
     /// <summary>

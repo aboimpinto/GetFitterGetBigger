@@ -68,13 +68,13 @@
    - Test null/empty exercise types scenarios
    - **Files**: `Tests/Unit/Attributes/ConditionalRequiredMuscleGroupsAttributeTests.cs`
 
-8. **[ReadyToDevelop] Unit Tests - DTO Validation**
+8. **[Implemented: 313ffa74] Unit Tests - DTO Validation**
    - Test `CreateExerciseRequest` allows REST exercises without muscle groups
    - Test `CreateExerciseRequest` requires muscle groups for non-REST exercises
    - Test `UpdateExerciseRequest` allows REST exercises without muscle groups
    - Test `UpdateExerciseRequest` requires muscle groups for non-REST exercises
    - Test edge cases with mixed exercise types
-   - **Files**: `Tests/Unit/DTOs/CreateExerciseRequestTests.cs`, `Tests/Unit/DTOs/UpdateExerciseRequestTests.cs`
+   - **Files**: `Tests/Unit/DTOs/CreateExerciseRequestValidationTests.cs`, `Tests/Unit/DTOs/UpdateExerciseRequestValidationTests.cs`
 
 9. **[ReadyToDevelop] Unit Tests - Service Layer**
    - Test `ExerciseService.CreateAsync()` with REST exercise and no muscle groups
