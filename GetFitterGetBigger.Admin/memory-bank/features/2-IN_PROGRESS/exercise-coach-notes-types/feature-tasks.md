@@ -16,16 +16,16 @@
 - **Task 1.3:** Write unit tests for updated ExerciseService with new data structures `[Implemented: 862beec9]`
 - **Task 1.4:** Update ReferenceDataService to fetch exercise types if needed `[Implemented: 6d54bc51]`
 
-**CHECKPOINT 1:** 🛑 `dotnet build` MUST PASS | `dotnet test` ALL GREEN | NO WARNINGS
+**CHECKPOINT 1:** ✅ `dotnet build` MUST PASS | `dotnet test` ALL GREEN | NO WARNINGS
 
 ### Phase 2: Coach Notes Editor Component
-- **Task 2.1:** Create CoachNotesEditor component with add/remove/reorder functionality `[ReadyToDevelop]`
-- **Task 2.2:** Implement drag-and-drop or move up/down buttons for reordering `[ReadyToDevelop]`
-- **Task 2.3:** Add character limit (1000) validation for each note `[ReadyToDevelop]`
-- **Task 2.4:** Write component tests for CoachNotesEditor `[ReadyToDevelop]`
-- **Task 2.5:** Test reordering functionality and validation `[ReadyToDevelop]`
+- **Task 2.1:** Create CoachNotesEditor component with add/remove/reorder functionality `[Implemented: 511fe2a6]`
+- **Task 2.2:** Implement drag-and-drop or move up/down buttons for reordering `[Implemented: 511fe2a6]`
+- **Task 2.3:** Add character limit (1000) validation for each note `[Implemented: 511fe2a6]`
+- **Task 2.4:** Write component tests for CoachNotesEditor `[Implemented: 511fe2a6]`
+- **Task 2.5:** Test reordering functionality and validation `[Implemented: 511fe2a6]`
 
-**CHECKPOINT 2:** 🛑 `dotnet build` MUST PASS | `dotnet test` ALL GREEN | NO WARNINGS
+**CHECKPOINT 2:** ✅ `dotnet build` MUST PASS | `dotnet test` ALL GREEN | NO WARNINGS
 
 ### Phase 3: Exercise Type Selector Component
 - **Task 3.1:** Create ExerciseTypeSelector component with checkbox interface `[ReadyToDevelop]`

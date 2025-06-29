@@ -1,0 +1,160 @@
+@using GetFitterGetBigger.Admin.Models.Dtos
+
+<div class="space-y-4">
+    <div class="flex justify-between items-center">
+        <h3 class="text-lg font-medium text-gray-900">Exercise Types</h3>
+        @if (!string.IsNullOrEmpty(ValidationMessage))
+        {
+            <span class="text-sm text-red-600">@ValidationMessage</span>
+        }
+    </div>
+
+    <div class="space-y-2">
+        @foreach (var type in AvailableTypes)
+        {
+            <label class="flex items-start space-x-3 p-3 border rounded-lg hover:bg-gray-50 cursor-pointer @(IsTypeDisabled(type) ? "opacity-50 cursor-not-allowed" : "")">
+                <input type="checkbox"
+                       checked="@IsTypeSelected(type)"
+                       disabled="@IsTypeDisabled(type)"
+                       @onchange="@(e => OnTypeChanged(type, e.Value is bool isChecked && isChecked))"
+                       class="mt-1 h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500" />
+                <div class="flex-1">
+                    <div class="font-medium text-gray-900">@type.Value</div>
+                    <div class="text-sm text-gray-500">@type.Description</div>
+                    @if (type.Value == "Rest" && SelectedTypeIds.Any() && !SelectedTypeIds.Contains(type.Id))
+                    {
+                        <div class="text-xs text-yellow-600 mt-1">
+                            <i class="fas fa-info-circle mr-1"></i>
+                            Rest type cannot be combined with other types
+                        </div>
+                    }
+                    @if (type.Value != "Rest" && IsRestSelected())
+                    {
+                        <div class="text-xs text-yellow-600 mt-1">
+                            <i class="fas fa-info-circle mr-1"></i>
+                            Cannot be selected when Rest is selected
+                        </div>
+                    }
+                </div>
+            </label>
+        }
+    </div>
+
+    <div class="text-sm text-gray-600">
+        <i class="fas fa-info-circle mr-1"></i>
+        Rules: At least one type must be selected. Rest type is exclusive. Cannot select all four types.
+    </div>
+</div>
+
+@code {
+    [Parameter] public List<ExerciseTypeDto> AvailableTypes { get; set; } = new();
+    [Parameter] public List<string> SelectedTypeIds { get; set; } = new();
+    [Parameter] public EventCallback<List<string>> SelectedTypeIdsChanged { get; set; }
+
+    private string ValidationMessage = string.Empty;
+
+    private bool IsTypeSelected(ExerciseTypeDto type)
+    {
+        return SelectedTypeIds.Contains(type.Id);
+    }
+
+    private bool IsTypeDisabled(ExerciseTypeDto type)
+    {
+        // When Rest is NOT selected but other types are, disable Rest
+        if (type.Value == "Rest" && !IsTypeSelected(type) && SelectedTypeIds.Any())
+        {
+            return true;
+        }
+
+        // Other types are disabled when Rest is selected
+        if (type.Value != "Rest" && IsRestSelected() && !IsTypeSelected(type))
+        {
+            return true;
+        }
+
+        // Prevent selecting all four types
+        if (!IsTypeSelected(type) && SelectedTypeIds.Count == 3)
+        {
+            return true;
+        }
+
+        // Cannot uncheck if it's the only one selected
+        if (IsTypeSelected(type) && SelectedTypeIds.Count == 1)
+        {
+            return true;
+        }
+
+        return false;
+    }
+
+    private bool IsRestSelected()
+    {
+        return SelectedTypeIds.Any(id => 
+            AvailableTypes.FirstOrDefault(t => t.Id == id)?.Value == "Rest");
+    }
+
+    private async Task OnTypeChanged(ExerciseTypeDto type, bool isChecked)
+    {
+        ValidationMessage = string.Empty;
+
+        if (isChecked)
+        {
+            // Add the type
+            if (!SelectedTypeIds.Contains(type.Id))
+            {
+                SelectedTypeIds.Add(type.Id);
+            }
+        }
+        else
+        {
+            // Remove the type
+            SelectedTypeIds.Remove(type.Id);
+        }
+
+        // Validate the selection
+        if (!ValidateSelection())
+        {
+            // Revert the change if validation fails
+            if (isChecked)
+            {
+                SelectedTypeIds.Remove(type.Id);
+            }
+            else
+            {
+                SelectedTypeIds.Add(type.Id);
+            }
+        }
+
+        await SelectedTypeIdsChanged.InvokeAsync(SelectedTypeIds);
+        StateHasChanged();
+    }
+
+    private bool ValidateSelection()
+    {
+        // Rule 1: At least one type must be selected
+        if (!SelectedTypeIds.Any())
+        {
+            ValidationMessage = "At least one exercise type must be selected";
+            return false;
+        }
+
+        // Rule 2: Cannot select all four types
+        if (SelectedTypeIds.Count == 4)
+        {
+            ValidationMessage = "Cannot select all four exercise types";
+            return false;
+        }
+
+        // Rule 3: Rest is exclusive
+        var hasRest = SelectedTypeIds.Any(id => 
+            AvailableTypes.FirstOrDefault(t => t.Id == id)?.Value == "Rest");
+        
+        if (hasRest && SelectedTypeIds.Count > 1)
+        {
+            ValidationMessage = "Rest type cannot be combined with other types";
+            return false;
+        }
+
+        return true;
+    }
+}
