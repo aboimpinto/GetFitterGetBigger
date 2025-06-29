@@ -37,7 +37,7 @@
    - Ensure other validations remain intact
    - **Files**: `DTOs/UpdateExerciseRequest.cs`
 
-4. **[ReadyToDevelop] Update Service Layer Validation**
+4. **[Implemented: ff8b9f21] Update Service Layer Validation**
    - Modify `ExerciseService.CreateAsync()` to allow empty muscle groups for REST exercises
    - Modify `ExerciseService.UpdateAsync()` to allow empty muscle groups for REST exercises
    - Ensure REST exclusivity rule still applies (REST can only be REST)
@@ -125,12 +125,18 @@
 - `Services/Implementations/ExerciseService.cs` - Update validation logic
 
 ### Validation Strategy
-The solution will use a custom validation attribute that:
-1. Checks if "Rest" is present in the exercise types (case-insensitive)
-2. If REST is present, muscle groups become optional
-3. If REST is not present, muscle groups remain required
-4. Leverages existing REST exclusivity rule (REST cannot be combined with other types)
-5. Provides clear validation error messages
+**Updated Implementation (ff8b9f21)**: The validation was moved to the service layer because:
+- DTO-level validation cannot access the database to check actual exercise type values
+- The service layer already has the proper infrastructure to look up exercise types
+- This ensures accurate REST detection by checking the ExerciseType.Value property
+
+The solution now uses service-layer validation that:
+1. Fetches actual ExerciseType entities from the database
+2. Checks if any type has Value == "rest" (case-insensitive)
+3. If REST is present, muscle groups become optional
+4. If REST is not present, muscle groups remain required
+5. Leverages existing REST exclusivity rule (REST cannot be combined with other types)
+6. Provides clear validation error messages
 
 ### Testing Priority
 1. **Critical**: REST exercises can be created without muscle groups
