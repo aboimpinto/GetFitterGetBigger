@@ -1,6 +1,7 @@
 @page "/exercises"
 @using GetFitterGetBigger.Admin.Models.Dtos
 @using GetFitterGetBigger.Admin.Services
+@using GetFitterGetBigger.Admin.Builders
 @using Microsoft.AspNetCore.Authorization
 @attribute [Authorize]
 @rendermode InteractiveServer
@@ -29,7 +30,7 @@
         </div>
     }
 
-    <div class="mb-4 grid grid-cols-1 md:grid-cols-4 gap-4">
+    <div class="mb-4 grid grid-cols-1 md:grid-cols-5 gap-4">
         <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Search by name</label>
             <input type="text" @bind="filterName" @bind:event="oninput" @onkeyup="@(async (e) => { if (e.Key == "Enter") await ApplyFilter(); })"
@@ -56,6 +57,14 @@
                 }
             </select>
         </div>
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
+            <select @bind="filterIsActive" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <option value="">All Statuses</option>
+                <option value="true">Active</option>
+                <option value="false">Inactive</option>
+            </select>
+        </div>
         <div class="flex items-end">
             <button @onclick="ApplyFilter" class="bg-gray-600 hover:bg-gray-700 text-white font-medium py-2 px-4 rounded-md transition-colors mr-2">
                 Apply Filter
@@ -78,6 +87,7 @@
                     <tr>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Types</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Difficulty</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Primary Muscles</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Equipment</th>
@@ -105,6 +115,14 @@
                                         Inactive
                                     </span>
                                 }
+                            </td>
+                            <td class="px-6 py-4 text-sm">
+                                <div class="flex flex-wrap gap-1">
+                                    @foreach (var type in exercise.ExerciseTypes.OrderBy(t => t.Value))
+                                    {
+                                        <ExerciseTypeBadge TypeName="@type.Value" />
+                                    }
+                                </div>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">@exercise.Difficulty?.Value</td>
                             <td class="px-6 py-4 text-sm text-gray-500">
@@ -174,6 +192,7 @@
     private string filterName = "";
     private string filterDifficulty = "";
     private string filterMuscleGroup = "";
+    private string filterIsActive = "";
 
     protected override async Task OnInitializedAsync()
     {
@@ -188,6 +207,7 @@
             filterName = StateService.CurrentFilter.Name ?? "";
             filterDifficulty = StateService.CurrentFilter.DifficultyId ?? "";
             filterMuscleGroup = StateService.CurrentFilter.MuscleGroupIds?.FirstOrDefault() ?? "";
+            filterIsActive = StateService.CurrentFilter.IsActive?.ToString().ToLower() ?? "";
         }
         else
         {
@@ -198,14 +218,14 @@
 
     private async Task ApplyFilter()
     {
-        var filter = new ExerciseFilterDto
-        {
-            Name = string.IsNullOrWhiteSpace(filterName) ? null : filterName,
-            DifficultyId = string.IsNullOrWhiteSpace(filterDifficulty) ? null : filterDifficulty,
-            MuscleGroupIds = string.IsNullOrWhiteSpace(filterMuscleGroup) ? null : new List<string> { filterMuscleGroup },
-            Page = 1,
-            PageSize = StateService.CurrentFilter.PageSize
-        };
+        var filter = ExerciseFilterBuilder.FromQueryParameters(
+            name: string.IsNullOrWhiteSpace(filterName) ? null : filterName,
+            difficultyId: string.IsNullOrWhiteSpace(filterDifficulty) ? null : filterDifficulty,
+            muscleGroupIds: string.IsNullOrWhiteSpace(filterMuscleGroup) ? null : new List<string> { filterMuscleGroup },
+            page: 1,
+            pageSize: StateService.CurrentFilter.PageSize,
+            isActive: string.IsNullOrWhiteSpace(filterIsActive) ? null : bool.Parse(filterIsActive)
+        );
 
         await StateService.LoadExercisesAsync(filter);
     }
@@ -215,7 +235,13 @@
         filterName = "";
         filterDifficulty = "";
         filterMuscleGroup = "";
-        await StateService.LoadExercisesAsync(new ExerciseFilterDto { Page = 1, PageSize = StateService.CurrentFilter.PageSize });
+        filterIsActive = "";
+        
+        var filter = new ExerciseFilterBuilder()
+            .WithPagination(1, StateService.CurrentFilter.PageSize)
+            .Build();
+            
+        await StateService.LoadExercisesAsync(filter);
     }
 
     private async Task GoToPage(int page)
@@ -265,6 +291,7 @@
         StateService.StoreReturnPage();
         Navigation.NavigateTo($"/exercises/{id}/edit");
     }
+
 
     public void Dispose()
     {

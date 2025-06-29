@@ -1,4 +1,5 @@
 using GetFitterGetBigger.Admin.Models.Dtos;
+using GetFitterGetBigger.Admin.Builders;
 
 namespace GetFitterGetBigger.Admin.Services
 {
@@ -11,7 +12,7 @@ namespace GetFitterGetBigger.Admin.Services
         
         // List state
         public ExercisePagedResultDto? CurrentPage { get; private set; }
-        public ExerciseFilterDto CurrentFilter { get; private set; } = new();
+        public ExerciseFilterDto CurrentFilter { get; private set; } = ExerciseFilterBuilder.Default();
         public bool IsLoading { get; private set; }
         public string? ErrorMessage { get; private set; }
         
@@ -26,6 +27,7 @@ namespace GetFitterGetBigger.Admin.Services
         public IEnumerable<ReferenceDataDto> Equipment { get; private set; } = Enumerable.Empty<ReferenceDataDto>();
         public IEnumerable<ReferenceDataDto> BodyParts { get; private set; } = Enumerable.Empty<ReferenceDataDto>();
         public IEnumerable<ReferenceDataDto> MovementPatterns { get; private set; } = Enumerable.Empty<ReferenceDataDto>();
+        public IEnumerable<ExerciseTypeDto> ExerciseTypes { get; private set; } = Enumerable.Empty<ExerciseTypeDto>();
         public bool IsLoadingReferenceData { get; private set; }
         
         // Page state management
@@ -196,24 +198,31 @@ namespace GetFitterGetBigger.Admin.Services
                 NotifyStateChanged();
                 
                 // Load all reference data in parallel
-                var tasks = new[]
-                {
-                    _referenceDataService.GetDifficultyLevelsAsync(),
-                    _referenceDataService.GetMuscleGroupsAsync(),
-                    _referenceDataService.GetMuscleRolesAsync(),
-                    _referenceDataService.GetEquipmentAsync(),
-                    _referenceDataService.GetBodyPartsAsync(),
-                    _referenceDataService.GetMovementPatternsAsync()
-                };
+                var difficultyTask = _referenceDataService.GetDifficultyLevelsAsync();
+                var muscleGroupsTask = _referenceDataService.GetMuscleGroupsAsync();
+                var muscleRolesTask = _referenceDataService.GetMuscleRolesAsync();
+                var equipmentTask = _referenceDataService.GetEquipmentAsync();
+                var bodyPartsTask = _referenceDataService.GetBodyPartsAsync();
+                var movementPatternsTask = _referenceDataService.GetMovementPatternsAsync();
+                var exerciseTypesTask = _referenceDataService.GetExerciseTypesAsync();
                 
-                var results = await Task.WhenAll(tasks);
+                await Task.WhenAll(
+                    difficultyTask,
+                    muscleGroupsTask,
+                    muscleRolesTask,
+                    equipmentTask,
+                    bodyPartsTask,
+                    movementPatternsTask,
+                    exerciseTypesTask
+                );
                 
-                DifficultyLevels = results[0];
-                MuscleGroups = results[1];
-                MuscleRoles = results[2];
-                Equipment = results[3];
-                BodyParts = results[4];
-                MovementPatterns = results[5];
+                DifficultyLevels = await difficultyTask;
+                MuscleGroups = await muscleGroupsTask;
+                MuscleRoles = await muscleRolesTask;
+                Equipment = await equipmentTask;
+                BodyParts = await bodyPartsTask;
+                MovementPatterns = await movementPatternsTask;
+                ExerciseTypes = await exerciseTypesTask;
             }
             catch (Exception ex)
             {
@@ -231,16 +240,7 @@ namespace GetFitterGetBigger.Admin.Services
         public void StoreReturnPage()
         {
             // Create a deep copy of the current filter to preserve state
-            _storedFilter = new ExerciseFilterDto
-            {
-                Name = CurrentFilter.Name,
-                DifficultyId = CurrentFilter.DifficultyId,
-                MuscleGroupIds = CurrentFilter.MuscleGroupIds?.ToList(),
-                EquipmentIds = CurrentFilter.EquipmentIds?.ToList(),
-                IsActive = CurrentFilter.IsActive,
-                Page = CurrentFilter.Page,
-                PageSize = CurrentFilter.PageSize
-            };
+            _storedFilter = ExerciseFilterBuilder.CopyFrom(CurrentFilter);
         }
         
         public void ClearStoredPage()

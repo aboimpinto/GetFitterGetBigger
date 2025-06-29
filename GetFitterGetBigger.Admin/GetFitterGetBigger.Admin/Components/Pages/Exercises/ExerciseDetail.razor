@@ -77,10 +77,33 @@
                 <p class="text-gray-700">@exercise.Description</p>
             </div>
 
-            <!-- Instructions -->
+            <!-- Coach Notes -->
             <div class="bg-gray-50 p-4 rounded-lg">
-                <h3 class="text-lg font-medium text-gray-900 mb-2">Instructions</h3>
-                <div class="text-gray-700 whitespace-pre-wrap">@exercise.Instructions</div>
+                <h3 class="text-lg font-medium text-gray-900 mb-2">Coach Notes</h3>
+                @if (exercise.CoachNotes.Any())
+                {
+                    <ol class="list-decimal list-inside space-y-2">
+                        @foreach (var note in exercise.CoachNotes.OrderBy(cn => cn.Order))
+                        {
+                            <li class="text-gray-700">@note.Text</li>
+                        }
+                    </ol>
+                }
+                else
+                {
+                    <p class="text-gray-500 italic">No coach notes available.</p>
+                }
+            </div>
+
+            <!-- Exercise Types -->
+            <div>
+                <h3 class="text-lg font-medium text-gray-900 mb-2">Exercise Types</h3>
+                <div class="flex flex-wrap gap-2">
+                    @foreach (var type in exercise.ExerciseTypes.OrderBy(t => t.Value))
+                    {
+                        <ExerciseTypeBadge TypeName="@type.Value" />
+                    }
+                </div>
             </div>
 
             <!-- Muscle Groups -->
@@ -277,6 +300,7 @@
             showDeleteConfirmation = false;
         }
     }
+
 
     public void Dispose()
     {

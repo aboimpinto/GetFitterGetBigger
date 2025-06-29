@@ -116,6 +116,48 @@ public class ExerciseService : IExerciseService
             throw new InvalidOperationException("Exercise type 'Rest' cannot be combined with other exercise types.");
         }
     }
+
+    private async Task<bool> IsRestExerciseAsync(IEnumerable<string> exerciseTypeIds, IReadOnlyUnitOfWork<FitnessDbContext> unitOfWork)
+    {
+        if (exerciseTypeIds == null || !exerciseTypeIds.Any())
+            return false;
+
+        var exerciseTypeRepo = unitOfWork.GetRepository<IExerciseTypeRepository>();
+        
+        foreach (var typeIdStr in exerciseTypeIds)
+        {
+            if (ExerciseTypeId.TryParse(typeIdStr, out var typeId))
+            {
+                var exerciseType = await exerciseTypeRepo.GetByIdAsync(typeId);
+                if (exerciseType != null && exerciseType.Value.ToLowerInvariant() == "rest")
+                {
+                    return true;
+                }
+            }
+        }
+        
+        return false;
+    }
+
+    private async Task ValidateMuscleGroupsAsync(CreateExerciseRequest request, IReadOnlyUnitOfWork<FitnessDbContext> unitOfWork)
+    {
+        var isRestExercise = await IsRestExerciseAsync(request.ExerciseTypeIds, unitOfWork);
+        
+        if (!isRestExercise && (request.MuscleGroups == null || !request.MuscleGroups.Any()))
+        {
+            throw new InvalidOperationException("At least one muscle group must be specified for non-REST exercises.");
+        }
+    }
+
+    private async Task ValidateMuscleGroupsAsync(UpdateExerciseRequest request, IReadOnlyUnitOfWork<FitnessDbContext> unitOfWork)
+    {
+        var isRestExercise = await IsRestExerciseAsync(request.ExerciseTypeIds, unitOfWork);
+        
+        if (!isRestExercise && (request.MuscleGroups == null || !request.MuscleGroups.Any()))
+        {
+            throw new InvalidOperationException("At least one muscle group must be specified for non-REST exercises.");
+        }
+    }
     
     /// <summary>
     /// Creates a new exercise
@@ -138,10 +180,11 @@ public class ExerciseService : IExerciseService
             throw new ArgumentException($"Invalid difficulty ID: {request.DifficultyId}");
         }
         
-        // Validate exercise types
+        // Validate exercise types and muscle groups
         using (var validationUow = _unitOfWorkProvider.CreateReadOnly())
         {
             await ValidateRestExclusivityAsync(request.ExerciseTypeIds, validationUow);
+            await ValidateMuscleGroupsAsync(request, validationUow);
         }
         
         // Create the exercise entity
@@ -237,10 +280,11 @@ public class ExerciseService : IExerciseService
             throw new ArgumentException($"Invalid difficulty ID: {request.DifficultyId}");
         }
         
-        // Validate exercise types
+        // Validate exercise types and muscle groups
         using (var validationUow = _unitOfWorkProvider.CreateReadOnly())
         {
             await ValidateRestExclusivityAsync(request.ExerciseTypeIds, validationUow);
+            await ValidateMuscleGroupsAsync(request, validationUow);
         }
         
         // Create updated exercise entity, using existing values for nullable fields if not provided

@@ -58,9 +58,8 @@ public class CreateExerciseRequest
     
     /// <summary>
     /// The muscle groups targeted by the exercise with their roles
+    /// Optional for REST exercises, required for all other exercise types
     /// </summary>
-    [Required(ErrorMessage = "At least one muscle group must be specified")]
-    [MinLength(1, ErrorMessage = "At least one muscle group must be specified")]
     public List<MuscleGroupWithRoleRequest> MuscleGroups { get; set; } = new();
     
     /// <summary>

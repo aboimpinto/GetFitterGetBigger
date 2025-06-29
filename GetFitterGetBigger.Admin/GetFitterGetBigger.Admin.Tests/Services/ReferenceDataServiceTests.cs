@@ -235,5 +235,57 @@ namespace GetFitterGetBigger.Admin.Tests.Services
             result.Should().HaveCount(1);
             // Service should still work even without configured URL (uses HttpClient's base address)
         }
+
+        [Fact]
+        public async Task GetExerciseTypesAsync_WhenNotCached_FetchesFromApiAndCaches()
+        {
+            // Arrange
+            var expectedData = new List<ReferenceDataDto>
+            {
+                new() { Id = "type-warmup", Value = "Warmup", Description = "Warmup exercises" },
+                new() { Id = "type-workout", Value = "Workout", Description = "Main workout exercises" },
+                new() { Id = "type-cooldown", Value = "Cooldown", Description = "Cooldown exercises" },
+                new() { Id = "type-rest", Value = "Rest", Description = "Rest periods" }
+            };
+            _httpMessageHandler.SetupResponse(HttpStatusCode.OK, expectedData);
+
+            // Act
+            var result = await _referenceDataService.GetExerciseTypesAsync();
+
+            // Assert
+            result.Should().HaveCount(4);
+            result.Should().Contain(x => x.Value == "Warmup");
+            result.Should().Contain(x => x.Value == "Workout");
+            result.Should().Contain(x => x.Value == "Cooldown");
+            result.Should().Contain(x => x.Value == "Rest");
+            
+            _httpMessageHandler.VerifyRequest(request =>
+                request.RequestUri!.AbsolutePath == "/api/ReferenceTables/ExerciseTypes");
+        }
+
+        [Fact]
+        public async Task GetExerciseTypesAsync_WhenCached_ReturnsCachedData()
+        {
+            // Arrange
+            var expectedData = new List<ReferenceDataDto>
+            {
+                new() { Id = "type-warmup", Value = "Warmup", Description = "Warmup exercises" },
+                new() { Id = "type-workout", Value = "Workout", Description = "Main workout exercises" }
+            };
+            _httpMessageHandler.SetupResponse(HttpStatusCode.OK, expectedData);
+
+            // Act - First call should hit the API
+            var firstResult = await _referenceDataService.GetExerciseTypesAsync();
+            
+            // Act - Second call should use cache
+            var secondResult = await _referenceDataService.GetExerciseTypesAsync();
+
+            // Assert
+            firstResult.Should().HaveCount(2);
+            secondResult.Should().BeEquivalentTo(firstResult);
+            
+            // Verify API was only called once
+            _httpMessageHandler.Requests.Should().HaveCount(1);
+        }
     }
 }

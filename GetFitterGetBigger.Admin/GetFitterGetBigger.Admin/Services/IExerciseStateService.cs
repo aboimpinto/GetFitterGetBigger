@@ -23,6 +23,7 @@ namespace GetFitterGetBigger.Admin.Services
         IEnumerable<ReferenceDataDto> Equipment { get; }
         IEnumerable<ReferenceDataDto> BodyParts { get; }
         IEnumerable<ReferenceDataDto> MovementPatterns { get; }
+        IEnumerable<ExerciseTypeDto> ExerciseTypes { get; }
         bool IsLoadingReferenceData { get; }
         
         // Methods
