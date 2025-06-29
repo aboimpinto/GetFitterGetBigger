@@ -74,11 +74,11 @@
 **CHECKPOINT 7:** ✅ `dotnet build` MUST PASS | `dotnet test` ALL GREEN | NO WARNINGS
 
 ### Phase 8: Manual Testing Fixes
-- **Task 8.1:** Fix ExerciseTypeSelector - Allow unselecting Rest type `[Implemented]`
-- **Task 8.2:** Enhance CoachNotesEditor - Add delete functionality for individual notes `[ReadyToDevelop]`
-- **Task 8.3:** Enhance CoachNotesEditor - Implement automatic order resequencing after deletion `[ReadyToDevelop]`
-- **Task 8.4:** Enhance CoachNotesEditor - Handle empty state when all notes deleted `[ReadyToDevelop]`
-- **Task 8.5:** Add up/down reordering buttons to CoachNotesEditor `[ReadyToDevelop]`
+- **Task 8.1:** Fix ExerciseTypeSelector - Allow unselecting Rest type `[Implemented: 1f0d3a75]`
+- **Task 8.2:** Enhance CoachNotesEditor - Add delete functionality for individual notes `[Fixed: CSS + FontAwesome issue]`
+- **Task 8.3:** Enhance CoachNotesEditor - Implement automatic order resequencing after deletion `[Fixed: CSS + FontAwesome issue]`
+- **Task 8.4:** Enhance CoachNotesEditor - Handle empty state when all notes deleted `[Fixed: CSS + FontAwesome issue]`
+- **Task 8.5:** Add up/down reordering buttons to CoachNotesEditor `[Fixed: CSS + FontAwesome issue]`
 - **Task 8.6:** Implement Rest type business rules - Auto-disable/clear dependent fields `[ReadyToDevelop]`
 - **Task 8.7:** Implement Rest type business rules - Auto-select Beginner difficulty (read-only) `[ReadyToDevelop]`
 - **Task 8.8:** Make muscle groups optional for exercise creation `[ReadyToDevelop]`
@@ -119,6 +119,7 @@
 - All API fields now use camelCase naming convention
 - Each implementation task must be immediately followed by its test task
 - Follow existing Blazor patterns and Tailwind CSS styling
+- **FontAwesome Issue**: FontAwesome CSS library is not loaded in the project, causing icons (fas fa-*) to not display. Components use Unicode symbols instead (→, ↑, ↓, ✕, 📝) for better visibility and compatibility.
 ## Boy Scout Rule (Applied during Phase 1):
 - Implement Builder pattern for all Exercise DTOs `[Implemented: 223fc351]`
 - Enhance builders with bulk operations support `[Implemented: 50457414]`
