@@ -11,18 +11,18 @@
   - ❌ Fix all issues before moving forward (unless user explicitly asks to skip)
 
 ### Phase 1: Remove Coach Notes Required Validation
-- **Task 1.1:** Remove coach notes required validation from ExerciseForm.razor `[Implemented]`
-- **Task 1.2:** Update form submission logic to filter out empty coach notes `[Implemented]`
-- **Task 1.3:** Update CoachNotesEditor to handle completely empty state gracefully `[Already implemented]`
-- **Task 1.4:** Test form submission with zero coach notes `[Implemented]`
+- **Task 1.1:** Remove coach notes required validation from ExerciseForm.razor `[Completed - commit e6031296]`
+- **Task 1.2:** Update form submission logic to filter out empty coach notes `[Completed - commit e6031296]`
+- **Task 1.3:** Update CoachNotesEditor to handle completely empty state gracefully `[Already completed]`
+- **Task 1.4:** Test form submission with zero coach notes `[Completed - commit e6031296]`
 
 **CHECKPOINT 1:** ✅ `dotnet build` MUST PASS | `dotnet test` ALL GREEN | NO WARNINGS
 
 ### Phase 2: Update Tests and Validation
-- **Task 2.1:** Update ExerciseForm validation tests to reflect optional coach notes `[Completed]`
-- **Task 2.2:** Add test cases for exercises with zero coach notes `[Completed]`
-- **Task 2.3:** Update existing tests that assume coach notes are required `[Completed]`
-- **Task 2.4:** Verify API integration works with empty coach notes array `[Completed]`
+- **Task 2.1:** Update ExerciseForm validation tests to reflect optional coach notes `[Completed - commit c5226112]`
+- **Task 2.2:** Add test cases for exercises with zero coach notes `[Completed - commit c5226112]`
+- **Task 2.3:** Update existing tests that assume coach notes are required `[Completed - commit c5226112]`
+- **Task 2.4:** Verify API integration works with empty coach notes array `[Completed - commit c5226112]`
 
 **CHECKPOINT 2:** ✅ `dotnet build` MUST PASS | `dotnet test` ALL GREEN | NO WARNINGS
 
