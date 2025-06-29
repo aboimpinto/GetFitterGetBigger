@@ -10,6 +10,8 @@ using AngleSharp.Dom;
 using Microsoft.AspNetCore.Components.Authorization;
 using System.Security.Claims;
 using Bunit.TestDoubles;
+using System.Threading.Tasks;
+using System.Linq;
 
 namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
 {
@@ -198,6 +200,136 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
             submittedModel!.CoachNotes.Should().BeEmpty();
             submittedModel.MuscleGroups.Should().BeEmpty();
         }
+
+        [Fact]
+        public void ExerciseForm_RestType_AutoSelectsBeginnerDifficulty()
+        {
+            // Task 8.10: Test that selecting Rest type auto-selects Beginner difficulty
+            
+            // Arrange
+            _mockStateService.SetupReferenceData();
+            var component = RenderComponent<ExerciseForm>();
+            
+            // Act - Select Rest exercise type
+            var restCheckbox = component.FindAll("input[type='checkbox']")[3]; // Rest is 4th type
+            restCheckbox.Change(true);
+            
+            // Assert - Difficulty should be auto-set to Beginner
+            var difficultySelect = component.Find("#difficulty");
+            difficultySelect.GetAttribute("value").Should().Be("1"); // Beginner ID
+            
+            // Difficulty should be disabled for Rest exercises
+            difficultySelect.HasAttribute("disabled").Should().BeTrue();
+        }
+
+        [Fact]
+        public void ExerciseForm_RestType_ClearsIncompatibleFields()
+        {
+            // Task 8.10: Test that selecting Rest type clears equipment, body parts, movement patterns, and muscle groups
+            
+            // Arrange
+            _mockStateService.SetupReferenceData();
+            var component = RenderComponent<ExerciseForm>();
+            
+            // Act - Select Rest exercise type directly (simpler test)
+            var restCheckbox = component.FindAll("input[type='checkbox']")[3];
+            restCheckbox.Change(true);
+            
+            // Assert - All incompatible fields should be cleared/disabled
+            // Check that muscle group section has opacity-50 class
+            var muscleGroupSections = component.FindAll("div.border-b.pb-6");
+            var muscleGroupSection = muscleGroupSections.FirstOrDefault(section => 
+                section.TextContent.Contains("Muscle Groups"));
+            muscleGroupSection.Should().NotBeNull();
+            muscleGroupSection!.GetAttribute("class").Should().Contain("opacity-50");
+            
+            // Equipment checkboxes should be disabled
+            var equipmentSection = muscleGroupSections.FirstOrDefault(section => 
+                section.TextContent.Contains("Equipment"));
+            equipmentSection.Should().NotBeNull();
+            var equipmentCheckboxesAfter = equipmentSection!.QuerySelectorAll("input[type='checkbox']");
+            equipmentCheckboxesAfter.All(cb => cb.HasAttribute("disabled")).Should().BeTrue();
+            
+            // Body parts checkboxes should be disabled
+            var bodyPartsSection = muscleGroupSections.FirstOrDefault(section => 
+                section.TextContent.Contains("Body Parts"));
+            bodyPartsSection.Should().NotBeNull();
+            var bodyPartsCheckboxes = bodyPartsSection!.QuerySelectorAll("input[type='checkbox']");
+            bodyPartsCheckboxes.All(cb => cb.HasAttribute("disabled")).Should().BeTrue();
+            
+            // Movement patterns checkboxes should be disabled
+            var movementSection = muscleGroupSections.FirstOrDefault(section => 
+                section.TextContent.Contains("Movement Patterns"));
+            movementSection.Should().NotBeNull();
+            var movementCheckboxes = movementSection!.QuerySelectorAll("input[type='checkbox']");
+            movementCheckboxes.All(cb => cb.HasAttribute("disabled")).Should().BeTrue();
+        }
+
+        [Fact]
+        public void ExerciseForm_RestType_DoesNotRequireMuscleGroups()
+        {
+            // Task 8.10: Test that Rest exercises can be created without muscle groups
+            
+            // Arrange
+            _mockStateService.SetupReferenceData();
+            var createdExercise = (ExerciseCreateDto?)null;
+            _mockStateService.OnCreateExercise = (model) => {
+                createdExercise = model;
+                return Task.CompletedTask;
+            };
+            
+            var component = RenderComponent<ExerciseForm>();
+            
+            // Act - Fill form with Rest exercise
+            component.Find("#name").Input("Rest Period");
+            component.Find("#description").Input("Recovery time");
+            
+            // Select Rest type
+            component.FindAll("input[type='checkbox']")[3].Change(true);
+            
+            // Submit without adding muscle groups
+            component.Find("form").Submit();
+            
+            // Wait for form submission
+            component.WaitForState(() => createdExercise != null, TimeSpan.FromSeconds(1));
+            
+            // Assert
+            createdExercise.Should().NotBeNull();
+            createdExercise!.MuscleGroups.Should().BeEmpty();
+            createdExercise.ExerciseTypeIds.Should().ContainSingle();
+            createdExercise.DifficultyId.Should().Be("1"); // Auto-set to Beginner
+        }
+
+        [Fact]
+        public void ExerciseForm_NonRestType_RequiresMuscleGroups()
+        {
+            // Task 8.10: Test that non-Rest exercises still require muscle groups
+            
+            // Arrange
+            _mockStateService.SetupReferenceData();
+            var component = RenderComponent<ExerciseForm>();
+            
+            // Act - Fill form without muscle groups
+            component.Find("#name").Input("Push-up");
+            component.Find("#description").Input("Upper body exercise");
+            component.Find("#difficulty").Change("2");
+            
+            // Select Workout type (not Rest)
+            component.FindAll("input[type='checkbox']")[1].Change(true);
+            
+            // Try to submit without muscle groups
+            component.Find("form").Submit();
+            
+            // Assert - Should show validation error
+            component.WaitForState(() => component.FindAll(".text-red-600").Any(e => 
+                e.TextContent.Contains("muscle group")), TimeSpan.FromSeconds(1));
+            
+            var errorMessage = component.FindAll(".text-red-600")
+                .FirstOrDefault(e => e.TextContent.Contains("muscle group"));
+            errorMessage.Should().NotBeNull();
+            errorMessage!.TextContent.Should().Contain("At least one muscle group with a role is required");
+        }
+
 
         private class MockExerciseStateService : IExerciseStateService
         {

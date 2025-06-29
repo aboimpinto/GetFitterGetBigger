@@ -42,7 +42,7 @@
 - **Task 4.2:** Integrate ExerciseTypeSelector into ExerciseForm `[Implemented: 49f67695]`
 - **Task 4.3:** Update form validation to include new business rules `[Implemented: 49f67695]`
 - **Task 4.4:** Update form submission to send coachNotes and exerciseTypes in correct format `[Implemented: 49f67695]`
-- **Task 4.5:** Write tests for updated ExerciseForm `[ReadyToDevelop]`
+- **Task 4.5:** Write tests for updated ExerciseForm `[Implemented: Multiple commits - ExerciseFormTests.cs]`
 
 **CHECKPOINT 4:** ✅ `dotnet build` MUST PASS | `dotnet test` ALL GREEN | NO WARNINGS
 
@@ -79,11 +79,11 @@
 - **Task 8.3:** Enhance CoachNotesEditor - Implement automatic order resequencing after deletion `[Fixed: CSS + FontAwesome issue: d9a8f721]`
 - **Task 8.4:** Enhance CoachNotesEditor - Handle empty state when all notes deleted `[Fixed: CSS + FontAwesome issue: d9a8f721]`
 - **Task 8.5:** Add up/down reordering buttons to CoachNotesEditor `[Fixed: CSS + FontAwesome issue: d9a8f721]`
-- **Task 8.6:** Implement Rest type business rules - Auto-disable/clear dependent fields `[ReadyToDevelop]`
-- **Task 8.7:** Implement Rest type business rules - Auto-select Beginner difficulty (read-only) `[ReadyToDevelop]`
-- **Task 8.8:** Make muscle groups optional for exercise creation `[ReadyToDevelop]`
-- **Task 8.9:** Update form validation to handle Rest type special cases `[ReadyToDevelop]`
-- **Task 8.10:** Write tests for all manual testing fixes `[ReadyToDevelop]`
+- **Task 8.6:** Implement Rest type business rules - Auto-disable/clear dependent fields `[Implemented: ccb43b67]`
+- **Task 8.7:** Implement Rest type business rules - Auto-select Beginner difficulty (read-only) `[Implemented: ccb43b67]`
+- **Task 8.8:** Make muscle groups optional for exercise creation `[Already implemented - validation skips for Rest]`
+- **Task 8.9:** Update form validation to handle Rest type special cases `[Implemented: ccb43b67]`
+- **Task 8.10:** Write tests for all manual testing fixes `[Implemented: 604e42ef]`
 
 **CHECKPOINT 8:** 🛑 `dotnet build` MUST PASS | `dotnet test` ALL GREEN | NO WARNINGS
 
