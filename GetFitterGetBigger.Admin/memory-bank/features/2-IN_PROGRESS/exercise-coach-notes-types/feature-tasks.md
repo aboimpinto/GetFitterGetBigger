@@ -75,10 +75,10 @@
 
 ### Phase 8: Manual Testing Fixes
 - **Task 8.1:** Fix ExerciseTypeSelector - Allow unselecting Rest type `[Implemented: 1f0d3a75]`
-- **Task 8.2:** Enhance CoachNotesEditor - Add delete functionality for individual notes `[Fixed: CSS + FontAwesome issue]`
-- **Task 8.3:** Enhance CoachNotesEditor - Implement automatic order resequencing after deletion `[Fixed: CSS + FontAwesome issue]`
-- **Task 8.4:** Enhance CoachNotesEditor - Handle empty state when all notes deleted `[Fixed: CSS + FontAwesome issue]`
-- **Task 8.5:** Add up/down reordering buttons to CoachNotesEditor `[Fixed: CSS + FontAwesome issue]`
+- **Task 8.2:** Enhance CoachNotesEditor - Add delete functionality for individual notes `[Fixed: CSS + FontAwesome issue: d9a8f721]`
+- **Task 8.3:** Enhance CoachNotesEditor - Implement automatic order resequencing after deletion `[Fixed: CSS + FontAwesome issue: d9a8f721]`
+- **Task 8.4:** Enhance CoachNotesEditor - Handle empty state when all notes deleted `[Fixed: CSS + FontAwesome issue: d9a8f721]`
+- **Task 8.5:** Add up/down reordering buttons to CoachNotesEditor `[Fixed: CSS + FontAwesome issue: d9a8f721]`
 - **Task 8.6:** Implement Rest type business rules - Auto-disable/clear dependent fields `[ReadyToDevelop]`
 - **Task 8.7:** Implement Rest type business rules - Auto-select Beginner difficulty (read-only) `[ReadyToDevelop]`
 - **Task 8.8:** Make muscle groups optional for exercise creation `[ReadyToDevelop]`

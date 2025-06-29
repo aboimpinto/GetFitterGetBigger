@@ -81,7 +81,7 @@
                     <ExerciseTypeSelector 
                         AvailableTypes="StateService.ExerciseTypes.ToList()" 
                         SelectedTypeIds="model.ExerciseTypeIds" 
-                        SelectedTypeIdsChanged="@((typeIds) => model.ExerciseTypeIds = typeIds)" />
+                        SelectedTypeIdsChanged="@OnExerciseTypesChanged" />
                     @if (validationErrors.ContainsKey("ExerciseTypes"))
                     {
                         <p class="mt-1 text-sm text-red-600">@validationErrors["ExerciseTypes"]</p>
@@ -100,7 +100,8 @@
                             <select id="difficulty" 
                                     @bind="_difficultyIdString"
                                     required
-                                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 @(GetFieldClass("Difficulty"))">
+                                    disabled="@IsRestTypeSelected"
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 @(GetFieldClass("Difficulty")) @(IsRestTypeSelected ? "bg-gray-100 cursor-not-allowed" : "")">
                                 <option value="">Select difficulty</option>
                                 @foreach (var difficulty in StateService.DifficultyLevels)
                                 {
@@ -133,8 +134,12 @@
                 </div>
 
                 <!-- Muscle Groups -->
-                <div class="border-b pb-6">
-                    <h3 class="text-lg font-medium text-gray-900 mb-4">Muscle Groups @if (!HasValidMuscleGroups()) { <span class="text-red-500">*</span> }</h3>
+                <div class="border-b pb-6 @(IsRestTypeSelected ? "opacity-50" : "")">
+                    <h3 class="text-lg font-medium text-gray-900 mb-4">
+                        Muscle Groups 
+                        @if (!HasValidMuscleGroups() && !IsRestTypeSelected) { <span class="text-red-500">*</span> }
+                        @if (IsRestTypeSelected) { <span class="text-sm text-gray-500">(disabled for Rest exercises)</span> }
+                    </h3>
                     <p class="text-sm text-gray-600 mb-4">Select muscle groups and assign their roles</p>
                     
                     @if (validationErrors.ContainsKey("MuscleGroups"))
@@ -149,7 +154,8 @@
                             <div class="flex items-center space-x-2 bg-gray-50 p-2 rounded">
                                 <select value="@muscleGroupAssignments[index].MuscleGroupId"
                                         @onchange="@((ChangeEventArgs e) => SetMuscleGroupId(index, e.Value?.ToString()))"
-                                        class="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                        disabled="@IsRestTypeSelected"
+                                        class="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 @(IsRestTypeSelected ? "bg-gray-100 cursor-not-allowed" : "")">
                                     <option value="">Select muscle group</option>
                                     @foreach (var muscleGroup in StateService.MuscleGroups)
                                     {
@@ -158,7 +164,8 @@
                                 </select>
                                 <select value="@muscleGroupAssignments[index].Role"
                                         @onchange="@((ChangeEventArgs e) => SetMuscleGroupRole(index, e.Value?.ToString()))"
-                                        class="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                        disabled="@IsRestTypeSelected"
+                                        class="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 @(IsRestTypeSelected ? "bg-gray-100 cursor-not-allowed" : "")">
                                     <option value="">Select role</option>
                                     @foreach (var role in StateService.MuscleRoles)
                                     {
@@ -168,7 +175,8 @@
                                 @if (muscleGroupAssignments.Count > 1)
                                 {
                                     <button type="button" @onclick="@(() => RemoveMuscleGroupAtIndex(index))"
-                                            class="text-red-600 hover:text-red-800">
+                                            disabled="@IsRestTypeSelected"
+                                            class="text-red-600 hover:text-red-800 @(IsRestTypeSelected ? "opacity-50 cursor-not-allowed" : "")">
                                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                                         </svg>
@@ -180,7 +188,8 @@
                     
                     <div class="flex items-center space-x-2">
                         <button type="button" @onclick="AddMuscleGroup" 
-                                class="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors">
+                                disabled="@IsRestTypeSelected"
+                                class="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors @(IsRestTypeSelected ? "opacity-50 cursor-not-allowed" : "")">
                             <svg class="w-4 h-4 inline-block mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
                             </svg>
@@ -191,8 +200,11 @@
                 </div>
 
                 <!-- Equipment -->
-                <div class="border-b pb-6">
-                    <h3 class="text-lg font-medium text-gray-900 mb-4">Equipment</h3>
+                <div class="border-b pb-6 @(IsRestTypeSelected ? "opacity-50" : "")">
+                    <h3 class="text-lg font-medium text-gray-900 mb-4">
+                        Equipment
+                        @if (IsRestTypeSelected) { <span class="text-sm text-gray-500">(disabled for Rest exercises)</span> }
+                    </h3>
                     <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
                         @foreach (var equipment in StateService.Equipment)
                         {
@@ -200,7 +212,8 @@
                                 <input type="checkbox" 
                                        checked="@selectedEquipmentIds.Contains(equipment.Id)"
                                        @onchange="@(() => ToggleEquipment(equipment.Id))"
-                                       class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                                       disabled="@IsRestTypeSelected"
+                                       class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded @(IsRestTypeSelected ? "cursor-not-allowed" : "")">
                                 <span class="ml-2 text-sm text-gray-700">@equipment.Value</span>
                             </label>
                         }
@@ -208,8 +221,11 @@
                 </div>
 
                 <!-- Body Parts -->
-                <div class="border-b pb-6">
-                    <h3 class="text-lg font-medium text-gray-900 mb-4">Body Parts</h3>
+                <div class="border-b pb-6 @(IsRestTypeSelected ? "opacity-50" : "")">
+                    <h3 class="text-lg font-medium text-gray-900 mb-4">
+                        Body Parts
+                        @if (IsRestTypeSelected) { <span class="text-sm text-gray-500">(disabled for Rest exercises)</span> }
+                    </h3>
                     <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
                         @foreach (var bodyPart in StateService.BodyParts)
                         {
@@ -217,7 +233,8 @@
                                 <input type="checkbox" 
                                        checked="@selectedBodyPartIds.Contains(bodyPart.Id)"
                                        @onchange="@(() => ToggleBodyPart(bodyPart.Id))"
-                                       class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                                       disabled="@IsRestTypeSelected"
+                                       class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded @(IsRestTypeSelected ? "cursor-not-allowed" : "")">
                                 <span class="ml-2 text-sm text-gray-700">@bodyPart.Value</span>
                             </label>
                         }
@@ -225,8 +242,11 @@
                 </div>
 
                 <!-- Movement Patterns -->
-                <div class="border-b pb-6">
-                    <h3 class="text-lg font-medium text-gray-900 mb-4">Movement Patterns</h3>
+                <div class="border-b pb-6 @(IsRestTypeSelected ? "opacity-50" : "")">
+                    <h3 class="text-lg font-medium text-gray-900 mb-4">
+                        Movement Patterns
+                        @if (IsRestTypeSelected) { <span class="text-sm text-gray-500">(disabled for Rest exercises)</span> }
+                    </h3>
                     <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
                         @foreach (var pattern in StateService.MovementPatterns)
                         {
@@ -234,7 +254,8 @@
                                 <input type="checkbox" 
                                        checked="@selectedMovementPatternIds.Contains(pattern.Id)"
                                        @onchange="@(() => ToggleMovementPattern(pattern.Id))"
-                                       class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                                       disabled="@IsRestTypeSelected"
+                                       class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded @(IsRestTypeSelected ? "cursor-not-allowed" : "")">
                                 <span class="ml-2 text-sm text-gray-700">@pattern.Value</span>
                             </label>
                         }
@@ -318,13 +339,18 @@
         }
     }
 
+    // Rest type business rules
+    private bool IsRestTypeSelected => model.ExerciseTypeIds.Any(id => 
+        StateService.ExerciseTypes.FirstOrDefault(et => et.Id == id)?.Value == "Rest");
+    
+    private string? BeginnerDifficultyId => StateService.DifficultyLevels.FirstOrDefault(d => d.Value == "Beginner")?.Id;
+
     private ExerciseCreateDto model = new ExerciseCreateDtoBuilder()
         .WithName(string.Empty)
         .WithDescription(string.Empty)
         .WithInstructions(string.Empty)
         .WithDifficultyId(string.Empty)
-        .WithCoachNotes(("", 0)) // Start with one empty coach note
-        .Build();
+        .Build(); // Coach notes are now optional - start with empty list
     private List<MuscleGroupRoleAssignmentDto> muscleGroupAssignments = new();
     private HashSet<string> selectedEquipmentIds = new();
     private HashSet<string> selectedBodyPartIds = new();
@@ -502,10 +528,8 @@
         else if (model.Description.Length > 1000)
             validationErrors["Description"] = "Description must be 1000 characters or less";
 
-        // Validate coach notes
-        if (!model.CoachNotes.Any() || model.CoachNotes.All(cn => string.IsNullOrWhiteSpace(cn.Text)))
-            validationErrors["CoachNotes"] = "At least one coach note is required";
-        else if (model.CoachNotes.Any(cn => cn.Text.Length > 1000))
+        // Validate coach notes (optional, but individual notes have character limits)
+        if (model.CoachNotes.Any(cn => !string.IsNullOrWhiteSpace(cn.Text) && cn.Text.Length > 1000))
             validationErrors["CoachNotes"] = "Each coach note must be 1000 characters or less";
 
         // Validate exercise types
@@ -515,13 +539,16 @@
         if (string.IsNullOrWhiteSpace(model.DifficultyId))
             validationErrors["Difficulty"] = "Difficulty level is required";
 
-        // Validate muscle groups
-        var validMuscleGroups = muscleGroupAssignments
-            .Where(mg => !string.IsNullOrWhiteSpace(mg.MuscleGroupId) && !string.IsNullOrWhiteSpace(mg.Role))
-            .ToList();
-        
-        if (!validMuscleGroups.Any())
-            validationErrors["MuscleGroups"] = "At least one muscle group with a role is required";
+        // Validate muscle groups (optional for Rest exercises)
+        if (!IsRestTypeSelected)
+        {
+            var validMuscleGroups = muscleGroupAssignments
+                .Where(mg => !string.IsNullOrWhiteSpace(mg.MuscleGroupId) && !string.IsNullOrWhiteSpace(mg.Role))
+                .ToList();
+            
+            if (!validMuscleGroups.Any())
+                validationErrors["MuscleGroups"] = "At least one muscle group with a role is required";
+        }
 
         // Update UI to show validation errors
         StateHasChanged();
@@ -547,6 +574,12 @@
                     roleName => StateService.MuscleRoles.FirstOrDefault(r => r.Value == roleName)?.Id
                 ))
                 .Where(mg => !string.IsNullOrWhiteSpace(mg.MuscleRoleId)) // Only include if we found the role ID
+                .ToList();
+            
+            // Filter out empty coach notes before submission
+            model.CoachNotes = model.CoachNotes
+                .Where(cn => !string.IsNullOrWhiteSpace(cn.Text))
+                .Select((cn, index) => new CoachNoteCreateDto { Text = cn.Text.Trim(), Order = index })
                 .ToList();
             
             model.EquipmentIds = selectedEquipmentIds.ToList();
@@ -601,6 +634,42 @@
     private string GetFieldClass(string fieldName)
     {
         return validationErrors.ContainsKey(fieldName) ? "border-red-500" : "";
+    }
+    
+    private void OnExerciseTypesChanged(List<string> typeIds)
+    {
+        model.ExerciseTypeIds = typeIds;
+        
+        // Apply Rest type business rules
+        if (IsRestTypeSelected)
+        {
+            // Auto-set difficulty to Beginner
+            if (!string.IsNullOrEmpty(BeginnerDifficultyId))
+            {
+                model.DifficultyId = BeginnerDifficultyId;
+            }
+            
+            // Clear dependent fields
+            ClearRestIncompatibleFields();
+        }
+        
+        StateHasChanged();
+    }
+    
+    private void ClearRestIncompatibleFields()
+    {
+        // Clear equipment
+        selectedEquipmentIds.Clear();
+        
+        // Clear body parts
+        selectedBodyPartIds.Clear();
+        
+        // Clear movement patterns
+        selectedMovementPatternIds.Clear();
+        
+        // Clear muscle groups
+        muscleGroupAssignments.Clear();
+        muscleGroupAssignments.Add(MuscleGroupRoleAssignmentDtoBuilder.Empty());
     }
     
     private bool HasValidMuscleGroups()
