@@ -73,10 +73,12 @@ This document outlines the standard process for implementing new features in the
 
 ### 6. Feature Finalization
 After user explicitly states feature acceptance:
-1. Merge feature branch into master
-2. Create descriptive commit message summarizing all changes
-3. Push to remote repository
-4. Delete the feature branch locally
+1. Create descriptive commit message summarizing all changes
+2. Push feature branch to remote repository
+3. Merge feature branch into master locally
+4. **MANDATORY: Push the merged master branch to remote repository**
+5. Delete the feature branch locally
+6. Optionally delete the feature branch on remote
 
 ### 7. Special Conditions
 - **Skipping Manual Tests**: Only when user explicitly requests during initial feature specification
