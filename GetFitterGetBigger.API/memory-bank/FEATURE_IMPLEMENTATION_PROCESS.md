@@ -25,13 +25,14 @@ This document outlines the standard process for implementing new features in the
 ### 3. Implementation Phase
 - Execute tasks sequentially from the task tracking file
 - **For EVERY task implementation:**
-  1. Write the implementation code
-  2. **MANDATORY: Write unit tests for the implemented code in the immediately following task**
-  3. **MANDATORY: Keep build warnings to a minimum** (address nullable warnings, unused variables, etc.)
-  4. **MANDATORY: Run `dotnet build` to ensure compilation succeeds with minimal warnings**
-  5. **MANDATORY: Run `dotnet test` to ensure ALL tests pass (100% green)**
-  6. Only after build succeeds and ALL tests pass, commit the changes
-  7. Update the task status in the tracking file from `[ReadyToDevelop]` to `[Implemented: <git-commit-hash>]`
+  1. Update task status to `[InProgress: Started: YYYY-MM-DD HH:MM]` when starting
+  2. Write the implementation code
+  3. **MANDATORY: Write unit tests for the implemented code in the immediately following task**
+  4. **MANDATORY: Keep build warnings to a minimum** (address nullable warnings, unused variables, etc.)
+  5. **MANDATORY: Run `dotnet build` to ensure compilation succeeds with minimal warnings**
+  6. **MANDATORY: Run `dotnet test` to ensure ALL tests pass (100% green)**
+  7. Only after build succeeds and ALL tests pass, commit the changes
+  8. Update the task status to `[Implemented: <hash> | Started: <timestamp> | Finished: YYYY-MM-DD HH:MM | Duration: Xh Ym]`
 - **For EVERY checkpoint:**
   1. Run `dotnet build` - BUILD MUST BE SUCCESSFUL (no errors)
   2. Run `dotnet test` - ALL TESTS MUST BE GREEN (no failures)
@@ -85,7 +86,8 @@ After user explicitly states feature acceptance:
 
 ## Task Status Definitions
 - `[ReadyToDevelop]` - Task identified and ready to implement
-- `[Implemented: <hash>]` - Task completed with reference commit
+- `[InProgress: Started: YYYY-MM-DD HH:MM]` - Task currently being worked on with start timestamp
+- `[Implemented: <hash> | Started: YYYY-MM-DD HH:MM | Finished: YYYY-MM-DD HH:MM | Duration: Xh Ym]` - Task completed with timing data
 - `[BUG: <reason>]` - Known issue requiring future resolution
 - `[Skipped]` - Task deferred or determined unnecessary
 - `[INCOMPLETE: <reason>]` - Task cannot be completed due to external dependency or bug
@@ -130,46 +132,84 @@ Before marking any task as `[Implemented]`, verify:
 # [Feature Name] Implementation Tasks
 
 ## Feature Branch: `feature/[branch-name]`
+## Estimated Total Time: [X days / Y hours]
+## Actual Total Time: [To be calculated at completion]
 
-### Category 1 (e.g., Models & DTOs)
-- **Task 1.1:** Create [Name] entity model `[ReadyToDevelop]`
-- **Task 1.2:** Create [Name]Dto and request/response models `[ReadyToDevelop]`
-- **Task 1.3:** Write unit tests for DTOs `[ReadyToDevelop]`
+### Category 1 (e.g., Models & DTOs) - Estimated: Xh
+- **Task 1.1:** Create [Name] entity model `[ReadyToDevelop]` (Est: 30m)
+- **Task 1.2:** Create [Name]Dto and request/response models `[ReadyToDevelop]` (Est: 45m)
+- **Task 1.3:** Write unit tests for DTOs `[ReadyToDevelop]` (Est: 30m)
 
-### Category 2 (e.g., Repository Layer)
-- **Task 2.1:** Create I[Name]Repository interface `[ReadyToDevelop]`
-- **Task 2.2:** Implement [Name]Repository `[ReadyToDevelop]`
-- **Task 2.3:** Write repository unit tests `[ReadyToDevelop]`
+### Category 2 (e.g., Repository Layer) - Estimated: Xh
+- **Task 2.1:** Create I[Name]Repository interface `[ReadyToDevelop]` (Est: 15m)
+- **Task 2.2:** Implement [Name]Repository `[ReadyToDevelop]` (Est: 1h)
+- **Task 2.3:** Write repository unit tests `[ReadyToDevelop]` (Est: 1h)
 
-### Category 3 (e.g., Service Layer)
-- **Task 3.1:** Create I[Name]Service interface `[ReadyToDevelop]`
-- **Task 3.2:** Implement [Name]Service with business logic `[ReadyToDevelop]`
-- **Task 3.3:** Write service unit tests `[ReadyToDevelop]`
+### Category 3 (e.g., Service Layer) - Estimated: Xh
+- **Task 3.1:** Create I[Name]Service interface `[ReadyToDevelop]` (Est: 15m)
+- **Task 3.2:** Implement [Name]Service with business logic `[ReadyToDevelop]` (Est: 2h)
+- **Task 3.3:** Write service unit tests `[ReadyToDevelop]` (Est: 1.5h)
 
-### Category 4 (e.g., Controller)
-- **Task 4.1:** Create [Name]Controller with CRUD endpoints `[ReadyToDevelop]`
-- **Task 4.2:** Add authorization and validation `[ReadyToDevelop]`
-- **Task 4.3:** Write controller unit tests `[ReadyToDevelop]`
-- **Task 4.4:** Write integration tests for endpoints `[ReadyToDevelop]`
+### Category 4 (e.g., Controller) - Estimated: Xh
+- **Task 4.1:** Create [Name]Controller with CRUD endpoints `[ReadyToDevelop]` (Est: 1.5h)
+- **Task 4.2:** Add authorization and validation `[ReadyToDevelop]` (Est: 45m)
+- **Task 4.3:** Write controller unit tests `[ReadyToDevelop]` (Est: 1.5h)
+- **Task 4.4:** Write integration tests for endpoints `[ReadyToDevelop]` (Est: 2h)
 
-### Category 5 (e.g., Database & Migrations)
-- **Task 5.1:** Add entity configuration `[ReadyToDevelop]`
-- **Task 5.2:** Create database migration `[ReadyToDevelop]`
-- **Task 5.3:** Add seed data if needed `[ReadyToDevelop]`
+### Category 5 (e.g., Database & Migrations) - Estimated: Xh
+- **Task 5.1:** Add entity configuration `[ReadyToDevelop]` (Est: 30m)
+- **Task 5.2:** Create database migration `[ReadyToDevelop]` (Est: 15m)
+- **Task 5.3:** Add seed data if needed `[ReadyToDevelop]` (Est: 30m)
+
+## Time Tracking Summary
+- **Total Estimated Time:** [Sum of all estimates]
+- **Total Actual Time:** [To be calculated from task durations]
+- **AI Assistance Impact:** [% reduction in time]
 
 ## Notes
 - Each implementation task must be immediately followed by its test task
 - No task is complete until build passes and all tests are green
 - Keep build warnings to minimum
 - Follow existing API patterns and conventions
+- Time estimates are for a developer without AI assistance
 ```
 
 ## Example Task Status Updates
 
 - `[ReadyToDevelop]` - Initial status for all tasks
-- `[Implemented: a1b2c3d4]` - Task completed with commit hash
+- `[InProgress: Started: 2025-01-15 14:30]` - Task being actively worked on
+- `[Implemented: a1b2c3d4 | Started: 2025-01-15 14:30 | Finished: 2025-01-15 15:15 | Duration: 0h 45m]` - Completed task
 - `[BUG: Complex mock setup for external service]` - Known issue to be addressed later
 - `[Skipped]` - Task determined unnecessary during implementation
+
+## Time Calculation Guidelines
+
+### Recording Time
+- Use 24-hour format for timestamps (HH:MM)
+- Record actual work time only (exclude breaks, interruptions)
+- If a task spans multiple days, sum up the actual work duration
+- Round to nearest 5-minute increment for consistency
+
+### Duration Calculation
+- Format: `Xh Ym` (e.g., "2h 30m", "0h 45m", "4h 0m")
+- For tasks interrupted and resumed:
+  - Track each work session
+  - Sum total actual work time
+  - Note in task if it was interrupted
+
+### Example with Interruption
+```
+Task 2.2: Implement UserRepository 
+[Implemented: abc123 | Started: 2025-01-15 09:00 | Finished: 2025-01-16 11:30 | Duration: 3h 15m]
+Note: Work sessions: Jan 15 (09:00-10:30), Jan 16 (10:00-11:30)
+```
+
+### AI Impact Calculation
+At feature completion, calculate:
+- Sum all estimated times
+- Sum all actual durations
+- AI Impact = ((Estimated - Actual) / Estimated) × 100%
+- Document any factors that affected the comparison
 
 ## API-Specific Considerations
 
