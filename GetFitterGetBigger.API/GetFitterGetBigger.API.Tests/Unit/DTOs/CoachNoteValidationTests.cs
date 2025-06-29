@@ -21,7 +21,7 @@ public class CoachNoteValidationTests
             {
                 new() { MuscleGroupId = "musclegroup-123", MuscleRoleId = "musclerole-456" }
             },
-            CoachNotes = null // Explicitly null
+            CoachNotes = null! // Explicitly null for testing validation
         };
 
         // Act

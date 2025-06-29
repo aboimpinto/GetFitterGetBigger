@@ -7,6 +7,13 @@
     <IsPackable>false</IsPackable>
   </PropertyGroup>
 
+  <!-- Coverlet Configuration -->
+  <PropertyGroup>
+    <CollectCoverage>true</CollectCoverage>
+    <CoverletOutputFormat>cobertura</CoverletOutputFormat>
+    <CoverletOutput>./TestResults/coverage.cobertura.xml</CoverletOutput>
+  </PropertyGroup>
+
   <ItemGroup>
     <PackageReference Include="coverlet.collector" Version="6.0.2" />
     <PackageReference Include="coverlet.msbuild" Version="6.0.4">
