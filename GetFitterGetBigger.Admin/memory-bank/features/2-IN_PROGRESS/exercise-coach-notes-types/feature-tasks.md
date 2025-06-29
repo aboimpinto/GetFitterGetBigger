@@ -50,10 +50,10 @@
 - **Task 5.1:** Update ExerciseList to display exercise types as colored badges `[Implemented: ExerciseList line 100-110]`
 - **Task 5.2:** Add isActive status indicator to exercise list rows `[Already existed: ExerciseList line 96-108]`
 - **Task 5.3:** Implement isActive filter dropdown in ExerciseList `[Implemented: ExerciseList line 61-69]`
-- **Task 5.4:** Write tests for ExerciseList updates `[ReadyToDevelop]`
+- **Task 5.4:** Write tests for ExerciseList updates `[Implemented: ExerciseListDisplayTests.cs]`
 - **Task 5.5:** Update ExerciseDetail to display coach notes as ordered list `[Implemented: ExerciseDetail line 82-97]`
 - **Task 5.6:** Update ExerciseDetail to show exercise types with badges `[Implemented: ExerciseDetail line 99-108]`
-- **Task 5.7:** Write tests for ExerciseDetail updates `[ReadyToDevelop]`
+- **Task 5.7:** Write tests for ExerciseDetail updates `[Implemented: ExerciseDetailDisplayTests.cs]`
 
 **CHECKPOINT 5:** ✅ `dotnet build` MUST PASS | `dotnet test` ALL GREEN | NO WARNINGS
 

@@ -128,6 +128,12 @@ namespace GetFitterGetBigger.Admin.Builders
             return this;
         }
 
+        public ExerciseListDtoBuilder WithIsActive(bool isActive)
+        {
+            _isActive = isActive;
+            return this;
+        }
+
         public ExerciseListDtoBuilder WithDifficulty(string value, string? id = null)
         {
             _difficulty = new ReferenceDataDto 
