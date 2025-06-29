@@ -35,7 +35,49 @@ Features progress through these workflow states:
 - Naming convention: `feature/[descriptive-feature-name]`
 - All development work occurs in this isolated branch
 
-### 3. Implementation Phase
+### 3. Baseline Health Check (MANDATORY)
+Before starting ANY implementation:
+1. **Run baseline health check**:
+   ```bash
+   dotnet build
+   dotnet test
+   ```
+2. **Document results in feature-tasks.md**:
+   ```markdown
+   ## Baseline Health Check Report
+   **Date/Time**: YYYY-MM-DD HH:MM
+   **Branch**: feature/branch-name
+
+   ### Build Status
+   - **Build Result**: ✅ Success / ❌ Failed / ⚠️ Success with warnings
+   - **Warning Count**: X warnings
+   - **Warning Details**: [List specific warnings if any]
+
+   ### Test Status
+   - **Total Tests**: X
+   - **Passed**: X
+   - **Failed**: X (MUST be 0 to proceed)
+   - **Skipped/Ignored**: X
+   - **Test Execution Time**: X.XX seconds
+
+   ### Decision to Proceed
+   - [ ] All tests passing
+   - [ ] Build successful
+   - [ ] Warnings documented and approved
+
+   **Approval to Proceed**: Yes/No
+   ```
+
+3. **Evaluation and Action**:
+   - ✅ **All Green**: Proceed to implementation
+   - ❌ **Build Fails**: STOP - Create Task 0.1 to fix build
+   - ❌ **Tests Fail**: STOP - Create Task 0.2 to fix failing tests
+   - ⚠️ **Warnings Exist**: Document and ask for approval
+     - If approved: Create Boy Scout tasks (0.3, 0.4, etc.) to fix warnings FIRST
+     - Complete Boy Scout tasks before feature tasks
+     - Re-run baseline check after Boy Scout cleanup
+
+### 4. Implementation Phase
 - Execute tasks sequentially from the task tracking file
 - **For EVERY task implementation:**
   1. Update task status to `[InProgress: Started: YYYY-MM-DD HH:MM]` when starting
@@ -64,7 +106,7 @@ Features progress through these workflow states:
     - Tests are not written
     - Any test is failing
 
-### 4. Test Development & Handling
+### 5. Test Development & Handling
 - Write unit tests for all business logic
 - Write integration tests for API endpoints
 - Write repository tests for data access
@@ -74,7 +116,7 @@ Features progress through these workflow states:
   - Include bug reference in test comment
   - Example: `[Fact(Skip = "BUG-001: Complex database mocking requires additional setup")]`
 
-### 5. Manual Testing Phase (DEFAULT BEHAVIOR)
+### 6. Manual Testing Phase (DEFAULT BEHAVIOR)
 - After all implementation tasks are complete
 - Provide user with:
   - Detailed step-by-step testing instructions
@@ -83,7 +125,34 @@ Features progress through these workflow states:
   - Sample data for testing
 - Wait for user acceptance before proceeding
 
-### 6. Feature Finalization
+### 7. Quality Comparison Report (MANDATORY)
+After all implementation is complete, add to feature-tasks.md:
+```markdown
+## Implementation Summary Report
+**Date/Time**: YYYY-MM-DD HH:MM
+**Duration**: X days/hours
+
+### Quality Metrics Comparison
+| Metric | Baseline | Final | Change |
+|--------|----------|-------|--------|
+| Build Warnings | X | Y | -Z |
+| Test Count | X | Y | +Z |
+| Test Pass Rate | X% | Y% | +Z% |
+| Skipped Tests | X | Y | -Z |
+
+### Quality Improvements
+- Fixed X build warnings
+- Added Y new tests
+- Removed Z skipped tests
+- [Other improvements]
+
+### Boy Scout Rule Applied
+- ✅ All encountered issues fixed
+- ✅ Code quality improved
+- ✅ Documentation updated
+```
+
+### 8. Feature Finalization
 After user explicitly states feature acceptance:
 1. Create descriptive commit message summarizing all changes
 2. Push feature branch to remote repository
@@ -92,7 +161,7 @@ After user explicitly states feature acceptance:
 5. Delete the feature branch locally
 6. Optionally delete the feature branch on remote
 
-### 7. Special Conditions
+### 9. Special Conditions
 - **Skipping Manual Tests**: Only when user explicitly requests during initial feature specification
 - **Interrupted Implementation**: Next session can resume using existing task list with current statuses
 - **Git Operations**: All git operations require explicit user approval and are not automated

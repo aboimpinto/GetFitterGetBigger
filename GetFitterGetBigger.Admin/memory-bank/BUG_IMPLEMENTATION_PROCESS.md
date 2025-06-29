@@ -26,7 +26,55 @@ This document outlines the standard process for fixing bugs in the GetFitterGetB
 - Naming convention: `bugfix/[descriptive-bug-name]`
 - All bug fix work occurs in this isolated branch
 
-### 3. Test-First Implementation Phase
+### 3. Baseline Health Check (MANDATORY)
+Before starting ANY bug fix:
+1. **Run baseline health check**:
+   ```bash
+   npm run build
+   npm test
+   npm run lint
+   ```
+2. **Document results in bug-tasks.md**:
+   ```markdown
+   ## Baseline Health Check Report
+   **Date/Time**: YYYY-MM-DD HH:MM
+   **Branch**: bugfix/branch-name
+
+   ### Build Status
+   - **Build Result**: ✅ Success / ❌ Failed / ⚠️ Success with warnings
+   - **Warning Count**: X warnings
+   - **Warning Details**: [List specific warnings if any]
+
+   ### Test Status
+   - **Total Tests**: X
+   - **Passed**: X
+   - **Failed**: X (excluding the bug being fixed)
+   - **Skipped/Ignored**: X
+   - **Test Execution Time**: X.XX seconds
+
+   ### Linting Status
+   - **Errors**: X (MUST be 0 to proceed)
+   - **Warnings**: X
+
+   ### Decision to Proceed
+   - [ ] Build successful
+   - [ ] No unrelated test failures
+   - [ ] No linting errors
+   - [ ] Warnings documented and approved
+
+   **Approval to Proceed**: Yes/No
+   ```
+
+3. **Evaluation and Action**:
+   - ✅ **Build OK, Tests OK**: Proceed to bug fix
+   - ❌ **Build Fails**: STOP - Fix build first (Task 0.1)
+   - ❌ **Unrelated Tests Fail**: STOP - Fix other tests first (Task 0.2)
+   - ❌ **Lint Errors**: STOP - Fix linting errors (Task 0.3)
+   - ⚠️ **Warnings Exist**: Document and apply Boy Scout Rule
+     - Create Task 0.4+ for warning fixes
+     - Fix warnings in touched files
+
+### 4. Test-First Implementation Phase
 - **CRITICAL**: Write failing tests FIRST that reproduce the bug
 - Execute tasks sequentially from the bug tracking file
 - **For EVERY task implementation:**
@@ -44,7 +92,7 @@ This document outlines the standard process for fixing bugs in the GetFitterGetB
   - `[IMPLEMENTED: <hash>]` - Task completed with reference commit
   - `[BLOCKED: <reason>]` - Task cannot be completed due to dependency
 
-### 4. Test Development Rules
+### 5. Test Development Rules
 - **First tests MUST fail** with the same error as the bug report
 - Tests should cover:
   - The exact scenario that triggered the bug
@@ -55,7 +103,7 @@ This document outlines the standard process for fixing bugs in the GetFitterGetB
   - Create a new bug entry for the blocker
   - Link both bugs bidirectionally
 
-### 5. Fix Verification Phase
+### 6. Fix Verification Phase
 - After fix implementation:
   - ALL tests must be GREEN (no failures, no skipped)
   - Build must succeed with minimal warnings
@@ -63,7 +111,7 @@ This document outlines the standard process for fixing bugs in the GetFitterGetB
   - Manual test script must execute successfully
 - Only when ALL tests pass, return control to user
 
-### 6. Manual Testing Phase
+### 7. Manual Testing Phase
 - Provide user with:
   - The test script from the bug file
   - Expected UI behaviors
@@ -71,14 +119,43 @@ This document outlines the standard process for fixing bugs in the GetFitterGetB
   - Any additional verification steps
 - Wait for user acceptance before proceeding
 
-### 7. Bug Finalization
+### 8. Quality Comparison Report (MANDATORY)
+After all bug fix tasks are complete, add to bug-tasks.md:
+```markdown
+## Implementation Summary Report
+**Date/Time**: YYYY-MM-DD HH:MM
+**Duration**: X days/hours
+
+### Quality Metrics Comparison
+| Metric | Baseline | Final | Change |
+|--------|----------|-------|--------|
+| Build Warnings | X | Y | -Z |
+| Test Count | X | Y | +Z |
+| Test Pass Rate | X% | 100% | +Z% |
+| Skipped Tests | X | Y | -Z |
+| Lint Warnings | X | Y | -Z |
+
+### Quality Improvements
+- Fixed X build warnings in touched files
+- Added Y new tests for bug fix
+- Fixed Z unrelated failing tests
+- Fixed X linting warnings
+- [Other improvements]
+
+### Boy Scout Rule Applied
+- ✅ All issues in touched files fixed
+- ✅ Bug properly tested
+- ✅ No regression introduced
+```
+
+### 9. Bug Finalization
 After user confirms bug is fixed:
 1. Update bug file status to `[FIXED]`
 2. Merge bugfix branch into original branch
 3. Create descriptive commit message referencing BUG-ID
 4. Delete the bugfix branch locally
 
-### 8. Handling Blocked Bugs
+### 10. Handling Blocked Bugs
 When a bug cannot be fixed due to dependencies:
 1. Mark the bug overall status as `[BLOCKED: <reason>]`
 2. Create new bug entry for the blocker with:
@@ -125,13 +202,19 @@ When a bug cannot be fixed due to dependencies:
 - **Task 2.1:** [Specific fix action] [TODO]
 - **Task 2.2:** [Additional fix if needed] [TODO]
 
-### Category 3: Verification Tests
-- **Task 3.1:** Run all related unit tests [TODO]
-- **Task 3.2:** Run all component tests [TODO]
-- **Task 3.3:** Create test script for manual testing [TODO]
+### Category 3: Boy Scout Cleanup (MANDATORY)
+- **Task 3.1:** Fix any failing tests found during work [TODO]
+- **Task 3.2:** Fix all build warnings in touched files [TODO]
+- **Task 3.3:** Clean up code smells in modified files [TODO]
+- **Task 3.4:** Update outdated documentation encountered [TODO]
 
-### Category 4: Documentation
-- **Task 4.1:** Document the fix and prevention [TODO]
+### Category 4: Verification Tests
+- **Task 4.1:** Run all related unit tests [TODO]
+- **Task 4.2:** Run all component tests [TODO]
+- **Task 4.3:** Create test script for manual testing [TODO]
+
+### Category 5: Documentation
+- **Task 5.1:** Document the fix and prevention [TODO]
 
 ## Test Script for Manual Verification
 ```bash

@@ -42,7 +42,56 @@ When a feature arrives in `0-SUBMITTED` from API propagation:
 - Naming convention: `feature/[descriptive-feature-name]`
 - All development work occurs in this isolated branch
 
-### 3. Implementation Phase
+### 3. Baseline Health Check (MANDATORY)
+Before starting ANY implementation:
+1. **Run baseline health check**:
+   ```bash
+   npm run build
+   npm test
+   npm run lint
+   ```
+2. **Document results in feature-tasks.md**:
+   ```markdown
+   ## Baseline Health Check Report
+   **Date/Time**: YYYY-MM-DD HH:MM
+   **Branch**: feature/branch-name
+
+   ### Build Status
+   - **Build Result**: ✅ Success / ❌ Failed / ⚠️ Success with warnings
+   - **Warning Count**: X warnings
+   - **Warning Details**: [List specific warnings if any]
+
+   ### Test Status
+   - **Total Tests**: X
+   - **Passed**: X
+   - **Failed**: X (MUST be 0 to proceed)
+   - **Skipped/Ignored**: X
+   - **Test Execution Time**: X.XX seconds
+
+   ### Linting Status
+   - **Errors**: X (MUST be 0 to proceed)
+   - **Warnings**: X
+
+   ### Decision to Proceed
+   - [ ] All tests passing
+   - [ ] Build successful
+   - [ ] No linting errors
+   - [ ] Warnings documented and approved
+
+   **Approval to Proceed**: Yes/No
+   ```
+
+3. **Evaluation and Action**:
+   - ✅ **All Green**: Proceed to implementation
+   - ❌ **Build Fails**: STOP - Create Task 0.1 to fix build
+   - ❌ **Tests Fail**: STOP - Create Task 0.2 to fix failing tests
+   - ❌ **Lint Errors**: STOP - Create Task 0.3 to fix linting errors
+   - ⚠️ **Warnings Exist**: Document and ask for approval
+     - If approved: Create Boy Scout tasks (0.4, 0.5, etc.) to fix warnings FIRST
+     - Complete Boy Scout tasks before feature tasks
+     - Re-run baseline check after Boy Scout cleanup
+
+### 4. Implementation Phase
 - Execute tasks sequentially from the task tracking file
 - **For EVERY task implementation:**
   1. Update task status to `[InProgress: Started: YYYY-MM-DD HH:MM]` when starting
@@ -59,6 +108,7 @@ When a feature arrives in `0-SUBMITTED` from API propagation:
   2. Run `npm test` - ALL TESTS MUST BE GREEN (no failures)
   3. Verify no build warnings exist
   4. **MANDATORY: Update checkpoint status from 🛑 to ✅ when all conditions pass**
+  5. Only proceed to next category after checkpoint passes
 - Follow existing React patterns and conventions
 - Use existing UI components and design system
 - The task tracking file serves as both documentation and audit trail
@@ -73,7 +123,7 @@ When a feature arrives in `0-SUBMITTED` from API propagation:
     - Any test is failing
     - Linting errors exist
 
-### 4. Test Development & Handling
+### 5. Test Development & Handling
 - Write unit tests for all business logic
 - Write component tests for all React components
 - Write integration tests for API interactions
@@ -83,7 +133,7 @@ When a feature arrives in `0-SUBMITTED` from API propagation:
   - Include bug reference in test comment
   - Example: `test.skip('BUG-001: Complex API mocking requires additional setup')`
 
-### 5. Manual Testing Phase (DEFAULT BEHAVIOR)
+### 6. Manual Testing Phase (DEFAULT BEHAVIOR)
 - After all implementation tasks are complete
 - Provide user with:
   - Detailed step-by-step testing instructions
@@ -92,7 +142,36 @@ When a feature arrives in `0-SUBMITTED` from API propagation:
   - Sample data for testing
 - Wait for user acceptance before proceeding
 
-### 6. Feature Finalization
+### 7. Quality Comparison Report (MANDATORY)
+After all implementation is complete, add to feature-tasks.md:
+```markdown
+## Implementation Summary Report
+**Date/Time**: YYYY-MM-DD HH:MM
+**Duration**: X days/hours
+
+### Quality Metrics Comparison
+| Metric | Baseline | Final | Change |
+|--------|----------|-------|--------|
+| Build Warnings | X | Y | -Z |
+| Test Count | X | Y | +Z |
+| Test Pass Rate | X% | Y% | +Z% |
+| Skipped Tests | X | Y | -Z |
+| Lint Warnings | X | Y | -Z |
+
+### Quality Improvements
+- Fixed X build warnings
+- Added Y new tests
+- Removed Z skipped tests
+- Fixed X linting warnings
+- [Other improvements]
+
+### Boy Scout Rule Applied
+- ✅ All encountered issues fixed
+- ✅ Code quality improved
+- ✅ Documentation updated
+```
+
+### 8. Feature Finalization
 After user explicitly states feature acceptance:
 1. Create descriptive commit message summarizing all changes
 2. Push feature branch to remote repository
@@ -101,7 +180,7 @@ After user explicitly states feature acceptance:
 5. Delete the feature branch locally
 6. Optionally delete the feature branch on remote
 
-### 7. Special Conditions
+### 9. Special Conditions
 - **Skipping Manual Tests**: Only when user explicitly requests during initial feature specification
 - **Interrupted Implementation**: Next session can resume using existing task list with current statuses
 - **Git Operations**: All git operations require explicit user approval and are not automated
@@ -186,6 +265,12 @@ Before marking any task as `[Implemented]`, verify:
 - **Task 5.2:** Implement error boundaries and messages `[ReadyToDevelop]` (Est: 45m)
 - **Task 5.3:** Add animations and transitions `[ReadyToDevelop]` (Est: 1h)
 - **Task 5.4:** Ensure responsive design across breakpoints `[ReadyToDevelop]` (Est: 45m)
+
+### Checkpoints
+- **Checkpoint after Category 2:** All state management working 🛑
+- **Checkpoint after Category 3:** All components tested 🛑
+- **Checkpoint after Category 4:** Full feature flow working 🛑
+- **Final Checkpoint:** All tests green, build clean 🛑
 
 ## Time Tracking Summary
 - **Total Estimated Time:** [Sum of all estimates]

@@ -44,7 +44,79 @@ When a feature arrives in `0-SUBMITTED` from API propagation:
 - Naming convention: `feature/[descriptive-feature-name]`
 - All development work occurs in this isolated branch
 
-### 3. Implementation Phase
+### 3. Baseline Health Check (MANDATORY)
+Before starting ANY implementation:
+1. **Run baseline health check for each platform**:
+   ```bash
+   # Mobile
+   npm run build
+   npm test
+   npm run lint
+
+   # Web
+   npm run build
+   npm test
+   npm run lint
+
+   # Desktop
+   dotnet build
+   dotnet test
+   ```
+2. **Document results in feature-tasks.md**:
+   ```markdown
+   ## Baseline Health Check Report
+   **Date/Time**: YYYY-MM-DD HH:MM
+   **Branch**: feature/branch-name
+
+   ### Mobile Platform
+   #### Build Status
+   - **Build Result**: ✅ Success / ❌ Failed / ⚠️ Success with warnings
+   - **Warning Count**: X warnings
+   - **Warning Details**: [List specific warnings if any]
+
+   #### Test Status
+   - **Total Tests**: X
+   - **Passed**: X
+   - **Failed**: X (MUST be 0 to proceed)
+   - **Skipped/Ignored**: X
+
+   #### Linting Status
+   - **Errors**: X (MUST be 0 to proceed)
+   - **Warnings**: X
+
+   ### Web Platform
+   [Similar structure as Mobile]
+
+   ### Desktop Platform
+   #### Build Status
+   - **Build Result**: ✅ Success / ❌ Failed / ⚠️ Success with warnings
+   - **Warning Count**: X warnings
+
+   #### Test Status
+   - **Total Tests**: X
+   - **Passed**: X
+   - **Failed**: X (MUST be 0 to proceed)
+
+   ### Decision to Proceed
+   - [ ] All platforms build successfully
+   - [ ] All tests passing on all platforms
+   - [ ] No linting errors
+   - [ ] Warnings documented and approved
+
+   **Approval to Proceed**: Yes/No
+   ```
+
+3. **Evaluation and Action**:
+   - ✅ **All Green**: Proceed to implementation
+   - ❌ **Build Fails**: STOP - Create Task 0.1 to fix build on affected platform
+   - ❌ **Tests Fail**: STOP - Create Task 0.2 to fix failing tests
+   - ❌ **Lint Errors**: STOP - Create Task 0.3 to fix linting errors
+   - ⚠️ **Warnings Exist**: Document and ask for approval
+     - If approved: Create Boy Scout tasks (0.4, 0.5, etc.) per platform
+     - Complete Boy Scout tasks before feature tasks
+     - Re-run baseline check after Boy Scout cleanup
+
+### 4. Implementation Phase
 - Execute tasks sequentially from the task tracking file
 - **For EVERY task implementation:**
   1. Update task status to `[InProgress: Started: YYYY-MM-DD HH:MM]` when starting
@@ -79,7 +151,7 @@ When a feature arrives in `0-SUBMITTED` from API propagation:
     - Tests are not written
     - Any test is failing
 
-### 4. Test Development & Handling
+### 5. Test Development & Handling
 - Write unit tests for all business logic
 - Write component/UI tests for all platforms
 - Write platform-specific integration tests
@@ -88,7 +160,7 @@ When a feature arrives in `0-SUBMITTED` from API propagation:
   - Mark test appropriately per platform
   - Include bug reference in test comment
 
-### 5. Manual Testing Phase (DEFAULT BEHAVIOR)
+### 6. Manual Testing Phase (DEFAULT BEHAVIOR)
 - After all implementation tasks are complete
 - Provide user with platform-specific testing instructions:
   - **Mobile**: Device/emulator setup, gestures, navigation
@@ -97,7 +169,44 @@ When a feature arrives in `0-SUBMITTED` from API propagation:
 - Include test scenarios covering all user flows
 - Wait for user acceptance on all platforms before proceeding
 
-### 6. Feature Finalization
+### 7. Quality Comparison Report (MANDATORY)
+After all implementation is complete, add to feature-tasks.md:
+```markdown
+## Implementation Summary Report
+**Date/Time**: YYYY-MM-DD HH:MM
+**Duration**: X days/hours
+
+### Quality Metrics Comparison (Per Platform)
+
+#### Mobile Platform
+| Metric | Baseline | Final | Change |
+|--------|----------|-------|--------|
+| Build Warnings | X | Y | -Z |
+| Test Count | X | Y | +Z |
+| Test Pass Rate | X% | Y% | +Z% |
+| Skipped Tests | X | Y | -Z |
+| Lint Warnings | X | Y | -Z |
+
+#### Web Platform
+[Similar table]
+
+#### Desktop Platform
+[Similar table]
+
+### Quality Improvements
+- Fixed X build warnings across platforms
+- Added Y new tests
+- Removed Z skipped tests
+- Fixed X platform-specific issues
+- [Other improvements]
+
+### Boy Scout Rule Applied
+- ✅ All encountered issues fixed
+- ✅ Code quality improved on all platforms
+- ✅ Documentation updated
+```
+
+### 8. Feature Finalization
 After user explicitly states feature acceptance:
 1. Create descriptive commit message summarizing all changes
 2. Push feature branch to remote repository
@@ -106,7 +215,7 @@ After user explicitly states feature acceptance:
 5. Delete the feature branch locally
 6. Optionally delete the feature branch on remote
 
-### 7. Special Conditions
+### 9. Special Conditions
 - **Platform-Specific Implementation**: Some features may not apply to all platforms
 - **Skipping Manual Tests**: Only when user explicitly requests
 - **Interrupted Implementation**: Next session can resume using existing task list
@@ -236,6 +345,12 @@ Before marking any task as `[Implemented]`, verify:
 ### Shared Models/Logic - Estimated: Xh
 - **Task S1.1:** Create shared data models `[ReadyToDevelop]` (Est: 30m)
 - **Task S1.2:** Write tests for shared models `[ReadyToDevelop]` (Est: 30m)
+
+## Checkpoints
+- **Mobile Checkpoint:** After Mobile tasks - All mobile tests green 🛑
+- **Web Checkpoint:** After Web tasks - All web tests green 🛑
+- **Desktop Checkpoint:** After Desktop tasks - All desktop tests green 🛑
+- **Final Checkpoint:** All platforms tested, builds clean 🛑
 
 ## Time Tracking Summary
 - **Total Estimated Time:** [Sum of all estimates]

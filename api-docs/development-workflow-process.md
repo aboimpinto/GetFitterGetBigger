@@ -30,8 +30,8 @@ memory-bank/features/
 
 1. **SUBMITTED**: Feature propagated from another project, needs refinement
 2. **READY_TO_DEVELOP**: Feature is fully specified with tasks defined
-3. **IN_PROGRESS**: Active development with commit tracking
-4. **COMPLETED**: All tasks done, tests passing, user accepted
+3. **IN_PROGRESS**: Active development with commit tracking and time tracking
+4. **COMPLETED**: All tasks done, tests passing, user explicitly accepted
 5. **BLOCKED**: Cannot proceed due to dependencies
 6. **SKIPPED**: Deferred or cancelled with documented reasons
 
@@ -44,8 +44,8 @@ Each feature folder must contain different files based on state:
 - No tasks file yet (created during refinement)
 
 #### 1-READY_TO_DEVELOP through 5-SKIPPED  
-- `feature-description.md` - Business value, user stories, acceptance criteria
-- `feature-tasks.md` - Detailed implementation tasks with status tracking
+- `feature-description.md` - Business value, user stories, acceptance criteria, Feature ID
+- `feature-tasks.md` - Detailed implementation tasks with status tracking and time estimates
 
 ### Feature Creation Process
 
@@ -66,10 +66,12 @@ This applies to ALL features:
 
 1. **Refinement** (0-SUBMITTED → 1-READY_TO_DEVELOP): Analyze impact, create tasks
 2. **Planning**: Create comprehensive task list
-3. **Development**: Execute tasks sequentially
-4. **Testing**: Write tests immediately after implementation
-5. **Verification**: Ensure all tests pass and build succeeds
-6. **Acceptance**: Get user approval before completion
+3. **Baseline Health Check**: Mandatory health check before starting (see `baseline-health-check-process.md`)
+4. **Development**: Execute tasks sequentially
+5. **Testing**: Write tests immediately after implementation
+6. **Verification**: Ensure all tests pass and build succeeds
+7. **Quality Report**: Compare baseline to final metrics
+8. **Acceptance**: Get user approval before completion
 
 ## Bug Management Workflow
 
@@ -97,8 +99,8 @@ memory-bank/bugs/
 ### Required Files
 
 Each bug folder must contain:
-- `bug-report.md` - Description, reproduction steps, impact
-- `bug-tasks.md` - Fix implementation tasks with test-first approach
+- `bug-report.md` - Description, reproduction steps, impact, Related Feature reference
+- `bug-tasks.md` - Fix implementation tasks with test-first approach and Boy Scout cleanup
 
 ### Test-First Approach
 
@@ -121,17 +123,37 @@ When working on ANY task:
 All tasks use consistent status indicators:
 - `[ReadyToDevelop]` or `[TODO]` - Task identified
 - `[PROGRESS]` - Currently working on task
-- `[Implemented: <hash>]` or `[IMPLEMENTED: <hash>]` - Completed with commit reference
+- `[Implemented: <hash>]` - Completed with commit reference (simple format)
+- `[Implemented: <hash> | Started: YYYY-MM-DD HH:MM | Finished: YYYY-MM-DD HH:MM | Duration: Xh Ym]` - With time tracking
 - `[BLOCKED: <reason>]` - Cannot proceed
 - `[Skipped]` - Determined unnecessary
+
+### Time Tracking Requirements
+
+All tasks must include time tracking with the following format:
+- **Estimated Time**: Include in task definition
+- **Actual Time**: Track using the extended format above
+- **Time Summary**: Calculate total time and AI assistance impact
+- **Format**: Use 24-hour timestamps, round to 5-minute increments
+
+Example:
+```
+### Time Summary
+- **Estimated Time**: 3h 
+- **Actual Time**: 1h 25m
+- **Time Saved**: 1h 35m (52.8% reduction)
+- **AI Assistance Impact**: High - Significant time savings
+```
 
 ### Quality Gates
 Before marking any task complete:
 - Implementation code is complete
-- Tests are written and passing
-- Build succeeds with minimal warnings
+- Tests are written and passing (>80% branch coverage target)
+- Build succeeds with NO warnings in touched files
 - Linting passes (where applicable)
 - No regression in existing functionality
+- User explicitly approves for feature completion
+- Time tracking is complete with AI impact assessment
 
 ## Project-Specific Considerations
 
@@ -175,6 +197,14 @@ Each project maintains a `TESTING-QUICK-REFERENCE.md` with:
 3. **Quality**: Mandatory testing and cleanup
 4. **Traceability**: Commit tracking for all changes
 5. **Flexibility**: Supports various development scenarios
+
+## Key Process Rules
+
+1. **Feature IDs**: Always use Feature IDs (FEAT-XXX) in references, not folder paths
+2. **0-SUBMITTED is Mandatory**: ALL features must start in 0-SUBMITTED, no exceptions
+3. **User Approval**: Required before moving features to COMPLETED
+4. **AI Impact Tracking**: Document time savings and efficiency gains
+5. **Test Coverage**: Target >80% branch coverage for new code
 
 ## Getting Started
 

@@ -29,6 +29,18 @@ used_by:
 ---
 ```
 
+## Workflow Documentation
+
+### Development Process
+- `development-workflow-process.md` - Unified workflow for all projects
+- `workflow-0-submitted-state.md` - Details on the mandatory 0-SUBMITTED state
+- `feature-bug-workflow-changes.md` - Recent changes to Feature/Bug processes
+- `testing-guidelines.md` - Comprehensive testing standards
+- `documentation-propagation-rules.md` - How to propagate documentation
+
+### Feature Tracking
+- `feature-propagation-log.md` - Log of features propagated to Admin/Clients
+
 ## Workflow
 
 When changes are needed to an API endpoint:

@@ -177,6 +177,11 @@ If a feature is deferred or cancelled:
 3. **Test Scripts**: Include all test scripts in the feature folder
 4. **Clean Transitions**: Move entire folder, don't leave artifacts
 5. **Audit Trail**: Preserve all history in the moved files
+6. **Feature ID Usage**: Always use Feature IDs (FEAT-XXX) when referencing features:
+   - In bug reports: "Related Feature: FEAT-001"
+   - In blocked reasons: "Blocked by FEAT-002"
+   - In documentation: "See FEAT-003 for details"
+   - Never use folder paths or feature names alone
 
 ## Monitoring and Reporting
 
