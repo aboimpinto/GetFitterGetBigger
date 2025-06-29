@@ -74,7 +74,10 @@ public class ExerciseServiceUpdateCoachNotesTests
                 new() { Text = "Second note", Order = 2 }
             },
             ExerciseTypeIds = new List<string>(),
-            MuscleGroups = new List<MuscleGroupWithRoleRequest>(),
+            MuscleGroups = new List<MuscleGroupWithRoleRequest>
+            {
+                new() { MuscleGroupId = "musclegroup-chest-123", MuscleRoleId = "musclerole-primary-456" }
+            },
             EquipmentIds = new List<string>(),
             MovementPatternIds = new List<string>(),
             BodyPartIds = new List<string>()
@@ -143,7 +146,10 @@ public class ExerciseServiceUpdateCoachNotesTests
                 new() { Text = "New note 3", Order = 3 } // New note without ID
             },
             ExerciseTypeIds = new List<string>(),
-            MuscleGroups = new List<MuscleGroupWithRoleRequest>(),
+            MuscleGroups = new List<MuscleGroupWithRoleRequest>
+            {
+                new() { MuscleGroupId = "musclegroup-chest-123", MuscleRoleId = "musclerole-primary-456" }
+            },
             EquipmentIds = new List<string>(),
             MovementPatternIds = new List<string>(),
             BodyPartIds = new List<string>()
@@ -208,7 +214,10 @@ public class ExerciseServiceUpdateCoachNotesTests
             DifficultyId = DifficultyLevelId.New().ToString(),
             CoachNotes = new List<CoachNoteRequest>(), // Empty list
             ExerciseTypeIds = new List<string>(),
-            MuscleGroups = new List<MuscleGroupWithRoleRequest>(),
+            MuscleGroups = new List<MuscleGroupWithRoleRequest>
+            {
+                new() { MuscleGroupId = "musclegroup-chest-123", MuscleRoleId = "musclerole-primary-456" }
+            },
             EquipmentIds = new List<string>(),
             MovementPatternIds = new List<string>(),
             BodyPartIds = new List<string>()
@@ -264,7 +273,10 @@ public class ExerciseServiceUpdateCoachNotesTests
                 new() { Id = "coachnote-not-a-guid", Text = "Note with malformed ID", Order = 2 }
             },
             ExerciseTypeIds = new List<string>(),
-            MuscleGroups = new List<MuscleGroupWithRoleRequest>(),
+            MuscleGroups = new List<MuscleGroupWithRoleRequest>
+            {
+                new() { MuscleGroupId = "musclegroup-chest-123", MuscleRoleId = "musclerole-primary-456" }
+            },
             EquipmentIds = new List<string>(),
             MovementPatternIds = new List<string>(),
             BodyPartIds = new List<string>()
@@ -322,7 +334,10 @@ public class ExerciseServiceUpdateCoachNotesTests
             DifficultyId = DifficultyLevelId.New().ToString(),
             CoachNotes = null!, // Null means don't update
             ExerciseTypeIds = new List<string>(),
-            MuscleGroups = new List<MuscleGroupWithRoleRequest>(),
+            MuscleGroups = new List<MuscleGroupWithRoleRequest>
+            {
+                new() { MuscleGroupId = "musclegroup-chest-123", MuscleRoleId = "musclerole-primary-456" }
+            },
             EquipmentIds = new List<string>(),
             MovementPatternIds = new List<string>(),
             BodyPartIds = new List<string>()
@@ -379,7 +394,10 @@ public class ExerciseServiceUpdateCoachNotesTests
                 new() { Text = "Note at 50", Order = 50 }
             },
             ExerciseTypeIds = new List<string>(),
-            MuscleGroups = new List<MuscleGroupWithRoleRequest>(),
+            MuscleGroups = new List<MuscleGroupWithRoleRequest>
+            {
+                new() { MuscleGroupId = "musclegroup-chest-123", MuscleRoleId = "musclerole-primary-456" }
+            },
             EquipmentIds = new List<string>(),
             MovementPatternIds = new List<string>(),
             BodyPartIds = new List<string>()

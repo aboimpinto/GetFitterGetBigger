@@ -65,7 +65,10 @@ public class ExerciseServiceCoachNotesTests
                 new() { Text = "Third note", Order = 3 }
             },
             ExerciseTypeIds = new List<string>(),
-            MuscleGroups = new List<MuscleGroupWithRoleRequest>(),
+            MuscleGroups = new List<MuscleGroupWithRoleRequest>
+            {
+                new() { MuscleGroupId = "musclegroup-chest-123", MuscleRoleId = "musclerole-primary-456" }
+            },
             EquipmentIds = new List<string>(),
             MovementPatternIds = new List<string>(),
             BodyPartIds = new List<string>()
@@ -120,7 +123,10 @@ public class ExerciseServiceCoachNotesTests
                 exerciseTypeId1.ToString(),
                 exerciseTypeId2.ToString()
             },
-            MuscleGroups = new List<MuscleGroupWithRoleRequest>(),
+            MuscleGroups = new List<MuscleGroupWithRoleRequest>
+            {
+                new() { MuscleGroupId = "musclegroup-chest-123", MuscleRoleId = "musclerole-primary-456" }
+            },
             EquipmentIds = new List<string>(),
             MovementPatternIds = new List<string>(),
             BodyPartIds = new List<string>()
@@ -167,7 +173,10 @@ public class ExerciseServiceCoachNotesTests
             DifficultyId = DifficultyLevelId.New().ToString(),
             CoachNotes = new List<CoachNoteRequest>(),
             ExerciseTypeIds = new List<string>(),
-            MuscleGroups = new List<MuscleGroupWithRoleRequest>(),
+            MuscleGroups = new List<MuscleGroupWithRoleRequest>
+            {
+                new() { MuscleGroupId = "musclegroup-chest-123", MuscleRoleId = "musclerole-primary-456" }
+            },
             EquipmentIds = new List<string>(),
             MovementPatternIds = new List<string>(),
             BodyPartIds = new List<string>()
@@ -207,7 +216,10 @@ public class ExerciseServiceCoachNotesTests
                 "invalid-id",
                 "exercisetype-not-a-guid"
             },
-            MuscleGroups = new List<MuscleGroupWithRoleRequest>(),
+            MuscleGroups = new List<MuscleGroupWithRoleRequest>
+            {
+                new() { MuscleGroupId = "musclegroup-chest-123", MuscleRoleId = "musclerole-primary-456" }
+            },
             EquipmentIds = new List<string>(),
             MovementPatternIds = new List<string>(),
             BodyPartIds = new List<string>()
@@ -260,7 +272,10 @@ public class ExerciseServiceCoachNotesTests
                 new() { Text = "Note at 20", Order = 20 }
             },
             ExerciseTypeIds = new List<string>(),
-            MuscleGroups = new List<MuscleGroupWithRoleRequest>(),
+            MuscleGroups = new List<MuscleGroupWithRoleRequest>
+            {
+                new() { MuscleGroupId = "musclegroup-chest-123", MuscleRoleId = "musclerole-primary-456" }
+            },
             EquipmentIds = new List<string>(),
             MovementPatternIds = new List<string>(),
             BodyPartIds = new List<string>()

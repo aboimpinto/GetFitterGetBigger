@@ -155,6 +155,11 @@ public class ExercisesController : ControllerBase
             _logger.LogWarning("Rest exclusivity rule violation: {Error}", ex.Message);
             return BadRequest(new { error = ex.Message });
         }
+        catch (InvalidOperationException ex) when (ex.Message.Contains("muscle group"))
+        {
+            _logger.LogWarning("Muscle group validation error: {Error}", ex.Message);
+            return BadRequest(new { error = ex.Message });
+        }
         catch (ArgumentException ex)
         {
             _logger.LogWarning("Invalid exercise creation request: {Error}", ex.Message);
@@ -254,6 +259,11 @@ public class ExercisesController : ControllerBase
         catch (InvalidOperationException ex) when (ex.Message.Contains("Rest"))
         {
             _logger.LogWarning("Rest exclusivity rule violation: {Error}", ex.Message);
+            return BadRequest(new { error = ex.Message });
+        }
+        catch (InvalidOperationException ex) when (ex.Message.Contains("muscle group"))
+        {
+            _logger.LogWarning("Muscle group validation error: {Error}", ex.Message);
             return BadRequest(new { error = ex.Message });
         }
     }

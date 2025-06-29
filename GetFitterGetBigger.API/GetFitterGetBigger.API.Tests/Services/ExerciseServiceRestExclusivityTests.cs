@@ -214,7 +214,10 @@ public class ExerciseServiceRestExclusivityTests
                 "exercisetype-b2c3d4e5-6f7a-8b9c-0d1e-2f3a4b5c6d7e", // Workout
                 "exercisetype-33445566-7788-99aa-bbcc-ddeeff001122"  // Cooldown
             },
-            MuscleGroups = new List<MuscleGroupWithRoleRequest>(),
+            MuscleGroups = new List<MuscleGroupWithRoleRequest>
+            {
+                new() { MuscleGroupId = "musclegroup-chest-123", MuscleRoleId = "musclerole-primary-456" }
+            },
             EquipmentIds = new List<string>(),
             MovementPatternIds = new List<string>(),
             BodyPartIds = new List<string>()
@@ -264,7 +267,10 @@ public class ExerciseServiceRestExclusivityTests
             Description = "No Type Description",
             DifficultyId = DifficultyLevelId.New().ToString(),
             ExerciseTypeIds = new List<string>(),
-            MuscleGroups = new List<MuscleGroupWithRoleRequest>(),
+            MuscleGroups = new List<MuscleGroupWithRoleRequest>
+            {
+                new() { MuscleGroupId = "musclegroup-chest-123", MuscleRoleId = "musclerole-primary-456" }
+            },
             EquipmentIds = new List<string>(),
             MovementPatternIds = new List<string>(),
             BodyPartIds = new List<string>()

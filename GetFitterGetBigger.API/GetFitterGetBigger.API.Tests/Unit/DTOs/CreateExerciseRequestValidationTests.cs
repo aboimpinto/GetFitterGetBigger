@@ -29,9 +29,9 @@ public class CreateExerciseRequestValidationTests
     }
 
     [Fact]
-    public void CreateExerciseRequest_NonRestExercise_EmptyMuscleGroups_IsInvalid()
+    public void CreateExerciseRequest_NonRestExercise_EmptyMuscleGroups_IsValidAtDtoLevel()
     {
-        // Arrange
+        // Arrange - DTO validation no longer checks muscle groups (moved to service layer)
         var request = new CreateExerciseRequest
         {
             Name = "Push Up",
@@ -44,9 +44,8 @@ public class CreateExerciseRequestValidationTests
         // Act
         var validationResults = ValidateModel(request);
 
-        // Assert
-        Assert.Single(validationResults);
-        Assert.Contains("At least one muscle group must be specified for non-REST exercises", validationResults[0].ErrorMessage);
+        // Assert - DTO validation should pass, service layer will handle muscle group validation
+        Assert.Empty(validationResults);
     }
 
     [Fact]
@@ -97,9 +96,9 @@ public class CreateExerciseRequestValidationTests
     }
 
     [Fact]
-    public void CreateExerciseRequest_EmptyExerciseTypes_EmptyMuscleGroups_IsInvalid()
+    public void CreateExerciseRequest_EmptyExerciseTypes_EmptyMuscleGroups_IsValidAtDtoLevel()
     {
-        // Arrange
+        // Arrange - DTO validation no longer checks muscle groups (moved to service layer)
         var request = new CreateExerciseRequest
         {
             Name = "Some Exercise",
@@ -112,9 +111,8 @@ public class CreateExerciseRequestValidationTests
         // Act
         var validationResults = ValidateModel(request);
 
-        // Assert
-        Assert.Single(validationResults);
-        Assert.Contains("At least one muscle group must be specified for non-REST exercises", validationResults[0].ErrorMessage);
+        // Assert - DTO validation should pass, service layer will handle muscle group validation
+        Assert.Empty(validationResults);
     }
 
     [Fact]
@@ -169,9 +167,9 @@ public class CreateExerciseRequestValidationTests
     [InlineData("exercisetype-workout-456")]
     [InlineData("exercisetype-cooldown-456")]
     [InlineData("exercisetype-strength-456")]
-    public void CreateExerciseRequest_NonRestExerciseTypes_EmptyMuscleGroups_IsInvalid(string exerciseTypeId)
+    public void CreateExerciseRequest_NonRestExerciseTypes_EmptyMuscleGroups_IsValidAtDtoLevel(string exerciseTypeId)
     {
-        // Arrange
+        // Arrange - DTO validation no longer checks muscle groups (moved to service layer)
         var request = new CreateExerciseRequest
         {
             Name = "Some Exercise",
@@ -184,9 +182,8 @@ public class CreateExerciseRequestValidationTests
         // Act
         var validationResults = ValidateModel(request);
 
-        // Assert
-        Assert.Single(validationResults);
-        Assert.Contains("At least one muscle group must be specified for non-REST exercises", validationResults[0].ErrorMessage);
+        // Assert - DTO validation should pass, service layer will handle muscle group validation
+        Assert.Empty(validationResults);
     }
 
     private static List<ValidationResult> ValidateModel(object model)
