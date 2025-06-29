@@ -27,17 +27,17 @@
 **CHECKPOINT 2:** ✅ `dotnet build` MUST PASS | `dotnet test` ALL GREEN | NO WARNINGS
 
 ### Phase 3: UI/UX Improvements
-- **Task 3.1:** Update form labels to remove required indicators for coach notes `[ReadyToDevelop]`
-- **Task 3.2:** Ensure empty state messaging is appropriate for optional field `[ReadyToDevelop]`
-- **Task 3.3:** Add helpful placeholder text indicating coach notes are optional `[ReadyToDevelop]`
+- **Task 3.1:** Update form labels to remove required indicators for coach notes `[Completed - commit d3dabab5]`
+- **Task 3.2:** Ensure empty state messaging is appropriate for optional field `[Completed - commit d3dabab5]`
+- **Task 3.3:** Add helpful placeholder text indicating coach notes are optional `[Completed - commit d3dabab5]`
 
-**CHECKPOINT 3:** 🛑 `dotnet build` MUST PASS | `dotnet test` ALL GREEN | NO WARNINGS
+**CHECKPOINT 3:** ✅ `dotnet build` MUST PASS | `dotnet test` ALL GREEN | NO WARNINGS
 
 ### Phase 4: Integration Testing
-- **Task 4.1:** Test complete exercise CRUD flow with zero coach notes `[ReadyToDevelop]`
-- **Task 4.2:** Test exercise creation, editing, and deletion without coach notes `[ReadyToDevelop]`
-- **Task 4.3:** Verify coach notes functionality still works when notes are provided `[ReadyToDevelop]`
-- **Task 4.4:** Test edge cases (all empty notes, mixed empty/filled notes) `[ReadyToDevelop]`
+- **Task 4.1:** Test complete exercise CRUD flow with zero coach notes `[Completed - commit 604e42ef]`
+- **Task 4.2:** Test exercise creation, editing, and deletion without coach notes `[Completed - commit 604e42ef]`
+- **Task 4.3:** Verify coach notes functionality still works when notes are provided `[Completed - commit 604e42ef]`
+- **Task 4.4:** Test edge cases (all empty notes, mixed empty/filled notes) `[Completed - commit 604e42ef]`
 
 **FINAL CHECKPOINT:** 🛑 `dotnet build` MUST PASS | `dotnet test` ALL GREEN | NO WARNINGS
 
