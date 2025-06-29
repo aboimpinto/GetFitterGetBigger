@@ -1,8 +1,9 @@
 # Exercise Management Feature
 
 ## Feature ID: FEAT-011
-## Status: BLOCKED
-## Target PI: TBD
+## Status: COMPLETED
+## Completed: 2025-01-29
+## Target PI: PI-2025-Q1
 
 ## 1. Feature Overview
 
@@ -15,7 +16,6 @@ This document outlines the API and database-level implementation for the Exercis
 - Pagination support (default 10 items per page, configurable)
 - Filtering capabilities (by name and other fields)
 - Soft delete with conditional hard delete
-- Admin-only access via authorization
 
 ---
 
