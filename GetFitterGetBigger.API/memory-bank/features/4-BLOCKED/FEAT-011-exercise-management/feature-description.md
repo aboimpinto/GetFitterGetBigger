@@ -1,5 +1,9 @@
 # Exercise Management Feature
 
+## Feature ID: FEAT-011
+## Status: BLOCKED
+## Target PI: TBD
+
 ## 1. Feature Overview
 
 This feature enables the creation and management of exercises, which are the fundamental building blocks of workouts. Personal Trainers (PTs) will use the Admin application to create a comprehensive library of exercises, including detailed instructions and visual aids.

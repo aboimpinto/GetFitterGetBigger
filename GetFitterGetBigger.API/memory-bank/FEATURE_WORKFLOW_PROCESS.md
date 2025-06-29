@@ -18,25 +18,31 @@ memory-bank/features/
 
 ### 0. Feature Submission (SUBMITTED) - MANDATORY STARTING POINT
 **IMPORTANT**: ALL features MUST start in 0-SUBMITTED state, even in the API project:
-1. Create folder: `memory-bank/features/0-SUBMITTED/[feature-name]/`
-2. Add only `feature-description.md` with the feature details
-3. NO task files yet - these are created during refinement
-4. When ready to plan, create tasks and move to `1-READY_TO_DEVELOP`
+1. Assign the next Feature ID from `/memory-bank/features/NEXT_FEATURE_ID.txt`
+2. Create folder: `memory-bank/features/0-SUBMITTED/FEAT-XXX-[feature-name]/`
+   - Replace XXX with the assigned Feature ID (e.g., FEAT-009-new-feature)
+3. Add only `feature-description.md` with the feature details (must include Feature ID)
+4. Update `NEXT_FEATURE_ID.txt` to the next number
+5. NO task files yet - these are created during refinement
+6. When ready to plan, create tasks and move to `1-READY_TO_DEVELOP`
 
 This ensures consistent workflow tracking across all projects.
 
 ### 1. Feature Planning (READY_TO_DEVELOP)
 When a new feature is identified:
-1. Create a folder: `memory-bank/features/1-READY_TO_DEVELOP/[feature-name]/`
-2. Create two files in the folder:
-   - `feature-description.md` - Detailed feature specification
+1. Assign the next Feature ID from `/memory-bank/features/NEXT_FEATURE_ID.txt`
+2. Create a folder: `memory-bank/features/1-READY_TO_DEVELOP/FEAT-XXX-[feature-name]/`
+   - Replace XXX with the assigned Feature ID (e.g., FEAT-007-integration-tests-fix)
+3. Create two files in the folder:
+   - `feature-description.md` - Detailed feature specification (must include Feature ID)
    - `feature-tasks.md` - Implementation task list
-3. Optional: Add any supporting documents, mockups, or scripts
+4. Update `NEXT_FEATURE_ID.txt` to the next number
+5. Optional: Add any supporting documents, mockups, or scripts
 
 **Folder Structure Example:**
 ```
 1-READY_TO_DEVELOP/
-└── exercise-management/
+└── FEAT-008-exercise-management/
     ├── feature-description.md
     ├── feature-tasks.md
     └── api-endpoints-spec.md
@@ -53,7 +59,7 @@ When development begins:
 **Folder Structure Example:**
 ```
 2-IN_PROGRESS/
-└── exercise-management/
+└── FEAT-008-exercise-management/
     ├── feature-description.md
     ├── feature-tasks.md (with commit hashes)
     ├── api-endpoints-spec.md
@@ -61,16 +67,32 @@ When development begins:
 ```
 
 ### 3. Feature Completion (COMPLETED)
-When all tasks are implemented and tested:
-1. Ensure all tests are green
-2. Get user acceptance (if manual testing phase)
-3. Calculate final time metrics in feature-tasks.md:
-   - Sum all actual durations
-   - Calculate AI assistance impact percentage
-   - Add final summary of time savings
-4. Move entire folder from `2-IN_PROGRESS` to `3-COMPLETED`
-5. Add completion date and time metrics to feature-description.md
-6. Feature is now eligible for next PI release
+**⚠️ CRITICAL: ONLY THE USER CAN MOVE FEATURES TO COMPLETED! ⚠️**
+
+The AI assistant should NEVER move features to COMPLETED. When all implementation tasks are done:
+
+1. **AI ASSISTANT RESPONSIBILITIES:**
+   - Verify ALL tasks in feature-tasks.md are marked as `[Implemented]` with commit hashes
+   - Ensure all automated tests are green
+   - Calculate final time metrics in feature-tasks.md
+   - Update all checkboxes to checked [x] in feature-tasks.md
+   - Create `completion-summary.md` with implementation summary
+   - **NOTIFY THE USER** that implementation is complete and ready for review
+
+2. **USER RESPONSIBILITIES (ONLY THE USER CAN DO THESE):**
+   - Perform manual testing and validation
+   - Review all code changes
+   - Verify acceptance criteria are met
+   - Make the decision to move to COMPLETED
+   - Move entire folder from `2-IN_PROGRESS` to `3-COMPLETED`
+   - Add completion date to feature-description.md
+   - Approve for PI release
+
+**IMPORTANT**: Features CANNOT be moved to COMPLETED if:
+- Any tasks remain in `[ReadyToDevelop]` or `[InProgress]` state
+- User has not performed manual testing
+- Code review is not complete
+- User has not explicitly approved the completion
 
 ### 4. Blocked Features (BLOCKED)
 If a feature cannot proceed:
@@ -194,21 +216,43 @@ To get current feature status:
 - SKIPPED features older than 4 PIs can be archived
 - Archive location: `memory-bank/archive/features/[year]/`
 
+## Feature ID Management
+
+1. **Feature ID Format**: FEAT-XXX (e.g., FEAT-001, FEAT-007, FEAT-099)
+2. **Assignment**: Always use the next available ID from `NEXT_FEATURE_ID.txt`
+3. **Folder Naming**: All feature folders MUST be prefixed with their Feature ID
+4. **Consistency**: Feature ID must appear in:
+   - Folder name: `FEAT-007-integration-tests-fix/`
+   - feature-description.md: `## Feature ID: FEAT-007`
+   - Bug references: "Fixed in FEAT-007"
+   - Commit messages: "feat(FEAT-007): implement PostgreSQL tests"
+
 ## Common Mistakes to Avoid
 
-1. **Starting work without proper folder structure**: Always create the feature folder in the appropriate state directory BEFORE starting implementation
-2. **Creating task files in wrong location**: Task files must be inside the feature folder, not directly in `memory-bank/features/`
-3. **Not moving folders between states**: Remember to move the entire feature folder as it progresses through states
-4. **Missing feature-description.md**: Both description and tasks files are required from the start
+1. **Not using Feature IDs**: All features MUST have a Feature ID prefix in their folder name
+2. **Starting work without proper folder structure**: Always create the feature folder in the appropriate state directory BEFORE starting implementation
+3. **Creating task files in wrong location**: Task files must be inside the feature folder, not directly in `memory-bank/features/`
+4. **Not moving folders between states**: Remember to move the entire feature folder as it progresses through states
+5. **Missing feature-description.md**: Both description and tasks files are required from the start
+6. **Using folder paths in references**: Always use Feature IDs (FEAT-XXX) not folder paths when referencing features
 
 ### Example of Incorrect Start:
 ```
 ❌ memory-bank/features/my-feature-tasks.md  # Wrong location
+❌ memory-bank/features/1-READY_TO_DEVELOP/my-feature/  # Missing Feature ID
 ```
 
 ### Example of Correct Start:
 ```
-✅ memory-bank/features/1-READY_TO_DEVELOP/my-feature/
-   ├── feature-description.md
+✅ memory-bank/features/1-READY_TO_DEVELOP/FEAT-009-my-feature/
+   ├── feature-description.md  # Contains Feature ID: FEAT-009
    └── feature-tasks.md
 ```
+
+## Feature ID Sequence
+
+- Use sequential numbering: FEAT-001, FEAT-002, etc.
+- Maintain a `NEXT_FEATURE_ID.txt` file in features folder
+- Never reuse feature IDs
+- Format: FEAT-[3-digit-number]
+- Feature IDs are permanent and don't change when features move between states

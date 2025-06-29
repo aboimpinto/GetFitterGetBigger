@@ -160,8 +160,8 @@ public class CacheServiceTests
         Assert.Equal(newValue.Id, cachedResult.Id);
     }
 
-    [Fact(Skip = "GetOrCreateAsync doesn't support nullable return types - causes CS8634 warning")]
-    public async Task GetOrCreateAsync_WhenFactoryReturnsNull_DoesNotCache()
+    [Fact]
+    public async Task GetOrCreateNullableAsync_WhenFactoryReturnsNull_DoesNotCache()
     {
         // Arrange
         var key = "test-key";
@@ -173,9 +173,7 @@ public class CacheServiceTests
         };
 
         // Act
-        // This line causes CS8634 warning - commented out since test is skipped
-        // var result = await _cacheService.GetOrCreateAsync(key, factory, TimeSpan.FromMinutes(5));
-        TestObject? result = null; // Simulated result
+        var result = await _cacheService.GetOrCreateNullableAsync(key, factory, TimeSpan.FromMinutes(5));
 
         // Assert
         Assert.Null(result);

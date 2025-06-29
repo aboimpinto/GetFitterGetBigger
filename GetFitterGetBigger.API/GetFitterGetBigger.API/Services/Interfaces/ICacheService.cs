@@ -46,4 +46,14 @@ public interface ICacheService
     /// <param name="expiration">The cache expiration time</param>
     /// <returns>The cached or newly created value</returns>
     Task<T> GetOrCreateAsync<T>(string key, Func<Task<T>> factory, TimeSpan expiration) where T : class;
+
+    /// <summary>
+    /// Gets or creates a cached value that may be null
+    /// </summary>
+    /// <typeparam name="T">The type of the cached value</typeparam>
+    /// <param name="key">The cache key</param>
+    /// <param name="factory">The factory function to create the value if not cached (may return null)</param>
+    /// <param name="expiration">The cache expiration time</param>
+    /// <returns>The cached or newly created value, or null if factory returns null</returns>
+    Task<T?> GetOrCreateNullableAsync<T>(string key, Func<Task<T?>> factory, TimeSpan expiration) where T : class;
 }

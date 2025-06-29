@@ -126,6 +126,9 @@ If bug won't be addressed:
 
 ## Fix Summary
 [Brief description of how it was fixed - added after resolution]
+
+## Related Feature
+[If bug was fixed as part of a feature, reference it by Feature ID: FEAT-XXX]
 ```
 
 ### bug-tasks.md Template
@@ -241,3 +244,28 @@ Track bug metrics:
 - Maintain a `NEXT_BUG_ID.txt` file in bugs folder
 - Never reuse bug IDs
 - Format: BUG-[3-digit-number]
+
+## Feature Reference Guidelines
+
+When a bug is fixed as part of a feature implementation:
+
+1. **Always use Feature IDs**: Reference features by their ID (e.g., FEAT-007) rather than folder paths
+   - ✅ Correct: "Fixed in FEAT-007"
+   - ❌ Incorrect: "Fixed in features/2-IN_PROGRESS/integration-tests-ef-core-fix/"
+
+2. **Why Feature IDs over Paths**: Feature folders move between states as work progresses:
+   - A feature starts in `0-SUBMITTED/`
+   - Moves to `1-READY_TO_DEVELOP/`
+   - Then to `2-IN_PROGRESS/`
+   - Finally to `3-COMPLETED/`
+   - Using the Feature ID ensures references remain valid regardless of state
+
+3. **Where to Reference Features**:
+   - In `## Fixed Version:` field, add "Fixed in FEAT-XXX"
+   - In `## Fix Summary` section, mention the feature that included the fix
+   - In new `## Related Feature` section at the end of bug-report.md
+
+4. **Feature ID Format**: 
+   - Features use the format: FEAT-XXX (e.g., FEAT-001, FEAT-007)
+   - Feature IDs are defined in the feature's `feature-description.md` file
+   - Each feature should have a unique ID that never changes

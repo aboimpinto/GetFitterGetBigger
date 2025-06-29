@@ -118,4 +118,35 @@ public class CacheService : ICacheService
             return await factory();
         }
     }
+
+    /// <inheritdoc/>
+    public async Task<T?> GetOrCreateNullableAsync<T>(string key, Func<Task<T?>> factory, TimeSpan expiration) where T : class
+    {
+        try
+        {
+            var cachedValue = await GetAsync<T>(key);
+            if (cachedValue != null)
+            {
+                _logger.LogDebug("Cache hit for key: {Key}", key);
+                return cachedValue;
+            }
+
+            _logger.LogDebug("Cache miss for key: {Key}", key);
+            var value = await factory();
+            
+            // Only cache non-null values
+            if (value != null)
+            {
+                await SetAsync(key, value, expiration);
+            }
+
+            return value;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error in GetOrCreateNullableAsync for key: {Key}", key);
+            // If caching fails, still try to get the value from the factory
+            return await factory();
+        }
+    }
 }

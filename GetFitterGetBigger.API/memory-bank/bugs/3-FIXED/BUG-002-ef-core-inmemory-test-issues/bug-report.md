@@ -2,10 +2,11 @@
 
 ## Bug ID: BUG-002
 ## Reported: 2025-01-29 (documented from BUGS.md)
-## Status: OPEN
+## Status: FIXED
 ## Severity: Medium
 ## Affected Version: Current
-## Fixed Version: [Pending]
+## Fixed Version: Fixed in FEAT-007
+## Resolution Date: 2025-01-29
 
 ## Description
 
@@ -51,3 +52,34 @@ Tests are currently skipped with bug reference in the skip message.
 ## Related Information
 - Feature FEAT-007 will implement the fix using PostgreSQL TestContainers
 - Note: There's another BUG-002 in 3-FIXED related to production `.AsSplitQuery()` issues, but this is a different issue specific to test infrastructure
+
+## Resolution
+
+This bug was fixed as part of FEAT-007 "Fix EF Core Integration Tests with PostgreSQL TestContainers" on 2025-01-29.
+
+### Solution Implemented:
+1. **Replaced In-Memory Provider**: Migrated from EF Core In-Memory database to PostgreSQL TestContainers
+2. **Real Database Testing**: Tests now run against actual PostgreSQL instances in Docker containers
+3. **Full Query Support**: All EF Core features including `.AsSplitQuery()` now work correctly
+4. **Database Migrations**: Tests use real migrations instead of `EnsureCreated`
+
+### Results:
+- ✅ 7 out of 8 tests now pass successfully
+- ✅ The one failing test revealed an actual API bug (muscle group filter issue)
+- ✅ Test execution time remains reasonable (~6.5 seconds for full suite)
+- ✅ No more "Sequence contains no elements" errors
+- ✅ Complex queries with multiple includes work correctly
+
+### Implementation Details:
+- Added `TestContainers.PostgreSql` NuGet package
+- Created `PostgreSqlTestFixture` for container lifecycle management
+- Updated `ApiTestFixture` to use PostgreSQL instead of In-Memory
+- Implemented proper test data cleanup between test runs
+- All 8 previously skipped tests have been migrated
+
+### Reference:
+- Implementation PR: feature/integration-tests-postgresql branch
+- Fixed by Feature: FEAT-007
+
+## Related Feature
+- FEAT-007: Fix EF Core Integration Tests with PostgreSQL TestContainers

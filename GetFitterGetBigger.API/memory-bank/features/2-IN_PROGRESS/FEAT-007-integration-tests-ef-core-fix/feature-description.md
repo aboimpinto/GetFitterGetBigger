@@ -2,7 +2,7 @@
 
 ## Feature ID: FEAT-007
 ## Created: 2025-01-29
-## Status: SUBMITTED
+## Status: IN_PROGRESS
 ## Target PI: PI-2025-Q1
 
 ## Description
@@ -10,6 +10,11 @@
 This feature addresses the issue of 8 skipped integration tests in the ExercisesController test suite. These tests are currently skipped due to limitations of the EF Core In-Memory database provider when handling complex queries with multiple includes and the `.AsSplitQuery()` method.
 
 The solution involves replacing the In-Memory provider with a real PostgreSQL database instance using TestContainers, ensuring test behavior matches production exactly.
+
+**UPDATE**: The scope was expanded to fix ALL skipped tests in the project, including:
+- 8 ExercisesController tests (fixed by creating PostgreSQL versions and removing In-Memory duplicates)
+- 1 CacheService test (fixed by adding GetOrCreateNullableAsync method)
+- Result: **0 skipped tests** remaining in the entire project
 
 ## Business Value
 

@@ -1,5 +1,9 @@
 # API Authorization Middleware
 
+## Feature ID: FEAT-010
+## Status: SUBMITTED
+## Target PI: TBD
+
 ## Feature Overview
 
 This feature implements the authorization layer for the GetFitterGetBigger API, building upon the existing authentication infrastructure. It adds JWT Bearer authentication middleware, custom token validation with sliding expiration, authorization policies, and [Authorize] attribute enforcement on controller actions.
