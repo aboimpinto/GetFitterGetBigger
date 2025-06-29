@@ -34,6 +34,13 @@ namespace GetFitterGetBigger.Admin.Tests.Services
             _referenceDataServiceMock.Setup(x => x.GetEquipmentAsync()).ReturnsAsync(ReferenceDataDtoBuilder.BuildList(4));
             _referenceDataServiceMock.Setup(x => x.GetBodyPartsAsync()).ReturnsAsync(ReferenceDataDtoBuilder.BuildList(2));
             _referenceDataServiceMock.Setup(x => x.GetMovementPatternsAsync()).ReturnsAsync(ReferenceDataDtoBuilder.BuildList(6));
+            _referenceDataServiceMock.Setup(x => x.GetExerciseTypesAsync()).ReturnsAsync(new List<ExerciseTypeDto>
+            {
+                new() { Id = "1", Value = "Warmup", Description = "Warmup exercises" },
+                new() { Id = "2", Value = "Workout", Description = "Main workout exercises" },
+                new() { Id = "3", Value = "Cooldown", Description = "Cooldown exercises" },
+                new() { Id = "4", Value = "Rest", Description = "Rest periods" }
+            });
             _exerciseServiceMock.Setup(x => x.GetExercisesAsync(It.IsAny<ExerciseFilterDto>())).ReturnsAsync(exercises);
 
             // Act
@@ -42,9 +49,85 @@ namespace GetFitterGetBigger.Admin.Tests.Services
             // Assert
             _stateService.DifficultyLevels.Should().HaveCount(3);
             _stateService.MuscleGroups.Should().HaveCount(5);
+            _stateService.ExerciseTypes.Should().HaveCount(4);
             _stateService.CurrentPage.Should().NotBeNull();
             _stateService.IsLoadingReferenceData.Should().BeFalse();
             _stateService.IsLoading.Should().BeFalse();
+        }
+
+        [Fact]
+        public async Task StateService_HandlesCoachNotesAndExerciseTypes_Correctly()
+        {
+            // Arrange
+            var exerciseWithCoachNotes = new ExerciseListDtoBuilder()
+                .WithId("exercise-1")
+                .WithName("Test Exercise")
+                .WithCoachNotes(
+                    ("Step 1: Setup", 0),
+                    ("Step 2: Execute", 1),
+                    ("Step 3: Reset", 2))
+                .WithExerciseTypes(
+                    ("Warmup", "Warmup description"),
+                    ("Workout", "Main workout"))
+                .Build();
+
+            var exercises = new ExercisePagedResultDto 
+            { 
+                Items = new List<ExerciseListDto> { exerciseWithCoachNotes } 
+            };
+
+            var exerciseTypes = new List<ExerciseTypeDto>
+            {
+                new() { Id = "1", Value = "Warmup", Description = "Warmup exercises" },
+                new() { Id = "2", Value = "Workout", Description = "Main workout exercises" },
+                new() { Id = "3", Value = "Cooldown", Description = "Cooldown exercises" },
+                new() { Id = "4", Value = "Rest", Description = "Rest periods" }
+            };
+            
+            _referenceDataServiceMock.Setup(x => x.GetDifficultyLevelsAsync()).ReturnsAsync(ReferenceDataDtoBuilder.BuildList(3));
+            _referenceDataServiceMock.Setup(x => x.GetMuscleGroupsAsync()).ReturnsAsync(ReferenceDataDtoBuilder.BuildList(5));
+            _referenceDataServiceMock.Setup(x => x.GetMuscleRolesAsync()).ReturnsAsync(ReferenceDataDtoBuilder.BuildList(3));
+            _referenceDataServiceMock.Setup(x => x.GetEquipmentAsync()).ReturnsAsync(ReferenceDataDtoBuilder.BuildList(4));
+            _referenceDataServiceMock.Setup(x => x.GetBodyPartsAsync()).ReturnsAsync(ReferenceDataDtoBuilder.BuildList(2));
+            _referenceDataServiceMock.Setup(x => x.GetMovementPatternsAsync()).ReturnsAsync(ReferenceDataDtoBuilder.BuildList(6));
+            _referenceDataServiceMock.Setup(x => x.GetExerciseTypesAsync()).ReturnsAsync(exerciseTypes);
+            _exerciseServiceMock.Setup(x => x.GetExercisesAsync(It.IsAny<ExerciseFilterDto>())).ReturnsAsync(exercises);
+
+            // Act
+            await _stateService.InitializeAsync();
+
+            // Assert
+            _stateService.ExerciseTypes.Should().HaveCount(4);
+            _stateService.CurrentPage.Should().NotBeNull();
+            _stateService.CurrentPage!.Items.Should().HaveCount(1);
+            
+            var loadedExercise = _stateService.CurrentPage.Items.First();
+            loadedExercise.CoachNotes.Should().HaveCount(3);
+            loadedExercise.CoachNotes.Should().Contain(cn => cn.Text == "Step 1: Setup" && cn.Order == 0);
+            loadedExercise.CoachNotes.Should().Contain(cn => cn.Text == "Step 2: Execute" && cn.Order == 1);
+            loadedExercise.CoachNotes.Should().Contain(cn => cn.Text == "Step 3: Reset" && cn.Order == 2);
+            
+            loadedExercise.ExerciseTypes.Should().HaveCount(2);
+            loadedExercise.ExerciseTypes.Should().Contain(et => et.Value == "Warmup");
+            loadedExercise.ExerciseTypes.Should().Contain(et => et.Value == "Workout");
+        }
+
+        [Fact]
+        public async Task StateService_HandlesIsActiveFiltering_Correctly()
+        {
+            // Arrange
+            var filter = new ExerciseFilterDto { IsActive = true };
+            var exercises = new ExercisePagedResultDto { Items = new List<ExerciseListDto>() };
+            
+            _exerciseServiceMock.Setup(x => x.GetExercisesAsync(It.Is<ExerciseFilterDto>(f => f.IsActive == true)))
+                .ReturnsAsync(exercises);
+
+            // Act
+            await _stateService.LoadExercisesAsync(filter);
+
+            // Assert
+            _stateService.CurrentFilter.IsActive.Should().Be(true);
+            _exerciseServiceMock.Verify(x => x.GetExercisesAsync(It.Is<ExerciseFilterDto>(f => f.IsActive == true)), Times.Once);
         }
 
         [Fact]
