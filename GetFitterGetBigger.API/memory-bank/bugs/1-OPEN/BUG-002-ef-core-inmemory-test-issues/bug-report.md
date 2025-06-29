@@ -1,0 +1,53 @@
+# BUG-002: EF Core In-Memory Database Issues with Complex Queries
+
+## Bug ID: BUG-002
+## Reported: 2025-01-29 (documented from BUGS.md)
+## Status: OPEN
+## Severity: Medium
+## Affected Version: Current
+## Fixed Version: [Pending]
+
+## Description
+
+The EF Core In-Memory database provider has limitations when dealing with complex queries that include multiple navigation properties. When using Include() to load related entities (DifficultyLevel, MuscleGroups, Equipment, etc.), the in-memory provider fails to properly track and return the seeded data.
+
+## Error Messages
+- "Sequence contains no elements" errors when trying to access seeded data
+- Empty collections returned from queries that should have data
+
+## Reproduction Steps
+1. Run any of the ExercisesControllerTests integration tests
+2. Tests fail with various errors related to missing data
+3. Currently 8 tests are skipped with message: "BUG-002: EF Core In-Memory database provider has issues with complex queries involving multiple includes"
+
+## Affected Tests
+All in `ExercisesControllerTests.cs`:
+1. `GetExercises_ReturnsPagedListOfExercises`
+2. `GetExercises_WithNameFilter_ReturnsFilteredResults`
+3. `GetExercises_WithMuscleGroupFilter_ReturnsFilteredResults`
+4. `GetExercise_WithValidId_ReturnsExercise`
+5. `CreateExercise_WithDuplicateName_ReturnsConflict`
+6. `UpdateExercise_WithValidData_ReturnsUpdatedExercise`
+7. `UpdateExercise_WithDuplicateName_ReturnsConflict`
+8. `DeleteExercise_WithValidId_ReturnsNoContent`
+
+## Root Cause
+1. EF Core In-Memory provider doesn't support `.AsSplitQuery()` properly
+2. Complex queries with multiple includes cause issues in the In-Memory provider
+3. The provider can't handle the same level of query complexity as PostgreSQL
+4. Each test creates a new in-memory database instance, and the complex entity relationships with multiple includes are not properly handled
+
+## Impact
+- **Test Coverage**: 8 critical integration tests cannot run
+- **Developer Experience**: Tests must be skipped, reducing confidence
+- **Quality Risk**: Exercise API endpoints not fully tested
+
+## Proposed Solution
+Replace EF Core In-Memory provider with PostgreSQL TestContainers for integration tests. This is being tracked as FEAT-007 in the feature workflow.
+
+## Workaround
+Tests are currently skipped with bug reference in the skip message.
+
+## Related Information
+- Feature FEAT-007 will implement the fix using PostgreSQL TestContainers
+- Note: There's another BUG-002 in 3-FIXED related to production `.AsSplitQuery()` issues, but this is a different issue specific to test infrastructure

@@ -82,6 +82,8 @@ The `/memory-bank/` directory contains all project knowledge and processes:
 - **`4-BLOCKED/`** - Bugs waiting on dependencies
 - **`5-WONT_FIX/`** - Bugs that won't be addressed
 
+**IMPORTANT**: Always use the `/memory-bank/bugs/` folder structure for bug tracking. Do NOT use or create a `BUGS.md` file in the memory-bank root. Each bug should have its own folder with proper documentation following the BUG_WORKFLOW_PROCESS.md.
+
 ### Feature Management (`/features/`)
 - **`1-READY_TO_DEVELOP/`** - Features ready to implement
 - **`2-IN_PROGRESS/`** - Features being developed
