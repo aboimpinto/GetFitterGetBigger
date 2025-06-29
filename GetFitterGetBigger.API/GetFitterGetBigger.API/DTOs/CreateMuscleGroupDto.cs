@@ -19,6 +19,6 @@ public class CreateMuscleGroupDto
     /// </summary>
     [Required(ErrorMessage = "Body part ID is required")]
     [RegularExpression(@"^bodypart-[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$", 
-        ErrorMessage = "Body part ID must be in the format 'bodypart-{guid}'")]
+        ErrorMessage = "Body part ID must be in the format 'bodypart-{{guid}}'")]
     public string BodyPartId { get; set; } = string.Empty;
 }

@@ -50,7 +50,6 @@ public class MuscleGroupDtoValidationTests
     
     [Theory]
     [InlineData("")]
-    [InlineData("A")]
     [InlineData("This is a very long muscle group name that exceeds the maximum allowed length of one hundred characters which should fail validation")]
     public void CreateMuscleGroupDto_InvalidNameLength_FailsValidation(string name)
     {

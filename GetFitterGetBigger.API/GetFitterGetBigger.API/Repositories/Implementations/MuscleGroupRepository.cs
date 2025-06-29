@@ -94,7 +94,21 @@ public class MuscleGroupRepository : RepositoryBase<FitnessDbContext>, IMuscleGr
     /// <returns>The updated muscle group</returns>
     public async Task<MuscleGroup> UpdateAsync(MuscleGroup entity)
     {
-        Context.MuscleGroups.Update(entity);
+        // Check if entity is already tracked
+        var tracked = Context.ChangeTracker.Entries<MuscleGroup>()
+            .FirstOrDefault(e => e.Entity.Id == entity.Id);
+        
+        if (tracked != null)
+        {
+            // Update the tracked entity's values
+            tracked.CurrentValues.SetValues(entity);
+        }
+        else
+        {
+            // Attach and mark as modified
+            Context.MuscleGroups.Update(entity);
+        }
+        
         await Context.SaveChangesAsync();
         
         // Load the BodyPart navigation property
@@ -119,7 +133,10 @@ public class MuscleGroupRepository : RepositoryBase<FitnessDbContext>, IMuscleGr
             return false;
         
         var deactivated = MuscleGroup.Handler.Deactivate(muscleGroup);
-        Context.MuscleGroups.Update(deactivated);
+        
+        // Update the tracked entity with the new values
+        Context.Entry(muscleGroup).CurrentValues.SetValues(deactivated);
+        
         await Context.SaveChangesAsync();
         
         return true;

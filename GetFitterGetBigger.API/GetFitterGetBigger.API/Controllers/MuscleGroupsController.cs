@@ -189,8 +189,6 @@ public class MuscleGroupsController : ReferenceTablesBaseController
     [ProducesResponseType(typeof(MuscleGroupDto), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
-    // TODO: Uncomment when authorization is implemented
-    // [Authorize(Policy = "ReferenceData-Management")]
     public async Task<IActionResult> Create([FromBody] CreateMuscleGroupDto request)
     {
         // Validate BodyPart ID format
@@ -253,8 +251,6 @@ public class MuscleGroupsController : ReferenceTablesBaseController
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
-    // TODO: Uncomment when authorization is implemented
-    // [Authorize(Policy = "ReferenceData-Management")]
     public async Task<IActionResult> Update(string id, [FromBody] UpdateMuscleGroupDto request)
     {
         // Validate muscle group ID format
@@ -330,8 +326,6 @@ public class MuscleGroupsController : ReferenceTablesBaseController
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
-    // TODO: Uncomment when authorization is implemented
-    // [Authorize(Policy = "ReferenceData-Management")]
     public async Task<IActionResult> Delete(string id)
     {
         // Validate muscle group ID format
