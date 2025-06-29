@@ -12,13 +12,13 @@
 ## 1. Entity & Database Updates (Estimated: 3-4 hours)
 
 ### 1.1 Update MuscleGroup Entity
-- [ ] Add `IsActive` property with default value `true` `[ReadyToDevelop]` (Est: 15m)
-- [ ] Add `CreatedAt` property with UTC timestamp `[ReadyToDevelop]` (Est: 15m)
-- [ ] Add `UpdatedAt` nullable property `[ReadyToDevelop]` (Est: 15m)
-- [ ] Update Handler class with Create method `[ReadyToDevelop]` (Est: 30m)
-- [ ] Update Handler class with Update method `[ReadyToDevelop]` (Est: 30m)
-- [ ] Update Handler class with Deactivate method `[ReadyToDevelop]` (Est: 20m)
-- [ ] Add unit tests for Handler methods `[ReadyToDevelop]` (Est: 45m)
+- [x] Add `IsActive` property with default value `true` `[Implemented: Completed | Started: 2025-01-29 10:35 | Finished: 2025-01-29 10:37 | Duration: 0h 2m]` (Est: 15m)
+- [x] Add `CreatedAt` property with UTC timestamp `[Implemented: Completed | Started: 2025-01-29 10:37 | Finished: 2025-01-29 10:37 | Duration: 0h 0m]` (Est: 15m)
+- [x] Add `UpdatedAt` nullable property `[Implemented: Completed | Started: 2025-01-29 10:37 | Finished: 2025-01-29 10:37 | Duration: 0h 0m]` (Est: 15m)
+- [x] Update Handler class with Create method `[Implemented: Completed | Started: 2025-01-29 10:37 | Finished: 2025-01-29 10:38 | Duration: 0h 1m]` (Est: 30m)
+- [x] Update Handler class with Update method `[Implemented: Completed | Started: 2025-01-29 10:38 | Finished: 2025-01-29 10:39 | Duration: 0h 1m]` (Est: 30m)
+- [x] Update Handler class with Deactivate method `[Implemented: Completed | Started: 2025-01-29 10:39 | Finished: 2025-01-29 10:39 | Duration: 0h 0m]` (Est: 20m)
+- [ ] Add unit tests for Handler methods `[InProgress: Started: 2025-01-29 10:40]` (Est: 45m)
 
 ### 1.2 Database Migration
 - [ ] Create migration: `Add-Migration AddCrudFieldsToMuscleGroup` `[ReadyToDevelop]` (Est: 15m)
