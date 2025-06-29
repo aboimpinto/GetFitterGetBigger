@@ -4,6 +4,24 @@ This document outlines the standard process for implementing new features across
 
 ## Process Overview
 
+### 0. Feature States (Pre-Implementation)
+Features progress through these workflow states:
+- **0-SUBMITTED**: Features propagated from API, needs project-specific refinement
+- **1-READY_TO_DEVELOP**: Feature refined with tasks and ready to implement
+- **2-IN_PROGRESS**: Feature currently being implemented
+- **3-COMPLETED**: Feature done and tested
+- **4-BLOCKED**: Dependencies preventing progress
+- **5-SKIPPED**: Feature deferred or cancelled
+
+#### Working with 0-SUBMITTED Features
+When a feature arrives in `0-SUBMITTED` from API propagation:
+1. Review the API contract and changes
+2. Analyze impact on each client platform (Mobile, Web, Desktop)
+3. Create platform-specific implementation tasks
+4. Consider user experience differences across platforms
+5. Add time estimates per platform
+6. Move to `1-READY_TO_DEVELOP` when the team is ready
+
 ### 1. Feature Analysis & Planning
 - User provides detailed feature requirements and platform-specific UI/UX specifications
 - Create a comprehensive implementation plan with tasks for each platform

@@ -18,6 +18,7 @@ All projects use the same state-based folder structure for features:
 
 ```
 memory-bank/features/
+├── 0-SUBMITTED/            # Features propagated but not refined (NEW)
 ├── 1-READY_TO_DEVELOP/     # Features planned and ready to implement
 ├── 2-IN_PROGRESS/          # Features currently being developed
 ├── 3-COMPLETED/            # Features fully implemented and tested
@@ -27,25 +28,40 @@ memory-bank/features/
 
 ### Feature Lifecycle
 
-1. **READY_TO_DEVELOP**: Feature is fully specified with tasks defined
-2. **IN_PROGRESS**: Active development with commit tracking
-3. **COMPLETED**: All tasks done, tests passing, user accepted
-4. **BLOCKED**: Cannot proceed due to dependencies
-5. **SKIPPED**: Deferred or cancelled with documented reasons
+1. **SUBMITTED**: Feature propagated from another project, needs refinement
+2. **READY_TO_DEVELOP**: Feature is fully specified with tasks defined
+3. **IN_PROGRESS**: Active development with commit tracking
+4. **COMPLETED**: All tasks done, tests passing, user accepted
+5. **BLOCKED**: Cannot proceed due to dependencies
+6. **SKIPPED**: Deferred or cancelled with documented reasons
 
 ### Required Files
 
-Each feature folder must contain:
+Each feature folder must contain different files based on state:
+
+#### 0-SUBMITTED
+- `feature-description.md` - API changes, endpoints, impact analysis
+- No tasks file yet (created during refinement)
+
+#### 1-READY_TO_DEVELOP through 5-SKIPPED  
 - `feature-description.md` - Business value, user stories, acceptance criteria
 - `feature-tasks.md` - Detailed implementation tasks with status tracking
 
+### Feature Propagation Process (NEW)
+
+1. **API Changes**: When API endpoints are created/modified
+2. **Root Propagation**: Document changes in `0-SUBMITTED` folders
+3. **Project Refinement**: Teams analyze and create implementation plans
+4. **Transition**: Move to `1-READY_TO_DEVELOP` when refined
+
 ### Implementation Process
 
-1. **Planning**: Create comprehensive task list
-2. **Development**: Execute tasks sequentially
-3. **Testing**: Write tests immediately after implementation
-4. **Verification**: Ensure all tests pass and build succeeds
-5. **Acceptance**: Get user approval before completion
+1. **Refinement** (0-SUBMITTED → 1-READY_TO_DEVELOP): Analyze impact, create tasks
+2. **Planning**: Create comprehensive task list
+3. **Development**: Execute tasks sequentially
+4. **Testing**: Write tests immediately after implementation
+5. **Verification**: Ensure all tests pass and build succeeds
+6. **Acceptance**: Get user approval before completion
 
 ## Bug Management Workflow
 

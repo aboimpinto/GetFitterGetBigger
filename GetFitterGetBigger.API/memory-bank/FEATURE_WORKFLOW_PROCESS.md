@@ -6,6 +6,7 @@ This document defines the complete lifecycle of features, from inception to rele
 
 ```
 memory-bank/features/
+├── 0-SUBMITTED/            # Features propagated but not refined (rarely used in API)
 ├── 1-READY_TO_DEVELOP/     # Features planned and ready to implement
 ├── 2-IN_PROGRESS/          # Features currently being developed
 ├── 3-COMPLETED/            # Features fully implemented and tested
@@ -14,6 +15,12 @@ memory-bank/features/
 ```
 
 ## Feature Lifecycle
+
+### 0. Feature Submission (SUBMITTED) - Rarely Used in API
+The API typically originates features rather than receiving them. However, if a feature request comes from external sources:
+1. Create folder: `memory-bank/features/0-SUBMITTED/[feature-name]/`
+2. Add only `feature-description.md` with the request details
+3. When ready to plan, create tasks and move to `1-READY_TO_DEVELOP`
 
 ### 1. Feature Creation (READY_TO_DEVELOP)
 When a new feature is identified:

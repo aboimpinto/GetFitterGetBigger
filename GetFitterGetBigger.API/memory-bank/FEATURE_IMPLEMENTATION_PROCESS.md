@@ -4,6 +4,15 @@ This document outlines the standard process for implementing new features in the
 
 ## Process Overview
 
+### 0. Feature States (Pre-Implementation)
+Features progress through these workflow states:
+- **0-SUBMITTED**: Not typically used in API (API originates features)
+- **1-READY_TO_DEVELOP**: Feature fully planned with tasks defined
+- **2-IN_PROGRESS**: Feature currently being implemented
+- **3-COMPLETED**: Feature done and tested
+- **4-BLOCKED**: Dependencies preventing progress
+- **5-SKIPPED**: Feature deferred or cancelled
+
 ### 1. Feature Analysis & Planning
 - User provides detailed feature requirements and API specifications
 - Create a comprehensive implementation plan with granular tasks

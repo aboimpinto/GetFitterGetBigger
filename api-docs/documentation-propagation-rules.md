@@ -72,6 +72,8 @@ When creating propagation documents in memory-banks:
 1. **Analyze**: Read the API implementation details from API memory-bank
 2. **Summarize**: Create comprehensive summary in `/api-docs/`
 3. **Propagate**: Create integration documents in both Admin and Clients memory-banks
+   - Place features in `0-SUBMITTED` folder for project teams to refine
+   - Focus on API contract details, not implementation tasks
 4. **Verify**: Ensure all necessary information is included for independent implementation
 
 ## Information Isolation

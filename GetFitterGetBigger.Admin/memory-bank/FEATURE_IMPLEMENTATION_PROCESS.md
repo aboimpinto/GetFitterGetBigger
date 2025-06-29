@@ -4,6 +4,23 @@ This document outlines the standard process for implementing new features in the
 
 ## Process Overview
 
+### 0. Feature States (Pre-Implementation)
+Features progress through these workflow states:
+- **0-SUBMITTED**: Features propagated from API, needs project-specific refinement
+- **1-READY_TO_DEVELOP**: Feature refined with tasks and ready to implement
+- **2-IN_PROGRESS**: Feature currently being implemented
+- **3-COMPLETED**: Feature done and tested
+- **4-BLOCKED**: Dependencies preventing progress
+- **5-SKIPPED**: Feature deferred or cancelled
+
+#### Working with 0-SUBMITTED Features
+When a feature arrives in `0-SUBMITTED` from API propagation:
+1. Review the API contract and changes
+2. Analyze impact on Admin UI/UX
+3. Create implementation tasks specific to Admin project
+4. Add time estimates
+5. Move to `1-READY_TO_DEVELOP` when the team is ready
+
 ### 1. Feature Analysis & Planning
 - User provides detailed feature requirements and UI/UX specifications
 - Create a comprehensive implementation plan with granular tasks

@@ -6,6 +6,7 @@ This document defines the complete lifecycle of features, from inception to rele
 
 ```
 memory-bank/features/
+├── 0-SUBMITTED/            # Features propagated from API, needs refinement
 ├── 1-READY_TO_DEVELOP/     # Features planned and ready to implement
 ├── 2-IN_PROGRESS/          # Features currently being developed
 ├── 3-COMPLETED/            # Features fully implemented and tested
@@ -15,8 +16,29 @@ memory-bank/features/
 
 ## Feature Lifecycle
 
-### 1. Feature Creation (READY_TO_DEVELOP)
-When a new feature is identified:
+### 0. Feature Submission (SUBMITTED)
+When features are propagated from API changes:
+1. Root folder creates: `memory-bank/features/0-SUBMITTED/[feature-name]/`
+2. Contains only `feature-description.md` with:
+   - API endpoint changes
+   - Request/response formats
+   - Business context
+   - Potential impact on Admin UI
+3. NO task files yet - these are created during refinement
+
+### 1. Feature Refinement & Planning (READY_TO_DEVELOP)
+When the team is ready to implement:
+1. Review the submitted feature documentation
+2. Analyze Admin-specific requirements
+3. Create `feature-tasks.md` with UI implementation tasks
+4. Move entire folder from `0-SUBMITTED` to `1-READY_TO_DEVELOP`
+5. The team decides when this transition happens based on:
+   - Current priorities
+   - Resource availability
+   - Dependencies readiness
+
+#### Direct Feature Creation (Without API Propagation)
+When a new Admin-specific feature is identified:
 1. Create a folder: `memory-bank/features/1-READY_TO_DEVELOP/[feature-name]/`
 2. Create two files in the folder:
    - `feature-description.md` - Detailed feature specification
