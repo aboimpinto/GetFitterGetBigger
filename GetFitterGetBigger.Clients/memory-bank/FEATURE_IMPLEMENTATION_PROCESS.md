@@ -26,20 +26,21 @@ This document outlines the standard process for implementing new features across
 ### 3. Implementation Phase
 - Execute tasks sequentially from the task tracking file
 - **For EVERY task implementation:**
-  1. Write the implementation code
-  2. **MANDATORY: Write unit/component tests for the implemented code in the immediately following task**
-  3. **MANDATORY: Keep build warnings to a minimum** (address platform-specific warnings)
-  4. **MANDATORY: Run platform-specific build commands:**
+  1. Update task status to `[InProgress: Started: YYYY-MM-DD HH:MM]` when starting
+  2. Write the implementation code
+  3. **MANDATORY: Write unit/component tests for the implemented code in the immediately following task**
+  4. **MANDATORY: Keep build warnings to a minimum** (address platform-specific warnings)
+  5. **MANDATORY: Run platform-specific build commands:**
      - Mobile: `npm run build` or `npx react-native run-android/ios`
      - Web: `npm run build`
      - Desktop: `dotnet build`
-  5. **MANDATORY: Run platform-specific tests:**
+  6. **MANDATORY: Run platform-specific tests:**
      - Mobile: `npm test`
      - Web: `npm test`
      - Desktop: `dotnet test`
-  6. **MANDATORY: Ensure code follows platform standards (linting, formatting)**
-  7. Only after build succeeds and ALL tests pass, commit the changes
-  8. Update the task status in the tracking file from `[ReadyToDevelop]` to `[Implemented: <git-commit-hash>]`
+  7. **MANDATORY: Ensure code follows platform standards (linting, formatting)**
+  8. Only after build succeeds and ALL tests pass, commit the changes
+  9. Update the task status to `[Implemented: <hash> | Started: <timestamp> | Finished: YYYY-MM-DD HH:MM | Duration: Xh Ym]`
 - **For EVERY checkpoint:**
   1. Run platform-specific builds - BUILD MUST BE SUCCESSFUL (no errors)
   2. Run platform-specific tests - ALL TESTS MUST BE GREEN (no failures)
@@ -92,7 +93,8 @@ After user explicitly states feature acceptance:
 
 ## Task Status Definitions
 - `[ReadyToDevelop]` - Task identified and ready to implement
-- `[Implemented: <hash>]` - Task completed with reference commit
+- `[InProgress: Started: YYYY-MM-DD HH:MM]` - Task currently being worked on with start timestamp
+- `[Implemented: <hash> | Started: YYYY-MM-DD HH:MM | Finished: YYYY-MM-DD HH:MM | Duration: Xh Ym]` - Task completed with timing data
 - `[BUG: <reason>]` - Known issue requiring future resolution
 - `[Skipped]` - Task deferred or determined unnecessary
 - `[N/A - Platform]` - Task not applicable to specific platform
@@ -150,81 +152,122 @@ Before marking any task as `[Implemented]`, verify:
 # [Feature Name] Implementation Tasks
 
 ## Feature Branch: `feature/[branch-name]`
+## Estimated Total Time: [X days / Y hours]
+## Actual Total Time: [To be calculated at completion]
 
-## Mobile Tasks (React Native)
+## Mobile Tasks (React Native) - Estimated: Xh
 
-### API Integration
-- **Task M1.1:** Create [Name]Service for API calls `[ReadyToDevelop]`
-- **Task M1.2:** Write unit tests for [Name]Service `[ReadyToDevelop]`
-- **Task M1.3:** Implement offline caching `[ReadyToDevelop]`
+### API Integration - Estimated: Xh
+- **Task M1.1:** Create [Name]Service for API calls `[ReadyToDevelop]` (Est: 45m)
+- **Task M1.2:** Write unit tests for [Name]Service `[ReadyToDevelop]` (Est: 30m)
+- **Task M1.3:** Implement offline caching `[ReadyToDevelop]` (Est: 1h)
 
-### Components
-- **Task M2.1:** Create [Name]Screen component `[ReadyToDevelop]`
-- **Task M2.2:** Write component tests for [Name]Screen `[ReadyToDevelop]`
-- **Task M2.3:** Create [Name]Card component `[ReadyToDevelop]`
-- **Task M2.4:** Write component tests for [Name]Card `[ReadyToDevelop]`
+### Components - Estimated: Xh
+- **Task M2.1:** Create [Name]Screen component `[ReadyToDevelop]` (Est: 1.5h)
+- **Task M2.2:** Write component tests for [Name]Screen `[ReadyToDevelop]` (Est: 1h)
+- **Task M2.3:** Create [Name]Card component `[ReadyToDevelop]` (Est: 1h)
+- **Task M2.4:** Write component tests for [Name]Card `[ReadyToDevelop]` (Est: 45m)
 
-### Navigation
-- **Task M3.1:** Add navigation routes `[ReadyToDevelop]`
-- **Task M3.2:** Implement deep linking `[ReadyToDevelop]`
+### Navigation - Estimated: Xh
+- **Task M3.1:** Add navigation routes `[ReadyToDevelop]` (Est: 30m)
+- **Task M3.2:** Implement deep linking `[ReadyToDevelop]` (Est: 45m)
 
-### Platform-Specific
-- **Task M4.1:** iOS-specific styling adjustments `[ReadyToDevelop]`
-- **Task M4.2:** Android-specific permissions `[ReadyToDevelop]`
+### Platform-Specific - Estimated: Xh
+- **Task M4.1:** iOS-specific styling adjustments `[ReadyToDevelop]` (Est: 30m)
+- **Task M4.2:** Android-specific permissions `[ReadyToDevelop]` (Est: 45m)
 
-## Web Tasks (React)
+## Web Tasks (React) - Estimated: Xh
 
-### API Integration
-- **Task W1.1:** Create [Name]Service for API calls `[ReadyToDevelop]`
-- **Task W1.2:** Write unit tests for [Name]Service `[ReadyToDevelop]`
+### API Integration - Estimated: Xh
+- **Task W1.1:** Create [Name]Service for API calls `[ReadyToDevelop]` (Est: 45m)
+- **Task W1.2:** Write unit tests for [Name]Service `[ReadyToDevelop]` (Est: 30m)
 
-### Components
-- **Task W2.1:** Create [Name]Page component `[ReadyToDevelop]`
-- **Task W2.2:** Write component tests for [Name]Page `[ReadyToDevelop]`
-- **Task W2.3:** Create responsive [Name]Grid `[ReadyToDevelop]`
-- **Task W2.4:** Write component tests for [Name]Grid `[ReadyToDevelop]`
+### Components - Estimated: Xh
+- **Task W2.1:** Create [Name]Page component `[ReadyToDevelop]` (Est: 1.5h)
+- **Task W2.2:** Write component tests for [Name]Page `[ReadyToDevelop]` (Est: 1h)
+- **Task W2.3:** Create responsive [Name]Grid `[ReadyToDevelop]` (Est: 2h)
+- **Task W2.4:** Write component tests for [Name]Grid `[ReadyToDevelop]` (Est: 1h)
 
-### State Management
-- **Task W3.1:** Implement Redux/Context state `[ReadyToDevelop]`
-- **Task W3.2:** Write tests for state management `[ReadyToDevelop]`
+### State Management - Estimated: Xh
+- **Task W3.1:** Implement Redux/Context state `[ReadyToDevelop]` (Est: 1h)
+- **Task W3.2:** Write tests for state management `[ReadyToDevelop]` (Est: 45m)
 
-## Desktop Tasks (Avalonia)
+## Desktop Tasks (Avalonia) - Estimated: Xh
 
-### Services
-- **Task D1.1:** Create [Name]Service for API integration `[ReadyToDevelop]`
-- **Task D1.2:** Write unit tests for [Name]Service `[ReadyToDevelop]`
+### Services - Estimated: Xh
+- **Task D1.1:** Create [Name]Service for API integration `[ReadyToDevelop]` (Est: 45m)
+- **Task D1.2:** Write unit tests for [Name]Service `[ReadyToDevelop]` (Est: 30m)
 
-### ViewModels
-- **Task D2.1:** Create [Name]ViewModel with ReactiveUI `[ReadyToDevelop]`
-- **Task D2.2:** Write tests for [Name]ViewModel `[ReadyToDevelop]`
+### ViewModels - Estimated: Xh
+- **Task D2.1:** Create [Name]ViewModel with ReactiveUI `[ReadyToDevelop]` (Est: 1h)
+- **Task D2.2:** Write tests for [Name]ViewModel `[ReadyToDevelop]` (Est: 45m)
 
-### Views
-- **Task D3.1:** Create [Name]View XAML layout `[ReadyToDevelop]`
-- **Task D3.2:** Implement data bindings `[ReadyToDevelop]`
+### Views - Estimated: Xh
+- **Task D3.1:** Create [Name]View XAML layout `[ReadyToDevelop]` (Est: 1h)
+- **Task D3.2:** Implement data bindings `[ReadyToDevelop]` (Est: 30m)
 
-### Platform Integration
-- **Task D4.1:** Implement native menu integration `[ReadyToDevelop]`
-- **Task D4.2:** Add keyboard shortcuts `[ReadyToDevelop]`
+### Platform Integration - Estimated: Xh
+- **Task D4.1:** Implement native menu integration `[ReadyToDevelop]` (Est: 45m)
+- **Task D4.2:** Add keyboard shortcuts `[ReadyToDevelop]` (Est: 30m)
 
-## Shared Tasks (If Applicable)
+## Shared Tasks (If Applicable) - Estimated: Xh
 
-### Shared Models/Logic
-- **Task S1.1:** Create shared data models `[ReadyToDevelop]`
-- **Task S1.2:** Write tests for shared models `[ReadyToDevelop]`
+### Shared Models/Logic - Estimated: Xh
+- **Task S1.1:** Create shared data models `[ReadyToDevelop]` (Est: 30m)
+- **Task S1.2:** Write tests for shared models `[ReadyToDevelop]` (Est: 30m)
+
+## Time Tracking Summary
+- **Total Estimated Time:** [Sum of all estimates]
+- **Total Actual Time:** [To be calculated from task durations]
+- **AI Assistance Impact:** [% reduction in time]
+- **Implementation Started:** [First task start time]
+- **Implementation Completed:** [Last task finish time]
 
 ## Notes
 - Tasks prefixed with M (Mobile), W (Web), D (Desktop), S (Shared)
 - Each implementation task must be immediately followed by its test task
 - Platform-specific tasks may be marked [N/A - Platform] if not applicable
+- Time estimates are for a developer without AI assistance
 ```
 
 ## Example Task Status Updates
 
 - `[ReadyToDevelop]` - Initial status for all tasks
-- `[Implemented: a1b2c3d4]` - Task completed with commit hash
+- `[InProgress: Started: 2025-01-15 14:30]` - Task being actively worked on
+- `[Implemented: a1b2c3d4 | Started: 2025-01-15 14:30 | Finished: 2025-01-15 15:15 | Duration: 0h 45m]` - Completed task
 - `[BUG: React Native navigation issue on Android]` - Platform-specific bug
 - `[N/A - Desktop]` - Task not applicable to desktop platform
 - `[Skipped]` - Task determined unnecessary during implementation
+
+## Time Calculation Guidelines
+
+### Recording Time
+- Use 24-hour format for timestamps (HH:MM)
+- Record actual work time only (exclude breaks, interruptions)
+- If a task spans multiple days, sum up the actual work duration
+- Round to nearest 5-minute increment for consistency
+
+### Duration Calculation
+- Format: `Xh Ym` (e.g., "2h 30m", "0h 45m", "4h 0m")
+- For tasks interrupted and resumed:
+  - Track each work session
+  - Sum total actual work time
+  - Note in task if it was interrupted
+
+### Example with Interruption
+```
+Task M2.1: Create UserProfile screen component 
+[Implemented: abc123 | Started: 2025-01-15 09:00 | Finished: 2025-01-16 11:30 | Duration: 3h 15m]
+Note: Work sessions: Jan 15 (09:00-10:30), Jan 16 (10:00-11:30)
+```
+
+### AI Impact Calculation
+At feature completion, calculate:
+- Sum all estimated times
+- Sum all actual durations
+- AI Impact = ((Estimated - Actual) / Estimated) × 100%
+- Document any factors that affected the comparison
+- Track platform-specific efficiency differences
 
 ## Platform-Specific Considerations
 

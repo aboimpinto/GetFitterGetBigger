@@ -25,14 +25,15 @@ This document outlines the standard process for implementing new features in the
 ### 3. Implementation Phase
 - Execute tasks sequentially from the task tracking file
 - **For EVERY task implementation:**
-  1. Write the implementation code
-  2. **MANDATORY: Write unit/component tests for the implemented code in the immediately following task**
-  3. **MANDATORY: Keep build warnings to a minimum** (address TypeScript errors, unused variables, etc.)
-  4. **MANDATORY: Run `npm run build` to ensure compilation succeeds with minimal warnings**
-  5. **MANDATORY: Run `npm test` to ensure ALL tests pass (100% green)**
-  6. **MANDATORY: Run `npm run lint` to ensure code follows project standards**
-  7. Only after build succeeds and ALL tests pass, commit the changes
-  8. Update the task status in the tracking file from `[ReadyToDevelop]` to `[Implemented: <git-commit-hash>]`
+  1. Update task status to `[InProgress: Started: YYYY-MM-DD HH:MM]` when starting
+  2. Write the implementation code
+  3. **MANDATORY: Write unit/component tests for the implemented code in the immediately following task**
+  4. **MANDATORY: Keep build warnings to a minimum** (address TypeScript errors, unused variables, etc.)
+  5. **MANDATORY: Run `npm run build` to ensure compilation succeeds with minimal warnings**
+  6. **MANDATORY: Run `npm test` to ensure ALL tests pass (100% green)**
+  7. **MANDATORY: Run `npm run lint` to ensure code follows project standards**
+  8. Only after build succeeds and ALL tests pass, commit the changes
+  9. Update the task status to `[Implemented: <hash> | Started: <timestamp> | Finished: YYYY-MM-DD HH:MM | Duration: Xh Ym]`
 - **For EVERY checkpoint:**
   1. Run `npm run build` - BUILD MUST BE SUCCESSFUL (no errors)
   2. Run `npm test` - ALL TESTS MUST BE GREEN (no failures)
@@ -87,7 +88,8 @@ After user explicitly states feature acceptance:
 
 ## Task Status Definitions
 - `[ReadyToDevelop]` - Task identified and ready to implement
-- `[Implemented: <hash>]` - Task completed with reference commit
+- `[InProgress: Started: YYYY-MM-DD HH:MM]` - Task currently being worked on with start timestamp
+- `[Implemented: <hash> | Started: YYYY-MM-DD HH:MM | Finished: YYYY-MM-DD HH:MM | Duration: Xh Ym]` - Task completed with timing data
 - `[BUG: <reason>]` - Known issue requiring future resolution
 - `[Skipped]` - Task deferred or determined unnecessary
 - `[INCOMPLETE: <reason>]` - Task cannot be completed due to external dependency or bug
@@ -133,49 +135,89 @@ Before marking any task as `[Implemented]`, verify:
 # [Feature Name] Implementation Tasks
 
 ## Feature Branch: `feature/[branch-name]`
+## Estimated Total Time: [X days / Y hours]
+## Actual Total Time: [To be calculated at completion]
 
-### Category 1 (e.g., API Service Layer)
-- **Task 1.1:** Create [Name]Service for API integration `[ReadyToDevelop]`
-- **Task 1.2:** Write unit tests for [Name]Service `[ReadyToDevelop]`
-- **Task 1.3:** Add error handling and retry logic `[ReadyToDevelop]`
+### Category 1 (e.g., API Service Layer) - Estimated: Xh
+- **Task 1.1:** Create [Name]Service for API integration `[ReadyToDevelop]` (Est: 45m)
+- **Task 1.2:** Write unit tests for [Name]Service `[ReadyToDevelop]` (Est: 30m)
+- **Task 1.3:** Add error handling and retry logic `[ReadyToDevelop]` (Est: 30m)
 
-### Category 2 (e.g., State Management)
-- **Task 2.1:** Create Redux/Context state for [feature] `[ReadyToDevelop]`
-- **Task 2.2:** Implement actions and reducers `[ReadyToDevelop]`
-- **Task 2.3:** Write tests for state management `[ReadyToDevelop]`
+### Category 2 (e.g., State Management) - Estimated: Xh
+- **Task 2.1:** Create Redux/Context state for [feature] `[ReadyToDevelop]` (Est: 1h)
+- **Task 2.2:** Implement actions and reducers `[ReadyToDevelop]` (Est: 1h)
+- **Task 2.3:** Write tests for state management `[ReadyToDevelop]` (Est: 45m)
 
-### Category 3 (e.g., Components)
-- **Task 3.1:** Create [Name]List component with pagination `[ReadyToDevelop]`
-- **Task 3.2:** Write component tests for [Name]List `[ReadyToDevelop]`
-- **Task 3.3:** Create [Name]Form component with validation `[ReadyToDevelop]`
-- **Task 3.4:** Write component tests for [Name]Form `[ReadyToDevelop]`
-- **Task 3.5:** Create [Name]Detail component `[ReadyToDevelop]`
-- **Task 3.6:** Write component tests for [Name]Detail `[ReadyToDevelop]`
+### Category 3 (e.g., Components) - Estimated: Xh
+- **Task 3.1:** Create [Name]List component with pagination `[ReadyToDevelop]` (Est: 2h)
+- **Task 3.2:** Write component tests for [Name]List `[ReadyToDevelop]` (Est: 1h)
+- **Task 3.3:** Create [Name]Form component with validation `[ReadyToDevelop]` (Est: 2.5h)
+- **Task 3.4:** Write component tests for [Name]Form `[ReadyToDevelop]` (Est: 1.5h)
+- **Task 3.5:** Create [Name]Detail component `[ReadyToDevelop]` (Est: 1h)
+- **Task 3.6:** Write component tests for [Name]Detail `[ReadyToDevelop]` (Est: 45m)
 
-### Category 4 (e.g., Pages & Routing)
-- **Task 4.1:** Create [Name]Page container component `[ReadyToDevelop]`
-- **Task 4.2:** Set up routing for [feature] pages `[ReadyToDevelop]`
-- **Task 4.3:** Write integration tests for pages `[ReadyToDevelop]`
+### Category 4 (e.g., Pages & Routing) - Estimated: Xh
+- **Task 4.1:** Create [Name]Page container component `[ReadyToDevelop]` (Est: 1h)
+- **Task 4.2:** Set up routing for [feature] pages `[ReadyToDevelop]` (Est: 30m)
+- **Task 4.3:** Write integration tests for pages `[ReadyToDevelop]` (Est: 1.5h)
 
-### Category 5 (e.g., UI/UX Polish)
-- **Task 5.1:** Add loading states and skeletons `[ReadyToDevelop]`
-- **Task 5.2:** Implement error boundaries and messages `[ReadyToDevelop]`
-- **Task 5.3:** Add animations and transitions `[ReadyToDevelop]`
-- **Task 5.4:** Ensure responsive design across breakpoints `[ReadyToDevelop]`
+### Category 5 (e.g., UI/UX Polish) - Estimated: Xh
+- **Task 5.1:** Add loading states and skeletons `[ReadyToDevelop]` (Est: 1h)
+- **Task 5.2:** Implement error boundaries and messages `[ReadyToDevelop]` (Est: 45m)
+- **Task 5.3:** Add animations and transitions `[ReadyToDevelop]` (Est: 1h)
+- **Task 5.4:** Ensure responsive design across breakpoints `[ReadyToDevelop]` (Est: 45m)
+
+## Time Tracking Summary
+- **Total Estimated Time:** [Sum of all estimates]
+- **Total Actual Time:** [To be calculated from task durations]
+- **AI Assistance Impact:** [% reduction in time]
+- **Implementation Started:** [First task start time]
+- **Implementation Completed:** [Last task finish time]
 
 ## Notes
 - Each implementation task must be immediately followed by its test task
 - No task is complete until build passes and all tests are green
 - Keep build warnings to minimum
 - Follow existing UI patterns and component library
+- Time estimates are for a developer without AI assistance
 ```
 
 ## Example Task Status Updates
 
 - `[ReadyToDevelop]` - Initial status for all tasks
-- `[Implemented: a1b2c3d4]` - Task completed with commit hash
+- `[InProgress: Started: 2025-01-15 14:30]` - Task being actively worked on
+- `[Implemented: a1b2c3d4 | Started: 2025-01-15 14:30 | Finished: 2025-01-15 15:15 | Duration: 0h 45m]` - Completed task
 - `[BUG: Complex mock setup for API service]` - Known issue to be addressed later
 - `[Skipped]` - Task determined unnecessary during implementation
+
+## Time Calculation Guidelines
+
+### Recording Time
+- Use 24-hour format for timestamps (HH:MM)
+- Record actual work time only (exclude breaks, interruptions)
+- If a task spans multiple days, sum up the actual work duration
+- Round to nearest 5-minute increment for consistency
+
+### Duration Calculation
+- Format: `Xh Ym` (e.g., "2h 30m", "0h 45m", "4h 0m")
+- For tasks interrupted and resumed:
+  - Track each work session
+  - Sum total actual work time
+  - Note in task if it was interrupted
+
+### Example with Interruption
+```
+Task 3.1: Create UserProfile component 
+[Implemented: abc123 | Started: 2025-01-15 09:00 | Finished: 2025-01-16 11:30 | Duration: 3h 15m]
+Note: Work sessions: Jan 15 (09:00-10:30), Jan 16 (10:00-11:30)
+```
+
+### AI Impact Calculation
+At feature completion, calculate:
+- Sum all estimated times
+- Sum all actual durations
+- AI Impact = ((Estimated - Actual) / Estimated) × 100%
+- Document any factors that affected the comparison
 
 ## Admin-Specific Considerations
 

@@ -56,9 +56,13 @@ When development begins:
 When all tasks are implemented and tested:
 1. Ensure all tests are green on all platforms
 2. Get user acceptance (if manual testing phase)
-3. Move entire folder from `2-IN_PROGRESS` to `3-COMPLETED`
-4. Add completion date to feature-description.md
-5. Feature is now eligible for next PI release
+3. Calculate final time metrics in feature-tasks.md:
+   - Sum all actual durations
+   - Calculate AI assistance impact percentage
+   - Add final summary of time savings
+4. Move entire folder from `2-IN_PROGRESS` to `3-COMPLETED`
+5. Add completion date and time metrics to feature-description.md
+6. Feature is now eligible for next PI release
 
 ### 4. Blocked Features (BLOCKED)
 If a feature cannot proceed:
@@ -129,18 +133,28 @@ If a feature is deferred or cancelled:
 # [Feature Name] Implementation Tasks
 
 ## Feature Branch: `feature/[branch-name]`
+## Estimated Total Time: [X days / Y hours]
+## Actual Total Time: [To be calculated at completion]
 
 ### Task Categories
-[Tasks organized by platform and logical groupings]
+[Tasks organized by platform and logical groupings with time estimates]
 
 ### Progress Tracking
-- All tasks start as `[ReadyToDevelop]`
-- Update to `[Implemented: <commit-hash>]` when complete
+- All tasks start as `[ReadyToDevelop]` with time estimate
+- Update to `[InProgress: Started: YYYY-MM-DD HH:MM]` when starting
+- Update to `[Implemented: <hash> | Started: <time> | Finished: <time> | Duration: Xh Ym]` when complete
 - Use `[Blocked: reason]` if blocked
 - Use `[N/A - Platform]` if not applicable
 
 ### Tasks
-[Detailed task list following FEATURE_IMPLEMENTATION_PROCESS.md]
+[Detailed task list following FEATURE_IMPLEMENTATION_PROCESS.md with estimates]
+
+### Time Tracking Summary
+- **Total Estimated Time:** [Sum of all estimates]
+- **Total Actual Time:** [To be calculated from task durations]
+- **AI Assistance Impact:** [% reduction in time]
+- **Implementation Started:** [First task start time]
+- **Implementation Completed:** [Last task finish time]
 ```
 
 ## State Transition Rules
@@ -177,6 +191,11 @@ To get current feature status:
 - Track velocity by completion dates
 - Identify bottlenecks in BLOCKED folder
 - Monitor platform-specific progress
+- Generate AI impact reports:
+  - Average time reduction percentage across features
+  - Total hours saved with AI assistance
+  - Productivity metrics comparison by platform
+  - Feature complexity vs time savings analysis
 
 ## Cleanup Policy
 
