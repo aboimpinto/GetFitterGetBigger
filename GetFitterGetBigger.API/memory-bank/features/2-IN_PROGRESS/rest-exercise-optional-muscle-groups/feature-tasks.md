@@ -18,24 +18,24 @@
 
 #### Phase 1: Core Validation Logic
 
-1. **[ReadyToDevelop] Create Custom Validation Attribute**
+1. **[Implemented: 622577e0] Create Custom Validation Attribute**
    - Create `ConditionalRequiredMuscleGroupsAttribute` for REST exercise validation
    - Implement logic to check if "Rest" is in exercise types before requiring muscle groups
    - Handle case-insensitive "Rest" detection
    - **Files**: `Attributes/ConditionalRequiredMuscleGroupsAttribute.cs`
    - **Tests**: `Tests/Unit/Attributes/ConditionalRequiredMuscleGroupsAttributeTests.cs`
 
-2. **[ReadyToDevelop] Update CreateExerciseRequest DTO**
+2. **[Implemented: 622577e0] Update CreateExerciseRequest DTO**
    - Remove `[Required]` and `[MinLength(1)]` from MuscleGroups property
    - Add `[ConditionalRequiredMuscleGroups]` attribute
    - Ensure other validations remain intact
-   - **Files**: `Models/DTOs/CreateExerciseRequest.cs`
+   - **Files**: `DTOs/CreateExerciseRequest.cs`
 
-3. **[ReadyToDevelop] Update UpdateExerciseRequest DTO**
+3. **[Implemented: 622577e0] Update UpdateExerciseRequest DTO**
    - Remove `[Required]` and `[MinLength(1)]` from MuscleGroups property
    - Add `[ConditionalRequiredMuscleGroups]` attribute
    - Ensure other validations remain intact
-   - **Files**: `Models/DTOs/UpdateExerciseRequest.cs`
+   - **Files**: `DTOs/UpdateExerciseRequest.cs`
 
 4. **[ReadyToDevelop] Update Service Layer Validation**
    - Modify `ExerciseService.CreateAsync()` to allow empty muscle groups for REST exercises
