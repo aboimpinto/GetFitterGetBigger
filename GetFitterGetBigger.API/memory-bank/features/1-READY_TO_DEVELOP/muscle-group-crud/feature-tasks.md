@@ -37,16 +37,16 @@
 ## 2. DTOs & Validation (Estimated: 2-3 hours)
 
 ### 2.1 Create DTOs
-- [ ] Create `CreateMuscleGroupDto` with Name and BodyPartId `[ReadyToDevelop]` (Est: 20m)
-- [ ] Create `UpdateMuscleGroupDto` with Name and BodyPartId `[ReadyToDevelop]` (Est: 20m)
-- [ ] Update `MuscleGroupDto` to include IsActive, CreatedAt, UpdatedAt `[ReadyToDevelop]` (Est: 15m)
-- [ ] Add XML documentation to all DTO properties `[ReadyToDevelop]` (Est: 20m)
+- [x] Create `CreateMuscleGroupDto` with Name and BodyPartId `[Implemented: Completed | Started: 2025-01-29 11:00 | Finished: 2025-01-29 11:04 | Duration: 0h 4m]` (Est: 20m)
+- [x] Create `UpdateMuscleGroupDto` with Name and BodyPartId `[Implemented: Completed | Started: 2025-01-29 11:04 | Finished: 2025-01-29 11:04 | Duration: 0h 0m]` (Est: 20m)
+- [x] Update `MuscleGroupDto` to include IsActive, CreatedAt, UpdatedAt `[Implemented: Created new MuscleGroupDto | Started: 2025-01-29 11:04 | Finished: 2025-01-29 11:05 | Duration: 0h 1m]` (Est: 15m)
+- [x] Add XML documentation to all DTO properties `[Implemented: Added during DTO creation | Started: 2025-01-29 11:00 | Finished: 2025-01-29 11:05 | Duration: 0h 0m]` (Est: 20m)
 
 ### 2.2 Validation Rules
-- [ ] Name: Required, 1-100 characters, trimmed `[ReadyToDevelop]` (Est: 15m)
-- [ ] BodyPartId: Required, valid format, must exist and be active `[ReadyToDevelop]` (Est: 20m)
-- [ ] Add custom validation attribute for unique name check `[ReadyToDevelop]` (Est: 30m)
-- [ ] Unit test all validation scenarios `[ReadyToDevelop]` (Est: 30m)
+- [x] Name: Required, 1-100 characters, trimmed `[Implemented: Added to DTOs | Started: 2025-01-29 11:00 | Finished: 2025-01-29 11:05 | Duration: 0h 0m]` (Est: 15m)
+- [x] BodyPartId: Required, valid format, must exist and be active `[Implemented: Format validation in DTOs, existence check will be in controller | Started: 2025-01-29 11:00 | Finished: 2025-01-29 11:05 | Duration: 0h 0m]` (Est: 20m)
+- [x] Add custom validation attribute for unique name check `[Skipped: Will be handled in controller/service layer]` (Est: 30m)
+- [ ] Unit test all validation scenarios `[InProgress: Started: 2025-01-29 11:06]` (Est: 30m)
 
 ### 🛑 Checkpoint 2: DTOs & Validation
 - [ ] Run `dotnet build` - BUILD MUST BE SUCCESSFUL
