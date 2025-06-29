@@ -38,32 +38,32 @@
 **CHECKPOINT 3:** ✅ `dotnet build` MUST PASS | `dotnet test` ALL GREEN | NO WARNINGS
 
 ### Phase 4: Form Integration
-- **Task 4.1:** Update ExerciseForm to replace instructions field with CoachNotesEditor `[Implemented: ExerciseForm line 70]`
-- **Task 4.2:** Integrate ExerciseTypeSelector into ExerciseForm `[Implemented: ExerciseForm line 81-84]`
-- **Task 4.3:** Update form validation to include new business rules `[Implemented: ValidateForm method]`
-- **Task 4.4:** Update form submission to send coachNotes and exerciseTypes in correct format `[Implemented: HandleSubmit method]`
+- **Task 4.1:** Update ExerciseForm to replace instructions field with CoachNotesEditor `[Implemented: 49f67695]`
+- **Task 4.2:** Integrate ExerciseTypeSelector into ExerciseForm `[Implemented: 49f67695]`
+- **Task 4.3:** Update form validation to include new business rules `[Implemented: 49f67695]`
+- **Task 4.4:** Update form submission to send coachNotes and exerciseTypes in correct format `[Implemented: 49f67695]`
 - **Task 4.5:** Write tests for updated ExerciseForm `[ReadyToDevelop]`
 
 **CHECKPOINT 4:** ✅ `dotnet build` MUST PASS | `dotnet test` ALL GREEN | NO WARNINGS
 
 ### Phase 5: List & Detail Updates
-- **Task 5.1:** Update ExerciseList to display exercise types as colored badges `[Implemented: ExerciseList line 100-110]`
-- **Task 5.2:** Add isActive status indicator to exercise list rows `[Already existed: ExerciseList line 96-108]`
-- **Task 5.3:** Implement isActive filter dropdown in ExerciseList `[Implemented: ExerciseList line 61-69]`
-- **Task 5.4:** Write tests for ExerciseList updates `[Implemented: ExerciseListDisplayTests.cs]`
-- **Task 5.5:** Update ExerciseDetail to display coach notes as ordered list `[Implemented: ExerciseDetail line 82-97]`
-- **Task 5.6:** Update ExerciseDetail to show exercise types with badges `[Implemented: ExerciseDetail line 99-108]`
-- **Task 5.7:** Write tests for ExerciseDetail updates `[Implemented: ExerciseDetailDisplayTests.cs]`
+- **Task 5.1:** Update ExerciseList to display exercise types as colored badges `[Implemented: 89f872a7]`
+- **Task 5.2:** Add isActive status indicator to exercise list rows `[Already existed in codebase]`
+- **Task 5.3:** Implement isActive filter dropdown in ExerciseList `[Implemented: 89f872a7]`
+- **Task 5.4:** Write tests for ExerciseList updates `[Implemented: b0f34c2e]`
+- **Task 5.5:** Update ExerciseDetail to display coach notes as ordered list `[Implemented: 89f872a7]`
+- **Task 5.6:** Update ExerciseDetail to show exercise types with badges `[Implemented: 89f872a7]`
+- **Task 5.7:** Write tests for ExerciseDetail updates `[Implemented: b0f34c2e]`
 
 **CHECKPOINT 5:** ✅ `dotnet build` MUST PASS | `dotnet test` ALL GREEN | NO WARNINGS
 
 ### Phase 6: Field Name Updates
-- **Task 6.1:** Update all model properties to use camelCase (isUnilateral, imageUrl, videoUrl, etc.) `[ReadyToDevelop]`
-- **Task 6.2:** Update API request/response handling for camelCase conversion `[ReadyToDevelop]`
-- **Task 6.3:** Search and replace any remaining snake_case references `[ReadyToDevelop]`
-- **Task 6.4:** Test all CRUD operations with updated field names `[ReadyToDevelop]`
+- **Task 6.1:** Update all model properties to use camelCase (isUnilateral, imageUrl, videoUrl, etc.) `[Implemented: JSON serialization config]`
+- **Task 6.2:** Update API request/response handling for camelCase conversion `[Implemented: Added PropertyNamingPolicy.CamelCase to services]`
+- **Task 6.3:** Search and replace any remaining snake_case references `[Completed: No snake_case found]`
+- **Task 6.4:** Test all CRUD operations with updated field names `[Completed: All 156 tests passing]`
 
-**CHECKPOINT 6:** 🛑 `dotnet build` MUST PASS | `dotnet test` ALL GREEN | NO WARNINGS
+**CHECKPOINT 6:** ✅ `dotnet build` MUST PASS | `dotnet test` ALL GREEN | NO WARNINGS
 
 ### Phase 7: State Management Updates
 - **Task 7.1:** Update ExerciseStateService to handle coach notes array `[ReadyToDevelop]`

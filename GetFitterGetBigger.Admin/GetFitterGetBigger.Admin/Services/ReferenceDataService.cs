@@ -1,6 +1,7 @@
 using GetFitterGetBigger.Admin.Models.Dtos;
 using Microsoft.Extensions.Caching.Memory;
 using System.Net.Http.Json;
+using System.Text.Json;
 
 namespace GetFitterGetBigger.Admin.Services
 {
@@ -10,6 +11,7 @@ namespace GetFitterGetBigger.Admin.Services
         private readonly IMemoryCache _cache;
         private readonly IConfiguration _configuration;
         private readonly string _apiBaseUrl;
+        private readonly JsonSerializerOptions _jsonOptions;
 
         public ReferenceDataService(HttpClient httpClient, IMemoryCache cache, IConfiguration configuration)
         {
@@ -17,6 +19,11 @@ namespace GetFitterGetBigger.Admin.Services
             _cache = cache;
             _configuration = configuration;
             _apiBaseUrl = _configuration["ApiBaseUrl"] ?? string.Empty;
+            _jsonOptions = new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true,
+                PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+            };
         }
 
         private async Task<IEnumerable<ReferenceDataDto>> GetDataAsync(string endpoint, string cacheKey)
@@ -24,7 +31,7 @@ namespace GetFitterGetBigger.Admin.Services
             if (!_cache.TryGetValue(cacheKey, out IEnumerable<ReferenceDataDto>? cachedData))
             {
                 var requestUrl = $"{_apiBaseUrl}{endpoint}";
-                cachedData = await _httpClient.GetFromJsonAsync<IEnumerable<ReferenceDataDto>>(requestUrl);
+                cachedData = await _httpClient.GetFromJsonAsync<IEnumerable<ReferenceDataDto>>(requestUrl, _jsonOptions);
                 if (cachedData != null)
                 {
                     _cache.Set(cacheKey, cachedData, TimeSpan.FromHours(24));
@@ -47,7 +54,7 @@ namespace GetFitterGetBigger.Admin.Services
             if (!_cache.TryGetValue("ExerciseTypes", out IEnumerable<ExerciseTypeDto>? cachedData))
             {
                 var requestUrl = $"{_apiBaseUrl}/api/ReferenceTables/ExerciseTypes";
-                var referenceData = await _httpClient.GetFromJsonAsync<IEnumerable<ReferenceDataDto>>(requestUrl);
+                var referenceData = await _httpClient.GetFromJsonAsync<IEnumerable<ReferenceDataDto>>(requestUrl, _jsonOptions);
                 if (referenceData != null)
                 {
                     // Convert ReferenceDataDto to ExerciseTypeDto

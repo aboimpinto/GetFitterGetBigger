@@ -23,7 +23,8 @@ namespace GetFitterGetBigger.Admin.Services
             _apiBaseUrl = _configuration["ApiBaseUrl"] ?? string.Empty;
             _jsonOptions = new JsonSerializerOptions
             {
-                PropertyNameCaseInsensitive = true
+                PropertyNameCaseInsensitive = true,
+                PropertyNamingPolicy = JsonNamingPolicy.CamelCase
             };
         }
 

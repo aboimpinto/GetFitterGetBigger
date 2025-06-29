@@ -386,9 +386,9 @@ namespace GetFitterGetBigger.Admin.Tests.Services
             _httpMessageHandler.VerifyRequest(request =>
             {
                 var content = request.Content?.ReadAsStringAsync().Result;
-                // The JSON serializer uses PascalCase by default
-                content.Should().Contain("CoachNotes");
-                content.Should().Contain("ExerciseTypeIds");
+                // The JSON serializer now uses camelCase as configured
+                content.Should().Contain("coachNotes");
+                content.Should().Contain("exerciseTypeIds");
                 return true;
             });
         }
