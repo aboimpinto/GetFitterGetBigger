@@ -20,6 +20,7 @@ public class MuscleGroupRepository : RepositoryBase<FitnessDbContext>, IMuscleGr
         await Context.MuscleGroups
             .AsNoTracking()
             .Include(mg => mg.BodyPart)
+            .Where(mg => mg.IsActive)
             .OrderBy(mg => mg.Name)
             .ToListAsync();
     
@@ -52,6 +53,7 @@ public class MuscleGroupRepository : RepositoryBase<FitnessDbContext>, IMuscleGr
         await Context.MuscleGroups
             .AsNoTracking()
             .Include(mg => mg.BodyPart)
+            .Where(mg => mg.IsActive)
             .FirstOrDefaultAsync(mg => mg.Name.ToLower() == name.ToLower());
     
     /// <summary>
@@ -63,7 +65,98 @@ public class MuscleGroupRepository : RepositoryBase<FitnessDbContext>, IMuscleGr
         await Context.MuscleGroups
             .AsNoTracking()
             .Include(mg => mg.BodyPart)
-            .Where(mg => mg.BodyPartId == bodyPartId)
+            .Where(mg => mg.BodyPartId == bodyPartId && mg.IsActive)
             .OrderBy(mg => mg.Name)
             .ToListAsync();
+    
+    /// <summary>
+    /// Creates a new muscle group
+    /// </summary>
+    /// <param name="entity">The muscle group to create</param>
+    /// <returns>The created muscle group</returns>
+    public async Task<MuscleGroup> CreateAsync(MuscleGroup entity)
+    {
+        Context.MuscleGroups.Add(entity);
+        await Context.SaveChangesAsync();
+        
+        // Load the BodyPart navigation property
+        await Context.Entry(entity)
+            .Reference(mg => mg.BodyPart)
+            .LoadAsync();
+        
+        return entity;
+    }
+    
+    /// <summary>
+    /// Updates an existing muscle group
+    /// </summary>
+    /// <param name="entity">The muscle group to update</param>
+    /// <returns>The updated muscle group</returns>
+    public async Task<MuscleGroup> UpdateAsync(MuscleGroup entity)
+    {
+        Context.MuscleGroups.Update(entity);
+        await Context.SaveChangesAsync();
+        
+        // Load the BodyPart navigation property
+        await Context.Entry(entity)
+            .Reference(mg => mg.BodyPart)
+            .LoadAsync();
+        
+        return entity;
+    }
+    
+    /// <summary>
+    /// Deactivates a muscle group by its ID
+    /// </summary>
+    /// <param name="id">The ID of the muscle group to deactivate</param>
+    /// <returns>True if the muscle group was deactivated, false if not found</returns>
+    public async Task<bool> DeactivateAsync(MuscleGroupId id)
+    {
+        var muscleGroup = await Context.MuscleGroups
+            .FirstOrDefaultAsync(mg => mg.Id == id);
+        
+        if (muscleGroup == null)
+            return false;
+        
+        var deactivated = MuscleGroup.Handler.Deactivate(muscleGroup);
+        Context.MuscleGroups.Update(deactivated);
+        await Context.SaveChangesAsync();
+        
+        return true;
+    }
+    
+    /// <summary>
+    /// Checks if a muscle group with the given name exists
+    /// </summary>
+    /// <param name="name">The name to check</param>
+    /// <param name="excludeId">Optional ID to exclude from the check (for updates)</param>
+    /// <returns>True if a muscle group with the name exists, false otherwise</returns>
+    public async Task<bool> ExistsByNameAsync(string name, MuscleGroupId? excludeId = null)
+    {
+        var query = Context.MuscleGroups
+            .Where(mg => mg.IsActive && mg.Name.ToLower() == name.ToLower());
+        
+        if (excludeId != null)
+        {
+            query = query.Where(mg => mg.Id != excludeId);
+        }
+        
+        return await query.AnyAsync();
+    }
+    
+    /// <summary>
+    /// Checks if a muscle group can be deactivated (no active exercise dependencies)
+    /// </summary>
+    /// <param name="id">The ID of the muscle group to check</param>
+    /// <returns>True if the muscle group can be deactivated, false otherwise</returns>
+    public async Task<bool> CanDeactivateAsync(MuscleGroupId id)
+    {
+        // Check if there are any active exercises using this muscle group
+        var hasActiveExercises = await Context.ExerciseMuscleGroups
+            .Include(emg => emg.Exercise)
+            .Where(emg => emg.MuscleGroupId == id && emg.Exercise.IsActive)
+            .AnyAsync();
+        
+        return !hasActiveExercises;
+    }
 }

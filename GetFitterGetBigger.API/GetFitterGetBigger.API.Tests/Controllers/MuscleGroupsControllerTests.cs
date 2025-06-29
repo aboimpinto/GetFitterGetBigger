@@ -1,5 +1,7 @@
 using System.Net;
 using System.Net.Http.Json;
+using System.Text;
+using System.Text.Json;
 using GetFitterGetBigger.API.DTOs;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Xunit;
@@ -159,5 +161,280 @@ public class MuscleGroupsControllerTests : IClassFixture<ApiTestFixture>
         
         Assert.NotNull(muscleGroup);
         Assert.Equal("Pectoralis", muscleGroup.Value, ignoreCase: true); // The actual stored value has proper casing
+    }
+    
+    [Fact]
+    public async Task Create_WithValidData_ReturnsCreatedMuscleGroup()
+    {
+        // Arrange - first get a valid body part ID
+        var bodyPartsResponse = await _client.GetAsync("/api/ReferenceTables/BodyParts");
+        bodyPartsResponse.EnsureSuccessStatusCode();
+        var bodyParts = await bodyPartsResponse.Content.ReadFromJsonAsync<List<ReferenceDataDto>>();
+        
+        if (bodyParts == null || !bodyParts.Any())
+        {
+            return; // Skip test if no body parts available
+        }
+        
+        var bodyPartId = bodyParts.First().Id;
+        var uniqueName = $"TestMuscleGroup_{Guid.NewGuid()}";
+        var createDto = new CreateMuscleGroupDto
+        {
+            Name = uniqueName,
+            BodyPartId = bodyPartId
+        };
+        
+        var content = new StringContent(JsonSerializer.Serialize(createDto), Encoding.UTF8, "application/json");
+        
+        // Act
+        var response = await _client.PostAsync("/api/ReferenceTables/MuscleGroups", content);
+        
+        // Assert
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+        var createdDto = await response.Content.ReadFromJsonAsync<MuscleGroupDto>();
+        
+        Assert.NotNull(createdDto);
+        Assert.Equal(uniqueName, createdDto.Name);
+        Assert.Equal(bodyPartId, createdDto.BodyPartId);
+        Assert.True(createdDto.IsActive);
+        Assert.True(createdDto.CreatedAt > DateTime.MinValue);
+        Assert.Null(createdDto.UpdatedAt);
+        
+        // Clean up - deactivate the created muscle group
+        await _client.DeleteAsync($"/api/ReferenceTables/MuscleGroups/{createdDto.Id}");
+    }
+    
+    [Fact]
+    public async Task Create_WithDuplicateName_ReturnsConflict()
+    {
+        // Arrange - first create a muscle group
+        var bodyPartsResponse = await _client.GetAsync("/api/ReferenceTables/BodyParts");
+        bodyPartsResponse.EnsureSuccessStatusCode();
+        var bodyParts = await bodyPartsResponse.Content.ReadFromJsonAsync<List<ReferenceDataDto>>();
+        
+        if (bodyParts == null || !bodyParts.Any())
+        {
+            return; // Skip test if no body parts available
+        }
+        
+        var bodyPartId = bodyParts.First().Id;
+        var uniqueName = $"TestMuscleGroup_{Guid.NewGuid()}";
+        var createDto = new CreateMuscleGroupDto
+        {
+            Name = uniqueName,
+            BodyPartId = bodyPartId
+        };
+        
+        var content = new StringContent(JsonSerializer.Serialize(createDto), Encoding.UTF8, "application/json");
+        var firstResponse = await _client.PostAsync("/api/ReferenceTables/MuscleGroups", content);
+        Assert.Equal(HttpStatusCode.Created, firstResponse.StatusCode);
+        
+        var createdDto = await firstResponse.Content.ReadFromJsonAsync<MuscleGroupDto>();
+        
+        // Act - try to create with same name
+        var duplicateResponse = await _client.PostAsync("/api/ReferenceTables/MuscleGroups", content);
+        
+        // Assert
+        Assert.Equal(HttpStatusCode.Conflict, duplicateResponse.StatusCode);
+        
+        // Clean up
+        if (createdDto != null)
+        {
+            await _client.DeleteAsync($"/api/ReferenceTables/MuscleGroups/{createdDto.Id}");
+        }
+    }
+    
+    [Fact]
+    public async Task Create_WithInvalidBodyPartId_ReturnsBadRequest()
+    {
+        // Arrange
+        var createDto = new CreateMuscleGroupDto
+        {
+            Name = "TestMuscleGroup",
+            BodyPartId = "invalid-format"
+        };
+        
+        var content = new StringContent(JsonSerializer.Serialize(createDto), Encoding.UTF8, "application/json");
+        
+        // Act
+        var response = await _client.PostAsync("/api/ReferenceTables/MuscleGroups", content);
+        
+        // Assert
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+    
+    [Fact]
+    public async Task Update_WithValidData_ReturnsUpdatedMuscleGroup()
+    {
+        // Arrange - first create a muscle group to update
+        var bodyPartsResponse = await _client.GetAsync("/api/ReferenceTables/BodyParts");
+        bodyPartsResponse.EnsureSuccessStatusCode();
+        var bodyParts = await bodyPartsResponse.Content.ReadFromJsonAsync<List<ReferenceDataDto>>();
+        
+        if (bodyParts == null || !bodyParts.Any())
+        {
+            return; // Skip test if no body parts available
+        }
+        
+        var bodyPartId = bodyParts.First().Id;
+        var originalName = $"TestMuscleGroup_{Guid.NewGuid()}";
+        var createDto = new CreateMuscleGroupDto
+        {
+            Name = originalName,
+            BodyPartId = bodyPartId
+        };
+        
+        var createContent = new StringContent(JsonSerializer.Serialize(createDto), Encoding.UTF8, "application/json");
+        var createResponse = await _client.PostAsync("/api/ReferenceTables/MuscleGroups", createContent);
+        Assert.Equal(HttpStatusCode.Created, createResponse.StatusCode);
+        
+        var createdDto = await createResponse.Content.ReadFromJsonAsync<MuscleGroupDto>();
+        Assert.NotNull(createdDto);
+        
+        // Update with new name
+        var updatedName = $"UpdatedMuscleGroup_{Guid.NewGuid()}";
+        var updateDto = new UpdateMuscleGroupDto
+        {
+            Name = updatedName,
+            BodyPartId = bodyPartId
+        };
+        
+        var updateContent = new StringContent(JsonSerializer.Serialize(updateDto), Encoding.UTF8, "application/json");
+        
+        // Act
+        var updateResponse = await _client.PutAsync($"/api/ReferenceTables/MuscleGroups/{createdDto.Id}", updateContent);
+        
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, updateResponse.StatusCode);
+        var updatedDto = await updateResponse.Content.ReadFromJsonAsync<MuscleGroupDto>();
+        
+        Assert.NotNull(updatedDto);
+        Assert.Equal(updatedName, updatedDto.Name);
+        Assert.NotNull(updatedDto.UpdatedAt);
+        
+        // Clean up
+        await _client.DeleteAsync($"/api/ReferenceTables/MuscleGroups/{createdDto.Id}");
+    }
+    
+    [Fact]
+    public async Task Update_NonExistentMuscleGroup_ReturnsNotFound()
+    {
+        // Arrange
+        var nonExistentId = $"musclegroup-{Guid.NewGuid()}";
+        var updateDto = new UpdateMuscleGroupDto
+        {
+            Name = "UpdatedName",
+            BodyPartId = "bodypart-12345678-1234-1234-1234-123456789012"
+        };
+        
+        var content = new StringContent(JsonSerializer.Serialize(updateDto), Encoding.UTF8, "application/json");
+        
+        // Act
+        var response = await _client.PutAsync($"/api/ReferenceTables/MuscleGroups/{nonExistentId}", content);
+        
+        // Assert
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+    }
+    
+    [Fact]
+    public async Task Delete_ExistingMuscleGroup_ReturnsNoContent()
+    {
+        // Arrange - first create a muscle group to delete
+        var bodyPartsResponse = await _client.GetAsync("/api/ReferenceTables/BodyParts");
+        bodyPartsResponse.EnsureSuccessStatusCode();
+        var bodyParts = await bodyPartsResponse.Content.ReadFromJsonAsync<List<ReferenceDataDto>>();
+        
+        if (bodyParts == null || !bodyParts.Any())
+        {
+            return; // Skip test if no body parts available
+        }
+        
+        var bodyPartId = bodyParts.First().Id;
+        var createDto = new CreateMuscleGroupDto
+        {
+            Name = $"TestMuscleGroup_{Guid.NewGuid()}",
+            BodyPartId = bodyPartId
+        };
+        
+        var createContent = new StringContent(JsonSerializer.Serialize(createDto), Encoding.UTF8, "application/json");
+        var createResponse = await _client.PostAsync("/api/ReferenceTables/MuscleGroups", createContent);
+        Assert.Equal(HttpStatusCode.Created, createResponse.StatusCode);
+        
+        var createdDto = await createResponse.Content.ReadFromJsonAsync<MuscleGroupDto>();
+        Assert.NotNull(createdDto);
+        
+        // Act
+        var deleteResponse = await _client.DeleteAsync($"/api/ReferenceTables/MuscleGroups/{createdDto.Id}");
+        
+        // Assert
+        Assert.Equal(HttpStatusCode.NoContent, deleteResponse.StatusCode);
+        
+        // Verify it's no longer retrievable
+        var getResponse = await _client.GetAsync($"/api/ReferenceTables/MuscleGroups/{createdDto.Id}");
+        Assert.Equal(HttpStatusCode.NotFound, getResponse.StatusCode);
+    }
+    
+    [Fact]
+    public async Task Delete_NonExistentMuscleGroup_ReturnsNotFound()
+    {
+        // Arrange
+        var nonExistentId = $"musclegroup-{Guid.NewGuid()}";
+        
+        // Act
+        var response = await _client.DeleteAsync($"/api/ReferenceTables/MuscleGroups/{nonExistentId}");
+        
+        // Assert
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+    }
+    
+    [Fact]
+    public async Task CacheInvalidation_AfterCreate_ReturnsUpdatedList()
+    {
+        // Arrange - get initial list
+        var initialResponse = await _client.GetAsync("/api/ReferenceTables/MuscleGroups");
+        initialResponse.EnsureSuccessStatusCode();
+        var initialList = await initialResponse.Content.ReadFromJsonAsync<List<ReferenceDataDto>>();
+        Assert.NotNull(initialList);
+        var initialCount = initialList.Count;
+        
+        // Get a body part for creation
+        var bodyPartsResponse = await _client.GetAsync("/api/ReferenceTables/BodyParts");
+        bodyPartsResponse.EnsureSuccessStatusCode();
+        var bodyParts = await bodyPartsResponse.Content.ReadFromJsonAsync<List<ReferenceDataDto>>();
+        
+        if (bodyParts == null || !bodyParts.Any())
+        {
+            return; // Skip test if no body parts available
+        }
+        
+        var bodyPartId = bodyParts.First().Id;
+        var createDto = new CreateMuscleGroupDto
+        {
+            Name = $"TestMuscleGroup_{Guid.NewGuid()}",
+            BodyPartId = bodyPartId
+        };
+        
+        var content = new StringContent(JsonSerializer.Serialize(createDto), Encoding.UTF8, "application/json");
+        
+        // Act - create new muscle group
+        var createResponse = await _client.PostAsync("/api/ReferenceTables/MuscleGroups", content);
+        Assert.Equal(HttpStatusCode.Created, createResponse.StatusCode);
+        var createdDto = await createResponse.Content.ReadFromJsonAsync<MuscleGroupDto>();
+        
+        // Get list again
+        var updatedResponse = await _client.GetAsync("/api/ReferenceTables/MuscleGroups");
+        updatedResponse.EnsureSuccessStatusCode();
+        var updatedList = await updatedResponse.Content.ReadFromJsonAsync<List<ReferenceDataDto>>();
+        
+        // Assert
+        Assert.NotNull(updatedList);
+        Assert.Equal(initialCount + 1, updatedList.Count);
+        Assert.Contains(updatedList, mg => mg.Value == createDto.Name);
+        
+        // Clean up
+        if (createdDto != null)
+        {
+            await _client.DeleteAsync($"/api/ReferenceTables/MuscleGroups/{createdDto.Id}");
+        }
     }
 }

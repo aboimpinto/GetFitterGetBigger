@@ -232,6 +232,16 @@ public class FitnessDbContext : DbContext
                 id => (Guid)id,
                 guid => BodyPartId.From(guid));
                 
+        // Configure MuscleGroup CRUD properties
+        modelBuilder.Entity<MuscleGroup>()
+            .Property(mg => mg.Name)
+            .HasMaxLength(100)
+            .IsRequired();
+            
+        modelBuilder.Entity<MuscleGroup>()
+            .HasIndex(mg => new { mg.Name, mg.IsActive })
+            .HasDatabaseName("IX_MuscleGroup_Name_IsActive");
+                
         modelBuilder.Entity<ExerciseTargetedMuscle>()
             .Property(etm => etm.MuscleRoleId)
             .HasConversion(
