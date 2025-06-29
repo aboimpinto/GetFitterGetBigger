@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<coverage line-rate="0.014499999999999999" branch-rate="0.0106" version="1.9" timestamp="1751162243" lines-covered="37" lines-valid="2547" branches-covered="6" branches-valid="562">
+<coverage line-rate="0.015700000000000002" branch-rate="0.016" version="1.9" timestamp="1751162363" lines-covered="40" lines-valid="2547" branches-covered="9" branches-valid="562">
   <sources>
     <source>/home/esqueleto/myWork/GetFitterGetBigger/GetFitterGetBigger.API/</source>
   </sources>
@@ -270,7 +270,7 @@
         </class>
       </classes>
     </package>
-    <package name="GetFitterGetBigger.API" line-rate="0.0148" branch-rate="0.0109" complexity="821">
+    <package name="GetFitterGetBigger.API" line-rate="0.016" branch-rate="0.016399999999999998" complexity="821">
       <classes>
         <class name="Program" filename="GetFitterGetBigger.API/Program.cs" line-rate="0" branch-rate="0" complexity="6">
           <methods>
@@ -6278,16 +6278,16 @@
             <line number="47" hits="0" branch="False" />
           </lines>
         </class>
-        <class name="GetFitterGetBigger.API.DTOs.CreateExerciseRequest" filename="GetFitterGetBigger.API/DTOs/CreateExerciseRequest.cs" line-rate="0.75" branch-rate="1" complexity="12">
+        <class name="GetFitterGetBigger.API.DTOs.CreateExerciseRequest" filename="GetFitterGetBigger.API/DTOs/CreateExerciseRequest.cs" line-rate="0.9166" branch-rate="1" complexity="12">
           <methods>
             <method name="get_Name" signature="()" line-rate="1" branch-rate="1" complexity="1">
               <lines>
-                <line number="18" hits="2" branch="False" />
+                <line number="18" hits="3" branch="False" />
               </lines>
             </method>
             <method name="get_Description" signature="()" line-rate="1" branch-rate="1" complexity="1">
               <lines>
-                <line number="25" hits="2" branch="False" />
+                <line number="25" hits="3" branch="False" />
               </lines>
             </method>
             <method name="get_CoachNotes" signature="()" line-rate="1" branch-rate="1" complexity="1">
@@ -6300,14 +6300,14 @@
                 <line number="35" hits="3" branch="False" />
               </lines>
             </method>
-            <method name="get_VideoUrl" signature="()" line-rate="0" branch-rate="1" complexity="1">
+            <method name="get_VideoUrl" signature="()" line-rate="1" branch-rate="1" complexity="1">
               <lines>
-                <line number="41" hits="0" branch="False" />
+                <line number="41" hits="1" branch="False" />
               </lines>
             </method>
-            <method name="get_ImageUrl" signature="()" line-rate="0" branch-rate="1" complexity="1">
+            <method name="get_ImageUrl" signature="()" line-rate="1" branch-rate="1" complexity="1">
               <lines>
-                <line number="47" hits="0" branch="False" />
+                <line number="47" hits="1" branch="False" />
               </lines>
             </method>
             <method name="get_IsUnilateral" signature="()" line-rate="0" branch-rate="1" complexity="1">
@@ -6317,7 +6317,7 @@
             </method>
             <method name="get_DifficultyId" signature="()" line-rate="1" branch-rate="1" complexity="1">
               <lines>
-                <line number="58" hits="2" branch="False" />
+                <line number="58" hits="3" branch="False" />
               </lines>
             </method>
             <method name="get_MuscleGroups" signature="()" line-rate="1" branch-rate="1" complexity="1">
@@ -6342,14 +6342,14 @@
             </method>
           </methods>
           <lines>
-            <line number="18" hits="2" branch="False" />
-            <line number="25" hits="2" branch="False" />
+            <line number="18" hits="3" branch="False" />
+            <line number="25" hits="3" branch="False" />
             <line number="30" hits="1" branch="False" />
             <line number="35" hits="3" branch="False" />
-            <line number="41" hits="0" branch="False" />
-            <line number="47" hits="0" branch="False" />
+            <line number="41" hits="1" branch="False" />
+            <line number="47" hits="1" branch="False" />
             <line number="52" hits="0" branch="False" />
-            <line number="58" hits="2" branch="False" />
+            <line number="58" hits="3" branch="False" />
             <line number="65" hits="3" branch="False" />
             <line number="70" hits="1" branch="False" />
             <line number="75" hits="1" branch="False" />
@@ -9340,7 +9340,7 @@
             <line number="53" hits="0" branch="False" />
           </lines>
         </class>
-        <class name="GetFitterGetBigger.API.Attributes.ConditionalRequiredMuscleGroupsAttribute" filename="GetFitterGetBigger.API/Attributes/ConditionalRequiredMuscleGroupsAttribute.cs" line-rate="0.6086" branch-rate="0.25" complexity="25">
+        <class name="GetFitterGetBigger.API.Attributes.ConditionalRequiredMuscleGroupsAttribute" filename="GetFitterGetBigger.API/Attributes/ConditionalRequiredMuscleGroupsAttribute.cs" line-rate="0.6304" branch-rate="0.375" complexity="25">
           <methods>
             <method name="IsValid" signature="(System.Object)" line-rate="0" branch-rate="0" complexity="4">
               <lines>
@@ -9361,7 +9361,7 @@
                 <line number="33" hits="0" branch="False" />
               </lines>
             </method>
-            <method name="IsValid" signature="(System.Object,System.ComponentModel.DataAnnotations.ValidationContext)" line-rate="0.5714" branch-rate="0.21420000000000003" complexity="14">
+            <method name="IsValid" signature="(System.Object,System.ComponentModel.DataAnnotations.ValidationContext)" line-rate="0.619" branch-rate="0.4285" complexity="14">
               <lines>
                 <line number="36" hits="1" branch="False" />
                 <line number="38" hits="1" branch="True" condition-coverage="50% (1/2)">
@@ -9390,18 +9390,18 @@
                     <condition number="133" type="jump" coverage="50%" />
                   </conditions>
                 </line>
-                <line number="65" hits="1" branch="False" />
-                <line number="66" hits="1" branch="False" />
-                <line number="70" hits="0" branch="True" condition-coverage="0% (0/4)">
+                <line number="65" hits="0" branch="False" />
+                <line number="66" hits="0" branch="False" />
+                <line number="70" hits="1" branch="True" condition-coverage="50% (2/4)">
                   <conditions>
-                    <condition number="146" type="jump" coverage="0%" />
-                    <condition number="164" type="jump" coverage="0%" />
+                    <condition number="146" type="jump" coverage="50%" />
+                    <condition number="164" type="jump" coverage="50%" />
                   </conditions>
                 </line>
-                <line number="71" hits="0" branch="False" />
-                <line number="72" hits="0" branch="True" condition-coverage="0% (0/2)">
+                <line number="71" hits="1" branch="False" />
+                <line number="72" hits="1" branch="True" condition-coverage="50% (1/2)">
                   <conditions>
-                    <condition number="174" type="jump" coverage="0%" />
+                    <condition number="174" type="jump" coverage="50%" />
                   </conditions>
                 </line>
                 <line number="75" hits="0" branch="False" />
@@ -9487,18 +9487,18 @@
                 <condition number="133" type="jump" coverage="50%" />
               </conditions>
             </line>
-            <line number="65" hits="1" branch="False" />
-            <line number="66" hits="1" branch="False" />
-            <line number="70" hits="0" branch="True" condition-coverage="0% (0/4)">
+            <line number="65" hits="0" branch="False" />
+            <line number="66" hits="0" branch="False" />
+            <line number="70" hits="1" branch="True" condition-coverage="50% (2/4)">
               <conditions>
-                <condition number="146" type="jump" coverage="0%" />
-                <condition number="164" type="jump" coverage="0%" />
+                <condition number="146" type="jump" coverage="50%" />
+                <condition number="164" type="jump" coverage="50%" />
               </conditions>
             </line>
-            <line number="71" hits="0" branch="False" />
-            <line number="72" hits="0" branch="True" condition-coverage="0% (0/2)">
+            <line number="71" hits="1" branch="False" />
+            <line number="72" hits="1" branch="True" condition-coverage="50% (1/2)">
               <conditions>
-                <condition number="174" type="jump" coverage="0%" />
+                <condition number="174" type="jump" coverage="50%" />
               </conditions>
             </line>
             <line number="75" hits="0" branch="False" />
