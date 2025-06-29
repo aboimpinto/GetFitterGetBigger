@@ -73,27 +73,49 @@
 
 **CHECKPOINT 7:** ✅ `dotnet build` MUST PASS | `dotnet test` ALL GREEN | NO WARNINGS
 
-### Phase 8: Integration Testing
-- **Task 8.1:** Write end-to-end test for creating exercise with coach notes `[ReadyToDevelop]`
-- **Task 8.2:** Write end-to-end test for exercise type selection and validation `[ReadyToDevelop]`
-- **Task 8.3:** Write end-to-end test for editing exercise with reordering coach notes `[ReadyToDevelop]`
-- **Task 8.4:** Write end-to-end test for isActive filtering `[ReadyToDevelop]`
+### Phase 8: Manual Testing Fixes
+- **Task 8.1:** Fix ExerciseTypeSelector - Allow unselecting Rest type `[Implemented]`
+- **Task 8.2:** Enhance CoachNotesEditor - Add delete functionality for individual notes `[ReadyToDevelop]`
+- **Task 8.3:** Enhance CoachNotesEditor - Implement automatic order resequencing after deletion `[ReadyToDevelop]`
+- **Task 8.4:** Enhance CoachNotesEditor - Handle empty state when all notes deleted `[ReadyToDevelop]`
+- **Task 8.5:** Add up/down reordering buttons to CoachNotesEditor `[ReadyToDevelop]`
+- **Task 8.6:** Implement Rest type business rules - Auto-disable/clear dependent fields `[ReadyToDevelop]`
+- **Task 8.7:** Implement Rest type business rules - Auto-select Beginner difficulty (read-only) `[ReadyToDevelop]`
+- **Task 8.8:** Make muscle groups optional for exercise creation `[ReadyToDevelop]`
+- **Task 8.9:** Update form validation to handle Rest type special cases `[ReadyToDevelop]`
+- **Task 8.10:** Write tests for all manual testing fixes `[ReadyToDevelop]`
 
 **CHECKPOINT 8:** 🛑 `dotnet build` MUST PASS | `dotnet test` ALL GREEN | NO WARNINGS
 
-### Phase 9: UI/UX Polish
-- **Task 9.1:** Style exercise type badges with appropriate colors `[ReadyToDevelop]`
-- **Task 9.2:** Add icons for coach notes reordering buttons `[ReadyToDevelop]`
-- **Task 9.3:** Ensure responsive design for new components `[ReadyToDevelop]`
-- **Task 9.4:** Add helpful tooltips for business rules (Rest exclusivity, etc.) `[ReadyToDevelop]`
+### Phase 9: Integration Testing
+- **Task 9.1:** Write end-to-end test for creating exercise with coach notes `[ReadyToDevelop]`
+- **Task 9.2:** Write end-to-end test for exercise type selection and validation `[ReadyToDevelop]`
+- **Task 9.3:** Write end-to-end test for editing exercise with reordering coach notes `[ReadyToDevelop]`
+- **Task 9.4:** Write end-to-end test for isActive filtering `[ReadyToDevelop]`
+- **Task 9.5:** Write end-to-end test for Rest type business rules `[ReadyToDevelop]`
+
+**CHECKPOINT 9:** 🛑 `dotnet build` MUST PASS | `dotnet test` ALL GREEN | NO WARNINGS
+
+### Phase 10: UI/UX Polish
+- **Task 10.1:** Style exercise type badges with appropriate colors `[ReadyToDevelop]`
+- **Task 10.2:** Add icons for coach notes reordering buttons `[ReadyToDevelop]`
+- **Task 10.3:** Ensure responsive design for new components `[ReadyToDevelop]`
+- **Task 10.4:** Add helpful tooltips for business rules (Rest exclusivity, etc.) `[ReadyToDevelop]`
 
 **FINAL CHECKPOINT:** 🛑 `dotnet build` MUST PASS | `dotnet test` ALL GREEN | NO WARNINGS
 
 ## Notes
 - Coach notes must maintain their order (0-based indexing)
-- Rest exercise type cannot be combined with other types
-- Every exercise must have at least one type
+- Coach notes should be deletable and auto-resequence order after deletion
+- Rest exercise type cannot be combined with other types but CAN be unselected
+- Every exercise must have at least one type (except temporarily during selection)
 - No exercise can have all four types
+- **Rest Type Business Rules:**
+  - When Rest is selected: automatically disable/clear Equipment, Muscle Groups, Movement Patterns, Body Parts
+  - When Rest is selected: automatically set Difficulty to "Beginner" and make it read-only
+  - Muscle groups should be optional (not required) for exercise creation
+  - Coach notes are still allowed for Rest exercises
+  - IsActive flag is still user-controlled for Rest exercises
 - All API fields now use camelCase naming convention
 - Each implementation task must be immediately followed by its test task
 - Follow existing Blazor patterns and Tailwind CSS styling

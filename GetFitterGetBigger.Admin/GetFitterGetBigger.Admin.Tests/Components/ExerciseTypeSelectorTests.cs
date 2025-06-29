@@ -128,7 +128,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components
             checkboxes[0].HasAttribute("disabled").Should().BeTrue(); // Warmup disabled
             checkboxes[1].HasAttribute("disabled").Should().BeTrue(); // Workout disabled
             checkboxes[2].HasAttribute("disabled").Should().BeTrue(); // Cooldown disabled
-            checkboxes[3].HasAttribute("disabled").Should().BeTrue(); // Rest disabled (cannot uncheck last item)
+            checkboxes[3].HasAttribute("disabled").Should().BeFalse(); // Rest can be unselected
 
             // Should show warning messages
             component.Markup.Should().Contain("Cannot be selected when Rest is selected");
@@ -156,20 +156,27 @@ namespace GetFitterGetBigger.Admin.Tests.Components
         }
 
         [Fact]
-        public void CannotDeselectLastSelectedType()
+        public void CanDeselectLastSelectedType_ShowsValidationMessage()
         {
             // Arrange
             var availableTypes = GetTestExerciseTypes();
             var selectedIds = new List<string> { "1" }; // Only Warmup selected
+            var updatedIds = new List<string>();
 
             var component = RenderComponent<ExerciseTypeSelector>(parameters => parameters
                 .Add(p => p.AvailableTypes, availableTypes)
                 .Add(p => p.SelectedTypeIds, selectedIds)
+                .Add(p => p.SelectedTypeIdsChanged, EventCallback.Factory.Create<List<string>>(this, (list) => updatedIds = list))
             );
 
-            // Act & Assert
+            // Act - Deselect the last type
             var warmupCheckbox = component.FindAll("input[type='checkbox']")[0];
-            warmupCheckbox.HasAttribute("disabled").Should().BeTrue();
+            warmupCheckbox.HasAttribute("disabled").Should().BeFalse(); // Should not be disabled
+            warmupCheckbox.Change(false);
+
+            // Assert - Should allow deselection and show validation message
+            updatedIds.Should().BeEmpty();
+            component.Markup.Should().Contain("At least one exercise type must be selected");
         }
 
         [Fact]
@@ -216,21 +223,23 @@ namespace GetFitterGetBigger.Admin.Tests.Components
             // Arrange
             var availableTypes = GetTestExerciseTypes();
             var selectedIds = new List<string> { "4" }; // Rest selected
+            var updatedIds = new List<string>();
 
             var component = RenderComponent<ExerciseTypeSelector>(parameters => parameters
                 .Add(p => p.AvailableTypes, availableTypes)
                 .Add(p => p.SelectedTypeIds, selectedIds)
+                .Add(p => p.SelectedTypeIdsChanged, EventCallback.Factory.Create<List<string>>(this, (list) => updatedIds = list))
             );
 
-            // Try to uncheck Rest (which would leave no selection)
+            // Try to uncheck Rest (which should now be allowed, leaving no selection)
             var restCheckbox = component.FindAll("input[type='checkbox']")[3];
             
-            // Act - This should be prevented due to validation
+            // Act - This should now be allowed and show validation message
             restCheckbox.Change(false);
 
-            // Assert - Rest should still be selected due to validation
-            selectedIds.Should().Contain("4");
-            selectedIds.Should().HaveCount(1);
+            // Assert - Rest should be unselected and validation message should appear
+            updatedIds.Should().BeEmpty();
+            component.Markup.Should().Contain("At least one exercise type must be selected");
         }
 
         [Fact]

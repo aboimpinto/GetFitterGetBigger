@@ -78,11 +78,7 @@
             return true;
         }
 
-        // Cannot uncheck if it's the only one selected
-        if (IsTypeSelected(type) && SelectedTypeIds.Count == 1)
-        {
-            return true;
-        }
+        // Allow unchecking any type - users can temporarily have no types selected
 
         return false;
     }
@@ -131,11 +127,11 @@
 
     private bool ValidateSelection()
     {
-        // Rule 1: At least one type must be selected
+        // Rule 1: At least one type must be selected (but allow temporary empty state)
         if (!SelectedTypeIds.Any())
         {
             ValidationMessage = "At least one exercise type must be selected";
-            return false;
+            return true; // Allow the change but show warning
         }
 
         // Rule 2: Cannot select all four types
