@@ -34,10 +34,10 @@
 **CHECKPOINT 3:** ✅ `dotnet build` MUST PASS | `dotnet test` ALL GREEN | NO WARNINGS
 
 ### Phase 4: Integration Testing
-- **Task 4.1:** Test complete exercise CRUD flow with zero coach notes `[Completed - commit 604e42ef]`
-- **Task 4.2:** Test exercise creation, editing, and deletion without coach notes `[Completed - commit 604e42ef]`
-- **Task 4.3:** Verify coach notes functionality still works when notes are provided `[Completed - commit 604e42ef]`
-- **Task 4.4:** Test edge cases (all empty notes, mixed empty/filled notes) `[Completed - commit 604e42ef]`
+- **Task 4.1:** Test complete exercise CRUD flow with zero coach notes `[Completed - commit 62a3c256]`
+- **Task 4.2:** Test exercise creation, editing, and deletion without coach notes `[Completed - commit 62a3c256]`
+- **Task 4.3:** Verify coach notes functionality still works when notes are provided `[Completed - commit 62a3c256]`
+- **Task 4.4:** Test edge cases (all empty notes, mixed empty/filled notes) `[Completed - commit 62a3c256]`
 
 **FINAL CHECKPOINT:** 🛑 `dotnet build` MUST PASS | `dotnet test` ALL GREEN | NO WARNINGS
 
