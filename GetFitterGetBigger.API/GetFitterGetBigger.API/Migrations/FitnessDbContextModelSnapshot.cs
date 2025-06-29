@@ -498,13 +498,26 @@ namespace GetFitterGetBigger.API.Migrations
                     b.Property<Guid>("BodyPartId")
                         .HasColumnType("uuid");
 
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
 
                     b.HasKey("Id");
 
                     b.HasIndex("BodyPartId");
+
+                    b.HasIndex("Name", "IsActive")
+                        .HasDatabaseName("IX_MuscleGroup_Name_IsActive");
 
                     b.ToTable("MuscleGroups");
                 });
