@@ -63,16 +63,24 @@ namespace GetFitterGetBigger.API.Tests.Repositories
             
             // Add an exercise that uses the chest muscle group
             var benchPress = Exercise.Handler.CreateNew(
-                "Bench Press", "Chest exercise", beginnerDifficulty.Id);
+                "Bench Press", 
+                "Chest exercise", 
+                null, // videoUrl
+                null, // imageUrl
+                false, // isUnilateral
+                beginnerDifficulty.Id);
             _context.Exercises.Add(benchPress);
             
+            // Add muscle role for the relationship
+            var primaryRole = MuscleRole.Handler.Create(
+                MuscleRoleId.New(), "Primary", "Primary muscle", 1, true);
+            _context.MuscleRoles.Add(primaryRole);
+            
             // Add exercise-muscle group relationship
-            var exerciseMuscleGroup = new ExerciseMuscleGroup
-            {
-                ExerciseId = benchPress.Id,
-                MuscleGroupId = chest.Id,
-                MuscleRoleId = MuscleRoleId.New()
-            };
+            var exerciseMuscleGroup = ExerciseMuscleGroup.Handler.Create(
+                benchPress.Id,
+                chest.Id,
+                primaryRole.Id);
             _context.ExerciseMuscleGroups.Add(exerciseMuscleGroup);
             
             _context.SaveChanges();

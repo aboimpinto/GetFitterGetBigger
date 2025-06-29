@@ -197,7 +197,7 @@ public class MuscleGroupsControllerTests : IClassFixture<ApiTestFixture>
         Assert.Equal(uniqueName, createdDto.Name);
         Assert.Equal(bodyPartId, createdDto.BodyPartId);
         Assert.True(createdDto.IsActive);
-        Assert.NotNull(createdDto.CreatedAt);
+        Assert.True(createdDto.CreatedAt > DateTime.MinValue);
         Assert.Null(createdDto.UpdatedAt);
         
         // Clean up - deactivate the created muscle group
