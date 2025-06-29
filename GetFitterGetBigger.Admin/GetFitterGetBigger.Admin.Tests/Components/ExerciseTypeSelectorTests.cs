@@ -252,7 +252,8 @@ namespace GetFitterGetBigger.Admin.Tests.Components
             );
 
             // Assert
-            component.Markup.Should().Contain("Rules: At least one type must be selected. Rest type is exclusive. Cannot select all four types.");
+            component.Markup.Should().Contain("Rules:");
+            component.Markup.Should().Contain("At least one type must be selected. Rest type is exclusive. Cannot select all four types.");
         }
 
         [Fact]

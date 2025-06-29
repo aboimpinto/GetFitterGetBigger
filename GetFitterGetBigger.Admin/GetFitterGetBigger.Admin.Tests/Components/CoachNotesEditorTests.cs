@@ -150,7 +150,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components
             );
 
             // Act - Remove the middle note
-            var removeButtons = component.FindAll("button[title='Remove note']");
+            var removeButtons = component.FindAll("button[title='Remove this coach note']");
             removeButtons[1].Click();
 
             // Assert
@@ -176,7 +176,15 @@ namespace GetFitterGetBigger.Admin.Tests.Components
             );
 
             // Act
-            var moveUpButtons = component.FindAll("button[title='Move up']");
+            // Find all buttons with move up functionality (including disabled ones)
+            var allButtons = component.FindAll("button").ToList();
+            var moveUpButtons = allButtons.Where((b, index) => 
+            {
+                var title = b.GetAttribute("title") ?? "";
+                return title.Contains("Move note up") || title.Contains("first note");
+            }).ToList();
+            
+            moveUpButtons.Should().HaveCount(2); // Should have 2 move up buttons
             moveUpButtons[1].Click(); // Click the second note's up button
 
             // Assert
@@ -201,7 +209,15 @@ namespace GetFitterGetBigger.Admin.Tests.Components
             );
 
             // Act
-            var moveDownButtons = component.FindAll("button[title='Move down']");
+            // Find all buttons with move down functionality (including disabled ones)
+            var allButtons = component.FindAll("button").ToList();
+            var moveDownButtons = allButtons.Where(b => 
+            {
+                var title = b.GetAttribute("title") ?? "";
+                return title.Contains("Move note down") || title.Contains("last note");
+            }).ToList();
+            
+            moveDownButtons.Should().HaveCount(2); // Should have 2 move down buttons
             moveDownButtons[0].Click(); // Click the first note's down button
 
             // Assert
@@ -227,8 +243,21 @@ namespace GetFitterGetBigger.Admin.Tests.Components
             );
 
             // Assert
-            var moveUpButtons = component.FindAll("button[title='Move up']");
-            var moveDownButtons = component.FindAll("button[title='Move down']");
+            // Get all buttons including disabled ones
+            var allButtons = component.FindAll("button").ToList();
+            var moveUpButtons = allButtons.Where(b => 
+            {
+                var title = b.GetAttribute("title") ?? "";
+                return title.Contains("Move note up") || title.Contains("first note");
+            }).ToList();
+            var moveDownButtons = allButtons.Where(b => 
+            {
+                var title = b.GetAttribute("title") ?? "";
+                return title.Contains("Move note down") || title.Contains("last note");
+            }).ToList();
+            
+            moveUpButtons.Should().HaveCount(3); // 3 notes = 3 up buttons
+            moveDownButtons.Should().HaveCount(3); // 3 notes = 3 down buttons
             
             // First item's up button should be disabled
             moveUpButtons[0].HasAttribute("disabled").Should().BeTrue();
@@ -260,11 +289,24 @@ namespace GetFitterGetBigger.Admin.Tests.Components
             );
 
             // Act - Move C up twice
-            var moveUpButtons = component.FindAll("button[title='Move up']");
-            moveUpButtons[2].Click(); // C moves to position 1
+            var allButtons = component.FindAll("button").ToList();
+            var moveUpButtons = allButtons.Where(b => 
+            {
+                var title = b.GetAttribute("title") ?? "";
+                return title.Contains("Move note up") || title.Contains("first note");
+            }).ToList();
             
-            moveUpButtons = component.FindAll("button[title='Move up']"); // Re-query after DOM update
-            moveUpButtons[1].Click(); // C moves to position 0
+            moveUpButtons.Should().HaveCount(4); // 4 notes = 4 up buttons
+            moveUpButtons[2].Click(); // C (at position 2) moves up to position 1
+            
+            // Re-query after DOM update
+            allButtons = component.FindAll("button").ToList();
+            moveUpButtons = allButtons.Where(b => 
+            {
+                var title = b.GetAttribute("title") ?? "";
+                return title.Contains("Move note up") || title.Contains("first note");
+            }).ToList();
+            moveUpButtons[1].Click(); // C (now at position 1) moves up to position 0
 
             // Assert
             notes.Select(n => n.Text).Should().BeEquivalentTo(new[] { "C", "A", "B", "D" }, options => options.WithStrictOrdering());

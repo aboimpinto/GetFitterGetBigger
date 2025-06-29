@@ -227,15 +227,24 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
             component.WaitForState(() => component.FindAll("textarea").Count > 1);
             
             // Should have delete and reorder buttons
-            var deleteButton = component.Find("button[title='Remove note']");
+            var deleteButton = component.Find("button[title='Remove this coach note']");
             deleteButton.Should().NotBeNull();
-            deleteButton.TextContent.Should().Contain("✕");
+            deleteButton.TextContent.Should().Contain("×");
             
-            var upButton = component.Find("button[title='Move up']");
+            var allButtons = component.FindAll("button").ToList();
+            var upButton = allButtons.FirstOrDefault(b => 
+            {
+                var title = b.GetAttribute("title") ?? "";
+                return title.Contains("Move note up") || title.Contains("first note");
+            });
             upButton.Should().NotBeNull();
-            upButton.TextContent.Should().Contain("↑");
+            upButton!.TextContent.Should().Contain("↑");
             
-            var downButton = component.Find("button[title='Move down']");
+            var downButton = allButtons.FirstOrDefault(b => 
+            {
+                var title = b.GetAttribute("title") ?? "";
+                return title.Contains("Move note down") || title.Contains("last note");
+            });
             downButton.Should().NotBeNull();
             downButton.TextContent.Should().Contain("↓");
         }

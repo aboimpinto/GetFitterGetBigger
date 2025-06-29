@@ -1,10 +1,10 @@
 @using GetFitterGetBigger.Admin.Models.Dtos
 
 <div class="space-y-4">
-    <div class="flex justify-between items-center">
+    <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
         <h3 class="text-lg font-medium text-gray-900">Coach Notes <span class="text-sm font-normal text-gray-500">(Optional)</span></h3>
-        <button type="button" @onclick="AddNote" class="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-            <span class="mr-1">+</span>
+        <button type="button" @onclick="AddNote" class="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors w-full sm:w-auto justify-center">
+            <span class="mr-2 text-lg">➕</span>
             Add Note
         </button>
     </div>
@@ -17,28 +17,29 @@
                 var index = i; // Capture for closure
                 var note = Notes[index];
                 
-                <div class="border rounded-lg p-4 bg-gray-50">
+                <div class="border-2 border-gray-200 rounded-lg p-3 sm:p-4 bg-gray-50 hover:border-gray-300 transition-colors">
                     <div class="flex items-start space-x-3">
                         <div class="flex flex-col space-y-1">
                             <button type="button" 
                                     @onclick="() => MoveNoteUp(index)"
                                     disabled="@(index == 0)"
-                                    class="p-2 rounded text-gray-400 hover:text-gray-600 hover:bg-gray-100 @(index == 0 ? "opacity-50 cursor-not-allowed" : "")"
-                                    title="Move up">
-                                ↑
+                                    class="p-2 rounded-md text-gray-500 hover:text-gray-700 hover:bg-gray-200 transition-colors @(index == 0 ? "opacity-50 cursor-not-allowed" : "")"
+                                    title="@(index == 0 ? "This is the first note" : "Move note up in order")">
+                                <span class="block w-5 h-5 flex items-center justify-center font-bold">↑</span>
                             </button>
                             <button type="button" 
                                     @onclick="() => MoveNoteDown(index)"
                                     disabled="@(index == Notes.Count - 1)"
-                                    class="p-2 rounded text-gray-400 hover:text-gray-600 hover:bg-gray-100 @(index == Notes.Count - 1 ? "opacity-50 cursor-not-allowed" : "")"
-                                    title="Move down">
-                                ↓
+                                    class="p-2 rounded-md text-gray-500 hover:text-gray-700 hover:bg-gray-200 transition-colors @(index == Notes.Count - 1 ? "opacity-50 cursor-not-allowed" : "")"
+                                    title="@(index == Notes.Count - 1 ? "This is the last note" : "Move note down in order")">
+                                <span class="block w-5 h-5 flex items-center justify-center font-bold">↓</span>
                             </button>
                         </div>
                         
                         <div class="flex-1">
                             <div class="flex items-center justify-between mb-2">
-                                <label class="text-sm font-medium text-gray-700">
+                                <label class="text-sm font-medium text-gray-700 flex items-center">
+                                    <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-blue-100 text-blue-800 text-xs font-bold mr-2">@(index + 1)</span>
                                     Step @(index + 1)
                                 </label>
                                 <span class="text-xs text-gray-500">
@@ -51,7 +52,8 @@
                                 class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                                 rows="3"
                                 maxlength="1000"
-                                placeholder="Enter coaching instruction (optional)...">
+                                placeholder="Enter coaching instruction (optional)..."
+                                title="Provide clear, step-by-step instructions for performing this part of the exercise (max 1000 characters)">
                             </textarea>
                             @if (note.Text.Length > 900)
                             {
@@ -63,9 +65,9 @@
                         
                         <button type="button" 
                                 @onclick="() => RemoveNote(index)"
-                                class="p-2 rounded text-red-500 hover:text-red-700 hover:bg-red-50 font-bold"
-                                title="Remove note">
-                            ✕
+                                class="p-2 rounded-md text-red-500 hover:text-red-700 hover:bg-red-50 transition-colors"
+                                title="Remove this coach note">
+                            <span class="block w-5 h-5 flex items-center justify-center font-bold text-lg">×</span>
                         </button>
                     </div>
                 </div>

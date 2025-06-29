@@ -1,7 +1,7 @@
 @using GetFitterGetBigger.Admin.Models.Dtos
 
 <div class="space-y-4">
-    <div class="flex justify-between items-center">
+    <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
         <h3 class="text-lg font-medium text-gray-900">Exercise Types</h3>
         @if (!string.IsNullOrEmpty(ValidationMessage))
         {
@@ -12,7 +12,8 @@
     <div class="space-y-2">
         @foreach (var type in AvailableTypes)
         {
-            <label class="flex items-start space-x-3 p-3 border rounded-lg hover:bg-gray-50 cursor-pointer @(IsTypeDisabled(type) ? "opacity-50 cursor-not-allowed" : "")">
+            <label class="flex items-start space-x-3 p-3 border rounded-lg hover:bg-gray-50 cursor-pointer @(IsTypeDisabled(type) ? "opacity-50 cursor-not-allowed" : "")"
+                   title="@GetTypeTooltip(type)">
                 <input type="checkbox"
                        checked="@IsTypeSelected(type)"
                        disabled="@IsTypeDisabled(type)"
@@ -24,14 +25,14 @@
                     @if (type.Value == "Rest" && SelectedTypeIds.Any() && !SelectedTypeIds.Contains(type.Id))
                     {
                         <div class="text-xs text-yellow-600 mt-1">
-                            <i class="fas fa-info-circle mr-1"></i>
+                            <span class="mr-1">⚠️</span>
                             Rest type cannot be combined with other types
                         </div>
                     }
                     @if (type.Value != "Rest" && IsRestSelected())
                     {
                         <div class="text-xs text-yellow-600 mt-1">
-                            <i class="fas fa-info-circle mr-1"></i>
+                            <span class="mr-1">⚠️</span>
                             Cannot be selected when Rest is selected
                         </div>
                     }
@@ -40,9 +41,9 @@
         }
     </div>
 
-    <div class="text-sm text-gray-600">
-        <i class="fas fa-info-circle mr-1"></i>
-        Rules: At least one type must be selected. Rest type is exclusive. Cannot select all four types.
+    <div class="text-sm text-gray-600 bg-blue-50 border border-blue-200 rounded-md p-3">
+        <span class="mr-1">ℹ️</span>
+        <span class="font-medium">Rules:</span> At least one type must be selected. Rest type is exclusive. Cannot select all four types.
     </div>
 </div>
 
@@ -152,5 +153,33 @@
         }
 
         return true;
+    }
+
+    private string GetTypeTooltip(ExerciseTypeDto type)
+    {
+        if (IsTypeDisabled(type))
+        {
+            if (type.Value == "Rest" && SelectedTypeIds.Any())
+            {
+                return "Rest type cannot be combined with other exercise types";
+            }
+            else if (type.Value != "Rest" && IsRestSelected())
+            {
+                return "Cannot select this type when Rest is selected";
+            }
+            else if (SelectedTypeIds.Count == 3)
+            {
+                return "Cannot select all four exercise types";
+            }
+        }
+        
+        return type.Value switch
+        {
+            "Warmup" => "Preparatory exercises to get the body ready for workout",
+            "Workout" => "Main exercise performed during the training session",
+            "Cooldown" => "Recovery exercises performed after the main workout",
+            "Rest" => "Rest period between sets or exercises (exclusive type)",
+            _ => type.Description
+        };
     }
 }
