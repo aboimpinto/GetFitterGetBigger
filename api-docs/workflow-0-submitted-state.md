@@ -13,10 +13,14 @@ The `0-SUBMITTED` state represents features that have been propagated from one p
 
 ### When to Use 0-SUBMITTED
 
-Features enter `0-SUBMITTED` when:
-- API changes are propagated to Admin/Client projects
-- New features are documented but need project-specific planning
-- Cross-project dependencies are identified but not yet refined
+**IMPORTANT**: ALL features MUST start in `0-SUBMITTED` state, regardless of source:
+- API changes propagated to Admin/Client projects
+- New features requested by users
+- Features identified by the development team
+- Cross-project dependencies
+- Any feature request, no matter how simple or complex
+
+**No exceptions**: Even if tasks seem obvious, the feature must go through 0-SUBMITTED for proper workflow tracking.
 
 ## Workflow States (Updated)
 

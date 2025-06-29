@@ -16,13 +16,16 @@ memory-bank/features/
 
 ## Feature Lifecycle
 
-### 0. Feature Submission (SUBMITTED) - Rarely Used in API
-The API typically originates features rather than receiving them. However, if a feature request comes from external sources:
+### 0. Feature Submission (SUBMITTED) - MANDATORY STARTING POINT
+**IMPORTANT**: ALL features MUST start in 0-SUBMITTED state, even in the API project:
 1. Create folder: `memory-bank/features/0-SUBMITTED/[feature-name]/`
-2. Add only `feature-description.md` with the request details
-3. When ready to plan, create tasks and move to `1-READY_TO_DEVELOP`
+2. Add only `feature-description.md` with the feature details
+3. NO task files yet - these are created during refinement
+4. When ready to plan, create tasks and move to `1-READY_TO_DEVELOP`
 
-### 1. Feature Creation (READY_TO_DEVELOP)
+This ensures consistent workflow tracking across all projects.
+
+### 1. Feature Planning (READY_TO_DEVELOP)
 When a new feature is identified:
 1. Create a folder: `memory-bank/features/1-READY_TO_DEVELOP/[feature-name]/`
 2. Create two files in the folder:

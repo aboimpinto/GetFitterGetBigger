@@ -23,10 +23,13 @@ When a feature arrives in `0-SUBMITTED` from API propagation:
 6. Move to `1-READY_TO_DEVELOP` when the team is ready
 
 ### 1. Feature Analysis & Planning
-- User provides detailed feature requirements and platform-specific UI/UX specifications
+- Feature MUST already exist in `0-SUBMITTED` state
+- Review feature requirements from `feature-description.md`
+- Analyze platform-specific UI/UX implications (Mobile, Web, Desktop)
 - Create a comprehensive implementation plan with tasks for each platform
-- **MANDATORY**: Create a task tracking file at `memory-bank/features/[feature-name]-tasks.md`
+- **MANDATORY**: Create `feature-tasks.md` in the existing feature folder
 - Each task must be marked with status `[ReadyToDevelop]`
+- Move feature folder from `0-SUBMITTED` to `1-READY_TO_DEVELOP`
 - Tasks should be specific, actionable, and independently verifiable
 - The task file must include:
   - Feature branch name at the top

@@ -6,18 +6,22 @@ This document outlines the standard process for implementing new features in the
 
 ### 0. Feature States (Pre-Implementation)
 Features progress through these workflow states:
-- **0-SUBMITTED**: Not typically used in API (API originates features)
+- **0-SUBMITTED**: MANDATORY starting point for ALL features
 - **1-READY_TO_DEVELOP**: Feature fully planned with tasks defined
 - **2-IN_PROGRESS**: Feature currently being implemented
 - **3-COMPLETED**: Feature done and tested
 - **4-BLOCKED**: Dependencies preventing progress
 - **5-SKIPPED**: Feature deferred or cancelled
 
+**IMPORTANT**: Every feature MUST start in 0-SUBMITTED state, even in the API project. This ensures consistent workflow tracking across all projects.
+
 ### 1. Feature Analysis & Planning
-- User provides detailed feature requirements and API specifications
+- Feature MUST already exist in `0-SUBMITTED` state
+- Review feature requirements from `feature-description.md`
 - Create a comprehensive implementation plan with granular tasks
-- **MANDATORY**: Create a task tracking file at `memory-bank/features/[feature-name]-tasks.md`
+- **MANDATORY**: Create `feature-tasks.md` in the existing feature folder
 - Each task must be marked with status `[ReadyToDevelop]`
+- Move feature folder from `0-SUBMITTED` to `1-READY_TO_DEVELOP`
 - Tasks should be specific, actionable, and independently verifiable
 - The task file must include:
   - Feature branch name at the top

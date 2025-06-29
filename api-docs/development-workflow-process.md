@@ -47,12 +47,20 @@ Each feature folder must contain different files based on state:
 - `feature-description.md` - Business value, user stories, acceptance criteria
 - `feature-tasks.md` - Detailed implementation tasks with status tracking
 
-### Feature Propagation Process (NEW)
+### Feature Creation Process
 
-1. **API Changes**: When API endpoints are created/modified
-2. **Root Propagation**: Document changes in `0-SUBMITTED` folders
-3. **Project Refinement**: Teams analyze and create implementation plans
-4. **Transition**: Move to `1-READY_TO_DEVELOP` when refined
+**IMPORTANT**: ALL features MUST start in `0-SUBMITTED` state:
+
+1. **Initial Creation**: Create feature in `0-SUBMITTED` with description only
+2. **No Direct Creation**: NEVER create features directly in `1-READY_TO_DEVELOP`
+3. **Refinement Required**: Teams must refine and add tasks before moving forward
+4. **Transition Control**: Only move to `1-READY_TO_DEVELOP` when fully planned
+
+This applies to ALL features:
+- API-originated features
+- User-requested features  
+- Team-identified features
+- Bug-to-feature conversions
 
 ### Implementation Process
 

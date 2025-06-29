@@ -37,22 +37,13 @@ When the team is ready to implement:
    - Resource availability
    - Dependencies readiness
 
-#### Direct Feature Creation (Without API Propagation)
-When a new Admin-specific feature is identified:
-1. Create a folder: `memory-bank/features/1-READY_TO_DEVELOP/[feature-name]/`
-2. Create two files in the folder:
-   - `feature-description.md` - Detailed feature specification
-   - `feature-tasks.md` - Implementation task list
-3. Optional: Add any supporting documents, mockups, or scripts
+#### Important Note on Feature Creation
+**ALL features MUST start in 0-SUBMITTED**, even Admin-specific features:
+1. Create in `0-SUBMITTED` with basic description
+2. Refine and add tasks when ready
+3. Move to `1-READY_TO_DEVELOP` after planning
 
-**Folder Structure Example:**
-```
-1-READY_TO_DEVELOP/
-└── exercise-management/
-    ├── feature-description.md
-    ├── feature-tasks.md
-    └── ui-mockups.png
-```
+This ensures consistent workflow tracking. Direct creation in 1-READY_TO_DEVELOP is NOT allowed.
 
 ### 2. Feature Development (IN_PROGRESS)
 When development begins:
