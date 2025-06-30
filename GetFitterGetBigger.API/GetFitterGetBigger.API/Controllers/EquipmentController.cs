@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using Olimpo.EntityFramework.Persistency;
 using GetFitterGetBigger.API.Services.Interfaces;
 using GetFitterGetBigger.API.Configuration;
+using GetFitterGetBigger.API.Utilities;
 using Microsoft.Extensions.Options;
 
 namespace GetFitterGetBigger.API.Controllers;
@@ -140,5 +141,161 @@ public class EquipmentController : ReferenceTablesBaseController
             Id = equipment.Id.ToString(),
             Value = equipment.Name
         });
+    }
+    
+    /// <summary>
+    /// Creates new equipment
+    /// </summary>
+    /// <param name="request">The equipment creation request</param>
+    /// <returns>The created equipment</returns>
+    [HttpPost]
+    [ProducesResponseType(typeof(EquipmentDto), StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> Create([FromBody] CreateEquipmentDto request)
+    {
+        using var unitOfWork = _unitOfWorkProvider.CreateWritable();
+        var repository = unitOfWork.GetRepository<IEquipmentRepository>();
+        
+        // Check for duplicate name
+        if (await repository.ExistsAsync(request.Name))
+        {
+            return Conflict($"Equipment with the name '{request.Name}' already exists");
+        }
+        
+        // Create the equipment
+        var equipment = Equipment.Handler.CreateNew(request.Name.Trim());
+        var created = await repository.CreateAsync(equipment);
+        
+        await unitOfWork.CommitAsync();
+        
+        // Invalidate cache
+        var tableName = GetTableName();
+        await _cacheService.RemoveAsync(CacheKeyGenerator.GetAllKey(tableName));
+        
+        // Map to DTO
+        var dto = new EquipmentDto
+        {
+            Id = created.Id.ToString(),
+            Name = created.Name,
+            IsActive = created.IsActive,
+            CreatedAt = created.CreatedAt,
+            UpdatedAt = created.UpdatedAt
+        };
+        
+        return CreatedAtAction(nameof(GetById), new { id = dto.Id }, dto);
+    }
+    
+    /// <summary>
+    /// Updates existing equipment
+    /// </summary>
+    /// <param name="id">The ID of the equipment to update</param>
+    /// <param name="request">The equipment update request</param>
+    /// <returns>The updated equipment</returns>
+    [HttpPut("{id}")]
+    [ProducesResponseType(typeof(EquipmentDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> Update(string id, [FromBody] UpdateEquipmentDto request)
+    {
+        // Validate equipment ID format
+        if (!EquipmentId.TryParse(id, out var equipmentId))
+        {
+            return BadRequest($"Invalid ID format. Expected format: 'equipment-{{guid}}', got: '{id}'");
+        }
+        
+        using var unitOfWork = _unitOfWorkProvider.CreateWritable();
+        var repository = unitOfWork.GetRepository<IEquipmentRepository>();
+        
+        // Get existing equipment
+        var existing = await repository.GetByIdAsync(equipmentId);
+        if (existing == null)
+        {
+            return NotFound();
+        }
+        
+        // Check for duplicate name (excluding current)
+        if (await repository.ExistsAsync(request.Name, equipmentId))
+        {
+            return Conflict($"Equipment with the name '{request.Name}' already exists");
+        }
+        
+        // Update the equipment
+        var updated = Equipment.Handler.Update(existing, request.Name.Trim());
+        var result = await repository.UpdateAsync(updated);
+        
+        await unitOfWork.CommitAsync();
+        
+        // Invalidate cache
+        var tableName = GetTableName();
+        await _cacheService.RemoveAsync(CacheKeyGenerator.GetAllKey(tableName));
+        await _cacheService.RemoveAsync(CacheKeyGenerator.GetByIdKey(tableName, id));
+        await _cacheService.RemoveAsync(CacheKeyGenerator.GetByValueKey(tableName, existing.Name));
+        await _cacheService.RemoveAsync(CacheKeyGenerator.GetByValueKey(tableName, request.Name));
+        
+        // Map to DTO
+        var dto = new EquipmentDto
+        {
+            Id = result.Id.ToString(),
+            Name = result.Name,
+            IsActive = result.IsActive,
+            CreatedAt = result.CreatedAt,
+            UpdatedAt = result.UpdatedAt
+        };
+        
+        return Ok(dto);
+    }
+    
+    /// <summary>
+    /// Deactivates equipment
+    /// </summary>
+    /// <param name="id">The ID of the equipment to deactivate</param>
+    /// <returns>No content if successful</returns>
+    [HttpDelete("{id}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> Delete(string id)
+    {
+        // Validate equipment ID format
+        if (!EquipmentId.TryParse(id, out var equipmentId))
+        {
+            return BadRequest($"Invalid ID format. Expected format: 'equipment-{{guid}}', got: '{id}'");
+        }
+        
+        using var unitOfWork = _unitOfWorkProvider.CreateWritable();
+        var repository = unitOfWork.GetRepository<IEquipmentRepository>();
+        
+        // Check if equipment exists
+        var existing = await repository.GetByIdAsync(equipmentId);
+        if (existing == null)
+        {
+            return NotFound();
+        }
+        
+        // Check if equipment is in use
+        if (await repository.IsInUseAsync(equipmentId))
+        {
+            return Conflict("Cannot deactivate equipment that is in use by exercises");
+        }
+        
+        // Deactivate the equipment
+        var deactivated = await repository.DeactivateAsync(equipmentId);
+        if (!deactivated)
+        {
+            return NotFound();
+        }
+        
+        await unitOfWork.CommitAsync();
+        
+        // Invalidate cache
+        var tableName = GetTableName();
+        await _cacheService.RemoveAsync(CacheKeyGenerator.GetAllKey(tableName));
+        await _cacheService.RemoveAsync(CacheKeyGenerator.GetByIdKey(tableName, id));
+        await _cacheService.RemoveAsync(CacheKeyGenerator.GetByValueKey(tableName, existing.Name));
+        
+        return NoContent();
     }
 }
