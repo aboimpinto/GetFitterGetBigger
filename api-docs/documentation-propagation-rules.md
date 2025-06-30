@@ -71,18 +71,29 @@ When creating propagation documents in memory-banks:
 3. Create `feature-description.md` inside the folder
 4. Update `NEXT_FEATURE_ID.txt`
 
-### For Admin and Clients Projects (use descriptive names):
+### For Admin Project (also uses FEAT-XXX format):
+1. Check `NEXT_FEATURE_ID.txt` for the next number
+2. Create folder: `memory-bank/features/0-SUBMITTED/FEAT-XXX-{feature-name}/`
+3. Create `feature-description.md` (API integration details)
+4. Create `{feature-name}.md` (implementation plan with FEAT-XXX header)
+5. Update `NEXT_FEATURE_ID.txt` to next number
+
+### For Clients Project (no numbering system):
 1. Create folder: `memory-bank/features/0-SUBMITTED/{feature-name}/`
-2. Create `feature-description.md` inside the folder
-3. Use descriptive folder names like:
-   - `equipment-crud-operations`
-   - `musclegroup-crud-operations`
+2. Create `feature-description.md` (API integration details)
+3. Create `{feature-name}.md` (implementation plan)
+4. Use descriptive folder names like:
+   - `equipment-reference-data`
+   - `musclegroup-reference-data`
    - `rest-exercise-optional-musclegroups`
 
 ### Important Notes:
-- API documentation should be in `feature-description.md`, not standalone files
-- ALL features MUST start in `0-SUBMITTED` folder
-- Feature definitions in root `0-SUBMITTED/` use FEAT-{name}.md format
+- API documentation should be in `feature-description.md` (API integration details)
+- Feature implementation plan should be in `{feature-name}.md` (no FEAT prefix in filename)
+- Both files go in the same feature folder within `memory-bank/features/0-SUBMITTED/`
+- Folder names: Admin uses `FEAT-XXX-{name}`, Clients uses `{name}` only
+- ALL features MUST start in `0-SUBMITTED` state
+- No files should be placed in a root-level `0-SUBMITTED` folder
 
 ## Propagation Process
 
