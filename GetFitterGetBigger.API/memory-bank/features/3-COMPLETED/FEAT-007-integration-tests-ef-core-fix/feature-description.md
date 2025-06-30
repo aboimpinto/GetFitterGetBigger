@@ -2,8 +2,10 @@
 
 ## Feature ID: FEAT-007
 ## Created: 2025-01-29
-## Status: IN_PROGRESS
+## Status: COMPLETED
+## Completed: 2025-01-30
 ## Target PI: PI-2025-Q1
+## Accepted By: Paulo Aboim Pinto (Product Owner)
 
 ## Description
 

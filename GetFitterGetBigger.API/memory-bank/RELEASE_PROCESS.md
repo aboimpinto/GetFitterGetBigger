@@ -247,8 +247,17 @@ Track for each release:
 
 ## Release Approval Chain
 
+**IMPORTANT**: Always identify WHO made the decision, not just the role.
+Format: `Name (Role)` - e.g., "Paulo Aboim Pinto (Product Owner)"
+
 1. Development Team Lead - Technical approval
 2. QA Lead - Quality approval
 3. Product Owner - Feature approval
 4. DevOps Lead - Deployment approval
 5. Stakeholders - Final sign-off
+
+Example approvals:
+- Approved by: Paulo Aboim Pinto (Development Team Lead)
+- Tested by: Maria Silva (QA Lead)
+- Accepted by: Paulo Aboim Pinto (Product Owner)
+- Deployed by: João Santos (DevOps Lead)

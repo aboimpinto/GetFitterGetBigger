@@ -101,6 +101,10 @@ The AI assistant should NEVER move features to COMPLETED. When all implementatio
    - Make the decision to move to COMPLETED
    - Move entire folder from `2-IN_PROGRESS` to `3-COMPLETED`
    - Add completion date to feature-description.md
+   - Add acceptance information with format: `Accepted By: Name (Role)`
+     - Example: `Accepted By: Paulo Aboim Pinto (Product Owner)`
+     - Example: `Reviewed By: Maria Silva (Tech Lead)`
+     - IMPORTANT: Always include WHO made the decision, not just the role
    - Approve for PI release
 
 **IMPORTANT**: Features CANNOT be moved to COMPLETED if:

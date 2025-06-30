@@ -1,6 +1,9 @@
 # Feature Request: Equipment CRUD Operations
 
 ## Feature ID: FEAT-013
+## Status: COMPLETED
+## Completed: 2025-01-30
+## Accepted By: Paulo Aboim Pinto (Product Owner)
 
 ## Summary
 Extend the existing Equipment reference table to support full Create, Read, Update, and Delete (CRUD) operations. Currently, Equipment only supports read operations, but full CRUD functionality is needed for comprehensive equipment management in the fitness tracking system.
