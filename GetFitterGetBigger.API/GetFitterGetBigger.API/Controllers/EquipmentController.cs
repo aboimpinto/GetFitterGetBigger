@@ -82,7 +82,7 @@ public class EquipmentController : ReferenceTablesBaseController
             return await repository.GetByIdAsync(equipmentId);
         });
         
-        if (equipment == null)
+        if (equipment == null || !equipment.IsActive)
             return NotFound();
             
         return Ok(new ReferenceDataDto
@@ -167,7 +167,7 @@ public class EquipmentController : ReferenceTablesBaseController
         var equipment = Equipment.Handler.CreateNew(request.Name.Trim());
         var created = await repository.CreateAsync(equipment);
         
-        await unitOfWork.CommitAsync();
+        // Repository already saves, no need to commit again
         
         // Invalidate cache
         var tableName = GetTableName();
@@ -210,7 +210,7 @@ public class EquipmentController : ReferenceTablesBaseController
         
         // Get existing equipment
         var existing = await repository.GetByIdAsync(equipmentId);
-        if (existing == null)
+        if (existing == null || !existing.IsActive)
         {
             return NotFound();
         }
@@ -225,7 +225,7 @@ public class EquipmentController : ReferenceTablesBaseController
         var updated = Equipment.Handler.Update(existing, request.Name.Trim());
         var result = await repository.UpdateAsync(updated);
         
-        await unitOfWork.CommitAsync();
+        // Repository already saves, no need to commit again
         
         // Invalidate cache
         var tableName = GetTableName();
@@ -270,7 +270,7 @@ public class EquipmentController : ReferenceTablesBaseController
         
         // Check if equipment exists
         var existing = await repository.GetByIdAsync(equipmentId);
-        if (existing == null)
+        if (existing == null || !existing.IsActive)
         {
             return NotFound();
         }
@@ -288,7 +288,7 @@ public class EquipmentController : ReferenceTablesBaseController
             return NotFound();
         }
         
-        await unitOfWork.CommitAsync();
+        // Repository already saves, no need to commit again
         
         // Invalidate cache
         var tableName = GetTableName();

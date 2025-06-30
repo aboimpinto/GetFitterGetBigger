@@ -46,9 +46,11 @@ public class ApiTestFixture : WebApplicationFactory<Program>
             }
 
             // Add DbContext using an in-memory database for testing with a unique name
+            var dbName = $"InMemoryDbForTesting_{Guid.NewGuid()}";
             services.AddDbContext<FitnessDbContext>(options =>
             {
-                options.UseInMemoryDatabase($"InMemoryDbForTesting_{Guid.NewGuid()}");
+                options.UseInMemoryDatabase(dbName);
+                options.EnableSensitiveDataLogging(); // Helps with debugging
                 options.ConfigureWarnings(w => w.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.InMemoryEventId.TransactionIgnoredWarning));
             });
         });

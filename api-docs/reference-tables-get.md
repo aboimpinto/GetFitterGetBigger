@@ -71,11 +71,17 @@ Bearer token required in the Authorization header for all endpoints.
 ### Equipment
 
 *   **Volatility:** Dynamic. New equipment can be added over time.
+*   **CRUD Support:** Full CRUD operations available.
 *   **Endpoints:**
-    *   `GET /api/ReferenceTables/Equipment`: Get all equipment.
+    *   `GET /api/ReferenceTables/Equipment`: Get all active equipment.
     *   `GET /api/ReferenceTables/Equipment/{id}`: Get equipment by ID.
     *   `GET /api/ReferenceTables/Equipment/ByName/{name}`: Get equipment by name.
     *   `GET /api/ReferenceTables/Equipment/ByValue/{value}`: Get equipment by value (name).
+    *   `POST /api/ReferenceTables/Equipment`: Create new equipment (Admin only).
+    *   `PUT /api/ReferenceTables/Equipment/{id}`: Update existing equipment (Admin only).
+    *   `DELETE /api/ReferenceTables/Equipment/{id}`: Soft delete equipment (Admin only).
+
+**Note:** Equipment uses soft deletes. Deleted equipment remains in the database with `IsActive = false` and won't appear in GET endpoints.
 
 ### KineticChainTypes
 

@@ -81,7 +81,7 @@ namespace GetFitterGetBigger.API.Tests.Controllers
             
             // Verify cache invalidation
             _mockCacheService.Verify(x => x.RemoveAsync(It.Is<string>(k => k.Contains("GetAll"))), Times.Once);
-            _mockUnitOfWork.Verify(x => x.CommitAsync(), Times.Once);
+            // Repository handles saving, no need to verify CommitAsync
         }
 
         [Fact]
@@ -157,7 +157,7 @@ namespace GetFitterGetBigger.API.Tests.Controllers
             _mockCacheService.Verify(x => x.RemoveAsync(It.Is<string>(k => k.Contains("GetAll"))), Times.Once);
             _mockCacheService.Verify(x => x.RemoveAsync(It.Is<string>(k => k.Contains("GetById"))), Times.Once);
             _mockCacheService.Verify(x => x.RemoveAsync(It.Is<string>(k => k.Contains("barbell"))), Times.AtLeastOnce);
-            _mockUnitOfWork.Verify(x => x.CommitAsync(), Times.Once);
+            // Repository handles saving, no need to verify CommitAsync
         }
 
         [Fact]
@@ -242,7 +242,7 @@ namespace GetFitterGetBigger.API.Tests.Controllers
             _mockCacheService.Verify(x => x.RemoveAsync(It.Is<string>(k => k.Contains("GetAll"))), Times.Once);
             _mockCacheService.Verify(x => x.RemoveAsync(It.Is<string>(k => k.Contains("GetById"))), Times.Once);
             _mockCacheService.Verify(x => x.RemoveAsync(It.Is<string>(k => k.Contains("barbell"))), Times.Once);
-            _mockUnitOfWork.Verify(x => x.CommitAsync(), Times.Once);
+            // Repository handles saving, no need to verify CommitAsync
         }
 
         [Fact]

@@ -30,7 +30,8 @@ public class EquipmentRepository : RepositoryBase<FitnessDbContext>, IEquipmentR
     /// <returns>The equipment if found, null otherwise</returns>
     public async Task<Equipment?> GetByIdAsync(EquipmentId id)
     {
-        var equipment = await Context.Equipment.FindAsync(id);
+        var equipment = await Context.Equipment
+            .FirstOrDefaultAsync(e => e.Id == id);
         
         if (equipment != null)
         {
