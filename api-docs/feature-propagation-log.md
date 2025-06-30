@@ -62,6 +62,24 @@ This document tracks features that have been propagated from the API to Admin an
 2. Propagate future features promptly
 3. Maintain clear API documentation
 
+## Propagation Date: 2025-06-30
+
+### Features Propagated
+
+#### 3. Equipment CRUD Operations
+- **API Completion Date**: 2025-06-30
+- **Feature IDs**: 
+  - API: FEAT-013 (marked as IN_PROGRESS but implementation is complete)
+  - Admin: FEAT-equipment-management
+  - Clients: FEAT-equipment-reference-data
+- **Status**: Propagated to 0-SUBMITTED in both Admin and Clients
+- **Summary**: Equipment converted from read-only to full CRUD with soft delete support
+- **Key Changes**:
+  - Admin: Full CRUD interface for equipment management
+  - Clients: Read-only access for equipment reference data
+  - Soft delete implementation maintains referential integrity
+  - Case-insensitive unique name validation
+
 ## Notes
 - Both Admin and Clients projects already had the workflow structure in place
 - Focus was on propagating specific completed features
