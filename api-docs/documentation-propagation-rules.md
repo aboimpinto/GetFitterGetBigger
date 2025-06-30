@@ -61,11 +61,28 @@ When propagating API information, include:
 - Related endpoints that must be implemented together
 - Order of implementation if dependencies exist
 
-## File Naming Convention
+## File Naming and Structure Convention
 
 When creating propagation documents in memory-banks:
-- Use descriptive names: `api-{feature}-integration.md`
-- Examples: `api-exercise-crud-integration.md`, `api-workout-management-integration.md`
+
+### For API Project (uses FEAT-XXX format):
+1. Check `NEXT_FEATURE_ID.txt` for the next number
+2. Create folder: `memory-bank/features/0-SUBMITTED/FEAT-XXX-{feature-name}/`
+3. Create `feature-description.md` inside the folder
+4. Update `NEXT_FEATURE_ID.txt`
+
+### For Admin and Clients Projects (use descriptive names):
+1. Create folder: `memory-bank/features/0-SUBMITTED/{feature-name}/`
+2. Create `feature-description.md` inside the folder
+3. Use descriptive folder names like:
+   - `equipment-crud-operations`
+   - `musclegroup-crud-operations`
+   - `rest-exercise-optional-musclegroups`
+
+### Important Notes:
+- API documentation should be in `feature-description.md`, not standalone files
+- ALL features MUST start in `0-SUBMITTED` folder
+- Feature definitions in root `0-SUBMITTED/` use FEAT-{name}.md format
 
 ## Propagation Process
 
