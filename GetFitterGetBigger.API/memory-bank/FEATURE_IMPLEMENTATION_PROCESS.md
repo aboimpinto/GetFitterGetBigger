@@ -4,6 +4,19 @@ This document outlines the standard process for implementing new features in the
 
 ## Process Overview
 
+### File Management Rules
+
+**⚠️ IMPORTANT: Maintain focus on REQUIRED files only! ⚠️**
+
+When implementing features:
+- **Only create files explicitly required** by this process
+- **DO NOT add extra documentation files** like README.md, notes.md, etc.
+- **feature-description.md and feature-tasks.md** contain all necessary documentation
+- **Avoid redundancy** - if information exists in required files, don't duplicate it elsewhere
+- **Supporting files** (like test scripts, API specs) are allowed ONLY if they add unique value
+
+Remember: Clean, focused file structure makes features easier to track and maintain.
+
 ### 0. Feature States (Pre-Implementation)
 Features progress through these workflow states:
 - **0-SUBMITTED**: MANDATORY starting point for ALL features

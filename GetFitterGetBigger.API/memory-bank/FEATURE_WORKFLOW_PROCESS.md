@@ -14,6 +14,21 @@ memory-bank/features/
 └── 5-SKIPPED/              # Features deferred or cancelled
 ```
 
+## Important File Management Rules
+
+**⚠️ CRITICAL: Only create the REQUIRED files for each state! ⚠️**
+
+- **DO NOT create unnecessary files** like README.md, notes.txt, or other documentation
+- **Each state has SPECIFIC required files** - stick to these requirements
+- **Avoid file duplication** - don't create files that duplicate information already in required files
+- **Focus on the necessary** - extra files add confusion and maintenance overhead
+
+Required files by state:
+- **0-SUBMITTED**: Only `feature-description.md`
+- **1-READY_TO_DEVELOP**: `feature-description.md` and `feature-tasks.md`
+- **2-IN_PROGRESS**: Same files + completion artifacts as work progresses
+- **3-COMPLETED**: Same files + `completion-summary.md`
+
 ## Feature Lifecycle
 
 ### 0. Feature Submission (SUBMITTED) - MANDATORY STARTING POINT

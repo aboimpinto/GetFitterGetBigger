@@ -14,6 +14,22 @@ memory-bank/bugs/
 └── 5-WONT_FIX/     # Bugs that won't be addressed
 ```
 
+## Important File Management Rules
+
+**⚠️ CRITICAL: Only create the REQUIRED files for each state! ⚠️**
+
+- **DO NOT create unnecessary files** like README.md, notes.txt, or other documentation
+- **Each state has SPECIFIC required files** - stick to these requirements
+- **Avoid file duplication** - don't create files that duplicate information already in required files
+- **Focus on the necessary** - extra files add confusion and maintenance overhead
+
+Required files by state:
+- **1-OPEN/1-TODO**: `bug-report.md` and `bug-tasks.md`
+- **2-IN_PROGRESS**: Same files + test scripts and reproduction artifacts
+- **3-FIXED**: Same files + any fix validation scripts
+- **4-BLOCKED**: Same files + `BLOCKED_REASON.md`
+- **5-WONT_FIX**: Same files + `WONT_FIX_REASON.md`
+
 ## Bug Lifecycle
 
 ### 1. Bug Discovery (OPEN/TODO)

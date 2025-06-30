@@ -4,6 +4,19 @@ This document outlines the standard process for fixing bugs in the GetFitterGetB
 
 ## Process Overview
 
+### File Management Rules
+
+**⚠️ IMPORTANT: Maintain focus on REQUIRED files only! ⚠️**
+
+When implementing bug fixes:
+- **Only create files explicitly required** by this process
+- **DO NOT add extra documentation files** like README.md, notes.md, etc.
+- **bug-report.md and bug-tasks.md** contain all necessary documentation
+- **Avoid redundancy** - if information exists in required files, don't duplicate it elsewhere
+- **Supporting files** (like error logs, test scripts) are allowed ONLY if they add unique value
+
+Remember: Clean, focused file structure makes bugs easier to track and fix.
+
 ### 1. Bug Analysis & Planning
 - User provides bug description with error details and reproduction steps
 - Create a comprehensive bug fix plan with granular tasks
