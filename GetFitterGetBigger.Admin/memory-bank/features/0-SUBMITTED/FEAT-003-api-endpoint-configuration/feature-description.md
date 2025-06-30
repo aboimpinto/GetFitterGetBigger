@@ -41,3 +41,4 @@ Centralized API endpoint management system to provide consistent URL building, A
 - This feature blocks Exercise Management and Workout Builder
 - Focus on creating extensible architecture
 - All tasks are ready to develop
+- Relationship to API Configuration: While API Configuration (IN PROGRESS) establishes basic connectivity, this feature provides systematic endpoint management and versioning

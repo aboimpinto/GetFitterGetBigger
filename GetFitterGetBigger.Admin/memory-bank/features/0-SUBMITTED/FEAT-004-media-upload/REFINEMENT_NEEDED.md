@@ -1,6 +1,6 @@
-# [BLOCKED] Media Upload Feature
+# [SUBMITTED] Media Upload Feature
 
-## Status: BLOCKED - Awaiting Architectural Decision
+## Status: SUBMITTED - Awaiting Refinement and Architectural Decision
 
 ### Feature Overview
 The ability for Personal Trainers to upload images and videos for exercises through the Admin application.
