@@ -13,14 +13,4 @@ public interface IMuscleGroupService : IReferenceTableService<MuscleGroup>
     /// Gets muscle groups by body part
     /// </summary>
     Task<IEnumerable<MuscleGroupDto>> GetByBodyPartAsync(string bodyPartId);
-    
-    /// <summary>
-    /// Adds a body part to a muscle group
-    /// </summary>
-    Task<MuscleGroupDto> AddBodyPartAsync(string id, AddBodyPartRequest request);
-    
-    /// <summary>
-    /// Removes a body part from a muscle group
-    /// </summary>
-    Task RemoveBodyPartAsync(string id, string bodyPartId);
 }
