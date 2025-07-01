@@ -31,6 +31,7 @@ When working from the main GetFitterGetBigger repository folder (`/home/esquelet
 - **NO** creating components, services, or controllers
 - **NO** implementing API endpoints or UI elements
 - **NO** writing application logic
+- **NO** providing code examples in any language (TypeScript, JavaScript, C#, etc.)
 
 ### ❌ No Direct Testing
 - **NO** writing actual test code
@@ -142,6 +143,7 @@ When creating or updating documentation:
    - Use the same format across all projects
    - Follow established naming conventions
    - Keep terminology consistent
+   - **NO** code examples - leave implementation details to each project
 
 3. **Enable Independence**
    - Each project should be able to work from its own documentation
@@ -153,6 +155,19 @@ When creating or updating documentation:
    - Mark beta or experimental features
    - Document breaking changes
 
+## Technology-Agnostic Documentation
+
+### Important Guidelines
+- **NO** code examples in any programming language
+- **NO** assumptions about implementation technologies
+- Each project knows its own technology stack:
+  - API: C# .NET
+  - Admin: C# Blazor
+  - Mobile Clients: Various technologies
+- Focus on **WHAT** needs to be implemented, not **HOW**
+- Provide API contracts, data models, and business rules only
+- Let each project implement according to its own technology and patterns
+
 ## Summary
 
-From the main GetFitterGetBigger folder, the AI assistant is a **Documentation Architect** and **Standards Enforcer**, ensuring all projects in the ecosystem follow consistent development practices through comprehensive documentation management. Implementation work must be done from within specific project folders.
+From the main GetFitterGetBigger folder, the AI assistant is a **Documentation Architect** and **Standards Enforcer**, ensuring all projects in the ecosystem follow consistent development practices through comprehensive documentation management. The assistant provides technology-agnostic documentation focusing on requirements, API contracts, and business rules without any code examples. Implementation work and technology-specific code must be done from within specific project folders.
