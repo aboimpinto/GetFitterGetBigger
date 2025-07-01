@@ -74,6 +74,12 @@ builder.Services.AddHttpClient<GetFitterGetBigger.Admin.Services.IEquipmentServi
 // Add EquipmentStateService
 builder.Services.AddScoped<GetFitterGetBigger.Admin.Services.IEquipmentStateService, GetFitterGetBigger.Admin.Services.EquipmentStateService>();
 
+// Add HttpClient for MuscleGroupsService
+builder.Services.AddHttpClient<GetFitterGetBigger.Admin.Services.IMuscleGroupsService, GetFitterGetBigger.Admin.Services.MuscleGroupsService>();
+
+// Add MuscleGroupsStateService (will be implemented in Task 2.1)
+// builder.Services.AddScoped<GetFitterGetBigger.Admin.Services.IMuscleGroupsStateService, GetFitterGetBigger.Admin.Services.MuscleGroupsStateService>();
+
 // Add NavigationService
 builder.Services.AddScoped<GetFitterGetBigger.Admin.Services.INavigationService, GetFitterGetBigger.Admin.Services.NavigationService>();
 
