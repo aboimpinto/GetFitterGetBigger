@@ -31,17 +31,10 @@ public class MuscleGroupRepository : RepositoryBase<FitnessDbContext>, IMuscleGr
     /// <returns>The muscle group if found, null otherwise</returns>
     public async Task<MuscleGroup?> GetByIdAsync(MuscleGroupId id)
     {
-        var muscleGroup = await Context.MuscleGroups
+        return await Context.MuscleGroups
+            .AsNoTracking()
             .Include(mg => mg.BodyPart)
             .FirstOrDefaultAsync(mg => mg.Id == id);
-        
-        if (muscleGroup != null)
-        {
-            // Detach the entity from the context to achieve the same effect as AsNoTracking
-            Context.Entry(muscleGroup).State = EntityState.Detached;
-        }
-        
-        return muscleGroup;
     }
     
     /// <summary>
@@ -100,14 +93,12 @@ public class MuscleGroupRepository : RepositoryBase<FitnessDbContext>, IMuscleGr
         
         if (tracked != null)
         {
-            // Update the tracked entity's values
-            tracked.CurrentValues.SetValues(entity);
+            // Detach the existing tracked entity
+            tracked.State = EntityState.Detached;
         }
-        else
-        {
-            // Attach and mark as modified
-            Context.MuscleGroups.Update(entity);
-        }
+        
+        // Always use Update to ensure all properties are updated
+        Context.MuscleGroups.Update(entity);
         
         await Context.SaveChangesAsync();
         
