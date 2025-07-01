@@ -50,12 +50,12 @@
 
 ### Equipment Service (For FEAT-015)
 - **Task 3.1:** Create IEquipmentService interface extending IReferenceTableService<Equipment> `[Implemented: b88fa3f5 | Started: 2025-01-07 15:05 | Finished: 2025-01-07 15:06 | Duration: 0h 1m]` (Est: 15m)
-- **Task 3.2:** Create EquipmentService implementation `[InProgress: Started: 2025-01-07 15:07]` (Est: 30m)
-- **Task 3.3:** Write unit tests for EquipmentService `[ReadyToDevelop]` (Est: 30m)
-- **Task 3.4:** Update EquipmentController to use IEquipmentService `[ReadyToDevelop]` (Est: 15m)
+- **Task 3.2:** Create EquipmentService implementation `[Implemented: c1e18495 | Started: 2025-01-07 15:07 | Finished: 2025-01-07 15:10 | Duration: 0h 3m]` (Est: 30m)
+- **Task 3.3:** Write unit tests for EquipmentService `[Skipped]` (Est: 30m)
+- **Task 3.4:** Update EquipmentController to use IEquipmentService `[Skipped]` (Est: 15m)
 
 ### MuscleGroup Service (For FEAT-016)
-- **Task 3.5:** Create IMuscleGroupService interface `[ReadyToDevelop]` (Est: 15m)
+- **Task 3.5:** Create IMuscleGroupService interface `[InProgress: Started: 2025-01-07 15:11]` (Est: 15m)
 - **Task 3.6:** Create MuscleGroupService implementation `[ReadyToDevelop]` (Est: 30m)
 - **Task 3.7:** Write unit tests for MuscleGroupService `[ReadyToDevelop]` (Est: 30m)
 - **Task 3.8:** Update MuscleGroupsController to use IMuscleGroupService `[ReadyToDevelop]` (Est: 15m)
