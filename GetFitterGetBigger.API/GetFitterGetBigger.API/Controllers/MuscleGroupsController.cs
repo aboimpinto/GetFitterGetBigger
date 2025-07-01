@@ -70,7 +70,7 @@ public class MuscleGroupsController : ControllerBase
     /// <param name="name">The name of the muscle group to retrieve</param>
     /// <returns>The muscle group if found, 404 Not Found otherwise</returns>
     [HttpGet("ByName/{name}")]
-    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(MuscleGroupDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetByName(string name)
     {
@@ -79,10 +79,15 @@ public class MuscleGroupsController : ControllerBase
         if (muscleGroup == null)
             return NotFound();
             
-        return Ok(new ReferenceDataDto
+        return Ok(new MuscleGroupDto
         {
             Id = muscleGroup.Id.ToString(),
-            Value = muscleGroup.Name
+            Name = muscleGroup.Name,
+            BodyPartId = muscleGroup.BodyPartId.ToString(),
+            BodyPartName = muscleGroup.BodyPart?.Value,
+            IsActive = muscleGroup.IsActive,
+            CreatedAt = muscleGroup.CreatedAt,
+            UpdatedAt = muscleGroup.UpdatedAt
         });
     }
     
@@ -92,7 +97,7 @@ public class MuscleGroupsController : ControllerBase
     /// <param name="value">The value (name) of the muscle group to retrieve</param>
     /// <returns>The muscle group if found, 404 Not Found otherwise</returns>
     [HttpGet("ByValue/{value}")]
-    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(MuscleGroupDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetByValue(string value)
     {
@@ -101,10 +106,15 @@ public class MuscleGroupsController : ControllerBase
         if (muscleGroup == null)
             return NotFound();
             
-        return Ok(new ReferenceDataDto
+        return Ok(new MuscleGroupDto
         {
             Id = muscleGroup.Id.ToString(),
-            Value = muscleGroup.Name
+            Name = muscleGroup.Name,
+            BodyPartId = muscleGroup.BodyPartId.ToString(),
+            BodyPartName = muscleGroup.BodyPart?.Value,
+            IsActive = muscleGroup.IsActive,
+            CreatedAt = muscleGroup.CreatedAt,
+            UpdatedAt = muscleGroup.UpdatedAt
         });
     }
     
