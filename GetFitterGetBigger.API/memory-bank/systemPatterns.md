@@ -61,13 +61,48 @@ The GetFitterGetBigger API Application serves as the central hub for all data op
 - **UnitOfWork manages database transactions**
 - **Services MUST call CommitAsync() on Writable UnitOfWork**
 - **Multiple operations can be wrapped in a single UnitOfWork transaction**
-- **Example pattern:**
+
+#### ⚠️ CRITICAL: ReadOnly vs Writable UnitOfWork Usage
+
+**This is a MANDATORY architectural rule that MUST be followed:**
+
+1. **Use ReadOnlyUnitOfWork for ALL validation and query operations**
+   - Checking if related entities exist
+   - Validating data before updates
+   - Any operation that doesn't modify data
+   
+2. **Use WritableUnitOfWork ONLY for actual data modifications**
+   - Creating new entities
+   - Updating existing entities
+   - Deleting entities
+
+**Why this matters:**
+- Using WritableUnitOfWork for queries causes Entity Framework to track entities
+- Tracked entities can lead to unwanted database updates
+- Example: Validating a BodyPart exists before updating a MuscleGroup can cause BOTH to be updated if using WritableUnitOfWork
+
+**Correct pattern:**
 ```csharp
-using (var unitOfWork = _unitOfWorkProvider.CreateWritable())
+public async Task<ResultDto> UpdateEntityAsync(string id, UpdateDto request)
 {
-    var repository = unitOfWork.GetRepository<IRepository>();
-    // Perform operations
-    await unitOfWork.CommitAsync();
+    // STEP 1: Validation with ReadOnlyUnitOfWork
+    using (var readOnlyUow = _unitOfWorkProvider.CreateReadOnly())
+    {
+        var validationRepo = readOnlyUow.GetRepository<IValidationRepository>();
+        var relatedEntity = await validationRepo.GetByIdAsync(request.RelatedId);
+        if (relatedEntity == null)
+            throw new ArgumentException("Related entity not found");
+    }
+    
+    // STEP 2: Update with WritableUnitOfWork
+    using var writableUow = _unitOfWorkProvider.CreateWritable();
+    var repository = writableUow.GetRepository<IMainRepository>();
+    var entity = await repository.GetByIdAsync(id);
+    var updated = Entity.Handler.Update(entity, request.NewValue);
+    await repository.UpdateAsync(updated);
+    await writableUow.CommitAsync();
+    
+    return MapToDto(updated);
 }
 ```
 

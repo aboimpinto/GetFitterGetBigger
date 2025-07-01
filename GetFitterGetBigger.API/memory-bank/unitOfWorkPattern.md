@@ -1,5 +1,69 @@
 # Unit of Work Pattern
 
+## ⚠️ CRITICAL: ReadOnly vs Writable Usage
+
+### **NEVER use WritableUnitOfWork for validation queries!**
+
+This is one of the most common and dangerous mistakes in our codebase. Using `WritableUnitOfWork` for validation queries causes Entity Framework to track entities unnecessarily, leading to:
+
+1. **Unwanted database updates** - EF may update entities you only meant to validate
+2. **Performance issues** - Tracked entities consume memory and slow down operations
+3. **Confusing SQL generation** - Multiple UPDATE statements when you expect only one
+
+### ✅ Correct Pattern
+
+```csharp
+public async Task<SomeDto> UpdateSomethingAsync(string id, UpdateDto request)
+{
+    // STEP 1: Use ReadOnlyUnitOfWork for ALL validation queries
+    using (var readOnlyUow = _unitOfWorkProvider.CreateReadOnly())
+    {
+        var validationRepo = readOnlyUow.GetRepository<IValidationRepository>();
+        
+        // Check if related entity exists (NOT TRACKED!)
+        var relatedEntity = await validationRepo.GetByIdAsync(request.RelatedId);
+        if (relatedEntity == null || !relatedEntity.IsActive)
+        {
+            throw new ArgumentException("Related entity not found or inactive");
+        }
+    }
+    
+    // STEP 2: Use WritableUnitOfWork ONLY for the actual update
+    using var writableUow = _unitOfWorkProvider.CreateWritable();
+    var repository = writableUow.GetRepository<IMainRepository>();
+    
+    // Perform the update
+    var entity = await repository.GetByIdAsync(id);
+    var updated = Entity.Handler.Update(entity, request.NewValue);
+    await repository.UpdateAsync(updated);
+    
+    await writableUow.CommitAsync();
+}
+```
+
+### ❌ Common Mistake
+
+```csharp
+public async Task<SomeDto> UpdateSomethingAsync(string id, UpdateDto request)
+{
+    // WRONG: Using WritableUnitOfWork for everything
+    using var unitOfWork = _unitOfWorkProvider.CreateWritable();
+    var mainRepo = unitOfWork.GetRepository<IMainRepository>();
+    var relatedRepo = unitOfWork.GetRepository<IRelatedRepository>();
+    
+    // This tracks the related entity!
+    var relatedEntity = await relatedRepo.GetByIdAsync(request.RelatedId);
+    
+    // Later update causes BOTH entities to be updated in the database!
+    var entity = await mainRepo.GetByIdAsync(id);
+    var updated = Entity.Handler.Update(entity, request.NewValue);
+    await mainRepo.UpdateAsync(updated);
+    
+    await unitOfWork.CommitAsync();
+    // Result: TWO UPDATE statements instead of one!
+}
+```
+
 ## Overview
 
 The Unit of Work pattern is implemented in our project using the Olimpo.EntityFramework.Persistency library. This pattern provides a structured way to interact with the database, ensuring proper transaction management and separation of concerns.

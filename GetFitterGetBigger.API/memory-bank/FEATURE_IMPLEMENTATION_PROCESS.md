@@ -95,6 +95,9 @@ Before starting ANY implementation:
 - **For EVERY task implementation:**
   1. Update task status to `[InProgress: Started: YYYY-MM-DD HH:MM]` when starting
   2. Write the implementation code
+     - **⚠️ CRITICAL: Check `common-implementation-pitfalls.md` before implementing services**
+     - **ALWAYS use ReadOnlyUnitOfWork for validation queries**
+     - **ONLY use WritableUnitOfWork for actual data modifications**
   3. **MANDATORY: Write unit tests for the implemented code in the immediately following task**
   4. **MANDATORY: Keep build warnings to a minimum** (address nullable warnings, unused variables, etc.)
   5. **MANDATORY: Run `dotnet build` to ensure compilation succeeds with minimal warnings**
@@ -230,22 +233,34 @@ Before marking any task as `[Implemented]`, verify:
 ## Estimated Total Time: [X days / Y hours]
 ## Actual Total Time: [To be calculated at completion]
 
+## 📚 Pre-Implementation Checklist
+- [ ] Read `/memory-bank/systemPatterns.md` - Architecture rules
+- [ ] Read `/memory-bank/unitOfWorkPattern.md` - Critical ReadOnly vs Writable patterns
+- [ ] Read `/memory-bank/common-implementation-pitfalls.md` - Common mistakes to avoid
+- [ ] Run baseline health check (`dotnet build` and `dotnet test`)
+
 ### Category 1 (e.g., Models & DTOs) - Estimated: Xh
+#### 📖 Before Starting: Review entity pattern in `/memory-bank/databaseModelPattern.md`
 - **Task 1.1:** Create [Name] entity model `[ReadyToDevelop]` (Est: 30m)
 - **Task 1.2:** Create [Name]Dto and request/response models `[ReadyToDevelop]` (Est: 45m)
 - **Task 1.3:** Write unit tests for DTOs `[ReadyToDevelop]` (Est: 30m)
 
 ### Category 2 (e.g., Repository Layer) - Estimated: Xh
+#### 📖 Before Starting: Review repository patterns in `/memory-bank/unitOfWorkPattern.md`
 - **Task 2.1:** Create I[Name]Repository interface `[ReadyToDevelop]` (Est: 15m)
 - **Task 2.2:** Implement [Name]Repository `[ReadyToDevelop]` (Est: 1h)
 - **Task 2.3:** Write repository unit tests `[ReadyToDevelop]` (Est: 1h)
 
 ### Category 3 (e.g., Service Layer) - Estimated: Xh
+#### ⚠️ CRITICAL Before Starting: 
+- [ ] Re-read `/memory-bank/common-implementation-pitfalls.md` Section 1
+- [ ] Remember: ReadOnlyUnitOfWork for validation, WritableUnitOfWork for modifications ONLY
 - **Task 3.1:** Create I[Name]Service interface `[ReadyToDevelop]` (Est: 15m)
 - **Task 3.2:** Implement [Name]Service with business logic `[ReadyToDevelop]` (Est: 2h)
 - **Task 3.3:** Write service unit tests `[ReadyToDevelop]` (Est: 1.5h)
 
 ### Category 4 (e.g., Controller) - Estimated: Xh
+#### 📖 Before Starting: Review controller rules - NO direct repository/UnitOfWork access!
 - **Task 4.1:** Create [Name]Controller with CRUD endpoints `[ReadyToDevelop]` (Est: 1.5h)
 - **Task 4.2:** Add authorization and validation `[ReadyToDevelop]` (Est: 45m)
 - **Task 4.3:** Write controller unit tests `[ReadyToDevelop]` (Est: 1.5h)
@@ -255,6 +270,12 @@ Before marking any task as `[Implemented]`, verify:
 - **Task 5.1:** Add entity configuration `[ReadyToDevelop]` (Est: 30m)
 - **Task 5.2:** Create database migration `[ReadyToDevelop]` (Est: 15m)
 - **Task 5.3:** Add seed data if needed `[ReadyToDevelop]` (Est: 30m)
+
+## 🔄 Mid-Implementation Checkpoint
+- [ ] All tests still passing (`dotnet test`)
+- [ ] Build has no errors (`dotnet build`)
+- [ ] Re-read `/memory-bank/common-implementation-pitfalls.md` if any issues
+- [ ] Verify correct UnitOfWork usage in all services
 
 ## Time Tracking Summary
 - **Total Estimated Time:** [Sum of all estimates]

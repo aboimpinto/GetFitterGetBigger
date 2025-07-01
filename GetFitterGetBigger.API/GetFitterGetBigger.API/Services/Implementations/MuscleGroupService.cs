@@ -218,22 +218,28 @@ public class MuscleGroupService : ReferenceTableServiceBase<MuscleGroup>, IMuscl
             throw new ArgumentException($"Invalid BodyPart ID format. Expected format: 'bodypart-{{guid}}', got: '{request.BodyPartId}'");
         }
         
+        // Use ReadOnlyUnitOfWork for validation queries
+        using (var readOnlyUnitOfWork = _unitOfWorkProvider.CreateReadOnly())
+        {
+            var bodyPartRepository = readOnlyUnitOfWork.GetRepository<IBodyPartRepository>();
+            
+            // Check if BodyPart exists and is active (not tracked)
+            var bodyPart = await bodyPartRepository.GetByIdAsync(bodyPartId);
+            if (bodyPart == null || !bodyPart.IsActive)
+            {
+                throw new ArgumentException("Body part not found or is inactive");
+            }
+        }
+        
+        // Use WritableUnitOfWork only for the update operation
         using var unitOfWork = _unitOfWorkProvider.CreateWritable();
         var repository = unitOfWork.GetRepository<IMuscleGroupRepository>();
-        var bodyPartRepository = unitOfWork.GetRepository<IBodyPartRepository>();
         
         // Get existing muscle group
         var existing = await repository.GetByIdAsync(muscleGroupId);
         if (existing == null)
         {
             throw new InvalidOperationException($"Muscle group with ID '{id}' not found");
-        }
-        
-        // Check if BodyPart exists and is active
-        var bodyPart = await bodyPartRepository.GetByIdAsync(bodyPartId);
-        if (bodyPart == null || !bodyPart.IsActive)
-        {
-            throw new ArgumentException("Body part not found or is inactive");
         }
         
         // Check for duplicate name (excluding current)

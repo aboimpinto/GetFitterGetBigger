@@ -73,7 +73,14 @@ The `/memory-bank/` directory contains all project knowledge and processes:
 ### Quick References
 - **`TESTING-QUICK-REFERENCE.md`** ⚡ - Common test failures and solutions (CHECK FIRST!)
 - **`common-testing-errors-and-solutions.md`** - Detailed testing patterns
+- **`common-implementation-pitfalls.md`** ⚠️ - Critical implementation mistakes to avoid
+- **`service-implementation-checklist.md`** 📋 - Quick checklist for EVERY service implementation
 - **`TestingGuidelines.md`** - Overall testing strategy
+
+**CRITICAL REMINDERS**:
+1. Always check `common-implementation-pitfalls.md` before implementing service methods
+2. Use `service-implementation-checklist.md` as a quick reference while coding
+3. Remember: ReadOnlyUnitOfWork for queries, WritableUnitOfWork for modifications ONLY!
 
 ### Bug Management (`/bugs/`)
 - **`1-OPEN/`** - New bugs awaiting work

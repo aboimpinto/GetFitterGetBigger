@@ -83,9 +83,16 @@ Before starting ANY bug fix:
 ### 4. Test-First Implementation Phase
 - **CRITICAL**: Write failing tests FIRST that reproduce the bug
 - Execute tasks sequentially from the bug tracking file
+
+#### 📚 Before Starting ANY Service Modifications:
+- [ ] Read `/memory-bank/common-implementation-pitfalls.md`
+- [ ] Review `/memory-bank/service-implementation-checklist.md`
+- [ ] Remember: ReadOnlyUnitOfWork for queries, WritableUnitOfWork for saves ONLY
+
 - **For EVERY task implementation:**
   1. If it's a test task: Write test that fails with the exact error described
   2. If it's a fix task: Implement the minimum code to make tests pass
+     - **⚠️ For service fixes: Use the service-implementation-checklist.md**
   3. **MANDATORY: Keep build warnings to a minimum**
   4. **MANDATORY: Run `dotnet build` to ensure compilation succeeds**
   5. **MANDATORY: Run `dotnet test` to verify test status**
@@ -194,6 +201,12 @@ When a bug cannot be fixed due to dependencies:
 - [Impact on system]
 - [Affected features]
 
+## 📚 Pre-Implementation Checklist
+- [ ] Read `/memory-bank/common-implementation-pitfalls.md`
+- [ ] Review `/memory-bank/service-implementation-checklist.md`
+- [ ] Understand ReadOnly vs Writable UnitOfWork pattern
+- [ ] Run baseline health check
+
 ## Implementation Tasks
 
 ### Category 1: Test Creation (Reproduce the Bug)
@@ -201,6 +214,7 @@ When a bug cannot be fixed due to dependencies:
 - **Task 1.2:** Create integration test for affected endpoint [TODO]
 
 ### Category 2: Fix Implementation
+#### ⚠️ Before Starting: If modifying services, use service-implementation-checklist.md
 - **Task 2.1:** [Specific fix action] [TODO]
 - **Task 2.2:** [Additional fix if needed] [TODO]
 
