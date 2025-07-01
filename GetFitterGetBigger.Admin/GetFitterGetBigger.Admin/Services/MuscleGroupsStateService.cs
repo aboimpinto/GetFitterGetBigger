@@ -255,15 +255,17 @@ namespace GetFitterGetBigger.Admin.Services
             }
             catch (InvalidOperationException ex)
             {
-                _errorMessage = ex.Message;
+                var errorMessage = ex.Message;
                 // Reload to restore the item that couldn't be deleted
                 await LoadMuscleGroupsAsync();
+                _errorMessage = errorMessage; // Restore error message after reload
             }
             catch (Exception ex)
             {
-                _errorMessage = $"Failed to delete muscle group: {ex.Message}";
+                var errorMessage = $"Failed to delete muscle group: {ex.Message}";
                 // Reload to restore the item that couldn't be deleted
                 await LoadMuscleGroupsAsync();
+                _errorMessage = errorMessage; // Restore error message after reload
             }
             finally
             {
