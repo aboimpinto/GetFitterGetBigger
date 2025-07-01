@@ -30,9 +30,9 @@ public class MuscleGroupsController : ControllerBase
     /// <summary>
     /// Gets all muscle groups
     /// </summary>
-    /// <returns>A collection of muscle groups</returns>
+    /// <returns>A collection of muscle groups with full details including body part information</returns>
     [HttpGet]
-    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(IEnumerable<MuscleGroupDto>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetAll()
     {
         var result = await _muscleGroupService.GetAllAsDtosAsync();
@@ -43,9 +43,9 @@ public class MuscleGroupsController : ControllerBase
     /// Gets a muscle group by ID
     /// </summary>
     /// <param name="id">The ID of the muscle group to retrieve in the format "musclegroup-{guid}"</param>
-    /// <returns>The muscle group if found, 404 Not Found otherwise</returns>
+    /// <returns>The muscle group with full details including body part information</returns>
     [HttpGet("{id}")]
-    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(MuscleGroupDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> GetById(string id)
@@ -122,9 +122,9 @@ public class MuscleGroupsController : ControllerBase
     /// Gets all muscle groups for a specific body part
     /// </summary>
     /// <param name="bodyPartId">The ID of the body part in the format "bodypart-{guid}"</param>
-    /// <returns>A collection of muscle groups for the specified body part</returns>
+    /// <returns>A collection of muscle groups for the specified body part with full details</returns>
     [HttpGet("ByBodyPart/{bodyPartId}")]
-    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(IEnumerable<MuscleGroupDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> GetByBodyPart(string bodyPartId)
     {
