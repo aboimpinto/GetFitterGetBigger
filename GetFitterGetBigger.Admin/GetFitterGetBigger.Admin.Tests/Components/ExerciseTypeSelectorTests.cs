@@ -212,7 +212,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components
             // Act & Assert - Rest checkbox should be disabled
             var restCheckbox = component.FindAll("input[type='checkbox']")[3];
             restCheckbox.HasAttribute("disabled").Should().BeTrue();
-            
+
             // Verify the warning message is shown
             component.Markup.Should().Contain("Rest type cannot be combined with other types");
         }
@@ -233,7 +233,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components
 
             // Try to uncheck Rest (which should now be allowed, leaving no selection)
             var restCheckbox = component.FindAll("input[type='checkbox']")[3];
-            
+
             // Act - This should now be allowed and show validation message
             restCheckbox.Change(false);
 

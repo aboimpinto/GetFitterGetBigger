@@ -18,7 +18,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
         public ExerciseCoachNotesIntegrationTests()
         {
             _mockStateService = new MockExerciseStateService();
-            
+
             Services.AddSingleton<IExerciseStateService>(_mockStateService);
             var navMan = Services.GetRequiredService<FakeNavigationManager>();
             navMan.NavigateTo("http://localhost/exercises/new");
@@ -30,27 +30,28 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
             // Arrange
             _mockStateService.SetupReferenceData();
             var createdExercise = (ExerciseCreateDto?)null;
-            _mockStateService.OnCreateExercise = (model) => {
+            _mockStateService.OnCreateExercise = (model) =>
+            {
                 createdExercise = model;
                 return Task.CompletedTask;
             };
 
             // Act
             var component = RenderComponent<ExerciseForm>();
-            
+
             // Fill required fields
             component.Find("#name").Input("Bench Press");
             component.Find("#description").Input("Classic chest exercise");
             component.Find("#difficulty").Change("2");
-            
+
             // Select exercise types
             component.FindAll("input[type='checkbox']")[0].Change(true); // Warmup
             component.FindAll("input[type='checkbox']")[1].Change(true); // Workout
-            
+
             // Select muscle groups
             component.FindAll("select")[1].Change("1"); // Chest
             component.FindAll("select")[2].Change("Primary");
-            
+
             // Add 3 coach notes
             for (int i = 0; i < 3; i++)
             {
@@ -59,18 +60,18 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
                     component.FindAll("button").First(b => b.TextContent.Contains("Add Note")).Click();
                 });
             }
-            
+
             // Wait for notes to be added
             component.WaitForState(() => component.FindAll("textarea").Count >= 4);
-            
+
             // Fill coach notes
             await component.InvokeAsync(() => component.FindAll("textarea")[1].Change("Keep your back flat on the bench"));
             await component.InvokeAsync(() => component.FindAll("textarea")[2].Change("Lower the bar to chest level"));
             await component.InvokeAsync(() => component.FindAll("textarea")[3].Change("Press up explosively"));
-            
+
             // Submit form
             component.Find("form").Submit();
-            
+
             // Wait for submission
             component.WaitForState(() => createdExercise != null, TimeSpan.FromSeconds(1));
 
@@ -99,11 +100,11 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
                 .WithName("Pull-ups")
                 .WithDescription("Back exercise")
                 .WithDifficulty(new ReferenceDataDto { Id = "2", Value = "Intermediate", Description = "For intermediate users" })
-                .WithExerciseTypes(new List<ExerciseTypeDto> { 
-                    new() { Id = "2", Value = "Workout", Description = "Main workout" } 
+                .WithExerciseTypes(new List<ExerciseTypeDto> {
+                    new() { Id = "2", Value = "Workout", Description = "Main workout" }
                 })
                 .WithMuscleGroups(new List<MuscleGroupWithRoleDto> {
-                    new() { 
+                    new() {
                         MuscleGroup = new ReferenceDataDto { Id = "2", Value = "Back", Description = "Back muscles" },
                         Role = new ReferenceDataDto { Id = "1", Value = "Primary", Description = "Primary muscle" }
                     }
@@ -114,9 +115,10 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
                     new() { Id = "3", Text = "Lower with control", Order = 2 }
                 })
                 .Build();
-            
+
             var updatedExercise = (ExerciseUpdateDto?)null;
-            _mockStateService.OnUpdateExercise = (id, model) => {
+            _mockStateService.OnUpdateExercise = (id, model) =>
+            {
                 updatedExercise = model;
                 return Task.CompletedTask;
             };
@@ -124,23 +126,23 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
             // Act
             var component = RenderComponent<ExerciseForm>(parameters => parameters
                 .Add(p => p.Id, "123"));
-            
+
             // Wait for form to load with coach notes
             component.WaitForState(() => component.FindAll("textarea").Count >= 4);
-            
+
             // Click the down arrow on the first note to move it down
             await component.InvokeAsync(() =>
             {
                 var moveDownButtons = component.FindAll("button").Where(b => b.TextContent.Contains("↓")).ToList();
                 moveDownButtons[0].Click(); // Move first note down
             });
-            
+
             // Add a delay to ensure state updates
             await Task.Delay(100);
-            
+
             // Submit form
             component.Find("form").Submit();
-            
+
             // Wait for submission
             component.WaitForState(() => updatedExercise != null, TimeSpan.FromSeconds(1));
 
@@ -185,21 +187,21 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
                     new() { Id = "2", Value = "Intermediate", Description = "For intermediate users" },
                     new() { Id = "3", Value = "Advanced", Description = "For advanced users" }
                 };
-                
+
                 MuscleGroups = new List<ReferenceDataDto>
                 {
                     new() { Id = "1", Value = "Chest", Description = "Chest muscles" },
                     new() { Id = "2", Value = "Back", Description = "Back muscles" },
                     new() { Id = "3", Value = "Legs", Description = "Leg muscles" }
                 };
-                
+
                 MuscleRoles = new List<ReferenceDataDto>
                 {
                     new() { Id = "1", Value = "Primary", Description = "Primary muscle" },
                     new() { Id = "2", Value = "Secondary", Description = "Secondary muscle" },
                     new() { Id = "3", Value = "Stabilizer", Description = "Stabilizer muscle" }
                 };
-                
+
                 ExerciseTypes = new List<ExerciseTypeDto>
                 {
                     new() { Id = "1", Value = "Warmup", Description = "Warmup exercises" },
@@ -207,7 +209,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
                     new() { Id = "3", Value = "Cooldown", Description = "Cooldown exercises" },
                     new() { Id = "4", Value = "Rest", Description = "Rest period" }
                 };
-                
+
                 Equipment = new List<ReferenceDataDto>();
                 BodyParts = new List<ReferenceDataDto>();
                 MovementPatterns = new List<ReferenceDataDto>();
@@ -216,7 +218,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
             public Task InitializeAsync() => Task.CompletedTask;
             public Task LoadExercisesAsync(ExerciseFilterDto? filter = null) => Task.CompletedTask;
             public Task LoadExerciseByIdAsync(string id) => Task.CompletedTask;
-            
+
             public async Task CreateExerciseAsync(ExerciseCreateDto exercise)
             {
                 if (OnCreateExercise != null)
@@ -224,7 +226,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
                     await OnCreateExercise(exercise);
                 }
             }
-            
+
             public async Task UpdateExerciseAsync(string id, ExerciseUpdateDto exercise)
             {
                 if (OnUpdateExercise != null)
@@ -232,7 +234,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
                     await OnUpdateExercise(id, exercise);
                 }
             }
-            
+
             public Task DeleteExerciseAsync(string id) => Task.CompletedTask;
             public Task RefreshCurrentPageAsync() => Task.CompletedTask;
             public void ClearSelectedExercise() { }

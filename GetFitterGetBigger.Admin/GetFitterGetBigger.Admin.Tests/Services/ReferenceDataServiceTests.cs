@@ -27,7 +27,7 @@ namespace GetFitterGetBigger.Admin.Tests.Services
             };
             _memoryCache = new MemoryCache(new MemoryCacheOptions());
             _configurationMock = new Mock<IConfiguration>();
-            
+
             _configurationMock
                 .Setup(x => x["ApiBaseUrl"])
                 .Returns("http://localhost:5214");
@@ -52,7 +52,7 @@ namespace GetFitterGetBigger.Admin.Tests.Services
             result.Should().NotBeNull();
             result.Should().HaveCount(3);
             result.First().Id.Should().Be("ref-1");
-            
+
             // Verify API was called
             _httpMessageHandler.VerifyRequest(req =>
                 req.Method == HttpMethod.Get &&
@@ -72,7 +72,7 @@ namespace GetFitterGetBigger.Admin.Tests.Services
             // Assert
             result.Should().NotBeNull();
             result.Should().HaveCount(2);
-            
+
             // Verify no API call was made
             _httpMessageHandler.VerifyNoRequests();
         }
@@ -103,7 +103,7 @@ namespace GetFitterGetBigger.Admin.Tests.Services
             result1.Should().HaveCount(1);
             result2.Should().HaveCount(1);
             result1.Should().BeEquivalentTo(result2);
-            
+
             // Verify API was called only once
             _httpMessageHandler.Requests.Count.Should().Be(1);
         }
@@ -121,7 +121,7 @@ namespace GetFitterGetBigger.Admin.Tests.Services
             // Assert
             result.Should().NotBeNull();
             result.Should().HaveCount(5);
-            
+
             // Verify correct endpoint was called
             _httpMessageHandler.VerifyRequest(req =>
                 req.Method == HttpMethod.Get &&
@@ -155,9 +155,9 @@ namespace GetFitterGetBigger.Admin.Tests.Services
             // Arrange
             var expectedData = ReferenceDataDtoBuilder.BuildList(2);
             _httpMessageHandler.SetupResponse(HttpStatusCode.OK, expectedData);
-            
+
             var method = _referenceDataService.GetType().GetMethod(methodName);
-            
+
             // Act
             var task = (Task<IEnumerable<ReferenceDataDto>>)method!.Invoke(_referenceDataService, null)!;
             var result = await task;
@@ -186,17 +186,17 @@ namespace GetFitterGetBigger.Admin.Tests.Services
                 var handler = new MockHttpMessageHandler();
                 var client = new HttpClient(handler) { BaseAddress = new Uri("http://localhost:5214") };
                 var service = new ReferenceDataService(client, _memoryCache, _configurationMock.Object);
-                
+
                 var expectedData = ReferenceDataDtoBuilder.BuildList(1);
                 handler.SetupResponse(HttpStatusCode.OK, expectedData)
                        .SetupResponse(HttpStatusCode.OK, expectedData);
 
                 var method = service.GetType().GetMethod(methodName);
-                
+
                 // Act
                 var task1 = (Task<IEnumerable<ReferenceDataDto>>)method!.Invoke(service, null)!;
                 var result1 = await task1;
-                
+
                 var task2 = (Task<IEnumerable<ReferenceDataDto>>)method!.Invoke(service, null)!;
                 var result2 = await task2;
 
@@ -223,7 +223,7 @@ namespace GetFitterGetBigger.Admin.Tests.Services
             // Arrange
             var configMock = new Mock<IConfiguration>();
             configMock.Setup(x => x["ApiBaseUrl"]).Returns((string?)null);
-            
+
             var service = new ReferenceDataService(_httpClient, _memoryCache, configMock.Object);
             var expectedData = ReferenceDataDtoBuilder.BuildList(1);
             _httpMessageHandler.SetupResponse(HttpStatusCode.OK, expectedData);
@@ -258,7 +258,7 @@ namespace GetFitterGetBigger.Admin.Tests.Services
             result.Should().Contain(x => x.Value == "Workout");
             result.Should().Contain(x => x.Value == "Cooldown");
             result.Should().Contain(x => x.Value == "Rest");
-            
+
             _httpMessageHandler.VerifyRequest(request =>
                 request.RequestUri!.AbsolutePath == "/api/ReferenceTables/ExerciseTypes");
         }
@@ -276,14 +276,14 @@ namespace GetFitterGetBigger.Admin.Tests.Services
 
             // Act - First call should hit the API
             var firstResult = await _referenceDataService.GetExerciseTypesAsync();
-            
+
             // Act - Second call should use cache
             var secondResult = await _referenceDataService.GetExerciseTypesAsync();
 
             // Assert
             firstResult.Should().HaveCount(2);
             secondResult.Should().BeEquivalentTo(firstResult);
-            
+
             // Verify API was only called once
             _httpMessageHandler.Requests.Should().HaveCount(1);
         }

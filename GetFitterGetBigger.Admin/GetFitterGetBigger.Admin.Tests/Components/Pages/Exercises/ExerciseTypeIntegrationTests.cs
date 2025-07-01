@@ -18,7 +18,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
         public ExerciseTypeIntegrationTests()
         {
             _mockStateService = new MockExerciseStateService();
-            
+
             Services.AddSingleton<IExerciseStateService>(_mockStateService);
             var navMan = Services.GetRequiredService<FakeNavigationManager>();
             navMan.NavigateTo("http://localhost/exercises/new");
@@ -30,35 +30,36 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
             // Arrange
             _mockStateService.SetupReferenceData();
             var createdExercise = (ExerciseCreateDto?)null;
-            _mockStateService.OnCreateExercise = (model) => {
+            _mockStateService.OnCreateExercise = (model) =>
+            {
                 createdExercise = model;
                 return Task.CompletedTask;
             };
 
             // Act
             var component = RenderComponent<ExerciseForm>();
-            
+
             // Fill all required fields except exercise types
             component.Find("#name").Input("Jumping Jacks");
             component.Find("#description").Input("Cardio warmup exercise");
             component.Find("#difficulty").Change("1");
-            
+
             // Select muscle groups
             component.FindAll("select")[1].Change("3"); // Legs
             component.FindAll("select")[2].Change("Primary");
-            
+
             // Try to submit without selecting any exercise type
             component.Find("form").Submit();
-            
+
             // Should not submit
             createdExercise.Should().BeNull();
-            
+
             // Now select an exercise type
             component.FindAll("input[type='checkbox']")[0].Change(true); // Warmup
-            
+
             // Submit again
             component.Find("form").Submit();
-            
+
             // Wait for submission
             component.WaitForState(() => createdExercise != null, TimeSpan.FromSeconds(1));
 
@@ -76,33 +77,33 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
 
             // Act
             var component = RenderComponent<ExerciseForm>();
-            
+
             // Try to select all four types
             await component.InvokeAsync(() =>
             {
                 var checkboxes = component.FindAll("input[type='checkbox']");
                 checkboxes[0].Change(true); // Warmup
             });
-            
+
             await component.InvokeAsync(() =>
             {
                 var checkboxes = component.FindAll("input[type='checkbox']");
                 checkboxes[1].Change(true); // Workout
             });
-            
+
             await component.InvokeAsync(() =>
             {
                 var checkboxes = component.FindAll("input[type='checkbox']");
                 checkboxes[2].Change(true); // Cooldown
             });
-            
+
             // When trying to select the fourth, it should not be allowed
             await component.InvokeAsync(() =>
             {
                 var checkboxes = component.FindAll("input[type='checkbox']");
                 checkboxes[3].Change(true); // Rest
             });
-            
+
             // Check that not all four are selected
             var checkboxes = component.FindAll("input[type='checkbox']");
             var checkedCount = checkboxes.Count(cb => cb.GetAttribute("checked") == "checked");
@@ -115,58 +116,59 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
             // Arrange
             _mockStateService.SetupReferenceData();
             var createdExercise = (ExerciseCreateDto?)null;
-            _mockStateService.OnCreateExercise = (model) => {
+            _mockStateService.OnCreateExercise = (model) =>
+            {
                 createdExercise = model;
                 return Task.CompletedTask;
             };
 
             // Act
             var component = RenderComponent<ExerciseForm>();
-            
+
             // Fill basic required fields
             component.Find("#name").Input("Test Exercise");
             component.Find("#description").Input("Test Description");
             component.Find("#difficulty").Change("1");
-            
+
             // Test 1: When Rest is selected first, other types should be disabled
             await component.InvokeAsync(() =>
             {
                 var checkboxes = component.FindAll("input[type='checkbox']");
                 checkboxes[3].Change(true); // Rest
             });
-            
+
             // Verify other checkboxes are disabled
             var checkboxes = component.FindAll("input[type='checkbox']");
             checkboxes[0].GetAttribute("disabled").Should().NotBeNull(); // Warmup disabled
             checkboxes[1].GetAttribute("disabled").Should().NotBeNull(); // Workout disabled
             checkboxes[2].GetAttribute("disabled").Should().NotBeNull(); // Cooldown disabled
-            
+
             // Test 2: Uncheck Rest and select Warmup
             await component.InvokeAsync(() =>
             {
                 var checkboxes = component.FindAll("input[type='checkbox']");
                 checkboxes[3].Change(false); // Uncheck Rest
             });
-            
+
             await component.InvokeAsync(() =>
             {
                 var checkboxes = component.FindAll("input[type='checkbox']");
                 checkboxes[0].Change(true); // Warmup
             });
-            
+
             // Now Rest should be disabled
             checkboxes = component.FindAll("input[type='checkbox']");
             checkboxes[3].GetAttribute("disabled").Should().NotBeNull(); // Rest disabled
-            
+
             // Select a muscle group and submit
             component.FindAll("select")[1].Change("1"); // Chest
             component.FindAll("select")[2].Change("Primary");
-            
+
             component.Find("form").Submit();
-            
+
             // Wait for submission
             component.WaitForState(() => createdExercise != null, TimeSpan.FromSeconds(1));
-            
+
             // Assert - only Warmup should be selected
             createdExercise.Should().NotBeNull();
             createdExercise!.ExerciseTypeIds.Should().HaveCount(1);
@@ -179,35 +181,36 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
             // Arrange
             _mockStateService.SetupReferenceData();
             var createdExercise = (ExerciseCreateDto?)null;
-            _mockStateService.OnCreateExercise = (model) => {
+            _mockStateService.OnCreateExercise = (model) =>
+            {
                 createdExercise = model;
                 return Task.CompletedTask;
             };
 
             // Act
             var component = RenderComponent<ExerciseForm>();
-            
+
             // Fill basic fields
             component.Find("#name").Input("Rest Period");
             component.Find("#description").Input("Recovery time between sets");
-            
+
             // First select a muscle group and equipment
             component.FindAll("select")[1].Change("1"); // Chest
             component.FindAll("select")[2].Change("Primary");
-            
+
             // Select Rest type
             await component.InvokeAsync(() =>
             {
                 var checkboxes = component.FindAll("input[type='checkbox']");
                 checkboxes[3].Change(true); // Rest
             });
-            
+
             // Wait for state updates
             await Task.Delay(100);
-            
+
             // Submit form
             component.Find("form").Submit();
-            
+
             // Wait for submission
             component.WaitForState(() => createdExercise != null, TimeSpan.FromSeconds(1));
 
@@ -285,21 +288,21 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
                     new() { Id = "2", Value = "Intermediate", Description = "For intermediate users" },
                     new() { Id = "3", Value = "Advanced", Description = "For advanced users" }
                 };
-                
+
                 MuscleGroups = new List<ReferenceDataDto>
                 {
                     new() { Id = "1", Value = "Chest", Description = "Chest muscles" },
                     new() { Id = "2", Value = "Back", Description = "Back muscles" },
                     new() { Id = "3", Value = "Legs", Description = "Leg muscles" }
                 };
-                
+
                 MuscleRoles = new List<ReferenceDataDto>
                 {
                     new() { Id = "1", Value = "Primary", Description = "Primary muscle" },
                     new() { Id = "2", Value = "Secondary", Description = "Secondary muscle" },
                     new() { Id = "3", Value = "Stabilizer", Description = "Stabilizer muscle" }
                 };
-                
+
                 ExerciseTypes = new List<ExerciseTypeDto>
                 {
                     new() { Id = "1", Value = "Warmup", Description = "Warmup exercises" },
@@ -307,7 +310,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
                     new() { Id = "3", Value = "Cooldown", Description = "Cooldown exercises" },
                     new() { Id = "4", Value = "Rest", Description = "Rest period" }
                 };
-                
+
                 Equipment = new List<ReferenceDataDto>();
                 BodyParts = new List<ReferenceDataDto>();
                 MovementPatterns = new List<ReferenceDataDto>();
@@ -316,7 +319,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
             public Task InitializeAsync() => Task.CompletedTask;
             public Task LoadExercisesAsync(ExerciseFilterDto? filter = null) => Task.CompletedTask;
             public Task LoadExerciseByIdAsync(string id) => Task.CompletedTask;
-            
+
             public async Task CreateExerciseAsync(ExerciseCreateDto exercise)
             {
                 if (OnCreateExercise != null)
@@ -324,7 +327,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
                     await OnCreateExercise(exercise);
                 }
             }
-            
+
             public async Task UpdateExerciseAsync(string id, ExerciseUpdateDto exercise)
             {
                 if (OnUpdateExercise != null)
@@ -332,7 +335,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
                     await OnUpdateExercise(id, exercise);
                 }
             }
-            
+
             public Task DeleteExerciseAsync(string id) => Task.CompletedTask;
             public Task RefreshCurrentPageAsync() => Task.CompletedTask;
             public void ClearSelectedExercise() { }

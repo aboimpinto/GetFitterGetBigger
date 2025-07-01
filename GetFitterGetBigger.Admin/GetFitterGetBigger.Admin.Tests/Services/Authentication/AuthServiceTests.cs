@@ -30,7 +30,7 @@ namespace GetFitterGetBigger.Admin.Tests.Services.Authentication
             {
                 BaseAddress = new Uri("http://localhost:5214")
             };
-            
+
             _authService = new AuthService(
                 _authStateProviderMock.Object,
                 _httpContextAccessorMock.Object,
@@ -186,7 +186,7 @@ namespace GetFitterGetBigger.Admin.Tests.Services.Authentication
             // Arrange
             var httpContext = new DefaultHttpContext();
             var authServiceMock = new Mock<IAuthenticationService>();
-            
+
             httpContext.RequestServices = new ServiceCollection()
                 .AddSingleton(authServiceMock.Object)
                 .BuildServiceProvider();
@@ -228,7 +228,7 @@ namespace GetFitterGetBigger.Admin.Tests.Services.Authentication
         {
             // Arrange
             var expectedAuthState = new AuthenticationState(new ClaimsPrincipal());
-            
+
             _authStateProviderMock
                 .Setup(x => x.GetAuthenticationStateAsync())
                 .ReturnsAsync(expectedAuthState);
@@ -289,7 +289,7 @@ namespace GetFitterGetBigger.Admin.Tests.Services.Authentication
             await _authService.GetClaimsAsync(request);
 
             // Assert
-            _httpMessageHandler.VerifyRequest(req => 
+            _httpMessageHandler.VerifyRequest(req =>
                 req.Method == HttpMethod.Post &&
                 req.RequestUri!.ToString().Contains("api/Auth/login"));
         }

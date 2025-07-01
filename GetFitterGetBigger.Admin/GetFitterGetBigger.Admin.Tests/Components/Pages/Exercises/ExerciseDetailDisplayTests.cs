@@ -25,7 +25,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
 
             // Assert
             exercise.CoachNotes.Should().HaveCount(3);
-            
+
             var orderedNotes = exercise.CoachNotes.OrderBy(cn => cn.Order).ToList();
             orderedNotes[0].Text.Should().Be("Step 1: Start position");
             orderedNotes[0].Order.Should().Be(0);

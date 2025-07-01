@@ -29,7 +29,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components
             // Arrange
             var notes = new List<CoachNoteCreateDto>();
             var notesChanged = false;
-            
+
             var component = RenderComponent<CoachNotesEditor>(parameters => parameters
                 .Add(p => p.Notes, notes)
                 .Add(p => p.NotesChanged, EventCallback.Factory.Create<List<CoachNoteCreateDto>>(this, (list) => notesChanged = true))
@@ -65,7 +65,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components
             textareas.Should().HaveCount(2);
             textareas[0].GetAttribute("value").Should().Be("First note");
             textareas[1].GetAttribute("value").Should().Be("Second note");
-            
+
             component.FindAll("label").Where(l => l.TextContent.Contains("Step")).Should().HaveCount(2);
             component.Find("label").TextContent.Should().Contain("Step 1");
         }
@@ -79,7 +79,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components
                 new() { Text = "Original text", Order = 0 }
             };
             var updatedNotes = new List<CoachNoteCreateDto>();
-            
+
             var component = RenderComponent<CoachNotesEditor>(parameters => parameters
                 .Add(p => p.Notes, notes)
                 .Add(p => p.NotesChanged, EventCallback.Factory.Create<List<CoachNoteCreateDto>>(this, (list) => updatedNotes = list))
@@ -103,7 +103,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components
                 new() { Text = "", Order = 0 }
             };
             var longText = new string('a', 1005);
-            
+
             var component = RenderComponent<CoachNotesEditor>(parameters => parameters
                 .Add(p => p.Notes, notes)
             );
@@ -144,7 +144,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components
                 new() { Text = "Note 2", Order = 1 },
                 new() { Text = "Note 3", Order = 2 }
             };
-            
+
             var component = RenderComponent<CoachNotesEditor>(parameters => parameters
                 .Add(p => p.Notes, notes)
             );
@@ -170,7 +170,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components
                 new() { Text = "Note 1", Order = 0 },
                 new() { Text = "Note 2", Order = 1 }
             };
-            
+
             var component = RenderComponent<CoachNotesEditor>(parameters => parameters
                 .Add(p => p.Notes, notes)
             );
@@ -178,12 +178,12 @@ namespace GetFitterGetBigger.Admin.Tests.Components
             // Act
             // Find all buttons with move up functionality (including disabled ones)
             var allButtons = component.FindAll("button").ToList();
-            var moveUpButtons = allButtons.Where((b, index) => 
+            var moveUpButtons = allButtons.Where((b, index) =>
             {
                 var title = b.GetAttribute("title") ?? "";
                 return title.Contains("Move note up") || title.Contains("first note");
             }).ToList();
-            
+
             moveUpButtons.Should().HaveCount(2); // Should have 2 move up buttons
             moveUpButtons[1].Click(); // Click the second note's up button
 
@@ -203,7 +203,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components
                 new() { Text = "Note 1", Order = 0 },
                 new() { Text = "Note 2", Order = 1 }
             };
-            
+
             var component = RenderComponent<CoachNotesEditor>(parameters => parameters
                 .Add(p => p.Notes, notes)
             );
@@ -211,12 +211,12 @@ namespace GetFitterGetBigger.Admin.Tests.Components
             // Act
             // Find all buttons with move down functionality (including disabled ones)
             var allButtons = component.FindAll("button").ToList();
-            var moveDownButtons = allButtons.Where(b => 
+            var moveDownButtons = allButtons.Where(b =>
             {
                 var title = b.GetAttribute("title") ?? "";
                 return title.Contains("Move note down") || title.Contains("last note");
             }).ToList();
-            
+
             moveDownButtons.Should().HaveCount(2); // Should have 2 move down buttons
             moveDownButtons[0].Click(); // Click the first note's down button
 
@@ -237,7 +237,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components
                 new() { Text = "Note 2", Order = 1 },
                 new() { Text = "Note 3", Order = 2 }
             };
-            
+
             var component = RenderComponent<CoachNotesEditor>(parameters => parameters
                 .Add(p => p.Notes, notes)
             );
@@ -245,28 +245,28 @@ namespace GetFitterGetBigger.Admin.Tests.Components
             // Assert
             // Get all buttons including disabled ones
             var allButtons = component.FindAll("button").ToList();
-            var moveUpButtons = allButtons.Where(b => 
+            var moveUpButtons = allButtons.Where(b =>
             {
                 var title = b.GetAttribute("title") ?? "";
                 return title.Contains("Move note up") || title.Contains("first note");
             }).ToList();
-            var moveDownButtons = allButtons.Where(b => 
+            var moveDownButtons = allButtons.Where(b =>
             {
                 var title = b.GetAttribute("title") ?? "";
                 return title.Contains("Move note down") || title.Contains("last note");
             }).ToList();
-            
+
             moveUpButtons.Should().HaveCount(3); // 3 notes = 3 up buttons
             moveDownButtons.Should().HaveCount(3); // 3 notes = 3 down buttons
-            
+
             // First item's up button should be disabled
             moveUpButtons[0].HasAttribute("disabled").Should().BeTrue();
             moveUpButtons[0].GetAttribute("class").Should().Contain("opacity-50");
-            
+
             // Last item's down button should be disabled
             moveDownButtons[2].HasAttribute("disabled").Should().BeTrue();
             moveDownButtons[2].GetAttribute("class").Should().Contain("opacity-50");
-            
+
             // Middle items should not be disabled
             moveUpButtons[1].HasAttribute("disabled").Should().BeFalse();
             moveDownButtons[1].HasAttribute("disabled").Should().BeFalse();
@@ -283,25 +283,25 @@ namespace GetFitterGetBigger.Admin.Tests.Components
                 new() { Text = "C", Order = 2 },
                 new() { Text = "D", Order = 3 }
             };
-            
+
             var component = RenderComponent<CoachNotesEditor>(parameters => parameters
                 .Add(p => p.Notes, notes)
             );
 
             // Act - Move C up twice
             var allButtons = component.FindAll("button").ToList();
-            var moveUpButtons = allButtons.Where(b => 
+            var moveUpButtons = allButtons.Where(b =>
             {
                 var title = b.GetAttribute("title") ?? "";
                 return title.Contains("Move note up") || title.Contains("first note");
             }).ToList();
-            
+
             moveUpButtons.Should().HaveCount(4); // 4 notes = 4 up buttons
             moveUpButtons[2].Click(); // C (at position 2) moves up to position 1
-            
+
             // Re-query after DOM update
             allButtons = component.FindAll("button").ToList();
-            moveUpButtons = allButtons.Where(b => 
+            moveUpButtons = allButtons.Where(b =>
             {
                 var title = b.GetAttribute("title") ?? "";
                 return title.Contains("Move note up") || title.Contains("first note");

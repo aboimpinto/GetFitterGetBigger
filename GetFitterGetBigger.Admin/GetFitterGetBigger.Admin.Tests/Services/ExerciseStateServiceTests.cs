@@ -71,9 +71,9 @@ namespace GetFitterGetBigger.Admin.Tests.Services
                     ("Workout", "Main workout"))
                 .Build();
 
-            var exercises = new ExercisePagedResultDto 
-            { 
-                Items = new List<ExerciseListDto> { exerciseWithCoachNotes } 
+            var exercises = new ExercisePagedResultDto
+            {
+                Items = new List<ExerciseListDto> { exerciseWithCoachNotes }
             };
 
             var exerciseTypes = new List<ExerciseTypeDto>
@@ -83,7 +83,7 @@ namespace GetFitterGetBigger.Admin.Tests.Services
                 new() { Id = "3", Value = "Cooldown", Description = "Cooldown exercises" },
                 new() { Id = "4", Value = "Rest", Description = "Rest periods" }
             };
-            
+
             _referenceDataServiceMock.Setup(x => x.GetDifficultyLevelsAsync()).ReturnsAsync(ReferenceDataDtoBuilder.BuildList(3));
             _referenceDataServiceMock.Setup(x => x.GetMuscleGroupsAsync()).ReturnsAsync(ReferenceDataDtoBuilder.BuildList(5));
             _referenceDataServiceMock.Setup(x => x.GetMuscleRolesAsync()).ReturnsAsync(ReferenceDataDtoBuilder.BuildList(3));
@@ -100,13 +100,13 @@ namespace GetFitterGetBigger.Admin.Tests.Services
             _stateService.ExerciseTypes.Should().HaveCount(4);
             _stateService.CurrentPage.Should().NotBeNull();
             _stateService.CurrentPage!.Items.Should().HaveCount(1);
-            
+
             var loadedExercise = _stateService.CurrentPage.Items.First();
             loadedExercise.CoachNotes.Should().HaveCount(3);
             loadedExercise.CoachNotes.Should().Contain(cn => cn.Text == "Step 1: Setup" && cn.Order == 0);
             loadedExercise.CoachNotes.Should().Contain(cn => cn.Text == "Step 2: Execute" && cn.Order == 1);
             loadedExercise.CoachNotes.Should().Contain(cn => cn.Text == "Step 3: Reset" && cn.Order == 2);
-            
+
             loadedExercise.ExerciseTypes.Should().HaveCount(2);
             loadedExercise.ExerciseTypes.Should().Contain(et => et.Value == "Warmup");
             loadedExercise.ExerciseTypes.Should().Contain(et => et.Value == "Workout");
@@ -118,7 +118,7 @@ namespace GetFitterGetBigger.Admin.Tests.Services
             // Arrange
             var filter = new ExerciseFilterDto { IsActive = true };
             var exercises = new ExercisePagedResultDto { Items = new List<ExerciseListDto>() };
-            
+
             _exerciseServiceMock.Setup(x => x.GetExercisesAsync(It.Is<ExerciseFilterDto>(f => f.IsActive == true)))
                 .ReturnsAsync(exercises);
 
@@ -240,7 +240,7 @@ namespace GetFitterGetBigger.Admin.Tests.Services
                 .WithDescription(string.Empty)
                 .WithInstructions(string.Empty)
                 .Build();
-            
+
             _exerciseServiceMock.Setup(x => x.CreateExerciseAsync(createDto)).ReturnsAsync(createdExercise);
             _exerciseServiceMock.Setup(x => x.GetExercisesAsync(It.IsAny<ExerciseFilterDto>()))
                 .ReturnsAsync(new ExercisePagedResultDto());
@@ -262,7 +262,7 @@ namespace GetFitterGetBigger.Admin.Tests.Services
             var updateDto = new ExerciseUpdateDtoBuilder()
                 .WithName("Updated Exercise")
                 .Build();
-            
+
             // Load an exercise first to set SelectedExercise
             _exerciseServiceMock.Setup(x => x.GetExerciseByIdAsync(exerciseId))
                 .ReturnsAsync(new ExerciseDtoBuilder()
@@ -272,7 +272,7 @@ namespace GetFitterGetBigger.Admin.Tests.Services
                     .WithInstructions(string.Empty)
                     .Build());
             await _stateService.LoadExerciseByIdAsync(exerciseId);
-            
+
             _exerciseServiceMock.Setup(x => x.UpdateExerciseAsync(exerciseId, updateDto)).Returns(Task.CompletedTask);
             _exerciseServiceMock.Setup(x => x.GetExercisesAsync(It.IsAny<ExerciseFilterDto>()))
                 .ReturnsAsync(new ExercisePagedResultDto());
@@ -291,7 +291,7 @@ namespace GetFitterGetBigger.Admin.Tests.Services
         {
             // Arrange
             var exerciseId = Guid.NewGuid().ToString();
-            
+
             // Load an exercise first to set SelectedExercise
             _exerciseServiceMock.Setup(x => x.GetExerciseByIdAsync(exerciseId))
                 .ReturnsAsync(new ExerciseDtoBuilder()
@@ -301,7 +301,7 @@ namespace GetFitterGetBigger.Admin.Tests.Services
                     .WithInstructions(string.Empty)
                     .Build());
             await _stateService.LoadExerciseByIdAsync(exerciseId);
-            
+
             _exerciseServiceMock.Setup(x => x.DeleteExerciseAsync(exerciseId)).Returns(Task.CompletedTask);
             _exerciseServiceMock.Setup(x => x.GetExercisesAsync(It.IsAny<ExerciseFilterDto>()))
                 .ReturnsAsync(new ExercisePagedResultDto());
@@ -328,7 +328,7 @@ namespace GetFitterGetBigger.Admin.Tests.Services
                     .WithInstructions(string.Empty)
                     .Build());
             await _stateService.LoadExerciseByIdAsync(exerciseId);
-            
+
             var changeNotified = false;
             _stateService.OnChange += () => changeNotified = true;
 
@@ -348,7 +348,7 @@ namespace GetFitterGetBigger.Admin.Tests.Services
             _exerciseServiceMock.Setup(x => x.GetExercisesAsync(It.IsAny<ExerciseFilterDto>()))
                 .ThrowsAsync(new Exception("Test error"));
             await _stateService.LoadExercisesAsync();
-            
+
             var changeNotified = false;
             _stateService.OnChange += () => changeNotified = true;
 
@@ -376,7 +376,7 @@ namespace GetFitterGetBigger.Admin.Tests.Services
                 .ReturnsAsync(ReferenceDataDtoBuilder.BuildList(1));
             _referenceDataServiceMock.Setup(x => x.GetMovementPatternsAsync())
                 .ReturnsAsync(ReferenceDataDtoBuilder.BuildList(1));
-            
+
             var exercises = new ExercisePagedResultDto { Items = new List<ExerciseListDto>() };
             _exerciseServiceMock.Setup(x => x.GetExercisesAsync(It.IsAny<ExerciseFilterDto>()))
                 .ReturnsAsync(exercises);

@@ -18,7 +18,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
         public ExerciseFormIntegrationTests()
         {
             _mockStateService = new MockExerciseStateService();
-            
+
             Services.AddSingleton<IExerciseStateService>(_mockStateService);
             var navMan = Services.GetRequiredService<FakeNavigationManager>();
             navMan.NavigateTo("http://localhost/exercises/new");
@@ -28,33 +28,34 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
         public void ExerciseForm_CompleteFlow_CreatesExerciseWithZeroCoachNotes()
         {
             // Task 4.1: Test complete exercise CRUD flow with zero coach notes
-            
+
             // Arrange
             _mockStateService.SetupReferenceData();
             var createdExercise = (ExerciseCreateDto?)null;
-            _mockStateService.OnCreateExercise = (model) => {
+            _mockStateService.OnCreateExercise = (model) =>
+            {
                 createdExercise = model;
                 return Task.CompletedTask;
             };
 
             // Act
             var component = RenderComponent<ExerciseForm>();
-            
+
             // Fill all required fields
             component.Find("#name").Input("Push-up");
             component.Find("#description").Input("A basic bodyweight exercise");
             component.Find("#difficulty").Change("1");
-            
+
             // Select exercise type
             component.Find("input[type='checkbox']").Change(true);
-            
+
             // Select muscle groups
             component.FindAll("select")[1].Change("1"); // Chest
             component.FindAll("select")[2].Change("Primary");
-            
+
             // Submit form without adding any coach notes
             component.Find("form").Submit();
-            
+
             // Wait for submission
             component.WaitForState(() => createdExercise != null, TimeSpan.FromSeconds(1));
 
@@ -70,21 +71,21 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
         public async Task ExerciseForm_EditMode_RemovesAllCoachNotes()
         {
             // Task 4.2: Test exercise editing to remove all coach notes
-            
+
             // Arrange
             _mockStateService.SetupReferenceData();
-            
+
             // Set up an existing exercise with coach notes
             _mockStateService.SelectedExercise = new ExerciseDtoBuilder()
                 .WithId("123")
                 .WithName("Squat")
                 .WithDescription("Lower body exercise")
                 .WithDifficulty(new ReferenceDataDto { Id = "1", Value = "Beginner", Description = "For beginners" })
-                .WithExerciseTypes(new List<ExerciseTypeDto> { 
-                    new() { Id = "2", Value = "Workout", Description = "Main workout" } 
+                .WithExerciseTypes(new List<ExerciseTypeDto> {
+                    new() { Id = "2", Value = "Workout", Description = "Main workout" }
                 })
                 .WithMuscleGroups(new List<MuscleGroupWithRoleDto> {
-                    new() { 
+                    new() {
                         MuscleGroup = new ReferenceDataDto { Id = "3", Value = "Legs", Description = "Leg muscles" },
                         Role = new ReferenceDataDto { Id = "1", Value = "Primary", Description = "Primary muscle" }
                     }
@@ -94,9 +95,10 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
                     new() { Id = "2", Text = "Knees over toes", Order = 1 }
                 })
                 .Build();
-            
+
             var updatedExercise = (ExerciseUpdateDto?)null;
-            _mockStateService.OnUpdateExercise = (id, model) => {
+            _mockStateService.OnUpdateExercise = (id, model) =>
+            {
                 updatedExercise = model;
                 return Task.CompletedTask;
             };
@@ -104,10 +106,10 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
             // Act
             var component = RenderComponent<ExerciseForm>(parameters => parameters
                 .Add(p => p.Id, "123"));
-            
+
             // Wait for the form to load
             component.WaitForState(() => component.FindAll("textarea").Count > 2);
-            
+
             // Clear all coach note textareas
             var textareaCount = component.FindAll("textarea").Count;
             for (int i = 1; i < textareaCount; i++)
@@ -118,10 +120,10 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
                     textarea.Change("");
                 });
             }
-            
+
             // Submit form
             component.Find("form").Submit();
-            
+
             // Wait for submission
             component.WaitForState(() => updatedExercise != null, TimeSpan.FromSeconds(1));
 
@@ -134,18 +136,19 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
         public async Task ExerciseForm_MixedCoachNotes_FiltersEmptyOnes()
         {
             // Task 4.4: Test edge case with mixed empty/filled notes
-            
+
             // Arrange
             _mockStateService.SetupReferenceData();
             var createdExercise = (ExerciseCreateDto?)null;
-            _mockStateService.OnCreateExercise = (model) => {
+            _mockStateService.OnCreateExercise = (model) =>
+            {
                 createdExercise = model;
                 return Task.CompletedTask;
             };
 
             // Act
             var component = RenderComponent<ExerciseForm>();
-            
+
             // Fill required fields
             component.Find("#name").Input("Plank");
             component.Find("#description").Input("Core stabilization exercise");
@@ -153,7 +156,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
             component.Find("input[type='checkbox']").Change(true);
             component.FindAll("select")[1].Change("1");
             component.FindAll("select")[2].Change("Primary");
-            
+
             // Add multiple coach notes and fill them
             for (int i = 0; i < 4; i++)
             {
@@ -162,19 +165,19 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
                     component.FindAll("button").First(b => b.TextContent.Contains("Add Note")).Click();
                 });
             }
-            
+
             // Wait for all notes to be added
             component.WaitForState(() => component.FindAll("textarea").Count >= 5);
-            
+
             // Fill notes with mixed content - wrap each in InvokeAsync
             await component.InvokeAsync(() => component.FindAll("textarea").Skip(1).First().Change("")); // Empty
             await component.InvokeAsync(() => component.FindAll("textarea").Skip(1).ElementAt(1).Change("Keep core tight")); // Valid
             await component.InvokeAsync(() => component.FindAll("textarea").Skip(1).ElementAt(2).Change("   ")); // Whitespace
             await component.InvokeAsync(() => component.FindAll("textarea").Skip(1).ElementAt(3).Change("Breathe normally")); // Valid
-            
+
             // Submit form
             component.Find("form").Submit();
-            
+
             // Wait for submission
             component.WaitForState(() => createdExercise != null, TimeSpan.FromSeconds(1));
 
@@ -191,18 +194,19 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
         public async Task ExerciseForm_CoachNotesFunctionality_WorksWhenProvided()
         {
             // Task 4.3: Verify coach notes functionality still works when notes are provided
-            
+
             // Arrange
             _mockStateService.SetupReferenceData();
             var createdExercise = (ExerciseCreateDto?)null;
-            _mockStateService.OnCreateExercise = (model) => {
+            _mockStateService.OnCreateExercise = (model) =>
+            {
                 createdExercise = model;
                 return Task.CompletedTask;
             };
 
             // Act
             var component = RenderComponent<ExerciseForm>();
-            
+
             // Fill required fields
             component.Find("#name").Input("Deadlift");
             component.Find("#description").Input("Full body compound exercise");
@@ -210,7 +214,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
             component.Find("input[type='checkbox']").Change(true);
             component.FindAll("select")[1].Change("2"); // Back
             component.FindAll("select")[2].Change("Primary");
-            
+
             // Add two coach notes
             await component.InvokeAsync(() =>
             {
@@ -220,17 +224,17 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
             {
                 component.FindAll("button").First(b => b.TextContent.Contains("Add Note")).Click();
             });
-            
+
             // Wait for notes to be added
             component.WaitForState(() => component.FindAll("textarea").Count >= 3);
-            
+
             // Fill notes - wrap each in InvokeAsync
             await component.InvokeAsync(() => component.FindAll("textarea").Skip(1).First().Change("Maintain neutral spine"));
             await component.InvokeAsync(() => component.FindAll("textarea").Skip(1).ElementAt(1).Change("Drive through heels"));
-            
+
             // Submit form
             component.Find("form").Submit();
-            
+
             // Wait for submission
             component.WaitForState(() => createdExercise != null, TimeSpan.FromSeconds(1));
 
@@ -245,30 +249,31 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
         public void ExerciseForm_RestExercise_AllowsZeroCoachNotesAndMuscleGroups()
         {
             // Additional test for Rest exercises
-            
+
             // Arrange
             _mockStateService.SetupReferenceData();
             var createdExercise = (ExerciseCreateDto?)null;
-            _mockStateService.OnCreateExercise = (model) => {
+            _mockStateService.OnCreateExercise = (model) =>
+            {
                 createdExercise = model;
                 return Task.CompletedTask;
             };
 
             // Act
             var component = RenderComponent<ExerciseForm>();
-            
+
             // Fill required fields
             component.Find("#name").Input("Rest Period");
             component.Find("#description").Input("Recovery time between sets");
             component.Find("#difficulty").Change("1"); // Should auto-set to Beginner
-            
+
             // Select Rest exercise type
             var checkboxes = component.FindAll("input[type='checkbox']");
             checkboxes[3].Change(true); // Rest is the 4th type
-            
+
             // Submit form without coach notes or muscle groups
             component.Find("form").Submit();
-            
+
             // Wait for submission
             component.WaitForState(() => createdExercise != null, TimeSpan.FromSeconds(1));
 
@@ -310,21 +315,21 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
                     new() { Id = "2", Value = "Intermediate", Description = "For intermediate users" },
                     new() { Id = "3", Value = "Advanced", Description = "For advanced users" }
                 };
-                
+
                 MuscleGroups = new List<ReferenceDataDto>
                 {
                     new() { Id = "1", Value = "Chest", Description = "Chest muscles" },
                     new() { Id = "2", Value = "Back", Description = "Back muscles" },
                     new() { Id = "3", Value = "Legs", Description = "Leg muscles" }
                 };
-                
+
                 MuscleRoles = new List<ReferenceDataDto>
                 {
                     new() { Id = "1", Value = "Primary", Description = "Primary muscle" },
                     new() { Id = "2", Value = "Secondary", Description = "Secondary muscle" },
                     new() { Id = "3", Value = "Stabilizer", Description = "Stabilizer muscle" }
                 };
-                
+
                 ExerciseTypes = new List<ExerciseTypeDto>
                 {
                     new() { Id = "1", Value = "Warmup", Description = "Warmup exercises" },
@@ -332,7 +337,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
                     new() { Id = "3", Value = "Cooldown", Description = "Cooldown exercises" },
                     new() { Id = "4", Value = "Rest", Description = "Rest period" }
                 };
-                
+
                 Equipment = new List<ReferenceDataDto>();
                 BodyParts = new List<ReferenceDataDto>();
                 MovementPatterns = new List<ReferenceDataDto>();
@@ -341,7 +346,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
             public Task InitializeAsync() => Task.CompletedTask;
             public Task LoadExercisesAsync(ExerciseFilterDto? filter = null) => Task.CompletedTask;
             public Task LoadExerciseByIdAsync(string id) => Task.CompletedTask;
-            
+
             public async Task CreateExerciseAsync(ExerciseCreateDto exercise)
             {
                 if (OnCreateExercise != null)
@@ -349,7 +354,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
                     await OnCreateExercise(exercise);
                 }
             }
-            
+
             public async Task UpdateExerciseAsync(string id, ExerciseUpdateDto exercise)
             {
                 if (OnUpdateExercise != null)
@@ -357,7 +362,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
                     await OnUpdateExercise(id, exercise);
                 }
             }
-            
+
             public Task DeleteExerciseAsync(string id) => Task.CompletedTask;
             public Task RefreshCurrentPageAsync() => Task.CompletedTask;
             public void ClearSelectedExercise() { }

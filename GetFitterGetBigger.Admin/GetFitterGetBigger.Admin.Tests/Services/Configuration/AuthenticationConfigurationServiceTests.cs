@@ -26,10 +26,10 @@ namespace GetFitterGetBigger.Admin.Tests.Services.Configuration
             _mockConfiguration = new Mock<IConfiguration>();
             _mockGoogleSection = new Mock<IConfigurationSection>();
             _mockFacebookSection = new Mock<IConfigurationSection>();
-            
+
             _services = new ServiceCollection();
             _authBuilder = new AuthenticationBuilder(_services);
-            
+
             SetupConfiguration();
         }
 
@@ -37,10 +37,10 @@ namespace GetFitterGetBigger.Admin.Tests.Services.Configuration
         {
             _mockGoogleSection.Setup(x => x["ClientId"]).Returns("test-google-client-id");
             _mockGoogleSection.Setup(x => x["ClientSecret"]).Returns("test-google-client-secret");
-            
+
             _mockFacebookSection.Setup(x => x["AppId"]).Returns("test-facebook-app-id");
             _mockFacebookSection.Setup(x => x["AppSecret"]).Returns("test-facebook-app-secret");
-            
+
             _mockConfiguration.Setup(x => x.GetSection("Authentication:Google")).Returns(_mockGoogleSection.Object);
             _mockConfiguration.Setup(x => x.GetSection("Authentication:Facebook")).Returns(_mockFacebookSection.Object);
             _mockConfiguration.Setup(x => x["Authentication:Google:ClientId"]).Returns("test-google-client-id");
@@ -122,7 +122,7 @@ namespace GetFitterGetBigger.Admin.Tests.Services.Configuration
             // Act & Assert
             var action = () => _service.ConfigureAuthenticationOptions(_authBuilder, _mockConfiguration.Object);
             action.Should().NotThrow();
-            
+
             // Verify all three authentication providers are configured
             _services.Should().Contain(sd => sd.ServiceType == typeof(IConfigureOptions<CookieAuthenticationOptions>));
             _services.Should().Contain(sd => sd.ServiceType == typeof(IConfigureOptions<GoogleOptions>));
@@ -134,7 +134,7 @@ namespace GetFitterGetBigger.Admin.Tests.Services.Configuration
         {
             // Arrange
             var emptyConfig = new Mock<IConfiguration>();
-            
+
             // Act & Assert
             var action = () => _service.ConfigureAuthenticationOptions(_authBuilder, emptyConfig.Object);
             action.Should().NotThrow();

@@ -14,7 +14,7 @@ namespace GetFitterGetBigger.Admin.Tests.Helpers
         public MockHttpMessageHandler SetupResponse(HttpStatusCode statusCode, object? content = null)
         {
             var response = new HttpResponseMessage(statusCode);
-            
+
             if (content != null)
             {
                 var json = JsonSerializer.Serialize(content);

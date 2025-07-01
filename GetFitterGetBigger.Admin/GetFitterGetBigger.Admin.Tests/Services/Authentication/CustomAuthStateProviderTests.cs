@@ -169,7 +169,7 @@ namespace GetFitterGetBigger.Admin.Tests.Services.Authentication
         {
             // Arrange
             var identity = new ClaimsIdentity(
-                new[] { new Claim(ClaimTypes.Name, "Test User") }, 
+                new[] { new Claim(ClaimTypes.Name, "Test User") },
                 authenticationType);
             var claimsPrincipal = new ClaimsPrincipal(identity);
 

@@ -50,7 +50,7 @@ namespace GetFitterGetBigger.Admin.Tests.Services.Authentication
             _authorizationStateService.IsReady.Should().BeTrue();
             _authorizationStateService.UserHasAdminAccess.Should().BeTrue();
             stateChangedCalled.Should().BeTrue();
-            
+
             _authServiceMock.Verify(x => x.GetClaimsAsync(It.IsAny<ClaimRequest>()), Times.Once);
         }
 
@@ -72,7 +72,7 @@ namespace GetFitterGetBigger.Admin.Tests.Services.Authentication
             _authorizationStateService.IsReady.Should().BeTrue();
             _authorizationStateService.UserHasAdminAccess.Should().BeFalse();
             stateChangedCalled.Should().BeTrue();
-            
+
             _authServiceMock.Verify(x => x.GetClaimsAsync(It.IsAny<ClaimRequest>()), Times.Never);
         }
 
@@ -166,7 +166,7 @@ namespace GetFitterGetBigger.Admin.Tests.Services.Authentication
         {
             // Arrange
             _authServiceMock.Setup(x => x.GetCurrentUserAsync()).ReturnsAsync((AuthUser?)null);
-            
+
             var callCount = 0;
             _authorizationStateService.OnChange += () => callCount++;
 

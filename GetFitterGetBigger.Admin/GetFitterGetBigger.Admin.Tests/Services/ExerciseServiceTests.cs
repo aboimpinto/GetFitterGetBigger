@@ -28,7 +28,7 @@ namespace GetFitterGetBigger.Admin.Tests.Services
             };
             _memoryCache = new MemoryCache(new MemoryCacheOptions());
             _configurationMock = new Mock<IConfiguration>();
-            
+
             _configurationMock
                 .Setup(x => x["ApiBaseUrl"])
                 .Returns("http://localhost:5214");
@@ -96,7 +96,7 @@ namespace GetFitterGetBigger.Admin.Tests.Services
             // Assert
             result.Should().NotBeNull();
             result!.Name.Should().Be("Bench Press");
-            
+
             // Verify it's cached
             _memoryCache.TryGetValue($"exercise_{exerciseId}", out ExerciseDto? cached).Should().BeTrue();
             cached.Should().NotBeNull();
@@ -113,7 +113,7 @@ namespace GetFitterGetBigger.Admin.Tests.Services
                 .WithDescription(string.Empty)
                 .WithInstructions(string.Empty)
                 .Build();
-            
+
             _memoryCache.Set($"exercise_{exerciseId}", cachedExercise);
 
             // Act
@@ -200,7 +200,7 @@ namespace GetFitterGetBigger.Admin.Tests.Services
         {
             // Arrange
             var exerciseId = Guid.NewGuid().ToString();
-            
+
             // Cache the exercise
             _memoryCache.Set($"exercise_{exerciseId}", new ExerciseDtoBuilder()
                 .WithId(exerciseId)
@@ -233,7 +233,7 @@ namespace GetFitterGetBigger.Admin.Tests.Services
             var muscleGroupId1 = Guid.NewGuid().ToString();
             var muscleGroupId2 = Guid.NewGuid().ToString();
             var equipmentId = Guid.NewGuid().ToString();
-            
+
             var filter = new ExerciseFilterDtoBuilder()
                 .WithName("press")
                 .WithDifficultyId(Guid.NewGuid().ToString())
@@ -298,7 +298,7 @@ namespace GetFitterGetBigger.Admin.Tests.Services
         {
             // Arrange
             var filter = new ExerciseFilterDtoBuilder().Build();
-            
+
             var squatExercise = new ExerciseListDtoBuilder()
                 .WithName("Squat")
                 .WithDescription("Full depth squat")
@@ -327,7 +327,7 @@ namespace GetFitterGetBigger.Admin.Tests.Services
             // Assert
             result.Should().NotBeNull();
             result.Items.Should().HaveCount(1);
-            
+
             var exercise = result.Items.First();
             exercise.CoachNotes.Should().HaveCount(3);
             exercise.CoachNotes[0].Text.Should().Be("Keep your back straight");
@@ -336,7 +336,7 @@ namespace GetFitterGetBigger.Admin.Tests.Services
             exercise.CoachNotes[1].Order.Should().Be(1);
             exercise.CoachNotes[2].Text.Should().Be("Maintain knee alignment");
             exercise.CoachNotes[2].Order.Should().Be(2);
-            
+
             exercise.ExerciseTypes.Should().HaveCount(2);
             exercise.ExerciseTypes.Should().Contain(et => et.Value == "Workout");
             exercise.ExerciseTypes.Should().Contain(et => et.Value == "Warmup");
@@ -382,7 +382,7 @@ namespace GetFitterGetBigger.Admin.Tests.Services
             result.Should().NotBeNull();
             result.CoachNotes.Should().HaveCount(3);
             result.ExerciseTypes.Should().HaveCount(2);
-            
+
             _httpMessageHandler.VerifyRequest(request =>
             {
                 var content = request.Content?.ReadAsStringAsync().Result;
@@ -412,7 +412,7 @@ namespace GetFitterGetBigger.Admin.Tests.Services
 
             // Act - First call should hit the API
             var firstResult = await _exerciseService.GetExerciseByIdAsync(exerciseId);
-            
+
             // Act - Second call should use cache
             var secondResult = await _exerciseService.GetExerciseByIdAsync(exerciseId);
 
@@ -420,9 +420,9 @@ namespace GetFitterGetBigger.Admin.Tests.Services
             firstResult.Should().NotBeNull();
             firstResult!.CoachNotes.Should().HaveCount(2);
             firstResult.ExerciseTypes.Should().HaveCount(1);
-            
+
             secondResult.Should().BeEquivalentTo(firstResult);
-            
+
             // Verify API was only called once
             _httpMessageHandler.Requests.Should().HaveCount(1);
         }
