@@ -63,7 +63,6 @@ public class DatabaseMigrationTests : IAsyncLifetime
                     // Add logging to capture migration logs
                     services.AddLogging(logging =>
                     {
-                        logging.AddXUnit(_output);
                         logging.SetMinimumLevel(LogLevel.Debug);
                     });
                 });
@@ -118,7 +117,6 @@ public class DatabaseMigrationTests : IAsyncLifetime
                     // Add logging to capture migration logs
                     services.AddLogging(logging =>
                     {
-                        logging.AddXUnit(_output);
                         logging.SetMinimumLevel(LogLevel.Debug);
                     });
                 });

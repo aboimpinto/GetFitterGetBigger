@@ -158,7 +158,7 @@ public class BranchCoverageTests : IClassFixture<ApiTestFixture>
         var response = await _client.GetAsync($"/api/ReferenceTables/MuscleGroups/ByBodyPart/{bodyPartId}");
         
         response.EnsureSuccessStatusCode();
-        var muscleGroups = await response.Content.ReadFromJsonAsync<List<MuscleGroup>>();
+        var muscleGroups = await response.Content.ReadFromJsonAsync<List<ReferenceDataDto>>();
         
         Assert.NotNull(muscleGroups);
         // The endpoint might return an empty list if the relationship is not loaded
@@ -186,7 +186,7 @@ public class BranchCoverageTests : IClassFixture<ApiTestFixture>
         var response = await _client.GetAsync($"/api/ReferenceTables/MuscleGroups/ByBodyPart/{nonExistentId}");
         
         response.EnsureSuccessStatusCode();
-        var muscleGroups = await response.Content.ReadFromJsonAsync<List<MuscleGroup>>();
+        var muscleGroups = await response.Content.ReadFromJsonAsync<List<ReferenceDataDto>>();
         
         Assert.NotNull(muscleGroups);
         Assert.Empty(muscleGroups);

@@ -119,7 +119,7 @@ public class PostgreSqlMigrationTests : PostgreSqlTestBase
             catch (Exception ex)
             {
                 // If we get here, the table might not exist
-                Assert.True(false, $"Expected table '{tableName}' was not found: {ex.Message}");
+                Assert.Fail($"Expected table '{tableName}' was not found: {ex.Message}");
             }
         }
     }

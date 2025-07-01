@@ -82,7 +82,7 @@ public class MuscleGroupsController : ReferenceTablesBaseController
             return await repository.GetByIdAsync(muscleGroupId);
         });
         
-        if (muscleGroup == null)
+        if (muscleGroup == null || !muscleGroup.IsActive)
             return NotFound();
             
         return Ok(new ReferenceDataDto
