@@ -32,8 +32,8 @@
 ### Generic Interface and Base Implementation
 - **Task 1.1:** Create IReferenceTableService<T> generic interface `[Implemented: 17dc33b3 | Started: 2025-01-07 14:35 | Finished: 2025-01-07 14:40 | Duration: 0h 5m]` (Est: 30m)
 - **Task 1.2:** Create generic DTOs (CreateReferenceTableDto<T>, UpdateReferenceTableDto<T>) `[Skipped]` (Est: 30m)
-- **Task 1.3:** Create ReferenceTableServiceBase<T> abstract class with virtual methods `[InProgress: Started: 2025-01-07 14:46]` (Est: 1h)
-- **Task 1.4:** Write unit tests for ReferenceTableServiceBase `[ReadyToDevelop]` (Est: 1h)
+- **Task 1.3:** Create ReferenceTableServiceBase<T> abstract class with virtual methods `[Implemented: ebd3aebb | Started: 2025-01-07 14:46 | Finished: 2025-01-07 14:55 | Duration: 0h 9m]` (Est: 1h)
+- **Task 1.4:** Write unit tests for ReferenceTableServiceBase `[InProgress: Started: 2025-01-07 14:56]` (Est: 1h)
 
 **Checkpoint 1:** 🛑 Build and run all tests - must be green
 
