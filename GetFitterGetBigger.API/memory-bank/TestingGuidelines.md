@@ -1,5 +1,30 @@
 # Testing Guidelines - Branch Coverage
 
+## Integration Test Architecture
+
+### Overview
+We maintain two distinct integration test approaches to balance speed and accuracy:
+
+1. **SharedDatabaseTestFixture** - Fast in-memory tests for CRUD operations
+2. **PostgreSqlApiTestFixture** - Real database tests for complex scenarios
+
+### Architecture Decision Record (ADR)
+
+**Context**: Integration tests were failing when data created via HTTP POST wasn't visible in subsequent GET requests.
+
+**Decision**: Maintain two test fixture types:
+- In-memory for fast CRUD testing where data persistence between API calls is needed
+- PostgreSQL for database-specific features and production-like behavior
+
+**Consequences**:
+- ✅ Fast test execution for most scenarios
+- ✅ Accurate database behavior when needed
+- ✅ Clear guidelines prevent "Skip" test anti-pattern
+- ⚠️ Developers must choose appropriate fixture
+- ⚠️ Some tests may need migration between fixtures
+
+**See TESTING-QUICK-REFERENCE.md for detailed usage guidelines**
+
 ## Why Branch Coverage Matters
 
 Branch coverage measures how many decision paths in your code are tested. A branch is created whenever your code can take different paths based on conditions (if/else, switch, try/catch, etc.).

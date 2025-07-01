@@ -60,6 +60,82 @@ await Context.Entry(entity).Collection(e => e.Collection).LoadAsync();
 3. **EF Core In-Memory** = Some features don't work (see skipped tests)
 4. **ID Parsing** = Will fail silently with wrong format
 
+## 🔄 Integration Test Types - CRITICAL KNOWLEDGE
+
+### SharedDatabaseTestFixture vs PostgreSqlApiTestFixture
+
+We have TWO types of integration test fixtures, each with specific use cases:
+
+#### 1. SharedDatabaseTestFixture (In-Memory Database)
+**When to use:**
+- Testing CRUD operations where data needs to persist between HTTP requests
+- Testing workflows that create data in one API call and use it in subsequent calls
+- When you need fast test execution without database overhead
+- When testing business logic that doesn't depend on database-specific features
+
+**Characteristics:**
+- Uses EF Core In-Memory database
+- Single database instance shared across all HTTP requests in a test
+- Data persists between API calls within the same test
+- Fast execution
+- Some EF Core features don't work (complex queries, transactions, etc.)
+
+**Example:**
+```csharp
+[Collection("SharedDatabase")]
+public class EquipmentCrudSimpleTests : IClassFixture<SharedDatabaseTestFixture>
+{
+    // Test creates equipment via POST, then retrieves it via GET
+    // Data persists between these calls
+}
+```
+
+#### 2. PostgreSqlApiTestFixture (Real PostgreSQL)
+**When to use:**
+- Testing database-specific features (migrations, complex queries, transactions)
+- Testing concurrent operations
+- When you need exact production database behavior
+- Testing with pre-seeded data that gets reset before each test
+
+**Characteristics:**
+- Uses real PostgreSQL via TestContainers
+- Inherits from PostgreSqlTestBase which calls CleanupDatabaseAsync() before each test
+- Each test starts with a clean database + seeded reference data
+- Slower but more accurate
+- Supports all PostgreSQL features
+
+**Example:**
+```csharp
+[Collection("PostgreSQL Integration Tests")]
+public class ExercisesControllerPostgreSqlTests : PostgreSqlTestBase
+{
+    // Test uses pre-seeded data or creates all test data upfront
+    // Database is cleaned before each test
+}
+```
+
+### ⚡ Decision Guide: Which to Use?
+
+**Use SharedDatabaseTestFixture when:**
+- ✅ Testing Create → Read → Update → Delete workflows
+- ✅ Data created via API needs to persist between calls
+- ✅ Testing simple business logic
+- ✅ You see "Skip: In-memory database limitation" - try this first!
+
+**Use PostgreSqlApiTestFixture when:**
+- ✅ Testing database migrations
+- ✅ Testing complex queries or database-specific features
+- ✅ Testing concurrent operations
+- ✅ Need exact production database behavior
+- ✅ Tests work with pre-seeded reference data only
+
+### 🚨 Common Pitfall: "In-memory database limitation"
+
+Before skipping a test with "In-memory database limitation":
+1. **First try SharedDatabaseTestFixture** - it solves most data persistence issues
+2. If that fails due to missing EF Core features, then use PostgreSqlApiTestFixture
+3. Only skip if the test truly cannot work with either approach
+
 ## 📊 Success Story
 Using these patterns, we fixed:
 - BUG-004: 81 tests (inotify limit)

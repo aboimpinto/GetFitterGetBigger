@@ -2,22 +2,27 @@ using System.Net;
 using System.Net.Http.Json;
 using System.Threading.Tasks;
 using GetFitterGetBigger.API.DTOs;
+using GetFitterGetBigger.API.Models;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 
 namespace GetFitterGetBigger.API.Tests.Integration
 {
-    public class EquipmentCrudSimpleTests : IClassFixture<ApiTestFixture>
+    [Collection("SharedDatabase")]
+    public class EquipmentCrudSimpleTests : IClassFixture<SharedDatabaseTestFixture>
     {
+        private readonly SharedDatabaseTestFixture _fixture;
         private readonly HttpClient _client;
-        private readonly ApiTestFixture _fixture;
-
-        public EquipmentCrudSimpleTests(ApiTestFixture fixture)
+        
+        public EquipmentCrudSimpleTests(SharedDatabaseTestFixture fixture)
         {
             _fixture = fixture;
-            _client = fixture.CreateClient();
+            _client = _fixture.CreateClient();
         }
+        
 
-        [Fact(Skip = "In-memory database limitation: Different DbContext instances don't share data")]
+        [Fact]
         public async Task EquipmentCrud_FullFlow_Success()
         {
             // Create unique name to avoid conflicts
@@ -115,8 +120,13 @@ namespace GetFitterGetBigger.API.Tests.Integration
             var created = await createResponse.Content.ReadFromJsonAsync<EquipmentDto>();
             Assert.NotNull(created);
             
+            // Log the created ID to help debug
+            var createdId = created.Id;
+            // Assert ID format is correct
+            Assert.StartsWith("equipment-", createdId);
+            
             // Step 2: Get it by ID
-            var getResponse = await _client.GetAsync($"/api/ReferenceTables/Equipment/{created.Id}");
+            var getResponse = await _client.GetAsync($"/api/ReferenceTables/Equipment/{createdId}");
             Assert.Equal(HttpStatusCode.OK, getResponse.StatusCode);
             
             var fetched = await getResponse.Content.ReadFromJsonAsync<ReferenceDataDto>();
@@ -128,7 +138,7 @@ namespace GetFitterGetBigger.API.Tests.Integration
             await _client.DeleteAsync($"/api/ReferenceTables/Equipment/{created.Id}");
         }
 
-        [Fact(Skip = "In-memory database limitation: Different DbContext instances don't share data")]
+        [Fact]
         public async Task Update_JustCreatedEquipment_Success()
         {
             // Create unique name to avoid conflicts
