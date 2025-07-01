@@ -54,11 +54,32 @@ Refactor the MuscleGroupsController to comply with the new architectural rules. 
 - RemoveBodyPart(string id, string bodyPartId)
 
 ## Dependencies
+- **PREREQUISITE**: FEAT-017 must be completed first
 - Must follow the patterns established in ExerciseService
 - Must maintain compatibility with existing DTOs
 - Must handle cross-repository operations (MuscleGroup and BodyPart)
+- Should inherit from ReferenceTableServiceBase<MuscleGroup> where applicable
+
+## Technical Details
+### Transaction Boundaries
+- AddBodyPart operation must be atomic (both entities updated or neither)
+- RemoveBodyPart operation must be atomic
+- Service must manage UnitOfWork lifecycle for cross-entity operations
+
+### Caching Strategy
+- Cache muscle groups by ID
+- Cache muscle groups by body part
+- Invalidate cache on any modification operation
+- Consider using cache-aside pattern
+
+### Validation Requirements
+- Body part must exist before association
+- Prevent duplicate body part associations
+- Validate muscle group exists before operations
 
 ## Notes
 - This controller has more complex business logic than simple reference tables
 - Involves cross-entity operations between MuscleGroups and BodyParts
 - Good example of why service layer is needed for complex operations
+- Can partially inherit from ReferenceTableServiceBase<T> for basic operations
+- Requires additional methods for body part management

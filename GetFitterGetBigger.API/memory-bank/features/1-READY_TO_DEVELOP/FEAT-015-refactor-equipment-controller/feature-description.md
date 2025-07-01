@@ -54,11 +54,30 @@ Refactor the EquipmentController to comply with the new architectural rules. The
 - Delete(string id)
 
 ## Dependencies
+- **PREREQUISITE**: FEAT-017 must be completed first
 - Must follow the patterns established in ExerciseService
 - Must maintain compatibility with existing DTOs
 - Must preserve caching functionality
+- Should inherit from ReferenceTableServiceBase<Equipment>
+
+## Technical Details
+### Service Implementation
+- EquipmentService should inherit from ReferenceTableServiceBase<Equipment>
+- Most functionality will be inherited from the base class
+- May need to override methods for equipment-specific validation
+
+### Validation Requirements
+- Equipment name must be unique
+- Equipment value must be unique
+- Validate equipment not in use before deletion
+
+### Caching Strategy
+- Inherit caching behavior from base service
+- Cache equipment by ID, name, and value
+- Invalidate cache on any modification
 
 ## Notes
 - This is part of a larger architectural refactoring effort
-- Similar refactoring needed for other reference table controllers
-- Consider creating a generic base service for reference tables
+- Simpler than MuscleGroups as it's a pure reference table
+- Good example of standard reference table service pattern
+- Can serve as a template for other simple reference tables

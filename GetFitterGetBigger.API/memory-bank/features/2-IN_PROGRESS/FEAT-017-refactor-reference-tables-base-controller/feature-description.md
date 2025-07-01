@@ -59,11 +59,35 @@ Refactor the ReferenceTablesBaseController and all inheriting controllers to com
 7. MuscleRolesController → IMuscleRoleService
 
 ## Dependencies
-- Must be completed before or alongside individual controller refactoring
+- Must be completed FIRST before FEAT-015 and FEAT-016
 - Must maintain compatibility with existing caching strategy
 - Must preserve all existing endpoints and functionality
+- Requires understanding of existing ExerciseService pattern
+
+## Technical Details
+### Generic Interface Definition
+```csharp
+public interface IReferenceTableService<T> where T : class, IReferenceTable
+{
+    Task<IEnumerable<T>> GetAllAsync();
+    Task<T?> GetByIdAsync(string id);
+    Task<T?> GetByNameAsync(string name);
+    Task<T?> GetByValueAsync(string value);
+    Task<T> CreateAsync(CreateReferenceTableDto<T> dto);
+    Task<T> UpdateAsync(string id, UpdateReferenceTableDto<T> dto);
+    Task DeleteAsync(string id);
+}
+```
+
+### Key Implementation Requirements
+- Virtual methods in base service for customization
+- Proper generic constraints (where T : class, IReferenceTable)
+- Caching strategy integration
+- Transaction management in service layer
+- Validation logic centralization
 
 ## Notes
-- This is the most critical refactoring as it affects multiple controllers
-- Consider implementing this first as it will simplify other refactoring tasks
-- The generic pattern should be flexible enough to handle special cases
+- This is the HIGHEST PRIORITY refactoring as it creates the pattern for all others
+- Implementation order: FEAT-017 → FEAT-015 → FEAT-016
+- The generic pattern should support special cases through virtual methods
+- Equipment and MuscleGroups services can inherit from this base pattern
