@@ -12,17 +12,17 @@ public interface IMuscleGroupService : IReferenceTableService<MuscleGroup>
     /// <summary>
     /// Gets all muscle groups as DTOs
     /// </summary>
-    Task<IEnumerable<ReferenceDataDto>> GetAllAsDtosAsync();
+    Task<IEnumerable<MuscleGroupDto>> GetAllAsDtosAsync();
     
     /// <summary>
     /// Gets muscle group by ID as DTO
     /// </summary>
-    Task<ReferenceDataDto?> GetByIdAsDtoAsync(string id);
+    Task<MuscleGroupDto?> GetByIdAsDtoAsync(string id);
     
     /// <summary>
     /// Gets muscle groups by body part
     /// </summary>
-    Task<IEnumerable<ReferenceDataDto>> GetByBodyPartAsync(string bodyPartId);
+    Task<IEnumerable<MuscleGroupDto>> GetByBodyPartAsync(string bodyPartId);
     
     /// <summary>
     /// Creates a new muscle group
