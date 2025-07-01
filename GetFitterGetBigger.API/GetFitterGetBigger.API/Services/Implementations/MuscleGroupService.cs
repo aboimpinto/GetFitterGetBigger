@@ -31,36 +31,46 @@ public class MuscleGroupService : ReferenceTableServiceBase<MuscleGroup>, IMuscl
     /// <summary>
     /// Gets all muscle groups as DTOs
     /// </summary>
-    public async Task<IEnumerable<ReferenceDataDto>> GetAllAsDtosAsync()
+    public async Task<IEnumerable<MuscleGroupDto>> GetAllAsDtosAsync()
     {
         var muscleGroups = await GetAllAsync();
-        return muscleGroups.Select(mg => new ReferenceDataDto
+        return muscleGroups.Select(mg => new MuscleGroupDto
         {
             Id = mg.Id.ToString(),
-            Value = mg.Name
+            Name = mg.Name,
+            BodyPartId = mg.BodyPartId.ToString(),
+            BodyPartName = mg.BodyPart?.Value,
+            IsActive = mg.IsActive,
+            CreatedAt = mg.CreatedAt,
+            UpdatedAt = mg.UpdatedAt
         });
     }
     
     /// <summary>
     /// Gets muscle group by ID as DTO
     /// </summary>
-    public async Task<ReferenceDataDto?> GetByIdAsDtoAsync(string id)
+    public async Task<MuscleGroupDto?> GetByIdAsDtoAsync(string id)
     {
         var muscleGroup = await GetByIdAsync(id);
         if (muscleGroup == null || !muscleGroup.IsActive)
             return null;
             
-        return new ReferenceDataDto
+        return new MuscleGroupDto
         {
             Id = muscleGroup.Id.ToString(),
-            Value = muscleGroup.Name
+            Name = muscleGroup.Name,
+            BodyPartId = muscleGroup.BodyPartId.ToString(),
+            BodyPartName = muscleGroup.BodyPart?.Value,
+            IsActive = muscleGroup.IsActive,
+            CreatedAt = muscleGroup.CreatedAt,
+            UpdatedAt = muscleGroup.UpdatedAt
         };
     }
     
     /// <summary>
     /// Gets muscle groups by body part
     /// </summary>
-    public async Task<IEnumerable<ReferenceDataDto>> GetByBodyPartAsync(string bodyPartId)
+    public async Task<IEnumerable<MuscleGroupDto>> GetByBodyPartAsync(string bodyPartId)
     {
         if (!BodyPartId.TryParse(bodyPartId, out var parsedBodyPartId))
         {
@@ -69,7 +79,7 @@ public class MuscleGroupService : ReferenceTableServiceBase<MuscleGroup>, IMuscl
         
         var cacheKey = $"{CacheKeyPrefix}:byBodyPart:{bodyPartId}";
         
-        var cached = await _cacheService.GetAsync<IEnumerable<ReferenceDataDto>>(cacheKey);
+        var cached = await _cacheService.GetAsync<IEnumerable<MuscleGroupDto>>(cacheKey);
         if (cached != null)
         {
             return cached;
@@ -79,10 +89,15 @@ public class MuscleGroupService : ReferenceTableServiceBase<MuscleGroup>, IMuscl
         var repository = unitOfWork.GetRepository<IMuscleGroupRepository>();
         var muscleGroups = await repository.GetByBodyPartAsync(parsedBodyPartId);
         
-        var dtos = muscleGroups.Select(mg => new ReferenceDataDto
+        var dtos = muscleGroups.Select(mg => new MuscleGroupDto
         {
             Id = mg.Id.ToString(),
-            Value = mg.Name
+            Name = mg.Name,
+            BodyPartId = mg.BodyPartId.ToString(),
+            BodyPartName = mg.BodyPart?.Value,
+            IsActive = mg.IsActive,
+            CreatedAt = mg.CreatedAt,
+            UpdatedAt = mg.UpdatedAt
         }).ToList();
         
         await _cacheService.SetAsync(cacheKey, dtos, CacheDuration);
