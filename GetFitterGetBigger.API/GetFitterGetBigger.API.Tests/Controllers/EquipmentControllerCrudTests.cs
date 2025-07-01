@@ -2,18 +2,10 @@ using System;
 using System.Threading.Tasks;
 using GetFitterGetBigger.API.Controllers;
 using GetFitterGetBigger.API.DTOs;
-using GetFitterGetBigger.API.Models;
-using GetFitterGetBigger.API.Models.Entities;
-using GetFitterGetBigger.API.Models.SpecializedIds;
-using GetFitterGetBigger.API.Repositories.Interfaces;
 using GetFitterGetBigger.API.Services.Interfaces;
-using GetFitterGetBigger.API.Configuration;
-using GetFitterGetBigger.API.Utilities;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using Moq;
-using Olimpo.EntityFramework.Persistency;
 using Xunit;
 
 namespace GetFitterGetBigger.API.Tests.Controllers
@@ -21,38 +13,16 @@ namespace GetFitterGetBigger.API.Tests.Controllers
     public class EquipmentControllerCrudTests
     {
         private readonly EquipmentController _controller;
-        private readonly Mock<IUnitOfWorkProvider<FitnessDbContext>> _mockUnitOfWorkProvider;
-        private readonly Mock<IWritableUnitOfWork<FitnessDbContext>> _mockUnitOfWork;
-        private readonly Mock<IEquipmentRepository> _mockRepository;
-        private readonly Mock<ICacheService> _mockCacheService;
+        private readonly Mock<IEquipmentService> _mockEquipmentService;
         private readonly Mock<ILogger<EquipmentController>> _mockLogger;
 
         public EquipmentControllerCrudTests()
         {
-            _mockUnitOfWorkProvider = new Mock<IUnitOfWorkProvider<FitnessDbContext>>();
-            _mockUnitOfWork = new Mock<IWritableUnitOfWork<FitnessDbContext>>();
-            _mockRepository = new Mock<IEquipmentRepository>();
-            _mockCacheService = new Mock<ICacheService>();
+            _mockEquipmentService = new Mock<IEquipmentService>();
             _mockLogger = new Mock<ILogger<EquipmentController>>();
 
-            var cacheConfig = new CacheConfiguration
-            {
-                DynamicTables = new TableCacheConfiguration
-                {
-                    DurationInHours = 1,
-                    Tables = new List<string> { "Equipment" }
-                }
-            };
-            var mockCacheOptions = new Mock<IOptions<CacheConfiguration>>();
-            mockCacheOptions.Setup(x => x.Value).Returns(cacheConfig);
-
-            _mockUnitOfWorkProvider.Setup(x => x.CreateWritable()).Returns(_mockUnitOfWork.Object);
-            _mockUnitOfWork.Setup(x => x.GetRepository<IEquipmentRepository>()).Returns(_mockRepository.Object);
-
             _controller = new EquipmentController(
-                _mockUnitOfWorkProvider.Object,
-                _mockCacheService.Object,
-                mockCacheOptions.Object,
+                _mockEquipmentService.Object,
                 _mockLogger.Object);
         }
 
@@ -63,12 +33,16 @@ namespace GetFitterGetBigger.API.Tests.Controllers
         {
             // Arrange
             var request = new CreateEquipmentDto { Name = "Barbell" };
-            var createdEquipment = Equipment.Handler.CreateNew("Barbell");
+            var createdDto = new EquipmentDto 
+            { 
+                Id = "equipment-123",
+                Name = "Barbell",
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow
+            };
             
-            _mockRepository.Setup(x => x.ExistsAsync("Barbell", null))
-                .ReturnsAsync(false);
-            _mockRepository.Setup(x => x.CreateAsync(It.IsAny<Equipment>()))
-                .ReturnsAsync(createdEquipment);
+            _mockEquipmentService.Setup(x => x.CreateEquipmentAsync(request))
+                .ReturnsAsync(createdDto);
 
             // Act
             var result = await _controller.Create(request);
@@ -78,10 +52,6 @@ namespace GetFitterGetBigger.API.Tests.Controllers
             var dto = Assert.IsType<EquipmentDto>(createdResult.Value);
             Assert.Equal("Barbell", dto.Name);
             Assert.True(dto.IsActive);
-            
-            // Verify cache invalidation
-            _mockCacheService.Verify(x => x.RemoveAsync(It.Is<string>(k => k.Contains("GetAll"))), Times.Once);
-            // Repository handles saving, no need to verify CommitAsync
         }
 
         [Fact]
@@ -90,38 +60,31 @@ namespace GetFitterGetBigger.API.Tests.Controllers
             // Arrange
             var request = new CreateEquipmentDto { Name = "Barbell" };
             
-            _mockRepository.Setup(x => x.ExistsAsync("Barbell", null))
-                .ReturnsAsync(true);
+            _mockEquipmentService.Setup(x => x.CreateEquipmentAsync(request))
+                .ThrowsAsync(new InvalidOperationException("Equipment with the name 'Barbell' already exists"));
 
             // Act
             var result = await _controller.Create(request);
 
             // Assert
             var conflictResult = Assert.IsType<ConflictObjectResult>(result);
-            Assert.Equal("Equipment with the name 'Barbell' already exists", conflictResult.Value);
-            
-            _mockRepository.Verify(x => x.CreateAsync(It.IsAny<Equipment>()), Times.Never);
-            _mockUnitOfWork.Verify(x => x.CommitAsync(), Times.Never);
+            Assert.Contains("already exists", conflictResult.Value?.ToString());
         }
 
         [Fact]
-        public async Task Create_TrimsWhitespace()
+        public async Task Create_WithNullRequest_ReturnsBadRequest()
         {
             // Arrange
-            var request = new CreateEquipmentDto { Name = "  Barbell  " };
-            var createdEquipment = Equipment.Handler.CreateNew("Barbell");
+            CreateEquipmentDto? nullRequest = null;
             
-            _mockRepository.Setup(x => x.ExistsAsync("  Barbell  ", null))
-                .ReturnsAsync(false);
-            _mockRepository.Setup(x => x.CreateAsync(It.Is<Equipment>(e => e.Name == "Barbell")))
-                .ReturnsAsync(createdEquipment);
+            _mockEquipmentService.Setup(x => x.CreateEquipmentAsync(It.IsAny<CreateEquipmentDto>()))
+                .ThrowsAsync(new ArgumentNullException());
 
             // Act
-            var result = await _controller.Create(request);
+            var result = await _controller.Create(nullRequest!);
 
             // Assert
-            Assert.IsType<CreatedAtActionResult>(result);
-            _mockRepository.Verify(x => x.CreateAsync(It.Is<Equipment>(e => e.Name == "Barbell")), Times.Once);
+            Assert.IsType<BadRequestObjectResult>(result);
         }
 
         #endregion
@@ -129,89 +92,83 @@ namespace GetFitterGetBigger.API.Tests.Controllers
         #region Update Tests
 
         [Fact]
-        public async Task Update_WithValidData_ReturnsOkResult()
+        public async Task Update_WithValidData_ReturnsOk()
         {
             // Arrange
-            var equipmentId = EquipmentId.New();
-            var existingEquipment = Equipment.Handler.Create(equipmentId, "Barbell");
-            var request = new UpdateEquipmentDto { Name = "Olympic Barbell" };
-            var updatedEquipment = Equipment.Handler.Update(existingEquipment, "Olympic Barbell");
+            var id = "equipment-123";
+            var request = new UpdateEquipmentDto { Name = "Updated Barbell" };
+            var updatedDto = new EquipmentDto 
+            { 
+                Id = id,
+                Name = "Updated Barbell",
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow.AddDays(-1),
+                UpdatedAt = DateTime.UtcNow
+            };
             
-            _mockRepository.Setup(x => x.GetByIdAsync(equipmentId))
-                .ReturnsAsync(existingEquipment);
-            _mockRepository.Setup(x => x.ExistsAsync("Olympic Barbell", equipmentId))
-                .ReturnsAsync(false);
-            _mockRepository.Setup(x => x.UpdateAsync(It.IsAny<Equipment>()))
-                .ReturnsAsync(updatedEquipment);
+            _mockEquipmentService.Setup(x => x.UpdateEquipmentAsync(id, request))
+                .ReturnsAsync(updatedDto);
 
             // Act
-            var result = await _controller.Update(equipmentId.ToString(), request);
+            var result = await _controller.Update(id, request);
 
             // Assert
             var okResult = Assert.IsType<OkObjectResult>(result);
             var dto = Assert.IsType<EquipmentDto>(okResult.Value);
-            Assert.Equal("Olympic Barbell", dto.Name);
+            Assert.Equal("Updated Barbell", dto.Name);
             Assert.NotNull(dto.UpdatedAt);
-            
-            // Verify cache invalidation
-            _mockCacheService.Verify(x => x.RemoveAsync(It.Is<string>(k => k.Contains("GetAll"))), Times.Once);
-            _mockCacheService.Verify(x => x.RemoveAsync(It.Is<string>(k => k.Contains("GetById"))), Times.Once);
-            _mockCacheService.Verify(x => x.RemoveAsync(It.Is<string>(k => k.Contains("barbell"))), Times.AtLeastOnce);
-            // Repository handles saving, no need to verify CommitAsync
         }
 
         [Fact]
-        public async Task Update_WithInvalidIdFormat_ReturnsBadRequest()
+        public async Task Update_WithNonExistentId_ReturnsNotFound()
         {
             // Arrange
-            var request = new UpdateEquipmentDto { Name = "Olympic Barbell" };
-
-            // Act
-            var result = await _controller.Update("invalid-id", request);
-
-            // Assert
-            var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
-            Assert.Contains("Invalid ID format", badRequestResult.Value?.ToString() ?? string.Empty);
-        }
-
-        [Fact]
-        public async Task Update_WhenNotExists_ReturnsNotFound()
-        {
-            // Arrange
-            var equipmentId = EquipmentId.New();
-            var request = new UpdateEquipmentDto { Name = "Olympic Barbell" };
+            var id = "equipment-999";
+            var request = new UpdateEquipmentDto { Name = "Updated Barbell" };
             
-            _mockRepository.Setup(x => x.GetByIdAsync(equipmentId))
-                .ReturnsAsync((Equipment?)null);
+            _mockEquipmentService.Setup(x => x.UpdateEquipmentAsync(id, request))
+                .ThrowsAsync(new InvalidOperationException("Entity with ID 'equipment-999' not found"));
 
             // Act
-            var result = await _controller.Update(equipmentId.ToString(), request);
+            var result = await _controller.Update(id, request);
 
             // Assert
             Assert.IsType<NotFoundResult>(result);
-            _mockRepository.Verify(x => x.UpdateAsync(It.IsAny<Equipment>()), Times.Never);
         }
 
         [Fact]
         public async Task Update_WithDuplicateName_ReturnsConflict()
         {
             // Arrange
-            var equipmentId = EquipmentId.New();
-            var existingEquipment = Equipment.Handler.Create(equipmentId, "Barbell");
+            var id = "equipment-123";
             var request = new UpdateEquipmentDto { Name = "Dumbbell" };
             
-            _mockRepository.Setup(x => x.GetByIdAsync(equipmentId))
-                .ReturnsAsync(existingEquipment);
-            _mockRepository.Setup(x => x.ExistsAsync("Dumbbell", equipmentId))
-                .ReturnsAsync(true);
+            _mockEquipmentService.Setup(x => x.UpdateEquipmentAsync(id, request))
+                .ThrowsAsync(new InvalidOperationException("Equipment with the name 'Dumbbell' already exists"));
 
             // Act
-            var result = await _controller.Update(equipmentId.ToString(), request);
+            var result = await _controller.Update(id, request);
 
             // Assert
             var conflictResult = Assert.IsType<ConflictObjectResult>(result);
-            Assert.Equal("Equipment with the name 'Dumbbell' already exists", conflictResult.Value);
-            _mockRepository.Verify(x => x.UpdateAsync(It.IsAny<Equipment>()), Times.Never);
+            Assert.Contains("already exists", conflictResult.Value?.ToString());
+        }
+
+        [Fact]
+        public async Task Update_WithInvalidIdFormat_ReturnsBadRequest()
+        {
+            // Arrange
+            var id = "invalid-id";
+            var request = new UpdateEquipmentDto { Name = "Updated Barbell" };
+            
+            _mockEquipmentService.Setup(x => x.UpdateEquipmentAsync(id, request))
+                .ThrowsAsync(new ArgumentException("Invalid ID format"));
+
+            // Act
+            var result = await _controller.Update(id, request);
+
+            // Assert
+            Assert.IsType<BadRequestObjectResult>(result);
         }
 
         #endregion
@@ -219,103 +176,68 @@ namespace GetFitterGetBigger.API.Tests.Controllers
         #region Delete Tests
 
         [Fact]
-        public async Task Delete_WhenNotInUse_ReturnsNoContent()
+        public async Task Delete_WithValidId_ReturnsNoContent()
         {
             // Arrange
-            var equipmentId = EquipmentId.New();
-            var existingEquipment = Equipment.Handler.Create(equipmentId, "Barbell");
+            var id = "equipment-123";
             
-            _mockRepository.Setup(x => x.GetByIdAsync(equipmentId))
-                .ReturnsAsync(existingEquipment);
-            _mockRepository.Setup(x => x.IsInUseAsync(equipmentId))
-                .ReturnsAsync(false);
-            _mockRepository.Setup(x => x.DeactivateAsync(equipmentId))
-                .ReturnsAsync(true);
+            _mockEquipmentService.Setup(x => x.DeactivateAsync(id))
+                .Returns(Task.CompletedTask);
 
             // Act
-            var result = await _controller.Delete(equipmentId.ToString());
+            var result = await _controller.Delete(id);
 
             // Assert
             Assert.IsType<NoContentResult>(result);
+        }
+
+        [Fact]
+        public async Task Delete_WithNonExistentId_ReturnsNotFound()
+        {
+            // Arrange
+            var id = "equipment-999";
             
-            // Verify cache invalidation
-            _mockCacheService.Verify(x => x.RemoveAsync(It.Is<string>(k => k.Contains("GetAll"))), Times.Once);
-            _mockCacheService.Verify(x => x.RemoveAsync(It.Is<string>(k => k.Contains("GetById"))), Times.Once);
-            _mockCacheService.Verify(x => x.RemoveAsync(It.Is<string>(k => k.Contains("barbell"))), Times.Once);
-            // Repository handles saving, no need to verify CommitAsync
+            _mockEquipmentService.Setup(x => x.DeactivateAsync(id))
+                .ThrowsAsync(new InvalidOperationException("Equipment with ID 'equipment-999' not found"));
+
+            // Act
+            var result = await _controller.Delete(id);
+
+            // Assert
+            Assert.IsType<NotFoundResult>(result);
+        }
+
+        [Fact]
+        public async Task Delete_WithEquipmentInUse_ReturnsConflict()
+        {
+            // Arrange
+            var id = "equipment-123";
+            
+            _mockEquipmentService.Setup(x => x.DeactivateAsync(id))
+                .ThrowsAsync(new InvalidOperationException("Cannot deactivate equipment that is in use"));
+
+            // Act
+            var result = await _controller.Delete(id);
+
+            // Assert
+            var conflictResult = Assert.IsType<ConflictObjectResult>(result);
+            Assert.Contains("in use", conflictResult.Value?.ToString());
         }
 
         [Fact]
         public async Task Delete_WithInvalidIdFormat_ReturnsBadRequest()
         {
-            // Act
-            var result = await _controller.Delete("invalid-id");
-
-            // Assert
-            var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
-            Assert.Contains("Invalid ID format", badRequestResult.Value?.ToString() ?? string.Empty);
-        }
-
-        [Fact]
-        public async Task Delete_WhenNotExists_ReturnsNotFound()
-        {
             // Arrange
-            var equipmentId = EquipmentId.New();
+            var id = "invalid-id";
             
-            _mockRepository.Setup(x => x.GetByIdAsync(equipmentId))
-                .ReturnsAsync((Equipment?)null);
+            _mockEquipmentService.Setup(x => x.DeactivateAsync(id))
+                .ThrowsAsync(new ArgumentException("Invalid ID format"));
 
             // Act
-            var result = await _controller.Delete(equipmentId.ToString());
+            var result = await _controller.Delete(id);
 
             // Assert
-            Assert.IsType<NotFoundResult>(result);
-            _mockRepository.Verify(x => x.IsInUseAsync(It.IsAny<EquipmentId>()), Times.Never);
-            _mockRepository.Verify(x => x.DeactivateAsync(It.IsAny<EquipmentId>()), Times.Never);
-        }
-
-        [Fact]
-        public async Task Delete_WhenInUse_ReturnsConflict()
-        {
-            // Arrange
-            var equipmentId = EquipmentId.New();
-            var existingEquipment = Equipment.Handler.Create(equipmentId, "Barbell");
-            
-            _mockRepository.Setup(x => x.GetByIdAsync(equipmentId))
-                .ReturnsAsync(existingEquipment);
-            _mockRepository.Setup(x => x.IsInUseAsync(equipmentId))
-                .ReturnsAsync(true);
-
-            // Act
-            var result = await _controller.Delete(equipmentId.ToString());
-
-            // Assert
-            var conflictResult = Assert.IsType<ConflictObjectResult>(result);
-            Assert.Equal("Cannot deactivate equipment that is in use by exercises", conflictResult.Value);
-            _mockRepository.Verify(x => x.DeactivateAsync(It.IsAny<EquipmentId>()), Times.Never);
-            _mockUnitOfWork.Verify(x => x.CommitAsync(), Times.Never);
-        }
-
-        [Fact]
-        public async Task Delete_WhenDeactivateFails_ReturnsNotFound()
-        {
-            // Arrange
-            var equipmentId = EquipmentId.New();
-            var existingEquipment = Equipment.Handler.Create(equipmentId, "Barbell");
-            
-            _mockRepository.Setup(x => x.GetByIdAsync(equipmentId))
-                .ReturnsAsync(existingEquipment);
-            _mockRepository.Setup(x => x.IsInUseAsync(equipmentId))
-                .ReturnsAsync(false);
-            _mockRepository.Setup(x => x.DeactivateAsync(equipmentId))
-                .ReturnsAsync(false);
-
-            // Act
-            var result = await _controller.Delete(equipmentId.ToString());
-
-            // Assert
-            Assert.IsType<NotFoundResult>(result);
-            _mockUnitOfWork.Verify(x => x.CommitAsync(), Times.Never);
+            Assert.IsType<BadRequestObjectResult>(result);
         }
 
         #endregion

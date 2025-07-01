@@ -1,36 +1,30 @@
 using GetFitterGetBigger.API.DTOs;
-using GetFitterGetBigger.API.Models;
-using GetFitterGetBigger.API.Models.Entities;
-using GetFitterGetBigger.API.Models.SpecializedIds;
-using GetFitterGetBigger.API.Repositories.Interfaces;
 using Microsoft.AspNetCore.Mvc;
-using Olimpo.EntityFramework.Persistency;
 using GetFitterGetBigger.API.Services.Interfaces;
-using GetFitterGetBigger.API.Configuration;
-using GetFitterGetBigger.API.Utilities;
-using Microsoft.Extensions.Options;
 
 namespace GetFitterGetBigger.API.Controllers;
 
 /// <summary>
 /// Controller for retrieving equipment data
 /// </summary>
-public class EquipmentController : ReferenceTablesBaseController
+[ApiController]
+[Route("api/ReferenceTables/[controller]")]
+public class EquipmentController : ControllerBase
 {
+    private readonly IEquipmentService _equipmentService;
+    private readonly ILogger<EquipmentController> _logger;
+
     /// <summary>
     /// Initializes a new instance of the <see cref="EquipmentController"/> class
     /// </summary>
-    /// <param name="unitOfWorkProvider">The unit of work provider</param>
-    /// <param name="cacheService">The cache service</param>
-    /// <param name="cacheConfiguration">The cache configuration</param>
+    /// <param name="equipmentService">The equipment service</param>
     /// <param name="logger">The logger</param>
     public EquipmentController(
-        IUnitOfWorkProvider<FitnessDbContext> unitOfWorkProvider,
-        ICacheService cacheService,
-        IOptions<CacheConfiguration> cacheConfiguration,
+        IEquipmentService equipmentService,
         ILogger<EquipmentController> logger)
-        : base(unitOfWorkProvider, cacheService, cacheConfiguration, logger)
     {
+        _equipmentService = equipmentService;
+        _logger = logger;
     }
 
     /// <summary>
@@ -41,20 +35,7 @@ public class EquipmentController : ReferenceTablesBaseController
     [ProducesResponseType(StatusCodes.Status200OK)]
     public async Task<IActionResult> GetAll()
     {
-        var equipment = await GetAllWithCacheAsync(async () =>
-        {
-            using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
-            var repository = unitOfWork.GetRepository<IEquipmentRepository>();
-            return await repository.GetAllAsync();
-        });
-        
-        // Map to DTOs
-        var result = equipment.Select(e => new ReferenceDataDto
-        {
-            Id = e.Id.ToString(),
-            Value = e.Name
-        });
-        
+        var result = await _equipmentService.GetAllAsDtosAsync();
         return Ok(result);
     }
 
@@ -69,27 +50,18 @@ public class EquipmentController : ReferenceTablesBaseController
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> GetById(string id)
     {
-        // Try to parse the ID from the format "equipment-{guid}"
-        if (!EquipmentId.TryParse(id, out var equipmentId))
+        try
         {
-            return BadRequest($"Invalid ID format. Expected format: 'equipment-{{guid}}', got: '{id}'");
+            var equipment = await _equipmentService.GetByIdAsDtoAsync(id);
+            if (equipment == null)
+                return NotFound();
+                
+            return Ok(equipment);
         }
-        
-        var equipment = await GetByIdWithCacheAsync(id, async () =>
+        catch (ArgumentException ex)
         {
-            using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
-            var repository = unitOfWork.GetRepository<IEquipmentRepository>();
-            return await repository.GetByIdAsync(equipmentId);
-        });
-        
-        if (equipment == null || !equipment.IsActive)
-            return NotFound();
-            
-        return Ok(new ReferenceDataDto
-        {
-            Id = equipment.Id.ToString(),
-            Value = equipment.Name
-        });
+            return BadRequest(ex.Message);
+        }
     }
 
     /// <summary>
@@ -102,9 +74,7 @@ public class EquipmentController : ReferenceTablesBaseController
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetByName(string name)
     {
-        using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
-        var repository = unitOfWork.GetRepository<IEquipmentRepository>();
-        var equipment = await repository.GetByNameAsync(name);
+        var equipment = await _equipmentService.GetByNameAsync(name);
         
         if (equipment == null)
             return NotFound();
@@ -126,12 +96,7 @@ public class EquipmentController : ReferenceTablesBaseController
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetByValue(string value)
     {
-        var equipment = await GetByValueWithCacheAsync(value, async () =>
-        {
-            using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
-            var repository = unitOfWork.GetRepository<IEquipmentRepository>();
-            return await repository.GetByNameAsync(value);
-        });
+        var equipment = await _equipmentService.GetByValueAsync(value);
         
         if (equipment == null)
             return NotFound();
@@ -154,37 +119,19 @@ public class EquipmentController : ReferenceTablesBaseController
     [ProducesResponseType(StatusCodes.Status409Conflict)]
     public async Task<IActionResult> Create([FromBody] CreateEquipmentDto request)
     {
-        using var unitOfWork = _unitOfWorkProvider.CreateWritable();
-        var repository = unitOfWork.GetRepository<IEquipmentRepository>();
-        
-        // Check for duplicate name
-        if (await repository.ExistsAsync(request.Name))
+        try
         {
-            return Conflict($"Equipment with the name '{request.Name}' already exists");
+            var dto = await _equipmentService.CreateEquipmentAsync(request);
+            return CreatedAtAction(nameof(GetById), new { id = dto.Id }, dto);
         }
-        
-        // Create the equipment
-        var equipment = Equipment.Handler.CreateNew(request.Name.Trim());
-        var created = await repository.CreateAsync(equipment);
-        
-        // Commit the transaction
-        await unitOfWork.CommitAsync();
-        
-        // Invalidate cache
-        var tableName = GetTableName();
-        await _cacheService.RemoveAsync(CacheKeyGenerator.GetAllKey(tableName));
-        
-        // Map to DTO
-        var dto = new EquipmentDto
+        catch (InvalidOperationException ex) when (ex.Message.Contains("already exists"))
         {
-            Id = created.Id.ToString(),
-            Name = created.Name,
-            IsActive = created.IsActive,
-            CreatedAt = created.CreatedAt,
-            UpdatedAt = created.UpdatedAt
-        };
-        
-        return CreatedAtAction(nameof(GetById), new { id = dto.Id }, dto);
+            return Conflict(ex.Message);
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(ex.Message);
+        }
     }
     
     /// <summary>
@@ -205,72 +152,34 @@ public class EquipmentController : ReferenceTablesBaseController
         _logger.LogInformation("[Equipment Update] Incoming JSON: {@Request}", request);
         _logger.LogInformation("[Equipment Update] Request Name: '{Name}'", request?.Name);
         
-        // Validate equipment ID format
-        if (!EquipmentId.TryParse(id, out var equipmentId))
+        try
         {
-            _logger.LogWarning("[Equipment Update] Invalid ID format: {Id}", id);
-            return BadRequest($"Invalid ID format. Expected format: 'equipment-{{guid}}', got: '{id}'");
+            if (request == null)
+            {
+                return BadRequest("Request body is required");
+            }
+            
+            var dto = await _equipmentService.UpdateEquipmentAsync(id, request);
+            
+            _logger.LogInformation("[Equipment Update] Successfully updated equipment. Response DTO: {@Dto}", dto);
+            
+            return Ok(dto);
         }
-        
-        using var unitOfWork = _unitOfWorkProvider.CreateWritable();
-        var repository = unitOfWork.GetRepository<IEquipmentRepository>();
-        
-        // Get existing equipment
-        var existing = await repository.GetByIdAsync(equipmentId);
-        if (existing == null || !existing.IsActive)
+        catch (InvalidOperationException ex) when (ex.Message.Contains("not found"))
         {
-            _logger.LogWarning("[Equipment Update] Equipment not found or inactive. ID: {Id}", id);
+            _logger.LogWarning("[Equipment Update] Equipment not found. ID: {Id}", id);
             return NotFound();
         }
-        
-        // Log the existing state
-        _logger.LogInformation("[Equipment Update] Existing equipment state - ID: {Id}, Name: '{Name}', IsActive: {IsActive}, CreatedAt: {CreatedAt}, UpdatedAt: {UpdatedAt}", 
-            existing.Id, existing.Name, existing.IsActive, existing.CreatedAt, existing.UpdatedAt);
-        
-        // Check for duplicate name (excluding current)
-        if (request?.Name != null && await repository.ExistsAsync(request.Name, equipmentId))
+        catch (InvalidOperationException ex) when (ex.Message.Contains("already exists"))
         {
-            _logger.LogWarning("[Equipment Update] Duplicate name conflict: '{Name}'", request.Name);
-            return Conflict($"Equipment with the name '{request.Name}' already exists");
+            _logger.LogWarning("[Equipment Update] Duplicate name conflict: '{Name}'", request?.Name);
+            return Conflict(ex.Message);
         }
-        
-        // Update the equipment
-        _logger.LogInformation("[Equipment Update] Updating equipment from '{OldName}' to '{NewName}'", existing.Name, request?.Name?.Trim());
-        var updated = Equipment.Handler.Update(existing, request!.Name!.Trim());
-        
-        // Log the updated entity before saving
-        _logger.LogInformation("[Equipment Update] Updated entity state (before save) - ID: {Id}, Name: '{Name}', IsActive: {IsActive}, CreatedAt: {CreatedAt}, UpdatedAt: {UpdatedAt}", 
-            updated.Id, updated.Name, updated.IsActive, updated.CreatedAt, updated.UpdatedAt);
-        
-        var result = await repository.UpdateAsync(updated);
-        
-        // Commit the transaction
-        await unitOfWork.CommitAsync();
-        
-        // Log the result after saving
-        _logger.LogInformation("[Equipment Update] Saved entity state - ID: {Id}, Name: '{Name}', IsActive: {IsActive}, CreatedAt: {CreatedAt}, UpdatedAt: {UpdatedAt}", 
-            result.Id, result.Name, result.IsActive, result.CreatedAt, result.UpdatedAt);
-        
-        // Invalidate cache
-        var tableName = GetTableName();
-        await _cacheService.RemoveAsync(CacheKeyGenerator.GetAllKey(tableName));
-        await _cacheService.RemoveAsync(CacheKeyGenerator.GetByIdKey(tableName, id));
-        await _cacheService.RemoveAsync(CacheKeyGenerator.GetByValueKey(tableName, existing.Name));
-        await _cacheService.RemoveAsync(CacheKeyGenerator.GetByValueKey(tableName, request.Name));
-        
-        // Map to DTO
-        var dto = new EquipmentDto
+        catch (ArgumentException ex)
         {
-            Id = result.Id.ToString(),
-            Name = result.Name,
-            IsActive = result.IsActive,
-            CreatedAt = result.CreatedAt,
-            UpdatedAt = result.UpdatedAt
-        };
-        
-        _logger.LogInformation("[Equipment Update] Successfully updated equipment. Response DTO: {@Dto}", dto);
-        
-        return Ok(dto);
+            _logger.LogWarning("[Equipment Update] Invalid argument: {Message}", ex.Message);
+            return BadRequest(ex.Message);
+        }
     }
     
     /// <summary>
@@ -285,44 +194,22 @@ public class EquipmentController : ReferenceTablesBaseController
     [ProducesResponseType(StatusCodes.Status409Conflict)]
     public async Task<IActionResult> Delete(string id)
     {
-        // Validate equipment ID format
-        if (!EquipmentId.TryParse(id, out var equipmentId))
+        try
         {
-            return BadRequest($"Invalid ID format. Expected format: 'equipment-{{guid}}', got: '{id}'");
+            await _equipmentService.DeactivateAsync(id);
+            return NoContent();
         }
-        
-        using var unitOfWork = _unitOfWorkProvider.CreateWritable();
-        var repository = unitOfWork.GetRepository<IEquipmentRepository>();
-        
-        // Check if equipment exists
-        var existing = await repository.GetByIdAsync(equipmentId);
-        if (existing == null || !existing.IsActive)
+        catch (InvalidOperationException ex) when (ex.Message.Contains("not found"))
         {
             return NotFound();
         }
-        
-        // Check if equipment is in use
-        if (await repository.IsInUseAsync(equipmentId))
+        catch (InvalidOperationException ex) when (ex.Message.Contains("in use"))
         {
-            return Conflict("Cannot deactivate equipment that is in use by exercises");
+            return Conflict(ex.Message);
         }
-        
-        // Deactivate the equipment
-        var deactivated = await repository.DeactivateAsync(equipmentId);
-        if (!deactivated)
+        catch (ArgumentException ex)
         {
-            return NotFound();
+            return BadRequest(ex.Message);
         }
-        
-        // Commit the transaction
-        await unitOfWork.CommitAsync();
-        
-        // Invalidate cache
-        var tableName = GetTableName();
-        await _cacheService.RemoveAsync(CacheKeyGenerator.GetAllKey(tableName));
-        await _cacheService.RemoveAsync(CacheKeyGenerator.GetByIdKey(tableName, id));
-        await _cacheService.RemoveAsync(CacheKeyGenerator.GetByValueKey(tableName, existing.Name));
-        
-        return NoContent();
     }
 }

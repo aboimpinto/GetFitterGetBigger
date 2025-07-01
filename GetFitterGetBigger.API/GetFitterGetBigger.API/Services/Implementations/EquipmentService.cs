@@ -139,7 +139,9 @@ public class EquipmentService : ReferenceTableServiceBase<Equipment>, IEquipment
     protected override async Task<Equipment?> GetEntityByIdAsync(IReadOnlyUnitOfWork<FitnessDbContext> unitOfWork, string id)
     {
         if (!EquipmentId.TryParse(id, out var equipmentId))
-            return null;
+        {
+            throw new ArgumentException($"Invalid ID format. Expected format: 'equipment-{{guid}}', got: '{id}'");
+        }
             
         var repository = unitOfWork.GetRepository<IEquipmentRepository>();
         return await repository.GetByIdAsync(equipmentId);
@@ -212,7 +214,9 @@ public class EquipmentService : ReferenceTableServiceBase<Equipment>, IEquipment
     protected override async Task<bool> CheckEntityExistsAsync(IWritableUnitOfWork<FitnessDbContext> unitOfWork, string id)
     {
         if (!EquipmentId.TryParse(id, out var equipmentId))
-            return false;
+        {
+            throw new ArgumentException($"Invalid ID format. Expected format: 'equipment-{{guid}}', got: '{id}'");
+        }
             
         var repository = unitOfWork.GetRepository<IEquipmentRepository>();
         var entity = await repository.GetByIdAsync(equipmentId);

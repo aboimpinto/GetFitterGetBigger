@@ -76,7 +76,9 @@ public class CacheService : ICacheService
     {
         try
         {
-            var keysToRemove = _cacheKeys.Keys.Where(k => k.StartsWith(pattern)).ToList();
+            // Handle wildcard pattern (e.g., "MuscleGroups:*" should match all keys starting with "MuscleGroups:")
+            var actualPrefix = pattern.EndsWith("*") ? pattern.Substring(0, pattern.Length - 1) : pattern;
+            var keysToRemove = _cacheKeys.Keys.Where(k => k.StartsWith(actualPrefix)).ToList();
             
             foreach (var key in keysToRemove)
             {

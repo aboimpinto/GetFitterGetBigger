@@ -428,6 +428,12 @@ public class MuscleGroupsControllerTests : IClassFixture<ApiTestFixture>
         
         // Assert
         Assert.NotNull(updatedList);
+        Assert.NotNull(createdDto);
+        
+        // Check if the newly created item is in the list
+        var newItemInList = updatedList.FirstOrDefault(mg => mg.Id == createdDto.Id);
+        Assert.NotNull(newItemInList); // Ensure the new item is actually in the list
+        
         Assert.Equal(initialCount + 1, updatedList.Count);
         Assert.Contains(updatedList, mg => mg.Value == createDto.Name);
         

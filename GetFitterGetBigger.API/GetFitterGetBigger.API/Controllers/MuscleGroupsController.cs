@@ -1,36 +1,30 @@
 using GetFitterGetBigger.API.DTOs;
-using GetFitterGetBigger.API.Models;
-using GetFitterGetBigger.API.Models.Entities;
-using GetFitterGetBigger.API.Models.SpecializedIds;
-using GetFitterGetBigger.API.Repositories.Interfaces;
 using Microsoft.AspNetCore.Mvc;
-using Olimpo.EntityFramework.Persistency;
 using GetFitterGetBigger.API.Services.Interfaces;
-using GetFitterGetBigger.API.Configuration;
-using GetFitterGetBigger.API.Utilities;
-using Microsoft.Extensions.Options;
 
 namespace GetFitterGetBigger.API.Controllers;
 
 /// <summary>
 /// Controller for retrieving muscle group data
 /// </summary>
-public class MuscleGroupsController : ReferenceTablesBaseController
+[ApiController]
+[Route("api/ReferenceTables/[controller]")]
+public class MuscleGroupsController : ControllerBase
 {
+    private readonly IMuscleGroupService _muscleGroupService;
+    private readonly ILogger<MuscleGroupsController> _logger;
+
     /// <summary>
     /// Initializes a new instance of the <see cref="MuscleGroupsController"/> class
     /// </summary>
-    /// <param name="unitOfWorkProvider">The unit of work provider</param>
-    /// <param name="cacheService">The cache service</param>
-    /// <param name="cacheConfiguration">The cache configuration</param>
+    /// <param name="muscleGroupService">The muscle group service</param>
     /// <param name="logger">The logger</param>
     public MuscleGroupsController(
-        IUnitOfWorkProvider<FitnessDbContext> unitOfWorkProvider,
-        ICacheService cacheService,
-        IOptions<CacheConfiguration> cacheConfiguration,
+        IMuscleGroupService muscleGroupService,
         ILogger<MuscleGroupsController> logger)
-        : base(unitOfWorkProvider, cacheService, cacheConfiguration, logger)
     {
+        _muscleGroupService = muscleGroupService;
+        _logger = logger;
     }
 
     /// <summary>
@@ -41,20 +35,7 @@ public class MuscleGroupsController : ReferenceTablesBaseController
     [ProducesResponseType(StatusCodes.Status200OK)]
     public async Task<IActionResult> GetAll()
     {
-        var muscleGroups = await GetAllWithCacheAsync(async () =>
-        {
-            using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
-            var repository = unitOfWork.GetRepository<IMuscleGroupRepository>();
-            return await repository.GetAllAsync();
-        });
-        
-        // Map to DTOs
-        var result = muscleGroups.Select(mg => new ReferenceDataDto
-        {
-            Id = mg.Id.ToString(),
-            Value = mg.Name
-        });
-        
+        var result = await _muscleGroupService.GetAllAsDtosAsync();
         return Ok(result);
     }
 
@@ -69,27 +50,18 @@ public class MuscleGroupsController : ReferenceTablesBaseController
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> GetById(string id)
     {
-        // Try to parse the ID from the format "musclegroup-{guid}"
-        if (!MuscleGroupId.TryParse(id, out var muscleGroupId))
+        try
         {
-            return BadRequest($"Invalid ID format. Expected format: 'musclegroup-{{guid}}', got: '{id}'");
+            var muscleGroup = await _muscleGroupService.GetByIdAsDtoAsync(id);
+            if (muscleGroup == null)
+                return NotFound();
+                
+            return Ok(muscleGroup);
         }
-        
-        var muscleGroup = await GetByIdWithCacheAsync(id, async () =>
+        catch (ArgumentException ex)
         {
-            using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
-            var repository = unitOfWork.GetRepository<IMuscleGroupRepository>();
-            return await repository.GetByIdAsync(muscleGroupId);
-        });
-        
-        if (muscleGroup == null || !muscleGroup.IsActive)
-            return NotFound();
-            
-        return Ok(new ReferenceDataDto
-        {
-            Id = muscleGroup.Id.ToString(),
-            Value = muscleGroup.Name
-        });
+            return BadRequest(ex.Message);
+        }
     }
 
     /// <summary>
@@ -102,9 +74,7 @@ public class MuscleGroupsController : ReferenceTablesBaseController
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetByName(string name)
     {
-        using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
-        var repository = unitOfWork.GetRepository<IMuscleGroupRepository>();
-        var muscleGroup = await repository.GetByNameAsync(name);
+        var muscleGroup = await _muscleGroupService.GetByNameAsync(name);
         
         if (muscleGroup == null)
             return NotFound();
@@ -126,12 +96,7 @@ public class MuscleGroupsController : ReferenceTablesBaseController
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetByValue(string value)
     {
-        var muscleGroup = await GetByValueWithCacheAsync(value, async () =>
-        {
-            using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
-            var repository = unitOfWork.GetRepository<IMuscleGroupRepository>();
-            return await repository.GetByNameAsync(value);
-        });
+        var muscleGroup = await _muscleGroupService.GetByValueAsync(value);
         
         if (muscleGroup == null)
             return NotFound();
@@ -153,31 +118,15 @@ public class MuscleGroupsController : ReferenceTablesBaseController
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> GetByBodyPart(string bodyPartId)
     {
-        // Try to parse the ID from the format "bodypart-{guid}"
-        if (!BodyPartId.TryParse(bodyPartId, out var bodyPartIdObj))
+        try
         {
-            return BadRequest($"Invalid ID format. Expected format: 'bodypart-{{guid}}', got: '{bodyPartId}'");
+            var result = await _muscleGroupService.GetByBodyPartAsync(bodyPartId);
+            return Ok(result);
         }
-        
-        var cacheKey = $"MuscleGroups:ByBodyPart:{bodyPartId}";
-        var muscleGroups = await _cacheService.GetOrCreateAsync(
-            cacheKey,
-            async () =>
-            {
-                using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
-                var repository = unitOfWork.GetRepository<IMuscleGroupRepository>();
-                return await repository.GetByBodyPartAsync(bodyPartIdObj);
-            },
-            GetCacheDuration());
-        
-        // Map to DTOs
-        var result = muscleGroups.Select(mg => new ReferenceDataDto
+        catch (ArgumentException ex)
         {
-            Id = mg.Id.ToString(),
-            Value = mg.Name
-        });
-        
-        return Ok(result);
+            return BadRequest(ex.Message);
+        }
     }
     
     /// <summary>
@@ -191,53 +140,19 @@ public class MuscleGroupsController : ReferenceTablesBaseController
     [ProducesResponseType(StatusCodes.Status409Conflict)]
     public async Task<IActionResult> Create([FromBody] CreateMuscleGroupDto request)
     {
-        // Validate BodyPart ID format
-        if (!BodyPartId.TryParse(request.BodyPartId, out var bodyPartId))
+        try
         {
-            return BadRequest($"Invalid BodyPart ID format. Expected format: 'bodypart-{{guid}}', got: '{request.BodyPartId}'");
+            var dto = await _muscleGroupService.CreateMuscleGroupAsync(request);
+            return CreatedAtAction(nameof(GetById), new { id = dto.Id }, dto);
         }
-        
-        using var unitOfWork = _unitOfWorkProvider.CreateWritable();
-        var repository = unitOfWork.GetRepository<IMuscleGroupRepository>();
-        var bodyPartRepository = unitOfWork.GetRepository<IBodyPartRepository>();
-        
-        // Check if BodyPart exists and is active
-        var bodyPart = await bodyPartRepository.GetByIdAsync(bodyPartId);
-        if (bodyPart == null || !bodyPart.IsActive)
+        catch (InvalidOperationException ex) when (ex.Message.Contains("already exists"))
         {
-            return BadRequest("Body part not found or is inactive");
+            return Conflict(ex.Message);
         }
-        
-        // Check for duplicate name
-        if (await repository.ExistsByNameAsync(request.Name))
+        catch (ArgumentException ex)
         {
-            return Conflict($"A muscle group with the name '{request.Name}' already exists");
+            return BadRequest(ex.Message);
         }
-        
-        // Create the muscle group
-        var muscleGroup = MuscleGroup.Handler.CreateNew(request.Name.Trim(), bodyPartId);
-        var created = await repository.CreateAsync(muscleGroup);
-        
-        await unitOfWork.CommitAsync();
-        
-        // Invalidate cache
-        var tableName = GetTableName();
-        await _cacheService.RemoveAsync(CacheKeyGenerator.GetAllKey(tableName));
-        await _cacheService.RemoveAsync($"MuscleGroups:ByBodyPart:{request.BodyPartId}");
-        
-        // Map to DTO
-        var dto = new MuscleGroupDto
-        {
-            Id = created.Id.ToString(),
-            Name = created.Name,
-            BodyPartId = created.BodyPartId.ToString(),
-            BodyPartName = created.BodyPart?.Value,
-            IsActive = created.IsActive,
-            CreatedAt = created.CreatedAt,
-            UpdatedAt = created.UpdatedAt
-        };
-        
-        return CreatedAtAction(nameof(GetById), new { id = dto.Id }, dto);
     }
     
     /// <summary>
@@ -253,67 +168,23 @@ public class MuscleGroupsController : ReferenceTablesBaseController
     [ProducesResponseType(StatusCodes.Status409Conflict)]
     public async Task<IActionResult> Update(string id, [FromBody] UpdateMuscleGroupDto request)
     {
-        // Validate muscle group ID format
-        if (!MuscleGroupId.TryParse(id, out var muscleGroupId))
+        try
         {
-            return BadRequest($"Invalid ID format. Expected format: 'musclegroup-{{guid}}', got: '{id}'");
+            var dto = await _muscleGroupService.UpdateMuscleGroupAsync(id, request);
+            return Ok(dto);
         }
-        
-        // Validate BodyPart ID format
-        if (!BodyPartId.TryParse(request.BodyPartId, out var bodyPartId))
-        {
-            return BadRequest($"Invalid BodyPart ID format. Expected format: 'bodypart-{{guid}}', got: '{request.BodyPartId}'");
-        }
-        
-        using var unitOfWork = _unitOfWorkProvider.CreateWritable();
-        var repository = unitOfWork.GetRepository<IMuscleGroupRepository>();
-        var bodyPartRepository = unitOfWork.GetRepository<IBodyPartRepository>();
-        
-        // Get existing muscle group
-        var existing = await repository.GetByIdAsync(muscleGroupId);
-        if (existing == null)
+        catch (InvalidOperationException ex) when (ex.Message.Contains("not found"))
         {
             return NotFound();
         }
-        
-        // Check if BodyPart exists and is active
-        var bodyPart = await bodyPartRepository.GetByIdAsync(bodyPartId);
-        if (bodyPart == null || !bodyPart.IsActive)
+        catch (InvalidOperationException ex) when (ex.Message.Contains("already exists"))
         {
-            return BadRequest("Body part not found or is inactive");
+            return Conflict(ex.Message);
         }
-        
-        // Check for duplicate name (excluding current)
-        if (await repository.ExistsByNameAsync(request.Name, muscleGroupId))
+        catch (ArgumentException ex)
         {
-            return Conflict($"A muscle group with the name '{request.Name}' already exists");
+            return BadRequest(ex.Message);
         }
-        
-        // Update the muscle group
-        var updated = MuscleGroup.Handler.Update(existing, request.Name.Trim(), bodyPartId);
-        var result = await repository.UpdateAsync(updated);
-        
-        await unitOfWork.CommitAsync();
-        
-        // Invalidate cache
-        var tableName = GetTableName();
-        await _cacheService.RemoveAsync(CacheKeyGenerator.GetAllKey(tableName));
-        await _cacheService.RemoveAsync($"MuscleGroups:ByBodyPart:{existing.BodyPartId}");
-        await _cacheService.RemoveAsync($"MuscleGroups:ByBodyPart:{request.BodyPartId}");
-        
-        // Map to DTO
-        var dto = new MuscleGroupDto
-        {
-            Id = result.Id.ToString(),
-            Name = result.Name,
-            BodyPartId = result.BodyPartId.ToString(),
-            BodyPartName = result.BodyPart?.Value,
-            IsActive = result.IsActive,
-            CreatedAt = result.CreatedAt,
-            UpdatedAt = result.UpdatedAt
-        };
-        
-        return Ok(dto);
     }
     
     /// <summary>
@@ -328,42 +199,22 @@ public class MuscleGroupsController : ReferenceTablesBaseController
     [ProducesResponseType(StatusCodes.Status409Conflict)]
     public async Task<IActionResult> Delete(string id)
     {
-        // Validate muscle group ID format
-        if (!MuscleGroupId.TryParse(id, out var muscleGroupId))
+        try
         {
-            return BadRequest($"Invalid ID format. Expected format: 'musclegroup-{{guid}}', got: '{id}'");
+            await _muscleGroupService.DeactivateMuscleGroupAsync(id);
+            return NoContent();
         }
-        
-        using var unitOfWork = _unitOfWorkProvider.CreateWritable();
-        var repository = unitOfWork.GetRepository<IMuscleGroupRepository>();
-        
-        // Check if muscle group exists
-        var existing = await repository.GetByIdAsync(muscleGroupId);
-        if (existing == null)
+        catch (InvalidOperationException ex) when (ex.Message.Contains("not found"))
         {
             return NotFound();
         }
-        
-        // Check if it can be deactivated
-        if (!await repository.CanDeactivateAsync(muscleGroupId))
+        catch (InvalidOperationException ex) when (ex.Message.Contains("being used"))
         {
-            return Conflict("Cannot deactivate muscle group as it is being used by active exercises");
+            return Conflict(ex.Message);
         }
-        
-        // Deactivate the muscle group
-        var success = await repository.DeactivateAsync(muscleGroupId);
-        if (!success)
+        catch (ArgumentException ex)
         {
-            return NotFound();
+            return BadRequest(ex.Message);
         }
-        
-        await unitOfWork.CommitAsync();
-        
-        // Invalidate cache
-        var tableName = GetTableName();
-        await _cacheService.RemoveAsync(CacheKeyGenerator.GetAllKey(tableName));
-        await _cacheService.RemoveAsync($"MuscleGroups:ByBodyPart:{existing.BodyPartId}");
-        
-        return NoContent();
     }
 }

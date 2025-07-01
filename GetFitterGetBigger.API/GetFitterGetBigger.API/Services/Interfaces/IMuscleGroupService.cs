@@ -10,7 +10,32 @@ namespace GetFitterGetBigger.API.Services.Interfaces;
 public interface IMuscleGroupService : IReferenceTableService<MuscleGroup>
 {
     /// <summary>
+    /// Gets all muscle groups as DTOs
+    /// </summary>
+    Task<IEnumerable<ReferenceDataDto>> GetAllAsDtosAsync();
+    
+    /// <summary>
+    /// Gets muscle group by ID as DTO
+    /// </summary>
+    Task<ReferenceDataDto?> GetByIdAsDtoAsync(string id);
+    
+    /// <summary>
     /// Gets muscle groups by body part
     /// </summary>
-    Task<IEnumerable<MuscleGroupDto>> GetByBodyPartAsync(string bodyPartId);
+    Task<IEnumerable<ReferenceDataDto>> GetByBodyPartAsync(string bodyPartId);
+    
+    /// <summary>
+    /// Creates a new muscle group
+    /// </summary>
+    Task<MuscleGroupDto> CreateMuscleGroupAsync(CreateMuscleGroupDto request);
+    
+    /// <summary>
+    /// Updates an existing muscle group
+    /// </summary>
+    Task<MuscleGroupDto> UpdateMuscleGroupAsync(string id, UpdateMuscleGroupDto request);
+    
+    /// <summary>
+    /// Deactivates a muscle group
+    /// </summary>
+    Task DeactivateMuscleGroupAsync(string id);
 }

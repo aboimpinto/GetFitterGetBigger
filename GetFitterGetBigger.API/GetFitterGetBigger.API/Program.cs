@@ -66,6 +66,8 @@ builder.Services.AddTransient<IExerciseRepository, ExerciseRepository>();
 
 // Register services
 builder.Services.AddTransient<IExerciseService, ExerciseService>();
+builder.Services.AddTransient<IEquipmentService, EquipmentService>();
+builder.Services.AddTransient<IMuscleGroupService, MuscleGroupService>();
 
 // Register authentication services
 builder.Services.AddTransient<IJwtService, JwtService>();
