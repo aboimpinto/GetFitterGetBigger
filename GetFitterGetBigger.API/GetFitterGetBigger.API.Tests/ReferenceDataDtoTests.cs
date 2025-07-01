@@ -25,7 +25,7 @@ public class ReferenceDataDtoTests : IClassFixture<ApiTestFixture>
     [InlineData("/api/ReferenceTables/Equipment", "equipment-")]
     [InlineData("/api/ReferenceTables/MetricTypes", "metrictype-")]
     [InlineData("/api/ReferenceTables/MovementPatterns", "movementpattern-")]
-    [InlineData("/api/ReferenceTables/MuscleGroups", "musclegroup-")]
+    // MuscleGroups removed - it now returns MuscleGroupDto instead of ReferenceDataDto
     public async Task GetAll_ReturnsCorrectlyFormattedIds(string endpoint, string expectedPrefix)
     {
         // Act
@@ -85,8 +85,8 @@ public class ReferenceDataDtoTests : IClassFixture<ApiTestFixture>
             "/api/ReferenceTables/MuscleRoles",
             "/api/ReferenceTables/Equipment",
             "/api/ReferenceTables/MetricTypes",
-            "/api/ReferenceTables/MovementPatterns",
-            "/api/ReferenceTables/MuscleGroups"
+            "/api/ReferenceTables/MovementPatterns"
+            // MuscleGroups removed - it now returns MuscleGroupDto instead of ReferenceDataDto
         };
         
         foreach (var endpoint in endpoints)

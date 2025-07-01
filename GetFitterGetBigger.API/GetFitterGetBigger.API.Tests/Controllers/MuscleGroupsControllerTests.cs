@@ -27,7 +27,7 @@ public class MuscleGroupsControllerTests : IClassFixture<ApiTestFixture>
         
         // Assert
         response.EnsureSuccessStatusCode();
-        var muscleGroups = await response.Content.ReadFromJsonAsync<List<ReferenceDataDto>>();
+        var muscleGroups = await response.Content.ReadFromJsonAsync<List<MuscleGroupDto>>();
         
         Assert.NotNull(muscleGroups);
         // We don't assert NotEmpty because the database might be empty in some test environments
@@ -39,7 +39,7 @@ public class MuscleGroupsControllerTests : IClassFixture<ApiTestFixture>
         // First get all muscle groups to find a valid ID
         var allResponse = await _client.GetAsync("/api/ReferenceTables/MuscleGroups");
         allResponse.EnsureSuccessStatusCode();
-        var allMuscleGroups = await allResponse.Content.ReadFromJsonAsync<List<ReferenceDataDto>>();
+        var allMuscleGroups = await allResponse.Content.ReadFromJsonAsync<List<MuscleGroupDto>>();
         Assert.NotNull(allMuscleGroups);
         
         // Skip the test if there are no muscle groups
@@ -55,11 +55,11 @@ public class MuscleGroupsControllerTests : IClassFixture<ApiTestFixture>
         
         // Assert
         response.EnsureSuccessStatusCode();
-        var muscleGroup = await response.Content.ReadFromJsonAsync<ReferenceDataDto>();
+        var muscleGroup = await response.Content.ReadFromJsonAsync<MuscleGroupDto>();
         
         Assert.NotNull(muscleGroup);
         Assert.Equal(firstMuscleGroup.Id, muscleGroup.Id);
-        Assert.Equal(firstMuscleGroup.Value, muscleGroup.Value);
+        Assert.Equal(firstMuscleGroup.Name, muscleGroup.Name);
     }
 
     [Fact]
@@ -97,7 +97,7 @@ public class MuscleGroupsControllerTests : IClassFixture<ApiTestFixture>
         // First get all muscle groups to find a valid value
         var allResponse = await _client.GetAsync("/api/ReferenceTables/MuscleGroups");
         allResponse.EnsureSuccessStatusCode();
-        var allMuscleGroups = await allResponse.Content.ReadFromJsonAsync<List<ReferenceDataDto>>();
+        var allMuscleGroups = await allResponse.Content.ReadFromJsonAsync<List<MuscleGroupDto>>();
         Assert.NotNull(allMuscleGroups);
         
         // Skip the test if there are no muscle groups
@@ -109,14 +109,14 @@ public class MuscleGroupsControllerTests : IClassFixture<ApiTestFixture>
         var firstMuscleGroup = allMuscleGroups.First();
         
         // Act
-        var response = await _client.GetAsync($"/api/ReferenceTables/MuscleGroups/ByValue/{firstMuscleGroup.Value}");
+        var response = await _client.GetAsync($"/api/ReferenceTables/MuscleGroups/ByValue/{firstMuscleGroup.Name}");
         
         // Assert
         response.EnsureSuccessStatusCode();
-        var muscleGroup = await response.Content.ReadFromJsonAsync<ReferenceDataDto>();
+        var muscleGroup = await response.Content.ReadFromJsonAsync<MuscleGroupDto>();
         
         Assert.NotNull(muscleGroup);
-        Assert.Equal(firstMuscleGroup.Value, muscleGroup.Value);
+        Assert.Equal(firstMuscleGroup.Name, muscleGroup.Name);
     }
 
     [Fact]
@@ -142,12 +142,12 @@ public class MuscleGroupsControllerTests : IClassFixture<ApiTestFixture>
         // First check if the muscle group exists
         var allResponse = await _client.GetAsync("/api/ReferenceTables/MuscleGroups");
         allResponse.EnsureSuccessStatusCode();
-        var allMuscleGroups = await allResponse.Content.ReadFromJsonAsync<List<ReferenceDataDto>>();
+        var allMuscleGroups = await allResponse.Content.ReadFromJsonAsync<List<MuscleGroupDto>>();
         
         Assert.NotNull(allMuscleGroups);
         
         // Skip the test if there are no muscle groups or if "Pectoralis" doesn't exist
-        if (!allMuscleGroups.Any() || !allMuscleGroups.Any(mg => mg.Value.Equals("Pectoralis", StringComparison.OrdinalIgnoreCase)))
+        if (!allMuscleGroups.Any() || !allMuscleGroups.Any(mg => mg.Name.Equals("Pectoralis", StringComparison.OrdinalIgnoreCase)))
         {
             return; // Skip the test
         }
@@ -157,10 +157,10 @@ public class MuscleGroupsControllerTests : IClassFixture<ApiTestFixture>
         
         // Assert
         response.EnsureSuccessStatusCode();
-        var muscleGroup = await response.Content.ReadFromJsonAsync<ReferenceDataDto>();
+        var muscleGroup = await response.Content.ReadFromJsonAsync<MuscleGroupDto>();
         
         Assert.NotNull(muscleGroup);
-        Assert.Equal("Pectoralis", muscleGroup.Value, ignoreCase: true); // The actual stored value has proper casing
+        Assert.Equal("Pectoralis", muscleGroup.Name, ignoreCase: true); // The actual stored value has proper casing
     }
     
     [Fact]
@@ -403,7 +403,7 @@ public class MuscleGroupsControllerTests : IClassFixture<ApiTestFixture>
         // Arrange - get initial list
         var initialResponse = await _client.GetAsync("/api/ReferenceTables/MuscleGroups");
         initialResponse.EnsureSuccessStatusCode();
-        var initialList = await initialResponse.Content.ReadFromJsonAsync<List<ReferenceDataDto>>();
+        var initialList = await initialResponse.Content.ReadFromJsonAsync<List<MuscleGroupDto>>();
         Assert.NotNull(initialList);
         var initialCount = initialList.Count;
         
@@ -434,7 +434,7 @@ public class MuscleGroupsControllerTests : IClassFixture<ApiTestFixture>
         // Get list again
         var updatedResponse = await _client.GetAsync("/api/ReferenceTables/MuscleGroups");
         updatedResponse.EnsureSuccessStatusCode();
-        var updatedList = await updatedResponse.Content.ReadFromJsonAsync<List<ReferenceDataDto>>();
+        var updatedList = await updatedResponse.Content.ReadFromJsonAsync<List<MuscleGroupDto>>();
         
         // Assert
         Assert.NotNull(updatedList);
@@ -445,7 +445,7 @@ public class MuscleGroupsControllerTests : IClassFixture<ApiTestFixture>
         Assert.NotNull(newItemInList); // Ensure the new item is actually in the list
         
         Assert.Equal(initialCount + 1, updatedList.Count);
-        Assert.Contains(updatedList, mg => mg.Value == createDto.Name);
+        Assert.Contains(updatedList, mg => mg.Name == createDto.Name);
         
         // Clean up
         if (createdDto != null)
