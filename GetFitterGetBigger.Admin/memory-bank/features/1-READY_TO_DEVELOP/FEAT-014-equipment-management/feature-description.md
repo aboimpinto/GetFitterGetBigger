@@ -4,10 +4,25 @@ This document provides the API specifications for Equipment CRUD operations that
 
 ---
 feature: equipment-management
-status: 0-SUBMITTED
+status: 1-READY_TO_DEVELOP
 created: 2025-06-30
 api_version: 1.0
+refined: 2025-07-01
+product_owner_approval: 2025-07-01
+developer_acceptance: 2025-07-01
 ---
+
+## Product Owner Approval
+
+**Date**: 2025-07-01
+**Approved By**: Paulo Aboim Pinto (Product Owner)
+**Status**: APPROVED - Feature refinement is complete and ready for development
+
+## Developer Acceptance
+
+**Date**: 2025-07-01
+**Accepted By**: Paulo Aboim Pinto (Developer)
+**Status**: ACCEPTED - All information needed for implementation is present and clear
 
 ## Overview
 
