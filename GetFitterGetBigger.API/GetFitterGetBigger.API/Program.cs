@@ -102,6 +102,31 @@ builder.Services.AddSwaggerGen(options =>
 
 var app = builder.Build();
 
+// Apply database migrations on startup
+using (var scope = app.Services.CreateScope())
+{
+    var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+    
+    try
+    {
+        logger.LogInformation("Starting database migration check...");
+        
+        var context = scope.ServiceProvider.GetRequiredService<FitnessDbContext>();
+        
+        // This will create the database if it doesn't exist and apply all pending migrations
+        await context.Database.MigrateAsync();
+        
+        logger.LogInformation("Database migration completed successfully");
+    }
+    catch (Exception ex)
+    {
+        logger.LogError(ex, "Database migration failed. Application cannot start with an invalid database schema.");
+        
+        // Exit gracefully to prevent running with mismatched schema
+        Environment.Exit(1);
+    }
+}
+
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {

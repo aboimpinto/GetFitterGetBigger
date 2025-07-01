@@ -13,7 +13,12 @@ Backend service for the GetFitterGetBigger fitness application ecosystem.
 ### Database Setup
 1. Ensure PostgreSQL is running locally
 2. Update connection string in `appsettings.Development.json`
-3. Run migrations:
+3. Database migrations are applied automatically on startup
+   - The application will create the database if it doesn't exist
+   - All pending migrations will be applied automatically
+   - If migration fails, the application will exit to prevent data corruption
+   
+   **Manual migration (optional):**
    ```bash
    dotnet ef database update
    ```
@@ -74,3 +79,33 @@ dotnet test --filter "FullyQualifiedName~PostgreSql"
 3. Follow BUG_IMPLEMENTATION_PROCESS.md for bug fixes
 4. Ensure all tests pass before committing
 5. Update memory bank documentation as needed
+
+## Database Migration Troubleshooting
+
+### Automatic Migration Behavior
+- Migrations run automatically on application startup
+- Database is created if it doesn't exist
+- All pending migrations are applied in order
+- Application exits if migration fails (prevents schema mismatch)
+
+### Common Issues
+1. **Application won't start**
+   - Check PostgreSQL is running
+   - Verify connection string is correct
+   - Check logs for migration errors
+   - Run `dotnet ef database update` manually to see detailed errors
+
+2. **Migration failures**
+   - Each migration runs in its own transaction
+   - Failed migrations are automatically rolled back
+   - Check for schema conflicts or invalid SQL
+
+3. **Debugging migrations**
+   - Enable EF Core debug logging in appsettings.json:
+     ```json
+     "Logging": {
+       "LogLevel": {
+         "Microsoft.EntityFrameworkCore.Migrations": "Debug"
+       }
+     }
+     ```
