@@ -2,9 +2,11 @@
 @using GetFitterGetBigger.Admin.Models.Dtos
 @using GetFitterGetBigger.Admin.Services
 @using GetFitterGetBigger.Admin.Components.Pages.Equipment
+@using GetFitterGetBigger.Admin.Components.Pages.MuscleGroups
 @using Microsoft.AspNetCore.Authorization
 @inject IReferenceDataService ReferenceDataService
 @inject IEquipmentStateService EquipmentStateService
+@inject IMuscleGroupsStateService MuscleGroupsStateService
 @inject NavigationManager Navigation
 @attribute [Authorize]
 @rendermode InteractiveServer
@@ -157,6 +159,170 @@
         </div>
     }
 }
+else if (TableName == "MuscleGroups")
+{
+    <div class="bg-white rounded-lg shadow-md p-6">
+        <div class="flex justify-between items-center mb-6">
+            <div>
+                <h2 class="text-2xl font-semibold text-gray-800">Muscle Groups</h2>
+                <p class="text-gray-600">Manage muscle groups associated with body parts</p>
+            </div>
+            <button @onclick="ShowCreateMuscleGroupForm" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors">
+                Add Muscle Group
+            </button>
+        </div>
+
+        @if (MuscleGroupsStateService.ErrorMessage != null)
+        {
+            <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4">
+                <p>@MuscleGroupsStateService.ErrorMessage</p>
+                <button @onclick="MuscleGroupsStateService.ClearError" class="text-sm underline mt-1">Dismiss</button>
+            </div>
+        }
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Search muscle groups</label>
+                <input type="text" @bind="MuscleGroupsStateService.SearchTerm" @bind:event="oninput"
+                       class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                       placeholder="Search by name...">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Filter by body part</label>
+                <select @bind="MuscleGroupsStateService.SelectedBodyPartId" 
+                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <option value="">All body parts</option>
+                    @if (MuscleGroupsStateService.IsLoadingBodyParts)
+                    {
+                        <option disabled>Loading...</option>
+                    }
+                    else
+                    {
+                        @foreach (var bodyPart in MuscleGroupsStateService.BodyParts.OrderBy(bp => bp.Value))
+                        {
+                            <option value="@bodyPart.Id">@bodyPart.Value</option>
+                        }
+                    }
+                </select>
+            </div>
+        </div>
+
+        @if (MuscleGroupsStateService.IsLoading)
+        {
+            <div class="text-center py-8">
+                <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+                <p class="mt-2 text-gray-600">Loading muscle groups...</p>
+            </div>
+        }
+        else if (MuscleGroupsStateService.FilteredMuscleGroups.Any())
+        {
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Body Part</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Created</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Updated</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        @foreach (var muscleGroup in MuscleGroupsStateService.FilteredMuscleGroups)
+                        {
+                            <tr class="hover:bg-gray-50">
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                    @muscleGroup.Name
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    @(muscleGroup.BodyPartName ?? "Unknown")
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    @if (muscleGroup.IsActive)
+                                    {
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                            Active
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                                            Inactive
+                                        </span>
+                                    }
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    @muscleGroup.CreatedAt.ToString("yyyy-MM-dd")
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    @(muscleGroup.UpdatedAt?.ToString("yyyy-MM-dd") ?? "-")
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                    <button @onclick="() => ShowEditMuscleGroupForm(muscleGroup)" 
+                                            class="text-indigo-600 hover:text-indigo-900 mr-4">
+                                        Edit
+                                    </button>
+                                    <button @onclick="() => ShowDeleteMuscleGroupConfirmation(muscleGroup)" 
+                                            class="text-red-600 hover:text-red-900">
+                                        Delete
+                                    </button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+        else
+        {
+            <div class="text-center py-8">
+                <p class="text-gray-500">No muscle groups found.</p>
+            </div>
+        }
+    </div>
+
+    @if (showMuscleGroupForm)
+    {
+        <GetFitterGetBigger.Admin.Components.Pages.MuscleGroups.MuscleGroupForm 
+            MuscleGroup="@selectedMuscleGroup" 
+            BodyParts="@MuscleGroupsStateService.BodyParts" 
+            OnSave="HandleMuscleGroupSave" 
+            OnCancel="HideMuscleGroupForm" />
+    }
+
+    @if (showDeleteMuscleGroupConfirmation && muscleGroupToDelete != null)
+    {
+        <div class="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center p-4 z-50">
+            <div class="bg-white rounded-lg p-6 max-w-md w-full">
+                <h3 class="text-lg font-medium text-gray-900 mb-4">Delete Muscle Group</h3>
+                <p class="text-sm text-gray-500 mb-6">
+                    Are you sure you want to delete <strong>@muscleGroupToDelete.Name</strong> from <strong>@(muscleGroupToDelete.BodyPartName ?? "Unknown")</strong>? 
+                    This action cannot be undone.
+                </p>
+                @if (MuscleGroupsStateService.IsDeleting)
+                {
+                    <div class="text-center">
+                        <div class="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-gray-900"></div>
+                    </div>
+                }
+                else
+                {
+                    <div class="flex justify-end space-x-3">
+                        <button @onclick="HideDeleteMuscleGroupConfirmation" 
+                                class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50">
+                            Cancel
+                        </button>
+                        <button @onclick="ConfirmDeleteMuscleGroup" 
+                                class="px-4 py-2 text-sm font-medium text-white bg-red-600 border border-transparent rounded-md hover:bg-red-700">
+                            Delete
+                        </button>
+                    </div>
+                }
+            </div>
+        </div>
+    }
+}
 else
 {
     <div class="bg-white rounded-lg shadow-md p-6">
@@ -238,6 +404,12 @@ else
     private EquipmentDto? selectedEquipment;
     private EquipmentDto? equipmentToDelete;
 
+    // MuscleGroups management fields
+    private bool showMuscleGroupForm = false;
+    private bool showDeleteMuscleGroupConfirmation = false;
+    private MuscleGroupDto? selectedMuscleGroup;
+    private MuscleGroupDto? muscleGroupToDelete;
+
     protected override async Task OnInitializedAsync()
     {
         SetDisplayName();
@@ -246,6 +418,11 @@ else
         {
             EquipmentStateService.OnChange += StateHasChanged;
             await EquipmentStateService.InitializeAsync();
+        }
+        else if (TableName == "MuscleGroups")
+        {
+            MuscleGroupsStateService.OnChange += StateHasChanged;
+            await MuscleGroupsStateService.InitializeAsync();
         }
         else
         {
@@ -316,11 +493,61 @@ else
         }
     }
 
+    // MuscleGroups management methods
+    private void ShowCreateMuscleGroupForm()
+    {
+        selectedMuscleGroup = null;
+        showMuscleGroupForm = true;
+    }
+
+    private void ShowEditMuscleGroupForm(MuscleGroupDto muscleGroup)
+    {
+        selectedMuscleGroup = muscleGroup;
+        showMuscleGroupForm = true;
+    }
+
+    private void HideMuscleGroupForm()
+    {
+        showMuscleGroupForm = false;
+        selectedMuscleGroup = null;
+    }
+
+    private async Task HandleMuscleGroupSave()
+    {
+        HideMuscleGroupForm();
+        await MuscleGroupsStateService.LoadMuscleGroupsAsync(); // Refresh the list
+    }
+
+    private void ShowDeleteMuscleGroupConfirmation(MuscleGroupDto muscleGroup)
+    {
+        muscleGroupToDelete = muscleGroup;
+        showDeleteMuscleGroupConfirmation = true;
+    }
+
+    private void HideDeleteMuscleGroupConfirmation()
+    {
+        showDeleteMuscleGroupConfirmation = false;
+        muscleGroupToDelete = null;
+    }
+
+    private async Task ConfirmDeleteMuscleGroup()
+    {
+        if (muscleGroupToDelete != null)
+        {
+            await MuscleGroupsStateService.DeleteMuscleGroupAsync(muscleGroupToDelete.Id);
+            HideDeleteMuscleGroupConfirmation();
+        }
+    }
+
     public void Dispose()
     {
         if (TableName == "Equipment")
         {
             EquipmentStateService.OnChange -= StateHasChanged;
+        }
+        else if (TableName == "MuscleGroups")
+        {
+            MuscleGroupsStateService.OnChange -= StateHasChanged;
         }
     }
 }
