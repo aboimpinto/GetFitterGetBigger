@@ -40,10 +40,20 @@ namespace GetFitterGetBigger.Admin.Services
                     throw new HttpRequestException($"Failed to get equipment: {response.StatusCode}");
                 }
 
-                cachedData = await response.Content.ReadFromJsonAsync<IEnumerable<EquipmentDto>>(_jsonOptions);
+                // The API returns ReferenceDataDto, we need to convert to EquipmentDto
+                var referenceData = await response.Content.ReadFromJsonAsync<IEnumerable<ReferenceDataDto>>(_jsonOptions);
                 
-                if (cachedData != null)
+                if (referenceData != null)
                 {
+                    cachedData = referenceData.Select(rd => new EquipmentDto
+                    {
+                        Id = rd.Id,
+                        Name = rd.Value, // Map 'value' to 'name'
+                        IsActive = true, // Reference data is always active
+                        CreatedAt = DateTime.UtcNow, // Default since not provided by API
+                        UpdatedAt = null
+                    }).ToList();
+                    
                     _cache.Set(CacheKey, cachedData, TimeSpan.FromHours(24));
                 }
             }

@@ -19,9 +19,18 @@
 <div class="bg-white rounded-lg shadow-md p-6">
     <div class="flex justify-between items-center mb-4">
         <h2 class="text-2xl font-semibold text-gray-800">@DisplayName</h2>
-        <button class="bg-gray-300 text-gray-500 font-bold py-2 px-4 rounded cursor-not-allowed" disabled>
-            Add New
-        </button>
+        @if (TableName == "Equipment")
+        {
+            <a href="/equipment" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors">
+                Manage Equipment
+            </a>
+        }
+        else
+        {
+            <button class="bg-gray-300 text-gray-500 font-bold py-2 px-4 rounded cursor-not-allowed" disabled>
+                Add New
+            </button>
+        }
     </div>
 
     @if (items == null)

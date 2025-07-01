@@ -62,7 +62,7 @@ namespace GetFitterGetBigger.Admin.Services
                     {
                         Id = rd.Id,
                         Value = rd.Value,
-                        Description = rd.Description
+                        Description = rd.Description ?? string.Empty
                     });
                     _cache.Set("ExerciseTypes", cachedData, TimeSpan.FromHours(24));
                 }

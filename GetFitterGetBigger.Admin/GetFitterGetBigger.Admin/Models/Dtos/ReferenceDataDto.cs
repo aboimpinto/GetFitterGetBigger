@@ -11,6 +11,6 @@ namespace GetFitterGetBigger.Admin.Models.Dtos
         public required string Value { get; set; }
 
         [JsonPropertyName("description")]
-        public required string Description { get; set; }
+        public string? Description { get; set; }
     }
 }

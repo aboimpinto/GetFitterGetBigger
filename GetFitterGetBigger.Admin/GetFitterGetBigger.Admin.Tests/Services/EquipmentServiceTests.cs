@@ -50,12 +50,12 @@ namespace GetFitterGetBigger.Admin.Tests.Services
         public async Task GetEquipmentAsync_WhenNotCached_FetchesFromApiAndCaches()
         {
             // Arrange
-            var expectedData = new List<EquipmentDto>
+            var referenceData = new List<ReferenceDataDto>
             {
-                new() { Id = "equipment-123", Name = "Barbell", IsActive = true, CreatedAt = DateTime.UtcNow },
-                new() { Id = "equipment-456", Name = "Dumbbell", IsActive = true, CreatedAt = DateTime.UtcNow }
+                new() { Id = "equipment-33445566-7788-99aa-bbcc-ddeeff001122", Value = "Barbell", Description = null },
+                new() { Id = "equipment-44556677-8899-aabb-ccdd-eeff00112233", Value = "Dumbbell", Description = null }
             };
-            _httpMessageHandler.SetupResponse(HttpStatusCode.OK, expectedData);
+            _httpMessageHandler.SetupResponse(HttpStatusCode.OK, referenceData);
 
             // Act
             var result = await _equipmentService.GetEquipmentAsync();
