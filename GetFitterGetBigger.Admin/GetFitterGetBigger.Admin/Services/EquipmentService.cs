@@ -78,10 +78,33 @@ namespace GetFitterGetBigger.Admin.Services
 
             if (!response.IsSuccessStatusCode)
             {
+                var errorContent = await response.Content.ReadAsStringAsync();
+                Console.WriteLine($"[CREATE EQUIPMENT] Error Response: {errorContent}");
                 throw new HttpRequestException($"Failed to create equipment: {response.StatusCode}");
             }
 
-            var created = await response.Content.ReadFromJsonAsync<EquipmentDto>(_jsonOptions);
+            var responseContent = await response.Content.ReadAsStringAsync();
+            Console.WriteLine($"[CREATE EQUIPMENT] Success Response: {responseContent}");
+            
+            // Try to deserialize as ReferenceDataDto first since that's what the API returns
+            EquipmentDto created;
+            try 
+            {
+                var referenceData = JsonSerializer.Deserialize<ReferenceDataDto>(responseContent, _jsonOptions);
+                created = new EquipmentDto
+                {
+                    Id = referenceData!.Id,
+                    Name = referenceData.Value,
+                    IsActive = true,
+                    CreatedAt = DateTime.UtcNow,
+                    UpdatedAt = null
+                };
+            }
+            catch
+            {
+                // If that fails, try as EquipmentDto
+                created = JsonSerializer.Deserialize<EquipmentDto>(responseContent, _jsonOptions)!;
+            }
             
             // Invalidate cache
             _cache.Remove(CacheKey);
@@ -120,8 +143,25 @@ namespace GetFitterGetBigger.Admin.Services
             var responseContent = await response.Content.ReadAsStringAsync();
             Console.WriteLine($"[UPDATE EQUIPMENT] Success Response: {responseContent}");
             
-            // Reset the stream position for deserialization
-            var updated = JsonSerializer.Deserialize<EquipmentDto>(responseContent, _jsonOptions);
+            // Try to deserialize as ReferenceDataDto first since that's what the API returns
+            EquipmentDto updated;
+            try 
+            {
+                var referenceData = JsonSerializer.Deserialize<ReferenceDataDto>(responseContent, _jsonOptions);
+                updated = new EquipmentDto
+                {
+                    Id = referenceData!.Id,
+                    Name = referenceData.Value,
+                    IsActive = true,
+                    CreatedAt = DateTime.UtcNow,
+                    UpdatedAt = DateTime.UtcNow
+                };
+            }
+            catch
+            {
+                // If that fails, try as EquipmentDto
+                updated = JsonSerializer.Deserialize<EquipmentDto>(responseContent, _jsonOptions)!;
+            }
             
             // Invalidate cache
             _cache.Remove(CacheKey);
@@ -132,6 +172,11 @@ namespace GetFitterGetBigger.Admin.Services
         public async Task DeleteEquipmentAsync(string id)
         {
             var requestUrl = $"{_apiBaseUrl}/api/ReferenceTables/Equipment/{id}";
+            
+            // Log the request details
+            Console.WriteLine($"[DELETE EQUIPMENT] URL: {requestUrl}");
+            Console.WriteLine($"[DELETE EQUIPMENT] ID: {id}");
+            
             var response = await _httpClient.DeleteAsync(requestUrl);
 
             if (response.StatusCode == HttpStatusCode.NotFound)
@@ -146,8 +191,12 @@ namespace GetFitterGetBigger.Admin.Services
 
             if (!response.IsSuccessStatusCode)
             {
+                var errorContent = await response.Content.ReadAsStringAsync();
+                Console.WriteLine($"[DELETE EQUIPMENT] Error Response: {errorContent}");
                 throw new HttpRequestException($"Failed to delete equipment: {response.StatusCode}");
             }
+            
+            Console.WriteLine($"[DELETE EQUIPMENT] Success: Equipment {id} deleted");
 
             // Invalidate cache
             _cache.Remove(CacheKey);

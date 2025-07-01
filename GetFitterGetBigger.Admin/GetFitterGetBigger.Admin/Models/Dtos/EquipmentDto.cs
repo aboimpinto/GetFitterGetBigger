@@ -22,13 +22,13 @@ namespace GetFitterGetBigger.Admin.Models.Dtos
 
     public class CreateEquipmentDto
     {
-        [JsonPropertyName("value")]
+        [JsonPropertyName("name")]
         public required string Name { get; set; }
     }
 
     public class UpdateEquipmentDto
     {
-        [JsonPropertyName("value")]
+        [JsonPropertyName("name")]
         public required string Name { get; set; }
     }
 }
