@@ -234,8 +234,12 @@ export const useExercises = (filters) => {
         {
           "muscleGroup": {
             "id": "musclegroup-xxx",
-            "value": "Quadriceps",
-            "description": "Front thigh muscles"
+            "name": "Quadriceps",
+            "bodyPartId": "bodypart-legs-xxx",
+            "bodyPartName": "Legs",
+            "isActive": true,
+            "createdAt": "2025-07-01T10:00:00Z",
+            "updatedAt": "2025-07-01T10:00:00Z"
           },
           "role": {
             "id": "role-1",
@@ -246,8 +250,12 @@ export const useExercises = (filters) => {
         {
           "muscleGroup": {
             "id": "musclegroup-yyy",
-            "value": "Glutes",
-            "description": "Buttock muscles"
+            "name": "Glutes",
+            "bodyPartId": "bodypart-legs-xxx",
+            "bodyPartName": "Legs",
+            "isActive": true,
+            "createdAt": "2025-07-01T10:00:00Z",
+            "updatedAt": "2025-07-01T10:00:00Z"
           },
           "role": {
             "id": "role-2",
@@ -355,7 +363,7 @@ const ExerciseDetailScreen = ({ route }) => {
         <Text style={styles.sectionTitle}>Target Muscles</Text>
         {exercise.muscleGroups.map(mg => (
           <View key={mg.muscleGroup.id} style={styles.muscleItem}>
-            <Text style={styles.muscleName}>{mg.muscleGroup.value}</Text>
+            <Text style={styles.muscleName}>{mg.muscleGroup.name}</Text>
             <Text style={styles.muscleRole}>{mg.role.value}</Text>
           </View>
         ))}
@@ -453,7 +461,7 @@ const ExerciseDetail = () => {
         <div className="muscle-groups">
           {exercise.muscleGroups.map(mg => (
             <div key={mg.muscleGroup.id} className="muscle-group">
-              <span className="muscle-name">{mg.muscleGroup.value}</span>
+              <span className="muscle-name">{mg.muscleGroup.name}</span>
               <span className={`role-badge role-${mg.role.value.toLowerCase()}`}>
                 {mg.role.value}
               </span>
@@ -614,7 +622,7 @@ public class DifficultyDto
                 <ItemsControl.ItemTemplate>
                     <DataTemplate>
                         <StackPanel Orientation="Horizontal" Margin="0,5">
-                            <TextBlock Text="{Binding MuscleGroup.Value}" Margin="0,0,10,0" />
+                            <TextBlock Text="{Binding MuscleGroup.Name}" Margin="0,0,10,0" />
                             <TextBlock Text="{Binding Role.Value}" 
                                        Classes="role-badge" />
                         </StackPanel>
@@ -1147,7 +1155,7 @@ import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
 const ExerciseCard = ({ exercise, onPress }) => {
   const primaryMuscles = exercise.muscleGroups
     .filter(mg => mg.role.value === 'Primary')
-    .map(mg => mg.muscleGroup.value);
+    .map(mg => mg.muscleGroup.name);
 
   return (
     <TouchableOpacity style={styles.card} onPress={() => onPress(exercise)}>

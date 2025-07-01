@@ -52,12 +52,29 @@ namespace GetFitterGetBigger.Admin.Tests.Services
         public async Task GetMuscleGroupsAsync_ShouldReturnMuscleGroups_WhenApiCallSucceeds()
         {
             // Arrange
-            var referenceData = new[]
+            var muscleGroups = new[]
             {
-                new ReferenceDataDto { Id = "musclegroup-1", Value = "Biceps", Description = "Biceps muscle" },
-                new ReferenceDataDto { Id = "musclegroup-2", Value = "Triceps", Description = "Triceps muscle" }
+                new MuscleGroupDto 
+                { 
+                    Id = "musclegroup-1", 
+                    Name = "Biceps", 
+                    BodyPartId = "bodypart-1",
+                    BodyPartName = "Arms",
+                    IsActive = true,
+                    CreatedAt = DateTime.UtcNow
+                },
+                new MuscleGroupDto 
+                { 
+                    Id = "musclegroup-2", 
+                    Name = "Triceps", 
+                    BodyPartId = "bodypart-1",
+                    BodyPartName = "Arms",
+                    IsActive = true,
+                    CreatedAt = DateTime.UtcNow
+                }
             };
-            _httpMessageHandler.SetupResponse(HttpStatusCode.OK, referenceData);
+            // The API returns a simple array of MuscleGroupDto
+            _httpMessageHandler.SetupResponse(HttpStatusCode.OK, muscleGroups);
 
             // Act
             var result = await _muscleGroupsService.GetMuscleGroupsAsync();
@@ -66,6 +83,7 @@ namespace GetFitterGetBigger.Admin.Tests.Services
             result.Should().HaveCount(2);
             result.First().Id.Should().Be("musclegroup-1");
             result.First().Name.Should().Be("Biceps");
+            result.First().BodyPartName.Should().Be("Arms");
             result.First().IsActive.Should().BeTrue();
             _httpMessageHandler.Requests.Should().HaveCount(1);
         }
@@ -74,11 +92,19 @@ namespace GetFitterGetBigger.Admin.Tests.Services
         public async Task GetMuscleGroupsAsync_ShouldReturnCachedData_WhenCalledSecondTime()
         {
             // Arrange
-            var referenceData = new[]
+            var muscleGroups = new[]
             {
-                new ReferenceDataDto { Id = "musclegroup-1", Value = "Biceps", Description = "Biceps muscle" }
+                new MuscleGroupDto 
+                { 
+                    Id = "musclegroup-1", 
+                    Name = "Biceps", 
+                    BodyPartId = "bodypart-1",
+                    IsActive = true,
+                    CreatedAt = DateTime.UtcNow
+                }
             };
-            _httpMessageHandler.SetupResponse(HttpStatusCode.OK, referenceData);
+            // The API returns a simple array of MuscleGroupDto
+            _httpMessageHandler.SetupResponse(HttpStatusCode.OK, muscleGroups);
 
             // Act
             await _muscleGroupsService.GetMuscleGroupsAsync(); // First call
@@ -108,12 +134,28 @@ namespace GetFitterGetBigger.Admin.Tests.Services
         {
             // Arrange
             var bodyPartId = "bodypart-123";
-            var referenceData = new[]
+            var muscleGroups = new[]
             {
-                new ReferenceDataDto { Id = "musclegroup-1", Value = "Biceps", Description = "Biceps muscle" },
-                new ReferenceDataDto { Id = "musclegroup-2", Value = "Brachialis", Description = "Brachialis muscle" }
+                new MuscleGroupDto 
+                { 
+                    Id = "musclegroup-1", 
+                    Name = "Biceps", 
+                    BodyPartId = bodyPartId,
+                    BodyPartName = "Arms",
+                    IsActive = true,
+                    CreatedAt = DateTime.UtcNow
+                },
+                new MuscleGroupDto 
+                { 
+                    Id = "musclegroup-2", 
+                    Name = "Brachialis", 
+                    BodyPartId = bodyPartId,
+                    BodyPartName = "Arms",
+                    IsActive = true,
+                    CreatedAt = DateTime.UtcNow
+                }
             };
-            _httpMessageHandler.SetupResponse(HttpStatusCode.OK, referenceData);
+            _httpMessageHandler.SetupResponse(HttpStatusCode.OK, muscleGroups);
 
             // Act
             var result = await _muscleGroupsService.GetMuscleGroupsByBodyPartAsync(bodyPartId);
@@ -130,12 +172,32 @@ namespace GetFitterGetBigger.Admin.Tests.Services
             // Arrange
             var bodyPartId1 = "bodypart-123";
             var bodyPartId2 = "bodypart-456";
-            var referenceData1 = new[] { new ReferenceDataDto { Id = "musclegroup-1", Value = "Biceps", Description = "Biceps muscle" } };
-            var referenceData2 = new[] { new ReferenceDataDto { Id = "musclegroup-2", Value = "Quadriceps", Description = "Quadriceps muscle" } };
+            var muscleGroups1 = new[] 
+            { 
+                new MuscleGroupDto 
+                { 
+                    Id = "musclegroup-1", 
+                    Name = "Biceps", 
+                    BodyPartId = bodyPartId1,
+                    IsActive = true,
+                    CreatedAt = DateTime.UtcNow
+                } 
+            };
+            var muscleGroups2 = new[] 
+            { 
+                new MuscleGroupDto 
+                { 
+                    Id = "musclegroup-2", 
+                    Name = "Quadriceps", 
+                    BodyPartId = bodyPartId2,
+                    IsActive = true,
+                    CreatedAt = DateTime.UtcNow
+                } 
+            };
 
             _httpMessageHandler
-                .SetupResponse(HttpStatusCode.OK, referenceData1)
-                .SetupResponse(HttpStatusCode.OK, referenceData2);
+                .SetupResponse(HttpStatusCode.OK, muscleGroups1)
+                .SetupResponse(HttpStatusCode.OK, muscleGroups2);
 
             // Act
             var result1 = await _muscleGroupsService.GetMuscleGroupsByBodyPartAsync(bodyPartId1);

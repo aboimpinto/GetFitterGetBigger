@@ -33,6 +33,7 @@ namespace GetFitterGetBigger.Admin.Services
         {
             if (!_cache.TryGetValue(CacheKey, out IEnumerable<MuscleGroupDto>? cachedData))
             {
+                // Try the simple endpoint first (without pagination parameters)
                 var requestUrl = $"{_apiBaseUrl}/api/ReferenceTables/MuscleGroups";
                 var response = await _httpClient.GetAsync(requestUrl);
                 
@@ -41,24 +42,60 @@ namespace GetFitterGetBigger.Admin.Services
                     throw new HttpRequestException($"Failed to get muscle groups: {response.StatusCode}");
                 }
 
-                // The API returns ReferenceDataDto for list operations
-                var referenceData = await response.Content.ReadFromJsonAsync<IEnumerable<ReferenceDataDto>>(_jsonOptions);
-                
-                if (referenceData != null)
+                // Log the raw response to debug the issue
+                var responseContent = await response.Content.ReadAsStringAsync();
+                Console.WriteLine($"[GET MUSCLE GROUPS] Raw Response: {responseContent}");
+
+                try
                 {
-                    // For the list view, we only have id and name from ReferenceDataDto
-                    // We'll need to enhance this with body part information in the UI
-                    cachedData = referenceData.Select(rd => new MuscleGroupDto
-                    {
-                        Id = rd.Id,
-                        Name = rd.Value, // Map 'value' to 'name'
-                        BodyPartId = string.Empty, // Not provided by reference endpoint
-                        IsActive = true, // Reference data is always active
-                        CreatedAt = DateTime.UtcNow, // Default since not provided
-                        UpdatedAt = null
-                    }).ToList();
+                    // First try to deserialize as an array (simple format)
+                    cachedData = JsonSerializer.Deserialize<IEnumerable<MuscleGroupDto>>(responseContent, _jsonOptions);
                     
-                    _cache.Set(CacheKey, cachedData, TimeSpan.FromHours(24));
+                    if (cachedData != null)
+                    {
+                        _cache.Set(CacheKey, cachedData, TimeSpan.FromHours(24));
+                    }
+                }
+                catch (JsonException)
+                {
+                    // If array deserialization fails, try paginated result
+                    try
+                    {
+                        var pagedResult = JsonSerializer.Deserialize<MuscleGroupPagedResultDto>(responseContent, _jsonOptions);
+                        
+                        if (pagedResult != null)
+                        {
+                            cachedData = pagedResult.Items;
+                            _cache.Set(CacheKey, cachedData, TimeSpan.FromHours(24));
+                        }
+                    }
+                    catch (JsonException ex)
+                    {
+                        Console.WriteLine($"[GET MUSCLE GROUPS] Deserialization error: {ex.Message}");
+                        // Last attempt: try as ReferenceDataDto array (old format)
+                        try
+                        {
+                            var referenceData = JsonSerializer.Deserialize<IEnumerable<ReferenceDataDto>>(responseContent, _jsonOptions);
+                            if (referenceData != null)
+                            {
+                                cachedData = referenceData.Select(rd => new MuscleGroupDto
+                                {
+                                    Id = rd.Id,
+                                    Name = rd.Value,
+                                    BodyPartId = string.Empty,
+                                    IsActive = true,
+                                    CreatedAt = DateTime.UtcNow,
+                                    UpdatedAt = null
+                                }).ToList();
+                                
+                                _cache.Set(CacheKey, cachedData, TimeSpan.FromHours(24));
+                            }
+                        }
+                        catch
+                        {
+                            throw new InvalidOperationException($"Failed to deserialize muscle groups response. Raw response: {responseContent}", ex);
+                        }
+                    }
                 }
             }
             
@@ -79,20 +116,11 @@ namespace GetFitterGetBigger.Admin.Services
                     throw new HttpRequestException($"Failed to get muscle groups by body part: {response.StatusCode}");
                 }
 
-                var referenceData = await response.Content.ReadFromJsonAsync<IEnumerable<ReferenceDataDto>>(_jsonOptions);
+                // The API now returns an array of MuscleGroupDto
+                cachedData = await response.Content.ReadFromJsonAsync<IEnumerable<MuscleGroupDto>>(_jsonOptions);
                 
-                if (referenceData != null)
+                if (cachedData != null)
                 {
-                    cachedData = referenceData.Select(rd => new MuscleGroupDto
-                    {
-                        Id = rd.Id,
-                        Name = rd.Value,
-                        BodyPartId = bodyPartId, // We know this from the request
-                        IsActive = true,
-                        CreatedAt = DateTime.UtcNow,
-                        UpdatedAt = null
-                    }).ToList();
-                    
                     _cache.Set(cacheKey, cachedData, TimeSpan.FromHours(24));
                 }
             }

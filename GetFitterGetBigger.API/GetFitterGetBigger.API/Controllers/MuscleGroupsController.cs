@@ -178,6 +178,12 @@ public class MuscleGroupsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status409Conflict)]
     public async Task<IActionResult> Update(string id, [FromBody] UpdateMuscleGroupDto request)
     {
+        _logger.LogInformation("=== MuscleGroup Update Request ===");
+        _logger.LogInformation("ID: {Id}", id);
+        _logger.LogInformation("Request Name: {Name}", request.Name);
+        _logger.LogInformation("Request BodyPartId: {BodyPartId}", request.BodyPartId);
+        _logger.LogInformation("=================================");
+        
         try
         {
             var dto = await _muscleGroupService.UpdateMuscleGroupAsync(id, request);

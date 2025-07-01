@@ -154,18 +154,27 @@
 
 **Final Checkpoint:** All tests green, build clean ✅
 
-### Category 6: Manual Testing & User Acceptance - Estimated: 30m
-- **Task 6.1:** Manual testing and user acceptance `[ReadyForTesting]` (Est: 30m)
+### Category 6: API Contract Updates - Estimated: 30m
+- **Task 6.1:** Update service to use MuscleGroupDto instead of ReferenceDataDto `[Implemented: Fixed API contract | Started: 2025-07-01 22:40 | Finished: 2025-07-01 22:55 | Duration: 0h 15m]` (Est: 30m)
+  - Updated MuscleGroupsService to expect MuscleGroupPagedResultDto from GET /api/ReferenceTables/MuscleGroups
+  - Updated GetMuscleGroupsByBodyPartAsync to expect MuscleGroupDto[] directly
+  - Added MuscleGroupPagedResultDto to DTOs
+  - Updated all service tests to use correct DTOs
+  - All 244 tests passing
+
+### Category 7: Manual Testing & User Acceptance - Estimated: 30m
+- **Task 7.1:** Manual testing and user acceptance `[ReadyForTesting]` (Est: 30m)
   - Test all CRUD operations for muscle groups
   - Verify body part filtering works correctly
   - Test validation rules (unique names per body part)
   - Test error handling scenarios
   - Verify integration with existing reference tables UI
   - Confirm all functionality meets requirements
+  - Verify bodyPartName is displayed correctly in the UI
 
 ## Implementation Summary Report
-**Date/Time**: 2025-07-01 22:15
-**Duration**: 1h 5m (Started: 21:10, Finished: 22:15)
+**Date/Time**: 2025-07-01 22:55
+**Duration**: 1h 20m (Started: 21:10, Finished: 22:15, API fix: 22:40-22:55)
 
 ### Quality Metrics Comparison
 | Metric | Baseline | Final | Change |
@@ -189,10 +198,10 @@
 
 ## Time Tracking Summary
 - **Total Estimated Time:** 20 hours
-- **Total Actual Time:** 1h 5m (Task 1.1: 10m, Task 1.2: 10m, Task 2.1: 10m, Task 2.2: 10m, Task 3.1: 15m, Others: integrated/skipped)
-- **AI Assistance Impact:** 94.6% reduction in time (19h saved)
+- **Total Actual Time:** 1h 20m (Task 1.1: 10m, Task 1.2: 10m, Task 2.1: 10m, Task 2.2: 10m, Task 3.1: 15m, Task 6.1: 15m, Others: integrated/skipped)
+- **AI Assistance Impact:** 93.3% reduction in time (18h 40m saved)
 - **Implementation Started:** 2025-07-01 21:10
-- **Implementation Completed:** 2025-07-01 22:15
+- **Implementation Completed:** 2025-07-01 22:55 (includes API contract fix)
 
 ## Notes
 - Each implementation task must be immediately followed by its test task
