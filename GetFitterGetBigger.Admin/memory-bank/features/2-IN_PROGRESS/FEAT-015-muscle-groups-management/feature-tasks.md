@@ -40,7 +40,7 @@
 - **Task 0.3:** Fix linting errors `[ReadyToDevelop]` (Est: TBD)
 
 ### Category 1: API Service Layer - Estimated: 4h
-- **Task 1.1:** Create MuscleGroupsService for API integration `[ReadyToDevelop]` (Est: 2h)
+- **Task 1.1:** Create MuscleGroupsService for API integration `[Implemented: ffbc9382 | Started: 2025-07-01 21:15 | Finished: 2025-07-01 21:25 | Duration: 0h 10m]` (Est: 2h)
   - Implement getMuscleGroups() method
   - Implement getMuscleGroupsByBodyPart() method
   - Implement createMuscleGroup() method
@@ -48,7 +48,7 @@
   - Implement deleteMuscleGroup() method
   - Add TypeScript interfaces for all DTOs
   - Handle error responses and transformations
-- **Task 1.2:** Write unit tests for MuscleGroupsService `[ReadyToDevelop]` (Est: 2h)
+- **Task 1.2:** Write unit tests for MuscleGroupsService `[InProgress: Started: 2025-07-01 21:25]` (Est: 2h)
   - Test all CRUD operations with MSW mocks
   - Test getMuscleGroupsByBodyPart filtering
   - Test error scenarios (401, 403, 404, 409, 500)
