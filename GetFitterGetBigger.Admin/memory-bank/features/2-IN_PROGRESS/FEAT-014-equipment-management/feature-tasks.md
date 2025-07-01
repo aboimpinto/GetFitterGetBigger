@@ -38,14 +38,14 @@
 - **Task 0.1:** Fix code formatting issues `[Implemented: b105c9c8 | Started: 2025-07-01 10:35 | Finished: 2025-07-01 10:36 | Duration: 0h 1m]`
 
 ### Category 1: API Service Layer - Estimated: 3h
-- **Task 1.1:** Create EquipmentService for API integration `[Implemented: equipment-service | Started: 2025-07-01 10:40 | Finished: 2025-07-01 10:50 | Duration: 0h 10m]` (Est: 1h 30m)
+- **Task 1.1:** Create EquipmentService for API integration `[Implemented: 9728cbde | Started: 2025-07-01 10:40 | Finished: 2025-07-01 10:50 | Duration: 0h 10m]` (Est: 1h 30m)
   - Implement getEquipment() method
   - Implement createEquipment() method
   - Implement updateEquipment() method
   - Implement deleteEquipment() method
   - Add TypeScript interfaces for DTOs
   - Handle error responses and transformations
-- **Task 1.2:** Write unit tests for EquipmentService `[ReadyToDevelop]` (Est: 1h 30m)
+- **Task 1.2:** Write unit tests for EquipmentService `[Implemented: equipment-tests | Started: 2025-07-01 10:51 | Finished: 2025-07-01 11:00 | Duration: 0h 9m]` (Est: 1h 30m)
   - Test all CRUD operations with MSW mocks
   - Test error scenarios (401, 403, 404, 409, 500)
   - Test data transformation
