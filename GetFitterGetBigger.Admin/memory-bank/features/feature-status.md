@@ -16,7 +16,7 @@ This file serves as a central dashboard for tracking the status of all features 
 | API Endpoint Configuration | SUBMITTED | High | FEAT-003 | 2025-06-29 | [Details](0-SUBMITTED/FEAT-003-api-endpoint-configuration/feature-description.md) |
 | Workout Builder | SUBMITTED | Medium | FEAT-012 | 2025-06-29 | [Details](0-SUBMITTED/FEAT-012-workout-builder/overview.md) |
 | Media Upload | SUBMITTED | Medium | FEAT-004 | 2025-06-29 | [Details](0-SUBMITTED/FEAT-004-media-upload/feature-description.md) |
-| Reference Table Inline Creation | SUBMITTED | Medium | - | 2025-06-29 | [Details](0-SUBMITTED/FEAT-013-reference-table-inline-creation/feature-description.md) |
+| Reference Table Inline Creation | READY TO DEVELOP | Medium | FEAT-013 | 2025-07-01 | [Details](1-READY_TO_DEVELOP/FEAT-013-reference-table-inline-creation/feature-description.md) |
 | Equipment Management | COMPLETED | High | FEAT-014 | 2025-07-01 | [Details](3-COMPLETED/FEAT-014-equipment-management/completion-summary.md) |
 | Muscle Groups Management | SUBMITTED | High | FEAT-015 | 2025-07-01 | [Details](0-SUBMITTED/FEAT-015-muscle-groups-management/feature-description.md) |
 

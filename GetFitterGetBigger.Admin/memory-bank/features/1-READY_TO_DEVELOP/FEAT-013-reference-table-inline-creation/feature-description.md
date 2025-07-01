@@ -39,10 +39,9 @@ This feature enables inline creation of reference data directly from forms, impr
    - Proper cache invalidation occurs
 
 4. **Supported Reference Tables**
-   - Equipment (CRUD enabled)
-   - MuscleGroups (CRUD enabled)
-   - MetricTypes (CRUD enabled)  
-   - MovementPatterns (CRUD enabled)
+   - Equipment (CRUD enabled) - PRIMARY FOCUS
+   - MuscleGroups (CRUD enabled) - PRIMARY FOCUS
+   - Note: For this initial implementation, we will focus only on Equipment and Muscle Groups as the customizable reference tables
 
 ### Non-Functional Requirements
 1. **Performance**
@@ -64,7 +63,7 @@ This feature enables inline creation of reference data directly from forms, impr
 
 ### API Requirements
 - MuscleGroup CRUD endpoints ✅ Complete (merged to master Jan 29, 2025)
-- Equipment, MetricTypes, MovementPatterns CRUD endpoints need verification
+- Equipment CRUD endpoints ✅ Complete (merged to master Jan 29, 2025)
 - Proper authorization for PT-Tier users ready to implement
 
 ### Frontend Requirements
