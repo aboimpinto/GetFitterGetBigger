@@ -49,8 +49,8 @@
 ## Phase 3: Create Specific Service Implementations - Estimated: 5h
 
 ### Equipment Service (For FEAT-015)
-- **Task 3.1:** Create IEquipmentService interface extending IReferenceTableService<Equipment> `[InProgress: Started: 2025-01-07 15:05]` (Est: 15m)
-- **Task 3.2:** Create EquipmentService implementation `[ReadyToDevelop]` (Est: 30m)
+- **Task 3.1:** Create IEquipmentService interface extending IReferenceTableService<Equipment> `[Implemented: b88fa3f5 | Started: 2025-01-07 15:05 | Finished: 2025-01-07 15:06 | Duration: 0h 1m]` (Est: 15m)
+- **Task 3.2:** Create EquipmentService implementation `[InProgress: Started: 2025-01-07 15:07]` (Est: 30m)
 - **Task 3.3:** Write unit tests for EquipmentService `[ReadyToDevelop]` (Est: 30m)
 - **Task 3.4:** Update EquipmentController to use IEquipmentService `[ReadyToDevelop]` (Est: 15m)
 
