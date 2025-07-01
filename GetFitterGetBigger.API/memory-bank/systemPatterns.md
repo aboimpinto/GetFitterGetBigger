@@ -18,9 +18,58 @@ The GetFitterGetBigger API Application serves as the central hub for all data op
 ### Design Patterns
 
 - **Repository Pattern**: For data access abstraction
+- **Service Layer Pattern**: MANDATORY - All business logic must reside in service layer
 - **Dependency Injection**: For loose coupling and testability
+- **Unit of Work Pattern**: For managing database transactions
 - **CQRS (Command Query Responsibility Segregation)**: Potentially for separating read and write operations
 - **Mediator Pattern**: Potentially for handling communication between components
+
+### Architectural Rules (MANDATORY)
+
+#### Controller Layer Rules
+- **Controllers MUST NOT directly access repositories** - This is FORBIDDEN
+- **Controllers MUST NOT directly access UnitOfWork (ReadOnly or Writable)** - This is FORBIDDEN
+- **Controllers MUST ONLY communicate with Service layer**
+- **Controllers are responsible for:**
+  - HTTP request/response handling
+  - Input validation via attributes
+  - Authorization checks
+  - Calling appropriate service methods
+  - Mapping service results to HTTP responses
+
+#### Service Layer Rules
+- **Services are the ONLY components that access repositories**
+- **Services are the ONLY components that create UnitOfWork instances**
+- **Services decide whether to use ReadOnly or Writable UnitOfWork**
+- **Services are responsible for:**
+  - Business logic implementation
+  - Transaction management via UnitOfWork
+  - Calling multiple repositories within a single transaction
+  - Data validation beyond basic input validation
+  - Business rule enforcement
+
+#### Repository Layer Rules
+- **Repositories MUST be accessed through UnitOfWork**
+- **Repositories handle ONLY data access logic**
+- **No business logic in repositories**
+- **Repositories are responsible for:**
+  - CRUD operations
+  - Query operations
+  - Data persistence logic
+
+#### Transaction Management
+- **UnitOfWork manages database transactions**
+- **Services MUST call CommitAsync() on Writable UnitOfWork**
+- **Multiple operations can be wrapped in a single UnitOfWork transaction**
+- **Example pattern:**
+```csharp
+using (var unitOfWork = _unitOfWorkProvider.CreateWritable())
+{
+    var repository = unitOfWork.GetRepository<IRepository>();
+    // Perform operations
+    await unitOfWork.CommitAsync();
+}
+```
 
 ## Communication Patterns
 
