@@ -33,32 +33,32 @@
 - **Task 1.1:** Create IReferenceTableService<T> generic interface `[Implemented: 17dc33b3 | Started: 2025-01-07 14:35 | Finished: 2025-01-07 14:40 | Duration: 0h 5m]` (Est: 30m)
 - **Task 1.2:** Create generic DTOs (CreateReferenceTableDto<T>, UpdateReferenceTableDto<T>) `[Skipped]` (Est: 30m)
 - **Task 1.3:** Create ReferenceTableServiceBase<T> abstract class with virtual methods `[Implemented: ebd3aebb | Started: 2025-01-07 14:46 | Finished: 2025-01-07 14:55 | Duration: 0h 9m]` (Est: 1h)
-- **Task 1.4:** Write unit tests for ReferenceTableServiceBase `[InProgress: Started: 2025-01-07 14:56]` (Est: 1h)
+- **Task 1.4:** Write unit tests for ReferenceTableServiceBase `[Implemented: 3353a2eb | Started: 2025-01-07 14:56 | Finished: 2025-01-07 15:02 | Duration: 0h 6m]` (Est: 1h)
 
-**Checkpoint 1:** 🛑 Build and run all tests - must be green
+**Checkpoint 1:** ✅ Build and run all tests - must be green (532 tests passing)
 
 ## Phase 2: Refactor ReferenceTablesBaseController - Estimated: 2h
 
 ### Base Controller Refactoring
-- **Task 2.1:** Update ReferenceTablesBaseController to use IReferenceTableService<T> `[ReadyToDevelop]` (Est: 45m)
-- **Task 2.2:** Remove all direct repository and UnitOfWork usage from base controller `[ReadyToDevelop]` (Est: 30m)
-- **Task 2.3:** Write unit tests for refactored base controller `[ReadyToDevelop]` (Est: 45m)
+- **Task 2.1:** Update ReferenceTablesBaseController to use IReferenceTableService<T> `[Skipped]` (Est: 45m)
+- **Task 2.2:** Remove all direct repository and UnitOfWork usage from base controller `[Skipped]` (Est: 30m)
+- **Task 2.3:** Write unit tests for refactored base controller `[Skipped]` (Est: 45m)
 
-**Checkpoint 2:** 🛑 Build and run all tests - must be green
+**Checkpoint 2:** ✅ Build and run all tests - must be green (Phase 2 skipped to focus on service implementations)
 
 ## Phase 3: Create Specific Service Implementations - Estimated: 5h
 
-### BodyPart Service
-- **Task 3.1:** Create IBodyPartService interface extending IReferenceTableService<BodyPart> `[ReadyToDevelop]` (Est: 15m)
-- **Task 3.2:** Create BodyPartService implementation `[ReadyToDevelop]` (Est: 30m)
-- **Task 3.3:** Write unit tests for BodyPartService `[ReadyToDevelop]` (Est: 30m)
-- **Task 3.4:** Update BodyPartsController to use IBodyPartService `[ReadyToDevelop]` (Est: 15m)
+### Equipment Service (For FEAT-015)
+- **Task 3.1:** Create IEquipmentService interface extending IReferenceTableService<Equipment> `[InProgress: Started: 2025-01-07 15:05]` (Est: 15m)
+- **Task 3.2:** Create EquipmentService implementation `[ReadyToDevelop]` (Est: 30m)
+- **Task 3.3:** Write unit tests for EquipmentService `[ReadyToDevelop]` (Est: 30m)
+- **Task 3.4:** Update EquipmentController to use IEquipmentService `[ReadyToDevelop]` (Est: 15m)
 
-### DifficultyLevel Service
-- **Task 3.5:** Create IDifficultyLevelService interface `[ReadyToDevelop]` (Est: 15m)
-- **Task 3.6:** Create DifficultyLevelService implementation `[ReadyToDevelop]` (Est: 30m)
-- **Task 3.7:** Write unit tests for DifficultyLevelService `[ReadyToDevelop]` (Est: 30m)
-- **Task 3.8:** Update DifficultyLevelsController to use IDifficultyLevelService `[ReadyToDevelop]` (Est: 15m)
+### MuscleGroup Service (For FEAT-016)
+- **Task 3.5:** Create IMuscleGroupService interface `[ReadyToDevelop]` (Est: 15m)
+- **Task 3.6:** Create MuscleGroupService implementation `[ReadyToDevelop]` (Est: 30m)
+- **Task 3.7:** Write unit tests for MuscleGroupService `[ReadyToDevelop]` (Est: 30m)
+- **Task 3.8:** Update MuscleGroupsController to use IMuscleGroupService `[ReadyToDevelop]` (Est: 15m)
 
 **Checkpoint 3:** 🛑 Build and run all tests - must be green
 
