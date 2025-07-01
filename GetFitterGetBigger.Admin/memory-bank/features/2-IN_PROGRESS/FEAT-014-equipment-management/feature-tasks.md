@@ -52,12 +52,12 @@
   - Test request/response validation
 
 ### Category 2: State Management - Estimated: 2h
-- **Task 2.1:** Create state service for equipment `[Implemented: state-service | Started: 2025-07-01 11:01 | Finished: 2025-07-01 11:10 | Duration: 0h 9m]` (Est: 1h)
+- **Task 2.1:** Create state service for equipment `[Implemented: 4034aa56 | Started: 2025-07-01 11:01 | Finished: 2025-07-01 11:10 | Duration: 0h 9m]` (Est: 1h)
   - Define state interface (equipment list, loading, error, filters)
   - Create actions/reducers for CRUD operations
   - Add selectors for filtered equipment
   - Implement cache invalidation logic
-- **Task 2.2:** Write tests for state management `[ReadyToDevelop]` (Est: 1h)
+- **Task 2.2:** Write tests for state management `[Implemented: state-tests | Started: 2025-07-01 11:11 | Finished: 2025-07-01 11:20 | Duration: 0h 9m]` (Est: 1h)
   - Test all actions and reducers
   - Test state selectors
   - Test async thunks/effects
