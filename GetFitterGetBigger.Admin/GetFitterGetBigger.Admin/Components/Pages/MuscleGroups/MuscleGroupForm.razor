@@ -27,6 +27,7 @@
                     Body Part <span class="text-red-500">*</span>
                 </label>
                 <InputSelect id="bodyPart" @bind-Value="model.BodyPartId" 
+                             @bind-Value:after="OnBodyPartChanged"
                              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
                     <option value="">Select a body part</option>
                     @if (BodyParts != null)
@@ -75,12 +76,20 @@
 
     private MuscleGroupFormModel model = new();
 
-    protected override void OnInitialized()
+    protected override void OnParametersSet()
     {
+        // Create a new model instance to ensure proper binding
+        model = new MuscleGroupFormModel();
+        
         if (MuscleGroup != null)
         {
             model.Name = MuscleGroup.Name;
             model.BodyPartId = MuscleGroup.BodyPartId;
+            Console.WriteLine($"[MUSCLE GROUP FORM] OnParametersSet - Editing {MuscleGroup.Name} with BodyPartId: {MuscleGroup.BodyPartId}");
+        }
+        else
+        {
+            Console.WriteLine($"[MUSCLE GROUP FORM] OnParametersSet - Creating new muscle group");
         }
     }
 
@@ -101,6 +110,10 @@
         else
         {
             // Update existing muscle group
+            Console.WriteLine($"[MUSCLE GROUP FORM] Updating muscle group {MuscleGroup.Id}");
+            Console.WriteLine($"[MUSCLE GROUP FORM] Original BodyPartId: {MuscleGroup.BodyPartId}");
+            Console.WriteLine($"[MUSCLE GROUP FORM] New BodyPartId from form: {model.BodyPartId}");
+            
             var updateDto = new UpdateMuscleGroupDto 
             { 
                 Name = model.Name,
@@ -113,6 +126,11 @@
         {
             await OnSave.InvokeAsync();
         }
+    }
+
+    private void OnBodyPartChanged()
+    {
+        Console.WriteLine($"[MUSCLE GROUP FORM] Body part changed to: {model.BodyPartId}");
     }
 
     private class MuscleGroupFormModel

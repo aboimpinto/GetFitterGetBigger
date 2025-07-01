@@ -97,17 +97,29 @@ public class MuscleGroupRepository : RepositoryBase<FitnessDbContext>, IMuscleGr
             tracked.State = EntityState.Detached;
         }
         
-        // Always use Update to ensure all properties are updated
-        Context.MuscleGroups.Update(entity);
+        // Ensure we're not tracking any BodyPart entities
+        var trackedBodyParts = Context.ChangeTracker.Entries<BodyPart>()
+            .Where(e => e.State != EntityState.Detached)
+            .ToList();
+        
+        foreach (var bodyPart in trackedBodyParts)
+        {
+            bodyPart.State = EntityState.Detached;
+        }
+        
+        // Create a clean entity without navigation properties to avoid unwanted updates
+        var cleanEntity = entity with { BodyPart = null };
+        
+        // Attach and update only the MuscleGroup entity
+        Context.MuscleGroups.Attach(cleanEntity);
+        Context.Entry(cleanEntity).State = EntityState.Modified;
         
         await Context.SaveChangesAsync();
         
-        // Load the BodyPart navigation property
-        await Context.Entry(entity)
-            .Reference(mg => mg.BodyPart)
-            .LoadAsync();
+        // Now reload the entity with its navigation property
+        Context.Entry(cleanEntity).State = EntityState.Detached;
         
-        return entity;
+        return await GetByIdAsync(entity.Id) ?? entity;
     }
     
     /// <summary>
