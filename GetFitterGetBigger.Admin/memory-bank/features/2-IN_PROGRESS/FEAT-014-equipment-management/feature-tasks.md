@@ -45,14 +45,14 @@
   - Implement deleteEquipment() method
   - Add TypeScript interfaces for DTOs
   - Handle error responses and transformations
-- **Task 1.2:** Write unit tests for EquipmentService `[Implemented: equipment-tests | Started: 2025-07-01 10:51 | Finished: 2025-07-01 11:00 | Duration: 0h 9m]` (Est: 1h 30m)
+- **Task 1.2:** Write unit tests for EquipmentService `[Implemented: edb9d019 | Started: 2025-07-01 10:51 | Finished: 2025-07-01 11:00 | Duration: 0h 9m]` (Est: 1h 30m)
   - Test all CRUD operations with MSW mocks
   - Test error scenarios (401, 403, 404, 409, 500)
   - Test data transformation
   - Test request/response validation
 
 ### Category 2: State Management - Estimated: 2h
-- **Task 2.1:** Create Redux/Context state for equipment `[ReadyToDevelop]` (Est: 1h)
+- **Task 2.1:** Create state service for equipment `[Implemented: state-service | Started: 2025-07-01 11:01 | Finished: 2025-07-01 11:10 | Duration: 0h 9m]` (Est: 1h)
   - Define state interface (equipment list, loading, error, filters)
   - Create actions/reducers for CRUD operations
   - Add selectors for filtered equipment

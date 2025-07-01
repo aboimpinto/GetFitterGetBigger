@@ -71,6 +71,9 @@ builder.Services.AddScoped<GetFitterGetBigger.Admin.Services.IExerciseStateServi
 // Add HttpClient for EquipmentService
 builder.Services.AddHttpClient<GetFitterGetBigger.Admin.Services.IEquipmentService, GetFitterGetBigger.Admin.Services.EquipmentService>();
 
+// Add EquipmentStateService
+builder.Services.AddScoped<GetFitterGetBigger.Admin.Services.IEquipmentStateService, GetFitterGetBigger.Admin.Services.EquipmentStateService>();
+
 // Add NavigationService
 builder.Services.AddScoped<GetFitterGetBigger.Admin.Services.INavigationService, GetFitterGetBigger.Admin.Services.NavigationService>();
 
