@@ -64,6 +64,11 @@ namespace GetFitterGetBigger.Admin.Services
         public async Task<EquipmentDto> CreateEquipmentAsync(CreateEquipmentDto dto)
         {
             var requestUrl = $"{_apiBaseUrl}/api/ReferenceTables/Equipment";
+            
+            // Log the request details
+            Console.WriteLine($"[CREATE EQUIPMENT] URL: {requestUrl}");
+            Console.WriteLine($"[CREATE EQUIPMENT] DTO: {JsonSerializer.Serialize(dto, _jsonOptions)}");
+            
             var response = await _httpClient.PostAsJsonAsync(requestUrl, dto, _jsonOptions);
 
             if (response.StatusCode == HttpStatusCode.Conflict)
@@ -87,6 +92,12 @@ namespace GetFitterGetBigger.Admin.Services
         public async Task<EquipmentDto> UpdateEquipmentAsync(string id, UpdateEquipmentDto dto)
         {
             var requestUrl = $"{_apiBaseUrl}/api/ReferenceTables/Equipment/{id}";
+            
+            // Log the request details
+            Console.WriteLine($"[UPDATE EQUIPMENT] URL: {requestUrl}");
+            Console.WriteLine($"[UPDATE EQUIPMENT] ID: {id}");
+            Console.WriteLine($"[UPDATE EQUIPMENT] DTO: {JsonSerializer.Serialize(dto, _jsonOptions)}");
+            
             var response = await _httpClient.PutAsJsonAsync(requestUrl, dto, _jsonOptions);
 
             if (response.StatusCode == HttpStatusCode.NotFound)
@@ -101,10 +112,16 @@ namespace GetFitterGetBigger.Admin.Services
 
             if (!response.IsSuccessStatusCode)
             {
+                var errorContent = await response.Content.ReadAsStringAsync();
+                Console.WriteLine($"[UPDATE EQUIPMENT] Error Response: {errorContent}");
                 throw new HttpRequestException($"Failed to update equipment: {response.StatusCode}");
             }
 
-            var updated = await response.Content.ReadFromJsonAsync<EquipmentDto>(_jsonOptions);
+            var responseContent = await response.Content.ReadAsStringAsync();
+            Console.WriteLine($"[UPDATE EQUIPMENT] Success Response: {responseContent}");
+            
+            // Reset the stream position for deserialization
+            var updated = JsonSerializer.Deserialize<EquipmentDto>(responseContent, _jsonOptions);
             
             // Invalidate cache
             _cache.Remove(CacheKey);
