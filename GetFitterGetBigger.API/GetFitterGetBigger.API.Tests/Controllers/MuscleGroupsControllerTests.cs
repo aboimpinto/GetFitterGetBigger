@@ -319,12 +319,22 @@ public class MuscleGroupsControllerTests : IClassFixture<ApiTestFixture>
     [Fact]
     public async Task Update_NonExistentMuscleGroup_ReturnsNotFound()
     {
-        // Arrange
+        // Arrange - first get a valid body part
+        var bodyPartsResponse = await _client.GetAsync("/api/ReferenceTables/BodyParts");
+        bodyPartsResponse.EnsureSuccessStatusCode();
+        var bodyParts = await bodyPartsResponse.Content.ReadFromJsonAsync<List<ReferenceDataDto>>();
+        
+        if (bodyParts == null || !bodyParts.Any())
+        {
+            return; // Skip test if no body parts available
+        }
+        
+        var validBodyPartId = bodyParts.First().Id;
         var nonExistentId = $"musclegroup-{Guid.NewGuid()}";
         var updateDto = new UpdateMuscleGroupDto
         {
             Name = "UpdatedName",
-            BodyPartId = "bodypart-12345678-1234-1234-1234-123456789012"
+            BodyPartId = validBodyPartId
         };
         
         var content = new StringContent(JsonSerializer.Serialize(updateDto), Encoding.UTF8, "application/json");

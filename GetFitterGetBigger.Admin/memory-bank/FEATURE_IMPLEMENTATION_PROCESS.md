@@ -133,14 +133,22 @@ Before starting ANY implementation:
   - Include bug reference in test comment
   - Example: `test.skip('BUG-001: Complex API mocking requires additional setup')`
 
-### 6. Manual Testing Phase (DEFAULT BEHAVIOR)
+### 6. Manual Testing Phase (MANDATORY - NEVER SKIP)
+- **⚠️ CRITICAL: This phase is MANDATORY and CANNOT be skipped**
+- **⚠️ NEVER move a feature to COMPLETED without explicit user acceptance**
 - After all implementation tasks are complete
 - Provide user with:
   - Detailed step-by-step testing instructions
   - Test scenarios covering all user flows
   - Expected UI behaviors and responses
   - Sample data for testing
-- Wait for user acceptance before proceeding
+  - Clear indication that manual testing is required
+- **MANDATORY ACTIONS**:
+  1. Create a task in feature-tasks.md: `**Task X.X:** Manual testing by user [ReadyForTesting]`
+  2. Update task to `[InProgress: Started: YYYY-MM-DD HH:MM]` when user begins testing
+  3. Wait for EXPLICIT user acceptance (user must say "tests passed" or similar)
+  4. Only update to `[Completed: YYYY-MM-DD HH:MM]` after user confirms
+- **⚠️ REMINDER: The AI assistant must NEVER automatically move features to COMPLETED**
 
 ### 7. Quality Comparison Report (MANDATORY)
 After all implementation is complete, add to feature-tasks.md:

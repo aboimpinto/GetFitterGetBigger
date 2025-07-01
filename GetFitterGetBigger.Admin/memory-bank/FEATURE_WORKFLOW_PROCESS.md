@@ -103,16 +103,27 @@ When development begins:
 ```
 
 ### 3. Feature Completion (COMPLETED)
+⚠️ **CRITICAL: Features must NEVER be automatically moved to COMPLETED** ⚠️
+
 When all tasks are implemented and tested:
 1. Ensure all tests are green
-2. Get user acceptance (if manual testing phase)
+2. **MANDATORY: Get explicit user acceptance through manual testing**
+   - The user MUST explicitly state the feature is accepted
+   - Phrases like "tests passed", "feature accepted", "looks good" are required
+   - **NEVER assume acceptance based on silence or completion of tasks**
 3. Calculate final time metrics in feature-tasks.md:
    - Sum all actual durations
    - Calculate AI assistance impact percentage
    - Add final summary of time savings
-4. Move entire folder from `2-IN_PROGRESS` to `3-COMPLETED`
+4. **Only after explicit user acceptance**: Move entire folder from `2-IN_PROGRESS` to `3-COMPLETED`
 5. Add completion date and time metrics to feature-description.md
 6. Feature is now eligible for next PI release
+
+⚠️ **REMINDER FOR AI ASSISTANTS**:
+- You must NEVER automatically transition features to COMPLETED
+- Always wait for explicit user confirmation
+- Create a manual testing task and mark it as [ReadyForTesting]
+- The user must complete testing and provide explicit acceptance
 
 ### 4. Blocked Features (BLOCKED)
 If a feature cannot proceed:
@@ -196,7 +207,14 @@ If a feature is deferred or cancelled:
 ## State Transition Rules
 
 1. **To IN_PROGRESS**: Only when developer is actively working on it
-2. **To COMPLETED**: Only when ALL tasks are implemented and tests pass
+2. **To COMPLETED**: ⚠️ **CRITICAL REQUIREMENTS** ⚠️
+   - ALL implementation tasks must be completed
+   - ALL automated tests must pass (100% green)
+   - A manual testing task MUST be created and marked [ReadyForTesting]
+   - The user MUST complete manual testing
+   - The user MUST provide EXPLICIT acceptance (e.g., "tests passed", "feature accepted")
+   - **NEVER move to COMPLETED without explicit user confirmation**
+   - **AI assistants must NEVER automatically transition to COMPLETED**
 3. **To BLOCKED**: As soon as a blocking issue is identified
 4. **To SKIPPED**: Only with explicit user decision
 5. **From BLOCKED**: Only when blocking issue is resolved
@@ -241,12 +259,42 @@ To get current feature status:
 - SKIPPED features older than 4 PIs can be archived
 - Archive location: `memory-bank/archive/features/[year]/`
 
+## AI Assistant Guidelines for Feature Completion
+
+⚠️ **MANDATORY RULES FOR AI ASSISTANTS** ⚠️
+
+1. **NEVER automatically move features to COMPLETED state**
+2. **ALWAYS create a manual testing task** in feature-tasks.md:
+   ```markdown
+   **Task X.X:** Manual testing and user acceptance `[ReadyForTesting]`
+   ```
+3. **ALWAYS inform the user that manual testing is required**
+4. **WAIT for explicit user acceptance** such as:
+   - "Tests passed"
+   - "Feature accepted"
+   - "Everything looks good"
+   - "Approved"
+   - Any clear statement of acceptance
+5. **Only after explicit acceptance**, update the manual testing task to `[Completed]` and move the feature to COMPLETED
+
+### Example AI Assistant Behavior:
+```
+✅ CORRECT:
+AI: "I've completed all implementation tasks. The feature is now ready for manual testing. 
+Please test the following scenarios: [list scenarios]. 
+Once you've tested and are satisfied, please let me know so I can mark the feature as completed."
+
+❌ INCORRECT:
+AI: "All tasks are done. I'm moving the feature to COMPLETED."
+```
+
 ## Common Mistakes to Avoid
 
 1. **Starting work without proper folder structure**: Always create the feature folder in the appropriate state directory BEFORE starting implementation
 2. **Creating task files in wrong location**: Task files must be inside the feature folder, not directly in `memory-bank/features/`
 3. **Not moving folders between states**: Remember to move the entire feature folder as it progresses through states
 4. **Missing feature-description.md**: Both description and tasks files are required from the start
+5. **AI assistants moving features to COMPLETED automatically**: This is NEVER allowed
 
 ### Example of Incorrect Start:
 ```
