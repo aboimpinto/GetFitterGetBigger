@@ -3,6 +3,7 @@ using GetFitterGetBigger.API.Models.Entities;
 using GetFitterGetBigger.API.Models.SpecializedIds;
 using GetFitterGetBigger.API.Repositories.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using Olimpo.EntityFramework.Persistency;
 
 namespace GetFitterGetBigger.API.Repositories.Implementations;
@@ -30,14 +31,10 @@ public class EquipmentRepository : RepositoryBase<FitnessDbContext>, IEquipmentR
     /// <returns>The equipment if found, null otherwise</returns>
     public async Task<Equipment?> GetByIdAsync(EquipmentId id)
     {
+        // Use AsNoTracking for read operations to avoid tracking conflicts
         var equipment = await Context.Equipment
+            .AsNoTracking()
             .FirstOrDefaultAsync(e => e.Id == id);
-        
-        if (equipment != null)
-        {
-            // Detach the entity from the context to achieve the same effect as AsNoTracking
-            Context.Entry(equipment).State = EntityState.Detached;
-        }
         
         return equipment;
     }
@@ -73,22 +70,34 @@ public class EquipmentRepository : RepositoryBase<FitnessDbContext>, IEquipmentR
     /// <returns>The updated equipment</returns>
     public async Task<Equipment> UpdateAsync(Equipment entity)
     {
-        // Check if entity is already tracked
+        // Log the entity state before any operations
+        Console.WriteLine($"[Equipment Repository] UpdateAsync called with entity: ID={entity.Id}, Name='{entity.Name}', IsActive={entity.IsActive}, CreatedAt={entity.CreatedAt}, UpdatedAt={entity.UpdatedAt}");
+        Console.WriteLine($"[Equipment Repository] ID as GUID: {(Guid)entity.Id}");
+        
+        // First, check if there's already a tracked entity with the same ID
         var tracked = Context.ChangeTracker.Entries<Equipment>()
             .FirstOrDefault(e => e.Entity.Id == entity.Id);
         
         if (tracked != null)
         {
-            // Update the tracked entity's values
-            tracked.CurrentValues.SetValues(entity);
-        }
-        else
-        {
-            // Attach and mark as modified
-            Context.Equipment.Update(entity);
+            Console.WriteLine($"[Equipment Repository] Found tracked entity with same ID, detaching it");
+            // Detach the existing tracked entity
+            tracked.State = EntityState.Detached;
         }
         
+        // Attach the entity and mark it as modified
+        Context.Equipment.Attach(entity);
+        Context.Entry(entity).State = EntityState.Modified;
+        
+        // Log the tracked entity values before save
+        var entry = Context.Entry(entity);
+        Console.WriteLine($"[Equipment Repository] Entity state before SaveChanges: {entry.State}");
+        Console.WriteLine($"[Equipment Repository] Current values: ID={entry.CurrentValues["Id"]}, Name='{entry.CurrentValues["Name"]}', IsActive={entry.CurrentValues["IsActive"]}, CreatedAt={entry.CurrentValues["CreatedAt"]}, UpdatedAt={entry.CurrentValues["UpdatedAt"]}");
+        Console.WriteLine($"[Equipment Repository] Original values: ID={entry.OriginalValues["Id"]}, Name='{entry.OriginalValues["Name"]}', IsActive={entry.OriginalValues["IsActive"]}, CreatedAt={entry.OriginalValues["CreatedAt"]}, UpdatedAt={entry.OriginalValues["UpdatedAt"]}");
+        
         await Context.SaveChangesAsync();
+        
+        Console.WriteLine($"[Equipment Repository] After SaveChanges - Entity state: {entry.State}");
         
         return entity;
     }

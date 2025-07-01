@@ -167,7 +167,8 @@ public class EquipmentController : ReferenceTablesBaseController
         var equipment = Equipment.Handler.CreateNew(request.Name.Trim());
         var created = await repository.CreateAsync(equipment);
         
-        // Repository already saves, no need to commit again
+        // Commit the transaction
+        await unitOfWork.CommitAsync();
         
         // Invalidate cache
         var tableName = GetTableName();
@@ -199,9 +200,15 @@ public class EquipmentController : ReferenceTablesBaseController
     [ProducesResponseType(StatusCodes.Status409Conflict)]
     public async Task<IActionResult> Update(string id, [FromBody] UpdateEquipmentDto request)
     {
+        // Log the incoming request
+        _logger.LogInformation("[Equipment Update] Starting update for ID: {Id}", id);
+        _logger.LogInformation("[Equipment Update] Incoming JSON: {@Request}", request);
+        _logger.LogInformation("[Equipment Update] Request Name: '{Name}'", request?.Name);
+        
         // Validate equipment ID format
         if (!EquipmentId.TryParse(id, out var equipmentId))
         {
+            _logger.LogWarning("[Equipment Update] Invalid ID format: {Id}", id);
             return BadRequest($"Invalid ID format. Expected format: 'equipment-{{guid}}', got: '{id}'");
         }
         
@@ -212,20 +219,37 @@ public class EquipmentController : ReferenceTablesBaseController
         var existing = await repository.GetByIdAsync(equipmentId);
         if (existing == null || !existing.IsActive)
         {
+            _logger.LogWarning("[Equipment Update] Equipment not found or inactive. ID: {Id}", id);
             return NotFound();
         }
         
+        // Log the existing state
+        _logger.LogInformation("[Equipment Update] Existing equipment state - ID: {Id}, Name: '{Name}', IsActive: {IsActive}, CreatedAt: {CreatedAt}, UpdatedAt: {UpdatedAt}", 
+            existing.Id, existing.Name, existing.IsActive, existing.CreatedAt, existing.UpdatedAt);
+        
         // Check for duplicate name (excluding current)
-        if (await repository.ExistsAsync(request.Name, equipmentId))
+        if (request?.Name != null && await repository.ExistsAsync(request.Name, equipmentId))
         {
+            _logger.LogWarning("[Equipment Update] Duplicate name conflict: '{Name}'", request.Name);
             return Conflict($"Equipment with the name '{request.Name}' already exists");
         }
         
         // Update the equipment
-        var updated = Equipment.Handler.Update(existing, request.Name.Trim());
+        _logger.LogInformation("[Equipment Update] Updating equipment from '{OldName}' to '{NewName}'", existing.Name, request?.Name?.Trim());
+        var updated = Equipment.Handler.Update(existing, request!.Name!.Trim());
+        
+        // Log the updated entity before saving
+        _logger.LogInformation("[Equipment Update] Updated entity state (before save) - ID: {Id}, Name: '{Name}', IsActive: {IsActive}, CreatedAt: {CreatedAt}, UpdatedAt: {UpdatedAt}", 
+            updated.Id, updated.Name, updated.IsActive, updated.CreatedAt, updated.UpdatedAt);
+        
         var result = await repository.UpdateAsync(updated);
         
-        // Repository already saves, no need to commit again
+        // Commit the transaction
+        await unitOfWork.CommitAsync();
+        
+        // Log the result after saving
+        _logger.LogInformation("[Equipment Update] Saved entity state - ID: {Id}, Name: '{Name}', IsActive: {IsActive}, CreatedAt: {CreatedAt}, UpdatedAt: {UpdatedAt}", 
+            result.Id, result.Name, result.IsActive, result.CreatedAt, result.UpdatedAt);
         
         // Invalidate cache
         var tableName = GetTableName();
@@ -243,6 +267,8 @@ public class EquipmentController : ReferenceTablesBaseController
             CreatedAt = result.CreatedAt,
             UpdatedAt = result.UpdatedAt
         };
+        
+        _logger.LogInformation("[Equipment Update] Successfully updated equipment. Response DTO: {@Dto}", dto);
         
         return Ok(dto);
     }
@@ -288,7 +314,8 @@ public class EquipmentController : ReferenceTablesBaseController
             return NotFound();
         }
         
-        // Repository already saves, no need to commit again
+        // Commit the transaction
+        await unitOfWork.CommitAsync();
         
         // Invalidate cache
         var tableName = GetTableName();
