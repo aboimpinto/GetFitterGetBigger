@@ -1,8 +1,7 @@
+@using GetFitterGetBigger.Admin.Models
 @using GetFitterGetBigger.Admin.Models.Dtos
 @using GetFitterGetBigger.Admin.Services
 @using System.ComponentModel.DataAnnotations
-
-@typeparam TCreateDto where TCreateDto : new()
 
 <div class="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center p-4 z-50 animate-fade-in" 
      @onclick="HandleBackdropClick"
@@ -195,12 +194,6 @@
         {
             OnCancel.InvokeAsync();
         }
-    }
-
-    public enum ReferenceEntityType
-    {
-        Equipment,
-        MuscleGroup
     }
 
     private class EquipmentFormModel

@@ -1,0 +1,165 @@
+@using GetFitterGetBigger.Admin.Models
+@using GetFitterGetBigger.Admin.Models.Dtos
+@using GetFitterGetBigger.Admin.Services
+
+@typeparam TItem where TItem : class
+
+<div class="flex items-center gap-2">
+    @if (Multiple)
+    {
+        <div class="flex-1">
+            @foreach (var item in Items ?? Enumerable.Empty<TItem>())
+            {
+                var itemId = GetItemId(item);
+                var itemName = GetItemName(item);
+                var isChecked = SelectedValues?.Contains(itemId) ?? false;
+                
+                <label class="flex items-center space-x-2 py-1">
+                    <input type="checkbox" 
+                           checked="@isChecked" 
+                           @onchange="@(e => HandleCheckboxChange(itemId, (bool)e.Value!))"
+                           class="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                           disabled="@Disabled" />
+                    <span class="text-sm @(Disabled ? "text-gray-500" : "text-gray-700")">@itemName</span>
+                </label>
+            }
+        </div>
+    }
+    else
+    {
+        <select @bind="SingleValue" 
+                @bind:after="HandleSingleValueChanged"
+                class="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 @(Disabled ? "bg-gray-100 cursor-not-allowed" : "")"
+                disabled="@Disabled">
+            @if (!Required)
+            {
+                <option value="">@Placeholder</option>
+            }
+            @foreach (var item in Items ?? Enumerable.Empty<TItem>())
+            {
+                var itemId = GetItemId(item);
+                var itemName = GetItemName(item);
+                <option value="@itemId">@itemName</option>
+            }
+        </select>
+    }
+    
+    @if (EnableInlineCreation && !Disabled)
+    {
+        <button type="button"
+                @onclick="OpenCreateModal"
+                class="p-2 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-md transition-colors"
+                title="Add new @EntityTypeName">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+            </svg>
+        </button>
+    }
+</div>
+
+@if (showCreateModal)
+{
+    <AddReferenceItemModal EntityType="@EntityType"
+                          OnItemCreated="HandleItemCreated"
+                          OnCancel="CloseCreateModal" />
+}
+
+@code {
+    [Parameter] public IEnumerable<TItem>? Items { get; set; }
+    [Parameter] public string? Value { get; set; }
+    [Parameter] public EventCallback<string> ValueChanged { get; set; }
+    [Parameter] public List<string>? SelectedValues { get; set; }
+    [Parameter] public EventCallback<List<string>> SelectedValuesChanged { get; set; }
+    [Parameter] public bool Multiple { get; set; } = false;
+    [Parameter] public bool Required { get; set; } = false;
+    [Parameter] public string Placeholder { get; set; } = "Select an option";
+    [Parameter] public bool Disabled { get; set; } = false;
+    [Parameter] public bool EnableInlineCreation { get; set; } = false;
+    [Parameter] public ReferenceEntityType EntityType { get; set; }
+    [Parameter] public Func<TItem, string> GetItemId { get; set; } = item => string.Empty;
+    [Parameter] public Func<TItem, string> GetItemName { get; set; } = item => string.Empty;
+    [Parameter] public EventCallback OnItemsRefreshed { get; set; }
+
+    private bool showCreateModal = false;
+    private string? SingleValue 
+    { 
+        get => Value; 
+        set { Value = value; ValueChanged.InvokeAsync(value); }
+    }
+
+    private string EntityTypeName => EntityType switch
+    {
+        ReferenceEntityType.Equipment => "equipment",
+        ReferenceEntityType.MuscleGroup => "muscle group",
+        _ => "item"
+    };
+
+    private void HandleCheckboxChange(string itemId, bool isChecked)
+    {
+        if (SelectedValues == null)
+        {
+            SelectedValues = new List<string>();
+        }
+
+        if (isChecked)
+        {
+            if (!SelectedValues.Contains(itemId))
+            {
+                SelectedValues.Add(itemId);
+            }
+        }
+        else
+        {
+            SelectedValues.Remove(itemId);
+        }
+
+        SelectedValuesChanged.InvokeAsync(SelectedValues);
+    }
+
+    private async Task HandleSingleValueChanged()
+    {
+        await ValueChanged.InvokeAsync(Value);
+    }
+
+    private void OpenCreateModal()
+    {
+        showCreateModal = true;
+    }
+
+    private void CloseCreateModal()
+    {
+        showCreateModal = false;
+    }
+
+    private async Task HandleItemCreated(object createdItem)
+    {
+        showCreateModal = false;
+
+        // Notify parent to refresh items
+        await OnItemsRefreshed.InvokeAsync();
+
+        // Auto-select the created item
+        if (createdItem != null)
+        {
+            string createdItemId = GetItemId((TItem)createdItem);
+            
+            if (Multiple)
+            {
+                if (SelectedValues == null)
+                {
+                    SelectedValues = new List<string>();
+                }
+                if (!SelectedValues.Contains(createdItemId))
+                {
+                    SelectedValues.Add(createdItemId);
+                    await SelectedValuesChanged.InvokeAsync(SelectedValues);
+                }
+            }
+            else
+            {
+                SingleValue = createdItemId;
+                await ValueChanged.InvokeAsync(createdItemId);
+            }
+        }
+    }
+}
