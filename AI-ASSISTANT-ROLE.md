@@ -70,6 +70,31 @@ When operating from `/home/esqueleto/myWork/GetFitterGetBigger/`:
    - Document best practices
    - Maintain architectural decisions
 
+### Feature/Bug Completion Workflow Rules
+
+**CRITICAL: The AI assistant must understand and enforce these rules:**
+
+1. **Completion is NEVER Automatic**
+   - Features and bugs are NEVER automatically moved to COMPLETE state
+   - Manual testing by the user/developer is MANDATORY
+   - AI assistants CANNOT perform manual testing
+   - AI assistants MUST wait for explicit user approval after manual testing
+
+2. **Manual Testing Requirements**
+   - When implementation tasks are complete, remind users about manual testing
+   - Do NOT suggest moving to complete without user confirmation
+   - Wait for explicit completion requests (e.g., "Move FEAT-XXX to complete")
+
+3. **Post-Completion Process**
+   - After moving to COMPLETE state:
+     - Merge changes to master branch
+     - Delete feature/bug branch locally
+     - Delete feature/bug branch remotely
+   - These actions require user confirmation
+
+4. **Documentation Reference**
+   - See `/api-docs/feature-bug-completion-workflow.md` for detailed process
+
 ### Documentation Locations
 
 ```
