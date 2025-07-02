@@ -1,0 +1,55 @@
+@using GetFitterGetBigger.Admin.Models.Dtos
+
+<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-medium @GetRoleColorClass() group">
+    <span>@MuscleGroupName (@Role)</span>
+    @if (!Disabled && OnRemove.HasDelegate)
+    {
+        <button type="button" 
+                @onclick="HandleRemove" 
+                @onclick:stopPropagation="true"
+                class="ml-1 @GetRemoveButtonColorClass() focus:outline-none"
+                title="Remove @MuscleGroupName">
+            <svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+        </button>
+    }
+</span>
+
+@code {
+    [Parameter, EditorRequired] public string MuscleGroupId { get; set; } = string.Empty;
+    [Parameter, EditorRequired] public string MuscleGroupName { get; set; } = string.Empty;
+    [Parameter, EditorRequired] public string Role { get; set; } = string.Empty;
+    [Parameter] public bool Disabled { get; set; } = false;
+    [Parameter] public EventCallback<(string muscleGroupId, string role)> OnRemove { get; set; }
+
+    private async Task HandleRemove()
+    {
+        if (!Disabled && OnRemove.HasDelegate)
+        {
+            await OnRemove.InvokeAsync((MuscleGroupId, Role));
+        }
+    }
+
+    private string GetRoleColorClass()
+    {
+        return Role switch
+        {
+            "Primary" => "bg-blue-100 text-blue-800 border border-blue-200",
+            "Secondary" => "bg-amber-100 text-amber-800 border border-amber-200",
+            "Stabilizer" => "bg-purple-100 text-purple-800 border border-purple-200",
+            _ => "bg-gray-100 text-gray-800 border border-gray-200"
+        };
+    }
+
+    private string GetRemoveButtonColorClass()
+    {
+        return Role switch
+        {
+            "Primary" => "text-blue-400 hover:text-blue-600",
+            "Secondary" => "text-amber-400 hover:text-amber-600",
+            "Stabilizer" => "text-purple-400 hover:text-purple-600",
+            _ => "text-gray-400 hover:text-gray-600"
+        };
+    }
+}

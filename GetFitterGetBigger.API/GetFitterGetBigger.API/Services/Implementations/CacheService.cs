@@ -43,16 +43,18 @@ public class CacheService : ICacheService
                 .RegisterPostEvictionCallback((evictedKey, evictedValue, reason, state) =>
                 {
                     _cacheKeys.TryRemove(evictedKey.ToString() ?? string.Empty, out _);
+                    _logger.LogDebug("[Cache EVICTED] Key: {Key} was evicted. Reason: {Reason}", evictedKey, reason);
                 });
 
             _memoryCache.Set(key, value, cacheEntryOptions);
             _cacheKeys.TryAdd(key, true);
+            _logger.LogDebug("[Cache SET] Successfully stored value for key: {Key} with sliding expiration: {Expiration}", key, expiration);
             
             await Task.CompletedTask;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error setting value in cache for key: {Key}", key);
+            _logger.LogError(ex, "[Cache ERROR] Failed to set value in cache for key: {Key}", key);
         }
     }
 
@@ -63,11 +65,12 @@ public class CacheService : ICacheService
         {
             _memoryCache.Remove(key);
             _cacheKeys.TryRemove(key, out _);
+            _logger.LogDebug("[Cache REMOVE] Successfully removed key: {Key}", key);
             await Task.CompletedTask;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error removing value from cache for key: {Key}", key);
+            _logger.LogError(ex, "[Cache ERROR] Failed to remove value from cache for key: {Key}", key);
         }
     }
 
@@ -80,14 +83,18 @@ public class CacheService : ICacheService
             var actualPrefix = pattern.EndsWith("*") ? pattern.Substring(0, pattern.Length - 1) : pattern;
             var keysToRemove = _cacheKeys.Keys.Where(k => k.StartsWith(actualPrefix)).ToList();
             
+            _logger.LogInformation("[Cache PATTERN REMOVE] Removing {Count} keys matching pattern: {Pattern}", keysToRemove.Count, pattern);
+            
             foreach (var key in keysToRemove)
             {
                 await RemoveAsync(key);
             }
+            
+            _logger.LogDebug("[Cache PATTERN REMOVE] Completed removal of all keys matching pattern: {Pattern}", pattern);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error removing values from cache by pattern: {Pattern}", pattern);
+            _logger.LogError(ex, "[Cache ERROR] Failed to remove values from cache by pattern: {Pattern}", pattern);
         }
     }
 

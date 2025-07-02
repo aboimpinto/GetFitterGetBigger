@@ -9,6 +9,7 @@ using GetFitterGetBigger.API.Models.SpecializedIds;
 using GetFitterGetBigger.API.Repositories.Interfaces;
 using GetFitterGetBigger.API.Services.Interfaces;
 using GetFitterGetBigger.API.Services.ReferenceTable;
+using Microsoft.Extensions.Logging;
 using Olimpo.EntityFramework.Persistency;
 
 namespace GetFitterGetBigger.API.Services.Implementations;
@@ -20,8 +21,9 @@ public class EquipmentService : ReferenceTableServiceBase<Equipment>, IEquipment
 {
     public EquipmentService(
         IUnitOfWorkProvider<FitnessDbContext> unitOfWorkProvider,
-        ICacheService cacheService)
-        : base(unitOfWorkProvider, cacheService)
+        ICacheService cacheService,
+        ILogger<EquipmentService> logger)
+        : base(unitOfWorkProvider, cacheService, logger)
     {
     }
     
@@ -96,6 +98,8 @@ public class EquipmentService : ReferenceTableServiceBase<Equipment>, IEquipment
     /// </summary>
     public async Task DeactivateAsync(string id)
     {
+        _logger.LogInformation("[Cache] Deactivating equipment with ID: {Id}. Cache invalidation will follow after successful deactivation.", id);
+        
         using var unitOfWork = _unitOfWorkProvider.CreateWritable();
         var repository = unitOfWork.GetRepository<IEquipmentRepository>();
         
@@ -111,9 +115,12 @@ public class EquipmentService : ReferenceTableServiceBase<Equipment>, IEquipment
             throw new InvalidOperationException($"Equipment with ID '{id}' not found or already inactive");
         }
         
+        _logger.LogDebug("[Cache] Equipment '{Name}' (ID: {Id}) found and is active. Checking if in use...", existing.Name, id);
+        
         // Check if equipment is in use
         if (await repository.IsInUseAsync(equipmentId))
         {
+            _logger.LogWarning("[Cache] Cannot deactivate equipment '{Name}' (ID: {Id}) as it is in use by exercises", existing.Name, id);
             throw new InvalidOperationException("Cannot deactivate equipment that is in use by exercises");
         }
         
@@ -125,6 +132,7 @@ public class EquipmentService : ReferenceTableServiceBase<Equipment>, IEquipment
         }
         
         await unitOfWork.CommitAsync();
+        _logger.LogDebug("[Cache] Equipment '{Name}' (ID: {Id}) deactivated successfully. Proceeding with cache invalidation...", existing.Name, id);
         
         // Invalidate cache
         await InvalidateCacheAsync();

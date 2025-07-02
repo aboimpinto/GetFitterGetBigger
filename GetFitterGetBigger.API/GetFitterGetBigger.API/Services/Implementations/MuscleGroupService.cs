@@ -19,15 +19,15 @@ namespace GetFitterGetBigger.API.Services.Implementations;
 /// </summary>
 public class MuscleGroupService : ReferenceTableServiceBase<MuscleGroup>, IMuscleGroupService
 {
-    private readonly ILogger<MuscleGroupService> _logger;
+    private readonly ILogger<MuscleGroupService> _specificLogger;
     
     public MuscleGroupService(
         IUnitOfWorkProvider<FitnessDbContext> unitOfWorkProvider,
         ICacheService cacheService,
         ILogger<MuscleGroupService> logger)
-        : base(unitOfWorkProvider, cacheService)
+        : base(unitOfWorkProvider, cacheService, logger)
     {
-        _logger = logger;
+        _specificLogger = logger;
     }
     
     protected override string CacheKeyPrefix => "MuscleGroups";
@@ -226,28 +226,28 @@ public class MuscleGroupService : ReferenceTableServiceBase<MuscleGroup>, IMuscl
     /// </summary>
     public async Task<MuscleGroupDto> UpdateMuscleGroupAsync(string id, UpdateMuscleGroupDto request)
     {
-        _logger.LogInformation("=== MuscleGroupService.UpdateMuscleGroupAsync START ===");
-        _logger.LogInformation("Received ID: {Id}", id);
-        _logger.LogInformation("Received Name: {Name}", request.Name);
-        _logger.LogInformation("Received BodyPartId: {BodyPartId}", request.BodyPartId);
+        _specificLogger.LogInformation("=== MuscleGroupService.UpdateMuscleGroupAsync START ===");
+        _specificLogger.LogInformation("Received ID: {Id}", id);
+        _specificLogger.LogInformation("Received Name: {Name}", request.Name);
+        _specificLogger.LogInformation("Received BodyPartId: {BodyPartId}", request.BodyPartId);
         
         // Validate muscle group ID format
         if (!MuscleGroupId.TryParse(id, out var muscleGroupId))
         {
-            _logger.LogError("Invalid muscle group ID format: {Id}", id);
+            _specificLogger.LogError("Invalid muscle group ID format: {Id}", id);
             throw new ArgumentException($"Invalid ID format. Expected format: 'musclegroup-{{guid}}', got: '{id}'");
         }
         
-        _logger.LogInformation("Parsed MuscleGroupId: {MuscleGroupId}", muscleGroupId);
+        _specificLogger.LogInformation("Parsed MuscleGroupId: {MuscleGroupId}", muscleGroupId);
         
         // Validate BodyPart ID format
         if (!BodyPartId.TryParse(request.BodyPartId, out var bodyPartId))
         {
-            _logger.LogError("Invalid body part ID format: {BodyPartId}", request.BodyPartId);
+            _specificLogger.LogError("Invalid body part ID format: {BodyPartId}", request.BodyPartId);
             throw new ArgumentException($"Invalid BodyPart ID format. Expected format: 'bodypart-{{guid}}', got: '{request.BodyPartId}'");
         }
         
-        _logger.LogInformation("Parsed BodyPartId: {BodyPartId}", bodyPartId);
+        _specificLogger.LogInformation("Parsed BodyPartId: {BodyPartId}", bodyPartId);
         
         // Use ReadOnlyUnitOfWork for validation queries
         using (var readOnlyUnitOfWork = _unitOfWorkProvider.CreateReadOnly())
@@ -270,57 +270,57 @@ public class MuscleGroupService : ReferenceTableServiceBase<MuscleGroup>, IMuscl
         var existing = await repository.GetByIdAsync(muscleGroupId);
         if (existing == null)
         {
-            _logger.LogError("Muscle group not found with ID: {Id}", id);
+            _specificLogger.LogError("Muscle group not found with ID: {Id}", id);
             throw new InvalidOperationException($"Muscle group with ID '{id}' not found");
         }
         
-        _logger.LogInformation("=== EXISTING MuscleGroup BEFORE UPDATE ===");
-        _logger.LogInformation("ID: {Id}", existing.Id);
-        _logger.LogInformation("Name: {Name}", existing.Name);
-        _logger.LogInformation("BodyPartId: {BodyPartId}", existing.BodyPartId);
-        _logger.LogInformation("IsActive: {IsActive}", existing.IsActive);
-        _logger.LogInformation("CreatedAt: {CreatedAt}", existing.CreatedAt);
-        _logger.LogInformation("UpdatedAt: {UpdatedAt}", existing.UpdatedAt);
-        _logger.LogInformation("========================================");
+        _specificLogger.LogInformation("=== EXISTING MuscleGroup BEFORE UPDATE ===");
+        _specificLogger.LogInformation("ID: {Id}", existing.Id);
+        _specificLogger.LogInformation("Name: {Name}", existing.Name);
+        _specificLogger.LogInformation("BodyPartId: {BodyPartId}", existing.BodyPartId);
+        _specificLogger.LogInformation("IsActive: {IsActive}", existing.IsActive);
+        _specificLogger.LogInformation("CreatedAt: {CreatedAt}", existing.CreatedAt);
+        _specificLogger.LogInformation("UpdatedAt: {UpdatedAt}", existing.UpdatedAt);
+        _specificLogger.LogInformation("========================================");
         
         // Check for duplicate name (excluding current)
         if (await repository.ExistsByNameAsync(request.Name, muscleGroupId))
         {
-            _logger.LogError("Duplicate name found: {Name}", request.Name);
+            _specificLogger.LogError("Duplicate name found: {Name}", request.Name);
             throw new InvalidOperationException($"A muscle group with the name '{request.Name}' already exists");
         }
         
-        _logger.LogInformation("Updating MuscleGroup - New Name: {Name}, New BodyPartId: {BodyPartId}", request.Name.Trim(), bodyPartId);
+        _specificLogger.LogInformation("Updating MuscleGroup - New Name: {Name}, New BodyPartId: {BodyPartId}", request.Name.Trim(), bodyPartId);
         
         // Update the muscle group
         var updated = MuscleGroup.Handler.Update(existing, request.Name.Trim(), bodyPartId);
         
-        _logger.LogInformation("=== UPDATED MuscleGroup BEFORE SAVE ===");
-        _logger.LogInformation("ID: {Id}", updated.Id);
-        _logger.LogInformation("Name: {Name}", updated.Name);
-        _logger.LogInformation("BodyPartId: {BodyPartId}", updated.BodyPartId);
-        _logger.LogInformation("IsActive: {IsActive}", updated.IsActive);
-        _logger.LogInformation("CreatedAt: {CreatedAt}", updated.CreatedAt);
-        _logger.LogInformation("UpdatedAt: {UpdatedAt}", updated.UpdatedAt);
-        _logger.LogInformation("======================================");
+        _specificLogger.LogInformation("=== UPDATED MuscleGroup BEFORE SAVE ===");
+        _specificLogger.LogInformation("ID: {Id}", updated.Id);
+        _specificLogger.LogInformation("Name: {Name}", updated.Name);
+        _specificLogger.LogInformation("BodyPartId: {BodyPartId}", updated.BodyPartId);
+        _specificLogger.LogInformation("IsActive: {IsActive}", updated.IsActive);
+        _specificLogger.LogInformation("CreatedAt: {CreatedAt}", updated.CreatedAt);
+        _specificLogger.LogInformation("UpdatedAt: {UpdatedAt}", updated.UpdatedAt);
+        _specificLogger.LogInformation("======================================");
         
         var result = await repository.UpdateAsync(updated);
         
         await unitOfWork.CommitAsync();
         
-        _logger.LogInformation("=== SAVED MuscleGroup RESULT ===");
-        _logger.LogInformation("ID: {Id}", result.Id);
-        _logger.LogInformation("Name: {Name}", result.Name);
-        _logger.LogInformation("BodyPartId: {BodyPartId}", result.BodyPartId);
-        _logger.LogInformation("UpdatedAt: {UpdatedAt}", result.UpdatedAt);
-        _logger.LogInformation("================================");
+        _specificLogger.LogInformation("=== SAVED MuscleGroup RESULT ===");
+        _specificLogger.LogInformation("ID: {Id}", result.Id);
+        _specificLogger.LogInformation("Name: {Name}", result.Name);
+        _specificLogger.LogInformation("BodyPartId: {BodyPartId}", result.BodyPartId);
+        _specificLogger.LogInformation("UpdatedAt: {UpdatedAt}", result.UpdatedAt);
+        _specificLogger.LogInformation("================================");
         
         // Invalidate cache
         await InvalidateCacheAsync();
         await _cacheService.RemoveAsync($"{CacheKeyPrefix}:byBodyPart:{existing.BodyPartId}");
         await _cacheService.RemoveAsync($"{CacheKeyPrefix}:byBodyPart:{request.BodyPartId}");
         
-        _logger.LogInformation("Cache invalidated for old BodyPartId: {OldBodyPartId} and new BodyPartId: {NewBodyPartId}", 
+        _specificLogger.LogInformation("Cache invalidated for old BodyPartId: {OldBodyPartId} and new BodyPartId: {NewBodyPartId}", 
             existing.BodyPartId, request.BodyPartId);
         
         // Map to DTO

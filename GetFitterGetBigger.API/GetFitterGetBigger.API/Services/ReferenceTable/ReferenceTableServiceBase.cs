@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using GetFitterGetBigger.API.Models;
 using GetFitterGetBigger.API.Services.Interfaces;
+using Microsoft.Extensions.Logging;
 using Olimpo.EntityFramework.Persistency;
 
 namespace GetFitterGetBigger.API.Services.ReferenceTable;
@@ -14,13 +16,16 @@ public abstract class ReferenceTableServiceBase<T> : IReferenceTableService<T> w
 {
     protected readonly IUnitOfWorkProvider<FitnessDbContext> _unitOfWorkProvider;
     protected readonly ICacheService _cacheService;
+    protected readonly ILogger _logger;
     
     protected ReferenceTableServiceBase(
         IUnitOfWorkProvider<FitnessDbContext> unitOfWorkProvider,
-        ICacheService cacheService)
+        ICacheService cacheService,
+        ILogger logger)
     {
         _unitOfWorkProvider = unitOfWorkProvider;
         _cacheService = cacheService;
+        _logger = logger;
     }
     
     /// <summary>
@@ -39,19 +44,29 @@ public abstract class ReferenceTableServiceBase<T> : IReferenceTableService<T> w
     public virtual async Task<IEnumerable<T>> GetAllAsync()
     {
         var cacheKey = $"{CacheKeyPrefix}:all";
+        _logger.LogDebug("[Cache] Attempting to retrieve all {EntityType} entities with key: {CacheKey}", typeof(T).Name, cacheKey);
         
         var cached = await _cacheService.GetAsync<IEnumerable<T>>(cacheKey);
         if (cached != null)
         {
+            _logger.LogInformation("[Cache HIT] Successfully retrieved {Count} {EntityType} entities from cache with key: {CacheKey}", 
+                cached.Count(), typeof(T).Name, cacheKey);
             return cached;
         }
+        
+        _logger.LogInformation("[Cache MISS] No cached data found for key: {CacheKey}. Fetching from database...", cacheKey);
         
         using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
         var entities = await GetAllEntitiesAsync(unitOfWork);
         
-        await _cacheService.SetAsync(cacheKey, entities, CacheDuration);
+        var entityList = entities.ToList();
+        _logger.LogDebug("[Cache] Fetched {Count} {EntityType} entities from database", entityList.Count, typeof(T).Name);
         
-        return entities;
+        await _cacheService.SetAsync(cacheKey, entityList, CacheDuration);
+        _logger.LogInformation("[Cache SET] Cached {Count} {EntityType} entities with key: {CacheKey} for duration: {Duration}", 
+            entityList.Count, typeof(T).Name, cacheKey, CacheDuration);
+        
+        return entityList;
     }
     
     /// <summary>
@@ -60,12 +75,16 @@ public abstract class ReferenceTableServiceBase<T> : IReferenceTableService<T> w
     public virtual async Task<T?> GetByIdAsync(string id)
     {
         var cacheKey = $"{CacheKeyPrefix}:id:{id}";
+        _logger.LogDebug("[Cache] Attempting to retrieve {EntityType} by ID with key: {CacheKey}", typeof(T).Name, cacheKey);
         
         var cached = await _cacheService.GetAsync<T>(cacheKey);
         if (cached != null)
         {
+            _logger.LogInformation("[Cache HIT] Successfully retrieved {EntityType} from cache with key: {CacheKey}", typeof(T).Name, cacheKey);
             return cached;
         }
+        
+        _logger.LogInformation("[Cache MISS] No cached data found for key: {CacheKey}. Fetching from database...", cacheKey);
         
         using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
         var entity = await GetEntityByIdAsync(unitOfWork, id);
@@ -73,6 +92,12 @@ public abstract class ReferenceTableServiceBase<T> : IReferenceTableService<T> w
         if (entity != null)
         {
             await _cacheService.SetAsync(cacheKey, entity, CacheDuration);
+            _logger.LogInformation("[Cache SET] Cached {EntityType} with ID: {Id} using key: {CacheKey} for duration: {Duration}", 
+                typeof(T).Name, id, cacheKey, CacheDuration);
+        }
+        else
+        {
+            _logger.LogDebug("[Cache] No {EntityType} found with ID: {Id}, nothing to cache", typeof(T).Name, id);
         }
         
         return entity;
@@ -84,12 +109,16 @@ public abstract class ReferenceTableServiceBase<T> : IReferenceTableService<T> w
     public virtual async Task<T?> GetByNameAsync(string name)
     {
         var cacheKey = $"{CacheKeyPrefix}:name:{name}";
+        _logger.LogDebug("[Cache] Attempting to retrieve {EntityType} by name with key: {CacheKey}", typeof(T).Name, cacheKey);
         
         var cached = await _cacheService.GetAsync<T>(cacheKey);
         if (cached != null)
         {
+            _logger.LogInformation("[Cache HIT] Successfully retrieved {EntityType} from cache with key: {CacheKey}", typeof(T).Name, cacheKey);
             return cached;
         }
+        
+        _logger.LogInformation("[Cache MISS] No cached data found for key: {CacheKey}. Fetching from database...", cacheKey);
         
         using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
         var entity = await GetEntityByNameAsync(unitOfWork, name);
@@ -97,6 +126,12 @@ public abstract class ReferenceTableServiceBase<T> : IReferenceTableService<T> w
         if (entity != null)
         {
             await _cacheService.SetAsync(cacheKey, entity, CacheDuration);
+            _logger.LogInformation("[Cache SET] Cached {EntityType} with name: '{Name}' using key: {CacheKey} for duration: {Duration}", 
+                typeof(T).Name, name, cacheKey, CacheDuration);
+        }
+        else
+        {
+            _logger.LogDebug("[Cache] No {EntityType} found with name: '{Name}', nothing to cache", typeof(T).Name, name);
         }
         
         return entity;
@@ -108,12 +143,16 @@ public abstract class ReferenceTableServiceBase<T> : IReferenceTableService<T> w
     public virtual async Task<T?> GetByValueAsync(string value)
     {
         var cacheKey = $"{CacheKeyPrefix}:value:{value}";
+        _logger.LogDebug("[Cache] Attempting to retrieve {EntityType} by value with key: {CacheKey}", typeof(T).Name, cacheKey);
         
         var cached = await _cacheService.GetAsync<T>(cacheKey);
         if (cached != null)
         {
+            _logger.LogInformation("[Cache HIT] Successfully retrieved {EntityType} from cache with key: {CacheKey}", typeof(T).Name, cacheKey);
             return cached;
         }
+        
+        _logger.LogInformation("[Cache MISS] No cached data found for key: {CacheKey}. Fetching from database...", cacheKey);
         
         using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
         var entity = await GetEntityByValueAsync(unitOfWork, value);
@@ -121,6 +160,12 @@ public abstract class ReferenceTableServiceBase<T> : IReferenceTableService<T> w
         if (entity != null)
         {
             await _cacheService.SetAsync(cacheKey, entity, CacheDuration);
+            _logger.LogInformation("[Cache SET] Cached {EntityType} with value: '{Value}' using key: {CacheKey} for duration: {Duration}", 
+                typeof(T).Name, value, cacheKey, CacheDuration);
+        }
+        else
+        {
+            _logger.LogDebug("[Cache] No {EntityType} found with value: '{Value}', nothing to cache", typeof(T).Name, value);
         }
         
         return entity;
@@ -131,6 +176,8 @@ public abstract class ReferenceTableServiceBase<T> : IReferenceTableService<T> w
     /// </summary>
     public virtual async Task<T> CreateAsync(object createDto)
     {
+        _logger.LogInformation("[Cache] Creating new {EntityType}. Cache invalidation will follow after successful creation.", typeof(T).Name);
+        
         using var unitOfWork = _unitOfWorkProvider.CreateWritable();
         
         // Validate before creation
@@ -139,6 +186,7 @@ public abstract class ReferenceTableServiceBase<T> : IReferenceTableService<T> w
         var entity = await CreateEntityAsync(unitOfWork, createDto);
         
         await unitOfWork.CommitAsync();
+        _logger.LogDebug("[Cache] {EntityType} created successfully. Proceeding with cache invalidation...", typeof(T).Name);
         
         // Invalidate cache
         await InvalidateCacheAsync();
@@ -151,6 +199,9 @@ public abstract class ReferenceTableServiceBase<T> : IReferenceTableService<T> w
     /// </summary>
     public virtual async Task<T> UpdateAsync(string id, object updateDto)
     {
+        _logger.LogInformation("[Cache] Updating {EntityType} with ID: {Id}. Cache invalidation will follow after successful update.", 
+            typeof(T).Name, id);
+        
         using var unitOfWork = _unitOfWorkProvider.CreateWritable();
         
         // Check if entity exists - we'll use a method that works with writable unit of work
@@ -166,6 +217,8 @@ public abstract class ReferenceTableServiceBase<T> : IReferenceTableService<T> w
         var updatedEntity = await UpdateEntityAsync(unitOfWork, id, updateDto);
         
         await unitOfWork.CommitAsync();
+        _logger.LogDebug("[Cache] {EntityType} with ID: {Id} updated successfully. Proceeding with cache invalidation...", 
+            typeof(T).Name, id);
         
         // Invalidate cache
         await InvalidateCacheAsync();
@@ -178,6 +231,9 @@ public abstract class ReferenceTableServiceBase<T> : IReferenceTableService<T> w
     /// </summary>
     public virtual async Task DeleteAsync(string id)
     {
+        _logger.LogInformation("[Cache] Deleting {EntityType} with ID: {Id}. Cache invalidation will follow after successful deletion.", 
+            typeof(T).Name, id);
+        
         using var unitOfWork = _unitOfWorkProvider.CreateWritable();
         
         // Check if entity exists
@@ -193,6 +249,8 @@ public abstract class ReferenceTableServiceBase<T> : IReferenceTableService<T> w
         await DeleteEntityAsync(unitOfWork, id);
         
         await unitOfWork.CommitAsync();
+        _logger.LogDebug("[Cache] {EntityType} with ID: {Id} deleted successfully. Proceeding with cache invalidation...", 
+            typeof(T).Name, id);
         
         // Invalidate cache
         await InvalidateCacheAsync();
@@ -268,6 +326,11 @@ public abstract class ReferenceTableServiceBase<T> : IReferenceTableService<T> w
     protected virtual async Task InvalidateCacheAsync()
     {
         var pattern = $"{CacheKeyPrefix}:*";
+        _logger.LogInformation("[Cache INVALIDATION] Starting cache invalidation for pattern: {Pattern}", pattern);
+        
         await _cacheService.RemoveByPatternAsync(pattern);
+        
+        _logger.LogInformation("[Cache INVALIDATION] Successfully invalidated all cache entries for {EntityType} with pattern: {Pattern}", 
+            typeof(T).Name, pattern);
     }
 }

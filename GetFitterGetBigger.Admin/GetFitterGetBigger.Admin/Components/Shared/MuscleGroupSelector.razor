@@ -1,0 +1,239 @@
+@using GetFitterGetBigger.Admin.Models
+@using GetFitterGetBigger.Admin.Models.Dtos
+@using GetFitterGetBigger.Admin.Builders
+
+<div class="space-y-3">
+    <h3 class="text-lg font-medium text-gray-900">
+        Muscle Groups 
+        @if (!HasPrimaryRole && !Disabled) { <span class="text-red-500">*</span> }
+        @if (Disabled) { <span class="text-sm text-gray-500">(disabled for Rest exercises)</span> }
+    </h3>
+    <p class="text-sm text-gray-600">Select muscle groups and assign their roles</p>
+    
+    @if (ShowValidationError)
+    {
+        <div class="p-3 bg-red-50 border border-red-200 rounded-md">
+            <p class="text-sm text-red-600">At least one muscle group with Primary role is required</p>
+        </div>
+    }
+
+    <!-- Selection Controls -->
+    <div class="flex gap-2 items-start">
+        <div class="flex-1">
+            <select @bind="selectedRole"
+                    @bind:after="OnRoleChanged"
+                    disabled="@Disabled"
+                    class="w-full px-3 py-2 border @(ShowValidationError ? "border-red-300" : "border-gray-300") rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 @(Disabled ? "bg-gray-100 cursor-not-allowed" : "")">
+                <option value="">Select role</option>
+                @foreach (var role in AvailableRoles)
+                {
+                    <option value="@role.Value">@role.Value</option>
+                }
+            </select>
+        </div>
+        
+        <div class="flex-1">
+            <EnhancedReferenceSelect Items="@AvailableMuscles"
+                                   Value="@selectedMuscleId"
+                                   ValueChanged="@((string value) => selectedMuscleId = value)"
+                                   Multiple="false"
+                                   Placeholder="Select muscle group"
+                                   Disabled="@(Disabled || string.IsNullOrEmpty(selectedRole))"
+                                   EnableInlineCreation="true"
+                                   EntityType="ReferenceEntityType.MuscleGroup"
+                                   GetItemId="@(item => item.Id)"
+                                   GetItemName="@(item => item.Value)"
+                                   OnItemsRefreshed="@OnMuscleGroupsRefreshed"
+                                   ShowInlineCreationHint="false" />
+        </div>
+        
+        <button type="button"
+                @onclick="AddMuscleGroup"
+                disabled="@(Disabled || string.IsNullOrEmpty(selectedRole) || string.IsNullOrEmpty(selectedMuscleId))"
+                class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+            Add
+        </button>
+    </div>
+
+    @if (!Disabled)
+    {
+        <div class="text-xs text-blue-600">
+            <button type="button" @onclick="OpenCreateModal" class="hover:underline">
+                Can't find the Muscle Group? Create here
+            </button>
+        </div>
+    }
+
+    <!-- Selected Muscle Groups as Tags -->
+    @if (MuscleGroups.Any())
+    {
+        <div class="flex flex-wrap gap-2 p-3 bg-gray-50 rounded-md @(ShowValidationError ? "border border-red-300" : "")">
+            @foreach (var mg in MuscleGroups.OrderBy(m => m.Role != "Primary").ThenBy(m => m.MuscleGroupId))
+            {
+                var muscleGroup = AllMuscleGroups?.FirstOrDefault(m => m.Id == mg.MuscleGroupId);
+                if (muscleGroup != null)
+                {
+                    <MuscleGroupTag 
+                        MuscleGroupId="@mg.MuscleGroupId"
+                        MuscleGroupName="@muscleGroup.Value"
+                        Role="@mg.Role"
+                        Disabled="@Disabled"
+                        OnRemove="HandleRemoveMuscleGroup" />
+                }
+            }
+        </div>
+        <div class="text-sm text-gray-500">
+            Total: @MuscleGroups.Count
+            @if (HasPrimaryRole)
+            {
+                <span class="text-green-600 ml-2">✓ Primary muscle group assigned</span>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="text-sm text-gray-500 italic p-3 bg-gray-50 rounded-md @(ShowValidationError ? "border border-red-300" : "")">
+            No muscle groups selected
+        </div>
+    }
+</div>
+
+@if (showCreateModal)
+{
+    <AddReferenceItemModal EntityType="ReferenceEntityType.MuscleGroup"
+                          OnItemCreated="HandleItemCreated"
+                          OnCancel="CloseCreateModal" />
+}
+
+@code {
+    [Parameter] public List<MuscleGroupRoleAssignmentDto> MuscleGroups { get; set; } = new();
+    [Parameter] public EventCallback<List<MuscleGroupRoleAssignmentDto>> MuscleGroupsChanged { get; set; }
+    [Parameter] public IEnumerable<ReferenceDataDto>? AllMuscleGroups { get; set; }
+    [Parameter] public IEnumerable<ReferenceDataDto>? MuscleRoles { get; set; }
+    [Parameter] public bool Disabled { get; set; } = false;
+    [Parameter] public bool ShowValidationError { get; set; } = false;
+    [Parameter] public EventCallback OnMuscleGroupsRefreshed { get; set; }
+
+    private string selectedRole = string.Empty;
+    private string selectedMuscleId = string.Empty;
+    private bool showCreateModal = false;
+    private List<ReferenceDataDto> optimisticallyAddedMuscles = new();
+
+    private bool HasPrimaryRole => MuscleGroups.Any(mg => mg.Role == "Primary");
+    private List<string> SelectedMuscleIds => MuscleGroups.Select(mg => mg.MuscleGroupId).ToList();
+
+    private IEnumerable<ReferenceDataDto> AvailableRoles
+    {
+        get
+        {
+            if (MuscleRoles == null) return Enumerable.Empty<ReferenceDataDto>();
+            
+            // If we already have a Primary, don't show Primary as an option
+            if (HasPrimaryRole)
+            {
+                return MuscleRoles.Where(r => r.Value != "Primary");
+            }
+            return MuscleRoles;
+        }
+    }
+
+    private IEnumerable<ReferenceDataDto> AvailableMuscles
+    {
+        get
+        {
+            if (AllMuscleGroups == null) return Enumerable.Empty<ReferenceDataDto>();
+            
+            var allMuscles = AllMuscleGroups.Concat(optimisticallyAddedMuscles);
+            
+            // Always exclude already selected muscles
+            return allMuscles.Where(mg => !SelectedMuscleIds.Contains(mg.Id));
+        }
+    }
+
+    private void OnRoleChanged()
+    {
+        // Reset muscle selection when role changes since available options might change
+        selectedMuscleId = string.Empty;
+        StateHasChanged();
+    }
+
+    private async Task AddMuscleGroup()
+    {
+        if (!string.IsNullOrEmpty(selectedRole) && !string.IsNullOrEmpty(selectedMuscleId))
+        {
+            var newAssignment = new MuscleGroupRoleAssignmentDto
+            {
+                MuscleGroupId = selectedMuscleId,
+                Role = selectedRole
+            };
+            
+            MuscleGroups.Add(newAssignment);
+            await MuscleGroupsChanged.InvokeAsync(MuscleGroups);
+            
+            // Reset selections
+            selectedRole = string.Empty;
+            selectedMuscleId = string.Empty;
+            
+            StateHasChanged();
+        }
+    }
+
+    private async Task HandleRemoveMuscleGroup((string muscleGroupId, string role) item)
+    {
+        var toRemove = MuscleGroups.FirstOrDefault(mg => mg.MuscleGroupId == item.muscleGroupId && mg.Role == item.role);
+        if (toRemove != null)
+        {
+            MuscleGroups.Remove(toRemove);
+            await MuscleGroupsChanged.InvokeAsync(MuscleGroups);
+            StateHasChanged();
+        }
+    }
+
+    private void OpenCreateModal()
+    {
+        showCreateModal = true;
+    }
+
+    private void CloseCreateModal()
+    {
+        showCreateModal = false;
+    }
+
+    private async Task HandleItemCreated(object createdItem)
+    {
+        showCreateModal = false;
+
+        if (createdItem != null && createdItem is ReferenceDataDto muscleGroup)
+        {
+            optimisticallyAddedMuscles.Add(muscleGroup);
+            
+            // Auto-select the created muscle group
+            selectedMuscleId = muscleGroup.Id;
+            
+            StateHasChanged();
+            
+            try
+            {
+                // Refresh muscle groups from server
+                await OnMuscleGroupsRefreshed.InvokeAsync();
+            }
+            catch
+            {
+                // If refresh fails, remove optimistically added item
+                optimisticallyAddedMuscles.Remove(muscleGroup);
+                selectedMuscleId = string.Empty;
+                StateHasChanged();
+            }
+        }
+    }
+    
+    protected override void OnParametersSet()
+    {
+        // Clear optimistically added items if they're now in the main list
+        if (optimisticallyAddedMuscles.Any() && AllMuscleGroups != null)
+        {
+            var actualIds = AllMuscleGroups.Select(mg => mg.Id).ToHashSet();
+            optimisticallyAddedMuscles.RemoveAll(mg => actualIds.Contains(mg.Id));
+        }
+    }
+}

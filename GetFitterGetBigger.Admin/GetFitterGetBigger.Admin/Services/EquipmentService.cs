@@ -11,15 +11,17 @@ namespace GetFitterGetBigger.Admin.Services
         private readonly HttpClient _httpClient;
         private readonly IMemoryCache _cache;
         private readonly IConfiguration _configuration;
+        private readonly ICacheHelperService _cacheHelper;
         private readonly string _apiBaseUrl;
         private readonly JsonSerializerOptions _jsonOptions;
         private const string CacheKey = "EquipmentDto_Full";
 
-        public EquipmentService(HttpClient httpClient, IMemoryCache cache, IConfiguration configuration)
+        public EquipmentService(HttpClient httpClient, IMemoryCache cache, IConfiguration configuration, ICacheHelperService cacheHelper)
         {
             _httpClient = httpClient;
             _cache = cache;
             _configuration = configuration;
+            _cacheHelper = cacheHelper;
             _apiBaseUrl = _configuration["ApiBaseUrl"] ?? string.Empty;
             _jsonOptions = new JsonSerializerOptions
             {
@@ -106,8 +108,12 @@ namespace GetFitterGetBigger.Admin.Services
                 created = JsonSerializer.Deserialize<EquipmentDto>(responseContent, _jsonOptions)!;
             }
 
-            // Invalidate cache
+            // Invalidate caches - both our own and ReferenceDataService's
             _cache.Remove(CacheKey);
+            _cache.Remove("RefData_Equipment");
+            _cache.Remove("Equipment"); // Legacy key
+            Console.WriteLine($"[EquipmentService] Cache invalidated: {CacheKey}, RefData_Equipment, Equipment");
+            Console.WriteLine($"[EquipmentService] Cache invalidated: {CacheKey}, RefData_Equipment, Equipment");
 
             return created ?? throw new InvalidOperationException("Failed to deserialize created equipment");
         }
@@ -163,8 +169,11 @@ namespace GetFitterGetBigger.Admin.Services
                 updated = JsonSerializer.Deserialize<EquipmentDto>(responseContent, _jsonOptions)!;
             }
 
-            // Invalidate cache
+            // Invalidate caches - both our own and ReferenceDataService's
             _cache.Remove(CacheKey);
+            _cache.Remove("RefData_Equipment");
+            _cache.Remove("Equipment"); // Legacy key
+            Console.WriteLine($"[EquipmentService] Cache invalidated: {CacheKey}, RefData_Equipment, Equipment");
 
             return updated ?? throw new InvalidOperationException("Failed to deserialize updated equipment");
         }
@@ -198,8 +207,11 @@ namespace GetFitterGetBigger.Admin.Services
 
             Console.WriteLine($"[DELETE EQUIPMENT] Success: Equipment {id} deleted");
 
-            // Invalidate cache
+            // Invalidate caches - both our own and ReferenceDataService's
             _cache.Remove(CacheKey);
+            _cache.Remove("RefData_Equipment");
+            _cache.Remove("Equipment"); // Legacy key
+            Console.WriteLine($"[EquipmentService] Cache invalidated: {CacheKey}, RefData_Equipment, Equipment");
         }
     }
 }

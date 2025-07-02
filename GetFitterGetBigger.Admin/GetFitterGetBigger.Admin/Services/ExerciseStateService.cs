@@ -42,11 +42,8 @@ namespace GetFitterGetBigger.Admin.Services
 
         public async Task InitializeAsync()
         {
-            Console.WriteLine("[ExerciseStateService] InitializeAsync called");
             await LoadReferenceDataAsync();
-            Console.WriteLine("[ExerciseStateService] LoadReferenceDataAsync completed");
             await LoadExercisesAsync();
-            Console.WriteLine("[ExerciseStateService] LoadExercisesAsync completed");
         }
 
         public async Task LoadExercisesAsync(ExerciseFilterDto? filter = null)
@@ -200,8 +197,6 @@ namespace GetFitterGetBigger.Admin.Services
                 IsLoadingReferenceData = true;
                 NotifyStateChanged();
 
-                Console.WriteLine("[ExerciseStateService] Starting LoadReferenceDataAsync...");
-
                 // Load all reference data in parallel
                 var difficultyTask = _referenceDataService.GetDifficultyLevelsAsync();
                 var muscleGroupsTask = _referenceDataService.GetMuscleGroupsAsync();
@@ -228,20 +223,10 @@ namespace GetFitterGetBigger.Admin.Services
                 BodyParts = await bodyPartsTask;
                 MovementPatterns = await movementPatternsTask;
                 ExerciseTypes = await exerciseTypesTask;
-
-                Console.WriteLine($"[ExerciseStateService] Reference data loaded:");
-                Console.WriteLine($"  - DifficultyLevels: {DifficultyLevels.Count()}");
-                Console.WriteLine($"  - MuscleGroups: {MuscleGroups.Count()}");
-                Console.WriteLine($"  - MuscleRoles: {MuscleRoles.Count()}");
-                Console.WriteLine($"  - Equipment: {Equipment.Count()}");
-                Console.WriteLine($"  - BodyParts: {BodyParts.Count()}");
-                Console.WriteLine($"  - MovementPatterns: {MovementPatterns.Count()}");
-                Console.WriteLine($"  - ExerciseTypes: {ExerciseTypes.Count()}");
             }
             catch (Exception ex)
             {
                 ErrorMessage = $"Failed to load reference data: {ex.Message}";
-                Console.WriteLine($"[ExerciseStateService] ERROR: {ex}");
             }
             finally
             {

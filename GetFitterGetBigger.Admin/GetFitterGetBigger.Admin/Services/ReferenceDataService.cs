@@ -30,24 +30,17 @@ namespace GetFitterGetBigger.Admin.Services
         {
             try
             {
-                Console.WriteLine($"[ReferenceDataService] GetDataAsync called for {endpoint} with cache key {cacheKey}");
-
                 if (!_cache.TryGetValue(cacheKey, out IEnumerable<ReferenceDataDto>? cachedData))
                 {
-                    Console.WriteLine($"[ReferenceDataService] Cache miss for {cacheKey}, fetching from API...");
+                    Console.WriteLine($"[ReferenceDataService] Cache miss for {cacheKey}, fetching from API");
                     // Use relative URL since HttpClient has BaseAddress configured
                     var requestUrl = endpoint.StartsWith("/") ? endpoint.Substring(1) : endpoint;
-                    Console.WriteLine($"[ReferenceDataService] Requesting: {requestUrl}");
                     cachedData = await _httpClient.GetFromJsonAsync<IEnumerable<ReferenceDataDto>>(requestUrl, _jsonOptions);
                     if (cachedData != null)
                     {
-                        Console.WriteLine($"[ReferenceDataService] Fetched {cachedData.Count()} items for {cacheKey}");
                         _cache.Set(cacheKey, cachedData, TimeSpan.FromHours(24));
+                        Console.WriteLine($"[ReferenceDataService] Cached {cachedData.Count()} items for {cacheKey}");
                     }
-                }
-                else
-                {
-                    Console.WriteLine($"[ReferenceDataService] Cache hit for {cacheKey}, returning {cachedData?.Count() ?? 0} items");
                 }
                 return cachedData ?? Enumerable.Empty<ReferenceDataDto>();
             }
@@ -73,7 +66,10 @@ namespace GetFitterGetBigger.Admin.Services
 
         public Task<IEnumerable<ReferenceDataDto>> GetBodyPartsAsync() => GetDataAsync("/api/ReferenceTables/BodyParts", "RefData_BodyParts");
         public Task<IEnumerable<ReferenceDataDto>> GetDifficultyLevelsAsync() => GetDataAsync("/api/ReferenceTables/DifficultyLevels", "RefData_DifficultyLevels");
-        public Task<IEnumerable<ReferenceDataDto>> GetEquipmentAsync() => GetDataAsync("/api/ReferenceTables/Equipment", "RefData_Equipment");
+        public Task<IEnumerable<ReferenceDataDto>> GetEquipmentAsync()
+        {
+            return GetDataAsync("/api/ReferenceTables/Equipment", "RefData_Equipment");
+        }
         public Task<IEnumerable<ReferenceDataDto>> GetKineticChainTypesAsync() => GetDataAsync("/api/ReferenceTables/KineticChainTypes", "RefData_KineticChainTypes");
         public Task<IEnumerable<ReferenceDataDto>> GetMetricTypesAsync() => GetDataAsync("/api/ReferenceTables/MetricTypes", "RefData_MetricTypes");
         public Task<IEnumerable<ReferenceDataDto>> GetMovementPatternsAsync() => GetDataAsync("/api/ReferenceTables/MovementPatterns", "RefData_MovementPatterns");
@@ -82,12 +78,10 @@ namespace GetFitterGetBigger.Admin.Services
             const string cacheKey = "RefData_MuscleGroups";
             try
             {
-                Console.WriteLine($"[ReferenceDataService] GetMuscleGroupsAsync called");
-
                 if (!_cache.TryGetValue(cacheKey, out IEnumerable<ReferenceDataDto>? cachedData))
                 {
-                    Console.WriteLine($"[ReferenceDataService] Cache miss for {cacheKey}, fetching from API...");
-                    var requestUrl = "api/ReferenceTables/MuscleGroups";
+                    Console.WriteLine($"[ReferenceDataService] Cache miss for {cacheKey}, fetching from API");
+                    var requestUrl = "/api/ReferenceTables/MuscleGroups";
 
                     // MuscleGroups endpoint returns MuscleGroupDto, not ReferenceDataDto
                     var muscleGroups = await _httpClient.GetFromJsonAsync<IEnumerable<MuscleGroupDto>>(requestUrl, _jsonOptions);
@@ -101,15 +95,34 @@ namespace GetFitterGetBigger.Admin.Services
                             Description = $"Body Part: {mg.BodyPartName ?? "Unknown"}"
                         }).ToList();
 
-                        Console.WriteLine($"[ReferenceDataService] Fetched {cachedData.Count()} muscle groups");
                         _cache.Set(cacheKey, cachedData, TimeSpan.FromHours(24));
+                        Console.WriteLine($"[ReferenceDataService] Cached {cachedData.Count()} items for {cacheKey}");
                     }
                 }
-                else
-                {
-                    Console.WriteLine($"[ReferenceDataService] Cache hit for {cacheKey}, returning {cachedData?.Count() ?? 0} items");
-                }
                 return cachedData ?? Enumerable.Empty<ReferenceDataDto>();
+            }
+            catch (InvalidCastException ex)
+            {
+                Console.WriteLine($"[ReferenceDataService] InvalidCastException in GetMuscleGroupsAsync: {ex.Message}");
+                // Cache contains data of wrong type - clear it and retry
+                _cache.Remove(cacheKey);
+                _cache.Remove("MuscleGroupsDto_Full"); // Clear related cache
+                
+                var requestUrl = "api/ReferenceTables/MuscleGroups";
+                var muscleGroups = await _httpClient.GetFromJsonAsync<IEnumerable<MuscleGroupDto>>(requestUrl, _jsonOptions);
+                if (muscleGroups != null)
+                {
+                    var cachedData = muscleGroups.Select(mg => new ReferenceDataDto
+                    {
+                        Id = mg.Id,
+                        Value = mg.Name,
+                        Description = $"Body Part: {mg.BodyPartName ?? "Unknown"}"
+                    }).ToList();
+
+                    _cache.Set(cacheKey, cachedData, TimeSpan.FromHours(24));
+                    return cachedData;
+                }
+                return Enumerable.Empty<ReferenceDataDto>();
             }
             catch (Exception ex)
             {
@@ -119,11 +132,25 @@ namespace GetFitterGetBigger.Admin.Services
         }
         public Task<IEnumerable<ReferenceDataDto>> GetMuscleRolesAsync() => GetDataAsync("/api/ReferenceTables/MuscleRoles", "RefData_MuscleRoles");
 
+        public void ClearEquipmentCache()
+        {
+            _cache.Remove("RefData_Equipment");
+            Console.WriteLine("[ReferenceDataService] Cleared cache: RefData_Equipment");
+        }
+
+        public void ClearMuscleGroupsCache()
+        {
+            _cache.Remove("RefData_MuscleGroups");
+            _cache.Remove("MuscleGroupsDto_Full"); // Also clear MuscleGroupsService cache
+            _cache.Remove("MuscleGroups"); // Legacy key
+            Console.WriteLine("[ReferenceDataService] Cleared caches: RefData_MuscleGroups, MuscleGroupsDto_Full, MuscleGroups");
+        }
+
         public async Task<IEnumerable<ExerciseTypeDto>> GetExerciseTypesAsync()
         {
             if (!_cache.TryGetValue("RefData_ExerciseTypes", out IEnumerable<ExerciseTypeDto>? cachedData))
             {
-                var requestUrl = "api/ReferenceTables/ExerciseTypes";
+                var requestUrl = "/api/ReferenceTables/ExerciseTypes";
                 var referenceData = await _httpClient.GetFromJsonAsync<IEnumerable<ReferenceDataDto>>(requestUrl, _jsonOptions);
                 if (referenceData != null)
                 {

@@ -11,16 +11,18 @@ namespace GetFitterGetBigger.Admin.Services
         private readonly HttpClient _httpClient;
         private readonly IMemoryCache _cache;
         private readonly IConfiguration _configuration;
+        private readonly ICacheHelperService _cacheHelper;
         private readonly string _apiBaseUrl;
         private readonly JsonSerializerOptions _jsonOptions;
         private const string CacheKey = "MuscleGroupsDto_Full";
         private const string CacheKeyPrefix = "MuscleGroups_BodyPart_";
 
-        public MuscleGroupsService(HttpClient httpClient, IMemoryCache cache, IConfiguration configuration)
+        public MuscleGroupsService(HttpClient httpClient, IMemoryCache cache, IConfiguration configuration, ICacheHelperService cacheHelper)
         {
             _httpClient = httpClient;
             _cache = cache;
             _configuration = configuration;
+            _cacheHelper = cacheHelper;
             _apiBaseUrl = _configuration["ApiBaseUrl"] ?? string.Empty;
             _jsonOptions = new JsonSerializerOptions
             {
@@ -167,9 +169,11 @@ namespace GetFitterGetBigger.Admin.Services
             // API returns the full MuscleGroupDto on create
             var created = JsonSerializer.Deserialize<MuscleGroupDto>(responseContent, _jsonOptions);
 
-            // Invalidate all relevant caches
+            // Invalidate all relevant caches - both our own and ReferenceDataService's
             _cache.Remove(CacheKey);
             _cache.Remove($"{CacheKeyPrefix}{dto.BodyPartId}");
+            _cache.Remove("RefData_MuscleGroups");
+            _cache.Remove("MuscleGroups"); // Legacy key
 
             return created ?? throw new InvalidOperationException("Failed to deserialize created muscle group");
         }
@@ -216,6 +220,9 @@ namespace GetFitterGetBigger.Admin.Services
 
             // Invalidate all caches (including old and new body part caches)
             _cache.Remove(CacheKey);
+            _cache.Remove("RefData_MuscleGroups");
+            _cache.Remove("MuscleGroups"); // Legacy key
+            
             // Clear all body part caches since we don't track the old body part
             var cacheEntries = _cache.GetType()
                 .GetField("_entries", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
@@ -272,6 +279,9 @@ namespace GetFitterGetBigger.Admin.Services
 
             // Invalidate all caches
             _cache.Remove(CacheKey);
+            _cache.Remove("RefData_MuscleGroups");
+            _cache.Remove("MuscleGroups"); // Legacy key
+            
             // Clear all body part caches
             var cacheEntries = _cache.GetType()
                 .GetField("_entries", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)

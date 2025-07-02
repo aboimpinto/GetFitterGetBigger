@@ -13,5 +13,7 @@ namespace GetFitterGetBigger.Admin.Services
         Task<IEnumerable<ReferenceDataDto>> GetMovementPatternsAsync();
         Task<IEnumerable<ReferenceDataDto>> GetMuscleGroupsAsync();
         Task<IEnumerable<ReferenceDataDto>> GetMuscleRolesAsync();
+        void ClearEquipmentCache();
+        void ClearMuscleGroupsCache();
     }
 }

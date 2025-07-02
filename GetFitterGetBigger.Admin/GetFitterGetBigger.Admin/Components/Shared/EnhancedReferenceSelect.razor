@@ -72,7 +72,7 @@
     }
     </div>
 
-    @if (EnableInlineCreation && !Disabled && !isRefreshing)
+    @if (EnableInlineCreation && !Disabled && !isRefreshing && ShowInlineCreationHint)
     {
         <div id="@($"{EntityType}-help")" class="text-xs text-blue-600 mt-1">
             <span class="inline-flex items-center">
@@ -108,6 +108,7 @@
     [Parameter] public Func<TItem, string> GetItemName { get; set; } = item => string.Empty;
     [Parameter] public EventCallback OnItemsRefreshed { get; set; }
     [Parameter] public EventCallback<string> OnCreationError { get; set; }
+    [Parameter] public bool ShowInlineCreationHint { get; set; } = true;
 
     private bool showCreateModal = false;
     private List<TItem> optimisticallyAddedItems = new();
@@ -247,12 +248,15 @@
             finally
             {
                 isRefreshing = false;
+                // Force UI update after refresh completes
+                StateHasChanged();
             }
         }
     }
     
     protected override void OnParametersSet()
     {
+        
         // When Items parameter changes (after refresh), clear optimistically added items
         // They should now be included in the Items collection from the server
         if (optimisticallyAddedItems.Any() && Items != null)
@@ -260,6 +264,12 @@
             // Check if optimistically added items are now in the actual Items collection
             var actualItemIds = Items.Select(item => GetItemId(item)).ToHashSet();
             optimisticallyAddedItems.RemoveAll(item => actualItemIds.Contains(GetItemId(item)));
+        }
+        
+        // Reset the refreshing state if it got stuck
+        if (isRefreshing)
+        {
+            isRefreshing = false;
         }
     }
 }

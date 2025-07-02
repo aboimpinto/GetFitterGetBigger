@@ -171,6 +171,7 @@
 
     private async Task HandleSubmit()
     {
+        Console.WriteLine($"[AddReferenceItemModal] HandleSubmit called for {EntityType}");
         isSubmitting = true;
         errorMessage = null;
 
@@ -182,25 +183,50 @@
             {
                 case ReferenceEntityType.Equipment when EquipmentService != null:
                     var equipmentModel = (EquipmentFormModel)(object)model;
+                    Console.WriteLine($"[AddReferenceItemModal] Creating equipment: {equipmentModel.Name}");
                     var createEquipmentDto = new CreateEquipmentDto { Name = equipmentModel.Name };
                     var createdEquipment = await EquipmentService.CreateEquipmentAsync(createEquipmentDto);
-                    createdItem = createdEquipment;
+                    Console.WriteLine($"[AddReferenceItemModal] Equipment created with ID: {createdEquipment?.Id}");
+                    
+                    // Convert EquipmentDto to ReferenceDataDto for consistency with the Items type
+                    if (createdEquipment != null)
+                    {
+                        createdItem = new ReferenceDataDto
+                        {
+                            Id = createdEquipment.Id,
+                            Value = createdEquipment.Name,
+                            Description = null
+                        };
+                    }
                     break;
 
                 case ReferenceEntityType.MuscleGroup when MuscleGroupsService != null:
                     var muscleGroupModel = (MuscleGroupFormModel)(object)model;
+                    Console.WriteLine($"[AddReferenceItemModal] Creating muscle group: {muscleGroupModel.Name} for body part: {muscleGroupModel.BodyPartId}");
                     var createMuscleGroupDto = new CreateMuscleGroupDto 
                     { 
                         Name = muscleGroupModel.Name,
                         BodyPartId = muscleGroupModel.BodyPartId
                     };
                     var createdMuscleGroup = await MuscleGroupsService.CreateMuscleGroupAsync(createMuscleGroupDto);
-                    createdItem = createdMuscleGroup;
+                    Console.WriteLine($"[AddReferenceItemModal] Muscle group created with ID: {createdMuscleGroup?.Id}");
+                    
+                    // Convert MuscleGroupDto to ReferenceDataDto for consistency with the Items type
+                    if (createdMuscleGroup != null)
+                    {
+                        createdItem = new ReferenceDataDto
+                        {
+                            Id = createdMuscleGroup.Id,
+                            Value = createdMuscleGroup.Name,
+                            Description = $"Body Part: {createdMuscleGroup.BodyPartName ?? "Unknown"}"
+                        };
+                    }
                     break;
             }
 
             if (createdItem != null)
             {
+                Console.WriteLine($"[AddReferenceItemModal] Invoking OnItemCreated callback");
                 await OnItemCreated.InvokeAsync(createdItem);
             }
         }

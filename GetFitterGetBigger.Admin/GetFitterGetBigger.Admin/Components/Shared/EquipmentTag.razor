@@ -1,0 +1,31 @@
+@using GetFitterGetBigger.Admin.Models.Dtos
+
+<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-medium bg-gray-100 text-gray-800 border border-gray-200 group">
+    <span>@Equipment.Value</span>
+    @if (!Disabled && OnRemove.HasDelegate)
+    {
+        <button type="button" 
+                @onclick="HandleRemove" 
+                @onclick:stopPropagation="true"
+                class="ml-1 text-gray-400 hover:text-gray-600 focus:outline-none"
+                title="Remove @Equipment.Value">
+            <svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+        </button>
+    }
+</span>
+
+@code {
+    [Parameter, EditorRequired] public ReferenceDataDto Equipment { get; set; } = null!;
+    [Parameter] public bool Disabled { get; set; } = false;
+    [Parameter] public EventCallback<ReferenceDataDto> OnRemove { get; set; }
+
+    private async Task HandleRemove()
+    {
+        if (!Disabled && OnRemove.HasDelegate)
+        {
+            await OnRemove.InvokeAsync(Equipment);
+        }
+    }
+}

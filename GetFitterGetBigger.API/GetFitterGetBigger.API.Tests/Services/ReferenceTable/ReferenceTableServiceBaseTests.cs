@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using GetFitterGetBigger.API.Models;
 using GetFitterGetBigger.API.Services.Interfaces;
 using GetFitterGetBigger.API.Services.ReferenceTable;
+using Microsoft.Extensions.Logging;
 using Moq;
 using Olimpo.EntityFramework.Persistency;
 using Xunit;
@@ -16,6 +17,7 @@ public class ReferenceTableServiceBaseTests
     private readonly Mock<ICacheService> _cacheServiceMock;
     private readonly Mock<IReadOnlyUnitOfWork<FitnessDbContext>> _readOnlyUnitOfWorkMock;
     private readonly Mock<IWritableUnitOfWork<FitnessDbContext>> _writableUnitOfWorkMock;
+    private readonly Mock<ILogger> _loggerMock;
     private readonly TestReferenceTableService _service;
 
     public ReferenceTableServiceBaseTests()
@@ -24,6 +26,7 @@ public class ReferenceTableServiceBaseTests
         _cacheServiceMock = new Mock<ICacheService>();
         _readOnlyUnitOfWorkMock = new Mock<IReadOnlyUnitOfWork<FitnessDbContext>>();
         _writableUnitOfWorkMock = new Mock<IWritableUnitOfWork<FitnessDbContext>>();
+        _loggerMock = new Mock<ILogger>();
         
         _unitOfWorkProviderMock
             .Setup(x => x.CreateReadOnly())
@@ -35,7 +38,8 @@ public class ReferenceTableServiceBaseTests
 
         _service = new TestReferenceTableService(
             _unitOfWorkProviderMock.Object,
-            _cacheServiceMock.Object);
+            _cacheServiceMock.Object,
+            _loggerMock.Object);
     }
 
     [Fact]
@@ -227,8 +231,9 @@ public class ReferenceTableServiceBaseTests
 
         public TestReferenceTableService(
             IUnitOfWorkProvider<FitnessDbContext> unitOfWorkProvider,
-            ICacheService cacheService)
-            : base(unitOfWorkProvider, cacheService)
+            ICacheService cacheService,
+            ILogger logger)
+            : base(unitOfWorkProvider, cacheService, logger)
         {
         }
 
