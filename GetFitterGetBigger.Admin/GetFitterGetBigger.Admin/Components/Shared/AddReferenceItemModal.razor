@@ -4,11 +4,21 @@
 
 @typeparam TCreateDto where TCreateDto : new()
 
-<div class="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center p-4 z-50" @onclick="HandleBackdropClick">
-    <div class="bg-white rounded-lg p-6 max-w-md w-full" @onclick:stopPropagation="true">
-        <h3 class="text-lg font-medium text-gray-900 mb-4">
+<div class="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center p-4 z-50 animate-fade-in" 
+     @onclick="HandleBackdropClick"
+     role="dialog"
+     aria-modal="true"
+     aria-labelledby="modal-title"
+     aria-describedby="modal-description"
+     tabindex="-1">
+    <div class="bg-white rounded-lg p-6 max-w-md w-full animate-scale-in" 
+         @onclick:stopPropagation="true">
+        <h3 id="modal-title" class="text-lg font-medium text-gray-900 mb-4">
             Add New @EntityName
         </h3>
+        <div id="modal-description" class="sr-only">
+            Dialog for adding a new @EntityName.ToLower() to the system.
+        </div>
 
         <EditForm Model="@model" OnValidSubmit="HandleSubmit">
             <DataAnnotationsValidator />

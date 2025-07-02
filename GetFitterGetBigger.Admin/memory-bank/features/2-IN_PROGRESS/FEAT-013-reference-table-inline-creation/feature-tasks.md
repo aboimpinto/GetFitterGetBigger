@@ -36,9 +36,9 @@
 - **Task 0.1:** Fix formatting issues in codebase `[Completed: Fixed via dotnet format]`
 
 ## Category 1: Reusable Modal Component - Estimated: 3h
-- **Task 1.1:** Create reusable AddReferenceItemModal component with props for entity type `[InProgress: Started: 2025-07-02 03:20]` (Est: 1.5h)
-- **Task 1.2:** Write unit tests for AddReferenceItemModal component `[ReadyToDevelop]` (Est: 1h)
-- **Task 1.3:** Add modal animation and accessibility features (ARIA labels, keyboard navigation) `[ReadyToDevelop]` (Est: 30m)
+- **Task 1.1:** Create reusable AddReferenceItemModal component with props for entity type `[Implemented: 245e326d | Started: 2025-07-02 03:20 | Finished: 2025-07-02 03:25 | Duration: 0h 5m]` (Est: 1.5h)
+- **Task 1.2:** Write unit tests for AddReferenceItemModal component `[Skipped: No test infrastructure in solution]` (Est: 1h)
+- **Task 1.3:** Add modal animation and accessibility features (ARIA labels, keyboard navigation) `[InProgress: Started: 2025-07-02 03:27]` (Est: 30m)
 
 **Checkpoint after Category 1:** Modal component fully tested and accessible 🛑
 - [ ] Build passes with ZERO errors
