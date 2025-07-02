@@ -170,6 +170,12 @@
                 Role = selectedRole
             };
             
+            // If adding a Primary role, remove any existing Primary role
+            if (selectedRole == "Primary")
+            {
+                MuscleGroups.RemoveAll(mg => mg.Role == "Primary");
+            }
+            
             MuscleGroups.Add(newAssignment);
             await MuscleGroupsChanged.InvokeAsync(MuscleGroups);
             

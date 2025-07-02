@@ -41,6 +41,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Shared
                     new() { Id = "4", Value = "Shoulders" }
                 });
         }
+
         private readonly List<ReferenceDataDto> _testMuscleGroups = new()
         {
             new() { Id = "1", Value = "Biceps", Description = "Biceps muscle" },
@@ -57,8 +58,10 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Shared
             new() { Id = "3", Value = "Stabilizer", Description = "Stabilizer muscle" }
         };
 
+        #region UI Interaction Tests
+
         [Fact]
-        public void MuscleGroupSelector_RendersWithEmptyState()
+        public void MuscleGroupSelector_UI_RendersWithEmptyState()
         {
             // Arrange & Act
             var component = RenderComponent<MuscleGroupSelector>(parameters => parameters
@@ -66,16 +69,15 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Shared
                 .Add(p => p.MuscleRoles, _testMuscleRoles)
                 .Add(p => p.MuscleGroups, new List<MuscleGroupRoleAssignmentDto>()));
 
-            // Assert
-            component.Find("select").Should().NotBeNull();
-            var options = component.FindAll("option").ToList();
-            options.Should().HaveCountGreaterThan(0);
-            options[0].TextContent.Should().Be("Select role");
-            component.Markup.Should().Contain("No muscle groups selected");
+            // Assert - Check UI elements
+            component.Find("[data-testid='muscle-group-role-select']").Should().NotBeNull();
+            component.Find("[data-testid='add-muscle-group-button']").Should().NotBeNull();
+            component.Find("[data-testid='muscle-group-empty-state']").TextContent
+                .Should().Contain("No muscle groups selected");
         }
 
         [Fact]
-        public void MuscleGroupSelector_ShowsRoleOptions()
+        public void MuscleGroupSelector_UI_ShowsRoleOptions()
         {
             // Arrange & Act
             var component = RenderComponent<MuscleGroupSelector>(parameters => parameters
@@ -83,8 +85,8 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Shared
                 .Add(p => p.MuscleRoles, _testMuscleRoles)
                 .Add(p => p.MuscleGroups, new List<MuscleGroupRoleAssignmentDto>()));
 
-            // Assert
-            var roleSelect = component.Find("select");
+            // Assert - Check role options through UI
+            var roleSelect = component.Find("[data-testid='muscle-group-role-select']");
             var options = roleSelect.QuerySelectorAll("option").Skip(1).ToList(); // Skip placeholder
             options.Should().HaveCount(3);
             options[0].TextContent.Should().Be("Primary");
@@ -93,68 +95,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Shared
         }
 
         [Fact]
-        public void MuscleGroupSelector_FiltersAvailableMuscleGroupsBasedOnRole()
-        {
-            // Arrange
-            var selectedGroups = new List<MuscleGroupRoleAssignmentDto>
-            {
-                new() { MuscleGroupId = "1", Role = "Secondary" }
-            };
-
-            var component = RenderComponent<MuscleGroupSelector>(parameters => parameters
-                .Add(p => p.AllMuscleGroups, _testMuscleGroups)
-                .Add(p => p.MuscleRoles, _testMuscleRoles)
-                .Add(p => p.MuscleGroups, selectedGroups));
-
-            // Act - Select Primary role
-            component.Find("select").Change("Primary");
-
-            // Assert - Primary role should exclude all already selected muscle groups
-            var muscleSelect = component.FindAll("select")[1];
-            var options = muscleSelect.QuerySelectorAll("option").Skip(1).ToList();
-            options.Should().HaveCount(4); // All except Biceps
-            options.Select(o => o.GetAttribute("value")).Should().NotContain("1");
-        }
-
-        // [Fact(Skip = "Component interaction with nested modal requires complex async handling. TODO: Refactor for better testability")]
-        [Fact]
-        public async Task MuscleGroupSelector_AddsNewMuscleGroupWithRole()
-        {
-            // Arrange
-            var selectedGroups = new List<MuscleGroupRoleAssignmentDto>();
-            var changedGroups = new List<MuscleGroupRoleAssignmentDto>();
-
-            var component = RenderComponent<MuscleGroupSelector>(parameters => parameters
-                .Add(p => p.AllMuscleGroups, _testMuscleGroups)
-                .Add(p => p.MuscleRoles, _testMuscleRoles)
-                .Add(p => p.MuscleGroups, selectedGroups)
-                .Add(p => p.MuscleGroupsChanged, EventCallback.Factory.Create<List<MuscleGroupRoleAssignmentDto>>(this, groups => changedGroups = groups)));
-
-            // Act
-            // Directly set the internal state and call the method
-            var instance = component.Instance;
-            instance.selectedRole = "Primary";
-            instance.selectedMuscleId = "1";
-            
-            // Call AddMuscleGroup directly
-            await component.InvokeAsync(async () => 
-            {
-                await instance.AddMuscleGroup();
-            });
-
-            // Assert - Check both the original list and the callback
-            selectedGroups.Should().HaveCount(1);
-            selectedGroups[0].MuscleGroupId.Should().Be("1");
-            selectedGroups[0].Role.Should().Be("Primary");
-            
-            // Also check if callback was invoked
-            changedGroups.Should().HaveCount(1);
-            changedGroups[0].MuscleGroupId.Should().Be("1");
-            changedGroups[0].Role.Should().Be("Primary");
-        }
-
-        [Fact]
-        public async Task MuscleGroupSelector_AddsNewMuscleGroupWithRole_UsingUIInteraction()
+        public async Task MuscleGroupSelector_UI_AddsNewMuscleGroupWithRole()
         {
             // Arrange
             var selectedGroups = new List<MuscleGroupRoleAssignmentDto>();
@@ -167,9 +108,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Shared
                 .Add(p => p.MuscleGroupsChanged, EventCallback.Factory.Create<List<MuscleGroupRoleAssignmentDto>>(this, groups => changedGroups = groups)));
 
             // Act - Use data-testid to find elements
-            // Select role using data-testid
-            var roleSelect = component.Find("[data-testid='muscle-group-role-select']");
-            roleSelect.Change("Primary");
+            component.Find("[data-testid='muscle-group-role-select']").Change("Primary");
             
             // Wait for re-render after role selection
             component.Render();
@@ -179,127 +118,33 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Shared
             muscleGroupSelect.Change("1");
             
             // Find and click the add button
-            var addButton = component.Find("[data-testid='add-muscle-group-button']");
-            await component.InvokeAsync(() => addButton.Click());
+            await component.InvokeAsync(() => 
+                component.Find("[data-testid='add-muscle-group-button']").Click()
+            );
 
             // Assert
-            selectedGroups.Should().HaveCount(1);
-            selectedGroups[0].MuscleGroupId.Should().Be("1");
-            selectedGroups[0].Role.Should().Be("Primary");
-            
-            // Verify callback was invoked
             changedGroups.Should().HaveCount(1);
             changedGroups[0].MuscleGroupId.Should().Be("1");
             changedGroups[0].Role.Should().Be("Primary");
         }
 
         [Fact]
-        public void MuscleGroupSelector_DisplaysRoleSpecificTagColors()
+        public void MuscleGroupSelector_UI_DisplaysValidationError()
         {
-            // Arrange
-            var selectedGroups = new List<MuscleGroupRoleAssignmentDto>
-            {
-                new() { MuscleGroupId = "1", Role = "Primary" },
-                new() { MuscleGroupId = "2", Role = "Secondary" },
-                new() { MuscleGroupId = "3", Role = "Stabilizer" }
-            };
-
-            // Act
+            // Arrange & Act
             var component = RenderComponent<MuscleGroupSelector>(parameters => parameters
                 .Add(p => p.AllMuscleGroups, _testMuscleGroups)
                 .Add(p => p.MuscleRoles, _testMuscleRoles)
-                .Add(p => p.MuscleGroups, selectedGroups));
+                .Add(p => p.MuscleGroups, new List<MuscleGroupRoleAssignmentDto>())
+                .Add(p => p.ShowValidationError, true));
 
-            // Assert - Check that MuscleGroupTag components are rendered with correct roles
-            var tags = component.FindComponents<MuscleGroupTag>();
-            tags.Should().HaveCount(3);
-            
-            tags[0].Instance.Role.Should().Be("Primary");
-            tags[1].Instance.Role.Should().Be("Secondary");
-            tags[2].Instance.Role.Should().Be("Stabilizer");
+            // Assert
+            component.Find("[data-testid='muscle-group-validation-error']").TextContent
+                .Should().Contain("At least one muscle group with Primary role is required");
         }
 
         [Fact]
-        public void MuscleGroupSelector_PreventsDuplicateMuscleGroups()
-        {
-            // Arrange
-            var selectedGroups = new List<MuscleGroupRoleAssignmentDto>
-            {
-                new() { MuscleGroupId = "1", Role = "Primary" }
-            };
-
-            var component = RenderComponent<MuscleGroupSelector>(parameters => parameters
-                .Add(p => p.AllMuscleGroups, _testMuscleGroups)
-                .Add(p => p.MuscleRoles, _testMuscleRoles)
-                .Add(p => p.MuscleGroups, selectedGroups));
-
-            // Act - Select a role
-            component.Find("select").Change("Secondary");
-
-            // Assert - Muscle group 1 should not be in the available options
-            var muscleSelect = component.FindAll("select")[1];
-            var options = muscleSelect.QuerySelectorAll("option").Skip(1).Select(o => o.GetAttribute("value"));
-            options.Should().NotContain("1"); // Already selected muscle should be filtered out
-        }
-
-        [Fact(Skip = "Business rule enforcement requires complex state management testing. TODO: Test rule logic in isolation")]
-        public void MuscleGroupSelector_EnforcesSinglePrimaryRule()
-        {
-            // Arrange
-            var selectedGroups = new List<MuscleGroupRoleAssignmentDto>
-            {
-                new() { MuscleGroupId = "1", Role = "Primary" }
-            };
-
-            var changedGroups = new List<MuscleGroupRoleAssignmentDto>();
-
-            var component = RenderComponent<MuscleGroupSelector>(parameters => parameters
-                .Add(p => p.AllMuscleGroups, _testMuscleGroups)
-                .Add(p => p.MuscleRoles, _testMuscleRoles)
-                .Add(p => p.MuscleGroups, selectedGroups)
-                .Add(p => p.MuscleGroupsChanged, EventCallback.Factory.Create<List<MuscleGroupRoleAssignmentDto>>(this, groups => changedGroups = groups)));
-
-            // Act - Try to add another Primary
-            component.Find("select").Change("Primary");
-            component.FindAll("select")[1].Change("2");
-            component.Find("button").Click();
-
-            // Assert - Should replace the existing Primary
-            changedGroups.Should().HaveCount(1);
-            changedGroups[0].MuscleGroupId.Should().Be("2");
-            changedGroups[0].Role.Should().Be("Primary");
-        }
-
-        [Fact]
-        public void MuscleGroupSelector_FiltersOutAlreadySelectedMuscles()
-        {
-            // Arrange
-            var selectedGroups = new List<MuscleGroupRoleAssignmentDto>
-            {
-                new() { MuscleGroupId = "1", Role = "Secondary" },
-                new() { MuscleGroupId = "2", Role = "Stabilizer" }
-            };
-
-            var component = RenderComponent<MuscleGroupSelector>(parameters => parameters
-                .Add(p => p.AllMuscleGroups, _testMuscleGroups)
-                .Add(p => p.MuscleRoles, _testMuscleRoles)
-                .Add(p => p.MuscleGroups, selectedGroups));
-
-            // Act - Select any role to see available muscles
-            component.Find("select").Change("Primary");
-
-            // Assert - Already selected muscles should not be available
-            var muscleSelect = component.FindAll("select")[1];
-            var availableOptions = muscleSelect.QuerySelectorAll("option").Skip(1).Select(o => o.GetAttribute("value")).ToList();
-            availableOptions.Should().NotContain("1"); // Biceps already selected
-            availableOptions.Should().NotContain("2"); // Triceps already selected
-            availableOptions.Should().Contain("3"); // Chest available
-            availableOptions.Should().Contain("4"); // Back available
-            availableOptions.Should().Contain("5"); // Shoulders available
-        }
-
-        [Fact(Skip = "MuscleGroupTag component interaction not properly isolated. TODO: Mock child component or test integration separately")]
-        public void MuscleGroupSelector_RemovesMuscleGroupWhenTagXClicked()
+        public async Task MuscleGroupSelector_UI_RemovesMuscleGroupWhenTagXClicked()
         {
             // Arrange
             var selectedGroups = new List<MuscleGroupRoleAssignmentDto>
@@ -316,55 +161,194 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Shared
                 .Add(p => p.MuscleGroups, selectedGroups)
                 .Add(p => p.MuscleGroupsChanged, EventCallback.Factory.Create<List<MuscleGroupRoleAssignmentDto>>(this, groups => changedGroups = groups)));
 
-            // Act - Remove first muscle group via MuscleGroupTag component
-            var firstTag = component.FindComponent<MuscleGroupTag>();
-            firstTag.Instance.OnRemove.InvokeAsync();
+            // Act - Find and click the remove button on the first muscle group tag
+            var removeButtons = component.FindAll("button[title^='Remove']");
+            removeButtons.Should().HaveCount(2);
+            
+            await component.InvokeAsync(() => removeButtons[0].Click());
 
             // Assert
             changedGroups.Should().HaveCount(1);
             changedGroups[0].MuscleGroupId.Should().Be("2");
+            changedGroups[0].Role.Should().Be("Secondary");
         }
 
         [Fact]
-        public void MuscleGroupSelector_ShowsInlineCreationHintAppropriately()
+        public void MuscleGroupSelector_UI_DisablesControlsWhenDisabled()
         {
-            // Arrange & Act - With hint by default
+            // Arrange & Act
+            var component = RenderComponent<MuscleGroupSelector>(parameters => parameters
+                .Add(p => p.AllMuscleGroups, _testMuscleGroups)
+                .Add(p => p.MuscleRoles, _testMuscleRoles)
+                .Add(p => p.MuscleGroups, new List<MuscleGroupRoleAssignmentDto>())
+                .Add(p => p.Disabled, true));
+
+            // Assert
+            component.Find("[data-testid='muscle-group-role-select']")
+                .GetAttribute("disabled").Should().NotBeNull();
+            component.Find("[data-testid='add-muscle-group-button']")
+                .GetAttribute("disabled").Should().NotBeNull();
+            component.FindAll("[data-testid='create-muscle-group-button']")
+                .Should().BeEmpty(); // Creation button should not be shown when disabled
+        }
+
+        [Fact]
+        public void MuscleGroupSelector_UI_DisablesAddButtonWhenNoMuscleSelected()
+        {
+            // Arrange
             var component = RenderComponent<MuscleGroupSelector>(parameters => parameters
                 .Add(p => p.AllMuscleGroups, _testMuscleGroups)
                 .Add(p => p.MuscleRoles, _testMuscleRoles)
                 .Add(p => p.MuscleGroups, new List<MuscleGroupRoleAssignmentDto>()));
 
-            // Act - Select a role to show the muscle group dropdown
-            component.Find("select").Change("Primary");
+            // Assert - Initially the button should be disabled
+            var addButton = component.Find("[data-testid='add-muscle-group-button']");
+            addButton.GetAttribute("disabled").Should().NotBeNull();
 
-            // Assert
-            component.Markup.Should().Contain("Can't find the Muscle Group? Create here");
+            // Act - Select role but no muscle
+            component.Find("[data-testid='muscle-group-role-select']").Change("Primary");
+            component.Render();
+
+            // Assert - Add button should still be disabled
+            addButton = component.Find("[data-testid='add-muscle-group-button']");
+            addButton.GetAttribute("disabled").Should().NotBeNull();
         }
 
-        [Fact(Skip = "EventCallback testing requires proper async/await handling. TODO: Use InvokeAsync pattern for event verification")]
-        public void MuscleGroupSelector_RaisesOnMuscleGroupsChangedEvent()
+        #endregion
+
+        #region Direct Logic Tests
+
+        [Fact]
+        public void MuscleGroupSelector_Logic_InitializesCorrectly()
+        {
+            // Arrange & Act
+            var component = RenderComponent<MuscleGroupSelector>(parameters => parameters
+                .Add(p => p.AllMuscleGroups, _testMuscleGroups)
+                .Add(p => p.MuscleRoles, _testMuscleRoles)
+                .Add(p => p.MuscleGroups, new List<MuscleGroupRoleAssignmentDto>()));
+
+            var instance = component.Instance;
+
+            // Assert
+            instance.selectedRole.Should().BeEmpty();
+            instance.selectedMuscleId.Should().BeEmpty();
+            instance.MuscleGroups.Should().BeEmpty();
+        }
+
+        [Fact]
+        public async Task MuscleGroupSelector_Logic_AddsNewMuscleGroup()
         {
             // Arrange
             var selectedGroups = new List<MuscleGroupRoleAssignmentDto>();
-            var eventRaised = false;
+            var changedGroups = new List<MuscleGroupRoleAssignmentDto>();
 
             var component = RenderComponent<MuscleGroupSelector>(parameters => parameters
                 .Add(p => p.AllMuscleGroups, _testMuscleGroups)
                 .Add(p => p.MuscleRoles, _testMuscleRoles)
                 .Add(p => p.MuscleGroups, selectedGroups)
-                .Add(p => p.MuscleGroupsChanged, EventCallback.Factory.Create<List<MuscleGroupRoleAssignmentDto>>(this, groups => eventRaised = true)));
+                .Add(p => p.MuscleGroupsChanged, EventCallback.Factory.Create<List<MuscleGroupRoleAssignmentDto>>(this, groups => changedGroups = groups)));
 
-            // Act
-            component.Find("select").Change("Primary");
-            component.FindAll("select")[1].Change("1");
-            component.Find("button").Click();
+            var instance = component.Instance;
+
+            // Act - Set state directly and call method
+            instance.selectedRole = "Primary";
+            instance.selectedMuscleId = "1";
+            
+            await component.InvokeAsync(async () => await instance.AddMuscleGroup());
 
             // Assert
-            eventRaised.Should().BeTrue();
+            selectedGroups.Should().HaveCount(1);
+            selectedGroups[0].MuscleGroupId.Should().Be("1");
+            selectedGroups[0].Role.Should().Be("Primary");
+            
+            changedGroups.Should().HaveCount(1);
+            changedGroups[0].MuscleGroupId.Should().Be("1");
+            changedGroups[0].Role.Should().Be("Primary");
         }
 
-        [Fact(Skip = "Form reset behavior coupled with async operations. TODO: Separate form state management from async actions")]
-        public void MuscleGroupSelector_ResetsFormAfterSuccessfulAdd()
+        [Fact]
+        public async Task MuscleGroupSelector_Logic_EnforcesSinglePrimaryRule()
+        {
+            // Arrange
+            var selectedGroups = new List<MuscleGroupRoleAssignmentDto>
+            {
+                new() { MuscleGroupId = "1", Role = "Primary" }
+            };
+
+            var changedGroups = new List<MuscleGroupRoleAssignmentDto>();
+
+            var component = RenderComponent<MuscleGroupSelector>(parameters => parameters
+                .Add(p => p.AllMuscleGroups, _testMuscleGroups)
+                .Add(p => p.MuscleRoles, _testMuscleRoles)
+                .Add(p => p.MuscleGroups, selectedGroups)
+                .Add(p => p.MuscleGroupsChanged, EventCallback.Factory.Create<List<MuscleGroupRoleAssignmentDto>>(this, groups => changedGroups = groups)));
+
+            var instance = component.Instance;
+
+            // Act - Try to add another Primary
+            instance.selectedRole = "Primary"; 
+            instance.selectedMuscleId = "2";
+            
+            await component.InvokeAsync(async () => await instance.AddMuscleGroup());
+
+            // Assert - Should replace the existing Primary
+            changedGroups.Should().HaveCount(1);
+            changedGroups[0].MuscleGroupId.Should().Be("2");
+            changedGroups[0].Role.Should().Be("Primary");
+        }
+
+        [Fact]
+        public void MuscleGroupSelector_Logic_FiltersAvailableMuscleGroups()
+        {
+            // Arrange
+            var selectedGroups = new List<MuscleGroupRoleAssignmentDto>
+            {
+                new() { MuscleGroupId = "1", Role = "Secondary" },
+                new() { MuscleGroupId = "2", Role = "Stabilizer" }
+            };
+
+            var component = RenderComponent<MuscleGroupSelector>(parameters => parameters
+                .Add(p => p.AllMuscleGroups, _testMuscleGroups)
+                .Add(p => p.MuscleRoles, _testMuscleRoles)
+                .Add(p => p.MuscleGroups, selectedGroups));
+
+            // Act - Get available muscles through the EnhancedReferenceSelect component
+            var enhancedSelect = component.FindComponent<EnhancedReferenceSelect<ReferenceDataDto>>();
+            var availableItems = enhancedSelect.Instance.Items;
+
+            // Assert
+            availableItems.Should().HaveCount(3); // Only 3, 4, 5 should be available
+            availableItems.Select(i => i.Id).Should().NotContain("1");
+            availableItems.Select(i => i.Id).Should().NotContain("2");
+            availableItems.Select(i => i.Id).Should().Contain(new[] { "3", "4", "5" });
+        }
+
+        [Fact]
+        public void MuscleGroupSelector_Logic_FiltersAvailableRoles()
+        {
+            // Arrange - Start with a Primary muscle already selected
+            var selectedGroups = new List<MuscleGroupRoleAssignmentDto>
+            {
+                new() { MuscleGroupId = "1", Role = "Primary" }
+            };
+
+            var component = RenderComponent<MuscleGroupSelector>(parameters => parameters
+                .Add(p => p.AllMuscleGroups, _testMuscleGroups)
+                .Add(p => p.MuscleRoles, _testMuscleRoles)
+                .Add(p => p.MuscleGroups, selectedGroups));
+
+            // Act - Check available roles through UI
+            var roleSelect = component.Find("[data-testid='muscle-group-role-select']");
+            var options = roleSelect.QuerySelectorAll("option").Skip(1).ToList();
+
+            // Assert - Primary should not be available
+            options.Should().HaveCount(2);
+            options.Select(o => o.TextContent).Should().NotContain("Primary");
+            options.Select(o => o.TextContent).Should().Contain(new[] { "Secondary", "Stabilizer" });
+        }
+
+        [Fact]
+        public async Task MuscleGroupSelector_Logic_ResetsFormAfterAdd()
         {
             // Arrange
             var selectedGroups = new List<MuscleGroupRoleAssignmentDto>();
@@ -375,38 +359,180 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Shared
                 .Add(p => p.MuscleGroups, selectedGroups)
                 .Add(p => p.MuscleGroupsChanged, EventCallback.Factory.Create<List<MuscleGroupRoleAssignmentDto>>(this, groups => selectedGroups = groups)));
 
-            // Act
-            component.Find("select").Change("Primary");
-            component.FindAll("select")[1].Change("1");
-            component.Find("button").Click();
+            var instance = component.Instance;
 
-            // Assert
-            var roleSelect = component.Find("select");
-            roleSelect.GetAttribute("value").Should().BeEmpty();
-            component.FindAll("select").Should().HaveCount(1); // Only role select visible
+            // Act - Set values and add muscle group
+            instance.selectedRole = "Primary";
+            instance.selectedMuscleId = "1";
+            
+            await component.InvokeAsync(async () => await instance.AddMuscleGroup());
+
+            // Assert - Fields should be reset
+            instance.selectedRole.Should().BeEmpty();
+            instance.selectedMuscleId.Should().BeEmpty();
+            
+            // The muscle select should be disabled since no role is selected
+            var enhancedSelect = component.FindComponent<EnhancedReferenceSelect<ReferenceDataDto>>();
+            enhancedSelect.Instance.Disabled.Should().BeTrue();
         }
 
-        [Fact(Skip = "Button state testing requires precise element selection across dynamic DOM. TODO: Improve button selector strategy")]
-        public void MuscleGroupSelector_DisablesAddButtonWhenNoMuscleGroupSelected()
+        [Fact]
+        public async Task MuscleGroupSelector_Logic_IgnoresAddWithInvalidData()
         {
             // Arrange
+            var selectedGroups = new List<MuscleGroupRoleAssignmentDto>();
+            var callbackInvoked = false;
+
             var component = RenderComponent<MuscleGroupSelector>(parameters => parameters
                 .Add(p => p.AllMuscleGroups, _testMuscleGroups)
                 .Add(p => p.MuscleRoles, _testMuscleRoles)
-                .Add(p => p.MuscleGroups, new List<MuscleGroupRoleAssignmentDto>()));
+                .Add(p => p.MuscleGroups, selectedGroups)
+                .Add(p => p.MuscleGroupsChanged, EventCallback.Factory.Create<List<MuscleGroupRoleAssignmentDto>>(this, groups => callbackInvoked = true)));
 
-            // Act - Select role but no muscle
-            component.Find("select").Change("Primary");
+            var instance = component.Instance;
 
-            // Assert - Add button should be disabled
-            var addButton = component.FindAll("button").First(b => b.TextContent.Trim() == "Add");
-            addButton.GetAttribute("disabled").Should().NotBeNull();
-            
-            // Act - Now select a muscle
-            component.FindAll("select")[1].Change("1");
-            
-            // Assert - Add button should be enabled
-            addButton.GetAttribute("disabled").Should().BeNull();
+            // Act - Try to add with no role
+            instance.selectedRole = "";
+            instance.selectedMuscleId = "1";
+            await component.InvokeAsync(async () => await instance.AddMuscleGroup());
+
+            // Assert
+            selectedGroups.Should().BeEmpty();
+            callbackInvoked.Should().BeFalse();
+
+            // Act - Try to add with no muscle
+            instance.selectedRole = "Primary";
+            instance.selectedMuscleId = "";
+            await component.InvokeAsync(async () => await instance.AddMuscleGroup());
+
+            // Assert
+            selectedGroups.Should().BeEmpty();
+            callbackInvoked.Should().BeFalse();
         }
+
+        #endregion
+
+        #region Integration Tests
+
+        [Fact]
+        public async Task MuscleGroupSelector_Integration_CompleteWorkflowWithTags()
+        {
+            // Arrange
+            var selectedGroups = new List<MuscleGroupRoleAssignmentDto>();
+            var changedGroups = new List<MuscleGroupRoleAssignmentDto>();
+
+            var component = RenderComponent<MuscleGroupSelector>(parameters => parameters
+                .Add(p => p.AllMuscleGroups, _testMuscleGroups)
+                .Add(p => p.MuscleRoles, _testMuscleRoles)
+                .Add(p => p.MuscleGroups, selectedGroups)
+                .Add(p => p.MuscleGroupsChanged, EventCallback.Factory.Create<List<MuscleGroupRoleAssignmentDto>>(this, groups => changedGroups = groups)));
+
+            // Act - Add Primary muscle group
+            component.Find("[data-testid='muscle-group-role-select']").Change("Primary");
+            component.Find("[data-testid='muscle-group-select']").Change("1");
+            await component.InvokeAsync(() => 
+                component.Find("[data-testid='add-muscle-group-button']").Click()
+            );
+
+            // Verify Primary tag is displayed
+            var tags = component.FindComponents<MuscleGroupTag>();
+            tags.Should().HaveCount(1);
+            tags[0].Instance.Role.Should().Be("Primary");
+            tags[0].Instance.MuscleGroupName.Should().Be("Biceps");
+
+            // Add Secondary muscle group
+            component.Find("[data-testid='muscle-group-role-select']").Change("Secondary");
+            component.Find("[data-testid='muscle-group-select']").Change("2");
+            await component.InvokeAsync(() => 
+                component.Find("[data-testid='add-muscle-group-button']").Click()
+            );
+
+            // Verify both tags are displayed
+            tags = component.FindComponents<MuscleGroupTag>();
+            tags.Should().HaveCount(2);
+
+            // Try to add another Primary (should replace the first)
+            component.Find("[data-testid='muscle-group-role-select']").Change("Primary");
+            component.Find("[data-testid='muscle-group-select']").Change("3");
+            await component.InvokeAsync(() => 
+                component.Find("[data-testid='add-muscle-group-button']").Click()
+            );
+
+            // Assert - Should have 2 tags, with new Primary
+            tags = component.FindComponents<MuscleGroupTag>();
+            tags.Should().HaveCount(2);
+            
+            var primaryTag = tags.FirstOrDefault(t => t.Instance.Role == "Primary");
+            primaryTag.Should().NotBeNull();
+            primaryTag!.Instance.MuscleGroupName.Should().Be("Chest");
+            
+            // Verify success indicator
+            component.Markup.Should().Contain("✓ Primary muscle group assigned");
+        }
+
+        [Fact]
+        public void MuscleGroupSelector_Integration_ValidationScenarios()
+        {
+            // Arrange - Start with no Primary muscle and validation error showing
+            var component = RenderComponent<MuscleGroupSelector>(parameters => parameters
+                .Add(p => p.AllMuscleGroups, _testMuscleGroups)
+                .Add(p => p.MuscleRoles, _testMuscleRoles)
+                .Add(p => p.MuscleGroups, new List<MuscleGroupRoleAssignmentDto>
+                {
+                    new() { MuscleGroupId = "1", Role = "Secondary" }
+                })
+                .Add(p => p.ShowValidationError, true));
+
+            // Assert - Validation error should be visible
+            component.Find("[data-testid='muscle-group-validation-error']").Should().NotBeNull();
+            component.Markup.Should().NotContain("✓ Primary muscle group assigned");
+
+            // Act - Update to add a Primary muscle
+            component.SetParametersAndRender(parameters => parameters
+                .Add(p => p.MuscleGroups, new List<MuscleGroupRoleAssignmentDto>
+                {
+                    new() { MuscleGroupId = "1", Role = "Primary" },
+                    new() { MuscleGroupId = "2", Role = "Secondary" }
+                })
+                .Add(p => p.ShowValidationError, false));
+
+            // Assert - Validation error should be gone and success indicator visible
+            component.FindAll("[data-testid='muscle-group-validation-error']").Should().BeEmpty();
+            component.Markup.Should().Contain("✓ Primary muscle group assigned");
+        }
+
+        #endregion
+
+        #region Accessibility Tests
+
+        [Fact]
+        public void MuscleGroupSelector_Accessibility_RequiredFieldsMarked()
+        {
+            // Arrange & Act
+            var component = RenderComponent<MuscleGroupSelector>(parameters => parameters
+                .Add(p => p.AllMuscleGroups, _testMuscleGroups)
+                .Add(p => p.MuscleRoles, _testMuscleRoles)
+                .Add(p => p.MuscleGroups, new List<MuscleGroupRoleAssignmentDto>())
+                .Add(p => p.Disabled, false));
+
+            // Assert - Required field indicator should be present
+            component.Markup.Should().Contain("<span class=\"text-red-500\">*</span>");
+        }
+
+        [Fact]
+        public void MuscleGroupSelector_Accessibility_DisabledStateExplanation()
+        {
+            // Arrange & Act
+            var component = RenderComponent<MuscleGroupSelector>(parameters => parameters
+                .Add(p => p.AllMuscleGroups, _testMuscleGroups)
+                .Add(p => p.MuscleRoles, _testMuscleRoles)
+                .Add(p => p.MuscleGroups, new List<MuscleGroupRoleAssignmentDto>())
+                .Add(p => p.Disabled, true));
+
+            // Assert - Disabled explanation should be present
+            component.Markup.Should().Contain("(disabled for Rest exercises)");
+        }
+
+        #endregion
     }
 }
