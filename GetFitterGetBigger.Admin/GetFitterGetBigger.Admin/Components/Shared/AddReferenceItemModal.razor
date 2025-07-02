@@ -52,17 +52,28 @@
                     <label for="bodyPart" class="block text-sm font-medium text-gray-700 mb-1">
                         Body Part <span class="text-red-500">*</span>
                     </label>
-                    <InputSelect id="bodyPart" @bind-Value="((MuscleGroupFormModel)(object)model).BodyPartId" 
-                                 class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
-                        <option value="">Select a body part</option>
-                        @if (bodyParts != null)
-                        {
-                            @foreach (var bodyPart in bodyParts.OrderBy(bp => bp.Value))
+                    @if (isLoadingBodyParts)
+                    {
+                        <div class="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50 flex items-center">
+                            <span class="inline-block animate-spin rounded-full h-4 w-4 border-b-2 border-gray-600 mr-2"></span>
+                            <span class="text-gray-600">Loading body parts...</span>
+                        </div>
+                    }
+                    else
+                    {
+                        <InputSelect id="bodyPart" @bind-Value="((MuscleGroupFormModel)(object)model).BodyPartId" 
+                                     class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                     disabled="@(bodyParts == null || !bodyParts.Any())">
+                            <option value="">@(bodyParts?.Any() == true ? "Select a body part" : "No body parts available")</option>
+                            @if (bodyParts != null)
                             {
-                                <option value="@bodyPart.Id">@bodyPart.Value</option>
+                                @foreach (var bodyPart in bodyParts.OrderBy(bp => bp.Value))
+                                {
+                                    <option value="@bodyPart.Id">@bodyPart.Value</option>
+                                }
                             }
-                        }
-                    </InputSelect>
+                        </InputSelect>
+                    }
                     <ValidationMessage For="@(() => ((MuscleGroupFormModel)(object)model).BodyPartId)" class="text-red-500 text-sm mt-1" />
                 </div>
             }
@@ -107,6 +118,7 @@
     private bool isSubmitting = false;
     private string? errorMessage;
     private IEnumerable<ReferenceDataDto>? bodyParts;
+    private bool isLoadingBodyParts = false;
 
     private string EntityName => EntityType switch
     {
@@ -121,7 +133,19 @@
         
         if (EntityType == ReferenceEntityType.MuscleGroup && ReferenceDataService != null)
         {
-            bodyParts = await ReferenceDataService.GetBodyPartsAsync();
+            isLoadingBodyParts = true;
+            try
+            {
+                bodyParts = await ReferenceDataService.GetBodyPartsAsync();
+            }
+            catch (Exception ex)
+            {
+                errorMessage = $"Failed to load body parts: {ex.Message}";
+            }
+            finally
+            {
+                isLoadingBodyParts = false;
+            }
         }
     }
 
@@ -172,15 +196,18 @@
         }
         catch (InvalidOperationException ex)
         {
+            // These are business logic errors with user-friendly messages
             errorMessage = ex.Message;
         }
         catch (HttpRequestException ex)
         {
-            errorMessage = $"Network error: {ex.Message}";
+            errorMessage = "Unable to connect to the server. Please check your connection and try again.";
+            Console.WriteLine($"[AddReferenceItemModal] Network error: {ex}");
         }
         catch (Exception ex)
         {
-            errorMessage = $"An unexpected error occurred: {ex.Message}";
+            errorMessage = "An unexpected error occurred. Please try again or contact support if the issue persists.";
+            Console.WriteLine($"[AddReferenceItemModal] Unexpected error: {ex}");
         }
         finally
         {
