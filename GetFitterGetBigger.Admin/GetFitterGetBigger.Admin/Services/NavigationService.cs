@@ -34,20 +34,20 @@ namespace GetFitterGetBigger.Admin.Services
         private void UpdateSection(string uri)
         {
             var currentSection = GetSectionFromUri(uri);
-            
+
             // Clear stored exercise page if navigating away from exercises section
             if (_lastSection == "exercises" && currentSection != "exercises")
             {
                 _exerciseStateService.ClearStoredPage();
             }
-            
+
             _lastSection = currentSection;
         }
 
         private string GetSectionFromUri(string uri)
         {
             var path = new Uri(uri).LocalPath.ToLower();
-            
+
             if (path.Contains("/exercises"))
                 return "exercises";
             else if (path.Contains("/clients"))

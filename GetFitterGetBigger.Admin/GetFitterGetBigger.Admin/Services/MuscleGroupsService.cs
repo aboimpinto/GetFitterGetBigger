@@ -36,7 +36,7 @@ namespace GetFitterGetBigger.Admin.Services
                 // Try the simple endpoint first (without pagination parameters)
                 var requestUrl = $"{_apiBaseUrl}/api/ReferenceTables/MuscleGroups";
                 var response = await _httpClient.GetAsync(requestUrl);
-                
+
                 if (!response.IsSuccessStatusCode)
                 {
                     throw new HttpRequestException($"Failed to get muscle groups: {response.StatusCode}");
@@ -50,7 +50,7 @@ namespace GetFitterGetBigger.Admin.Services
                 {
                     // First try to deserialize as an array (simple format)
                     cachedData = JsonSerializer.Deserialize<IEnumerable<MuscleGroupDto>>(responseContent, _jsonOptions);
-                    
+
                     if (cachedData != null)
                     {
                         _cache.Set(CacheKey, cachedData, TimeSpan.FromHours(24));
@@ -62,7 +62,7 @@ namespace GetFitterGetBigger.Admin.Services
                     try
                     {
                         var pagedResult = JsonSerializer.Deserialize<MuscleGroupPagedResultDto>(responseContent, _jsonOptions);
-                        
+
                         if (pagedResult != null)
                         {
                             cachedData = pagedResult.Items;
@@ -87,7 +87,7 @@ namespace GetFitterGetBigger.Admin.Services
                                     CreatedAt = DateTime.UtcNow,
                                     UpdatedAt = null
                                 }).ToList();
-                                
+
                                 _cache.Set(CacheKey, cachedData, TimeSpan.FromHours(24));
                             }
                         }
@@ -98,19 +98,19 @@ namespace GetFitterGetBigger.Admin.Services
                     }
                 }
             }
-            
+
             return cachedData ?? Enumerable.Empty<MuscleGroupDto>();
         }
 
         public async Task<IEnumerable<MuscleGroupDto>> GetMuscleGroupsByBodyPartAsync(string bodyPartId)
         {
             var cacheKey = $"{CacheKeyPrefix}{bodyPartId}";
-            
+
             if (!_cache.TryGetValue(cacheKey, out IEnumerable<MuscleGroupDto>? cachedData))
             {
                 var requestUrl = $"{_apiBaseUrl}/api/ReferenceTables/MuscleGroups/ByBodyPart/{bodyPartId}";
                 var response = await _httpClient.GetAsync(requestUrl);
-                
+
                 if (!response.IsSuccessStatusCode)
                 {
                     throw new HttpRequestException($"Failed to get muscle groups by body part: {response.StatusCode}");
@@ -118,24 +118,24 @@ namespace GetFitterGetBigger.Admin.Services
 
                 // The API now returns an array of MuscleGroupDto
                 cachedData = await response.Content.ReadFromJsonAsync<IEnumerable<MuscleGroupDto>>(_jsonOptions);
-                
+
                 if (cachedData != null)
                 {
                     _cache.Set(cacheKey, cachedData, TimeSpan.FromHours(24));
                 }
             }
-            
+
             return cachedData ?? Enumerable.Empty<MuscleGroupDto>();
         }
 
         public async Task<MuscleGroupDto> CreateMuscleGroupAsync(CreateMuscleGroupDto dto)
         {
             var requestUrl = $"{_apiBaseUrl}/api/ReferenceTables/MuscleGroups";
-            
+
             // Log the request details
             Console.WriteLine($"[CREATE MUSCLE GROUP] URL: {requestUrl}");
             Console.WriteLine($"[CREATE MUSCLE GROUP] DTO: {JsonSerializer.Serialize(dto, _jsonOptions)}");
-            
+
             var response = await _httpClient.PostAsJsonAsync(requestUrl, dto, _jsonOptions);
 
             if (response.StatusCode == HttpStatusCode.BadRequest)
@@ -163,26 +163,26 @@ namespace GetFitterGetBigger.Admin.Services
 
             var responseContent = await response.Content.ReadAsStringAsync();
             Console.WriteLine($"[CREATE MUSCLE GROUP] Success Response: {responseContent}");
-            
+
             // API returns the full MuscleGroupDto on create
             var created = JsonSerializer.Deserialize<MuscleGroupDto>(responseContent, _jsonOptions);
-            
+
             // Invalidate all relevant caches
             _cache.Remove(CacheKey);
             _cache.Remove($"{CacheKeyPrefix}{dto.BodyPartId}");
-            
+
             return created ?? throw new InvalidOperationException("Failed to deserialize created muscle group");
         }
 
         public async Task<MuscleGroupDto> UpdateMuscleGroupAsync(string id, UpdateMuscleGroupDto dto)
         {
             var requestUrl = $"{_apiBaseUrl}/api/ReferenceTables/MuscleGroups/{id}";
-            
+
             // Log the request details
             Console.WriteLine($"[UPDATE MUSCLE GROUP] URL: {requestUrl}");
             Console.WriteLine($"[UPDATE MUSCLE GROUP] ID: {id}");
             Console.WriteLine($"[UPDATE MUSCLE GROUP] DTO: {JsonSerializer.Serialize(dto, _jsonOptions)}");
-            
+
             var response = await _httpClient.PutAsJsonAsync(requestUrl, dto, _jsonOptions);
 
             if (response.StatusCode == HttpStatusCode.BadRequest)
@@ -210,17 +210,17 @@ namespace GetFitterGetBigger.Admin.Services
 
             var responseContent = await response.Content.ReadAsStringAsync();
             Console.WriteLine($"[UPDATE MUSCLE GROUP] Success Response: {responseContent}");
-            
+
             // API returns the full MuscleGroupDto on update
             var updated = JsonSerializer.Deserialize<MuscleGroupDto>(responseContent, _jsonOptions);
-            
+
             // Invalidate all caches (including old and new body part caches)
             _cache.Remove(CacheKey);
             // Clear all body part caches since we don't track the old body part
             var cacheEntries = _cache.GetType()
                 .GetField("_entries", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
                 ?.GetValue(_cache);
-            
+
             if (cacheEntries != null)
             {
                 var keys = ((dynamic)cacheEntries).Keys;
@@ -232,18 +232,18 @@ namespace GetFitterGetBigger.Admin.Services
                     }
                 }
             }
-            
+
             return updated ?? throw new InvalidOperationException("Failed to deserialize updated muscle group");
         }
 
         public async Task DeleteMuscleGroupAsync(string id)
         {
             var requestUrl = $"{_apiBaseUrl}/api/ReferenceTables/MuscleGroups/{id}";
-            
+
             // Log the request details
             Console.WriteLine($"[DELETE MUSCLE GROUP] URL: {requestUrl}");
             Console.WriteLine($"[DELETE MUSCLE GROUP] ID: {id}");
-            
+
             var response = await _httpClient.DeleteAsync(requestUrl);
 
             if (response.StatusCode == HttpStatusCode.BadRequest)
@@ -267,7 +267,7 @@ namespace GetFitterGetBigger.Admin.Services
                 Console.WriteLine($"[DELETE MUSCLE GROUP] Error Response: {errorContent}");
                 throw new HttpRequestException($"Failed to delete muscle group: {response.StatusCode}");
             }
-            
+
             Console.WriteLine($"[DELETE MUSCLE GROUP] Success: Muscle group {id} deleted");
 
             // Invalidate all caches
@@ -276,7 +276,7 @@ namespace GetFitterGetBigger.Admin.Services
             var cacheEntries = _cache.GetType()
                 .GetField("_entries", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
                 ?.GetValue(_cache);
-            
+
             if (cacheEntries != null)
             {
                 var keys = ((dynamic)cacheEntries).Keys;

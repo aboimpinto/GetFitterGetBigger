@@ -23,7 +23,7 @@ namespace GetFitterGetBigger.Admin.Services
 
         // List state
         public IEnumerable<EquipmentDto> Equipment => _equipment;
-        
+
         public IEnumerable<EquipmentDto> FilteredEquipment
         {
             get
@@ -31,7 +31,7 @@ namespace GetFitterGetBigger.Admin.Services
                 if (string.IsNullOrWhiteSpace(_searchTerm))
                     return _equipment;
 
-                return _equipment.Where(e => 
+                return _equipment.Where(e =>
                     e.Name.Contains(_searchTerm, StringComparison.OrdinalIgnoreCase));
             }
         }
@@ -95,10 +95,10 @@ namespace GetFitterGetBigger.Admin.Services
                 NotifyStateChanged();
 
                 var created = await _equipmentService.CreateEquipmentAsync(dto);
-                
+
                 // Reload the list to get the updated data
                 await LoadEquipmentAsync();
-                
+
                 // Select the newly created equipment
                 _selectedEquipment = _equipment.FirstOrDefault(e => e.Id == created.Id);
             }
@@ -126,10 +126,10 @@ namespace GetFitterGetBigger.Admin.Services
                 NotifyStateChanged();
 
                 var updated = await _equipmentService.UpdateEquipmentAsync(id, dto);
-                
+
                 // Reload the list to get the updated data
                 await LoadEquipmentAsync();
-                
+
                 // Update selected equipment if it was the one being edited
                 if (_selectedEquipment?.Id == id)
                 {
@@ -160,10 +160,10 @@ namespace GetFitterGetBigger.Admin.Services
                 NotifyStateChanged();
 
                 await _equipmentService.DeleteEquipmentAsync(id);
-                
+
                 // Reload the list to get the updated data
                 await LoadEquipmentAsync();
-                
+
                 // Clear selected equipment if it was the one being deleted
                 if (_selectedEquipment?.Id == id)
                 {

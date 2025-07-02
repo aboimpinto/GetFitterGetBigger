@@ -5,17 +5,17 @@ namespace GetFitterGetBigger.Admin.Services
     public interface IExerciseStateService
     {
         event Action? OnChange;
-        
+
         // List state
         ExercisePagedResultDto? CurrentPage { get; }
         ExerciseFilterDto CurrentFilter { get; }
         bool IsLoading { get; }
         string? ErrorMessage { get; }
-        
+
         // Selected exercise state
         ExerciseDto? SelectedExercise { get; }
         bool IsLoadingExercise { get; }
-        
+
         // Reference data state
         IEnumerable<ReferenceDataDto> DifficultyLevels { get; }
         IEnumerable<ReferenceDataDto> MuscleGroups { get; }
@@ -25,7 +25,7 @@ namespace GetFitterGetBigger.Admin.Services
         IEnumerable<ReferenceDataDto> MovementPatterns { get; }
         IEnumerable<ExerciseTypeDto> ExerciseTypes { get; }
         bool IsLoadingReferenceData { get; }
-        
+
         // Methods
         Task InitializeAsync();
         Task LoadExercisesAsync(ExerciseFilterDto? filter = null);

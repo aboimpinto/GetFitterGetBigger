@@ -34,7 +34,7 @@ namespace GetFitterGetBigger.Admin.Services
             {
                 var requestUrl = $"{_apiBaseUrl}/api/ReferenceTables/Equipment";
                 var response = await _httpClient.GetAsync(requestUrl);
-                
+
                 if (!response.IsSuccessStatusCode)
                 {
                     throw new HttpRequestException($"Failed to get equipment: {response.StatusCode}");
@@ -42,7 +42,7 @@ namespace GetFitterGetBigger.Admin.Services
 
                 // The API returns ReferenceDataDto, we need to convert to EquipmentDto
                 var referenceData = await response.Content.ReadFromJsonAsync<IEnumerable<ReferenceDataDto>>(_jsonOptions);
-                
+
                 if (referenceData != null)
                 {
                     cachedData = referenceData.Select(rd => new EquipmentDto
@@ -53,22 +53,22 @@ namespace GetFitterGetBigger.Admin.Services
                         CreatedAt = DateTime.UtcNow, // Default since not provided by API
                         UpdatedAt = null
                     }).ToList();
-                    
+
                     _cache.Set(CacheKey, cachedData, TimeSpan.FromHours(24));
                 }
             }
-            
+
             return cachedData ?? Enumerable.Empty<EquipmentDto>();
         }
 
         public async Task<EquipmentDto> CreateEquipmentAsync(CreateEquipmentDto dto)
         {
             var requestUrl = $"{_apiBaseUrl}/api/ReferenceTables/Equipment";
-            
+
             // Log the request details
             Console.WriteLine($"[CREATE EQUIPMENT] URL: {requestUrl}");
             Console.WriteLine($"[CREATE EQUIPMENT] DTO: {JsonSerializer.Serialize(dto, _jsonOptions)}");
-            
+
             var response = await _httpClient.PostAsJsonAsync(requestUrl, dto, _jsonOptions);
 
             if (response.StatusCode == HttpStatusCode.Conflict)
@@ -85,10 +85,10 @@ namespace GetFitterGetBigger.Admin.Services
 
             var responseContent = await response.Content.ReadAsStringAsync();
             Console.WriteLine($"[CREATE EQUIPMENT] Success Response: {responseContent}");
-            
+
             // Try to deserialize as ReferenceDataDto first since that's what the API returns
             EquipmentDto created;
-            try 
+            try
             {
                 var referenceData = JsonSerializer.Deserialize<ReferenceDataDto>(responseContent, _jsonOptions);
                 created = new EquipmentDto
@@ -105,22 +105,22 @@ namespace GetFitterGetBigger.Admin.Services
                 // If that fails, try as EquipmentDto
                 created = JsonSerializer.Deserialize<EquipmentDto>(responseContent, _jsonOptions)!;
             }
-            
+
             // Invalidate cache
             _cache.Remove(CacheKey);
-            
+
             return created ?? throw new InvalidOperationException("Failed to deserialize created equipment");
         }
 
         public async Task<EquipmentDto> UpdateEquipmentAsync(string id, UpdateEquipmentDto dto)
         {
             var requestUrl = $"{_apiBaseUrl}/api/ReferenceTables/Equipment/{id}";
-            
+
             // Log the request details
             Console.WriteLine($"[UPDATE EQUIPMENT] URL: {requestUrl}");
             Console.WriteLine($"[UPDATE EQUIPMENT] ID: {id}");
             Console.WriteLine($"[UPDATE EQUIPMENT] DTO: {JsonSerializer.Serialize(dto, _jsonOptions)}");
-            
+
             var response = await _httpClient.PutAsJsonAsync(requestUrl, dto, _jsonOptions);
 
             if (response.StatusCode == HttpStatusCode.NotFound)
@@ -142,10 +142,10 @@ namespace GetFitterGetBigger.Admin.Services
 
             var responseContent = await response.Content.ReadAsStringAsync();
             Console.WriteLine($"[UPDATE EQUIPMENT] Success Response: {responseContent}");
-            
+
             // Try to deserialize as ReferenceDataDto first since that's what the API returns
             EquipmentDto updated;
-            try 
+            try
             {
                 var referenceData = JsonSerializer.Deserialize<ReferenceDataDto>(responseContent, _jsonOptions);
                 updated = new EquipmentDto
@@ -162,21 +162,21 @@ namespace GetFitterGetBigger.Admin.Services
                 // If that fails, try as EquipmentDto
                 updated = JsonSerializer.Deserialize<EquipmentDto>(responseContent, _jsonOptions)!;
             }
-            
+
             // Invalidate cache
             _cache.Remove(CacheKey);
-            
+
             return updated ?? throw new InvalidOperationException("Failed to deserialize updated equipment");
         }
 
         public async Task DeleteEquipmentAsync(string id)
         {
             var requestUrl = $"{_apiBaseUrl}/api/ReferenceTables/Equipment/{id}";
-            
+
             // Log the request details
             Console.WriteLine($"[DELETE EQUIPMENT] URL: {requestUrl}");
             Console.WriteLine($"[DELETE EQUIPMENT] ID: {id}");
-            
+
             var response = await _httpClient.DeleteAsync(requestUrl);
 
             if (response.StatusCode == HttpStatusCode.NotFound)
@@ -195,7 +195,7 @@ namespace GetFitterGetBigger.Admin.Services
                 Console.WriteLine($"[DELETE EQUIPMENT] Error Response: {errorContent}");
                 throw new HttpRequestException($"Failed to delete equipment: {response.StatusCode}");
             }
-            
+
             Console.WriteLine($"[DELETE EQUIPMENT] Success: Equipment {id} deleted");
 
             // Invalidate cache

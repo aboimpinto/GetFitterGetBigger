@@ -31,7 +31,7 @@ namespace GetFitterGetBigger.Admin.Services
             try
             {
                 Console.WriteLine($"[ReferenceDataService] GetDataAsync called for {endpoint} with cache key {cacheKey}");
-                
+
                 if (!_cache.TryGetValue(cacheKey, out IEnumerable<ReferenceDataDto>? cachedData))
                 {
                     Console.WriteLine($"[ReferenceDataService] Cache miss for {cacheKey}, fetching from API...");
@@ -83,12 +83,12 @@ namespace GetFitterGetBigger.Admin.Services
             try
             {
                 Console.WriteLine($"[ReferenceDataService] GetMuscleGroupsAsync called");
-                
+
                 if (!_cache.TryGetValue(cacheKey, out IEnumerable<ReferenceDataDto>? cachedData))
                 {
                     Console.WriteLine($"[ReferenceDataService] Cache miss for {cacheKey}, fetching from API...");
                     var requestUrl = "api/ReferenceTables/MuscleGroups";
-                    
+
                     // MuscleGroups endpoint returns MuscleGroupDto, not ReferenceDataDto
                     var muscleGroups = await _httpClient.GetFromJsonAsync<IEnumerable<MuscleGroupDto>>(requestUrl, _jsonOptions);
                     if (muscleGroups != null)
@@ -100,7 +100,7 @@ namespace GetFitterGetBigger.Admin.Services
                             Value = mg.Name,
                             Description = $"Body Part: {mg.BodyPartName ?? "Unknown"}"
                         }).ToList();
-                        
+
                         Console.WriteLine($"[ReferenceDataService] Fetched {cachedData.Count()} muscle groups");
                         _cache.Set(cacheKey, cachedData, TimeSpan.FromHours(24));
                     }
@@ -118,7 +118,7 @@ namespace GetFitterGetBigger.Admin.Services
             }
         }
         public Task<IEnumerable<ReferenceDataDto>> GetMuscleRolesAsync() => GetDataAsync("/api/ReferenceTables/MuscleRoles", "RefData_MuscleRoles");
-        
+
         public async Task<IEnumerable<ExerciseTypeDto>> GetExerciseTypesAsync()
         {
             if (!_cache.TryGetValue("RefData_ExerciseTypes", out IEnumerable<ExerciseTypeDto>? cachedData))

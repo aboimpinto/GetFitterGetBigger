@@ -11,7 +11,7 @@ namespace GetFitterGetBigger.Admin.Services
     public class CacheHelperService : ICacheHelperService
     {
         private readonly IMemoryCache _cache;
-        
+
         // List of all cache keys used in the application
         private readonly string[] _referenceDataCacheKeys = new[]
         {

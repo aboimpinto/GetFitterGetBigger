@@ -30,7 +30,7 @@ namespace GetFitterGetBigger.Admin.Services
 
         // List state
         public IEnumerable<MuscleGroupDto> MuscleGroups => _muscleGroups;
-        
+
         public IEnumerable<MuscleGroupDto> FilteredMuscleGroups
         {
             get
@@ -40,7 +40,7 @@ namespace GetFitterGetBigger.Admin.Services
                 // Filter by search term
                 if (!string.IsNullOrWhiteSpace(_searchTerm))
                 {
-                    filtered = filtered.Where(mg => 
+                    filtered = filtered.Where(mg =>
                         mg.Name.Contains(_searchTerm, StringComparison.OrdinalIgnoreCase));
                 }
 
@@ -96,7 +96,7 @@ namespace GetFitterGetBigger.Admin.Services
             // Load both body parts and muscle groups in parallel
             var loadBodyPartsTask = LoadBodyPartsAsync();
             var loadMuscleGroupsTask = LoadMuscleGroupsAsync();
-            
+
             await Task.WhenAll(loadBodyPartsTask, loadMuscleGroupsTask);
         }
 
@@ -178,7 +178,7 @@ namespace GetFitterGetBigger.Admin.Services
                 NotifyStateChanged();
 
                 var created = await _muscleGroupsService.CreateMuscleGroupAsync(dto);
-                
+
                 // Reload the list to get the updated data
                 await LoadMuscleGroupsAsync();
             }
@@ -206,10 +206,10 @@ namespace GetFitterGetBigger.Admin.Services
                 NotifyStateChanged();
 
                 var updated = await _muscleGroupsService.UpdateMuscleGroupAsync(id, dto);
-                
+
                 // Reload the list to get the updated data
                 await LoadMuscleGroupsAsync();
-                
+
                 // Update selected muscle group if it was the one being updated
                 if (_selectedMuscleGroup?.Id == id)
                 {
@@ -240,16 +240,16 @@ namespace GetFitterGetBigger.Admin.Services
                 NotifyStateChanged();
 
                 await _muscleGroupsService.DeleteMuscleGroupAsync(id);
-                
+
                 // Remove from local list immediately for better UX
                 _muscleGroups.RemoveAll(mg => mg.Id == id);
-                
+
                 // Clear selected if it was deleted
                 if (_selectedMuscleGroup?.Id == id)
                 {
                     _selectedMuscleGroup = null;
                 }
-                
+
                 // Reload to ensure consistency
                 await LoadMuscleGroupsAsync();
             }

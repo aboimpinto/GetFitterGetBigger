@@ -15,7 +15,7 @@ namespace GetFitterGetBigger.Admin.Services.UI
             {
                 return user.DisplayName[0].ToString();
             }
-            
+
             return "?";
         }
 

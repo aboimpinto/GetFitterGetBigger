@@ -32,10 +32,10 @@ namespace GetFitterGetBigger.Admin.Services
         {
             var queryParams = BuildQueryString(filter);
             var requestUrl = $"{_apiBaseUrl}/api/exercises{queryParams}";
-            
+
             var response = await _httpClient.GetAsync(requestUrl);
             response.EnsureSuccessStatusCode();
-            
+
             var result = await response.Content.ReadFromJsonAsync<ExercisePagedResultDto>(_jsonOptions);
             return result ?? new ExercisePagedResultDto();
         }
@@ -43,12 +43,12 @@ namespace GetFitterGetBigger.Admin.Services
         public async Task<ExerciseDto?> GetExerciseByIdAsync(string id)
         {
             var cacheKey = $"exercise_{id}";
-            
+
             if (!_cache.TryGetValue(cacheKey, out ExerciseDto? exercise))
             {
                 var requestUrl = $"{_apiBaseUrl}/api/exercises/{id}";
                 var response = await _httpClient.GetAsync(requestUrl);
-                
+
                 if (response.IsSuccessStatusCode)
                 {
                     exercise = await response.Content.ReadFromJsonAsync<ExerciseDto>(_jsonOptions);
@@ -58,7 +58,7 @@ namespace GetFitterGetBigger.Admin.Services
                     }
                 }
             }
-            
+
             return exercise;
         }
 
@@ -68,26 +68,26 @@ namespace GetFitterGetBigger.Admin.Services
             {
                 var requestUrl = $"{_apiBaseUrl}/api/exercises";
                 var json = JsonSerializer.Serialize(exercise, _jsonOptions);
-                
+
                 Console.WriteLine($"[ExerciseService] Creating exercise at URL: {requestUrl}");
                 Console.WriteLine($"[ExerciseService] Request JSON:");
                 Console.WriteLine(json);
-                
+
                 var content = new StringContent(json, Encoding.UTF8, "application/json");
-                
+
                 var response = await _httpClient.PostAsync(requestUrl, content);
-                
+
                 Console.WriteLine($"[ExerciseService] Response Status: {response.StatusCode}");
-                
+
                 if (!response.IsSuccessStatusCode)
                 {
                     var errorContent = await response.Content.ReadAsStringAsync();
                     Console.WriteLine($"[ExerciseService] Error Response Body:");
                     Console.WriteLine(errorContent);
                 }
-                
+
                 response.EnsureSuccessStatusCode();
-                
+
                 var created = await response.Content.ReadFromJsonAsync<ExerciseDto>(_jsonOptions);
                 return created ?? throw new InvalidOperationException("Failed to create exercise");
             }
@@ -109,10 +109,10 @@ namespace GetFitterGetBigger.Admin.Services
                 JsonSerializer.Serialize(exercise, _jsonOptions),
                 Encoding.UTF8,
                 "application/json");
-            
+
             var response = await _httpClient.PutAsync(requestUrl, content);
             response.EnsureSuccessStatusCode();
-            
+
             // Clear cache for this exercise
             _cache.Remove($"exercise_{id}");
         }
@@ -122,7 +122,7 @@ namespace GetFitterGetBigger.Admin.Services
             var requestUrl = $"{_apiBaseUrl}/api/exercises/{id}";
             var response = await _httpClient.DeleteAsync(requestUrl);
             response.EnsureSuccessStatusCode();
-            
+
             // Clear cache for this exercise
             _cache.Remove($"exercise_{id}");
         }
@@ -130,19 +130,19 @@ namespace GetFitterGetBigger.Admin.Services
         private string BuildQueryString(ExerciseFilterDto filter)
         {
             var query = HttpUtility.ParseQueryString(string.Empty);
-            
+
             query["page"] = filter.Page.ToString();
             query["pageSize"] = filter.PageSize.ToString();
-            
+
             if (!string.IsNullOrWhiteSpace(filter.Name))
                 query["name"] = filter.Name;
-            
+
             if (!string.IsNullOrWhiteSpace(filter.DifficultyId))
                 query["difficultyId"] = filter.DifficultyId;
-            
+
             if (filter.IsActive.HasValue)
                 query["isActive"] = filter.IsActive.Value.ToString();
-            
+
             if (filter.MuscleGroupIds?.Any() == true)
             {
                 foreach (var id in filter.MuscleGroupIds)
@@ -150,7 +150,7 @@ namespace GetFitterGetBigger.Admin.Services
                     query.Add("muscleGroupIds", id);
                 }
             }
-            
+
             if (filter.EquipmentIds?.Any() == true)
             {
                 foreach (var id in filter.EquipmentIds)
@@ -158,7 +158,7 @@ namespace GetFitterGetBigger.Admin.Services
                     query.Add("equipmentIds", id);
                 }
             }
-            
+
             return query.ToString() == "" ? "" : "?" + query.ToString();
         }
     }

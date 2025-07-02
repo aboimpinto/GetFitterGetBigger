@@ -136,11 +136,11 @@ namespace GetFitterGetBigger.Admin.Builders
 
         public ExerciseListDtoBuilder WithDifficulty(string value, string? id = null)
         {
-            _difficulty = new ReferenceDataDto 
-            { 
-                Id = id ?? $"difficulty-{value.ToLower()}", 
-                Value = value, 
-                Description = $"{value} level" 
+            _difficulty = new ReferenceDataDto
+            {
+                Id = id ?? $"difficulty-{value.ToLower()}",
+                Value = value,
+                Description = $"{value} level"
             };
             return this;
         }
@@ -149,17 +149,17 @@ namespace GetFitterGetBigger.Admin.Builders
         {
             _muscleGroups = muscleGroups.Select(mg => new MuscleGroupListItemDto
             {
-                MuscleGroup = new ReferenceDataDto 
-                { 
-                    Id = Guid.NewGuid().ToString(), 
-                    Value = mg.muscleName, 
-                    Description = mg.muscleName 
+                MuscleGroup = new ReferenceDataDto
+                {
+                    Id = Guid.NewGuid().ToString(),
+                    Value = mg.muscleName,
+                    Description = mg.muscleName
                 },
-                Role = new ReferenceDataDto 
-                { 
-                    Id = Guid.NewGuid().ToString(), 
-                    Value = mg.roleName, 
-                    Description = mg.roleName 
+                Role = new ReferenceDataDto
+                {
+                    Id = Guid.NewGuid().ToString(),
+                    Value = mg.roleName,
+                    Description = mg.roleName
                 }
             }).ToList();
             return this;
@@ -169,17 +169,17 @@ namespace GetFitterGetBigger.Admin.Builders
         {
             _muscleGroups.Add(new MuscleGroupListItemDto
             {
-                MuscleGroup = new ReferenceDataDto 
-                { 
-                    Id = Guid.NewGuid().ToString(), 
-                    Value = muscleName, 
-                    Description = muscleName 
+                MuscleGroup = new ReferenceDataDto
+                {
+                    Id = Guid.NewGuid().ToString(),
+                    Value = muscleName,
+                    Description = muscleName
                 },
-                Role = new ReferenceDataDto 
-                { 
-                    Id = Guid.NewGuid().ToString(), 
-                    Value = roleName, 
-                    Description = roleName 
+                Role = new ReferenceDataDto
+                {
+                    Id = Guid.NewGuid().ToString(),
+                    Value = roleName,
+                    Description = roleName
                 }
             });
             return this;
