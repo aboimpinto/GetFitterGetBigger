@@ -195,15 +195,15 @@ namespace GetFitterGetBigger.Admin.Tests.Services
         {
             // Arrange
             var createDto = new CreateMuscleGroupDto { Name = "Deltoids", BodyPartId = "bp-1" };
-            var created = new MuscleGroupDto 
-            { 
-                Id = "mg-new", 
-                Name = "Deltoids", 
-                BodyPartId = "bp-1", 
-                IsActive = true, 
-                CreatedAt = DateTime.UtcNow 
+            var created = new MuscleGroupDto
+            {
+                Id = "mg-new",
+                Name = "Deltoids",
+                BodyPartId = "bp-1",
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow
             };
-            
+
             _muscleGroupsServiceMock.Setup(x => x.CreateMuscleGroupAsync(It.IsAny<CreateMuscleGroupDto>()))
                 .ReturnsAsync(created);
             _muscleGroupsServiceMock.Setup(x => x.GetMuscleGroupsAsync())
@@ -243,21 +243,21 @@ namespace GetFitterGetBigger.Admin.Tests.Services
         public async Task UpdateMuscleGroupAsync_ShouldReloadListAndUpdateSelected_WhenSuccessful()
         {
             // Arrange
-            var muscleGroup = new MuscleGroupDto 
-            { 
-                Id = "mg-1", 
-                Name = "Biceps", 
-                BodyPartId = "bp-1", 
-                IsActive = true, 
-                CreatedAt = DateTime.UtcNow 
+            var muscleGroup = new MuscleGroupDto
+            {
+                Id = "mg-1",
+                Name = "Biceps",
+                BodyPartId = "bp-1",
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow
             };
             var updateDto = new UpdateMuscleGroupDto { Name = "Updated Biceps", BodyPartId = "bp-1" };
-            var updated = new MuscleGroupDto 
-            { 
-                Id = "mg-1", 
-                Name = "Updated Biceps", 
-                BodyPartId = "bp-1", 
-                IsActive = true, 
+            var updated = new MuscleGroupDto
+            {
+                Id = "mg-1",
+                Name = "Updated Biceps",
+                BodyPartId = "bp-1",
+                IsActive = true,
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow
             };
@@ -295,7 +295,7 @@ namespace GetFitterGetBigger.Admin.Tests.Services
                 new() { Id = "mg-1", Name = "Biceps", BodyPartId = "bp-1", IsActive = true, CreatedAt = DateTime.UtcNow },
                 new() { Id = "mg-2", Name = "Triceps", BodyPartId = "bp-1", IsActive = true, CreatedAt = DateTime.UtcNow }
             };
-            
+
             _muscleGroupsServiceMock.Setup(x => x.GetMuscleGroupsAsync())
                 .ReturnsAsync(muscleGroups);
             await _stateService.LoadMuscleGroupsAsync();
@@ -325,7 +325,7 @@ namespace GetFitterGetBigger.Admin.Tests.Services
             {
                 new() { Id = "mg-1", Name = "Biceps", BodyPartId = "bp-1", IsActive = true, CreatedAt = DateTime.UtcNow }
             };
-            
+
             _muscleGroupsServiceMock.Setup(x => x.GetMuscleGroupsAsync())
                 .ReturnsAsync(muscleGroups);
             await _stateService.LoadMuscleGroupsAsync();
@@ -380,13 +380,13 @@ namespace GetFitterGetBigger.Admin.Tests.Services
             // Arrange
             var changeTriggered = false;
             _stateService.OnChange += () => changeTriggered = true;
-            var muscleGroup = new MuscleGroupDto 
-            { 
-                Id = "mg-1", 
-                Name = "Biceps", 
-                BodyPartId = "bp-1", 
-                IsActive = true, 
-                CreatedAt = DateTime.UtcNow 
+            var muscleGroup = new MuscleGroupDto
+            {
+                Id = "mg-1",
+                Name = "Biceps",
+                BodyPartId = "bp-1",
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow
             };
 
             // Act

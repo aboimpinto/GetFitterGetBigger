@@ -58,19 +58,19 @@ namespace GetFitterGetBigger.Admin.Tests.Services
             // Arrange
             var muscleGroups = new[]
             {
-                new MuscleGroupDto 
-                { 
-                    Id = "musclegroup-1", 
-                    Name = "Biceps", 
+                new MuscleGroupDto
+                {
+                    Id = "musclegroup-1",
+                    Name = "Biceps",
                     BodyPartId = "bodypart-1",
                     BodyPartName = "Arms",
                     IsActive = true,
                     CreatedAt = DateTime.UtcNow
                 },
-                new MuscleGroupDto 
-                { 
-                    Id = "musclegroup-2", 
-                    Name = "Triceps", 
+                new MuscleGroupDto
+                {
+                    Id = "musclegroup-2",
+                    Name = "Triceps",
                     BodyPartId = "bodypart-1",
                     BodyPartName = "Arms",
                     IsActive = true,
@@ -98,10 +98,10 @@ namespace GetFitterGetBigger.Admin.Tests.Services
             // Arrange
             var muscleGroups = new[]
             {
-                new MuscleGroupDto 
-                { 
-                    Id = "musclegroup-1", 
-                    Name = "Biceps", 
+                new MuscleGroupDto
+                {
+                    Id = "musclegroup-1",
+                    Name = "Biceps",
                     BodyPartId = "bodypart-1",
                     IsActive = true,
                     CreatedAt = DateTime.UtcNow
@@ -140,19 +140,19 @@ namespace GetFitterGetBigger.Admin.Tests.Services
             var bodyPartId = "bodypart-123";
             var muscleGroups = new[]
             {
-                new MuscleGroupDto 
-                { 
-                    Id = "musclegroup-1", 
-                    Name = "Biceps", 
+                new MuscleGroupDto
+                {
+                    Id = "musclegroup-1",
+                    Name = "Biceps",
                     BodyPartId = bodyPartId,
                     BodyPartName = "Arms",
                     IsActive = true,
                     CreatedAt = DateTime.UtcNow
                 },
-                new MuscleGroupDto 
-                { 
-                    Id = "musclegroup-2", 
-                    Name = "Brachialis", 
+                new MuscleGroupDto
+                {
+                    Id = "musclegroup-2",
+                    Name = "Brachialis",
                     BodyPartId = bodyPartId,
                     BodyPartName = "Arms",
                     IsActive = true,
@@ -176,27 +176,27 @@ namespace GetFitterGetBigger.Admin.Tests.Services
             // Arrange
             var bodyPartId1 = "bodypart-123";
             var bodyPartId2 = "bodypart-456";
-            var muscleGroups1 = new[] 
-            { 
-                new MuscleGroupDto 
-                { 
-                    Id = "musclegroup-1", 
-                    Name = "Biceps", 
+            var muscleGroups1 = new[]
+            {
+                new MuscleGroupDto
+                {
+                    Id = "musclegroup-1",
+                    Name = "Biceps",
                     BodyPartId = bodyPartId1,
                     IsActive = true,
                     CreatedAt = DateTime.UtcNow
-                } 
+                }
             };
-            var muscleGroups2 = new[] 
-            { 
-                new MuscleGroupDto 
-                { 
-                    Id = "musclegroup-2", 
-                    Name = "Quadriceps", 
+            var muscleGroups2 = new[]
+            {
+                new MuscleGroupDto
+                {
+                    Id = "musclegroup-2",
+                    Name = "Quadriceps",
                     BodyPartId = bodyPartId2,
                     IsActive = true,
                     CreatedAt = DateTime.UtcNow
-                } 
+                }
             };
 
             _httpMessageHandler
@@ -281,7 +281,7 @@ namespace GetFitterGetBigger.Admin.Tests.Services
             _httpMessageHandler.SetupResponse(HttpStatusCode.NotFound);
 
             // Act & Assert
-            var exception = await Assert.ThrowsAsync<InvalidOperationException>(() => 
+            var exception = await Assert.ThrowsAsync<InvalidOperationException>(() =>
                 _muscleGroupsService.CreateMuscleGroupAsync(createDto));
             exception.Message.Should().Be("Body part not found");
         }
@@ -294,7 +294,7 @@ namespace GetFitterGetBigger.Admin.Tests.Services
             _httpMessageHandler.SetupResponse(HttpStatusCode.Conflict);
 
             // Act & Assert
-            var exception = await Assert.ThrowsAsync<InvalidOperationException>(() => 
+            var exception = await Assert.ThrowsAsync<InvalidOperationException>(() =>
                 _muscleGroupsService.CreateMuscleGroupAsync(createDto));
             exception.Message.Should().Be("Muscle group with this name already exists for the selected body part");
         }
@@ -336,7 +336,7 @@ namespace GetFitterGetBigger.Admin.Tests.Services
             _httpMessageHandler.SetupResponse(HttpStatusCode.NotFound);
 
             // Act & Assert
-            var exception = await Assert.ThrowsAsync<InvalidOperationException>(() => 
+            var exception = await Assert.ThrowsAsync<InvalidOperationException>(() =>
                 _muscleGroupsService.UpdateMuscleGroupAsync("musclegroup-invalid", updateDto));
             exception.Message.Should().Be("Muscle group or body part not found");
         }
@@ -349,7 +349,7 @@ namespace GetFitterGetBigger.Admin.Tests.Services
             _httpMessageHandler.SetupResponse(HttpStatusCode.Conflict);
 
             // Act & Assert
-            var exception = await Assert.ThrowsAsync<InvalidOperationException>(() => 
+            var exception = await Assert.ThrowsAsync<InvalidOperationException>(() =>
                 _muscleGroupsService.UpdateMuscleGroupAsync("musclegroup-1", updateDto));
             exception.Message.Should().Be("Muscle group with this name already exists for the selected body part");
         }
@@ -397,7 +397,7 @@ namespace GetFitterGetBigger.Admin.Tests.Services
             _httpMessageHandler.SetupResponse(HttpStatusCode.NotFound);
 
             // Act & Assert
-            var exception = await Assert.ThrowsAsync<InvalidOperationException>(() => 
+            var exception = await Assert.ThrowsAsync<InvalidOperationException>(() =>
                 _muscleGroupsService.DeleteMuscleGroupAsync("musclegroup-invalid"));
             exception.Message.Should().Be("Muscle group not found");
         }
@@ -409,7 +409,7 @@ namespace GetFitterGetBigger.Admin.Tests.Services
             _httpMessageHandler.SetupResponse(HttpStatusCode.Conflict);
 
             // Act & Assert
-            var exception = await Assert.ThrowsAsync<InvalidOperationException>(() => 
+            var exception = await Assert.ThrowsAsync<InvalidOperationException>(() =>
                 _muscleGroupsService.DeleteMuscleGroupAsync("musclegroup-1"));
             exception.Message.Should().Be("Cannot delete muscle group that is in use by exercises");
         }
@@ -421,7 +421,7 @@ namespace GetFitterGetBigger.Admin.Tests.Services
             _httpMessageHandler.SetupResponse(HttpStatusCode.InternalServerError);
 
             // Act & Assert
-            await Assert.ThrowsAsync<HttpRequestException>(() => 
+            await Assert.ThrowsAsync<HttpRequestException>(() =>
                 _muscleGroupsService.DeleteMuscleGroupAsync("musclegroup-1"));
         }
 

@@ -35,7 +35,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
             Services.AddSingleton<IReferenceDataService>(_mockReferenceDataService);
             Services.AddSingleton<IEquipmentService>(_mockEquipmentService);
             Services.AddSingleton<IMuscleGroupsService>(_mockMuscleGroupsService);
-            
+
             var navMan = Services.GetRequiredService<FakeNavigationManager>();
             navMan.NavigateTo("http://localhost/exercises/new");
         }
@@ -48,7 +48,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
             // Arrange
             _mockStateService.SetupReferenceData();
             var initialEquipmentCount = _mockStateService.Equipment.Count();
-            
+
             _mockEquipmentService.OnCreateEquipment = async (name) =>
             {
                 var newEquipment = new EquipmentDto { Id = "new-1", Name = name };
@@ -78,7 +78,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
             await component.InvokeAsync(async () =>
             {
                 var instance = component.Instance;
-                var refreshMethod = instance.GetType().GetMethod("RefreshEquipment", 
+                var refreshMethod = instance.GetType().GetMethod("RefreshEquipment",
                     System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
                 refreshMethod.Should().NotBeNull("RefreshEquipment method should exist");
                 await (Task)refreshMethod!.Invoke(instance, null)!;
@@ -99,12 +99,12 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
             var component = RenderComponent<ExerciseForm>();
 
             // Act - Find the Equipment section
-            var equipmentSection = component.FindAll("div").FirstOrDefault(d => 
+            var equipmentSection = component.FindAll("div").FirstOrDefault(d =>
                 d.TextContent.Contains("Equipment"));
-            
+
             // Assert - Equipment section should exist
             equipmentSection.Should().NotBeNull("Equipment section should be present in the form");
-            
+
             // The test verifies that the component structure supports inline creation
             // The actual optimistic update behavior is tested in the InvalidatesCacheAndRefreshesDropdown test
         }
@@ -119,12 +119,12 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
             // Arrange
             _mockStateService.SetupReferenceData();
             var initialMuscleGroupCount = _mockStateService.MuscleGroups.Count();
-            
+
             _mockMuscleGroupsService.OnCreateMuscleGroup = async (dto) =>
             {
-                var newMuscleGroup = new MuscleGroupDto 
-                { 
-                    Id = "new-mg-1", 
+                var newMuscleGroup = new MuscleGroupDto
+                {
+                    Id = "new-mg-1",
                     Name = dto.Name,
                     BodyPartId = dto.BodyPartId
                 };
@@ -152,7 +152,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
             await component.InvokeAsync(async () =>
             {
                 var instance = component.Instance;
-                var refreshMethod = instance.GetType().GetMethod("RefreshMuscleGroups", 
+                var refreshMethod = instance.GetType().GetMethod("RefreshMuscleGroups",
                     System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
                 refreshMethod.Should().NotBeNull("RefreshMuscleGroups method should exist");
                 await (Task)refreshMethod!.Invoke(instance, null)!;
@@ -173,12 +173,12 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
             var component = RenderComponent<ExerciseForm>();
 
             // Act - Find the muscle groups section
-            var muscleGroupSection = component.FindAll("div").FirstOrDefault(d => 
+            var muscleGroupSection = component.FindAll("div").FirstOrDefault(d =>
                 d.TextContent.Contains("Muscle Groups"));
-            
+
             // Assert - Muscle groups section should exist
             muscleGroupSection.Should().NotBeNull("Muscle Groups section should be present in the form");
-            
+
             // The test verifies that the component has muscle group functionality
             // The actual inline creation UI is part of the MuscleGroupSelector component
         }
@@ -196,10 +196,10 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
             // Arrange
             _mockStateService.SetupReferenceData();
             var component = RenderComponent<ExerciseForm>();
-            
+
             var errorOccurred = false;
             var refreshCalled = false;
-            
+
             // Set up error after component is initialized
             _mockStateService.OnInitialize = async () =>
             {
@@ -214,7 +214,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
                 await component.InvokeAsync(async () =>
                 {
                     var instance = component.Instance;
-                    var refreshMethod = instance.GetType().GetMethod("RefreshEquipment", 
+                    var refreshMethod = instance.GetType().GetMethod("RefreshEquipment",
                         System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
                     await (Task)refreshMethod!.Invoke(instance, null)!;
                 });
@@ -247,13 +247,13 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
 
             // Try to add a muscle group - this may not work due to component complexity
             // but the important part is that form state is maintained
-            try 
+            try
             {
                 var roleSelect = component.FindAll("select").FirstOrDefault(s => s.GetAttribute("value") == "");
                 if (roleSelect != null)
                 {
                     roleSelect.Change("Primary");
-                    var muscleSelects = component.FindAll("select").Where(s => 
+                    var muscleSelects = component.FindAll("select").Where(s =>
                         s.GetAttribute("placeholder") == "Select muscle group" ||
                         s.Parent?.TextContent?.Contains("Select muscle group") == true);
                     var muscleSelect = muscleSelects.FirstOrDefault();
@@ -265,7 +265,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
                     }
                 }
             }
-            catch 
+            catch
             {
                 // If muscle group selection fails, it's OK - we're mainly testing form state preservation
             }
@@ -362,33 +362,33 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
             public Action? OnClearEquipmentCache { get; set; }
             public Action? OnClearMuscleGroupsCache { get; set; }
 
-            public Task<IEnumerable<ReferenceDataDto>> GetDifficultyLevelsAsync() => 
+            public Task<IEnumerable<ReferenceDataDto>> GetDifficultyLevelsAsync() =>
                 Task.FromResult<IEnumerable<ReferenceDataDto>>(new List<ReferenceDataDto>());
-            
-            public Task<IEnumerable<ReferenceDataDto>> GetMuscleGroupsAsync() => 
+
+            public Task<IEnumerable<ReferenceDataDto>> GetMuscleGroupsAsync() =>
                 Task.FromResult<IEnumerable<ReferenceDataDto>>(new List<ReferenceDataDto>());
-            
-            public Task<IEnumerable<ReferenceDataDto>> GetMuscleRolesAsync() => 
+
+            public Task<IEnumerable<ReferenceDataDto>> GetMuscleRolesAsync() =>
                 Task.FromResult<IEnumerable<ReferenceDataDto>>(new List<ReferenceDataDto>());
-            
-            public Task<IEnumerable<ReferenceDataDto>> GetEquipmentAsync() => 
+
+            public Task<IEnumerable<ReferenceDataDto>> GetEquipmentAsync() =>
                 Task.FromResult<IEnumerable<ReferenceDataDto>>(new List<ReferenceDataDto>());
-            
-            public Task<IEnumerable<ReferenceDataDto>> GetBodyPartsAsync() => 
+
+            public Task<IEnumerable<ReferenceDataDto>> GetBodyPartsAsync() =>
                 Task.FromResult<IEnumerable<ReferenceDataDto>>(new List<ReferenceDataDto>());
-            
-            public Task<IEnumerable<ReferenceDataDto>> GetMovementPatternsAsync() => 
+
+            public Task<IEnumerable<ReferenceDataDto>> GetMovementPatternsAsync() =>
                 Task.FromResult<IEnumerable<ReferenceDataDto>>(new List<ReferenceDataDto>());
-            
-            public Task<IEnumerable<ExerciseTypeDto>> GetExerciseTypesAsync() => 
+
+            public Task<IEnumerable<ExerciseTypeDto>> GetExerciseTypesAsync() =>
                 Task.FromResult<IEnumerable<ExerciseTypeDto>>(new List<ExerciseTypeDto>());
-            
-            public Task<IEnumerable<ReferenceDataDto>> GetKineticChainTypesAsync() => 
+
+            public Task<IEnumerable<ReferenceDataDto>> GetKineticChainTypesAsync() =>
                 Task.FromResult<IEnumerable<ReferenceDataDto>>(new List<ReferenceDataDto>());
-            
-            public Task<IEnumerable<ReferenceDataDto>> GetMetricTypesAsync() => 
+
+            public Task<IEnumerable<ReferenceDataDto>> GetMetricTypesAsync() =>
                 Task.FromResult<IEnumerable<ReferenceDataDto>>(new List<ReferenceDataDto>());
-            
+
             public void ClearEquipmentCache() => OnClearEquipmentCache?.Invoke();
             public void ClearMuscleGroupsCache() => OnClearMuscleGroupsCache?.Invoke();
         }
@@ -397,7 +397,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
         {
             public Func<string, Task<EquipmentDto>>? OnCreateEquipment { get; set; }
 
-            public Task<IEnumerable<EquipmentDto>> GetEquipmentAsync() => 
+            public Task<IEnumerable<EquipmentDto>> GetEquipmentAsync() =>
                 Task.FromResult<IEnumerable<EquipmentDto>>(new List<EquipmentDto>());
 
             public async Task<EquipmentDto> CreateEquipmentAsync(CreateEquipmentDto dto)
@@ -406,9 +406,9 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
                 {
                     return await OnCreateEquipment(dto.Name);
                 }
-                return new EquipmentDto 
-                { 
-                    Id = "new", 
+                return new EquipmentDto
+                {
+                    Id = "new",
                     Name = dto.Name,
                     IsActive = true,
                     CreatedAt = DateTime.UtcNow,
@@ -416,10 +416,10 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
                 };
             }
 
-            public Task<EquipmentDto> UpdateEquipmentAsync(string id, UpdateEquipmentDto dto) => 
-                Task.FromResult(new EquipmentDto 
-                { 
-                    Id = id, 
+            public Task<EquipmentDto> UpdateEquipmentAsync(string id, UpdateEquipmentDto dto) =>
+                Task.FromResult(new EquipmentDto
+                {
+                    Id = id,
                     Name = dto.Name,
                     IsActive = true,
                     CreatedAt = DateTime.UtcNow,
@@ -433,10 +433,10 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
         {
             public Func<CreateMuscleGroupDto, Task<MuscleGroupDto>>? OnCreateMuscleGroup { get; set; }
 
-            public Task<IEnumerable<MuscleGroupDto>> GetMuscleGroupsAsync() => 
+            public Task<IEnumerable<MuscleGroupDto>> GetMuscleGroupsAsync() =>
                 Task.FromResult<IEnumerable<MuscleGroupDto>>(new List<MuscleGroupDto>());
 
-            public Task<IEnumerable<MuscleGroupDto>> GetMuscleGroupsByBodyPartAsync(string bodyPartId) => 
+            public Task<IEnumerable<MuscleGroupDto>> GetMuscleGroupsByBodyPartAsync(string bodyPartId) =>
                 Task.FromResult<IEnumerable<MuscleGroupDto>>(new List<MuscleGroupDto>());
 
             public async Task<MuscleGroupDto> CreateMuscleGroupAsync(CreateMuscleGroupDto dto)
@@ -445,9 +445,9 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
                 {
                     return await OnCreateMuscleGroup(dto);
                 }
-                return new MuscleGroupDto 
-                { 
-                    Id = "new", 
+                return new MuscleGroupDto
+                {
+                    Id = "new",
                     Name = dto.Name,
                     BodyPartId = dto.BodyPartId,
                     BodyPartName = null,
@@ -457,10 +457,10 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
                 };
             }
 
-            public Task<MuscleGroupDto> UpdateMuscleGroupAsync(string id, UpdateMuscleGroupDto dto) => 
-                Task.FromResult(new MuscleGroupDto 
-                { 
-                    Id = id, 
+            public Task<MuscleGroupDto> UpdateMuscleGroupAsync(string id, UpdateMuscleGroupDto dto) =>
+                Task.FromResult(new MuscleGroupDto
+                {
+                    Id = id,
                     Name = dto.Name,
                     BodyPartId = dto.BodyPartId,
                     BodyPartName = null,

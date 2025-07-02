@@ -90,12 +90,12 @@ namespace GetFitterGetBigger.Admin.Tests.Services
         {
             // Arrange
             var createDto = new CreateEquipmentDto { Name = "New Equipment" };
-            var createdEquipment = new EquipmentDto 
-            { 
-                Id = "new-1", 
-                Name = "New Equipment", 
-                IsActive = true, 
-                CreatedAt = DateTime.UtcNow 
+            var createdEquipment = new EquipmentDto
+            {
+                Id = "new-1",
+                Name = "New Equipment",
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow
             };
 
             _equipmentServiceMock.Setup(x => x.CreateEquipmentAsync(createDto))
@@ -137,18 +137,18 @@ namespace GetFitterGetBigger.Admin.Tests.Services
             // Arrange
             var equipmentId = "equipment-1";
             var updateDto = new UpdateEquipmentDto { Name = "Updated Equipment" };
-            var originalEquipment = new EquipmentDto 
-            { 
-                Id = equipmentId, 
-                Name = "Original", 
-                IsActive = true, 
-                CreatedAt = DateTime.UtcNow 
+            var originalEquipment = new EquipmentDto
+            {
+                Id = equipmentId,
+                Name = "Original",
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow
             };
-            var updatedEquipment = new EquipmentDto 
-            { 
-                Id = equipmentId, 
-                Name = "Updated Equipment", 
-                IsActive = true, 
+            var updatedEquipment = new EquipmentDto
+            {
+                Id = equipmentId,
+                Name = "Updated Equipment",
+                IsActive = true,
                 CreatedAt = DateTime.UtcNow.AddDays(-1),
                 UpdatedAt = DateTime.UtcNow
             };
@@ -179,12 +179,12 @@ namespace GetFitterGetBigger.Admin.Tests.Services
         {
             // Arrange
             var equipmentId = "equipment-1";
-            var equipment = new EquipmentDto 
-            { 
-                Id = equipmentId, 
-                Name = "To Delete", 
-                IsActive = true, 
-                CreatedAt = DateTime.UtcNow 
+            var equipment = new EquipmentDto
+            {
+                Id = equipmentId,
+                Name = "To Delete",
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow
             };
 
             _equipmentServiceMock.Setup(x => x.DeleteEquipmentAsync(equipmentId))
@@ -227,12 +227,12 @@ namespace GetFitterGetBigger.Admin.Tests.Services
         public void SelectEquipment_UpdatesSelectedAndNotifies()
         {
             // Arrange
-            var equipment = new EquipmentDto 
-            { 
-                Id = "1", 
-                Name = "Selected", 
-                IsActive = true, 
-                CreatedAt = DateTime.UtcNow 
+            var equipment = new EquipmentDto
+            {
+                Id = "1",
+                Name = "Selected",
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow
             };
             _stateChangeCount = 0;
 
@@ -248,12 +248,12 @@ namespace GetFitterGetBigger.Admin.Tests.Services
         public void ClearSelectedEquipment_ClearsAndNotifies()
         {
             // Arrange
-            var equipment = new EquipmentDto 
-            { 
-                Id = "1", 
-                Name = "Selected", 
-                IsActive = true, 
-                CreatedAt = DateTime.UtcNow 
+            var equipment = new EquipmentDto
+            {
+                Id = "1",
+                Name = "Selected",
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow
             };
             _stateService.SelectEquipment(equipment);
             _stateChangeCount = 0;
