@@ -789,5 +789,249 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Shared
         }
 
         #endregion
+
+        #region Rapid Interaction Tests
+
+        [Fact]
+        public async Task AddReferenceItemModal_RapidInteraction_HandlesDoubleClickSubmission()
+        {
+            // Arrange
+            var submitCount = 0;
+            var tcs = new TaskCompletionSource<EquipmentDto>();
+            
+            _mockEquipmentService.Setup(x => x.CreateEquipmentAsync(It.IsAny<CreateEquipmentDto>()))
+                .Returns(() =>
+                {
+                    submitCount++;
+                    return tcs.Task;
+                });
+
+            var component = RenderComponent<AddReferenceItemModal>(parameters => parameters
+                .Add(p => p.EntityType, ReferenceEntityType.Equipment));
+
+            // Act - Fill form and double-click submit button rapidly
+            component.Find("[data-testid='equipment-name-input']").Change("Double Click Test");
+            
+            // Simulate double-click by clicking twice rapidly
+            var submitButton = component.Find("[data-testid='submit-button']");
+            var firstClickTask = component.InvokeAsync(() => submitButton.Click());
+            var secondClickTask = component.InvokeAsync(() => submitButton.Click());
+
+            // Complete the async operation
+            tcs.SetResult(new EquipmentDto { Id = "1", Name = "Double Click Test" });
+            
+            await firstClickTask;
+            await secondClickTask;
+
+            // Assert - Should only submit once due to isSubmitting flag
+            submitCount.Should().Be(1);
+        }
+
+        [Fact]
+        public async Task AddReferenceItemModal_RapidInteraction_HandlesRapidFormResubmissions()
+        {
+            // Arrange
+            var submissionTimes = new List<DateTime>();
+            _mockEquipmentService.Setup(x => x.CreateEquipmentAsync(It.IsAny<CreateEquipmentDto>()))
+                .Callback(() => submissionTimes.Add(DateTime.Now))
+                .ReturnsAsync(() => new EquipmentDto { Id = Guid.NewGuid().ToString(), Name = "Test" });
+
+            var component = RenderComponent<AddReferenceItemModal>(parameters => parameters
+                .Add(p => p.EntityType, ReferenceEntityType.Equipment));
+
+            // Act - Submit form rapidly multiple times
+            for (int i = 0; i < 5; i++)
+            {
+                component.Find("[data-testid='equipment-name-input']").Change($"Test Item {i}");
+                await component.InvokeAsync(() =>
+                    component.Find("[data-testid='add-reference-form']").Submit()
+                );
+                
+                // Small delay to simulate rapid user interaction
+                await Task.Delay(50);
+            }
+
+            // Assert - All submissions should complete successfully
+            submissionTimes.Should().HaveCount(5);
+            
+            // Verify submissions are spaced out (not simultaneous)
+            for (int i = 1; i < submissionTimes.Count; i++)
+            {
+                var timeDiff = submissionTimes[i] - submissionTimes[i - 1];
+                timeDiff.TotalMilliseconds.Should().BeGreaterThan(40); // At least 40ms apart
+            }
+        }
+
+        [Fact]
+        public async Task AddReferenceItemModal_RapidInteraction_HandlesKeyboardSpamDuringInput()
+        {
+            // Arrange
+            var component = RenderComponent<AddReferenceItemModal>(parameters => parameters
+                .Add(p => p.EntityType, ReferenceEntityType.Equipment));
+
+            var nameInput = component.Find("[data-testid='equipment-name-input']");
+            
+            // Act - Simulate keyboard spam with rapid changes
+            var rapidInputs = new[] { "T", "Te", "Tes", "Test", "Test ", "Test E", "Test Eq", "Test Equ", "Test Equi", "Test Equip" };
+            
+            foreach (var input in rapidInputs)
+            {
+                nameInput.Change(input);
+                // No delay - simulating very fast typing
+            }
+
+            // Final value
+            nameInput.Change("Test Equipment");
+            
+            // Submit form
+            await component.InvokeAsync(() =>
+                component.Find("[data-testid='add-reference-form']").Submit()
+            );
+
+            // Assert - Form should handle rapid input changes gracefully
+            _mockEquipmentService.Verify(x => x.CreateEquipmentAsync(
+                It.Is<CreateEquipmentDto>(dto => dto.Name == "Test Equipment")), Times.Once);
+        }
+
+        [Fact]
+        public async Task AddReferenceItemModal_RapidInteraction_HandlesRapidCancelClicks()
+        {
+            // Arrange
+            var cancelCount = 0;
+            var component = RenderComponent<AddReferenceItemModal>(parameters => parameters
+                .Add(p => p.EntityType, ReferenceEntityType.Equipment)
+                .Add(p => p.OnCancel, EventCallback.Factory.Create(this, () => cancelCount++)));
+
+            // Act - Click cancel button multiple times rapidly
+            var cancelButton = component.Find("[data-testid='cancel-button']");
+            
+            var tasks = new List<Task>();
+            for (int i = 0; i < 5; i++)
+            {
+                tasks.Add(component.InvokeAsync(() => cancelButton.Click()));
+            }
+            
+            await Task.WhenAll(tasks);
+
+            // Assert - Component allows multiple cancel calls (not protected)
+            cancelCount.Should().Be(5);
+        }
+
+        [Fact]
+        public async Task AddReferenceItemModal_RapidInteraction_HandlesFormSubmitDuringLoading()
+        {
+            // Arrange
+            var submitCount = 0;
+            var tcs = new TaskCompletionSource<EquipmentDto>();
+            
+            _mockEquipmentService.Setup(x => x.CreateEquipmentAsync(It.IsAny<CreateEquipmentDto>()))
+                .Returns(() =>
+                {
+                    submitCount++;
+                    return tcs.Task;
+                });
+
+            var component = RenderComponent<AddReferenceItemModal>(parameters => parameters
+                .Add(p => p.EntityType, ReferenceEntityType.Equipment));
+
+            // Act - Submit form
+            component.Find("[data-testid='equipment-name-input']").Change("Test");
+            var submitTask = component.InvokeAsync(() =>
+                component.Find("[data-testid='add-reference-form']").Submit()
+            );
+
+            // Try to submit again while first is still loading
+            await component.InvokeAsync(() =>
+                component.Find("[data-testid='add-reference-form']").Submit()
+            );
+
+            // Complete the first submission
+            tcs.SetResult(new EquipmentDto { Id = "1", Name = "Test" });
+            await submitTask;
+
+            // Assert - Only one submission should occur
+            submitCount.Should().Be(1);
+        }
+
+        [Fact]
+        public void AddReferenceItemModal_RapidInteraction_ShowsCorrectFormBasedOnEntityType()
+        {
+            // Test that the component shows the correct form based on entity type
+            // In practice, the modal would be recreated when entity type changes
+            
+            // Test 1: Equipment type
+            var equipmentComponent = RenderComponent<AddReferenceItemModal>(parameters => parameters
+                .Add(p => p.EntityType, ReferenceEntityType.Equipment));
+
+            // Verify Equipment form is shown
+            equipmentComponent.FindAll("[data-testid='equipment-name-input']").Should().HaveCount(1);
+            equipmentComponent.FindAll("[data-testid='muscle-group-name-input']").Should().BeEmpty();
+            equipmentComponent.Find("[data-testid='modal-title']").TextContent.Should().Contain("Equipment");
+
+            // Test 2: MuscleGroup type
+            var muscleGroupComponent = RenderComponent<AddReferenceItemModal>(parameters => parameters
+                .Add(p => p.EntityType, ReferenceEntityType.MuscleGroup));
+
+            // Verify MuscleGroup form is shown
+            muscleGroupComponent.FindAll("[data-testid='equipment-name-input']").Should().BeEmpty();
+            muscleGroupComponent.FindAll("[data-testid='muscle-group-name-input']").Should().HaveCount(1);
+            muscleGroupComponent.Find("[data-testid='modal-title']").TextContent.Should().Contain("Muscle Group");
+            
+            // Verify body parts select is present
+            var bodyPartSelect = muscleGroupComponent.Find("[data-testid='body-part-select']");
+            bodyPartSelect.Should().NotBeNull();
+        }
+
+        [Fact]
+        public async Task AddReferenceItemModal_RapidInteraction_HandlesEscapeKeySpam()
+        {
+            // Arrange
+            var cancelCount = 0;
+            var component = RenderComponent<AddReferenceItemModal>(parameters => parameters
+                .Add(p => p.EntityType, ReferenceEntityType.Equipment)
+                .Add(p => p.OnCancel, EventCallback.Factory.Create(this, () => cancelCount++)));
+
+            var backdrop = component.Find("[data-testid='add-reference-modal-backdrop']");
+
+            // Act - Spam Escape key
+            var tasks = new List<Task>();
+            for (int i = 0; i < 10; i++)
+            {
+                tasks.Add(component.InvokeAsync(() =>
+                    backdrop.KeyDown(new KeyboardEventArgs { Key = "Escape" })
+                ));
+            }
+            
+            await Task.WhenAll(tasks);
+
+            // Assert - Component allows multiple escape key events (not protected)
+            cancelCount.Should().Be(10);
+        }
+
+        [Fact]
+        public async Task AddReferenceItemModal_RapidInteraction_HandlesBackdropClickSpam()
+        {
+            // Arrange
+            var cancelCount = 0;
+            var component = RenderComponent<AddReferenceItemModal>(parameters => parameters
+                .Add(p => p.EntityType, ReferenceEntityType.Equipment)
+                .Add(p => p.OnCancel, EventCallback.Factory.Create(this, () => cancelCount++)));
+
+            var backdrop = component.Find("[data-testid='add-reference-modal-backdrop']");
+
+            // Act - Click backdrop multiple times rapidly
+            var tasks = new List<Task>();
+            for (int i = 0; i < 5; i++)
+            {
+                tasks.Add(component.InvokeAsync(() => backdrop.Click()));
+            }
+            
+            await Task.WhenAll(tasks);
+
+            // Assert - Component allows multiple backdrop clicks (not protected)
+            cancelCount.Should().Be(5);
+        }
+
+        #endregion
     }
 }
