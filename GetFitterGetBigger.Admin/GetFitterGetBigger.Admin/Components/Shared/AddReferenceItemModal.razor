@@ -5,6 +5,7 @@
 
 <div class="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center p-4 z-50 animate-fade-in" 
      @onclick="HandleBackdropClick"
+     @onkeydown="HandleKeyDown"
      role="dialog"
      aria-modal="true"
      aria-labelledby="modal-title"
@@ -29,9 +30,9 @@
                         Equipment Name <span class="text-red-500">*</span>
                     </label>
                     <InputText id="name" @bind-Value="((EquipmentFormModel)(object)model).Name" 
+                               @ref="firstInput"
                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" 
-                               placeholder="Enter equipment name"
-                               autofocus />
+                               placeholder="Enter equipment name" />
                     <ValidationMessage For="@(() => ((EquipmentFormModel)(object)model).Name)" class="text-red-500 text-sm mt-1" />
                 </div>
             }
@@ -42,9 +43,9 @@
                         Muscle Group Name <span class="text-red-500">*</span>
                     </label>
                     <InputText id="name" @bind-Value="((MuscleGroupFormModel)(object)model).Name" 
+                               @ref="firstInput"
                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" 
-                               placeholder="Enter muscle group name"
-                               autofocus />
+                               placeholder="Enter muscle group name" />
                     <ValidationMessage For="@(() => ((MuscleGroupFormModel)(object)model).Name)" class="text-red-500 text-sm mt-1" />
                 </div>
 
@@ -119,6 +120,7 @@
     private string? errorMessage;
     private IEnumerable<ReferenceDataDto>? bodyParts;
     private bool isLoadingBodyParts = false;
+    private InputText? firstInput;
 
     private string EntityName => EntityType switch
     {
@@ -146,6 +148,14 @@
             {
                 isLoadingBodyParts = false;
             }
+        }
+    }
+    
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && firstInput?.Element != null)
+        {
+            await firstInput.Element.Value.FocusAsync();
         }
     }
 
@@ -218,6 +228,14 @@
     private void HandleBackdropClick()
     {
         if (!isSubmitting)
+        {
+            OnCancel.InvokeAsync();
+        }
+    }
+    
+    private void HandleKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key == "Escape" && !isSubmitting)
         {
             OnCancel.InvokeAsync();
         }
