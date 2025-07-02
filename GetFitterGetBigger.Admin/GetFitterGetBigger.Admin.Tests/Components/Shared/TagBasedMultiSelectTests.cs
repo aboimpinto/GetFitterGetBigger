@@ -170,8 +170,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Shared
                 .Add(p => p.EnableInlineCreation, true)
                 .Add(p => p.EntityType, ReferenceEntityType.Equipment)
                 .Add(p => p.GetItemId, item => item.Id)
-                .Add(p => p.GetItemName, item => item.Value)
-                .Add(p => p.EntityType, ReferenceEntityType.Equipment));
+                .Add(p => p.GetItemName, item => item.Value));
 
             // Assert
             component.Markup.Should().Contain("Can't find equipment? Create here");
@@ -245,8 +244,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Shared
                 .Add(p => p.EnableInlineCreation, true)
                 .Add(p => p.EntityType, ReferenceEntityType.Equipment)
                 .Add(p => p.GetItemId, item => item.Id)
-                .Add(p => p.GetItemName, item => item.Value)
-                .Add(p => p.EntityType, ReferenceEntityType.Equipment));
+                .Add(p => p.GetItemName, item => item.Value));
 
             // Act
             var createLink = component.Find("button.text-blue-600");
@@ -266,8 +264,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Shared
                 .Add(p => p.EnableInlineCreation, true)
                 .Add(p => p.EntityType, ReferenceEntityType.Equipment)
                 .Add(p => p.GetItemId, item => item.Id)
-                .Add(p => p.GetItemName, item => item.Value)
-                .Add(p => p.EntityType, ReferenceEntityType.Equipment));
+                .Add(p => p.GetItemName, item => item.Value));
 
             // Act
             var select = component.Find("select");
