@@ -49,10 +49,18 @@
         <button type="button"
                 @onclick="OpenCreateModal"
                 class="p-2 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-md transition-colors"
-                title="Add new @EntityTypeName">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-            </svg>
+                title="Add new @EntityTypeName"
+                disabled="@isRefreshing">
+            @if (isRefreshing)
+            {
+                <span class="inline-block animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600"></span>
+            }
+            else
+            {
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                </svg>
+            }
         </button>
     }
 </div>
@@ -79,9 +87,11 @@
     [Parameter] public Func<TItem, string> GetItemId { get; set; } = item => string.Empty;
     [Parameter] public Func<TItem, string> GetItemName { get; set; } = item => string.Empty;
     [Parameter] public EventCallback OnItemsRefreshed { get; set; }
+    [Parameter] public EventCallback<string> OnCreationError { get; set; }
 
     private bool showCreateModal = false;
     private List<TItem> optimisticallyAddedItems = new();
+    private bool isRefreshing = false;
     
     private string? SingleValue 
     { 
@@ -169,11 +179,41 @@
             
             // Force UI update to show the new item immediately
             StateHasChanged();
+            
+            try
+            {
+                isRefreshing = true;
+                // Notify parent to refresh items from server
+                // This will merge the optimistically added item with the full list
+                await OnItemsRefreshed.InvokeAsync();
+            }
+            catch (Exception ex)
+            {
+                // If refresh fails, remove the optimistically added item
+                optimisticallyAddedItems.Remove(typedItem);
+                
+                // Deselect the item
+                if (Multiple && SelectedValues != null)
+                {
+                    SelectedValues.Remove(createdItemId);
+                    await SelectedValuesChanged.InvokeAsync(SelectedValues);
+                }
+                else if (!Multiple && SingleValue == createdItemId)
+                {
+                    SingleValue = string.Empty;
+                    await ValueChanged.InvokeAsync(string.Empty);
+                }
+                
+                // Notify about the error
+                await OnCreationError.InvokeAsync($"Failed to refresh after creating {EntityTypeName}: {ex.Message}");
+                
+                StateHasChanged();
+            }
+            finally
+            {
+                isRefreshing = false;
+            }
         }
-
-        // Notify parent to refresh items from server
-        // This will merge the optimistically added item with the full list
-        await OnItemsRefreshed.InvokeAsync();
     }
     
     protected override void OnParametersSet()
