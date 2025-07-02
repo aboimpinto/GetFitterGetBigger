@@ -8,7 +8,7 @@
     @if (Multiple)
     {
         <div class="flex-1">
-            @foreach (var item in Items ?? Enumerable.Empty<TItem>())
+            @foreach (var item in DisplayItems)
             {
                 var itemId = GetItemId(item);
                 var itemName = GetItemName(item);
@@ -35,7 +35,7 @@
             {
                 <option value="">@Placeholder</option>
             }
-            @foreach (var item in Items ?? Enumerable.Empty<TItem>())
+            @foreach (var item in DisplayItems)
             {
                 var itemId = GetItemId(item);
                 var itemName = GetItemName(item);
@@ -81,11 +81,17 @@
     [Parameter] public EventCallback OnItemsRefreshed { get; set; }
 
     private bool showCreateModal = false;
+    private List<TItem> optimisticallyAddedItems = new();
+    
     private string? SingleValue 
     { 
         get => Value; 
         set { Value = value; ValueChanged.InvokeAsync(value); }
     }
+    
+    // Combine actual items with optimistically added items
+    private IEnumerable<TItem> DisplayItems => 
+        (Items ?? Enumerable.Empty<TItem>()).Concat(optimisticallyAddedItems);
 
     private string EntityTypeName => EntityType switch
     {
@@ -135,13 +141,13 @@
     {
         showCreateModal = false;
 
-        // Notify parent to refresh items
-        await OnItemsRefreshed.InvokeAsync();
-
-        // Auto-select the created item
-        if (createdItem != null)
+        // Add the item optimistically for immediate display
+        if (createdItem != null && createdItem is TItem typedItem)
         {
-            string createdItemId = GetItemId((TItem)createdItem);
+            optimisticallyAddedItems.Add(typedItem);
+            
+            // Auto-select the created item
+            string createdItemId = GetItemId(typedItem);
             
             if (Multiple)
             {
@@ -160,6 +166,25 @@
                 SingleValue = createdItemId;
                 await ValueChanged.InvokeAsync(createdItemId);
             }
+            
+            // Force UI update to show the new item immediately
+            StateHasChanged();
+        }
+
+        // Notify parent to refresh items from server
+        // This will merge the optimistically added item with the full list
+        await OnItemsRefreshed.InvokeAsync();
+    }
+    
+    protected override void OnParametersSet()
+    {
+        // When Items parameter changes (after refresh), clear optimistically added items
+        // They should now be included in the Items collection from the server
+        if (optimisticallyAddedItems.Any() && Items != null)
+        {
+            // Check if optimistically added items are now in the actual Items collection
+            var actualItemIds = Items.Select(item => GetItemId(item)).ToHashSet();
+            optimisticallyAddedItems.RemoveAll(item => actualItemIds.Contains(GetItemId(item)));
         }
     }
 }
