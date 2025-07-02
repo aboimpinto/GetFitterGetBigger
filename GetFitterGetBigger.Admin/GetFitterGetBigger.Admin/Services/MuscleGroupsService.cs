@@ -222,7 +222,7 @@ namespace GetFitterGetBigger.Admin.Services
             _cache.Remove(CacheKey);
             _cache.Remove("RefData_MuscleGroups");
             _cache.Remove("MuscleGroups"); // Legacy key
-            
+
             // Clear all body part caches since we don't track the old body part
             var cacheEntries = _cache.GetType()
                 .GetField("_entries", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
@@ -281,7 +281,7 @@ namespace GetFitterGetBigger.Admin.Services
             _cache.Remove(CacheKey);
             _cache.Remove("RefData_MuscleGroups");
             _cache.Remove("MuscleGroups"); // Legacy key
-            
+
             // Clear all body part caches
             var cacheEntries = _cache.GetType()
                 .GetField("_entries", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)

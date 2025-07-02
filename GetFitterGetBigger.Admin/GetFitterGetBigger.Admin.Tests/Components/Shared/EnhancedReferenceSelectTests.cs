@@ -25,7 +25,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Shared
             _mockEquipmentService = new Mock<IEquipmentService>();
             _mockMuscleGroupsService = new Mock<IMuscleGroupsService>();
             _mockReferenceDataService = new Mock<IReferenceDataService>();
-            
+
             Services.AddSingleton<IEquipmentService>(_mockEquipmentService.Object);
             Services.AddSingleton<IMuscleGroupsService>(_mockMuscleGroupsService.Object);
             Services.AddSingleton<IReferenceDataService>(_mockReferenceDataService.Object);
@@ -161,7 +161,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Shared
         {
             // Arrange
             var items = new List<ReferenceDataDto>(_testItems);
-            
+
             var component = RenderComponent<EnhancedReferenceSelect<ReferenceDataDto>>(parameters => parameters
                 .Add(p => p.Items, items)
                 .Add(p => p.Value, string.Empty)

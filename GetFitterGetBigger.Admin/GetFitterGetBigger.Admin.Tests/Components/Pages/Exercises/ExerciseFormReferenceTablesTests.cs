@@ -32,26 +32,26 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
             // This test verifies the fix - when only SOME reference data is loaded, InitializeAsync should be called
             // Arrange
             _mockStateService.SetupPartialReferenceData(); // Only DifficultyLevels populated
-            
+
             // Act
             var component = RenderComponent<ExerciseForm>();
-            
+
             // Wait for initialization
             await component.InvokeAsync(async () => await Task.Delay(100));
-            
+
             // Assert - InitializeAsync SHOULD be called because not all reference data is loaded
             _mockStateService.InitializeAsyncCalled.Should().BeTrue("InitializeAsync should be called when not all reference data is loaded");
-            
+
             // Assert - After initialization, all reference data should be available
             // The actual state is more important than the DOM structure
             _mockStateService.MuscleGroups.Should().HaveCount(3, "Should have 3 muscle groups after initialization");
             _mockStateService.Equipment.Should().HaveCount(2, "Should have 2 equipment items after initialization");
-            
+
             // Check that the muscle groups section exists
             var muscleGroupSection = component.FindAll("div")
                 .FirstOrDefault(section => section.TextContent.Contains("Muscle Groups"));
             muscleGroupSection.Should().NotBeNull("Muscle Groups section should exist");
-            
+
             // Check that the equipment section exists  
             var equipmentSection = component.FindAll("div")
                 .FirstOrDefault(section => section.TextContent.Contains("Equipment"));
@@ -216,7 +216,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
                     new() { Id = "2", Value = "Intermediate", Description = "For intermediate users" },
                     new() { Id = "3", Value = "Advanced", Description = "For advanced users" }
                 };
-                
+
                 // Leave all other collections empty
                 MuscleGroups = Enumerable.Empty<ReferenceDataDto>();
                 MuscleRoles = Enumerable.Empty<ReferenceDataDto>();
@@ -278,7 +278,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
             public async Task InitializeAsync()
             {
                 InitializeAsyncCalled = true;
-                
+
                 if (!SimulateNoInitialization)
                 {
                     // Simulate loading reference data
@@ -303,33 +303,33 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
 
         private class MockReferenceDataService : IReferenceDataService
         {
-            public Task<IEnumerable<ReferenceDataDto>> GetDifficultyLevelsAsync() => 
+            public Task<IEnumerable<ReferenceDataDto>> GetDifficultyLevelsAsync() =>
                 Task.FromResult<IEnumerable<ReferenceDataDto>>(new List<ReferenceDataDto>());
-            
-            public Task<IEnumerable<ReferenceDataDto>> GetMuscleGroupsAsync() => 
+
+            public Task<IEnumerable<ReferenceDataDto>> GetMuscleGroupsAsync() =>
                 Task.FromResult<IEnumerable<ReferenceDataDto>>(new List<ReferenceDataDto>());
-            
-            public Task<IEnumerable<ReferenceDataDto>> GetMuscleRolesAsync() => 
+
+            public Task<IEnumerable<ReferenceDataDto>> GetMuscleRolesAsync() =>
                 Task.FromResult<IEnumerable<ReferenceDataDto>>(new List<ReferenceDataDto>());
-            
-            public Task<IEnumerable<ReferenceDataDto>> GetEquipmentAsync() => 
+
+            public Task<IEnumerable<ReferenceDataDto>> GetEquipmentAsync() =>
                 Task.FromResult<IEnumerable<ReferenceDataDto>>(new List<ReferenceDataDto>());
-            
-            public Task<IEnumerable<ReferenceDataDto>> GetBodyPartsAsync() => 
+
+            public Task<IEnumerable<ReferenceDataDto>> GetBodyPartsAsync() =>
                 Task.FromResult<IEnumerable<ReferenceDataDto>>(new List<ReferenceDataDto>());
-            
-            public Task<IEnumerable<ReferenceDataDto>> GetMovementPatternsAsync() => 
+
+            public Task<IEnumerable<ReferenceDataDto>> GetMovementPatternsAsync() =>
                 Task.FromResult<IEnumerable<ReferenceDataDto>>(new List<ReferenceDataDto>());
-            
-            public Task<IEnumerable<ExerciseTypeDto>> GetExerciseTypesAsync() => 
+
+            public Task<IEnumerable<ExerciseTypeDto>> GetExerciseTypesAsync() =>
                 Task.FromResult<IEnumerable<ExerciseTypeDto>>(new List<ExerciseTypeDto>());
-            
-            public Task<IEnumerable<ReferenceDataDto>> GetKineticChainTypesAsync() => 
+
+            public Task<IEnumerable<ReferenceDataDto>> GetKineticChainTypesAsync() =>
                 Task.FromResult<IEnumerable<ReferenceDataDto>>(new List<ReferenceDataDto>());
-            
-            public Task<IEnumerable<ReferenceDataDto>> GetMetricTypesAsync() => 
+
+            public Task<IEnumerable<ReferenceDataDto>> GetMetricTypesAsync() =>
                 Task.FromResult<IEnumerable<ReferenceDataDto>>(new List<ReferenceDataDto>());
-            
+
             public void ClearEquipmentCache() { }
             public void ClearMuscleGroupsCache() { }
         }

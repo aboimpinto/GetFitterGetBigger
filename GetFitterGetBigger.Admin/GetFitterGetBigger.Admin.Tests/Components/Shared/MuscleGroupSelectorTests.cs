@@ -26,7 +26,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Shared
             _mockEquipmentService = new Mock<IEquipmentService>();
             _mockMuscleGroupsService = new Mock<IMuscleGroupsService>();
             _mockReferenceDataService = new Mock<IReferenceDataService>();
-            
+
             Services.AddSingleton<IEquipmentService>(_mockEquipmentService.Object);
             Services.AddSingleton<IMuscleGroupsService>(_mockMuscleGroupsService.Object);
             Services.AddSingleton<IReferenceDataService>(_mockReferenceDataService.Object);
@@ -109,16 +109,16 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Shared
 
             // Act - Use data-testid to find elements
             component.Find("[data-testid='muscle-group-role-select']").Change("Primary");
-            
+
             // Wait for re-render after role selection
             component.Render();
-            
+
             // Find and interact with muscle group select
             var muscleGroupSelect = component.Find("[data-testid='muscle-group-select']");
             muscleGroupSelect.Change("1");
-            
+
             // Find and click the add button
-            await component.InvokeAsync(() => 
+            await component.InvokeAsync(() =>
                 component.Find("[data-testid='add-muscle-group-button']").Click()
             );
 
@@ -164,7 +164,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Shared
             // Act - Find and click the remove button on the first muscle group tag
             var removeButtons = component.FindAll("button[title^='Remove']");
             removeButtons.Should().HaveCount(2);
-            
+
             await component.InvokeAsync(() => removeButtons[0].Click());
 
             // Assert
@@ -253,14 +253,14 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Shared
             // Act - Set state directly and call method
             instance.selectedRole = "Primary";
             instance.selectedMuscleId = "1";
-            
+
             await component.InvokeAsync(async () => await instance.AddMuscleGroup());
 
             // Assert
             selectedGroups.Should().HaveCount(1);
             selectedGroups[0].MuscleGroupId.Should().Be("1");
             selectedGroups[0].Role.Should().Be("Primary");
-            
+
             changedGroups.Should().HaveCount(1);
             changedGroups[0].MuscleGroupId.Should().Be("1");
             changedGroups[0].Role.Should().Be("Primary");
@@ -286,9 +286,9 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Shared
             var instance = component.Instance;
 
             // Act - Try to add another Primary
-            instance.selectedRole = "Primary"; 
+            instance.selectedRole = "Primary";
             instance.selectedMuscleId = "2";
-            
+
             await component.InvokeAsync(async () => await instance.AddMuscleGroup());
 
             // Assert - Should replace the existing Primary
@@ -364,13 +364,13 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Shared
             // Act - Set values and add muscle group
             instance.selectedRole = "Primary";
             instance.selectedMuscleId = "1";
-            
+
             await component.InvokeAsync(async () => await instance.AddMuscleGroup());
 
             // Assert - Fields should be reset
             instance.selectedRole.Should().BeEmpty();
             instance.selectedMuscleId.Should().BeEmpty();
-            
+
             // The muscle select should be disabled since no role is selected
             var enhancedSelect = component.FindComponent<EnhancedReferenceSelect<ReferenceDataDto>>();
             enhancedSelect.Instance.Disabled.Should().BeTrue();
@@ -430,7 +430,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Shared
             // Act - Add Primary muscle group
             component.Find("[data-testid='muscle-group-role-select']").Change("Primary");
             component.Find("[data-testid='muscle-group-select']").Change("1");
-            await component.InvokeAsync(() => 
+            await component.InvokeAsync(() =>
                 component.Find("[data-testid='add-muscle-group-button']").Click()
             );
 
@@ -443,7 +443,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Shared
             // Add Secondary muscle group
             component.Find("[data-testid='muscle-group-role-select']").Change("Secondary");
             component.Find("[data-testid='muscle-group-select']").Change("2");
-            await component.InvokeAsync(() => 
+            await component.InvokeAsync(() =>
                 component.Find("[data-testid='add-muscle-group-button']").Click()
             );
 
@@ -454,18 +454,18 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Shared
             // Try to add another Primary (should replace the first)
             component.Find("[data-testid='muscle-group-role-select']").Change("Primary");
             component.Find("[data-testid='muscle-group-select']").Change("3");
-            await component.InvokeAsync(() => 
+            await component.InvokeAsync(() =>
                 component.Find("[data-testid='add-muscle-group-button']").Click()
             );
 
             // Assert - Should have 2 tags, with new Primary
             tags = component.FindComponents<MuscleGroupTag>();
             tags.Should().HaveCount(2);
-            
+
             var primaryTag = tags.FirstOrDefault(t => t.Instance.Role == "Primary");
             primaryTag.Should().NotBeNull();
             primaryTag!.Instance.MuscleGroupName.Should().Be("Chest");
-            
+
             // Verify success indicator
             component.Markup.Should().Contain("✓ Primary muscle group assigned");
         }

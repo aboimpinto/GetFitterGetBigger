@@ -27,7 +27,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Shared
             _mockEquipmentService = new Mock<IEquipmentService>();
             _mockMuscleGroupsService = new Mock<IMuscleGroupsService>();
             _mockReferenceDataService = new Mock<IReferenceDataService>();
-            
+
             Services.AddSingleton<IEquipmentService>(_mockEquipmentService.Object);
             Services.AddSingleton<IMuscleGroupsService>(_mockMuscleGroupsService.Object);
             Services.AddSingleton<IReferenceDataService>(_mockReferenceDataService.Object);
@@ -47,7 +47,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Shared
             component.Find("[data-testid='equipment-name-input']").Should().NotBeNull();
             component.Find("[data-testid='cancel-button']").Should().NotBeNull();
             component.Find("[data-testid='submit-button']").Should().NotBeNull();
-            
+
             // Should not have muscle group fields
             component.FindAll("[data-testid='muscle-group-name-input']").Should().BeEmpty();
             component.FindAll("[data-testid='body-part-select']").Should().BeEmpty();
@@ -72,7 +72,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Shared
             component.Find("[data-testid='modal-title']").TextContent.Should().Contain("Add New Muscle Group");
             component.Find("[data-testid='muscle-group-name-input']").Should().NotBeNull();
             component.Find("[data-testid='body-part-select']").Should().NotBeNull();
-            
+
             // Verify body parts are loaded
             var bodyPartOptions = component.Find("[data-testid='body-part-select']").QuerySelectorAll("option");
             bodyPartOptions.Should().HaveCount(3); // Placeholder + 2 body parts
@@ -93,14 +93,14 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Shared
 
             // Act - Fill form through UI
             component.Find("[data-testid='equipment-name-input']").Change("Barbell");
-            await component.InvokeAsync(() => 
+            await component.InvokeAsync(() =>
                 component.Find("[data-testid='add-reference-form']").Submit()
             );
 
             // Assert - Verify through UI and callbacks
             _mockEquipmentService.Verify(x => x.CreateEquipmentAsync(
                 It.Is<CreateEquipmentDto>(dto => dto.Name == "Barbell")), Times.Once);
-            
+
             callbackResult.Should().NotBeNull();
             callbackResult.Should().BeOfType<ReferenceDataDto>();
             var referenceData = (ReferenceDataDto)callbackResult!;
@@ -117,12 +117,12 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Shared
                     new() { Id = "1", Value = "Arms" }
                 });
 
-            var createdMuscleGroup = new MuscleGroupDto 
-            { 
-                Id = "1", 
-                Name = "Biceps", 
-                BodyPartId = "1", 
-                BodyPartName = "Arms" 
+            var createdMuscleGroup = new MuscleGroupDto
+            {
+                Id = "1",
+                Name = "Biceps",
+                BodyPartId = "1",
+                BodyPartName = "Arms"
             };
             _mockMuscleGroupsService.Setup(x => x.CreateMuscleGroupAsync(It.IsAny<CreateMuscleGroupDto>()))
                 .ReturnsAsync(createdMuscleGroup);
@@ -135,14 +135,14 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Shared
             // Act
             component.Find("[data-testid='muscle-group-name-input']").Change("Biceps");
             component.Find("[data-testid='body-part-select']").Change("1");
-            await component.InvokeAsync(() => 
+            await component.InvokeAsync(() =>
                 component.Find("[data-testid='add-reference-form']").Submit()
             );
 
             // Assert
             _mockMuscleGroupsService.Verify(x => x.CreateMuscleGroupAsync(
                 It.Is<CreateMuscleGroupDto>(dto => dto.Name == "Biceps" && dto.BodyPartId == "1")), Times.Once);
-            
+
             callbackResult.Should().NotBeNull();
             var referenceData = (ReferenceDataDto)callbackResult!;
             referenceData.Value.Should().Be("Biceps");
@@ -157,7 +157,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Shared
                 .Add(p => p.EntityType, ReferenceEntityType.Equipment));
 
             // Act - Submit empty form
-            await component.InvokeAsync(() => 
+            await component.InvokeAsync(() =>
                 component.Find("[data-testid='add-reference-form']").Submit()
             );
 
@@ -181,7 +181,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Shared
 
             // Act
             component.Find("[data-testid='equipment-name-input']").Change("Test");
-            await component.InvokeAsync(() => 
+            await component.InvokeAsync(() =>
                 component.Find("[data-testid='add-reference-form']").Submit()
             );
 
@@ -206,7 +206,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Shared
 
             // Act - Start submission
             component.Find("[data-testid='equipment-name-input']").Change("Test");
-            var submitTask = component.InvokeAsync(() => 
+            var submitTask = component.InvokeAsync(() =>
                 component.Find("[data-testid='add-reference-form']").Submit()
             );
 
@@ -279,7 +279,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Shared
             // Assert
             _mockEquipmentService.Verify(x => x.CreateEquipmentAsync(
                 It.Is<CreateEquipmentDto>(dto => dto.Name == "Dumbbell")), Times.Once);
-            
+
             instance.isSubmitting.Should().BeFalse();
             instance.errorMessage.Should().BeNull();
             callbackResult.Should().NotBeNull();
@@ -291,7 +291,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Shared
             // Arrange
             var callCount = 0;
             var tcs = new TaskCompletionSource<EquipmentDto>();
-            
+
             _mockEquipmentService.Setup(x => x.CreateEquipmentAsync(It.IsAny<CreateEquipmentDto>()))
                 .Returns(() =>
                 {
@@ -307,7 +307,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Shared
 
             // Act - Start the first submission (this will set isSubmitting = true)
             var firstSubmitTask = component.InvokeAsync(async () => await instance.HandleSubmit());
-            
+
             // Try to submit while the first is still in progress
             // These should be ignored due to isSubmitting check
             await component.InvokeAsync(async () => await instance.HandleSubmit());
@@ -315,7 +315,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Shared
 
             // Complete the async operation
             tcs.SetResult(new EquipmentDto { Id = "1", Name = "Test Equipment" });
-            
+
             // Wait for the first submission to complete
             await firstSubmitTask;
 
@@ -366,7 +366,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Shared
         }
 
         [Fact]
-        public async Task AddReferenceItemModal_Logic_LoadsBodyPartsForMuscleGroup()
+        public void AddReferenceItemModal_Logic_LoadsBodyPartsForMuscleGroup()
         {
             // Arrange
             var bodyParts = new List<ReferenceDataDto>
@@ -396,7 +396,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Shared
         public async Task AddReferenceItemModal_Integration_CompleteEquipmentCreationWorkflow()
         {
             // This test combines UI and Logic to test the complete workflow
-            
+
             // Arrange
             var createdEquipment = new EquipmentDto { Id = "1", Name = "Kettlebell", IsActive = true };
             _mockEquipmentService.Setup(x => x.CreateEquipmentAsync(It.IsAny<CreateEquipmentDto>()))
@@ -412,12 +412,12 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Shared
 
             // Act - Complete workflow through UI
             component.Find("[data-testid='equipment-name-input']").Change("Kettlebell");
-            
+
             // Verify submit button is enabled
             component.Find("[data-testid='submit-button']").GetAttribute("disabled").Should().BeNull();
-            
+
             // Submit form
-            await component.InvokeAsync(() => 
+            await component.InvokeAsync(() =>
                 component.Find("[data-testid='add-reference-form']").Submit()
             );
 
@@ -425,7 +425,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Shared
             _mockEquipmentService.Verify(x => x.CreateEquipmentAsync(It.IsAny<CreateEquipmentDto>()), Times.Once);
             itemCreatedCount.Should().Be(1);
             cancelCount.Should().Be(0);
-            
+
             // Verify no error message
             component.FindAll("[data-testid='error-message']").Should().BeEmpty();
         }
@@ -441,12 +441,12 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Shared
                     new() { Id = "2", Value = "Chest" }
                 });
 
-            var createdMuscleGroup = new MuscleGroupDto 
-            { 
-                Id = "1", 
-                Name = "Pectorals", 
-                BodyPartId = "2", 
-                BodyPartName = "Chest" 
+            var createdMuscleGroup = new MuscleGroupDto
+            {
+                Id = "1",
+                Name = "Pectorals",
+                BodyPartId = "2",
+                BodyPartName = "Chest"
             };
             _mockMuscleGroupsService.Setup(x => x.CreateMuscleGroupAsync(It.IsAny<CreateMuscleGroupDto>()))
                 .ReturnsAsync(createdMuscleGroup);
@@ -459,17 +459,17 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Shared
             // Act - Complete workflow
             component.Find("[data-testid='muscle-group-name-input']").Change("Pectorals");
             component.Find("[data-testid='body-part-select']").Change("2");
-            
-            await component.InvokeAsync(() => 
+
+            await component.InvokeAsync(() =>
                 component.Find("[data-testid='add-reference-form']").Submit()
             );
 
             // Assert
             _mockMuscleGroupsService.Verify(x => x.CreateMuscleGroupAsync(
-                It.Is<CreateMuscleGroupDto>(dto => 
-                    dto.Name == "Pectorals" && 
+                It.Is<CreateMuscleGroupDto>(dto =>
+                    dto.Name == "Pectorals" &&
                     dto.BodyPartId == "2")), Times.Once);
-            
+
             createdItem.Should().NotBeNull();
             var referenceData = (ReferenceDataDto)createdItem!;
             referenceData.Value.Should().Be("Pectorals");

@@ -27,7 +27,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
 
             Services.AddSingleton<IExerciseStateService>(_mockStateService);
             Services.AddSingleton<IReferenceDataService>(_mockReferenceDataService);
-            
+
             var navMan = Services.GetRequiredService<FakeNavigationManager>();
             navMan.NavigateTo("http://localhost/exercises/new");
         }
@@ -66,7 +66,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
                 if (checkbox != null)
                 {
                     checkbox.Change(true);
-                    
+
                     // Assert - Sections should indicate they're disabled
                     component.Markup.Should().Contain("disabled for Rest exercises");
                 }
@@ -83,7 +83,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
             // Fill required fields
             component.Find("#name").Input("Test Exercise");
             component.Find("#description").Input("Test Description");
-            
+
             var difficultySelect = component.Find("#difficulty");
             if (difficultySelect != null)
             {
@@ -102,9 +102,9 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
 
             // Assert - Should have validation error
             // The form should not submit successfully without muscle groups
-            component.WaitForState(() => 
-                component.Markup.Contains("required") || 
-                component.Markup.Contains("muscle group"), 
+            component.WaitForState(() =>
+                component.Markup.Contains("required") ||
+                component.Markup.Contains("muscle group"),
                 TimeSpan.FromSeconds(1));
         }
 
@@ -127,10 +127,10 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
             var component = RenderComponent<ExerciseForm>();
 
             // Assert - Equipment section should have tag-based selection
-            var equipmentSection = component.FindAll("div").FirstOrDefault(d => 
+            var equipmentSection = component.FindAll("div").FirstOrDefault(d =>
                 d.TextContent.Contains("Equipment"));
             equipmentSection.Should().NotBeNull();
-            
+
             // Should use dropdown selection instead of checkboxes
             component.Markup.Should().Contain("Select equipment");
         }
@@ -204,13 +204,13 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
                     new() { Id = "1", Value = "Dumbbell", Description = "Free weight" },
                     new() { Id = "2", Value = "Barbell", Description = "Olympic bar" }
                 };
-                
+
                 BodyParts = new List<ReferenceDataDto>
                 {
                     new() { Id = "1", Value = "Upper Body", Description = "Upper body parts" },
                     new() { Id = "2", Value = "Lower Body", Description = "Lower body parts" }
                 };
-                
+
                 MovementPatterns = new List<ReferenceDataDto>
                 {
                     new() { Id = "1", Value = "Push", Description = "Pushing movements" },
@@ -242,33 +242,33 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
 
         private class MockReferenceDataService : IReferenceDataService
         {
-            public Task<IEnumerable<ReferenceDataDto>> GetDifficultyLevelsAsync() => 
+            public Task<IEnumerable<ReferenceDataDto>> GetDifficultyLevelsAsync() =>
                 Task.FromResult<IEnumerable<ReferenceDataDto>>(new List<ReferenceDataDto>());
-            
-            public Task<IEnumerable<ReferenceDataDto>> GetMuscleGroupsAsync() => 
+
+            public Task<IEnumerable<ReferenceDataDto>> GetMuscleGroupsAsync() =>
                 Task.FromResult<IEnumerable<ReferenceDataDto>>(new List<ReferenceDataDto>());
-            
-            public Task<IEnumerable<ReferenceDataDto>> GetMuscleRolesAsync() => 
+
+            public Task<IEnumerable<ReferenceDataDto>> GetMuscleRolesAsync() =>
                 Task.FromResult<IEnumerable<ReferenceDataDto>>(new List<ReferenceDataDto>());
-            
-            public Task<IEnumerable<ReferenceDataDto>> GetEquipmentAsync() => 
+
+            public Task<IEnumerable<ReferenceDataDto>> GetEquipmentAsync() =>
                 Task.FromResult<IEnumerable<ReferenceDataDto>>(new List<ReferenceDataDto>());
-            
-            public Task<IEnumerable<ReferenceDataDto>> GetBodyPartsAsync() => 
+
+            public Task<IEnumerable<ReferenceDataDto>> GetBodyPartsAsync() =>
                 Task.FromResult<IEnumerable<ReferenceDataDto>>(new List<ReferenceDataDto>());
-            
-            public Task<IEnumerable<ReferenceDataDto>> GetMovementPatternsAsync() => 
+
+            public Task<IEnumerable<ReferenceDataDto>> GetMovementPatternsAsync() =>
                 Task.FromResult<IEnumerable<ReferenceDataDto>>(new List<ReferenceDataDto>());
-            
-            public Task<IEnumerable<ExerciseTypeDto>> GetExerciseTypesAsync() => 
+
+            public Task<IEnumerable<ExerciseTypeDto>> GetExerciseTypesAsync() =>
                 Task.FromResult<IEnumerable<ExerciseTypeDto>>(new List<ExerciseTypeDto>());
-            
-            public Task<IEnumerable<ReferenceDataDto>> GetKineticChainTypesAsync() => 
+
+            public Task<IEnumerable<ReferenceDataDto>> GetKineticChainTypesAsync() =>
                 Task.FromResult<IEnumerable<ReferenceDataDto>>(new List<ReferenceDataDto>());
-            
-            public Task<IEnumerable<ReferenceDataDto>> GetMetricTypesAsync() => 
+
+            public Task<IEnumerable<ReferenceDataDto>> GetMetricTypesAsync() =>
                 Task.FromResult<IEnumerable<ReferenceDataDto>>(new List<ReferenceDataDto>());
-            
+
             public void ClearEquipmentCache() { }
             public void ClearMuscleGroupsCache() { }
         }

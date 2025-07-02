@@ -30,7 +30,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
 
             Services.AddSingleton<IExerciseStateService>(_mockStateService);
             Services.AddSingleton<IReferenceDataService>(_mockReferenceDataService);
-            
+
             var navMan = Services.GetRequiredService<FakeNavigationManager>();
             navMan.NavigateTo("http://localhost/exercises/new");
         }
@@ -46,24 +46,24 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
 
             // Fill basic info
             component.Find("#name").Input("Test Exercise");
-            
+
             // Act - Select REST type
             // Find REST checkbox by looking for the label containing "Rest"
             var restLabel = component.FindAll("label").FirstOrDefault(l => l.TextContent.Contains("Rest"));
             restLabel.Should().NotBeNull("REST type should be available");
-            
+
             var restCheckbox = restLabel!.QuerySelector("input[type='checkbox']");
             restCheckbox.Should().NotBeNull();
             restCheckbox!.Change(true);
 
             // Assert - Verify REST behavior is applied
             // The component should show disabled message for incompatible sections
-            component.WaitForState(() => 
-                component.Markup.Contains("disabled for Rest exercises"), 
+            component.WaitForState(() =>
+                component.Markup.Contains("disabled for Rest exercises"),
                 TimeSpan.FromSeconds(1));
-            
+
             var markup = component.Markup;
-            markup.Should().Contain("disabled for Rest exercises", 
+            markup.Should().Contain("disabled for Rest exercises",
                 "REST exercises should disable muscle groups, equipment, body parts, and movement patterns");
         }
 
@@ -100,17 +100,17 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
 
             // Assert - REST exercises should show disabled sections
             var markup = component.Markup;
-            
+
             // Should not show muscle group data even if it exists
-            markup.Should().NotContain("Chest (Primary)", 
+            markup.Should().NotContain("Chest (Primary)",
                 "REST exercises should not display muscle groups even if they exist in data");
-            
+
             // Should not show equipment data
-            markup.Should().NotContain("Dumbbell", 
+            markup.Should().NotContain("Dumbbell",
                 "REST exercises should not display equipment even if it exists in data");
-            
+
             // Should show disabled message instead
-            markup.Should().Contain("disabled for Rest exercises", 
+            markup.Should().Contain("disabled for Rest exercises",
                 "REST exercises should show disabled message for incompatible sections");
         }
 
@@ -119,27 +119,27 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
         {
             // This test verifies that deselecting REST type re-enables dependent fields
             // Due to bUnit limitations with checkbox event handlers, we'll test the basic structure
-            
+
             // Arrange
             _mockStateService.SetupReferenceData();
             var component = RenderComponent<ExerciseForm>();
 
             // Assert - Verify initial state (no REST selected)
             var initialMarkup = component.Markup;
-            
+
             // When REST is not selected, equipment should be available
-            var hasEquipmentSection = 
-                initialMarkup.Contains("Select equipment") || 
+            var hasEquipmentSection =
+                initialMarkup.Contains("Select equipment") ||
                 initialMarkup.Contains("Equipment") && !initialMarkup.Contains("disabled for Rest exercises");
-                
+
             hasEquipmentSection.Should().BeTrue(
                 "Equipment section should be enabled when REST is not selected");
-            
+
             // Muscle groups should be available
-            var hasMuscleGroupSection = 
-                initialMarkup.Contains("Select role") || 
+            var hasMuscleGroupSection =
+                initialMarkup.Contains("Select role") ||
                 initialMarkup.Contains("Muscle Groups") && !initialMarkup.Contains("disabled for Rest exercises");
-                
+
             hasMuscleGroupSection.Should().BeTrue(
                 "Muscle group section should be enabled when REST is not selected");
         }
@@ -159,7 +159,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
             component.Find("#name").Input("Test Exercise");
             component.Find("#description").Input("Test Description");
             component.Find("#difficulty").Change("1");
-            
+
             // Select a non-REST exercise type (first checkbox)
             var firstCheckbox = component.Find("input[type='checkbox']");
             firstCheckbox.Change(true);
@@ -168,18 +168,18 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
             component.Find("form").Submit();
 
             // Assert - Should show validation state
-            component.WaitForState(() => 
+            component.WaitForState(() =>
                 component.Markup.Contains("Primary role is required") ||
                 component.Markup.Contains("border-red-500") ||
                 component.FindAll(".text-red-600").Any(),
                 TimeSpan.FromSeconds(1));
-            
+
             // The form should indicate validation failure in some way
-            var hasValidationIndication = 
+            var hasValidationIndication =
                 component.Markup.Contains("Primary role is required") ||
                 component.Markup.Contains("border-red-500") ||
                 component.FindAll(".text-red-600").Any();
-                
+
             hasValidationIndication.Should().BeTrue(
                 "Form should indicate that Primary muscle group is required for non-REST exercises");
         }
@@ -193,19 +193,19 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
 
             // Assert - Verify MuscleGroupSelector component structure exists
             var markup = component.Markup;
-            
+
             // The component should have the muscle group selection UI
             markup.Should().Contain("Muscle Groups", "Muscle Groups section should exist");
             markup.Should().Contain("Select role", "Role selection should be available");
             markup.Should().Contain("Select muscle group", "Muscle group selection should be available");
-            
+
             // The MuscleGroupSelector component handles duplicate prevention internally
             // through dynamic filtering based on already selected muscles
-            var hasMuscleGroupSelector = 
-                markup.Contains("Muscle Groups") && 
-                markup.Contains("Select role") && 
+            var hasMuscleGroupSelector =
+                markup.Contains("Muscle Groups") &&
+                markup.Contains("Select role") &&
                 markup.Contains("Select muscle group");
-                
+
             hasMuscleGroupSelector.Should().BeTrue(
                 "MuscleGroupSelector component should be rendered with role and muscle selection");
         }
@@ -221,7 +221,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
             component.Find("#name").Input("Test Exercise");
             component.Find("#description").Input("Test Description");
             component.Find("#difficulty").Change("1");
-            
+
             // Select exercise type (not REST)
             var firstCheckbox = component.Find("input[type='checkbox']");
             firstCheckbox.Change(true);
@@ -230,7 +230,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
             component.Find("form").Submit();
 
             // Assert - Should show validation indication
-            component.WaitForState(() => 
+            component.WaitForState(() =>
             {
                 var markup = component.Markup;
                 return markup.Contains("Primary role is required") ||
@@ -238,13 +238,13 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
                        component.FindAll(".text-red-600").Any() ||
                        markup.Contains("required") && markup.Contains("muscle");
             }, TimeSpan.FromSeconds(1));
-            
+
             // The form should indicate that muscle groups are required
-            var hasValidationError = 
+            var hasValidationError =
                 component.Markup.Contains("Primary role is required") ||
                 component.Markup.Contains("border-red-500") ||
                 (component.Markup.Contains("required") && component.Markup.Contains("muscle"));
-                
+
             hasValidationError.Should().BeTrue(
                 "Form should indicate that Primary muscle group is required for non-REST exercises");
         }
@@ -264,12 +264,12 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
                 new() { Id = "2", Value = "Barbell", Description = "Olympic bar" },
                 new() { Id = "3", Value = "Kettlebell", Description = "Cast iron weight" }
             };
-            
+
             var component = RenderComponent<ExerciseForm>();
 
             // Since we can't directly interact with TagBasedMultiSelect in tests,
             // we'll verify the component structure
-            var equipmentSection = component.FindAll("div").FirstOrDefault(d => 
+            var equipmentSection = component.FindAll("div").FirstOrDefault(d =>
                 d.TextContent.Contains("Equipment") && (d.GetAttribute("class") ?? "").Contains("border-b"));
             equipmentSection.Should().NotBeNull();
 
@@ -287,18 +287,18 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
 
             // Assert - Should have inline creation capability
             var markup = component.Markup;
-            
+
             // Look for equipment creation link or hint
-            var hasEquipmentCreation = 
+            var hasEquipmentCreation =
                 markup.Contains("Can't find equipment? Create here") ||
                 markup.Contains("Create here") && markup.Contains("equipment") ||
                 markup.Contains("Ctrl+N") && markup.Contains("equipment");
-                
+
             hasEquipmentCreation.Should().BeTrue(
                 "Equipment section should have inline creation capability");
-            
+
             // Verify it's using the enhanced component
-            markup.Should().Contain("Select equipment", 
+            markup.Should().Contain("Select equipment",
                 "Should use dropdown selection for equipment");
         }
 
@@ -315,18 +315,18 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
 
             // Assert - Verify MuscleGroupSelector structure
             var markup = component.Markup;
-            
+
             // The component should have the muscle group section with proper structure
             markup.Should().Contain("Muscle Groups", "Muscle Groups section should exist");
-            
+
             // Should have the description text indicating tag-based selection
-            var hasProperStructure = 
+            var hasProperStructure =
                 markup.Contains("Select muscle groups and assign their roles") ||
                 (markup.Contains("Muscle Groups") && markup.Contains("Select role"));
-                
+
             hasProperStructure.Should().BeTrue(
                 "MuscleGroupSelector should be rendered with role selection capability");
-            
+
             // The component uses MuscleGroupTag internally which implements role-based colors:
             // - Primary: bg-blue-100
             // - Secondary: bg-amber-100  
@@ -342,13 +342,13 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
 
             // Assert - Should have muscle group inline creation capability
             var markup = component.Markup;
-            
+
             // Look for muscle group creation link or capability
-            var hasMuscleGroupCreation = 
+            var hasMuscleGroupCreation =
                 markup.Contains("Can't find the Muscle Group? Create here") ||
                 markup.Contains("Create here") && markup.Contains("Muscle Group") ||
                 (markup.Contains("Muscle Groups") && markup.Contains("Create here"));
-                
+
             hasMuscleGroupCreation.Should().BeTrue(
                 "Muscle group section should have inline creation capability");
         }
@@ -366,7 +366,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
             {
                 new() { Id = "1", Value = "Dumbbell", Description = "Free weight" }
             };
-            
+
             var submittedModel = (ExerciseCreateDto?)null;
             _mockStateService.OnCreateExercise = (model) =>
             {
@@ -380,7 +380,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
             component.Find("#name").Input("Test Exercise");
             component.Find("#description").Input("Test Description");
             component.Find("#difficulty").Change("2");
-            
+
             // Select first exercise type (non-REST)
             var firstCheckbox = component.Find("input[type='checkbox']");
             firstCheckbox.Change(true);
@@ -393,12 +393,12 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
 
             // Assert - Should show validation error or indication
             // Since muscle groups are required for non-REST exercises
-            var hasValidationIndication = 
+            var hasValidationIndication =
                 component.Markup.Contains("Primary role is required") ||
                 component.Markup.Contains("border-red-500") ||
                 component.FindAll(".text-red-600").Any() ||
                 submittedModel == null; // Form shouldn't submit without required fields
-                
+
             hasValidationIndication.Should().BeTrue(
                 "Form should not submit or should show validation errors when muscle groups are missing for non-REST exercises");
         }
@@ -461,7 +461,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
                 {
                     Equipment = new List<ReferenceDataDto>();
                 }
-                
+
                 BodyParts = new List<ReferenceDataDto>();
                 MovementPatterns = new List<ReferenceDataDto>();
             }
@@ -490,33 +490,33 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
 
         private class MockReferenceDataService : IReferenceDataService
         {
-            public Task<IEnumerable<ReferenceDataDto>> GetDifficultyLevelsAsync() => 
+            public Task<IEnumerable<ReferenceDataDto>> GetDifficultyLevelsAsync() =>
                 Task.FromResult<IEnumerable<ReferenceDataDto>>(new List<ReferenceDataDto>());
-            
-            public Task<IEnumerable<ReferenceDataDto>> GetMuscleGroupsAsync() => 
+
+            public Task<IEnumerable<ReferenceDataDto>> GetMuscleGroupsAsync() =>
                 Task.FromResult<IEnumerable<ReferenceDataDto>>(new List<ReferenceDataDto>());
-            
-            public Task<IEnumerable<ReferenceDataDto>> GetMuscleRolesAsync() => 
+
+            public Task<IEnumerable<ReferenceDataDto>> GetMuscleRolesAsync() =>
                 Task.FromResult<IEnumerable<ReferenceDataDto>>(new List<ReferenceDataDto>());
-            
-            public Task<IEnumerable<ReferenceDataDto>> GetEquipmentAsync() => 
+
+            public Task<IEnumerable<ReferenceDataDto>> GetEquipmentAsync() =>
                 Task.FromResult<IEnumerable<ReferenceDataDto>>(new List<ReferenceDataDto>());
-            
-            public Task<IEnumerable<ReferenceDataDto>> GetBodyPartsAsync() => 
+
+            public Task<IEnumerable<ReferenceDataDto>> GetBodyPartsAsync() =>
                 Task.FromResult<IEnumerable<ReferenceDataDto>>(new List<ReferenceDataDto>());
-            
-            public Task<IEnumerable<ReferenceDataDto>> GetMovementPatternsAsync() => 
+
+            public Task<IEnumerable<ReferenceDataDto>> GetMovementPatternsAsync() =>
                 Task.FromResult<IEnumerable<ReferenceDataDto>>(new List<ReferenceDataDto>());
-            
-            public Task<IEnumerable<ExerciseTypeDto>> GetExerciseTypesAsync() => 
+
+            public Task<IEnumerable<ExerciseTypeDto>> GetExerciseTypesAsync() =>
                 Task.FromResult<IEnumerable<ExerciseTypeDto>>(new List<ExerciseTypeDto>());
-            
-            public Task<IEnumerable<ReferenceDataDto>> GetKineticChainTypesAsync() => 
+
+            public Task<IEnumerable<ReferenceDataDto>> GetKineticChainTypesAsync() =>
                 Task.FromResult<IEnumerable<ReferenceDataDto>>(new List<ReferenceDataDto>());
-            
-            public Task<IEnumerable<ReferenceDataDto>> GetMetricTypesAsync() => 
+
+            public Task<IEnumerable<ReferenceDataDto>> GetMetricTypesAsync() =>
                 Task.FromResult<IEnumerable<ReferenceDataDto>>(new List<ReferenceDataDto>());
-            
+
             public void ClearEquipmentCache() { }
             public void ClearMuscleGroupsCache() { }
         }

@@ -161,33 +161,33 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
 
         private class MockReferenceDataService : IReferenceDataService
         {
-            public Task<IEnumerable<ReferenceDataDto>> GetDifficultyLevelsAsync() => 
+            public Task<IEnumerable<ReferenceDataDto>> GetDifficultyLevelsAsync() =>
                 Task.FromResult<IEnumerable<ReferenceDataDto>>(new List<ReferenceDataDto>());
-            
-            public Task<IEnumerable<ReferenceDataDto>> GetMuscleGroupsAsync() => 
+
+            public Task<IEnumerable<ReferenceDataDto>> GetMuscleGroupsAsync() =>
                 Task.FromResult<IEnumerable<ReferenceDataDto>>(new List<ReferenceDataDto>());
-            
-            public Task<IEnumerable<ReferenceDataDto>> GetMuscleRolesAsync() => 
+
+            public Task<IEnumerable<ReferenceDataDto>> GetMuscleRolesAsync() =>
                 Task.FromResult<IEnumerable<ReferenceDataDto>>(new List<ReferenceDataDto>());
-            
-            public Task<IEnumerable<ReferenceDataDto>> GetEquipmentAsync() => 
+
+            public Task<IEnumerable<ReferenceDataDto>> GetEquipmentAsync() =>
                 Task.FromResult<IEnumerable<ReferenceDataDto>>(new List<ReferenceDataDto>());
-            
-            public Task<IEnumerable<ReferenceDataDto>> GetBodyPartsAsync() => 
+
+            public Task<IEnumerable<ReferenceDataDto>> GetBodyPartsAsync() =>
                 Task.FromResult<IEnumerable<ReferenceDataDto>>(new List<ReferenceDataDto>());
-            
-            public Task<IEnumerable<ReferenceDataDto>> GetMovementPatternsAsync() => 
+
+            public Task<IEnumerable<ReferenceDataDto>> GetMovementPatternsAsync() =>
                 Task.FromResult<IEnumerable<ReferenceDataDto>>(new List<ReferenceDataDto>());
-            
-            public Task<IEnumerable<ExerciseTypeDto>> GetExerciseTypesAsync() => 
+
+            public Task<IEnumerable<ExerciseTypeDto>> GetExerciseTypesAsync() =>
                 Task.FromResult<IEnumerable<ExerciseTypeDto>>(new List<ExerciseTypeDto>());
-            
-            public Task<IEnumerable<ReferenceDataDto>> GetKineticChainTypesAsync() => 
+
+            public Task<IEnumerable<ReferenceDataDto>> GetKineticChainTypesAsync() =>
                 Task.FromResult<IEnumerable<ReferenceDataDto>>(new List<ReferenceDataDto>());
-            
-            public Task<IEnumerable<ReferenceDataDto>> GetMetricTypesAsync() => 
+
+            public Task<IEnumerable<ReferenceDataDto>> GetMetricTypesAsync() =>
                 Task.FromResult<IEnumerable<ReferenceDataDto>>(new List<ReferenceDataDto>());
-            
+
             public void ClearEquipmentCache() { }
             public void ClearMuscleGroupsCache() { }
         }

@@ -93,12 +93,12 @@ namespace GetFitterGetBigger.Admin.Tests.Services
         {
             // Arrange
             var createDto = new CreateEquipmentDto { Name = "Kettlebell" };
-            var createdEquipment = new EquipmentDto 
-            { 
-                Id = "equipment-789", 
-                Name = "Kettlebell", 
-                IsActive = true, 
-                CreatedAt = DateTime.UtcNow 
+            var createdEquipment = new EquipmentDto
+            {
+                Id = "equipment-789",
+                Name = "Kettlebell",
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow
             };
             _httpMessageHandler.SetupResponse(HttpStatusCode.Created, createdEquipment);
 
@@ -136,11 +136,11 @@ namespace GetFitterGetBigger.Admin.Tests.Services
             // Arrange
             var equipmentId = "equipment-123";
             var updateDto = new UpdateEquipmentDto { Name = "Olympic Barbell" };
-            var updatedEquipment = new EquipmentDto 
-            { 
-                Id = equipmentId, 
-                Name = "Olympic Barbell", 
-                IsActive = true, 
+            var updatedEquipment = new EquipmentDto
+            {
+                Id = equipmentId,
+                Name = "Olympic Barbell",
+                IsActive = true,
                 CreatedAt = DateTime.UtcNow.AddDays(-1),
                 UpdatedAt = DateTime.UtcNow
             };

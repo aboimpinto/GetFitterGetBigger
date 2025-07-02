@@ -107,7 +107,7 @@ namespace GetFitterGetBigger.Admin.Services
                 // Cache contains data of wrong type - clear it and retry
                 _cache.Remove(cacheKey);
                 _cache.Remove("MuscleGroupsDto_Full"); // Clear related cache
-                
+
                 var requestUrl = "api/ReferenceTables/MuscleGroups";
                 var muscleGroups = await _httpClient.GetFromJsonAsync<IEnumerable<MuscleGroupDto>>(requestUrl, _jsonOptions);
                 if (muscleGroups != null)

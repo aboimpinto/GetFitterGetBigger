@@ -25,7 +25,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Shared
             _mockEquipmentService = new Mock<IEquipmentService>();
             _mockMuscleGroupsService = new Mock<IMuscleGroupsService>();
             _mockReferenceDataService = new Mock<IReferenceDataService>();
-            
+
             Services.AddSingleton<IEquipmentService>(_mockEquipmentService.Object);
             Services.AddSingleton<IMuscleGroupsService>(_mockMuscleGroupsService.Object);
             Services.AddSingleton<IReferenceDataService>(_mockReferenceDataService.Object);
@@ -81,7 +81,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Shared
             // Arrange
             var selectedValues = new List<string>();
             var changedValues = new List<string>();
-            
+
             var component = RenderComponent<TagBasedMultiSelect<ReferenceDataDto>>(parameters => parameters
                 .Add(p => p.Items, _testItems)
                 .Add(p => p.SelectedValues, selectedValues)
@@ -104,7 +104,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Shared
         {
             // Arrange
             var selectedValues = new List<string> { "1" };
-            
+
             var component = RenderComponent<TagBasedMultiSelect<ReferenceDataDto>>(parameters => parameters
                 .Add(p => p.Items, _testItems)
                 .Add(p => p.SelectedValues, selectedValues)
@@ -124,7 +124,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Shared
             // Arrange
             var selectedValues = new List<string> { "1", "2" };
             var changedValues = new List<string>();
-            
+
             var component = RenderComponent<TagBasedMultiSelect<ReferenceDataDto>>(parameters => parameters
                 .Add(p => p.Items, _testItems)
                 .Add(p => p.SelectedValues, selectedValues)
@@ -198,7 +198,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Shared
             // Arrange
             var selectedValues = new List<string>();
             var changedValues = new List<string>();
-            
+
             var component = RenderComponent<TagBasedMultiSelect<ReferenceDataDto>>(parameters => parameters
                 .Add(p => p.Items, _testItems)
                 .Add(p => p.SelectedValues, selectedValues)
