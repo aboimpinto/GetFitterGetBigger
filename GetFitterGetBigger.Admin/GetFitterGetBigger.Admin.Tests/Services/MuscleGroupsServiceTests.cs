@@ -7,6 +7,7 @@ using GetFitterGetBigger.Admin.Services;
 using GetFitterGetBigger.Admin.Tests.Helpers;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;
+using Moq;
 using Xunit;
 
 namespace GetFitterGetBigger.Admin.Tests.Services
@@ -17,6 +18,7 @@ namespace GetFitterGetBigger.Admin.Tests.Services
         private readonly HttpClient _httpClient;
         private readonly IMemoryCache _memoryCache;
         private readonly IConfiguration _configuration;
+        private readonly Mock<ICacheHelperService> _cacheHelperMock;
         private readonly MuscleGroupsService _muscleGroupsService;
         private readonly JsonSerializerOptions _jsonOptions;
 
@@ -35,10 +37,12 @@ namespace GetFitterGetBigger.Admin.Tests.Services
             _configuration = new ConfigurationBuilder()
                 .AddInMemoryCollection(inMemorySettings)
                 .Build();
+            _cacheHelperMock = new Mock<ICacheHelperService>();
             _muscleGroupsService = new MuscleGroupsService(
                 _httpClient,
                 _memoryCache,
-                _configuration);
+                _configuration,
+                _cacheHelperMock.Object);
             _jsonOptions = new JsonSerializerOptions
             {
                 PropertyNameCaseInsensitive = true,
@@ -254,8 +258,9 @@ namespace GetFitterGetBigger.Admin.Tests.Services
             };
 
             // Pre-populate cache
-            _memoryCache.Set("MuscleGroups", new List<MuscleGroupDto>());
+            _memoryCache.Set("MuscleGroupsDto_Full", new List<MuscleGroupDto>());
             _memoryCache.Set($"MuscleGroups_BodyPart_bodypart-123", new List<MuscleGroupDto>());
+            _memoryCache.Set("RefData_MuscleGroups", new List<ReferenceDataDto>());
 
             _httpMessageHandler.SetupResponse(HttpStatusCode.Created, createdMuscleGroup);
 
@@ -263,8 +268,9 @@ namespace GetFitterGetBigger.Admin.Tests.Services
             await _muscleGroupsService.CreateMuscleGroupAsync(createDto);
 
             // Assert
-            _memoryCache.TryGetValue("MuscleGroups", out _).Should().BeFalse();
+            _memoryCache.TryGetValue("MuscleGroupsDto_Full", out _).Should().BeFalse();
             _memoryCache.TryGetValue($"MuscleGroups_BodyPart_bodypart-123", out _).Should().BeFalse();
+            _memoryCache.TryGetValue("RefData_MuscleGroups", out _).Should().BeFalse();
         }
 
         [Fact]
@@ -367,9 +373,10 @@ namespace GetFitterGetBigger.Admin.Tests.Services
         {
             // Arrange
             // Pre-populate caches
-            _memoryCache.Set("MuscleGroups", new List<MuscleGroupDto>());
+            _memoryCache.Set("MuscleGroupsDto_Full", new List<MuscleGroupDto>());
             _memoryCache.Set("MuscleGroups_BodyPart_bodypart-123", new List<MuscleGroupDto>());
             _memoryCache.Set("MuscleGroups_BodyPart_bodypart-456", new List<MuscleGroupDto>());
+            _memoryCache.Set("RefData_MuscleGroups", new List<ReferenceDataDto>());
 
             _httpMessageHandler.SetupResponse(HttpStatusCode.NoContent);
 
@@ -377,7 +384,8 @@ namespace GetFitterGetBigger.Admin.Tests.Services
             await _muscleGroupsService.DeleteMuscleGroupAsync("musclegroup-1");
 
             // Assert
-            _memoryCache.TryGetValue("MuscleGroups", out _).Should().BeFalse();
+            _memoryCache.TryGetValue("MuscleGroupsDto_Full", out _).Should().BeFalse();
+            _memoryCache.TryGetValue("RefData_MuscleGroups", out _).Should().BeFalse();
             // Note: The actual implementation tries to clear all body part caches,
             // but in unit tests we can't easily verify this due to IMemoryCache limitations
         }

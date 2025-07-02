@@ -17,6 +17,7 @@ namespace GetFitterGetBigger.Admin.Tests.Services
         private readonly HttpClient _httpClient;
         private readonly IMemoryCache _memoryCache;
         private readonly Mock<IConfiguration> _configurationMock;
+        private readonly Mock<ICacheHelperService> _cacheHelperMock;
         private readonly EquipmentService _equipmentService;
         private readonly JsonSerializerOptions _jsonOptions;
 
@@ -29,6 +30,7 @@ namespace GetFitterGetBigger.Admin.Tests.Services
             };
             _memoryCache = new MemoryCache(new MemoryCacheOptions());
             _configurationMock = new Mock<IConfiguration>();
+            _cacheHelperMock = new Mock<ICacheHelperService>();
 
             _configurationMock
                 .Setup(x => x["ApiBaseUrl"])
@@ -37,7 +39,8 @@ namespace GetFitterGetBigger.Admin.Tests.Services
             _equipmentService = new EquipmentService(
                 _httpClient,
                 _memoryCache,
-                _configurationMock.Object);
+                _configurationMock.Object,
+                _cacheHelperMock.Object);
 
             _jsonOptions = new JsonSerializerOptions
             {
@@ -100,14 +103,16 @@ namespace GetFitterGetBigger.Admin.Tests.Services
             _httpMessageHandler.SetupResponse(HttpStatusCode.Created, createdEquipment);
 
             // Pre-populate cache
-            _memoryCache.Set("Equipment", new List<EquipmentDto>());
+            _memoryCache.Set("EquipmentDto_Full", new List<EquipmentDto>());
+            _memoryCache.Set("RefData_Equipment", new List<ReferenceDataDto>());
 
             // Act
             var result = await _equipmentService.CreateEquipmentAsync(createDto);
 
             // Assert
             result.Name.Should().Be("Kettlebell");
-            _memoryCache.TryGetValue("Equipment", out _).Should().BeFalse(); // Cache should be invalidated
+            _memoryCache.TryGetValue("EquipmentDto_Full", out _).Should().BeFalse(); // Cache should be invalidated
+            _memoryCache.TryGetValue("RefData_Equipment", out _).Should().BeFalse(); // ReferenceData cache should also be invalidated
         }
 
         [Fact]
@@ -142,7 +147,8 @@ namespace GetFitterGetBigger.Admin.Tests.Services
             _httpMessageHandler.SetupResponse(HttpStatusCode.OK, updatedEquipment);
 
             // Pre-populate cache
-            _memoryCache.Set("Equipment", new List<EquipmentDto>());
+            _memoryCache.Set("EquipmentDto_Full", new List<EquipmentDto>());
+            _memoryCache.Set("RefData_Equipment", new List<ReferenceDataDto>());
 
             // Act
             var result = await _equipmentService.UpdateEquipmentAsync(equipmentId, updateDto);
@@ -150,7 +156,8 @@ namespace GetFitterGetBigger.Admin.Tests.Services
             // Assert
             result.Name.Should().Be("Olympic Barbell");
             result.UpdatedAt.Should().NotBeNull();
-            _memoryCache.TryGetValue("Equipment", out _).Should().BeFalse(); // Cache should be invalidated
+            _memoryCache.TryGetValue("EquipmentDto_Full", out _).Should().BeFalse(); // Cache should be invalidated
+            _memoryCache.TryGetValue("RefData_Equipment", out _).Should().BeFalse(); // ReferenceData cache should also be invalidated
         }
 
         [Fact]
@@ -193,13 +200,15 @@ namespace GetFitterGetBigger.Admin.Tests.Services
             _httpMessageHandler.SetupResponse(HttpStatusCode.NoContent, null);
 
             // Pre-populate cache
-            _memoryCache.Set("Equipment", new List<EquipmentDto>());
+            _memoryCache.Set("EquipmentDto_Full", new List<EquipmentDto>());
+            _memoryCache.Set("RefData_Equipment", new List<ReferenceDataDto>());
 
             // Act
             await _equipmentService.DeleteEquipmentAsync(equipmentId);
 
             // Assert
-            _memoryCache.TryGetValue("Equipment", out _).Should().BeFalse(); // Cache should be invalidated
+            _memoryCache.TryGetValue("EquipmentDto_Full", out _).Should().BeFalse(); // Cache should be invalidated
+            _memoryCache.TryGetValue("RefData_Equipment", out _).Should().BeFalse(); // ReferenceData cache should also be invalidated
         }
 
         [Fact]

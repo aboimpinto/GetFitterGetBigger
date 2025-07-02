@@ -64,7 +64,8 @@ namespace GetFitterGetBigger.Admin.Tests.Services
         {
             // Arrange
             var cachedData = ReferenceDataDtoBuilder.BuildList(2);
-            _memoryCache.Set("BodyParts", cachedData);
+            // Ensure we're setting the exact type expected
+            _memoryCache.Set("RefData_BodyParts", cachedData as IEnumerable<ReferenceDataDto>);
 
             // Act
             var result = await _referenceDataService.GetBodyPartsAsync();
@@ -148,7 +149,6 @@ namespace GetFitterGetBigger.Admin.Tests.Services
         [InlineData("GetKineticChainTypesAsync", "/api/ReferenceTables/KineticChainTypes")]
         [InlineData("GetMetricTypesAsync", "/api/ReferenceTables/MetricTypes")]
         [InlineData("GetMovementPatternsAsync", "/api/ReferenceTables/MovementPatterns")]
-        [InlineData("GetMuscleGroupsAsync", "/api/ReferenceTables/MuscleGroups")]
         [InlineData("GetMuscleRolesAsync", "/api/ReferenceTables/MuscleRoles")]
         public async Task ReferenceDataMethods_UseCorrectEndpoints(string methodName, string expectedEndpoint)
         {
@@ -166,6 +166,28 @@ namespace GetFitterGetBigger.Admin.Tests.Services
             result.Should().HaveCount(2);
             _httpMessageHandler.VerifyRequest(req =>
                 req.RequestUri!.ToString().Contains(expectedEndpoint));
+        }
+
+        [Fact]
+        public async Task GetMuscleGroupsAsync_UseCorrectEndpoint()
+        {
+            // Arrange - MuscleGroups endpoint returns MuscleGroupDto, not ReferenceDataDto
+            var expectedData = new List<MuscleGroupDto>
+            {
+                new() { Id = "1", Name = "Chest", BodyPartId = "1", BodyPartName = "Upper Body", IsActive = true, CreatedAt = DateTime.UtcNow },
+                new() { Id = "2", Name = "Back", BodyPartId = "1", BodyPartName = "Upper Body", IsActive = true, CreatedAt = DateTime.UtcNow }
+            };
+            _httpMessageHandler.SetupResponse(HttpStatusCode.OK, expectedData);
+
+            // Act
+            var result = await _referenceDataService.GetMuscleGroupsAsync();
+
+            // Assert
+            result.Should().HaveCount(2);
+            result.First().Value.Should().Be("Chest");
+            result.First().Description.Should().Contain("Upper Body");
+            _httpMessageHandler.VerifyRequest(req =>
+                req.RequestUri!.ToString().Contains("/api/ReferenceTables/MuscleGroups"));
         }
 
         [Fact]

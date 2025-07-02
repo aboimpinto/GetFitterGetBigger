@@ -52,16 +52,17 @@ namespace GetFitterGetBigger.Admin.Tests.Services
             _cache.Set("MuscleGroups", muscleGroupDtos);
             
             // Setup mock HTTP responses for ReferenceDataService
-            var mockReferenceData = new List<ReferenceDataDto>
+            // MuscleGroups endpoint now expects MuscleGroupDto
+            var mockMuscleGroups = new List<MuscleGroupDto>
             {
-                new() { Id = "ref1", Value = "Chest", Description = "Chest muscles" },
-                new() { Id = "ref2", Value = "Back", Description = "Back muscles" }
+                new() { Id = "ref1", Name = "Chest", BodyPartId = "bp1", BodyPartName = "Upper Body", IsActive = true, CreatedAt = DateTime.UtcNow },
+                new() { Id = "ref2", Name = "Back", BodyPartId = "bp1", BodyPartName = "Upper Body", IsActive = true, CreatedAt = DateTime.UtcNow }
             };
             
             var mockHandler = new MockHttpMessageHandler();
-            mockHandler.SetupResponse(HttpStatusCode.OK, mockReferenceData);
+            mockHandler.SetupResponse(HttpStatusCode.OK, mockMuscleGroups);
             
-            var httpClient = new HttpClient(mockHandler);
+            var httpClient = new HttpClient(mockHandler) { BaseAddress = new Uri("http://localhost:5214") };
             var referenceDataService = new ReferenceDataService(httpClient, _cache, _configuration);
             
             // Act
@@ -98,7 +99,7 @@ namespace GetFitterGetBigger.Admin.Tests.Services
             var mockHandler = new MockHttpMessageHandler();
             mockHandler.SetupResponse(HttpStatusCode.OK, mockReferenceData);
             
-            var httpClient = new HttpClient(mockHandler);
+            var httpClient = new HttpClient(mockHandler) { BaseAddress = new Uri("http://localhost:5214") };
             var referenceDataService = new ReferenceDataService(httpClient, _cache, _configuration);
             
             // Act
@@ -130,26 +131,60 @@ namespace GetFitterGetBigger.Admin.Tests.Services
                 { "/api/ReferenceTables/ExerciseTypes", "RefData_ExerciseTypes" }
             };
             
-            foreach (var endpoint in endpoints)
+            // Set up responses in the order they will be called
+            // BodyParts
+            mockHandler.SetupResponse(HttpStatusCode.OK, new List<ReferenceDataDto>
             {
-                var mockData = new List<ReferenceDataDto>
-                {
-                    new() { Id = "test", Value = endpoint.Key, Description = "Test" }
-                };
-                mockHandler.SetupResponse(HttpStatusCode.OK, mockData);
-            }
+                new() { Id = "test", Value = "BodyParts", Description = "Test" }
+            });
             
-            var httpClient = new HttpClient(mockHandler);
+            // DifficultyLevels
+            mockHandler.SetupResponse(HttpStatusCode.OK, new List<ReferenceDataDto>
+            {
+                new() { Id = "test", Value = "DifficultyLevels", Description = "Test" }
+            });
+            
+            // Equipment
+            mockHandler.SetupResponse(HttpStatusCode.OK, new List<ReferenceDataDto>
+            {
+                new() { Id = "test", Value = "Equipment", Description = "Test" }
+            });
+            
+            // MuscleRoles
+            mockHandler.SetupResponse(HttpStatusCode.OK, new List<ReferenceDataDto>
+            {
+                new() { Id = "test", Value = "MuscleRoles", Description = "Test" }
+            });
+            
+            // MovementPatterns
+            mockHandler.SetupResponse(HttpStatusCode.OK, new List<ReferenceDataDto>
+            {
+                new() { Id = "test", Value = "MovementPatterns", Description = "Test" }
+            });
+            
+            // ExerciseTypes - API returns ReferenceDataDto, not ExerciseTypeDto
+            mockHandler.SetupResponse(HttpStatusCode.OK, new List<ReferenceDataDto>
+            {
+                new() { Id = "test", Value = "Test Type", Description = "Test" }
+            });
+            
+            // MuscleGroups - returns MuscleGroupDto
+            mockHandler.SetupResponse(HttpStatusCode.OK, new List<MuscleGroupDto>
+            {
+                new() { Id = "test", Name = "Test Muscle", BodyPartId = "bp1", IsActive = true, CreatedAt = DateTime.UtcNow }
+            });
+            
+            var httpClient = new HttpClient(mockHandler) { BaseAddress = new Uri("http://localhost:5214") };
             var service = new ReferenceDataService(httpClient, _cache, _configuration);
             
             // Act
             await service.GetBodyPartsAsync();
             await service.GetDifficultyLevelsAsync();
             await service.GetEquipmentAsync();
-            await service.GetMuscleGroupsAsync();
             await service.GetMuscleRolesAsync();
             await service.GetMovementPatternsAsync();
             await service.GetExerciseTypesAsync();
+            await service.GetMuscleGroupsAsync(); // Do this last as it expects different response
             
             // Assert - verify each method used its unique cache key
             foreach (var expectedCacheKey in endpoints.Values)
