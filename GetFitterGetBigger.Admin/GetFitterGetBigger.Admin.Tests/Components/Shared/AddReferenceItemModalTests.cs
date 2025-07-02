@@ -543,5 +543,251 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Shared
         }
 
         #endregion
+
+        #region Boundary Value Tests
+
+        [Fact]
+        public async Task AddReferenceItemModal_BoundaryValue_HandlesMaxLengthStrings()
+        {
+            // Arrange - Create 100 character string (max allowed by StringLength attribute)
+            var maxLengthName = new string('A', 100);
+            var createdEquipment = new EquipmentDto { Id = "1", Name = maxLengthName, IsActive = true };
+            _mockEquipmentService.Setup(x => x.CreateEquipmentAsync(It.IsAny<CreateEquipmentDto>()))
+                .ReturnsAsync(createdEquipment);
+
+            var component = RenderComponent<AddReferenceItemModal>(parameters => parameters
+                .Add(p => p.EntityType, ReferenceEntityType.Equipment));
+
+            // Act - Test through UI
+            component.Find("[data-testid='equipment-name-input']").Change(maxLengthName);
+            await component.InvokeAsync(() =>
+                component.Find("[data-testid='add-reference-form']").Submit()
+            );
+
+            // Assert
+            _mockEquipmentService.Verify(x => x.CreateEquipmentAsync(
+                It.Is<CreateEquipmentDto>(dto => dto.Name == maxLengthName)), Times.Once);
+        }
+
+        [Fact]
+        public async Task AddReferenceItemModal_BoundaryValue_RejectsOverMaxLengthStrings()
+        {
+            // Arrange - Create 101 character string (over the limit)
+            var overMaxLengthName = new string('B', 101);
+            var component = RenderComponent<AddReferenceItemModal>(parameters => parameters
+                .Add(p => p.EntityType, ReferenceEntityType.Equipment));
+
+            // Act - Test through UI
+            component.Find("[data-testid='equipment-name-input']").Change(overMaxLengthName);
+            await component.InvokeAsync(() =>
+                component.Find("[data-testid='add-reference-form']").Submit()
+            );
+
+            // Assert - Should show validation error
+            component.WaitForAssertion(() =>
+            {
+                component.Find("[data-testid='equipment-name-error']").TextContent
+                    .Should().Contain("must be less than 100 characters");
+            });
+            _mockEquipmentService.Verify(x => x.CreateEquipmentAsync(It.IsAny<CreateEquipmentDto>()), Times.Never);
+        }
+
+        [Fact]
+        public async Task AddReferenceItemModal_BoundaryValue_RejectsWhitespaceOnlyStrings()
+        {
+            // Arrange
+            var whitespaceStrings = new[] { " ", "  ", "\t", "\n", "\r\n", "   \t\n   " };
+            
+            foreach (var whitespace in whitespaceStrings)
+            {
+                var component = RenderComponent<AddReferenceItemModal>(parameters => parameters
+                    .Add(p => p.EntityType, ReferenceEntityType.Equipment));
+
+                // Act
+                component.Find("[data-testid='equipment-name-input']").Change(whitespace);
+                await component.InvokeAsync(() =>
+                    component.Find("[data-testid='add-reference-form']").Submit()
+                );
+
+                // Assert
+                component.WaitForAssertion(() =>
+                {
+                    component.Find("[data-testid='equipment-name-error']").TextContent
+                        .Should().Contain("Equipment name is required");
+                });
+            }
+            
+            _mockEquipmentService.Verify(x => x.CreateEquipmentAsync(It.IsAny<CreateEquipmentDto>()), Times.Never);
+        }
+
+        [Fact]
+        public async Task AddReferenceItemModal_BoundaryValue_HandlesSpecialCharacters()
+        {
+            // Arrange - Test various special characters
+            var specialCharNames = new[]
+            {
+                "Equipment @#$%",
+                "Equipment_123",
+                "Equipment-Pro+",
+                "Equipment (Heavy)",
+                "Equipment & More",
+                "Equipment^2",
+                "Equipment*Special*",
+                "Equipment!Important!"
+            };
+
+            foreach (var specialName in specialCharNames)
+            {
+                var createdEquipment = new EquipmentDto { Id = Guid.NewGuid().ToString(), Name = specialName };
+                _mockEquipmentService.Setup(x => x.CreateEquipmentAsync(It.Is<CreateEquipmentDto>(dto => dto.Name == specialName)))
+                    .ReturnsAsync(createdEquipment);
+
+                var component = RenderComponent<AddReferenceItemModal>(parameters => parameters
+                    .Add(p => p.EntityType, ReferenceEntityType.Equipment));
+
+                // Act
+                component.Find("[data-testid='equipment-name-input']").Change(specialName);
+                await component.InvokeAsync(() =>
+                    component.Find("[data-testid='add-reference-form']").Submit()
+                );
+
+                // Assert - Should accept special characters
+                _mockEquipmentService.Verify(x => x.CreateEquipmentAsync(
+                    It.Is<CreateEquipmentDto>(dto => dto.Name == specialName)), Times.Once);
+            }
+        }
+
+        [Fact]
+        public async Task AddReferenceItemModal_BoundaryValue_HandlesUnicodeCharacters()
+        {
+            // Arrange - Test Unicode characters including emojis and accented characters
+            var unicodeNames = new[]
+            {
+                "Équipement spécial",     // French accents
+                "Gerät für Übungen",       // German umlauts
+                "Оборудование",            // Cyrillic
+                "設備",                    // Japanese
+                "معدات",                   // Arabic
+                "Equipment 🎯",            // Emoji
+                "Dumbbells 💪",           // Another emoji
+                "àéîõüñç Equipment"        // Various accents
+            };
+
+            foreach (var unicodeName in unicodeNames)
+            {
+                var createdEquipment = new EquipmentDto { Id = Guid.NewGuid().ToString(), Name = unicodeName };
+                _mockEquipmentService.Setup(x => x.CreateEquipmentAsync(It.Is<CreateEquipmentDto>(dto => dto.Name == unicodeName)))
+                    .ReturnsAsync(createdEquipment);
+
+                var component = RenderComponent<AddReferenceItemModal>(parameters => parameters
+                    .Add(p => p.EntityType, ReferenceEntityType.Equipment));
+
+                // Act
+                component.Find("[data-testid='equipment-name-input']").Change(unicodeName);
+                await component.InvokeAsync(() =>
+                    component.Find("[data-testid='add-reference-form']").Submit()
+                );
+
+                // Assert - Should accept Unicode characters
+                _mockEquipmentService.Verify(x => x.CreateEquipmentAsync(
+                    It.Is<CreateEquipmentDto>(dto => dto.Name == unicodeName)), Times.Once);
+            }
+        }
+
+        [Fact]
+        public async Task AddReferenceItemModal_BoundaryValue_HandlesSQLInjectionAttempts()
+        {
+            // Arrange - Test potential SQL injection strings
+            var sqlInjectionAttempts = new[]
+            {
+                "'; DROP TABLE Equipment--",
+                "1'; DELETE FROM Equipment WHERE '1'='1",
+                "Equipment' OR '1'='1",
+                "Equipment\"; DROP TABLE--",
+                "Equipment'); DROP TABLE Equipment;--"
+            };
+
+            foreach (var sqlAttempt in sqlInjectionAttempts)
+            {
+                var createdEquipment = new EquipmentDto { Id = Guid.NewGuid().ToString(), Name = sqlAttempt };
+                _mockEquipmentService.Setup(x => x.CreateEquipmentAsync(It.Is<CreateEquipmentDto>(dto => dto.Name == sqlAttempt)))
+                    .ReturnsAsync(createdEquipment);
+
+                var component = RenderComponent<AddReferenceItemModal>(parameters => parameters
+                    .Add(p => p.EntityType, ReferenceEntityType.Equipment));
+
+                // Act
+                component.Find("[data-testid='equipment-name-input']").Change(sqlAttempt);
+                await component.InvokeAsync(() =>
+                    component.Find("[data-testid='add-reference-form']").Submit()
+                );
+
+                // Assert - Should safely handle SQL injection attempts as regular strings
+                _mockEquipmentService.Verify(x => x.CreateEquipmentAsync(
+                    It.Is<CreateEquipmentDto>(dto => dto.Name == sqlAttempt)), Times.Once);
+            }
+        }
+
+        [Fact]
+        public async Task AddReferenceItemModal_BoundaryValue_HandlesEmptyStringLogicTest()
+        {
+            // Arrange - Direct logic test for empty string
+            var component = RenderComponent<AddReferenceItemModal>(parameters => parameters
+                .Add(p => p.EntityType, ReferenceEntityType.Equipment));
+
+            // Act - Submit form with empty input through UI (validation should prevent submission)
+            component.Find("[data-testid='equipment-name-input']").Change("");
+            await component.InvokeAsync(() =>
+                component.Find("[data-testid='add-reference-form']").Submit()
+            );
+
+            // Assert - Should not call service with empty string due to validation
+            _mockEquipmentService.Verify(x => x.CreateEquipmentAsync(It.IsAny<CreateEquipmentDto>()), Times.Never);
+            
+            // Validation error should be shown
+            component.WaitForAssertion(() =>
+            {
+                component.Find("[data-testid='equipment-name-error']").TextContent
+                    .Should().Contain("Equipment name is required");
+            });
+        }
+
+        [Fact]
+        public async Task AddReferenceItemModal_BoundaryValue_MuscleGroupMaxLengthTest()
+        {
+            // Arrange - Test muscle group with max length name
+            _mockReferenceDataService.Setup(x => x.GetBodyPartsAsync())
+                .ReturnsAsync(new List<ReferenceDataDto>
+                {
+                    new() { Id = "1", Value = "Arms" }
+                });
+
+            var maxLengthName = new string('M', 100);
+            var createdMuscleGroup = new MuscleGroupDto
+            {
+                Id = "1",
+                Name = maxLengthName,
+                BodyPartId = "1",
+                BodyPartName = "Arms"
+            };
+            _mockMuscleGroupsService.Setup(x => x.CreateMuscleGroupAsync(It.IsAny<CreateMuscleGroupDto>()))
+                .ReturnsAsync(createdMuscleGroup);
+
+            var component = RenderComponent<AddReferenceItemModal>(parameters => parameters
+                .Add(p => p.EntityType, ReferenceEntityType.MuscleGroup));
+
+            // Act
+            component.Find("[data-testid='muscle-group-name-input']").Change(maxLengthName);
+            component.Find("[data-testid='body-part-select']").Change("1");
+            await component.InvokeAsync(() =>
+                component.Find("[data-testid='add-reference-form']").Submit()
+            );
+
+            // Assert
+            _mockMuscleGroupsService.Verify(x => x.CreateMuscleGroupAsync(
+                It.Is<CreateMuscleGroupDto>(dto => dto.Name == maxLengthName && dto.BodyPartId == "1")), Times.Once);
+        }
+
+        #endregion
     }
 }
