@@ -1,5 +1,6 @@
 @page "/exercises/new"
 @page "/exercises/{Id}/edit"
+@using GetFitterGetBigger.Admin.Models
 @using GetFitterGetBigger.Admin.Models.Dtos
 @using GetFitterGetBigger.Admin.Services
 @using GetFitterGetBigger.Admin.Builders
@@ -205,19 +206,16 @@
                         Equipment
                         @if (IsRestTypeSelected) { <span class="text-sm text-gray-500">(disabled for Rest exercises)</span> }
                     </h3>
-                    <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
-                        @foreach (var equipment in StateService.Equipment)
-                        {
-                            <label class="flex items-center">
-                                <input type="checkbox" 
-                                       checked="@selectedEquipmentIds.Contains(equipment.Id)"
-                                       @onchange="@(() => ToggleEquipment(equipment.Id))"
-                                       disabled="@IsRestTypeSelected"
-                                       class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded @(IsRestTypeSelected ? "cursor-not-allowed" : "")">
-                                <span class="ml-2 text-sm text-gray-700">@equipment.Value</span>
-                            </label>
-                        }
-                    </div>
+                    <EnhancedReferenceSelect Items="@StateService.Equipment"
+                                           SelectedValues="@selectedEquipmentIds"
+                                           SelectedValuesChanged="@((List<string> values) => selectedEquipmentIds = values)"
+                                           Multiple="true"
+                                           Disabled="@IsRestTypeSelected"
+                                           EnableInlineCreation="true"
+                                           EntityType="ReferenceEntityType.Equipment"
+                                           GetItemId="@(item => item.Id)"
+                                           GetItemName="@(item => item.Value)"
+                                           OnItemsRefreshed="@RefreshEquipment" />
                 </div>
 
                 <!-- Body Parts -->
@@ -352,7 +350,7 @@
         .WithDifficultyId(string.Empty)
         .Build(); // Coach notes are now optional - start with empty list
     private List<MuscleGroupRoleAssignmentDto> muscleGroupAssignments = new();
-    private HashSet<string> selectedEquipmentIds = new();
+    private List<string> selectedEquipmentIds = new();
     private HashSet<string> selectedBodyPartIds = new();
     private HashSet<string> selectedMovementPatternIds = new();
     private Dictionary<string, string> validationErrors = new();
@@ -432,7 +430,7 @@
             ).ToList();
 
             // Map equipment
-            selectedEquipmentIds = exercise.Equipment.Select(e => e.Id).ToHashSet();
+            selectedEquipmentIds = exercise.Equipment.Select(e => e.Id).ToList();
             
             // Map body parts
             selectedBodyPartIds = exercise.BodyParts.Select(bp => bp.Id).ToHashSet();
@@ -544,6 +542,12 @@
             selectedMovementPatternIds.Remove(patternId);
         else
             selectedMovementPatternIds.Add(patternId);
+    }
+
+    private async Task RefreshEquipment()
+    {
+        await StateService.InitializeAsync();
+        StateHasChanged();
     }
 
     private bool ValidateForm()
