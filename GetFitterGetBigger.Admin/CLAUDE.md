@@ -12,6 +12,23 @@ When working in the Admin project folder, the AI assistant can perform **full im
 
 Note: When in the main repository folder, only documentation work is performed.
 
+## Testing Guidelines
+
+**IMPORTANT**: When writing tests for any component (React or Blazor), always consult the **memory-bank/COMPREHENSIVE-TESTING-GUIDE.md** file. This consolidated guide contains:
+- Blazor/bUnit testing patterns and lessons learned
+- React/Jest testing best practices
+- API service testing with xUnit
+- Common pitfalls and debugging strategies
+- Quick reference for both tech stacks
+
+Key requirements for all component tests:
+1. Add `data-testid` attributes to interactive elements (Blazor) or use semantic queries (React)
+2. Use `internal` visibility for testable methods/fields in Blazor components
+3. Implement both UI interaction and unit tests when appropriate
+4. Handle async operations properly (InvokeAsync for Blazor, waitFor/findBy for React)
+5. Always wrap React components with required providers
+6. Mock all external dependencies at the appropriate level
+
 ## Git Commit Messages
 
 When creating git commits, use the following signature format at the end of the commit message:

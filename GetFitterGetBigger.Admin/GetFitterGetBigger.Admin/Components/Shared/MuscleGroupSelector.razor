@@ -12,7 +12,7 @@
     
     @if (ShowValidationError)
     {
-        <div class="p-3 bg-red-50 border border-red-200 rounded-md">
+        <div class="p-3 bg-red-50 border border-red-200 rounded-md" data-testid="muscle-group-validation-error">
             <p class="text-sm text-red-600">At least one muscle group with Primary role is required</p>
         </div>
     }
@@ -23,6 +23,7 @@
             <select @bind="selectedRole"
                     @bind:after="OnRoleChanged"
                     disabled="@Disabled"
+                    data-testid="muscle-group-role-select"
                     class="w-full px-3 py-2 border @(ShowValidationError ? "border-red-300" : "border-gray-300") rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 @(Disabled ? "bg-gray-100 cursor-not-allowed" : "")">
                 <option value="">Select role</option>
                 @foreach (var role in AvailableRoles)
@@ -44,12 +45,14 @@
                                    GetItemId="@(item => item.Id)"
                                    GetItemName="@(item => item.Value)"
                                    OnItemsRefreshed="@OnMuscleGroupsRefreshed"
-                                   ShowInlineCreationHint="false" />
+                                   ShowInlineCreationHint="false"
+                                   DataTestId="muscle-group-select" />
         </div>
         
         <button type="button"
                 @onclick="AddMuscleGroup"
                 disabled="@(Disabled || string.IsNullOrEmpty(selectedRole) || string.IsNullOrEmpty(selectedMuscleId))"
+                data-testid="add-muscle-group-button"
                 class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
             Add
         </button>
@@ -58,7 +61,7 @@
     @if (!Disabled)
     {
         <div class="text-xs text-blue-600">
-            <button type="button" @onclick="OpenCreateModal" class="hover:underline">
+            <button type="button" @onclick="OpenCreateModal" data-testid="create-muscle-group-button" class="hover:underline">
                 Can't find the Muscle Group? Create here
             </button>
         </div>
@@ -92,7 +95,7 @@
     }
     else
     {
-        <div class="text-sm text-gray-500 italic p-3 bg-gray-50 rounded-md @(ShowValidationError ? "border border-red-300" : "")">
+        <div class="text-sm text-gray-500 italic p-3 bg-gray-50 rounded-md @(ShowValidationError ? "border border-red-300" : "")" data-testid="muscle-group-empty-state">
             No muscle groups selected
         </div>
     }
@@ -114,8 +117,8 @@
     [Parameter] public bool ShowValidationError { get; set; } = false;
     [Parameter] public EventCallback OnMuscleGroupsRefreshed { get; set; }
 
-    private string selectedRole = string.Empty;
-    private string selectedMuscleId = string.Empty;
+    internal string selectedRole = string.Empty;
+    internal string selectedMuscleId = string.Empty;
     private bool showCreateModal = false;
     private List<ReferenceDataDto> optimisticallyAddedMuscles = new();
 
@@ -157,7 +160,7 @@
         StateHasChanged();
     }
 
-    private async Task AddMuscleGroup()
+    internal async Task AddMuscleGroup()
     {
         if (!string.IsNullOrEmpty(selectedRole) && !string.IsNullOrEmpty(selectedMuscleId))
         {

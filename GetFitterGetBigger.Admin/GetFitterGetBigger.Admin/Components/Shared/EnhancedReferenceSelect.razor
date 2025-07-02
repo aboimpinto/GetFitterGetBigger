@@ -36,6 +36,7 @@
                 @onkeydown="HandleKeyDown"
                 class="flex-1 px-3 py-2 border @(EnableInlineCreation && !Disabled ? "border-blue-400" : "border-gray-300") rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 @(Disabled ? "bg-gray-100 cursor-not-allowed" : "")"
                 disabled="@Disabled"
+                data-testid="@DataTestId"
                 title="@(EnableInlineCreation && !Disabled ? "Press Ctrl+N to add new " + EntityTypeName : "")"
                 aria-describedby="@(EnableInlineCreation && !Disabled ? $"{EntityType}-help" : "")">
             @if (!Required)
@@ -109,6 +110,7 @@
     [Parameter] public EventCallback OnItemsRefreshed { get; set; }
     [Parameter] public EventCallback<string> OnCreationError { get; set; }
     [Parameter] public bool ShowInlineCreationHint { get; set; } = true;
+    [Parameter] public string? DataTestId { get; set; }
 
     private bool showCreateModal = false;
     private List<TItem> optimisticallyAddedItems = new();

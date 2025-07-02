@@ -7,8 +7,10 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using Xunit;
 
 namespace GetFitterGetBigger.Admin.Tests.Components.Shared
@@ -114,8 +116,9 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Shared
             options.Select(o => o.GetAttribute("value")).Should().NotContain("1");
         }
 
-        [Fact(Skip = "Component interaction with nested modal requires complex async handling. TODO: Refactor for better testability")]
-        public void MuscleGroupSelector_AddsNewMuscleGroupWithRole()
+        // [Fact(Skip = "Component interaction with nested modal requires complex async handling. TODO: Refactor for better testability")]
+        [Fact]
+        public async Task MuscleGroupSelector_AddsNewMuscleGroupWithRole()
         {
             // Arrange
             var selectedGroups = new List<MuscleGroupRoleAssignmentDto>();
@@ -128,11 +131,63 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Shared
                 .Add(p => p.MuscleGroupsChanged, EventCallback.Factory.Create<List<MuscleGroupRoleAssignmentDto>>(this, groups => changedGroups = groups)));
 
             // Act
-            component.Find("select").Change("Primary");
-            component.FindAll("select")[1].Change("1");
-            component.Find("button").Click();
+            // Directly set the internal state and call the method
+            var instance = component.Instance;
+            instance.selectedRole = "Primary";
+            instance.selectedMuscleId = "1";
+            
+            // Call AddMuscleGroup directly
+            await component.InvokeAsync(async () => 
+            {
+                await instance.AddMuscleGroup();
+            });
+
+            // Assert - Check both the original list and the callback
+            selectedGroups.Should().HaveCount(1);
+            selectedGroups[0].MuscleGroupId.Should().Be("1");
+            selectedGroups[0].Role.Should().Be("Primary");
+            
+            // Also check if callback was invoked
+            changedGroups.Should().HaveCount(1);
+            changedGroups[0].MuscleGroupId.Should().Be("1");
+            changedGroups[0].Role.Should().Be("Primary");
+        }
+
+        [Fact]
+        public async Task MuscleGroupSelector_AddsNewMuscleGroupWithRole_UsingUIInteraction()
+        {
+            // Arrange
+            var selectedGroups = new List<MuscleGroupRoleAssignmentDto>();
+            var changedGroups = new List<MuscleGroupRoleAssignmentDto>();
+
+            var component = RenderComponent<MuscleGroupSelector>(parameters => parameters
+                .Add(p => p.AllMuscleGroups, _testMuscleGroups)
+                .Add(p => p.MuscleRoles, _testMuscleRoles)
+                .Add(p => p.MuscleGroups, selectedGroups)
+                .Add(p => p.MuscleGroupsChanged, EventCallback.Factory.Create<List<MuscleGroupRoleAssignmentDto>>(this, groups => changedGroups = groups)));
+
+            // Act - Use data-testid to find elements
+            // Select role using data-testid
+            var roleSelect = component.Find("[data-testid='muscle-group-role-select']");
+            roleSelect.Change("Primary");
+            
+            // Wait for re-render after role selection
+            component.Render();
+            
+            // Find and interact with muscle group select
+            var muscleGroupSelect = component.Find("[data-testid='muscle-group-select']");
+            muscleGroupSelect.Change("1");
+            
+            // Find and click the add button
+            var addButton = component.Find("[data-testid='add-muscle-group-button']");
+            await component.InvokeAsync(() => addButton.Click());
 
             // Assert
+            selectedGroups.Should().HaveCount(1);
+            selectedGroups[0].MuscleGroupId.Should().Be("1");
+            selectedGroups[0].Role.Should().Be("Primary");
+            
+            // Verify callback was invoked
             changedGroups.Should().HaveCount(1);
             changedGroups[0].MuscleGroupId.Should().Be("1");
             changedGroups[0].Role.Should().Be("Primary");
