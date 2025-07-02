@@ -153,16 +153,19 @@
                         {
                             var index = i; // Capture for closure
                             <div class="flex items-center space-x-2 bg-gray-50 p-2 rounded">
-                                <select value="@muscleGroupAssignments[index].MuscleGroupId"
-                                        @onchange="@((ChangeEventArgs e) => SetMuscleGroupId(index, e.Value?.ToString()))"
-                                        disabled="@IsRestTypeSelected"
-                                        class="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 @(IsRestTypeSelected ? "bg-gray-100 cursor-not-allowed" : "")">
-                                    <option value="">Select muscle group</option>
-                                    @foreach (var muscleGroup in StateService.MuscleGroups)
-                                    {
-                                        <option value="@muscleGroup.Id">@muscleGroup.Value</option>
-                                    }
-                                </select>
+                                <div class="flex-1">
+                                    <EnhancedReferenceSelect Items="@StateService.MuscleGroups"
+                                                           Value="@muscleGroupAssignments[index].MuscleGroupId"
+                                                           ValueChanged="@((string value) => SetMuscleGroupId(index, value))"
+                                                           Multiple="false"
+                                                           Placeholder="Select muscle group"
+                                                           Disabled="@IsRestTypeSelected"
+                                                           EnableInlineCreation="true"
+                                                           EntityType="ReferenceEntityType.MuscleGroup"
+                                                           GetItemId="@(item => item.Id)"
+                                                           GetItemName="@(item => item.Value)"
+                                                           OnItemsRefreshed="@RefreshMuscleGroups" />
+                                </div>
                                 <select value="@muscleGroupAssignments[index].Role"
                                         @onchange="@((ChangeEventArgs e) => SetMuscleGroupRole(index, e.Value?.ToString()))"
                                         disabled="@IsRestTypeSelected"
@@ -545,6 +548,12 @@
     }
 
     private async Task RefreshEquipment()
+    {
+        await StateService.InitializeAsync();
+        StateHasChanged();
+    }
+
+    private async Task RefreshMuscleGroups()
     {
         await StateService.InitializeAsync();
         StateHasChanged();
