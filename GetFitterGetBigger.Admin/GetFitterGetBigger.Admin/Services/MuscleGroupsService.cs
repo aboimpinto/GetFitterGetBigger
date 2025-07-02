@@ -13,7 +13,7 @@ namespace GetFitterGetBigger.Admin.Services
         private readonly IConfiguration _configuration;
         private readonly string _apiBaseUrl;
         private readonly JsonSerializerOptions _jsonOptions;
-        private const string CacheKey = "MuscleGroups";
+        private const string CacheKey = "MuscleGroupsDto_Full";
         private const string CacheKeyPrefix = "MuscleGroups_BodyPart_";
 
         public MuscleGroupsService(HttpClient httpClient, IMemoryCache cache, IConfiguration configuration)

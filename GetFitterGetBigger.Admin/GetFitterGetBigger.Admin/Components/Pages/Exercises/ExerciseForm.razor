@@ -361,11 +361,29 @@
     {
         StateService.OnChange += StateHasChanged;
         
-        if (StateService.DifficultyLevels?.Any() != true)
+        Console.WriteLine("[ExerciseForm] OnInitializedAsync started");
+        Console.WriteLine($"[ExerciseForm] Current reference data state:");
+        Console.WriteLine($"  - DifficultyLevels: {StateService.DifficultyLevels?.Count() ?? 0}");
+        Console.WriteLine($"  - MuscleGroups: {StateService.MuscleGroups?.Count() ?? 0}");
+        Console.WriteLine($"  - Equipment: {StateService.Equipment?.Count() ?? 0}");
+        Console.WriteLine($"  - BodyParts: {StateService.BodyParts?.Count() ?? 0}");
+        
+        // Check if ALL reference data is loaded, not just DifficultyLevels
+        if (!IsReferenceDataLoaded())
         {
+            Console.WriteLine("[ExerciseForm] Reference data not loaded, calling InitializeAsync...");
             await StateService.InitializeAsync();
+            Console.WriteLine("[ExerciseForm] InitializeAsync completed");
+            Console.WriteLine($"[ExerciseForm] After initialization:");
+            Console.WriteLine($"  - DifficultyLevels: {StateService.DifficultyLevels?.Count() ?? 0}");
+            Console.WriteLine($"  - MuscleGroups: {StateService.MuscleGroups?.Count() ?? 0}");
+            Console.WriteLine($"  - Equipment: {StateService.Equipment?.Count() ?? 0}");
+            Console.WriteLine($"  - BodyParts: {StateService.BodyParts?.Count() ?? 0}");
         }
-
+        else
+        {
+            Console.WriteLine("[ExerciseForm] Reference data already loaded");
+        }
 
         if (IsEditMode)
         {
@@ -378,6 +396,20 @@
         }
 
         isLoading = false;
+    }
+    
+    private bool IsReferenceDataLoaded()
+    {
+        var loaded = StateService.DifficultyLevels?.Any() == true &&
+               StateService.MuscleGroups?.Any() == true &&
+               StateService.MuscleRoles?.Any() == true &&
+               StateService.Equipment?.Any() == true &&
+               StateService.BodyParts?.Any() == true &&
+               StateService.MovementPatterns?.Any() == true &&
+               StateService.ExerciseTypes?.Any() == true;
+               
+        Console.WriteLine($"[ExerciseForm] IsReferenceDataLoaded: {loaded}");
+        return loaded;
     }
 
     private async Task LoadExerciseForEdit()

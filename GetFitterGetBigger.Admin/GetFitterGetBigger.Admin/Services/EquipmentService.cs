@@ -13,7 +13,7 @@ namespace GetFitterGetBigger.Admin.Services
         private readonly IConfiguration _configuration;
         private readonly string _apiBaseUrl;
         private readonly JsonSerializerOptions _jsonOptions;
-        private const string CacheKey = "Equipment";
+        private const string CacheKey = "EquipmentDto_Full";
 
         public EquipmentService(HttpClient httpClient, IMemoryCache cache, IConfiguration configuration)
         {

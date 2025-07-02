@@ -60,7 +60,10 @@ builder.Services.AddScoped<IUserProfileDisplayService, UserProfileDisplayService
 builder.Services.AddMemoryCache();
 
 // Add HttpClient for ReferenceDataService
-builder.Services.AddHttpClient<GetFitterGetBigger.Admin.Services.IReferenceDataService, GetFitterGetBigger.Admin.Services.ReferenceDataService>();
+builder.Services.AddHttpClient<GetFitterGetBigger.Admin.Services.IReferenceDataService, GetFitterGetBigger.Admin.Services.ReferenceDataService>(client =>
+{
+    client.BaseAddress = new Uri(builder.Configuration["ApiBaseUrl"] ?? "http://localhost:5214");
+});
 
 // Add HttpClient for ExerciseService
 builder.Services.AddHttpClient<GetFitterGetBigger.Admin.Services.IExerciseService, GetFitterGetBigger.Admin.Services.ExerciseService>();
@@ -83,7 +86,17 @@ builder.Services.AddScoped<GetFitterGetBigger.Admin.Services.IMuscleGroupsStateS
 // Add NavigationService
 builder.Services.AddScoped<GetFitterGetBigger.Admin.Services.INavigationService, GetFitterGetBigger.Admin.Services.NavigationService>();
 
+// Add CacheHelperService
+builder.Services.AddSingleton<GetFitterGetBigger.Admin.Services.ICacheHelperService, GetFitterGetBigger.Admin.Services.CacheHelperService>();
+
 var app = builder.Build();
+
+// Clear all caches on startup to avoid cache collision issues
+using (var scope = app.Services.CreateScope())
+{
+    var cacheHelper = scope.ServiceProvider.GetRequiredService<GetFitterGetBigger.Admin.Services.ICacheHelperService>();
+    cacheHelper.ClearAllCaches();
+}
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())

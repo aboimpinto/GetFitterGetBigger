@@ -31,7 +31,9 @@ memory-bank/
 ├── features/          # Feature documentation by state
 ├── bugs/             # Bug reports by state
 ├── docs/             # General documentation
-├── api-patterns/     # API design patterns
+├── api-patterns/     # API design patterns and troubleshooting
+│   ├── id-format.md                      # ID format conventions
+│   └── api-integration-troubleshooting.md # Common API issues and solutions
 └── scripts/          # Utility scripts
 ```
 
