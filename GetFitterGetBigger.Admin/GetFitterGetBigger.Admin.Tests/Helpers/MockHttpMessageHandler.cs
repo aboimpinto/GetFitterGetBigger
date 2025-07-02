@@ -8,6 +8,11 @@ namespace GetFitterGetBigger.Admin.Tests.Helpers
     {
         private readonly Queue<HttpResponseMessage> _responses = new();
         private readonly List<HttpRequestMessage> _requests = new();
+        private readonly JsonSerializerOptions _jsonOptions = new()
+        {
+            PropertyNameCaseInsensitive = true,
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+        };
 
         public IReadOnlyList<HttpRequestMessage> Requests => _requests.AsReadOnly();
 
@@ -17,7 +22,7 @@ namespace GetFitterGetBigger.Admin.Tests.Helpers
 
             if (content != null)
             {
-                var json = JsonSerializer.Serialize(content);
+                var json = JsonSerializer.Serialize(content, _jsonOptions);
                 response.Content = new StringContent(json, Encoding.UTF8, "application/json");
             }
 
