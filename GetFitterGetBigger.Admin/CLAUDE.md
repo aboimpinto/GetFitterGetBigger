@@ -78,3 +78,11 @@ All project documentation is maintained in the `memory-bank/` folder. This inclu
 - Bug tracking and workflow processes
 
 The memory-bank serves as the central repository for all project context that AI assistants need to understand and work with the codebase effectively.
+
+## Temporary Files Pattern
+
+When creating temporary files during work sessions (plans, summaries, analysis):
+- Use `memory-bank/temp/` directory for all temporary files
+- This directory is gitignored and won't be committed
+- See `memory-bank/AI-ASSISTANT-TEMP-FILES-PATTERN.md` for details
+- Never create temporary documentation files in test or source directories
