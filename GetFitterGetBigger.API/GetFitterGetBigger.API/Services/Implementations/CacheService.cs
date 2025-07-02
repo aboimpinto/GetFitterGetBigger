@@ -43,12 +43,12 @@ public class CacheService : ICacheService
                 .RegisterPostEvictionCallback((evictedKey, evictedValue, reason, state) =>
                 {
                     _cacheKeys.TryRemove(evictedKey.ToString() ?? string.Empty, out _);
-                    _logger.LogDebug("[Cache EVICTED] Key: {Key} was evicted. Reason: {Reason}", evictedKey, reason);
+                    // Silent eviction - no logging needed for automatic evictions
                 });
 
             _memoryCache.Set(key, value, cacheEntryOptions);
             _cacheKeys.TryAdd(key, true);
-            _logger.LogDebug("[Cache SET] Successfully stored value for key: {Key} with sliding expiration: {Expiration}", key, expiration);
+            // Silent set - logging happens at higher level when needed
             
             await Task.CompletedTask;
         }
@@ -65,7 +65,7 @@ public class CacheService : ICacheService
         {
             _memoryCache.Remove(key);
             _cacheKeys.TryRemove(key, out _);
-            _logger.LogDebug("[Cache REMOVE] Successfully removed key: {Key}", key);
+            // Silent remove - part of pattern removal
             await Task.CompletedTask;
         }
         catch (Exception ex)
@@ -83,14 +83,17 @@ public class CacheService : ICacheService
             var actualPrefix = pattern.EndsWith("*") ? pattern.Substring(0, pattern.Length - 1) : pattern;
             var keysToRemove = _cacheKeys.Keys.Where(k => k.StartsWith(actualPrefix)).ToList();
             
-            _logger.LogInformation("[Cache PATTERN REMOVE] Removing {Count} keys matching pattern: {Pattern}", keysToRemove.Count, pattern);
+            if (keysToRemove.Count > 0)
+            {
+                _logger.LogDebug("[Cache] Removing {Count} keys matching pattern: {Pattern}", keysToRemove.Count, pattern);
+            }
             
             foreach (var key in keysToRemove)
             {
                 await RemoveAsync(key);
             }
             
-            _logger.LogDebug("[Cache PATTERN REMOVE] Completed removal of all keys matching pattern: {Pattern}", pattern);
+            // Pattern removal complete
         }
         catch (Exception ex)
         {
@@ -106,11 +109,11 @@ public class CacheService : ICacheService
             var cachedValue = await GetAsync<T>(key);
             if (cachedValue != null)
             {
-                _logger.LogDebug("Cache hit for key: {Key}", key);
+                // Cache hit - silent
                 return cachedValue;
             }
 
-            _logger.LogDebug("Cache miss for key: {Key}", key);
+            // Cache miss - fetch from factory
             var value = await factory();
             
             if (value != null)
@@ -136,11 +139,11 @@ public class CacheService : ICacheService
             var cachedValue = await GetAsync<T>(key);
             if (cachedValue != null)
             {
-                _logger.LogDebug("Cache hit for key: {Key}", key);
+                // Cache hit - silent
                 return cachedValue;
             }
 
-            _logger.LogDebug("Cache miss for key: {Key}", key);
+            // Cache miss - fetch from factory
             var value = await factory();
             
             // Only cache non-null values
