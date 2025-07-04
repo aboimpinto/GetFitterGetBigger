@@ -15,11 +15,60 @@
 
 <PageTitle>@(IsEditMode ? "Edit Exercise" : "New Exercise") - GetFitterGetBigger Admin</PageTitle>
 
-<div class="bg-white rounded-lg shadow-md p-6 max-w-4xl mx-auto">
-    <div class="mb-6">
-        <h2 class="text-2xl font-semibold text-gray-800">@(IsEditMode ? "Edit Exercise" : "Create New Exercise")</h2>
-        <p class="text-gray-600">@(IsEditMode ? "Update exercise details and configuration" : "Add a new exercise to the library")</p>
+@* Floating action buttons - always visible *@
+@if (!isLoading)
+{
+    @* Cancel button - responsive positioning *@
+    <div class="fixed bottom-8 z-50 cancelPostionStyle">
+        <button type="button" @onclick="Cancel"
+                class="flex flex-col items-center group"
+                data-testid="floating-cancel-button">
+            <div class="w-14 h-14 bg-gray-600 hover:bg-gray-700 rounded-full flex items-center justify-center shadow-lg transition-colors">
+                <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </div>
+            <span class="text-xs text-gray-600 mt-1 font-medium">Cancel</span>
+        </button>
     </div>
+
+    @* Save button - responsive positioning *@
+    <div class="fixed bottom-8 right-4 z-50 xl:right-[calc(50%-41rem)]">
+        <button type="button" @onclick="HandleSubmitFromFloating" disabled="@isSubmitting"
+                class="flex flex-col items-center group"
+                data-testid="floating-save-button">
+            <div class="w-14 h-14 @(isSubmitting ? "bg-blue-400" : "bg-blue-600 hover:bg-blue-700") rounded-full flex items-center justify-center shadow-lg transition-colors @(isSubmitting ? "cursor-not-allowed" : "")">
+                @if (isSubmitting)
+                {
+                    <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-white"></div>
+                }
+                else
+                {
+                    <svg class="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M17 3H5C3.89 3 3 3.9 3 5V19C3 20.1 3.89 21 5 21H19C20.1 21 21 20.1 21 19V7L17 3M19 19H5V5H16.17L19 7.83V19M12 12C10.34 12 9 13.34 9 15S10.34 18 12 18 15 16.66 15 15 13.66 12 12 12M6 6H15V10H6V6Z"/>
+                    </svg>
+                }
+            </div>
+            <span class="text-xs text-gray-600 mt-1 font-medium">
+                @if (isSubmitting)
+                {
+                    <text>Saving...</text>
+                }
+                else
+                {
+                    <text>@(IsEditMode ? "Update" : "Create")</text>
+                }
+            </span>
+        </button>
+    </div>
+}
+
+<div>
+    <div class="bg-white rounded-lg shadow-md p-6 max-w-4xl mx-auto">
+        <div class="mb-6">
+            <h2 class="text-2xl font-semibold text-gray-800">@(IsEditMode ? "Edit Exercise" : "Create New Exercise")</h2>
+            <p class="text-gray-600">@(IsEditMode ? "Update exercise details and configuration" : "Add a new exercise to the library")</p>
+        </div>
 
     @if (StateService.ErrorMessage != null)
     {
@@ -238,28 +287,12 @@
                     </div>
                 </div>
 
-                <!-- Form Actions -->
-                <div class="flex justify-end space-x-4">
-                    <button type="button" @onclick="Cancel"
-                            class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">
-                        Cancel
-                    </button>
-                    <button type="submit" disabled="@isSubmitting"
-                            class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50">
-                        @if (isSubmitting)
-                        {
-                            <span>Saving...</span>
-                        }
-                        else
-                        {
-                            <span>@(IsEditMode ? "Update Exercise" : "Create Exercise")</span>
-                        }
-                    </button>
-                </div>
             </div>
         </EditForm>
     }
+    </div>
 </div>
+
 
 @code {
     [Parameter] public string? Id { get; set; }
@@ -504,6 +537,11 @@
         return !validationErrors.Any();
     }
 
+    private async Task HandleSubmitFromFloating()
+    {
+        await HandleSubmit();
+    }
+
     private async Task HandleSubmit()
     {
         if (!ValidateForm())
@@ -626,8 +664,18 @@
             !string.IsNullOrWhiteSpace(mg.Role));
     }
 
+
     public void Dispose()
     {
         StateService.OnChange -= StateHasChanged;
     }
 }
+
+<style>
+    @* Large screen positioning *@
+    @@media (min-width: 1280px) {
+        .cancelPostionStyle {
+            left: calc(50% - 25rem) !important;
+        }
+    }
+</style>

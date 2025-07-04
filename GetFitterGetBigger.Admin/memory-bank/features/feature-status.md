@@ -20,6 +20,7 @@ This file serves as a central dashboard for tracking the status of all features 
 | Equipment Management | COMPLETED | High | FEAT-014 | 2025-07-01 | [Details](3-COMPLETED/FEAT-014-equipment-management/completion-summary.md) |
 | Muscle Groups Management | COMPLETED | High | FEAT-015 | 2025-07-03 | [Details](3-COMPLETED/FEAT-015-muscle-groups-management/feature-description.md) |
 | Comprehensive Test Improvements | COMPLETED | High | FEAT-TEST-001 | 2025-01-02 | [Details](3-COMPLETED/FEAT-TEST-001-comprehensive-test-improvements/feature-description.md) |
+| Floating Action Buttons | IN PROGRESS | Medium | FEAT-016 | 2025-07-04 | [Details](2-IN_PROGRESS/FEAT-016-floating-action-buttons/feature-description.md) |
 
 ## Status Definitions
 
