@@ -194,6 +194,14 @@ public class ExerciseRepository : RepositoryBase<FitnessDbContext>, IExerciseRep
             .Reference(e => e.Difficulty)
             .LoadAsync();
         
+        // Load KineticChain navigation property if present
+        if (exercise.KineticChainId.HasValue)
+        {
+            await Context.Entry(exercise)
+                .Reference(e => e.KineticChain)
+                .LoadAsync();
+        }
+        
         return exercise;
     }
     

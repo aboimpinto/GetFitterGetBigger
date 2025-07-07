@@ -42,6 +42,76 @@ public class ExerciseServiceMapToDtoTests
     }
     
     [Fact]
+    public async Task GetByIdAsync_WithKineticChain_MapsKineticChainCorrectly()
+    {
+        // Arrange
+        var exerciseId = ExerciseId.New();
+        var difficultyId = DifficultyLevelId.New();
+        var kineticChainId = KineticChainTypeId.New();
+        
+        var difficulty = DifficultyLevel.Handler.Create(difficultyId, "Intermediate", "Medium difficulty", 3);
+        var kineticChain = KineticChainType.Handler.Create(kineticChainId, "Open Chain", "Open kinetic chain movement", 1);
+        
+        var exercise = Exercise.Handler.CreateNew(
+            "Test Exercise",
+            "Test Description",
+            null,
+            null,
+            false,
+            difficultyId,
+            kineticChainId);
+            
+        // Use reflection to set navigation properties for testing
+        typeof(Exercise).GetProperty(nameof(Exercise.Difficulty))!.SetValue(exercise, difficulty);
+        typeof(Exercise).GetProperty(nameof(Exercise.KineticChain))!.SetValue(exercise, kineticChain);
+        
+        _exerciseRepositoryMock.Setup(r => r.GetByIdAsync(exerciseId))
+            .ReturnsAsync(exercise);
+        
+        // Act
+        var result = await _exerciseService.GetByIdAsync(exerciseId.ToString());
+        
+        // Assert
+        Assert.NotNull(result);
+        Assert.NotNull(result.KineticChain);
+        Assert.Equal(kineticChainId.ToString(), result.KineticChain.Id);
+        Assert.Equal("Open Chain", result.KineticChain.Value);
+        Assert.Equal("Open kinetic chain movement", result.KineticChain.Description);
+    }
+    
+    [Fact]
+    public async Task GetByIdAsync_WithoutKineticChain_MapsKineticChainAsNull()
+    {
+        // Arrange
+        var exerciseId = ExerciseId.New();
+        var difficultyId = DifficultyLevelId.New();
+        
+        var difficulty = DifficultyLevel.Handler.Create(difficultyId, "Beginner", "Easy difficulty", 1);
+        
+        var exercise = Exercise.Handler.CreateNew(
+            "Rest Exercise",
+            "Rest period",
+            null,
+            null,
+            false,
+            difficultyId,
+            null); // No kinetic chain
+            
+        // Use reflection to set navigation properties for testing
+        typeof(Exercise).GetProperty(nameof(Exercise.Difficulty))!.SetValue(exercise, difficulty);
+        
+        _exerciseRepositoryMock.Setup(r => r.GetByIdAsync(exerciseId))
+            .ReturnsAsync(exercise);
+        
+        // Act
+        var result = await _exerciseService.GetByIdAsync(exerciseId.ToString());
+        
+        // Assert
+        Assert.NotNull(result);
+        Assert.Null(result.KineticChain);
+    }
+    
+    [Fact]
     public async Task GetByIdAsync_WithCoachNotes_MapsCoachNotesCorrectly()
     {
         // Arrange

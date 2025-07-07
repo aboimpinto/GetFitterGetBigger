@@ -105,6 +105,7 @@ public class ExercisesController : ControllerBase
     ///         "imageUrl": "https://example.com/squat-image.jpg",
     ///         "isUnilateral": false,
     ///         "difficultyId": "difficultylevel-8a8adb1d-24d2-4979-a5a6-0d760e6da24b",
+    ///         "kineticChainId": "kineticchaintype-12345678-9abc-def0-1234-567890abcdef",
     ///         "muscleGroups": [
     ///             {
     ///                 "muscleGroupId": "musclegroup-ccddeeff-0011-2233-4455-667788990011",
@@ -121,6 +122,7 @@ public class ExercisesController : ControllerBase
     /// - CoachNotes are ordered instruction items that replace the previous single Instructions field
     /// - ExerciseTypeIds specify the types (Warmup, Workout, Cooldown, Rest)
     /// - If "Rest" type is included, it must be the only type (business rule)
+    /// - KineticChainId is required for non-REST exercises and must be null for REST exercises
     /// </remarks>
     /// <param name="request">The exercise creation request</param>
     /// <returns>The created exercise with its generated ID</returns>
@@ -160,6 +162,11 @@ public class ExercisesController : ControllerBase
             _logger.LogWarning("Muscle group validation error: {Error}", ex.Message);
             return BadRequest(new { error = ex.Message });
         }
+        catch (InvalidOperationException ex) when (ex.Message.Contains("Kinetic chain"))
+        {
+            _logger.LogWarning("Kinetic chain validation error: {Error}", ex.Message);
+            return BadRequest(new { error = ex.Message });
+        }
         catch (ArgumentException ex)
         {
             _logger.LogWarning("Invalid exercise creation request: {Error}", ex.Message);
@@ -197,6 +204,7 @@ public class ExercisesController : ControllerBase
     ///         "isUnilateral": false,
     ///         "isActive": true,
     ///         "difficultyId": "difficultylevel-8a8adb1d-24d2-4979-a5a6-0d760e6da24b",
+    ///         "kineticChainId": "kineticchaintype-12345678-9abc-def0-1234-567890abcdef",
     ///         "muscleGroups": [
     ///             {
     ///                 "muscleGroupId": "musclegroup-ccddeeff-0011-2233-4455-667788990011",
@@ -214,6 +222,7 @@ public class ExercisesController : ControllerBase
     /// - CoachNotes not included in the request will be deleted
     /// - ExerciseTypeIds completely replace the existing types
     /// - If "Rest" type is included, it must be the only type (business rule)
+    /// - KineticChainId is required for non-REST exercises and must be null for REST exercises
     /// </remarks>
     /// <param name="id">The ID of the exercise to update (from URL path)</param>
     /// <param name="request">The exercise update request containing all fields to update</param>
@@ -264,6 +273,11 @@ public class ExercisesController : ControllerBase
         catch (InvalidOperationException ex) when (ex.Message.Contains("muscle group"))
         {
             _logger.LogWarning("Muscle group validation error: {Error}", ex.Message);
+            return BadRequest(new { error = ex.Message });
+        }
+        catch (InvalidOperationException ex) when (ex.Message.Contains("Kinetic chain"))
+        {
+            _logger.LogWarning("Kinetic chain validation error: {Error}", ex.Message);
             return BadRequest(new { error = ex.Message });
         }
     }

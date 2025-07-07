@@ -159,6 +159,21 @@ public class ExerciseService : IExerciseService
         }
     }
     
+    private async Task ValidateKineticChainAsync(string? kineticChainId, IEnumerable<string> exerciseTypeIds, IReadOnlyUnitOfWork<FitnessDbContext> unitOfWork)
+    {
+        var isRestExercise = await IsRestExerciseAsync(exerciseTypeIds, unitOfWork);
+        
+        if (isRestExercise && !string.IsNullOrEmpty(kineticChainId))
+        {
+            throw new InvalidOperationException("Kinetic chain type must not be specified for REST exercises.");
+        }
+        
+        if (!isRestExercise && string.IsNullOrEmpty(kineticChainId))
+        {
+            throw new InvalidOperationException("Kinetic chain type must be specified for non-REST exercises.");
+        }
+    }
+    
     /// <summary>
     /// Creates a new exercise
     /// </summary>
@@ -180,11 +195,23 @@ public class ExerciseService : IExerciseService
             throw new ArgumentException($"Invalid difficulty ID: {request.DifficultyId}");
         }
         
-        // Validate exercise types and muscle groups
+        // Parse KineticChainId if provided
+        KineticChainTypeId? kineticChainId = null;
+        if (!string.IsNullOrEmpty(request.KineticChainId))
+        {
+            if (!KineticChainTypeId.TryParse(request.KineticChainId, out var parsedKineticChainId))
+            {
+                throw new ArgumentException($"Invalid kinetic chain ID: {request.KineticChainId}");
+            }
+            kineticChainId = parsedKineticChainId;
+        }
+        
+        // Validate exercise types, muscle groups, and kinetic chain
         using (var validationUow = _unitOfWorkProvider.CreateReadOnly())
         {
             await ValidateRestExclusivityAsync(request.ExerciseTypeIds, validationUow);
             await ValidateMuscleGroupsAsync(request, validationUow);
+            await ValidateKineticChainAsync(request.KineticChainId, request.ExerciseTypeIds, validationUow);
         }
         
         // Create the exercise entity
@@ -194,7 +221,8 @@ public class ExerciseService : IExerciseService
             request.VideoUrl,
             request.ImageUrl,
             request.IsUnilateral,
-            difficultyId);
+            difficultyId,
+            kineticChainId);
         
         // Add coach notes
         if (request.CoachNotes != null)
@@ -280,11 +308,23 @@ public class ExerciseService : IExerciseService
             throw new ArgumentException($"Invalid difficulty ID: {request.DifficultyId}");
         }
         
-        // Validate exercise types and muscle groups
+        // Parse KineticChainId if provided
+        KineticChainTypeId? kineticChainId = null;
+        if (!string.IsNullOrEmpty(request.KineticChainId))
+        {
+            if (!KineticChainTypeId.TryParse(request.KineticChainId, out var parsedKineticChainId))
+            {
+                throw new ArgumentException($"Invalid kinetic chain ID: {request.KineticChainId}");
+            }
+            kineticChainId = parsedKineticChainId;
+        }
+        
+        // Validate exercise types, muscle groups, and kinetic chain
         using (var validationUow = _unitOfWorkProvider.CreateReadOnly())
         {
             await ValidateRestExclusivityAsync(request.ExerciseTypeIds, validationUow);
             await ValidateMuscleGroupsAsync(request, validationUow);
+            await ValidateKineticChainAsync(request.KineticChainId, request.ExerciseTypeIds, validationUow);
         }
         
         // Create updated exercise entity, using existing values for nullable fields if not provided
@@ -296,7 +336,8 @@ public class ExerciseService : IExerciseService
             request.ImageUrl,
             request.IsUnilateral ?? existingExercise.IsUnilateral,
             request.IsActive ?? existingExercise.IsActive,
-            difficultyId);
+            difficultyId,
+            kineticChainId);
         
         // Synchronize coach notes
         if (request.CoachNotes != null)
@@ -393,7 +434,8 @@ public class ExerciseService : IExerciseService
                 exercise.ImageUrl,
                 exercise.IsUnilateral,
                 false, // Mark as inactive
-                exercise.DifficultyId);
+                exercise.DifficultyId,
+                exercise.KineticChainId);
             
             // Preserve existing relationships
             foreach (var emg in exercise.ExerciseMuscleGroups)
