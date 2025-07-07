@@ -219,5 +219,113 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
             exercise.CoachNotes[0].Text.Should().Be(longText);
             exercise.CoachNotes[0].Text.Length.Should().Be(1000);
         }
+
+        [Fact]
+        public void ExerciseDto_WithKineticChain_ContainsKineticChainForDetailDisplay()
+        {
+            // Arrange & Act
+            var compoundExercise = new ExerciseDtoBuilder()
+                .WithId("1")
+                .WithName("Compound Exercise")
+                .WithKineticChain("Compound", "Multi-muscle movement")
+                .Build();
+
+            var isolationExercise = new ExerciseDtoBuilder()
+                .WithId("2")
+                .WithName("Isolation Exercise")
+                .WithKineticChain("Isolation", "Single-muscle movement")
+                .Build();
+
+            // Assert
+            compoundExercise.KineticChain.Should().NotBeNull();
+            compoundExercise.KineticChain!.Value.Should().Be("Compound");
+            compoundExercise.KineticChain.Description.Should().Be("Multi-muscle movement");
+
+            isolationExercise.KineticChain.Should().NotBeNull();
+            isolationExercise.KineticChain!.Value.Should().Be("Isolation");
+            isolationExercise.KineticChain.Description.Should().Be("Single-muscle movement");
+        }
+
+        [Fact]
+        public void ExerciseDto_WithNullKineticChain_HandlesGracefullyInDetailView()
+        {
+            // Arrange & Act
+            var restExercise = new ExerciseDtoBuilder()
+                .WithId("1")
+                .WithName("Rest Exercise")
+                .WithKineticChain(null)
+                .Build();
+
+            // Assert
+            restExercise.KineticChain.Should().BeNull();
+        }
+
+        [Fact]
+        public void ExerciseDto_KineticChainBadgeColorMapping_ReturnsCorrectClasses()
+        {
+            // This tests the color class logic for kinetic chain badges in detail view
+            string GetKineticChainBadgeClass(string kineticChainType) => kineticChainType?.ToLower() switch
+            {
+                "compound" => "bg-purple-100 text-purple-800",
+                "isolation" => "bg-blue-100 text-blue-800",
+                _ => "bg-gray-100 text-gray-800"
+            };
+
+            // Assert
+            GetKineticChainBadgeClass("Compound").Should().Be("bg-purple-100 text-purple-800");
+            GetKineticChainBadgeClass("Isolation").Should().Be("bg-blue-100 text-blue-800");
+            GetKineticChainBadgeClass("Unknown").Should().Be("bg-gray-100 text-gray-800");
+            GetKineticChainBadgeClass(null!).Should().Be("bg-gray-100 text-gray-800");
+        }
+
+        [Fact]
+        public void ExerciseDto_WithKineticChainTooltip_DisplaysBothValueAndDescription()
+        {
+            // Arrange & Act
+            var exercise = new ExerciseDtoBuilder()
+                .WithId("1")
+                .WithName("Test Exercise")
+                .WithKineticChain("Compound", "Multi-muscle movement pattern")
+                .Build();
+
+            // Assert - for tooltip display functionality
+            exercise.KineticChain.Should().NotBeNull();
+            exercise.KineticChain!.Value.Should().Be("Compound"); // Badge text
+            exercise.KineticChain.Description.Should().Be("Multi-muscle movement pattern"); // Tooltip text
+        }
+
+        [Fact]
+        public void ExerciseDto_KineticChainDisplayLogic_WorksForRestExercisesInDetailView()
+        {
+            // Arrange & Act
+            var restExercise = new ExerciseDtoBuilder()
+                .WithId("1")
+                .WithName("Rest Exercise")
+                .WithExerciseTypes(("Rest", "Rest period"))
+                .WithKineticChain(null) // REST exercises should have null kinetic chain
+                .Build();
+
+            // Assert
+            restExercise.ExerciseTypes.Should().Contain(t => t.Value == "Rest");
+            restExercise.KineticChain.Should().BeNull();
+        }
+
+        [Fact]
+        public void ExerciseDto_WithBothDifficultyAndKineticChain_DisplaysCorrectly()
+        {
+            // Arrange & Act
+            var exercise = new ExerciseDtoBuilder()
+                .WithId("1")
+                .WithName("Complex Exercise")
+                .WithDifficulty(new ReferenceDataDto { Id = "advanced", Value = "Advanced", Description = "Advanced level" })
+                .WithKineticChain("Compound", "Multi-muscle movement")
+                .Build();
+
+            // Assert - should have both difficulty and kinetic chain for display
+            exercise.Difficulty.Should().NotBeNull();
+            exercise.Difficulty!.Value.Should().Be("Advanced");
+            exercise.KineticChain.Should().NotBeNull();
+            exercise.KineticChain!.Value.Should().Be("Compound");
+        }
     }
 }

@@ -2000,6 +2000,10 @@ video {
 }
 
 @media (min-width: 768px) {
+  .md\:table-cell {
+    display: table-cell;
+  }
+
   .md\:grid-cols-2 {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -2018,6 +2022,10 @@ video {
 }
 
 @media (min-width: 1024px) {
+  .lg\:table-cell {
+    display: table-cell;
+  }
+
   .lg\:grid-cols-3 {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
@@ -2031,5 +2039,9 @@ video {
 @media (min-width: 1280px) {
   .xl\:right-\[calc\(50\%-41rem\)\] {
     right: calc(50% - 41rem);
+  }
+
+  .xl\:table-cell {
+    display: table-cell;
   }
 }

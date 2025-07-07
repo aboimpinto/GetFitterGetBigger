@@ -15,6 +15,7 @@ namespace GetFitterGetBigger.Admin.Builders
         private List<CoachNoteDto> _coachNotes = new();
         private List<ExerciseTypeDto> _exerciseTypes = new();
         private ReferenceDataDto? _difficulty = new() { Id = "1", Value = "Intermediate", Description = "Intermediate level" };
+        private ReferenceDataDto? _kineticChain = null;
         private bool _isUnilateral = false;
         private bool _isActive = true;
         private string? _imageUrl = null;
@@ -110,6 +111,24 @@ namespace GetFitterGetBigger.Admin.Builders
             return this;
         }
 
+        public ExerciseDtoBuilder WithKineticChain(string? value, string? description = null)
+        {
+            if (value == null)
+            {
+                _kineticChain = null;
+            }
+            else
+            {
+                _kineticChain = new ReferenceDataDto
+                {
+                    Id = $"kineticchain-{value.ToLower()}",
+                    Value = value,
+                    Description = description ?? $"{value} movement"
+                };
+            }
+            return this;
+        }
+
         public ExerciseDtoBuilder AsUnilateral()
         {
             _isUnilateral = true;
@@ -189,6 +208,7 @@ namespace GetFitterGetBigger.Admin.Builders
                 CoachNotes = _coachNotes,
                 ExerciseTypes = _exerciseTypes,
                 Difficulty = _difficulty,
+                KineticChain = _kineticChain,
                 IsUnilateral = _isUnilateral,
                 IsActive = _isActive,
                 ImageUrl = _imageUrl,

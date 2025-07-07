@@ -83,6 +83,12 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
                     new() { Id = "4", Value = "Rest", Description = "Rest period" }
                 };
 
+                KineticChainTypes = new List<ReferenceDataDto>
+                {
+                    new() { Id = "kineticchain-1", Value = "Compound", Description = "Multi-muscle movement" },
+                    new() { Id = "kineticchain-2", Value = "Isolation", Description = "Single-muscle movement" }
+                };
+
                 Equipment = new List<ReferenceDataDto>();
                 BodyParts = new List<ReferenceDataDto>();
                 MovementPatterns = new List<ReferenceDataDto>();

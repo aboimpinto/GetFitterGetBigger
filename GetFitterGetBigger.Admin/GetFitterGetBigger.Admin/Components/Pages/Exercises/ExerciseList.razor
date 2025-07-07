@@ -88,10 +88,11 @@
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Types</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Difficulty</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Primary Muscles</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Equipment</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Unilateral</th>
+                        <th class="hidden md:table-cell px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Difficulty</th>
+                        <th class="hidden lg:table-cell px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Kinetic Chain</th>
+                        <th class="hidden xl:table-cell px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Primary Muscles</th>
+                        <th class="hidden xl:table-cell px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Equipment</th>
+                        <th class="hidden lg:table-cell px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Unilateral</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                     </tr>
                 </thead>
@@ -124,14 +125,26 @@
                                     }
                                 </div>
                             </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">@exercise.Difficulty?.Value</td>
-                            <td class="px-6 py-4 text-sm text-gray-500">
+                            <td class="hidden md:table-cell px-6 py-4 whitespace-nowrap text-sm text-gray-500">@exercise.Difficulty?.Value</td>
+                            <td class="hidden lg:table-cell px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                @if (exercise.KineticChain != null)
+                                {
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium @GetKineticChainBadgeClass(exercise.KineticChain.Value)">
+                                        @exercise.KineticChain.Value
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="text-gray-400">-</span>
+                                }
+                            </td>
+                            <td class="hidden xl:table-cell px-6 py-4 text-sm text-gray-500">
                                 @string.Join(", ", exercise.MuscleGroups.Where(mg => mg.Role?.Value == "Primary").Select(mg => mg.MuscleGroup?.Value ?? ""))
                             </td>
-                            <td class="px-6 py-4 text-sm text-gray-500">
+                            <td class="hidden xl:table-cell px-6 py-4 text-sm text-gray-500">
                                 @string.Join(", ", exercise.Equipment.Select(e => e.Value))
                             </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            <td class="hidden lg:table-cell px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                 @if (exercise.IsUnilateral)
                                 {
                                     <span class="text-green-600">Yes</span>
@@ -292,6 +305,15 @@
         Navigation.NavigateTo($"/exercises/{id}/edit");
     }
 
+    private string GetKineticChainBadgeClass(string kineticChainType)
+    {
+        return kineticChainType?.ToLower() switch
+        {
+            "compound" => "bg-purple-100 text-purple-800",
+            "isolation" => "bg-blue-100 text-blue-800",
+            _ => "bg-gray-100 text-gray-800"
+        };
+    }
 
     public void Dispose()
     {

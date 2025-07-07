@@ -433,6 +433,7 @@
             if (IsRestTypeSelected)
             {
                 // For REST exercises, clear all incompatible fields even if they have data
+                model.KineticChainId = null;
                 selectedEquipmentIds.Clear();
                 selectedBodyPartIds.Clear();
                 selectedMovementPatternIds.Clear();
@@ -546,6 +547,24 @@
 
         if (string.IsNullOrWhiteSpace(model.DifficultyId))
             validationErrors["Difficulty"] = "Difficulty level is required";
+
+        // Validate kinetic chain
+        if (IsRestTypeSelected)
+        {
+            // REST exercises must have null kinetic chain
+            if (!string.IsNullOrWhiteSpace(model.KineticChainId))
+            {
+                validationErrors["KineticChain"] = "REST exercises cannot have a kinetic chain type";
+            }
+        }
+        else
+        {
+            // Non-REST exercises require kinetic chain
+            if (string.IsNullOrWhiteSpace(model.KineticChainId))
+            {
+                validationErrors["KineticChain"] = "Kinetic chain type is required for non-REST exercises";
+            }
+        }
 
         // Validate muscle groups (optional for Rest exercises)
         if (!IsRestTypeSelected)
@@ -677,6 +696,9 @@
     
     private void ClearRestIncompatibleFields()
     {
+        // Clear kinetic chain (REST exercises cannot have kinetic chain)
+        model.KineticChainId = null;
+        
         // Clear equipment
         selectedEquipmentIds.Clear();
         

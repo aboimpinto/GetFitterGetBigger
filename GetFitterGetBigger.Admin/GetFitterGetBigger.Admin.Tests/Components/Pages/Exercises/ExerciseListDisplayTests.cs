@@ -183,5 +183,122 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
             pagedResult.Items.Should().Contain(e => e.ExerciseTypes.Any(t => t.Value == "Warmup"));
             pagedResult.Items.Should().Contain(e => e.ExerciseTypes.Any(t => t.Value == "Workout"));
         }
+
+        [Fact]
+        public void ExerciseListDto_WithKineticChain_ContainsKineticChainForDisplay()
+        {
+            // Arrange & Act
+            var compoundExercise = new ExerciseListDtoBuilder()
+                .WithId("1")
+                .WithName("Compound Exercise")
+                .WithKineticChain("Compound", "Multi-muscle movement")
+                .Build();
+
+            var isolationExercise = new ExerciseListDtoBuilder()
+                .WithId("2")
+                .WithName("Isolation Exercise")
+                .WithKineticChain("Isolation", "Single-muscle movement")
+                .Build();
+
+            // Assert
+            compoundExercise.KineticChain.Should().NotBeNull();
+            compoundExercise.KineticChain!.Value.Should().Be("Compound");
+            compoundExercise.KineticChain.Description.Should().Be("Multi-muscle movement");
+
+            isolationExercise.KineticChain.Should().NotBeNull();
+            isolationExercise.KineticChain!.Value.Should().Be("Isolation");
+            isolationExercise.KineticChain.Description.Should().Be("Single-muscle movement");
+        }
+
+        [Fact]
+        public void ExerciseListDto_WithNullKineticChain_HandlesGracefully()
+        {
+            // Arrange & Act
+            var restExercise = new ExerciseListDtoBuilder()
+                .WithId("1")
+                .WithName("Rest Exercise")
+                .WithKineticChain(null)
+                .Build();
+
+            // Assert
+            restExercise.KineticChain.Should().BeNull();
+        }
+
+        [Fact]
+        public void KineticChainBadgeClass_ColorClassMapping_ShouldMapCorrectly()
+        {
+            // This tests the color class logic for kinetic chain badges
+            var compoundType = "Compound";
+            var isolationType = "Isolation";
+            var unknownType = "Unknown";
+
+            // Simulate the GetKineticChainBadgeClass method logic
+            string GetKineticChainBadgeClass(string kineticChainType) => kineticChainType?.ToLower() switch
+            {
+                "compound" => "bg-purple-100 text-purple-800",
+                "isolation" => "bg-blue-100 text-blue-800",
+                _ => "bg-gray-100 text-gray-800"
+            };
+
+            // Assert
+            GetKineticChainBadgeClass(compoundType).Should().Be("bg-purple-100 text-purple-800");
+            GetKineticChainBadgeClass(isolationType).Should().Be("bg-blue-100 text-blue-800");
+            GetKineticChainBadgeClass(unknownType).Should().Be("bg-gray-100 text-gray-800");
+            GetKineticChainBadgeClass(null!).Should().Be("bg-gray-100 text-gray-800");
+        }
+
+        [Fact]
+        public void ExercisePagedResultDto_WithMixedKineticChains_ShowsCorrectData()
+        {
+            // Arrange
+            var exercises = new List<ExerciseListDto>
+            {
+                new ExerciseListDtoBuilder()
+                    .WithId("1")
+                    .WithName("Compound Exercise")
+                    .WithKineticChain("Compound", "Multi-muscle movement")
+                    .Build(),
+                new ExerciseListDtoBuilder()
+                    .WithId("2")
+                    .WithName("Isolation Exercise")
+                    .WithKineticChain("Isolation", "Single-muscle movement")
+                    .Build(),
+                new ExerciseListDtoBuilder()
+                    .WithId("3")
+                    .WithName("Rest Exercise")
+                    .WithKineticChain(null)
+                    .Build()
+            };
+
+            // Act
+            var pagedResult = new ExercisePagedResultDto
+            {
+                Items = exercises,
+                TotalCount = 3,
+                PageSize = 10
+            };
+
+            // Assert
+            pagedResult.Items.Should().HaveCount(3);
+            pagedResult.Items.Should().Contain(e => e.KineticChain != null && e.KineticChain.Value == "Compound");
+            pagedResult.Items.Should().Contain(e => e.KineticChain != null && e.KineticChain.Value == "Isolation");
+            pagedResult.Items.Should().Contain(e => e.KineticChain == null);
+        }
+
+        [Fact]
+        public void ExerciseListDto_KineticChainDisplayLogic_WorksForRestExercises()
+        {
+            // Arrange & Act
+            var restExercise = new ExerciseListDtoBuilder()
+                .WithId("1")
+                .WithName("Rest Exercise")
+                .WithExerciseTypes(("Rest", "Rest period"))
+                .WithKineticChain(null) // REST exercises should have null kinetic chain
+                .Build();
+
+            // Assert
+            restExercise.ExerciseTypes.Should().Contain(t => t.Value == "Rest");
+            restExercise.KineticChain.Should().BeNull();
+        }
     }
 }

@@ -67,12 +67,154 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
             checkboxes.All(cb => !cb.IsChecked()).Should().BeTrue();
         }
 
+        [Fact]
+        public void ExerciseForm_KineticChainDropdown_RendersCorrectly()
+        {
+            // Arrange
+            _mockStateService.SetupReferenceData();
+            var component = RenderComponent<ExerciseForm>();
 
+            // Act
+            var kineticChainSelect = component.Find("select#kineticChain");
+            var options = kineticChainSelect.QuerySelectorAll("option");
 
+            // Assert
+            kineticChainSelect.Should().NotBeNull();
+            options.Should().HaveCount(3); // Empty option + 2 kinetic chain types
+            options[0].TextContent.Should().Be("Select kinetic chain type");
+            options[1].TextContent.Should().Be("Compound");
+            options[2].TextContent.Should().Be("Isolation");
+        }
 
+        [Fact]
+        public void ExerciseForm_KineticChainDropdown_RequiredForNonRestExercises()
+        {
+            // Arrange
+            _mockStateService.SetupReferenceData();
+            var component = RenderComponent<ExerciseForm>();
 
+            // Act
+            var kineticChainSelect = component.Find("select#kineticChain");
 
+            // Assert - should be required by default (when no exercise type is selected, it defaults to requiring kinetic chain)
+            // This is actually correct behavior since in the actual form, kinetic chain is required unless REST is selected
+            kineticChainSelect.HasAttribute("required").Should().BeTrue();
+            kineticChainSelect.IsDisabled().Should().BeFalse();
+        }
 
+        [Fact]
+        public void ExerciseForm_KineticChainDropdown_DisabledForRestExercises()
+        {
+            // Arrange
+            _mockStateService.SetupReferenceData();
+            var component = RenderComponent<ExerciseForm>();
+
+            // Act - Select Rest exercise type
+            var restCheckbox = component.FindAll("input[type='checkbox']").First(cb => 
+                cb.Parent!.TextContent.Contains("Rest"));
+            restCheckbox.Change(true);
+
+            // Assert
+            var kineticChainSelect = component.Find("select#kineticChain");
+            kineticChainSelect.IsDisabled().Should().BeTrue();
+            kineticChainSelect.HasAttribute("required").Should().BeFalse();
+            kineticChainSelect.GetAttribute("class").Should().Contain("bg-gray-100");
+        }
+
+        [Fact]
+        public void ExerciseForm_KineticChainDropdown_RequiredForWorkoutExercises()
+        {
+            // Arrange
+            _mockStateService.SetupReferenceData();
+            var component = RenderComponent<ExerciseForm>();
+
+            // Act - Select Workout exercise type
+            var workoutCheckbox = component.FindAll("input[type='checkbox']").First(cb => 
+                cb.Parent!.TextContent.Contains("Workout"));
+            workoutCheckbox.Change(true);
+
+            // Assert
+            var kineticChainSelect = component.Find("select#kineticChain");
+            kineticChainSelect.IsDisabled().Should().BeFalse();
+            kineticChainSelect.HasAttribute("required").Should().BeTrue();
+        }
+
+        [Fact]
+        public void ExerciseForm_KineticChainValidation_ShowsErrorForMissingKineticChain()
+        {
+            // Arrange
+            _mockStateService.SetupReferenceData();
+            var component = RenderComponent<ExerciseForm>();
+
+            // Act - Fill required fields but leave kinetic chain empty for workout exercise
+            component.Find("input#name").Input("Test Exercise");
+            component.Find("textarea#description").Input("Test Description");
+            component.Find("select#difficulty").Change("1");
+            
+            var workoutCheckbox = component.FindAll("input[type='checkbox']").First(cb => 
+                cb.Parent!.TextContent.Contains("Workout"));
+            workoutCheckbox.Change(true);
+
+            // Try to submit the form
+            var submitButton = component.Find("button[data-testid='floating-save-button']");
+            submitButton.Click();
+
+            // Assert
+            var errorMessage = component.Find("p.text-red-600");
+            errorMessage.TextContent.Should().Be("Kinetic chain type is required for non-REST exercises");
+        }
+
+        [Fact]
+        public void ExerciseForm_KineticChainValidation_ShowsErrorForRestExerciseWithKineticChain()
+        {
+            // Arrange
+            _mockStateService.SetupReferenceData();
+            var component = RenderComponent<ExerciseForm>();
+
+            // Act - Fill required fields and select kinetic chain
+            component.Find("input#name").Input("Rest Exercise");
+            component.Find("textarea#description").Input("Rest Description");
+            component.Find("select#difficulty").Change("1");
+            component.Find("select#kineticChain").Change("kineticchain-1");
+
+            // Then select Rest exercise type (this should clear kinetic chain)
+            var restCheckbox = component.FindAll("input[type='checkbox']").First(cb => 
+                cb.Parent!.TextContent.Contains("Rest"));
+            restCheckbox.Change(true);
+
+            // Try to submit the form
+            var submitButton = component.Find("button[data-testid='floating-save-button']");
+            submitButton.Click();
+
+            // Assert - Should not show error because kinetic chain should be cleared automatically
+            var kineticChainSelect = component.Find("select#kineticChain");
+            var value = kineticChainSelect.GetAttribute("value");
+            (value == null || value == "").Should().BeTrue();
+        }
+
+        [Fact]
+        public void ExerciseForm_KineticChainSelection_ClearsWhenRestTypeSelected()
+        {
+            // Arrange
+            _mockStateService.SetupReferenceData();
+            var component = RenderComponent<ExerciseForm>();
+
+            // Act - First select a kinetic chain type
+            var kineticChainSelect = component.Find("select#kineticChain");
+            kineticChainSelect.Change("kineticchain-1");
+
+            // Verify it's selected
+            kineticChainSelect.GetAttribute("value").Should().Be("kineticchain-1");
+
+            // Then select Rest exercise type
+            var restCheckbox = component.FindAll("input[type='checkbox']").First(cb => 
+                cb.Parent!.TextContent.Contains("Rest"));
+            restCheckbox.Change(true);
+
+            // Assert - kinetic chain should be cleared
+            var value = kineticChainSelect.GetAttribute("value");
+            (value == null || value == "").Should().BeTrue();
+        }
 
         private class MockExerciseStateService : IExerciseStateService
         {
@@ -126,6 +268,12 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
                     new() { Id = "2", Value = "Workout", Description = "Main workout" },
                     new() { Id = "3", Value = "Cooldown", Description = "Cooldown exercises" },
                     new() { Id = "4", Value = "Rest", Description = "Rest period" }
+                };
+
+                KineticChainTypes = new List<ReferenceDataDto>
+                {
+                    new() { Id = "kineticchain-1", Value = "Compound", Description = "Multi-muscle movement" },
+                    new() { Id = "kineticchain-2", Value = "Isolation", Description = "Single-muscle movement" }
                 };
 
                 Equipment = new List<ReferenceDataDto>();
