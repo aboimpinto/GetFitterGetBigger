@@ -85,3 +85,35 @@ This document tracks features that have been propagated from the API to Admin an
 - Focus was on propagating specific completed features
 - All workflow documentation was already synchronized
 - Testing guidelines enhanced for consistency
+
+## Propagation Date: 2025-07-07
+
+### Features Propagated
+
+#### 4. Exercise Kinetic Chain Field
+- **API Completion Date**: 2025-07-07 (IN_PROGRESS - implementation complete, pending testing)
+- **Feature IDs**: 
+  - API: FEAT-019
+  - Admin: FEAT-017
+  - Clients: Not yet propagated
+- **Status**: Propagated to 0-SUBMITTED in Admin
+- **Summary**: Added Kinetic Chain field to categorize exercises as Compound or Isolation movements
+- **Key Changes**:
+  - New required field for non-REST exercises
+  - Two kinetic chain types: Compound (multi-muscle) and Isolation (single-muscle)
+  - Validation rules based on exercise type
+  - Reference table endpoint: `/api/referenceTables/kineticChainTypes`
+- **Documentation**: Created `/api-docs/exercise-kinetic-chain.md` with full specification
+
+### Process Documentation
+
+#### Created Documents
+1. `/GetFitterGetBigger.Admin/memory-bank/API-FEATURE-PROPAGATION-PROCESS.md` - Comprehensive guide for propagating API features to frontend projects
+   - Emphasizes independent feature numbering per project
+   - Details the 0-SUBMITTED workflow
+   - Includes best practices and common pitfalls
+
+## Notes
+- FEAT-019 demonstrates the proper propagation process with independent numbering
+- Admin project maintains its own feature sequence (FEAT-017)
+- Process documentation created to standardize future propagations
