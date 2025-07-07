@@ -46,8 +46,8 @@
 
 ### Category 2: DTOs and Request/Response Models - Estimated: 1h
 #### 📖 Before Starting: Review DTO patterns in existing code
-- **Task 2.1:** Add KineticChain property to ExerciseDto `[InProgress: Started: 2025-01-07 20:01]` (Est: 15m)
-- **Task 2.2:** Add KineticChainId to CreateExerciseRequest and UpdateExerciseRequest `[ReadyToDevelop]` (Est: 15m)
+- **Task 2.1:** Add KineticChain property to ExerciseDto `[Implemented: 651bfa61 | Started: 2025-01-07 20:01 | Finished: 2025-01-07 20:02 | Duration: 0h 1m]` (Est: 15m)
+- **Task 2.2:** Add KineticChainId to CreateExerciseRequest and UpdateExerciseRequest `[InProgress: Started: 2025-01-07 20:02]` (Est: 15m)
 - **Task 2.3:** Write unit tests for DTO serialization/deserialization `[ReadyToDevelop]` (Est: 30m)
 
 ### Category 3: Database Configuration - Estimated: 1h

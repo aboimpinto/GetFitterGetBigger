@@ -58,6 +58,13 @@ public class CreateExerciseRequest
     public string DifficultyId { get; set; } = string.Empty;
     
     /// <summary>
+    /// The ID of the kinetic chain type
+    /// Required for non-rest exercises, must be null for rest exercises
+    /// Validation is handled at the service layer to access database for exercise type detection
+    /// </summary>
+    public string? KineticChainId { get; set; }
+    
+    /// <summary>
     /// The muscle groups targeted by the exercise with their roles
     /// Optional for REST exercises, required for all other exercise types
     /// Validation is handled at the service layer to access database for exercise type detection
