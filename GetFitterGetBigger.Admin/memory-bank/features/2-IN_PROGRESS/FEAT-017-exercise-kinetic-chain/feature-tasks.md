@@ -34,16 +34,19 @@
 
 ---
 
+### Boy Scout Tasks
+- **Task 0.1:** Fix null reference warnings in ExerciseFormFloatingButtonTests `[Implemented: 4573697c | Started: 2025-07-07 18:03 | Finished: 2025-07-07 18:04 | Duration: 0h 1m]` (Est: 5m)
+
 ### Category 1: Data Models & DTOs - Estimated: 30m
 - **Task 1.1:** Add KineticChain property to ExerciseDto in Models/Dtos/ExerciseDto.cs `[Implemented: b79bb563 | Started: 2025-07-07 17:57 | Finished: 2025-07-07 17:58 | Duration: 0h 1m]` (Est: 10m)
 - **Task 1.2:** Add KineticChainId property to ExerciseCreateDto and ExerciseUpdateDto `[Implemented: bb0496ed | Started: 2025-07-07 17:59 | Finished: 2025-07-07 18:00 | Duration: 0h 1m]` (Est: 10m)
 - **Task 1.3:** Write unit tests for DTO serialization/deserialization with KineticChain `[Implemented: cf786267 | Started: 2025-07-07 18:00 | Finished: 2025-07-07 18:01 | Duration: 0h 1m]` (Est: 10m)
 
 ### Category 2: Service Layer - Estimated: 45m
-- **Task 2.1:** Add GetKineticChainTypesAsync() method to IReferenceDataService interface `[ReadyToDevelop]` (Est: 5m)
-- **Task 2.2:** Implement GetKineticChainTypesAsync() in ReferenceDataService with caching `[ReadyToDevelop]` (Est: 15m)
-- **Task 2.3:** Add KineticChainTypes property to IExerciseStateService interface `[ReadyToDevelop]` (Est: 5m)
-- **Task 2.4:** Implement KineticChainTypes loading in ExerciseStateService.InitializeAsync() `[ReadyToDevelop]` (Est: 10m)
+- **Task 2.1:** Add GetKineticChainTypesAsync() method to IReferenceDataService interface `[Implemented: Already exists | Started: 2025-07-07 18:05 | Finished: 2025-07-07 18:05 | Duration: 0h 0m]` (Est: 5m)
+- **Task 2.2:** Implement GetKineticChainTypesAsync() in ReferenceDataService with caching `[Implemented: Already exists | Started: 2025-07-07 18:05 | Finished: 2025-07-07 18:05 | Duration: 0h 0m]` (Est: 15m)
+- **Task 2.3:** Add KineticChainTypes property to IExerciseStateService interface `[Implemented: c47a9e01 | Started: 2025-07-07 18:06 | Finished: 2025-07-07 18:07 | Duration: 0h 1m]` (Est: 5m)
+- **Task 2.4:** Implement KineticChainTypes loading in ExerciseStateService.InitializeAsync() `[InProgress: Started: 2025-07-07 18:07]` (Est: 10m)
 - **Task 2.5:** Write unit tests for kinetic chain types service methods `[ReadyToDevelop]` (Est: 10m)
 
 ### Checkpoint after Category 2: Service layer working with kinetic chain types 🛑
