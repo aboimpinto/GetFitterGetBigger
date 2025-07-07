@@ -53,8 +53,8 @@
 
 ### Category 3: Builder Updates - Estimated: 30m
 - **Task 3.1:** Add WithKineticChainId() method to ExerciseCreateDtoBuilder `[Implemented: 07fc9546 | Started: 2025-07-07 18:21 | Finished: 2025-07-07 18:22 | Duration: 0h 1m]` (Est: 10m)
-- **Task 3.2:** Update FromExerciseDto() method in ExerciseUpdateDtoBuilder to map KineticChain `[InProgress: Started: 2025-07-07 18:22]` (Est: 10m)
-- **Task 3.3:** Write unit tests for builder methods with kinetic chain `[ReadyToDevelop]` (Est: 10m)
+- **Task 3.2:** Update FromExerciseDto() method in ExerciseUpdateDtoBuilder to map KineticChain `[Implemented: 35b7d06a | Started: 2025-07-07 18:22 | Finished: 2025-07-07 18:24 | Duration: 0h 2m]` (Est: 10m)
+- **Task 3.3:** Write unit tests for builder methods with kinetic chain `[InProgress: Started: 2025-07-07 18:24]` (Est: 10m)
 
 ### Category 4: Form Component Updates - Estimated: 1h 30m
 - **Task 4.1:** Add KineticChain dropdown to ExerciseForm.razor using EnhancedReferenceSelect component `[ReadyToDevelop]` (Est: 20m)
