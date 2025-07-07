@@ -34,6 +34,7 @@ namespace GetFitterGetBigger.Admin.Models.Dtos
         public List<CoachNoteCreateDto> CoachNotes { get; set; } = new();
         public List<string> ExerciseTypeIds { get; set; } = new();
         public string DifficultyId { get; set; } = string.Empty;
+        public string? KineticChainId { get; set; }
         public bool IsUnilateral { get; set; }
         public bool IsActive { get; set; } = true;
         public string? ImageUrl { get; set; }
