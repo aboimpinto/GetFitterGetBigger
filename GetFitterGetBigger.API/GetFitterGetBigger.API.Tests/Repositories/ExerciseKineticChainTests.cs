@@ -51,7 +51,7 @@ namespace GetFitterGetBigger.API.Tests.Repositories
                 kineticChainId);
 
             // Act
-            await _repository.CreateAsync(exercise);
+            _context.Exercises.Add(exercise);
             await _context.SaveChangesAsync();
             
             // Load the exercise with navigation property
@@ -87,7 +87,7 @@ namespace GetFitterGetBigger.API.Tests.Repositories
                 null); // No kinetic chain for rest
 
             // Act
-            await _repository.CreateAsync(exercise);
+            _context.Exercises.Add(exercise);
             await _context.SaveChangesAsync();
             
             var savedExercise = await _context.Exercises

@@ -107,6 +107,6 @@ public class ExerciseTests
         
         // Assert
         Assert.Null(exercise.KineticChain);
-        Assert.NotNull(exercise.Id);
+        // ExerciseId is a value type, so it can't be null
     }
 }
