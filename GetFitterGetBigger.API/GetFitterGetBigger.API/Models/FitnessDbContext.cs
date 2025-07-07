@@ -488,6 +488,13 @@ public class FitnessDbContext : DbContext
             .WithMany(dl => dl.Exercises)
             .HasForeignKey(e => e.DifficultyId);
             
+        // KineticChainType to Exercise (one-to-many)
+        modelBuilder.Entity<Exercise>()
+            .HasOne(e => e.KineticChain)
+            .WithMany(kc => kc.Exercises)
+            .HasForeignKey(e => e.KineticChainId)
+            .IsRequired(false);
+            
         // Exercise to CoachNote (one-to-many)
         modelBuilder.Entity<CoachNote>()
             .HasOne(cn => cn.Exercise)

@@ -48,11 +48,11 @@
 #### 📖 Before Starting: Review DTO patterns in existing code
 - **Task 2.1:** Add KineticChain property to ExerciseDto `[Implemented: 651bfa61 | Started: 2025-01-07 20:01 | Finished: 2025-01-07 20:02 | Duration: 0h 1m]` (Est: 15m)
 - **Task 2.2:** Add KineticChainId to CreateExerciseRequest and UpdateExerciseRequest `[Implemented: 758c080d | Started: 2025-01-07 20:02 | Finished: 2025-01-07 20:04 | Duration: 0h 2m]` (Est: 15m)
-- **Task 2.3:** Write unit tests for DTO serialization/deserialization `[InProgress: Started: 2025-01-07 20:04]` (Est: 30m)
+- **Task 2.3:** Write unit tests for DTO serialization/deserialization `[Implemented: f70ab5a1 | Started: 2025-01-07 20:04 | Finished: 2025-01-07 20:06 | Duration: 0h 2m]` (Est: 30m)
 
 ### Category 3: Database Configuration - Estimated: 1h
 #### 📖 Before Starting: Review database configuration patterns
-- **Task 3.1:** Configure Exercise-KineticChainType relationship in FitnessDbContext `[ReadyToDevelop]` (Est: 20m)
+- **Task 3.1:** Configure Exercise-KineticChainType relationship in FitnessDbContext `[InProgress: Started: 2025-01-07 20:06]` (Est: 20m)
 - **Task 3.2:** Create database migration for KineticChainId column `[ReadyToDevelop]` (Est: 20m)
 - **Task 3.3:** Write tests for database configuration `[ReadyToDevelop]` (Est: 20m)
 
