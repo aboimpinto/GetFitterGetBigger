@@ -28,6 +28,7 @@ namespace GetFitterGetBigger.Admin.Services
         public IEnumerable<ReferenceDataDto> BodyParts { get; private set; } = Enumerable.Empty<ReferenceDataDto>();
         public IEnumerable<ReferenceDataDto> MovementPatterns { get; private set; } = Enumerable.Empty<ReferenceDataDto>();
         public IEnumerable<ExerciseTypeDto> ExerciseTypes { get; private set; } = Enumerable.Empty<ExerciseTypeDto>();
+        public IEnumerable<ReferenceDataDto> KineticChainTypes { get; private set; } = Enumerable.Empty<ReferenceDataDto>();
         public bool IsLoadingReferenceData { get; private set; }
 
         // Page state management
@@ -205,6 +206,7 @@ namespace GetFitterGetBigger.Admin.Services
                 var bodyPartsTask = _referenceDataService.GetBodyPartsAsync();
                 var movementPatternsTask = _referenceDataService.GetMovementPatternsAsync();
                 var exerciseTypesTask = _referenceDataService.GetExerciseTypesAsync();
+                var kineticChainTypesTask = _referenceDataService.GetKineticChainTypesAsync();
 
                 await Task.WhenAll(
                     difficultyTask,
@@ -213,7 +215,8 @@ namespace GetFitterGetBigger.Admin.Services
                     equipmentTask,
                     bodyPartsTask,
                     movementPatternsTask,
-                    exerciseTypesTask
+                    exerciseTypesTask,
+                    kineticChainTypesTask
                 );
 
                 DifficultyLevels = await difficultyTask;
@@ -223,6 +226,7 @@ namespace GetFitterGetBigger.Admin.Services
                 BodyParts = await bodyPartsTask;
                 MovementPatterns = await movementPatternsTask;
                 ExerciseTypes = await exerciseTypesTask;
+                KineticChainTypes = await kineticChainTypesTask;
             }
             catch (Exception ex)
             {
