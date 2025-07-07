@@ -59,6 +59,11 @@ public class ExerciseDto
     public ReferenceDataDto Difficulty { get; set; } = null!;
     
     /// <summary>
+    /// The kinetic chain type of the exercise (Open Chain, Closed Chain)
+    /// </summary>
+    public ReferenceDataDto? KineticChain { get; set; }
+    
+    /// <summary>
     /// The muscle groups targeted by the exercise
     /// </summary>
     public List<MuscleGroupWithRoleDto> MuscleGroups { get; set; } = new();
