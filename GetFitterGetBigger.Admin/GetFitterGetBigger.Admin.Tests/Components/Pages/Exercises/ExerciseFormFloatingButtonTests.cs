@@ -61,12 +61,12 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
             // Act & Assert - Cancel button structure
             var cancelButton = component.Find("[data-testid='floating-cancel-button']");
             cancelButton.QuerySelector("svg").Should().NotBeNull("Cancel button should have an X icon");
-            cancelButton.QuerySelector("span").TextContent.Should().Be("Cancel");
+            cancelButton.QuerySelector("span")?.TextContent.Should().Be("Cancel");
 
             // Save button structure
             var saveButton = component.Find("[data-testid='floating-save-button']");
             saveButton.QuerySelector("svg").Should().NotBeNull("Save button should have a floppy disk icon");
-            var saveText = saveButton.QuerySelector("span").TextContent;
+            var saveText = saveButton.QuerySelector("span")?.TextContent;
             saveText.Should().Be("Create"); // In create mode
         }
 
@@ -82,15 +82,15 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
             var saveContainer = component.Find("[data-testid='floating-save-button']").ParentElement;
 
             // Assert - Verify CSS classes
-            cancelContainer.GetAttribute("class").Should().Contain("fixed");
-            cancelContainer.GetAttribute("class").Should().Contain("bottom-8");
-            cancelContainer.GetAttribute("class").Should().Contain("z-50");
-            cancelContainer.GetAttribute("class").Should().Contain("cancelPostionStyle");
+            cancelContainer?.GetAttribute("class").Should().Contain("fixed");
+            cancelContainer?.GetAttribute("class").Should().Contain("bottom-8");
+            cancelContainer?.GetAttribute("class").Should().Contain("z-50");
+            cancelContainer?.GetAttribute("class").Should().Contain("cancelPostionStyle");
 
-            saveContainer.GetAttribute("class").Should().Contain("fixed");
-            saveContainer.GetAttribute("class").Should().Contain("bottom-8");
-            saveContainer.GetAttribute("class").Should().Contain("z-50");
-            saveContainer.GetAttribute("class").Should().Contain("right-4");
+            saveContainer?.GetAttribute("class").Should().Contain("fixed");
+            saveContainer?.GetAttribute("class").Should().Contain("bottom-8");
+            saveContainer?.GetAttribute("class").Should().Contain("z-50");
+            saveContainer?.GetAttribute("class").Should().Contain("right-4");
             // Note: xl:right-[calc(50%-41rem)] is a Tailwind class that would be present
         }
 

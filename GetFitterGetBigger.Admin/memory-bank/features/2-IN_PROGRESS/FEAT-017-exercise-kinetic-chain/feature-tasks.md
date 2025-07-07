@@ -37,7 +37,7 @@
 ### Category 1: Data Models & DTOs - Estimated: 30m
 - **Task 1.1:** Add KineticChain property to ExerciseDto in Models/Dtos/ExerciseDto.cs `[Implemented: b79bb563 | Started: 2025-07-07 17:57 | Finished: 2025-07-07 17:58 | Duration: 0h 1m]` (Est: 10m)
 - **Task 1.2:** Add KineticChainId property to ExerciseCreateDto and ExerciseUpdateDto `[Implemented: bb0496ed | Started: 2025-07-07 17:59 | Finished: 2025-07-07 18:00 | Duration: 0h 1m]` (Est: 10m)
-- **Task 1.3:** Write unit tests for DTO serialization/deserialization with KineticChain `[InProgress: Started: 2025-07-07 18:00]` (Est: 10m)
+- **Task 1.3:** Write unit tests for DTO serialization/deserialization with KineticChain `[Implemented: cf786267 | Started: 2025-07-07 18:00 | Finished: 2025-07-07 18:01 | Duration: 0h 1m]` (Est: 10m)
 
 ### Category 2: Service Layer - Estimated: 45m
 - **Task 2.1:** Add GetKineticChainTypesAsync() method to IReferenceDataService interface `[ReadyToDevelop]` (Est: 5m)
