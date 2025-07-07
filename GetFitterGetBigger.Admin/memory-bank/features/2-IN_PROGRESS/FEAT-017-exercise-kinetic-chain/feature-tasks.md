@@ -46,8 +46,8 @@
 - **Task 2.1:** Add GetKineticChainTypesAsync() method to IReferenceDataService interface `[Implemented: Already exists | Started: 2025-07-07 18:05 | Finished: 2025-07-07 18:05 | Duration: 0h 0m]` (Est: 5m)
 - **Task 2.2:** Implement GetKineticChainTypesAsync() in ReferenceDataService with caching `[Implemented: Already exists | Started: 2025-07-07 18:05 | Finished: 2025-07-07 18:05 | Duration: 0h 0m]` (Est: 15m)
 - **Task 2.3:** Add KineticChainTypes property to IExerciseStateService interface `[Implemented: c47a9e01 | Started: 2025-07-07 18:06 | Finished: 2025-07-07 18:07 | Duration: 0h 1m]` (Est: 5m)
-- **Task 2.4:** Implement KineticChainTypes loading in ExerciseStateService.InitializeAsync() `[InProgress: Started: 2025-07-07 18:07]` (Est: 10m)
-- **Task 2.5:** Write unit tests for kinetic chain types service methods `[ReadyToDevelop]` (Est: 10m)
+- **Task 2.4:** Implement KineticChainTypes loading in ExerciseStateService.InitializeAsync() `[Implemented: 86250848 + 9999d744 | Started: 2025-07-07 18:07 | Finished: 2025-07-07 18:16 | Duration: 0h 9m]` (Est: 10m)
+- **Task 2.5:** Write unit tests for kinetic chain types service methods `[InProgress: Started: 2025-07-07 18:16]` (Est: 10m)
 
 ### Checkpoint after Category 2: Service layer working with kinetic chain types 🛑
 
