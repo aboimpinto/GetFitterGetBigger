@@ -1,0 +1,11 @@
+  Determining projects to restore...
+  All projects are up-to-date for restore.
+  Olimpo.EntityFramework.Persistency -> /home/esqueleto/myWork/GetFitterGetBigger/GetFitterGetBigger.API/Olimpo.EntityFramework.Persistency/bin/Debug/net9.0/Olimpo.EntityFramework.Persistency.dll
+  GetFitterGetBigger.API -> /home/esqueleto/myWork/GetFitterGetBigger/GetFitterGetBigger.API/GetFitterGetBigger.API/bin/Debug/net9.0/GetFitterGetBigger.API.dll
+  GetFitterGetBigger.API.Tests -> /home/esqueleto/myWork/GetFitterGetBigger/GetFitterGetBigger.API/GetFitterGetBigger.API.Tests/bin/Debug/net9.0/GetFitterGetBigger.API.Tests.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:02.45

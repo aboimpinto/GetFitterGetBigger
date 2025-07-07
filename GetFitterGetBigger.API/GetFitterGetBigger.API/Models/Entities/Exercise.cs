@@ -14,9 +14,11 @@ public record Exercise
     public bool IsUnilateral { get; init; }
     public bool IsActive { get; init; } = true;
     public DifficultyLevelId DifficultyId { get; init; }
+    public KineticChainTypeId? KineticChainId { get; init; }
     
     // Navigation properties
     public DifficultyLevel? Difficulty { get; init; }
+    public KineticChainType? KineticChain { get; init; }
     public ICollection<CoachNote> CoachNotes { get; init; } = new List<CoachNote>();
     public ICollection<ExerciseExerciseType> ExerciseExerciseTypes { get; init; } = new List<ExerciseExerciseType>();
     
@@ -37,7 +39,8 @@ public record Exercise
             string? videoUrl,
             string? imageUrl,
             bool isUnilateral,
-            DifficultyLevelId difficultyId)
+            DifficultyLevelId difficultyId,
+            KineticChainTypeId? kineticChainId = null)
         {
             // Validation logic
             if (string.IsNullOrWhiteSpace(name))
@@ -80,7 +83,8 @@ public record Exercise
                 ImageUrl = imageUrl?.Trim(),
                 IsUnilateral = isUnilateral,
                 IsActive = true,
-                DifficultyId = difficultyId
+                DifficultyId = difficultyId,
+                KineticChainId = kineticChainId
             };
         }
         
@@ -92,7 +96,8 @@ public record Exercise
             string? imageUrl,
             bool isUnilateral,
             bool isActive,
-            DifficultyLevelId difficultyId)
+            DifficultyLevelId difficultyId,
+            KineticChainTypeId? kineticChainId = null)
         {
             return new Exercise
             {
@@ -103,7 +108,8 @@ public record Exercise
                 ImageUrl = imageUrl,
                 IsUnilateral = isUnilateral,
                 IsActive = isActive,
-                DifficultyId = difficultyId
+                DifficultyId = difficultyId,
+                KineticChainId = kineticChainId
             };
         }
     }
