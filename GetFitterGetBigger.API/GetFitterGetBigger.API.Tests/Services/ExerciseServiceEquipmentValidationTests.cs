@@ -64,7 +64,8 @@ public class ExerciseServiceEquipmentValidationTests
             MuscleGroups = new List<MuscleGroupWithRoleRequest>(), // Empty for REST
             EquipmentIds = new List<string>(), // Empty equipment - this should be allowed
             MovementPatternIds = new List<string>(),
-            BodyPartIds = new List<string>()
+            BodyPartIds = new List<string>(),
+            KineticChainId = null // REST exercise
         };
         
         _exerciseRepositoryMock.Setup(r => r.ExistsAsync(It.IsAny<string>(), null))
@@ -94,7 +95,7 @@ public class ExerciseServiceEquipmentValidationTests
     {
         // Arrange
         var workoutTypeId = ExerciseTypeId.New();
-        var workoutType = ExerciseType.Handler.Create(workoutTypeId, "Workout", "Main workout", 1, true);
+        var workoutType = ExerciseType.Handler.Create(workoutTypeId, "Workout", "Main workout", 1, false);
         
         var request = new CreateExerciseRequest
         {
@@ -108,7 +109,8 @@ public class ExerciseServiceEquipmentValidationTests
             },
             EquipmentIds = new List<string>(), // Empty equipment - this should be allowed for bodyweight exercises
             MovementPatternIds = new List<string>(),
-            BodyPartIds = new List<string>()
+            BodyPartIds = new List<string>(),
+            KineticChainId = KineticChainTypeId.New().ToString() // Non-REST exercise
         };
         
         _exerciseRepositoryMock.Setup(r => r.ExistsAsync(It.IsAny<string>(), null))
@@ -138,7 +140,7 @@ public class ExerciseServiceEquipmentValidationTests
     {
         // Arrange
         var workoutTypeId = ExerciseTypeId.New();
-        var workoutType = ExerciseType.Handler.Create(workoutTypeId, "Workout", "Main workout", 1, true);
+        var workoutType = ExerciseType.Handler.Create(workoutTypeId, "Workout", "Main workout", 1, false);
         var equipmentId = EquipmentId.New();
         
         var request = new CreateExerciseRequest
@@ -153,7 +155,8 @@ public class ExerciseServiceEquipmentValidationTests
             },
             EquipmentIds = new List<string> { equipmentId.ToString() }, // With equipment
             MovementPatternIds = new List<string>(),
-            BodyPartIds = new List<string>()
+            BodyPartIds = new List<string>(),
+            KineticChainId = KineticChainTypeId.New().ToString() // Non-REST exercise
         };
         
         _exerciseRepositoryMock.Setup(r => r.ExistsAsync(It.IsAny<string>(), null))
@@ -184,7 +187,7 @@ public class ExerciseServiceEquipmentValidationTests
         // Arrange
         var exerciseId = ExerciseId.New();
         var workoutTypeId = ExerciseTypeId.New();
-        var workoutType = ExerciseType.Handler.Create(workoutTypeId, "Workout", "Main workout", 1, true);
+        var workoutType = ExerciseType.Handler.Create(workoutTypeId, "Workout", "Main workout", 1, false);
         
         var existingExercise = Exercise.Handler.CreateNew(
             "Bench Press",
@@ -207,7 +210,8 @@ public class ExerciseServiceEquipmentValidationTests
             },
             EquipmentIds = new List<string>(), // Remove all equipment
             MovementPatternIds = new List<string>(),
-            BodyPartIds = new List<string>()
+            BodyPartIds = new List<string>(),
+            KineticChainId = KineticChainTypeId.New().ToString() // Non-REST exercise
         };
         
         _exerciseRepositoryMock.Setup(r => r.ExistsAsync(It.IsAny<string>(), It.IsAny<ExerciseId>()))

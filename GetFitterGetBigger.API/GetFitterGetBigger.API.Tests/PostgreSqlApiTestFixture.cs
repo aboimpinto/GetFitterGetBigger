@@ -205,7 +205,7 @@ public class PostgreSqlApiTestFixture : WebApplicationFactory<Program>, IAsyncLi
                     true
                 ),
                 KineticChainType.Handler.Create(
-                    KineticChainTypeId.From(Guid.Parse("a1b2c3d4-e5f6-7890-abcd-ef1234567890")),
+                    KineticChainTypeId.From(Guid.Parse("2b3e7cb2-9a3e-4c9a-88d8-b7c019c90d1b")),
                     "Isolation",
                     "Exercises that work a single muscle group",
                     2,
@@ -340,7 +340,7 @@ public class PostgreSqlApiTestFixture : WebApplicationFactory<Program>, IAsyncLi
                     true
                 ),
                 ExerciseType.Handler.Create(
-                    ExerciseTypeId.From(Guid.Parse("22334455-6677-8899-aabb-ccddeeff0011")),
+                    ExerciseTypeId.From(Guid.Parse("b2c3d4e5-6f7a-8b9c-0d1e-2f3a4b5c6d7e")),
                     "Workout",
                     "Main exercises that form the core of the training session",
                     2,

@@ -109,7 +109,9 @@ public class ExercisesControllerPostgreSqlTests : PostgreSqlTestBase
             Name = existingExercise.Name,
             Description = "Test Description",
             CoachNotes = new List<CoachNoteRequest> { new() { Text = "Step 1", Order = 0 } },
+            ExerciseTypeIds = new List<string> { "exercisetype-b2c3d4e5-6f7a-8b9c-0d1e-2f3a4b5c6d7e" }, // Workout
             DifficultyId = "difficultylevel-8a8adb1d-24d2-4979-a5a6-0d760e6da24b",
+            KineticChainId = "kineticchaintype-f5d5a2de-9c4e-4b87-b8c3-5d1e17d0b1f4", // Compound
             MuscleGroups = new List<MuscleGroupWithRoleRequest> { new() { MuscleGroupId = "musclegroup-ccddeeff-0011-2233-4455-667788990011", MuscleRoleId = "musclerole-abcdef12-3456-7890-abcd-ef1234567890" } }
         };
 
@@ -136,9 +138,11 @@ public class ExercisesControllerPostgreSqlTests : PostgreSqlTestBase
                 new() { Text = "Updated Step 1", Order = 0 },
                 new() { Text = "Updated Step 2", Order = 1 }
             },
+            ExerciseTypeIds = new List<string> { "exercisetype-b2c3d4e5-6f7a-8b9c-0d1e-2f3a4b5c6d7e" }, // Workout
             VideoUrl = "https://example.com/updated-video.mp4",
             ImageUrl = "https://example.com/updated-image.jpg",
             DifficultyId = "difficultylevel-9c7b59a4-bcd8-48a6-971a-cd67b0a7ab5a",
+            KineticChainId = "kineticchaintype-f5d5a2de-9c4e-4b87-b8c3-5d1e17d0b1f4", // Compound
             MuscleGroups = new List<MuscleGroupWithRoleRequest> 
             { 
                 new() 
@@ -178,7 +182,9 @@ public class ExercisesControllerPostgreSqlTests : PostgreSqlTestBase
             Name = exercise2.Name, // Try to update exercise1 with exercise2's name
             Description = "Updated Description",
             CoachNotes = new List<CoachNoteRequest> { new() { Text = "Step 1", Order = 0 } },
+            ExerciseTypeIds = new List<string> { "exercisetype-b2c3d4e5-6f7a-8b9c-0d1e-2f3a4b5c6d7e" }, // Workout
             DifficultyId = exercise1.DifficultyId.ToString(),
+            KineticChainId = exercise1.KineticChainId?.ToString(),
             MuscleGroups = new List<MuscleGroupWithRoleRequest> { new() { MuscleGroupId = "musclegroup-ccddeeff-0011-2233-4455-667788990011", MuscleRoleId = "musclerole-abcdef12-3456-7890-abcd-ef1234567890" } }
         };
 
@@ -221,7 +227,8 @@ public class ExercisesControllerPostgreSqlTests : PostgreSqlTestBase
                 "https://example.com/squat-video.mp4",
                 "https://example.com/squat-image.jpg",
                 false,
-                DifficultyLevelId.From(Guid.Parse("9c7b59a4-bcd8-48a6-971a-cd67b0a7ab5a"))
+                DifficultyLevelId.From(Guid.Parse("9c7b59a4-bcd8-48a6-971a-cd67b0a7ab5a")),
+                KineticChainTypeId.From(Guid.Parse("f5d5a2de-9c4e-4b87-b8c3-5d1e17d0b1f4")) // Compound
             ),
             Exercise.Handler.CreateNew(
                 "Dumbbell Bicep Curl",
@@ -229,7 +236,8 @@ public class ExercisesControllerPostgreSqlTests : PostgreSqlTestBase
                 null,
                 null,
                 true,
-                DifficultyLevelId.From(Guid.Parse("8a8adb1d-24d2-4979-a5a6-0d760e6da24b"))
+                DifficultyLevelId.From(Guid.Parse("8a8adb1d-24d2-4979-a5a6-0d760e6da24b")),
+                KineticChainTypeId.From(Guid.Parse("2b3e7cb2-9a3e-4c9a-88d8-b7c019c90d1b")) // Isolation
             ),
             Exercise.Handler.CreateNew(
                 "Push-up",
@@ -237,7 +245,8 @@ public class ExercisesControllerPostgreSqlTests : PostgreSqlTestBase
                 "https://example.com/pushup-video.mp4",
                 null,
                 false,
-                DifficultyLevelId.From(Guid.Parse("8a8adb1d-24d2-4979-a5a6-0d760e6da24b"))
+                DifficultyLevelId.From(Guid.Parse("8a8adb1d-24d2-4979-a5a6-0d760e6da24b")),
+                KineticChainTypeId.From(Guid.Parse("f5d5a2de-9c4e-4b87-b8c3-5d1e17d0b1f4")) // Compound
             )
         };
 

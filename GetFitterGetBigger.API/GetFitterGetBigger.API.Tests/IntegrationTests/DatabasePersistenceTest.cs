@@ -31,6 +31,7 @@ public class DatabasePersistenceTest : IClassFixture<SharedDatabaseTestFixture>
             },
             ExerciseTypeIds = new List<string> { "exercisetype-22334455-6677-8899-aabb-ccddeeff0011" },
             DifficultyId = "difficultylevel-8a8adb1d-24d2-4979-a5a6-0d760e6da24b",
+            KineticChainId = "kineticchaintype-f5d5a2de-9c4e-4b87-b8c3-5d1e17d0b1f4", // Compound
             MuscleGroups = new List<MuscleGroupWithRoleRequest>
             {
                 new()

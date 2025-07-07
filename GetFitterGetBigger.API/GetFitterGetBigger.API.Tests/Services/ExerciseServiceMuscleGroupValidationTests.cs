@@ -64,7 +64,8 @@ public class ExerciseServiceMuscleGroupValidationTests
             MuscleGroups = new List<MuscleGroupWithRoleRequest>(), // Empty muscle groups for REST
             EquipmentIds = new List<string>(),
             MovementPatternIds = new List<string>(),
-            BodyPartIds = new List<string>()
+            BodyPartIds = new List<string>(),
+            KineticChainId = null // REST exercise
         };
         
         _exerciseRepositoryMock.Setup(r => r.ExistsAsync(It.IsAny<string>(), null))
@@ -94,7 +95,7 @@ public class ExerciseServiceMuscleGroupValidationTests
     {
         // Arrange
         var workoutTypeId = ExerciseTypeId.New();
-        var workoutType = ExerciseType.Handler.Create(workoutTypeId, "Workout", "Main workout", 1, true);
+        var workoutType = ExerciseType.Handler.Create(workoutTypeId, "Workout", "Main workout", 1, false);
         
         var request = new CreateExerciseRequest
         {
@@ -105,7 +106,8 @@ public class ExerciseServiceMuscleGroupValidationTests
             MuscleGroups = new List<MuscleGroupWithRoleRequest>(), // Empty muscle groups for non-REST
             EquipmentIds = new List<string>(),
             MovementPatternIds = new List<string>(),
-            BodyPartIds = new List<string>()
+            BodyPartIds = new List<string>(),
+            KineticChainId = KineticChainTypeId.New().ToString() // Non-REST exercise
         };
         
         _exerciseRepositoryMock.Setup(r => r.ExistsAsync(It.IsAny<string>(), null))
@@ -141,7 +143,8 @@ public class ExerciseServiceMuscleGroupValidationTests
             },
             EquipmentIds = new List<string>(),
             MovementPatternIds = new List<string>(),
-            BodyPartIds = new List<string>()
+            BodyPartIds = new List<string>(),
+            KineticChainId = null // REST exercise
         };
         
         _exerciseRepositoryMock.Setup(r => r.ExistsAsync(It.IsAny<string>(), null))
@@ -225,7 +228,7 @@ public class ExerciseServiceMuscleGroupValidationTests
         // Arrange
         var exerciseId = ExerciseId.New();
         var workoutTypeId = ExerciseTypeId.New();
-        var workoutType = ExerciseType.Handler.Create(workoutTypeId, "Workout", "Main workout", 1, true);
+        var workoutType = ExerciseType.Handler.Create(workoutTypeId, "Workout", "Main workout", 1, false);
         
         var existingExercise = Exercise.Handler.CreateNew(
             "Old Exercise",
@@ -321,7 +324,8 @@ public class ExerciseServiceMuscleGroupValidationTests
             MuscleGroups = new List<MuscleGroupWithRoleRequest>(), // Empty muscle groups
             EquipmentIds = new List<string>(),
             MovementPatternIds = new List<string>(),
-            BodyPartIds = new List<string>()
+            BodyPartIds = new List<string>(),
+            KineticChainId = KineticChainTypeId.New().ToString() // No exercise types, so non-REST
         };
         
         _exerciseRepositoryMock.Setup(r => r.ExistsAsync(It.IsAny<string>(), null))
@@ -341,7 +345,7 @@ public class ExerciseServiceMuscleGroupValidationTests
         var restTypeId = ExerciseTypeId.New();
         var workoutTypeId = ExerciseTypeId.New();
         var restType = ExerciseType.Handler.Create(restTypeId, "Rest", "Rest period", 1, true);
-        var workoutType = ExerciseType.Handler.Create(workoutTypeId, "Workout", "Main workout", 2, true);
+        var workoutType = ExerciseType.Handler.Create(workoutTypeId, "Workout", "Main workout", 2, false);
         
         var request = new CreateExerciseRequest
         {
@@ -352,7 +356,8 @@ public class ExerciseServiceMuscleGroupValidationTests
             MuscleGroups = new List<MuscleGroupWithRoleRequest>(), // Empty muscle groups
             EquipmentIds = new List<string>(),
             MovementPatternIds = new List<string>(),
-            BodyPartIds = new List<string>()
+            BodyPartIds = new List<string>(),
+            KineticChainId = KineticChainTypeId.New().ToString() // Mixed types
         };
         
         _exerciseRepositoryMock.Setup(r => r.ExistsAsync(It.IsAny<string>(), null))

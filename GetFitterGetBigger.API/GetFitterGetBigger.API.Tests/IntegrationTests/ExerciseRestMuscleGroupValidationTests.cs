@@ -36,7 +36,8 @@ public class ExerciseRestMuscleGroupValidationTests : IClassFixture<SharedDataba
             MuscleGroups = new List<MuscleGroupWithRoleRequest>(), // Empty muscle groups
             EquipmentIds = new List<string>(),
             MovementPatternIds = new List<string>(),
-            BodyPartIds = new List<string>()
+            BodyPartIds = new List<string>(),
+            KineticChainId = null // REST exercises should have null KineticChainId
         };
         
         // Act
@@ -73,7 +74,8 @@ public class ExerciseRestMuscleGroupValidationTests : IClassFixture<SharedDataba
             MuscleGroups = new List<MuscleGroupWithRoleRequest>(), // Empty muscle groups - should fail
             EquipmentIds = new List<string>(),
             MovementPatternIds = new List<string>(),
-            BodyPartIds = new List<string>()
+            BodyPartIds = new List<string>(),
+            KineticChainId = "kineticchaintype-f5d5a2de-9c4e-4b87-b8c3-5d1e17d0b1f4" // Compound
         };
         
         // Act
@@ -109,7 +111,8 @@ public class ExerciseRestMuscleGroupValidationTests : IClassFixture<SharedDataba
             },
             EquipmentIds = new List<string>(),
             MovementPatternIds = new List<string>(),
-            BodyPartIds = new List<string>()
+            BodyPartIds = new List<string>(),
+            KineticChainId = null // REST exercises should have null KineticChainId
         };
         
         // Act
@@ -147,7 +150,8 @@ public class ExerciseRestMuscleGroupValidationTests : IClassFixture<SharedDataba
             },
             EquipmentIds = new List<string>(),
             MovementPatternIds = new List<string>(),
-            BodyPartIds = new List<string>()
+            BodyPartIds = new List<string>(),
+            KineticChainId = "kineticchaintype-f5d5a2de-9c4e-4b87-b8c3-5d1e17d0b1f4" // Compound
         };
         
         // Act

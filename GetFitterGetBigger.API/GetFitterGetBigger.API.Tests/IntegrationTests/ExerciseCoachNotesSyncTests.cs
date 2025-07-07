@@ -46,7 +46,8 @@ public class ExerciseCoachNotesSyncTests : IClassFixture<SharedDatabaseTestFixtu
             },
             EquipmentIds = new List<string>(),
             BodyPartIds = new List<string> { "bodypart-7c5a2d6e-e87e-4c8a-9f1d-9eb734f3df3c" },
-            MovementPatternIds = new List<string>()
+            MovementPatternIds = new List<string>(),
+            KineticChainId = "kineticchaintype-f5d5a2de-9c4e-4b87-b8c3-5d1e17d0b1f4" // Compound
         };
         
         // Act
@@ -93,7 +94,8 @@ public class ExerciseCoachNotesSyncTests : IClassFixture<SharedDatabaseTestFixtu
             },
             EquipmentIds = new List<string>(),
             BodyPartIds = new List<string> { "bodypart-7c5a2d6e-e87e-4c8a-9f1d-9eb734f3df3c" },
-            MovementPatternIds = new List<string>()
+            MovementPatternIds = new List<string>(),
+            KineticChainId = "kineticchaintype-f5d5a2de-9c4e-4b87-b8c3-5d1e17d0b1f4" // Compound
         };
         
         // Act
@@ -133,7 +135,8 @@ public class ExerciseCoachNotesSyncTests : IClassFixture<SharedDatabaseTestFixtu
             },
             EquipmentIds = new List<string>(),
             BodyPartIds = new List<string> { "bodypart-7c5a2d6e-e87e-4c8a-9f1d-9eb734f3df3c" },
-            MovementPatternIds = new List<string>()
+            MovementPatternIds = new List<string>(),
+            KineticChainId = "kineticchaintype-f5d5a2de-9c4e-4b87-b8c3-5d1e17d0b1f4" // Compound
         };
         
         var createResponse = await _client.PostAsJsonAsync("/api/exercises", createRequest);
@@ -186,7 +189,8 @@ public class ExerciseCoachNotesSyncTests : IClassFixture<SharedDatabaseTestFixtu
             },
             EquipmentIds = new List<string>(),
             BodyPartIds = new List<string> { "bodypart-7c5a2d6e-e87e-4c8a-9f1d-9eb734f3df3c" },
-            MovementPatternIds = new List<string>()
+            MovementPatternIds = new List<string>(),
+            KineticChainId = "kineticchaintype-f5d5a2de-9c4e-4b87-b8c3-5d1e17d0b1f4" // Compound
         };
         
         var exercise2 = new CreateExerciseRequest
@@ -209,7 +213,8 @@ public class ExerciseCoachNotesSyncTests : IClassFixture<SharedDatabaseTestFixtu
             },
             EquipmentIds = new List<string>(),
             BodyPartIds = new List<string> { "bodypart-7c5a2d6e-e87e-4c8a-9f1d-9eb734f3df3c" },
-            MovementPatternIds = new List<string>()
+            MovementPatternIds = new List<string>(),
+            KineticChainId = "kineticchaintype-f5d5a2de-9c4e-4b87-b8c3-5d1e17d0b1f4" // Compound
         };
         
         var response1 = await _client.PostAsJsonAsync("/api/exercises", exercise1);

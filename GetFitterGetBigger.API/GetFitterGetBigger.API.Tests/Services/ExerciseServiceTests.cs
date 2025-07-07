@@ -142,6 +142,8 @@ namespace GetFitterGetBigger.API.Tests.Services
                 CoachNotes = new List<CoachNoteRequest> { new() { Text = "Instructions", Order = 0 } },
                 IsUnilateral = false,
                 DifficultyId = "difficultylevel-" + Guid.NewGuid(),
+                KineticChainId = "kineticchaintype-" + Guid.NewGuid(), // Added for non-REST exercise
+                ExerciseTypeIds = new List<string> { "exercisetype-" + Guid.NewGuid() }, // Non-REST type
                 MuscleGroups = new List<MuscleGroupWithRoleRequest>
                 {
                     new MuscleGroupWithRoleRequest
@@ -164,6 +166,12 @@ namespace GetFitterGetBigger.API.Tests.Services
                 .Setup(r => r.AddAsync(It.IsAny<Exercise>()))
                 .ReturnsAsync(createdExercise);
 
+            // Mock exercise type as non-REST
+            var exerciseType = ExerciseType.Handler.Create(ExerciseTypeId.New(), "Strength", "Strength training", 1);
+            _mockExerciseTypeRepository
+                .Setup(r => r.GetByIdAsync(It.IsAny<ExerciseTypeId>()))
+                .ReturnsAsync(exerciseType);
+
             // Act
             var result = await _service.CreateAsync(request);
 
@@ -183,6 +191,8 @@ namespace GetFitterGetBigger.API.Tests.Services
                 Description = "Description",
                 CoachNotes = new List<CoachNoteRequest> { new() { Text = "Instructions", Order = 0 } },
                 DifficultyId = "difficultylevel-" + Guid.NewGuid(),
+                KineticChainId = "kineticchaintype-" + Guid.NewGuid(), // Added for non-REST exercise
+                ExerciseTypeIds = new List<string> { "exercisetype-" + Guid.NewGuid() }, // Non-REST type
                 MuscleGroups = new List<MuscleGroupWithRoleRequest>
                 {
                     new MuscleGroupWithRoleRequest
@@ -214,6 +224,8 @@ namespace GetFitterGetBigger.API.Tests.Services
                 CoachNotes = new List<CoachNoteRequest> { new() { Text = "Updated Instructions", Order = 0 } },
                 IsActive = true,
                 DifficultyId = "difficultylevel-" + Guid.NewGuid(),
+                KineticChainId = "kineticchaintype-" + Guid.NewGuid(), // Added for non-REST exercise
+                ExerciseTypeIds = new List<string> { "exercisetype-" + Guid.NewGuid() }, // Non-REST type
                 MuscleGroups = new List<MuscleGroupWithRoleRequest>
                 {
                     new MuscleGroupWithRoleRequest
@@ -336,13 +348,15 @@ namespace GetFitterGetBigger.API.Tests.Services
 
         private Exercise CreateTestExercise(string name, DifficultyLevelId difficultyId, DifficultyLevel difficulty)
         {
+            var kineticChainId = KineticChainTypeId.New(); // Add kinetic chain for non-REST exercise
             var exercise = Exercise.Handler.CreateNew(
                 name,
                 "Test Description",
                 null,
                 null,
                 false,
-                difficultyId);
+                difficultyId,
+                kineticChainId);
 
             // Use reflection to set the navigation property
             var difficultyProperty = exercise.GetType().GetProperty("Difficulty");

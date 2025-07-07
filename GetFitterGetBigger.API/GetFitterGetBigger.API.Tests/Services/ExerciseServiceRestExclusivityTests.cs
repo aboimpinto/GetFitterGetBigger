@@ -65,7 +65,8 @@ public class ExerciseServiceRestExclusivityTests
             MuscleGroups = new List<MuscleGroupWithRoleRequest>(),
             EquipmentIds = new List<string>(),
             MovementPatternIds = new List<string>(),
-            BodyPartIds = new List<string>()
+            BodyPartIds = new List<string>(),
+            KineticChainId = KineticChainTypeId.New().ToString() // Mixed types including REST
         };
         
         _exerciseRepositoryMock.Setup(r => r.ExistsAsync(It.IsAny<string>(), null))
@@ -77,7 +78,7 @@ public class ExerciseServiceRestExclusivityTests
         var warmupTypeId = ExerciseTypeId.From(Guid.Parse("22222222-2222-2222-2222-222222222222"));
         
         var restType = ExerciseType.Handler.Create(restTypeId, "Rest", "Rest period", 1, true);
-        var warmupType = ExerciseType.Handler.Create(warmupTypeId, "Warmup", "Warmup exercise", 2, true);
+        var warmupType = ExerciseType.Handler.Create(warmupTypeId, "Warmup", "Warmup exercise", 2, false);
         
         _exerciseTypeRepositoryMock.Setup(r => r.GetByIdAsync(restTypeId))
             .ReturnsAsync(restType);
@@ -118,7 +119,8 @@ public class ExerciseServiceRestExclusivityTests
             MuscleGroups = new List<MuscleGroupWithRoleRequest>(),
             EquipmentIds = new List<string>(),
             MovementPatternIds = new List<string>(),
-            BodyPartIds = new List<string>()
+            BodyPartIds = new List<string>(),
+            KineticChainId = KineticChainTypeId.New().ToString() // Mixed types including REST
         };
         
         _exerciseRepositoryMock.Setup(r => r.ExistsAsync(It.IsAny<string>(), It.IsAny<ExerciseId>()))
@@ -132,7 +134,7 @@ public class ExerciseServiceRestExclusivityTests
         var cooldownTypeId = ExerciseTypeId.From(Guid.Parse("33333333-3333-3333-3333-333333333333"));
         
         var restType = ExerciseType.Handler.Create(restTypeId, "Rest", "Rest period", 1, true);
-        var cooldownType = ExerciseType.Handler.Create(cooldownTypeId, "Cooldown", "Cooldown exercise", 3, true);
+        var cooldownType = ExerciseType.Handler.Create(cooldownTypeId, "Cooldown", "Cooldown exercise", 3, false);
         
         _exerciseTypeRepositoryMock.Setup(r => r.GetByIdAsync(It.IsAny<ExerciseTypeId>()))
             .Returns<ExerciseTypeId>(id =>
@@ -167,7 +169,8 @@ public class ExerciseServiceRestExclusivityTests
             MuscleGroups = new List<MuscleGroupWithRoleRequest>(),
             EquipmentIds = new List<string>(),
             MovementPatternIds = new List<string>(),
-            BodyPartIds = new List<string>()
+            BodyPartIds = new List<string>(),
+            KineticChainId = null // REST exercise
         };
         
         _exerciseRepositoryMock.Setup(r => r.ExistsAsync(It.IsAny<string>(), null))
@@ -220,7 +223,8 @@ public class ExerciseServiceRestExclusivityTests
             },
             EquipmentIds = new List<string>(),
             MovementPatternIds = new List<string>(),
-            BodyPartIds = new List<string>()
+            BodyPartIds = new List<string>(),
+            KineticChainId = KineticChainTypeId.New().ToString() // Non-REST exercises
         };
         
         _exerciseRepositoryMock.Setup(r => r.ExistsAsync(It.IsAny<string>(), null))
@@ -237,9 +241,9 @@ public class ExerciseServiceRestExclusivityTests
         var workoutTypeId = ExerciseTypeId.From(Guid.Parse("b2c3d4e5-6f7a-8b9c-0d1e-2f3a4b5c6d7e"));
         var cooldownTypeId = ExerciseTypeId.From(Guid.Parse("33445566-7788-99aa-bbcc-ddeeff001122"));
         
-        var warmupType = ExerciseType.Handler.Create(warmupTypeId, "Warmup", "Warmup exercise", 1, true);
-        var workoutType = ExerciseType.Handler.Create(workoutTypeId, "Workout", "Workout exercise", 2, true);
-        var cooldownType = ExerciseType.Handler.Create(cooldownTypeId, "Cooldown", "Cooldown exercise", 3, true);
+        var warmupType = ExerciseType.Handler.Create(warmupTypeId, "Warmup", "Warmup exercise", 1, false);
+        var workoutType = ExerciseType.Handler.Create(workoutTypeId, "Workout", "Workout exercise", 2, false);
+        var cooldownType = ExerciseType.Handler.Create(cooldownTypeId, "Cooldown", "Cooldown exercise", 3, false);
         
         _exerciseTypeRepositoryMock.Setup(r => r.GetByIdAsync(warmupTypeId))
             .ReturnsAsync(warmupType);
@@ -273,7 +277,8 @@ public class ExerciseServiceRestExclusivityTests
             },
             EquipmentIds = new List<string>(),
             MovementPatternIds = new List<string>(),
-            BodyPartIds = new List<string>()
+            BodyPartIds = new List<string>(),
+            KineticChainId = KineticChainTypeId.New().ToString() // No exercise types, so non-REST
         };
         
         _exerciseRepositoryMock.Setup(r => r.ExistsAsync(It.IsAny<string>(), null))

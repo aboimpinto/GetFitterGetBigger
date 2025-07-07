@@ -71,7 +71,8 @@ public class ExerciseServiceCoachNotesTests
             },
             EquipmentIds = new List<string>(),
             MovementPatternIds = new List<string>(),
-            BodyPartIds = new List<string>()
+            BodyPartIds = new List<string>(),
+            KineticChainId = KineticChainTypeId.New().ToString()
         };
         
         _exerciseRepositoryMock.Setup(r => r.ExistsAsync(It.IsAny<string>(), null))
@@ -110,8 +111,8 @@ public class ExerciseServiceCoachNotesTests
         var exerciseTypeId1 = ExerciseTypeId.New();
         var exerciseTypeId2 = ExerciseTypeId.New();
         
-        var exerciseType1 = ExerciseType.Handler.Create(exerciseTypeId1, "Type1", "Description1", 1);
-        var exerciseType2 = ExerciseType.Handler.Create(exerciseTypeId2, "Type2", "Description2", 2);
+        var exerciseType1 = ExerciseType.Handler.Create(exerciseTypeId1, "Type1", "Description1", 1, false);
+        var exerciseType2 = ExerciseType.Handler.Create(exerciseTypeId2, "Type2", "Description2", 2, false);
         
         var request = new CreateExerciseRequest
         {
@@ -129,7 +130,8 @@ public class ExerciseServiceCoachNotesTests
             },
             EquipmentIds = new List<string>(),
             MovementPatternIds = new List<string>(),
-            BodyPartIds = new List<string>()
+            BodyPartIds = new List<string>(),
+            KineticChainId = KineticChainTypeId.New().ToString()
         };
         
         _exerciseRepositoryMock.Setup(r => r.ExistsAsync(It.IsAny<string>(), null))
@@ -179,7 +181,8 @@ public class ExerciseServiceCoachNotesTests
             },
             EquipmentIds = new List<string>(),
             MovementPatternIds = new List<string>(),
-            BodyPartIds = new List<string>()
+            BodyPartIds = new List<string>(),
+            KineticChainId = KineticChainTypeId.New().ToString()
         };
         
         _exerciseRepositoryMock.Setup(r => r.ExistsAsync(It.IsAny<string>(), null))
@@ -222,14 +225,15 @@ public class ExerciseServiceCoachNotesTests
             },
             EquipmentIds = new List<string>(),
             MovementPatternIds = new List<string>(),
-            BodyPartIds = new List<string>()
+            BodyPartIds = new List<string>(),
+            KineticChainId = KineticChainTypeId.New().ToString()
         };
         
         _exerciseRepositoryMock.Setup(r => r.ExistsAsync(It.IsAny<string>(), null))
             .ReturnsAsync(false);
         
         // Mock the valid ExerciseType to be found in the database
-        var validExerciseType = ExerciseType.Handler.Create(validId, "Workout", "Test workout type", 1, true);
+        var validExerciseType = ExerciseType.Handler.Create(validId, "Workout", "Test workout type", 1, false);
         _exerciseTypeRepositoryMock.Setup(r => r.GetByIdAsync(validId))
             .ReturnsAsync(validExerciseType);
         _exerciseTypeRepositoryMock.Setup(r => r.GetByIdAsync(It.Is<ExerciseTypeId>(id => id != validId)))
@@ -278,7 +282,8 @@ public class ExerciseServiceCoachNotesTests
             },
             EquipmentIds = new List<string>(),
             MovementPatternIds = new List<string>(),
-            BodyPartIds = new List<string>()
+            BodyPartIds = new List<string>(),
+            KineticChainId = KineticChainTypeId.New().ToString()
         };
         
         _exerciseRepositoryMock.Setup(r => r.ExistsAsync(It.IsAny<string>(), null))

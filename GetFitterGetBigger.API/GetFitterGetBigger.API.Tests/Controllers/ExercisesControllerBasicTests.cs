@@ -33,7 +33,9 @@ public class ExercisesControllerBasicTests : IClassFixture<ApiTestFixture>
                 new() { Text = "Step 1: Starting position", Order = 0 },
                 new() { Text = "Step 2: Execute movement", Order = 1 }
             },
+            ExerciseTypeIds = new List<string> { "exercisetype-b2c3d4e5-6f7a-8b9c-0d1e-2f3a4b5c6d7e" }, // Workout
             DifficultyId = "difficultylevel-8a8adb1d-24d2-4979-a5a6-0d760e6da24b",
+            KineticChainId = "kineticchaintype-f5d5a2de-9c4e-4b87-b8c3-5d1e17d0b1f4", // Compound
             MuscleGroups = new List<MuscleGroupWithRoleRequest> 
             { 
                 new() 

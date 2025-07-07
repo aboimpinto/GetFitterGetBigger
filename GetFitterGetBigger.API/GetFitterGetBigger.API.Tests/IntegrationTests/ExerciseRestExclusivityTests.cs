@@ -48,7 +48,8 @@ public class ExerciseRestExclusivityTests : IClassFixture<SharedDatabaseTestFixt
             },
             EquipmentIds = new List<string>(),
             BodyPartIds = new List<string> { "bodypart-7c5a2d6e-e87e-4c8a-9f1d-9eb734f3df3c" },
-            MovementPatternIds = new List<string>()
+            MovementPatternIds = new List<string>(),
+            KineticChainId = null // REST exercises should have null KineticChainId
         };
         
         // Act
@@ -87,7 +88,8 @@ public class ExerciseRestExclusivityTests : IClassFixture<SharedDatabaseTestFixt
             },
             EquipmentIds = new List<string>(),
             BodyPartIds = new List<string> { "bodypart-7c5a2d6e-e87e-4c8a-9f1d-9eb734f3df3c" },
-            MovementPatternIds = new List<string>()
+            MovementPatternIds = new List<string>(),
+            KineticChainId = null // REST exercises should have null KineticChainId
         };
         
         // Act
@@ -126,7 +128,8 @@ public class ExerciseRestExclusivityTests : IClassFixture<SharedDatabaseTestFixt
             },
             EquipmentIds = new List<string>(),
             BodyPartIds = new List<string> { "bodypart-7c5a2d6e-e87e-4c8a-9f1d-9eb734f3df3c" },
-            MovementPatternIds = new List<string>()
+            MovementPatternIds = new List<string>(),
+            KineticChainId = null // REST exercises should have null KineticChainId
         };
         
         // Act
@@ -163,7 +166,8 @@ public class ExerciseRestExclusivityTests : IClassFixture<SharedDatabaseTestFixt
             },
             EquipmentIds = new List<string>(),
             BodyPartIds = new List<string> { "bodypart-7c5a2d6e-e87e-4c8a-9f1d-9eb734f3df3c" },
-            MovementPatternIds = new List<string>()
+            MovementPatternIds = new List<string>(),
+            KineticChainId = null // REST exercises should have null KineticChainId
         };
         
         // Act
@@ -202,7 +206,8 @@ public class ExerciseRestExclusivityTests : IClassFixture<SharedDatabaseTestFixt
             },
             EquipmentIds = new List<string>(),
             BodyPartIds = new List<string> { "bodypart-7c5a2d6e-e87e-4c8a-9f1d-9eb734f3df3c" },
-            MovementPatternIds = new List<string>()
+            MovementPatternIds = new List<string>(),
+            KineticChainId = "kineticchaintype-f5d5a2de-9c4e-4b87-b8c3-5d1e17d0b1f4" // Compound
         };
         
         // Act
