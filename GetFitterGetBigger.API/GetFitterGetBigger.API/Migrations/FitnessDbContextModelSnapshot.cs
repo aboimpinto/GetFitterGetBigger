@@ -232,7 +232,7 @@ namespace GetFitterGetBigger.API.Migrations
                     b.Property<bool>("IsUnilateral")
                         .HasColumnType("boolean");
 
-                    b.Property<Guid?>("KineticChainTypeId")
+                    b.Property<Guid?>("KineticChainId")
                         .HasColumnType("uuid");
 
                     b.Property<string>("Name")
@@ -247,7 +247,7 @@ namespace GetFitterGetBigger.API.Migrations
 
                     b.HasIndex("DifficultyId");
 
-                    b.HasIndex("KineticChainTypeId");
+                    b.HasIndex("KineticChainId");
 
                     b.HasIndex("Name")
                         .IsUnique();
@@ -687,11 +687,13 @@ namespace GetFitterGetBigger.API.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("GetFitterGetBigger.API.Models.Entities.KineticChainType", null)
+                    b.HasOne("GetFitterGetBigger.API.Models.Entities.KineticChainType", "KineticChain")
                         .WithMany("Exercises")
-                        .HasForeignKey("KineticChainTypeId");
+                        .HasForeignKey("KineticChainId");
 
                     b.Navigation("Difficulty");
+
+                    b.Navigation("KineticChain");
                 });
 
             modelBuilder.Entity("GetFitterGetBigger.API.Models.Entities.ExerciseBodyPart", b =>
