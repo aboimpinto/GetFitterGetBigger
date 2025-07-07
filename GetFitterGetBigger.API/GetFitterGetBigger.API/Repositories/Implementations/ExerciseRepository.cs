@@ -28,6 +28,7 @@ public class ExerciseRepository : RepositoryBase<FitnessDbContext>, IExerciseRep
     {
         var query = Context.Exercises
             .Include(e => e.Difficulty)
+            .Include(e => e.KineticChain)
             .Include(e => e.CoachNotes)
             .Include(e => e.ExerciseExerciseTypes)
                 .ThenInclude(eet => eet.ExerciseType)
@@ -108,6 +109,7 @@ public class ExerciseRepository : RepositoryBase<FitnessDbContext>, IExerciseRep
     {
         var exercise = await Context.Exercises
             .Include(e => e.Difficulty)
+            .Include(e => e.KineticChain)
             .Include(e => e.CoachNotes)
             .Include(e => e.ExerciseExerciseTypes)
                 .ThenInclude(eet => eet.ExerciseType)

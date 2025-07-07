@@ -544,7 +544,13 @@ public class ExerciseService : IExerciseService
                 Id = exercise.Difficulty?.Id.ToString() ?? string.Empty,
                 Value = exercise.Difficulty?.Value ?? string.Empty,
                 Description = exercise.Difficulty?.Description
-            }
+            },
+            KineticChain = exercise.KineticChain != null ? new ReferenceDataDto
+            {
+                Id = exercise.KineticChain.Id.ToString(),
+                Value = exercise.KineticChain.Value,
+                Description = exercise.KineticChain.Description
+            } : null
         };
         
         // Map muscle groups with roles
