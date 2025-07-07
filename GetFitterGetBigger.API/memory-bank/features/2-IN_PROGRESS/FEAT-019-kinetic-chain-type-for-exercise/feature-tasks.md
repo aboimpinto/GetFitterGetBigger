@@ -35,9 +35,9 @@
 
 ### Category 1: Entity Model Updates - Estimated: 1h
 #### 📖 Before Starting: Review entity pattern in `/memory-bank/databaseModelPattern.md`
-- **Task 1.1:** Add KineticChainTypeId and navigation property to Exercise entity `[InProgress: Started: 2025-01-07 19:47]` (Est: 20m)
-- **Task 1.2:** Update Exercise.Handler methods to accept KineticChainTypeId parameter `[ReadyToDevelop]` (Est: 20m)
-- **Task 1.3:** Write unit tests for Exercise entity with KineticChainType `[ReadyToDevelop]` (Est: 20m)
+- **Task 1.1:** Add KineticChainTypeId and navigation property to Exercise entity `[Implemented: b4f4851e | Started: 2025-01-07 19:47 | Finished: 2025-01-07 19:51 | Duration: 0h 4m]` (Est: 20m)
+- **Task 1.2:** Update Exercise.Handler methods to accept KineticChainTypeId parameter `[Implemented: b4f4851e | Started: 2025-01-07 19:47 | Finished: 2025-01-07 19:51 | Duration: 0h 0m - completed with 1.1]` (Est: 20m)
+- **Task 1.3:** Write unit tests for Exercise entity with KineticChainType `[InProgress: Started: 2025-01-07 19:52]` (Est: 20m)
 
 ### 🔄 Checkpoint 1
 - [ ] All tests still passing (`dotnet test`)

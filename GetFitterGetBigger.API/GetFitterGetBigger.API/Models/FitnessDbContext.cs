@@ -201,6 +201,12 @@ public class FitnessDbContext : DbContext
                 id => (Guid)id,
                 guid => DifficultyLevelId.From(guid));
                 
+        modelBuilder.Entity<Exercise>()
+            .Property(e => e.KineticChainId)
+            .HasConversion(
+                id => id.HasValue ? (Guid?)id.Value : null,
+                guid => guid.HasValue ? KineticChainTypeId.From(guid.Value) : null);
+                
         // Configure Exercise entity constraints
         modelBuilder.Entity<Exercise>()
             .HasIndex(e => e.Name)
