@@ -21,7 +21,7 @@ This file serves as a central dashboard for tracking the status of all features 
 | Muscle Groups Management | COMPLETED | High | FEAT-015 | 2025-07-03 | [Details](3-COMPLETED/FEAT-015-muscle-groups-management/feature-description.md) |
 | Comprehensive Test Improvements | COMPLETED | High | FEAT-TEST-001 | 2025-01-02 | [Details](3-COMPLETED/FEAT-TEST-001-comprehensive-test-improvements/feature-description.md) |
 | Floating Action Buttons | COMPLETED | Medium | FEAT-016 | 2025-07-04 | [Details](3-COMPLETED/FEAT-016-floating-action-buttons/feature-description.md) |
-| Exercise Kinetic Chain | SUBMITTED | High | FEAT-017 | 2025-07-07 | [Details](0-SUBMITTED/FEAT-017-exercise-kinetic-chain/feature-description.md) |
+| Exercise Kinetic Chain | IN PROGRESS | High | FEAT-017 | 2025-07-07 | [Details](2-IN_PROGRESS/FEAT-017-exercise-kinetic-chain/feature-description.md) |
 
 ## Status Definitions
 

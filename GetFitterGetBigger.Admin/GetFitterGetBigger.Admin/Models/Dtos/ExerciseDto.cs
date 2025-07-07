@@ -9,6 +9,7 @@ namespace GetFitterGetBigger.Admin.Models.Dtos
         public List<CoachNoteDto> CoachNotes { get; set; } = new();
         public List<ExerciseTypeDto> ExerciseTypes { get; set; } = new();
         public ReferenceDataDto? Difficulty { get; set; }
+        public ReferenceDataDto? KineticChain { get; set; }
         public bool IsUnilateral { get; set; }
         public bool IsActive { get; set; }
         public string? ImageUrl { get; set; }
@@ -72,6 +73,7 @@ namespace GetFitterGetBigger.Admin.Models.Dtos
         public bool IsUnilateral { get; set; }
         public bool IsActive { get; set; }
         public ReferenceDataDto? Difficulty { get; set; }
+        public ReferenceDataDto? KineticChain { get; set; }
         public List<MuscleGroupListItemDto> MuscleGroups { get; set; } = new();
         public List<ReferenceDataDto> Equipment { get; set; } = new();
         public List<ReferenceDataDto> MovementPatterns { get; set; } = new();
