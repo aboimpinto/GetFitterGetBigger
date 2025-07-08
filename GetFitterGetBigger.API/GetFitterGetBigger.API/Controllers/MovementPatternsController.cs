@@ -51,7 +51,8 @@ public class MovementPatternsController : ReferenceTablesBaseController
         var result = movementPatterns.Select(mp => new ReferenceDataDto
         {
             Id = mp.Id.ToString(),
-            Value = mp.Name
+            Value = mp.Name,
+            Description = mp.Description
         });
         
         return Ok(result);
@@ -87,7 +88,8 @@ public class MovementPatternsController : ReferenceTablesBaseController
         return Ok(new ReferenceDataDto
         {
             Id = movementPattern.Id.ToString(),
-            Value = movementPattern.Name
+            Value = movementPattern.Name,
+            Description = movementPattern.Description
         });
     }
 
@@ -111,7 +113,8 @@ public class MovementPatternsController : ReferenceTablesBaseController
         return Ok(new ReferenceDataDto
         {
             Id = movementPattern.Id.ToString(),
-            Value = movementPattern.Name
+            Value = movementPattern.Name,
+            Description = movementPattern.Description
         });
     }
     
@@ -138,7 +141,8 @@ public class MovementPatternsController : ReferenceTablesBaseController
         return Ok(new ReferenceDataDto
         {
             Id = movementPattern.Id.ToString(),
-            Value = movementPattern.Name
+            Value = movementPattern.Name,
+            Description = movementPattern.Description
         });
     }
 }
