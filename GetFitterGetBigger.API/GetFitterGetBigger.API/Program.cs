@@ -69,6 +69,9 @@ builder.Services.AddTransient<IExerciseService, ExerciseService>();
 builder.Services.AddTransient<IEquipmentService, EquipmentService>();
 builder.Services.AddTransient<IMuscleGroupService, MuscleGroupService>();
 
+// Register reference table validation services
+builder.Services.AddTransient<IBodyPartService, BodyPartService>();
+
 // Register authentication services
 builder.Services.AddTransient<IJwtService, JwtService>();
 builder.Services.AddTransient<IAuthService, AuthService>();
