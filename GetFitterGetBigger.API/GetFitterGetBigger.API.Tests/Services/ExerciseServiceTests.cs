@@ -8,6 +8,7 @@ using GetFitterGetBigger.API.Models.Entities;
 using GetFitterGetBigger.API.Models.SpecializedIds;
 using GetFitterGetBigger.API.Repositories.Interfaces;
 using GetFitterGetBigger.API.Services.Implementations;
+using GetFitterGetBigger.API.Services.Interfaces;
 using Moq;
 using Olimpo.EntityFramework.Persistency;
 using Xunit;
@@ -20,7 +21,7 @@ namespace GetFitterGetBigger.API.Tests.Services
         private readonly Mock<IReadOnlyUnitOfWork<FitnessDbContext>> _mockReadOnlyUnitOfWork;
         private readonly Mock<IWritableUnitOfWork<FitnessDbContext>> _mockWritableUnitOfWork;
         private readonly Mock<IExerciseRepository> _mockExerciseRepository;
-        private readonly Mock<IExerciseTypeRepository> _mockExerciseTypeRepository;
+        private readonly Mock<IExerciseTypeService> _mockExerciseTypeService;
         private readonly ExerciseService _service;
 
         public ExerciseServiceTests()
@@ -29,15 +30,11 @@ namespace GetFitterGetBigger.API.Tests.Services
             _mockReadOnlyUnitOfWork = new Mock<IReadOnlyUnitOfWork<FitnessDbContext>>();
             _mockWritableUnitOfWork = new Mock<IWritableUnitOfWork<FitnessDbContext>>();
             _mockExerciseRepository = new Mock<IExerciseRepository>();
-            _mockExerciseTypeRepository = new Mock<IExerciseTypeRepository>();
+            _mockExerciseTypeService = new Mock<IExerciseTypeService>();
 
             _mockReadOnlyUnitOfWork
                 .Setup(uow => uow.GetRepository<IExerciseRepository>())
                 .Returns(_mockExerciseRepository.Object);
-            
-            _mockReadOnlyUnitOfWork
-                .Setup(uow => uow.GetRepository<IExerciseTypeRepository>())
-                .Returns(_mockExerciseTypeRepository.Object);
 
             _mockWritableUnitOfWork
                 .Setup(uow => uow.GetRepository<IExerciseRepository>())
@@ -51,7 +48,23 @@ namespace GetFitterGetBigger.API.Tests.Services
                 .Setup(p => p.CreateWritable())
                 .Returns(_mockWritableUnitOfWork.Object);
 
-            _service = new ExerciseService(_mockUnitOfWorkProvider.Object);
+            // Setup default mock behaviors for ExerciseTypeService
+            _mockExerciseTypeService
+                .Setup(s => s.AllExistAsync(It.IsAny<IEnumerable<string>>()))
+                .ReturnsAsync(true);
+                
+            _mockExerciseTypeService
+                .Setup(s => s.AnyIsRestTypeAsync(It.IsAny<IEnumerable<string>>()))
+                .ReturnsAsync((IEnumerable<string> ids) => 
+                    ids.Any(id => id == "exercisetype-d4e5f6a7-8b9c-0d1e-2f3a-4b5c6d7e8f9a" || 
+                                  id.ToLowerInvariant().Contains("rest")));
+
+            // Default behavior: all exercise types exist
+            _mockExerciseTypeService
+                .Setup(s => s.ExistsAsync(It.IsAny<ExerciseTypeId>()))
+                .ReturnsAsync(true);
+
+            _service = new ExerciseService(_mockUnitOfWorkProvider.Object, _mockExerciseTypeService.Object);
         }
 
         [Fact]
@@ -166,11 +179,10 @@ namespace GetFitterGetBigger.API.Tests.Services
                 .Setup(r => r.AddAsync(It.IsAny<Exercise>()))
                 .ReturnsAsync(createdExercise);
 
-            // Mock exercise type as non-REST
-            var exerciseType = ExerciseType.Handler.Create(ExerciseTypeId.New(), "Strength", "Strength training", 1);
-            _mockExerciseTypeRepository
-                .Setup(r => r.GetByIdAsync(It.IsAny<ExerciseTypeId>()))
-                .ReturnsAsync(exerciseType);
+            // Mock exercise type service to validate all types exist
+            _mockExerciseTypeService
+                .Setup(s => s.AllExistAsync(It.IsAny<IEnumerable<string>>()))
+                .ReturnsAsync(true);
 
             // Act
             var result = await _service.CreateAsync(request);
@@ -276,6 +288,11 @@ namespace GetFitterGetBigger.API.Tests.Services
             _mockExerciseRepository
                 .Setup(r => r.UpdateAsync(It.IsAny<Exercise>()))
                 .ReturnsAsync(updatedExerciseWithDifficulty);
+
+            // Mock exercise type service to validate all types exist
+            _mockExerciseTypeService
+                .Setup(s => s.AllExistAsync(It.IsAny<IEnumerable<string>>()))
+                .ReturnsAsync(true);
 
             // Act
             var result = await _service.UpdateAsync(exerciseId.ToString(), request);

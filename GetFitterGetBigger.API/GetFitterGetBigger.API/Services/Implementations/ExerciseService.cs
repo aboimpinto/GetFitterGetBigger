@@ -18,10 +18,14 @@ namespace GetFitterGetBigger.API.Services.Implementations;
 public class ExerciseService : IExerciseService
 {
     private readonly IUnitOfWorkProvider<FitnessDbContext> _unitOfWorkProvider;
+    private readonly IExerciseTypeService _exerciseTypeService;
     
-    public ExerciseService(IUnitOfWorkProvider<FitnessDbContext> unitOfWorkProvider)
+    public ExerciseService(
+        IUnitOfWorkProvider<FitnessDbContext> unitOfWorkProvider,
+        IExerciseTypeService exerciseTypeService)
     {
         _unitOfWorkProvider = unitOfWorkProvider;
+        _exerciseTypeService = exerciseTypeService;
     }
     
     /// <summary>
@@ -85,7 +89,7 @@ public class ExerciseService : IExerciseService
     /// <summary>
     /// Validates that if any exercise type is "Rest", it must be the only type assigned
     /// </summary>
-    private async Task ValidateRestExclusivityAsync(IEnumerable<string> exerciseTypeIds, IReadOnlyUnitOfWork<FitnessDbContext> unitOfWork)
+    private async Task ValidateRestExclusivityAsync(IEnumerable<string> exerciseTypeIds)
     {
         if (exerciseTypeIds == null || !exerciseTypeIds.Any())
             return;
@@ -94,22 +98,8 @@ public class ExerciseService : IExerciseService
         if (typeIds.Count <= 1)
             return;
             
-        // Get the actual ExerciseType entities to check their values
-        var exerciseTypeRepo = unitOfWork.GetRepository<IExerciseTypeRepository>();
-        var hasRestType = false;
-        
-        foreach (var typeIdStr in typeIds)
-        {
-            if (ExerciseTypeId.TryParse(typeIdStr, out var typeId))
-            {
-                var exerciseType = await exerciseTypeRepo.GetByIdAsync(typeId);
-                if (exerciseType != null && exerciseType.Value.ToLowerInvariant() == "rest")
-                {
-                    hasRestType = true;
-                    break;
-                }
-            }
-        }
+        // Check if any of the types is a Rest type using the service
+        var hasRestType = await _exerciseTypeService.AnyIsRestTypeAsync(typeIds);
         
         if (hasRestType)
         {
@@ -117,31 +107,18 @@ public class ExerciseService : IExerciseService
         }
     }
 
-    private async Task<bool> IsRestExerciseAsync(IEnumerable<string> exerciseTypeIds, IReadOnlyUnitOfWork<FitnessDbContext> unitOfWork)
+    private async Task<bool> IsRestExerciseAsync(IEnumerable<string> exerciseTypeIds)
     {
         if (exerciseTypeIds == null || !exerciseTypeIds.Any())
             return false;
 
-        var exerciseTypeRepo = unitOfWork.GetRepository<IExerciseTypeRepository>();
-        
-        foreach (var typeIdStr in exerciseTypeIds)
-        {
-            if (ExerciseTypeId.TryParse(typeIdStr, out var typeId))
-            {
-                var exerciseType = await exerciseTypeRepo.GetByIdAsync(typeId);
-                if (exerciseType != null && exerciseType.Value.ToLowerInvariant() == "rest")
-                {
-                    return true;
-                }
-            }
-        }
-        
-        return false;
+        // Check if any of the types is a Rest type using the service
+        return await _exerciseTypeService.AnyIsRestTypeAsync(exerciseTypeIds);
     }
 
-    private async Task ValidateMuscleGroupsAsync(CreateExerciseRequest request, IReadOnlyUnitOfWork<FitnessDbContext> unitOfWork)
+    private async Task ValidateMuscleGroupsAsync(CreateExerciseRequest request)
     {
-        var isRestExercise = await IsRestExerciseAsync(request.ExerciseTypeIds, unitOfWork);
+        var isRestExercise = await IsRestExerciseAsync(request.ExerciseTypeIds);
         
         if (!isRestExercise && (request.MuscleGroups == null || !request.MuscleGroups.Any()))
         {
@@ -149,9 +126,9 @@ public class ExerciseService : IExerciseService
         }
     }
 
-    private async Task ValidateMuscleGroupsAsync(UpdateExerciseRequest request, IReadOnlyUnitOfWork<FitnessDbContext> unitOfWork)
+    private async Task ValidateMuscleGroupsAsync(UpdateExerciseRequest request)
     {
-        var isRestExercise = await IsRestExerciseAsync(request.ExerciseTypeIds, unitOfWork);
+        var isRestExercise = await IsRestExerciseAsync(request.ExerciseTypeIds);
         
         if (!isRestExercise && (request.MuscleGroups == null || !request.MuscleGroups.Any()))
         {
@@ -159,9 +136,9 @@ public class ExerciseService : IExerciseService
         }
     }
     
-    private async Task ValidateKineticChainAsync(string? kineticChainId, IEnumerable<string> exerciseTypeIds, IReadOnlyUnitOfWork<FitnessDbContext> unitOfWork)
+    private async Task ValidateKineticChainAsync(string? kineticChainId, IEnumerable<string> exerciseTypeIds)
     {
-        var isRestExercise = await IsRestExerciseAsync(exerciseTypeIds, unitOfWork);
+        var isRestExercise = await IsRestExerciseAsync(exerciseTypeIds);
         
         if (isRestExercise && !string.IsNullOrEmpty(kineticChainId))
         {
@@ -207,12 +184,9 @@ public class ExerciseService : IExerciseService
         }
         
         // Validate exercise types, muscle groups, and kinetic chain
-        using (var validationUow = _unitOfWorkProvider.CreateReadOnly())
-        {
-            await ValidateRestExclusivityAsync(request.ExerciseTypeIds, validationUow);
-            await ValidateMuscleGroupsAsync(request, validationUow);
-            await ValidateKineticChainAsync(request.KineticChainId, request.ExerciseTypeIds, validationUow);
-        }
+        await ValidateRestExclusivityAsync(request.ExerciseTypeIds);
+        await ValidateMuscleGroupsAsync(request);
+        await ValidateKineticChainAsync(request.KineticChainId, request.ExerciseTypeIds);
         
         // Create the exercise entity
         var exercise = Exercise.Handler.CreateNew(
@@ -235,22 +209,18 @@ public class ExerciseService : IExerciseService
         }
         
         // Validate and add exercise types
-        using (var readOnlyUow = _unitOfWorkProvider.CreateReadOnly())
+        var uniqueExerciseTypeIds = request.ExerciseTypeIds.Distinct().ToList();
+        
+        // Add only valid exercise types (silently ignore invalid ones)
+        foreach (var exerciseTypeIdStr in uniqueExerciseTypeIds)
         {
-            var exerciseTypeRepo = readOnlyUow.GetRepository<IExerciseTypeRepository>();
-            var uniqueExerciseTypeIds = request.ExerciseTypeIds.Distinct();
-            
-            foreach (var exerciseTypeIdStr in uniqueExerciseTypeIds)
+            if (ExerciseTypeId.TryParse(exerciseTypeIdStr, out var exerciseTypeId))
             {
-                if (ExerciseTypeId.TryParse(exerciseTypeIdStr, out var exerciseTypeId))
+                // Check if this specific type exists
+                if (await _exerciseTypeService.ExistsAsync(exerciseTypeId))
                 {
-                    // Verify the exercise type exists
-                    var exerciseType = await exerciseTypeRepo.GetByIdAsync(exerciseTypeId);
-                    if (exerciseType != null)
-                    {
-                        exercise.ExerciseExerciseTypes.Add(
-                            ExerciseExerciseType.Handler.Create(exercise.Id, exerciseTypeId));
-                    }
+                    exercise.ExerciseExerciseTypes.Add(
+                        ExerciseExerciseType.Handler.Create(exercise.Id, exerciseTypeId));
                 }
             }
         }
@@ -320,12 +290,9 @@ public class ExerciseService : IExerciseService
         }
         
         // Validate exercise types, muscle groups, and kinetic chain
-        using (var validationUow = _unitOfWorkProvider.CreateReadOnly())
-        {
-            await ValidateRestExclusivityAsync(request.ExerciseTypeIds, validationUow);
-            await ValidateMuscleGroupsAsync(request, validationUow);
-            await ValidateKineticChainAsync(request.KineticChainId, request.ExerciseTypeIds, validationUow);
-        }
+        await ValidateRestExclusivityAsync(request.ExerciseTypeIds);
+        await ValidateMuscleGroupsAsync(request);
+        await ValidateKineticChainAsync(request.KineticChainId, request.ExerciseTypeIds);
         
         // Create updated exercise entity, using existing values for nullable fields if not provided
         var exercise = Exercise.Handler.Create(
@@ -363,22 +330,18 @@ public class ExerciseService : IExerciseService
         }
         
         // Validate and add exercise types
-        using (var readOnlyUow = _unitOfWorkProvider.CreateReadOnly())
+        var uniqueExerciseTypeIds = request.ExerciseTypeIds.Distinct().ToList();
+        
+        // Add only valid exercise types (silently ignore invalid ones)
+        foreach (var exerciseTypeIdStr in uniqueExerciseTypeIds)
         {
-            var exerciseTypeRepo = readOnlyUow.GetRepository<IExerciseTypeRepository>();
-            var uniqueExerciseTypeIds = request.ExerciseTypeIds.Distinct();
-            
-            foreach (var exerciseTypeIdStr in uniqueExerciseTypeIds)
+            if (ExerciseTypeId.TryParse(exerciseTypeIdStr, out var exerciseTypeId))
             {
-                if (ExerciseTypeId.TryParse(exerciseTypeIdStr, out var exerciseTypeId))
+                // Check if this specific type exists
+                if (await _exerciseTypeService.ExistsAsync(exerciseTypeId))
                 {
-                    // Verify the exercise type exists
-                    var exerciseType = await exerciseTypeRepo.GetByIdAsync(exerciseTypeId);
-                    if (exerciseType != null)
-                    {
-                        exercise.ExerciseExerciseTypes.Add(
-                            ExerciseExerciseType.Handler.Create(exercise.Id, exerciseTypeId));
-                    }
+                    exercise.ExerciseExerciseTypes.Add(
+                        ExerciseExerciseType.Handler.Create(exercise.Id, exerciseTypeId));
                 }
             }
         }

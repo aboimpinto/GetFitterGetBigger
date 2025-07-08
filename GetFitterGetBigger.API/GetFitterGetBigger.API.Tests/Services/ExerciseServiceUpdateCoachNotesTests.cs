@@ -8,6 +8,7 @@ using GetFitterGetBigger.API.Models.Entities;
 using GetFitterGetBigger.API.Models.SpecializedIds;
 using GetFitterGetBigger.API.Repositories.Interfaces;
 using GetFitterGetBigger.API.Services.Implementations;
+using GetFitterGetBigger.API.Services.Interfaces;
 using Moq;
 using Olimpo.EntityFramework.Persistency;
 using Xunit;
@@ -21,6 +22,7 @@ public class ExerciseServiceUpdateCoachNotesTests
     private readonly Mock<IWritableUnitOfWork<FitnessDbContext>> _writableUnitOfWorkMock;
     private readonly Mock<IExerciseRepository> _exerciseRepositoryMock;
     private readonly Mock<IExerciseTypeRepository> _exerciseTypeRepositoryMock;
+    private readonly Mock<IExerciseTypeService> _mockExerciseTypeService;
     private readonly ExerciseService _exerciseService;
     
     public ExerciseServiceUpdateCoachNotesTests()
@@ -30,6 +32,7 @@ public class ExerciseServiceUpdateCoachNotesTests
         _writableUnitOfWorkMock = new Mock<IWritableUnitOfWork<FitnessDbContext>>();
         _exerciseRepositoryMock = new Mock<IExerciseRepository>();
         _exerciseTypeRepositoryMock = new Mock<IExerciseTypeRepository>();
+        _mockExerciseTypeService = new Mock<IExerciseTypeService>();
         
         _readOnlyUnitOfWorkMock.Setup(uow => uow.GetRepository<IExerciseRepository>())
             .Returns(_exerciseRepositoryMock.Object);
@@ -46,7 +49,23 @@ public class ExerciseServiceUpdateCoachNotesTests
         _unitOfWorkProviderMock.Setup(p => p.CreateWritable())
             .Returns(_writableUnitOfWorkMock.Object);
         
-        _exerciseService = new ExerciseService(_unitOfWorkProviderMock.Object);
+        // Setup default mock behaviors for ExerciseTypeService
+        _mockExerciseTypeService
+            .Setup(s => s.AllExistAsync(It.IsAny<IEnumerable<string>>()))
+            .ReturnsAsync(true);
+            
+        _mockExerciseTypeService
+            .Setup(s => s.AnyIsRestTypeAsync(It.IsAny<IEnumerable<string>>()))
+            .ReturnsAsync((IEnumerable<string> ids) => 
+                ids.Any(id => id == "exercisetype-d4e5f6a7-8b9c-0d1e-2f3a-4b5c6d7e8f9a" || 
+                              id.ToLowerInvariant().Contains("rest")));
+        
+        // Default behavior: all exercise types exist
+        _mockExerciseTypeService
+            .Setup(s => s.ExistsAsync(It.IsAny<ExerciseTypeId>()))
+            .ReturnsAsync(true);
+        
+        _exerciseService = new ExerciseService(_unitOfWorkProviderMock.Object, _mockExerciseTypeService.Object);
     }
     
     [Fact]

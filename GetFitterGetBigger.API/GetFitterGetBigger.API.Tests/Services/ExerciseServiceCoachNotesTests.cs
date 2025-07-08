@@ -8,6 +8,7 @@ using GetFitterGetBigger.API.Models.Entities;
 using GetFitterGetBigger.API.Models.SpecializedIds;
 using GetFitterGetBigger.API.Repositories.Interfaces;
 using GetFitterGetBigger.API.Services.Implementations;
+using GetFitterGetBigger.API.Services.Interfaces;
 using Moq;
 using Olimpo.EntityFramework.Persistency;
 using Xunit;
@@ -21,6 +22,7 @@ public class ExerciseServiceCoachNotesTests
     private readonly Mock<IWritableUnitOfWork<FitnessDbContext>> _writableUnitOfWorkMock;
     private readonly Mock<IExerciseRepository> _exerciseRepositoryMock;
     private readonly Mock<IExerciseTypeRepository> _exerciseTypeRepositoryMock;
+    private readonly Mock<IExerciseTypeService> _mockExerciseTypeService;
     private readonly ExerciseService _exerciseService;
     
     public ExerciseServiceCoachNotesTests()
@@ -30,6 +32,7 @@ public class ExerciseServiceCoachNotesTests
         _writableUnitOfWorkMock = new Mock<IWritableUnitOfWork<FitnessDbContext>>();
         _exerciseRepositoryMock = new Mock<IExerciseRepository>();
         _exerciseTypeRepositoryMock = new Mock<IExerciseTypeRepository>();
+        _mockExerciseTypeService = new Mock<IExerciseTypeService>();
         
         _readOnlyUnitOfWorkMock.Setup(uow => uow.GetRepository<IExerciseRepository>())
             .Returns(_exerciseRepositoryMock.Object);
@@ -46,7 +49,23 @@ public class ExerciseServiceCoachNotesTests
         _unitOfWorkProviderMock.Setup(p => p.CreateWritable())
             .Returns(_writableUnitOfWorkMock.Object);
         
-        _exerciseService = new ExerciseService(_unitOfWorkProviderMock.Object);
+        // Setup default mock behaviors for ExerciseTypeService
+        _mockExerciseTypeService
+            .Setup(s => s.AllExistAsync(It.IsAny<IEnumerable<string>>()))
+            .ReturnsAsync(true);
+            
+        _mockExerciseTypeService
+            .Setup(s => s.AnyIsRestTypeAsync(It.IsAny<IEnumerable<string>>()))
+            .ReturnsAsync((IEnumerable<string> ids) => 
+                ids.Any(id => id == "exercisetype-d4e5f6a7-8b9c-0d1e-2f3a-4b5c6d7e8f9a" || 
+                              id.ToLowerInvariant().Contains("rest")));
+        
+        // Default behavior: all exercise types exist
+        _mockExerciseTypeService
+            .Setup(s => s.ExistsAsync(It.IsAny<ExerciseTypeId>()))
+            .ReturnsAsync(true);
+        
+        _exerciseService = new ExerciseService(_unitOfWorkProviderMock.Object, _mockExerciseTypeService.Object);
     }
     
     [Fact]
@@ -137,11 +156,11 @@ public class ExerciseServiceCoachNotesTests
         _exerciseRepositoryMock.Setup(r => r.ExistsAsync(It.IsAny<string>(), null))
             .ReturnsAsync(false);
         
-        // Mock ExerciseTypeRepository
-        _exerciseTypeRepositoryMock.Setup(r => r.GetByIdAsync(exerciseTypeId1))
-            .ReturnsAsync(exerciseType1);
-        _exerciseTypeRepositoryMock.Setup(r => r.GetByIdAsync(exerciseTypeId2))
-            .ReturnsAsync(exerciseType2);
+        // Override the default mock to return false for non-REST types
+        _mockExerciseTypeService
+            .Setup(s => s.AnyIsRestTypeAsync(It.Is<IEnumerable<string>>(ids => 
+                ids.Contains(exerciseTypeId1.ToString()) || ids.Contains(exerciseTypeId2.ToString()))))
+            .ReturnsAsync(false);
         
         Exercise? capturedExercise = null;
         _exerciseRepositoryMock.Setup(r => r.AddAsync(It.IsAny<Exercise>()))
@@ -232,12 +251,16 @@ public class ExerciseServiceCoachNotesTests
         _exerciseRepositoryMock.Setup(r => r.ExistsAsync(It.IsAny<string>(), null))
             .ReturnsAsync(false);
         
-        // Mock the valid ExerciseType to be found in the database
-        var validExerciseType = ExerciseType.Handler.Create(validId, "Workout", "Test workout type", 1, false);
-        _exerciseTypeRepositoryMock.Setup(r => r.GetByIdAsync(validId))
-            .ReturnsAsync(validExerciseType);
-        _exerciseTypeRepositoryMock.Setup(r => r.GetByIdAsync(It.Is<ExerciseTypeId>(id => id != validId)))
-            .ReturnsAsync((ExerciseType?)null);
+        // Override the default mock to return false for non-REST type
+        _mockExerciseTypeService
+            .Setup(s => s.AnyIsRestTypeAsync(It.Is<IEnumerable<string>>(ids => 
+                ids.Contains(validId.ToString()))))
+            .ReturnsAsync(false);
+            
+        // Mock ExistsAsync to return true only for the valid ID
+        _mockExerciseTypeService
+            .Setup(s => s.ExistsAsync(validId))
+            .ReturnsAsync(true);
         
         Exercise? capturedExercise = null;
         _exerciseRepositoryMock.Setup(r => r.AddAsync(It.IsAny<Exercise>()))

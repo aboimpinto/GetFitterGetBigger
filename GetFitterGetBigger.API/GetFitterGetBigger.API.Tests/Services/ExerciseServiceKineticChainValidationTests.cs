@@ -8,6 +8,7 @@ using GetFitterGetBigger.API.Models.Entities;
 using GetFitterGetBigger.API.Models.SpecializedIds;
 using GetFitterGetBigger.API.Repositories.Interfaces;
 using GetFitterGetBigger.API.Services.Implementations;
+using GetFitterGetBigger.API.Services.Interfaces;
 using Moq;
 using Olimpo.EntityFramework.Persistency;
 using Xunit;
@@ -21,6 +22,7 @@ namespace GetFitterGetBigger.API.Tests.Services
         private readonly Mock<IWritableUnitOfWork<FitnessDbContext>> _mockWritableUnitOfWork;
         private readonly Mock<IExerciseRepository> _mockExerciseRepository;
         private readonly Mock<IExerciseTypeRepository> _mockExerciseTypeRepository;
+        private readonly Mock<IExerciseTypeService> _mockExerciseTypeService;
         private readonly ExerciseService _service;
         
         // Reference data IDs
@@ -40,12 +42,30 @@ namespace GetFitterGetBigger.API.Tests.Services
             _mockWritableUnitOfWork = new Mock<IWritableUnitOfWork<FitnessDbContext>>();
             _mockExerciseRepository = new Mock<IExerciseRepository>();
             _mockExerciseTypeRepository = new Mock<IExerciseTypeRepository>();
+            _mockExerciseTypeService = new Mock<IExerciseTypeService>();
             
             // Create reference data entities
             _restType = ExerciseType.Handler.Create(_restTypeId, "Rest", "Rest period between exercises", 1);
             _strengthType = ExerciseType.Handler.Create(_strengthTypeId, "Strength", "Strength training exercise", 2);
             
-            _service = new ExerciseService(_mockUnitOfWorkProvider.Object);
+            // Setup default mock behaviors for ExerciseTypeService
+            _mockExerciseTypeService
+                .Setup(s => s.AllExistAsync(It.IsAny<IEnumerable<string>>()))
+                .ReturnsAsync(true);
+                
+            _mockExerciseTypeService
+                .Setup(s => s.AnyIsRestTypeAsync(It.IsAny<IEnumerable<string>>()))
+                .ReturnsAsync((IEnumerable<string> ids) => 
+                    ids.Any(id => id == "exercisetype-d4e5f6a7-8b9c-0d1e-2f3a-4b5c6d7e8f9a" || 
+                                  id == _restTypeId.ToString() ||
+                                  id.ToLowerInvariant().Contains("rest")));
+            
+            // Default behavior: all exercise types exist
+            _mockExerciseTypeService
+                .Setup(s => s.ExistsAsync(It.IsAny<ExerciseTypeId>()))
+                .ReturnsAsync(true);
+            
+            _service = new ExerciseService(_mockUnitOfWorkProvider.Object, _mockExerciseTypeService.Object);
         }
 
         private void SetupMocks()
@@ -63,11 +83,17 @@ namespace GetFitterGetBigger.API.Tests.Services
             _mockWritableUnitOfWork.Setup(x => x.GetRepository<IExerciseRepository>())
                 .Returns(_mockExerciseRepository.Object);
                 
-            // Set up exercise type repository to return our test types
-            _mockExerciseTypeRepository.Setup(x => x.GetByIdAsync(_restTypeId))
-                .ReturnsAsync(_restType);
-            _mockExerciseTypeRepository.Setup(x => x.GetByIdAsync(_strengthTypeId))
-                .ReturnsAsync(_strengthType);
+            // Override the default mock to return true for REST type
+            _mockExerciseTypeService
+                .Setup(s => s.AnyIsRestTypeAsync(It.Is<IEnumerable<string>>(ids => 
+                    ids.Contains(_restTypeId.ToString()))))
+                .ReturnsAsync(true);
+                
+            // Override the default mock to return false for non-REST type
+            _mockExerciseTypeService
+                .Setup(s => s.AnyIsRestTypeAsync(It.Is<IEnumerable<string>>(ids => 
+                    ids.Contains(_strengthTypeId.ToString()))))
+                .ReturnsAsync(false);
                 
             // Default: exercise name doesn't exist
             _mockExerciseRepository.Setup(x => x.ExistsAsync(It.IsAny<string>(), It.IsAny<ExerciseId?>()))

@@ -32,20 +32,49 @@ public class ExerciseTypeService : IExerciseTypeService
     }
 
     /// <inheritdoc/>
-    public async Task<bool> AllExistAsync(IEnumerable<ExerciseTypeId> ids)
+    public async Task<bool> AllExistAsync(IEnumerable<string> ids)
     {
         using var uow = _unitOfWorkProvider.CreateReadOnly();
         var repository = uow.GetRepository<IExerciseTypeRepository>();
         
-        foreach (var id in ids)
+        foreach (var idString in ids)
         {
-            var exerciseType = await repository.GetByIdAsync(id);
-            if (exerciseType == null || !exerciseType.IsActive)
+            if (ExerciseTypeId.TryParse(idString, out var id))
             {
+                var exerciseType = await repository.GetByIdAsync(id);
+                if (exerciseType == null || !exerciseType.IsActive)
+                {
+                    return false;
+                }
+            }
+            else
+            {
+                // Invalid ID format
                 return false;
             }
         }
         
         return true;
+    }
+    
+    /// <inheritdoc/>
+    public async Task<bool> AnyIsRestTypeAsync(IEnumerable<string> ids)
+    {
+        using var uow = _unitOfWorkProvider.CreateReadOnly();
+        var repository = uow.GetRepository<IExerciseTypeRepository>();
+        
+        foreach (var idString in ids)
+        {
+            if (ExerciseTypeId.TryParse(idString, out var id))
+            {
+                var exerciseType = await repository.GetByIdAsync(id);
+                if (exerciseType != null && exerciseType.Value.ToLowerInvariant() == "rest")
+                {
+                    return true;
+                }
+            }
+        }
+        
+        return false;
     }
 }

@@ -19,7 +19,14 @@ public interface IExerciseTypeService
     /// <summary>
     /// Checks if all exercise types in a collection exist
     /// </summary>
-    /// <param name="ids">The exercise type IDs to check</param>
+    /// <param name="ids">The exercise type ID strings to check</param>
     /// <returns>True if all exercise types exist, false otherwise</returns>
-    Task<bool> AllExistAsync(IEnumerable<ExerciseTypeId> ids);
+    Task<bool> AllExistAsync(IEnumerable<string> ids);
+    
+    /// <summary>
+    /// Checks if any of the exercise types is a REST type
+    /// </summary>
+    /// <param name="ids">The exercise type ID strings to check</param>
+    /// <returns>True if any exercise type is REST, false otherwise</returns>
+    Task<bool> AnyIsRestTypeAsync(IEnumerable<string> ids);
 }

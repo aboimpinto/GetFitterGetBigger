@@ -62,19 +62,19 @@
 ## Category 2: MuscleGroupService Refactoring - Estimated: 2h
 
 #### ⚠️ CRITICAL Before Starting:
-- [ ] Re-read `/memory-bank/common-implementation-pitfalls.md` Section 1
-- [ ] Remember: Service-to-service calls for validation, not direct repository access
+- [x] Re-read `/memory-bank/common-implementation-pitfalls.md` Section 1
+- [x] Remember: Service-to-service calls for validation, not direct repository access
 
 - **Task 2.1:** Replace IBodyPartRepository with IBodyPartService in constructor `[Implemented: cd5993df | Started: 2025-01-08 19:16 | Finished: 2025-01-08 19:18 | Duration: 0h 2m]` (Est: 15m)
 - **Task 2.2:** Update CreateAsync method to use BodyPartService.ExistsAsync `[Implemented: 073f2f70 | Started: 2025-01-08 19:18 | Finished: 2025-01-08 19:20 | Duration: 0h 2m]` (Est: 30m)
 - **Task 2.3:** Update UpdateAsync method to use BodyPartService.ExistsAsync `[Implemented: 5a08d9db | Started: 2025-01-08 19:20 | Finished: 2025-01-08 19:21 | Duration: 0h 1m]` (Est: 30m)
-- **Task 2.4:** Update unit tests to mock IBodyPartService instead of repository `[InProgress: Started: 2025-01-08 19:21]` (Est: 45m)
+- **Task 2.4:** Update unit tests to mock IBodyPartService instead of repository `[Implemented: 1ed1ba4a | Started: 2025-01-08 19:21 | Finished: 2025-01-08 19:26 | Duration: 0h 5m]` (Est: 45m)
 
 ## 🔄 Checkpoint 2
-- Status: 🛑
-- [ ] MuscleGroupService refactored and working
-- [ ] All MuscleGroupService tests passing
-- [ ] No build warnings
+- Status: ✅
+- [x] MuscleGroupService refactored and working
+- [x] All MuscleGroupService tests passing
+- [x] No build warnings
 
 ## Category 3: ExerciseService Refactoring - Estimated: 3h
 
@@ -82,17 +82,17 @@
 - [ ] Review all 4 locations where ExerciseTypeRepository is used
 - [ ] Ensure service maintains same validation behavior
 
-- **Task 3.1:** Replace IExerciseTypeRepository with IExerciseTypeService in constructor `[ReadyToDevelop]` (Est: 15m)
-- **Task 3.2:** Update CreateAsync method to use ExerciseTypeService.AllExistAsync `[ReadyToDevelop]` (Est: 30m)
-- **Task 3.3:** Update UpdateAsync method to use ExerciseTypeService.AllExistAsync `[ReadyToDevelop]` (Est: 30m)
-- **Task 3.4:** Update two internal validation methods to use ExerciseTypeService `[ReadyToDevelop]` (Est: 30m)
-- **Task 3.5:** Update unit tests to mock IExerciseTypeService instead of repository `[ReadyToDevelop]` (Est: 1h 15m)
+- **Task 3.1:** Replace IExerciseTypeRepository with IExerciseTypeService in constructor `[Implemented: c887e9c6 | Started: 2025-01-08 19:28 | Finished: 2025-01-08 19:29 | Duration: 0h 1m]` (Est: 15m)
+- **Task 3.2:** Update CreateAsync method to use ExerciseTypeService.AllExistAsync `[Implemented: ea00b84e | Started: 2025-01-08 19:29 | Finished: 2025-01-08 19:31 | Duration: 0h 2m]` (Est: 30m)
+- **Task 3.3:** Update UpdateAsync method to use ExerciseTypeService.AllExistAsync `[Implemented: ea00b84e | Started: 2025-01-08 19:31 | Finished: 2025-01-08 19:32 | Duration: 0h 1m]` (Est: 30m)
+- **Task 3.4:** Update two internal validation methods to use ExerciseTypeService `[Implemented: 58802e5f | Started: 2025-01-08 19:32 | Finished: 2025-01-08 19:35 | Duration: 0h 3m]` (Est: 30m)
+- **Task 3.5:** Update unit tests to mock IExerciseTypeService instead of repository `[Implemented: 1edc5bf3 | Started: 2025-01-08 19:35 | Finished: 2025-01-08 19:38 | Duration: 0h 3m]` (Est: 1h 15m)
 
 ## 🔄 Checkpoint 3
-- Status: 🛑
-- [ ] ExerciseService refactored and working
-- [ ] All ExerciseService tests passing
-- [ ] Integration tests still working
+- Status: ✅
+- [x] ExerciseService refactored and working
+- [x] All ExerciseService tests passing
+- [x] Integration tests still working
 
 ## Category 4: AuthService Refactoring - Estimated: 2.5h
 

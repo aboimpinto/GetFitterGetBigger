@@ -7,6 +7,7 @@ using GetFitterGetBigger.API.Models.Entities;
 using GetFitterGetBigger.API.Models.SpecializedIds;
 using GetFitterGetBigger.API.Repositories.Interfaces;
 using GetFitterGetBigger.API.Services.Implementations;
+using GetFitterGetBigger.API.Services.Interfaces;
 using Moq;
 using Olimpo.EntityFramework.Persistency;
 using Xunit;
@@ -20,6 +21,7 @@ public class ExerciseServiceMuscleGroupValidationTests
     private readonly Mock<IWritableUnitOfWork<FitnessDbContext>> _writableUnitOfWorkMock;
     private readonly Mock<IExerciseRepository> _exerciseRepositoryMock;
     private readonly Mock<IExerciseTypeRepository> _exerciseTypeRepositoryMock;
+    private readonly Mock<IExerciseTypeService> _mockExerciseTypeService;
     private readonly ExerciseService _exerciseService;
     
     public ExerciseServiceMuscleGroupValidationTests()
@@ -29,6 +31,7 @@ public class ExerciseServiceMuscleGroupValidationTests
         _writableUnitOfWorkMock = new Mock<IWritableUnitOfWork<FitnessDbContext>>();
         _exerciseRepositoryMock = new Mock<IExerciseRepository>();
         _exerciseTypeRepositoryMock = new Mock<IExerciseTypeRepository>();
+        _mockExerciseTypeService = new Mock<IExerciseTypeService>();
         
         _readOnlyUnitOfWorkMock.Setup(uow => uow.GetRepository<IExerciseRepository>())
             .Returns(_exerciseRepositoryMock.Object);
@@ -45,14 +48,33 @@ public class ExerciseServiceMuscleGroupValidationTests
         _unitOfWorkProviderMock.Setup(p => p.CreateWritable())
             .Returns(_writableUnitOfWorkMock.Object);
         
-        _exerciseService = new ExerciseService(_unitOfWorkProviderMock.Object);
+        // Setup default mock behaviors for ExerciseTypeService
+        _mockExerciseTypeService
+            .Setup(s => s.AllExistAsync(It.IsAny<IEnumerable<string>>()))
+            .ReturnsAsync(true);
+            
+        _mockExerciseTypeService
+            .Setup(s => s.AnyIsRestTypeAsync(It.IsAny<IEnumerable<string>>()))
+            .ReturnsAsync((IEnumerable<string> ids) => 
+            {
+                return ids.Any(id => 
+                    id == "exercisetype-d4e5f6a7-8b9c-0d1e-2f3a-4b5c6d7e8f9a" || 
+                    id.ToLowerInvariant().Contains("rest"));
+            });
+        
+        // Default behavior: all exercise types exist
+        _mockExerciseTypeService
+            .Setup(s => s.ExistsAsync(It.IsAny<ExerciseTypeId>()))
+            .ReturnsAsync(true);
+        
+        _exerciseService = new ExerciseService(_unitOfWorkProviderMock.Object, _mockExerciseTypeService.Object);
     }
     
     [Fact]
     public async Task CreateAsync_RestExerciseWithoutMuscleGroups_CreatesSuccessfully()
     {
         // Arrange
-        var restTypeId = ExerciseTypeId.New();
+        var restTypeId = ExerciseTypeId.From(Guid.Parse("d4e5f6a7-8b9c-0d1e-2f3a-4b5c6d7e8f9a"));
         var restType = ExerciseType.Handler.Create(restTypeId, "Rest", "Rest period", 1, true);
         
         var request = new CreateExerciseRequest
@@ -70,9 +92,6 @@ public class ExerciseServiceMuscleGroupValidationTests
         
         _exerciseRepositoryMock.Setup(r => r.ExistsAsync(It.IsAny<string>(), null))
             .ReturnsAsync(false);
-        
-        _exerciseTypeRepositoryMock.Setup(r => r.GetByIdAsync(restTypeId))
-            .ReturnsAsync(restType);
         
         _exerciseRepositoryMock.Setup(r => r.AddAsync(It.IsAny<Exercise>()))
             .ReturnsAsync((Exercise e) => e);
@@ -113,9 +132,6 @@ public class ExerciseServiceMuscleGroupValidationTests
         _exerciseRepositoryMock.Setup(r => r.ExistsAsync(It.IsAny<string>(), null))
             .ReturnsAsync(false);
         
-        _exerciseTypeRepositoryMock.Setup(r => r.GetByIdAsync(workoutTypeId))
-            .ReturnsAsync(workoutType);
-        
         // Act & Assert
         var exception = await Assert.ThrowsAsync<InvalidOperationException>(
             () => _exerciseService.CreateAsync(request));
@@ -128,7 +144,7 @@ public class ExerciseServiceMuscleGroupValidationTests
     public async Task CreateAsync_RestExerciseWithMuscleGroups_CreatesSuccessfully()
     {
         // Arrange - REST exercises CAN have muscle groups, they're just not required
-        var restTypeId = ExerciseTypeId.New();
+        var restTypeId = ExerciseTypeId.From(Guid.Parse("d4e5f6a7-8b9c-0d1e-2f3a-4b5c6d7e8f9a"));
         var restType = ExerciseType.Handler.Create(restTypeId, "Rest", "Rest period", 1, true);
         
         var request = new CreateExerciseRequest
@@ -149,9 +165,6 @@ public class ExerciseServiceMuscleGroupValidationTests
         
         _exerciseRepositoryMock.Setup(r => r.ExistsAsync(It.IsAny<string>(), null))
             .ReturnsAsync(false);
-        
-        _exerciseTypeRepositoryMock.Setup(r => r.GetByIdAsync(restTypeId))
-            .ReturnsAsync(restType);
         
         _exerciseRepositoryMock.Setup(r => r.AddAsync(It.IsAny<Exercise>()))
             .ReturnsAsync((Exercise e) => e);
@@ -174,7 +187,7 @@ public class ExerciseServiceMuscleGroupValidationTests
     {
         // Arrange
         var exerciseId = ExerciseId.New();
-        var restTypeId = ExerciseTypeId.New();
+        var restTypeId = ExerciseTypeId.From(Guid.Parse("d4e5f6a7-8b9c-0d1e-2f3a-4b5c6d7e8f9a"));
         var restType = ExerciseType.Handler.Create(restTypeId, "Rest", "Rest period", 1, true);
         
         var existingExercise = Exercise.Handler.CreateNew(
@@ -202,9 +215,6 @@ public class ExerciseServiceMuscleGroupValidationTests
         
         _exerciseRepositoryMock.Setup(r => r.GetByIdAsync(exerciseId))
             .ReturnsAsync(existingExercise);
-        
-        _exerciseTypeRepositoryMock.Setup(r => r.GetByIdAsync(restTypeId))
-            .ReturnsAsync(restType);
         
         _exerciseRepositoryMock.Setup(r => r.UpdateAsync(It.IsAny<Exercise>()))
             .ReturnsAsync((Exercise e) => e);
@@ -256,9 +266,6 @@ public class ExerciseServiceMuscleGroupValidationTests
         _exerciseRepositoryMock.Setup(r => r.GetByIdAsync(exerciseId))
             .ReturnsAsync(existingExercise);
         
-        _exerciseTypeRepositoryMock.Setup(r => r.GetByIdAsync(workoutTypeId))
-            .ReturnsAsync(workoutType);
-        
         // Act & Assert
         var exception = await Assert.ThrowsAsync<InvalidOperationException>(
             () => _exerciseService.UpdateAsync(exerciseId.ToString(), request));
@@ -275,7 +282,7 @@ public class ExerciseServiceMuscleGroupValidationTests
     public async Task CreateAsync_RestExerciseCaseInsensitive_WithoutMuscleGroups_CreatesSuccessfully(string restValue)
     {
         // Arrange
-        var restTypeId = ExerciseTypeId.New();
+        var restTypeId = ExerciseTypeId.From(Guid.Parse("d4e5f6a7-8b9c-0d1e-2f3a-4b5c6d7e8f9a"));
         var restType = ExerciseType.Handler.Create(restTypeId, restValue, "Rest period", 1, true);
         
         var request = new CreateExerciseRequest
@@ -292,9 +299,6 @@ public class ExerciseServiceMuscleGroupValidationTests
         
         _exerciseRepositoryMock.Setup(r => r.ExistsAsync(It.IsAny<string>(), null))
             .ReturnsAsync(false);
-        
-        _exerciseTypeRepositoryMock.Setup(r => r.GetByIdAsync(restTypeId))
-            .ReturnsAsync(restType);
         
         _exerciseRepositoryMock.Setup(r => r.AddAsync(It.IsAny<Exercise>()))
             .ReturnsAsync((Exercise e) => e);
@@ -342,7 +346,7 @@ public class ExerciseServiceMuscleGroupValidationTests
     public async Task CreateAsync_MultipleTypesIncludingRest_WithoutMuscleGroups_ThrowsRestExclusivityError()
     {
         // Arrange - REST can't be combined with other types (REST exclusivity rule)
-        var restTypeId = ExerciseTypeId.New();
+        var restTypeId = ExerciseTypeId.From(Guid.Parse("d4e5f6a7-8b9c-0d1e-2f3a-4b5c6d7e8f9a"));
         var workoutTypeId = ExerciseTypeId.New();
         var restType = ExerciseType.Handler.Create(restTypeId, "Rest", "Rest period", 1, true);
         var workoutType = ExerciseType.Handler.Create(workoutTypeId, "Workout", "Main workout", 2, false);
@@ -353,7 +357,10 @@ public class ExerciseServiceMuscleGroupValidationTests
             Description = "Can't be both REST and Workout",
             DifficultyId = DifficultyLevelId.New().ToString(),
             ExerciseTypeIds = new List<string> { restTypeId.ToString(), workoutTypeId.ToString() },
-            MuscleGroups = new List<MuscleGroupWithRoleRequest>(), // Empty muscle groups
+            MuscleGroups = new List<MuscleGroupWithRoleRequest>
+            {
+                new() { MuscleGroupId = MuscleGroupId.New().ToString(), MuscleRoleId = MuscleRoleId.New().ToString() }
+            }, // With muscle groups - REST exclusivity should be checked first
             EquipmentIds = new List<string>(),
             MovementPatternIds = new List<string>(),
             BodyPartIds = new List<string>(),
@@ -362,11 +369,6 @@ public class ExerciseServiceMuscleGroupValidationTests
         
         _exerciseRepositoryMock.Setup(r => r.ExistsAsync(It.IsAny<string>(), null))
             .ReturnsAsync(false);
-        
-        _exerciseTypeRepositoryMock.Setup(r => r.GetByIdAsync(restTypeId))
-            .ReturnsAsync(restType);
-        _exerciseTypeRepositoryMock.Setup(r => r.GetByIdAsync(workoutTypeId))
-            .ReturnsAsync(workoutType);
         
         // Act & Assert
         var exception = await Assert.ThrowsAsync<InvalidOperationException>(
