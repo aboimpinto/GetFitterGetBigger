@@ -21,7 +21,7 @@ namespace GetFitterGetBigger.API.Tests.Services
         private readonly Mock<IUnitOfWorkProvider<FitnessDbContext>> _mockUnitOfWorkProvider;
         private readonly Mock<IWritableUnitOfWork<FitnessDbContext>> _mockUnitOfWork;
         private readonly Mock<IUserRepository> _mockUserRepository;
-        private readonly Mock<IClaimRepository> _mockClaimRepository;
+        private readonly Mock<IClaimService> _mockClaimService;
         private readonly AuthService _authService;
 
         public AuthServiceTests()
@@ -30,7 +30,7 @@ namespace GetFitterGetBigger.API.Tests.Services
             _mockUnitOfWorkProvider = new Mock<IUnitOfWorkProvider<FitnessDbContext>>();
             _mockUnitOfWork = new Mock<IWritableUnitOfWork<FitnessDbContext>>();
             _mockUserRepository = new Mock<IUserRepository>();
-            _mockClaimRepository = new Mock<IClaimRepository>();
+            _mockClaimService = new Mock<IClaimService>();
 
             _mockUnitOfWorkProvider
                 .Setup(x => x.CreateWritable())
@@ -40,11 +40,7 @@ namespace GetFitterGetBigger.API.Tests.Services
                 .Setup(x => x.GetRepository<IUserRepository>())
                 .Returns(_mockUserRepository.Object);
 
-            _mockUnitOfWork
-                .Setup(x => x.GetRepository<IClaimRepository>())
-                .Returns(_mockClaimRepository.Object);
-
-            _authService = new AuthService(_mockJwtService.Object, _mockUnitOfWorkProvider.Object);
+            _authService = new AuthService(_mockJwtService.Object, _mockUnitOfWorkProvider.Object, _mockClaimService.Object);
         }
 
         [Fact]
@@ -64,7 +60,7 @@ namespace GetFitterGetBigger.API.Tests.Services
                 .Returns(expectedToken);
 
             User? capturedUser = null;
-            Claim? capturedClaim = null;
+            ClaimId? capturedClaimId = null;
             
             _mockUserRepository
                 .Setup(x => x.AddUserAsync(It.IsAny<User>()))
@@ -76,18 +72,25 @@ namespace GetFitterGetBigger.API.Tests.Services
                 })
                 .ReturnsAsync((User u) => u);
 
-            _mockClaimRepository
-                .Setup(x => x.AddClaimAsync(It.IsAny<Claim>()))
-                .Callback<Claim>(c => 
+            _mockClaimService
+                .Setup(x => x.CreateUserClaimAsync(It.IsAny<UserId>(), "Free-Tier", _mockUnitOfWork.Object))
+                .Callback<UserId, string, IWritableUnitOfWork<FitnessDbContext>>((userId, claimType, uow) => 
                 {
-                    capturedClaim = c;
+                    capturedClaimId = ClaimId.New();
                     // Add the claim to the user's claims collection
                     if (capturedUser != null && capturedUser.Claims != null)
                     {
-                        capturedUser.Claims.Add(c);
+                        capturedUser.Claims.Add(new Claim 
+                        { 
+                            Id = capturedClaimId.Value,
+                            UserId = userId,
+                            ClaimType = claimType,
+                            ExpirationDate = null,
+                            Resource = null
+                        });
                     }
                 })
-                .ReturnsAsync((Claim c) => c);
+                .ReturnsAsync(() => capturedClaimId!.Value);
 
             // Act
             var response = await _authService.AuthenticateAsync(request);
@@ -96,11 +99,8 @@ namespace GetFitterGetBigger.API.Tests.Services
             Assert.NotNull(capturedUser);
             Assert.Equal(email, capturedUser.Email);
 
-            Assert.NotNull(capturedClaim);
-            Assert.Equal("Free-Tier", capturedClaim.ClaimType);
-            Assert.Equal(capturedUser.Id, capturedClaim.UserId);
-            Assert.Null(capturedClaim.ExpirationDate);
-            Assert.Null(capturedClaim.Resource);
+            Assert.NotNull(capturedClaimId);
+            _mockClaimService.Verify(x => x.CreateUserClaimAsync(capturedUser.Id, "Free-Tier", _mockUnitOfWork.Object), Times.Once);
 
             Assert.Equal(expectedToken, response.Token);
             Assert.Single(response.Claims);
@@ -163,7 +163,7 @@ namespace GetFitterGetBigger.API.Tests.Services
             Assert.Contains(response.Claims, c => c.ClaimType == "Premium-Tier");
 
             _mockUserRepository.Verify(x => x.AddUserAsync(It.IsAny<User>()), Times.Never);
-            _mockClaimRepository.Verify(x => x.AddClaimAsync(It.IsAny<Claim>()), Times.Never);
+            _mockClaimService.Verify(x => x.CreateUserClaimAsync(It.IsAny<UserId>(), It.IsAny<string>(), It.IsAny<IWritableUnitOfWork<FitnessDbContext>>()), Times.Never);
             _mockUnitOfWork.Verify(x => x.CommitAsync(), Times.Once);
         }
 
@@ -272,9 +272,9 @@ namespace GetFitterGetBigger.API.Tests.Services
                     return u;
                 });
 
-            _mockClaimRepository
-                .Setup(x => x.AddClaimAsync(It.IsAny<Claim>()))
-                .ReturnsAsync((Claim c) => c);
+            _mockClaimService
+                .Setup(x => x.CreateUserClaimAsync(It.IsAny<UserId>(), "Free-Tier", _mockUnitOfWork.Object))
+                .ReturnsAsync(ClaimId.New());
 
             // Act
             var response = await _authService.AuthenticateAsync(request);
@@ -340,9 +340,9 @@ namespace GetFitterGetBigger.API.Tests.Services
                     return u;
                 });
 
-            _mockClaimRepository
-                .Setup(x => x.AddClaimAsync(It.IsAny<Claim>()))
-                .ReturnsAsync((Claim c) => c);
+            _mockClaimService
+                .Setup(x => x.CreateUserClaimAsync(It.IsAny<UserId>(), "Free-Tier", _mockUnitOfWork.Object))
+                .ReturnsAsync(ClaimId.New());
 
             _mockUnitOfWork
                 .Setup(x => x.CommitAsync())

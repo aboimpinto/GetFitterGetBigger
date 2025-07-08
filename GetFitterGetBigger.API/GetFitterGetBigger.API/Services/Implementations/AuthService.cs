@@ -14,20 +14,22 @@ namespace GetFitterGetBigger.API.Services.Implementations
     {
         private readonly IJwtService _jwtService;
         private readonly IUnitOfWorkProvider<Models.FitnessDbContext> _unitOfWorkProvider;
+        private readonly IClaimService _claimService;
 
         public AuthService(
             IJwtService jwtService,
-            IUnitOfWorkProvider<Models.FitnessDbContext> unitOfWorkProvider)
+            IUnitOfWorkProvider<Models.FitnessDbContext> unitOfWorkProvider,
+            IClaimService claimService)
         {
             _jwtService = jwtService;
             _unitOfWorkProvider = unitOfWorkProvider;
+            _claimService = claimService;
         }
 
         public async Task<AuthenticationResponse> AuthenticateAsync(AuthenticationRequest request)
         {
             using var unitOfWork = _unitOfWorkProvider.CreateWritable();
             var userRepository = unitOfWork.GetRepository<IUserRepository>();
-            var claimRepository = unitOfWork.GetRepository<IClaimRepository>();
 
             var user = await userRepository.GetUserByEmailAsync(request.Email);
 
@@ -36,15 +38,8 @@ namespace GetFitterGetBigger.API.Services.Implementations
                 user = new User { Id = UserId.New(), Email = request.Email };
                 await userRepository.AddUserAsync(user);
 
-                var claim = new Claim
-                {
-                    Id = ClaimId.New(),
-                    UserId = user.Id,
-                    ClaimType = "Free-Tier",
-                    ExpirationDate = null,
-                    Resource = null
-                };
-                await claimRepository.AddClaimAsync(claim);
+                // Use ClaimService with the same UnitOfWork for transactional consistency
+                await _claimService.CreateUserClaimAsync(user.Id, "Free-Tier", unitOfWork);
             }
 
             var token = _jwtService.GenerateToken(user);

@@ -108,10 +108,50 @@ public async Task<ResultDto> UpdateEntityAsync(string id, UpdateDto request)
 
 ## Communication Patterns
 
+### External Communication
 - **RESTful API**: For standardized communication between clients and server
 - **Request-Response**: Standard HTTP communication pattern
 - **JWT Authentication**: For secure authentication and authorization
 - **Federated Authentication and Claims-Based Authorization**: A detailed system for handling user identity and permissions via federated providers and a local claims store. [Details](/memory-bank/features/federated-authentication.md)
+
+### Service-to-Service Communication (NEW - FEAT-020)
+- **Single Repository Rule**: Each service only accesses its own repository directly
+- **Service Dependencies**: Services depend on other services, not repositories
+- **Validation Pattern**: Services expose validation methods (ExistsAsync, AllExistAsync) for cross-service validation
+- **Transactional Pattern**: Services accept IWritableUnitOfWork parameters for participating in transactions initiated by other services
+
+Example of service-to-service communication:
+```csharp
+// MuscleGroupService needs to validate a BodyPart exists
+public async Task<MuscleGroupDto> CreateAsync(CreateMuscleGroupRequest request)
+{
+    // Use IBodyPartService instead of IBodyPartRepository
+    if (!await _bodyPartService.ExistsAsync(request.BodyPartId))
+    {
+        throw new InvalidOperationException($"Body part with ID {request.BodyPartId} not found");
+    }
+    
+    // Continue with creation...
+}
+```
+
+Example of transactional pattern:
+```csharp
+// AuthService creates user and claim in same transaction
+public async Task<AuthenticationResponse> AuthenticateAsync(AuthenticationRequest request)
+{
+    using var unitOfWork = _unitOfWorkProvider.CreateWritable();
+    
+    // Create user
+    var user = new User { Id = UserId.New(), Email = request.Email };
+    await userRepository.AddUserAsync(user);
+    
+    // Pass unitOfWork to ClaimService for transactional consistency
+    await _claimService.CreateUserClaimAsync(user.Id, "Free-Tier", unitOfWork);
+    
+    await unitOfWork.CommitAsync();
+}
+```
 
 ## Data Patterns
 

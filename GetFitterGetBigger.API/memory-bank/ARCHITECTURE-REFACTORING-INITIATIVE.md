@@ -4,9 +4,24 @@
 This document tracks the architectural refactoring initiative to enforce proper separation of concerns in the GetFitterGetBigger API. The goal is to ensure that controllers never directly access repositories or UnitOfWork, and instead communicate only through a service layer.
 
 ## Architectural Rules (MANDATORY)
+
+### Controller Layer Rules
 1. **Controllers MUST NOT directly access repositories** - This is FORBIDDEN
 2. **Controllers MUST NOT directly access UnitOfWork (ReadOnly or Writable)** - This is FORBIDDEN
 3. **Controllers MUST ONLY communicate with Service layer**
+
+### Service Layer Rules (NEW - Implemented in FEAT-020)
+1. **Single Repository Rule**: Each service MUST only access its own repository directly
+   - Example: MuscleGroupService can only access IMuscleGroupRepository directly
+2. **Service-to-Service Communication**: When a service needs data from another entity, it MUST call the corresponding service
+   - Example: If MuscleGroupService needs to validate a BodyPart exists, it must call IBodyPartService.ExistsAsync()
+3. **Transactional Pattern**: For operations across multiple repositories:
+   - The same WritableUnitOfWork MUST be passed between services
+   - Services accepting UnitOfWork parameters MUST use the provided instance
+   - Example: AuthService passes its UnitOfWork to ClaimService.CreateUserClaimAsync()
+4. **Read-Only Operations**: For read-only cross-service operations:
+   - Services should NOT pass UnitOfWork between them
+   - Each service creates its own ReadOnlyUnitOfWork as needed
 
 ## Current State Analysis (as of 2025-01-07)
 

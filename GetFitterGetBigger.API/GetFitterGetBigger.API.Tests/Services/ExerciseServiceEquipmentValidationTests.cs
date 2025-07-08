@@ -20,7 +20,6 @@ public class ExerciseServiceEquipmentValidationTests
     private readonly Mock<IReadOnlyUnitOfWork<FitnessDbContext>> _readOnlyUnitOfWorkMock;
     private readonly Mock<IWritableUnitOfWork<FitnessDbContext>> _writableUnitOfWorkMock;
     private readonly Mock<IExerciseRepository> _exerciseRepositoryMock;
-    private readonly Mock<IExerciseTypeRepository> _exerciseTypeRepositoryMock;
     private readonly Mock<IExerciseTypeService> _mockExerciseTypeService;
     private readonly ExerciseService _exerciseService;
     
@@ -30,14 +29,10 @@ public class ExerciseServiceEquipmentValidationTests
         _readOnlyUnitOfWorkMock = new Mock<IReadOnlyUnitOfWork<FitnessDbContext>>();
         _writableUnitOfWorkMock = new Mock<IWritableUnitOfWork<FitnessDbContext>>();
         _exerciseRepositoryMock = new Mock<IExerciseRepository>();
-        _exerciseTypeRepositoryMock = new Mock<IExerciseTypeRepository>();
         _mockExerciseTypeService = new Mock<IExerciseTypeService>();
         
         _readOnlyUnitOfWorkMock.Setup(uow => uow.GetRepository<IExerciseRepository>())
             .Returns(_exerciseRepositoryMock.Object);
-        
-        _readOnlyUnitOfWorkMock.Setup(uow => uow.GetRepository<IExerciseTypeRepository>())
-            .Returns(_exerciseTypeRepositoryMock.Object);
         
         _writableUnitOfWorkMock.Setup(uow => uow.GetRepository<IExerciseRepository>())
             .Returns(_exerciseRepositoryMock.Object);
