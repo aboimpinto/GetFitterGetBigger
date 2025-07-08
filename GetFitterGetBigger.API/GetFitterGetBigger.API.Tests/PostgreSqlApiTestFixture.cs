@@ -280,24 +280,54 @@ public class PostgreSqlApiTestFixture : WebApplicationFactory<Program>, IAsyncLi
             );
         }
         
-        // Seed MovementPatterns
+        // Seed MovementPatterns - Updated to match migration data
         if (!context.MovementPatterns.Any())
         {
             context.MovementPatterns.AddRange(
                 MovementPattern.Handler.Create(
                     MovementPatternId.From(Guid.Parse("99aabbcc-ddee-ff00-1122-334455667788")),
-                    "Push",
-                    "Pushing movement away from the body"
+                    "Horizontal Push",
+                    "Pushing forward, parallel to the ground. Examples: Bench Press, Push-up, Cable Chest Press."
                 ),
                 MovementPattern.Handler.Create(
                     MovementPatternId.From(Guid.Parse("aabbccdd-eeff-0011-2233-445566778899")),
-                    "Pull",
-                    "Pulling movement towards the body"
+                    "Horizontal Pull",
+                    "Pulling backward, parallel to the ground. Examples: Bent-Over Row, Seated Cable Row, Inverted Row."
                 ),
                 MovementPattern.Handler.Create(
                     MovementPatternId.From(Guid.Parse("bbccddee-ff00-1122-3344-556677889900")),
                     "Squat",
-                    "Bending at the knees and hips"
+                    "A lower-body, knee-dominant movement characterized by the simultaneous bending of the hips, knees, and ankles while maintaining a relatively upright torso. Examples: Barbell Back Squat, Goblet Squat, Air Squat."
+                ),
+                MovementPattern.Handler.Create(
+                    MovementPatternId.From(Guid.Parse("71b77ae2-e8d2-4547-bd90-b7a69d975124")),
+                    "Vertical Push",
+                    "Pushing upward, overhead. Examples: Overhead Press, Dumbbell Shoulder Press, Handstand Push-up."
+                ),
+                MovementPattern.Handler.Create(
+                    MovementPatternId.From(Guid.Parse("efab6dba-4bcd-4381-9fd1-cbb86f1f2301")),
+                    "Vertical Pull",
+                    "Pulling downward from an overhead position. Examples: Pull-up, Chin-up, Lat Pulldown."
+                ),
+                MovementPattern.Handler.Create(
+                    MovementPatternId.From(Guid.Parse("a760cc8f-b32e-408b-b0ec-1ba053ee4bed")),
+                    "Hinge",
+                    "A lower-body, hip-dominant movement involving flexion and extension primarily at the hip joint with minimal knee bend. This pattern is fundamental for lifting objects from the floor and developing the posterior chain. Examples: Deadlift, Kettlebell Swing, Good Morning."
+                ),
+                MovementPattern.Handler.Create(
+                    MovementPatternId.From(Guid.Parse("5c4b8fe7-a66e-4be2-9e3f-30c1de46e7ad")),
+                    "Lunge",
+                    "A unilateral (single-leg focused) movement pattern that challenges balance, stability, and strength in a split stance. It is a key pattern for locomotion and single-leg stability. Examples: Forward Lunge, Reverse Lunge, Bulgarian Split Squat."
+                ),
+                MovementPattern.Handler.Create(
+                    MovementPatternId.From(Guid.Parse("a2c67018-196d-45ff-b596-c2d8bc845c20")),
+                    "Carry",
+                    "A pattern of locomotion (walking or running) while under an external load. This is considered highly functional as it integrates core stability with grip strength and full-body coordination. Examples: Farmer's Walk, Suitcase Carry, Overhead Carry."
+                ),
+                MovementPattern.Handler.Create(
+                    MovementPatternId.From(Guid.Parse("9019d05b-c822-4aa9-8181-751f16cfbc75")),
+                    "Rotation/Anti-Rotation",
+                    "A core-focused pattern involving either generating rotational force (twisting) or resisting it. This is crucial for athletic power transfer and spinal stability. Examples: Medicine Ball Rotational Throw (Rotation), Pallof Press (Anti-Rotation), Bird-Dog (Anti-Rotation)."
                 )
             );
         }
