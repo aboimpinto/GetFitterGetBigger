@@ -66,8 +66,8 @@
 - [ ] Remember: Service-to-service calls for validation, not direct repository access
 
 - **Task 2.1:** Replace IBodyPartRepository with IBodyPartService in constructor `[Implemented: cd5993df | Started: 2025-01-08 19:16 | Finished: 2025-01-08 19:18 | Duration: 0h 2m]` (Est: 15m)
-- **Task 2.2:** Update CreateAsync method to use BodyPartService.ExistsAsync `[InProgress: Started: 2025-01-08 19:18]` (Est: 30m)
-- **Task 2.3:** Update UpdateAsync method to use BodyPartService.ExistsAsync `[ReadyToDevelop]` (Est: 30m)
+- **Task 2.2:** Update CreateAsync method to use BodyPartService.ExistsAsync `[Implemented: 073f2f70 | Started: 2025-01-08 19:18 | Finished: 2025-01-08 19:20 | Duration: 0h 2m]` (Est: 30m)
+- **Task 2.3:** Update UpdateAsync method to use BodyPartService.ExistsAsync `[InProgress: Started: 2025-01-08 19:20]` (Est: 30m)
 - **Task 2.4:** Update unit tests to mock IBodyPartService instead of repository `[ReadyToDevelop]` (Est: 45m)
 
 ## 🔄 Checkpoint 2

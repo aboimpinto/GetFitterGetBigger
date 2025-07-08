@@ -250,17 +250,10 @@ public class MuscleGroupService : ReferenceTableServiceBase<MuscleGroup>, IMuscl
         
         _specificLogger.LogInformation("Parsed BodyPartId: {BodyPartId}", bodyPartId);
         
-        // Use ReadOnlyUnitOfWork for validation queries
-        using (var readOnlyUnitOfWork = _unitOfWorkProvider.CreateReadOnly())
+        // Check if BodyPart exists using service
+        if (!await _bodyPartService.ExistsAsync(bodyPartId))
         {
-            var bodyPartRepository = readOnlyUnitOfWork.GetRepository<IBodyPartRepository>();
-            
-            // Check if BodyPart exists and is active (not tracked)
-            var bodyPart = await bodyPartRepository.GetByIdAsync(bodyPartId);
-            if (bodyPart == null || !bodyPart.IsActive)
-            {
-                throw new ArgumentException("Body part not found or is inactive");
-            }
+            throw new ArgumentException("Body part not found or is inactive");
         }
         
         // Use WritableUnitOfWork only for the update operation
