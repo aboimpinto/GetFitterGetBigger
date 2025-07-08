@@ -39,12 +39,12 @@
 - **Task 1.1:** Create IBodyPartService interface `[Implemented: 9bb71f0f | Started: 2025-01-08 18:47 | Finished: 2025-01-08 18:50 | Duration: 0h 3m]` (Est: 15m)
 - **Task 1.2:** Implement BodyPartService with ExistsAsync method `[Implemented: ff14f8cb | Started: 2025-01-08 18:50 | Finished: 2025-01-08 18:53 | Duration: 0h 3m]` (Est: 30m)
 - **Task 1.3:** Write unit tests for BodyPartService `[Implemented: bc95d6a6 | Started: 2025-01-08 18:53 | Finished: 2025-01-08 18:56 | Duration: 0h 3m]` (Est: 30m)
-- **Task 1.3a:** Register BodyPartService in DI container (Program.cs) `[InProgress: Started: 2025-01-08 19:02]` (Est: 5m)
+- **Task 1.3a:** Register BodyPartService in DI container (Program.cs) `[Implemented: 8240f700 | Started: 2025-01-08 19:02 | Finished: 2025-01-08 19:03 | Duration: 0h 1m]` (Est: 5m)
 
 ### ExerciseType Service
 - **Task 1.4:** Create IExerciseTypeService interface `[Implemented: 58c59879 | Started: 2025-01-08 18:56 | Finished: 2025-01-08 18:57 | Duration: 0h 1m]` (Est: 15m)
 - **Task 1.5:** Implement ExerciseTypeService with ExistsAsync and AllExistAsync methods `[Implemented: 03316071 | Started: 2025-01-08 18:57 | Finished: 2025-01-08 18:59 | Duration: 0h 2m]` (Est: 45m)
-- **Task 1.6:** Write unit tests for ExerciseTypeService `[ReadyToDevelop]` (Est: 45m)
+- **Task 1.6:** Write unit tests for ExerciseTypeService `[InProgress: Started: 2025-01-08 19:04]` (Est: 45m)
 - **Task 1.6a:** Register ExerciseTypeService in DI container (Program.cs) `[ReadyToDevelop]` (Est: 5m)
 
 ### Claim Service
