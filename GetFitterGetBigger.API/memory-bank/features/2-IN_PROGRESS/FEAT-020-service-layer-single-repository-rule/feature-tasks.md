@@ -50,8 +50,8 @@
 ### Claim Service
 - **Task 1.7:** Create IClaimService interface `[Implemented: 31d2a679 | Started: 2025-01-08 19:07 | Finished: 2025-01-08 19:09 | Duration: 0h 2m]` (Est: 15m)
 - **Task 1.8:** Implement ClaimService with CreateUserClaimsAsync supporting UoW parameter `[Implemented: 27c2812b | Started: 2025-01-08 19:09 | Finished: 2025-01-08 19:11 | Duration: 0h 2m]` (Est: 30m)
-- **Task 1.9:** Write unit tests for ClaimService `[InProgress: Started: 2025-01-08 19:11]` (Est: 30m)
-- **Task 1.9a:** Register ClaimService in DI container (Program.cs) `[ReadyToDevelop]` (Est: 5m)
+- **Task 1.9:** Write unit tests for ClaimService `[Implemented: e00264de | Started: 2025-01-08 19:11 | Finished: 2025-01-08 19:13 | Duration: 0h 2m]` (Est: 30m)
+- **Task 1.9a:** Register ClaimService in DI container (Program.cs) `[InProgress: Started: 2025-01-08 19:13]` (Est: 5m)
 
 ## 🔄 Checkpoint 1
 - Status: 🛑
