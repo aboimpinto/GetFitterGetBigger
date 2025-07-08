@@ -38,10 +38,10 @@
 ### BodyPart Service
 - **Task 1.1:** Create IBodyPartService interface `[Implemented: 9bb71f0f | Started: 2025-01-08 18:47 | Finished: 2025-01-08 18:50 | Duration: 0h 3m]` (Est: 15m)
 - **Task 1.2:** Implement BodyPartService with ExistsAsync method `[Implemented: ff14f8cb | Started: 2025-01-08 18:50 | Finished: 2025-01-08 18:53 | Duration: 0h 3m]` (Est: 30m)
-- **Task 1.3:** Write unit tests for BodyPartService `[InProgress: Started: 2025-01-08 18:53]` (Est: 30m)
+- **Task 1.3:** Write unit tests for BodyPartService `[Implemented: bc95d6a6 | Started: 2025-01-08 18:53 | Finished: 2025-01-08 18:56 | Duration: 0h 3m]` (Est: 30m)
 
 ### ExerciseType Service
-- **Task 1.4:** Create IExerciseTypeService interface `[ReadyToDevelop]` (Est: 15m)
+- **Task 1.4:** Create IExerciseTypeService interface `[InProgress: Started: 2025-01-08 18:56]` (Est: 15m)
 - **Task 1.5:** Implement ExerciseTypeService with ExistsAsync and AllExistAsync methods `[ReadyToDevelop]` (Est: 45m)
 - **Task 1.6:** Write unit tests for ExerciseTypeService `[ReadyToDevelop]` (Est: 45m)
 
