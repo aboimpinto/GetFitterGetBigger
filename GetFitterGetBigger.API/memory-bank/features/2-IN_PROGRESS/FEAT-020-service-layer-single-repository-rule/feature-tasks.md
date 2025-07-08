@@ -44,8 +44,8 @@
 ### ExerciseType Service
 - **Task 1.4:** Create IExerciseTypeService interface `[Implemented: 58c59879 | Started: 2025-01-08 18:56 | Finished: 2025-01-08 18:57 | Duration: 0h 1m]` (Est: 15m)
 - **Task 1.5:** Implement ExerciseTypeService with ExistsAsync and AllExistAsync methods `[Implemented: 03316071 | Started: 2025-01-08 18:57 | Finished: 2025-01-08 18:59 | Duration: 0h 2m]` (Est: 45m)
-- **Task 1.6:** Write unit tests for ExerciseTypeService `[InProgress: Started: 2025-01-08 19:04]` (Est: 45m)
-- **Task 1.6a:** Register ExerciseTypeService in DI container (Program.cs) `[ReadyToDevelop]` (Est: 5m)
+- **Task 1.6:** Write unit tests for ExerciseTypeService `[Implemented: 5c150273 | Started: 2025-01-08 19:04 | Finished: 2025-01-08 19:06 | Duration: 0h 2m]` (Est: 45m)
+- **Task 1.6a:** Register ExerciseTypeService in DI container (Program.cs) `[InProgress: Started: 2025-01-08 19:06]` (Est: 5m)
 
 ### Claim Service
 - **Task 1.7:** Create IClaimService interface `[ReadyToDevelop]` (Est: 15m)
