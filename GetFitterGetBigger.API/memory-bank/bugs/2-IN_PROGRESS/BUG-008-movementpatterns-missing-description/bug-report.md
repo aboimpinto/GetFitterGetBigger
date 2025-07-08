@@ -2,10 +2,10 @@
 
 ## Bug ID: BUG-008
 ## Reported: 2025-01-08
-## Status: TODO
+## Status: FIXED
 ## Severity: Medium
 ## Affected Version: Current
-## Fixed Version: [Pending]
+## Fixed Version: Fixed in bugfix/movementpatterns-description-mapping
 
 ## Description
 The MovementPatterns API endpoints are not returning the `Description` field in their responses, even though the MovementPattern entity has a Description property and it was recently populated with data through FEAT-021. The endpoints are only returning `Id` and `Value` fields through the ReferenceDataDto.
@@ -35,7 +35,7 @@ Instead of:
 4. Actual: Response only includes id and value fields; description is missing
 
 ## Root Cause
-The MovementPatternsController uses `ReferenceDataDto` which only has `Id` and `Value` properties. The controller maps the MovementPattern entity to this DTO, thereby losing the Description field that exists in the entity model.
+The MovementPatternsController was not mapping the Description field from the MovementPattern entity to the ReferenceDataDto, even though the DTO already had a Description property available.
 
 ## Impact
 - Users affected: Personal Trainers and Clients using the API
@@ -58,7 +58,13 @@ Use any of the movement patterns added/updated in FEAT-021:
 - Rotation/Anti-Rotation
 
 ## Fix Summary
-[To be added after resolution]
+The fix was straightforward - updated all four endpoints in MovementPatternsController to include the Description field in the DTO mapping:
+- GetAll: Added `Description = mp.Description` to the Select projection
+- GetById: Added `Description = movementPattern.Description` to the DTO initialization
+- GetByName: Added `Description = movementPattern.Description` to the DTO initialization  
+- GetByValue: Added `Description = movementPattern.Description` to the DTO initialization
+
+Added 4 integration tests to verify the Description field is properly returned by all endpoints.
 
 ## Related Feature
 FEAT-021 - Movement Patterns Data Update (added the description data that is not being returned)
