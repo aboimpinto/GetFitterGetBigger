@@ -32,8 +32,7 @@ namespace GetFitterGetBigger.API.Tests.Services
                 .Returns(_mockBodyPartRepository.Object);
 
             _bodyPartService = new BodyPartService(
-                _mockUnitOfWorkProvider.Object,
-                _mockBodyPartRepository.Object);
+                _mockUnitOfWorkProvider.Object);
         }
 
         [Fact]

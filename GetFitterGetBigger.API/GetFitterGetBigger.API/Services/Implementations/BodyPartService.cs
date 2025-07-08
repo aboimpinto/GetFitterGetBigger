@@ -12,21 +12,19 @@ namespace GetFitterGetBigger.API.Services.Implementations;
 public class BodyPartService : IBodyPartService
 {
     private readonly IUnitOfWorkProvider<FitnessDbContext> _unitOfWorkProvider;
-    private readonly IBodyPartRepository _bodyPartRepository;
 
     public BodyPartService(
-        IUnitOfWorkProvider<FitnessDbContext> unitOfWorkProvider,
-        IBodyPartRepository bodyPartRepository)
+        IUnitOfWorkProvider<FitnessDbContext> unitOfWorkProvider)
     {
         _unitOfWorkProvider = unitOfWorkProvider;
-        _bodyPartRepository = bodyPartRepository;
     }
 
     /// <inheritdoc/>
     public async Task<bool> ExistsAsync(BodyPartId id)
     {
         using var uow = _unitOfWorkProvider.CreateReadOnly();
-        var bodyPart = await _bodyPartRepository.GetByIdAsync(id);
-        return bodyPart != null;
+        var repository = uow.GetRepository<IBodyPartRepository>();
+        var bodyPart = await repository.GetByIdAsync(id);
+        return bodyPart != null && bodyPart.IsActive;
     }
 }

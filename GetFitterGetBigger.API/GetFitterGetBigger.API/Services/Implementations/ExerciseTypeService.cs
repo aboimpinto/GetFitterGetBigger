@@ -15,33 +15,32 @@ namespace GetFitterGetBigger.API.Services.Implementations;
 public class ExerciseTypeService : IExerciseTypeService
 {
     private readonly IUnitOfWorkProvider<FitnessDbContext> _unitOfWorkProvider;
-    private readonly IExerciseTypeRepository _exerciseTypeRepository;
 
     public ExerciseTypeService(
-        IUnitOfWorkProvider<FitnessDbContext> unitOfWorkProvider,
-        IExerciseTypeRepository exerciseTypeRepository)
+        IUnitOfWorkProvider<FitnessDbContext> unitOfWorkProvider)
     {
         _unitOfWorkProvider = unitOfWorkProvider;
-        _exerciseTypeRepository = exerciseTypeRepository;
     }
 
     /// <inheritdoc/>
     public async Task<bool> ExistsAsync(ExerciseTypeId id)
     {
         using var uow = _unitOfWorkProvider.CreateReadOnly();
-        var exerciseType = await _exerciseTypeRepository.GetByIdAsync(id);
-        return exerciseType != null;
+        var repository = uow.GetRepository<IExerciseTypeRepository>();
+        var exerciseType = await repository.GetByIdAsync(id);
+        return exerciseType != null && exerciseType.IsActive;
     }
 
     /// <inheritdoc/>
     public async Task<bool> AllExistAsync(IEnumerable<ExerciseTypeId> ids)
     {
         using var uow = _unitOfWorkProvider.CreateReadOnly();
+        var repository = uow.GetRepository<IExerciseTypeRepository>();
         
         foreach (var id in ids)
         {
-            var exerciseType = await _exerciseTypeRepository.GetByIdAsync(id);
-            if (exerciseType == null)
+            var exerciseType = await repository.GetByIdAsync(id);
+            if (exerciseType == null || !exerciseType.IsActive)
             {
                 return false;
             }

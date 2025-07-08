@@ -34,8 +34,7 @@ namespace GetFitterGetBigger.API.Tests.Services
                 .Returns(_mockExerciseTypeRepository.Object);
 
             _exerciseTypeService = new ExerciseTypeService(
-                _mockUnitOfWorkProvider.Object,
-                _mockExerciseTypeRepository.Object);
+                _mockUnitOfWorkProvider.Object);
         }
 
         [Fact]
