@@ -1,0 +1,1 @@
+can you catch up reading the @memory-bank/ and wait for instructions

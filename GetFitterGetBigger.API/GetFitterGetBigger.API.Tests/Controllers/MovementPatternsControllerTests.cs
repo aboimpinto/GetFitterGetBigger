@@ -160,4 +160,112 @@ public class MovementPatternsControllerTests : IClassFixture<ApiTestFixture>
         Assert.NotNull(movementPattern);
         Assert.Equal("Push", movementPattern.Value, ignoreCase: true); // The actual stored value has proper casing
     }
+
+    [Fact]
+    public async Task GetAll_ReturnsMovementPatternsWithDescription()
+    {
+        // Act
+        var response = await _client.GetAsync("/api/ReferenceTables/MovementPatterns");
+        
+        // Assert
+        response.EnsureSuccessStatusCode();
+        var movementPatterns = await response.Content.ReadFromJsonAsync<List<ReferenceDataDto>>();
+        
+        Assert.NotNull(movementPatterns);
+        
+        // If there are movement patterns, verify they have descriptions
+        if (movementPatterns.Any())
+        {
+            var firstPattern = movementPatterns.First();
+            Assert.NotNull(firstPattern.Description);
+            Assert.NotEmpty(firstPattern.Description);
+        }
+    }
+
+    [Fact]
+    public async Task GetById_ReturnsMovementPatternWithDescription()
+    {
+        // First get all movement patterns to find a valid ID
+        var allResponse = await _client.GetAsync("/api/ReferenceTables/MovementPatterns");
+        allResponse.EnsureSuccessStatusCode();
+        var allMovementPatterns = await allResponse.Content.ReadFromJsonAsync<List<ReferenceDataDto>>();
+        Assert.NotNull(allMovementPatterns);
+        
+        // Skip the test if there are no movement patterns
+        if (!allMovementPatterns.Any())
+        {
+            return; // Skip the test
+        }
+        
+        var firstMovementPattern = allMovementPatterns.First();
+        
+        // Act
+        var response = await _client.GetAsync($"/api/ReferenceTables/MovementPatterns/{firstMovementPattern.Id}");
+        
+        // Assert
+        response.EnsureSuccessStatusCode();
+        var movementPattern = await response.Content.ReadFromJsonAsync<ReferenceDataDto>();
+        
+        Assert.NotNull(movementPattern);
+        Assert.NotNull(movementPattern.Description);
+        Assert.NotEmpty(movementPattern.Description);
+    }
+
+    [Fact]
+    public async Task GetByName_ReturnsMovementPatternWithDescription()
+    {
+        // First get all movement patterns to find a valid name
+        var allResponse = await _client.GetAsync("/api/ReferenceTables/MovementPatterns");
+        allResponse.EnsureSuccessStatusCode();
+        var allMovementPatterns = await allResponse.Content.ReadFromJsonAsync<List<ReferenceDataDto>>();
+        Assert.NotNull(allMovementPatterns);
+        
+        // Skip the test if there are no movement patterns
+        if (!allMovementPatterns.Any())
+        {
+            return; // Skip the test
+        }
+        
+        var firstMovementPattern = allMovementPatterns.First();
+        
+        // Act
+        var response = await _client.GetAsync($"/api/ReferenceTables/MovementPatterns/ByName/{firstMovementPattern.Value}");
+        
+        // Assert
+        response.EnsureSuccessStatusCode();
+        var movementPattern = await response.Content.ReadFromJsonAsync<ReferenceDataDto>();
+        
+        Assert.NotNull(movementPattern);
+        Assert.NotNull(movementPattern.Description);
+        Assert.NotEmpty(movementPattern.Description);
+    }
+
+    [Fact]
+    public async Task GetByValue_ReturnsMovementPatternWithDescription()
+    {
+        // First get all movement patterns to find a valid value
+        var allResponse = await _client.GetAsync("/api/ReferenceTables/MovementPatterns");
+        allResponse.EnsureSuccessStatusCode();
+        var allMovementPatterns = await allResponse.Content.ReadFromJsonAsync<List<ReferenceDataDto>>();
+        Assert.NotNull(allMovementPatterns);
+        
+        // Skip the test if there are no movement patterns
+        if (!allMovementPatterns.Any())
+        {
+            return; // Skip the test
+        }
+        
+        var firstMovementPattern = allMovementPatterns.First();
+        
+        // Act
+        var response = await _client.GetAsync($"/api/ReferenceTables/MovementPatterns/ByValue/{firstMovementPattern.Value}");
+        
+        // Assert
+        response.EnsureSuccessStatusCode();
+        var movementPattern = await response.Content.ReadFromJsonAsync<ReferenceDataDto>();
+        
+        Assert.NotNull(movementPattern);
+        Assert.NotNull(movementPattern.Description);
+        Assert.NotEmpty(movementPattern.Description);
+    }
 }
