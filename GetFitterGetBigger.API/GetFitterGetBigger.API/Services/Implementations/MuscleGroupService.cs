@@ -184,16 +184,14 @@ public class MuscleGroupService : ReferenceTableServiceBase<MuscleGroup>, IMuscl
             throw new ArgumentException($"Invalid BodyPart ID format. Expected format: 'bodypart-{{guid}}', got: '{request.BodyPartId}'");
         }
         
-        using var unitOfWork = _unitOfWorkProvider.CreateWritable();
-        var repository = unitOfWork.GetRepository<IMuscleGroupRepository>();
-        var bodyPartRepository = unitOfWork.GetRepository<IBodyPartRepository>();
-        
-        // Check if BodyPart exists and is active
-        var bodyPart = await bodyPartRepository.GetByIdAsync(bodyPartId);
-        if (bodyPart == null || !bodyPart.IsActive)
+        // Check if BodyPart exists using service
+        if (!await _bodyPartService.ExistsAsync(bodyPartId))
         {
             throw new ArgumentException("Body part not found or is inactive");
         }
+        
+        using var unitOfWork = _unitOfWorkProvider.CreateWritable();
+        var repository = unitOfWork.GetRepository<IMuscleGroupRepository>();
         
         // Check for duplicate name
         if (await repository.ExistsByNameAsync(request.Name))
