@@ -20,14 +20,17 @@ namespace GetFitterGetBigger.API.Services.Implementations;
 public class MuscleGroupService : ReferenceTableServiceBase<MuscleGroup>, IMuscleGroupService
 {
     private readonly ILogger<MuscleGroupService> _specificLogger;
+    private readonly IBodyPartService _bodyPartService;
     
     public MuscleGroupService(
         IUnitOfWorkProvider<FitnessDbContext> unitOfWorkProvider,
         ICacheService cacheService,
-        ILogger<MuscleGroupService> logger)
+        ILogger<MuscleGroupService> logger,
+        IBodyPartService bodyPartService)
         : base(unitOfWorkProvider, cacheService, logger)
     {
         _specificLogger = logger;
+        _bodyPartService = bodyPartService;
     }
     
     protected override string CacheKeyPrefix => "MuscleGroups";

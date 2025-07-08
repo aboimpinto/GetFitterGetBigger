@@ -51,13 +51,13 @@
 - **Task 1.7:** Create IClaimService interface `[Implemented: 31d2a679 | Started: 2025-01-08 19:07 | Finished: 2025-01-08 19:09 | Duration: 0h 2m]` (Est: 15m)
 - **Task 1.8:** Implement ClaimService with CreateUserClaimsAsync supporting UoW parameter `[Implemented: 27c2812b | Started: 2025-01-08 19:09 | Finished: 2025-01-08 19:11 | Duration: 0h 2m]` (Est: 30m)
 - **Task 1.9:** Write unit tests for ClaimService `[Implemented: e00264de | Started: 2025-01-08 19:11 | Finished: 2025-01-08 19:13 | Duration: 0h 2m]` (Est: 30m)
-- **Task 1.9a:** Register ClaimService in DI container (Program.cs) `[InProgress: Started: 2025-01-08 19:13]` (Est: 5m)
+- **Task 1.9a:** Register ClaimService in DI container (Program.cs) `[Implemented: 4d8a897c | Started: 2025-01-08 19:13 | Finished: 2025-01-08 19:14 | Duration: 0h 1m]` (Est: 5m)
 
 ## 🔄 Checkpoint 1
-- Status: 🛑
-- [ ] All new services implemented with tests
-- [ ] Build successful (`dotnet build`)
-- [ ] All tests passing (`dotnet test`)
+- Status: ✅
+- [x] All new services implemented with tests
+- [x] Build successful (`dotnet build`)
+- [x] All tests passing (`dotnet test`)
 
 ## Category 2: MuscleGroupService Refactoring - Estimated: 2h
 
@@ -65,7 +65,7 @@
 - [ ] Re-read `/memory-bank/common-implementation-pitfalls.md` Section 1
 - [ ] Remember: Service-to-service calls for validation, not direct repository access
 
-- **Task 2.1:** Replace IBodyPartRepository with IBodyPartService in constructor `[ReadyToDevelop]` (Est: 15m)
+- **Task 2.1:** Replace IBodyPartRepository with IBodyPartService in constructor `[InProgress: Started: 2025-01-08 19:16]` (Est: 15m)
 - **Task 2.2:** Update CreateAsync method to use BodyPartService.ExistsAsync `[ReadyToDevelop]` (Est: 30m)
 - **Task 2.3:** Update UpdateAsync method to use BodyPartService.ExistsAsync `[ReadyToDevelop]` (Est: 30m)
 - **Task 2.4:** Update unit tests to mock IBodyPartService instead of repository `[ReadyToDevelop]` (Est: 45m)
