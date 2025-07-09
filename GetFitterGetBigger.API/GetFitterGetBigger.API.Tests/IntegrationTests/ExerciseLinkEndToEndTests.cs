@@ -71,6 +71,8 @@ public class ExerciseLinkEndToEndTests : IClassFixture<ApiTestFixture>
         // Step 3: Create cooldown links
         var cooldownLink1 = await CreateLink(mainWorkout.Id.ToString(), cooldown1.Id.ToString(), "Cooldown", 1);
         var cooldownLink2 = await CreateLink(mainWorkout.Id.ToString(), cooldown2.Id.ToString(), "Cooldown", 2);
+        Assert.NotNull(cooldownLink1);
+        Assert.NotNull(cooldownLink2);
 
         // Step 4: Get all links with details
         var allLinksResponse = await _client.GetAsync($"/api/exercises/{mainWorkout.Id}/links?includeExerciseDetails=true");
@@ -110,7 +112,7 @@ public class ExerciseLinkEndToEndTests : IClassFixture<ApiTestFixture>
         Assert.NotNull(suggested);
 
         // Step 7: Delete a link
-        var deleteResponse = await _client.DeleteAsync($"/api/exercises/{mainWorkout.Id}/links/{cooldownLink2.Id}");
+        var deleteResponse = await _client.DeleteAsync($"/api/exercises/{mainWorkout.Id}/links/{cooldownLink2!.Id}");
         Assert.Equal(HttpStatusCode.NoContent, deleteResponse.StatusCode);
 
         // Step 8: Verify final state
@@ -156,7 +158,7 @@ public class ExerciseLinkEndToEndTests : IClassFixture<ApiTestFixture>
         Assert.Equal(3, deadliftLinks.Links.Count); // 2 warmups, 1 cooldown
 
         var rdlLinks = await GetLinks(rdl.Id.ToString());
-        Assert.Equal(1, rdlLinks.Links.Count); // 1 warmup
+        Assert.Single(rdlLinks.Links); // 1 warmup
 
         // Test filtering
         var warmupOnlyLinks = await GetLinks(deadlift.Id.ToString(), "Warmup");
@@ -164,8 +166,8 @@ public class ExerciseLinkEndToEndTests : IClassFixture<ApiTestFixture>
         Assert.All(warmupOnlyLinks.Links, link => Assert.Equal("Warmup", link.LinkType));
 
         // Test display order sorting
-        Assert.Single(warmupOnlyLinks.Links.Where(l => l.DisplayOrder == 1));
-        Assert.Single(warmupOnlyLinks.Links.Where(l => l.DisplayOrder == 2));
+        Assert.Single(warmupOnlyLinks.Links, l => l.DisplayOrder == 1);
+        Assert.Single(warmupOnlyLinks.Links, l => l.DisplayOrder == 2);
     }
 
     [Fact]
