@@ -1,0 +1,2 @@
+Can you please start implementing the feature $ARGUMENT that is already in READY_TO_DEVELOP, follwing the @memory-bank/FEATURE_IMPLEMENTATION_PROCESS.md and @memory-bank/FEATURE_WORKFLOW_PROCESS.md
+If the feature is not in the right state, do not start it and inform the user the reason.

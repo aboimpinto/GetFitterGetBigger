@@ -63,11 +63,13 @@ builder.Services.AddTransient<IMuscleGroupRepository, MuscleGroupRepository>();
 builder.Services.AddTransient<IUserRepository, UserRepository>();
 builder.Services.AddTransient<IClaimRepository, ClaimRepository>();
 builder.Services.AddTransient<IExerciseRepository, ExerciseRepository>();
+builder.Services.AddTransient<IExerciseLinkRepository, ExerciseLinkRepository>();
 
 // Register services
 builder.Services.AddTransient<IExerciseService, ExerciseService>();
 builder.Services.AddTransient<IEquipmentService, EquipmentService>();
 builder.Services.AddTransient<IMuscleGroupService, MuscleGroupService>();
+builder.Services.AddTransient<IExerciseLinkService, ExerciseLinkService>();
 
 // Register reference table validation services
 builder.Services.AddTransient<IBodyPartService, BodyPartService>();
