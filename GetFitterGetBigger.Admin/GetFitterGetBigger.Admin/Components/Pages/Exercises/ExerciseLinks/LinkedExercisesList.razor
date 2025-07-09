@@ -1,0 +1,257 @@
+@using GetFitterGetBigger.Admin.Models.Dtos
+@using GetFitterGetBigger.Admin.Services
+@implements IDisposable
+
+<div class="space-y-6" data-testid="linked-exercises-list">
+    @* Warmup Section *@
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200" data-testid="warmup-section">
+        <div class="px-4 py-3 border-b border-gray-200 bg-orange-50">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <svg class="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                              d="M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0120 13a7.975 7.975 0 01-2.343 5.657z" />
+                    </svg>
+                    <h3 class="text-lg font-medium text-gray-900">Warmup Exercises</h3>
+                    <span class="text-sm text-gray-600" data-testid="warmup-count">
+                        @StateService.WarmupLinkCount / @MaxLinksPerType
+                    </span>
+                </div>
+                
+                @if (!Disabled && StateService.WarmupLinkCount < MaxLinksPerType)
+                {
+                    <button type="button"
+                            @onclick="HandleAddWarmup"
+                            class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-orange-700 bg-orange-100 rounded-md hover:bg-orange-200 transition-colors"
+                            data-testid="add-warmup-button">
+                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                        </svg>
+                        Add Warmup
+                    </button>
+                }
+            </div>
+        </div>
+        
+        <div class="p-4">
+            @if (StateService.WarmupLinks.Any())
+            {
+                <div class="space-y-2" 
+                     @ondrop="HandleDropWarmup"
+                     @ondragover="HandleDragOver"
+                     @ondragover:preventDefault="true"
+                     data-testid="warmup-links-container">
+                    @foreach (var link in StateService.WarmupLinks)
+                    {
+                        <ExerciseLinkCard Link="link"
+                                         Disabled="@Disabled"
+                                         IsDragging="@(_draggedLink?.Id == link.Id)"
+                                         OnRemove="@(async (l) => await HandleRemoveLink(l))"
+                                         OnDragStart="@(async (l) => await HandleDragStart(l))"
+                                         OnDragEnd="HandleDragEnd" />
+                    }
+                </div>
+            }
+            else
+            {
+                <div class="text-center py-8 text-gray-500" data-testid="warmup-empty-state">
+                    <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                              d="M12 4v16m8-8H4" />
+                    </svg>
+                    <p class="mt-2">No warmup exercises linked yet.</p>
+                    @if (!Disabled)
+                    {
+                        <p class="text-sm">Click "Add Warmup" to link exercises.</p>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+
+    @* Cooldown Section *@
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200" data-testid="cooldown-section">
+        <div class="px-4 py-3 border-b border-gray-200 bg-blue-50">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                              d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z" />
+                    </svg>
+                    <h3 class="text-lg font-medium text-gray-900">Cooldown Exercises</h3>
+                    <span class="text-sm text-gray-600" data-testid="cooldown-count">
+                        @StateService.CooldownLinkCount / @MaxLinksPerType
+                    </span>
+                </div>
+                
+                @if (!Disabled && StateService.CooldownLinkCount < MaxLinksPerType)
+                {
+                    <button type="button"
+                            @onclick="HandleAddCooldown"
+                            class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-blue-700 bg-blue-100 rounded-md hover:bg-blue-200 transition-colors"
+                            data-testid="add-cooldown-button">
+                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                        </svg>
+                        Add Cooldown
+                    </button>
+                }
+            </div>
+        </div>
+        
+        <div class="p-4">
+            @if (StateService.CooldownLinks.Any())
+            {
+                <div class="space-y-2"
+                     @ondrop="HandleDropCooldown"
+                     @ondragover="HandleDragOver"
+                     @ondragover:preventDefault="true"
+                     data-testid="cooldown-links-container">
+                    @foreach (var link in StateService.CooldownLinks)
+                    {
+                        <ExerciseLinkCard Link="link"
+                                         Disabled="@Disabled"
+                                         IsDragging="@(_draggedLink?.Id == link.Id)"
+                                         OnRemove="@(async (l) => await HandleRemoveLink(l))"
+                                         OnDragStart="@(async (l) => await HandleDragStart(l))"
+                                         OnDragEnd="HandleDragEnd" />
+                    }
+                </div>
+            }
+            else
+            {
+                <div class="text-center py-8 text-gray-500" data-testid="cooldown-empty-state">
+                    <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                              d="M12 4v16m8-8H4" />
+                    </svg>
+                    <p class="mt-2">No cooldown exercises linked yet.</p>
+                    @if (!Disabled)
+                    {
+                        <p class="text-sm">Click "Add Cooldown" to link exercises.</p>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter, EditorRequired] public IExerciseLinkStateService StateService { get; set; } = null!;
+    [Parameter] public bool Disabled { get; set; } = false;
+    [Parameter] public EventCallback<string> OnAddLink { get; set; }
+    [Parameter] public EventCallback<ExerciseLinkDto> OnRemoveLink { get; set; }
+    [Parameter] public EventCallback<(string linkType, Dictionary<string, int> reorderMap)> OnReorderLinks { get; set; }
+    
+    private const int MaxLinksPerType = 10;
+    private ExerciseLinkDto? _draggedLink;
+    private string? _draggedLinkOriginalType;
+
+    protected override void OnInitialized()
+    {
+        StateService.OnChange += StateHasChanged;
+    }
+
+    private async Task HandleRemoveLink(ExerciseLinkDto link)
+    {
+        if (!Disabled && OnRemoveLink.HasDelegate)
+        {
+            await OnRemoveLink.InvokeAsync(link);
+        }
+    }
+
+    private async Task HandleDragStart(ExerciseLinkDto link)
+    {
+        if (!Disabled)
+        {
+            _draggedLink = link;
+            _draggedLinkOriginalType = link.LinkType;
+            await Task.CompletedTask;
+        }
+    }
+
+    private void HandleDragEnd()
+    {
+        _draggedLink = null;
+        _draggedLinkOriginalType = null;
+    }
+
+    private void HandleDragOver(DragEventArgs e)
+    {
+        if (!Disabled && _draggedLink != null)
+        {
+            e.DataTransfer.DropEffect = "move";
+        }
+    }
+
+    private async Task HandleAddWarmup()
+    {
+        await OnAddLink.InvokeAsync("Warmup");
+    }
+
+    private async Task HandleAddCooldown()
+    {
+        await OnAddLink.InvokeAsync("Cooldown");
+    }
+
+    private async Task HandleDropWarmup(DragEventArgs e)
+    {
+        await HandleDrop(e, "Warmup");
+    }
+
+    private async Task HandleDropCooldown(DragEventArgs e)
+    {
+        await HandleDrop(e, "Cooldown");
+    }
+
+    private async Task HandleDrop(DragEventArgs e, string targetLinkType)
+    {
+        if (!Disabled && _draggedLink != null && OnReorderLinks.HasDelegate)
+        {
+            // Get the appropriate link collection
+            var targetLinks = targetLinkType == "Warmup" 
+                ? StateService.WarmupLinks.ToList() 
+                : StateService.CooldownLinks.ToList();
+
+            // Prevent cross-section drops
+            if (_draggedLinkOriginalType != targetLinkType)
+            {
+                HandleDragEnd();
+                return;
+            }
+
+            // Find the dragged link's current position
+            var draggedIndex = targetLinks.FindIndex(l => l.Id == _draggedLink.Id);
+            if (draggedIndex < 0)
+            {
+                HandleDragEnd();
+                return;
+            }
+
+            // For a more sophisticated implementation, we would detect the drop position
+            // For now, we'll move the dragged item to the end if it's not already there
+            if (draggedIndex < targetLinks.Count - 1)
+            {
+                // Remove the dragged item and add it to the end
+                targetLinks.RemoveAt(draggedIndex);
+                targetLinks.Add(_draggedLink);
+                
+                // Create reorder map with new positions
+                var reorderMap = new Dictionary<string, int>();
+                for (int i = 0; i < targetLinks.Count; i++)
+                {
+                    reorderMap[targetLinks[i].Id] = i;
+                }
+                
+                await OnReorderLinks.InvokeAsync((targetLinkType, reorderMap));
+            }
+            
+            HandleDragEnd();
+        }
+    }
+
+    public void Dispose()
+    {
+        StateService.OnChange -= StateHasChanged;
+    }
+}
