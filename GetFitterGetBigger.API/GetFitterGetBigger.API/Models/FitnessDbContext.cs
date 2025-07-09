@@ -34,6 +34,7 @@ public class FitnessDbContext : DbContext
     public DbSet<ExerciseMuscleGroup> ExerciseMuscleGroups => Set<ExerciseMuscleGroup>();
     public DbSet<ExerciseBodyPart> ExerciseBodyParts => Set<ExerciseBodyPart>();
     public DbSet<ExerciseExerciseType> ExerciseExerciseTypes => Set<ExerciseExerciseType>();
+    public DbSet<ExerciseLink> ExerciseLinks => Set<ExerciseLink>();
     
     public FitnessDbContext(DbContextOptions<FitnessDbContext> options) 
         : base(options)
@@ -253,6 +254,25 @@ public class FitnessDbContext : DbContext
             .HasConversion(
                 id => (Guid)id,
                 guid => MuscleRoleId.From(guid));
+                
+        // ExerciseLink ID
+        modelBuilder.Entity<ExerciseLink>()
+            .Property(el => el.Id)
+            .HasConversion(
+                id => (Guid)id,
+                guid => ExerciseLinkId.From(guid));
+                
+        modelBuilder.Entity<ExerciseLink>()
+            .Property(el => el.SourceExerciseId)
+            .HasConversion(
+                id => (Guid)id,
+                guid => ExerciseId.From(guid));
+                
+        modelBuilder.Entity<ExerciseLink>()
+            .Property(el => el.TargetExerciseId)
+            .HasConversion(
+                id => (Guid)id,
+                guid => ExerciseId.From(guid));
     }
     
     private static void ConfigureManyToManyRelationships(ModelBuilder modelBuilder)
