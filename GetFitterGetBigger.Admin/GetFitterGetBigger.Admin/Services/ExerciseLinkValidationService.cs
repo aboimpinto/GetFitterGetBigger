@@ -132,7 +132,7 @@ public class ExerciseLinkValidationService : IExerciseLinkValidationService
         }
         
         // Validate duplicate link
-        var duplicateResult = ValidateDuplicateLink(existingLinks, targetExerciseId, linkType);
+        var duplicateResult = ValidateDuplicateLink(existingLinks ?? Enumerable.Empty<ExerciseLinkDto>(), targetExerciseId, linkType);
         if (!duplicateResult.IsValid)
         {
             return duplicateResult;
