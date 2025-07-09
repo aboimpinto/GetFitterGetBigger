@@ -84,13 +84,12 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises.ExerciseLink
         {
             // Arrange
             var link = new ExerciseLinkDtoBuilder().Build();
-            var dragStartCalled = false;
 
             // Act
             var component = RenderComponent<ExerciseLinkCard>(parameters => parameters
                 .Add(p => p.Link, link)
                 .Add(p => p.Disabled, false)
-                .Add(p => p.OnDragStart, EventCallback.Factory.Create<ExerciseLinkDto>(this, _ => dragStartCalled = true)));
+                .Add(p => p.OnDragStart, EventCallback.Factory.Create<ExerciseLinkDto>(this, _ => { })));
 
             // Assert
             component.Find("[data-testid='drag-handle']").Should().NotBeNull();

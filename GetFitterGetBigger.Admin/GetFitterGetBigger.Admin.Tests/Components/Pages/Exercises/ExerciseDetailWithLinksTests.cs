@@ -195,8 +195,9 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
         {
             // Arrange
             _exerciseStateServiceMock.SetupGet(x => x.SelectedExercise).Returns(_workoutExercise);
-            _linkStateServiceMock.SetupGet(x => x.IsLoading).Returns(true);
             SetupLinkStateWithNoLinks();
+            // Override IsLoading after setup
+            _linkStateServiceMock.SetupGet(x => x.IsLoading).Returns(true);
             
             Services.AddSingleton(_exerciseStateServiceMock.Object);
             Services.AddSingleton(_linkStateServiceMock.Object);

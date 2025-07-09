@@ -49,9 +49,10 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises.ExerciseLink
             _stateServiceMock.SetupGet(x => x.CurrentExerciseName).Returns("Squats");
             _stateServiceMock.SetupGet(x => x.CurrentLinks).Returns(new ExerciseLinksResponseDto
             {
+                ExerciseId = "ex1",
+                ExerciseName = "Squats",
                 Links = new List<ExerciseLinkDto>(),
-                TotalWarmupCount = 0,
-                TotalCooldownCount = 0
+                TotalCount = 0
             });
             _stateServiceMock.SetupGet(x => x.IsLoading).Returns(false);
             _stateServiceMock.SetupGet(x => x.ErrorMessage).Returns((string?)null);

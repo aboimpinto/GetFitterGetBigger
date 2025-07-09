@@ -384,6 +384,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises.ExerciseLink
 
             var modal = component.FindComponent<AddExerciseLinkModal>();
             var selectedExercise = new ExerciseListDtoBuilder()
+                .WithId("ex4")
                 .WithName("Jumping Jacks")
                 .Build();
 
