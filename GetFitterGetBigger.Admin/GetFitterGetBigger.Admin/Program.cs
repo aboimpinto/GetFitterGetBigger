@@ -89,6 +89,12 @@ builder.Services.AddScoped<GetFitterGetBigger.Admin.Services.INavigationService,
 // Add CacheHelperService
 builder.Services.AddSingleton<GetFitterGetBigger.Admin.Services.ICacheHelperService, GetFitterGetBigger.Admin.Services.CacheHelperService>();
 
+// Add HttpClient for ExerciseLinkService
+builder.Services.AddHttpClient<GetFitterGetBigger.Admin.Services.IExerciseLinkService, GetFitterGetBigger.Admin.Services.ExerciseLinkService>();
+
+// Add ExerciseLinkStateService
+builder.Services.AddScoped<GetFitterGetBigger.Admin.Services.IExerciseLinkStateService, GetFitterGetBigger.Admin.Services.ExerciseLinkStateService>();
+
 var app = builder.Build();
 
 // Clear all caches on startup to avoid cache collision issues
