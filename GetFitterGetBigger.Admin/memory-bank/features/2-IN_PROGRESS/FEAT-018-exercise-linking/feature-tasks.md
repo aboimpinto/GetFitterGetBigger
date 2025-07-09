@@ -37,8 +37,8 @@
 ### Category 1: Data Models & DTOs - Estimated: 1h
 - **Task 1.1:** Create ExerciseLinkDto interface with all required properties `[Implemented: eb2adf41 | Started: 2025-07-09 10:48 | Finished: 2025-07-09 10:50 | Duration: 0h 2m]` (Est: 15m)
 - **Task 1.2:** Create ExerciseLinksResponseDto, CreateExerciseLinkDto, UpdateExerciseLinkDto interfaces `[Implemented: a21359a1 | Started: 2025-07-09 10:51 | Finished: 2025-07-09 10:53 | Duration: 0h 2m]` (Est: 15m)
-- **Task 1.3:** Update ExerciseDto to include link count/indicator properties `[InProgress: Started: 2025-07-09 10:54]` (Est: 15m)
-- **Task 1.4:** Write unit tests for DTO serialization/deserialization `[ReadyToDevelop]` (Est: 15m)
+- **Task 1.3:** Update ExerciseDto to include link count/indicator properties `[Implemented: c8f0102a | Started: 2025-07-09 10:54 | Finished: 2025-07-09 10:56 | Duration: 0h 2m]` (Est: 15m)
+- **Task 1.4:** Write unit tests for DTO serialization/deserialization `[InProgress: Started: 2025-07-09 10:57]` (Est: 15m)
 
 ### Category 2: API Service Layer - Estimated: 2h
 - **Task 2.1:** Create IExerciseLinkService interface with all 5 methods `[ReadyToDevelop]` (Est: 15m)
