@@ -41,8 +41,8 @@
 - **Task 1.4:** Write unit tests for DTO serialization/deserialization `[Implemented: 7661f233 | Started: 2025-07-09 10:57 | Finished: 2025-07-09 11:00 | Duration: 0h 3m]` (Est: 15m)
 
 ### Category 2: API Service Layer - Estimated: 2h
-- **Task 2.1:** Create IExerciseLinkService interface with all 5 methods `[InProgress: Started: 2025-07-09 11:01]` (Est: 15m)
-- **Task 2.2:** Implement ExerciseLinkService with createLink method `[ReadyToDevelop]` (Est: 20m)
+- **Task 2.1:** Create IExerciseLinkService interface with all 5 methods `[Implemented: 7b80a94e | Started: 2025-07-09 11:01 | Finished: 2025-07-09 11:03 | Duration: 0h 2m]` (Est: 15m)
+- **Task 2.2:** Implement ExerciseLinkService with createLink method `[InProgress: Started: 2025-07-09 11:04]` (Est: 20m)
 - **Task 2.3:** Implement getLinks method with query parameters support `[ReadyToDevelop]` (Est: 20m)
 - **Task 2.4:** Implement updateLink, deleteLink, and getSuggestedLinks methods `[ReadyToDevelop]` (Est: 20m)
 - **Task 2.5:** Add comprehensive error handling and custom error types `[ReadyToDevelop]` (Est: 15m)
