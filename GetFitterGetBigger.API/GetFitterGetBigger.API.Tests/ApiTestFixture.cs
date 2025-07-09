@@ -150,7 +150,7 @@ public class ApiTestFixture : WebApplicationFactory<Program>
         {
             context.KineticChainTypes.AddRange(
                 KineticChainType.Handler.Create(
-                    KineticChainTypeId.From(Guid.Parse("f5d5a2de-9c4e-4b87-b8c3-5d1e17d0b1f4")),
+                    KineticChainTypeId.From(Guid.Parse("12345678-9abc-def0-1234-567890abcdef")),
                     "Compound",
                     "Exercises that work multiple muscle groups",
                     1,
@@ -306,7 +306,7 @@ public class ApiTestFixture : WebApplicationFactory<Program>
                     true
                 ),
                 ExerciseType.Handler.Create(
-                    ExerciseTypeId.From(Guid.Parse("d4e5f6a7-8b9c-0d1e-2f3a-4b5c6d7e8f9a")),
+                    ExerciseTypeId.From(Guid.Parse("91fc6a9f-70d1-4ae3-906f-3e4e3a5dce30")),
                     "Rest",
                     "Periods of rest between exercises or sets - cannot be combined with other exercise types",
                     4,

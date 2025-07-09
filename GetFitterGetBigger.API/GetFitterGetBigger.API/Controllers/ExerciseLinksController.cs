@@ -16,7 +16,6 @@ namespace GetFitterGetBigger.API.Controllers;
 [Route("api/exercises/{exerciseId}/links")]
 [Produces("application/json")]
 [Tags("Exercise Links")]
-[Authorize]
 public class ExerciseLinksController : ControllerBase
 {
     private readonly IExerciseLinkService _exerciseLinkService;
@@ -41,14 +40,9 @@ public class ExerciseLinksController : ControllerBase
     /// <returns>The created exercise link</returns>
     /// <response code="201">Returns the created exercise link</response>
     /// <response code="400">If the request is invalid or business rules are violated</response>
-    /// <response code="401">If the user is not authenticated</response>
-    /// <response code="403">If the user doesn't have PT-Tier or Admin-Tier access</response>
     [HttpPost]
-    [Authorize]
     [ProducesResponseType(typeof(ExerciseLinkDto), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public async Task<IActionResult> CreateLink(string exerciseId, [FromBody] CreateExerciseLinkDto dto)
     {
         if (!ModelState.IsValid)
@@ -84,11 +78,9 @@ public class ExerciseLinksController : ControllerBase
     /// <returns>The exercise links</returns>
     /// <response code="200">Returns the exercise links</response>
     /// <response code="400">If the exercise ID is invalid</response>
-    /// <response code="401">If the user is not authenticated</response>
     [HttpGet]
     [ProducesResponseType(typeof(ExerciseLinksResponseDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> GetLinks(
         string exerciseId, 
         [FromQuery] string? linkType = null,
@@ -117,14 +109,9 @@ public class ExerciseLinksController : ControllerBase
     /// <returns>Suggested exercise links based on usage patterns</returns>
     /// <response code="200">Returns the suggested links</response>
     /// <response code="400">If the exercise ID is invalid</response>
-    /// <response code="401">If the user is not authenticated</response>
-    /// <response code="403">If the user doesn't have PT-Tier or Admin-Tier access</response>
     [HttpGet("suggested")]
-    [Authorize]
     [ProducesResponseType(typeof(ExerciseLinkDto[]), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public async Task<IActionResult> GetSuggestedLinks(string exerciseId, [FromQuery] int count = 5)
     {
         try
@@ -151,15 +138,10 @@ public class ExerciseLinksController : ControllerBase
     /// <returns>The updated exercise link</returns>
     /// <response code="200">Returns the updated exercise link</response>
     /// <response code="400">If the request is invalid</response>
-    /// <response code="401">If the user is not authenticated</response>
-    /// <response code="403">If the user doesn't have PT-Tier or Admin-Tier access</response>
     /// <response code="404">If the link is not found</response>
     [HttpPut("{linkId}")]
-    [Authorize]
     [ProducesResponseType(typeof(ExerciseLinkDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> UpdateLink(string exerciseId, string linkId, [FromBody] UpdateExerciseLinkDto dto)
     {
@@ -198,15 +180,10 @@ public class ExerciseLinksController : ControllerBase
     /// <returns>No content on success</returns>
     /// <response code="204">The link was deleted successfully</response>
     /// <response code="400">If the request is invalid</response>
-    /// <response code="401">If the user is not authenticated</response>
-    /// <response code="403">If the user doesn't have PT-Tier or Admin-Tier access</response>
     /// <response code="404">If the link is not found</response>
     [HttpDelete("{linkId}")]
-    [Authorize]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> DeleteLink(string exerciseId, string linkId)
     {

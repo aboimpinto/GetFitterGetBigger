@@ -63,9 +63,14 @@ public class ExerciseLinkRepository : RepositoryBase<FitnessDbContext>, IExercis
     /// </summary>
     public async Task<IEnumerable<(ExerciseLink link, int usageCount)>> GetMostUsedLinksAsync(int count)
     {
-        var linkGroups = await Context.ExerciseLinks
+        // Simplified query for in-memory database compatibility
+        var allLinks = await Context.ExerciseLinks
             .Where(el => el.IsActive)
             .Include(el => el.TargetExercise)
+            .AsNoTracking()
+            .ToListAsync();
+        
+        var linkGroups = allLinks
             .GroupBy(el => new { el.TargetExerciseId, el.LinkType })
             .Select(g => new 
             { 
@@ -76,8 +81,7 @@ public class ExerciseLinkRepository : RepositoryBase<FitnessDbContext>, IExercis
             })
             .OrderByDescending(g => g.UsageCount)
             .Take(count)
-            .AsNoTracking()
-            .ToListAsync();
+            .ToList();
         
         var results = new List<(ExerciseLink link, int usageCount)>();
         foreach (var group in linkGroups)
@@ -117,8 +121,16 @@ public class ExerciseLinkRepository : RepositoryBase<FitnessDbContext>, IExercis
     /// </summary>
     public async Task<ExerciseLink> UpdateAsync(ExerciseLink exerciseLink)
     {
-        Context.ExerciseLinks.Update(exerciseLink);
-        return await Task.FromResult(exerciseLink);
+        var existingLink = await Context.ExerciseLinks.FindAsync(exerciseLink.Id);
+        if (existingLink != null)
+        {
+            Context.Entry(existingLink).CurrentValues.SetValues(exerciseLink);
+        }
+        else
+        {
+            Context.ExerciseLinks.Update(exerciseLink);
+        }
+        return exerciseLink;
     }
     
     /// <summary>
@@ -132,19 +144,19 @@ public class ExerciseLinkRepository : RepositoryBase<FitnessDbContext>, IExercis
             return false;
         }
         
-        // Soft delete by setting IsActive to false
-        var updatedLink = ExerciseLink.Handler.Create(
+        // Soft delete by updating the tracked entity directly
+        Context.Entry(exerciseLink).CurrentValues.SetValues(new
+        {
             exerciseLink.Id,
             exerciseLink.SourceExerciseId,
             exerciseLink.TargetExerciseId,
             exerciseLink.LinkType,
             exerciseLink.DisplayOrder,
-            false, // Set IsActive to false
+            IsActive = false,
             exerciseLink.CreatedAt,
-            DateTime.UtcNow
-        );
+            UpdatedAt = DateTime.UtcNow
+        });
         
-        Context.ExerciseLinks.Update(updatedLink);
         return true;
     }
 }

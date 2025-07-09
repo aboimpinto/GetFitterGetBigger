@@ -34,7 +34,6 @@ public class ExerciseLinkCircularReferenceTests : IClassFixture<ApiTestFixture>
         // Arrange
         await using var scope = _fixture.Services.CreateAsyncScope();
         var context = scope.ServiceProvider.GetRequiredService<FitnessDbContext>();
-        var linkRepo = scope.ServiceProvider.GetRequiredService<IExerciseLinkRepository>();
         
         var workoutType = await context.ExerciseTypes.FirstAsync(et => et.Value == "Workout");
         var warmupType = await context.ExerciseTypes.FirstAsync(et => et.Value == "Warmup");
@@ -45,7 +44,7 @@ public class ExerciseLinkCircularReferenceTests : IClassFixture<ApiTestFixture>
         
         // Create first link: A -> B
         var firstLink = ExerciseLink.Handler.CreateNew(exerciseA.Id, exerciseB.Id, "Warmup", 1);
-        await linkRepo.AddAsync(firstLink);
+        context.ExerciseLinks.Add(firstLink);
         await context.SaveChangesAsync();
         
         // Try to create reverse link: B -> A
@@ -71,7 +70,6 @@ public class ExerciseLinkCircularReferenceTests : IClassFixture<ApiTestFixture>
         // Arrange
         await using var scope = _fixture.Services.CreateAsyncScope();
         var context = scope.ServiceProvider.GetRequiredService<FitnessDbContext>();
-        var linkRepo = scope.ServiceProvider.GetRequiredService<IExerciseLinkRepository>();
         
         var workoutType = await context.ExerciseTypes.FirstAsync(et => et.Value == "Workout");
         var warmupType = await context.ExerciseTypes.FirstAsync(et => et.Value == "Warmup");
@@ -84,8 +82,8 @@ public class ExerciseLinkCircularReferenceTests : IClassFixture<ApiTestFixture>
         // Create chain: A -> B -> C
         var linkAB = ExerciseLink.Handler.CreateNew(exerciseA.Id, exerciseB.Id, "Warmup", 1);
         var linkBC = ExerciseLink.Handler.CreateNew(exerciseB.Id, exerciseC.Id, "Warmup", 1);
-        await linkRepo.AddAsync(linkAB);
-        await linkRepo.AddAsync(linkBC);
+        context.ExerciseLinks.Add(linkAB);
+        context.ExerciseLinks.Add(linkBC);
         await context.SaveChangesAsync();
         
         // Try to create link that closes the loop: C -> A
@@ -111,7 +109,6 @@ public class ExerciseLinkCircularReferenceTests : IClassFixture<ApiTestFixture>
         // Arrange
         await using var scope = _fixture.Services.CreateAsyncScope();
         var context = scope.ServiceProvider.GetRequiredService<FitnessDbContext>();
-        var linkRepo = scope.ServiceProvider.GetRequiredService<IExerciseLinkRepository>();
         
         var workoutType = await context.ExerciseTypes.FirstAsync(et => et.Value == "Workout");
         var warmupType = await context.ExerciseTypes.FirstAsync(et => et.Value == "Warmup");
@@ -128,9 +125,9 @@ public class ExerciseLinkCircularReferenceTests : IClassFixture<ApiTestFixture>
         var linkBC = ExerciseLink.Handler.CreateNew(exerciseB.Id, exerciseC.Id, "Cooldown", 1);
         var linkCD = ExerciseLink.Handler.CreateNew(exerciseC.Id, exerciseD.Id, "Cooldown", 1);
         
-        await linkRepo.AddAsync(linkAB);
-        await linkRepo.AddAsync(linkBC);
-        await linkRepo.AddAsync(linkCD);
+        context.ExerciseLinks.Add(linkAB);
+        context.ExerciseLinks.Add(linkBC);
+        context.ExerciseLinks.Add(linkCD);
         await context.SaveChangesAsync();
         
         // Try to create link that creates a cycle: D -> A
@@ -156,7 +153,6 @@ public class ExerciseLinkCircularReferenceTests : IClassFixture<ApiTestFixture>
         // Arrange
         await using var scope = _fixture.Services.CreateAsyncScope();
         var context = scope.ServiceProvider.GetRequiredService<FitnessDbContext>();
-        var linkRepo = scope.ServiceProvider.GetRequiredService<IExerciseLinkRepository>();
         
         var workoutType = await context.ExerciseTypes.FirstAsync(et => et.Value == "Workout");
         var warmupType = await context.ExerciseTypes.FirstAsync(et => et.Value == "Warmup");
@@ -171,8 +167,8 @@ public class ExerciseLinkCircularReferenceTests : IClassFixture<ApiTestFixture>
         // Create existing links forming a tree
         var link1 = ExerciseLink.Handler.CreateNew(rootExercise.Id, warmup1.Id, "Warmup", 1);
         var link2 = ExerciseLink.Handler.CreateNew(rootExercise.Id, warmup2.Id, "Warmup", 2);
-        await linkRepo.AddAsync(link1);
-        await linkRepo.AddAsync(link2);
+        context.ExerciseLinks.Add(link1);
+        context.ExerciseLinks.Add(link2);
         await context.SaveChangesAsync();
         
         // Add a cooldown link - this should succeed as it doesn't create a cycle

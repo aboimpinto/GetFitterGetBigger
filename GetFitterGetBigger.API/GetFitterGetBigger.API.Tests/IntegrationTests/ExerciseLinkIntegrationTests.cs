@@ -148,7 +148,7 @@ public class ExerciseLinkIntegrationTests : IClassFixture<ApiTestFixture>
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
         var errorContent = await response.Content.ReadAsStringAsync();
-        Assert.Contains("REST exercises cannot be linked", errorContent);
+        Assert.Contains("Target exercise must be of type 'Warmup'", errorContent);
     }
 
     [Fact]
@@ -157,7 +157,6 @@ public class ExerciseLinkIntegrationTests : IClassFixture<ApiTestFixture>
         // Arrange
         await using var scope = _fixture.Services.CreateAsyncScope();
         var context = scope.ServiceProvider.GetRequiredService<FitnessDbContext>();
-        var linkRepo = scope.ServiceProvider.GetRequiredService<IExerciseLinkRepository>();
         
         var workoutType = await context.ExerciseTypes.FirstAsync(et => et.Value == "Workout");
         var warmupType = await context.ExerciseTypes.FirstAsync(et => et.Value == "Warmup");
@@ -171,8 +170,8 @@ public class ExerciseLinkIntegrationTests : IClassFixture<ApiTestFixture>
         var warmupLink = ExerciseLink.Handler.CreateNew(sourceExercise.Id, warmupExercise.Id, "Warmup", 1);
         var cooldownLink = ExerciseLink.Handler.CreateNew(sourceExercise.Id, cooldownExercise.Id, "Cooldown", 1);
         
-        await linkRepo.AddAsync(warmupLink);
-        await linkRepo.AddAsync(cooldownLink);
+        context.ExerciseLinks.Add(warmupLink);
+        context.ExerciseLinks.Add(cooldownLink);
         await context.SaveChangesAsync();
 
         // Act - Get all links
@@ -199,7 +198,6 @@ public class ExerciseLinkIntegrationTests : IClassFixture<ApiTestFixture>
         // Arrange
         await using var scope = _fixture.Services.CreateAsyncScope();
         var context = scope.ServiceProvider.GetRequiredService<FitnessDbContext>();
-        var linkRepo = scope.ServiceProvider.GetRequiredService<IExerciseLinkRepository>();
         
         var workoutType = await context.ExerciseTypes.FirstAsync(et => et.Value == "Workout");
         var warmupType = await context.ExerciseTypes.FirstAsync(et => et.Value == "Warmup");
@@ -208,7 +206,7 @@ public class ExerciseLinkIntegrationTests : IClassFixture<ApiTestFixture>
         var targetExercise = await CreateExerciseWithType(context, "Update Link Target", workoutType.Id, warmupType.Id);
         
         var link = ExerciseLink.Handler.CreateNew(sourceExercise.Id, targetExercise.Id, "Warmup", 1);
-        await linkRepo.AddAsync(link);
+        context.ExerciseLinks.Add(link);
         await context.SaveChangesAsync();
         
         var updateDto = new UpdateExerciseLinkDto
@@ -235,7 +233,6 @@ public class ExerciseLinkIntegrationTests : IClassFixture<ApiTestFixture>
         // Arrange
         await using var scope = _fixture.Services.CreateAsyncScope();
         var context = scope.ServiceProvider.GetRequiredService<FitnessDbContext>();
-        var linkRepo = scope.ServiceProvider.GetRequiredService<IExerciseLinkRepository>();
         
         var workoutType = await context.ExerciseTypes.FirstAsync(et => et.Value == "Workout");
         var warmupType = await context.ExerciseTypes.FirstAsync(et => et.Value == "Warmup");
@@ -244,7 +241,7 @@ public class ExerciseLinkIntegrationTests : IClassFixture<ApiTestFixture>
         var targetExercise = await CreateExerciseWithType(context, "Delete Link Target", workoutType.Id, warmupType.Id);
         
         var link = ExerciseLink.Handler.CreateNew(sourceExercise.Id, targetExercise.Id, "Warmup", 1);
-        await linkRepo.AddAsync(link);
+        context.ExerciseLinks.Add(link);
         await context.SaveChangesAsync();
 
         // Act
@@ -253,8 +250,10 @@ public class ExerciseLinkIntegrationTests : IClassFixture<ApiTestFixture>
         // Assert
         Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
         
-        // Verify soft delete
-        var deletedLink = await linkRepo.GetByIdAsync(link.Id);
+        // Verify soft delete - need to get a fresh context since the API uses its own
+        await using var verifyScope = _fixture.Services.CreateAsyncScope();
+        var verifyContext = verifyScope.ServiceProvider.GetRequiredService<FitnessDbContext>();
+        var deletedLink = await verifyContext.ExerciseLinks.FindAsync(link.Id);
         Assert.NotNull(deletedLink);
         Assert.False(deletedLink.IsActive);
     }

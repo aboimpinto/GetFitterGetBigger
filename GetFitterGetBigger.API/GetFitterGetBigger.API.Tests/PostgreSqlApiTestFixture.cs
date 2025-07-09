@@ -403,6 +403,7 @@ public class PostgreSqlApiTestFixture : WebApplicationFactory<Program>, IAsyncLi
         var context = scope.ServiceProvider.GetRequiredService<FitnessDbContext>();
         
         // Delete data in reverse order of dependencies
+        context.ExerciseLinks.RemoveRange(context.ExerciseLinks);
         context.Exercises.RemoveRange(context.Exercises);
         context.ExerciseTypes.RemoveRange(context.ExerciseTypes);
         context.MuscleGroups.RemoveRange(context.MuscleGroups);
