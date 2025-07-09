@@ -18,6 +18,11 @@ namespace GetFitterGetBigger.Admin.Models.Dtos
         public List<ReferenceDataDto> Equipment { get; set; } = new();
         public List<ReferenceDataDto> BodyParts { get; set; } = new();
         public List<ReferenceDataDto> MovementPatterns { get; set; } = new();
+        
+        // Link indicators
+        public int WarmupLinkCount { get; set; }
+        public int CooldownLinkCount { get; set; }
+        public bool HasLinks => WarmupLinkCount > 0 || CooldownLinkCount > 0;
     }
 
     public class MuscleGroupWithRoleDto
@@ -79,6 +84,11 @@ namespace GetFitterGetBigger.Admin.Models.Dtos
         public List<ReferenceDataDto> Equipment { get; set; } = new();
         public List<ReferenceDataDto> MovementPatterns { get; set; } = new();
         public List<ReferenceDataDto> BodyParts { get; set; } = new();
+        
+        // Link indicators
+        public int WarmupLinkCount { get; set; }
+        public int CooldownLinkCount { get; set; }
+        public bool HasLinks => WarmupLinkCount > 0 || CooldownLinkCount > 0;
     }
 
     public class MuscleGroupListItemDto
