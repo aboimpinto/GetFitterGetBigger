@@ -117,8 +117,8 @@ public class ExerciseLinkService : IExerciseLinkService
             }
             
             // Validate no circular reference
-            var hasCircularReference = await ValidateNoCircularReferenceAsync(sourceId, targetId);
-            if (!hasCircularReference)
+            var isValidNoCircularReference = await ValidateNoCircularReferenceAsync(sourceId, targetId);
+            if (!isValidNoCircularReference)
             {
                 throw new ArgumentException("This link would create a circular reference");
             }
