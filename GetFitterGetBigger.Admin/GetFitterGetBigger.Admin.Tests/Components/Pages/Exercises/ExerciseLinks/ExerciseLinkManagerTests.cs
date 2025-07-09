@@ -400,6 +400,54 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises.ExerciseLink
         }
 
         [Fact]
+        public async Task ExerciseLinkManager_SuccessNotificationCanBeDismissed()
+        {
+            // Arrange
+            SetupStateWithLinks();
+            _stateServiceMock.Setup(x => x.CreateLinkAsync(It.IsAny<CreateExerciseLinkDto>()))
+                .Returns(Task.CompletedTask);
+            _validationServiceMock.Setup(x => x.ValidateCreateLink(
+                It.IsAny<ExerciseDto>(),
+                It.IsAny<string>(),
+                It.IsAny<ExerciseLinkType>(),
+                It.IsAny<IEnumerable<ExerciseLinkDto>>()))
+                .ReturnsAsync(ValidationResult.Success());
+
+            var component = RenderComponent<ExerciseLinkManager>(parameters => parameters
+                .Add(p => p.Exercise, _workoutExercise)
+                .Add(p => p.StateService, _stateServiceMock.Object)
+                .Add(p => p.ExerciseService, _exerciseServiceMock.Object)
+                .Add(p => p.ExerciseTypes, _exerciseTypes));
+
+            // Open modal and select exercise
+            var linkedList = component.FindComponent<LinkedExercisesList>();
+            await component.InvokeAsync(() => linkedList.Instance.OnAddLink.InvokeAsync("Warmup"));
+
+            var modal = component.FindComponent<AddExerciseLinkModal>();
+            var selectedExercise = new ExerciseListDtoBuilder()
+                .WithId("ex4")
+                .WithName("Test Exercise")
+                .Build();
+
+            await component.InvokeAsync(() => modal.Instance.OnAdd.InvokeAsync(selectedExercise));
+
+            // Wait for notification to appear
+            component.WaitForAssertion(() =>
+            {
+                component.Find("[data-testid='success-notification']").Should().NotBeNull();
+            });
+
+            // Act - Click dismiss button
+            component.Find("[data-testid='success-notification'] button").Click();
+
+            // Assert - Notification should disappear
+            component.WaitForAssertion(() =>
+            {
+                component.FindAll("[data-testid='success-notification']").Should().BeEmpty();
+            });
+        }
+
+        [Fact]
         public void ExerciseLinkManager_SubscribesToStateChanges()
         {
             // Arrange

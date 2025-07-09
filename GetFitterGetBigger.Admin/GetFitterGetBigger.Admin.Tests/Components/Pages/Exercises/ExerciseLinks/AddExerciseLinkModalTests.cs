@@ -396,5 +396,67 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises.ExerciseLink
                     .Should().Contain("Failed to search exercises: Network error");
             });
         }
+
+        [Fact]
+        public async Task AddExerciseLinkModal_ShowsAddingProgressIndicator()
+        {
+            // Arrange
+            var exercises = new ExercisePagedResultDtoBuilder()
+                .WithItems(
+                    new ExerciseListDtoBuilder()
+                        .WithId("1")
+                        .WithName("Push-ups")
+                        .WithExerciseTypes(("Workout", "Main workout"))
+                        .Build()
+                )
+                .Build();
+
+            _exerciseServiceMock
+                .Setup(x => x.GetExercisesAsync(It.IsAny<ExerciseFilterDto>()))
+                .ReturnsAsync(exercises);
+
+            var tcs = new TaskCompletionSource<bool>();
+            ExerciseListDto? capturedExercise = null;
+
+            var component = RenderComponent<AddExerciseLinkModal>(parameters => parameters
+                .Add(p => p.IsOpen, true)
+                .Add(p => p.LinkType, "Warmup")
+                .Add(p => p.ExerciseService, _exerciseServiceMock.Object)
+                .Add(p => p.ExistingLinks, new List<ExerciseLinkDto>())
+                .Add(p => p.ExerciseTypes, _exerciseTypes)
+                .Add(p => p.OnAdd, EventCallback.Factory.Create<ExerciseListDto>(this, async exercise =>
+                {
+                    capturedExercise = exercise;
+                    await tcs.Task; // Wait for our signal
+                })));
+
+            // Select an exercise
+            component.WaitForElement("[data-testid='exercise-1']").Click();
+
+            // Act - Click add button (should show progress)
+            var addButton = component.Find("[data-testid='add-button']");
+            addButton.Click();
+
+            // Assert - Should show adding state
+            component.WaitForAssertion(() =>
+            {
+                var updatedButton = component.Find("[data-testid='add-button']");
+                updatedButton.TextContent.Should().Contain("Adding...");
+                updatedButton.QuerySelector(".animate-spin").Should().NotBeNull();
+                updatedButton.GetAttribute("disabled").Should().NotBeNull();
+            });
+
+            // Complete the async operation
+            tcs.SetResult(true);
+            await component.InvokeAsync(() => Task.CompletedTask);
+
+            // Assert - Should return to normal state
+            component.WaitForAssertion(() =>
+            {
+                // Modal should be closed/reset after successful add
+                capturedExercise.Should().NotBeNull();
+                capturedExercise!.Id.Should().Be("1");
+            });
+        }
     }
 }

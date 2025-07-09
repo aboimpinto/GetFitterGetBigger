@@ -105,13 +105,9 @@ namespace GetFitterGetBigger.Admin.Services
             {
                 ErrorMessage = "Exercise not found";
             }
-            catch (ExerciseLinkApiException ex)
-            {
-                ErrorMessage = $"Failed to load links: {ex.Message}";
-            }
             catch (Exception ex)
             {
-                ErrorMessage = $"An unexpected error occurred: {ex.Message}";
+                ErrorMessage = ErrorMessageFormatter.FormatExerciseLinkError(ex);
             }
             finally
             {
@@ -208,29 +204,9 @@ namespace GetFitterGetBigger.Admin.Services
                 
                 SuccessMessage = $"{createDto.LinkType} link created successfully";
             }
-            catch (DuplicateExerciseLinkException)
-            {
-                ErrorMessage = "This exercise is already linked";
-                await LoadLinksAsync(preserveErrorMessage: true); // Revert optimistic update
-            }
-            catch (MaximumLinksExceededException ex)
-            {
-                ErrorMessage = ex.Message;
-                await LoadLinksAsync(preserveErrorMessage: true); // Revert optimistic update
-            }
-            catch (InvalidExerciseLinkException ex)
-            {
-                ErrorMessage = ex.Message;
-                await LoadLinksAsync(preserveErrorMessage: true); // Revert optimistic update
-            }
-            catch (ExerciseLinkApiException ex)
-            {
-                ErrorMessage = $"Failed to create link: {ex.Message}";
-                await LoadLinksAsync(preserveErrorMessage: true); // Revert optimistic update
-            }
             catch (Exception ex)
             {
-                ErrorMessage = $"An unexpected error occurred: {ex.Message}";
+                ErrorMessage = ErrorMessageFormatter.FormatExerciseLinkError(ex);
                 await LoadLinksAsync(preserveErrorMessage: true); // Revert optimistic update
             }
             finally
@@ -275,19 +251,9 @@ namespace GetFitterGetBigger.Admin.Services
                 
                 SuccessMessage = "Link updated successfully";
             }
-            catch (ExerciseLinkNotFoundException)
-            {
-                ErrorMessage = "Link not found";
-                await LoadLinksAsync(preserveErrorMessage: true); // Revert optimistic update
-            }
-            catch (ExerciseLinkApiException ex)
-            {
-                ErrorMessage = $"Failed to update link: {ex.Message}";
-                await LoadLinksAsync(preserveErrorMessage: true); // Revert optimistic update
-            }
             catch (Exception ex)
             {
-                ErrorMessage = $"An unexpected error occurred: {ex.Message}";
+                ErrorMessage = ErrorMessageFormatter.FormatExerciseLinkError(ex);
                 await LoadLinksAsync(preserveErrorMessage: true); // Revert optimistic update
             }
             finally
@@ -332,19 +298,9 @@ namespace GetFitterGetBigger.Admin.Services
                 
                 SuccessMessage = $"{linkType} link removed successfully";
             }
-            catch (ExerciseLinkNotFoundException)
-            {
-                ErrorMessage = "Link not found";
-                await LoadLinksAsync(preserveErrorMessage: true); // Revert optimistic update
-            }
-            catch (ExerciseLinkApiException ex)
-            {
-                ErrorMessage = $"Failed to delete link: {ex.Message}";
-                await LoadLinksAsync(preserveErrorMessage: true); // Revert optimistic update
-            }
             catch (Exception ex)
             {
-                ErrorMessage = $"An unexpected error occurred: {ex.Message}";
+                ErrorMessage = ErrorMessageFormatter.FormatExerciseLinkError(ex);
                 await LoadLinksAsync(preserveErrorMessage: true); // Revert optimistic update
             }
             finally
@@ -384,7 +340,7 @@ namespace GetFitterGetBigger.Admin.Services
             }
             catch (Exception ex)
             {
-                ErrorMessage = $"Failed to update links: {ex.Message}";
+                ErrorMessage = ErrorMessageFormatter.FormatExerciseLinkError(ex);
                 await LoadLinksAsync(preserveErrorMessage: true); // Revert optimistic update
             }
             finally

@@ -320,7 +320,7 @@ namespace GetFitterGetBigger.Admin.Tests.Services
             await _stateService.CreateLinkAsync(createDto);
 
             // Assert
-            _stateService.ErrorMessage.Should().Be("This exercise is already linked");
+            _stateService.ErrorMessage.Should().Be("This exercise is already linked. Each exercise can only be linked once per type.");
             _stateService.SuccessMessage.Should().BeNull();
             _stateService.IsProcessingLink.Should().BeFalse();
             // After error and reload, we should have the reloaded state

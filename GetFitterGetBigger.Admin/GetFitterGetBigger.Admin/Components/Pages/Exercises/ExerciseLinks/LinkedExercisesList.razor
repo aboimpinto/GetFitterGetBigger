@@ -2,7 +2,18 @@
 @using GetFitterGetBigger.Admin.Services
 @implements IDisposable
 
-<div class="space-y-6" data-testid="linked-exercises-list">
+<div class="space-y-6 relative" data-testid="linked-exercises-list">
+    @* Progress Overlay for Bulk Operations *@
+    @if (StateService.IsSaving)
+    {
+        <div class="absolute inset-0 bg-white bg-opacity-75 z-10 flex items-center justify-center rounded-lg" data-testid="reorder-progress-overlay">
+            <div class="text-center">
+                <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mb-2"></div>
+                <p class="text-sm text-gray-600">Reordering exercises...</p>
+            </div>
+        </div>
+    }
+    
     @* Warmup Section *@
     <div class="bg-white rounded-lg shadow-sm border border-gray-200" data-testid="warmup-section">
         <div class="px-4 py-3 border-b border-gray-200 bg-orange-50">
@@ -36,10 +47,12 @@
         <div class="p-4">
             @if (StateService.WarmupLinks.Any())
             {
-                <div class="space-y-2" 
+                <div class="space-y-2 @GetDropZoneClasses("Warmup")" 
                      @ondrop="HandleDropWarmup"
                      @ondragover="HandleDragOver"
                      @ondragover:preventDefault="true"
+                     @ondragenter="@(() => HandleDragEnter("Warmup"))"
+                     @ondragleave="@(() => HandleDragLeave("Warmup"))"
                      data-testid="warmup-links-container">
                     @foreach (var link in StateService.WarmupLinks)
                     {
@@ -102,10 +115,12 @@
         <div class="p-4">
             @if (StateService.CooldownLinks.Any())
             {
-                <div class="space-y-2"
+                <div class="space-y-2 @GetDropZoneClasses("Cooldown")"
                      @ondrop="HandleDropCooldown"
                      @ondragover="HandleDragOver"
                      @ondragover:preventDefault="true"
+                     @ondragenter="@(() => HandleDragEnter("Cooldown"))"
+                     @ondragleave="@(() => HandleDragLeave("Cooldown"))"
                      data-testid="cooldown-links-container">
                     @foreach (var link in StateService.CooldownLinks)
                     {
@@ -146,6 +161,7 @@
     private const int MaxLinksPerType = 10;
     private ExerciseLinkDto? _draggedLink;
     private string? _draggedLinkOriginalType;
+    private string? _currentDropZone;
 
     protected override void OnInitialized()
     {
@@ -174,6 +190,7 @@
     {
         _draggedLink = null;
         _draggedLinkOriginalType = null;
+        _currentDropZone = null;
     }
 
     private void HandleDragOver(DragEventArgs e)
@@ -248,6 +265,31 @@
             
             HandleDragEnd();
         }
+    }
+
+    private void HandleDragEnter(string zone)
+    {
+        if (!Disabled && _draggedLink != null && _draggedLinkOriginalType == zone)
+        {
+            _currentDropZone = zone;
+        }
+    }
+
+    private void HandleDragLeave(string zone)
+    {
+        if (_currentDropZone == zone)
+        {
+            _currentDropZone = null;
+        }
+    }
+
+    private string GetDropZoneClasses(string zone)
+    {
+        if (_currentDropZone == zone && _draggedLink != null)
+        {
+            return "border-2 border-dashed border-blue-400 bg-blue-50 rounded-lg p-2 transition-all";
+        }
+        return "";
     }
 
     public void Dispose()

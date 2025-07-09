@@ -151,10 +151,23 @@
         <div class="bg-gray-50 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6">
             <button type="button"
                     @onclick="HandleAdd"
-                    disabled="@(!CanAdd())"
+                    disabled="@(!CanAdd() || _isAdding)"
                     class="inline-flex w-full justify-center rounded-md bg-blue-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 sm:ml-3 sm:w-auto disabled:opacity-50 disabled:cursor-not-allowed"
                     data-testid="add-button">
-                Add Link
+                @if (_isAdding)
+                {
+                    <span class="flex items-center">
+                        <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        Adding...
+                    </span>
+                }
+                else
+                {
+                    <span>Add Link</span>
+                }
             </button>
             <button type="button"
                     @onclick="HandleCancel"
@@ -180,6 +193,7 @@
     private List<ExerciseListDto>? _searchResults;
     private string? _selectedExerciseId;
     private bool _isSearching = false;
+    private bool _isAdding = false;
     private string? _errorMessage;
 
     protected override async Task OnParametersSetAsync()
@@ -266,9 +280,20 @@
     {
         if (CanAdd() && OnAdd.HasDelegate)
         {
-            var selectedExercise = _searchResults!.First(e => e.Id == _selectedExerciseId);
-            await OnAdd.InvokeAsync(selectedExercise);
-            ResetModal();
+            try
+            {
+                _isAdding = true;
+                StateHasChanged();
+                
+                var selectedExercise = _searchResults!.First(e => e.Id == _selectedExerciseId);
+                await OnAdd.InvokeAsync(selectedExercise);
+                ResetModal();
+            }
+            finally
+            {
+                _isAdding = false;
+                StateHasChanged();
+            }
         }
     }
 

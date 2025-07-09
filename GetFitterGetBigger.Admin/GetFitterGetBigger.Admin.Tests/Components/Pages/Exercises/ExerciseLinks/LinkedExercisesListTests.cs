@@ -286,6 +286,73 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises.ExerciseLink
             reorderCall!.Value.reorderMap.Should().ContainKey("link-2");
         }
 
+        [Fact]
+        public void LinkedExercisesList_ShowsReorderProgressOverlay_WhenIsSavingIsTrue()
+        {
+            // Arrange
+            SetupEmptyState();
+            _stateServiceMock.SetupGet(x => x.IsSaving).Returns(true);
+
+            // Act
+            var component = RenderComponent<LinkedExercisesList>(parameters => parameters
+                .Add(p => p.StateService, _stateServiceMock.Object));
+
+            // Assert
+            var overlay = component.Find("[data-testid='reorder-progress-overlay']");
+            overlay.Should().NotBeNull();
+            overlay.TextContent.Should().Contain("Reordering exercises...");
+            overlay.QuerySelector(".animate-spin").Should().NotBeNull();
+        }
+
+        [Fact]
+        public void LinkedExercisesList_HidesReorderProgressOverlay_WhenIsSavingIsFalse()
+        {
+            // Arrange
+            SetupEmptyState();
+            _stateServiceMock.SetupGet(x => x.IsSaving).Returns(false);
+
+            // Act
+            var component = RenderComponent<LinkedExercisesList>(parameters => parameters
+                .Add(p => p.StateService, _stateServiceMock.Object));
+
+            // Assert
+            component.FindAll("[data-testid='reorder-progress-overlay']").Should().BeEmpty();
+        }
+
+        [Fact]
+        public void LinkedExercisesList_ShowsDropZoneHighlight_DuringDrag()
+        {
+            // Arrange
+            var link = new ExerciseLinkDtoBuilder().WithId("link-1").AsWarmup().Build();
+            SetupStateWithLinks(new List<ExerciseLinkDto> { link }, new List<ExerciseLinkDto>());
+
+            var component = RenderComponent<LinkedExercisesList>(parameters => parameters
+                .Add(p => p.StateService, _stateServiceMock.Object));
+
+            var warmupContainer = component.Find("[data-testid='warmup-links-container']");
+            var firstCard = component.FindComponents<ExerciseLinkCard>().First();
+
+            // Act - Start drag
+            firstCard.Find("[data-testid='exercise-link-card']").TriggerEvent("ondragstart", new DragEventArgs());
+
+            // Act - Enter drop zone
+            warmupContainer.TriggerEvent("ondragenter", new DragEventArgs());
+
+            // Assert
+            var containerClass = warmupContainer.GetAttribute("class");
+            containerClass.Should().Contain("border-2");
+            containerClass.Should().Contain("border-dashed");
+            containerClass.Should().Contain("border-blue-400");
+            containerClass.Should().Contain("bg-blue-50");
+
+            // Act - Leave drop zone
+            warmupContainer.TriggerEvent("ondragleave", new DragEventArgs());
+
+            // Assert - highlight should be removed
+            var updatedClass = component.Find("[data-testid='warmup-links-container']").GetAttribute("class");
+            updatedClass.Should().NotContain("border-2");
+        }
+
         private void SetupEmptyState()
         {
             _stateServiceMock.SetupGet(x => x.WarmupLinks).Returns(Enumerable.Empty<ExerciseLinkDto>());
