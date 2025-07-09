@@ -74,6 +74,11 @@ namespace GetFitterGetBigger.Admin.Services
         /// </summary>
         string? SuccessMessage { get; }
 
+        /// <summary>
+        /// Screen reader announcement for accessibility
+        /// </summary>
+        string? ScreenReaderAnnouncement { get; }
+
         // Filter/Options state
         /// <summary>
         /// Whether to include full exercise details when loading links

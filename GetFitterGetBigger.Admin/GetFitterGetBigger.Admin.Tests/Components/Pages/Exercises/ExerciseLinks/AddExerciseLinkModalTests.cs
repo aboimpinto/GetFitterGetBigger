@@ -118,12 +118,12 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises.ExerciseLink
                     new ExerciseListDtoBuilder()
                         .WithId("1")
                         .WithName("Squats")
-                        .WithExerciseTypes(("Workout", "Main workout"))
+                        .WithExerciseTypes(("Warmup", "Warmup exercise"))
                         .Build(),
                     new ExerciseListDtoBuilder()
                         .WithId("2")
                         .WithName("Lunges")
-                        .WithExerciseTypes(("Workout", "Main workout"))
+                        .WithExerciseTypes(("Warmup", "Warmup exercise"))
                         .Build()
                 )
                 .Build();
@@ -149,7 +149,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises.ExerciseLink
         }
 
         [Fact]
-        public void AddExerciseLinkModal_FiltersOutNonWorkoutExercises()
+        public void AddExerciseLinkModal_ShowsOnlyWarmupExercisesForWarmupLink()
         {
             // Arrange
             var exercises = new ExercisePagedResultDtoBuilder()
@@ -168,6 +168,11 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises.ExerciseLink
                         .WithId("3")
                         .WithName("Stretching")
                         .WithExerciseTypes(("Cooldown", "Cooldown exercise"))
+                        .Build(),
+                    new ExerciseListDtoBuilder()
+                        .WithId("4")
+                        .WithName("Air Squats")
+                        .WithExerciseTypes(("Warmup", "Warmup exercise"), ("Workout", "Main workout"))
                         .Build()
                 )
                 .Build();
@@ -188,8 +193,60 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises.ExerciseLink
             component.WaitForAssertion(() =>
             {
                 var results = component.FindAll("[data-testid^='exercise-']");
-                results.Should().HaveCount(1);
-                results[0].GetAttribute("data-testid").Should().Be("exercise-1");
+                results.Should().HaveCount(2); // Should show "Arm Circles" and "Air Squats" (both have Warmup type)
+                results.Select(r => r.GetAttribute("data-testid")).Should().Contain("exercise-2");
+                results.Select(r => r.GetAttribute("data-testid")).Should().Contain("exercise-4");
+            });
+        }
+
+        [Fact]
+        public void AddExerciseLinkModal_ShowsOnlyCooldownExercisesForCooldownLink()
+        {
+            // Arrange
+            var exercises = new ExercisePagedResultDtoBuilder()
+                .WithItems(
+                    new ExerciseListDtoBuilder()
+                        .WithId("1")
+                        .WithName("Push-ups")
+                        .WithExerciseTypes(("Workout", "Main workout"))
+                        .Build(),
+                    new ExerciseListDtoBuilder()
+                        .WithId("2")
+                        .WithName("Arm Circles")
+                        .WithExerciseTypes(("Warmup", "Warmup exercise"))
+                        .Build(),
+                    new ExerciseListDtoBuilder()
+                        .WithId("3")
+                        .WithName("Stretching")
+                        .WithExerciseTypes(("Cooldown", "Cooldown exercise"))
+                        .Build(),
+                    new ExerciseListDtoBuilder()
+                        .WithId("4")
+                        .WithName("Walking")
+                        .WithExerciseTypes(("Cooldown", "Cooldown exercise"), ("Workout", "Main workout"))
+                        .Build()
+                )
+                .Build();
+
+            _exerciseServiceMock
+                .Setup(x => x.GetExercisesAsync(It.IsAny<ExerciseFilterDto>()))
+                .ReturnsAsync(exercises);
+
+            // Act
+            var component = RenderComponent<AddExerciseLinkModal>(parameters => parameters
+                .Add(p => p.IsOpen, true)
+                .Add(p => p.LinkType, "Cooldown")
+                .Add(p => p.ExerciseService, _exerciseServiceMock.Object)
+                .Add(p => p.ExistingLinks, new List<ExerciseLinkDto>())
+                .Add(p => p.ExerciseTypes, _exerciseTypes));
+
+            // Wait for render
+            component.WaitForAssertion(() =>
+            {
+                var results = component.FindAll("[data-testid^='exercise-']");
+                results.Should().HaveCount(2); // Should show "Stretching" and "Walking" (both have Cooldown type)
+                results.Select(r => r.GetAttribute("data-testid")).Should().Contain("exercise-3");
+                results.Select(r => r.GetAttribute("data-testid")).Should().Contain("exercise-4");
             });
         }
 
@@ -210,7 +267,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises.ExerciseLink
                     new ExerciseListDtoBuilder()
                         .WithId("1")
                         .WithName("Push-ups")
-                        .WithExerciseTypes(("Workout", "Main workout"))
+                        .WithExerciseTypes(("Cooldown", "Cooldown exercise"))
                         .Build()
                 )
                 .Build();
@@ -245,7 +302,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises.ExerciseLink
                     new ExerciseListDtoBuilder()
                         .WithId("1")
                         .WithName("Push-ups")
-                        .WithExerciseTypes(("Workout", "Main workout"))
+                        .WithExerciseTypes(("Warmup", "Warmup exercise"))
                         .Build()
                 )
                 .Build();
@@ -295,7 +352,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises.ExerciseLink
                     new ExerciseListDtoBuilder()
                         .WithId("1")
                         .WithName("Push-ups")
-                        .WithExerciseTypes(("Workout", "Main workout"))
+                        .WithExerciseTypes(("Warmup", "Warmup exercise"))
                         .Build()
                 )
                 .Build();
@@ -406,7 +463,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises.ExerciseLink
                     new ExerciseListDtoBuilder()
                         .WithId("1")
                         .WithName("Push-ups")
-                        .WithExerciseTypes(("Workout", "Main workout"))
+                        .WithExerciseTypes(("Warmup", "Warmup exercise"))
                         .Build()
                 )
                 .Build();

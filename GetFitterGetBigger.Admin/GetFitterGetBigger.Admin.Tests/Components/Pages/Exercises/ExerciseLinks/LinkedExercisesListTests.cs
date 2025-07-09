@@ -257,7 +257,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises.ExerciseLink
         }
 
         [Fact]
-        public void LinkedExercisesList_HandlesDragAndDrop()
+        public void LinkedExercisesList_HandlesMoveUpButton()
         {
             // Arrange
             var link1 = new ExerciseLinkDtoBuilder().WithId("link-1").AsWarmup().WithDisplayOrder(0).Build();
@@ -270,20 +270,19 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises.ExerciseLink
                 .Add(p => p.OnReorderLinks, EventCallback.Factory.Create<(string, Dictionary<string, int>)>(
                     this, args => reorderCall = args)));
 
-            var warmupContainer = component.Find("[data-testid='warmup-links-container']");
-            var firstCard = component.FindComponents<ExerciseLinkCard>().First();
+            var secondCard = component.FindComponents<ExerciseLinkCard>().Skip(1).First();
 
-            // Act - Start drag
-            firstCard.Find("[data-testid='exercise-link-card']").TriggerEvent("ondragstart", new DragEventArgs());
-
-            // Act - Drop
-            warmupContainer.TriggerEvent("ondrop", new DragEventArgs());
+            // Act - Click move up button on second card
+            secondCard.Find("[data-testid='move-up-button']").Click();
 
             // Assert
             reorderCall.Should().NotBeNull();
             reorderCall!.Value.linkType.Should().Be("Warmup");
             reorderCall!.Value.reorderMap.Should().ContainKey("link-1");
             reorderCall!.Value.reorderMap.Should().ContainKey("link-2");
+            // Second card should now be at position 0, first card at position 1
+            reorderCall!.Value.reorderMap["link-2"].Should().Be(0);
+            reorderCall!.Value.reorderMap["link-1"].Should().Be(1);
         }
 
         [Fact]
@@ -320,37 +319,32 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises.ExerciseLink
         }
 
         [Fact]
-        public void LinkedExercisesList_ShowsDropZoneHighlight_DuringDrag()
+        public void LinkedExercisesList_HandlesMoveDownButton()
         {
             // Arrange
-            var link = new ExerciseLinkDtoBuilder().WithId("link-1").AsWarmup().Build();
-            SetupStateWithLinks(new List<ExerciseLinkDto> { link }, new List<ExerciseLinkDto>());
+            var link1 = new ExerciseLinkDtoBuilder().WithId("link-1").AsWarmup().WithDisplayOrder(0).Build();
+            var link2 = new ExerciseLinkDtoBuilder().WithId("link-2").AsWarmup().WithDisplayOrder(1).Build();
+            SetupStateWithLinks(new List<ExerciseLinkDto> { link1, link2 }, new List<ExerciseLinkDto>());
 
+            (string linkType, Dictionary<string, int> reorderMap)? reorderCall = null;
             var component = RenderComponent<LinkedExercisesList>(parameters => parameters
-                .Add(p => p.StateService, _stateServiceMock.Object));
+                .Add(p => p.StateService, _stateServiceMock.Object)
+                .Add(p => p.OnReorderLinks, EventCallback.Factory.Create<(string, Dictionary<string, int>)>(
+                    this, args => reorderCall = args)));
 
-            var warmupContainer = component.Find("[data-testid='warmup-links-container']");
             var firstCard = component.FindComponents<ExerciseLinkCard>().First();
 
-            // Act - Start drag
-            firstCard.Find("[data-testid='exercise-link-card']").TriggerEvent("ondragstart", new DragEventArgs());
-
-            // Act - Enter drop zone
-            warmupContainer.TriggerEvent("ondragenter", new DragEventArgs());
+            // Act - Click move down button on first card
+            firstCard.Find("[data-testid='move-down-button']").Click();
 
             // Assert
-            var containerClass = warmupContainer.GetAttribute("class");
-            containerClass.Should().Contain("border-2");
-            containerClass.Should().Contain("border-dashed");
-            containerClass.Should().Contain("border-blue-400");
-            containerClass.Should().Contain("bg-blue-50");
-
-            // Act - Leave drop zone
-            warmupContainer.TriggerEvent("ondragleave", new DragEventArgs());
-
-            // Assert - highlight should be removed
-            var updatedClass = component.Find("[data-testid='warmup-links-container']").GetAttribute("class");
-            updatedClass.Should().NotContain("border-2");
+            reorderCall.Should().NotBeNull();
+            reorderCall!.Value.linkType.Should().Be("Warmup");
+            reorderCall!.Value.reorderMap.Should().ContainKey("link-1");
+            reorderCall!.Value.reorderMap.Should().ContainKey("link-2");
+            // First card should now be at position 1, second card at position 0
+            reorderCall!.Value.reorderMap["link-1"].Should().Be(1);
+            reorderCall!.Value.reorderMap["link-2"].Should().Be(0);
         }
 
         private void SetupEmptyState()

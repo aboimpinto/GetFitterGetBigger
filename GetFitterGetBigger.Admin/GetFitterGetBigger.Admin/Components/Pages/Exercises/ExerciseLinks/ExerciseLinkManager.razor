@@ -6,20 +6,20 @@
     @if (ShowComponent)
     {
         <div class="bg-white shadow-lg rounded-lg overflow-hidden">
-            <div class="px-6 py-4 bg-gray-50 border-b border-gray-200">
-                <h2 class="text-xl font-semibold text-gray-900 flex items-center gap-2">
+            <div class="px-4 sm:px-6 py-3 sm:py-4 bg-gray-50 border-b border-gray-200">
+                <h2 class="text-lg sm:text-xl font-semibold text-gray-900 flex items-center gap-2">
                     <svg class="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
                               d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
                     </svg>
                     Linked Exercises
                 </h2>
-                <p class="mt-1 text-sm text-gray-600">
+                <p class="mt-1 text-xs sm:text-sm text-gray-600">
                     Connect warmup and cooldown exercises to create comprehensive workout routines
                 </p>
             </div>
 
-            <div class="p-6">
+            <div class="p-4 sm:p-6">
                 @if (StateService.IsLoading)
                 {
                     <div class="flex justify-center py-8" data-testid="loading-spinner">
@@ -61,7 +61,7 @@
         @* Success Notification *@
         @if (!string.IsNullOrEmpty(_successMessage))
         {
-            <div class="fixed bottom-4 right-4 max-w-sm z-50" data-testid="success-notification">
+            <div class="fixed bottom-4 right-4 left-4 sm:left-auto max-w-sm z-50" data-testid="success-notification">
                 <div class="rounded-lg bg-green-50 p-4 shadow-lg">
                     <div class="flex">
                         <div class="flex-shrink-0">
@@ -98,8 +98,8 @@
         @* Delete Confirmation Dialog *@
         @if (_linkToDelete != null)
         {
-            <div class="relative z-50" data-testid="delete-confirmation-dialog">
-                <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"></div>
+            <div class="relative z-50" data-testid="delete-confirmation-dialog" role="dialog" aria-modal="true" aria-labelledby="delete-dialog-title">
+                <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true"></div>
                 <div class="fixed inset-0 z-10 overflow-y-auto">
                     <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
                         <div class="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg">
@@ -111,7 +111,7 @@
                                         </svg>
                                     </div>
                                     <div class="mt-3 text-center sm:ml-4 sm:mt-0 sm:text-left">
-                                        <h3 class="text-base font-semibold leading-6 text-gray-900">Remove Exercise Link</h3>
+                                        <h3 class="text-base font-semibold leading-6 text-gray-900" id="delete-dialog-title">Remove Exercise Link</h3>
                                         <div class="mt-2">
                                             <p class="text-sm text-gray-500">
                                                 Are you sure you want to remove "@_linkToDelete.TargetExercise?.Name" from the @_linkToDelete.LinkType.ToLower() exercises? 
@@ -123,6 +123,7 @@
                             </div>
                             <div class="bg-gray-50 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6">
                                 <button type="button"
+                                        @ref="_deleteConfirmButton"
                                         @onclick="ConfirmDelete"
                                         disabled="@StateService.IsDeleting"
                                         class="inline-flex w-full justify-center rounded-md bg-red-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-red-500 sm:ml-3 sm:w-auto disabled:opacity-50 disabled:cursor-not-allowed"
@@ -149,6 +150,9 @@
                 </div>
             </div>
         }
+
+        @* Screen Reader Announcements *@
+        <AriaLiveRegion Message="@StateService.ScreenReaderAnnouncement" AriaLive="assertive" />
     }
 </div>
 
@@ -165,6 +169,7 @@
     private ExerciseLinkDto? _linkToDelete;
     private string? _successMessage;
     private System.Threading.Timer? _successMessageTimer;
+    private ElementReference _deleteConfirmButton;
     
     private bool ShowComponent => Exercise.ExerciseTypes?.Any(t => t.Value == "Workout") == true;
 
@@ -177,6 +182,15 @@
         }
     }
 
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        // Focus management for delete confirmation dialog
+        if (_linkToDelete != null && _deleteConfirmButton.Id != null)
+        {
+            await _deleteConfirmButton.FocusAsync();
+        }
+    }
+
     private void HandleStateChange()
     {
         InvokeAsync(StateHasChanged);
@@ -184,21 +198,43 @@
 
     private void HandleAddLink(string linkType)
     {
+        Console.WriteLine($"[ExerciseLinkManager] HandleAddLink called with linkType: {linkType}");
+        Console.WriteLine($"[ExerciseLinkManager] Exercise: {Exercise?.Name} (ID: {Exercise?.Id})");
+        
+        if (Exercise?.ExerciseTypes?.Any() == true)
+        {
+            Console.WriteLine($"[ExerciseLinkManager] Exercise types: {string.Join(", ", Exercise.ExerciseTypes.Select(t => $"{t.Value} (ID: {t.Id})"))}");
+        }
+        
         _addLinkType = linkType;
         _showAddModal = true;
     }
 
     private async Task HandleExerciseSelected(ExerciseListDto exercise)
     {
+        Console.WriteLine($"[ExerciseLinkManager] HandleExerciseSelected called");
+        Console.WriteLine($"[ExerciseLinkManager] Selected exercise: {exercise.Name} (ID: {exercise.Id})");
+        Console.WriteLine($"[ExerciseLinkManager] Link type: {_addLinkType}");
+        
+        if (exercise.ExerciseTypes?.Any() == true)
+        {
+            Console.WriteLine($"[ExerciseLinkManager] Selected exercise types: {string.Join(", ", exercise.ExerciseTypes.Select(t => $"{t.Value} (ID: {t.Id})"))}");
+        }
+        
         _showAddModal = false;
         
         // Validate before creating the link
         var linkType = _addLinkType == "Warmup" ? ExerciseLinkType.Warmup : ExerciseLinkType.Cooldown;
+        
+        Console.WriteLine($"[ExerciseLinkManager] Validating link creation - LinkType enum: {linkType}");
+        
         var validationResult = await ValidationService.ValidateCreateLink(
             Exercise, 
             exercise.Id, 
             linkType, 
             StateService.CurrentLinks?.Links ?? Enumerable.Empty<ExerciseLinkDto>());
+        
+        Console.WriteLine($"[ExerciseLinkManager] Validation result: IsValid={validationResult.IsValid}, ErrorMessage='{validationResult.ErrorMessage}'");
         
         if (!validationResult.IsValid)
         {
@@ -214,17 +250,25 @@
             LinkType = _addLinkType
         };
 
+        Console.WriteLine($"[ExerciseLinkManager] Creating link with DTO: SourceExerciseId={createDto.SourceExerciseId}, TargetExerciseId={createDto.TargetExerciseId}, LinkType={createDto.LinkType}");
+
         await StateService.CreateLinkAsync(createDto);
         
         if (string.IsNullOrEmpty(StateService.ErrorMessage))
         {
             ShowSuccessMessage($"{exercise.Name} added to {_addLinkType.ToLower()} exercises");
         }
+        else
+        {
+            Console.WriteLine($"[ExerciseLinkManager] Error after CreateLinkAsync: {StateService.ErrorMessage}");
+        }
     }
 
-    private void HandleRemoveLink(ExerciseLinkDto link)
+    private async Task HandleRemoveLink(ExerciseLinkDto link)
     {
         _linkToDelete = link;
+        // Focus will be set in OnAfterRender
+        await InvokeAsync(StateHasChanged);
     }
 
     private async Task ConfirmDelete()
@@ -253,7 +297,8 @@
         var updates = args.reorderMap.Select(kvp => new UpdateExerciseLinkDto
         {
             Id = kvp.Key,
-            DisplayOrder = kvp.Value
+            DisplayOrder = kvp.Value,
+            IsActive = true // Always ON - no soft delete
         }).ToList();
 
         await StateService.UpdateMultipleLinksAsync(updates);

@@ -30,7 +30,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises.ExerciseLink
             // Assert
             component.Find("[data-testid='exercise-link-card']").Should().NotBeNull();
             component.Markup.Should().Contain($"Exercise ID: {link.TargetExerciseId}");
-            component.Markup.Should().Contain($"Order: {link.DisplayOrder}");
+            component.Markup.Should().Contain($"Position: {link.DisplayOrder + 1}");
         }
 
         [Fact]
@@ -80,7 +80,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises.ExerciseLink
         }
 
         [Fact]
-        public void ExerciseLinkCard_ShowsDragHandleWhenEnabled()
+        public void ExerciseLinkCard_ShowsMoveButtonsWhenEnabled()
         {
             // Arrange
             var link = new ExerciseLinkDtoBuilder().Build();
@@ -89,16 +89,19 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises.ExerciseLink
             var component = RenderComponent<ExerciseLinkCard>(parameters => parameters
                 .Add(p => p.Link, link)
                 .Add(p => p.Disabled, false)
-                .Add(p => p.OnDragStart, EventCallback.Factory.Create<ExerciseLinkDto>(this, _ => { })));
+                .Add(p => p.CanMoveUp, true)
+                .Add(p => p.CanMoveDown, true)
+                .Add(p => p.OnMoveUp, EventCallback.Factory.Create<ExerciseLinkDto>(this, _ => { }))
+                .Add(p => p.OnMoveDown, EventCallback.Factory.Create<ExerciseLinkDto>(this, _ => { })));
 
             // Assert
-            component.Find("[data-testid='drag-handle']").Should().NotBeNull();
-            var card = component.Find("[data-testid='exercise-link-card']");
-            card.GetAttribute("draggable").Should().Be("true");
+            component.Find("[data-testid='ordering-buttons']").Should().NotBeNull();
+            component.Find("[data-testid='move-up-button']").Should().NotBeNull();
+            component.Find("[data-testid='move-down-button']").Should().NotBeNull();
         }
 
         [Fact]
-        public void ExerciseLinkCard_HidesDragHandleWhenDisabled()
+        public void ExerciseLinkCard_HidesMoveButtonsWhenDisabled()
         {
             // Arrange
             var link = new ExerciseLinkDtoBuilder().Build();
@@ -107,12 +110,11 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises.ExerciseLink
             var component = RenderComponent<ExerciseLinkCard>(parameters => parameters
                 .Add(p => p.Link, link)
                 .Add(p => p.Disabled, true)
-                .Add(p => p.OnDragStart, EventCallback.Factory.Create<ExerciseLinkDto>(this, _ => { })));
+                .Add(p => p.OnMoveUp, EventCallback.Factory.Create<ExerciseLinkDto>(this, _ => { }))
+                .Add(p => p.OnMoveDown, EventCallback.Factory.Create<ExerciseLinkDto>(this, _ => { })));
 
             // Assert
-            component.FindAll("[data-testid='drag-handle']").Should().BeEmpty();
-            var card = component.Find("[data-testid='exercise-link-card']");
-            card.GetAttribute("draggable").Should().Be("false");
+            component.FindAll("[data-testid='ordering-buttons']").Should().BeEmpty();
         }
 
         [Fact]
@@ -167,26 +169,47 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises.ExerciseLink
         }
 
         [Fact]
-        public void ExerciseLinkCard_ShowsInactiveIndicatorWhenLinkIsInactive()
+        public void ExerciseLinkCard_CallsMoveUpWhenUpButtonClicked()
         {
             // Arrange
-            var link = new ExerciseLinkDtoBuilder()
-                .WithIsActive(false)
-                .Build();
+            var link = new ExerciseLinkDtoBuilder().WithId("link-1").Build();
+            ExerciseLinkDto? movedLink = null;
+
+            var component = RenderComponent<ExerciseLinkCard>(parameters => parameters
+                .Add(p => p.Link, link)
+                .Add(p => p.CanMoveUp, true)
+                .Add(p => p.OnMoveUp, EventCallback.Factory.Create<ExerciseLinkDto>(this, l => movedLink = l)));
 
             // Act
-            var component = RenderComponent<ExerciseLinkCard>(parameters => parameters
-                .Add(p => p.Link, link));
+            component.Find("[data-testid='move-up-button']").Click();
 
             // Assert
-            component.Markup.Should().Contain("Inactive");
-            var card = component.Find("[data-testid='exercise-link-card']");
-            card.GetAttribute("class").Should().Contain("border-red-200");
-            card.GetAttribute("class").Should().Contain("bg-red-50");
+            movedLink.Should().NotBeNull();
+            movedLink!.Id.Should().Be("link-1");
         }
 
         [Fact]
-        public void ExerciseLinkCard_AppliesDraggingStylesWhenIsDragging()
+        public void ExerciseLinkCard_CallsMoveDownWhenDownButtonClicked()
+        {
+            // Arrange
+            var link = new ExerciseLinkDtoBuilder().WithId("link-1").Build();
+            ExerciseLinkDto? movedLink = null;
+
+            var component = RenderComponent<ExerciseLinkCard>(parameters => parameters
+                .Add(p => p.Link, link)
+                .Add(p => p.CanMoveDown, true)
+                .Add(p => p.OnMoveDown, EventCallback.Factory.Create<ExerciseLinkDto>(this, l => movedLink = l)));
+
+            // Act
+            component.Find("[data-testid='move-down-button']").Click();
+
+            // Assert
+            movedLink.Should().NotBeNull();
+            movedLink!.Id.Should().Be("link-1");
+        }
+
+        [Fact]
+        public void ExerciseLinkCard_DisablesMoveUpButtonWhenCannotMoveUp()
         {
             // Arrange
             var link = new ExerciseLinkDtoBuilder().Build();
@@ -194,41 +217,29 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises.ExerciseLink
             // Act
             var component = RenderComponent<ExerciseLinkCard>(parameters => parameters
                 .Add(p => p.Link, link)
-                .Add(p => p.IsDragging, true));
+                .Add(p => p.CanMoveUp, false)
+                .Add(p => p.OnMoveUp, EventCallback.Factory.Create<ExerciseLinkDto>(this, _ => { })));
 
             // Assert
-            var card = component.Find("[data-testid='exercise-link-card']");
-            card.GetAttribute("class").Should().Contain("opacity-50");
-            card.GetAttribute("class").Should().Contain("scale-95");
+            var moveUpButton = component.Find("[data-testid='move-up-button']");
+            moveUpButton.HasAttribute("disabled").Should().BeTrue();
         }
 
         [Fact]
-        public void ExerciseLinkCard_CallsDragEventHandlers()
+        public void ExerciseLinkCard_DisablesMoveDownButtonWhenCannotMoveDown()
         {
             // Arrange
-            var link = new ExerciseLinkDtoBuilder().WithId("link-1").Build();
-            ExerciseLinkDto? draggedLink = null;
-            var dragEndCalled = false;
+            var link = new ExerciseLinkDtoBuilder().Build();
 
+            // Act
             var component = RenderComponent<ExerciseLinkCard>(parameters => parameters
                 .Add(p => p.Link, link)
-                .Add(p => p.OnDragStart, EventCallback.Factory.Create<ExerciseLinkDto>(this, l => draggedLink = l))
-                .Add(p => p.OnDragEnd, EventCallback.Factory.Create(this, () => dragEndCalled = true)));
-
-            var card = component.Find("[data-testid='exercise-link-card']");
-
-            // Act - Drag start
-            card.TriggerEvent("ondragstart", new DragEventArgs());
+                .Add(p => p.CanMoveDown, false)
+                .Add(p => p.OnMoveDown, EventCallback.Factory.Create<ExerciseLinkDto>(this, _ => { })));
 
             // Assert
-            draggedLink.Should().NotBeNull();
-            draggedLink!.Id.Should().Be("link-1");
-
-            // Act - Drag end
-            card.TriggerEvent("ondragend", new DragEventArgs());
-
-            // Assert
-            dragEndCalled.Should().BeTrue();
+            var moveDownButton = component.Find("[data-testid='move-down-button']");
+            moveDownButton.HasAttribute("disabled").Should().BeTrue();
         }
 
         [Fact]

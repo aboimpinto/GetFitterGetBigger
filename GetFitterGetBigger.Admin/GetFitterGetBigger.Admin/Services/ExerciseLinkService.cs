@@ -36,14 +36,28 @@ public class ExerciseLinkService : IExerciseLinkService
         {
             var requestUrl = $"{_apiBaseUrl}/api/exercises/{exerciseId}/links";
             
+            Console.WriteLine($"[ExerciseLinkService] CreateLinkAsync called");
+            Console.WriteLine($"[ExerciseLinkService] Request URL: {requestUrl}");
+            Console.WriteLine($"[ExerciseLinkService] ExerciseId: {exerciseId}");
+            Console.WriteLine($"[ExerciseLinkService] CreateLinkDto: SourceExerciseId={createLinkDto.SourceExerciseId}, TargetExerciseId={createLinkDto.TargetExerciseId}, LinkType={createLinkDto.LinkType}, DisplayOrder={createLinkDto.DisplayOrder}");
+            
+            var json = JsonSerializer.Serialize(createLinkDto, _jsonOptions);
+            Console.WriteLine($"[ExerciseLinkService] Request JSON: {json}");
+            
             var response = await _httpClient.PostAsJsonAsync(requestUrl, createLinkDto, _jsonOptions);
+            
+            Console.WriteLine($"[ExerciseLinkService] Response Status: {response.StatusCode}");
             
             if (!response.IsSuccessStatusCode)
             {
+                var errorContent = await response.Content.ReadAsStringAsync();
+                Console.WriteLine($"[ExerciseLinkService] Error Response Body: {errorContent}");
                 await HandleErrorResponseAsync(response, exerciseId, createLinkDto.TargetExerciseId);
             }
 
             var result = await response.Content.ReadFromJsonAsync<ExerciseLinkDto>(_jsonOptions);
+            
+            Console.WriteLine($"[ExerciseLinkService] Link created successfully with ID: {result?.Id}");
             
             // Invalidate cache for the exercise links
             InvalidateExerciseLinksCache(exerciseId);
@@ -52,18 +66,26 @@ public class ExerciseLinkService : IExerciseLinkService
         }
         catch (HttpRequestException ex)
         {
+            Console.WriteLine($"[ExerciseLinkService] HttpRequestException: {ex.Message}");
             throw new ExerciseLinkApiException($"Network error while creating exercise link: {ex.Message}", HttpStatusCode.ServiceUnavailable, ex);
         }
         catch (TaskCanceledException ex)
         {
+            Console.WriteLine($"[ExerciseLinkService] TaskCanceledException: {ex.Message}");
             throw new ExerciseLinkApiException("Request timeout while creating exercise link", HttpStatusCode.RequestTimeout, ex);
         }
-        catch (ExerciseLinkServiceException)
+        catch (ExerciseLinkServiceException ex)
         {
+            Console.WriteLine($"[ExerciseLinkService] ExerciseLinkServiceException: {ex.Message}");
             throw; // Re-throw our custom exceptions
         }
         catch (Exception ex)
         {
+            Console.WriteLine($"[ExerciseLinkService] Unexpected Exception: {ex.GetType().Name}: {ex.Message}");
+            if (ex.InnerException != null)
+            {
+                Console.WriteLine($"[ExerciseLinkService] Inner Exception: {ex.InnerException.Message}");
+            }
             throw new ExerciseLinkServiceException($"Unexpected error while creating exercise link: {ex.Message}", ex);
         }
     }

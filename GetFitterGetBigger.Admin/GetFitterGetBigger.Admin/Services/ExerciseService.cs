@@ -30,14 +30,60 @@ namespace GetFitterGetBigger.Admin.Services
 
         public async Task<ExercisePagedResultDto> GetExercisesAsync(ExerciseFilterDto filter)
         {
-            var queryParams = BuildQueryString(filter);
-            var requestUrl = $"{_apiBaseUrl}/api/exercises{queryParams}";
+            try
+            {
+                var queryParams = BuildQueryString(filter);
+                var requestUrl = $"{_apiBaseUrl}/api/exercises{queryParams}";
 
-            var response = await _httpClient.GetAsync(requestUrl);
-            response.EnsureSuccessStatusCode();
+                Console.WriteLine($"[ExerciseService] GetExercisesAsync - Request URL: {requestUrl}");
+                Console.WriteLine($"[ExerciseService] GetExercisesAsync - Filter: Name='{filter.Name}', DifficultyId='{filter.DifficultyId}', IsActive='{filter.IsActive}', Page={filter.Page}, PageSize={filter.PageSize}");
+                if (filter.MuscleGroupIds?.Any() == true)
+                {
+                    Console.WriteLine($"[ExerciseService] GetExercisesAsync - MuscleGroupIds: {string.Join(", ", filter.MuscleGroupIds)}");
+                }
+                if (filter.EquipmentIds?.Any() == true)
+                {
+                    Console.WriteLine($"[ExerciseService] GetExercisesAsync - EquipmentIds: {string.Join(", ", filter.EquipmentIds)}");
+                }
 
-            var result = await response.Content.ReadFromJsonAsync<ExercisePagedResultDto>(_jsonOptions);
-            return result ?? new ExercisePagedResultDto();
+                var response = await _httpClient.GetAsync(requestUrl);
+                
+                Console.WriteLine($"[ExerciseService] GetExercisesAsync - Response Status: {response.StatusCode}");
+                
+                if (!response.IsSuccessStatusCode)
+                {
+                    var errorContent = await response.Content.ReadAsStringAsync();
+                    Console.WriteLine($"[ExerciseService] GetExercisesAsync - Error Response Body:");
+                    Console.WriteLine(errorContent);
+                }
+                
+                response.EnsureSuccessStatusCode();
+
+                var result = await response.Content.ReadFromJsonAsync<ExercisePagedResultDto>(_jsonOptions);
+                
+                Console.WriteLine($"[ExerciseService] GetExercisesAsync - Response Items Count: {result?.Items?.Count ?? 0}");
+                
+                if (result?.Items?.Any() == true)
+                {
+                    Console.WriteLine($"[ExerciseService] GetExercisesAsync - First 3 exercises:");
+                    foreach (var exercise in result.Items.Take(3))
+                    {
+                        var types = exercise.ExerciseTypes?.Select(t => $"{t.Value} (ID: {t.Id})") ?? new[] { "No types" };
+                        Console.WriteLine($"  - {exercise.Name} (ID: {exercise.Id}) - Types: {string.Join(", ", types)}");
+                    }
+                }
+                
+                return result ?? new ExercisePagedResultDto();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[ExerciseService] Exception in GetExercisesAsync: {ex.GetType().Name}: {ex.Message}");
+                if (ex.InnerException != null)
+                {
+                    Console.WriteLine($"[ExerciseService] Inner Exception: {ex.InnerException.Message}");
+                }
+                throw;
+            }
         }
 
         public async Task<ExerciseDto?> GetExerciseByIdAsync(string id)

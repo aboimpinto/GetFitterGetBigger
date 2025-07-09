@@ -25,6 +25,7 @@ namespace GetFitterGetBigger.Admin.Services
         public bool IsProcessingLink { get; private set; }
         public string? ErrorMessage { get; private set; }
         public string? SuccessMessage { get; private set; }
+        public string? ScreenReaderAnnouncement { get; private set; }
 
         // Additional loading states
         public bool IsLoading => IsLoadingLinks || IsLoadingSuggestions;
@@ -149,16 +150,24 @@ namespace GetFitterGetBigger.Admin.Services
 
         public async Task CreateLinkAsync(CreateExerciseLinkDto createDto)
         {
+            Console.WriteLine($"[ExerciseLinkStateService] CreateLinkAsync called");
+            Console.WriteLine($"[ExerciseLinkStateService] CurrentExerciseId: {CurrentExerciseId}");
+            Console.WriteLine($"[ExerciseLinkStateService] CreateDto: SourceExerciseId={createDto.SourceExerciseId}, TargetExerciseId={createDto.TargetExerciseId}, LinkType={createDto.LinkType}, DisplayOrder={createDto.DisplayOrder}");
+            
             if (string.IsNullOrEmpty(CurrentExerciseId))
             {
+                Console.WriteLine($"[ExerciseLinkStateService] Error: No exercise selected");
                 ErrorMessage = "No exercise selected";
                 NotifyStateChanged();
                 return;
             }
 
             // Check max links before attempting to create
+            Console.WriteLine($"[ExerciseLinkStateService] Checking max links - WarmupLinkCount: {WarmupLinkCount}, CooldownLinkCount: {CooldownLinkCount}, MaxLinksPerType: {MaxLinksPerType}");
+            
             if (createDto.LinkType == "Warmup" && HasMaxWarmupLinks)
             {
+                Console.WriteLine($"[ExerciseLinkStateService] Error: Maximum warmup links reached");
                 ErrorMessage = $"Maximum {MaxLinksPerType} warmup links allowed";
                 NotifyStateChanged();
                 return;
@@ -166,6 +175,7 @@ namespace GetFitterGetBigger.Admin.Services
             
             if (createDto.LinkType == "Cooldown" && HasMaxCooldownLinks)
             {
+                Console.WriteLine($"[ExerciseLinkStateService] Error: Maximum cooldown links reached");
                 ErrorMessage = $"Maximum {MaxLinksPerType} cooldown links allowed";
                 NotifyStateChanged();
                 return;
@@ -173,6 +183,7 @@ namespace GetFitterGetBigger.Admin.Services
 
             try
             {
+                Console.WriteLine($"[ExerciseLinkStateService] Starting link creation process");
                 IsProcessingLink = true;
                 ClearMessages();
                 NotifyStateChanged();
@@ -192,25 +203,37 @@ namespace GetFitterGetBigger.Admin.Services
                         UpdatedAt = DateTime.UtcNow
                     };
 
+                    Console.WriteLine($"[ExerciseLinkStateService] Adding optimistic link with ID: {optimisticLink.Id}");
                     CurrentLinks.Links.Add(optimisticLink);
                     CurrentLinks.TotalCount++;
                     NotifyStateChanged();
                 }
 
+                Console.WriteLine($"[ExerciseLinkStateService] Calling ExerciseLinkService.CreateLinkAsync");
                 await _exerciseLinkService.CreateLinkAsync(CurrentExerciseId, createDto);
                 
+                Console.WriteLine($"[ExerciseLinkStateService] Link created successfully, reloading links");
                 // Reload to get the actual server state
                 await LoadLinksAsync();
                 
                 SuccessMessage = $"{createDto.LinkType} link created successfully";
+                ScreenReaderAnnouncement = $"{createDto.LinkType} exercise link has been added successfully";
+                Console.WriteLine($"[ExerciseLinkStateService] Link creation completed successfully");
             }
             catch (Exception ex)
             {
+                Console.WriteLine($"[ExerciseLinkStateService] Exception in CreateLinkAsync: {ex.GetType().Name}: {ex.Message}");
+                if (ex.InnerException != null)
+                {
+                    Console.WriteLine($"[ExerciseLinkStateService] Inner Exception: {ex.InnerException.Message}");
+                }
                 ErrorMessage = ErrorMessageFormatter.FormatExerciseLinkError(ex);
+                Console.WriteLine($"[ExerciseLinkStateService] Formatted error message: {ErrorMessage}");
                 await LoadLinksAsync(preserveErrorMessage: true); // Revert optimistic update
             }
             finally
             {
+                Console.WriteLine($"[ExerciseLinkStateService] CreateLinkAsync cleanup");
                 IsProcessingLink = false;
                 NotifyStateChanged();
             }
@@ -238,7 +261,7 @@ namespace GetFitterGetBigger.Admin.Services
                     if (link != null)
                     {
                         link.DisplayOrder = updateDto.DisplayOrder;
-                        link.IsActive = updateDto.IsActive;
+                        link.IsActive = true; // Always ON - no soft delete
                         link.UpdatedAt = DateTime.UtcNow;
                         NotifyStateChanged();
                     }
@@ -250,6 +273,7 @@ namespace GetFitterGetBigger.Admin.Services
                 await LoadLinksAsync();
                 
                 SuccessMessage = "Link updated successfully";
+                ScreenReaderAnnouncement = "Exercise link has been updated successfully";
             }
             catch (Exception ex)
             {
@@ -297,6 +321,7 @@ namespace GetFitterGetBigger.Admin.Services
                 await LoadLinksAsync();
                 
                 SuccessMessage = $"{linkType} link removed successfully";
+                ScreenReaderAnnouncement = $"{linkType} exercise link has been removed successfully";
             }
             catch (Exception ex)
             {
@@ -337,6 +362,7 @@ namespace GetFitterGetBigger.Admin.Services
                 await LoadLinksAsync();
                 
                 SuccessMessage = "Links updated successfully";
+                ScreenReaderAnnouncement = "Exercise links have been updated successfully";
             }
             catch (Exception ex)
             {
@@ -381,7 +407,7 @@ namespace GetFitterGetBigger.Admin.Services
                         var updateDto = new UpdateExerciseLinkDto
                         {
                             DisplayOrder = newOrder,
-                            IsActive = link.IsActive
+                            IsActive = true // Always ON - no soft delete
                         };
                         
                         updateTasks.Add(_exerciseLinkService.UpdateLinkAsync(CurrentExerciseId, linkId, updateDto));
@@ -397,6 +423,7 @@ namespace GetFitterGetBigger.Admin.Services
                     await LoadLinksAsync();
                     
                     SuccessMessage = $"{linkType} links reordered successfully";
+                    ScreenReaderAnnouncement = $"{linkType} exercise links have been reordered successfully";
                 }
             }
             catch (Exception ex)
@@ -438,6 +465,7 @@ namespace GetFitterGetBigger.Admin.Services
         {
             ErrorMessage = null;
             SuccessMessage = null;
+            ScreenReaderAnnouncement = null;
             NotifyStateChanged();
         }
         
@@ -445,6 +473,7 @@ namespace GetFitterGetBigger.Admin.Services
         {
             ErrorMessage = errorMessage;
             SuccessMessage = null;
+            ScreenReaderAnnouncement = $"Error: {errorMessage}";
             NotifyStateChanged();
         }
 

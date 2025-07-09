@@ -1,22 +1,36 @@
 @using GetFitterGetBigger.Admin.Models.Dtos
 
 <div class="@GetCardClasses()" 
-     draggable="@(!Disabled && OnDragStart.HasDelegate ? "true" : "false")"
-     @ondragstart="HandleDragStart"
-     @ondragend="HandleDragEnd"
-     data-testid="exercise-link-card">
+     data-testid="exercise-link-card"
+     role="listitem"
+     aria-label="@GetCardAriaLabel()">
     
     <div class="flex items-start gap-3">
-        @* Drag Handle *@
-        @if (!Disabled && OnDragStart.HasDelegate)
+        @* Ordering Buttons *@
+        @if (!Disabled && (OnMoveUp.HasDelegate || OnMoveDown.HasDelegate))
         {
-            <div class="drag-handle cursor-move text-gray-400 hover:text-gray-600 pt-1" 
-                 data-testid="drag-handle"
-                 title="Drag to reorder">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                          d="M4 8h16M4 16h16" />
-                </svg>
+            <div class="flex flex-col gap-1 pt-1" data-testid="ordering-buttons">
+                @* Move Up Button *@
+                <button type="button" 
+                        @onclick="HandleMoveUp"
+                        disabled="@(!CanMoveUp)"
+                        class="p-1 rounded-md text-gray-500 hover:text-gray-700 hover:bg-gray-200 transition-colors @(!CanMoveUp ? "opacity-50 cursor-not-allowed" : "")"
+                        title="@(!CanMoveUp ? "This is the first exercise" : "Move exercise up in order")"
+                        data-testid="move-up-button"
+                        aria-label="Move @(Link.TargetExercise?.Name ?? "exercise") up in order">
+                    <span class="block w-4 h-4 flex items-center justify-center font-bold text-xs">↑</span>
+                </button>
+                
+                @* Move Down Button *@
+                <button type="button" 
+                        @onclick="HandleMoveDown"
+                        disabled="@(!CanMoveDown)"
+                        class="p-1 rounded-md text-gray-500 hover:text-gray-700 hover:bg-gray-200 transition-colors @(!CanMoveDown ? "opacity-50 cursor-not-allowed" : "")"
+                        title="@(!CanMoveDown ? "This is the last exercise" : "Move exercise down in order")"
+                        data-testid="move-down-button"
+                        aria-label="Move @(Link.TargetExercise?.Name ?? "exercise") down in order">
+                    <span class="block w-4 h-4 flex items-center justify-center font-bold text-xs">↓</span>
+                </button>
             </div>
         }
 
@@ -37,7 +51,7 @@
                     
                     @if (Link.TargetExercise != null)
                     {
-                        <div class="mt-1 flex flex-wrap items-center gap-2 text-sm text-gray-600">
+                        <div class="mt-1 flex flex-wrap items-center gap-2 text-xs sm:text-sm text-gray-600">
                             @* Difficulty *@
                             @if (Link.TargetExercise.Difficulty != null)
                             {
@@ -80,11 +94,11 @@
                 {
                     <button type="button"
                             @onclick="HandleRemove"
-                            @onclick:stopPropagation="true"
                             class="ml-2 text-gray-400 hover:text-red-600 transition-colors"
                             data-testid="remove-button"
-                            title="Remove link">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            title="Remove link"
+                            aria-label="Remove @(Link.TargetExercise?.Name ?? $"exercise {Link.TargetExerciseId}")">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
                                   d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                         </svg>
@@ -94,13 +108,7 @@
 
             @* Additional Info *@
             <div class="mt-2 flex items-center gap-4 text-xs text-gray-500">
-                <span>Order: @Link.DisplayOrder</span>
-                @if (!Link.IsActive)
-                {
-                    <span class="inline-flex items-center px-2 py-0.5 rounded-full bg-red-100 text-red-800">
-                        Inactive
-                    </span>
-                }
+                <span>Position: @(Link.DisplayOrder + 1)</span>
                 <span>Added: @Link.CreatedAt.ToString("MMM d, yyyy")</span>
             </div>
         </div>
@@ -110,32 +118,18 @@
 @code {
     [Parameter, EditorRequired] public ExerciseLinkDto Link { get; set; } = null!;
     [Parameter] public bool Disabled { get; set; } = false;
-    [Parameter] public bool IsDragging { get; set; } = false;
+    [Parameter] public bool CanMoveUp { get; set; } = false;
+    [Parameter] public bool CanMoveDown { get; set; } = false;
     [Parameter] public EventCallback<ExerciseLinkDto> OnRemove { get; set; }
-    [Parameter] public EventCallback<ExerciseLinkDto> OnDragStart { get; set; }
-    [Parameter] public EventCallback OnDragEnd { get; set; }
+    [Parameter] public EventCallback<ExerciseLinkDto> OnMoveUp { get; set; }
+    [Parameter] public EventCallback<ExerciseLinkDto> OnMoveDown { get; set; }
 
     private string GetCardClasses()
     {
-        var classes = "bg-white border rounded-lg p-4 transition-all";
+        var classes = "bg-white border rounded-lg p-4 transition-all hover:shadow-md";
         
-        if (IsDragging)
-        {
-            classes += " opacity-50 scale-95";
-        }
-        else if (!Disabled && OnDragStart.HasDelegate)
-        {
-            classes += " hover:shadow-md cursor-move";
-        }
-        
-        if (!Link.IsActive)
-        {
-            classes += " border-red-200 bg-red-50";
-        }
-        else
-        {
-            classes += " border-gray-200";
-        }
+        // Always show as active since IsActive is always true now
+        classes += " border-gray-200";
         
         return classes;
     }
@@ -148,19 +142,28 @@
         }
     }
 
-    private async Task HandleDragStart(DragEventArgs e)
+    private async Task HandleMoveUp()
     {
-        if (!Disabled && OnDragStart.HasDelegate)
+        if (!Disabled && OnMoveUp.HasDelegate && CanMoveUp)
         {
-            await OnDragStart.InvokeAsync(Link);
+            await OnMoveUp.InvokeAsync(Link);
         }
     }
 
-    private async Task HandleDragEnd(DragEventArgs e)
+    private async Task HandleMoveDown()
     {
-        if (OnDragEnd.HasDelegate)
+        if (!Disabled && OnMoveDown.HasDelegate && CanMoveDown)
         {
-            await OnDragEnd.InvokeAsync();
+            await OnMoveDown.InvokeAsync(Link);
         }
     }
+
+    private string GetCardAriaLabel()
+    {
+        var exerciseName = Link.TargetExercise?.Name ?? $"Exercise ID {Link.TargetExerciseId}";
+        var order = $", position {Link.DisplayOrder + 1}";
+        return $"{Link.LinkType} exercise: {exerciseName}{order}";
+    }
+
+    // Removed HandleKeyDown as it's no longer needed without drag functionality
 }
