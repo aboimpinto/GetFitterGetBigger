@@ -2,7 +2,7 @@
 
 ## Feature ID: FEAT-018
 ## Created: 2025-07-09
-## Status: READY TO DEVELOP
+## Status: IN PROGRESS
 
 ## Overview
 
