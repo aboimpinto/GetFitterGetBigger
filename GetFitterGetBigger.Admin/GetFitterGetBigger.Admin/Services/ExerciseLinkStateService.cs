@@ -60,6 +60,11 @@ namespace GetFitterGetBigger.Admin.Services
 
         public async Task LoadLinksAsync()
         {
+            await LoadLinksAsync(preserveErrorMessage: false);
+        }
+
+        private async Task LoadLinksAsync(bool preserveErrorMessage)
+        {
             if (string.IsNullOrEmpty(CurrentExerciseId))
             {
                 ErrorMessage = "No exercise selected";
@@ -67,10 +72,16 @@ namespace GetFitterGetBigger.Admin.Services
                 return;
             }
 
+            // Store existing error message if we need to preserve it
+            var existingErrorMessage = preserveErrorMessage ? ErrorMessage : null;
+
             try
             {
                 IsLoadingLinks = true;
-                ErrorMessage = null;
+                if (!preserveErrorMessage)
+                {
+                    ErrorMessage = null;
+                }
                 NotifyStateChanged();
 
                 CurrentLinks = await _exerciseLinkService.GetLinksAsync(
@@ -93,6 +104,11 @@ namespace GetFitterGetBigger.Admin.Services
             finally
             {
                 IsLoadingLinks = false;
+                // Restore the error message if we were preserving it and no new error occurred
+                if (preserveErrorMessage && string.IsNullOrEmpty(ErrorMessage) && !string.IsNullOrEmpty(existingErrorMessage))
+                {
+                    ErrorMessage = existingErrorMessage;
+                }
                 NotifyStateChanged();
             }
         }
@@ -183,27 +199,27 @@ namespace GetFitterGetBigger.Admin.Services
             catch (DuplicateExerciseLinkException)
             {
                 ErrorMessage = "This exercise is already linked";
-                await LoadLinksAsync(); // Revert optimistic update
+                await LoadLinksAsync(preserveErrorMessage: true); // Revert optimistic update
             }
             catch (MaximumLinksExceededException ex)
             {
                 ErrorMessage = ex.Message;
-                await LoadLinksAsync(); // Revert optimistic update
+                await LoadLinksAsync(preserveErrorMessage: true); // Revert optimistic update
             }
             catch (InvalidExerciseLinkException ex)
             {
                 ErrorMessage = ex.Message;
-                await LoadLinksAsync(); // Revert optimistic update
+                await LoadLinksAsync(preserveErrorMessage: true); // Revert optimistic update
             }
             catch (ExerciseLinkApiException ex)
             {
                 ErrorMessage = $"Failed to create link: {ex.Message}";
-                await LoadLinksAsync(); // Revert optimistic update
+                await LoadLinksAsync(preserveErrorMessage: true); // Revert optimistic update
             }
             catch (Exception ex)
             {
                 ErrorMessage = $"An unexpected error occurred: {ex.Message}";
-                await LoadLinksAsync(); // Revert optimistic update
+                await LoadLinksAsync(preserveErrorMessage: true); // Revert optimistic update
             }
             finally
             {
@@ -250,17 +266,17 @@ namespace GetFitterGetBigger.Admin.Services
             catch (ExerciseLinkNotFoundException)
             {
                 ErrorMessage = "Link not found";
-                await LoadLinksAsync(); // Revert optimistic update
+                await LoadLinksAsync(preserveErrorMessage: true); // Revert optimistic update
             }
             catch (ExerciseLinkApiException ex)
             {
                 ErrorMessage = $"Failed to update link: {ex.Message}";
-                await LoadLinksAsync(); // Revert optimistic update
+                await LoadLinksAsync(preserveErrorMessage: true); // Revert optimistic update
             }
             catch (Exception ex)
             {
                 ErrorMessage = $"An unexpected error occurred: {ex.Message}";
-                await LoadLinksAsync(); // Revert optimistic update
+                await LoadLinksAsync(preserveErrorMessage: true); // Revert optimistic update
             }
             finally
             {
@@ -306,17 +322,17 @@ namespace GetFitterGetBigger.Admin.Services
             catch (ExerciseLinkNotFoundException)
             {
                 ErrorMessage = "Link not found";
-                await LoadLinksAsync(); // Revert optimistic update
+                await LoadLinksAsync(preserveErrorMessage: true); // Revert optimistic update
             }
             catch (ExerciseLinkApiException ex)
             {
                 ErrorMessage = $"Failed to delete link: {ex.Message}";
-                await LoadLinksAsync(); // Revert optimistic update
+                await LoadLinksAsync(preserveErrorMessage: true); // Revert optimistic update
             }
             catch (Exception ex)
             {
                 ErrorMessage = $"An unexpected error occurred: {ex.Message}";
-                await LoadLinksAsync(); // Revert optimistic update
+                await LoadLinksAsync(preserveErrorMessage: true); // Revert optimistic update
             }
             finally
             {
@@ -376,7 +392,7 @@ namespace GetFitterGetBigger.Admin.Services
             catch (Exception ex)
             {
                 ErrorMessage = $"Failed to reorder links: {ex.Message}";
-                await LoadLinksAsync(); // Revert optimistic update
+                await LoadLinksAsync(preserveErrorMessage: true); // Revert optimistic update
             }
             finally
             {

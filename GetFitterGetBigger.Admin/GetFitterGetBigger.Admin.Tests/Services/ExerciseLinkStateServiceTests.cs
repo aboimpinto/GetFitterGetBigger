@@ -287,7 +287,7 @@ namespace GetFitterGetBigger.Admin.Tests.Services
             _stateService.IsProcessingLink.Should().BeFalse();
         }
 
-        [Fact(Skip = "Error message is cleared by LoadLinksAsync - functionality works correctly")]
+        [Fact]
         public async Task CreateLinkAsync_DuplicateLink_HandlesErrorCorrectly()
         {
             // Arrange

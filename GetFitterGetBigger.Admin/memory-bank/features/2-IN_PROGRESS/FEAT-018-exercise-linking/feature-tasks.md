@@ -54,7 +54,7 @@
 - **Task 3.1:** Create exercise links state slice/context `[Implemented: 874267fb | Started: 2025-07-09 13:05 | Finished: 2025-07-09 13:20 | Duration: 0h 15m]` (Est: 20m)
 - **Task 3.2:** Implement actions for loading, creating, updating, deleting links `[Implemented: 874267fb | Started: 2025-07-09 13:05 | Finished: 2025-07-09 13:20 | Duration: 0h 15m]` (Est: 25m)
 - **Task 3.3:** Add optimistic updates and cache management (1 hour TTL) `[Implemented: 874267fb | Started: 2025-07-09 13:05 | Finished: 2025-07-09 13:20 | Duration: 0h 15m]` (Est: 20m)
-- **Task 3.4:** Write unit tests for state management logic `[ReadyToDevelop]` (Est: 25m)
+- **Task 3.4:** Write unit tests for state management logic `[Implemented: c8640126 | Started: 2025-07-09 13:24 | Finished: 2025-07-09 13:46 | Duration: 0h 22m]` (Est: 25m)
 
 ### Category 4: Exercise Link Components - Estimated: 3h 30m
 - **Task 4.1:** Create ExerciseLinkCard component with drag handle `[ReadyToDevelop]` (Est: 30m)
