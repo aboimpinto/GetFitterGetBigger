@@ -3,7 +3,7 @@
 ## Feature ID: FEAT-017
 ## Created: 2025-07-07
 
-## Status: SUBMITTED
+## Status: COMPLETED
 
 ## Summary
 Implement the Kinetic Chain field for exercises in the Admin application, allowing Personal Trainers to categorize exercises as either Compound (multi-muscle) or Isolation (single-muscle) movements.
@@ -48,14 +48,14 @@ Update the following TypeScript interfaces/types:
 - Handle the `kineticChain` object in GET responses
 
 ## Acceptance Criteria
-1. [ ] Create Exercise form includes Kinetic Chain dropdown (required for non-REST)
-2. [ ] Update Exercise form includes Kinetic Chain dropdown with current value
-3. [ ] Validation prevents saving non-REST exercises without Kinetic Chain
-4. [ ] Validation prevents saving REST exercises with Kinetic Chain
-5. [ ] Exercise list displays Kinetic Chain column
-6. [ ] Exercise details show Kinetic Chain information
-7. [ ] All API requests include the kineticChainId field correctly
-8. [ ] Error handling displays appropriate messages for validation failures
+1. [x] Create Exercise form includes Kinetic Chain dropdown (required for non-REST)
+2. [x] Update Exercise form includes Kinetic Chain dropdown with current value
+3. [x] Validation prevents saving non-REST exercises without Kinetic Chain
+4. [x] Validation prevents saving REST exercises with Kinetic Chain
+5. [x] Exercise list displays Kinetic Chain column
+6. [x] Exercise details show Kinetic Chain information
+7. [x] All API requests include the kineticChainId field correctly
+8. [x] Error handling displays appropriate messages for validation failures
 
 ## Technical Notes
 - The Kinetic Chain types are reference data and should be cached after first fetch
