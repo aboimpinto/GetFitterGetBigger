@@ -273,6 +273,38 @@ public class FitnessDbContext : DbContext
             .HasConversion(
                 id => (Guid)id,
                 guid => ExerciseId.From(guid));
+                
+        // Configure ExerciseLink constraints and indexes
+        modelBuilder.Entity<ExerciseLink>()
+            .HasIndex(el => new { el.SourceExerciseId, el.TargetExerciseId, el.LinkType })
+            .IsUnique()
+            .HasDatabaseName("IX_ExerciseLink_Source_Target_Type_Unique");
+            
+        modelBuilder.Entity<ExerciseLink>()
+            .HasIndex(el => new { el.SourceExerciseId, el.LinkType })
+            .HasDatabaseName("IX_ExerciseLink_SourceExerciseId_LinkType");
+            
+        modelBuilder.Entity<ExerciseLink>()
+            .HasIndex(el => el.TargetExerciseId)
+            .HasDatabaseName("IX_ExerciseLink_TargetExerciseId");
+            
+        modelBuilder.Entity<ExerciseLink>()
+            .Property(el => el.LinkType)
+            .HasMaxLength(10)
+            .IsRequired();
+            
+        // Configure relationships
+        modelBuilder.Entity<ExerciseLink>()
+            .HasOne(el => el.SourceExercise)
+            .WithMany()
+            .HasForeignKey(el => el.SourceExerciseId)
+            .OnDelete(DeleteBehavior.Restrict);
+            
+        modelBuilder.Entity<ExerciseLink>()
+            .HasOne(el => el.TargetExercise)
+            .WithMany()
+            .HasForeignKey(el => el.TargetExerciseId)
+            .OnDelete(DeleteBehavior.Restrict);
     }
     
     private static void ConfigureManyToManyRelationships(ModelBuilder modelBuilder)
