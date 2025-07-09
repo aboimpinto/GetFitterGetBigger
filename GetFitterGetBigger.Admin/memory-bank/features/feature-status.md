@@ -22,6 +22,7 @@ This file serves as a central dashboard for tracking the status of all features 
 | Comprehensive Test Improvements | COMPLETED | High | FEAT-TEST-001 | 2025-01-02 | [Details](3-COMPLETED/FEAT-TEST-001-comprehensive-test-improvements/feature-description.md) |
 | Floating Action Buttons | COMPLETED | Medium | FEAT-016 | 2025-07-04 | [Details](3-COMPLETED/FEAT-016-floating-action-buttons/feature-description.md) |
 | Exercise Kinetic Chain | COMPLETED | High | FEAT-017 | 2025-07-09 | [Details](3-COMPLETED/FEAT-017-exercise-kinetic-chain/feature-description.md) |
+| Exercise Linking | READY TO DEVELOP | High | FEAT-018 | 2025-07-09 | [Details](1-READY_TO_DEVELOP/FEAT-018-exercise-linking/feature-description.md) |
 
 ## Status Definitions
 

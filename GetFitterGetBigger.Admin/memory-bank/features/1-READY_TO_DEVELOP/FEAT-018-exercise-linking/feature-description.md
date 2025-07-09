@@ -1,5 +1,9 @@
 # FEAT-018: Exercise Linking UI
 
+## Feature ID: FEAT-018
+## Created: 2025-07-09
+## Status: READY TO DEVELOP
+
 ## Overview
 
 This feature implements the user interface for managing exercise links in the Admin application. Personal Trainers will be able to link exercises together, defining warmup and cooldown relationships that streamline workout creation.

@@ -1,0 +1,126 @@
+# Exercise Linking Implementation Tasks
+
+## Feature Branch: `feature/exercise-linking`
+## Estimated Total Time: 16h 30m
+## Actual Total Time: [To be calculated at completion]
+
+## Baseline Health Check Report
+[To be completed when implementation starts]
+
+---
+
+### Category 1: Data Models & DTOs - Estimated: 1h
+- **Task 1.1:** Create ExerciseLinkDto interface with all required properties `[ReadyToDevelop]` (Est: 15m)
+- **Task 1.2:** Create ExerciseLinksResponseDto, CreateExerciseLinkDto, UpdateExerciseLinkDto interfaces `[ReadyToDevelop]` (Est: 15m)
+- **Task 1.3:** Update ExerciseDto to include link count/indicator properties `[ReadyToDevelop]` (Est: 15m)
+- **Task 1.4:** Write unit tests for DTO serialization/deserialization `[ReadyToDevelop]` (Est: 15m)
+
+### Category 2: API Service Layer - Estimated: 2h
+- **Task 2.1:** Create IExerciseLinkService interface with all 5 methods `[ReadyToDevelop]` (Est: 15m)
+- **Task 2.2:** Implement ExerciseLinkService with createLink method `[ReadyToDevelop]` (Est: 20m)
+- **Task 2.3:** Implement getLinks method with query parameters support `[ReadyToDevelop]` (Est: 20m)
+- **Task 2.4:** Implement updateLink, deleteLink, and getSuggestedLinks methods `[ReadyToDevelop]` (Est: 20m)
+- **Task 2.5:** Add comprehensive error handling and custom error types `[ReadyToDevelop]` (Est: 15m)
+- **Task 2.6:** Write unit tests for all ExerciseLinkService methods `[ReadyToDevelop]` (Est: 30m)
+
+### Checkpoint after Category 2: Service layer complete and tested 🛑
+
+### Category 3: State Management - Estimated: 1h 30m
+- **Task 3.1:** Create exercise links state slice/context `[ReadyToDevelop]` (Est: 20m)
+- **Task 3.2:** Implement actions for loading, creating, updating, deleting links `[ReadyToDevelop]` (Est: 25m)
+- **Task 3.3:** Add optimistic updates and cache management (1 hour TTL) `[ReadyToDevelop]` (Est: 20m)
+- **Task 3.4:** Write unit tests for state management logic `[ReadyToDevelop]` (Est: 25m)
+
+### Category 4: Exercise Link Components - Estimated: 3h 30m
+- **Task 4.1:** Create ExerciseLinkCard component with drag handle `[ReadyToDevelop]` (Est: 30m)
+- **Task 4.2:** Write tests for ExerciseLinkCard component `[ReadyToDevelop]` (Est: 20m)
+- **Task 4.3:** Create LinkedExercisesList component with warmup/cooldown sections `[ReadyToDevelop]` (Est: 45m)
+- **Task 4.4:** Implement drag-and-drop reordering functionality `[ReadyToDevelop]` (Est: 30m)
+- **Task 4.5:** Write tests for LinkedExercisesList including drag-and-drop `[ReadyToDevelop]` (Est: 25m)
+- **Task 4.6:** Create AddExerciseLinkModal with search and filtering `[ReadyToDevelop]` (Est: 40m)
+- **Task 4.7:** Write tests for AddExerciseLinkModal component `[ReadyToDevelop]` (Est: 20m)
+
+### Checkpoint after Category 4: All link components functional 🛑
+
+### Category 5: Exercise Detail Page Integration - Estimated: 2h 30m
+- **Task 5.1:** Create ExerciseLinkManager parent component `[ReadyToDevelop]` (Est: 30m)
+- **Task 5.2:** Add "Linked Exercises" section to ExerciseDetails page (Workout type only) `[ReadyToDevelop]` (Est: 25m)
+- **Task 5.3:** Integrate state management and API calls `[ReadyToDevelop]` (Est: 20m)
+- **Task 5.4:** Implement link count display (e.g., "3/10 Warmups") `[ReadyToDevelop]` (Est: 15m)
+- **Task 5.5:** Add empty states and loading indicators `[ReadyToDevelop]` (Est: 20m)
+- **Task 5.6:** Write integration tests for exercise detail page with links `[ReadyToDevelop]` (Est: 40m)
+
+### Category 6: Exercise List Enhancement - Estimated: 1h 30m
+- **Task 6.1:** Add link indicator icon to exercise list items `[ReadyToDevelop]` (Est: 20m)
+- **Task 6.2:** Implement tooltip showing link counts on hover `[ReadyToDevelop]` (Est: 20m)
+- **Task 6.3:** Add "Has links" filter to exercise list filters `[ReadyToDevelop]` (Est: 20m)
+- **Task 6.4:** Write tests for exercise list enhancements `[ReadyToDevelop]` (Est: 30m)
+
+### Category 7: Business Logic & Validation - Estimated: 2h
+- **Task 7.1:** Implement client-side validation for exercise type compatibility `[ReadyToDevelop]` (Est: 25m)
+- **Task 7.2:** Add circular reference detection logic `[ReadyToDevelop]` (Est: 20m)
+- **Task 7.3:** Implement maximum links validation (10 per type) `[ReadyToDevelop]` (Est: 15m)
+- **Task 7.4:** Add duplicate link prevention `[ReadyToDevelop]` (Est: 15m)
+- **Task 7.5:** Write unit tests for all validation logic `[ReadyToDevelop]` (Est: 45m)
+
+### Checkpoint after Category 7: All business rules enforced 🛑
+
+### Category 8: User Feedback & Error Handling - Estimated: 1h 30m
+- **Task 8.1:** Implement success notifications for all CRUD operations `[ReadyToDevelop]` (Est: 20m)
+- **Task 8.2:** Add specific error message handling from API responses `[ReadyToDevelop]` (Est: 20m)
+- **Task 8.3:** Create confirmation dialog for link deletion `[ReadyToDevelop]` (Est: 15m)
+- **Task 8.4:** Add progress indicators for bulk operations `[ReadyToDevelop]` (Est: 15m)
+- **Task 8.5:** Write tests for user feedback components `[ReadyToDevelop]` (Est: 20m)
+
+### Category 9: Accessibility & Polish - Estimated: 1h 30m
+- **Task 9.1:** Add ARIA labels and keyboard navigation support `[ReadyToDevelop]` (Est: 25m)
+- **Task 9.2:** Implement focus management for modals and drag-drop `[ReadyToDevelop]` (Est: 20m)
+- **Task 9.3:** Add screen reader announcements for state changes `[ReadyToDevelop]` (Est: 15m)
+- **Task 9.4:** Ensure responsive design for mobile devices `[ReadyToDevelop]` (Est: 15m)
+- **Task 9.5:** Write accessibility tests `[ReadyToDevelop]` (Est: 15m)
+
+### Final Checkpoint: All features working, all tests green, build clean 🛑
+
+### Category 10: Integration Testing & Documentation - Estimated: 1h
+- **Task 10.1:** Write E2E tests for complete linking workflow `[ReadyToDevelop]` (Est: 30m)
+- **Task 10.2:** Test error scenarios and edge cases `[ReadyToDevelop]` (Est: 20m)
+- **Task 10.3:** Update user documentation `[ReadyToDevelop]` (Est: 10m)
+
+### Category 11: Manual Testing & User Acceptance - Estimated: 30m
+- **Task 11.1:** Manual testing by user `[ReadyForTesting]` (Est: 30m)
+  - Test creating warmup and cooldown links
+  - Test reordering via drag-and-drop
+  - Test link deletion with confirmation
+  - Test maximum links enforcement
+  - Test validation for invalid link types
+  - Verify exercise list indicators
+  - Test on mobile devices
+  - Test with slow network conditions
+
+## Time Tracking Summary
+- **Total Estimated Time:** 16h 30m
+- **Total Actual Time:** [To be calculated from task durations]
+- **AI Assistance Impact:** [% reduction in time]
+- **Implementation Started:** [First task start time]
+- **Implementation Completed:** [Last task finish time]
+
+## Notes
+- This feature depends on API FEAT-022 being deployed and accessible
+- Exercise linking is only available for "Workout" type exercises as source
+- Maximum 10 warmup and 10 cooldown links per exercise
+- Links are soft-deleted (marked inactive) rather than hard-deleted
+- Focus on responsive design as PTs may use tablets in the gym
+- All validation should provide clear, actionable error messages
+
+## Implementation Dependencies
+1. ExerciseDto must be updated to support link indicators
+2. ExerciseDetails page must be modified to show links section
+3. ExerciseList must be enhanced with link indicators
+4. State management must be extended for links data
+
+## Testing Focus Areas
+1. Drag-and-drop functionality across browsers
+2. Validation edge cases (circular references, type mismatches)
+3. Performance with maximum links (10 warmups + 10 cooldowns)
+4. Mobile responsiveness and touch interactions
+5. Accessibility with screen readers
