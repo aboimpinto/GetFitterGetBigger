@@ -735,6 +735,129 @@ public class MyComponentTests : TestContext
 
 ---
 
+## 🔄 State Service Testing
+
+State services in the Admin application follow specific patterns that require careful testing consideration.
+
+### Key Testing Scenarios for State Services
+
+#### 1. Error Message Persistence During Rollback
+
+When testing operations that may fail and require rollback (e.g., optimistic updates), ensure error messages persist:
+
+```csharp
+[Fact]
+public async Task CreateOperation_OnDuplicateError_PreservesErrorMessage()
+{
+    // Arrange
+    var exerciseId = Guid.NewGuid().ToString();
+    var initialState = new StateBuilder().WithExerciseId(exerciseId).Build();
+    
+    _mockService.SetupSequence(x => x.GetDataAsync(exerciseId))
+        .ReturnsAsync(initialState)
+        .ReturnsAsync(initialState); // For reload after error
+    
+    _mockService.Setup(x => x.CreateAsync(exerciseId, It.IsAny<CreateDto>()))
+        .ThrowsAsync(new DuplicateException());
+    
+    await _stateService.InitializeAsync(exerciseId);
+    
+    // Act
+    await _stateService.CreateAsync(new CreateDto());
+    
+    // Assert - Error message should persist after rollback
+    _stateService.ErrorMessage.Should().Be("This item already exists");
+    _stateService.CurrentState.Should().BeEquivalentTo(initialState);
+}
+```
+
+#### 2. Optimistic Update and Rollback Testing
+
+```csharp
+[Fact]
+public async Task UpdateOperation_OptimisticUpdate_RollsBackOnError()
+{
+    // Arrange
+    var originalItem = new ItemBuilder().WithId("1").WithName("Original").Build();
+    var items = new List<Item> { originalItem };
+    
+    _mockService.Setup(x => x.GetItemsAsync())
+        .ReturnsAsync(items);
+    
+    _mockService.Setup(x => x.UpdateAsync("1", It.IsAny<UpdateDto>()))
+        .ThrowsAsync(new ApiException("Update failed"));
+    
+    await _stateService.InitializeAsync();
+    var originalCount = _stateService.Items.Count;
+    
+    // Act
+    await _stateService.UpdateItemAsync("1", new UpdateDto { Name = "Updated" });
+    
+    // Assert - State should be rolled back
+    _stateService.Items.Should().HaveCount(originalCount);
+    _stateService.Items.First().Name.Should().Be("Original");
+    _stateService.ErrorMessage.Should().Contain("Update failed");
+}
+```
+
+#### 3. State Change Notification Testing
+
+```csharp
+[Fact]
+public async Task StateChanges_NotifySubscribers()
+{
+    // Arrange
+    var notifications = 0;
+    _stateService.OnChange += () => notifications++;
+    
+    // Act
+    await _stateService.LoadDataAsync();
+    _stateService.ClearError();
+    await _stateService.CreateItemAsync(new CreateDto());
+    
+    // Assert
+    notifications.Should().BeGreaterThan(3); // Multiple state changes
+}
+```
+
+### State Service Testing Best Practices
+
+1. **Always test error message persistence** when operations may fail
+2. **Verify optimistic updates are properly rolled back** on errors
+3. **Test state change notifications** are fired appropriately
+4. **Mock API calls with SetupSequence** when testing reload scenarios
+5. **Test loading states** transition correctly (IsLoading true → false)
+6. **Verify success messages** are set and cleared appropriately
+7. **Test concurrent operations** are handled correctly
+8. **Ensure proper cleanup** in Dispose methods
+
+### Common State Service Testing Pattern
+
+```csharp
+public class StateServiceTests
+{
+    private readonly Mock<IApiService> _apiServiceMock;
+    private readonly StateService _stateService;
+    private int _stateChangeCount;
+    
+    public StateServiceTests()
+    {
+        _apiServiceMock = new Mock<IApiService>();
+        _stateService = new StateService(_apiServiceMock.Object);
+        _stateService.OnChange += () => _stateChangeCount++;
+        _stateChangeCount = 0;
+    }
+    
+    // Helper to verify state changes occurred
+    private void AssertStateChanged(int minimumChanges = 1)
+    {
+        _stateChangeCount.Should().BeGreaterThanOrEqualTo(minimumChanges);
+    }
+}
+```
+
+---
+
 ## 📝 Best Practices Summary
 
 1. **Design for testability** - Use data-testid, internal visibility, clear separation of concerns

@@ -63,6 +63,13 @@ namespace GetFitterGetBigger.Admin.Services
             await LoadLinksAsync(preserveErrorMessage: false);
         }
 
+        /// <summary>
+        /// Loads exercise links with optional error message preservation.
+        /// When preserveErrorMessage is true, any existing error message will be retained
+        /// after the load operation completes. This is crucial for maintaining user feedback
+        /// when reverting optimistic updates after errors occur.
+        /// </summary>
+        /// <param name="preserveErrorMessage">Whether to preserve the current error message through the load operation</param>
         private async Task LoadLinksAsync(bool preserveErrorMessage)
         {
             if (string.IsNullOrEmpty(CurrentExerciseId))
