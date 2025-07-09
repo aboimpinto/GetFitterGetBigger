@@ -250,12 +250,11 @@ public class ExerciseLinkIntegrationTests : IClassFixture<ApiTestFixture>
         // Assert
         Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
         
-        // Verify soft delete - need to get a fresh context since the API uses its own
+        // Verify hard delete - link should be completely removed from database
         await using var verifyScope = _fixture.Services.CreateAsyncScope();
         var verifyContext = verifyScope.ServiceProvider.GetRequiredService<FitnessDbContext>();
         var deletedLink = await verifyContext.ExerciseLinks.FindAsync(link.Id);
-        Assert.NotNull(deletedLink);
-        Assert.False(deletedLink.IsActive);
+        Assert.Null(deletedLink);
     }
 
     private async Task<Exercise> CreateExerciseWithType(FitnessDbContext context, string name, params ExerciseTypeId[] typeIds)

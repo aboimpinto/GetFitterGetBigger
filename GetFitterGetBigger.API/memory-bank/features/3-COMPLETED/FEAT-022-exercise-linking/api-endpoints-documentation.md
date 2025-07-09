@@ -12,7 +12,7 @@ Exercise links allow connecting exercises together for warmup and cooldown purpo
 - REST exercises cannot be linked
 - Maximum 10 links per type (10 warmups, 10 cooldowns) per exercise
 - No circular references allowed
-- Soft delete is used (links are marked as inactive rather than deleted)
+- Hard delete is used (links are permanently removed from the database)
 
 ## Endpoints
 
@@ -265,7 +265,7 @@ Updates an existing exercise link (display order and active status).
 
 ### 5. Delete Exercise Link
 
-Soft deletes an exercise link (marks it as inactive).
+Permanently deletes an exercise link from the database.
 
 **Endpoint:** `DELETE /api/exercises/{exerciseId}/links/{linkId}`
 
@@ -277,7 +277,7 @@ Soft deletes an exercise link (marks it as inactive).
 
 **Error Responses:**
 - `400 Bad Request`: Invalid ID format
-- `404 Not Found`: Link not found (Note: Due to soft delete, subsequent deletes return 204)
+- `404 Not Found`: Link not found (subsequent deletes of the same link will return 404)
 
 ## Data Models
 
@@ -347,7 +347,7 @@ PUT /api/exercises/exercise-123e4567-e89b-12d3-a456-426614174001/links/exercisel
 }
 ```
 
-3. **Removing a link:**
+3. **Removing a link (permanent deletion):**
 ```bash
 DELETE /api/exercises/exercise-123e4567-e89b-12d3-a456-426614174001/links/exerciselink-550e8400-e29b-41d4-a716-446655440000
 ```
@@ -367,7 +367,7 @@ GET /api/exercises/exercise-123e4567-e89b-12d3-a456-426614174001/links/suggested
 ## Notes for Implementation
 
 - All endpoints currently have no authorization (to be added later)
-- Soft delete is idempotent - deleting an already deleted link returns success
+- Hard delete is used - once deleted, links cannot be recovered and subsequent deletes return 404
 - The suggested links endpoint currently returns the most commonly used links across all exercises
 - Display order is used for sorting within each link type
 - Exercise type validation is strict - ensure exercises have the correct types before linking

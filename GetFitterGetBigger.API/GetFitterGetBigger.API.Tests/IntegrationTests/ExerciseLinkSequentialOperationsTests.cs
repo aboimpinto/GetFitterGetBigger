@@ -210,14 +210,13 @@ public class ExerciseLinkSequentialOperationsTests : IClassFixture<ApiTestFixtur
         var firstDeleteResponse = await _client.DeleteAsync($"/api/exercises/{sourceExercise.Id}/links/{createdLink.Id}");
         Assert.Equal(HttpStatusCode.NoContent, firstDeleteResponse.StatusCode);
 
-        // Act - Second delete (currently succeeds with 204 as soft delete is idempotent)
+        // Act - Second delete (should fail with 404 as link no longer exists)
         var secondDeleteResponse = await _client.DeleteAsync($"/api/exercises/{sourceExercise.Id}/links/{createdLink.Id}");
-        Assert.Equal(HttpStatusCode.NoContent, secondDeleteResponse.StatusCode);
+        Assert.Equal(HttpStatusCode.NotFound, secondDeleteResponse.StatusCode);
 
-        // Verify link is soft deleted
+        // Verify link is hard deleted (completely removed from database)
         var deletedLink = await context.ExerciseLinks.FindAsync(ExerciseLinkId.From(Guid.Parse(createdLink.Id.Replace("exerciselink-", ""))));
-        Assert.NotNull(deletedLink);
-        Assert.False(deletedLink.IsActive);
+        Assert.Null(deletedLink);
     }
 
     [Fact]
@@ -266,35 +265,21 @@ public class ExerciseLinkSequentialOperationsTests : IClassFixture<ApiTestFixtur
         var updateOrderResponse = await _client.PutAsJsonAsync($"/api/exercises/{sourceExercise.Id}/links/{createdLink.Id}", updateOrderDto);
         Assert.Equal(HttpStatusCode.OK, updateOrderResponse.StatusCode);
         
-        // Step 3: Deactivate it
-        var deactivateDto = new UpdateExerciseLinkDto
-        {
-            DisplayOrder = 5,
-            IsActive = false
-        };
-        
-        var deactivateResponse = await _client.PutAsJsonAsync($"/api/exercises/{sourceExercise.Id}/links/{createdLink.Id}", deactivateDto);
-        Assert.Equal(HttpStatusCode.OK, deactivateResponse.StatusCode);
-        
-        // Verify it's not in active links anymore
-        var activeLinksResponse = await _client.GetAsync($"/api/exercises/{sourceExercise.Id}/links");
-        Assert.Equal(HttpStatusCode.OK, activeLinksResponse.StatusCode);
-        
-        var activeLinks = await activeLinksResponse.Content.ReadFromJsonAsync<ExerciseLinksResponseDto>();
-        Assert.NotNull(activeLinks);
-        Assert.Empty(activeLinks.Links);
-        
-        // Step 4: Delete it
+        // Step 3: Delete it (hard delete)
         var deleteResponse = await _client.DeleteAsync($"/api/exercises/{sourceExercise.Id}/links/{createdLink.Id}");
         Assert.Equal(HttpStatusCode.NoContent, deleteResponse.StatusCode);
         
-        // Step 5: Verify it's still not in results
+        // Step 4: Verify it's completely removed from database and not in results
         var finalLinksResponse = await _client.GetAsync($"/api/exercises/{sourceExercise.Id}/links");
         Assert.Equal(HttpStatusCode.OK, finalLinksResponse.StatusCode);
         
         var finalLinks = await finalLinksResponse.Content.ReadFromJsonAsync<ExerciseLinksResponseDto>();
         Assert.NotNull(finalLinks);
         Assert.Empty(finalLinks.Links);
+        
+        // Step 5: Verify link is completely removed from database
+        var deletedLink = await context.ExerciseLinks.FindAsync(ExerciseLinkId.From(Guid.Parse(createdLink.Id.Replace("exerciselink-", ""))));
+        Assert.Null(deletedLink);
     }
 
     private async Task<Exercise> CreateExerciseWithTypes(FitnessDbContext context, string name, params ExerciseTypeId[] typeIds)

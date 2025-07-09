@@ -106,4 +106,4 @@ interface WorkoutService {
 ## Migration Notes
 - No breaking changes to existing Exercise endpoints
 - Links are optional - exercises work without them
-- Soft delete pattern allows recovery
+- Hard delete pattern - once deleted, links cannot be recovered

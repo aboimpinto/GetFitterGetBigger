@@ -134,7 +134,7 @@ public class ExerciseLinkRepository : RepositoryBase<FitnessDbContext>, IExercis
     }
     
     /// <summary>
-    /// Deletes an exercise link (soft delete)
+    /// Deletes an exercise link (hard delete)
     /// </summary>
     public async Task<bool> DeleteAsync(ExerciseLinkId id)
     {
@@ -144,18 +144,8 @@ public class ExerciseLinkRepository : RepositoryBase<FitnessDbContext>, IExercis
             return false;
         }
         
-        // Soft delete by updating the tracked entity directly
-        Context.Entry(exerciseLink).CurrentValues.SetValues(new
-        {
-            exerciseLink.Id,
-            exerciseLink.SourceExerciseId,
-            exerciseLink.TargetExerciseId,
-            exerciseLink.LinkType,
-            exerciseLink.DisplayOrder,
-            IsActive = false,
-            exerciseLink.CreatedAt,
-            UpdatedAt = DateTime.UtcNow
-        });
+        // Hard delete - remove from database
+        Context.ExerciseLinks.Remove(exerciseLink);
         
         return true;
     }
