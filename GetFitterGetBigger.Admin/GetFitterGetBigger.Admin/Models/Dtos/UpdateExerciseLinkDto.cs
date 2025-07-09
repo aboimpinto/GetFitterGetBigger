@@ -8,6 +8,11 @@ namespace GetFitterGetBigger.Admin.Models.Dtos;
 public class UpdateExerciseLinkDto
 {
     /// <summary>
+    /// The ID of the link to update (used in bulk operations)
+    /// </summary>
+    public string Id { get; set; } = string.Empty;
+
+    /// <summary>
     /// New display order (min: 1) (required)
     /// </summary>
     [Required(ErrorMessage = "Display order is required")]

@@ -26,6 +26,11 @@ namespace GetFitterGetBigger.Admin.Services
         public string? ErrorMessage { get; private set; }
         public string? SuccessMessage { get; private set; }
 
+        // Additional loading states
+        public bool IsLoading => IsLoadingLinks || IsLoadingSuggestions;
+        public bool IsSaving { get; private set; }
+        public bool IsDeleting { get; private set; }
+
         // Filter/Options state
         public bool IncludeExerciseDetails { get; set; } = true;
         public string? LinkTypeFilter { get; set; }
@@ -304,6 +309,7 @@ namespace GetFitterGetBigger.Admin.Services
             try
             {
                 IsProcessingLink = true;
+                IsDeleting = true;
                 ClearMessages();
                 NotifyStateChanged();
 
@@ -344,6 +350,47 @@ namespace GetFitterGetBigger.Admin.Services
             finally
             {
                 IsProcessingLink = false;
+                IsDeleting = false;
+                NotifyStateChanged();
+            }
+        }
+
+        public async Task UpdateMultipleLinksAsync(List<UpdateExerciseLinkDto> updates)
+        {
+            if (string.IsNullOrEmpty(CurrentExerciseId))
+            {
+                ErrorMessage = "No exercise selected";
+                NotifyStateChanged();
+                return;
+            }
+
+            try
+            {
+                IsProcessingLink = true;
+                IsSaving = true;
+                ClearMessages();
+                NotifyStateChanged();
+
+                var updateTasks = updates.Select(update => 
+                    _exerciseLinkService.UpdateLinkAsync(CurrentExerciseId, update.Id, update)
+                ).ToList();
+
+                await Task.WhenAll(updateTasks);
+                
+                // Reload to ensure consistency
+                await LoadLinksAsync();
+                
+                SuccessMessage = "Links updated successfully";
+            }
+            catch (Exception ex)
+            {
+                ErrorMessage = $"Failed to update links: {ex.Message}";
+                await LoadLinksAsync(preserveErrorMessage: true); // Revert optimistic update
+            }
+            finally
+            {
+                IsProcessingLink = false;
+                IsSaving = false;
                 NotifyStateChanged();
             }
         }

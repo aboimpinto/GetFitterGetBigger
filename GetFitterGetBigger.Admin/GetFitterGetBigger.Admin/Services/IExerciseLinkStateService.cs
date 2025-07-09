@@ -50,6 +50,21 @@ namespace GetFitterGetBigger.Admin.Services
         bool IsProcessingLink { get; }
 
         /// <summary>
+        /// Whether any loading operation is in progress
+        /// </summary>
+        bool IsLoading { get; }
+
+        /// <summary>
+        /// Whether a save operation is in progress
+        /// </summary>
+        bool IsSaving { get; }
+
+        /// <summary>
+        /// Whether a delete operation is in progress
+        /// </summary>
+        bool IsDeleting { get; }
+
+        /// <summary>
         /// Current error message if any
         /// </summary>
         string? ErrorMessage { get; }
@@ -136,6 +151,11 @@ namespace GetFitterGetBigger.Admin.Services
         /// Reorder links by updating their display order
         /// </summary>
         Task ReorderLinksAsync(string linkType, Dictionary<string, int> linkIdToOrderMap);
+
+        /// <summary>
+        /// Update multiple links at once (for bulk operations)
+        /// </summary>
+        Task UpdateMultipleLinksAsync(List<UpdateExerciseLinkDto> updates);
 
         /// <summary>
         /// Clear the current exercise context and all links

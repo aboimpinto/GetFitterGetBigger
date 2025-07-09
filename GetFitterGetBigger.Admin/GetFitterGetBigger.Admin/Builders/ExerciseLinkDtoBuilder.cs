@@ -118,6 +118,21 @@ namespace GetFitterGetBigger.Admin.Builders
             return this;
         }
 
+        public ExerciseLinkDtoBuilder WithTargetExercise(string name, string id)
+        {
+            _targetExerciseName = name;
+            _targetExerciseId = id;
+            _targetExercise = new ExerciseDto
+            {
+                Id = id,
+                Name = name,
+                MuscleGroups = new List<MuscleGroupWithRoleDto>(),
+                Equipment = new List<ReferenceDataDto>(),
+                ExerciseTypes = new List<ExerciseTypeDto>()
+            };
+            return this;
+        }
+
         public ExerciseLinkDto Build()
         {
             return new ExerciseLinkDto

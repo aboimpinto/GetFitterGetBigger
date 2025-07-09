@@ -1,0 +1,322 @@
+@using GetFitterGetBigger.Admin.Models.Dtos
+@using GetFitterGetBigger.Admin.Services
+
+<div class="@GetModalClasses()" @onclick="HandleBackdropClick" data-testid="add-link-modal">
+    <div class="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-2xl"
+         @onclick:stopPropagation="true">
+        <div class="bg-white px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
+            <div class="sm:flex sm:items-start">
+                <div class="mt-3 text-center sm:ml-4 sm:mt-0 sm:text-left w-full">
+                    <h3 class="text-lg font-semibold leading-6 text-gray-900" data-testid="modal-title">
+                        Add @LinkType Exercise
+                    </h3>
+                    
+                    <div class="mt-4">
+                        @* Search Input *@
+                        <div class="mb-4">
+                            <label for="exercise-search" class="block text-sm font-medium text-gray-700">
+                                Search Exercises
+                            </label>
+                            <input type="text"
+                                   id="exercise-search"
+                                   @bind="_searchQuery"
+                                   @bind:event="oninput"
+                                   @onkeyup="@(async (e) => { if (e.Key == "Enter") await SearchExercises(); })"
+                                   class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                                   placeholder="Search by name..."
+                                   data-testid="search-input" />
+                        </div>
+
+                        @* Exercise Type Filter *@
+                        <div class="mb-4">
+                            <label for="exercise-type-filter" class="block text-sm font-medium text-gray-700">
+                                Exercise Type
+                            </label>
+                            <select id="exercise-type-filter"
+                                    @bind="_selectedExerciseType"
+                                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                                    data-testid="type-filter">
+                                <option value="">All Types</option>
+                                @foreach (var type in ExerciseTypes)
+                                {
+                                    <option value="@type.Id">@type.Value</option>
+                                }
+                            </select>
+                        </div>
+
+                        @* Search Button *@
+                        <div class="mb-4">
+                            <button type="button"
+                                    @onclick="SearchExercises"
+                                    disabled="@_isSearching"
+                                    class="inline-flex justify-center rounded-md bg-blue-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    data-testid="search-button">
+                                @if (_isSearching)
+                                {
+                                    <span>Searching...</span>
+                                }
+                                else
+                                {
+                                    <span>Search</span>
+                                }
+                            </button>
+                        </div>
+
+                        @* Results Section *@
+                        <div class="mt-4 max-h-96 overflow-y-auto" data-testid="results-section">
+                            @if (_isSearching)
+                            {
+                                <div class="text-center py-4">
+                                    <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+                                    <p class="mt-2 text-sm text-gray-500">Searching exercises...</p>
+                                </div>
+                            }
+                            else if (_searchResults != null)
+                            {
+                                @if (_searchResults.Any())
+                                {
+                                    <div class="space-y-2" data-testid="search-results">
+                                        @foreach (var exercise in _searchResults)
+                                        {
+                                            <div class="@GetExerciseCardClasses(exercise.Id)"
+                                                 @onclick="() => SelectExercise(exercise)"
+                                                 data-testid="@($"exercise-{exercise.Id}")">
+                                                <div class="flex items-start justify-between">
+                                                    <div class="flex-1">
+                                                        <h4 class="font-medium text-gray-900">@exercise.Name</h4>
+                                                        <div class="mt-1 text-sm text-gray-600 space-y-1">
+                                                            @if (!string.IsNullOrEmpty(exercise.Difficulty?.Value))
+                                                            {
+                                                                <p>Difficulty: @exercise.Difficulty.Value</p>
+                                                            }
+                                                            @if (exercise.ExerciseTypes?.Any() == true)
+                                                            {
+                                                                <p>Types: @string.Join(", ", exercise.ExerciseTypes.Select(t => t.Value))</p>
+                                                            }
+                                                            @if (IsAlreadyLinked(exercise.Id))
+                                                            {
+                                                                <p class="text-orange-600 font-medium">Already linked as @GetLinkType(exercise.Id)</p>
+                                                            }
+                                                        </div>
+                                                    </div>
+                                                    @if (_selectedExerciseId == exercise.Id)
+                                                    {
+                                                        <svg class="h-5 w-5 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                                                            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                                                        </svg>
+                                                    }
+                                                </div>
+                                            </div>
+                                        }
+                                    </div>
+                                }
+                                else
+                                {
+                                    <div class="text-center py-8" data-testid="no-results">
+                                        <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        </svg>
+                                        <p class="mt-2 text-sm text-gray-500">No exercises found matching your criteria.</p>
+                                    </div>
+                                }
+                            }
+                            else
+                            {
+                                <div class="text-center py-8 text-gray-500" data-testid="initial-state">
+                                    <p>Enter search criteria and click Search to find exercises.</p>
+                                </div>
+                            }
+                        </div>
+
+                        @if (!string.IsNullOrEmpty(_errorMessage))
+                        {
+                            <div class="mt-4 rounded-md bg-red-50 p-4" data-testid="error-message">
+                                <div class="flex">
+                                    <div class="flex-shrink-0">
+                                        <svg class="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                                        </svg>
+                                    </div>
+                                    <div class="ml-3">
+                                        <p class="text-sm text-red-800">@_errorMessage</p>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="bg-gray-50 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6">
+            <button type="button"
+                    @onclick="HandleAdd"
+                    disabled="@(!CanAdd())"
+                    class="inline-flex w-full justify-center rounded-md bg-blue-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 sm:ml-3 sm:w-auto disabled:opacity-50 disabled:cursor-not-allowed"
+                    data-testid="add-button">
+                Add Link
+            </button>
+            <button type="button"
+                    @onclick="HandleCancel"
+                    class="mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:mt-0 sm:w-auto"
+                    data-testid="cancel-button">
+                Cancel
+            </button>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter, EditorRequired] public bool IsOpen { get; set; }
+    [Parameter, EditorRequired] public string LinkType { get; set; } = null!;
+    [Parameter, EditorRequired] public IExerciseService ExerciseService { get; set; } = null!;
+    [Parameter, EditorRequired] public IEnumerable<ExerciseLinkDto> ExistingLinks { get; set; } = null!;
+    [Parameter, EditorRequired] public IEnumerable<ExerciseTypeDto> ExerciseTypes { get; set; } = null!;
+    [Parameter] public EventCallback<ExerciseListDto> OnAdd { get; set; }
+    [Parameter] public EventCallback OnCancel { get; set; }
+
+    private string _searchQuery = string.Empty;
+    private string _selectedExerciseType = string.Empty;
+    private List<ExerciseListDto>? _searchResults;
+    private string? _selectedExerciseId;
+    private bool _isSearching = false;
+    private string? _errorMessage;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (IsOpen && _searchResults == null)
+        {
+            // Perform initial search when modal opens
+            await SearchExercises();
+        }
+    }
+
+    private async Task SearchExercises()
+    {
+        try
+        {
+            _isSearching = true;
+            _errorMessage = null;
+            StateHasChanged();
+
+            var filter = new ExerciseFilterDto
+            {
+                Name = _searchQuery,
+                IsActive = true,
+                PageSize = 50 // Show more results in modal
+            };
+
+            // Note: API doesn't support filtering by exercise type directly
+            // We'll need to filter client-side for now
+            var result = await ExerciseService.GetExercisesAsync(filter);
+            
+            _searchResults = result.Items;
+
+            // Client-side filter by exercise type if selected
+            if (!string.IsNullOrEmpty(_selectedExerciseType))
+            {
+                _searchResults = _searchResults
+                    .Where(e => e.ExerciseTypes?.Any(t => t.Id == _selectedExerciseType) == true)
+                    .ToList();
+            }
+
+            // Filter to only show Workout type exercises (only these can be linked)
+            _searchResults = _searchResults
+                .Where(e => e.ExerciseTypes?.Any(t => t.Value == "Workout") == true)
+                .ToList();
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = $"Failed to search exercises: {ex.Message}";
+            _searchResults = new List<ExerciseListDto>();
+        }
+        finally
+        {
+            _isSearching = false;
+            StateHasChanged();
+        }
+    }
+
+    private void SelectExercise(ExerciseListDto exercise)
+    {
+        if (!IsAlreadyLinked(exercise.Id))
+        {
+            _selectedExerciseId = exercise.Id;
+        }
+    }
+
+    private bool IsAlreadyLinked(string exerciseId)
+    {
+        return ExistingLinks.Any(l => l.TargetExerciseId == exerciseId);
+    }
+
+    private string? GetLinkType(string exerciseId)
+    {
+        return ExistingLinks.FirstOrDefault(l => l.TargetExerciseId == exerciseId)?.LinkType;
+    }
+
+    private bool CanAdd()
+    {
+        return !string.IsNullOrEmpty(_selectedExerciseId) && 
+               _searchResults?.Any(e => e.Id == _selectedExerciseId) == true &&
+               !IsAlreadyLinked(_selectedExerciseId);
+    }
+
+    private async Task HandleAdd()
+    {
+        if (CanAdd() && OnAdd.HasDelegate)
+        {
+            var selectedExercise = _searchResults!.First(e => e.Id == _selectedExerciseId);
+            await OnAdd.InvokeAsync(selectedExercise);
+            ResetModal();
+        }
+    }
+
+    private async Task HandleCancel()
+    {
+        if (OnCancel.HasDelegate)
+        {
+            await OnCancel.InvokeAsync();
+        }
+        ResetModal();
+    }
+
+    private void HandleBackdropClick()
+    {
+        _ = HandleCancel();
+    }
+
+    private void ResetModal()
+    {
+        _searchQuery = string.Empty;
+        _selectedExerciseType = string.Empty;
+        _searchResults = null;
+        _selectedExerciseId = null;
+        _errorMessage = null;
+    }
+
+    private string GetModalClasses()
+    {
+        return IsOpen 
+            ? "relative z-50" 
+            : "hidden";
+    }
+
+    private string GetExerciseCardClasses(string exerciseId)
+    {
+        var baseClasses = "border rounded-lg p-3 cursor-pointer transition-colors";
+        
+        if (IsAlreadyLinked(exerciseId))
+        {
+            return $"{baseClasses} border-gray-300 bg-gray-50 cursor-not-allowed opacity-60";
+        }
+        else if (_selectedExerciseId == exerciseId)
+        {
+            return $"{baseClasses} border-blue-500 bg-blue-50";
+        }
+        else
+        {
+            return $"{baseClasses} border-gray-300 hover:border-blue-300 hover:bg-gray-50";
+        }
+    }
+}

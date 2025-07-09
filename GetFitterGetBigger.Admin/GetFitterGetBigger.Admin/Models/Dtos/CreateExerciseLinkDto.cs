@@ -8,6 +8,11 @@ namespace GetFitterGetBigger.Admin.Models.Dtos;
 public class CreateExerciseLinkDto
 {
     /// <summary>
+    /// The ID of the source exercise (optional - can be inferred from context)
+    /// </summary>
+    public string? SourceExerciseId { get; set; }
+
+    /// <summary>
     /// The ID of the exercise to link to (required)
     /// </summary>
     [Required(ErrorMessage = "Target exercise ID is required")]

@@ -1,0 +1,273 @@
+@using GetFitterGetBigger.Admin.Models.Dtos
+@using GetFitterGetBigger.Admin.Services
+@implements IDisposable
+
+<div class="mt-6" data-testid="exercise-link-manager">
+    @if (ShowComponent)
+    {
+        <div class="bg-white shadow-lg rounded-lg overflow-hidden">
+            <div class="px-6 py-4 bg-gray-50 border-b border-gray-200">
+                <h2 class="text-xl font-semibold text-gray-900 flex items-center gap-2">
+                    <svg class="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                              d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                    </svg>
+                    Linked Exercises
+                </h2>
+                <p class="mt-1 text-sm text-gray-600">
+                    Connect warmup and cooldown exercises to create comprehensive workout routines
+                </p>
+            </div>
+
+            <div class="p-6">
+                @if (StateService.IsLoading)
+                {
+                    <div class="flex justify-center py-8" data-testid="loading-spinner">
+                        <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+                    </div>
+                }
+                else if (!string.IsNullOrEmpty(StateService.ErrorMessage))
+                {
+                    <div class="rounded-md bg-red-50 p-4" data-testid="error-message">
+                        <div class="flex">
+                            <div class="flex-shrink-0">
+                                <svg class="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                                </svg>
+                            </div>
+                            <div class="ml-3">
+                                <h3 class="text-sm font-medium text-red-800">Error loading exercise links</h3>
+                                <p class="mt-1 text-sm text-red-700">@StateService.ErrorMessage</p>
+                                <button type="button"
+                                        @onclick="async () => await StateService.LoadLinksAsync()"
+                                        class="mt-2 text-sm font-medium text-red-600 hover:text-red-500">
+                                    Try again
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                }
+                else
+                {
+                    <LinkedExercisesList StateService="@StateService"
+                                       Disabled="@(StateService.IsSaving || StateService.IsDeleting)"
+                                       OnAddLink="@HandleAddLink"
+                                       OnRemoveLink="@HandleRemoveLink"
+                                       OnReorderLinks="@HandleReorderLinks" />
+                }
+            </div>
+        </div>
+
+        @* Success Notification *@
+        @if (!string.IsNullOrEmpty(_successMessage))
+        {
+            <div class="fixed bottom-4 right-4 max-w-sm z-50" data-testid="success-notification">
+                <div class="rounded-lg bg-green-50 p-4 shadow-lg">
+                    <div class="flex">
+                        <div class="flex-shrink-0">
+                            <svg class="h-5 w-5 text-green-400" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                            </svg>
+                        </div>
+                        <div class="ml-3">
+                            <p class="text-sm font-medium text-green-800">@_successMessage</p>
+                        </div>
+                        <div class="ml-auto pl-3">
+                            <button @onclick="() => _successMessage = null"
+                                    class="inline-flex rounded-md bg-green-50 p-1.5 text-green-500 hover:bg-green-100">
+                                <span class="sr-only">Dismiss</span>
+                                <svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+
+        @* Add Exercise Link Modal *@
+        <AddExerciseLinkModal IsOpen="@_showAddModal"
+                             LinkType="@_addLinkType"
+                             ExerciseService="@ExerciseService"
+                             ExistingLinks="@(StateService.CurrentLinks?.Links ?? Enumerable.Empty<ExerciseLinkDto>())"
+                             ExerciseTypes="@ExerciseTypes"
+                             OnAdd="@HandleExerciseSelected"
+                             OnCancel="@(() => _showAddModal = false)" />
+
+        @* Delete Confirmation Dialog *@
+        @if (_linkToDelete != null)
+        {
+            <div class="relative z-50" data-testid="delete-confirmation-dialog">
+                <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"></div>
+                <div class="fixed inset-0 z-10 overflow-y-auto">
+                    <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+                        <div class="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg">
+                            <div class="bg-white px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
+                                <div class="sm:flex sm:items-start">
+                                    <div class="mx-auto flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-red-100 sm:mx-0 sm:h-10 sm:w-10">
+                                        <svg class="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+                                        </svg>
+                                    </div>
+                                    <div class="mt-3 text-center sm:ml-4 sm:mt-0 sm:text-left">
+                                        <h3 class="text-base font-semibold leading-6 text-gray-900">Remove Exercise Link</h3>
+                                        <div class="mt-2">
+                                            <p class="text-sm text-gray-500">
+                                                Are you sure you want to remove "@_linkToDelete.TargetExercise?.Name" from the @_linkToDelete.LinkType.ToLower() exercises? 
+                                                This action cannot be undone.
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="bg-gray-50 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6">
+                                <button type="button"
+                                        @onclick="ConfirmDelete"
+                                        disabled="@StateService.IsDeleting"
+                                        class="inline-flex w-full justify-center rounded-md bg-red-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-red-500 sm:ml-3 sm:w-auto disabled:opacity-50 disabled:cursor-not-allowed"
+                                        data-testid="confirm-delete-button">
+                                    @if (StateService.IsDeleting)
+                                    {
+                                        <span>Removing...</span>
+                                    }
+                                    else
+                                    {
+                                        <span>Remove</span>
+                                    }
+                                </button>
+                                <button type="button"
+                                        @onclick="CancelDelete"
+                                        disabled="@StateService.IsDeleting"
+                                        class="mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:mt-0 sm:w-auto disabled:opacity-50 disabled:cursor-not-allowed"
+                                        data-testid="cancel-delete-button">
+                                    Cancel
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    }
+</div>
+
+@code {
+    [Parameter, EditorRequired] public ExerciseDto Exercise { get; set; } = null!;
+    [Parameter, EditorRequired] public IExerciseLinkStateService StateService { get; set; } = null!;
+    [Parameter, EditorRequired] public IExerciseService ExerciseService { get; set; } = null!;
+    [Parameter, EditorRequired] public IEnumerable<ExerciseTypeDto> ExerciseTypes { get; set; } = null!;
+
+    private bool _showAddModal = false;
+    private string _addLinkType = string.Empty;
+    private ExerciseLinkDto? _linkToDelete;
+    private string? _successMessage;
+    private System.Threading.Timer? _successMessageTimer;
+    
+    private bool ShowComponent => Exercise.ExerciseTypes?.Any(t => t.Value == "Workout") == true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (ShowComponent)
+        {
+            StateService.OnChange += HandleStateChange;
+            await StateService.InitializeForExerciseAsync(Exercise.Id, Exercise.Name);
+        }
+    }
+
+    private void HandleStateChange()
+    {
+        InvokeAsync(StateHasChanged);
+    }
+
+    private void HandleAddLink(string linkType)
+    {
+        _addLinkType = linkType;
+        _showAddModal = true;
+    }
+
+    private async Task HandleExerciseSelected(ExerciseListDto exercise)
+    {
+        _showAddModal = false;
+        
+        var createDto = new CreateExerciseLinkDto
+        {
+            SourceExerciseId = Exercise.Id,
+            TargetExerciseId = exercise.Id,
+            LinkType = _addLinkType
+        };
+
+        await StateService.CreateLinkAsync(createDto);
+        
+        if (string.IsNullOrEmpty(StateService.ErrorMessage))
+        {
+            ShowSuccessMessage($"{exercise.Name} added to {_addLinkType.ToLower()} exercises");
+        }
+    }
+
+    private async Task HandleRemoveLink(ExerciseLinkDto link)
+    {
+        _linkToDelete = link;
+    }
+
+    private async Task ConfirmDelete()
+    {
+        if (_linkToDelete != null)
+        {
+            var exerciseName = _linkToDelete.TargetExercise?.Name ?? "Exercise";
+            await StateService.DeleteLinkAsync(_linkToDelete.Id);
+            
+            if (string.IsNullOrEmpty(StateService.ErrorMessage))
+            {
+                ShowSuccessMessage($"{exerciseName} removed from {_linkToDelete.LinkType.ToLower()} exercises");
+            }
+            
+            _linkToDelete = null;
+        }
+    }
+
+    private void CancelDelete()
+    {
+        _linkToDelete = null;
+    }
+
+    private async Task HandleReorderLinks((string linkType, Dictionary<string, int> reorderMap) args)
+    {
+        var updates = args.reorderMap.Select(kvp => new UpdateExerciseLinkDto
+        {
+            Id = kvp.Key,
+            DisplayOrder = kvp.Value
+        }).ToList();
+
+        await StateService.UpdateMultipleLinksAsync(updates);
+        
+        if (string.IsNullOrEmpty(StateService.ErrorMessage))
+        {
+            ShowSuccessMessage($"{args.linkType} exercises reordered");
+        }
+    }
+
+    private void ShowSuccessMessage(string message)
+    {
+        _successMessage = message;
+        
+        // Cancel any existing timer
+        _successMessageTimer?.Dispose();
+        
+        // Set a new timer to clear the message after 3 seconds
+        _successMessageTimer = new System.Threading.Timer(_ =>
+        {
+            _successMessage = null;
+            InvokeAsync(StateHasChanged);
+        }, null, 3000, System.Threading.Timeout.Infinite);
+    }
+
+    public void Dispose()
+    {
+        if (ShowComponent)
+        {
+            StateService.OnChange -= HandleStateChange;
+        }
+        _successMessageTimer?.Dispose();
+    }
+}
