@@ -184,6 +184,12 @@ namespace GetFitterGetBigger.Admin.Builders
             return this;
         }
 
+        public ExerciseListDtoBuilder WithMuscleGroups(params MuscleGroupListItemDto[] muscleGroups)
+        {
+            _muscleGroups = muscleGroups.ToList();
+            return this;
+        }
+
         public ExerciseListDtoBuilder WithMuscleGroup(string muscleName, string roleName)
         {
             _muscleGroups.Add(new MuscleGroupListItemDto
@@ -204,6 +210,29 @@ namespace GetFitterGetBigger.Admin.Builders
             return this;
         }
 
+        public ExerciseListDtoBuilder WithPrimaryMuscleGroups(params string[] muscleNames)
+        {
+            foreach (var muscleName in muscleNames)
+            {
+                _muscleGroups.Add(new MuscleGroupListItemDto
+                {
+                    MuscleGroup = new ReferenceDataDto
+                    {
+                        Id = Guid.NewGuid().ToString(),
+                        Value = muscleName,
+                        Description = muscleName
+                    },
+                    Role = new ReferenceDataDto
+                    {
+                        Id = "1",
+                        Value = "Primary",
+                        Description = "Primary"
+                    }
+                });
+            }
+            return this;
+        }
+
         public ExerciseListDtoBuilder WithEquipment(params string[] equipment)
         {
             _equipment = equipment.Select(e => new ReferenceDataDto
@@ -212,6 +241,12 @@ namespace GetFitterGetBigger.Admin.Builders
                 Value = e,
                 Description = e
             }).ToList();
+            return this;
+        }
+
+        public ExerciseListDtoBuilder WithEquipment(params ReferenceDataDto[] equipment)
+        {
+            _equipment = equipment.ToList();
             return this;
         }
 

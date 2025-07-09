@@ -73,6 +73,12 @@ namespace GetFitterGetBigger.Admin.Builders
             return this;
         }
 
+        public ExerciseLinkDtoBuilder WithIsActive(bool isActive)
+        {
+            _isActive = isActive;
+            return this;
+        }
+
         public ExerciseLinkDtoBuilder WithCreatedAt(DateTime createdAt)
         {
             _createdAt = createdAt;
@@ -88,6 +94,27 @@ namespace GetFitterGetBigger.Admin.Builders
         public ExerciseLinkDtoBuilder WithTargetExercise(ExerciseDto targetExercise)
         {
             _targetExercise = targetExercise;
+            return this;
+        }
+
+        public ExerciseLinkDtoBuilder WithTargetExercise(ExerciseListDto targetExercise)
+        {
+            // Convert ExerciseListDto to ExerciseDto for the link
+            _targetExercise = new ExerciseDto
+            {
+                Id = targetExercise.Id,
+                Name = targetExercise.Name,
+                Difficulty = targetExercise.Difficulty,
+                MuscleGroups = targetExercise.MuscleGroups?.Select(mg => new MuscleGroupWithRoleDto
+                {
+                    MuscleGroup = mg.MuscleGroup,
+                    Role = mg.Role
+                }).ToList() ?? new List<MuscleGroupWithRoleDto>(),
+                Equipment = targetExercise.Equipment?.ToList() ?? new List<ReferenceDataDto>(),
+                ExerciseTypes = targetExercise.ExerciseTypes?.ToList() ?? new List<ExerciseTypeDto>()
+            };
+            _targetExerciseName = targetExercise.Name;
+            _targetExerciseId = targetExercise.Id;
             return this;
         }
 

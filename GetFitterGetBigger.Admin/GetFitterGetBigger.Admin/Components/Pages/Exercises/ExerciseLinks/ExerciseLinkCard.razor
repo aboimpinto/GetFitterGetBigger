@@ -1,0 +1,166 @@
+@using GetFitterGetBigger.Admin.Models.Dtos
+
+<div class="@GetCardClasses()" 
+     draggable="@(!Disabled && OnDragStart.HasDelegate ? "true" : "false")"
+     @ondragstart="HandleDragStart"
+     @ondragend="HandleDragEnd"
+     data-testid="exercise-link-card">
+    
+    <div class="flex items-start gap-3">
+        @* Drag Handle *@
+        @if (!Disabled && OnDragStart.HasDelegate)
+        {
+            <div class="drag-handle cursor-move text-gray-400 hover:text-gray-600 pt-1" 
+                 data-testid="drag-handle"
+                 title="Drag to reorder">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                          d="M4 8h16M4 16h16" />
+                </svg>
+            </div>
+        }
+
+        @* Exercise Info *@
+        <div class="flex-1">
+            <div class="flex items-start justify-between">
+                <div>
+                    <h4 class="font-medium text-gray-900">
+                        @if (Link.TargetExercise != null)
+                        {
+                            @Link.TargetExercise.Name
+                        }
+                        else
+                        {
+                            <span class="text-gray-500">Exercise ID: @Link.TargetExerciseId</span>
+                        }
+                    </h4>
+                    
+                    @if (Link.TargetExercise != null)
+                    {
+                        <div class="mt-1 flex flex-wrap items-center gap-2 text-sm text-gray-600">
+                            @* Difficulty *@
+                            @if (Link.TargetExercise.Difficulty != null)
+                            {
+                                <span class="inline-flex items-center">
+                                    <span class="font-medium">Difficulty:</span>
+                                    <span class="ml-1">@Link.TargetExercise.Difficulty.Value</span>
+                                </span>
+                            }
+
+                            @* Primary Muscles *@
+                            @{
+                                var primaryMuscles = Link.TargetExercise.MuscleGroups?
+                                    .Where(mg => mg.Role?.Value == "Primary")
+                                    .Select(mg => mg.MuscleGroup?.Value)
+                                    .Where(v => !string.IsNullOrEmpty(v))
+                                    .ToList();
+                            }
+                            @if (primaryMuscles?.Any() == true)
+                            {
+                                <span class="inline-flex items-center">
+                                    <span class="font-medium">Primary:</span>
+                                    <span class="ml-1">@string.Join(", ", primaryMuscles)</span>
+                                </span>
+                            }
+
+                            @* Equipment *@
+                            @if (Link.TargetExercise.Equipment?.Any() == true)
+                            {
+                                <span class="inline-flex items-center">
+                                    <span class="font-medium">Equipment:</span>
+                                    <span class="ml-1">@string.Join(", ", Link.TargetExercise.Equipment.Select(e => e.Value))</span>
+                                </span>
+                            }
+                        </div>
+                    }
+                </div>
+
+                @* Remove Button *@
+                @if (!Disabled && OnRemove.HasDelegate)
+                {
+                    <button type="button"
+                            @onclick="HandleRemove"
+                            @onclick:stopPropagation="true"
+                            class="ml-2 text-gray-400 hover:text-red-600 transition-colors"
+                            data-testid="remove-button"
+                            title="Remove link">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                  d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                    </button>
+                }
+            </div>
+
+            @* Additional Info *@
+            <div class="mt-2 flex items-center gap-4 text-xs text-gray-500">
+                <span>Order: @Link.DisplayOrder</span>
+                @if (!Link.IsActive)
+                {
+                    <span class="inline-flex items-center px-2 py-0.5 rounded-full bg-red-100 text-red-800">
+                        Inactive
+                    </span>
+                }
+                <span>Added: @Link.CreatedAt.ToString("MMM d, yyyy")</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter, EditorRequired] public ExerciseLinkDto Link { get; set; } = null!;
+    [Parameter] public bool Disabled { get; set; } = false;
+    [Parameter] public bool IsDragging { get; set; } = false;
+    [Parameter] public EventCallback<ExerciseLinkDto> OnRemove { get; set; }
+    [Parameter] public EventCallback<ExerciseLinkDto> OnDragStart { get; set; }
+    [Parameter] public EventCallback OnDragEnd { get; set; }
+
+    private string GetCardClasses()
+    {
+        var classes = "bg-white border rounded-lg p-4 transition-all";
+        
+        if (IsDragging)
+        {
+            classes += " opacity-50 scale-95";
+        }
+        else if (!Disabled && OnDragStart.HasDelegate)
+        {
+            classes += " hover:shadow-md cursor-move";
+        }
+        
+        if (!Link.IsActive)
+        {
+            classes += " border-red-200 bg-red-50";
+        }
+        else
+        {
+            classes += " border-gray-200";
+        }
+        
+        return classes;
+    }
+
+    private async Task HandleRemove()
+    {
+        if (!Disabled && OnRemove.HasDelegate)
+        {
+            await OnRemove.InvokeAsync(Link);
+        }
+    }
+
+    private async Task HandleDragStart(DragEventArgs e)
+    {
+        if (!Disabled && OnDragStart.HasDelegate)
+        {
+            await OnDragStart.InvokeAsync(Link);
+        }
+    }
+
+    private async Task HandleDragEnd(DragEventArgs e)
+    {
+        if (OnDragEnd.HasDelegate)
+        {
+            await OnDragEnd.InvokeAsync();
+        }
+    }
+}
