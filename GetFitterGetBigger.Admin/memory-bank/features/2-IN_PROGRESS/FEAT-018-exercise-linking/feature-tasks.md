@@ -35,7 +35,7 @@
 ---
 
 ### Category 1: Data Models & DTOs - Estimated: 1h
-- **Task 1.1:** Create ExerciseLinkDto interface with all required properties `[ReadyToDevelop]` (Est: 15m)
+- **Task 1.1:** Create ExerciseLinkDto interface with all required properties `[InProgress: Started: 2025-07-09 10:48]` (Est: 15m)
 - **Task 1.2:** Create ExerciseLinksResponseDto, CreateExerciseLinkDto, UpdateExerciseLinkDto interfaces `[ReadyToDevelop]` (Est: 15m)
 - **Task 1.3:** Update ExerciseDto to include link count/indicator properties `[ReadyToDevelop]` (Est: 15m)
 - **Task 1.4:** Write unit tests for DTO serialization/deserialization `[ReadyToDevelop]` (Est: 15m)
