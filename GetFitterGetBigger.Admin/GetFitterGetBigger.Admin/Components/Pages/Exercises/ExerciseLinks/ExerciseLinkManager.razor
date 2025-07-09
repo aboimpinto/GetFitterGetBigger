@@ -157,6 +157,8 @@
     [Parameter, EditorRequired] public IExerciseLinkStateService StateService { get; set; } = null!;
     [Parameter, EditorRequired] public IExerciseService ExerciseService { get; set; } = null!;
     [Parameter, EditorRequired] public IEnumerable<ExerciseTypeDto> ExerciseTypes { get; set; } = null!;
+    
+    [Inject] private IExerciseLinkValidationService ValidationService { get; set; } = null!;
 
     private bool _showAddModal = false;
     private string _addLinkType = string.Empty;
@@ -190,6 +192,21 @@
     {
         _showAddModal = false;
         
+        // Validate before creating the link
+        var linkType = _addLinkType == "Warmup" ? ExerciseLinkType.Warmup : ExerciseLinkType.Cooldown;
+        var validationResult = await ValidationService.ValidateCreateLink(
+            Exercise, 
+            exercise.Id, 
+            linkType, 
+            StateService.CurrentLinks?.Links ?? Enumerable.Empty<ExerciseLinkDto>());
+        
+        if (!validationResult.IsValid)
+        {
+            // Show validation error through state service
+            StateService.SetError(validationResult.ErrorMessage ?? "Validation failed");
+            return;
+        }
+        
         var createDto = new CreateExerciseLinkDto
         {
             SourceExerciseId = Exercise.Id,
@@ -205,7 +222,7 @@
         }
     }
 
-    private async Task HandleRemoveLink(ExerciseLinkDto link)
+    private void HandleRemoveLink(ExerciseLinkDto link)
     {
         _linkToDelete = link;
     }

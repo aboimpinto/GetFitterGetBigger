@@ -34,6 +34,11 @@ namespace GetFitterGetBigger.Admin.Builders
             return this;
         }
 
+        public ExercisePagedResultDtoBuilder WithExercises(params ExerciseListDto[] exercises)
+        {
+            return WithItems(exercises);
+        }
+
         public ExercisePagedResultDtoBuilder WithEmptyResult()
         {
             _items = new List<ExerciseListDto>();

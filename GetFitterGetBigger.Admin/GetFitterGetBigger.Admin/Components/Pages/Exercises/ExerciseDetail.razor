@@ -1,10 +1,13 @@
 @page "/exercises/{Id}"
 @using GetFitterGetBigger.Admin.Models.Dtos
 @using GetFitterGetBigger.Admin.Services
+@using GetFitterGetBigger.Admin.Components.Pages.Exercises.ExerciseLinks
 @using Microsoft.AspNetCore.Authorization
 @attribute [Authorize]
 @rendermode InteractiveServer
 @inject IExerciseStateService StateService
+@inject IExerciseLinkStateService LinkStateService
+@inject IExerciseService ExerciseService
 @inject NavigationManager Navigation
 @implements IDisposable
 
@@ -178,6 +181,15 @@
                         }
                     </div>
                 </div>
+            }
+
+            <!-- Linked Exercises (only for Workout type) -->
+            @if (exercise.ExerciseTypes.Any(t => t.Value == "Workout"))
+            {
+                <ExerciseLinkManager Exercise="@exercise"
+                                   StateService="@LinkStateService"
+                                   ExerciseService="@ExerciseService"
+                                   ExerciseTypes="@StateService.ExerciseTypes" />
             }
 
             <!-- Media -->

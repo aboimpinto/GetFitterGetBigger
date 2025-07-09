@@ -95,6 +95,9 @@ builder.Services.AddHttpClient<GetFitterGetBigger.Admin.Services.IExerciseLinkSe
 // Add ExerciseLinkStateService
 builder.Services.AddScoped<GetFitterGetBigger.Admin.Services.IExerciseLinkStateService, GetFitterGetBigger.Admin.Services.ExerciseLinkStateService>();
 
+// Add ExerciseLinkValidationService
+builder.Services.AddScoped<GetFitterGetBigger.Admin.Services.IExerciseLinkValidationService, GetFitterGetBigger.Admin.Services.ExerciseLinkValidationService>();
+
 var app = builder.Build();
 
 // Clear all caches on startup to avoid cache collision issues

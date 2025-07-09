@@ -484,6 +484,13 @@ namespace GetFitterGetBigger.Admin.Services
             SuccessMessage = null;
             NotifyStateChanged();
         }
+        
+        public void SetError(string errorMessage)
+        {
+            ErrorMessage = errorMessage;
+            SuccessMessage = null;
+            NotifyStateChanged();
+        }
 
         private void NotifyStateChanged() => OnChange?.Invoke();
     }

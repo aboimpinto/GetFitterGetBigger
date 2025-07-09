@@ -24,6 +24,8 @@ namespace GetFitterGetBigger.Admin.Builders
         private List<ReferenceDataDto> _equipment = new();
         private List<ReferenceDataDto> _bodyParts = new();
         private List<ReferenceDataDto> _movementPatterns = new();
+        private int _warmupLinkCount = 0;
+        private int _cooldownLinkCount = 0;
 
         public ExerciseDtoBuilder WithId(string id)
         {
@@ -108,6 +110,17 @@ namespace GetFitterGetBigger.Admin.Builders
         public ExerciseDtoBuilder WithDifficulty(ReferenceDataDto difficulty)
         {
             _difficulty = difficulty;
+            return this;
+        }
+
+        public ExerciseDtoBuilder WithDifficulty(string value, string? id = null)
+        {
+            _difficulty = new ReferenceDataDto
+            {
+                Id = id ?? $"difficulty-{value.ToLower()}",
+                Value = value,
+                Description = $"{value} level"
+            };
             return this;
         }
 
@@ -197,6 +210,25 @@ namespace GetFitterGetBigger.Admin.Builders
             return this;
         }
 
+        public ExerciseDtoBuilder WithWarmupLinkCount(int count)
+        {
+            _warmupLinkCount = count;
+            return this;
+        }
+
+        public ExerciseDtoBuilder WithCooldownLinkCount(int count)
+        {
+            _cooldownLinkCount = count;
+            return this;
+        }
+
+        public ExerciseDtoBuilder WithLinkCounts(int warmupCount, int cooldownCount)
+        {
+            _warmupLinkCount = warmupCount;
+            _cooldownLinkCount = cooldownCount;
+            return this;
+        }
+
         public ExerciseDto Build()
         {
             return new ExerciseDto
@@ -216,7 +248,9 @@ namespace GetFitterGetBigger.Admin.Builders
                 MuscleGroups = _muscleGroups,
                 Equipment = _equipment,
                 BodyParts = _bodyParts,
-                MovementPatterns = _movementPatterns
+                MovementPatterns = _movementPatterns,
+                WarmupLinkCount = _warmupLinkCount,
+                CooldownLinkCount = _cooldownLinkCount
             };
         }
     }

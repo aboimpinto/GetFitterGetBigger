@@ -49,6 +49,12 @@ namespace GetFitterGetBigger.Admin.Builders
             return this;
         }
 
+        public ExerciseFilterBuilder WithHasLinks(bool? hasLinks)
+        {
+            _filter.HasLinks = hasLinks;
+            return this;
+        }
+
         public ExerciseFilterBuilder OnlyActive()
         {
             _filter.IsActive = true;
@@ -95,6 +101,7 @@ namespace GetFitterGetBigger.Admin.Builders
             List<string>? muscleGroupIds = null,
             List<string>? equipmentIds = null,
             bool? isActive = null,
+            bool? hasLinks = null,
             int page = 1,
             int pageSize = 10)
         {
@@ -104,6 +111,7 @@ namespace GetFitterGetBigger.Admin.Builders
                 .WithMuscleGroups(muscleGroupIds)
                 .WithEquipment(equipmentIds)
                 .WithActiveStatus(isActive)
+                .WithHasLinks(hasLinks)
                 .WithPagination(page, pageSize)
                 .Build();
         }
@@ -119,6 +127,7 @@ namespace GetFitterGetBigger.Admin.Builders
                 .WithMuscleGroups(source.MuscleGroupIds?.ToList())
                 .WithEquipment(source.EquipmentIds?.ToList())
                 .WithActiveStatus(source.IsActive)
+                .WithHasLinks(source.HasLinks)
                 .WithPagination(source.Page, source.PageSize)
                 .Build();
         }

@@ -24,6 +24,8 @@ namespace GetFitterGetBigger.Admin.Builders
         private List<ReferenceDataDto> _equipment = new();
         private List<ReferenceDataDto> _movementPatterns = new();
         private List<ReferenceDataDto> _bodyParts = new();
+        private int _warmupLinkCount = 0;
+        private int _cooldownLinkCount = 0;
 
         public ExerciseListDtoBuilder WithId(string id)
         {
@@ -272,6 +274,25 @@ namespace GetFitterGetBigger.Admin.Builders
             return this;
         }
 
+        public ExerciseListDtoBuilder WithWarmupLinkCount(int count)
+        {
+            _warmupLinkCount = count;
+            return this;
+        }
+
+        public ExerciseListDtoBuilder WithCooldownLinkCount(int count)
+        {
+            _cooldownLinkCount = count;
+            return this;
+        }
+
+        public ExerciseListDtoBuilder WithLinkCounts(int warmupCount, int cooldownCount)
+        {
+            _warmupLinkCount = warmupCount;
+            _cooldownLinkCount = cooldownCount;
+            return this;
+        }
+
         public ExerciseListDto Build()
         {
             return new ExerciseListDto
@@ -291,7 +312,9 @@ namespace GetFitterGetBigger.Admin.Builders
                 MuscleGroups = _muscleGroups,
                 Equipment = _equipment,
                 MovementPatterns = _movementPatterns,
-                BodyParts = _bodyParts
+                BodyParts = _bodyParts,
+                WarmupLinkCount = _warmupLinkCount,
+                CooldownLinkCount = _cooldownLinkCount
             };
         }
 

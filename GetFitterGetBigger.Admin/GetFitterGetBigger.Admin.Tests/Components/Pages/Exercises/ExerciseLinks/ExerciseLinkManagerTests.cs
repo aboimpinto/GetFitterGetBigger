@@ -5,6 +5,7 @@ using GetFitterGetBigger.Admin.Models.Dtos;
 using GetFitterGetBigger.Admin.Services;
 using GetFitterGetBigger.Admin.Builders;
 using Microsoft.AspNetCore.Components;
+using Microsoft.Extensions.DependencyInjection;
 using Moq;
 using System;
 using System.Collections.Generic;
@@ -17,6 +18,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises.ExerciseLink
     {
         private readonly Mock<IExerciseLinkStateService> _stateServiceMock;
         private readonly Mock<IExerciseService> _exerciseServiceMock;
+        private readonly Mock<IExerciseLinkValidationService> _validationServiceMock;
         private readonly List<ExerciseTypeDto> _exerciseTypes;
         private readonly ExerciseDto _workoutExercise;
         private readonly ExerciseDto _nonWorkoutExercise;
@@ -25,6 +27,10 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises.ExerciseLink
         {
             _stateServiceMock = new Mock<IExerciseLinkStateService>();
             _exerciseServiceMock = new Mock<IExerciseService>();
+            _validationServiceMock = new Mock<IExerciseLinkValidationService>();
+            
+            // Register the validation service in the test context
+            Services.AddSingleton(_validationServiceMock.Object);
             
             _exerciseTypes = new List<ExerciseTypeDto>
             {
@@ -192,6 +198,14 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises.ExerciseLink
             SetupEmptyState();
             _stateServiceMock.Setup(x => x.CreateLinkAsync(It.IsAny<CreateExerciseLinkDto>()))
                 .Returns(Task.CompletedTask);
+            
+            // Setup validation to succeed
+            _validationServiceMock.Setup(x => x.ValidateCreateLink(
+                It.IsAny<ExerciseDto>(),
+                It.IsAny<string>(),
+                It.IsAny<ExerciseLinkType>(),
+                It.IsAny<IEnumerable<ExerciseLinkDto>>()))
+                .ReturnsAsync(ValidationResult.Success());
 
             var component = RenderComponent<ExerciseLinkManager>(parameters => parameters
                 .Add(p => p.Exercise, _workoutExercise)
@@ -349,6 +363,14 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises.ExerciseLink
             _stateServiceMock.SetupGet(x => x.ErrorMessage).Returns((string?)null);
             _stateServiceMock.Setup(x => x.CreateLinkAsync(It.IsAny<CreateExerciseLinkDto>()))
                 .Returns(Task.CompletedTask);
+            
+            // Setup validation to succeed
+            _validationServiceMock.Setup(x => x.ValidateCreateLink(
+                It.IsAny<ExerciseDto>(),
+                It.IsAny<string>(),
+                It.IsAny<ExerciseLinkType>(),
+                It.IsAny<IEnumerable<ExerciseLinkDto>>()))
+                .ReturnsAsync(ValidationResult.Success());
 
             var component = RenderComponent<ExerciseLinkManager>(parameters => parameters
                 .Add(p => p.Exercise, _workoutExercise)

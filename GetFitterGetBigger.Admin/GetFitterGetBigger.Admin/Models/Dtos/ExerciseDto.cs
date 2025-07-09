@@ -113,6 +113,7 @@ namespace GetFitterGetBigger.Admin.Models.Dtos
         public List<string>? MuscleGroupIds { get; set; }
         public List<string>? EquipmentIds { get; set; }
         public bool? IsActive { get; set; }
+        public bool? HasLinks { get; set; }
         public int Page { get; set; } = 1;
         public int PageSize { get; set; } = 10;
     }
