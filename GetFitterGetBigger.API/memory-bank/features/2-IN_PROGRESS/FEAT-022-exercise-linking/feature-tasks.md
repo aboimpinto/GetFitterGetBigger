@@ -112,9 +112,9 @@
 - [ ] Business rules properly enforced
 
 ## Category 8: Dependency Injection & Configuration - Estimated: 30m
-- **Task 8.1:** Register ExerciseLinkService in Program.cs `[InProgress: Started: 2025-07-09 10:54]` (Est: 10m)
-- **Task 8.2:** Register ExerciseLinkRepository in Program.cs `[ReadyToDevelop]` (Est: 10m)
-- **Task 8.3:** Write tests to verify DI configuration `[ReadyToDevelop]` (Est: 10m)
+- **Task 8.1:** Register ExerciseLinkService in Program.cs `[Implemented: a11645b9 | Started: 2025-07-09 10:54 | Finished: 2025-07-09 10:56 | Duration: 0h 2m]` (Est: 10m)
+- **Task 8.2:** Register ExerciseLinkRepository in Program.cs `[Implemented: a11645b9 | Started: 2025-07-09 10:54 | Finished: 2025-07-09 10:56 | Duration: 0h 2m]` (Est: 10m)
+- **Task 8.3:** Write tests to verify DI configuration `[Implemented: ExerciseLinkDIConfigurationTests | Started: 2025-07-09 10:57 | Finished: 2025-07-09 11:03 | Duration: 0h 6m]` (Est: 10m)
 
 ## Implementation Summary Report
 **Date/Time**: [To be filled at completion]
