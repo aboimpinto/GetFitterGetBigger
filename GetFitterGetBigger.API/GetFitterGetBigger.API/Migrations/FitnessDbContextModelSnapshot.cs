@@ -300,6 +300,49 @@ namespace GetFitterGetBigger.API.Migrations
                     b.ToTable("ExerciseExerciseTypes");
                 });
 
+            modelBuilder.Entity("GetFitterGetBigger.API.Models.Entities.ExerciseLink", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("DisplayOrder")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("LinkType")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)");
+
+                    b.Property<Guid>("SourceExerciseId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("TargetExerciseId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TargetExerciseId")
+                        .HasDatabaseName("IX_ExerciseLink_TargetExerciseId");
+
+                    b.HasIndex("SourceExerciseId", "LinkType")
+                        .HasDatabaseName("IX_ExerciseLink_SourceExerciseId_LinkType");
+
+                    b.HasIndex("SourceExerciseId", "TargetExerciseId", "LinkType")
+                        .IsUnique()
+                        .HasDatabaseName("IX_ExerciseLink_Source_Target_Type_Unique");
+
+                    b.ToTable("ExerciseLinks");
+                });
+
             modelBuilder.Entity("GetFitterGetBigger.API.Models.Entities.ExerciseMetricSupport", b =>
                 {
                     b.Property<Guid>("ExerciseId")
@@ -751,6 +794,25 @@ namespace GetFitterGetBigger.API.Migrations
                     b.Navigation("Exercise");
 
                     b.Navigation("ExerciseType");
+                });
+
+            modelBuilder.Entity("GetFitterGetBigger.API.Models.Entities.ExerciseLink", b =>
+                {
+                    b.HasOne("GetFitterGetBigger.API.Models.Entities.Exercise", "SourceExercise")
+                        .WithMany()
+                        .HasForeignKey("SourceExerciseId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("GetFitterGetBigger.API.Models.Entities.Exercise", "TargetExercise")
+                        .WithMany()
+                        .HasForeignKey("TargetExerciseId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("SourceExercise");
+
+                    b.Navigation("TargetExercise");
                 });
 
             modelBuilder.Entity("GetFitterGetBigger.API.Models.Entities.ExerciseMetricSupport", b =>
