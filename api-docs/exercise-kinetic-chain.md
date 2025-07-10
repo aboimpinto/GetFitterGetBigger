@@ -1,5 +1,12 @@
 # Exercise Kinetic Chain Field
 
+> **⚠️ DEPRECATED**: This documentation has been migrated to the new Features structure.
+> Please refer to:
+> - API: `/Features/ExerciseManagement/KineticChain/KineticChain_api.md`
+> - Admin: `/Features/ExerciseManagement/KineticChain/KineticChain_admin.md`
+> - Clients: `/Features/ExerciseManagement/KineticChain/KineticChain_clients.md`
+> This file is maintained for backward compatibility only.
+
 ## Overview
 The Kinetic Chain field has been added to all Exercise endpoints to categorize exercises based on their biomechanical movement patterns. This field helps trainers and clients understand whether an exercise involves compound movements (multi-muscle) or isolation movements (single-muscle).
 

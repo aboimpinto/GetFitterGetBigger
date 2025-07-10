@@ -1,5 +1,12 @@
 # Exercise Linking Feature
 
+> **⚠️ DEPRECATED**: This documentation has been migrated to the new Features structure.
+> Please refer to:
+> - API: `/Features/ExerciseManagement/ExerciseLinking/ExerciseLinking_api.md`
+> - Admin: `/Features/ExerciseManagement/ExerciseLinking/ExerciseLinking_admin.md`
+> - Clients: `/Features/ExerciseManagement/ExerciseLinking/ExerciseLinking_clients.md`
+> This file is maintained for backward compatibility only.
+
 ## Overview
 
 The Exercise Linking feature allows Personal Trainers to create relationships between exercises based on their type (Warmup, Workout, Cooldown). This feature streamlines workout creation by automatically suggesting or including appropriate warmup and cooldown exercises when a main workout exercise is selected.

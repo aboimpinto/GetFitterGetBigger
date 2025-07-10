@@ -1,5 +1,12 @@
 # Exercise CRUD API - Implementation Summary
 
+> **⚠️ DEPRECATED**: This documentation has been migrated to the new Features structure.
+> Please refer to:
+> - API: `/Features/ExerciseManagement/Core/Exercise_api.md`
+> - Admin: `/Features/ExerciseManagement/Core/Exercise_admin.md`
+> - Clients: `/Features/ExerciseManagement/Core/Exercise_clients.md`
+> This file is maintained for backward compatibility only.
+
 This document provides essential information for client applications (Admin and Clients) to implement Exercise management functionality.
 
 ## Overview

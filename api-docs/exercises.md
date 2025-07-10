@@ -1,5 +1,9 @@
 # Exercises API
 
+> **⚠️ DEPRECATED**: This documentation has been migrated to the new Features structure.
+> Please refer to: `/Features/ExerciseManagement/Core/Exercise_api.md`
+> This file is maintained for backward compatibility only.
+
 This document outlines the API endpoints for managing exercises. Personal Trainers use these endpoints to create, update, and organize the exercises that will be used in workouts.
 
 ---
