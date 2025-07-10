@@ -57,18 +57,18 @@
   - BODYWEIGHT_ONLY, BODYWEIGHT_OPTIONAL, WEIGHT_REQUIRED, MACHINE_WEIGHT, NO_WEIGHT
   - Use predefined GUIDs as specified in feature description
   
-- **Task 1.6:** Write tests for database migration and seed data `[InProgress: Started: 2025-01-10 15:20]` (Est: 1h)
+- **Task 1.6:** Write tests for database migration and seed data `[Implemented: 4c58a94c | Started: 2025-01-10 15:20 | Finished: 2025-01-10 15:27 | Duration: 0h 7m]` (Est: 1h)
   - Verify table creation
   - Verify seed data insertion
   - Test constraint enforcement
 
-**🛑 Checkpoint 1:** Build passes, all tests green, migration runs successfully
+**✅ Checkpoint 1:** Build passes, all tests green, migration runs successfully
 
 ## 2️⃣ Repository Layer - Estimated: 3h
 
 ### 📖 Before Starting: Review repository patterns in `/memory-bank/unitOfWorkPattern.md`
 
-- **Task 2.1:** Create IExerciseWeightTypeRepository interface `[ReadyToDevelop]` (Est: 15m)
+- **Task 2.1:** Create IExerciseWeightTypeRepository interface `[InProgress: Started: 2025-01-10 15:28]` (Est: 15m)
   - Inherit from IReferenceDataRepository<ExerciseWeightType, ExerciseWeightTypeId>
   - Add GetByCodeAsync method
   
