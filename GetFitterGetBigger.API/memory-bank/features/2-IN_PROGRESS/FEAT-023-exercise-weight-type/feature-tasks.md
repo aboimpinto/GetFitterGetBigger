@@ -72,11 +72,11 @@
   - Inherit from IReferenceDataRepository<ExerciseWeightType, ExerciseWeightTypeId>
   - Add GetByCodeAsync method
   
-- **Task 2.2:** Implement ExerciseWeightTypeRepository `[InProgress: Started: 2025-01-10 15:31]` (Est: 1h)
+- **Task 2.2:** Implement ExerciseWeightTypeRepository `[Implemented: dc11962d | Started: 2025-01-10 15:31 | Finished: 2025-01-10 15:33 | Duration: 0h 2m]` (Est: 1h)
   - Implement base repository methods
   - Implement GetByCodeAsync with proper null handling
   
-- **Task 2.3:** Write comprehensive repository unit tests `[ReadyToDevelop]` (Est: 1.5h)
+- **Task 2.3:** Write comprehensive repository unit tests `[InProgress: Started: 2025-01-10 15:34]` (Est: 1.5h)
   - Test GetAllAsync returns seeded data
   - Test GetByIdAsync with valid/invalid IDs
   - Test GetByValueAsync (case-insensitive)
