@@ -470,6 +470,42 @@ namespace GetFitterGetBigger.API.Migrations
                         });
                 });
 
+            modelBuilder.Entity("GetFitterGetBigger.API.Models.Entities.ExerciseWeightType", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("text");
+
+                    b.Property<int>("DisplayOrder")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Value")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Code")
+                        .IsUnique()
+                        .HasDatabaseName("IX_ExerciseWeightType_Code");
+
+                    b.HasIndex("Value")
+                        .HasDatabaseName("IX_ExerciseWeightType_Value");
+
+                    b.ToTable("ExerciseWeightTypes");
+                });
+
             modelBuilder.Entity("GetFitterGetBigger.API.Models.Entities.KineticChainType", b =>
                 {
                     b.Property<Guid>("Id")

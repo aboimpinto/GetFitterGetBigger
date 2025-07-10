@@ -25,6 +25,7 @@ public class FitnessDbContext : DbContext
     public DbSet<BodyPart> BodyParts => Set<BodyPart>();
     public DbSet<MuscleRole> MuscleRoles => Set<MuscleRole>();
     public DbSet<ExerciseType> ExerciseTypes => Set<ExerciseType>();
+    public DbSet<ExerciseWeightType> ExerciseWeightTypes => Set<ExerciseWeightType>();
     
     // Linking entities
     public DbSet<ExerciseMovementPattern> ExerciseMovementPatterns => Set<ExerciseMovementPattern>();
@@ -177,6 +178,12 @@ public class FitnessDbContext : DbContext
                 id => (Guid)id,
                 guid => ExerciseTypeId.From(guid));
                 
+        modelBuilder.Entity<ExerciseWeightType>()
+            .Property(ewt => ewt.Id)
+            .HasConversion(
+                id => (Guid)id,
+                guid => ExerciseWeightTypeId.From(guid));
+                
         // Foreign key ID conversions
         modelBuilder.Entity<WorkoutLog>()
             .Property(wl => wl.UserId)
@@ -305,6 +312,26 @@ public class FitnessDbContext : DbContext
             .WithMany()
             .HasForeignKey(el => el.TargetExerciseId)
             .OnDelete(DeleteBehavior.Restrict);
+            
+        // Configure ExerciseWeightType properties and indexes
+        modelBuilder.Entity<ExerciseWeightType>()
+            .Property(ewt => ewt.Code)
+            .HasMaxLength(50)
+            .IsRequired();
+            
+        modelBuilder.Entity<ExerciseWeightType>()
+            .Property(ewt => ewt.Value)
+            .HasMaxLength(100)
+            .IsRequired();
+            
+        modelBuilder.Entity<ExerciseWeightType>()
+            .HasIndex(ewt => ewt.Code)
+            .IsUnique()
+            .HasDatabaseName("IX_ExerciseWeightType_Code");
+            
+        modelBuilder.Entity<ExerciseWeightType>()
+            .HasIndex(ewt => ewt.Value)
+            .HasDatabaseName("IX_ExerciseWeightType_Value");
     }
     
     private static void ConfigureManyToManyRelationships(ModelBuilder modelBuilder)
