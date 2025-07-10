@@ -42,10 +42,10 @@
   - Create entity with Code property for programmatic reference
   - Implement proper record structure with init-only properties
   
-- **Task 1.2:** Create ExerciseWeightTypeId strongly-typed ID class `[InProgress: Started: 2025-01-10 14:54]` (Est: 15m)
+- **Task 1.2:** Create ExerciseWeightTypeId strongly-typed ID class `[Implemented: cc5e2a72 | Started: 2025-01-10 14:54 | Finished: 2025-01-10 14:56 | Duration: 0h 2m]` (Est: 15m)
   - Follow StronglyTypedId pattern from existing codebase
   
-- **Task 1.3:** Write unit tests for ExerciseWeightType entity `[ReadyToDevelop]` (Est: 30m)
+- **Task 1.3:** Write unit tests for ExerciseWeightType entity `[InProgress: Started: 2025-01-10 14:57]` (Est: 30m)
   - Test ID creation and formatting
   - Test entity property initialization
   
