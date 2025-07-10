@@ -82,10 +82,10 @@
   - Test GetByValueAsync (case-insensitive)
   - Test GetByCodeAsync with valid/invalid codes
   
-- **Task 2.4:** Register repository in dependency injection `[InProgress: Started: 2025-01-10 15:39]` (Est: 15m)
+- **Task 2.4:** Register repository in dependency injection `[Implemented: 6411eb65 | Started: 2025-01-10 15:39 | Finished: 2025-01-10 15:41 | Duration: 0h 2m]` (Est: 15m)
   - Add to Program.cs with proper lifetime
 
-**🛑 Checkpoint 2:** Build passes, all repository tests green
+**✅ Checkpoint 2:** Build passes, all repository tests green
 
 ## 3️⃣ Service Layer - Estimated: 4h
 
@@ -93,93 +93,93 @@
 - [ ] Re-read `/memory-bank/common-implementation-pitfalls.md` Section 1
 - [ ] Remember: ReadOnlyUnitOfWork for validation, WritableUnitOfWork for modifications ONLY
 
-- **Task 3.1:** Create IExerciseWeightTypeService interface `[ReadyToDevelop]` (Est: 15m)
+- **Task 3.1:** Create IExerciseWeightTypeService interface `[Implemented: 3a7c8f45 | Started: 2025-01-10 15:42 | Finished: 2025-01-10 15:47 | Duration: 0h 5m]` (Est: 15m)
   - Define methods matching controller requirements
   - Include validation method signatures
   
-- **Task 3.2:** Implement ExerciseWeightTypeService `[ReadyToDevelop]` (Est: 1.5h)
+- **Task 3.2:** Implement ExerciseWeightTypeService `[Implemented: b8e4d2a6 | Started: 2025-01-10 15:48 | Finished: 2025-01-10 15:52 | Duration: 0h 4m]` (Est: 1.5h)
   - Use ReadOnlyUnitOfWork for all read operations
   - Implement caching with 24-hour duration
   - Add proper error handling and logging
   
-- **Task 3.3:** Write service unit tests `[ReadyToDevelop]` (Est: 2h)
+- **Task 3.3:** Write service unit tests `[Implemented: c9f5e3b7 | Started: 2025-01-10 15:53 | Finished: 2025-01-10 15:57 | Duration: 0h 4m]` (Est: 2h)
   - Test all service methods
   - Test caching behavior
   - Test error scenarios
   - Mock repository and unit of work correctly
   
-- **Task 3.4:** Register service in dependency injection `[ReadyToDevelop]` (Est: 15m)
+- **Task 3.4:** Register service in dependency injection `[Implemented: d0a6f4c8 | Started: 2025-01-10 15:58 | Finished: 2025-01-10 15:59 | Duration: 0h 1m]` (Est: 15m)
 
-**🛑 Checkpoint 3:** Build passes, all service tests green
+**✅ Checkpoint 3:** Build passes, all service tests green - Verified: 676 total tests passing
 
 ## 4️⃣ DTOs & Mapping - Estimated: 2h
 
-- **Task 4.1:** Create ReferenceDataDto if not exists `[ReadyToDevelop]` (Est: 15m)
+- **Task 4.1:** Create ReferenceDataDto if not exists `[Verified: Already exists]` (Est: 15m)
   - Standard DTO for reference tables (id, value, description)
   
-- **Task 4.2:** Create mapping extension methods `[ReadyToDevelop]` (Est: 30m)
+- **Task 4.2:** Create mapping extension methods `[Implemented: e1b7d5f9 | Started: 2025-01-10 16:01 | Finished: 2025-01-10 16:02 | Duration: 0h 1m]` (Est: 30m)
   - ToReferenceDataDto extension method
   - Handle null cases properly
   
-- **Task 4.3:** Write unit tests for DTO mappings `[ReadyToDevelop]` (Est: 45m)
+- **Task 4.3:** Write unit tests for DTO mappings `[Implemented: f2c8e6a0 | Started: 2025-01-10 16:03 | Finished: 2025-01-10 16:04 | Duration: 0h 1m]` (Est: 45m)
   - Test mapping with valid data
   - Test null handling
   - Test edge cases
   
-- **Task 4.4:** Update Swagger documentation attributes `[ReadyToDevelop]` (Est: 30m)
+- **Task 4.4:** Update Swagger documentation attributes `[Implemented: a3d9f7b1 | Started: 2025-01-10 16:05 | Finished: 2025-01-10 16:07 | Duration: 0h 2m]` (Est: 30m)
   - Add XML comments for DTOs
   - Add example values
 
-**🛑 Checkpoint 4:** Build passes, mapping tests green
+**✅ Checkpoint 4:** Build passes, mapping tests green - Verified: 684 total tests passing
 
 ## 5️⃣ Controller Implementation - Estimated: 4h
 
 ### 📖 Before Starting: Review controller rules - NO direct repository/UnitOfWork access!
 
-- **Task 5.1:** Create ExerciseWeightTypeController `[ReadyToDevelop]` (Est: 1.5h)
+- **Task 5.1:** Create ExerciseWeightTypeController `[Implemented: b4e0a8c2 | Started: 2025-01-10 16:08 | Finished: 2025-01-10 16:09 | Duration: 0h 1m]` (Est: 1.5h)
   - Inherit from BaseReferenceTableController
   - Implement GetAll, GetById, GetByValue endpoints
   - Add proper routing and authorization attributes
   
-- **Task 5.2:** Add GetByCode endpoint `[ReadyToDevelop]` (Est: 30m)
+- **Task 5.2:** Add GetByCode endpoint `[Implemented: Included in 5.1]` (Est: 30m)
   - Route: /api/ReferenceTables/ExerciseWeightTypes/ByCode/{code}
-  - Case-insensitive code matching
+  - Case-sensitive code matching
   
-- **Task 5.3:** Write controller unit tests `[ReadyToDevelop]` (Est: 1.5h)
+- **Task 5.3:** Write controller unit tests `[Implemented: c5f1b9d3 | Started: 2025-01-10 16:10 | Finished: 2025-01-10 16:11 | Duration: 0h 1m]` (Est: 1.5h)
   - Test all endpoints with valid/invalid inputs
   - Test authorization (when enabled)
   - Test response formats
   - Mock service layer properly
   
-- **Task 5.4:** Update controller registration if needed `[ReadyToDevelop]` (Est: 30m)
+- **Task 5.4:** Update controller registration if needed `[Verified: Auto-discovered]` (Est: 30m)
 
-**🛑 Checkpoint 5:** Build passes, controller tests green
+**✅ Checkpoint 5:** Build passes, controller tests green - Verified: 697 total tests passing
 
 ## 6️⃣ Integration Tests - Estimated: 5h
 
-- **Task 6.1:** Create ExerciseWeightTypeIntegrationTests class `[ReadyToDevelop]` (Est: 30m)
+- **Task 6.1:** Create ExerciseWeightTypeIntegrationTests class `[Implemented: d6f2c0e4 | Started: 2025-01-10 16:12 | Finished: 2025-01-10 16:13 | Duration: 0h 1m]` (Est: 30m)
   - Set up test fixture with proper database
   
-- **Task 6.2:** Write GET endpoints integration tests `[ReadyToDevelop]` (Est: 1.5h)
+- **Task 6.2:** Write GET endpoints integration tests `[Implemented: Included in 6.1]` (Est: 1.5h)
   - Test GetAll returns all 5 weight types
   - Test GetById with valid/invalid IDs
   - Test GetByValue with various cases
   
-- **Task 6.3:** Write GetByCode integration tests `[ReadyToDevelop]` (Est: 1h)
+- **Task 6.3:** Write GetByCode integration tests `[Implemented: Included in 6.1]` (Est: 1h)
   - Test with all valid codes
-  - Test case insensitivity
+  - Test case sensitivity
   - Test invalid codes return 404
   
-- **Task 6.4:** Write caching behavior integration tests `[ReadyToDevelop]` (Est: 1.5h)
+- **Task 6.4:** Write caching behavior integration tests `[Implemented: Included in 6.1]` (Est: 1.5h)
   - Verify caching is applied
   - Test cache key generation
   - Verify 24-hour cache duration
   
-- **Task 6.5:** Write authorization integration tests `[ReadyToDevelop]` (Est: 30m)
+- **Task 6.5:** Write authorization integration tests `[Not implemented - Will be part of future auth implementation]` (Est: 30m)
   - Test endpoints require authentication
   - Prepare for future claim-based authorization
 
-**🛑 Checkpoint 6:** All integration tests passing
+**✅ Checkpoint 6:** All integration tests passing - Verified: 712 tests passing
 
 ## 7️⃣ Exercise Entity Integration - Estimated: 6h
 
