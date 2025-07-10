@@ -89,7 +89,7 @@
 
 ## Category 2: State Management Services - Estimated: 3h 30m
 
-### Task 2.1: Create ExerciseWeightTypeStateService `[InProgress: Started: 2025-07-10 23:59]` (Est: 1h 30m)
+### Task 2.1: Create ExerciseWeightTypeStateService `[Implemented: 5a6a3f4a | Started: 2025-07-10 23:59 | Finished: 2025-07-11 00:08 | Duration: 0h 9m]` (Est: 1h 30m)
 - Create IExerciseWeightTypeStateService interface
 - Implement ExerciseWeightTypeStateService class with caching
 - Add LoadWeightTypesAsync method with memory cache integration
@@ -98,7 +98,7 @@
 - Add state change notifications (OnChange event)
 - Follow patterns from EquipmentStateService and MuscleGroupsStateService
 
-### Task 2.2: Write comprehensive tests for state service `[ReadyToDevelop]` (Est: 1h 15m)
+### Task 2.2: Write comprehensive tests for state service `[InProgress: Started: 2025-07-11 00:08]` (Est: 1h 15m)
 - Create ExerciseWeightTypeStateServiceTests.cs in Tests/Services
 - Test caching behavior and cache invalidation
 - Test state change notifications
