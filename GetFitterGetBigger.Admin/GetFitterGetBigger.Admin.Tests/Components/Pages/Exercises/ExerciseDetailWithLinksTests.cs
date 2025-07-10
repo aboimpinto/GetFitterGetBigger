@@ -62,7 +62,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
             _exerciseStateServiceMock.SetupGet(x => x.ExerciseTypes).Returns(_exerciseTypes);
             _exerciseStateServiceMock.SetupGet(x => x.IsLoadingExercise).Returns(false);
             _exerciseStateServiceMock.SetupGet(x => x.ErrorMessage).Returns((string?)null);
-            
+
             // Register the validation service
             Services.AddSingleton(_validationServiceMock.Object);
         }
@@ -73,7 +73,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
             // Arrange
             _exerciseStateServiceMock.SetupGet(x => x.SelectedExercise).Returns(_workoutExercise);
             SetupLinkStateWithNoLinks();
-            
+
             Services.AddSingleton(_exerciseStateServiceMock.Object);
             Services.AddSingleton(_linkStateServiceMock.Object);
             Services.AddSingleton(_exerciseServiceMock.Object);
@@ -93,7 +93,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
         {
             // Arrange
             _exerciseStateServiceMock.SetupGet(x => x.SelectedExercise).Returns(_nonWorkoutExercise);
-            
+
             Services.AddSingleton(_exerciseStateServiceMock.Object);
             Services.AddSingleton(_linkStateServiceMock.Object);
             Services.AddSingleton(_exerciseServiceMock.Object);
@@ -114,7 +114,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
             // Arrange
             _exerciseStateServiceMock.SetupGet(x => x.SelectedExercise).Returns(_workoutExercise);
             SetupLinkStateWithNoLinks();
-            
+
             Services.AddSingleton(_exerciseStateServiceMock.Object);
             Services.AddSingleton(_linkStateServiceMock.Object);
             Services.AddSingleton(_exerciseServiceMock.Object);
@@ -136,13 +136,13 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
         {
             // Arrange
             _exerciseStateServiceMock.SetupGet(x => x.SelectedExercise).Returns(_workoutExercise);
-            
+
             var warmupLink = new ExerciseLinkDtoBuilder()
                 .WithId("link1")
                 .WithTargetExercise("Leg Swings", "ex3")
                 .AsWarmup()
                 .Build();
-            
+
             var cooldownLink = new ExerciseLinkDtoBuilder()
                 .WithId("link2")
                 .WithTargetExercise("Quad Stretch", "ex4")
@@ -150,7 +150,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
                 .Build();
 
             SetupLinkStateWithLinks(new List<ExerciseLinkDto> { warmupLink }, new List<ExerciseLinkDto> { cooldownLink });
-            
+
             Services.AddSingleton(_exerciseStateServiceMock.Object);
             Services.AddSingleton(_linkStateServiceMock.Object);
             Services.AddSingleton(_exerciseServiceMock.Object);
@@ -175,7 +175,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
             // Arrange
             _exerciseStateServiceMock.SetupGet(x => x.SelectedExercise).Returns(_workoutExercise);
             SetupLinkStateWithNoLinks();
-            
+
             Services.AddSingleton(_exerciseStateServiceMock.Object);
             Services.AddSingleton(_linkStateServiceMock.Object);
             Services.AddSingleton(_exerciseServiceMock.Object);
@@ -198,7 +198,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
             SetupLinkStateWithNoLinks();
             // Override IsLoading after setup
             _linkStateServiceMock.SetupGet(x => x.IsLoading).Returns(true);
-            
+
             Services.AddSingleton(_exerciseStateServiceMock.Object);
             Services.AddSingleton(_linkStateServiceMock.Object);
             Services.AddSingleton(_exerciseServiceMock.Object);
@@ -218,7 +218,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
             // Arrange
             _exerciseStateServiceMock.SetupGet(x => x.SelectedExercise).Returns(_workoutExercise);
             SetupLinkStateWithNoLinks();
-            
+
             Services.AddSingleton(_exerciseStateServiceMock.Object);
             Services.AddSingleton(_linkStateServiceMock.Object);
             Services.AddSingleton(_exerciseServiceMock.Object);
@@ -238,7 +238,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
         {
             // Arrange
             _exerciseStateServiceMock.SetupGet(x => x.SelectedExercise).Returns(_workoutExercise);
-            
+
             // Create 10 warmup links (max capacity)
             var warmupLinks = Enumerable.Range(0, 10)
                 .Select(i => new ExerciseLinkDtoBuilder()
@@ -248,7 +248,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
                 .ToList();
 
             SetupLinkStateWithLinks(warmupLinks, new List<ExerciseLinkDto>());
-            
+
             Services.AddSingleton(_exerciseStateServiceMock.Object);
             Services.AddSingleton(_linkStateServiceMock.Object);
             Services.AddSingleton(_exerciseServiceMock.Object);
@@ -270,7 +270,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
             // Arrange
             _exerciseStateServiceMock.SetupGet(x => x.SelectedExercise).Returns(_workoutExercise);
             SetupLinkStateWithNoLinks();
-            
+
             Services.AddSingleton(_exerciseStateServiceMock.Object);
             Services.AddSingleton(_linkStateServiceMock.Object);
             Services.AddSingleton(_exerciseServiceMock.Object);
@@ -287,10 +287,10 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
                 .WithId("new-link")
                 .AsWarmup()
                 .Build();
-            
+
             _linkStateServiceMock.SetupGet(x => x.WarmupLinks).Returns(new List<ExerciseLinkDto> { newLink });
             _linkStateServiceMock.SetupGet(x => x.WarmupLinkCount).Returns(1);
-            
+
             // Trigger state change
             component.InvokeAsync(() => _linkStateServiceMock.Raise(x => x.OnChange += null));
 
@@ -306,15 +306,15 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
         {
             // Arrange
             _exerciseStateServiceMock.SetupGet(x => x.SelectedExercise).Returns(_workoutExercise);
-            
+
             // Simulate state already loaded with links
             var existingLink = new ExerciseLinkDtoBuilder()
                 .WithId("existing")
                 .AsWarmup()
                 .Build();
-            
+
             SetupLinkStateWithLinks(new List<ExerciseLinkDto> { existingLink }, new List<ExerciseLinkDto>());
-            
+
             Services.AddSingleton(_exerciseStateServiceMock.Object);
             Services.AddSingleton(_linkStateServiceMock.Object);
             Services.AddSingleton(_exerciseServiceMock.Object);
@@ -353,11 +353,11 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
             _linkStateServiceMock.SetupGet(x => x.CooldownLinks).Returns(cooldownLinks);
             _linkStateServiceMock.SetupGet(x => x.WarmupLinkCount).Returns(warmupLinks.Count);
             _linkStateServiceMock.SetupGet(x => x.CooldownLinkCount).Returns(cooldownLinks.Count);
-            
+
             var allLinks = new List<ExerciseLinkDto>();
             allLinks.AddRange(warmupLinks);
             allLinks.AddRange(cooldownLinks);
-            
+
             _linkStateServiceMock.SetupGet(x => x.CurrentLinks).Returns(new ExerciseLinksResponseDto
             {
                 ExerciseId = "ex1",

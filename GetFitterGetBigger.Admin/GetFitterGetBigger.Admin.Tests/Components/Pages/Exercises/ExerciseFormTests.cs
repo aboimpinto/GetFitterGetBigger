@@ -110,7 +110,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
             var component = RenderComponent<ExerciseForm>();
 
             // Act - Select Rest exercise type
-            var restCheckbox = component.FindAll("input[type='checkbox']").First(cb => 
+            var restCheckbox = component.FindAll("input[type='checkbox']").First(cb =>
                 cb.Parent!.TextContent.Contains("Rest"));
             restCheckbox.Change(true);
 
@@ -129,7 +129,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
             var component = RenderComponent<ExerciseForm>();
 
             // Act - Select Workout exercise type
-            var workoutCheckbox = component.FindAll("input[type='checkbox']").First(cb => 
+            var workoutCheckbox = component.FindAll("input[type='checkbox']").First(cb =>
                 cb.Parent!.TextContent.Contains("Workout"));
             workoutCheckbox.Change(true);
 
@@ -150,8 +150,8 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
             component.Find("input#name").Input("Test Exercise");
             component.Find("textarea#description").Input("Test Description");
             component.Find("select#difficulty").Change("1");
-            
-            var workoutCheckbox = component.FindAll("input[type='checkbox']").First(cb => 
+
+            var workoutCheckbox = component.FindAll("input[type='checkbox']").First(cb =>
                 cb.Parent!.TextContent.Contains("Workout"));
             workoutCheckbox.Change(true);
 
@@ -178,7 +178,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
             component.Find("select#kineticChain").Change("kineticchain-1");
 
             // Then select Rest exercise type (this should clear kinetic chain)
-            var restCheckbox = component.FindAll("input[type='checkbox']").First(cb => 
+            var restCheckbox = component.FindAll("input[type='checkbox']").First(cb =>
                 cb.Parent!.TextContent.Contains("Rest"));
             restCheckbox.Change(true);
 
@@ -207,7 +207,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
             kineticChainSelect.GetAttribute("value").Should().Be("kineticchain-1");
 
             // Then select Rest exercise type
-            var restCheckbox = component.FindAll("input[type='checkbox']").First(cb => 
+            var restCheckbox = component.FindAll("input[type='checkbox']").First(cb =>
                 cb.Parent!.TextContent.Contains("Rest"));
             restCheckbox.Change(true);
 

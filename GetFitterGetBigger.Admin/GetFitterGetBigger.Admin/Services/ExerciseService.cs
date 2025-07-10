@@ -47,22 +47,22 @@ namespace GetFitterGetBigger.Admin.Services
                 }
 
                 var response = await _httpClient.GetAsync(requestUrl);
-                
+
                 Console.WriteLine($"[ExerciseService] GetExercisesAsync - Response Status: {response.StatusCode}");
-                
+
                 if (!response.IsSuccessStatusCode)
                 {
                     var errorContent = await response.Content.ReadAsStringAsync();
                     Console.WriteLine($"[ExerciseService] GetExercisesAsync - Error Response Body:");
                     Console.WriteLine(errorContent);
                 }
-                
+
                 response.EnsureSuccessStatusCode();
 
                 var result = await response.Content.ReadFromJsonAsync<ExercisePagedResultDto>(_jsonOptions);
-                
+
                 Console.WriteLine($"[ExerciseService] GetExercisesAsync - Response Items Count: {result?.Items?.Count ?? 0}");
-                
+
                 if (result?.Items?.Any() == true)
                 {
                     Console.WriteLine($"[ExerciseService] GetExercisesAsync - First 3 exercises:");
@@ -72,7 +72,7 @@ namespace GetFitterGetBigger.Admin.Services
                         Console.WriteLine($"  - {exercise.Name} (ID: {exercise.Id}) - Types: {string.Join(", ", types)}");
                     }
                 }
-                
+
                 return result ?? new ExercisePagedResultDto();
             }
             catch (Exception ex)

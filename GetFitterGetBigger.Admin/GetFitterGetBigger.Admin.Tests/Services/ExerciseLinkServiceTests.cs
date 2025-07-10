@@ -70,7 +70,7 @@ namespace GetFitterGetBigger.Admin.Tests.Services
             result.TargetExerciseId.Should().Be(createDto.TargetExerciseId);
             result.LinkType.Should().Be(createDto.LinkType);
             result.DisplayOrder.Should().Be(createDto.DisplayOrder);
-            
+
             _httpMessageHandler.VerifyRequest(request =>
             {
                 request.Method.Should().Be(HttpMethod.Post);

@@ -94,12 +94,12 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
             // Note: xl:right-[calc(50%-41rem)] is a Tailwind class that would be present
         }
 
-        [Fact] 
+        [Fact]
         public void SaveButton_HasProperStructure_ForCreateMode()
         {
             // This test verifies the save button structure without testing loading state
             // The loading state test would require more complex setup with the form
-            
+
             // Arrange
             _mockStateService.SetupReferenceData();
             var component = RenderComponent<ExerciseForm>();
@@ -135,12 +135,12 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
         {
             // Arrange
             _mockStateService.SetupReferenceData();
-            _mockStateService.SelectedExercise = new ExerciseDto 
-            { 
+            _mockStateService.SelectedExercise = new ExerciseDto
+            {
                 Id = "123",
-                Name = "Existing Exercise" 
+                Name = "Existing Exercise"
             };
-            
+
             var navMan = Services.GetRequiredService<Bunit.TestDoubles.FakeNavigationManager>();
             navMan.NavigateTo("http://localhost/exercises/123/edit");
 
@@ -165,7 +165,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
             // The actual CSS would be tested via integration/E2E tests
             component.Markup.Should().Contain("<style>");
             component.Markup.Should().Contain("cancelPostionStyle");
-            
+
             // This is as far as unit tests can go for CSS positioning
             // Actual responsive behavior would need:
             // 1. Integration tests with a real browser
@@ -270,12 +270,12 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
                 };
             }
 
-            public Task InitializeAsync() 
+            public Task InitializeAsync()
             {
                 SetupReferenceData();
                 return Task.CompletedTask;
             }
-            
+
             public Task LoadExercisesAsync(int pageNumber = 1, int pageSize = 10) => Task.CompletedTask;
             public Task LoadExercisesAsync(ExerciseFilterDto? filter) => Task.CompletedTask;
             public Task RefreshCurrentPageAsync() => Task.CompletedTask;
@@ -284,7 +284,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
             public void ClearStoredPage() { }
             public Task LoadExercisesWithStoredPageAsync() => Task.CompletedTask;
             public Task LoadExerciseByIdAsync(string id) => Task.CompletedTask;
-            public async Task CreateExerciseAsync(ExerciseCreateDto dto) 
+            public async Task CreateExerciseAsync(ExerciseCreateDto dto)
             {
                 if (CreateDelay != null)
                 {
@@ -302,27 +302,27 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
 
         private class MockReferenceDataService : IReferenceDataService
         {
-            public Task<IEnumerable<ReferenceDataDto>> GetDifficultyLevelsAsync() 
+            public Task<IEnumerable<ReferenceDataDto>> GetDifficultyLevelsAsync()
                 => Task.FromResult<IEnumerable<ReferenceDataDto>>(Array.Empty<ReferenceDataDto>());
-            public Task<IEnumerable<ReferenceDataDto>> GetMuscleGroupsAsync() 
+            public Task<IEnumerable<ReferenceDataDto>> GetMuscleGroupsAsync()
                 => Task.FromResult<IEnumerable<ReferenceDataDto>>(Array.Empty<ReferenceDataDto>());
-            public Task<IEnumerable<ReferenceDataDto>> GetMuscleRolesAsync() 
+            public Task<IEnumerable<ReferenceDataDto>> GetMuscleRolesAsync()
                 => Task.FromResult<IEnumerable<ReferenceDataDto>>(Array.Empty<ReferenceDataDto>());
-            public Task<IEnumerable<ReferenceDataDto>> GetEquipmentAsync() 
+            public Task<IEnumerable<ReferenceDataDto>> GetEquipmentAsync()
                 => Task.FromResult<IEnumerable<ReferenceDataDto>>(Array.Empty<ReferenceDataDto>());
-            public Task<IEnumerable<ReferenceDataDto>> GetBodyPartsAsync() 
+            public Task<IEnumerable<ReferenceDataDto>> GetBodyPartsAsync()
                 => Task.FromResult<IEnumerable<ReferenceDataDto>>(Array.Empty<ReferenceDataDto>());
-            public Task<IEnumerable<ReferenceDataDto>> GetMovementPatternsAsync() 
+            public Task<IEnumerable<ReferenceDataDto>> GetMovementPatternsAsync()
                 => Task.FromResult<IEnumerable<ReferenceDataDto>>(Array.Empty<ReferenceDataDto>());
-            public Task<IEnumerable<ExerciseTypeDto>> GetExerciseTypesAsync() 
+            public Task<IEnumerable<ExerciseTypeDto>> GetExerciseTypesAsync()
                 => Task.FromResult<IEnumerable<ExerciseTypeDto>>(Array.Empty<ExerciseTypeDto>());
             public Task<string> CreateMuscleGroupAsync(string value) => Task.FromResult(Guid.NewGuid().ToString());
             public Task<string> CreateEquipmentAsync(string value) => Task.FromResult(Guid.NewGuid().ToString());
             public void ClearMuscleGroupsCache() { }
             public void ClearEquipmentCache() { }
-            public Task<IEnumerable<ReferenceDataDto>> GetKineticChainTypesAsync() 
+            public Task<IEnumerable<ReferenceDataDto>> GetKineticChainTypesAsync()
                 => Task.FromResult<IEnumerable<ReferenceDataDto>>(Array.Empty<ReferenceDataDto>());
-            public Task<IEnumerable<ReferenceDataDto>> GetMetricTypesAsync() 
+            public Task<IEnumerable<ReferenceDataDto>> GetMetricTypesAsync()
                 => Task.FromResult<IEnumerable<ReferenceDataDto>>(Array.Empty<ReferenceDataDto>());
         }
     }

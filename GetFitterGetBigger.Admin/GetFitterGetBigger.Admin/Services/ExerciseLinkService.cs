@@ -35,19 +35,19 @@ public class ExerciseLinkService : IExerciseLinkService
         try
         {
             var requestUrl = $"{_apiBaseUrl}/api/exercises/{exerciseId}/links";
-            
+
             Console.WriteLine($"[ExerciseLinkService] CreateLinkAsync called");
             Console.WriteLine($"[ExerciseLinkService] Request URL: {requestUrl}");
             Console.WriteLine($"[ExerciseLinkService] ExerciseId: {exerciseId}");
             Console.WriteLine($"[ExerciseLinkService] CreateLinkDto: SourceExerciseId={createLinkDto.SourceExerciseId}, TargetExerciseId={createLinkDto.TargetExerciseId}, LinkType={createLinkDto.LinkType}, DisplayOrder={createLinkDto.DisplayOrder}");
-            
+
             var json = JsonSerializer.Serialize(createLinkDto, _jsonOptions);
             Console.WriteLine($"[ExerciseLinkService] Request JSON: {json}");
-            
+
             var response = await _httpClient.PostAsJsonAsync(requestUrl, createLinkDto, _jsonOptions);
-            
+
             Console.WriteLine($"[ExerciseLinkService] Response Status: {response.StatusCode}");
-            
+
             if (!response.IsSuccessStatusCode)
             {
                 var errorContent = await response.Content.ReadAsStringAsync();
@@ -56,12 +56,12 @@ public class ExerciseLinkService : IExerciseLinkService
             }
 
             var result = await response.Content.ReadFromJsonAsync<ExerciseLinkDto>(_jsonOptions);
-            
+
             Console.WriteLine($"[ExerciseLinkService] Link created successfully with ID: {result?.Id}");
-            
+
             // Invalidate cache for the exercise links
             InvalidateExerciseLinksCache(exerciseId);
-            
+
             return result ?? throw new ExerciseLinkServiceException("Failed to deserialize created exercise link response");
         }
         catch (HttpRequestException ex)
@@ -95,14 +95,14 @@ public class ExerciseLinkService : IExerciseLinkService
         try
         {
             var cacheKey = $"exercise_links_{exerciseId}_{linkType}_{includeExerciseDetails}";
-            
+
             if (!_cache.TryGetValue(cacheKey, out ExerciseLinksResponseDto? links))
             {
                 var queryParams = BuildLinksQueryString(linkType, includeExerciseDetails);
                 var requestUrl = $"{_apiBaseUrl}/api/exercises/{exerciseId}/links{queryParams}";
 
                 var response = await _httpClient.GetAsync(requestUrl);
-                
+
                 if (!response.IsSuccessStatusCode)
                 {
                     if (response.StatusCode == HttpStatusCode.NotFound)
@@ -113,7 +113,7 @@ public class ExerciseLinkService : IExerciseLinkService
                 }
 
                 links = await response.Content.ReadFromJsonAsync<ExerciseLinksResponseDto>(_jsonOptions);
-                
+
                 if (links != null)
                 {
                     // Cache for 1 hour as specified in requirements
@@ -146,14 +146,14 @@ public class ExerciseLinkService : IExerciseLinkService
         try
         {
             var cacheKey = $"suggested_links_{exerciseId}_{count}";
-            
+
             if (!_cache.TryGetValue(cacheKey, out List<ExerciseLinkDto>? suggestions))
             {
                 var queryParams = count != 5 ? $"?count={count}" : "";
                 var requestUrl = $"{_apiBaseUrl}/api/exercises/{exerciseId}/links/suggested{queryParams}";
 
                 var response = await _httpClient.GetAsync(requestUrl);
-                
+
                 if (!response.IsSuccessStatusCode)
                 {
                     if (response.StatusCode == HttpStatusCode.NotFound)
@@ -164,7 +164,7 @@ public class ExerciseLinkService : IExerciseLinkService
                 }
 
                 suggestions = await response.Content.ReadFromJsonAsync<List<ExerciseLinkDto>>(_jsonOptions);
-                
+
                 if (suggestions != null)
                 {
                     // Cache suggestions for 30 minutes
@@ -197,9 +197,9 @@ public class ExerciseLinkService : IExerciseLinkService
         try
         {
             var requestUrl = $"{_apiBaseUrl}/api/exercises/{exerciseId}/links/{linkId}";
-            
+
             var response = await _httpClient.PutAsJsonAsync(requestUrl, updateLinkDto, _jsonOptions);
-            
+
             if (!response.IsSuccessStatusCode)
             {
                 if (response.StatusCode == HttpStatusCode.NotFound)
@@ -210,10 +210,10 @@ public class ExerciseLinkService : IExerciseLinkService
             }
 
             var result = await response.Content.ReadFromJsonAsync<ExerciseLinkDto>(_jsonOptions);
-            
+
             // Invalidate cache for the exercise links
             InvalidateExerciseLinksCache(exerciseId);
-            
+
             return result ?? throw new ExerciseLinkServiceException("Failed to deserialize updated exercise link response");
         }
         catch (HttpRequestException ex)
@@ -239,9 +239,9 @@ public class ExerciseLinkService : IExerciseLinkService
         try
         {
             var requestUrl = $"{_apiBaseUrl}/api/exercises/{exerciseId}/links/{linkId}";
-            
+
             var response = await _httpClient.DeleteAsync(requestUrl);
-            
+
             if (!response.IsSuccessStatusCode)
             {
                 if (response.StatusCode == HttpStatusCode.NotFound)
@@ -250,7 +250,7 @@ public class ExerciseLinkService : IExerciseLinkService
                 }
                 await HandleErrorResponseAsync(response, exerciseId, linkId);
             }
-            
+
             // Invalidate cache for the exercise links
             InvalidateExerciseLinksCache(exerciseId);
         }
@@ -275,24 +275,24 @@ public class ExerciseLinkService : IExerciseLinkService
     private string BuildLinksQueryString(string? linkType, bool includeExerciseDetails)
     {
         var queryParams = new List<string>();
-        
+
         if (!string.IsNullOrEmpty(linkType))
         {
             queryParams.Add($"linkType={HttpUtility.UrlEncode(linkType)}");
         }
-        
+
         if (includeExerciseDetails)
         {
             queryParams.Add("includeExerciseDetails=true");
         }
-        
+
         return queryParams.Count > 0 ? "?" + string.Join("&", queryParams) : "";
     }
 
     private async Task HandleErrorResponseAsync(HttpResponseMessage response, string exerciseId, string? targetOrLinkId = null)
     {
         var errorContent = await response.Content.ReadAsStringAsync();
-        
+
         switch (response.StatusCode)
         {
             case HttpStatusCode.BadRequest:
@@ -315,29 +315,29 @@ public class ExerciseLinkService : IExerciseLinkService
                     throw new InvalidExerciseLinkException("Invalid exercise type for linking. Only Workout exercises can have links");
                 }
                 throw new InvalidExerciseLinkException($"Bad request: {errorContent}");
-                
+
             case HttpStatusCode.NotFound:
                 if (targetOrLinkId != null)
                 {
                     throw new ExerciseLinkNotFoundException(exerciseId, targetOrLinkId);
                 }
                 throw new ExerciseNotFoundException(exerciseId);
-                
+
             case HttpStatusCode.Conflict:
                 throw new DuplicateExerciseLinkException(exerciseId, targetOrLinkId ?? "unknown", "unknown");
-                
+
             case HttpStatusCode.UnprocessableEntity:
                 throw new InvalidExerciseLinkException($"Validation error: {errorContent}");
-                
+
             case HttpStatusCode.TooManyRequests:
                 throw new ExerciseLinkApiException("Rate limit exceeded. Please try again later", response.StatusCode);
-                
+
             case HttpStatusCode.InternalServerError:
                 throw new ExerciseLinkApiException("Internal server error occurred", response.StatusCode);
-                
+
             case HttpStatusCode.ServiceUnavailable:
                 throw new ExerciseLinkApiException("Service temporarily unavailable", response.StatusCode);
-                
+
             default:
                 throw new ExerciseLinkApiException($"API error ({response.StatusCode}): {errorContent}", response.StatusCode);
         }

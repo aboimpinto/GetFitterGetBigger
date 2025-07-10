@@ -36,7 +36,7 @@ public class ExerciseLinkServiceException : Exception
 /// </summary>
 public class ExerciseLinkNotFoundException : ExerciseLinkServiceException
 {
-    public ExerciseLinkNotFoundException(string exerciseId, string linkId) 
+    public ExerciseLinkNotFoundException(string exerciseId, string linkId)
         : base($"Exercise link '{linkId}' not found for exercise '{exerciseId}'", HttpStatusCode.NotFound, "EXERCISE_LINK_NOT_FOUND")
     {
     }
@@ -47,7 +47,7 @@ public class ExerciseLinkNotFoundException : ExerciseLinkServiceException
 /// </summary>
 public class ExerciseNotFoundException : ExerciseLinkServiceException
 {
-    public ExerciseNotFoundException(string exerciseId) 
+    public ExerciseNotFoundException(string exerciseId)
         : base($"Exercise '{exerciseId}' not found", HttpStatusCode.NotFound, "EXERCISE_NOT_FOUND")
     {
     }
@@ -58,7 +58,7 @@ public class ExerciseNotFoundException : ExerciseLinkServiceException
 /// </summary>
 public class InvalidExerciseLinkException : ExerciseLinkServiceException
 {
-    public InvalidExerciseLinkException(string message) 
+    public InvalidExerciseLinkException(string message)
         : base(message, HttpStatusCode.BadRequest, "INVALID_EXERCISE_LINK")
     {
     }
@@ -69,7 +69,7 @@ public class InvalidExerciseLinkException : ExerciseLinkServiceException
 /// </summary>
 public class MaximumLinksExceededException : ExerciseLinkServiceException
 {
-    public MaximumLinksExceededException(string linkType, int maxAllowed) 
+    public MaximumLinksExceededException(string linkType, int maxAllowed)
         : base($"Maximum {linkType} links exceeded. Only {maxAllowed} links are allowed per exercise", HttpStatusCode.BadRequest, "MAX_LINKS_EXCEEDED")
     {
     }
@@ -80,7 +80,7 @@ public class MaximumLinksExceededException : ExerciseLinkServiceException
 /// </summary>
 public class DuplicateExerciseLinkException : ExerciseLinkServiceException
 {
-    public DuplicateExerciseLinkException(string sourceExerciseId, string targetExerciseId, string linkType) 
+    public DuplicateExerciseLinkException(string sourceExerciseId, string targetExerciseId, string linkType)
         : base($"Link already exists between exercises '{sourceExerciseId}' and '{targetExerciseId}' of type '{linkType}'", HttpStatusCode.Conflict, "DUPLICATE_EXERCISE_LINK")
     {
     }
@@ -91,12 +91,12 @@ public class DuplicateExerciseLinkException : ExerciseLinkServiceException
 /// </summary>
 public class ExerciseLinkApiException : ExerciseLinkServiceException
 {
-    public ExerciseLinkApiException(string message, HttpStatusCode statusCode) 
+    public ExerciseLinkApiException(string message, HttpStatusCode statusCode)
         : base(message, statusCode, "API_ERROR")
     {
     }
 
-    public ExerciseLinkApiException(string message, HttpStatusCode statusCode, Exception innerException) 
+    public ExerciseLinkApiException(string message, HttpStatusCode statusCode, Exception innerException)
         : base(message, statusCode, innerException, "API_ERROR")
     {
     }

@@ -81,10 +81,10 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
             // Assert
             var linkIndicators = component.FindAll("[data-testid='link-indicator']");
             linkIndicators.Should().HaveCount(1);
-            
+
             var linkIcon = component.Find("[data-testid='link-icon']");
             linkIcon.Should().NotBeNull();
-            
+
             var linkCounts = component.Find("[data-testid='link-counts']");
             linkCounts.TextContent.Should().Be("3/2");
         }
@@ -163,7 +163,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
         {
             // Arrange
             SetupEmptyPagedResult();
-            
+
             Services.AddSingleton(_stateServiceMock.Object);
             Services.AddSingleton(_navigationManagerMock.Object);
 
@@ -173,10 +173,10 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
             // Assert
             var filterLabel = component.FindAll("label").FirstOrDefault(l => l.TextContent == "Links");
             filterLabel.Should().NotBeNull();
-            
+
             var filterSelect = filterLabel!.NextElementSibling;
             filterSelect.Should().NotBeNull();
-            
+
             var options = filterSelect!.QuerySelectorAll("option");
             options.Should().HaveCount(3);
             options[0].TextContent.Should().Be("All Exercises");
@@ -189,7 +189,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
         {
             // Arrange
             SetupEmptyPagedResult();
-            
+
             Services.AddSingleton(_stateServiceMock.Object);
             Services.AddSingleton(_navigationManagerMock.Object);
 
@@ -198,14 +198,14 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
             // Act
             var filterSelect = component.FindAll("select").FirstOrDefault(s => s.InnerHtml.Contains("Has Links"));
             filterSelect.Should().NotBeNull();
-            
+
             await filterSelect!.ChangeAsync(new ChangeEventArgs { Value = "true" });
-            
+
             var applyButton = component.FindAll("button").First(b => b.TextContent.Contains("Apply Filter"));
             await applyButton.ClickAsync(new Microsoft.AspNetCore.Components.Web.MouseEventArgs());
 
             // Assert
-            _stateServiceMock.Verify(x => x.LoadExercisesAsync(It.Is<ExerciseFilterDto>(f => 
+            _stateServiceMock.Verify(x => x.LoadExercisesAsync(It.Is<ExerciseFilterDto>(f =>
                 f.HasLinks == true
             )), Times.Once);
         }
@@ -215,7 +215,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
         {
             // Arrange
             SetupEmptyPagedResult();
-            
+
             Services.AddSingleton(_stateServiceMock.Object);
             Services.AddSingleton(_navigationManagerMock.Object);
 
@@ -230,10 +230,10 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
             await clearButton.ClickAsync(new Microsoft.AspNetCore.Components.Web.MouseEventArgs());
 
             // Assert
-            _stateServiceMock.Verify(x => x.LoadExercisesAsync(It.Is<ExerciseFilterDto>(f => 
+            _stateServiceMock.Verify(x => x.LoadExercisesAsync(It.Is<ExerciseFilterDto>(f =>
                 f.HasLinks == null
             )), Times.Once);
-            
+
             // Verify UI is cleared
             filterSelect!.GetAttribute("value").Should().Be("");
         }
@@ -251,9 +251,9 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
 
             _stateServiceMock.SetupGet(x => x.HasStoredPage).Returns(true);
             _stateServiceMock.SetupGet(x => x.CurrentFilter).Returns(filter);
-            
+
             SetupEmptyPagedResult();
-            
+
             Services.AddSingleton(_stateServiceMock.Object);
             Services.AddSingleton(_navigationManagerMock.Object);
 
@@ -334,7 +334,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
                 PageNumber = 1,
                 PageSize = 10
             };
-            
+
             _stateServiceMock.SetupGet(x => x.CurrentPage).Returns(pagedResult);
         }
     }

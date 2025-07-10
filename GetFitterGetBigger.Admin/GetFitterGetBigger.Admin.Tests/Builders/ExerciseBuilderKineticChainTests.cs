@@ -49,9 +49,9 @@ namespace GetFitterGetBigger.Admin.Tests.Builders
                 Description = "Test Description",
                 Instructions = "Test Instructions",
                 Difficulty = new ReferenceDataDto { Id = "difficulty-1", Value = "Easy" },
-                KineticChain = new ReferenceDataDto 
-                { 
-                    Id = "kineticchaintype-2b3e7cb2-9a3e-4c9a-88d8-b7c019c90d1b", 
+                KineticChain = new ReferenceDataDto
+                {
+                    Id = "kineticchaintype-2b3e7cb2-9a3e-4c9a-88d8-b7c019c90d1b",
                     Value = "Isolation",
                     Description = "Single-muscle movement"
                 },
@@ -135,9 +135,9 @@ namespace GetFitterGetBigger.Admin.Tests.Builders
                 Description = "Test Description",
                 Instructions = "Test Instructions",
                 Difficulty = new ReferenceDataDto { Id = "difficulty-1", Value = "Easy" },
-                KineticChain = new ReferenceDataDto 
-                { 
-                    Id = "kineticchaintype-f5d5a2de-9c4e-4b87-b8c3-5d1e17d0b1f4", 
+                KineticChain = new ReferenceDataDto
+                {
+                    Id = "kineticchaintype-f5d5a2de-9c4e-4b87-b8c3-5d1e17d0b1f4",
                     Value = "Compound",
                     Description = "Multi-muscle movement"
                 },

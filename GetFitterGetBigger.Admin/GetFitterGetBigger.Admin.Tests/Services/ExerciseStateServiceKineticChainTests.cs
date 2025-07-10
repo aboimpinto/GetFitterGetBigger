@@ -72,7 +72,7 @@ namespace GetFitterGetBigger.Admin.Tests.Services
                 new() { Id = "1", Value = "Compound", Description = "Multi-muscle" },
                 new() { Id = "2", Value = "Isolation", Description = "Single-muscle" }
             };
-            
+
             SetupAllReferenceData();
             _referenceDataServiceMock.Setup(x => x.GetKineticChainTypesAsync()).ReturnsAsync(kineticChainTypes);
             _exerciseServiceMock.Setup(x => x.GetExercisesAsync(It.IsAny<ExerciseFilterDto>()))
@@ -80,7 +80,7 @@ namespace GetFitterGetBigger.Admin.Tests.Services
 
             // Act
             await _stateService.InitializeAsync();
-            
+
             // Assert - All reference data including KineticChainTypes should be loaded
             _stateService.KineticChainTypes.Should().HaveCount(2);
             _stateService.DifficultyLevels.Should().HaveCount(3);

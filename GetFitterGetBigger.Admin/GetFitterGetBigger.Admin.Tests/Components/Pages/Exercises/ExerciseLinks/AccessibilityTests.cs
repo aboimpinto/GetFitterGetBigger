@@ -149,7 +149,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises.ExerciseLink
             // Assert
             var moveUpButton = component.Find("[data-testid='move-up-button']");
             moveUpButton.GetAttribute("aria-label").Should().Be("Move Push-ups up in order");
-            
+
             var moveDownButton = component.Find("[data-testid='move-down-button']");
             moveDownButton.GetAttribute("aria-label").Should().Be("Move Push-ups down in order");
         }
@@ -208,7 +208,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises.ExerciseLink
                 .Build();
 
             SetupStateWithLinks(new List<ExerciseLinkDto> { link }, new List<ExerciseLinkDto>());
-            
+
             var validationServiceMock = new Mock<IExerciseLinkValidationService>();
             Services.AddSingleton(validationServiceMock.Object);
 

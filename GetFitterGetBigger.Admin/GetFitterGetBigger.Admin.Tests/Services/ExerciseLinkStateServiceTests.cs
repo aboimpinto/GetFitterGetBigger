@@ -165,13 +165,13 @@ namespace GetFitterGetBigger.Admin.Tests.Services
             // Arrange
             var exerciseId = Guid.NewGuid().ToString();
             var links = new List<ExerciseLinkDto>();
-            
+
             // Add 10 warmup links
             for (int i = 0; i < 10; i++)
             {
                 links.Add(new ExerciseLinkDtoBuilder().AsWarmup().WithDisplayOrder(i).Build());
             }
-            
+
             // Add 10 cooldown links
             for (int i = 0; i < 10; i++)
             {
@@ -219,7 +219,7 @@ namespace GetFitterGetBigger.Admin.Tests.Services
             // Arrange
             var exerciseId = Guid.NewGuid().ToString();
             var links = new List<ExerciseLinkDto>();
-            
+
             // Add 10 warmup links to reach max
             for (int i = 0; i < 10; i++)
             {

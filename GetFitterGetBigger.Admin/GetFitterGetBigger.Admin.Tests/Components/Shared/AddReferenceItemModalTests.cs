@@ -597,7 +597,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Shared
         {
             // Arrange
             var whitespaceStrings = new[] { " ", "  ", "\t", "\n", "\r\n", "   \t\n   " };
-            
+
             foreach (var whitespace in whitespaceStrings)
             {
                 var component = RenderComponent<AddReferenceItemModal>(parameters => parameters
@@ -616,7 +616,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Shared
                         .Should().Contain("Equipment name is required");
                 });
             }
-            
+
             _mockEquipmentService.Verify(x => x.CreateEquipmentAsync(It.IsAny<CreateEquipmentDto>()), Times.Never);
         }
 
@@ -743,7 +743,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Shared
 
             // Assert - Should not call service with empty string due to validation
             _mockEquipmentService.Verify(x => x.CreateEquipmentAsync(It.IsAny<CreateEquipmentDto>()), Times.Never);
-            
+
             // Validation error should be shown
             component.WaitForAssertion(() =>
             {
@@ -798,7 +798,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Shared
             // Arrange
             var submitCount = 0;
             var tcs = new TaskCompletionSource<EquipmentDto>();
-            
+
             _mockEquipmentService.Setup(x => x.CreateEquipmentAsync(It.IsAny<CreateEquipmentDto>()))
                 .Returns(() =>
                 {
@@ -811,7 +811,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Shared
 
             // Act - Fill form and double-click submit button rapidly
             component.Find("[data-testid='equipment-name-input']").Change("Double Click Test");
-            
+
             // Simulate double-click by clicking twice rapidly
             var submitButton = component.Find("[data-testid='submit-button']");
             var firstClickTask = component.InvokeAsync(() => submitButton.Click());
@@ -819,7 +819,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Shared
 
             // Complete the async operation
             tcs.SetResult(new EquipmentDto { Id = "1", Name = "Double Click Test" });
-            
+
             await firstClickTask;
             await secondClickTask;
 
@@ -846,14 +846,14 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Shared
                 await component.InvokeAsync(() =>
                     component.Find("[data-testid='add-reference-form']").Submit()
                 );
-                
+
                 // Small delay to simulate rapid user interaction
                 await Task.Delay(50);
             }
 
             // Assert - All submissions should complete successfully
             submissionTimes.Should().HaveCount(5);
-            
+
             // Verify submissions are spaced out (not simultaneous)
             for (int i = 1; i < submissionTimes.Count; i++)
             {
@@ -870,10 +870,10 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Shared
                 .Add(p => p.EntityType, ReferenceEntityType.Equipment));
 
             var nameInput = component.Find("[data-testid='equipment-name-input']");
-            
+
             // Act - Simulate keyboard spam with rapid changes
             var rapidInputs = new[] { "T", "Te", "Tes", "Test", "Test ", "Test E", "Test Eq", "Test Equ", "Test Equi", "Test Equip" };
-            
+
             foreach (var input in rapidInputs)
             {
                 nameInput.Change(input);
@@ -882,7 +882,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Shared
 
             // Final value
             nameInput.Change("Test Equipment");
-            
+
             // Submit form
             await component.InvokeAsync(() =>
                 component.Find("[data-testid='add-reference-form']").Submit()
@@ -904,13 +904,13 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Shared
 
             // Act - Click cancel button multiple times rapidly
             var cancelButton = component.Find("[data-testid='cancel-button']");
-            
+
             var tasks = new List<Task>();
             for (int i = 0; i < 5; i++)
             {
                 tasks.Add(component.InvokeAsync(() => cancelButton.Click()));
             }
-            
+
             await Task.WhenAll(tasks);
 
             // Assert - Component allows multiple cancel calls (not protected)
@@ -923,7 +923,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Shared
             // Arrange
             var submitCount = 0;
             var tcs = new TaskCompletionSource<EquipmentDto>();
-            
+
             _mockEquipmentService.Setup(x => x.CreateEquipmentAsync(It.IsAny<CreateEquipmentDto>()))
                 .Returns(() =>
                 {
@@ -958,7 +958,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Shared
         {
             // Test that the component shows the correct form based on entity type
             // In practice, the modal would be recreated when entity type changes
-            
+
             // Test 1: Equipment type
             var equipmentComponent = RenderComponent<AddReferenceItemModal>(parameters => parameters
                 .Add(p => p.EntityType, ReferenceEntityType.Equipment));
@@ -976,7 +976,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Shared
             muscleGroupComponent.FindAll("[data-testid='equipment-name-input']").Should().BeEmpty();
             muscleGroupComponent.FindAll("[data-testid='muscle-group-name-input']").Should().HaveCount(1);
             muscleGroupComponent.Find("[data-testid='modal-title']").TextContent.Should().Contain("Muscle Group");
-            
+
             // Verify body parts select is present
             var bodyPartSelect = muscleGroupComponent.Find("[data-testid='body-part-select']");
             bodyPartSelect.Should().NotBeNull();
@@ -1001,7 +1001,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Shared
                     backdrop.KeyDown(new KeyboardEventArgs { Key = "Escape" })
                 ));
             }
-            
+
             await Task.WhenAll(tasks);
 
             // Assert - Component allows multiple escape key events (not protected)
@@ -1025,7 +1025,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Shared
             {
                 tasks.Add(component.InvokeAsync(() => backdrop.Click()));
             }
-            
+
             await Task.WhenAll(tasks);
 
             // Assert - Component allows multiple backdrop clicks (not protected)

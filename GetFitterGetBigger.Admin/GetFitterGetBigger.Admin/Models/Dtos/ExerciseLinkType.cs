@@ -9,7 +9,7 @@ public enum ExerciseLinkType
     /// Warmup exercise link
     /// </summary>
     Warmup,
-    
+
     /// <summary>
     /// Cooldown exercise link
     /// </summary>

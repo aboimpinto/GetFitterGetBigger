@@ -103,7 +103,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises.ExerciseLink
             // Assert
             var warmupContainer = component.Find("[data-testid='warmup-links-container']");
             var cooldownContainer = component.Find("[data-testid='cooldown-links-container']");
-            
+
             component.FindComponents<ExerciseLinkCard>().Should().HaveCount(3);
             warmupContainer.QuerySelectorAll("[data-testid='exercise-link-card']").Should().HaveCount(2);
             cooldownContainer.QuerySelectorAll("[data-testid='exercise-link-card']").Should().HaveCount(1);
@@ -215,7 +215,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises.ExerciseLink
             // Arrange
             var initialLinks = new List<ExerciseLinkDto>();
             SetupStateWithLinks(initialLinks, initialLinks);
-            
+
             var component = RenderComponent<LinkedExercisesList>(parameters => parameters
                 .Add(p => p.StateService, _stateServiceMock.Object));
 
@@ -223,18 +223,18 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises.ExerciseLink
             _stateServiceMock.VerifyAdd(x => x.OnChange += It.IsAny<Action>(), Times.Once);
 
             // Act - Simulate state change by updating the mock
-            var newWarmupLinks = new List<ExerciseLinkDto> 
-            { 
-                new ExerciseLinkDtoBuilder().AsWarmup().Build() 
+            var newWarmupLinks = new List<ExerciseLinkDto>
+            {
+                new ExerciseLinkDtoBuilder().AsWarmup().Build()
             };
             _stateServiceMock.SetupGet(x => x.WarmupLinks).Returns(newWarmupLinks);
             _stateServiceMock.SetupGet(x => x.WarmupLinkCount).Returns(1);
-            
+
             // Trigger the OnChange event within the renderer's synchronization context
             component.InvokeAsync(() => _stateServiceMock.Raise(x => x.OnChange += null));
 
             // Assert - Component should re-render with new state
-            component.WaitForAssertion(() => 
+            component.WaitForAssertion(() =>
                 component.Find("[data-testid='warmup-count']").TextContent.Should().Contain("1 / 10"));
         }
 

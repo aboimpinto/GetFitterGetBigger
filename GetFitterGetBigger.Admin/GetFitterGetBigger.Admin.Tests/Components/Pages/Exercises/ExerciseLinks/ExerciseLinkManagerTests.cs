@@ -28,10 +28,10 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises.ExerciseLink
             _stateServiceMock = new Mock<IExerciseLinkStateService>();
             _exerciseServiceMock = new Mock<IExerciseService>();
             _validationServiceMock = new Mock<IExerciseLinkValidationService>();
-            
+
             // Register the validation service in the test context
             Services.AddSingleton(_validationServiceMock.Object);
-            
+
             _exerciseTypes = new List<ExerciseTypeDto>
             {
                 new() { Id = "1", Value = "Warmup", Description = "Warmup exercises" },
@@ -86,7 +86,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises.ExerciseLink
             // Assert
             component.Find("[data-testid='exercise-link-manager']").Should().NotBeNull();
             component.Markup.Should().Contain("Linked Exercises");
-            
+
             // Wait for async initialization
             await Task.Delay(50);
             _stateServiceMock.Verify(x => x.InitializeForExerciseAsync("ex1", "Squats"), Times.Once);
@@ -198,7 +198,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises.ExerciseLink
             SetupEmptyState();
             _stateServiceMock.Setup(x => x.CreateLinkAsync(It.IsAny<CreateExerciseLinkDto>()))
                 .Returns(Task.CompletedTask);
-            
+
             // Setup validation to succeed
             _validationServiceMock.Setup(x => x.ValidateCreateLink(
                 It.IsAny<ExerciseDto>(),
@@ -223,7 +223,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises.ExerciseLink
                 .WithId("ex3")
                 .WithName("Stretching")
                 .Build();
-            
+
             await component.InvokeAsync(() => modal.Instance.OnAdd.InvokeAsync(selectedExercise));
 
             // Assert
@@ -244,7 +244,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises.ExerciseLink
                 .WithTargetExercise("Jumping Jacks", "ex4")
                 .AsWarmup()
                 .Build();
-            
+
             SetupStateWithLinks(new List<ExerciseLinkDto> { link });
 
             var component = RenderComponent<ExerciseLinkManager>(parameters => parameters
@@ -275,7 +275,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises.ExerciseLink
                 .WithTargetExercise("Push-ups", "ex5")
                 .AsWarmup()
                 .Build();
-            
+
             SetupStateWithLinks(new List<ExerciseLinkDto> { link });
             _stateServiceMock.Setup(x => x.DeleteLinkAsync("link1")).Returns(Task.CompletedTask);
 
@@ -363,7 +363,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises.ExerciseLink
             _stateServiceMock.SetupGet(x => x.ErrorMessage).Returns((string?)null);
             _stateServiceMock.Setup(x => x.CreateLinkAsync(It.IsAny<CreateExerciseLinkDto>()))
                 .Returns(Task.CompletedTask);
-            
+
             // Setup validation to succeed
             _validationServiceMock.Setup(x => x.ValidateCreateLink(
                 It.IsAny<ExerciseDto>(),

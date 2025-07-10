@@ -25,10 +25,10 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises.ExerciseLink
             _stateServiceMock = new Mock<IExerciseLinkStateService>();
             _exerciseServiceMock = new Mock<IExerciseService>();
             _validationServiceMock = new Mock<IExerciseLinkValidationService>();
-            
+
             // Register the validation service in the test context
             Services.AddSingleton(_validationServiceMock.Object);
-            
+
             _exerciseTypes = new List<ExerciseTypeDto>
             {
                 new() { Id = "1", Value = "Warmup", Description = "Warmup exercises" },
@@ -171,7 +171,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises.ExerciseLink
             SetupEmptyState();
             _stateServiceMock.Setup(x => x.CreateLinkAsync(It.IsAny<CreateExerciseLinkDto>()))
                 .Returns(Task.CompletedTask);
-            
+
             _validationServiceMock.Setup(x => x.ValidateCreateLink(
                 It.IsAny<ExerciseDto>(),
                 It.IsAny<string>(),

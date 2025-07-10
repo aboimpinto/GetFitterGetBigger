@@ -45,7 +45,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
             component.Find("select#kineticChain").Change("kineticchain-1"); // Compound
 
             // Select Workout exercise type
-            var workoutCheckbox = component.FindAll("input[type='checkbox']").First(cb => 
+            var workoutCheckbox = component.FindAll("input[type='checkbox']").First(cb =>
                 cb.Parent!.TextContent.Contains("Workout"));
             workoutCheckbox.Change(true);
 
@@ -75,7 +75,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
             component.Find("select#kineticChain").Change("kineticchain-2"); // Isolation
 
             // Select Workout exercise type
-            var workoutCheckbox = component.FindAll("input[type='checkbox']").First(cb => 
+            var workoutCheckbox = component.FindAll("input[type='checkbox']").First(cb =>
                 cb.Parent!.TextContent.Contains("Workout"));
             workoutCheckbox.Change(true);
 
@@ -111,7 +111,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
             component.Find("select#difficulty").Change("1"); // Beginner
 
             // Select Rest exercise type
-            var restCheckbox = component.FindAll("input[type='checkbox']").First(cb => 
+            var restCheckbox = component.FindAll("input[type='checkbox']").First(cb =>
                 cb.Parent!.TextContent.Contains("Rest"));
             restCheckbox.Change(true);
 
@@ -145,7 +145,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
             component.Find("select#kineticChain").Change("kineticchain-1"); // Try to set compound
 
             // Then select Rest exercise type (this should clear kinetic chain)
-            var restCheckbox = component.FindAll("input[type='checkbox']").First(cb => 
+            var restCheckbox = component.FindAll("input[type='checkbox']").First(cb =>
                 cb.Parent!.TextContent.Contains("Rest"));
             restCheckbox.Change(true);
 
@@ -170,7 +170,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
             // Intentionally leave kinetic chain empty
 
             // Select Workout exercise type
-            var workoutCheckbox = component.FindAll("input[type='checkbox']").First(cb => 
+            var workoutCheckbox = component.FindAll("input[type='checkbox']").First(cb =>
                 cb.Parent!.TextContent.Contains("Workout"));
             workoutCheckbox.Change(true);
 
@@ -188,7 +188,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
         {
             // Arrange
             _mockStateService.SetupReferenceData();
-            
+
             // Setup existing exercise with compound kinetic chain
             _mockStateService.SelectedExercise = new ExerciseDtoBuilder()
                 .WithId("existing-id")
@@ -220,7 +220,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
         {
             // Arrange
             _mockStateService.SetupReferenceData();
-            
+
             // Setup existing exercise without kinetic chain
             _mockStateService.SelectedExercise = new ExerciseDtoBuilder()
                 .WithId("existing-id")
@@ -246,7 +246,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
 
             // Assert - Verify the kinetic chain was added
             kineticChainSelect.GetAttribute("value").Should().Be("kineticchain-1");
-            
+
             // Verify the form allows submission (no validation errors)
             kineticChainSelect.HasAttribute("required").Should().BeTrue();
             kineticChainSelect.HasAttribute("disabled").Should().BeFalse();

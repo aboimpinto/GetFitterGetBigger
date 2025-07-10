@@ -181,7 +181,7 @@ namespace GetFitterGetBigger.Admin.Services
         /// Clear all messages (error and success)
         /// </summary>
         void ClearMessages();
-        
+
         /// <summary>
         /// Set an error message
         /// </summary>

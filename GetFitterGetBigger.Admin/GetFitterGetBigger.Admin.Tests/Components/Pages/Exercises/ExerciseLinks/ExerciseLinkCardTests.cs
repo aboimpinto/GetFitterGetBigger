@@ -39,13 +39,13 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises.ExerciseLink
             // Arrange
             var muscleGroups = new List<MuscleGroupListItemDto>
             {
-                new MuscleGroupListItemDto 
-                { 
+                new MuscleGroupListItemDto
+                {
                     MuscleGroup = new ReferenceDataDto { Id = "1", Value = "Chest" },
                     Role = new ReferenceDataDto { Id = "1", Value = "Primary" }
                 },
-                new MuscleGroupListItemDto 
-                { 
+                new MuscleGroupListItemDto
+                {
                     MuscleGroup = new ReferenceDataDto { Id = "2", Value = "Triceps" },
                     Role = new ReferenceDataDto { Id = "1", Value = "Primary" }
                 }

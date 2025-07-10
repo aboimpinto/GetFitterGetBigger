@@ -18,7 +18,7 @@ namespace GetFitterGetBigger.Admin.Models.Dtos
         public List<ReferenceDataDto> Equipment { get; set; } = new();
         public List<ReferenceDataDto> BodyParts { get; set; } = new();
         public List<ReferenceDataDto> MovementPatterns { get; set; } = new();
-        
+
         // Link indicators
         public int WarmupLinkCount { get; set; }
         public int CooldownLinkCount { get; set; }
@@ -84,7 +84,7 @@ namespace GetFitterGetBigger.Admin.Models.Dtos
         public List<ReferenceDataDto> Equipment { get; set; } = new();
         public List<ReferenceDataDto> MovementPatterns { get; set; } = new();
         public List<ReferenceDataDto> BodyParts { get; set; } = new();
-        
+
         // Link indicators
         public int WarmupLinkCount { get; set; }
         public int CooldownLinkCount { get; set; }
