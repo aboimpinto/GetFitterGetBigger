@@ -49,11 +49,11 @@
   - Test ID creation and formatting
   - Test entity property initialization
   
-- **Task 1.4:** Create database migration for ExerciseWeightType table `[InProgress: Started: 2025-01-10 15:03]` (Est: 45m)
+- **Task 1.4:** Create database migration for ExerciseWeightType table `[Implemented: f46e2d20 | Started: 2025-01-10 15:03 | Finished: 2025-01-10 15:09 | Duration: 0h 6m]` (Est: 45m)
   - Add table with proper constraints
   - Include indexes for Code and Name columns
   
-- **Task 1.5:** Create seed data for 5 weight types `[ReadyToDevelop]` (Est: 1h)
+- **Task 1.5:** Create seed data for 5 weight types `[InProgress: Started: 2025-01-10 15:10]` (Est: 1h)
   - BODYWEIGHT_ONLY, BODYWEIGHT_OPTIONAL, WEIGHT_REQUIRED, MACHINE_WEIGHT, NO_WEIGHT
   - Use predefined GUIDs as specified in feature description
   

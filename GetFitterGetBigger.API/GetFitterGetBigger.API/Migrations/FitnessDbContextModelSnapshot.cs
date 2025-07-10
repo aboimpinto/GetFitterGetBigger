@@ -504,6 +504,53 @@ namespace GetFitterGetBigger.API.Migrations
                         .HasDatabaseName("IX_ExerciseWeightType_Value");
 
                     b.ToTable("ExerciseWeightTypes");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("a1f3e2d4-5b6c-4d7e-8f9a-0b1c2d3e4f5a"),
+                            Code = "BODYWEIGHT_ONLY",
+                            Description = "Exercises that cannot have external weight added",
+                            DisplayOrder = 1,
+                            IsActive = true,
+                            Value = "Bodyweight Only"
+                        },
+                        new
+                        {
+                            Id = new Guid("b2e4d3c5-6a7b-5c8d-9e0f-1a2b3c4d5e6f"),
+                            Code = "BODYWEIGHT_OPTIONAL",
+                            Description = "Exercises that can be performed with or without additional weight",
+                            DisplayOrder = 2,
+                            IsActive = true,
+                            Value = "Bodyweight Optional"
+                        },
+                        new
+                        {
+                            Id = new Guid("c3d5c4b6-7b8c-6d9e-0f1a-2b3c4d5e6f7a"),
+                            Code = "WEIGHT_REQUIRED",
+                            Description = "Exercises that must have external weight specified",
+                            DisplayOrder = 3,
+                            IsActive = true,
+                            Value = "Weight Required"
+                        },
+                        new
+                        {
+                            Id = new Guid("d4c6b5a7-8c9d-7e0f-1a2b-3c4d5e6f7a8b"),
+                            Code = "MACHINE_WEIGHT",
+                            Description = "Exercises performed on machines with weight stacks",
+                            DisplayOrder = 4,
+                            IsActive = true,
+                            Value = "Machine Weight"
+                        },
+                        new
+                        {
+                            Id = new Guid("e5b7a698-9d0e-8f1a-2b3c-4d5e6f7a8b9c"),
+                            Code = "NO_WEIGHT",
+                            Description = "Exercises that do not use weight as a metric",
+                            DisplayOrder = 5,
+                            IsActive = true,
+                            Value = "No Weight"
+                        });
                 });
 
             modelBuilder.Entity("GetFitterGetBigger.API.Models.Entities.KineticChainType", b =>
