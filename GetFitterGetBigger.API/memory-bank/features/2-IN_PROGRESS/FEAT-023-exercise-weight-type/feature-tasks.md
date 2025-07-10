@@ -76,13 +76,13 @@
   - Implement base repository methods
   - Implement GetByCodeAsync with proper null handling
   
-- **Task 2.3:** Write comprehensive repository unit tests `[InProgress: Started: 2025-01-10 15:34]` (Est: 1.5h)
+- **Task 2.3:** Write comprehensive repository unit tests `[Implemented: e45b5b03 | Started: 2025-01-10 15:34 | Finished: 2025-01-10 15:38 | Duration: 0h 4m]` (Est: 1.5h)
   - Test GetAllAsync returns seeded data
   - Test GetByIdAsync with valid/invalid IDs
   - Test GetByValueAsync (case-insensitive)
   - Test GetByCodeAsync with valid/invalid codes
   
-- **Task 2.4:** Register repository in dependency injection `[ReadyToDevelop]` (Est: 15m)
+- **Task 2.4:** Register repository in dependency injection `[InProgress: Started: 2025-01-10 15:39]` (Est: 15m)
   - Add to Program.cs with proper lifetime
 
 **🛑 Checkpoint 2:** Build passes, all repository tests green
