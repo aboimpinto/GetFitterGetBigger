@@ -89,7 +89,7 @@
 
 ## Category 2: State Management Services - Estimated: 3h 30m
 
-### Task 2.1: Create ExerciseWeightTypeStateService `[ReadyToDevelop]` (Est: 1h 30m)
+### Task 2.1: Create ExerciseWeightTypeStateService `[InProgress: Started: 2025-07-10 23:59]` (Est: 1h 30m)
 - Create IExerciseWeightTypeStateService interface
 - Implement ExerciseWeightTypeStateService class with caching
 - Add LoadWeightTypesAsync method with memory cache integration
