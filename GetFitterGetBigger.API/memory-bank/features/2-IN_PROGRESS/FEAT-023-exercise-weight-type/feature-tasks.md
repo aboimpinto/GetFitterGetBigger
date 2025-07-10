@@ -53,11 +53,11 @@
   - Add table with proper constraints
   - Include indexes for Code and Name columns
   
-- **Task 1.5:** Create seed data for 5 weight types `[InProgress: Started: 2025-01-10 15:10]` (Est: 1h)
+- **Task 1.5:** Create seed data for 5 weight types `[Implemented: 9f1fef86 | Started: 2025-01-10 15:10 | Finished: 2025-01-10 15:19 | Duration: 0h 9m]` (Est: 1h)
   - BODYWEIGHT_ONLY, BODYWEIGHT_OPTIONAL, WEIGHT_REQUIRED, MACHINE_WEIGHT, NO_WEIGHT
   - Use predefined GUIDs as specified in feature description
   
-- **Task 1.6:** Write tests for database migration and seed data `[ReadyToDevelop]` (Est: 1h)
+- **Task 1.6:** Write tests for database migration and seed data `[InProgress: Started: 2025-01-10 15:20]` (Est: 1h)
   - Verify table creation
   - Verify seed data insertion
   - Test constraint enforcement
