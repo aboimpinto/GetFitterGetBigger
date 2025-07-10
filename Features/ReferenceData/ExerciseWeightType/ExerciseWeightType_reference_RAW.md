@@ -4,165 +4,113 @@
 
 The Exercise Weight Type reference table is a core system table that defines how exercises handle weight assignments. This is a fixed reference table that should not grow dynamically.
 
-## Table Structure
+## Conceptual Data Structure
 
-```sql
-CREATE TABLE ExerciseWeightTypes (
-    Id INT PRIMARY KEY,
-    Code VARCHAR(50) NOT NULL UNIQUE,
-    Name VARCHAR(100) NOT NULL,
-    Description TEXT,
-    UIBehavior TEXT,
-    ValidationRules TEXT,
-    IsActive BOOLEAN DEFAULT TRUE,
-    SortOrder INT,
-    CreatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    UpdatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-);
+```
+ExerciseWeightType:
+    - Identifier (unique)
+    - Code (unique, immutable)
+    - Name 
+    - Description
+    - IsActive indicator
+    - Display order
+    - Audit fields (creation time, last update)
 ```
 
-## Reference Data
+## Reference Data Values
 
-```json
-[
-  {
-    "id": 1,
-    "code": "BODYWEIGHT_ONLY",
-    "name": "Bodyweight Only",
-    "description": "Exercises that cannot have external weight added",
-    "uiBehavior": "Hide weight input field",
-    "validationRules": "TargetWeight must be null or zero",
-    "sortOrder": 1,
-    "isActive": true
-  },
-  {
-    "id": 2,
-    "code": "BODYWEIGHT_OPTIONAL",
-    "name": "Bodyweight Optional",
-    "description": "Exercises that can be performed with or without additional weight",
-    "uiBehavior": "Show optional weight field with + prefix",
-    "validationRules": "TargetWeight can be null, zero, or positive",
-    "sortOrder": 2,
-    "isActive": true
-  },
-  {
-    "id": 3,
-    "code": "WEIGHT_REQUIRED",
-    "name": "Weight Required",
-    "description": "Exercises that must have external weight specified",
-    "uiBehavior": "Show required weight field",
-    "validationRules": "TargetWeight must be greater than zero",
-    "sortOrder": 3,
-    "isActive": true
-  },
-  {
-    "id": 4,
-    "code": "MACHINE_WEIGHT",
-    "name": "Machine Weight",
-    "description": "Exercises performed on machines with weight stacks",
-    "uiBehavior": "Show weight field with machine context",
-    "validationRules": "TargetWeight must be greater than zero",
-    "sortOrder": 4,
-    "isActive": true
-  },
-  {
-    "id": 5,
-    "code": "NO_WEIGHT",
-    "name": "No Weight",
-    "description": "Exercises that do not use weight as a metric",
-    "uiBehavior": "Hide weight input field",
-    "validationRules": "TargetWeight must be null or zero",
-    "sortOrder": 5,
-    "isActive": true
-  }
-]
-```
+### BODYWEIGHT_ONLY
+- Code: BODYWEIGHT_ONLY
+- Name: Bodyweight Only
+- Description: Exercises that cannot have external weight added
+- Display Order: 1
+- Active: Yes
 
-## API Endpoints
+### BODYWEIGHT_OPTIONAL
+- Code: BODYWEIGHT_OPTIONAL
+- Name: Bodyweight Optional
+- Description: Exercises that can be performed with or without additional weight
+- Display Order: 2
+- Active: Yes
 
-### Get All Exercise Weight Types
-```
-GET /api/reference/exercise-weight-types
-```
+### WEIGHT_REQUIRED
+- Code: WEIGHT_REQUIRED
+- Name: Weight Required
+- Description: Exercises that must have external weight specified
+- Display Order: 3
+- Active: Yes
 
-Response:
-```json
-{
-    "data": [
-        {
-            "id": 1,
-            "code": "BODYWEIGHT_ONLY",
-            "name": "Bodyweight Only",
-            "description": "Exercises that cannot have external weight added"
-        },
-        // ... other types
-    ]
-}
-```
+### MACHINE_WEIGHT
+- Code: MACHINE_WEIGHT
+- Name: Machine Weight
+- Description: Exercises performed on machines with weight stacks
+- Display Order: 4
+- Active: Yes
 
-### Get Single Exercise Weight Type
-```
-GET /api/reference/exercise-weight-types/{id}
-```
+### NO_WEIGHT
+- Code: NO_WEIGHT
+- Name: No Weight
+- Description: Exercises that do not use weight as a metric
+- Display Order: 5
+- Active: Yes
+
+## Operations
+
+### Retrieve All Exercise Weight Types
+- Operation: List all weight types
+- Access: Public (no authentication required)
+- Returns: Collection of weight type records
+
+### Retrieve Single Exercise Weight Type
+- Operation: Get specific weight type by identifier
+- Access: Public (no authentication required)
+- Returns: Single weight type record or not found
 
 ## Usage in Exercise Entity
 
-### Exercise Model Structure
-```json
-{
-  "Exercise": {
-    "id": "number",
-    "name": "string",
-    "exerciseWeightTypeId": "number",
-    "exerciseWeightType": "ExerciseWeightType"
-  }
-}
+### Relationship with Exercise Entity
 ```
-
-### ExerciseWeightType Model Structure
-```json
-{
-  "ExerciseWeightType": {
-    "id": "number",
-    "code": "string",
-    "name": "string",
-    "description": "string",
-    "uiBehavior": "string",
-    "validationRules": "string"
-  }
-}
+Exercise:
+    - Has one ExerciseWeightType (required)
+    - References ExerciseWeightType by identifier
+    
+ExerciseWeightType:
+    - Can be referenced by many Exercises
+    - Provides weight handling rules for exercises
 ```
 
 ## Validation Logic
 
-### Weight Assignment Validation Rules
+**Note:** Weight validation rules and UI behavior are implemented in code based on the `code` field, not stored in the database. This ensures type-safe validation and consistent behavior across all applications.
+
+### Weight Assignment Validation Rules (Implemented in Code)
 
 ```
-FUNCTION validateWeightAssignment(exercise, targetWeight):
-    weightTypeCode = exercise.exerciseWeightType.code
+When validating weight for an exercise:
+    Get the exercise's weight type code
     
-    IF weightTypeCode IN ["BODYWEIGHT_ONLY", "NO_WEIGHT"]:
-        RETURN targetWeight IS NULL OR targetWeight = 0
+    If code is BODYWEIGHT_ONLY or NO_WEIGHT:
+        → Weight must be empty or zero
         
-    ELSE IF weightTypeCode = "BODYWEIGHT_OPTIONAL":
-        RETURN targetWeight IS NULL OR targetWeight >= 0
+    If code is BODYWEIGHT_OPTIONAL:
+        → Weight can be empty, zero, or positive
         
-    ELSE IF weightTypeCode IN ["WEIGHT_REQUIRED", "MACHINE_WEIGHT"]:
-        RETURN targetWeight > 0
+    If code is WEIGHT_REQUIRED or MACHINE_WEIGHT:
+        → Weight must be positive (greater than zero)
         
-    ELSE:
-        THROW ERROR "Unknown weight type: " + weightTypeCode
+    Otherwise:
+        → Invalid weight type code
 ```
 
 ### Validation Rules by Type
 
-| Weight Type Code | Valid Target Weight Values |
-|-----------------|---------------------------|
-| BODYWEIGHT_ONLY | null or 0 |
-| NO_WEIGHT | null or 0 |
-| BODYWEIGHT_OPTIONAL | null, 0, or any positive number |
-| WEIGHT_REQUIRED | positive numbers only (> 0) |
-| MACHINE_WEIGHT | positive numbers only (> 0) |
+| Weight Type Code | Valid Target Weight Values | UI Behavior (Implemented in Code) |
+|-----------------|---------------------------|----------------------------------|
+| BODYWEIGHT_ONLY | null or 0 | Hide weight input field |
+| NO_WEIGHT | null or 0 | Hide weight input field |
+| BODYWEIGHT_OPTIONAL | null, 0, or any positive number | Show optional weight field with + prefix |
+| WEIGHT_REQUIRED | positive numbers only (> 0) | Show required weight field |
+| MACHINE_WEIGHT | positive numbers only (> 0) | Show weight field with machine context |
 
 ## Admin Interface Requirements
 

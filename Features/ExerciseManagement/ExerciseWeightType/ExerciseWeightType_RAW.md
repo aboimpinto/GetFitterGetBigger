@@ -50,30 +50,28 @@ Exercises that don't use weight as a metric.
 
 ## Implementation Requirements
 
-### Database Changes
+### Data Structure Changes
 
-1. **Add to Exercise Table:**
-   ```sql
-   ALTER TABLE Exercises ADD COLUMN ExerciseWeightTypeId INT;
-   ALTER TABLE Exercises ADD CONSTRAINT FK_Exercise_ExerciseWeightType 
-     FOREIGN KEY (ExerciseWeightTypeId) REFERENCES ExerciseWeightTypes(Id);
+1. **Exercise Entity Enhancement:**
+   ```
+   Exercise:
+     - Add reference to ExerciseWeightType (required field)
+     - Enforce referential integrity
    ```
 
-2. **Create Reference Table:**
-   ```sql
-   CREATE TABLE ExerciseWeightTypes (
-     Id INT PRIMARY KEY,
-     Code VARCHAR(50) NOT NULL UNIQUE,
-     Name VARCHAR(100) NOT NULL,
-     Description TEXT,
-     UIBehavior TEXT,
-     ValidationRules TEXT,
-     IsActive BOOLEAN DEFAULT TRUE,
-     SortOrder INT,
-     CreatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-     UpdatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-   );
+2. **ExerciseWeightType Reference Data:**
    ```
+   ExerciseWeightType:
+     - Identifier (unique)
+     - Code (unique, immutable) 
+     - Name
+     - Description
+     - IsActive indicator
+     - Display order
+     - Audit fields
+   ```
+   
+   **Note:** UI behavior and validation rules are implemented in code based on the `code` field, not stored as data. This ensures type-safe validation and consistent behavior across all applications.
 
 ### Reference Data
 
