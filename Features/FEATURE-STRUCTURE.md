@@ -49,6 +49,13 @@ This document defines the immutable structure for organizing feature documentati
 
 ## Content Standards
 
+### Technology-Agnostic Approach
+- **MUST NOT** include technology-specific code examples
+- **MUST** use JSON serialization for all data models
+- **MUST** focus on business logic and requirements, not implementation
+- **MAY** reference current technology stack in Notes section only
+- **SHOULD** ensure documentation remains valid regardless of technology changes
+
 ### 1. Feature README.md
 - MUST follow FEATURE-TEMPLATE.md structure exactly
 - MUST include all sections from template
@@ -56,27 +63,31 @@ This document defines the immutable structure for organizing feature documentati
 
 ### 2. API Documentation (api/)
 - MUST include all endpoints with full REST specifications
-- MUST include request/response examples
+- MUST include request/response examples using JSON format
 - MUST document all error responses
 - MUST specify authorization requirements
+- MUST NOT include language-specific code snippets
 
 ### 3. Admin Documentation (admin/)
-- MUST include component hierarchy
+- MUST include component hierarchy (conceptual, not framework-specific)
 - MUST document user workflows with steps
 - SHOULD include mockups or screenshots
 - MUST specify responsive design requirements
+- MUST NOT reference specific UI framework components
 
 ### 4. Client Documentation (clients/)
-- MUST be platform-specific
+- MUST be platform-specific for behavior only
 - MUST note platform limitations
 - MUST include implementation status
 - SHOULD include platform-specific optimizations
+- MUST NOT include platform-specific code examples
 
 ### 5. Test Documentation (tests/)
 - MUST include test scenarios
 - MUST specify test data requirements
 - SHOULD include performance benchmarks
 - MUST document edge cases
+- MUST use language-agnostic test descriptions
 
 ## Cross-Feature References
 
@@ -154,5 +165,17 @@ This structure is designed to be:
 - **Maintainable** - Clear organization and standards
 - **Discoverable** - Easy to find and navigate
 
+## Current Technology Stack
+
+This section documents the current technology choices for reference. Note that feature documentation should remain technology-agnostic.
+
+### Current Implementation (as of 2025-07-10)
+- **API**: C# Minimal API
+- **Admin**: C# Blazor
+- **Clients**: C# Avalonia (compiles to Android, iOS, Desktop, and Web)
+
+### Technology Independence Principle
+Feature documentation focuses on business requirements and data models using JSON serialization. This approach ensures that features remain valid regardless of technology changes. Implementation details are kept in project-specific repositories, not in feature documentation.
+
 Last Updated: 2025-07-10
-Version: 1.0.0
+Version: 1.1.0

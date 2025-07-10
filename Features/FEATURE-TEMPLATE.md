@@ -33,8 +33,17 @@ DO NOT MODIFY THIS TEMPLATE. Copy it to create new feature documentation.
 ## Technical Specification
 
 ### Data Model
-```
-[Entity relationships and structure]
+```json
+{
+  "EntityName": {
+    "id": "string (guid)",
+    "property1": "type",
+    "property2": "type",
+    "relationships": {
+      "relatedEntity": "EntityName2"
+    }
+  }
+}
 ```
 
 ### API Endpoints
@@ -54,29 +63,25 @@ DO NOT MODIFY THIS TEMPLATE. Copy it to create new feature documentation.
 ## Implementation Details
 
 ### API Project
-- **Files Modified**:
-  - `path/to/file1.cs`
-  - `path/to/file2.cs`
-- **New Files**:
-  - `path/to/newfile1.cs`
-- **Database Changes**:
-  - [Migration or schema changes]
+- **Endpoints Implemented**: [List of endpoints]
+- **Data Models**: [List of models/DTOs]
+- **Database Changes**: [Schema changes in JSON format]
+- **Business Logic**: [Key business rules implemented]
 
 ### Admin Project
-- **Components**:
-  - `path/to/component1.tsx`
-  - `path/to/component2.tsx`
-- **Routes**:
-  - `/admin/feature-path`
-- **UI Requirements**:
-  - [Specific UI needs]
+- **UI Components**: [List of conceptual components]
+- **Routes**: [List of admin routes]
+- **User Workflows**: [Key workflows enabled]
+- **UI Requirements**: [Responsive design, accessibility needs]
 
 ### Clients Project
-- **Platforms**: Web | Mobile | Desktop
+- **Platforms**: Web | Mobile (Android/iOS) | Desktop
 - **Implementation Status**:
   - Web: [Status]
-  - Mobile: [Status]
+  - Android: [Status]
+  - iOS: [Status]
   - Desktop: [Status]
+- **Platform-Specific Considerations**: [Any platform limitations or optimizations]
 
 ## Request/Response Examples
 
@@ -188,3 +193,11 @@ Content-Type: application/json
 
 ## Notes
 [Any additional information not covered above]
+
+### Technology Stack Reference
+While this feature documentation remains technology-agnostic, the current implementation uses:
+- API: C# Minimal API
+- Admin: C# Blazor  
+- Clients: C# Avalonia (Android, iOS, Desktop, Web)
+
+Note: Feature documentation should focus on business requirements and use JSON for data models to maintain technology independence.

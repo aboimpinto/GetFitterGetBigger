@@ -75,6 +75,24 @@ All features follow a standardized structure defined in:
 2. Follow structure defined in `FEATURE-STRUCTURE.md`
 3. Add feature to this index when ready
 
+## Technology Stack
+
+### Current Implementation (as of 2025-07-10)
+- **API**: C# Minimal API - RESTful services with JWT authentication
+- **Admin**: C# Blazor - Server-side web application for personal trainers
+- **Clients**: C# Avalonia - Cross-platform framework compiling to:
+  - Android (native mobile app)
+  - iOS (native mobile app)
+  - Desktop (Windows, macOS, Linux)
+  - Web (WebAssembly)
+
+### Technology-Agnostic Documentation
+Feature documentation in this directory follows these principles:
+- **No code examples** - Focus on business logic and requirements
+- **JSON data models** - Universal format for all platforms
+- **Platform independence** - Documentation remains valid regardless of technology changes
+- **Implementation separation** - Technical details stay in project repositories
+
 ## Documentation Standards
 
 ### Version Control
@@ -89,11 +107,12 @@ All features follow a standardized structure defined in:
 
 ### Quality Checklist
 - [ ] All required sections filled
-- [ ] API examples provided
+- [ ] API examples provided (using JSON format)
 - [ ] Error cases documented
 - [ ] Security considerations addressed
 - [ ] Test scenarios defined
 - [ ] Cross-references updated
+- [ ] Technology-agnostic approach followed
 
 ## Feature Status Definitions
 
