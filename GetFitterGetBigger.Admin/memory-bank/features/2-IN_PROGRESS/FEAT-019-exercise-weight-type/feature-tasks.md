@@ -46,7 +46,7 @@
 
 ## Category 1: API Service Layer - Estimated: 4h
 
-### Task 1.1: Create ExerciseWeightTypeService for API integration `[InProgress: Started: 2025-07-10 23:38]` (Est: 1h 30m)
+### Task 1.1: Create ExerciseWeightTypeService for API integration `[Implemented: aae4e90f | Started: 2025-07-10 23:38 | Finished: 2025-07-10 23:42 | Duration: 0h 4m]` (Est: 1h 30m)
 - Create `IExerciseWeightTypeService` interface in Services folder
 - Implement `ExerciseWeightTypeService` class with HttpClient dependency
 - Add GET /api/exercise-weight-types endpoint method
@@ -55,7 +55,7 @@
 - Add proper error handling for network failures and invalid responses
 - Follow existing service patterns established by ExerciseService
 
-### Task 1.2: Write unit tests for ExerciseWeightTypeService `[ReadyToDevelop]` (Est: 1h)
+### Task 1.2: Write unit tests for ExerciseWeightTypeService `[InProgress: Started: 2025-07-10 23:44]` (Est: 1h)
 - Create ExerciseWeightTypeServiceTests.cs in Tests/Services
 - Test successful API calls with mocked HttpClient
 - Test error scenarios (network failures, 404, 500 responses)
