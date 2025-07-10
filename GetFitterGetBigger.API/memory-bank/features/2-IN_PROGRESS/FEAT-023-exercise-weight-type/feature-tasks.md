@@ -38,11 +38,11 @@
 
 ### 📖 Before Starting: Review entity pattern in `/memory-bank/databaseModelPattern.md`
 
-- **Task 1.1:** Create ExerciseWeightType entity inheriting from ReferenceDataBase `[InProgress: Started: 2025-01-10 14:50]` (Est: 30m)
+- **Task 1.1:** Create ExerciseWeightType entity inheriting from ReferenceDataBase `[Implemented: ae0040b3 | Started: 2025-01-10 14:50 | Finished: 2025-01-10 14:53 | Duration: 0h 3m]` (Est: 30m)
   - Create entity with Code property for programmatic reference
   - Implement proper record structure with init-only properties
   
-- **Task 1.2:** Create ExerciseWeightTypeId strongly-typed ID class `[ReadyToDevelop]` (Est: 15m)
+- **Task 1.2:** Create ExerciseWeightTypeId strongly-typed ID class `[InProgress: Started: 2025-01-10 14:54]` (Est: 15m)
   - Follow StronglyTypedId pattern from existing codebase
   
 - **Task 1.3:** Write unit tests for ExerciseWeightType entity `[ReadyToDevelop]` (Est: 30m)
