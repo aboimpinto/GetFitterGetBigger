@@ -68,11 +68,11 @@
 
 ### 📖 Before Starting: Review repository patterns in `/memory-bank/unitOfWorkPattern.md`
 
-- **Task 2.1:** Create IExerciseWeightTypeRepository interface `[InProgress: Started: 2025-01-10 15:28]` (Est: 15m)
+- **Task 2.1:** Create IExerciseWeightTypeRepository interface `[Implemented: 89d479b4 | Started: 2025-01-10 15:28 | Finished: 2025-01-10 15:30 | Duration: 0h 2m]` (Est: 15m)
   - Inherit from IReferenceDataRepository<ExerciseWeightType, ExerciseWeightTypeId>
   - Add GetByCodeAsync method
   
-- **Task 2.2:** Implement ExerciseWeightTypeRepository `[ReadyToDevelop]` (Est: 1h)
+- **Task 2.2:** Implement ExerciseWeightTypeRepository `[InProgress: Started: 2025-01-10 15:31]` (Est: 1h)
   - Implement base repository methods
   - Implement GetByCodeAsync with proper null handling
   
