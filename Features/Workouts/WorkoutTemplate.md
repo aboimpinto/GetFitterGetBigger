@@ -1,16 +1,12 @@
-# The Workout Model: From Blueprint to Action
+# The Workout Template Model: Creating Reusable Workout Blueprints
 
 ## Introduction
 
-With a comprehensive `Exercise` taxonomy established, we now turn to the structure that gives these exercises purpose and context: the Workout. A workout is more than a random list of exercises; it is a structured, goal-oriented session designed to elicit a specific physiological response. The challenge lies in creating a data model that is flexible enough to capture the vast diversity of training styles—from simple, full-body routines to complex, periodized programs—while remaining intuitive for the user.
+With a comprehensive `Exercise` taxonomy established, we now turn to the structure that gives these exercises purpose and context: the Workout Template. A workout template is more than a random list of exercises; it is a structured, goal-oriented blueprint designed to elicit a specific physiological response. The challenge lies in creating a data model that is flexible enough to capture the vast diversity of training styles—from simple, full-body routines to complex, periodized programs—while remaining intuitive for the user.
 
-This report outlines a multi-tiered data model that addresses your core requirements for workout phases (Warmup, Workout, Cooldown) and complex metric assignments. It also introduces additional critical components identified from leading fitness applications and exercise science principles, ensuring the "GetFitterGetBigger" platform is both powerful and scalable.
+This document focuses on the Workout Template—the reusable blueprint or plan for a workout that a user or coach designs. It addresses core requirements for workout phases (Warmup, Workout, Cooldown) and complex metric assignments through the integration of Exercises and ExerciseLinks.
 
-The proposed model is built on a key distinction:
-1.  **The Workout Template:** The reusable blueprint or plan for a workout. This is what a user or coach designs.
-2.  **The Workout Log:** The concrete record of a workout session that a user actually performed on a specific date. This is what is used for tracking progress.
-
-This separation is fundamental to creating a system that can both prescribe and track fitness journeys effectively.[1, 2]
+For information about tracking actual workout performance, see the companion document on Workout Logging.
 
 ## Part I: The Anatomy of a Workout Template
 
@@ -65,23 +61,10 @@ To handle this cleanly, we introduce a `SetGroup` entity. Each `WorkoutTemplateE
 
 This `SetGroup` structure provides the flexibility to define virtually any combination of performance metrics for an exercise within a workout.
 
-## Part II: What More is Needed? Advanced Workout Concepts
-
-To create a truly competitive application, the model should also support more advanced training concepts found in popular fitness apps like Jefit and Strong.[12, 13]
-
-*   **Supersets and Circuits:** Many workout plans group exercises to be performed back-to-back with minimal rest.[11, 12] This can be modeled by adding a `SupersetGroup` identifier to the `WorkoutTemplateExercise` table. Exercises sharing the same `SupersetGroup` ID are performed as a block, with rest taken only after the entire block is complete.
-*   **Warm-up, Drop, and Failure Sets:** Often, not all sets within an exercise are "working sets." Athletes perform lighter warm-up sets or intentionally push to failure on a final set.[11, 14] We can add a `SetType` enumeration (`Warmup`, `Working`, `Drop`, `Failure`) to the `SetGroup` entity to explicitly define the intent of each group of sets.
-*   **Workout Scheduling and Progressive Overload:** A single workout is just one part of a larger plan. The ultimate goal is to create `TrainingPrograms`—structured collections of workouts scheduled over several weeks.[15, 6] A `TrainingProgram` entity would contain multiple `WorkoutTemplates`, assigned to specific days (e.g., Week 1, Day 1: Workout A; Week 1, Day 2: Workout B).[14, 16] This structure is what enables the implementation of **progressive overload**, the cornerstone of long-term progress, where the application can automatically increase the `TargetWeight` or `TargetReps` for the next session based on the user's previous performance.[10, 12]
-
-## Part III: From Template to Action: The Workout Log
-
-When a user performs a workout, they create a `WorkoutLog`. This log is a snapshot in time, capturing what was *actually* accomplished, which can then be compared against the `WorkoutTemplate`.
-
-*   **`WorkoutLog` Entity:** Contains `UserID`, `WorkoutTemplateID` (if applicable), `StartTime`, `EndTime`, and overall user notes.
-*   **`WorkoutLog_Set` Entity:** This is the most granular piece of data. For every single set a user performs, a record is created here. It contains `WorkoutLogID`, `ExerciseID`, `SetOrder`, `RepsCompleted`, `WeightUsed`, `DurationCompleted`, and a `SetType` flag.
-
-This detailed logging allows the application to provide powerful analytics, showing a user their progress for a specific exercise over time, tracking total volume, and calculating new personal records.[2, 11, 14]
-
 ## Conclusion
 
-By separating the workout *plan* (`WorkoutTemplate`) from the workout *record* (`WorkoutLog`), we create a powerful and flexible system. This proposed model directly accommodates your requirements for distinct workout phases and complex, combined performance metrics. Furthermore, by incorporating concepts like workout objectives, advanced set types (supersets, warm-ups), and a structure for multi-week `TrainingPrograms`, it provides a robust foundation that can support users from beginners to advanced athletes. This architecture ensures that "GetFitterGetBigger" will not only be a simple workout logger but an intelligent training partner capable of guiding users toward their fitness goals.
+The Workout Template model provides a flexible and powerful system for creating reusable workout blueprints. By defining clear structures for exercises, phases, and performance metrics through the `WorkoutTemplate`, `WorkoutTemplateExercise`, and `SetGroup` entities, we create a foundation that can accommodate diverse training styles and objectives.
+
+This template-based approach, combined with the proper integration of Exercises and ExerciseLinks, ensures that workout creation remains intuitive while supporting complex training methodologies. The model's flexibility in handling various execution protocols (Standard, AMRAP, EMOM, ForTime) and metric combinations makes it suitable for users ranging from beginners to advanced athletes.
+
+For advanced training concepts like supersets and specialized set types, see the Advanced Training Concepts documentation. For multi-week programming and progressive overload, refer to the Training Programs documentation. To understand how these templates are used to track actual workout performance, see the Workout Logging documentation.
