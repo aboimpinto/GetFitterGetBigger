@@ -86,6 +86,25 @@ This document tracks features that have been propagated from the API to Admin an
 - All workflow documentation was already synchronized
 - Testing guidelines enhanced for consistency
 
+## Propagation Date: 2025-07-10
+
+### Features Propagated
+
+#### 5. Exercise Weight Type Classification
+- **API Completion Date**: 2025-07-10 (IN_PROGRESS - implementation complete, pending final testing)
+- **Feature IDs**: 
+  - API: FEAT-023
+  - Admin: FEAT-019
+  - Clients: Not applicable (Admin-only feature for exercise management)
+- **Status**: Propagated to 0-SUBMITTED in Admin
+- **Summary**: Exercise weight type classification system with 5 predefined categories for standardized weight handling
+- **Key Changes**:
+  - Admin: Complete UI component system for weight type management
+  - Weight types: BODYWEIGHT_ONLY, BODYWEIGHT_OPTIONAL, WEIGHT_REQUIRED, MACHINE_WEIGHT, NO_WEIGHT
+  - Dynamic weight input validation based on exercise type
+  - Enhanced exercise management with weight type selection and badges
+  - Bulk update capabilities for existing exercise migration
+
 ## Propagation Date: 2025-07-07
 
 ### Features Propagated
