@@ -6,36 +6,36 @@ The Exercise Management API provides comprehensive CRUD operations for managing 
 ## Data Models
 
 ### Exercise Entity
-```typescript
-interface Exercise {
-  id: string; // Format: "exercise-{guid}"
-  name: string; // Max 100 characters
-  description: string;
-  coachNotes: CoachNote[];
-  exerciseTypes: ExerciseType[];
-  videoUrl?: string;
-  imageUrl?: string;
-  isUnilateral: boolean;
-  isActive: boolean;
-  difficulty: DifficultyLevel;
-  muscleGroups: MuscleGroupAssignment[];
-  equipment: Equipment[];
-  movementPatterns: MovementPattern[];
-  bodyParts: BodyPart[];
-  kineticChain?: KineticChainType; // Required for non-REST exercises
-}
+The Exercise entity represents a single exercise with all its metadata and relationships.
 
-interface CoachNote {
-  id: string;
-  text: string;
-  order: number;
-}
+**Core Properties:**
+- `id` - Unique identifier (format: "exercise-{guid}")
+- `name` - Exercise name (max 100 characters)
+- `description` - Detailed description
+- `coachNotes` - Array of coaching instructions
+- `exerciseTypes` - Array of exercise type references
+- `videoUrl` - Optional video demonstration URL
+- `imageUrl` - Optional image URL
+- `isUnilateral` - Boolean indicating if exercise works one side at a time
+- `isActive` - Boolean for soft delete functionality
+- `difficulty` - Reference to difficulty level
+- `muscleGroups` - Array of muscle group assignments with roles
+- `equipment` - Array of required equipment references
+- `movementPatterns` - Array of movement pattern references
+- `bodyParts` - Array of body part references
+- `kineticChain` - Optional kinetic chain type (required for non-REST exercises)
+- `exerciseWeightType` - Defines how exercise handles weight assignments
 
-interface MuscleGroupAssignment {
-  muscleGroup: MuscleGroup;
-  role: MuscleRole; // Primary, Secondary, Stabilizer
-}
-```
+**Related Entities:**
+- `CoachNote` - Individual coaching instruction with text and order
+- `MuscleGroupAssignment` - Links muscle groups with their role (Primary/Secondary/Stabilizer)
+
+**Exercise Weight Types:**
+- `BODYWEIGHT_ONLY` - No external weight allowed
+- `BODYWEIGHT_OPTIONAL` - Can add weight to bodyweight
+- `WEIGHT_REQUIRED` - Must specify external weight
+- `MACHINE_WEIGHT` - Machine-based weight
+- `NO_WEIGHT` - Weight not applicable (e.g., stretches)
 
 ## Endpoints
 

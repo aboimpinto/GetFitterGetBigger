@@ -15,6 +15,7 @@ The Exercise feature in client applications (Mobile, Web, Desktop) provides user
   - Equipment available
   - Difficulty level
   - Exercise type
+  - Weight type (to match user's equipment)
 - Visual exercise cards with thumbnails
 - Favorite/bookmark exercises
 - Recently viewed exercises
@@ -58,6 +59,7 @@ The Exercise feature in client applications (Mobile, Web, Desktop) provides user
 - Quick access to video
 - Timer/rep counter integration
 - Next exercise preview
+- Weight input field (adaptive based on exercise weight type)
 
 **Expanded View**:
 - Full instructions

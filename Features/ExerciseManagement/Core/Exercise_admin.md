@@ -16,6 +16,7 @@ The Exercise Management feature in the Admin application allows Personal Trainer
   - Muscle Groups
   - Equipment
   - Kinetic Chain (Compound/Isolation)
+  - Exercise Weight Type
 - Exercise cards/rows displaying:
   - Thumbnail image
   - Exercise name
@@ -81,6 +82,12 @@ The Exercise Management feature in the Admin application allows Personal Trainer
    - Difficulty Level (dropdown)
    - Unilateral Exercise (toggle)
    - Kinetic Chain (dropdown, conditional on non-REST type)
+   - Exercise Weight Type (dropdown, required)
+     - Bodyweight Only
+     - Bodyweight Optional
+     - Weight Required
+     - Machine Weight
+     - No Weight
 
 2. **Media**
    - Image URL or upload

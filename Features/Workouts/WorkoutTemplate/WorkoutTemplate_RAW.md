@@ -16,8 +16,18 @@ A Workout Template is the core, reusable entity that defines the structure and i
 
 This is the top-level object for any workout plan. It contains the workout's metadata, defining its purpose and general characteristics.
 
-*   **Name:** A clear, descriptive title (e.g., "Upper Body Strength Day," "HIIT Cardio Blast").
+*   **Name:** A clear, descriptive title (e.g., "Upper Body Strength Day," "HIIT Cardio Blast", "Leg Burner I").
 *   **Description:** A brief overview of the workout's focus and what the user can expect.
+*   **Workout Category:** The primary muscle group or workout type this template targets. This enables users to browse workouts by the area they want to train. Based on the mobile app design, categories include:
+    *   HIIT (High Intensity)
+    *   Arms (Biceps, Triceps)
+    *   Legs (Quads, Glutes)
+    *   Abs & Core (Core)
+    *   Shoulders (Deltoids)
+    *   Back (Lats, Traps)
+    *   Chest (Pectorals)
+    *   Full Body
+*   **Target Muscles:** A more specific list of muscles that will be engaged. This can be modeled as a many-to-many relationship with a `Muscles` table, allowing a workout to target multiple muscle groups (e.g., "Quads, Hamstrings, Glutes" for a leg workout).
 *   **Workout Objective:** A crucial piece of metadata that defines the primary goal of the session. This is best modeled as a link to a separate `WorkoutObjectives` table. Research into fitness applications and coaching principles reveals several common objectives [3, 4, 5]:
     *   Muscular Strength
     *   Hypertrophy (Muscle Growth)
@@ -28,6 +38,7 @@ This is the top-level object for any workout plan. It contains the workout's met
     *   General Fitness / Maintenance
 *   **Estimated Duration:** The approximate time in minutes required to complete the workout. This is a highly valuable piece of information for users planning their schedule.[6]
 *   **Difficulty Level:** An enumerated type ('Beginner', 'Intermediate', 'Advanced') that helps users select appropriate routines.[7]
+*   **Preview Exercises:** A short list of key exercises included in the workout (e.g., "Pushups / Crunches / Squats"). This provides users with a quick preview of what to expect, as shown in the mobile mockup.
 
 ### 1.2 The `WorkoutTemplateExercise` Entity: Structuring the Flow
 
@@ -61,10 +72,89 @@ To handle this cleanly, we introduce a `SetGroup` entity. Each `WorkoutTemplateE
 
 This `SetGroup` structure provides the flexibility to define virtually any combination of performance metrics for an exercise within a workout.
 
+### 1.4 Exercise Weight Compatibility
+
+To prevent incongruence between exercise types and weight assignments (e.g., adding weight to an "Air Squat"), exercises use the ExerciseWeightType reference table to define how they handle weight.
+
+**Exercise Weight Type Integration:**
+The Exercise entity includes an `ExerciseWeightType` reference that determines weight handling behavior. This reference table contains five fixed types:
+
+*   **`BODYWEIGHT_ONLY`**: No external weight can be added (e.g., Air Squat, Regular Push-ups)
+*   **`BODYWEIGHT_OPTIONAL`**: Can be performed with or without added weight (e.g., Pull-ups, Dips)
+*   **`WEIGHT_REQUIRED`**: Must have external weight specified (e.g., Barbell Squat, Dumbbell Press)
+*   **`MACHINE_WEIGHT`**: Uses machine/cable weight systems
+*   **`NO_WEIGHT`**: Exercises that don't use weight metrics (e.g., stretches, mobility work)
+
+**Additional Weight-Related Attributes:**
+*   **`DefaultWeightUnit`:** Preferred unit for this exercise (lbs, kg, or percentage of bodyweight)
+*   **`MinimumWeight`:** For exercises requiring weight, the minimum safe/practical weight
+*   **`WeightIncrements`:** Suggested weight progression increments (e.g., 2.5kg for dumbbells, 5kg for barbells)
+
+**SetGroup Validation Rules:**
+1. If Exercise has `ExerciseWeightType = BODYWEIGHT_ONLY`, the `TargetWeight` must be null or zero
+2. If Exercise has `ExerciseWeightType = WEIGHT_REQUIRED`, the `TargetWeight` must be specified
+3. If Exercise has `ExerciseWeightType = BODYWEIGHT_OPTIONAL`, weight can be specified as additional resistance
+4. UI should adapt based on `ExerciseWeightType` to show/hide weight input fields
+
+**Example Implementations:**
+- **Air Squat** (BODYWEIGHT_ONLY): UI doesn't show weight field
+- **Weighted Pull-up** (BODYWEIGHT_OPTIONAL): UI shows optional weight field with "+" prefix
+- **Barbell Squat** (WEIGHT_REQUIRED): UI requires weight input
+- **Plank** (NO_WEIGHT): UI only shows duration field
+
+For complete details on the ExerciseWeightType reference table, see `/Features/ReferenceData/ExerciseWeightType/`.
+
+## Part II: Workout Categorization and Discovery
+
+### 2.1 The `WorkoutCategory` Entity
+
+To support the user interface shown in the mobile mockup, we need a proper categorization system. This allows users to browse workouts based on the muscle groups or workout types they want to focus on.
+
+**`WorkoutCategory` Entity:**
+*   **`CategoryID`:** Unique identifier
+*   **`Name`:** Category name (e.g., "Arms", "Legs", "HIIT")
+*   **`DisplayName`:** User-friendly display text
+*   **`Icon`:** Icon identifier for UI display
+*   **`MuscleGroups`:** List of primary muscles targeted
+*   **`SortOrder`:** For organizing categories in the UI
+*   **`IsUnlocked`:** Boolean flag for progressive category unlocking
+
+### 2.2 The `WorkoutMuscles` Entity
+
+A many-to-many relationship table that links workouts to specific muscles they target.
+
+**`WorkoutMuscles` Entity:**
+*   **`WorkoutTemplateID`:** Foreign key to WorkoutTemplate
+*   **`MuscleID`:** Foreign key to Muscles table
+*   **`EngagementLevel`:** Enumeration (`Primary`, `Secondary`, `Stabilizer`)
+
+This structure allows for:
+- Filtering workouts by specific muscle groups
+- Showing which muscles are targeted in each workout
+- Creating balanced training programs that hit all muscle groups
+
+### 2.3 Enhanced Discovery Features
+
+**Filter Combinations:**
+Users can filter workouts by:
+1. **Category** (e.g., "Legs")
+2. **Specific Muscles** (e.g., "Quads, Glutes")
+3. **Workout Objective** (e.g., "Hypertrophy")
+4. **Duration** (e.g., "Under 30 minutes")
+5. **Difficulty Level** (e.g., "Intermediate")
+
+This multi-dimensional filtering system ensures users can find the perfect workout for their current needs and goals.
+
 ## Conclusion
 
-The Workout Template model provides a flexible and powerful system for creating reusable workout blueprints. By defining clear structures for exercises, phases, and performance metrics through the `WorkoutTemplate`, `WorkoutTemplateExercise`, and `SetGroup` entities, we create a foundation that can accommodate diverse training styles and objectives.
+The enhanced Workout Template model now provides a comprehensive system for creating, categorizing, and discovering workout blueprints. By adding proper categorization through `WorkoutCategory` and `WorkoutMuscles` entities, alongside the existing structure of exercises, phases, and performance metrics, we create a user-friendly system that matches the mobile app's interface requirements.
 
-This template-based approach, combined with the proper integration of Exercises and ExerciseLinks, ensures that workout creation remains intuitive while supporting complex training methodologies. The model's flexibility in handling various execution protocols (Standard, AMRAP, EMOM, ForTime) and metric combinations makes it suitable for users ranging from beginners to advanced athletes.
+The model supports:
+- Intuitive workout discovery by muscle group or workout type
+- Detailed targeting information showing which muscles are engaged
+- Flexible filtering to find workouts matching specific criteria
+- Progressive unlocking of categories to gamify the user experience
+
+This categorization system, combined with the proper integration of Exercises and ExerciseLinks, ensures that users can easily find and select appropriate workouts while coaches and trainers can create well-organized workout libraries.
 
 For advanced training concepts like supersets and specialized set types, see the Advanced Training Concepts documentation. For multi-week programming and progressive overload, refer to the Training Programs documentation. To understand how these templates are used to track actual workout performance, see the Workout Logging documentation.
