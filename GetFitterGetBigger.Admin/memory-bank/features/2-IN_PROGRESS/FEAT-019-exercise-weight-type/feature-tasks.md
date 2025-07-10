@@ -98,7 +98,7 @@
 - Add state change notifications (OnChange event)
 - Follow patterns from EquipmentStateService and MuscleGroupsStateService
 
-### Task 2.2: Write comprehensive tests for state service `[InProgress: Started: 2025-07-11 00:08]` (Est: 1h 15m)
+### Task 2.2: Write comprehensive tests for state service `[Implemented: c7eb0bb1 | Started: 2025-07-11 00:08 | Finished: 2025-07-11 00:18 | Duration: 0h 10m]` (Est: 1h 15m)
 - Create ExerciseWeightTypeStateServiceTests.cs in Tests/Services
 - Test caching behavior and cache invalidation
 - Test state change notifications
@@ -107,7 +107,7 @@
 - Test validation logic for all weight type codes
 - Follow testing patterns from EquipmentStateServiceTests
 
-### Task 2.3: Integrate weight type service with dependency injection `[ReadyToDevelop]` (Est: 45m)
+### Task 2.3: Integrate weight type service with dependency injection `[InProgress: Started: 2025-07-11 00:18]` (Est: 45m)
 - Register IExerciseWeightTypeService and IExerciseWeightTypeStateService in Program.cs
 - Configure HttpClient for weight type service with proper lifetime
 - Add service configuration to match existing reference data services

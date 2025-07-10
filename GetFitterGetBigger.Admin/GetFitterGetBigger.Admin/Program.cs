@@ -98,6 +98,12 @@ builder.Services.AddScoped<GetFitterGetBigger.Admin.Services.IExerciseLinkStateS
 // Add ExerciseLinkValidationService
 builder.Services.AddScoped<GetFitterGetBigger.Admin.Services.IExerciseLinkValidationService, GetFitterGetBigger.Admin.Services.ExerciseLinkValidationService>();
 
+// Add HttpClient for ExerciseWeightTypeService
+builder.Services.AddHttpClient<GetFitterGetBigger.Admin.Services.IExerciseWeightTypeService, GetFitterGetBigger.Admin.Services.ExerciseWeightTypeService>();
+
+// Add ExerciseWeightTypeStateService
+builder.Services.AddScoped<GetFitterGetBigger.Admin.Services.IExerciseWeightTypeStateService, GetFitterGetBigger.Admin.Services.ExerciseWeightTypeStateService>();
+
 var app = builder.Build();
 
 // Clear all caches on startup to avoid cache collision issues
