@@ -215,6 +215,12 @@ public class FitnessDbContext : DbContext
                 id => id.HasValue ? (Guid?)id.Value : null,
                 guid => guid.HasValue ? KineticChainTypeId.From(guid.Value) : null);
                 
+        modelBuilder.Entity<Exercise>()
+            .Property(e => e.ExerciseWeightTypeId)
+            .HasConversion(
+                id => id.HasValue ? (Guid?)id.Value : null,
+                guid => guid.HasValue ? ExerciseWeightTypeId.From(guid.Value) : null);
+                
         // Configure Exercise entity constraints
         modelBuilder.Entity<Exercise>()
             .HasIndex(e => e.Name)
@@ -572,6 +578,13 @@ public class FitnessDbContext : DbContext
             .HasOne(e => e.KineticChain)
             .WithMany(kc => kc.Exercises)
             .HasForeignKey(e => e.KineticChainId)
+            .IsRequired(false);
+            
+        // ExerciseWeightType to Exercise (one-to-many)
+        modelBuilder.Entity<Exercise>()
+            .HasOne(e => e.ExerciseWeightType)
+            .WithMany(ewt => ewt.Exercises)
+            .HasForeignKey(e => e.ExerciseWeightTypeId)
             .IsRequired(false);
             
         // Exercise to CoachNote (one-to-many)

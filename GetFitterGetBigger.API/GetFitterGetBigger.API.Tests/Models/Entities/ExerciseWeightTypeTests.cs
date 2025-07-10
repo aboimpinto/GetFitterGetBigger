@@ -159,8 +159,8 @@ public class ExerciseWeightTypeTests
         var type1 = ExerciseWeightType.Handler.Create(id, code, value, description, order, isActive);
         var type2 = ExerciseWeightType.Handler.Create(id, code, value, description, order, isActive);
         
-        // Assert - Since ExerciseWeightType is a record without collections, 
-        // two instances with the same values should be equal
+        // Assert - ExerciseWeightType is a record with a collection property (Exercises),
+        // so two instances will not be equal even with the same values (collections are compared by reference)
         Assert.Equal(type1.Id, type2.Id);
         Assert.Equal(type1.Code, type2.Code);
         Assert.Equal(type1.Value, type2.Value);
@@ -168,9 +168,9 @@ public class ExerciseWeightTypeTests
         Assert.Equal(type1.DisplayOrder, type2.DisplayOrder);
         Assert.Equal(type1.IsActive, type2.IsActive);
         
-        // Records with same values are equal
-        Assert.Equal(type1, type2);
-        Assert.True(type1 == type2);
+        // Records with collections are not equal even with same property values
+        Assert.NotEqual(type1, type2);
+        Assert.False(type1 == type2);
     }
     
     [Fact]

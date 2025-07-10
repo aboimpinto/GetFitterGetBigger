@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using GetFitterGetBigger.API.Models.SpecializedIds;
 
 namespace GetFitterGetBigger.API.Models.Entities;
@@ -26,6 +27,9 @@ public record ExerciseWeightType : ReferenceDataBase
     /// </summary>
     /// <example>BODYWEIGHT_ONLY</example>
     public string Code { get; init; } = string.Empty;
+    
+    // Navigation properties
+    public ICollection<Exercise> Exercises { get; init; } = new List<Exercise>();
     
     private ExerciseWeightType() { }
     

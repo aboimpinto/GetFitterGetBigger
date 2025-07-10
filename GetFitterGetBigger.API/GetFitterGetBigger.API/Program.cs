@@ -12,6 +12,7 @@ using Swashbuckle.AspNetCore.SwaggerGen;
 using System.Reflection;
 using GetFitterGetBigger.API.Swagger;
 using GetFitterGetBigger.API.Configuration;
+using GetFitterGetBigger.API.Validators;
 using System.IO;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -81,6 +82,9 @@ builder.Services.AddTransient<IClaimService, ClaimService>();
 // Register authentication services
 builder.Services.AddTransient<IJwtService, JwtService>();
 builder.Services.AddTransient<IAuthService, AuthService>();
+
+// Register validation services
+builder.Services.AddTransient<IExerciseWeightValidator, ExerciseWeightValidator>();
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();

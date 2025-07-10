@@ -70,6 +70,12 @@ public class UpdateExerciseRequest
     public string? KineticChainId { get; set; }
     
     /// <summary>
+    /// The ID of the exercise weight type
+    /// Optional - defines how weight is handled for this exercise
+    /// </summary>
+    public string? ExerciseWeightTypeId { get; set; }
+    
+    /// <summary>
     /// The muscle groups targeted by the exercise with their roles
     /// Optional for REST exercises, required for all other exercise types
     /// Validation is handled at the service layer to access database for exercise type detection

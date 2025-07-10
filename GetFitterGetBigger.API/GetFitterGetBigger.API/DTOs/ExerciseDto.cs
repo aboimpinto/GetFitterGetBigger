@@ -64,6 +64,11 @@ public class ExerciseDto
     public ReferenceDataDto? KineticChain { get; set; }
     
     /// <summary>
+    /// The weight type of the exercise (Bodyweight Only, Weight Required, etc.)
+    /// </summary>
+    public ReferenceDataDto? ExerciseWeightType { get; set; }
+    
+    /// <summary>
     /// The muscle groups targeted by the exercise
     /// </summary>
     public List<MuscleGroupWithRoleDto> MuscleGroups { get; set; } = new();

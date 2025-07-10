@@ -183,6 +183,17 @@ public class ExerciseService : IExerciseService
             kineticChainId = parsedKineticChainId;
         }
         
+        // Parse ExerciseWeightTypeId if provided
+        ExerciseWeightTypeId? exerciseWeightTypeId = null;
+        if (!string.IsNullOrEmpty(request.ExerciseWeightTypeId))
+        {
+            if (!ExerciseWeightTypeId.TryParse(request.ExerciseWeightTypeId, out var parsedExerciseWeightTypeId))
+            {
+                throw new ArgumentException($"Invalid exercise weight type ID: {request.ExerciseWeightTypeId}");
+            }
+            exerciseWeightTypeId = parsedExerciseWeightTypeId;
+        }
+        
         // Validate exercise types, muscle groups, and kinetic chain
         await ValidateRestExclusivityAsync(request.ExerciseTypeIds);
         await ValidateMuscleGroupsAsync(request);
@@ -196,7 +207,8 @@ public class ExerciseService : IExerciseService
             request.ImageUrl,
             request.IsUnilateral,
             difficultyId,
-            kineticChainId);
+            kineticChainId,
+            exerciseWeightTypeId);
         
         // Add coach notes
         if (request.CoachNotes != null)
@@ -289,6 +301,17 @@ public class ExerciseService : IExerciseService
             kineticChainId = parsedKineticChainId;
         }
         
+        // Parse ExerciseWeightTypeId if provided
+        ExerciseWeightTypeId? exerciseWeightTypeId = null;
+        if (!string.IsNullOrEmpty(request.ExerciseWeightTypeId))
+        {
+            if (!ExerciseWeightTypeId.TryParse(request.ExerciseWeightTypeId, out var parsedExerciseWeightTypeId))
+            {
+                throw new ArgumentException($"Invalid exercise weight type ID: {request.ExerciseWeightTypeId}");
+            }
+            exerciseWeightTypeId = parsedExerciseWeightTypeId;
+        }
+        
         // Validate exercise types, muscle groups, and kinetic chain
         await ValidateRestExclusivityAsync(request.ExerciseTypeIds);
         await ValidateMuscleGroupsAsync(request);
@@ -304,7 +327,8 @@ public class ExerciseService : IExerciseService
             request.IsUnilateral ?? existingExercise.IsUnilateral,
             request.IsActive ?? existingExercise.IsActive,
             difficultyId,
-            kineticChainId);
+            kineticChainId,
+            exerciseWeightTypeId);
         
         // Synchronize coach notes
         if (request.CoachNotes != null)
@@ -555,6 +579,12 @@ public class ExerciseService : IExerciseService
                 Id = exercise.KineticChain.Id.ToString(),
                 Value = exercise.KineticChain.Value,
                 Description = exercise.KineticChain.Description
+            } : null,
+            ExerciseWeightType = exercise.ExerciseWeightType != null ? new ReferenceDataDto
+            {
+                Id = exercise.ExerciseWeightType.Id.ToString(),
+                Value = exercise.ExerciseWeightType.Value,
+                Description = exercise.ExerciseWeightType.Description
             } : null
         };
         

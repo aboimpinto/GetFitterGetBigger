@@ -15,10 +15,12 @@ public record Exercise
     public bool IsActive { get; init; } = true;
     public DifficultyLevelId DifficultyId { get; init; }
     public KineticChainTypeId? KineticChainId { get; init; }
+    public ExerciseWeightTypeId? ExerciseWeightTypeId { get; init; }
     
     // Navigation properties
     public DifficultyLevel? Difficulty { get; init; }
     public KineticChainType? KineticChain { get; init; }
+    public ExerciseWeightType? ExerciseWeightType { get; init; }
     public ICollection<CoachNote> CoachNotes { get; init; } = new List<CoachNote>();
     public ICollection<ExerciseExerciseType> ExerciseExerciseTypes { get; init; } = new List<ExerciseExerciseType>();
     
@@ -40,7 +42,8 @@ public record Exercise
             string? imageUrl,
             bool isUnilateral,
             DifficultyLevelId difficultyId,
-            KineticChainTypeId? kineticChainId = null)
+            KineticChainTypeId? kineticChainId = null,
+            ExerciseWeightTypeId? exerciseWeightTypeId = null)
         {
             // Validation logic
             if (string.IsNullOrWhiteSpace(name))
@@ -84,7 +87,8 @@ public record Exercise
                 IsUnilateral = isUnilateral,
                 IsActive = true,
                 DifficultyId = difficultyId,
-                KineticChainId = kineticChainId
+                KineticChainId = kineticChainId,
+                ExerciseWeightTypeId = exerciseWeightTypeId
             };
         }
         
@@ -97,7 +101,8 @@ public record Exercise
             bool isUnilateral,
             bool isActive,
             DifficultyLevelId difficultyId,
-            KineticChainTypeId? kineticChainId = null)
+            KineticChainTypeId? kineticChainId = null,
+            ExerciseWeightTypeId? exerciseWeightTypeId = null)
         {
             return new Exercise
             {
@@ -109,7 +114,8 @@ public record Exercise
                 IsUnilateral = isUnilateral,
                 IsActive = isActive,
                 DifficultyId = difficultyId,
-                KineticChainId = kineticChainId
+                KineticChainId = kineticChainId,
+                ExerciseWeightTypeId = exerciseWeightTypeId
             };
         }
     }

@@ -223,6 +223,9 @@ namespace GetFitterGetBigger.API.Migrations
                     b.Property<Guid>("DifficultyId")
                         .HasColumnType("uuid");
 
+                    b.Property<Guid?>("ExerciseWeightTypeId")
+                        .HasColumnType("uuid");
+
                     b.Property<string>("ImageUrl")
                         .HasColumnType("text");
 
@@ -246,6 +249,8 @@ namespace GetFitterGetBigger.API.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("DifficultyId");
+
+                    b.HasIndex("ExerciseWeightTypeId");
 
                     b.HasIndex("KineticChainId");
 
@@ -813,11 +818,17 @@ namespace GetFitterGetBigger.API.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("GetFitterGetBigger.API.Models.Entities.ExerciseWeightType", "ExerciseWeightType")
+                        .WithMany("Exercises")
+                        .HasForeignKey("ExerciseWeightTypeId");
+
                     b.HasOne("GetFitterGetBigger.API.Models.Entities.KineticChainType", "KineticChain")
                         .WithMany("Exercises")
                         .HasForeignKey("KineticChainId");
 
                     b.Navigation("Difficulty");
+
+                    b.Navigation("ExerciseWeightType");
 
                     b.Navigation("KineticChain");
                 });
@@ -1054,6 +1065,11 @@ namespace GetFitterGetBigger.API.Migrations
                     b.Navigation("ExerciseMovementPatterns");
 
                     b.Navigation("ExerciseMuscleGroups");
+                });
+
+            modelBuilder.Entity("GetFitterGetBigger.API.Models.Entities.ExerciseWeightType", b =>
+                {
+                    b.Navigation("Exercises");
                 });
 
             modelBuilder.Entity("GetFitterGetBigger.API.Models.Entities.KineticChainType", b =>
