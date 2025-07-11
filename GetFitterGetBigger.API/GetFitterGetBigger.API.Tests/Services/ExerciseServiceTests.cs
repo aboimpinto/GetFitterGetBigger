@@ -238,28 +238,24 @@ namespace GetFitterGetBigger.API.Tests.Services
             var difficulty = DifficultyLevel.Handler.Create(difficultyId, "Beginner", "For beginners", 1, true);
             
             // Create existing exercise with the same ID we're updating
-            var existingExercise = Exercise.Handler.Create(
-                exerciseId,
-                "Original Exercise",
-                "Original Description",
-                null,  // videoUrl
-                null,  // imageUrl
-                false, // isUnilateral
-                false, // isActive
-                difficultyId);
+            var existingExercise = ExerciseBuilder.AWorkoutExercise()
+                .WithId(exerciseId)
+                .WithName("Original Exercise")
+                .WithDescription("Original Description")
+                .WithDifficultyId(difficultyId)
+                .AsInactive()
+                .Build();
             
             // Set up the navigation property
             var existingExerciseWithDifficulty = existingExercise with { Difficulty = difficulty };
             
-            var updatedExercise = Exercise.Handler.Create(
-                exerciseId,
-                "Updated Exercise",
-                "Updated Description",
-                null,  // videoUrl
-                null,  // imageUrl
-                false, // isUnilateral
-                true,  // isActive
-                difficultyId);
+            var updatedExercise = ExerciseBuilder.AWorkoutExercise()
+                .WithId(exerciseId)
+                .WithName("Updated Exercise")
+                .WithDescription("Updated Description")
+                .WithDifficultyId(difficultyId)
+                .AsActive()
+                .Build();
                 
             var updatedExerciseWithDifficulty = updatedExercise with { Difficulty = difficulty };
 

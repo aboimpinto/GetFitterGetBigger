@@ -278,18 +278,14 @@ public class ExerciseServiceWeightTypeTests
             true
         );
         
-        var exercise = Exercise.Handler.Create(
-            exerciseId,
-            "Lat Pulldown",
-            "Back exercise on machine",
-            null,
-            null,
-            false,
-            true,
-            difficulty.Id,
-            KineticChainTypeId.From(Guid.Parse("f5d5a2de-9c4e-4b87-b8c3-5d1e17d0b1f4")),
-            exerciseWeightType.Id
-        );
+        var exercise = ExerciseBuilder.AWorkoutExercise()
+            .WithId(exerciseId)
+            .WithName("Lat Pulldown")
+            .WithDescription("Back exercise on machine")
+            .WithDifficultyId(difficulty.Id)
+            .WithKineticChainId(KineticChainTypeId.From(Guid.Parse("f5d5a2de-9c4e-4b87-b8c3-5d1e17d0b1f4")))
+            .WithExerciseWeightTypeId(exerciseWeightType.Id)
+            .Build();
         
         // Set the navigation properties using reflection
         var exerciseType = exercise.GetType();

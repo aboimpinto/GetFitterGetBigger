@@ -6,6 +6,7 @@ using GetFitterGetBigger.API.Models;
 using GetFitterGetBigger.API.Models.Entities;
 using GetFitterGetBigger.API.Models.SpecializedIds;
 using GetFitterGetBigger.API.Repositories.Implementations;
+using GetFitterGetBigger.API.Tests.TestBuilders.Domain;
 using Microsoft.EntityFrameworkCore;
 using Xunit;
 
@@ -65,12 +66,21 @@ namespace GetFitterGetBigger.API.Tests.Repositories
         {
             // Arrange
             var difficultyId = _context.DifficultyLevels.First().Id;
-            var exercise1 = Exercise.Handler.CreateNew(
-                "Push-up", "Basic push-up", null, null, false, difficultyId);
-            var exercise2 = Exercise.Handler.CreateNew(
-                "Pull-up", "Basic pull-up", null, null, false, difficultyId);
-            var inactiveExercise = Exercise.Handler.Create(
-                ExerciseId.New(), "Inactive", "Inactive exercise", null, null, false, false, difficultyId);
+            var exercise1 = ExerciseBuilder.AWorkoutExercise()
+                .WithName("Push-up")
+                .WithDescription("Basic push-up")
+                .WithDifficultyId(difficultyId)
+                .Build();
+            var exercise2 = ExerciseBuilder.AWorkoutExercise()
+                .WithName("Pull-up")
+                .WithDescription("Basic pull-up")
+                .WithDifficultyId(difficultyId)
+                .Build();
+            var inactiveExercise = ExerciseBuilder.AnInactiveExercise()
+                .WithName("Inactive")
+                .WithDescription("Inactive exercise")
+                .WithDifficultyId(difficultyId)
+                .Build();
             
             _context.Exercises.AddRange(exercise1, exercise2, inactiveExercise);
             await _context.SaveChangesAsync();
@@ -97,10 +107,16 @@ namespace GetFitterGetBigger.API.Tests.Repositories
         {
             // Arrange
             var difficultyId = _context.DifficultyLevels.First().Id;
-            var activeExercise = Exercise.Handler.CreateNew(
-                "Active Exercise", "Active description", null, null, false, difficultyId);
-            var inactiveExercise = Exercise.Handler.Create(
-                ExerciseId.New(), "Inactive Exercise", "Inactive description", null, null, false, false, difficultyId);
+            var activeExercise = ExerciseBuilder.AWorkoutExercise()
+                .WithName("Active Exercise")
+                .WithDescription("Active description")
+                .WithDifficultyId(difficultyId)
+                .Build();
+            var inactiveExercise = ExerciseBuilder.AnInactiveExercise()
+                .WithName("Inactive Exercise")
+                .WithDescription("Inactive description")
+                .WithDifficultyId(difficultyId)
+                .Build();
             
             _context.Exercises.AddRange(activeExercise, inactiveExercise);
             await _context.SaveChangesAsync();
