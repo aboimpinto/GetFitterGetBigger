@@ -110,7 +110,8 @@ public class ExercisesController : ControllerBase
     ///         ],
     ///         "equipmentIds": ["equipment-33445566-7788-99aa-bbcc-ddeeff001122"],
     ///         "bodyPartIds": ["bodypart-7c5a2d6e-e87e-4c8a-9f1d-9eb734f3df3c"],
-    ///         "movementPatternIds": ["movementpattern-99aabbcc-ddee-ff00-1122-334455667788"]
+    ///         "movementPatternIds": ["movementpattern-99aabbcc-ddee-ff00-1122-334455667788"],
+    ///         "exerciseWeightTypeId": "exerciseweighttype-12345678-9abc-def0-1234-567890abcdef"
     ///     }
     /// 
     /// Notes:
@@ -119,6 +120,7 @@ public class ExercisesController : ControllerBase
     /// - ExerciseTypeIds specify the types (Warmup, Workout, Cooldown, Rest)
     /// - If "Rest" type is included, it must be the only type (business rule)
     /// - KineticChainId is required for non-REST exercises and must be null for REST exercises
+    /// - ExerciseWeightTypeId is required for non-REST exercises and must be null for REST exercises
     /// </remarks>
     /// <param name="request">The exercise creation request</param>
     /// <returns>The created exercise with its generated ID</returns>
@@ -187,7 +189,8 @@ public class ExercisesController : ControllerBase
     ///         ],
     ///         "equipmentIds": ["equipment-33445566-7788-99aa-bbcc-ddeeff001122"],
     ///         "bodyPartIds": ["bodypart-7c5a2d6e-e87e-4c8a-9f1d-9eb734f3df3c"],
-    ///         "movementPatternIds": ["movementpattern-99aabbcc-ddee-ff00-1122-334455667788"]
+    ///         "movementPatternIds": ["movementpattern-99aabbcc-ddee-ff00-1122-334455667788"],
+    ///         "exerciseWeightTypeId": "exerciseweighttype-12345678-9abc-def0-1234-567890abcdef"
     ///     }
     /// 
     /// Notes:
@@ -197,6 +200,7 @@ public class ExercisesController : ControllerBase
     /// - ExerciseTypeIds completely replace the existing types
     /// - If "Rest" type is included, it must be the only type (business rule)
     /// - KineticChainId is required for non-REST exercises and must be null for REST exercises
+    /// - ExerciseWeightTypeId is required for non-REST exercises and must be null for REST exercises
     /// </remarks>
     /// <param name="id">The ID of the exercise to update (from URL path)</param>
     /// <param name="request">The exercise update request containing all fields to update</param>

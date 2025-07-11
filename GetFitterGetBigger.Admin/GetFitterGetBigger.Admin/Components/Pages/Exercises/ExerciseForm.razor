@@ -189,11 +189,9 @@
                     </div>
 
                     <div class="mt-6">
-                        <label class="block text-sm font-medium text-gray-700 mb-1">
-                            Weight Type @if (!IsRestTypeSelected && string.IsNullOrWhiteSpace(model.WeightTypeId)) { <span class="text-red-500">*</span> }
-                        </label>
                         <ExerciseWeightTypeSelector 
-                            @bind-Value="model.WeightTypeId"
+                            @bind-Value="model.ExerciseWeightTypeId"
+                            @bind-Value:after="OnWeightTypeChanged"
                             Required="@(!IsRestTypeSelected)"
                             Disabled="@IsRestTypeSelected"
                             ValidationMessage="@(validationErrors.ContainsKey("WeightType") ? validationErrors["WeightType"] : "")"
@@ -343,6 +341,11 @@
         set
         {
             model.DifficultyId = value ?? string.Empty;
+            // Clear validation error when difficulty is selected
+            if (!string.IsNullOrWhiteSpace(value) && validationErrors.ContainsKey("Difficulty"))
+            {
+                validationErrors.Remove("Difficulty");
+            }
             StateHasChanged();
         }
     }
@@ -353,6 +356,11 @@
         set
         {
             model.KineticChainId = value;
+            // Clear validation error when kinetic chain is selected
+            if (!string.IsNullOrWhiteSpace(value) && validationErrors.ContainsKey("KineticChain"))
+            {
+                validationErrors.Remove("KineticChain");
+            }
             StateHasChanged();
         }
     }
@@ -442,6 +450,9 @@
             
             // Map to edit model using builder
             model = ExerciseCreateDtoBuilder.FromExerciseDto(exercise);
+            
+            Console.WriteLine($"[ExerciseForm] After mapping from ExerciseDto:");
+            Console.WriteLine($"  - model.ExerciseWeightTypeId: {model.ExerciseWeightTypeId ?? "null"}");
 
             // Check if this is a REST type exercise
             if (IsRestTypeSelected)
@@ -584,7 +595,7 @@
         if (IsRestTypeSelected)
         {
             // REST exercises must have null weight type
-            if (!string.IsNullOrWhiteSpace(model.WeightTypeId))
+            if (!string.IsNullOrWhiteSpace(model.ExerciseWeightTypeId))
             {
                 validationErrors["WeightType"] = "REST exercises cannot have a weight type";
             }
@@ -592,7 +603,7 @@
         else
         {
             // Non-REST exercises require weight type
-            if (string.IsNullOrWhiteSpace(model.WeightTypeId))
+            if (string.IsNullOrWhiteSpace(model.ExerciseWeightTypeId))
             {
                 validationErrors["WeightType"] = "Weight type is required for non-REST exercises";
             }
@@ -704,6 +715,16 @@
     private string GetFieldClass(string fieldName)
     {
         return validationErrors.ContainsKey(fieldName) ? "border-red-500" : "";
+    }
+    
+    private void OnWeightTypeChanged()
+    {
+        // Clear the validation error when weight type is selected
+        if (validationErrors.ContainsKey("WeightType"))
+        {
+            validationErrors.Remove("WeightType");
+            StateHasChanged();
+        }
     }
     
     private void OnExerciseTypesChanged(List<string> typeIds)

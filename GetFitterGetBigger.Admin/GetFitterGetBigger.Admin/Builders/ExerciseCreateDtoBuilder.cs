@@ -215,7 +215,7 @@ namespace GetFitterGetBigger.Admin.Builders
                 ExerciseTypeIds = _exerciseTypeIds,
                 DifficultyId = _difficultyId,
                 KineticChainId = _kineticChainId,
-                WeightTypeId = _weightTypeId,
+                ExerciseWeightTypeId = _weightTypeId,
                 DefaultWeight = _defaultWeight,
                 IsUnilateral = _isUnilateral,
                 IsActive = _isActive,
@@ -234,13 +234,31 @@ namespace GetFitterGetBigger.Admin.Builders
         /// </summary>
         public static ExerciseCreateDto FromExerciseDto(ExerciseDto exercise)
         {
+            Console.WriteLine($"[ExerciseCreateDtoBuilder] FromExerciseDto called for exercise: {exercise.Name}");
+            
+            string? weightTypeId = null;
+            if (exercise.WeightType != null)
+            {
+                // Convert the GUID to specialized ID format
+                weightTypeId = $"exerciseweighttype-{exercise.WeightType.Id}";
+                Console.WriteLine($"[ExerciseCreateDtoBuilder] Mapping WeightType:");
+                Console.WriteLine($"  - Original WeightType.Id: {exercise.WeightType.Id}");
+                Console.WriteLine($"  - Original WeightType.Name: {exercise.WeightType.Name}");
+                Console.WriteLine($"  - Original WeightType.Description: {exercise.WeightType.Description}");
+                Console.WriteLine($"  - Mapped to weightTypeId: {weightTypeId}");
+            }
+            else
+            {
+                Console.WriteLine($"[ExerciseCreateDtoBuilder] No WeightType to map");
+            }
+            
             return new ExerciseCreateDtoBuilder()
                 .WithName(exercise.Name)
                 .WithDescription(exercise.Description)
                 .WithInstructions(exercise.Instructions)
                 .WithDifficultyId(exercise.Difficulty?.Id ?? string.Empty)
                 .WithKineticChainId(exercise.KineticChain?.Id)
-                .WithWeightTypeId(exercise.WeightType?.Id.ToString())
+                .WithWeightTypeId(weightTypeId)
                 .WithDefaultWeight(exercise.DefaultWeight)
                 .WithIsUnilateral(exercise.IsUnilateral)
                 .WithIsActive(exercise.IsActive)

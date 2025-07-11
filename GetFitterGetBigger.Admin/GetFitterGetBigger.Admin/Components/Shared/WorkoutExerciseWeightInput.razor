@@ -189,7 +189,8 @@
 
     private string GetHelpMessage(ExerciseWeightTypeDto weightType)
     {
-        return weightType.Code switch
+        var code = weightType.Code;
+        return code switch
         {
             "BODYWEIGHT_OPTIONAL" => "Add extra weight to bodyweight exercise",
             "WEIGHT_REQUIRED" => "Enter the weight you'll be lifting",
@@ -210,7 +211,8 @@
 
     private string? GetContextualHelpMessage(ExerciseWeightTypeDto weightType)
     {
-        return weightType.Code switch
+        var code = weightType.Code;
+        return code switch
         {
             "BODYWEIGHT_OPTIONAL" => "This exercise can be performed with just bodyweight or with additional weight for increased difficulty.",
             "WEIGHT_REQUIRED" => "This exercise requires external weight (dumbbells, barbells, etc.) to be performed effectively.",

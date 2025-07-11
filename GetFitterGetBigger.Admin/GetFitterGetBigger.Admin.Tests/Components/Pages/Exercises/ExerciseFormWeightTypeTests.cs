@@ -236,7 +236,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
                     System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
                 if (modelField?.GetValue(formInstance) is ExerciseCreateDto model)
                 {
-                    model.WeightTypeId = _mockWeightTypes[0].Id.ToString(); // Set a weight type
+                    model.ExerciseWeightTypeId = _mockWeightTypes[0].Id.ToString(); // Set a weight type
                 }
             });
 
@@ -296,7 +296,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
                     System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
                 if (modelField?.GetValue(formInstance) is ExerciseCreateDto model)
                 {
-                    model.WeightTypeId = _mockWeightTypes[3].Id.ToString(); // Weight Required
+                    model.ExerciseWeightTypeId = _mockWeightTypes[3].Id.ToString(); // Weight Required
                     model.KineticChainId = "kc1"; // Add required kinetic chain
                 }
             });
@@ -323,7 +323,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
 
             // Assert - Submitted model should include weight type
             submittedModel.Should().NotBeNull("Form should submit successfully");
-            submittedModel!.WeightTypeId.Should().Be(_mockWeightTypes[3].Id.ToString(), "Submitted model should include selected weight type");
+            submittedModel!.ExerciseWeightTypeId.Should().Be(_mockWeightTypes[3].Id.ToString(), "Submitted model should include selected weight type");
         }
 
         [Fact]
@@ -364,7 +364,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
                 submittedModel.Should().NotBeNull("REST exercises should submit successfully without weight type");
                 if (submittedModel != null)
                 {
-                    submittedModel.WeightTypeId.Should().BeNullOrEmpty(
+                    submittedModel.ExerciseWeightTypeId.Should().BeNullOrEmpty(
                         "Weight type should be null/empty for REST exercise types");
                 }
             }

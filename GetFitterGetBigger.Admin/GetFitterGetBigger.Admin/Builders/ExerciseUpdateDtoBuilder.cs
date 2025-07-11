@@ -10,11 +10,11 @@ namespace GetFitterGetBigger.Admin.Builders
     {
         private string _name = string.Empty;
         private string _description = string.Empty;
-        private string _instructions = string.Empty;
         private List<CoachNoteCreateDto> _coachNotes = new();
         private List<string> _exerciseTypeIds = new();
         private string _difficultyId = string.Empty;
         private string? _kineticChainId = null;
+        private string? _weightTypeId = null;
         private bool _isUnilateral = false;
         private bool _isActive = true;
         private string? _imageUrl = null;
@@ -36,11 +36,6 @@ namespace GetFitterGetBigger.Admin.Builders
             return this;
         }
 
-        public ExerciseUpdateDtoBuilder WithInstructions(string instructions)
-        {
-            _instructions = instructions;
-            return this;
-        }
 
         public ExerciseUpdateDtoBuilder WithCoachNotes(params (string text, int order)[] notes)
         {
@@ -95,6 +90,12 @@ namespace GetFitterGetBigger.Admin.Builders
         public ExerciseUpdateDtoBuilder WithKineticChainId(string? kineticChainId)
         {
             _kineticChainId = kineticChainId;
+            return this;
+        }
+
+        public ExerciseUpdateDtoBuilder WithWeightTypeId(string? weightTypeId)
+        {
+            _weightTypeId = weightTypeId;
             return this;
         }
 
@@ -190,11 +191,11 @@ namespace GetFitterGetBigger.Admin.Builders
             {
                 Name = _name,
                 Description = _description,
-                Instructions = _instructions,
                 CoachNotes = _coachNotes,
                 ExerciseTypeIds = _exerciseTypeIds,
                 DifficultyId = _difficultyId,
                 KineticChainId = _kineticChainId,
+                ExerciseWeightTypeId = _weightTypeId,
                 IsUnilateral = _isUnilateral,
                 IsActive = _isActive,
                 ImageUrl = _imageUrl,
@@ -215,9 +216,9 @@ namespace GetFitterGetBigger.Admin.Builders
             return new ExerciseUpdateDtoBuilder()
                 .WithName(createDto.Name)
                 .WithDescription(createDto.Description)
-                .WithInstructions(createDto.Instructions)
                 .WithDifficultyId(createDto.DifficultyId)
                 .WithKineticChainId(createDto.KineticChainId)
+                .WithWeightTypeId(createDto.ExerciseWeightTypeId)
                 .WithIsUnilateral(createDto.IsUnilateral)
                 .WithIsActive(createDto.IsActive)
                 .WithImageUrl(createDto.ImageUrl)
@@ -240,9 +241,9 @@ namespace GetFitterGetBigger.Admin.Builders
             var builder = new ExerciseUpdateDtoBuilder()
                 .WithName(exercise.Name)
                 .WithDescription(exercise.Description)
-                .WithInstructions(exercise.Instructions)
                 .WithDifficultyId(exercise.Difficulty?.Id ?? string.Empty)
                 .WithKineticChainId(exercise.KineticChain?.Id)
+                .WithWeightTypeId(exercise.WeightType != null ? $"exerciseweighttype-{exercise.WeightType.Id}" : null)
                 .WithIsUnilateral(exercise.IsUnilateral)
                 .WithIsActive(exercise.IsActive)
                 .WithImageUrl(exercise.ImageUrl)
@@ -253,6 +254,7 @@ namespace GetFitterGetBigger.Admin.Builders
             {
                 builder.WithCoachNotes(exercise.CoachNotes.Select(cn => new CoachNoteCreateDto
                 {
+                    Id = cn.Id,
                     Text = cn.Text,
                     Order = cn.Order
                 }).ToList());

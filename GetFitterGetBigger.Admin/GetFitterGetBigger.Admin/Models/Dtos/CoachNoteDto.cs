@@ -9,6 +9,7 @@ namespace GetFitterGetBigger.Admin.Models.Dtos
 
     public class CoachNoteCreateDto
     {
+        public string? Id { get; set; }
         public string Text { get; set; } = string.Empty;
         public int Order { get; set; }
     }

@@ -1,3 +1,6 @@
+using System.Text.Json.Serialization;
+using GetFitterGetBigger.Admin.JsonConverters;
+
 namespace GetFitterGetBigger.Admin.Models.Dtos
 {
     public class ExerciseDto
@@ -10,7 +13,11 @@ namespace GetFitterGetBigger.Admin.Models.Dtos
         public List<ExerciseTypeDto> ExerciseTypes { get; set; } = new();
         public ReferenceDataDto? Difficulty { get; set; }
         public ReferenceDataDto? KineticChain { get; set; }
+        
+        [JsonPropertyName("exerciseWeightType")]
+        [JsonConverter(typeof(ExerciseWeightTypeJsonConverter))]
         public ExerciseWeightTypeDto? WeightType { get; set; }
+        
         public decimal? DefaultWeight { get; set; }
         public bool IsUnilateral { get; set; }
         public bool IsActive { get; set; }
@@ -42,7 +49,7 @@ namespace GetFitterGetBigger.Admin.Models.Dtos
         public List<string> ExerciseTypeIds { get; set; } = new();
         public string DifficultyId { get; set; } = string.Empty;
         public string? KineticChainId { get; set; }
-        public string? WeightTypeId { get; set; }
+        public string? ExerciseWeightTypeId { get; set; }
         public decimal? DefaultWeight { get; set; }
         public bool IsUnilateral { get; set; }
         public bool IsActive { get; set; } = true;
@@ -54,8 +61,23 @@ namespace GetFitterGetBigger.Admin.Models.Dtos
         public List<string> MovementPatternIds { get; set; } = new();
     }
 
-    public class ExerciseUpdateDto : ExerciseCreateDto
+    public class ExerciseUpdateDto
     {
+        public string Name { get; set; } = string.Empty;
+        public string Description { get; set; } = string.Empty;
+        public List<CoachNoteCreateDto> CoachNotes { get; set; } = new();
+        public List<string> ExerciseTypeIds { get; set; } = new();
+        public string DifficultyId { get; set; } = string.Empty;
+        public string? KineticChainId { get; set; }
+        public string? ExerciseWeightTypeId { get; set; }
+        public bool IsUnilateral { get; set; }
+        public bool IsActive { get; set; } = true;
+        public string? ImageUrl { get; set; }
+        public string? VideoUrl { get; set; }
+        public List<MuscleGroupApiDto> MuscleGroups { get; set; } = new();
+        public List<string> EquipmentIds { get; set; } = new();
+        public List<string> BodyPartIds { get; set; } = new();
+        public List<string> MovementPatternIds { get; set; } = new();
     }
 
     public class MuscleGroupApiDto
@@ -84,6 +106,9 @@ namespace GetFitterGetBigger.Admin.Models.Dtos
         public bool IsActive { get; set; }
         public ReferenceDataDto? Difficulty { get; set; }
         public ReferenceDataDto? KineticChain { get; set; }
+        
+        [JsonPropertyName("exerciseWeightType")]
+        [JsonConverter(typeof(ExerciseWeightTypeJsonConverter))]
         public ExerciseWeightTypeDto? WeightType { get; set; }
         public List<MuscleGroupListItemDto> MuscleGroups { get; set; } = new();
         public List<ReferenceDataDto> Equipment { get; set; } = new();

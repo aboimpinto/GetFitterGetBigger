@@ -63,17 +63,52 @@ namespace GetFitterGetBigger.Admin.Services
 
                 response.EnsureSuccessStatusCode();
 
-                var result = await response.Content.ReadFromJsonAsync<ExercisePagedResultDto>(_jsonOptions);
+                // First read as string to log the raw response
+                var json = await response.Content.ReadAsStringAsync();
+                
+                // Log the first exercise to check if WeightType is included
+                try
+                {
+                    var jsonDoc = JsonDocument.Parse(json);
+                    if (jsonDoc.RootElement.TryGetProperty("items", out var items) && items.GetArrayLength() > 0)
+                    {
+                        var firstItem = items[0];
+                        Console.WriteLine($"[ExerciseService] First exercise raw JSON check:");
+                        Console.WriteLine($"  - Name: {(firstItem.TryGetProperty("name", out var name) ? name.GetString() : "N/A")}");
+                        Console.WriteLine($"  - Has exerciseWeightType field: {firstItem.TryGetProperty("exerciseWeightType", out var ewt)}");
+                        Console.WriteLine($"  - Has weightType field: {firstItem.TryGetProperty("weightType", out var wt)}");
+                        
+                        if (firstItem.TryGetProperty("exerciseWeightType", out var weightType))
+                        {
+                            Console.WriteLine($"  - exerciseWeightType value: {weightType}");
+                        }
+                        if (firstItem.TryGetProperty("weightType", out var weightType2))
+                        {
+                            Console.WriteLine($"  - weightType value: {weightType2}");
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"[ExerciseService] Error parsing response for logging: {ex.Message}");
+                }
+
+                var result = JsonSerializer.Deserialize<ExercisePagedResultDto>(json, _jsonOptions);
 
                 Console.WriteLine($"[ExerciseService] GetExercisesAsync - Response Items Count: {result?.Items?.Count ?? 0}");
 
                 if (result?.Items?.Any() == true)
                 {
-                    Console.WriteLine($"[ExerciseService] GetExercisesAsync - First 3 exercises:");
+                    Console.WriteLine($"[ExerciseService] GetExercisesAsync - First 3 exercises with WeightType:");
                     foreach (var exercise in result.Items.Take(3))
                     {
                         var types = exercise.ExerciseTypes?.Select(t => $"{t.Value} (ID: {t.Id})") ?? new[] { "No types" };
-                        Console.WriteLine($"  - {exercise.Name} (ID: {exercise.Id}) - Types: {string.Join(", ", types)}");
+                        var weightTypeInfo = exercise.WeightType != null 
+                            ? $"{exercise.WeightType.Name} (ID: {exercise.WeightType.Id}, Code: {exercise.WeightType.Code})" 
+                            : "null";
+                        Console.WriteLine($"  - {exercise.Name} (ID: {exercise.Id})");
+                        Console.WriteLine($"    Types: {string.Join(", ", types)}");
+                        Console.WriteLine($"    WeightType: {weightTypeInfo}");
                     }
                 }
 
@@ -101,9 +136,33 @@ namespace GetFitterGetBigger.Admin.Services
 
                 if (response.IsSuccessStatusCode)
                 {
+                    // First, get the raw JSON to see what we're receiving
+                    var jsonContent = await response.Content.ReadAsStringAsync();
+                    Console.WriteLine($"[ExerciseService] Raw JSON response from API:");
+                    Console.WriteLine(jsonContent);
+                    
+                    // Then deserialize
                     exercise = await response.Content.ReadFromJsonAsync<ExerciseDto>(_jsonOptions);
                     if (exercise != null)
                     {
+                        Console.WriteLine($"[ExerciseService] Loaded exercise '{exercise.Name}' with ID: {exercise.Id}");
+                        
+                        // Serialize the deserialized object back to JSON to see what we have
+                        var deserializedJson = JsonSerializer.Serialize(exercise, _jsonOptions);
+                        Console.WriteLine($"[ExerciseService] Deserialized ExerciseDto as JSON:");
+                        Console.WriteLine(deserializedJson);
+                        
+                        if (exercise.WeightType != null)
+                        {
+                            Console.WriteLine($"[ExerciseService] Exercise has WeightType:");
+                            Console.WriteLine($"  - WeightType.Id: {exercise.WeightType.Id}");
+                            Console.WriteLine($"  - WeightType.Name: {exercise.WeightType.Name}");
+                            Console.WriteLine($"  - WeightType.Description: {exercise.WeightType.Description}");
+                        }
+                        else
+                        {
+                            Console.WriteLine($"[ExerciseService] Exercise has no WeightType");
+                        }
                         _cache.Set(cacheKey, exercise, TimeSpan.FromMinutes(5));
                     }
                 }

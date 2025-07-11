@@ -6,7 +6,7 @@
 <div class="space-y-2">
     <label class="block text-sm font-medium text-gray-700">
         Weight Type
-        @if (Required && !Disabled)
+        @if (Required && !Disabled && string.IsNullOrWhiteSpace(Value))
         {
             <span class="text-red-500">*</span>
         }
@@ -44,7 +44,7 @@
             }
             @foreach (var weightType in WeightTypeStateService.WeightTypes)
             {
-                <option value="@weightType.Id" title="@weightType.Description">
+                <option value="@($"exerciseweighttype-{weightType.Id}")" title="@weightType.Description">
                     @weightType.Name
                 </option>
             }
@@ -52,7 +52,7 @@
 
         @if (!string.IsNullOrEmpty(Value))
         {
-            var selectedType = WeightTypeStateService.WeightTypes.FirstOrDefault(wt => wt.Id.ToString() == Value);
+            var selectedType = WeightTypeStateService.WeightTypes.FirstOrDefault(wt => $"exerciseweighttype-{wt.Id}" == Value || wt.Id.ToString() == Value);
             if (selectedType != null)
             {
                 <div class="mt-2 p-3 bg-gray-50 border border-gray-200 rounded-md">
@@ -90,16 +90,22 @@
 
     protected override async Task OnInitializedAsync()
     {
+        Console.WriteLine($"[ExerciseWeightTypeSelector] OnInitializedAsync - Value: {Value ?? "null"}");
+        
         WeightTypeStateService.OnChange += StateHasChanged;
         
         if (!WeightTypeStateService.WeightTypes.Any())
         {
             await WeightTypeStateService.LoadWeightTypesAsync();
         }
+        
+        LogWeightTypeSelection();
     }
 
     private async Task HandleValueChanged()
     {
+        Console.WriteLine($"[ExerciseWeightTypeSelector] HandleValueChanged - New Value: {Value ?? "null"}");
+        LogWeightTypeSelection();
         await ValueChanged.InvokeAsync(Value);
     }
 
@@ -114,7 +120,7 @@
         if (string.IsNullOrEmpty(Value))
             return "Select a weight type for this exercise";
 
-        var selectedType = WeightTypeStateService.WeightTypes.FirstOrDefault(wt => wt.Id.ToString() == Value);
+        var selectedType = WeightTypeStateService.WeightTypes.FirstOrDefault(wt => $"exerciseweighttype-{wt.Id}" == Value || wt.Id.ToString() == Value);
         return selectedType?.Description ?? "Select a weight type for this exercise";
     }
 
@@ -129,6 +135,40 @@
             "MACHINE_WEIGHT" => ("🎯", "text-purple-600"),
             _ => ("❓", "text-gray-600")
         };
+    }
+
+    protected override void OnParametersSet()
+    {
+        Console.WriteLine($"[ExerciseWeightTypeSelector] OnParametersSet - Value: {Value ?? "null"}");
+        LogWeightTypeSelection();
+    }
+    
+    private void LogWeightTypeSelection()
+    {
+        Console.WriteLine($"[ExerciseWeightTypeSelector] Current state:");
+        Console.WriteLine($"  - Value (bound parameter): {Value ?? "null"}");
+        Console.WriteLine($"  - Available weight types: {WeightTypeStateService.WeightTypes.Count()}");
+        
+        if (!string.IsNullOrEmpty(Value) && WeightTypeStateService.WeightTypes.Any())
+        {
+            var matchingType = WeightTypeStateService.WeightTypes.FirstOrDefault(wt => 
+                $"exerciseweighttype-{wt.Id}" == Value || wt.Id.ToString() == Value);
+                
+            if (matchingType != null)
+            {
+                Console.WriteLine($"  - Found matching weight type: {matchingType.Name} (Code: {matchingType.Code})");
+                Console.WriteLine($"  - Match found using: {($"exerciseweighttype-{matchingType.Id}" == Value ? "specialized ID format" : "GUID format")}");
+            }
+            else
+            {
+                Console.WriteLine($"  - No matching weight type found for value: {Value}");
+                Console.WriteLine($"  - Available weight type IDs:");
+                foreach (var wt in WeightTypeStateService.WeightTypes)
+                {
+                    Console.WriteLine($"    - {wt.Name}: GUID={wt.Id}, SpecializedID=exerciseweighttype-{wt.Id}");
+                }
+            }
+        }
     }
 
     public void Dispose()

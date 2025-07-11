@@ -4,7 +4,7 @@
 
 @if (!string.IsNullOrEmpty(WeightTypeId) || WeightType != null)
 {
-    var weightType = WeightType ?? WeightTypeStateService.WeightTypes.FirstOrDefault(wt => wt.Id.ToString() == WeightTypeId);
+    var weightType = WeightType ?? WeightTypeStateService.WeightTypes.FirstOrDefault(wt => wt.Id.ToString() == WeightTypeId || $"exerciseweighttype-{wt.Id}" == WeightTypeId);
     if (weightType != null)
     {
         var (bgColor, textColor, borderColor) = GetWeightTypeColors(weightType.Code);

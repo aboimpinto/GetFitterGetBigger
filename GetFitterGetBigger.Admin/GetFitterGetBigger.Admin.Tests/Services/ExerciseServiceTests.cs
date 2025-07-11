@@ -166,7 +166,6 @@ namespace GetFitterGetBigger.Admin.Tests.Services
             var updateDto = new ExerciseUpdateDtoBuilder()
                 .WithName("Updated Exercise")
                 .WithDescription("Updated description")
-                .WithInstructions("Updated instructions")
                 .WithDifficultyId(Guid.NewGuid().ToString())
                 .Build();
 

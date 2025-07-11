@@ -99,8 +99,8 @@ public class ExerciseService : IExerciseService
             command.ImageUrl,
             command.IsUnilateral,
             command.DifficultyId,
-            command.KineticChainId,
-            command.ExerciseWeightTypeId);
+            command.KineticChainId.IsEmpty ? null : command.KineticChainId,
+            command.ExerciseWeightTypeId.IsEmpty ? null : command.ExerciseWeightTypeId);
         
         // ADD all related data:
         var exerciseWithRelations = exercise with {
@@ -157,8 +157,8 @@ public class ExerciseService : IExerciseService
             IsUnilateral = command.IsUnilateral,
             IsActive = command.IsActive,
             DifficultyId = command.DifficultyId,
-            KineticChainId = command.KineticChainId,
-            ExerciseWeightTypeId = command.ExerciseWeightTypeId,
+            KineticChainId = command.KineticChainId.IsEmpty ? null : command.KineticChainId,
+            ExerciseWeightTypeId = command.ExerciseWeightTypeId.IsEmpty ? null : command.ExerciseWeightTypeId,
             
             // UPDATE related collections instead of losing them:
             ExerciseExerciseTypes = MapToExerciseTypes(command.ExerciseTypeIds, id),
