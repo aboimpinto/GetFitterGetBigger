@@ -217,7 +217,7 @@ namespace GetFitterGetBigger.API.Tests.Services
             // Assert
             Assert.False(result.IsSuccess);
             Assert.True(result.Data.IsEmpty);
-            Assert.Contains("already exists", result.Errors.First());
+            Assert.Contains("already exists", result.Errors.First()); // Partial match for DuplicateNameFormat
         }
 
         [Fact]
@@ -392,7 +392,7 @@ namespace GetFitterGetBigger.API.Tests.Services
             
             // Assert
             Assert.False(result.IsSuccess);
-            Assert.Contains("Non-REST exercises must have a valid weight type.", result.Errors);
+            Assert.Contains(ExerciseErrorMessages.NonRestExerciseMustHaveWeightType, result.Errors);
         }
 
         [Fact]
@@ -515,7 +515,7 @@ namespace GetFitterGetBigger.API.Tests.Services
             
             // Assert
             Assert.False(result.IsSuccess);
-            Assert.Contains("Non-REST exercises must have a valid weight type.", result.Errors);
+            Assert.Contains(ExerciseErrorMessages.NonRestExerciseMustHaveWeightType, result.Errors);
         }
     }
 }
