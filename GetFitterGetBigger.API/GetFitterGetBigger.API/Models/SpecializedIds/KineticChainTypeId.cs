@@ -15,6 +15,10 @@ public readonly record struct KineticChainTypeId
     
     public static KineticChainTypeId From(Guid guid) => new(guid);
     
+    public static KineticChainTypeId Empty => new(Guid.Empty);
+    
+    public bool IsEmpty => _value == Guid.Empty;
+    
     public static bool TryParse(string? input, out KineticChainTypeId result)
     {
         result = default;
@@ -31,7 +35,18 @@ public readonly record struct KineticChainTypeId
         return false;
     }
     
-    public override string ToString() => $"kineticchaintype-{this._value}";
+    public static KineticChainTypeId ParseOrEmpty(string? input)
+    {
+        if (string.IsNullOrEmpty(input))
+            return Empty;
+            
+        if (TryParse(input, out var result))
+            return result;
+            
+        return Empty;
+    }
+    
+    public override string ToString() => IsEmpty ? string.Empty : $"kineticchaintype-{this._value}";
     
     // Conversion to/from Guid for EF Core
     public static implicit operator Guid(KineticChainTypeId id) => id._value;

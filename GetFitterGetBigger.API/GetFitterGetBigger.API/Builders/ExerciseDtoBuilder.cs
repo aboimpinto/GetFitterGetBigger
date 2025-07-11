@@ -6,29 +6,43 @@ namespace GetFitterGetBigger.API.Builders;
 public class ExerciseDtoBuilder
 {
     private readonly Exercise _exercise;
-    private readonly ExerciseDto _dto;
+    private string? _id;
+    private string? _name;
+    private string? _description;
+    private string? _videoUrl;
+    private string? _imageUrl;
+    private bool _isUnilateral;
+    private bool _isActive;
+    private List<CoachNoteDto>? _coachNotes;
+    private List<ReferenceDataDto>? _exerciseTypes;
+    private List<MuscleGroupWithRoleDto>? _muscleGroups;
+    private List<ReferenceDataDto>? _equipment;
+    private List<ReferenceDataDto>? _bodyParts;
+    private List<ReferenceDataDto>? _movementPatterns;
+    private ReferenceDataDto? _difficulty;
+    private ReferenceDataDto? _kineticChain;
+    private ReferenceDataDto? _exerciseWeightType;
 
     public ExerciseDtoBuilder(Exercise exercise)
     {
         _exercise = exercise;
-        _dto = new ExerciseDto();
     }
 
     public ExerciseDtoBuilder WithBasicInfo()
     {
-        _dto.Id = _exercise.Id.ToString();
-        _dto.Name = _exercise.Name;
-        _dto.Description = _exercise.Description;
-        _dto.VideoUrl = _exercise.VideoUrl;
-        _dto.ImageUrl = _exercise.ImageUrl;
-        _dto.IsUnilateral = _exercise.IsUnilateral;
-        _dto.IsActive = _exercise.IsActive;
+        _id = _exercise.Id.ToString();
+        _name = _exercise.Name;
+        _description = _exercise.Description;
+        _videoUrl = _exercise.VideoUrl;
+        _imageUrl = _exercise.ImageUrl;
+        _isUnilateral = _exercise.IsUnilateral;
+        _isActive = _exercise.IsActive;
         return this;
     }
 
     public ExerciseDtoBuilder WithCoachNotes()
     {
-        _dto.CoachNotes = _exercise.CoachNotes?
+        _coachNotes = _exercise.CoachNotes?
             .OrderBy(cn => cn.Order)
             .Select(cn => new CoachNoteDto
             {
@@ -42,7 +56,7 @@ public class ExerciseDtoBuilder
 
     public ExerciseDtoBuilder WithExerciseTypes()
     {
-        _dto.ExerciseTypes = _exercise.ExerciseExerciseTypes?
+        _exerciseTypes = _exercise.ExerciseExerciseTypes?
             .Where(eet => eet.ExerciseType != null)
             .Select(eet => MapReferenceData(eet.ExerciseType!))
             .ToList() ?? new List<ReferenceDataDto>();
@@ -51,7 +65,7 @@ public class ExerciseDtoBuilder
 
     public ExerciseDtoBuilder WithMuscleGroups()
     {
-        _dto.MuscleGroups = _exercise.ExerciseMuscleGroups?
+        _muscleGroups = _exercise.ExerciseMuscleGroups?
             .Where(emg => emg.MuscleGroup != null && emg.MuscleRole != null)
             .Select(emg => new MuscleGroupWithRoleDto
             {
@@ -69,7 +83,7 @@ public class ExerciseDtoBuilder
 
     public ExerciseDtoBuilder WithEquipment()
     {
-        _dto.Equipment = _exercise.ExerciseEquipment?
+        _equipment = _exercise.ExerciseEquipment?
             .Where(ee => ee.Equipment != null)
             .Select(ee => new ReferenceDataDto
             {
@@ -83,7 +97,7 @@ public class ExerciseDtoBuilder
 
     public ExerciseDtoBuilder WithBodyParts()
     {
-        _dto.BodyParts = _exercise.ExerciseBodyParts?
+        _bodyParts = _exercise.ExerciseBodyParts?
             .Where(ebp => ebp.BodyPart != null)
             .Select(ebp => MapReferenceData(ebp.BodyPart!))
             .ToList() ?? new List<ReferenceDataDto>();
@@ -92,7 +106,7 @@ public class ExerciseDtoBuilder
 
     public ExerciseDtoBuilder WithMovementPatterns()
     {
-        _dto.MovementPatterns = _exercise.ExerciseMovementPatterns?
+        _movementPatterns = _exercise.ExerciseMovementPatterns?
             .Where(emp => emp.MovementPattern != null)
             .Select(emp => new ReferenceDataDto
             {
@@ -106,22 +120,40 @@ public class ExerciseDtoBuilder
 
     public ExerciseDtoBuilder WithReferenceData()
     {
-        _dto.Difficulty = _exercise.Difficulty != null 
+        _difficulty = _exercise.Difficulty != null 
             ? MapReferenceData(_exercise.Difficulty) 
             : null!;
             
-        _dto.KineticChain = _exercise.KineticChain != null 
+        _kineticChain = _exercise.KineticChain != null 
             ? MapReferenceData(_exercise.KineticChain) 
             : null;
             
-        _dto.ExerciseWeightType = _exercise.ExerciseWeightType != null 
+        _exerciseWeightType = _exercise.ExerciseWeightType != null 
             ? MapReferenceData(_exercise.ExerciseWeightType) 
             : null;
             
         return this;
     }
 
-    public ExerciseDto Build() => _dto;
+    public ExerciseDto Build() => new()
+    {
+        Id = _id ?? string.Empty,
+        Name = _name ?? string.Empty,
+        Description = _description ?? string.Empty,
+        VideoUrl = _videoUrl,
+        ImageUrl = _imageUrl,
+        IsUnilateral = _isUnilateral,
+        IsActive = _isActive,
+        CoachNotes = _coachNotes ?? new List<CoachNoteDto>(),
+        ExerciseTypes = _exerciseTypes ?? new List<ReferenceDataDto>(),
+        MuscleGroups = _muscleGroups ?? new List<MuscleGroupWithRoleDto>(),
+        Equipment = _equipment ?? new List<ReferenceDataDto>(),
+        BodyParts = _bodyParts ?? new List<ReferenceDataDto>(),
+        MovementPatterns = _movementPatterns ?? new List<ReferenceDataDto>(),
+        Difficulty = _difficulty ?? new ReferenceDataDto(),
+        KineticChain = _kineticChain,
+        ExerciseWeightType = _exerciseWeightType
+    };
 
     private static ReferenceDataDto MapReferenceData<T>(T data) where T : ReferenceDataBase
     {

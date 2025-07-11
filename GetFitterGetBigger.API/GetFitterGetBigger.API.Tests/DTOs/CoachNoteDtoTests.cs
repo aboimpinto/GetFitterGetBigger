@@ -20,13 +20,13 @@ public class CoachNoteDtoTests
     [Fact]
     public void CoachNoteDto_CanSetProperties()
     {
-        // Arrange
-        var dto = new CoachNoteDto();
-        
-        // Act
-        dto.Id = "coachnote-123e4567-e89b-12d3-a456-426614174000";
-        dto.Text = "Keep your back straight during the movement";
-        dto.Order = 1;
+        // Arrange & Act
+        var dto = new CoachNoteDto
+        {
+            Id = "coachnote-123e4567-e89b-12d3-a456-426614174000",
+            Text = "Keep your back straight during the movement",
+            Order = 1
+        };
         
         // Assert
         Assert.Equal("coachnote-123e4567-e89b-12d3-a456-426614174000", dto.Id);

@@ -1,5 +1,7 @@
 using System.Threading.Tasks;
 using GetFitterGetBigger.API.DTOs;
+using GetFitterGetBigger.API.Mappers;
+using GetFitterGetBigger.API.Models.SpecializedIds;
 using GetFitterGetBigger.API.Services.Interfaces;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -67,14 +69,11 @@ public class ExercisesController : ControllerBase
     {
         _logger.LogInformation("Getting exercise with ID: {Id}", id);
         
-        var exercise = await _exerciseService.GetByIdAsync(id);
+        var exercise = await _exerciseService.GetByIdAsync(ExerciseId.ParseOrEmpty(id));
         
-        if (exercise == null)
-        {
-            return NotFound();
-        }
-        
-        return Ok(exercise);
+        return exercise.IsEmpty 
+            ? NotFound() 
+            : Ok(exercise);
     }
 
     /// <summary>
@@ -142,37 +141,14 @@ public class ExercisesController : ControllerBase
 
         _logger.LogInformation("Creating new exercise: {Name}", request.Name);
         
-        try
+        var result = await _exerciseService.CreateAsync(request.ToCommand());
+        
+        return result switch
         {
-            // Pass request directly to service (temporarily reverting command pattern for build fix)
-            var exercise = await _exerciseService.CreateAsync(request);
-            return CreatedAtAction(nameof(GetExercise), new { id = exercise.Id }, exercise);
-        }
-        catch (InvalidOperationException ex) when (ex.Message.Contains("already exists"))
-        {
-            _logger.LogWarning("Attempted to create duplicate exercise: {Name}", request.Name);
-            return Conflict(new { error = ex.Message });
-        }
-        catch (InvalidOperationException ex) when (ex.Message.Contains("Rest"))
-        {
-            _logger.LogWarning("Rest exclusivity rule violation: {Error}", ex.Message);
-            return BadRequest(new { error = ex.Message });
-        }
-        catch (InvalidOperationException ex) when (ex.Message.Contains("muscle group"))
-        {
-            _logger.LogWarning("Muscle group validation error: {Error}", ex.Message);
-            return BadRequest(new { error = ex.Message });
-        }
-        catch (InvalidOperationException ex) when (ex.Message.Contains("Kinetic chain"))
-        {
-            _logger.LogWarning("Kinetic chain validation error: {Error}", ex.Message);
-            return BadRequest(new { error = ex.Message });
-        }
-        catch (ArgumentException ex)
-        {
-            _logger.LogWarning("Invalid exercise creation request: {Error}", ex.Message);
-            return BadRequest(new { error = ex.Message });
-        }
+            { IsSuccess: true } => CreatedAtAction(nameof(GetExercise), new { id = result.Data.Id }, result.Data),
+            { Errors: var errors } when errors.Any(e => e.Contains("already exists")) => Conflict(new { errors }),
+            { Errors: var errors } => BadRequest(new { errors })
+        };
     }
 
     /// <summary>
@@ -246,42 +222,15 @@ public class ExercisesController : ControllerBase
 
         _logger.LogInformation("Updating exercise with ID: {Id}", id);
         
-        try
+        var result = await _exerciseService.UpdateAsync(ExerciseId.ParseOrEmpty(id), request.ToCommand());
+        
+        return result switch
         {
-            // Pass request directly to service (temporarily reverting command pattern for build fix)  
-            var exercise = await _exerciseService.UpdateAsync(id, request);
-            return Ok(exercise);
-        }
-        catch (ArgumentException ex)
-        {
-            _logger.LogWarning("Invalid exercise update request: {Error}", ex.Message);
-            return BadRequest(new { error = ex.Message });
-        }
-        catch (InvalidOperationException ex) when (ex.Message.Contains("already exists"))
-        {
-            _logger.LogWarning("Attempted to update exercise with duplicate name: {Name}", request.Name);
-            return Conflict(new { error = ex.Message });
-        }
-        catch (InvalidOperationException ex) when (ex.Message.Contains("not found"))
-        {
-            _logger.LogWarning("Exercise not found for update: {Id}", id);
-            return NotFound();
-        }
-        catch (InvalidOperationException ex) when (ex.Message.Contains("Rest"))
-        {
-            _logger.LogWarning("Rest exclusivity rule violation: {Error}", ex.Message);
-            return BadRequest(new { error = ex.Message });
-        }
-        catch (InvalidOperationException ex) when (ex.Message.Contains("muscle group"))
-        {
-            _logger.LogWarning("Muscle group validation error: {Error}", ex.Message);
-            return BadRequest(new { error = ex.Message });
-        }
-        catch (InvalidOperationException ex) when (ex.Message.Contains("Kinetic chain"))
-        {
-            _logger.LogWarning("Kinetic chain validation error: {Error}", ex.Message);
-            return BadRequest(new { error = ex.Message });
-        }
+            { IsSuccess: true } => Ok(result.Data),
+            { Errors: var errors } when errors.Any(e => e.Contains("not found")) => NotFound(new { errors }),
+            { Errors: var errors } when errors.Any(e => e.Contains("already exists")) => Conflict(new { errors }),
+            { Errors: var errors } => BadRequest(new { errors })
+        };
     }
 
     /// <summary>
@@ -309,13 +258,14 @@ public class ExercisesController : ControllerBase
     {
         _logger.LogInformation("Deleting exercise with ID: {Id}", id);
         
-        var result = await _exerciseService.DeleteAsync(id);
+        var result = await _exerciseService.DeleteAsync(ExerciseId.ParseOrEmpty(id));
         
-        if (!result)
+        return result switch
         {
-            return NotFound();
-        }
-        
-        return NoContent();
+            { IsSuccess: true } => NoContent(),
+            { Errors: var errors } when errors.Any(e => e.Contains("Invalid exercise ID")) => NotFound(),
+            { Errors: var errors } when errors.Any(e => e.Contains("not found")) => NotFound(),
+            { Errors: var errors } => BadRequest(new { errors })
+        };
     }
 }

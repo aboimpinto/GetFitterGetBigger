@@ -37,15 +37,15 @@ public interface IExerciseRepository : IRepository
     /// Gets an exercise by its ID with all related data
     /// </summary>
     /// <param name="id">The ID of the exercise to retrieve</param>
-    /// <returns>The exercise if found, null otherwise</returns>
-    Task<Exercise?> GetByIdAsync(ExerciseId id);
+    /// <returns>The exercise if found, Exercise.Empty otherwise</returns>
+    Task<Exercise> GetByIdAsync(ExerciseId id);
     
     /// <summary>
     /// Gets an exercise by its name
     /// </summary>
     /// <param name="name">The name of the exercise to retrieve</param>
-    /// <returns>The exercise if found, null otherwise</returns>
-    Task<Exercise?> GetByNameAsync(string name);
+    /// <returns>The exercise if found, Exercise.Empty otherwise</returns>
+    Task<Exercise> GetByNameAsync(string name);
     
     /// <summary>
     /// Checks if an exercise name already exists (case-insensitive)

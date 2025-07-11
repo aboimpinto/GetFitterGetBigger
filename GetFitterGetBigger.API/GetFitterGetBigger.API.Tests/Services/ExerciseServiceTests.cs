@@ -10,7 +10,9 @@ using GetFitterGetBigger.API.Repositories.Interfaces;
 using GetFitterGetBigger.API.Services.Implementations;
 using GetFitterGetBigger.API.Services.Interfaces;
 using GetFitterGetBigger.API.Services.Commands;
+using GetFitterGetBigger.API.Services.Results;
 using GetFitterGetBigger.API.Tests.TestBuilders;
+using GetFitterGetBigger.API.Mappers;
 using GetFitterGetBigger.API.Tests.TestBuilders.Domain;
 using Moq;
 using Olimpo.EntityFramework.Persistency;
@@ -67,7 +69,7 @@ namespace GetFitterGetBigger.API.Tests.Services
                 .Setup(s => s.ExistsAsync(It.IsAny<ExerciseTypeId>()))
                 .ReturnsAsync(true);
 
-            _service = new ExerciseServiceTemp(_mockUnitOfWorkProvider.Object, _mockExerciseTypeService.Object);
+            _service = new ExerciseService(_mockUnitOfWorkProvider.Object, _mockExerciseTypeService.Object);
         }
 
         [Fact]
@@ -127,7 +129,7 @@ namespace GetFitterGetBigger.API.Tests.Services
                 .ReturnsAsync(exercise);
 
             // Act
-            var result = await _service.GetByIdAsync(exerciseId.ToString());
+            var result = await _service.GetByIdAsync(ExerciseId.ParseOrEmpty(exerciseId.ToString()));
 
             // Assert
             Assert.NotNull(result);
@@ -141,7 +143,7 @@ namespace GetFitterGetBigger.API.Tests.Services
             var invalidId = "invalid-id";
 
             // Act
-            var result = await _service.GetByIdAsync(invalidId);
+            var result = await _service.GetByIdAsync(ExerciseId.ParseOrEmpty(invalidId));
 
             // Assert
             Assert.Null(result);
@@ -177,11 +179,12 @@ namespace GetFitterGetBigger.API.Tests.Services
                 .ReturnsAsync(true);
 
             // Act
-            var result = await _service.CreateAsync(request);
+            var result = await _service.CreateAsync(request.ToCommand());
 
             // Assert
             Assert.NotNull(result);
-            Assert.Equal("New Exercise", result.Name);
+            Assert.True(result.IsSuccess);
+            Assert.Equal("New Exercise", result.Data.Name);
             _mockWritableUnitOfWork.Verify(uow => uow.CommitAsync(), Times.Once);
         }
 
@@ -202,7 +205,7 @@ namespace GetFitterGetBigger.API.Tests.Services
 
             // Act & Assert
             await Assert.ThrowsAsync<InvalidOperationException>(
-                () => _service.CreateAsync(request));
+                () => _service.CreateAsync(request.ToCommand()));
         }
 
         [Fact]
@@ -266,11 +269,12 @@ namespace GetFitterGetBigger.API.Tests.Services
                 .ReturnsAsync(true);
 
             // Act
-            var result = await _service.UpdateAsync(exerciseId.ToString(), request);
+            var result = await _service.UpdateAsync(ExerciseId.ParseOrEmpty(exerciseId.ToString()), request.ToCommand());
 
             // Assert
             Assert.NotNull(result);
-            Assert.Equal("Updated Exercise", result.Name);
+            Assert.True(result.IsSuccess);
+            Assert.Equal("Updated Exercise", result.Data.Name);
             _mockWritableUnitOfWork.Verify(uow => uow.CommitAsync(), Times.Once);
         }
 
@@ -296,12 +300,12 @@ namespace GetFitterGetBigger.API.Tests.Services
                 .ReturnsAsync(true);
 
             // Act
-            var result = await _service.DeleteAsync(exerciseId.ToString());
+            var result = await _service.DeleteAsync(ExerciseId.ParseOrEmpty(exerciseId.ToString()));
 
             // Assert
-            Assert.True(result);
-            _mockExerciseRepository.Verify(r => r.DeleteAsync(It.IsAny<ExerciseId>()), Times.Once);
-            _mockExerciseRepository.Verify(r => r.UpdateAsync(It.IsAny<Exercise>()), Times.Never);
+            Assert.True(result.IsSuccess);
+            _mockExerciseRepository.Verify(r => r.DeleteAsync(It.IsAny<ExerciseId>()), Times.Never);
+            _mockExerciseRepository.Verify(r => r.UpdateAsync(It.IsAny<Exercise>()), Times.Once);
         }
 
         [Fact]
@@ -326,10 +330,10 @@ namespace GetFitterGetBigger.API.Tests.Services
                 .ReturnsAsync(exercise);
 
             // Act
-            var result = await _service.DeleteAsync(exerciseId.ToString());
+            var result = await _service.DeleteAsync(ExerciseId.ParseOrEmpty(exerciseId.ToString()));
 
             // Assert
-            Assert.True(result);
+            Assert.True(result.IsSuccess);
             _mockExerciseRepository.Verify(r => r.UpdateAsync(It.IsAny<Exercise>()), Times.Once);
             _mockExerciseRepository.Verify(r => r.DeleteAsync(It.IsAny<ExerciseId>()), Times.Never);
         }
@@ -376,7 +380,7 @@ namespace GetFitterGetBigger.API.Tests.Services
 
             // Act & Assert
             var exception = await Assert.ThrowsAsync<InvalidOperationException>(
-                () => _service.CreateAsync(request));
+                () => _service.CreateAsync(request.ToCommand()));
             
             Assert.Contains("Exercise weight type must not be specified for REST exercises", exception.Message);
         }
@@ -411,7 +415,7 @@ namespace GetFitterGetBigger.API.Tests.Services
 
             // Act & Assert
             var exception = await Assert.ThrowsAsync<InvalidOperationException>(
-                () => _service.CreateAsync(request));
+                () => _service.CreateAsync(request.ToCommand()));
             
             Assert.Contains("Exercise weight type must be specified for non-REST exercises", exception.Message);
         }
@@ -456,11 +460,12 @@ namespace GetFitterGetBigger.API.Tests.Services
                 .ReturnsAsync(false);
 
             // Act
-            var result = await _service.CreateAsync(request);
+            var result = await _service.CreateAsync(request.ToCommand());
 
             // Assert
             Assert.NotNull(result);
-            Assert.Equal("Workout Exercise", result.Name);
+            Assert.True(result.IsSuccess);
+            Assert.Equal("Workout Exercise", result.Data.Name);
             _mockWritableUnitOfWork.Verify(uow => uow.CommitAsync(), Times.Once);
         }
 
@@ -497,7 +502,7 @@ namespace GetFitterGetBigger.API.Tests.Services
 
             // Act & Assert
             var exception = await Assert.ThrowsAsync<InvalidOperationException>(
-                () => _service.UpdateAsync(exerciseId.ToString(), request));
+                () => _service.UpdateAsync(ExerciseId.ParseOrEmpty(exerciseId.ToString()), request.ToCommand()));
             
             Assert.Contains("Exercise weight type must not be specified for REST exercises", exception.Message);
         }
@@ -544,7 +549,7 @@ namespace GetFitterGetBigger.API.Tests.Services
 
             // Act & Assert
             var exception = await Assert.ThrowsAsync<InvalidOperationException>(
-                () => _service.UpdateAsync(exerciseId.ToString(), request));
+                () => _service.UpdateAsync(ExerciseId.ParseOrEmpty(exerciseId.ToString()), request.ToCommand()));
             
             Assert.Contains("Exercise weight type must be specified for non-REST exercises", exception.Message);
         }

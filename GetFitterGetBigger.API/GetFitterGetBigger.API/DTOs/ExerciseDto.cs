@@ -6,101 +6,115 @@ namespace GetFitterGetBigger.API.DTOs;
 /// <summary>
 /// Data transfer object for Exercise entity responses
 /// </summary>
-public class ExerciseDto
+public record ExerciseDto
 {
     /// <summary>
     /// The ID of the exercise in the format "exercise-{guid}"
     /// </summary>
-    public string Id { get; set; } = string.Empty;
+    public string Id { get; init; } = string.Empty;
     
     /// <summary>
     /// The name of the exercise
     /// </summary>
-    public string Name { get; set; } = string.Empty;
+    public string Name { get; init; } = string.Empty;
     
     /// <summary>
     /// A concise summary of the exercise
     /// </summary>
-    public string Description { get; set; } = string.Empty;
+    public string Description { get; init; } = string.Empty;
     
     /// <summary>
     /// Ordered list of coach notes providing step-by-step instructions
     /// </summary>
-    public List<CoachNoteDto> CoachNotes { get; set; } = new();
+    public List<CoachNoteDto> CoachNotes { get; init; } = new();
     
     /// <summary>
     /// The types of this exercise (Warmup, Workout, Cooldown, Rest)
     /// </summary>
-    public List<ReferenceDataDto> ExerciseTypes { get; set; } = new();
+    public List<ReferenceDataDto> ExerciseTypes { get; init; } = new();
     
     /// <summary>
     /// A link to a hosted video demonstrating the exercise
     /// </summary>
-    public string? VideoUrl { get; set; }
+    public string? VideoUrl { get; init; }
     
     /// <summary>
     /// A link to a hosted image of the exercise
     /// </summary>
-    public string? ImageUrl { get; set; }
+    public string? ImageUrl { get; init; }
     
     /// <summary>
     /// Indicates if the exercise is performed on one side of the body at a time
     /// </summary>
-    public bool IsUnilateral { get; set; }
+    public bool IsUnilateral { get; init; }
     
     /// <summary>
     /// Indicates if the exercise is active
     /// </summary>
-    public bool IsActive { get; set; }
+    public bool IsActive { get; init; }
     
     /// <summary>
     /// The difficulty level of the exercise
     /// </summary>
-    public ReferenceDataDto Difficulty { get; set; } = null!;
+    public ReferenceDataDto Difficulty { get; init; } = null!;
     
     /// <summary>
     /// The kinetic chain type of the exercise (Open Chain, Closed Chain)
     /// </summary>
-    public ReferenceDataDto? KineticChain { get; set; }
+    public ReferenceDataDto? KineticChain { get; init; }
     
     /// <summary>
     /// The weight type of the exercise (Bodyweight Only, Weight Required, etc.)
     /// </summary>
-    public ReferenceDataDto? ExerciseWeightType { get; set; }
+    public ReferenceDataDto? ExerciseWeightType { get; init; }
     
     /// <summary>
     /// The muscle groups targeted by the exercise
     /// </summary>
-    public List<MuscleGroupWithRoleDto> MuscleGroups { get; set; } = new();
+    public List<MuscleGroupWithRoleDto> MuscleGroups { get; init; } = new();
     
     /// <summary>
     /// The equipment required for the exercise
     /// </summary>
-    public List<ReferenceDataDto> Equipment { get; set; } = new();
+    public List<ReferenceDataDto> Equipment { get; init; } = new();
     
     /// <summary>
     /// The movement patterns associated with the exercise
     /// </summary>
-    public List<ReferenceDataDto> MovementPatterns { get; set; } = new();
+    public List<ReferenceDataDto> MovementPatterns { get; init; } = new();
     
     /// <summary>
     /// The body parts involved in the exercise
     /// </summary>
-    public List<ReferenceDataDto> BodyParts { get; set; } = new();
+    public List<ReferenceDataDto> BodyParts { get; init; } = new();
+    
+    /// <summary>
+    /// Indicates if this is an empty/null object instance
+    /// </summary>
+    public bool IsEmpty => Id == string.Empty;
+    
+    /// <summary>
+    /// Static factory for creating an empty ExerciseDto instance
+    /// </summary>
+    public static ExerciseDto Empty => new() 
+    { 
+        Id = string.Empty,
+        Difficulty = new ReferenceDataDto() // Avoid null reference for required property
+    };
 }
 
 /// <summary>
 /// DTO for muscle group with its role in the exercise
 /// </summary>
-public class MuscleGroupWithRoleDto
+public record MuscleGroupWithRoleDto
 {
     /// <summary>
     /// The muscle group details
     /// </summary>
-    public ReferenceDataDto MuscleGroup { get; set; } = null!;
+    public ReferenceDataDto MuscleGroup { get; init; } = null!;
     
     /// <summary>
     /// The role of the muscle group in the exercise (Primary, Secondary, Stabilizer)
     /// </summary>
-    public ReferenceDataDto Role { get; set; } = null!;
+    public ReferenceDataDto Role { get; init; } = null!;
 }

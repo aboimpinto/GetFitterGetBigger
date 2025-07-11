@@ -90,7 +90,7 @@ public class ExerciseRepository : RepositoryBase<FitnessDbContext>, IExerciseRep
     /// <summary>
     /// Gets an exercise by its ID with all related data
     /// </summary>
-    public async Task<Exercise?> GetByIdAsync(ExerciseId id)
+    public async Task<Exercise> GetByIdAsync(ExerciseId id)
     {
         var exercise = await Context.Exercises
             .Include(e => e.Difficulty)
@@ -113,16 +113,20 @@ public class ExerciseRepository : RepositoryBase<FitnessDbContext>, IExerciseRep
             .AsNoTracking()
             .FirstOrDefaultAsync(e => e.Id == id);
         
-        return exercise;
+        return exercise ?? Exercise.Empty;
     }
     
     /// <summary>
     /// Gets an exercise by its name (case-insensitive)
     /// </summary>
-    public async Task<Exercise?> GetByNameAsync(string name) =>
-        await Context.Exercises
+    public async Task<Exercise> GetByNameAsync(string name)
+    {
+        var exercise = await Context.Exercises
             .AsNoTracking()
             .FirstOrDefaultAsync(e => e.Name.ToLower() == name.ToLower());
+        
+        return exercise ?? Exercise.Empty;
+    }
     
     /// <summary>
     /// Checks if an exercise name already exists (case-insensitive)
@@ -251,7 +255,7 @@ public class ExerciseRepository : RepositoryBase<FitnessDbContext>, IExerciseRep
         await Context.SaveChangesAsync();
         
         // Reload with all related data
-        return (await GetByIdAsync(exercise.Id))!;
+        return await GetByIdAsync(exercise.Id);
     }
     
     /// <summary>

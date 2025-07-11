@@ -15,6 +15,10 @@ public readonly record struct MuscleRoleId
     
     public static MuscleRoleId From(Guid guid) => new(guid);
     
+    public static MuscleRoleId Empty => new(Guid.Empty);
+    
+    public bool IsEmpty => _value == Guid.Empty;
+    
     public static bool TryParse(string? input, out MuscleRoleId result)
     {
         result = default;
@@ -31,7 +35,18 @@ public readonly record struct MuscleRoleId
         return false;
     }
     
-    public override string ToString() => $"musclerole-{this._value}";
+    public static MuscleRoleId ParseOrEmpty(string? input)
+    {
+        if (string.IsNullOrEmpty(input))
+            return Empty;
+            
+        if (TryParse(input, out var result))
+            return result;
+            
+        return Empty;
+    }
+    
+    public override string ToString() => IsEmpty ? string.Empty : $"musclerole-{this._value}";
     
     // Conversion to/from Guid for EF Core
     public static implicit operator Guid(MuscleRoleId id) => id._value;

@@ -15,6 +15,10 @@ public readonly record struct BodyPartId
     
     public static BodyPartId From(Guid guid) => new(guid);
     
+    public static BodyPartId Empty => new(Guid.Empty);
+    
+    public bool IsEmpty => _value == Guid.Empty;
+    
     public static bool TryParse(string? input, out BodyPartId result)
     {
         result = default;
@@ -31,7 +35,15 @@ public readonly record struct BodyPartId
         return false;
     }
     
-    public override string ToString() => $"bodypart-{this._value}";
+    public static BodyPartId ParseOrEmpty(string? input)
+    {
+        if (string.IsNullOrEmpty(input))
+            return Empty;
+            
+        return TryParse(input, out var result) ? result : Empty;
+    }
+    
+    public override string ToString() => IsEmpty ? string.Empty : $"bodypart-{this._value}";
     
     // Conversion to/from Guid for EF Core
     public static implicit operator Guid(BodyPartId id) => id._value;

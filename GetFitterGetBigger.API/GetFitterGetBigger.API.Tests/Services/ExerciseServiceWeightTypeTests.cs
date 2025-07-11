@@ -8,8 +8,10 @@ using GetFitterGetBigger.API.Models.SpecializedIds;
 using GetFitterGetBigger.API.Repositories.Interfaces;
 using GetFitterGetBigger.API.Services.Implementations;
 using GetFitterGetBigger.API.Services.Interfaces;
+using GetFitterGetBigger.API.Services.Results;
 using GetFitterGetBigger.API.Tests.TestBuilders;
 using GetFitterGetBigger.API.Tests.TestBuilders.Domain;
+using GetFitterGetBigger.API.Mappers;
 using Moq;
 using Olimpo.EntityFramework.Persistency;
 using Xunit;
@@ -65,7 +67,7 @@ public class ExerciseServiceWeightTypeTests
             .Setup(s => s.ExistsAsync(It.IsAny<ExerciseTypeId>()))
             .ReturnsAsync(true);
         
-        _service = new ExerciseServiceTemp(_mockUnitOfWorkProvider.Object, _mockExerciseTypeService.Object);
+        _service = new ExerciseService(_mockUnitOfWorkProvider.Object, _mockExerciseTypeService.Object);
     }
     
     [Fact]
@@ -123,14 +125,15 @@ public class ExerciseServiceWeightTypeTests
         _mockWritableUnitOfWork.Setup(uow => uow.CommitAsync()).Returns(Task.FromResult(true));
         
         // Act
-        var result = await _service.CreateAsync(request);
+        var result = await _service.CreateAsync(request.ToCommand());
         
         // Assert
         Assert.NotNull(result);
-        Assert.NotNull(result.ExerciseWeightType);
-        Assert.Equal("exerciseweighttype-c3d5c4b6-7b8c-6d9e-0f1a-2b3c4d5e6f7a", result.ExerciseWeightType.Id);
-        Assert.Equal("Weight Required", result.ExerciseWeightType.Value);
-        Assert.Equal("Exercises that must have external weight specified", result.ExerciseWeightType.Description);
+        Assert.True(result.IsSuccess);
+        Assert.NotNull(result.Data.ExerciseWeightType);
+        Assert.Equal("exerciseweighttype-c3d5c4b6-7b8c-6d9e-0f1a-2b3c4d5e6f7a", result.Data.ExerciseWeightType.Id);
+        Assert.Equal("Weight Required", result.Data.ExerciseWeightType.Value);
+        Assert.Equal("Exercises that must have external weight specified", result.Data.ExerciseWeightType.Description);
         
         // Verify the entity was created with the weight type ID
         Assert.NotNull(capturedExercise);
@@ -165,7 +168,7 @@ public class ExerciseServiceWeightTypeTests
         _mockExerciseRepository.Setup(r => r.ExistsAsync(It.IsAny<string>(), It.IsAny<ExerciseId?>())).ReturnsAsync(false);
         
         // Act & Assert
-        var exception = await Assert.ThrowsAsync<InvalidOperationException>(() => _service.CreateAsync(request));
+        var exception = await Assert.ThrowsAsync<InvalidOperationException>(() => _service.CreateAsync(request.ToCommand()));
         Assert.Contains("Exercise weight type must be specified for non-REST exercises", exception.Message);
     }
     
@@ -203,11 +206,12 @@ public class ExerciseServiceWeightTypeTests
         _mockWritableUnitOfWork.Setup(uow => uow.CommitAsync()).Returns(Task.FromResult(true));
         
         // Act
-        var result = await _service.CreateAsync(request);
+        var result = await _service.CreateAsync(request.ToCommand());
         
         // Assert
         Assert.NotNull(result);
-        Assert.Null(result.ExerciseWeightType);
+        Assert.True(result.IsSuccess);
+        Assert.Null(result.Data.ExerciseWeightType);
         
         // Verify the entity was created without weight type ID
         Assert.NotNull(capturedExercise);
@@ -241,7 +245,7 @@ public class ExerciseServiceWeightTypeTests
         _mockExerciseRepository.Setup(r => r.ExistsAsync(It.IsAny<string>(), It.IsAny<ExerciseId?>())).ReturnsAsync(false);
         
         // Act & Assert
-        var exception = await Assert.ThrowsAsync<ArgumentException>(() => _service.CreateAsync(request));
+        var exception = await Assert.ThrowsAsync<ArgumentException>(() => _service.CreateAsync(request.ToCommand()));
         Assert.Contains("Invalid exercise weight type ID", exception.Message);
     }
     
@@ -289,7 +293,7 @@ public class ExerciseServiceWeightTypeTests
         _mockExerciseRepository.Setup(r => r.GetByIdAsync(exerciseId)).ReturnsAsync(exercise);
         
         // Act
-        var result = await _service.GetByIdAsync(exerciseId.ToString());
+        var result = await _service.GetByIdAsync(ExerciseId.ParseOrEmpty(exerciseId.ToString()));
         
         // Assert
         Assert.NotNull(result);

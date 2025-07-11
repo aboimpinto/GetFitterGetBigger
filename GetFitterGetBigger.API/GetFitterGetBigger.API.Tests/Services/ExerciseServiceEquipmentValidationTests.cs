@@ -8,7 +8,9 @@ using GetFitterGetBigger.API.Models.SpecializedIds;
 using GetFitterGetBigger.API.Repositories.Interfaces;
 using GetFitterGetBigger.API.Services.Implementations;
 using GetFitterGetBigger.API.Services.Interfaces;
+using GetFitterGetBigger.API.Services.Results;
 using GetFitterGetBigger.API.Tests.TestBuilders;
+using GetFitterGetBigger.API.Mappers;
 using Moq;
 using Olimpo.EntityFramework.Persistency;
 using Xunit;
@@ -60,7 +62,7 @@ public class ExerciseServiceEquipmentValidationTests
             .Setup(s => s.ExistsAsync(It.IsAny<ExerciseTypeId>()))
             .ReturnsAsync(true);
         
-        _exerciseService = new ExerciseServiceTemp(_unitOfWorkProviderMock.Object, _mockExerciseTypeService.Object);
+        _exerciseService = new ExerciseService(_unitOfWorkProviderMock.Object, _mockExerciseTypeService.Object);
     }
     
     [Fact]
@@ -92,12 +94,13 @@ public class ExerciseServiceEquipmentValidationTests
             .Returns(Task.CompletedTask);
         
         // Act
-        var result = await _exerciseService.CreateAsync(request);
+        var result = await _exerciseService.CreateAsync(request.ToCommand());
         
         // Assert
         Assert.NotNull(result);
-        Assert.Equal("Rest Period", result.Name);
-        Assert.Empty(result.Equipment); // Equipment is empty and that's OK
+        Assert.True(result.IsSuccess);
+        Assert.Equal("Rest Period", result.Data.Name);
+        Assert.Empty(result.Data.Equipment); // Equipment is empty and that's OK
         _exerciseRepositoryMock.Verify(r => r.AddAsync(It.IsAny<Exercise>()), Times.Once);
     }
     
@@ -131,12 +134,13 @@ public class ExerciseServiceEquipmentValidationTests
             .Returns(Task.CompletedTask);
         
         // Act
-        var result = await _exerciseService.CreateAsync(request);
+        var result = await _exerciseService.CreateAsync(request.ToCommand());
         
         // Assert
         Assert.NotNull(result);
-        Assert.Equal("Push Up", result.Name);
-        Assert.Empty(result.Equipment); // Equipment is empty and that's OK for bodyweight exercises
+        Assert.True(result.IsSuccess);
+        Assert.Equal("Push Up", result.Data.Name);
+        Assert.Empty(result.Data.Equipment); // Equipment is empty and that's OK for bodyweight exercises
         _exerciseRepositoryMock.Verify(r => r.AddAsync(It.IsAny<Exercise>()), Times.Once);
     }
     
@@ -173,12 +177,13 @@ public class ExerciseServiceEquipmentValidationTests
             .Returns(Task.CompletedTask);
         
         // Act
-        var result = await _exerciseService.CreateAsync(request);
+        var result = await _exerciseService.CreateAsync(request.ToCommand());
         
         // Assert
         Assert.NotNull(result);
-        Assert.Equal("Bench Press", result.Name);
-        Assert.Single(result.Equipment); // Has equipment
+        Assert.True(result.IsSuccess);
+        Assert.Equal("Bench Press", result.Data.Name);
+        Assert.Single(result.Data.Equipment); // Has equipment
         _exerciseRepositoryMock.Verify(r => r.AddAsync(It.IsAny<Exercise>()), Times.Once);
     }
     
@@ -227,12 +232,13 @@ public class ExerciseServiceEquipmentValidationTests
             .Returns(Task.CompletedTask);
         
         // Act
-        var result = await _exerciseService.UpdateAsync(exerciseId.ToString(), request);
+        var result = await _exerciseService.UpdateAsync(ExerciseId.ParseOrEmpty(exerciseId.ToString()), request.ToCommand());
         
         // Assert
         Assert.NotNull(result);
-        Assert.Equal("Push Up", result.Name);
-        Assert.Empty(result.Equipment); // Equipment removed successfully
+        Assert.True(result.IsSuccess);
+        Assert.Equal("Push Up", result.Data.Name);
+        Assert.Empty(result.Data.Equipment); // Equipment removed successfully
         _exerciseRepositoryMock.Verify(r => r.UpdateAsync(It.IsAny<Exercise>()), Times.Once);
     }
 }

@@ -131,7 +131,7 @@ public class UpdateExerciseRequestBuilder
         return this;
     }
 
-    public UpdateExerciseRequestBuilder AddCoachNote(string id, string text, int order)
+    public UpdateExerciseRequestBuilder AddCoachNote(string? id, string text, int order)
     {
         _coachNotes.Add(new CoachNoteRequest
         {

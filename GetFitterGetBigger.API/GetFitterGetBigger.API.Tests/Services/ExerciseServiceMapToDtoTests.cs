@@ -53,7 +53,7 @@ public class ExerciseServiceMapToDtoTests
             .Setup(s => s.ExistsAsync(It.IsAny<ExerciseTypeId>()))
             .ReturnsAsync(true);
         
-        _exerciseService = new ExerciseServiceTemp(_unitOfWorkProviderMock.Object, _mockExerciseTypeService.Object);
+        _exerciseService = new ExerciseService(_unitOfWorkProviderMock.Object, _mockExerciseTypeService.Object);
     }
     
     [Fact]
@@ -84,7 +84,7 @@ public class ExerciseServiceMapToDtoTests
             .ReturnsAsync(exercise);
         
         // Act
-        var result = await _exerciseService.GetByIdAsync(exerciseId.ToString());
+        var result = await _exerciseService.GetByIdAsync(ExerciseId.ParseOrEmpty(exerciseId.ToString()));
         
         // Assert
         Assert.NotNull(result);
@@ -119,7 +119,7 @@ public class ExerciseServiceMapToDtoTests
             .ReturnsAsync(exercise);
         
         // Act
-        var result = await _exerciseService.GetByIdAsync(exerciseId.ToString());
+        var result = await _exerciseService.GetByIdAsync(ExerciseId.ParseOrEmpty(exerciseId.ToString()));
         
         // Assert
         Assert.NotNull(result);
@@ -153,7 +153,7 @@ public class ExerciseServiceMapToDtoTests
             .ReturnsAsync(exercise);
         
         // Act
-        var result = await _exerciseService.GetByIdAsync(exerciseId.ToString());
+        var result = await _exerciseService.GetByIdAsync(ExerciseId.ParseOrEmpty(exerciseId.ToString()));
         
         // Assert
         Assert.NotNull(result);
@@ -205,7 +205,7 @@ public class ExerciseServiceMapToDtoTests
             .ReturnsAsync(exercise);
         
         // Act
-        var result = await _exerciseService.GetByIdAsync(exerciseId.ToString());
+        var result = await _exerciseService.GetByIdAsync(ExerciseId.ParseOrEmpty(exerciseId.ToString()));
         
         // Assert
         Assert.NotNull(result);
@@ -239,7 +239,7 @@ public class ExerciseServiceMapToDtoTests
             .ReturnsAsync(exercise);
         
         // Act
-        var result = await _exerciseService.GetByIdAsync(exerciseId.ToString());
+        var result = await _exerciseService.GetByIdAsync(ExerciseId.ParseOrEmpty(exerciseId.ToString()));
         
         // Assert
         Assert.NotNull(result);
@@ -339,7 +339,7 @@ public class ExerciseServiceMapToDtoTests
             .ReturnsAsync(exercise);
         
         // Act
-        var result = await _exerciseService.GetByIdAsync(exerciseId.ToString());
+        var result = await _exerciseService.GetByIdAsync(ExerciseId.ParseOrEmpty(exerciseId.ToString()));
         
         // Assert
         Assert.NotNull(result);

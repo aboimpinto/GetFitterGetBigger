@@ -32,7 +32,7 @@ Currently only 1 out of 14 controllers follows the Clean Architecture Command Pa
 - **Files to modify**:
   - `ExercisesController.cs` - Restore `.ToCommand()` calls
   - `IExerciseService.cs` - Update interface to use Commands
-  - `ExerciseServiceTemp.cs` - Update to accept Commands
+  - `ExerciseService.cs` - Updated to accept Commands (ExerciseServiceTemp.cs removed)
 - **Success criteria**: ExercisesController uses CreateExerciseCommand/UpdateExerciseCommand
 
 #### 1.2 Fix Builder Interface Issues (4 hours)

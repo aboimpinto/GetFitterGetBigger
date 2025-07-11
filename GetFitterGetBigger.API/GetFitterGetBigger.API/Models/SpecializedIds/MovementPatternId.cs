@@ -15,6 +15,10 @@ public readonly record struct MovementPatternId
     
     public static MovementPatternId From(Guid guid) => new(guid);
     
+    public static MovementPatternId Empty => new(Guid.Empty);
+    
+    public bool IsEmpty => _value == Guid.Empty;
+    
     public static bool TryParse(string? input, out MovementPatternId result)
     {
         result = default;
@@ -31,7 +35,15 @@ public readonly record struct MovementPatternId
         return false;
     }
     
-    public override string ToString() => $"movementpattern-{this._value}";
+    public static MovementPatternId ParseOrEmpty(string? input)
+    {
+        if (string.IsNullOrEmpty(input))
+            return Empty;
+            
+        return TryParse(input, out var result) ? result : Empty;
+    }
+    
+    public override string ToString() => IsEmpty ? string.Empty : $"movementpattern-{this._value}";
     
     // Conversion to/from Guid for EF Core
     public static implicit operator Guid(MovementPatternId id) => id._value;

@@ -15,6 +15,10 @@ public readonly record struct ExerciseWeightTypeId
     
     public static ExerciseWeightTypeId From(Guid guid) => new(guid);
     
+    public static ExerciseWeightTypeId Empty => new(Guid.Empty);
+    
+    public bool IsEmpty => _value == Guid.Empty;
+    
     public static bool TryParse(string? input, out ExerciseWeightTypeId result)
     {
         result = default;
@@ -31,7 +35,18 @@ public readonly record struct ExerciseWeightTypeId
         return false;
     }
     
-    public override string ToString() => $"exerciseweighttype-{this._value}";
+    public static ExerciseWeightTypeId ParseOrEmpty(string? input)
+    {
+        if (string.IsNullOrEmpty(input))
+            return Empty;
+            
+        if (TryParse(input, out var result))
+            return result;
+            
+        return Empty;
+    }
+    
+    public override string ToString() => IsEmpty ? string.Empty : $"exerciseweighttype-{this._value}";
     
     // Conversion to/from Guid for EF Core
     public static implicit operator Guid(ExerciseWeightTypeId id) => id._value;

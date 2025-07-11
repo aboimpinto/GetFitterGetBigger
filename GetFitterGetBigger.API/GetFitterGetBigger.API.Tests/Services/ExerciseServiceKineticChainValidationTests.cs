@@ -9,7 +9,9 @@ using GetFitterGetBigger.API.Models.SpecializedIds;
 using GetFitterGetBigger.API.Repositories.Interfaces;
 using GetFitterGetBigger.API.Services.Implementations;
 using GetFitterGetBigger.API.Services.Interfaces;
+using GetFitterGetBigger.API.Services.Results;
 using GetFitterGetBigger.API.Tests.TestBuilders;
+using GetFitterGetBigger.API.Mappers;
 using Moq;
 using Olimpo.EntityFramework.Persistency;
 using Xunit;
@@ -64,7 +66,7 @@ namespace GetFitterGetBigger.API.Tests.Services
                 .Setup(s => s.ExistsAsync(It.IsAny<ExerciseTypeId>()))
                 .ReturnsAsync(true);
             
-            _service = new ExerciseServiceTemp(_mockUnitOfWorkProvider.Object, _mockExerciseTypeService.Object);
+            _service = new ExerciseService(_mockUnitOfWorkProvider.Object, _mockExerciseTypeService.Object);
         }
 
         private void SetupMocks()
@@ -114,7 +116,7 @@ namespace GetFitterGetBigger.API.Tests.Services
 
             // Act & Assert
             var exception = await Assert.ThrowsAsync<InvalidOperationException>(
-                () => _service.CreateAsync(request));
+                () => _service.CreateAsync(request.ToCommand()));
             Assert.Equal("Kinetic chain type must be specified for non-REST exercises.", exception.Message);
         }
 
@@ -134,7 +136,7 @@ namespace GetFitterGetBigger.API.Tests.Services
 
             // Act & Assert
             var exception = await Assert.ThrowsAsync<InvalidOperationException>(
-                () => _service.CreateAsync(request));
+                () => _service.CreateAsync(request.ToCommand()));
             Assert.Equal("Kinetic chain type must not be specified for REST exercises.", exception.Message);
         }
 
@@ -166,10 +168,11 @@ namespace GetFitterGetBigger.API.Tests.Services
                 .Build();
 
             // Act
-            var result = await _service.CreateAsync(request);
+            var result = await _service.CreateAsync(request.ToCommand());
 
             // Assert
             Assert.NotNull(result);
+            Assert.True(result.IsSuccess);
             _mockExerciseRepository.Verify(x => x.AddAsync(It.Is<Exercise>(e => 
                 e.KineticChainId == _kineticChainId)), Times.Once);
         }
@@ -200,10 +203,11 @@ namespace GetFitterGetBigger.API.Tests.Services
                 .Build();
 
             // Act
-            var result = await _service.CreateAsync(request);
+            var result = await _service.CreateAsync(request.ToCommand());
 
             // Assert
             Assert.NotNull(result);
+            Assert.True(result.IsSuccess);
             _mockExerciseRepository.Verify(x => x.AddAsync(It.Is<Exercise>(e => 
                 e.KineticChainId == null)), Times.Once);
         }
@@ -240,7 +244,7 @@ namespace GetFitterGetBigger.API.Tests.Services
 
             // Act & Assert
             var exception = await Assert.ThrowsAsync<InvalidOperationException>(
-                () => _service.UpdateAsync(exerciseId.ToString(), request));
+                () => _service.UpdateAsync(ExerciseId.ParseOrEmpty(exerciseId.ToString()), request.ToCommand()));
             Assert.Equal("Kinetic chain type must be specified for non-REST exercises.", exception.Message);
         }
 
@@ -275,7 +279,7 @@ namespace GetFitterGetBigger.API.Tests.Services
 
             // Act & Assert
             var exception = await Assert.ThrowsAsync<InvalidOperationException>(
-                () => _service.UpdateAsync(exerciseId.ToString(), request));
+                () => _service.UpdateAsync(ExerciseId.ParseOrEmpty(exerciseId.ToString()), request.ToCommand()));
             Assert.Equal("Kinetic chain type must not be specified for REST exercises.", exception.Message);
         }
 
@@ -324,10 +328,11 @@ namespace GetFitterGetBigger.API.Tests.Services
                 .Build();
 
             // Act
-            var result = await _service.UpdateAsync(exerciseId.ToString(), request);
+            var result = await _service.UpdateAsync(ExerciseId.ParseOrEmpty(exerciseId.ToString()), request.ToCommand());
 
             // Assert
             Assert.NotNull(result);
+            Assert.True(result.IsSuccess);
             _mockExerciseRepository.Verify(x => x.UpdateAsync(It.Is<Exercise>(e => 
                 e.KineticChainId == _kineticChainId)), Times.Once);
         }
@@ -349,7 +354,7 @@ namespace GetFitterGetBigger.API.Tests.Services
 
             // Act & Assert
             var exception = await Assert.ThrowsAsync<ArgumentException>(
-                () => _service.CreateAsync(request));
+                () => _service.CreateAsync(request.ToCommand()));
             Assert.Equal("Invalid kinetic chain ID: invalid-id-format", exception.Message);
         }
 
@@ -384,7 +389,7 @@ namespace GetFitterGetBigger.API.Tests.Services
 
             // Act & Assert
             var exception = await Assert.ThrowsAsync<ArgumentException>(
-                () => _service.UpdateAsync(exerciseId.ToString(), request));
+                () => _service.UpdateAsync(ExerciseId.ParseOrEmpty(exerciseId.ToString()), request.ToCommand()));
             Assert.Equal("Invalid kinetic chain ID: invalid-id-format", exception.Message);
         }
     }

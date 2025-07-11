@@ -9,8 +9,10 @@ using GetFitterGetBigger.API.Models.SpecializedIds;
 using GetFitterGetBigger.API.Repositories.Interfaces;
 using GetFitterGetBigger.API.Services.Implementations;
 using GetFitterGetBigger.API.Services.Interfaces;
+using GetFitterGetBigger.API.Services.Results;
 using GetFitterGetBigger.API.Tests.TestBuilders;
 using GetFitterGetBigger.API.Tests.TestBuilders.Domain;
+using GetFitterGetBigger.API.Mappers;
 using Moq;
 using Olimpo.EntityFramework.Persistency;
 using Xunit;
@@ -62,7 +64,7 @@ public class ExerciseServiceUpdateCoachNotesTests
             .Setup(s => s.ExistsAsync(It.IsAny<ExerciseTypeId>()))
             .ReturnsAsync(true);
         
-        _exerciseService = new ExerciseServiceTemp(_unitOfWorkProviderMock.Object, _mockExerciseTypeService.Object);
+        _exerciseService = new ExerciseService(_unitOfWorkProviderMock.Object, _mockExerciseTypeService.Object);
     }
     
     [Fact]
@@ -104,17 +106,19 @@ public class ExerciseServiceUpdateCoachNotesTests
             .Returns(Task.CompletedTask);
         
         // Act
-        var result = await _exerciseService.UpdateAsync(exerciseId.ToString(), request);
+        var result = await _exerciseService.UpdateAsync(ExerciseId.ParseOrEmpty(exerciseId.ToString()), request.ToCommand());
         
         // Assert
         Assert.NotNull(result);
-        Assert.Equal(3, result.CoachNotes.Count);
-        Assert.Equal("First note", result.CoachNotes[0].Text);
-        Assert.Equal(1, result.CoachNotes[0].Order);
-        Assert.Equal("Second note", result.CoachNotes[1].Text);
-        Assert.Equal(2, result.CoachNotes[1].Order);
-        Assert.Equal("Third note", result.CoachNotes[2].Text);
-        Assert.Equal(3, result.CoachNotes[2].Order);
+        Assert.True(result.IsSuccess);
+        Assert.True(result.IsSuccess);
+        Assert.Equal(3, result.Data.CoachNotes.Count);
+        Assert.Equal("First note", result.Data.CoachNotes[0].Text);
+        Assert.Equal(1, result.Data.CoachNotes[0].Order);
+        Assert.Equal("Second note", result.Data.CoachNotes[1].Text);
+        Assert.Equal(2, result.Data.CoachNotes[1].Order);
+        Assert.Equal("Third note", result.Data.CoachNotes[2].Text);
+        Assert.Equal(3, result.Data.CoachNotes[2].Order);
         
         // Verify the entity was updated with coach notes
         Assert.NotNull(capturedExercise);
@@ -166,24 +170,25 @@ public class ExerciseServiceUpdateCoachNotesTests
             .Returns(Task.CompletedTask);
         
         // Act
-        var result = await _exerciseService.UpdateAsync(exerciseId.ToString(), request);
+        var result = await _exerciseService.UpdateAsync(ExerciseId.ParseOrEmpty(exerciseId.ToString()), request.ToCommand());
         
         // Assert
         Assert.NotNull(result);
-        Assert.Equal(3, result.CoachNotes.Count);
+        Assert.True(result.IsSuccess);
+        Assert.Equal(3, result.Data.CoachNotes.Count);
         
         // Check that existing IDs were preserved
-        Assert.Equal(existingNoteId1.ToString(), result.CoachNotes[0].Id);
-        Assert.Equal("Updated note 1", result.CoachNotes[0].Text);
+        Assert.Equal(existingNoteId1.ToString(), result.Data.CoachNotes[0].Id);
+        Assert.Equal("Updated note 1", result.Data.CoachNotes[0].Text);
         
-        Assert.Equal(existingNoteId2.ToString(), result.CoachNotes[1].Id);
-        Assert.Equal("Updated note 2", result.CoachNotes[1].Text);
+        Assert.Equal(existingNoteId2.ToString(), result.Data.CoachNotes[1].Id);
+        Assert.Equal("Updated note 2", result.Data.CoachNotes[1].Text);
         
         // New note should have a new ID
-        Assert.NotEmpty(result.CoachNotes[2].Id);
-        Assert.NotEqual(existingNoteId1.ToString(), result.CoachNotes[2].Id);
-        Assert.NotEqual(existingNoteId2.ToString(), result.CoachNotes[2].Id);
-        Assert.Equal("New note 3", result.CoachNotes[2].Text);
+        Assert.NotEmpty(result.Data.CoachNotes[2].Id);
+        Assert.NotEqual(existingNoteId1.ToString(), result.Data.CoachNotes[2].Id);
+        Assert.NotEqual(existingNoteId2.ToString(), result.Data.CoachNotes[2].Id);
+        Assert.Equal("New note 3", result.Data.CoachNotes[2].Text);
     }
     
     [Fact]
@@ -226,11 +231,12 @@ public class ExerciseServiceUpdateCoachNotesTests
             .Returns(Task.CompletedTask);
         
         // Act
-        var result = await _exerciseService.UpdateAsync(exerciseId.ToString(), request);
+        var result = await _exerciseService.UpdateAsync(ExerciseId.ParseOrEmpty(exerciseId.ToString()), request.ToCommand());
         
         // Assert
         Assert.NotNull(result);
-        Assert.Empty(result.CoachNotes);
+        Assert.True(result.IsSuccess);
+        Assert.Empty(result.Data.CoachNotes);
         
         // Verify the entity was updated with empty coach notes
         Assert.NotNull(capturedExercise);
@@ -275,11 +281,12 @@ public class ExerciseServiceUpdateCoachNotesTests
             .Returns(Task.CompletedTask);
         
         // Act
-        var result = await _exerciseService.UpdateAsync(exerciseId.ToString(), request);
+        var result = await _exerciseService.UpdateAsync(ExerciseId.ParseOrEmpty(exerciseId.ToString()), request.ToCommand());
         
         // Assert
         Assert.NotNull(result);
-        Assert.Empty(result.CoachNotes); // Invalid IDs are ignored, no new notes created
+        Assert.True(result.IsSuccess);
+        Assert.Empty(result.Data.CoachNotes); // Invalid IDs are ignored, no new notes created
         
         // Verify the entity has no coach notes (invalid IDs were ignored)
         Assert.NotNull(capturedExercise);
@@ -330,11 +337,12 @@ public class ExerciseServiceUpdateCoachNotesTests
             .Returns(Task.CompletedTask);
         
         // Act
-        var result = await _exerciseService.UpdateAsync(exerciseId.ToString(), request);
+        var result = await _exerciseService.UpdateAsync(ExerciseId.ParseOrEmpty(exerciseId.ToString()), request.ToCommand());
         
         // Assert
         Assert.NotNull(result);
-        Assert.Empty(result.CoachNotes); // Null request.CoachNotes means empty collection in new entity
+        Assert.True(result.IsSuccess);
+        Assert.Empty(result.Data.CoachNotes); // Null request.CoachNotes means empty collection in new entity
         
         // Verify the entity has empty coach notes (null is treated as empty)
         Assert.NotNull(capturedExercise);
@@ -380,18 +388,19 @@ public class ExerciseServiceUpdateCoachNotesTests
             .Returns(Task.CompletedTask);
         
         // Act
-        var result = await _exerciseService.UpdateAsync(exerciseId.ToString(), request);
+        var result = await _exerciseService.UpdateAsync(ExerciseId.ParseOrEmpty(exerciseId.ToString()), request.ToCommand());
         
         // Assert
         Assert.NotNull(result);
-        Assert.Equal(3, result.CoachNotes.Count);
+        Assert.True(result.IsSuccess);
+        Assert.Equal(3, result.Data.CoachNotes.Count);
         
         // Verify notes preserve original order values and are sorted by order
-        Assert.Equal("Note at 5", result.CoachNotes[0].Text);
-        Assert.Equal(5, result.CoachNotes[0].Order);
-        Assert.Equal("Note at 50", result.CoachNotes[1].Text);
-        Assert.Equal(50, result.CoachNotes[1].Order);
-        Assert.Equal("Note at 100", result.CoachNotes[2].Text);
-        Assert.Equal(100, result.CoachNotes[2].Order);
+        Assert.Equal("Note at 5", result.Data.CoachNotes[0].Text);
+        Assert.Equal(5, result.Data.CoachNotes[0].Order);
+        Assert.Equal("Note at 50", result.Data.CoachNotes[1].Text);
+        Assert.Equal(50, result.Data.CoachNotes[1].Order);
+        Assert.Equal("Note at 100", result.Data.CoachNotes[2].Text);
+        Assert.Equal(100, result.Data.CoachNotes[2].Order);
     }
 }

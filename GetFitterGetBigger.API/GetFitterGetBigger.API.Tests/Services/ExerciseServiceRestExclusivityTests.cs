@@ -9,8 +9,10 @@ using GetFitterGetBigger.API.Models.SpecializedIds;
 using GetFitterGetBigger.API.Repositories.Interfaces;
 using GetFitterGetBigger.API.Services.Implementations;
 using GetFitterGetBigger.API.Services.Interfaces;
+using GetFitterGetBigger.API.Services.Results;
 using GetFitterGetBigger.API.Tests.TestBuilders;
 using GetFitterGetBigger.API.Tests.TestBuilders.Domain;
+using GetFitterGetBigger.API.Mappers;
 using Moq;
 using Olimpo.EntityFramework.Persistency;
 using Xunit;
@@ -62,7 +64,7 @@ public class ExerciseServiceRestExclusivityTests
             .Setup(s => s.ExistsAsync(It.IsAny<ExerciseTypeId>()))
             .ReturnsAsync(true);
         
-        _exerciseService = new ExerciseServiceTemp(_unitOfWorkProviderMock.Object, _mockExerciseTypeService.Object);
+        _exerciseService = new ExerciseService(_unitOfWorkProviderMock.Object, _mockExerciseTypeService.Object);
     }
     
     [Fact]
@@ -94,7 +96,7 @@ public class ExerciseServiceRestExclusivityTests
         
         // Act & Assert
         var exception = await Assert.ThrowsAsync<InvalidOperationException>(
-            () => _exerciseService.CreateAsync(request));
+            () => _exerciseService.CreateAsync(request.ToCommand()));
         
         Assert.Equal("Exercise type 'Rest' cannot be combined with other exercise types.", exception.Message);
     }
@@ -146,7 +148,7 @@ public class ExerciseServiceRestExclusivityTests
         
         // Act & Assert
         var exception = await Assert.ThrowsAsync<InvalidOperationException>(
-            () => _exerciseService.UpdateAsync(exerciseId.ToString(), request));
+            () => _exerciseService.UpdateAsync(ExerciseId.ParseOrEmpty(exerciseId.ToString()), request.ToCommand()));
         
         Assert.Equal("Exercise type 'Rest' cannot be combined with other exercise types.", exception.Message);
     }
@@ -176,11 +178,12 @@ public class ExerciseServiceRestExclusivityTests
             .ReturnsAsync(true);
         
         // Act
-        var result = await _exerciseService.CreateAsync(request);
+        var result = await _exerciseService.CreateAsync(request.ToCommand());
         
         // Assert
         Assert.NotNull(result);
-        Assert.Equal("Rest Exercise", result.Name);
+        Assert.True(result.IsSuccess);
+        Assert.Equal("Rest Exercise", result.Data.Name);
     }
     
     [Fact]
@@ -228,12 +231,13 @@ public class ExerciseServiceRestExclusivityTests
             .ReturnsAsync(false);
         
         // Act
-        var result = await _exerciseService.CreateAsync(request);
+        var result = await _exerciseService.CreateAsync(request.ToCommand());
         
         // Assert
         Assert.NotNull(result);
-        Assert.Equal("Complex Exercise", result.Name);
-        Assert.Equal(3, result.ExerciseTypes.Count);
+        Assert.True(result.IsSuccess);
+        Assert.Equal("Complex Exercise", result.Data.Name);
+        Assert.Equal(3, result.Data.ExerciseTypes.Count);
     }
     
     [Fact]
@@ -259,11 +263,12 @@ public class ExerciseServiceRestExclusivityTests
             .Returns(Task.CompletedTask);
         
         // Act
-        var result = await _exerciseService.CreateAsync(request);
+        var result = await _exerciseService.CreateAsync(request.ToCommand());
         
         // Assert - Should succeed because ForWorkoutExercise() includes ExerciseWeightTypeId by default
         Assert.NotNull(result);
-        Assert.Equal("No Type Exercise", result.Name);
-        Assert.Empty(result.ExerciseTypes);
+        Assert.True(result.IsSuccess);
+        Assert.Equal("No Type Exercise", result.Data.Name);
+        Assert.Empty(result.Data.ExerciseTypes);
     }
 }

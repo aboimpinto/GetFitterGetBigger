@@ -5,22 +5,22 @@ namespace GetFitterGetBigger.API.DTOs;
 /// <summary>
 /// Data transfer object for coach notes
 /// </summary>
-public class CoachNoteDto
+public record CoachNoteDto
 {
     /// <summary>
     /// The ID of the coach note in the format "coachnote-{guid}"
     /// </summary>
-    public string Id { get; set; } = string.Empty;
+    public string Id { get; init; } = string.Empty;
     
     /// <summary>
     /// The instructional text of the coach note
     /// </summary>
-    public string Text { get; set; } = string.Empty;
+    public string Text { get; init; } = string.Empty;
     
     /// <summary>
     /// The display order of the coach note (0-based)
     /// </summary>
-    public int Order { get; set; }
+    public int Order { get; init; }
 }
 
 /// <summary>

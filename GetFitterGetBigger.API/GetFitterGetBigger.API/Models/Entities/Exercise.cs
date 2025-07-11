@@ -33,6 +33,23 @@ public record Exercise
     // Private constructor to force usage of Handler
     private Exercise() { }
     
+    /// <summary>
+    /// Indicates if this is an empty/null object instance
+    /// </summary>
+    public bool IsEmpty => Id.IsEmpty;
+    
+    /// <summary>
+    /// Static factory for creating an empty Exercise instance
+    /// </summary>
+    public static Exercise Empty => new() 
+    { 
+        Id = ExerciseId.Empty,
+        Name = string.Empty,
+        Description = string.Empty,
+        DifficultyId = DifficultyLevelId.Empty,
+        IsActive = false
+    };
+    
     public static class Handler
     {
         public static Exercise CreateNew(

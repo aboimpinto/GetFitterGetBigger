@@ -15,6 +15,10 @@ public readonly record struct CoachNoteId
     
     public static CoachNoteId From(Guid guid) => new(guid);
     
+    public static CoachNoteId Empty => new(Guid.Empty);
+    
+    public bool IsEmpty => _value == Guid.Empty;
+    
     public static bool TryParse(string? input, out CoachNoteId result)
     {
         result = default;
@@ -31,7 +35,18 @@ public readonly record struct CoachNoteId
         return false;
     }
     
-    public override string ToString() => $"coachnote-{this._value}";
+    public static CoachNoteId ParseOrEmpty(string? input)
+    {
+        if (string.IsNullOrEmpty(input))
+            return Empty;
+            
+        if (TryParse(input, out var result))
+            return result;
+            
+        return Empty;
+    }
+    
+    public override string ToString() => IsEmpty ? string.Empty : $"coachnote-{this._value}";
     
     // Conversion to/from Guid for EF Core
     public static implicit operator Guid(CoachNoteId id) => id._value;

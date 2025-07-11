@@ -1,21 +1,32 @@
+using GetFitterGetBigger.API.DTOs;
 using GetFitterGetBigger.API.Models.SpecializedIds;
+using GetFitterGetBigger.API.Services.Commands;
+using System.Linq;
 
 namespace GetFitterGetBigger.API.Extensions;
 
 public static class SpecializedIdListExtensions
 {
+    public static List<ExerciseTypeId> ParseExerciseTypeIds(this List<string>? stringIds)
+    {
+        if (stringIds == null || stringIds.Count == 0)
+            return new List<ExerciseTypeId>();
+        
+        return stringIds
+            .Select(id => ExerciseTypeId.ParseOrEmpty(id))
+            .Where(id => !id.IsEmpty)
+            .ToList();
+    }
+    
     public static List<MuscleGroupId> ParseMuscleGroupIds(this List<string>? stringIds)
     {
         if (stringIds == null || stringIds.Count == 0)
             return new List<MuscleGroupId>();
         
-        var result = new List<MuscleGroupId>();
-        foreach (var stringId in stringIds)
-        {
-            if (MuscleGroupId.TryParse(stringId, out var id))
-                result.Add(id);
-        }
-        return result;
+        return stringIds
+            .Select(id => MuscleGroupId.ParseOrEmpty(id))
+            .Where(id => !id.IsEmpty)
+            .ToList();
     }
     
     public static List<EquipmentId> ParseEquipmentIds(this List<string>? stringIds)
@@ -23,13 +34,10 @@ public static class SpecializedIdListExtensions
         if (stringIds == null || stringIds.Count == 0)
             return new List<EquipmentId>();
         
-        var result = new List<EquipmentId>();
-        foreach (var stringId in stringIds)
-        {
-            if (EquipmentId.TryParse(stringId, out var id))
-                result.Add(id);
-        }
-        return result;
+        return stringIds
+            .Select(id => EquipmentId.ParseOrEmpty(id))
+            .Where(id => !id.IsEmpty)
+            .ToList();
     }
     
     public static List<MovementPatternId> ParseMovementPatternIds(this List<string>? stringIds)
@@ -37,13 +45,10 @@ public static class SpecializedIdListExtensions
         if (stringIds == null || stringIds.Count == 0)
             return new List<MovementPatternId>();
         
-        var result = new List<MovementPatternId>();
-        foreach (var stringId in stringIds)
-        {
-            if (MovementPatternId.TryParse(stringId, out var id))
-                result.Add(id);
-        }
-        return result;
+        return stringIds
+            .Select(id => MovementPatternId.ParseOrEmpty(id))
+            .Where(id => !id.IsEmpty)
+            .ToList();
     }
     
     public static List<BodyPartId> ParseBodyPartIds(this List<string>? stringIds)
@@ -51,12 +56,56 @@ public static class SpecializedIdListExtensions
         if (stringIds == null || stringIds.Count == 0)
             return new List<BodyPartId>();
         
-        var result = new List<BodyPartId>();
-        foreach (var stringId in stringIds)
+        return stringIds
+            .Select(id => BodyPartId.ParseOrEmpty(id))
+            .Where(id => !id.IsEmpty)
+            .ToList();
+    }
+    
+    public static List<MuscleGroupAssignment> ParseMuscleGroupAssignments(this List<MuscleGroupWithRoleRequest>? muscleGroups)
+    {
+        if (muscleGroups == null || muscleGroups.Count == 0)
+            return new List<MuscleGroupAssignment>();
+
+        var result = new List<MuscleGroupAssignment>();
+        foreach (var mg in muscleGroups)
         {
-            if (BodyPartId.TryParse(stringId, out var id))
-                result.Add(id);
+            var muscleGroupId = MuscleGroupId.ParseOrEmpty(mg.MuscleGroupId);
+            var muscleRoleId = MuscleRoleId.ParseOrEmpty(mg.MuscleRoleId);
+            
+            // Only add if both IDs are valid (not empty)
+            if (!muscleGroupId.IsEmpty && !muscleRoleId.IsEmpty)
+            {
+                result.Add(new MuscleGroupAssignment
+                {
+                    MuscleGroupId = muscleGroupId,
+                    MuscleRoleId = muscleRoleId
+                });
+            }
         }
+        
+        return result;
+    }
+    
+    public static List<CoachNoteCommand> ParseCoachNoteCommands(this List<CoachNoteRequest>? coachNotes)
+    {
+        if (coachNotes == null || coachNotes.Count == 0)
+            return new List<CoachNoteCommand>();
+
+        var result = new List<CoachNoteCommand>();
+        foreach (var note in coachNotes)
+        {
+            if (string.IsNullOrWhiteSpace(note.Text))
+                continue;
+
+            result.Add(new CoachNoteCommand
+            {
+                Id = CoachNoteId.ParseOrEmpty(note.Id),
+                Text = note.Text,
+                Order = note.Order
+            });
+        }
+        
         return result;
     }
 }

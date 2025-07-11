@@ -1,6 +1,8 @@
 using System.Threading.Tasks;
 using GetFitterGetBigger.API.DTOs;
+using GetFitterGetBigger.API.Models.SpecializedIds;
 using GetFitterGetBigger.API.Services.Commands;
+using GetFitterGetBigger.API.Services.Results;
 
 namespace GetFitterGetBigger.API.Services.Interfaces;
 
@@ -20,32 +22,32 @@ public interface IExerciseService
     /// Gets an exercise by its ID
     /// </summary>
     /// <param name="id">The ID of the exercise</param>
-    /// <returns>The exercise DTO if found, null otherwise</returns>
-    Task<ExerciseDto?> GetByIdAsync(string id);
+    /// <returns>The exercise DTO if found, ExerciseDto.Empty otherwise</returns>
+    Task<ExerciseDto> GetByIdAsync(ExerciseId id);
     
     /// <summary>
     /// Creates a new exercise
     /// </summary>
-    /// <param name="request">The exercise creation request</param>
-    /// <returns>The created exercise DTO</returns>
-    Task<ExerciseDto> CreateAsync(CreateExerciseRequest request);
+    /// <param name="command">The exercise creation command</param>
+    /// <returns>Service result containing the created exercise DTO or validation errors</returns>
+    Task<ServiceResult<ExerciseDto>> CreateAsync(CreateExerciseCommand command);
     
     /// <summary>
     /// Updates an existing exercise
     /// </summary>
     /// <param name="id">The ID of the exercise to update</param>
-    /// <param name="request">The exercise update request</param>
-    /// <returns>The updated exercise DTO</returns>
-    Task<ExerciseDto> UpdateAsync(string id, UpdateExerciseRequest request);
+    /// <param name="command">The exercise update command</param>
+    /// <returns>Service result containing the updated exercise DTO or validation errors</returns>
+    Task<ServiceResult<ExerciseDto>> UpdateAsync(ExerciseId id, UpdateExerciseCommand command);
     
     /// <summary>
     /// Deletes an exercise
     /// </summary>
     /// <param name="id">The ID of the exercise to delete</param>
-    /// <returns>True if deleted successfully, false otherwise</returns>
+    /// <returns>ServiceResult indicating success or failure with appropriate error messages</returns>
     /// <remarks>
     /// If the exercise has references, it will be soft deleted (marked as inactive).
     /// If the exercise has no references, it will be hard deleted from the database.
     /// </remarks>
-    Task<bool> DeleteAsync(string id);
+    Task<ServiceResult<bool>> DeleteAsync(ExerciseId id);
 }

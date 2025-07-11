@@ -57,7 +57,7 @@ public class ExerciseWeightValidatorTests
         var exerciseId = ExerciseId.New();
         _mockExerciseRepository
             .Setup(r => r.GetByIdAsync(exerciseId))
-            .ReturnsAsync((Exercise?)null);
+            .ReturnsAsync(Exercise.Empty);
         
         // Act
         var result = await _validator.ValidateWeightAsync(exerciseId, 50m);

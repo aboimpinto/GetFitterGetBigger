@@ -10,6 +10,7 @@ using GetFitterGetBigger.API.Repositories.Interfaces;
 using GetFitterGetBigger.API.Services.Implementations;
 using GetFitterGetBigger.API.Services.Interfaces;
 using GetFitterGetBigger.API.Tests.TestBuilders;
+using GetFitterGetBigger.API.Mappers;
 using Moq;
 using Olimpo.EntityFramework.Persistency;
 using Xunit;
@@ -61,7 +62,7 @@ public class ExerciseServiceCoachNotesTests
             .Setup(s => s.ExistsAsync(It.IsAny<ExerciseTypeId>()))
             .ReturnsAsync(true);
         
-        _exerciseService = new ExerciseServiceTemp(_unitOfWorkProviderMock.Object, _mockExerciseTypeService.Object);
+        _exerciseService = new ExerciseService(_unitOfWorkProviderMock.Object, _mockExerciseTypeService.Object);
     }
     
     [Fact]
@@ -86,17 +87,17 @@ public class ExerciseServiceCoachNotesTests
             .Returns(Task.CompletedTask);
         
         // Act
-        var result = await _exerciseService.CreateAsync(request);
+        var result = await _exerciseService.CreateAsync(request.ToCommand());
         
         // Assert
         Assert.NotNull(result);
-        Assert.Equal(3, result.CoachNotes.Count);
-        Assert.Equal("First note", result.CoachNotes[0].Text);
-        Assert.Equal(1, result.CoachNotes[0].Order);
-        Assert.Equal("Second note", result.CoachNotes[1].Text);
-        Assert.Equal(2, result.CoachNotes[1].Order);
-        Assert.Equal("Third note", result.CoachNotes[2].Text);
-        Assert.Equal(3, result.CoachNotes[2].Order);
+        Assert.Equal(3, result.Data.CoachNotes.Count);
+        Assert.Equal("First note", result.Data.CoachNotes[0].Text);
+        Assert.Equal(1, result.Data.CoachNotes[0].Order);
+        Assert.Equal("Second note", result.Data.CoachNotes[1].Text);
+        Assert.Equal(2, result.Data.CoachNotes[1].Order);
+        Assert.Equal("Third note", result.Data.CoachNotes[2].Text);
+        Assert.Equal(3, result.Data.CoachNotes[2].Order);
         
         // Verify the entity was created with coach notes
         Assert.NotNull(capturedExercise);
@@ -137,7 +138,7 @@ public class ExerciseServiceCoachNotesTests
             .Returns(Task.CompletedTask);
         
         // Act
-        var result = await _exerciseService.CreateAsync(request);
+        var result = await _exerciseService.CreateAsync(request.ToCommand());
         
         // Assert
         Assert.NotNull(result);
@@ -169,11 +170,11 @@ public class ExerciseServiceCoachNotesTests
             .Returns(Task.CompletedTask);
         
         // Act
-        var result = await _exerciseService.CreateAsync(request);
+        var result = await _exerciseService.CreateAsync(request.ToCommand());
         
         // Assert
         Assert.NotNull(result);
-        Assert.Empty(result.CoachNotes);
+        Assert.Empty(result.Data.CoachNotes);
     }
     
     [Fact]
@@ -211,11 +212,11 @@ public class ExerciseServiceCoachNotesTests
             .Returns(Task.CompletedTask);
         
         // Act
-        var result = await _exerciseService.CreateAsync(request);
+        var result = await _exerciseService.CreateAsync(request.ToCommand());
         
         // Assert
         Assert.NotNull(result);
-        Assert.Single(result.ExerciseTypes); // Only the valid ID should be processed
+        Assert.Single(result.Data.ExerciseTypes); // Only the valid ID should be processed
         
         // Verify only valid ID was added to entity
         Assert.NotNull(capturedExercise);
@@ -245,18 +246,18 @@ public class ExerciseServiceCoachNotesTests
             .Returns(Task.CompletedTask);
         
         // Act
-        var result = await _exerciseService.CreateAsync(request);
+        var result = await _exerciseService.CreateAsync(request.ToCommand());
         
         // Assert
         Assert.NotNull(result);
-        Assert.Equal(3, result.CoachNotes.Count);
+        Assert.Equal(3, result.Data.CoachNotes.Count);
         
         // Verify notes preserve original order values and are sorted by order
-        Assert.Equal("Note at 5", result.CoachNotes[0].Text);
-        Assert.Equal(5, result.CoachNotes[0].Order);
-        Assert.Equal("Note at 10", result.CoachNotes[1].Text);
-        Assert.Equal(10, result.CoachNotes[1].Order);
-        Assert.Equal("Note at 20", result.CoachNotes[2].Text);
-        Assert.Equal(20, result.CoachNotes[2].Order);
+        Assert.Equal("Note at 5", result.Data.CoachNotes[0].Text);
+        Assert.Equal(5, result.Data.CoachNotes[0].Order);
+        Assert.Equal("Note at 10", result.Data.CoachNotes[1].Text);
+        Assert.Equal(10, result.Data.CoachNotes[1].Order);
+        Assert.Equal("Note at 20", result.Data.CoachNotes[2].Text);
+        Assert.Equal(20, result.Data.CoachNotes[2].Order);
     }
 }

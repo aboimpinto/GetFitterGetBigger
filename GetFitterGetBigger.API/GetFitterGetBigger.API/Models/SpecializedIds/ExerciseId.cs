@@ -15,6 +15,10 @@ public readonly record struct ExerciseId
     
     public static ExerciseId From(Guid guid) => new(guid);
     
+    public static ExerciseId Empty => new(Guid.Empty);
+    
+    public bool IsEmpty => _value == Guid.Empty;
+    
     public static bool TryParse(string? input, out ExerciseId result)
     {
         result = default;
@@ -31,7 +35,15 @@ public readonly record struct ExerciseId
         return false;
     }
     
-    public override string ToString() => $"exercise-{this._value}";
+    public static ExerciseId ParseOrEmpty(string? input)
+    {
+        if (string.IsNullOrEmpty(input))
+            return Empty;
+            
+        return TryParse(input, out var result) ? result : Empty;
+    }
+    
+    public override string ToString() => IsEmpty ? string.Empty : $"exercise-{this._value}";
     
     // Conversion to/from Guid for EF Core
     public static implicit operator Guid(ExerciseId id) => id._value;
