@@ -13,6 +13,7 @@ using GetFitterGetBigger.API.Services.Results;
 using GetFitterGetBigger.API.Tests.TestBuilders;
 using GetFitterGetBigger.API.Tests.TestBuilders.Domain;
 using GetFitterGetBigger.API.Mappers;
+using GetFitterGetBigger.API.Constants;
 using Moq;
 using Olimpo.EntityFramework.Persistency;
 using Xunit;
@@ -99,7 +100,7 @@ public class ExerciseServiceRestExclusivityTests
         
         // Assert
         Assert.False(result.IsSuccess);
-        Assert.Contains("REST exercises cannot be combined with other exercise types.", result.Errors);
+        Assert.Contains(ExerciseErrorMessages.RestExerciseCannotBeCombined, result.Errors);
     }
     
     [Fact]
@@ -152,7 +153,7 @@ public class ExerciseServiceRestExclusivityTests
         
         // Assert
         Assert.False(result.IsSuccess);
-        Assert.Contains("REST exercises cannot be combined with other exercise types.", result.Errors);
+        Assert.Contains(ExerciseErrorMessages.RestExerciseCannotBeCombined, result.Errors);
     }
     
     [Fact]

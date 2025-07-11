@@ -25,6 +25,7 @@ public class DatabasePersistenceTest : IClassFixture<SharedDatabaseTestFixture>
         var createRequest = CreateExerciseRequestBuilder.ForWorkoutExercise()
             .WithName($"Persistence Test Exercise {Guid.NewGuid()}")
             .WithDescription("Testing database persistence")
+            .WithMuscleGroups(("musclegroup-ccddeeff-0011-2233-4455-667788990011", "musclerole-abcdef12-3456-7890-abcd-ef1234567890"))
             .WithCoachNotes(("Test Note", 1))
             .Build();
         

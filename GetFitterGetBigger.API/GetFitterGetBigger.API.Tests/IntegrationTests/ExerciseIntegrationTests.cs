@@ -29,6 +29,11 @@ public class ExerciseIntegrationTests : IClassFixture<SharedDatabaseTestFixture>
             .WithKineticChain(KineticChainTypeTestBuilder.Compound())
             .WithWeightType(ExerciseWeightTypeTestBuilder.Barbell())
             .AddMuscleGroup(MuscleGroupTestBuilder.Quadriceps(), MuscleRoleTestBuilder.Primary())
+            .WithCoachNotes(
+                ("Warm up properly first", 1),
+                ("Keep your back straight", 2),
+                ("Control the descent", 3)
+            )
             .WithVideoUrl("https://example.com/squat.mp4")
             .WithImageUrl("https://example.com/squat.jpg")
             .WithIsUnilateral(false)
@@ -55,7 +60,7 @@ public class ExerciseIntegrationTests : IClassFixture<SharedDatabaseTestFixture>
         
         // Check exercise types
         Assert.Single(createdExercise.ExerciseTypes);
-        Assert.Equal("exercisetype-b2c3d4e5-6f7a-8b9c-0d1e-2f3a4b5c6d7e", createdExercise.ExerciseTypes[0].Id);
+        Assert.Equal(SeedDataBuilder.StandardIds.ExerciseTypeIds.Workout, createdExercise.ExerciseTypes[0].Id);
     }
     
     [Fact]
@@ -87,9 +92,9 @@ public class ExerciseIntegrationTests : IClassFixture<SharedDatabaseTestFixture>
         Assert.Equal(3, createdExercise.ExerciseTypes.Count);
         
         var typeIds = createdExercise.ExerciseTypes.Select(et => et.Id).OrderBy(id => id).ToList();
-        Assert.Contains("exercisetype-a1b2c3d4-5e6f-7a8b-9c0d-1e2f3a4b5c6d", typeIds);
-        Assert.Contains("exercisetype-b2c3d4e5-6f7a-8b9c-0d1e-2f3a4b5c6d7e", typeIds);
-        Assert.Contains("exercisetype-c3d4e5f6-7a8b-9c0d-1e2f-3a4b5c6d7e8f", typeIds);
+        Assert.Contains(SeedDataBuilder.StandardIds.ExerciseTypeIds.Warmup, typeIds);
+        Assert.Contains(SeedDataBuilder.StandardIds.ExerciseTypeIds.Workout, typeIds);
+        Assert.Contains(SeedDataBuilder.StandardIds.ExerciseTypeIds.Cooldown, typeIds);
     }
     
     [Fact]
@@ -99,14 +104,13 @@ public class ExerciseIntegrationTests : IClassFixture<SharedDatabaseTestFixture>
         var request = CreateExerciseRequestBuilder.ForWorkoutExercise()
             .WithName("Integration Test Rest Exercise")
             .WithDescription("Invalid exercise with Rest and other types")
-            .WithKineticChain(KineticChainTypeTestBuilder.Compound())
-            .WithWeightType(ExerciseWeightTypeTestBuilder.Barbell())
+            .WithKineticChainId(null) // REST exercises shouldn't have kinetic chain
+            .WithExerciseWeightTypeId(null) // REST exercises shouldn't have weight type
             .WithExerciseTypes(new[]
             {
                 ExerciseTypeTestBuilder.Rest().Build(),
                 ExerciseTypeTestBuilder.Workout().Build()
             })
-            .AddMuscleGroup(MuscleGroupTestBuilder.Chest(), MuscleRoleTestBuilder.Primary())
             .Build();
         
         // Act
@@ -116,7 +120,7 @@ public class ExerciseIntegrationTests : IClassFixture<SharedDatabaseTestFixture>
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
         
         var content = await response.Content.ReadAsStringAsync();
-        Assert.Contains("Rest", content);
+        Assert.Contains("REST", content);
     }
     
     [Fact]
@@ -137,7 +141,7 @@ public class ExerciseIntegrationTests : IClassFixture<SharedDatabaseTestFixture>
         var createdExercise = await response.Content.ReadFromJsonAsync<ExerciseDto>();
         Assert.NotNull(createdExercise);
         Assert.Single(createdExercise.ExerciseTypes);
-        Assert.Equal("exercisetype-d4e5f6a7-8b9c-0d1e-2f3a-4b5c6d7e8f9a", createdExercise.ExerciseTypes[0].Id);
+        Assert.Equal(SeedDataBuilder.StandardIds.ExerciseTypeIds.Rest, createdExercise.ExerciseTypes[0].Id);
     }
     
     [Fact]
@@ -189,6 +193,11 @@ public class ExerciseIntegrationTests : IClassFixture<SharedDatabaseTestFixture>
             .WithKineticChain(KineticChainTypeTestBuilder.Compound())
             .WithWeightType(ExerciseWeightTypeTestBuilder.Barbell())
             .AddMuscleGroup(MuscleGroupTestBuilder.Chest(), MuscleRoleTestBuilder.Primary())
+            .WithCoachNotes(
+                ("First step", 1),
+                ("Second step", 2),
+                ("Third step", 3)
+            )
             .Build();
         
         // Act
@@ -299,9 +308,9 @@ public class ExerciseIntegrationTests : IClassFixture<SharedDatabaseTestFixture>
         Assert.Equal(2, updatedExercise.ExerciseTypes.Count);
         
         var typeIds = updatedExercise.ExerciseTypes.Select(et => et.Id).OrderBy(id => id).ToList();
-        Assert.Contains("exercisetype-b2c3d4e5-6f7a-8b9c-0d1e-2f3a4b5c6d7e", typeIds); // Workout
-        Assert.Contains("exercisetype-c3d4e5f6-7a8b-9c0d-1e2f-3a4b5c6d7e8f", typeIds); // Cooldown
-        Assert.DoesNotContain("exercisetype-a1b2c3d4-5e6f-7a8b-9c0d-1e2f3a4b5c6d", typeIds); // Warmup should be removed
+        Assert.Contains(SeedDataBuilder.StandardIds.ExerciseTypeIds.Workout, typeIds);
+        Assert.Contains(SeedDataBuilder.StandardIds.ExerciseTypeIds.Cooldown, typeIds);
+        Assert.DoesNotContain(SeedDataBuilder.StandardIds.ExerciseTypeIds.Warmup, typeIds); // Warmup should be removed
     }
     
     [Fact]
@@ -324,14 +333,13 @@ public class ExerciseIntegrationTests : IClassFixture<SharedDatabaseTestFixture>
         var updateRequest = UpdateExerciseRequestBuilder.ForWorkoutExercise()
             .WithName("Normal Exercise")
             .WithDescription("Exercise to test Rest validation")
-            .WithKineticChain(KineticChainTypeTestBuilder.Compound())
-            .WithWeightType(ExerciseWeightTypeTestBuilder.Barbell())
+            .WithKineticChainId(null) // REST exercises shouldn't have kinetic chain
+            .WithExerciseWeightTypeId(null) // REST exercises shouldn't have weight type
             .WithExerciseTypes(new[]
             {
                 ExerciseTypeTestBuilder.Rest().Build(),
                 ExerciseTypeTestBuilder.Workout().Build()
             })
-            .AddMuscleGroup(MuscleGroupTestBuilder.Chest(), MuscleRoleTestBuilder.Primary())
             .Build();
         
         // Act
@@ -341,6 +349,6 @@ public class ExerciseIntegrationTests : IClassFixture<SharedDatabaseTestFixture>
         Assert.Equal(HttpStatusCode.BadRequest, updateResponse.StatusCode);
         
         var content = await updateResponse.Content.ReadAsStringAsync();
-        Assert.Contains("Rest", content);
+        Assert.Contains("REST", content);
     }
 }

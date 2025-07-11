@@ -3,6 +3,7 @@ using System.Net.Http.Json;
 using GetFitterGetBigger.API.Models;
 using GetFitterGetBigger.API.Models.Entities;
 using GetFitterGetBigger.API.Models.SpecializedIds;
+using GetFitterGetBigger.API.Tests.TestBuilders;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
@@ -116,6 +117,9 @@ public class PostgreSqlApiTestFixture : WebApplicationFactory<Program>, IAsyncLi
             
             // Seed the database with test data
             SeedTestData(db);
+            
+            // Ensure the transaction is committed
+            db.SaveChanges();
         }
 
         return host;
@@ -128,272 +132,17 @@ public class PostgreSqlApiTestFixture : WebApplicationFactory<Program>, IAsyncLi
 
     private void SeedTestData(FitnessDbContext context)
     {
-        // No need to clear data as we're using a new database for each test
+        // Use the centralized SeedDataBuilder for consistent test data
+        var seedBuilder = new SeedDataBuilder(context);
         
-        // Seed BodyParts
+        // Only seed if no data exists
         if (!context.BodyParts.Any())
         {
-            context.BodyParts.AddRange(
-                BodyPart.Handler.Create(
-                    BodyPartId.From(Guid.Parse("7c5a2d6e-e87e-4c8a-9f1d-9eb734f3df3c")),
-                    "Chest",
-                    "Chest muscles including pectoralis major and minor",
-                    1,
-                    true
-                ),
-                BodyPart.Handler.Create(
-                    BodyPartId.From(Guid.Parse("b2d89d5c-cb8a-4f5d-8a9e-2c3b76612c5a")),
-                    "Back",
-                    "Back muscles including latissimus dorsi and trapezius",
-                    2,
-                    true
-                ),
-                BodyPart.Handler.Create(
-                    BodyPartId.From(Guid.Parse("4a6f1b42-5c9b-4c4e-878a-b3d9f2c1f1f5")),
-                    "Legs",
-                    "Leg muscles including quadriceps and hamstrings",
-                    3,
-                    true
-                ),
-                BodyPart.Handler.Create(
-                    BodyPartId.From(Guid.Parse("d7e0e24c-f8d4-4b8a-b1e0-cf9c2e6b5d0a")),
-                    "Shoulders",
-                    "Shoulder muscles including deltoids",
-                    4,
-                    true
-                )
-            );
+            seedBuilder
+                .WithAllReferenceDataAsync()
+                .GetAwaiter()
+                .GetResult();
         }
-
-        // Seed DifficultyLevels
-        if (!context.DifficultyLevels.Any())
-        {
-            context.DifficultyLevels.AddRange(
-                DifficultyLevel.Handler.Create(
-                    DifficultyLevelId.From(Guid.Parse("8a8adb1d-24d2-4979-a5a6-0d760e6da24b")),
-                    "Beginner",
-                    "Suitable for those new to fitness",
-                    1,
-                    true
-                ),
-                DifficultyLevel.Handler.Create(
-                    DifficultyLevelId.From(Guid.Parse("9c7b59a4-bcd8-48a6-971a-cd67b0a7ab5a")),
-                    "Intermediate",
-                    "Suitable for those with some fitness experience",
-                    2,
-                    true
-                ),
-                DifficultyLevel.Handler.Create(
-                    DifficultyLevelId.From(Guid.Parse("3e27f9a7-d5a5-4f8e-8a76-6de2d23c9a3c")),
-                    "Advanced",
-                    "Suitable for those with significant fitness experience",
-                    3,
-                    true
-                )
-            );
-        }
-
-        // Seed KineticChainTypes
-        if (!context.KineticChainTypes.Any())
-        {
-            context.KineticChainTypes.AddRange(
-                KineticChainType.Handler.Create(
-                    KineticChainTypeId.From(Guid.Parse("f5d5a2de-9c4e-4b87-b8c3-5d1e17d0b1f4")),
-                    "Compound",
-                    "Exercises that work multiple muscle groups",
-                    1,
-                    true
-                ),
-                KineticChainType.Handler.Create(
-                    KineticChainTypeId.From(Guid.Parse("2b3e7cb2-9a3e-4c9a-88d8-b7c019c90d1b")),
-                    "Isolation",
-                    "Exercises that work a single muscle group",
-                    2,
-                    true
-                )
-            );
-        }
-
-        // Seed MuscleRoles
-        if (!context.MuscleRoles.Any())
-        {
-            context.MuscleRoles.AddRange(
-                MuscleRole.Handler.Create(
-                    MuscleRoleId.From(Guid.Parse("abcdef12-3456-7890-abcd-ef1234567890")),
-                    "Primary",
-                    "The main muscle targeted by the exercise",
-                    1,
-                    true
-                ),
-                MuscleRole.Handler.Create(
-                    MuscleRoleId.From(Guid.Parse("11223344-5566-7788-99aa-bbccddeeff00")),
-                    "Secondary",
-                    "A muscle that assists in the exercise",
-                    2,
-                    true
-                ),
-                MuscleRole.Handler.Create(
-                    MuscleRoleId.From(Guid.Parse("22334455-6677-8899-aabb-ccddeeff0011")),
-                    "Stabilizer",
-                    "A muscle that helps stabilize the body during the exercise",
-                    3,
-                    true
-                )
-            );
-        }
-        
-        // Seed Equipment
-        if (!context.Equipment.Any())
-        {
-            context.Equipment.AddRange(
-                Equipment.Handler.Create(
-                    EquipmentId.From(Guid.Parse("33445566-7788-99aa-bbcc-ddeeff001122")),
-                    "Barbell"
-                ),
-                Equipment.Handler.Create(
-                    EquipmentId.From(Guid.Parse("44556677-8899-aabb-ccdd-eeff00112233")),
-                    "Dumbbell"
-                ),
-                Equipment.Handler.Create(
-                    EquipmentId.From(Guid.Parse("55667788-99aa-bbcc-ddee-ff0011223344")),
-                    "Kettlebell"
-                )
-            );
-        }
-        
-        // Seed MetricTypes
-        if (!context.MetricTypes.Any())
-        {
-            context.MetricTypes.AddRange(
-                MetricType.Handler.Create(
-                    MetricTypeId.From(Guid.Parse("66778899-aabb-ccdd-eeff-001122334455")),
-                    "Weight"
-                ),
-                MetricType.Handler.Create(
-                    MetricTypeId.From(Guid.Parse("778899aa-bbcc-ddee-ff00-112233445566")),
-                    "Reps"
-                ),
-                MetricType.Handler.Create(
-                    MetricTypeId.From(Guid.Parse("8899aabb-ccdd-eeff-0011-223344556677")),
-                    "Time"
-                )
-            );
-        }
-        
-        // Seed MovementPatterns - Updated to match migration data
-        if (!context.MovementPatterns.Any())
-        {
-            context.MovementPatterns.AddRange(
-                MovementPattern.Handler.Create(
-                    MovementPatternId.From(Guid.Parse("99aabbcc-ddee-ff00-1122-334455667788")),
-                    "Horizontal Push",
-                    "Pushing forward, parallel to the ground. Examples: Bench Press, Push-up, Cable Chest Press."
-                ),
-                MovementPattern.Handler.Create(
-                    MovementPatternId.From(Guid.Parse("aabbccdd-eeff-0011-2233-445566778899")),
-                    "Horizontal Pull",
-                    "Pulling backward, parallel to the ground. Examples: Bent-Over Row, Seated Cable Row, Inverted Row."
-                ),
-                MovementPattern.Handler.Create(
-                    MovementPatternId.From(Guid.Parse("bbccddee-ff00-1122-3344-556677889900")),
-                    "Squat",
-                    "A lower-body, knee-dominant movement characterized by the simultaneous bending of the hips, knees, and ankles while maintaining a relatively upright torso. Examples: Barbell Back Squat, Goblet Squat, Air Squat."
-                ),
-                MovementPattern.Handler.Create(
-                    MovementPatternId.From(Guid.Parse("71b77ae2-e8d2-4547-bd90-b7a69d975124")),
-                    "Vertical Push",
-                    "Pushing upward, overhead. Examples: Overhead Press, Dumbbell Shoulder Press, Handstand Push-up."
-                ),
-                MovementPattern.Handler.Create(
-                    MovementPatternId.From(Guid.Parse("efab6dba-4bcd-4381-9fd1-cbb86f1f2301")),
-                    "Vertical Pull",
-                    "Pulling downward from an overhead position. Examples: Pull-up, Chin-up, Lat Pulldown."
-                ),
-                MovementPattern.Handler.Create(
-                    MovementPatternId.From(Guid.Parse("a760cc8f-b32e-408b-b0ec-1ba053ee4bed")),
-                    "Hinge",
-                    "A lower-body, hip-dominant movement involving flexion and extension primarily at the hip joint with minimal knee bend. This pattern is fundamental for lifting objects from the floor and developing the posterior chain. Examples: Deadlift, Kettlebell Swing, Good Morning."
-                ),
-                MovementPattern.Handler.Create(
-                    MovementPatternId.From(Guid.Parse("5c4b8fe7-a66e-4be2-9e3f-30c1de46e7ad")),
-                    "Lunge",
-                    "A unilateral (single-leg focused) movement pattern that challenges balance, stability, and strength in a split stance. It is a key pattern for locomotion and single-leg stability. Examples: Forward Lunge, Reverse Lunge, Bulgarian Split Squat."
-                ),
-                MovementPattern.Handler.Create(
-                    MovementPatternId.From(Guid.Parse("a2c67018-196d-45ff-b596-c2d8bc845c20")),
-                    "Carry",
-                    "A pattern of locomotion (walking or running) while under an external load. This is considered highly functional as it integrates core stability with grip strength and full-body coordination. Examples: Farmer's Walk, Suitcase Carry, Overhead Carry."
-                ),
-                MovementPattern.Handler.Create(
-                    MovementPatternId.From(Guid.Parse("9019d05b-c822-4aa9-8181-751f16cfbc75")),
-                    "Rotation/Anti-Rotation",
-                    "A core-focused pattern involving either generating rotational force (twisting) or resisting it. This is crucial for athletic power transfer and spinal stability. Examples: Medicine Ball Rotational Throw (Rotation), Pallof Press (Anti-Rotation), Bird-Dog (Anti-Rotation)."
-                )
-            );
-        }
-        
-        // Seed MuscleGroups
-        if (!context.MuscleGroups.Any())
-        {
-            var chestId = BodyPartId.From(Guid.Parse("7c5a2d6e-e87e-4c8a-9f1d-9eb734f3df3c"));
-            var backId = BodyPartId.From(Guid.Parse("b2d89d5c-cb8a-4f5d-8a9e-2c3b76612c5a"));
-            var legsId = BodyPartId.From(Guid.Parse("4a6f1b42-5c9b-4c4e-878a-b3d9f2c1f1f5"));
-            
-            context.MuscleGroups.AddRange(
-                MuscleGroup.Handler.Create(
-                    MuscleGroupId.From(Guid.Parse("ccddeeff-0011-2233-4455-667788990011")),
-                    "Pectoralis",
-                    chestId
-                ),
-                MuscleGroup.Handler.Create(
-                    MuscleGroupId.From(Guid.Parse("ddeeff00-1122-3344-5566-778899001122")),
-                    "Latissimus Dorsi",
-                    backId
-                ),
-                MuscleGroup.Handler.Create(
-                    MuscleGroupId.From(Guid.Parse("eeff0011-2233-4455-6677-889900112233")),
-                    "Quadriceps",
-                    legsId
-                )
-            );
-        }
-
-        // Seed ExerciseTypes
-        if (!context.ExerciseTypes.Any())
-        {
-            context.ExerciseTypes.AddRange(
-                ExerciseType.Handler.Create(
-                    ExerciseTypeId.From(Guid.Parse("11223344-5566-7788-99aa-bbccddeeff00")),
-                    "Warmup",
-                    "Exercises performed to prepare the body for more intense activity",
-                    1,
-                    true
-                ),
-                ExerciseType.Handler.Create(
-                    ExerciseTypeId.From(Guid.Parse("b2c3d4e5-6f7a-8b9c-0d1e-2f3a4b5c6d7e")),
-                    "Workout",
-                    "Main exercises that form the core of the training session",
-                    2,
-                    true
-                ),
-                ExerciseType.Handler.Create(
-                    ExerciseTypeId.From(Guid.Parse("33445566-7788-99aa-bbcc-ddeeff001122")),
-                    "Cooldown",
-                    "Exercises performed to help the body recover after intense activity",
-                    3,
-                    true
-                ),
-                ExerciseType.Handler.Create(
-                    ExerciseTypeId.From(Guid.Parse("44556677-8899-aabb-ccdd-eeff00112233")),
-                    "Rest",
-                    "Periods of rest between exercises or sets - cannot be combined with other exercise types",
-                    4,
-                    true
-                )
-            );
-        }
-
-        context.SaveChanges();
     }
     
     // Helper method to clean up test data between tests
@@ -402,22 +151,11 @@ public class PostgreSqlApiTestFixture : WebApplicationFactory<Program>, IAsyncLi
         using var scope = Services.CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<FitnessDbContext>();
         
-        // Delete data in reverse order of dependencies
+        // Delete only exercise-related data, keep reference data
+        // This prevents duplicate key violations on reference data
         context.ExerciseLinks.RemoveRange(context.ExerciseLinks);
         context.Exercises.RemoveRange(context.Exercises);
-        context.ExerciseTypes.RemoveRange(context.ExerciseTypes);
-        context.MuscleGroups.RemoveRange(context.MuscleGroups);
-        context.MovementPatterns.RemoveRange(context.MovementPatterns);
-        context.MetricTypes.RemoveRange(context.MetricTypes);
-        context.Equipment.RemoveRange(context.Equipment);
-        context.MuscleRoles.RemoveRange(context.MuscleRoles);
-        context.KineticChainTypes.RemoveRange(context.KineticChainTypes);
-        context.DifficultyLevels.RemoveRange(context.DifficultyLevels);
-        context.BodyParts.RemoveRange(context.BodyParts);
         
         await context.SaveChangesAsync();
-        
-        // Re-seed the database
-        SeedTestData(context);
     }
 }

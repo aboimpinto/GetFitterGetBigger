@@ -4,6 +4,7 @@ using System.Net;
 using System.Net.Http.Json;
 using System.Threading.Tasks;
 using GetFitterGetBigger.API.DTOs;
+using GetFitterGetBigger.API.Models.SpecializedIds;
 using GetFitterGetBigger.API.Tests.TestBuilders;
 using Xunit;
 
@@ -28,6 +29,7 @@ public class ExercisesControllerBasicTests : IClassFixture<ApiTestFixture>
         var request = CreateExerciseRequestBuilder.ForWorkoutExercise()
             .WithName("Test Exercise " + Guid.NewGuid())
             .WithDescription("Test Description")
+            .WithMuscleGroups((MuscleGroupId.New().ToString(), MuscleRoleId.New().ToString()))
             .WithCoachNotes(
                 ("Step 1: Starting position", 0),
                 ("Step 2: Execute movement", 1)

@@ -111,7 +111,7 @@ public class ExerciseRepository : RepositoryBase<FitnessDbContext>, IExerciseRep
                 .ThenInclude(ebp => ebp.BodyPart)
             .AsSplitQuery()
             .AsNoTracking()
-            .FirstOrDefaultAsync(e => e.Id == id);
+            .FirstOrDefaultAsync(e => e.Id == id && e.IsActive);
         
         return exercise ?? Exercise.Empty;
     }
@@ -170,7 +170,7 @@ public class ExerciseRepository : RepositoryBase<FitnessDbContext>, IExerciseRep
     {
         Context.Exercises.Add(exercise);
         await Context.SaveChangesAsync();
-        
+
         // Load navigation properties explicitly for the join entities
         foreach (var eet in exercise.ExerciseExerciseTypes)
         {
@@ -294,6 +294,16 @@ public class ExerciseRepository : RepositoryBase<FitnessDbContext>, IExerciseRep
         
         // Reload with all related data
         return await GetByIdAsync(exercise.Id);
+    }
+    
+    /// <summary>
+    /// Soft deletes an exercise by marking it as inactive
+    /// </summary>
+    public async Task SoftDeleteAsync(ExerciseId id)
+    {
+        await Context.Exercises
+            .Where(e => e.Id == id)
+            .ExecuteUpdateAsync(e => e.SetProperty(x => x.IsActive, false));
     }
     
     /// <summary>

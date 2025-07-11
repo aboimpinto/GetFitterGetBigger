@@ -28,7 +28,8 @@ public class ExerciseTypesAssignmentTests : IClassFixture<SharedDatabaseTestFixt
         var request = CreateExerciseRequestBuilder.ForWorkoutExercise()
             .WithName("Single Type Exercise")
             .WithDescription("Exercise with single type")
-            .WithExerciseTypes("exercisetype-b2c3d4e5-6f7a-8b9c-0d1e-2f3a4b5c6d7e") // Workout
+            .WithExerciseTypes(SeedDataBuilder.StandardIds.ExerciseTypeIds.Workout)
+            .WithMuscleGroups((SeedDataBuilder.StandardIds.MuscleGroupIds.Chest, SeedDataBuilder.StandardIds.MuscleRoleIds.Primary))
             .Build();
         
         // Act
@@ -40,7 +41,7 @@ public class ExerciseTypesAssignmentTests : IClassFixture<SharedDatabaseTestFixt
         var createdExercise = await response.Content.ReadFromJsonAsync<ExerciseDto>();
         Assert.NotNull(createdExercise);
         Assert.Single(createdExercise.ExerciseTypes);
-        Assert.Equal("exercisetype-b2c3d4e5-6f7a-8b9c-0d1e-2f3a4b5c6d7e", createdExercise.ExerciseTypes[0].Id);
+        Assert.Equal(SeedDataBuilder.StandardIds.ExerciseTypeIds.Workout, createdExercise.ExerciseTypes[0].Id);
         Assert.Equal("Workout", createdExercise.ExerciseTypes[0].Value);
     }
     
@@ -52,10 +53,11 @@ public class ExerciseTypesAssignmentTests : IClassFixture<SharedDatabaseTestFixt
             .WithName("Multi Type Exercise")
             .WithDescription("Exercise with multiple types")
             .WithExerciseTypes(
-                "exercisetype-a1b2c3d4-5e6f-7a8b-9c0d-1e2f3a4b5c6d", // Warmup
-                "exercisetype-b2c3d4e5-6f7a-8b9c-0d1e-2f3a4b5c6d7e", // Workout
-                "exercisetype-c3d4e5f6-7a8b-9c0d-1e2f-3a4b5c6d7e8f"  // Cooldown
+                SeedDataBuilder.StandardIds.ExerciseTypeIds.Warmup,
+                SeedDataBuilder.StandardIds.ExerciseTypeIds.Workout,
+                SeedDataBuilder.StandardIds.ExerciseTypeIds.Cooldown
             )
+            .WithMuscleGroups((SeedDataBuilder.StandardIds.MuscleGroupIds.Chest, SeedDataBuilder.StandardIds.MuscleRoleIds.Primary))
             .Build();
         
         // Act
@@ -82,6 +84,7 @@ public class ExerciseTypesAssignmentTests : IClassFixture<SharedDatabaseTestFixt
             .WithName("No Type Exercise")
             .WithDescription("Exercise without types")
             .WithExerciseTypes() // Empty
+            .WithMuscleGroups((SeedDataBuilder.StandardIds.MuscleGroupIds.Chest, SeedDataBuilder.StandardIds.MuscleRoleIds.Primary))
             .Build();
         
         // Act
@@ -103,10 +106,11 @@ public class ExerciseTypesAssignmentTests : IClassFixture<SharedDatabaseTestFixt
             .WithName("Invalid Type Exercise")
             .WithDescription("Exercise with invalid type ID")
             .WithExerciseTypes(
-                "exercisetype-b2c3d4e5-6f7a-8b9c-0d1e-2f3a4b5c6d7e", // Valid
+                SeedDataBuilder.StandardIds.ExerciseTypeIds.Workout, // Valid
                 "invalid-type-id-format", // Invalid format
                 "exercisetype-99999999-9999-9999-9999-999999999999" // Valid format but non-existent
             )
+            .WithMuscleGroups((SeedDataBuilder.StandardIds.MuscleGroupIds.Chest, SeedDataBuilder.StandardIds.MuscleRoleIds.Primary))
             .Build();
         
         // Act
@@ -119,9 +123,9 @@ public class ExerciseTypesAssignmentTests : IClassFixture<SharedDatabaseTestFixt
         Assert.NotNull(createdExercise);
         // Should only have the valid exercise type
         Assert.Single(createdExercise.ExerciseTypes);
-        Assert.Equal("exercisetype-b2c3d4e5-6f7a-8b9c-0d1e-2f3a4b5c6d7e", createdExercise.ExerciseTypes[0].Id);
+        Assert.Equal(SeedDataBuilder.StandardIds.ExerciseTypeIds.Workout, createdExercise.ExerciseTypes[0].Id);
     }
-    
+
     [Fact]
     public async Task CreateExercise_WithDuplicateExerciseTypeIds_DeduplicatesTypes()
     {
@@ -129,24 +133,25 @@ public class ExerciseTypesAssignmentTests : IClassFixture<SharedDatabaseTestFixt
         var request = CreateExerciseRequestBuilder.ForWorkoutExercise()
             .WithName("Duplicate Type Exercise")
             .WithDescription("Exercise with duplicate type IDs")
+            .WithMuscleGroups((SeedDataBuilder.StandardIds.MuscleGroupIds.Chest, SeedDataBuilder.StandardIds.MuscleRoleIds.Primary))
             .WithExerciseTypes(
-                "exercisetype-b2c3d4e5-6f7a-8b9c-0d1e-2f3a4b5c6d7e", // Workout
-                "exercisetype-b2c3d4e5-6f7a-8b9c-0d1e-2f3a4b5c6d7e", // Duplicate
-                "exercisetype-a1b2c3d4-5e6f-7a8b-9c0d-1e2f3a4b5c6d"  // Warmup
+                SeedDataBuilder.StandardIds.ExerciseTypeIds.Workout,
+                SeedDataBuilder.StandardIds.ExerciseTypeIds.Workout, // Duplicate
+                SeedDataBuilder.StandardIds.ExerciseTypeIds.Warmup
             )
             .Build();
-        
+
         // Act
         var response = await _client.PostAsJsonAsync("/api/exercises", request);
-        
+
         // Assert
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);
-        
+
         var createdExercise = await response.Content.ReadFromJsonAsync<ExerciseDto>();
         Assert.NotNull(createdExercise);
         // Should only have 2 unique types
         Assert.Equal(2, createdExercise.ExerciseTypes.Count);
-        
+
         var typeIds = createdExercise.ExerciseTypes.Select(et => et.Id).OrderBy(id => id).ToList();
         Assert.Equal(typeIds.Count, typeIds.Distinct().Count()); // All IDs should be unique
     }

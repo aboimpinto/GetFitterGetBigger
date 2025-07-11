@@ -72,6 +72,7 @@ public class ExerciseServiceCoachNotesTests
         var request = CreateExerciseRequestBuilder.ForWorkoutExercise()
             .WithName("Exercise with Notes")
             .WithDescription("Description")
+            .WithMuscleGroups((MuscleGroupId.New().ToString(), MuscleRoleId.New().ToString()))
             .WithCoachNotes(("Second note", 2), ("First note", 1), ("Third note", 3))
             .Build();
         
@@ -91,7 +92,7 @@ public class ExerciseServiceCoachNotesTests
         
         // Assert
         Assert.NotNull(result);
-        Assert.True(result.IsSuccess);
+        Assert.True(result.IsSuccess, $"Create failed with errors: {string.Join(", ", result.Errors)}");
         
         // Verify the entity was created with coach notes
         Assert.NotNull(capturedExercise);
@@ -121,6 +122,7 @@ public class ExerciseServiceCoachNotesTests
             .WithName("Exercise with Types")
             .WithDescription("Description")
             .WithExerciseTypes(exerciseTypeId1.ToString(), exerciseTypeId2.ToString())
+            .WithMuscleGroups((MuscleGroupId.New().ToString(), MuscleRoleId.New().ToString()))
             .Build();
         
         _exerciseRepositoryMock.Setup(r => r.ExistsAsync(It.IsAny<string>(), null))
@@ -160,6 +162,7 @@ public class ExerciseServiceCoachNotesTests
         var request = CreateExerciseRequestBuilder.ForWorkoutExercise()
             .WithName("Exercise without Notes")
             .WithDescription("Description")
+            .WithMuscleGroups((MuscleGroupId.New().ToString(), MuscleRoleId.New().ToString()))
             .WithCoachNotes() // Empty coach notes
             .Build();
         
@@ -190,6 +193,7 @@ public class ExerciseServiceCoachNotesTests
             .WithName("Exercise with Invalid Type")
             .WithDescription("Description")
             .WithExerciseTypes(validId.ToString(), "invalid-id", "exercisetype-not-a-guid")
+            .WithMuscleGroups((MuscleGroupId.New().ToString(), MuscleRoleId.New().ToString()))
             .Build();
         
         _exerciseRepositoryMock.Setup(r => r.ExistsAsync(It.IsAny<string>(), null))
@@ -237,6 +241,7 @@ public class ExerciseServiceCoachNotesTests
         var request = CreateExerciseRequestBuilder.ForWorkoutExercise()
             .WithName("Exercise with Gaps")
             .WithDescription("Description")
+            .WithMuscleGroups((MuscleGroupId.New().ToString(), MuscleRoleId.New().ToString()))
             .WithCoachNotes(("Note at 10", 10), ("Note at 5", 5), ("Note at 20", 20))
             .Build();
         

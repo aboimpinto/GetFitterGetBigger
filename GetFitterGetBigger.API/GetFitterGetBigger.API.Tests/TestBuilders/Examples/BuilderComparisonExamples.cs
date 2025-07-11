@@ -95,7 +95,7 @@ public class BuilderComparisonExamples
         // Old pattern - builds successfully even with missing required data
         var request = new CreateExerciseRequestBuilder()
             .WithName("Incomplete Exercise")
-            .WithExerciseTypes(new[] { TestConstants.ExerciseTypeIds.Workout })
+            .WithExerciseTypes(new[] { SeedDataBuilder.StandardIds.ExerciseTypeIds.Workout })
             .WithKineticChainId(null)  // Explicitly clearing default
             .WithExerciseWeightTypeId(null)  // Explicitly clearing default
             .WithMuscleGroups()  // Clearing default muscle groups
@@ -108,19 +108,39 @@ public class BuilderComparisonExamples
     }
 
     [Fact]
-    public void NewPattern_ValidatesRequiredFields()
+    public void NewPattern_BuilderDoesNotValidate_ValidationHappensInService()
     {
-        // New pattern - validates all required fields
-        var exception = Assert.Throws<InvalidOperationException>(() =>
-            CreateExerciseRequestBuilder.ForWorkoutExercise()
-                .WithName("Incomplete Exercise")
-                .Build()  // Throws with helpful error message!
-        );
-
-        // Clear error message telling you what's missing
-        Assert.Contains("KineticChain is required", exception.Message);
-        Assert.Contains("ExerciseWeightType is required", exception.Message);
-        Assert.Contains("At least one muscle group is required", exception.Message);
+        // New pattern - builders don't validate, they just build
+        // Validation happens at the service layer when processing the command
+        
+        // The builder allows creating an incomplete request
+        // We explicitly clear required fields to demonstrate lack of validation
+        var incompleteRequest = CreateExerciseRequestBuilder.ForWorkoutExercise()
+            .WithName("Incomplete Exercise")
+            .WithKineticChainId(null)  // Explicitly clear required field
+            .WithExerciseWeightTypeId(null)  // Explicitly clear required field
+            .WithMuscleGroups()  // Clear all muscle groups
+            .Build();  // This succeeds! No validation in builder
+        
+        // The request is built successfully even though it's missing required fields
+        Assert.NotNull(incompleteRequest);
+        Assert.Null(incompleteRequest.KineticChainId);  // Missing required field!
+        Assert.Null(incompleteRequest.ExerciseWeightTypeId);  // Missing required field!
+        Assert.Empty(incompleteRequest.MuscleGroups);  // Missing required field!
+        
+        // Validation happens later in the service layer:
+        // 1. Request → ToCommand() → CreateExerciseCommand
+        // 2. ExerciseService.CreateAsync(command)
+        // 3. Private ValidateCreateCommand() returns validation errors
+        // 4. Service returns ServiceResult.Failure with errors
+        
+        // This architectural change follows Clean Architecture principles:
+        // - Builders (infrastructure layer) just build DTOs
+        // - Services (business layer) enforce business rules
+        // - Validation is a business concern, not a DTO construction concern
+        
+        // Note: The old test "NewPattern_ValidatesRequiredFields" expected builders
+        // to throw exceptions, but that's not how the new architecture works!
     }
 
     [Fact]

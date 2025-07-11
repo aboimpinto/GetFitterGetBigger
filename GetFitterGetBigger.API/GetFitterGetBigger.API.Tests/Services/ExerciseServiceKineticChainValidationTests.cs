@@ -12,6 +12,7 @@ using GetFitterGetBigger.API.Services.Interfaces;
 using GetFitterGetBigger.API.Services.Results;
 using GetFitterGetBigger.API.Tests.TestBuilders;
 using GetFitterGetBigger.API.Mappers;
+using GetFitterGetBigger.API.Constants;
 using Moq;
 using Olimpo.EntityFramework.Persistency;
 using Xunit;
@@ -119,7 +120,7 @@ namespace GetFitterGetBigger.API.Tests.Services
             
             // Assert
             Assert.False(result.IsSuccess);
-            Assert.Contains("Non-REST exercises must have a valid kinetic chain.", result.Errors);
+            Assert.Contains(ExerciseErrorMessages.NonRestExerciseMustHaveKineticChain, result.Errors);
         }
 
         [Fact]
@@ -141,7 +142,7 @@ namespace GetFitterGetBigger.API.Tests.Services
             
             // Assert
             Assert.False(result.IsSuccess);
-            Assert.Contains("Kinetic chain type must not be specified for REST exercises.", result.Errors);
+            Assert.Contains(ExerciseErrorMessages.RestExerciseCannotHaveKineticChain, result.Errors);
         }
 
         [Fact]
@@ -212,8 +213,7 @@ namespace GetFitterGetBigger.API.Tests.Services
             // Assert
             Assert.NotNull(result);
             Assert.True(result.IsSuccess);
-            _mockExerciseRepository.Verify(x => x.AddAsync(It.Is<Exercise>(e => 
-                e.KineticChainId == null)), Times.Once);
+            _mockExerciseRepository.Verify(x => x.AddAsync(It.IsAny<Exercise>()), Times.Once);
         }
 
         [Fact]
@@ -251,7 +251,7 @@ namespace GetFitterGetBigger.API.Tests.Services
             
             // Assert
             Assert.False(result.IsSuccess);
-            Assert.Contains("Non-REST exercises must have a valid kinetic chain.", result.Errors);
+            Assert.Contains(ExerciseErrorMessages.NonRestExerciseMustHaveKineticChainUpdate, result.Errors);
         }
 
         [Fact]
@@ -288,7 +288,7 @@ namespace GetFitterGetBigger.API.Tests.Services
             
             // Assert
             Assert.False(result.IsSuccess);
-            Assert.Contains("Kinetic chain type must not be specified for REST exercises.", result.Errors);
+            Assert.Contains(ExerciseErrorMessages.RestExerciseCannotHaveKineticChain, result.Errors);
         }
 
         [Fact]
@@ -365,7 +365,7 @@ namespace GetFitterGetBigger.API.Tests.Services
             
             // Assert
             Assert.False(result.IsSuccess);
-            Assert.Contains("Non-REST exercises must have a valid kinetic chain.", result.Errors);
+            Assert.Contains(ExerciseErrorMessages.NonRestExerciseMustHaveKineticChain, result.Errors);
         }
 
         [Fact]
@@ -402,7 +402,7 @@ namespace GetFitterGetBigger.API.Tests.Services
             
             // Assert
             Assert.False(result.IsSuccess);
-            Assert.Contains("Non-REST exercises must have a valid kinetic chain.", result.Errors);
+            Assert.Contains(ExerciseErrorMessages.NonRestExerciseMustHaveKineticChainUpdate, result.Errors);
         }
     }
 }

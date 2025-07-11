@@ -15,6 +15,7 @@ public static class SpecializedIdListExtensions
         return stringIds
             .Select(id => ExerciseTypeId.ParseOrEmpty(id))
             .Where(id => !id.IsEmpty)
+            .Distinct() // Deduplicate exercise type IDs
             .ToList();
     }
     

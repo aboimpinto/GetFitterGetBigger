@@ -8,6 +8,7 @@ using GetFitterGetBigger.API.Services.Commands;
 using GetFitterGetBigger.API.Services.Interfaces;
 using GetFitterGetBigger.API.Services.Results;
 using GetFitterGetBigger.API.Builders;
+using GetFitterGetBigger.API.Constants;
 using Olimpo.EntityFramework.Persistency;
 using System.Linq;
 
@@ -37,7 +38,7 @@ public class ExerciseService : IExerciseService
         var (exercises, totalCount) = await repository.GetPagedAsync(
             filterParams.Page,
             filterParams.PageSize,
-            filterParams.SearchTerm,
+            filterParams.Name,
             filterParams.DifficultyLevelId,
             filterParams.MuscleGroupIds,
             filterParams.EquipmentIds,
@@ -87,7 +88,7 @@ public class ExerciseService : IExerciseService
         // Check for duplicate name
         if (await repository.ExistsAsync(command.Name, null))
         {
-            return ServiceResult<ExerciseDto>.Failure(ExerciseDto.Empty, $"Exercise with name '{command.Name}' already exists.");
+            return ServiceResult<ExerciseDto>.Failure(ExerciseDto.Empty, string.Format(ExerciseErrorMessages.DuplicateNameFormat, command.Name));
         }
         
         // Create exercise with all data, not just basic fields
@@ -122,7 +123,7 @@ public class ExerciseService : IExerciseService
         // Validate the ID first
         if (id.IsEmpty)
         {
-            return ServiceResult<ExerciseDto>.Failure(ExerciseDto.Empty, "Invalid exercise ID");
+            return ServiceResult<ExerciseDto>.Failure(ExerciseDto.Empty, ExerciseErrorMessages.InvalidExerciseId);
         }
         
         // Business validation
@@ -138,13 +139,13 @@ public class ExerciseService : IExerciseService
         // Check for duplicate name (excluding current exercise)
         if (await repository.ExistsAsync(command.Name, id))
         {
-            return ServiceResult<ExerciseDto>.Failure(ExerciseDto.Empty, $"Exercise with name '{command.Name}' already exists.");
+            return ServiceResult<ExerciseDto>.Failure(ExerciseDto.Empty, string.Format(ExerciseErrorMessages.DuplicateNameFormat, command.Name));
         }
         
         var exercise = await repository.GetByIdAsync(id);
         if (exercise.IsEmpty)
         {
-            return ServiceResult<ExerciseDto>.Failure(ExerciseDto.Empty, "Exercise not found");
+            return ServiceResult<ExerciseDto>.Failure(ExerciseDto.Empty, ExerciseErrorMessages.ExerciseNotFound);
         }
         
         // PROPER UPDATE: Modify existing exercise instead of creating new one
@@ -173,7 +174,10 @@ public class ExerciseService : IExerciseService
         await repository.UpdateAsync(finalExercise);
         await writableUow.CommitAsync();
         
-        return ServiceResult<ExerciseDto>.Success(MapToExerciseDto(finalExercise));
+        // Reload the exercise with all navigation properties for proper mapping
+        var reloadedExercise = await repository.GetByIdAsync(id);
+        
+        return ServiceResult<ExerciseDto>.Success(MapToExerciseDto(reloadedExercise));
     }
 
     public async Task<ServiceResult<bool>> DeleteAsync(ExerciseId id)
@@ -181,7 +185,7 @@ public class ExerciseService : IExerciseService
         // Validate the ID first
         if (id.IsEmpty)
         {
-            return ServiceResult<bool>.Failure(false, "Invalid exercise ID");
+            return ServiceResult<bool>.Failure(false, ExerciseErrorMessages.InvalidExerciseId);
         }
         
         using var writableUow = _unitOfWorkProvider.CreateWritable();
@@ -190,12 +194,12 @@ public class ExerciseService : IExerciseService
         var exercise = await repository.GetByIdAsync(id);
         if (exercise.IsEmpty)
         {
-            return ServiceResult<bool>.Failure(false, "Exercise not found");
+            return ServiceResult<bool>.Failure(false, ExerciseErrorMessages.ExerciseNotFound);
         }
         
         // For now, just soft delete (mark as inactive)
-        var softDeletedExercise = exercise with { IsActive = false };
-        await repository.UpdateAsync(softDeletedExercise);
+        // Use direct Entity Framework update to avoid relationship clearing
+        await repository.SoftDeleteAsync(id);
         await writableUow.CommitAsync();
         
         return ServiceResult<bool>.Success(true);
@@ -281,19 +285,19 @@ public class ExerciseService : IExerciseService
         
         // Validate required fields
         if (string.IsNullOrWhiteSpace(command.Name))
-            errors.Add("Exercise name is required");
+            errors.Add(ExerciseErrorMessages.ExerciseNameRequired);
             
         if (string.IsNullOrWhiteSpace(command.Description))
-            errors.Add("Exercise description is required");
+            errors.Add(ExerciseErrorMessages.ExerciseDescriptionRequired);
             
         if (command.DifficultyId.IsEmpty)
-            errors.Add("Difficulty level is required");
+            errors.Add(ExerciseErrorMessages.DifficultyLevelRequired);
         
         // Validate exercise type IDs are not empty
         var validExerciseTypeIds = command.ExerciseTypeIds.Where(id => !id.IsEmpty).ToList();
         if (command.ExerciseTypeIds.Any() && !validExerciseTypeIds.Any())
         {
-            errors.Add("Invalid exercise type IDs provided");
+            errors.Add(ExerciseErrorMessages.InvalidExerciseTypeIds);
         }
         
         // Business validation: Check if exercise types contain REST
@@ -309,18 +313,18 @@ public class ExerciseService : IExerciseService
         {
             if (command.KineticChainId.HasValue && !command.KineticChainId.Value.IsEmpty)
             {
-                errors.Add("Kinetic chain type must not be specified for REST exercises.");
+                errors.Add(ExerciseErrorMessages.RestExerciseCannotHaveKineticChain);
             }
             
             if (command.ExerciseWeightTypeId.HasValue && !command.ExerciseWeightTypeId.Value.IsEmpty)
             {
-                errors.Add("REST exercises cannot have a weight type.");
+                errors.Add(ExerciseErrorMessages.RestExerciseCannotHaveWeightType);
             }
             
             // Check if REST is mixed with other types
             if (validExerciseTypeIds.Count > 1)
             {
-                errors.Add("REST exercises cannot be combined with other exercise types.");
+                errors.Add(ExerciseErrorMessages.RestExerciseCannotBeCombined);
             }
         }
         else
@@ -328,18 +332,18 @@ public class ExerciseService : IExerciseService
             // Non-REST exercises validation
             if (!command.KineticChainId.HasValue || command.KineticChainId.Value.IsEmpty)
             {
-                errors.Add("Non-REST exercises must have a valid kinetic chain.");
+                errors.Add(ExerciseErrorMessages.NonRestExerciseMustHaveKineticChain);
             }
             
             if (!command.ExerciseWeightTypeId.HasValue || command.ExerciseWeightTypeId.Value.IsEmpty)
             {
-                errors.Add("Non-REST exercises must have a valid weight type.");
+                errors.Add(ExerciseErrorMessages.NonRestExerciseMustHaveWeightType);
             }
             
             // Must have muscle groups for non-REST exercises
             if (!command.MuscleGroups.Any())
             {
-                errors.Add("Non-REST exercises must have at least one muscle group.");
+                errors.Add(ExerciseErrorMessages.NonRestExerciseMustHaveMuscleGroups);
             }
             else
             {
@@ -347,9 +351,9 @@ public class ExerciseService : IExerciseService
                 foreach (var mg in command.MuscleGroups)
                 {
                     if (mg.MuscleGroupId.IsEmpty)
-                        errors.Add("Invalid muscle group ID found");
+                        errors.Add(ExerciseErrorMessages.InvalidMuscleGroupId);
                     if (mg.MuscleRoleId.IsEmpty)
-                        errors.Add("Invalid muscle role ID found");
+                        errors.Add(ExerciseErrorMessages.InvalidMuscleRoleId);
                 }
             }
         }
@@ -365,13 +369,13 @@ public class ExerciseService : IExerciseService
         
         // Validate required fields
         if (string.IsNullOrWhiteSpace(command.Name))
-            errors.Add("Exercise name is required");
+            errors.Add(ExerciseErrorMessages.ExerciseNameRequired);
             
         if (string.IsNullOrWhiteSpace(command.Description))
-            errors.Add("Exercise description is required");
+            errors.Add(ExerciseErrorMessages.ExerciseDescriptionRequired);
             
         if (command.DifficultyId.IsEmpty)
-            errors.Add("Difficulty level is required");
+            errors.Add(ExerciseErrorMessages.DifficultyLevelRequired);
         
         // Same validation logic as create
         bool isRestExercise = false;
@@ -385,34 +389,34 @@ public class ExerciseService : IExerciseService
         {
             if (command.KineticChainId.HasValue && !command.KineticChainId.Value.IsEmpty)
             {
-                errors.Add("Kinetic chain type must not be specified for REST exercises.");
+                errors.Add(ExerciseErrorMessages.RestExerciseCannotHaveKineticChain);
             }
             
             if (command.ExerciseWeightTypeId.HasValue && !command.ExerciseWeightTypeId.Value.IsEmpty)
             {
-                errors.Add("REST exercises cannot have a weight type.");
+                errors.Add(ExerciseErrorMessages.RestExerciseCannotHaveWeightType);
             }
             
             if (command.ExerciseTypeIds.Count > 1)
             {
-                errors.Add("REST exercises cannot be combined with other exercise types.");
+                errors.Add(ExerciseErrorMessages.RestExerciseCannotBeCombined);
             }
         }
         else
         {
             if (!command.KineticChainId.HasValue || command.KineticChainId.Value.IsEmpty)
             {
-                errors.Add("Non-REST exercises must have a kinetic chain.");
+                errors.Add(ExerciseErrorMessages.NonRestExerciseMustHaveKineticChainUpdate);
             }
             
             if (!command.ExerciseWeightTypeId.HasValue || command.ExerciseWeightTypeId.Value.IsEmpty)
             {
-                errors.Add("Non-REST exercises must have a valid weight type.");
+                errors.Add(ExerciseErrorMessages.NonRestExerciseMustHaveWeightType);
             }
             
             if (!command.MuscleGroups.Any())
             {
-                errors.Add("Non-REST exercises must have at least one muscle group.");
+                errors.Add(ExerciseErrorMessages.NonRestExerciseMustHaveMuscleGroups);
             }
         }
         

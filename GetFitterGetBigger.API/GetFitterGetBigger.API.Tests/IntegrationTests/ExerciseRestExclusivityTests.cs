@@ -52,9 +52,10 @@ public class ExerciseRestExclusivityTests : IClassFixture<SharedDatabaseTestFixt
         var request = CreateExerciseRequestBuilder.ForWorkoutExercise()
             .WithName("Invalid Rest with Warmup")
             .WithDescription("Trying to combine Rest with Warmup")
+            .WithMuscleGroups((SeedDataBuilder.StandardIds.MuscleGroupIds.Chest, SeedDataBuilder.StandardIds.MuscleRoleIds.Primary))
             .WithExerciseTypes(
-                "exercisetype-d4e5f6a7-8b9c-0d1e-2f3a-4b5c6d7e8f9a", // ID containing "rest"
-                "exercisetype-a1b2c3d4-5e6f-7a8b-9c0d-1e2f3a4b5c6d" // Warmup
+                SeedDataBuilder.StandardIds.ExerciseTypeIds.Rest,
+                SeedDataBuilder.StandardIds.ExerciseTypeIds.Warmup
             )
             .WithKineticChainId(null) // REST exercises should have null KineticChainId
             .Build();
@@ -66,7 +67,7 @@ public class ExerciseRestExclusivityTests : IClassFixture<SharedDatabaseTestFixt
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
         
         var content = await response.Content.ReadAsStringAsync();
-        Assert.Contains("Rest", content);
+        Assert.Contains("REST", content);
         Assert.Contains("cannot be combined", content);
     }
     
@@ -77,9 +78,10 @@ public class ExerciseRestExclusivityTests : IClassFixture<SharedDatabaseTestFixt
         var request = CreateExerciseRequestBuilder.ForWorkoutExercise()
             .WithName("Invalid Rest with Workout")
             .WithDescription("Trying to combine Rest with Workout")
+            .WithMuscleGroups((SeedDataBuilder.StandardIds.MuscleGroupIds.Chest, SeedDataBuilder.StandardIds.MuscleRoleIds.Primary))
             .WithExerciseTypes(
-                "exercisetype-b2c3d4e5-6f7a-8b9c-0d1e-2f3a4b5c6d7e", // Workout
-                "exercisetype-d4e5f6a7-8b9c-0d1e-2f3a-4b5c6d7e8f9a" // ID containing "rest"
+                SeedDataBuilder.StandardIds.ExerciseTypeIds.Workout,
+                SeedDataBuilder.StandardIds.ExerciseTypeIds.Rest
             )
             .WithKineticChainId(null) // REST exercises should have null KineticChainId
             .Build();
@@ -98,11 +100,12 @@ public class ExerciseRestExclusivityTests : IClassFixture<SharedDatabaseTestFixt
         var request = CreateExerciseRequestBuilder.ForWorkoutExercise()
             .WithName("Invalid Rest with All Types")
             .WithDescription("Trying to combine Rest with all other types")
+            .WithMuscleGroups((SeedDataBuilder.StandardIds.MuscleGroupIds.Chest, SeedDataBuilder.StandardIds.MuscleRoleIds.Primary))
             .WithExerciseTypes(
-                "exercisetype-a1b2c3d4-5e6f-7a8b-9c0d-1e2f3a4b5c6d", // Warmup
-                "exercisetype-b2c3d4e5-6f7a-8b9c-0d1e-2f3a4b5c6d7e", // Workout
-                "exercisetype-c3d4e5f6-7a8b-9c0d-1e2f-3a4b5c6d7e8f", // Cooldown
-                "exercisetype-d4e5f6a7-8b9c-0d1e-2f3a-4b5c6d7e8f9a" // Rest (with "rest" in ID)
+                SeedDataBuilder.StandardIds.ExerciseTypeIds.Warmup,
+                SeedDataBuilder.StandardIds.ExerciseTypeIds.Workout,
+                SeedDataBuilder.StandardIds.ExerciseTypeIds.Cooldown,
+                SeedDataBuilder.StandardIds.ExerciseTypeIds.Rest
             )
             .WithKineticChainId(null) // REST exercises should have null KineticChainId
             .Build();
@@ -114,7 +117,7 @@ public class ExerciseRestExclusivityTests : IClassFixture<SharedDatabaseTestFixt
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
         
         var content = await response.Content.ReadAsStringAsync();
-        Assert.Contains("Rest", content);
+        Assert.Contains("REST", content);
     }
     
     [Fact]
@@ -124,10 +127,11 @@ public class ExerciseRestExclusivityTests : IClassFixture<SharedDatabaseTestFixt
         var request = CreateExerciseRequestBuilder.ForWorkoutExercise()
             .WithName("Multiple Types Without Rest")
             .WithDescription("Exercise with multiple non-Rest types")
+            .WithMuscleGroups((SeedDataBuilder.StandardIds.MuscleGroupIds.Chest, SeedDataBuilder.StandardIds.MuscleRoleIds.Primary))
             .WithExerciseTypes(
-                "exercisetype-a1b2c3d4-5e6f-7a8b-9c0d-1e2f3a4b5c6d", // Warmup
-                "exercisetype-b2c3d4e5-6f7a-8b9c-0d1e-2f3a4b5c6d7e", // Workout
-                "exercisetype-c3d4e5f6-7a8b-9c0d-1e2f-3a4b5c6d7e8f"  // Cooldown
+                SeedDataBuilder.StandardIds.ExerciseTypeIds.Warmup,
+                SeedDataBuilder.StandardIds.ExerciseTypeIds.Workout,
+                SeedDataBuilder.StandardIds.ExerciseTypeIds.Cooldown
             )
             .Build();
         

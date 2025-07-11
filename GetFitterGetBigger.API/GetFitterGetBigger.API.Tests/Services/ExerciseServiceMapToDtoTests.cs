@@ -343,8 +343,6 @@ public class ExerciseServiceMapToDtoTests
         
         // Assert
         Assert.NotNull(result);
-        Assert.Single(result.ExerciseTypes);
-        Assert.Empty(result.ExerciseTypes[0].Value); // Should handle null gracefully
-        Assert.Null(result.ExerciseTypes[0].Description);
+        Assert.Empty(result.ExerciseTypes); // Null navigation properties are filtered out
     }
 }

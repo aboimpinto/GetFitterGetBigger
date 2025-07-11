@@ -14,6 +14,7 @@ using GetFitterGetBigger.API.Services.Results;
 using GetFitterGetBigger.API.Tests.TestBuilders;
 using GetFitterGetBigger.API.Mappers;
 using GetFitterGetBigger.API.Tests.TestBuilders.Domain;
+using GetFitterGetBigger.API.Constants;
 using Moq;
 using Olimpo.EntityFramework.Persistency;
 using Xunit;
@@ -256,9 +257,15 @@ namespace GetFitterGetBigger.API.Tests.Services
                 
             var updatedExerciseWithDifficulty = updatedExercise with { Difficulty = difficulty };
 
+            // First call returns existing, second call (after update) returns updated
+            var getByIdCallCount = 0;
             _mockExerciseRepository
                 .Setup(r => r.GetByIdAsync(exerciseId))
-                .ReturnsAsync(existingExerciseWithDifficulty);
+                .ReturnsAsync(() => 
+                {
+                    getByIdCallCount++;
+                    return getByIdCallCount == 1 ? existingExerciseWithDifficulty : updatedExerciseWithDifficulty;
+                });
 
             _mockExerciseRepository
                 .Setup(r => r.ExistsAsync(It.IsAny<string>(), It.IsAny<ExerciseId?>()))
@@ -284,7 +291,7 @@ namespace GetFitterGetBigger.API.Tests.Services
         }
 
         [Fact]
-        public async Task DeleteAsync_WithNoReferences_PerformsHardDelete()
+        public async Task DeleteAsync_WithValidId_PerformsSoftDelete()
         {
             // Arrange
             var exerciseId = ExerciseId.New();
@@ -297,50 +304,35 @@ namespace GetFitterGetBigger.API.Tests.Services
                 .ReturnsAsync(exercise);
 
             _mockExerciseRepository
-                .Setup(r => r.HasReferencesAsync(It.IsAny<ExerciseId>()))
-                .ReturnsAsync(false);
-
-            _mockExerciseRepository
-                .Setup(r => r.DeleteAsync(It.IsAny<ExerciseId>()))
-                .ReturnsAsync(true);
+                .Setup(r => r.SoftDeleteAsync(It.IsAny<ExerciseId>()))
+                .Returns(Task.CompletedTask);
 
             // Act
             var result = await _service.DeleteAsync(ExerciseId.ParseOrEmpty(exerciseId.ToString()));
 
             // Assert
             Assert.True(result.IsSuccess);
-            _mockExerciseRepository.Verify(r => r.DeleteAsync(It.IsAny<ExerciseId>()), Times.Never);
-            _mockExerciseRepository.Verify(r => r.UpdateAsync(It.IsAny<Exercise>()), Times.Once);
+            _mockExerciseRepository.Verify(r => r.SoftDeleteAsync(It.IsAny<ExerciseId>()), Times.Once);
+            _mockExerciseRepository.Verify(r => r.UpdateAsync(It.IsAny<Exercise>()), Times.Never);
         }
 
         [Fact]
-        public async Task DeleteAsync_WithReferences_PerformsSoftDelete()
+        public async Task DeleteAsync_WithInvalidId_ReturnsFailure()
         {
             // Arrange
             var exerciseId = ExerciseId.New();
-            var difficultyId = DifficultyLevelId.New();
-            var difficulty = DifficultyLevel.Handler.Create(difficultyId, "Beginner", "For beginners", 1, true);
-            var exercise = CreateTestExercise("To Soft Delete", difficultyId, difficulty);
 
             _mockExerciseRepository
                 .Setup(r => r.GetByIdAsync(It.IsAny<ExerciseId>()))
-                .ReturnsAsync(exercise);
-
-            _mockExerciseRepository
-                .Setup(r => r.HasReferencesAsync(It.IsAny<ExerciseId>()))
-                .ReturnsAsync(true);
-
-            _mockExerciseRepository
-                .Setup(r => r.UpdateAsync(It.IsAny<Exercise>()))
-                .ReturnsAsync(exercise);
+                .ReturnsAsync(Exercise.Empty);
 
             // Act
             var result = await _service.DeleteAsync(ExerciseId.ParseOrEmpty(exerciseId.ToString()));
 
             // Assert
-            Assert.True(result.IsSuccess);
-            _mockExerciseRepository.Verify(r => r.UpdateAsync(It.IsAny<Exercise>()), Times.Once);
-            _mockExerciseRepository.Verify(r => r.DeleteAsync(It.IsAny<ExerciseId>()), Times.Never);
+            Assert.False(result.IsSuccess);
+            Assert.Contains(ExerciseErrorMessages.ExerciseNotFound, result.Errors);
+            _mockExerciseRepository.Verify(r => r.SoftDeleteAsync(It.IsAny<ExerciseId>()), Times.Never);
         }
 
         private Exercise CreateTestExercise(string name, DifficultyLevelId difficultyId, DifficultyLevel difficulty)
@@ -371,9 +363,9 @@ namespace GetFitterGetBigger.API.Tests.Services
             {
                 Name = "Rest Exercise",
                 Description = "Rest period",
-                DifficultyId = TestConstants.DifficultyLevelIds.Beginner,
-                ExerciseTypeIds = new List<string> { TestConstants.ExerciseTypeIds.Rest },
-                ExerciseWeightTypeId = TestConstants.ExerciseWeightTypeIds.WeightRequired, // Should not be allowed
+                DifficultyId = SeedDataBuilder.StandardIds.DifficultyLevelIds.Beginner,
+                ExerciseTypeIds = new List<string> { SeedDataBuilder.StandardIds.ExerciseTypeIds.Rest },
+                ExerciseWeightTypeId = SeedDataBuilder.StandardIds.ExerciseWeightTypeIds.WeightRequired, // Should not be allowed
                 KineticChainId = null,
                 MuscleGroups = new List<MuscleGroupWithRoleRequest>()
             };
@@ -388,7 +380,7 @@ namespace GetFitterGetBigger.API.Tests.Services
             
             // Assert
             Assert.False(result.IsSuccess);
-            Assert.Contains("REST exercises cannot have a weight type.", result.Errors);
+            Assert.Contains(ExerciseErrorMessages.RestExerciseCannotHaveWeightType, result.Errors);
         }
 
         [Fact]
@@ -400,16 +392,16 @@ namespace GetFitterGetBigger.API.Tests.Services
             {
                 Name = "Workout Exercise",
                 Description = "Workout description",
-                DifficultyId = TestConstants.DifficultyLevelIds.Beginner,
-                KineticChainId = TestConstants.KineticChainTypeIds.Compound,
-                ExerciseTypeIds = new List<string> { TestConstants.ExerciseTypeIds.Workout },
+                DifficultyId = SeedDataBuilder.StandardIds.DifficultyLevelIds.Beginner,
+                KineticChainId = SeedDataBuilder.StandardIds.KineticChainTypeIds.Compound,
+                ExerciseTypeIds = new List<string> { SeedDataBuilder.StandardIds.ExerciseTypeIds.Workout },
                 ExerciseWeightTypeId = null, // Should be required
                 MuscleGroups = new List<MuscleGroupWithRoleRequest>
                 {
                     new MuscleGroupWithRoleRequest
                     {
-                        MuscleGroupId = TestConstants.MuscleGroupIds.Chest,
-                        MuscleRoleId = TestConstants.MuscleRoleIds.Primary
+                        MuscleGroupId = SeedDataBuilder.StandardIds.MuscleGroupIds.Chest,
+                        MuscleRoleId = SeedDataBuilder.StandardIds.MuscleRoleIds.Primary
                     }
                 }
             };
@@ -512,7 +504,7 @@ namespace GetFitterGetBigger.API.Tests.Services
             
             // Assert
             Assert.False(result.IsSuccess);
-            Assert.Contains("REST exercises cannot have a weight type.", result.Errors);
+            Assert.Contains(ExerciseErrorMessages.RestExerciseCannotHaveWeightType, result.Errors);
         }
 
         [Fact]

@@ -26,8 +26,28 @@ public class ExercisesControllerPostgreSqlTests : PostgreSqlTestBase
     [Fact]
     public async Task GetExercises_ReturnsPagedListOfExercises()
     {
-        // Arrange
+        // Arrange - Seed test data first
         await SeedTestDataAsync();
+        
+        // Create some exercises through the API
+        var exercise1 = CreateExerciseRequestBuilder.ForWorkoutExercise()
+            .WithName("Test Exercise 1 " + Guid.NewGuid())
+            .WithDescription("Test Description 1")
+            .WithMuscleGroups((SeedDataBuilder.StandardIds.MuscleGroupIds.Chest, SeedDataBuilder.StandardIds.MuscleRoleIds.Primary))
+            .WithCoachNotes(("Step 1", 0))
+            .WithDifficultyId(SeedDataBuilder.StandardIds.DifficultyLevelIds.Beginner)
+            .WithKineticChainId(SeedDataBuilder.StandardIds.KineticChainTypeIds.Compound)
+            .WithExerciseWeightTypeId(SeedDataBuilder.StandardIds.ExerciseWeightTypeIds.WeightRequired)
+            .Build();
+        
+        var createResponse = await Client.PostAsJsonAsync("/api/exercises", exercise1);
+        
+        // Ensure the exercise was created successfully
+        if (!createResponse.IsSuccessStatusCode)
+        {
+            var errorContent = await createResponse.Content.ReadAsStringAsync();
+            throw new InvalidOperationException($"Failed to create exercise: {createResponse.StatusCode} - {errorContent}");
+        }
 
         // Act
         var response = await Client.GetAsync("/api/exercises?page=1&pageSize=10");
@@ -67,7 +87,7 @@ public class ExercisesControllerPostgreSqlTests : PostgreSqlTestBase
         await SeedTestDataAsync();
 
         // Act
-        var response = await Client.GetAsync("/api/exercises?MuscleGroupIds=musclegroup-ccddeeff-0011-2233-4455-667788990011&page=1&pageSize=10");
+        var response = await Client.GetAsync($"/api/exercises?MuscleGroupIds={SeedDataBuilder.StandardIds.MuscleGroupIds.Chest}&page=1&pageSize=10");
         
         // Assert
         response.EnsureSuccessStatusCode();
@@ -76,7 +96,7 @@ public class ExercisesControllerPostgreSqlTests : PostgreSqlTestBase
         Assert.NotNull(result);
         Assert.NotEmpty(result.Items);
         Assert.All(result.Items, item => 
-            Assert.Contains(item.MuscleGroups, mg => mg.MuscleGroup.Id == "musclegroup-ccddeeff-0011-2233-4455-667788990011"));
+            Assert.Contains(item.MuscleGroups, mg => mg.MuscleGroup.Id == SeedDataBuilder.StandardIds.MuscleGroupIds.Chest));
     }
 
     [Fact]
@@ -105,16 +125,15 @@ public class ExercisesControllerPostgreSqlTests : PostgreSqlTestBase
         var exercises = await SeedTestDataAsync();
         var existingExercise = exercises.First();
         
-        var request = new CreateExerciseRequest
-        {
-            Name = existingExercise.Name,
-            Description = "Test Description",
-            CoachNotes = new List<CoachNoteRequest> { new() { Text = "Step 1", Order = 0 } },
-            ExerciseTypeIds = new List<string> { "exercisetype-b2c3d4e5-6f7a-8b9c-0d1e-2f3a4b5c6d7e" }, // Workout
-            DifficultyId = "difficultylevel-8a8adb1d-24d2-4979-a5a6-0d760e6da24b",
-            KineticChainId = "kineticchaintype-f5d5a2de-9c4e-4b87-b8c3-5d1e17d0b1f4", // Compound
-            MuscleGroups = new List<MuscleGroupWithRoleRequest> { new() { MuscleGroupId = "musclegroup-ccddeeff-0011-2233-4455-667788990011", MuscleRoleId = "musclerole-abcdef12-3456-7890-abcd-ef1234567890" } }
-        };
+        var request = CreateExerciseRequestBuilder.ForWorkoutExercise()
+            .WithName(existingExercise.Name)
+            .WithDescription("Test Description")
+            .WithMuscleGroups((SeedDataBuilder.StandardIds.MuscleGroupIds.Chest, SeedDataBuilder.StandardIds.MuscleRoleIds.Primary))
+            .WithCoachNotes(("Step 1", 0))
+            .WithDifficultyId(SeedDataBuilder.StandardIds.DifficultyLevelIds.Beginner)
+            .WithKineticChainId(SeedDataBuilder.StandardIds.KineticChainTypeIds.Compound)
+            .WithExerciseWeightTypeId(SeedDataBuilder.StandardIds.ExerciseWeightTypeIds.WeightRequired)
+            .Build();
 
         // Act
         var response = await Client.PostAsJsonAsync("/api/exercises", request);
@@ -133,13 +152,14 @@ public class ExercisesControllerPostgreSqlTests : PostgreSqlTestBase
         var request = UpdateExerciseRequestBuilder.ForWorkoutExercise()
             .WithName("Updated Exercise Name")
             .WithDescription("Updated Description")
+            .WithMuscleGroups((SeedDataBuilder.StandardIds.MuscleGroupIds.Chest, SeedDataBuilder.StandardIds.MuscleRoleIds.Primary))
             .WithCoachNotes(
                 ("Updated Step 1", 0),
                 ("Updated Step 2", 1)
             )
             .WithVideoUrl("https://example.com/updated-video.mp4")
             .WithImageUrl("https://example.com/updated-image.jpg")
-            .WithDifficultyId(TestConstants.DifficultyLevelIds.Intermediate)
+            .WithDifficultyId(SeedDataBuilder.StandardIds.DifficultyLevelIds.Intermediate)
             .Build();
 
         // Act
@@ -163,16 +183,15 @@ public class ExercisesControllerPostgreSqlTests : PostgreSqlTestBase
         var exercise1 = exercises.First();
         var exercise2 = exercises.Skip(1).First();
         
-        var request = new UpdateExerciseRequest
-        {
-            Name = exercise2.Name, // Try to update exercise1 with exercise2's name
-            Description = "Updated Description",
-            CoachNotes = new List<CoachNoteRequest> { new() { Text = "Step 1", Order = 0 } },
-            ExerciseTypeIds = new List<string> { "exercisetype-b2c3d4e5-6f7a-8b9c-0d1e-2f3a4b5c6d7e" }, // Workout
-            DifficultyId = exercise1.DifficultyId.ToString(),
-            KineticChainId = exercise1.KineticChainId?.ToString(),
-            MuscleGroups = new List<MuscleGroupWithRoleRequest> { new() { MuscleGroupId = "musclegroup-ccddeeff-0011-2233-4455-667788990011", MuscleRoleId = "musclerole-abcdef12-3456-7890-abcd-ef1234567890" } }
-        };
+        var request = UpdateExerciseRequestBuilder.ForWorkoutExercise()
+            .WithName(exercise2.Name) // Try to update exercise1 with exercise2's name
+            .WithDescription("Updated Description")
+            .WithMuscleGroups((SeedDataBuilder.StandardIds.MuscleGroupIds.Chest, SeedDataBuilder.StandardIds.MuscleRoleIds.Primary))
+            .WithCoachNotes(("Step 1", 0))
+            .WithDifficultyId(exercise1.DifficultyId.ToString())
+            .WithKineticChainId(exercise1.KineticChainId?.ToString())
+            .WithExerciseWeightTypeId(exercise1.ExerciseWeightTypeId?.ToString() ?? SeedDataBuilder.StandardIds.ExerciseWeightTypeIds.WeightRequired)
+            .Build();
 
         // Act
         var response = await Client.PutAsJsonAsync($"/api/exercises/{exercise1.Id}", request);
@@ -184,18 +203,18 @@ public class ExercisesControllerPostgreSqlTests : PostgreSqlTestBase
     [Fact]
     public async Task DeleteExercise_WithValidId_ReturnsNoContent()
     {
-        // Arrange
+        // Arrange - Create an exercise through the API
         var exercises = await SeedTestDataAsync();
-        var exerciseToDelete = exercises.Last();
+        var exercise = exercises.First();
 
         // Act
-        var response = await Client.DeleteAsync($"/api/exercises/{exerciseToDelete.Id}");
+        var response = await Client.DeleteAsync($"/api/exercises/{exercise.Id}");
         
         // Assert
         Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
 
         // Verify exercise is deleted
-        var getResponse = await Client.GetAsync($"/api/exercises/{exerciseToDelete.Id}");
+        var getResponse = await Client.GetAsync($"/api/exercises/{exercise.Id}");
         Assert.Equal(HttpStatusCode.NotFound, getResponse.StatusCode);
     }
 
@@ -204,89 +223,77 @@ public class ExercisesControllerPostgreSqlTests : PostgreSqlTestBase
         using var scope = Factory.Services.CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<FitnessDbContext>();
 
-        // Create test exercises
-        var exercises = new List<Exercise>
-        {
-            Exercise.Handler.CreateNew(
-                "Barbell Back Squat",
-                "A compound lower body exercise",
-                "https://example.com/squat-video.mp4",
-                "https://example.com/squat-image.jpg",
-                false,
-                DifficultyLevelId.From(Guid.Parse("9c7b59a4-bcd8-48a6-971a-cd67b0a7ab5a")),
-                KineticChainTypeId.From(Guid.Parse("f5d5a2de-9c4e-4b87-b8c3-5d1e17d0b1f4")) // Compound
-            ),
-            Exercise.Handler.CreateNew(
-                "Dumbbell Bicep Curl",
-                "An isolation exercise for biceps",
-                null,
-                null,
-                true,
-                DifficultyLevelId.From(Guid.Parse("8a8adb1d-24d2-4979-a5a6-0d760e6da24b")),
-                KineticChainTypeId.From(Guid.Parse("2b3e7cb2-9a3e-4c9a-88d8-b7c019c90d1b")) // Isolation
-            ),
-            Exercise.Handler.CreateNew(
-                "Push-up",
-                "A bodyweight upper body exercise",
-                "https://example.com/pushup-video.mp4",
-                null,
-                false,
-                DifficultyLevelId.From(Guid.Parse("8a8adb1d-24d2-4979-a5a6-0d760e6da24b")),
-                KineticChainTypeId.From(Guid.Parse("f5d5a2de-9c4e-4b87-b8c3-5d1e17d0b1f4")) // Compound
-            )
-        };
-
-        context.Exercises.AddRange(exercises);
-        await context.SaveChangesAsync();
-
-        // Add muscle groups
-        exercises[0].ExerciseMuscleGroups.Add(ExerciseMuscleGroup.Handler.Create(
-            exercises[0].Id,
-            MuscleGroupId.From(Guid.Parse("ccddeeff-0011-2233-4455-667788990011")),
-            MuscleRoleId.From(Guid.Parse("abcdef12-3456-7890-abcd-ef1234567890"))
-        ));
+        // Use the centralized SeedDataBuilder for consistent data
+        var seedBuilder = new SeedDataBuilder(context);
         
-        exercises[1].ExerciseMuscleGroups.Add(ExerciseMuscleGroup.Handler.Create(
-            exercises[1].Id,
-            MuscleGroupId.From(Guid.Parse("ddeeff00-1122-3344-5566-778899001122")),
-            MuscleRoleId.From(Guid.Parse("abcdef12-3456-7890-abcd-ef1234567890"))
-        ));
+        // Clear any existing test data first
+        await seedBuilder.ClearAllDataAsync();
         
-        // Add muscle group to push-up (chest exercise)
-        exercises[2].ExerciseMuscleGroups.Add(ExerciseMuscleGroup.Handler.Create(
-            exercises[2].Id,
-            MuscleGroupId.From(Guid.Parse("ccddeeff-0011-2233-4455-667788990011")), // Pectoralis
-            MuscleRoleId.From(Guid.Parse("abcdef12-3456-7890-abcd-ef1234567890"))
-        ));
-
-        // Add equipment
-        exercises[0].ExerciseEquipment.Add(ExerciseEquipment.Handler.Create(
-            exercises[0].Id,
-            EquipmentId.From(Guid.Parse("33445566-7788-99aa-bbcc-ddeeff001122"))
-        ));
+        // Create all reference data and some sample exercises
+        await seedBuilder.WithAllReferenceDataAsync();
         
-        exercises[1].ExerciseEquipment.Add(ExerciseEquipment.Handler.Create(
-            exercises[1].Id,
-            EquipmentId.From(Guid.Parse("44556677-8899-aabb-ccdd-eeff00112233"))
-        ));
+        await seedBuilder
+            .WithWorkoutExercise(
+                name: "Barbell Back Squat",
+                description: "A compound lower body exercise",
+                videoUrl: "https://example.com/squat-video.mp4",
+                imageUrl: "https://example.com/squat-image.jpg",
+                difficultyId: SeedDataBuilder.StandardIds.IntermediateDifficultyId)
+            .WithWorkoutExercise(
+                name: "Dumbbell Bicep Curl",
+                description: "An isolation exercise for biceps",
+                videoUrl: null,
+                imageUrl: null,
+                isUnilateral: true,
+                difficultyId: SeedDataBuilder.StandardIds.BeginnerDifficultyId,
+                kineticChainId: SeedDataBuilder.StandardIds.IsolationKineticChainId,
+                exerciseWeightTypeId: SeedDataBuilder.StandardIds.WeightRequiredWeightTypeId,
+                configure: exercise =>
+                {
+                    // Clear default muscle groups and add biceps-specific ones
+                    exercise.ExerciseMuscleGroups.Clear();
+                    exercise.ExerciseMuscleGroups.Add(ExerciseMuscleGroup.Handler.Create(
+                        exercise.Id,
+                        MuscleGroupId.From(SeedDataBuilder.StandardIds.BicepsMuscleGroupId),
+                        MuscleRoleId.From(SeedDataBuilder.StandardIds.PrimaryMuscleRoleId)
+                    ));
+                    
+                    // Clear default equipment and add dumbbells
+                    exercise.ExerciseEquipment.Clear();
+                    exercise.ExerciseEquipment.Add(ExerciseEquipment.Handler.Create(
+                        exercise.Id,
+                        EquipmentId.From(SeedDataBuilder.StandardIds.DumbbellEquipmentId)
+                    ));
+                })
+            .WithWorkoutExercise(
+                name: "Push-up",
+                description: "A bodyweight upper body exercise",
+                videoUrl: "https://example.com/pushup-video.mp4",
+                imageUrl: null,
+                difficultyId: SeedDataBuilder.StandardIds.BeginnerDifficultyId,
+                exerciseWeightTypeId: SeedDataBuilder.StandardIds.BodyweightOnlyWeightTypeId,
+                configure: exercise =>
+                {
+                    // Clear default muscle groups and add chest-specific ones
+                    exercise.ExerciseMuscleGroups.Clear();
+                    exercise.ExerciseMuscleGroups.Add(ExerciseMuscleGroup.Handler.Create(
+                        exercise.Id,
+                        MuscleGroupId.From(SeedDataBuilder.StandardIds.ChestMuscleGroupId),
+                        MuscleRoleId.From(SeedDataBuilder.StandardIds.PrimaryMuscleRoleId)
+                    ));
+                    
+                    // No equipment needed for bodyweight exercise
+                    exercise.ExerciseEquipment.Clear();
+                })
+            .CommitAsync();
 
-        // Add body parts
-        exercises[0].ExerciseBodyParts.Add(ExerciseBodyPart.Handler.Create(
-            exercises[0].Id,
-            BodyPartId.From(Guid.Parse("7c5a2d6e-e87e-4c8a-9f1d-9eb734f3df3c"))
-        ));
-
-        // Add movement patterns
-        exercises[0].ExerciseMovementPatterns.Add(ExerciseMovementPattern.Handler.Create(
-            exercises[0].Id,
-            MovementPatternId.From(Guid.Parse("99aabbcc-ddee-ff00-1122-334455667788"))
-        ));
-
-        await context.SaveChangesAsync();
-
-        // Load full entities with relationships
+        // Load and return the exercises with full relationships
         return await context.Exercises
             .Include(e => e.Difficulty)
+            .Include(e => e.KineticChain)
+            .Include(e => e.ExerciseWeightType)
+            .Include(e => e.ExerciseExerciseTypes)
+                .ThenInclude(eet => eet.ExerciseType)
             .Include(e => e.ExerciseMuscleGroups)
                 .ThenInclude(emg => emg.MuscleGroup)
             .Include(e => e.ExerciseMuscleGroups)

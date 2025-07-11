@@ -28,6 +28,7 @@ public class ExerciseCoachNotesSyncTests : IClassFixture<SharedDatabaseTestFixtu
         var request = CreateExerciseRequestBuilder.ForWorkoutExercise()
             .WithName("Coach Notes Order Test")
             .WithDescription("Testing coach notes ordering")
+            .WithMuscleGroups(("musclegroup-ccddeeff-0011-2233-4455-667788990011", "musclerole-abcdef12-3456-7890-abcd-ef1234567890"))
             .WithCoachNotes(
                 ("Step 3", 3),
                 ("Step 1", 1),
@@ -60,6 +61,7 @@ public class ExerciseCoachNotesSyncTests : IClassFixture<SharedDatabaseTestFixtu
         var request = CreateExerciseRequestBuilder.ForWorkoutExercise()
             .WithName("Duplicate Order Test")
             .WithDescription("Testing duplicate coach note orders")
+            .WithMuscleGroups(("musclegroup-ccddeeff-0011-2233-4455-667788990011", "musclerole-abcdef12-3456-7890-abcd-ef1234567890"))
             .WithCoachNotes(
                 ("First with order 1", 1),
                 ("Second with order 1", 1),
@@ -85,6 +87,7 @@ public class ExerciseCoachNotesSyncTests : IClassFixture<SharedDatabaseTestFixtu
         var createRequest = CreateExerciseRequestBuilder.ForWorkoutExercise()
             .WithName("Get By Id Test")
             .WithDescription("Testing get by id with coach notes")
+            .WithMuscleGroups(("musclegroup-ccddeeff-0011-2233-4455-667788990011", "musclerole-abcdef12-3456-7890-abcd-ef1234567890"))
             .WithCoachNotes(
                 ("Last step", 99),
                 ("First step", 1),
@@ -124,6 +127,7 @@ public class ExerciseCoachNotesSyncTests : IClassFixture<SharedDatabaseTestFixtu
         var exercise1 = CreateExerciseRequestBuilder.ForWorkoutExercise()
             .WithName("List Test Exercise 1")
             .WithDescription("First exercise for list test")
+            .WithMuscleGroups(("musclegroup-ccddeeff-0011-2233-4455-667788990011", "musclerole-abcdef12-3456-7890-abcd-ef1234567890"))
             .WithCoachNotes(
                 ("Exercise 1 Note 1", 1),
                 ("Exercise 1 Note 2", 2)
@@ -133,6 +137,7 @@ public class ExerciseCoachNotesSyncTests : IClassFixture<SharedDatabaseTestFixtu
         var exercise2 = CreateExerciseRequestBuilder.ForWorkoutExercise()
             .WithName("List Test Exercise 2")
             .WithDescription("Second exercise for list test")
+            .WithMuscleGroups(("musclegroup-ccddeeff-0011-2233-4455-667788990011", "musclerole-abcdef12-3456-7890-abcd-ef1234567890"))
             .WithCoachNotes(
                 ("Exercise 2 Note 1", 1)
             )

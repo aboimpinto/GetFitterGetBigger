@@ -31,6 +31,24 @@ public record ExerciseWeightType : ReferenceDataBase
     // Navigation properties
     public ICollection<Exercise> Exercises { get; init; } = new List<Exercise>();
     
+    /// <summary>
+    /// Indicates if this is an empty/null object instance
+    /// </summary>
+    public bool IsEmpty => Id.IsEmpty;
+    
+    /// <summary>
+    /// Static factory for creating an empty ExerciseWeightType instance
+    /// </summary>
+    public static ExerciseWeightType Empty => new() 
+    { 
+        Id = ExerciseWeightTypeId.Empty,
+        Code = string.Empty,
+        Value = string.Empty,
+        Description = null,
+        DisplayOrder = 0,
+        IsActive = false
+    };
+    
     private ExerciseWeightType() { }
     
     /// <summary>

@@ -12,6 +12,7 @@ using GetFitterGetBigger.API.Services.Results;
 using GetFitterGetBigger.API.Tests.TestBuilders;
 using GetFitterGetBigger.API.Tests.TestBuilders.Domain;
 using GetFitterGetBigger.API.Mappers;
+using GetFitterGetBigger.API.Constants;
 using Moq;
 using Olimpo.EntityFramework.Persistency;
 using Xunit;
@@ -150,16 +151,16 @@ public class ExerciseServiceWeightTypeTests
         {
             Name = "Running",
             Description = "Basic cardio exercise",
-            DifficultyId = TestConstants.DifficultyLevelIds.Beginner,
-            KineticChainId = TestConstants.KineticChainTypeIds.Compound,
+            DifficultyId = SeedDataBuilder.StandardIds.DifficultyLevelIds.Beginner,
+            KineticChainId = SeedDataBuilder.StandardIds.KineticChainTypeIds.Compound,
             ExerciseWeightTypeId = null, // Explicitly null to test validation
-            ExerciseTypeIds = new List<string> { TestConstants.ExerciseTypeIds.Workout },
+            ExerciseTypeIds = new List<string> { SeedDataBuilder.StandardIds.ExerciseTypeIds.Workout },
             MuscleGroups = new List<MuscleGroupWithRoleRequest>
             {
                 new MuscleGroupWithRoleRequest
                 {
-                    MuscleGroupId = TestConstants.MuscleGroupIds.Legs,
-                    MuscleRoleId = TestConstants.MuscleRoleIds.Primary
+                    MuscleGroupId = SeedDataBuilder.StandardIds.MuscleGroupIds.Quadriceps,
+                    MuscleRoleId = SeedDataBuilder.StandardIds.MuscleRoleIds.Primary
                 }
             }
         };
@@ -172,7 +173,7 @@ public class ExerciseServiceWeightTypeTests
         
         // Assert
         Assert.False(result.IsSuccess);
-        Assert.Contains("Non-REST exercises must have a valid weight type.", result.Errors);
+        Assert.Contains(ExerciseErrorMessages.NonRestExerciseMustHaveWeightType, result.Errors);
     }
     
     [Fact]
@@ -230,16 +231,16 @@ public class ExerciseServiceWeightTypeTests
         {
             Name = "Invalid Weight Type Exercise",
             Description = "Exercise with invalid weight type",
-            DifficultyId = TestConstants.DifficultyLevelIds.Beginner,
-            KineticChainId = TestConstants.KineticChainTypeIds.Compound,
+            DifficultyId = SeedDataBuilder.StandardIds.DifficultyLevelIds.Beginner,
+            KineticChainId = SeedDataBuilder.StandardIds.KineticChainTypeIds.Compound,
             ExerciseWeightTypeId = "invalid-weight-type-id",  // Invalid format
-            ExerciseTypeIds = new List<string> { TestConstants.ExerciseTypeIds.Workout },
+            ExerciseTypeIds = new List<string> { SeedDataBuilder.StandardIds.ExerciseTypeIds.Workout },
             MuscleGroups = new List<MuscleGroupWithRoleRequest>
             {
                 new MuscleGroupWithRoleRequest
                 {
-                    MuscleGroupId = TestConstants.MuscleGroupIds.Chest,
-                    MuscleRoleId = TestConstants.MuscleRoleIds.Primary
+                    MuscleGroupId = SeedDataBuilder.StandardIds.MuscleGroupIds.Chest,
+                    MuscleRoleId = SeedDataBuilder.StandardIds.MuscleRoleIds.Primary
                 }
             }
         };
@@ -252,7 +253,7 @@ public class ExerciseServiceWeightTypeTests
         
         // Assert
         Assert.False(result.IsSuccess);
-        Assert.Contains("Non-REST exercises must have a valid weight type.", result.Errors);
+        Assert.Contains(ExerciseErrorMessages.NonRestExerciseMustHaveWeightType, result.Errors);
     }
     
     [Fact]

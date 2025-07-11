@@ -28,7 +28,7 @@ public class ExerciseWeightValidator : IExerciseWeightValidator
         var exerciseRepository = unitOfWork.GetRepository<IExerciseRepository>();
         
         var exercise = await exerciseRepository.GetByIdAsync(exerciseId);
-        if (exercise == null)
+        if (exercise.IsEmpty)
         {
             return WeightValidationResult.Failure($"Exercise with ID {exerciseId} not found");
         }
@@ -51,7 +51,7 @@ public class ExerciseWeightValidator : IExerciseWeightValidator
         var weightTypeRepository = unitOfWork.GetRepository<IExerciseWeightTypeRepository>();
         
         var weightType = await weightTypeRepository.GetByIdAsync(exerciseWeightTypeId);
-        if (weightType == null)
+        if (weightType == null || weightType.IsEmpty)
         {
             return WeightValidationResult.Failure($"Exercise weight type with ID {exerciseWeightTypeId} not found");
         }

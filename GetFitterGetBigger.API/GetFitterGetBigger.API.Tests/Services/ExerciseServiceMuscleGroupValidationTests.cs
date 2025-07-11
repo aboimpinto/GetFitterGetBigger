@@ -10,6 +10,7 @@ using GetFitterGetBigger.API.Services.Implementations;
 using GetFitterGetBigger.API.Services.Interfaces;
 using GetFitterGetBigger.API.Services.Results;
 using GetFitterGetBigger.API.Mappers;
+using GetFitterGetBigger.API.Constants;
 using Moq;
 using Olimpo.EntityFramework.Persistency;
 using Xunit;
@@ -135,7 +136,7 @@ public class ExerciseServiceMuscleGroupValidationTests
         
         // Assert
         Assert.False(result.IsSuccess);
-        Assert.Contains("Non-REST exercises must have at least one muscle group.", result.Errors);
+        Assert.Contains(ExerciseErrorMessages.NonRestExerciseMustHaveMuscleGroups, result.Errors);
         _exerciseRepositoryMock.Verify(r => r.AddAsync(It.IsAny<Exercise>()), Times.Never);
     }
     
@@ -165,7 +166,9 @@ public class ExerciseServiceMuscleGroupValidationTests
         _exerciseRepositoryMock.Setup(r => r.ExistsAsync(It.IsAny<string>(), null))
             .ReturnsAsync(false);
         
+        Exercise? capturedExercise = null;
         _exerciseRepositoryMock.Setup(r => r.AddAsync(It.IsAny<Exercise>()))
+            .Callback<Exercise>(e => capturedExercise = e)
             .ReturnsAsync((Exercise e) => e);
         
         _writableUnitOfWorkMock.Setup(uow => uow.CommitAsync())
@@ -176,9 +179,11 @@ public class ExerciseServiceMuscleGroupValidationTests
         
         // Assert
         Assert.NotNull(result);
-        Assert.True(result.IsSuccess);
-        Assert.Equal("Active Rest", result.Data.Name);
-        Assert.Single(result.Data.MuscleGroups);
+        Assert.True(result.IsSuccess, $"Create failed with errors: {string.Join(", ", result.Errors)}");
+        
+        // Verify the entity was created with muscle groups
+        Assert.NotNull(capturedExercise);
+        Assert.Single(capturedExercise.ExerciseMuscleGroups);
         _exerciseRepositoryMock.Verify(r => r.AddAsync(It.IsAny<Exercise>()), Times.Once);
     }
     
@@ -213,10 +218,17 @@ public class ExerciseServiceMuscleGroupValidationTests
         _exerciseRepositoryMock.Setup(r => r.ExistsAsync(It.IsAny<string>(), It.IsAny<ExerciseId>()))
             .ReturnsAsync(false);
         
+        Exercise? capturedExercise = null;
+        var getByIdCallCount = 0;
         _exerciseRepositoryMock.Setup(r => r.GetByIdAsync(exerciseId))
-            .ReturnsAsync(existingExercise);
+            .ReturnsAsync(() => 
+            {
+                getByIdCallCount++;
+                return getByIdCallCount == 1 ? existingExercise : capturedExercise ?? existingExercise;
+            });
         
         _exerciseRepositoryMock.Setup(r => r.UpdateAsync(It.IsAny<Exercise>()))
+            .Callback<Exercise>(e => capturedExercise = e)
             .ReturnsAsync((Exercise e) => e);
         
         _writableUnitOfWorkMock.Setup(uow => uow.CommitAsync())
@@ -272,7 +284,7 @@ public class ExerciseServiceMuscleGroupValidationTests
         
         // Assert
         Assert.False(result.IsSuccess);
-        Assert.Contains("Non-REST exercises must have at least one muscle group.", result.Errors);
+        Assert.Contains(ExerciseErrorMessages.NonRestExerciseMustHaveMuscleGroups, result.Errors);
         _exerciseRepositoryMock.Verify(r => r.UpdateAsync(It.IsAny<Exercise>()), Times.Never);
     }
     
@@ -338,11 +350,12 @@ public class ExerciseServiceMuscleGroupValidationTests
         _exerciseRepositoryMock.Setup(r => r.ExistsAsync(It.IsAny<string>(), null))
             .ReturnsAsync(false);
         
-        // Act & Assert
-        var exception = await Assert.ThrowsAsync<InvalidOperationException>(
-            () => _exerciseService.CreateAsync(request.ToCommand()));
+        // Act
+        var result = await _exerciseService.CreateAsync(request.ToCommand());
         
-        Assert.Equal("At least one muscle group must be specified for non-REST exercises.", exception.Message);
+        // Assert
+        Assert.False(result.IsSuccess);
+        Assert.Contains(ExerciseErrorMessages.NonRestExerciseMustHaveMuscleGroups, result.Errors);
     }
     
     [Fact]
@@ -378,6 +391,6 @@ public class ExerciseServiceMuscleGroupValidationTests
         
         // Assert - This should fail on REST exclusivity, not muscle group validation
         Assert.False(result.IsSuccess);
-        Assert.Contains("REST exercises cannot be combined with other exercise types", result.Errors);
+        Assert.Contains(ExerciseErrorMessages.RestExerciseCannotBeCombined, result.Errors);
     }
 }

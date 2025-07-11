@@ -390,7 +390,7 @@ public class ExerciseWeightValidatorTests
         var unknownId = ExerciseWeightTypeId.New();
         _mockWeightTypeRepository
             .Setup(r => r.GetByIdAsync(unknownId))
-            .ReturnsAsync((ExerciseWeightType?)null);
+            .ReturnsAsync(ExerciseWeightType.Empty);
         
         // Act
         var result = await _validator.ValidateWeightByTypeAsync(unknownId, 50m);

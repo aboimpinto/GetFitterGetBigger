@@ -77,6 +77,13 @@ public interface IExerciseRepository : IRepository
     Task<Exercise> UpdateAsync(Exercise exercise);
     
     /// <summary>
+    /// Soft deletes an exercise by marking it as inactive
+    /// </summary>
+    /// <param name="id">The ID of the exercise to soft delete</param>
+    /// <returns>Task</returns>
+    Task SoftDeleteAsync(ExerciseId id);
+    
+    /// <summary>
     /// Deletes an exercise from the repository
     /// </summary>
     /// <param name="id">The ID of the exercise to delete</param>

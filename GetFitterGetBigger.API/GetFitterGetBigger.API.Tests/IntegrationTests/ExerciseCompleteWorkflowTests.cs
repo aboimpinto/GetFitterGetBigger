@@ -36,20 +36,26 @@ public class ExerciseCompleteWorkflowTests : IClassFixture<SharedDatabaseTestFix
                 ("Breathing: Inhale down, exhale up", 5)
             )
             .WithExerciseTypes(
-                TestConstants.ExerciseTypeIds.Warmup,
-                TestConstants.ExerciseTypeIds.Workout
+                SeedDataBuilder.StandardIds.ExerciseTypeIds.Warmup,
+                SeedDataBuilder.StandardIds.ExerciseTypeIds.Workout
             )
             .WithVideoUrl("https://example.com/squat-tutorial.mp4")
             .WithImageUrl("https://example.com/squat-form.jpg")
             .WithIsUnilateral(false)
-            .WithDifficultyId(TestConstants.DifficultyLevelIds.Intermediate)
+            .WithDifficultyId(SeedDataBuilder.StandardIds.DifficultyLevelIds.Intermediate)
             .WithMuscleGroups(
-                (TestConstants.MuscleGroupIds.Legs, TestConstants.MuscleRoleIds.Primary), // Quadriceps - Primary
-                (TestConstants.MuscleGroupIds.Chest, TestConstants.MuscleRoleIds.Stabilizer) // Pectoralis - Stabilizer
+                (SeedDataBuilder.StandardIds.MuscleGroupIds.Quadriceps, SeedDataBuilder.StandardIds.MuscleRoleIds.Primary), // Quadriceps - Primary
+                (SeedDataBuilder.StandardIds.MuscleGroupIds.Chest, SeedDataBuilder.StandardIds.MuscleRoleIds.Stabilizer) // Pectoralis - Stabilizer
             )
             .WithBodyPartIds(
-                TestConstants.BodyPartIds.Legs,
-                TestConstants.BodyPartIds.Chest
+                SeedDataBuilder.StandardIds.BodyPartIds.Legs,
+                SeedDataBuilder.StandardIds.BodyPartIds.Chest
+            )
+            .WithEquipmentIds(
+                SeedDataBuilder.StandardIds.EquipmentIds.Barbell
+            )
+            .WithMovementPatternIds(
+                SeedDataBuilder.StandardIds.MovementPatternIds.Squat
             )
             .Build();
         
@@ -75,8 +81,8 @@ public class ExerciseCompleteWorkflowTests : IClassFixture<SharedDatabaseTestFix
         // Verify ExerciseTypes
         Assert.Equal(2, createdExercise.ExerciseTypes.Count);
         var typeIds = createdExercise.ExerciseTypes.Select(et => et.Id).ToList();
-        Assert.Contains("exercisetype-a1b2c3d4-5e6f-7a8b-9c0d-1e2f3a4b5c6d", typeIds);
-        Assert.Contains("exercisetype-b2c3d4e5-6f7a-8b9c-0d1e-2f3a4b5c6d7e", typeIds);
+        Assert.Contains(SeedDataBuilder.StandardIds.ExerciseTypeIds.Warmup, typeIds);
+        Assert.Contains(SeedDataBuilder.StandardIds.ExerciseTypeIds.Workout, typeIds);
         
         // Verify other properties
         Assert.Equal("https://example.com/squat-tutorial.mp4", createdExercise.VideoUrl);
@@ -95,6 +101,7 @@ public class ExerciseCompleteWorkflowTests : IClassFixture<SharedDatabaseTestFix
         var request = CreateExerciseRequestBuilder.ForWorkoutExercise()
             .WithName("Retrieve Order Test Exercise")
             .WithDescription("Testing coach notes order after retrieval")
+            .WithMuscleGroups((SeedDataBuilder.StandardIds.MuscleGroupIds.Chest, SeedDataBuilder.StandardIds.MuscleRoleIds.Primary))
             .WithCoachNotes(
                 ("Step E", 5),
                 ("Step A", 1),
@@ -132,12 +139,16 @@ public class ExerciseCompleteWorkflowTests : IClassFixture<SharedDatabaseTestFix
     [Fact]
     public async Task CompleteExerciseWorkflow_CreateMinimalExercise_Success()
     {
-        // Arrange - Minimal valid exercise
+        // Arrange - Minimal valid exercise (workout type requires muscle groups, kinetic chain, weight type, and at least one exercise type)
         var request = CreateExerciseRequestBuilder.ForWorkoutExercise()
             .WithName("Minimal Exercise Test")
             .WithDescription("The bare minimum required exercise")
+            .WithDifficultyId(SeedDataBuilder.StandardIds.DifficultyLevelIds.Beginner)
+            .WithKineticChainId(SeedDataBuilder.StandardIds.KineticChainTypeIds.Compound)
+            .WithExerciseWeightTypeId(SeedDataBuilder.StandardIds.ExerciseWeightTypeIds.WeightRequired)
+            .WithExerciseTypes(SeedDataBuilder.StandardIds.ExerciseTypeIds.Workout)
+            .WithMuscleGroups((SeedDataBuilder.StandardIds.MuscleGroupIds.Chest, SeedDataBuilder.StandardIds.MuscleRoleIds.Primary))
             .WithCoachNotes() // Empty is allowed
-            .WithExerciseTypes() // Empty is allowed
             .WithEquipmentIds() // Empty equipment
             .WithMovementPatternIds() // Empty movement patterns
             .Build();
@@ -151,10 +162,11 @@ public class ExerciseCompleteWorkflowTests : IClassFixture<SharedDatabaseTestFix
         var createdExercise = await response.Content.ReadFromJsonAsync<ExerciseDto>();
         Assert.NotNull(createdExercise);
         Assert.Empty(createdExercise.CoachNotes);
-        Assert.Empty(createdExercise.ExerciseTypes);
+        Assert.Single(createdExercise.ExerciseTypes); // Should have the Workout type
         Assert.Empty(createdExercise.Equipment);
         Assert.Empty(createdExercise.MovementPatterns);
-        Assert.Single(createdExercise.MuscleGroups);
-        Assert.Single(createdExercise.BodyParts);
+        Assert.Single(createdExercise.MuscleGroups); // Should have Chest as primary
+        Assert.NotNull(createdExercise.KineticChain);
+        Assert.NotNull(createdExercise.ExerciseWeightType);
     }
 }

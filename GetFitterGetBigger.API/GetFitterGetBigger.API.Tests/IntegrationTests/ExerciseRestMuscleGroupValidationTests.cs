@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Net;
 using System.Net.Http.Json;
 using System.Threading.Tasks;
+using GetFitterGetBigger.API.Constants;
 using GetFitterGetBigger.API.DTOs;
 using GetFitterGetBigger.API.Tests.TestBuilders;
 using Xunit;
@@ -67,7 +68,7 @@ public class ExerciseRestMuscleGroupValidationTests : IClassFixture<SharedDataba
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
         
         var problemDetails = await response.Content.ReadAsStringAsync();
-        Assert.Contains("At least one muscle group must be specified for non-REST exercises", problemDetails);
+        Assert.Contains(ExerciseErrorMessages.NonRestExerciseMustHaveMuscleGroups, problemDetails);
     }
     
     [Fact]
@@ -78,7 +79,7 @@ public class ExerciseRestMuscleGroupValidationTests : IClassFixture<SharedDataba
             .WithName($"Active Rest {Guid.NewGuid()}")
             .WithDescription("Light movement during rest")
             .WithMuscleGroups(
-                ("musclegroup-eeff0011-2233-4455-6677-889900112233", "musclerole-abcdef12-3456-7890-abcd-ef1234567890") // Quadriceps - Primary
+                (SeedDataBuilder.StandardIds.MuscleGroupIds.Quadriceps, SeedDataBuilder.StandardIds.MuscleRoleIds.Primary)
             )
             .Build();
         
@@ -102,7 +103,7 @@ public class ExerciseRestMuscleGroupValidationTests : IClassFixture<SharedDataba
             .WithName($"Bench Press {Guid.NewGuid()}")
             .WithDescription("Chest exercise")
             .WithMuscleGroups(
-                ("musclegroup-eeff0011-2233-4455-6677-889900112233", "musclerole-abcdef12-3456-7890-abcd-ef1234567890") // Quadriceps - Primary
+                (SeedDataBuilder.StandardIds.MuscleGroupIds.Chest, SeedDataBuilder.StandardIds.MuscleRoleIds.Primary)
             )
             .Build();
         

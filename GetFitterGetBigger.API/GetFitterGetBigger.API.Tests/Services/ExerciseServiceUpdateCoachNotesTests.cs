@@ -94,10 +94,15 @@ public class ExerciseServiceUpdateCoachNotesTests
         _exerciseRepositoryMock.Setup(r => r.ExistsAsync(It.IsAny<string>(), It.IsAny<ExerciseId>()))
             .ReturnsAsync(false);
         
-        _exerciseRepositoryMock.Setup(r => r.GetByIdAsync(It.IsAny<ExerciseId>()))
-            .ReturnsAsync(existingExercise);
-        
         Exercise? capturedExercise = null;
+        var getByIdCallCount = 0;
+        _exerciseRepositoryMock.Setup(r => r.GetByIdAsync(It.IsAny<ExerciseId>()))
+            .ReturnsAsync(() => 
+            {
+                getByIdCallCount++;
+                return getByIdCallCount == 1 ? existingExercise : capturedExercise ?? existingExercise;
+            });
+        
         _exerciseRepositoryMock.Setup(r => r.UpdateAsync(It.IsAny<Exercise>()))
             .Callback<Exercise>(e => capturedExercise = e)
             .ReturnsAsync((Exercise e) => e);
@@ -158,10 +163,15 @@ public class ExerciseServiceUpdateCoachNotesTests
         _exerciseRepositoryMock.Setup(r => r.ExistsAsync(It.IsAny<string>(), It.IsAny<ExerciseId>()))
             .ReturnsAsync(false);
         
-        _exerciseRepositoryMock.Setup(r => r.GetByIdAsync(It.IsAny<ExerciseId>()))
-            .ReturnsAsync(existingExercise);
-        
         Exercise? capturedExercise = null;
+        var getByIdCallCount = 0;
+        _exerciseRepositoryMock.Setup(r => r.GetByIdAsync(It.IsAny<ExerciseId>()))
+            .ReturnsAsync(() => 
+            {
+                getByIdCallCount++;
+                return getByIdCallCount == 1 ? existingExercise : capturedExercise ?? existingExercise;
+            });
+        
         _exerciseRepositoryMock.Setup(r => r.UpdateAsync(It.IsAny<Exercise>()))
             .Callback<Exercise>(e => capturedExercise = e)
             .ReturnsAsync((Exercise e) => e);
@@ -219,10 +229,15 @@ public class ExerciseServiceUpdateCoachNotesTests
         _exerciseRepositoryMock.Setup(r => r.ExistsAsync(It.IsAny<string>(), It.IsAny<ExerciseId>()))
             .ReturnsAsync(false);
         
-        _exerciseRepositoryMock.Setup(r => r.GetByIdAsync(It.IsAny<ExerciseId>()))
-            .ReturnsAsync(existingExercise);
-        
         Exercise? capturedExercise = null;
+        var getByIdCallCount = 0;
+        _exerciseRepositoryMock.Setup(r => r.GetByIdAsync(It.IsAny<ExerciseId>()))
+            .ReturnsAsync(() => 
+            {
+                getByIdCallCount++;
+                return getByIdCallCount == 1 ? existingExercise : capturedExercise ?? existingExercise;
+            });
+        
         _exerciseRepositoryMock.Setup(r => r.UpdateAsync(It.IsAny<Exercise>()))
             .Callback<Exercise>(e => capturedExercise = e)
             .ReturnsAsync((Exercise e) => e);
@@ -269,10 +284,15 @@ public class ExerciseServiceUpdateCoachNotesTests
         _exerciseRepositoryMock.Setup(r => r.ExistsAsync(It.IsAny<string>(), It.IsAny<ExerciseId>()))
             .ReturnsAsync(false);
         
-        _exerciseRepositoryMock.Setup(r => r.GetByIdAsync(It.IsAny<ExerciseId>()))
-            .ReturnsAsync(existingExercise);
-        
         Exercise? capturedExercise = null;
+        var getByIdCallCount = 0;
+        _exerciseRepositoryMock.Setup(r => r.GetByIdAsync(It.IsAny<ExerciseId>()))
+            .ReturnsAsync(() => 
+            {
+                getByIdCallCount++;
+                return getByIdCallCount == 1 ? existingExercise : capturedExercise ?? existingExercise;
+            });
+        
         _exerciseRepositoryMock.Setup(r => r.UpdateAsync(It.IsAny<Exercise>()))
             .Callback<Exercise>(e => capturedExercise = e)
             .ReturnsAsync((Exercise e) => e);
@@ -286,11 +306,16 @@ public class ExerciseServiceUpdateCoachNotesTests
         // Assert
         Assert.NotNull(result);
         Assert.True(result.IsSuccess);
-        Assert.Empty(result.Data.CoachNotes); // Invalid IDs are ignored, no new notes created
+        Assert.Equal(2, result.Data.CoachNotes.Count); // Invalid IDs result in new notes being created
         
-        // Verify the entity has no coach notes (invalid IDs were ignored)
+        // Verify the entity has new coach notes (invalid IDs resulted in new IDs)
         Assert.NotNull(capturedExercise);
-        Assert.Empty(capturedExercise.CoachNotes);
+        Assert.Equal(2, capturedExercise.CoachNotes.Count);
+        
+        // Verify the notes have new IDs (not the invalid ones from the request)
+        var noteTexts = capturedExercise.CoachNotes.OrderBy(cn => cn.Order).Select(cn => cn.Text).ToList();
+        Assert.Contains("Note with invalid ID", noteTexts[0]);
+        Assert.Contains("Note with malformed ID", noteTexts[1]);
     }
     
     [Fact]
@@ -325,10 +350,15 @@ public class ExerciseServiceUpdateCoachNotesTests
         _exerciseRepositoryMock.Setup(r => r.ExistsAsync(It.IsAny<string>(), It.IsAny<ExerciseId>()))
             .ReturnsAsync(false);
         
-        _exerciseRepositoryMock.Setup(r => r.GetByIdAsync(It.IsAny<ExerciseId>()))
-            .ReturnsAsync(existingExercise);
-        
         Exercise? capturedExercise = null;
+        var getByIdCallCount = 0;
+        _exerciseRepositoryMock.Setup(r => r.GetByIdAsync(It.IsAny<ExerciseId>()))
+            .ReturnsAsync(() => 
+            {
+                getByIdCallCount++;
+                return getByIdCallCount == 1 ? existingExercise : capturedExercise ?? existingExercise;
+            });
+        
         _exerciseRepositoryMock.Setup(r => r.UpdateAsync(It.IsAny<Exercise>()))
             .Callback<Exercise>(e => capturedExercise = e)
             .ReturnsAsync((Exercise e) => e);
@@ -376,10 +406,15 @@ public class ExerciseServiceUpdateCoachNotesTests
         _exerciseRepositoryMock.Setup(r => r.ExistsAsync(It.IsAny<string>(), It.IsAny<ExerciseId>()))
             .ReturnsAsync(false);
         
-        _exerciseRepositoryMock.Setup(r => r.GetByIdAsync(It.IsAny<ExerciseId>()))
-            .ReturnsAsync(existingExercise);
-        
         Exercise? capturedExercise = null;
+        var getByIdCallCount = 0;
+        _exerciseRepositoryMock.Setup(r => r.GetByIdAsync(It.IsAny<ExerciseId>()))
+            .ReturnsAsync(() => 
+            {
+                getByIdCallCount++;
+                return getByIdCallCount == 1 ? existingExercise : capturedExercise ?? existingExercise;
+            });
+        
         _exerciseRepositoryMock.Setup(r => r.UpdateAsync(It.IsAny<Exercise>()))
             .Callback<Exercise>(e => capturedExercise = e)
             .ReturnsAsync((Exercise e) => e);
