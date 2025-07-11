@@ -89,8 +89,14 @@ namespace GetFitterGetBigger.API.Tests.Services
             
             var exercises = new List<Exercise>
             {
-                CreateTestExercise("Bench Press", difficultyId, difficulty),
-                CreateTestExercise("Overhead Press", difficultyId, difficulty)
+                ExerciseBuilder.AWorkoutExercise()
+                    .WithName("Bench Press")
+                    .WithDifficultyId(difficultyId)
+                    .Build(),
+                ExerciseBuilder.AWorkoutExercise()
+                    .WithName("Overhead Press")
+                    .WithDifficultyId(difficultyId)
+                    .Build()
             };
 
             _mockExerciseRepository
@@ -337,21 +343,11 @@ namespace GetFitterGetBigger.API.Tests.Services
 
         private Exercise CreateTestExercise(string name, DifficultyLevelId difficultyId, DifficultyLevel difficulty)
         {
-            var kineticChainId = KineticChainTypeId.New(); // Add kinetic chain for non-REST exercise
-            var exercise = Exercise.Handler.CreateNew(
-                name,
-                "Test Description",
-                null,
-                null,
-                false,
-                difficultyId,
-                kineticChainId);
-
-            // Use reflection to set the navigation property
-            var difficultyProperty = exercise.GetType().GetProperty("Difficulty");
-            difficultyProperty?.SetValue(exercise, difficulty);
-
-            return exercise;
+            return ExerciseBuilder.AWorkoutExercise()
+                .WithName(name)
+                .WithDifficultyId(difficultyId)
+                .WithKineticChainId(KineticChainTypeId.New())
+                .Build();
         }
 
         [Fact]

@@ -11,6 +11,7 @@ using GetFitterGetBigger.API.Services.Implementations;
 using GetFitterGetBigger.API.Services.Interfaces;
 using GetFitterGetBigger.API.Services.Results;
 using GetFitterGetBigger.API.Tests.TestBuilders;
+using GetFitterGetBigger.API.Tests.TestBuilders.Domain;
 using GetFitterGetBigger.API.Mappers;
 using GetFitterGetBigger.API.Constants;
 using Moq;
@@ -151,14 +152,12 @@ namespace GetFitterGetBigger.API.Tests.Services
             // Arrange
             SetupMocks();
             
-            var createdExercise = Exercise.Handler.CreateNew(
-                "Test Exercise",
-                "Test Description",
-                null,
-                null,
-                false,
-                _difficultyId,
-                _kineticChainId);
+            var createdExercise = ExerciseBuilder.AWorkoutExercise()
+                .WithName("Test Exercise")
+                .WithDescription("Test Description")
+                .WithDifficultyId(_difficultyId)
+                .WithKineticChainId(_kineticChainId)
+                .Build();
                 
             _mockExerciseRepository.Setup(x => x.AddAsync(It.IsAny<Exercise>()))
                 .ReturnsAsync(createdExercise);
@@ -188,14 +187,11 @@ namespace GetFitterGetBigger.API.Tests.Services
             // Arrange
             SetupMocks();
             
-            var createdExercise = Exercise.Handler.CreateNew(
-                "Rest Period",
-                "Rest between sets",
-                null,
-                null,
-                false,
-                _difficultyId,
-                null); // No kinetic chain
+            var createdExercise = ExerciseBuilder.ARestExercise()
+                .WithName("Rest Period")
+                .WithDescription("Rest between sets")
+                .WithDifficultyId(_difficultyId)
+                .Build();
                 
             _mockExerciseRepository.Setup(x => x.AddAsync(It.IsAny<Exercise>()))
                 .ReturnsAsync(createdExercise);
@@ -223,16 +219,13 @@ namespace GetFitterGetBigger.API.Tests.Services
             SetupMocks();
             
             var exerciseId = ExerciseId.New();
-            var existingExercise = Exercise.Handler.Create(
-                exerciseId,
-                "Test Exercise",
-                "Test Description",
-                null,
-                null,
-                false,
-                true,
-                _difficultyId,
-                _kineticChainId);
+            var existingExercise = ExerciseBuilder.AWorkoutExercise()
+                .WithId(exerciseId)
+                .WithName("Test Exercise")
+                .WithDescription("Test Description")
+                .WithDifficultyId(_difficultyId)
+                .WithKineticChainId(_kineticChainId)
+                .Build();
                 
             _mockExerciseRepository.Setup(x => x.GetByIdAsync(exerciseId))
                 .ReturnsAsync(existingExercise);
@@ -261,16 +254,12 @@ namespace GetFitterGetBigger.API.Tests.Services
             SetupMocks();
             
             var exerciseId = ExerciseId.New();
-            var existingExercise = Exercise.Handler.Create(
-                exerciseId,
-                "Rest Period",
-                "Rest between sets",
-                null,
-                null,
-                false,
-                true,
-                _difficultyId,
-                null);
+            var existingExercise = ExerciseBuilder.ARestExercise()
+                .WithId(exerciseId)
+                .WithName("Rest Period")
+                .WithDescription("Rest between sets")
+                .WithDifficultyId(_difficultyId)
+                .Build();
                 
             _mockExerciseRepository.Setup(x => x.GetByIdAsync(exerciseId))
                 .ReturnsAsync(existingExercise);
@@ -298,30 +287,24 @@ namespace GetFitterGetBigger.API.Tests.Services
             SetupMocks();
             
             var exerciseId = ExerciseId.New();
-            var existingExercise = Exercise.Handler.Create(
-                exerciseId,
-                "Test Exercise",
-                "Test Description",
-                null,
-                null,
-                false,
-                true,
-                _difficultyId,
-                _kineticChainId);
+            var existingExercise = ExerciseBuilder.AWorkoutExercise()
+                .WithId(exerciseId)
+                .WithName("Test Exercise")
+                .WithDescription("Test Description")
+                .WithDifficultyId(_difficultyId)
+                .WithKineticChainId(_kineticChainId)
+                .Build();
                 
             _mockExerciseRepository.Setup(x => x.GetByIdAsync(exerciseId))
                 .ReturnsAsync(existingExercise);
                 
-            var updatedExercise = Exercise.Handler.Create(
-                exerciseId,
-                "Updated Exercise",
-                "Updated Description",
-                null,
-                null,
-                false,
-                true,
-                _difficultyId,
-                _kineticChainId);
+            var updatedExercise = ExerciseBuilder.AWorkoutExercise()
+                .WithId(exerciseId)
+                .WithName("Updated Exercise")
+                .WithDescription("Updated Description")
+                .WithDifficultyId(_difficultyId)
+                .WithKineticChainId(_kineticChainId)
+                .Build();
                 
             _mockExerciseRepository.Setup(x => x.UpdateAsync(It.IsAny<Exercise>()))
                 .ReturnsAsync(updatedExercise);
@@ -375,15 +358,13 @@ namespace GetFitterGetBigger.API.Tests.Services
             SetupMocks();
             
             var exerciseId = ExerciseId.New();
-            var existingExercise = Exercise.Handler.Create(
-                exerciseId,
-                "Test Exercise",
-                "Test Description",
-                null,
-                null,
-                false,
-                true,
-                _difficultyId);
+            var existingExercise = ExerciseBuilder.AWorkoutExercise()
+                .WithId(exerciseId)
+                .WithName("Test Exercise")
+                .WithDescription("Test Description")
+                .WithDifficultyId(_difficultyId)
+                .WithoutKineticChain()
+                .Build();
                 
             _mockExerciseRepository.Setup(x => x.GetByIdAsync(exerciseId))
                 .ReturnsAsync(existingExercise);

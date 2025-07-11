@@ -1,11 +1,8 @@
-using System.Threading.Tasks;
 using GetFitterGetBigger.API.DTOs;
 using GetFitterGetBigger.API.Mappers;
 using GetFitterGetBigger.API.Models.SpecializedIds;
 using GetFitterGetBigger.API.Services.Interfaces;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
 
 namespace GetFitterGetBigger.API.Controllers;
 
