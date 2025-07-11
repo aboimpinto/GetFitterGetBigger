@@ -146,24 +146,15 @@ public class ExerciseServiceWeightTypeTests
     public async Task CreateAsync_WithoutExerciseWeightTypeId_ReturnsFailure()
     {
         // Arrange - Non-REST exercise without ExerciseWeightTypeId should fail
-        // Arrange - Build request manually to bypass V2 builder validation
-        var request = new CreateExerciseRequest
-        {
-            Name = "Running",
-            Description = "Basic cardio exercise",
-            DifficultyId = SeedDataBuilder.StandardIds.DifficultyLevelIds.Beginner,
-            KineticChainId = SeedDataBuilder.StandardIds.KineticChainTypeIds.Compound,
-            ExerciseWeightTypeId = null, // Explicitly null to test validation
-            ExerciseTypeIds = new List<string> { SeedDataBuilder.StandardIds.ExerciseTypeIds.Workout },
-            MuscleGroups = new List<MuscleGroupWithRoleRequest>
-            {
-                new MuscleGroupWithRoleRequest
-                {
-                    MuscleGroupId = SeedDataBuilder.StandardIds.MuscleGroupIds.Quadriceps,
-                    MuscleRoleId = SeedDataBuilder.StandardIds.MuscleRoleIds.Primary
-                }
-            }
-        };
+        // Arrange - Non-REST exercise without ExerciseWeightTypeId should fail
+        var request = CreateExerciseRequestBuilder.ForWorkoutExercise()
+            .WithName("Running")
+            .WithDescription("Basic cardio exercise")
+            .WithExerciseWeightTypeId(null) // Explicitly null to test validation
+            .AddMuscleGroup(
+                SeedDataBuilder.StandardIds.MuscleGroupIds.Quadriceps,
+                SeedDataBuilder.StandardIds.MuscleRoleIds.Primary)
+            .Build();
         
         // Set up mocks
         _mockExerciseRepository.Setup(r => r.ExistsAsync(It.IsAny<string>(), It.IsAny<ExerciseId?>())).ReturnsAsync(false);
@@ -226,24 +217,15 @@ public class ExerciseServiceWeightTypeTests
     public async Task CreateAsync_WithInvalidExerciseWeightTypeId_ReturnsFailure()
     {
         // Arrange
-        // Arrange - Build request manually to test invalid ID validation
-        var request = new CreateExerciseRequest
-        {
-            Name = "Invalid Weight Type Exercise",
-            Description = "Exercise with invalid weight type",
-            DifficultyId = SeedDataBuilder.StandardIds.DifficultyLevelIds.Beginner,
-            KineticChainId = SeedDataBuilder.StandardIds.KineticChainTypeIds.Compound,
-            ExerciseWeightTypeId = "invalid-weight-type-id",  // Invalid format
-            ExerciseTypeIds = new List<string> { SeedDataBuilder.StandardIds.ExerciseTypeIds.Workout },
-            MuscleGroups = new List<MuscleGroupWithRoleRequest>
-            {
-                new MuscleGroupWithRoleRequest
-                {
-                    MuscleGroupId = SeedDataBuilder.StandardIds.MuscleGroupIds.Chest,
-                    MuscleRoleId = SeedDataBuilder.StandardIds.MuscleRoleIds.Primary
-                }
-            }
-        };
+        // Arrange - Build request to test invalid ID validation
+        var request = CreateExerciseRequestBuilder.ForWorkoutExercise()
+            .WithName("Invalid Weight Type Exercise")
+            .WithDescription("Exercise with invalid weight type")
+            .WithExerciseWeightTypeId("invalid-weight-type-id") // Invalid format
+            .AddMuscleGroup(
+                SeedDataBuilder.StandardIds.MuscleGroupIds.Chest,
+                SeedDataBuilder.StandardIds.MuscleRoleIds.Primary)
+            .Build();
         
         // Set up mocks
         _mockExerciseRepository.Setup(r => r.ExistsAsync(It.IsAny<string>(), It.IsAny<ExerciseId?>())).ReturnsAsync(false);

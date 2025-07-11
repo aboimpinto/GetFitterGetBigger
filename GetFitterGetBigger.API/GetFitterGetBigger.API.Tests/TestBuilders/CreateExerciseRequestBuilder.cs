@@ -118,6 +118,16 @@ public class CreateExerciseRequestBuilder
         });
         return this;
     }
+    
+    public CreateExerciseRequestBuilder AddMuscleGroup(string muscleGroupId, string muscleRoleId)
+    {
+        _muscleGroups.Add(new MuscleGroupWithRoleRequest
+        {
+            MuscleGroupId = muscleGroupId,
+            MuscleRoleId = muscleRoleId
+        });
+        return this;
+    }
 
     public CreateExerciseRequestBuilder WithCoachNotes(params (string text, int order)[] coachNotes)
     {

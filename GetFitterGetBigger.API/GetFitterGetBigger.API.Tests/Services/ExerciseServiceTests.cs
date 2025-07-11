@@ -350,17 +350,11 @@ namespace GetFitterGetBigger.API.Tests.Services
         public async Task CreateAsync_WithRestExerciseAndWeightType_ReturnsFailure()
         {
             // Arrange
-            // Create request manually to test validation
-            var request = new CreateExerciseRequest
-            {
-                Name = "Rest Exercise",
-                Description = "Rest period",
-                DifficultyId = SeedDataBuilder.StandardIds.DifficultyLevelIds.Beginner,
-                ExerciseTypeIds = new List<string> { SeedDataBuilder.StandardIds.ExerciseTypeIds.Rest },
-                ExerciseWeightTypeId = SeedDataBuilder.StandardIds.ExerciseWeightTypeIds.WeightRequired, // Should not be allowed
-                KineticChainId = null,
-                MuscleGroups = new List<MuscleGroupWithRoleRequest>()
-            };
+            var request = CreateExerciseRequestBuilder.ForRestExercise()
+                .WithName("Rest Exercise")
+                .WithDescription("Rest period")
+                .WithExerciseWeightTypeId(SeedDataBuilder.StandardIds.ExerciseWeightTypeIds.WeightRequired) // Should not be allowed
+                .Build();
 
             // Mock REST type detection
             _mockExerciseTypeService
@@ -379,24 +373,14 @@ namespace GetFitterGetBigger.API.Tests.Services
         public async Task CreateAsync_WithNonRestExerciseWithoutWeightType_ReturnsFailure()
         {
             // Arrange
-            // Create request manually to test validation
-            var request = new CreateExerciseRequest
-            {
-                Name = "Workout Exercise",
-                Description = "Workout description",
-                DifficultyId = SeedDataBuilder.StandardIds.DifficultyLevelIds.Beginner,
-                KineticChainId = SeedDataBuilder.StandardIds.KineticChainTypeIds.Compound,
-                ExerciseTypeIds = new List<string> { SeedDataBuilder.StandardIds.ExerciseTypeIds.Workout },
-                ExerciseWeightTypeId = null, // Should be required
-                MuscleGroups = new List<MuscleGroupWithRoleRequest>
-                {
-                    new MuscleGroupWithRoleRequest
-                    {
-                        MuscleGroupId = SeedDataBuilder.StandardIds.MuscleGroupIds.Chest,
-                        MuscleRoleId = SeedDataBuilder.StandardIds.MuscleRoleIds.Primary
-                    }
-                }
-            };
+            var request = CreateExerciseRequestBuilder.ForWorkoutExercise()
+                .WithName("Workout Exercise")
+                .WithDescription("Workout description")
+                .WithExerciseWeightTypeId(null) // Should be required
+                .AddMuscleGroup(
+                    MuscleGroupTestBuilder.Chest(), 
+                    MuscleRoleTestBuilder.Primary())
+                .Build();
 
             // Mock non-REST type detection
             _mockExerciseTypeService
@@ -415,23 +399,17 @@ namespace GetFitterGetBigger.API.Tests.Services
         public async Task CreateAsync_WithNonRestExerciseWithWeightType_Succeeds()
         {
             // Arrange
-            var request = new CreateExerciseRequest
-            {
-                Name = "Workout Exercise",
-                Description = "Strength exercise",
-                DifficultyId = "difficultylevel-" + Guid.NewGuid(),
-                KineticChainId = "kineticchaintype-" + Guid.NewGuid(),
-                ExerciseTypeIds = new List<string> { "exercisetype-" + Guid.NewGuid() },
-                ExerciseWeightTypeId = "exerciseweighttype-" + Guid.NewGuid(),
-                MuscleGroups = new List<MuscleGroupWithRoleRequest>
-                {
-                    new MuscleGroupWithRoleRequest
-                    {
-                        MuscleGroupId = "musclegroup-" + Guid.NewGuid(),
-                        MuscleRoleId = "musclerole-" + Guid.NewGuid()
-                    }
-                }
-            };
+            var request = CreateExerciseRequestBuilder.ForWorkoutExercise()
+                .WithName("Workout Exercise")
+                .WithDescription("Strength exercise")
+                .WithDifficultyId("difficultylevel-" + Guid.NewGuid())
+                .WithKineticChainId("kineticchaintype-" + Guid.NewGuid())
+                .WithExerciseTypes("exercisetype-" + Guid.NewGuid())
+                .WithExerciseWeightTypeId("exerciseweighttype-" + Guid.NewGuid())
+                .AddMuscleGroup(
+                    "musclegroup-" + Guid.NewGuid(),
+                    "musclerole-" + Guid.NewGuid())
+                .Build();
 
             var difficultyId = DifficultyLevelId.New();
             var difficulty = DifficultyLevel.Handler.Create(difficultyId, "Beginner", "For beginners", 1, true);
@@ -465,14 +443,13 @@ namespace GetFitterGetBigger.API.Tests.Services
         {
             // Arrange
             var exerciseId = ExerciseId.New();
-            var request = new UpdateExerciseRequest
-            {
-                Name = "Updated Rest Exercise",
-                Description = "Updated rest",
-                DifficultyId = "difficultylevel-" + Guid.NewGuid(),
-                ExerciseTypeIds = new List<string> { "exercisetype-d4e5f6a7-8b9c-0d1e-2f3a-4b5c6d7e8f9a" }, // REST type
-                ExerciseWeightTypeId = "exerciseweighttype-" + Guid.NewGuid() // Should not be allowed
-            };
+            var request = UpdateExerciseRequestBuilder.ForRestExercise()
+                .WithName("Updated Rest Exercise")
+                .WithDescription("Updated rest")
+                .WithDifficultyId("difficultylevel-" + Guid.NewGuid())
+                .WithExerciseTypes("exercisetype-d4e5f6a7-8b9c-0d1e-2f3a-4b5c6d7e8f9a") // REST type
+                .WithExerciseWeightTypeId("exerciseweighttype-" + Guid.NewGuid()) // Should not be allowed
+                .Build();
 
             var difficultyId = DifficultyLevelId.New();
             var difficulty = DifficultyLevel.Handler.Create(difficultyId, "Beginner", "For beginners", 1, true);
@@ -504,23 +481,17 @@ namespace GetFitterGetBigger.API.Tests.Services
         {
             // Arrange
             var exerciseId = ExerciseId.New();
-            var request = new UpdateExerciseRequest
-            {
-                Name = "Updated Workout Exercise",
-                Description = "Updated strength exercise",
-                DifficultyId = "difficultylevel-" + Guid.NewGuid(),
-                KineticChainId = "kineticchaintype-" + Guid.NewGuid(),
-                ExerciseTypeIds = new List<string> { "exercisetype-" + Guid.NewGuid() },
-                ExerciseWeightTypeId = null, // Should be required
-                MuscleGroups = new List<MuscleGroupWithRoleRequest>
-                {
-                    new MuscleGroupWithRoleRequest
-                    {
-                        MuscleGroupId = "musclegroup-" + Guid.NewGuid(),
-                        MuscleRoleId = "musclerole-" + Guid.NewGuid()
-                    }
-                }
-            };
+            var request = UpdateExerciseRequestBuilder.ForWorkoutExercise()
+                .WithName("Updated Workout Exercise")
+                .WithDescription("Updated strength exercise")
+                .WithDifficultyId("difficultylevel-" + Guid.NewGuid())
+                .WithKineticChainId("kineticchaintype-" + Guid.NewGuid())
+                .WithExerciseTypes("exercisetype-" + Guid.NewGuid())
+                .WithExerciseWeightTypeId(null) // Should be required
+                .AddMuscleGroup(
+                    "musclegroup-" + Guid.NewGuid(),
+                    "musclerole-" + Guid.NewGuid())
+                .Build();
 
             var difficultyId = DifficultyLevelId.New();
             var difficulty = DifficultyLevel.Handler.Create(difficultyId, "Beginner", "For beginners", 1, true);
