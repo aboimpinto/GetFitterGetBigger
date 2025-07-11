@@ -18,12 +18,12 @@ public class ExerciseRepository : RepositoryBase<FitnessDbContext>, IExerciseRep
     public async Task<(IEnumerable<Exercise> exercises, int totalCount)> GetPagedAsync(
         int pageNumber,
         int pageSize,
-        string? name = null,
-        DifficultyLevelId? difficultyId = null,
-        IEnumerable<MuscleGroupId>? muscleGroupIds = null,
-        IEnumerable<EquipmentId>? equipmentIds = null,
-        IEnumerable<MovementPatternId>? movementPatternIds = null,
-        IEnumerable<BodyPartId>? bodyPartIds = null,
+        string name,
+        DifficultyLevelId difficultyId,
+        IEnumerable<MuscleGroupId> muscleGroupIds,
+        IEnumerable<EquipmentId> equipmentIds,
+        IEnumerable<MovementPatternId> movementPatternIds,
+        IEnumerable<BodyPartId> bodyPartIds,
         bool includeInactive = false)
     {
         var query = Context.Exercises
@@ -52,43 +52,27 @@ public class ExerciseRepository : RepositoryBase<FitnessDbContext>, IExerciseRep
             query = query.Where(e => e.IsActive);
         }
         
-        if (!string.IsNullOrWhiteSpace(name))
+        if (!string.IsNullOrEmpty(name))
         {
             query = query.Where(e => e.Name.ToLower().Contains(name.ToLower()));
         }
         
-        if (difficultyId.HasValue)
+        if (!difficultyId.IsEmpty)
         {
-            query = query.Where(e => e.DifficultyId == difficultyId.Value);
+            query = query.Where(e => e.DifficultyId == difficultyId);
         }
         
-        if (muscleGroupIds != null && muscleGroupIds.Any())
-        {
-            var muscleGroupIdList = muscleGroupIds.ToList();
-            query = query.Where(e => e.ExerciseMuscleGroups
-                .Any(emg => muscleGroupIdList.Contains(emg.MuscleGroupId)));
-        }
+        query = query.Where(e => !muscleGroupIds.Any() || 
+            e.ExerciseMuscleGroups.Any(emg => muscleGroupIds.Contains(emg.MuscleGroupId)));
         
-        if (equipmentIds != null && equipmentIds.Any())
-        {
-            var equipmentIdList = equipmentIds.ToList();
-            query = query.Where(e => e.ExerciseEquipment
-                .Any(ee => equipmentIdList.Contains(ee.EquipmentId)));
-        }
+        query = query.Where(e => !equipmentIds.Any() || 
+            e.ExerciseEquipment.Any(ee => equipmentIds.Contains(ee.EquipmentId)));
         
-        if (movementPatternIds != null && movementPatternIds.Any())
-        {
-            var movementPatternIdList = movementPatternIds.ToList();
-            query = query.Where(e => e.ExerciseMovementPatterns
-                .Any(emp => movementPatternIdList.Contains(emp.MovementPatternId)));
-        }
+        query = query.Where(e => !movementPatternIds.Any() || 
+            e.ExerciseMovementPatterns.Any(emp => movementPatternIds.Contains(emp.MovementPatternId)));
         
-        if (bodyPartIds != null && bodyPartIds.Any())
-        {
-            var bodyPartIdList = bodyPartIds.ToList();
-            query = query.Where(e => e.ExerciseBodyParts
-                .Any(ebp => bodyPartIdList.Contains(ebp.BodyPartId)));
-        }
+        query = query.Where(e => !bodyPartIds.Any() || 
+            e.ExerciseBodyParts.Any(ebp => bodyPartIds.Contains(ebp.BodyPartId)));
         
         // Get total count before pagination
         var totalCount = await query.CountAsync();

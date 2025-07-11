@@ -1,0 +1,299 @@
+@using GetFitterGetBigger.Admin.Models.Dtos
+@using GetFitterGetBigger.Admin.Services
+@inject IExerciseWeightTypeStateService WeightTypeStateService
+
+<div class="space-y-3" data-testid="workout-weight-input">
+    @if (Exercise?.WeightType != null)
+    {
+        var weightType = Exercise.WeightType;
+        var isWeightRequired = IsWeightRequired(weightType.Code);
+        var isWeightAllowed = IsWeightAllowed(weightType.Code);
+        
+        @if (isWeightAllowed)
+        {
+            <div class="flex items-center gap-3">
+                <div class="flex-1">
+                    <label for="weight-input" class="block text-sm font-medium text-gray-700 mb-1">
+                        Weight
+                        @if (isWeightRequired && !Disabled)
+                        {
+                            <span class="text-red-500">*</span>
+                        }
+                    </label>
+                    <div class="flex items-center gap-2">
+                        <input type="number" 
+                               id="weight-input"
+                               @bind="WeightValue" 
+                               @bind:event="oninput"
+                               @onblur="ValidateWeight"
+                               step="0.1" 
+                               min="@GetMinWeight(weightType.Code)"
+                               max="@GetMaxWeight(weightType.Code)"
+                               disabled="@Disabled"
+                               placeholder="@GetPlaceholderText(weightType.Code)"
+                               class="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 @GetInputClass()"
+                               data-testid="weight-input-field" />
+                        
+                        @if (ShowUnitToggle && !Disabled)
+                        {
+                            <select @bind="WeightUnit" 
+                                    class="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    data-testid="weight-unit-select">
+                                <option value="kg">kg</option>
+                                <option value="lbs">lbs</option>
+                            </select>
+                        }
+                        else if (!string.IsNullOrEmpty(WeightUnit))
+                        {
+                            <span class="text-sm text-gray-600 px-2">@WeightUnit</span>
+                        }
+                    </div>
+                    
+                    @if (HasValidationError)
+                    {
+                        <p class="mt-1 text-sm text-red-600" data-testid="weight-validation-error">@ValidationMessage</p>
+                    }
+                </div>
+                
+                @if (ShowHelpIcon)
+                {
+                    <div class="relative group">
+                        <button type="button" 
+                                class="w-5 h-5 text-gray-400 hover:text-gray-600 transition-colors"
+                                data-testid="weight-help-icon">
+                            <svg fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-3a1 1 0 00-.867.5 1 1 0 11-1.731-1A3 3 0 0113 8a3.001 3.001 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2zm0 8a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd"></path>
+                            </svg>
+                        </button>
+                        
+                        <!-- Tooltip -->
+                        <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-10"
+                             data-testid="weight-help-tooltip">
+                            @GetHelpMessage(weightType)
+                            <div class="absolute top-full left-1/2 transform -translate-x-1/2 -mt-1">
+                                <div class="w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900"></div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+        else
+        {
+            <!-- No weight input for bodyweight-only or no-weight exercises -->
+            <div class="flex items-center gap-2 text-sm text-gray-600" data-testid="no-weight-message">
+                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M13.477 14.89A6 6 0 015.11 6.524l8.367 8.368zm1.414-1.414L6.524 5.11a6 6 0 018.367 8.367zM18 10a8 8 0 11-16 0 8 8 0 0116 0z" clip-rule="evenodd"></path>
+                </svg>
+                <span>@GetNoWeightMessage(weightType.Code)</span>
+            </div>
+        }
+        
+        @if (ShowContextualHelp && !string.IsNullOrEmpty(GetContextualHelpMessage(weightType)))
+        {
+            <div class="bg-blue-50 border border-blue-200 rounded-md p-3" data-testid="contextual-help">
+                <div class="flex items-start gap-2">
+                    <svg class="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
+                    </svg>
+                    <p class="text-sm text-blue-800">@GetContextualHelpMessage(weightType)</p>
+                </div>
+            </div>
+        }
+    }
+    else
+    {
+        <!-- No exercise selected or exercise without weight type -->
+        <div class="text-sm text-gray-500 italic" data-testid="no-exercise-message">
+            @(Exercise == null ? "Select an exercise to configure weight" : "Exercise weight type not available")
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public ExerciseDto? Exercise { get; set; }
+    [Parameter] public decimal? WeightValue { get; set; }
+    [Parameter] public EventCallback<decimal?> WeightValueChanged { get; set; }
+    [Parameter] public string WeightUnit { get; set; } = "kg";
+    [Parameter] public EventCallback<string> WeightUnitChanged { get; set; }
+    [Parameter] public bool Disabled { get; set; } = false;
+    [Parameter] public bool ShowUnitToggle { get; set; } = true;
+    [Parameter] public bool ShowHelpIcon { get; set; } = true;
+    [Parameter] public bool ShowContextualHelp { get; set; } = true;
+    [Parameter] public string? ValidationMessage { get; set; }
+    [Parameter] public EventCallback<string?> ValidationMessageChanged { get; set; }
+    
+    // Validation events for integration
+    [Parameter] public EventCallback<bool> OnValidationStateChanged { get; set; }
+    [Parameter] public EventCallback<WeightValidationResult> OnWeightValidated { get; set; }
+
+    private bool HasValidationError => !string.IsNullOrEmpty(ValidationMessage);
+
+    private bool IsWeightRequired(string weightTypeCode)
+    {
+        return weightTypeCode switch
+        {
+            "WEIGHT_REQUIRED" => true,
+            "MACHINE_WEIGHT" => true,
+            _ => false
+        };
+    }
+
+    private bool IsWeightAllowed(string weightTypeCode)
+    {
+        return weightTypeCode switch
+        {
+            "BODYWEIGHT_ONLY" => false,
+            "NO_WEIGHT" => false,
+            _ => true
+        };
+    }
+
+    private decimal GetMinWeight(string weightTypeCode)
+    {
+        return weightTypeCode switch
+        {
+            "BODYWEIGHT_OPTIONAL" => 0m,
+            "WEIGHT_REQUIRED" => 0.1m,
+            "MACHINE_WEIGHT" => 1m,
+            _ => 0m
+        };
+    }
+
+    private decimal GetMaxWeight(string weightTypeCode)
+    {
+        return weightTypeCode switch
+        {
+            "MACHINE_WEIGHT" => 500m, // Reasonable max for machines
+            _ => 1000m // General max weight
+        };
+    }
+
+    private string GetPlaceholderText(string weightTypeCode)
+    {
+        return weightTypeCode switch
+        {
+            "BODYWEIGHT_OPTIONAL" => "Enter additional weight (optional)",
+            "WEIGHT_REQUIRED" => "Enter weight amount",
+            "MACHINE_WEIGHT" => "Enter machine weight/setting",
+            _ => "Enter weight"
+        };
+    }
+
+    private string GetInputClass()
+    {
+        var baseClass = Disabled ? "bg-gray-100 cursor-not-allowed" : "";
+        var validationClass = HasValidationError ? "border-red-500" : "";
+        return $"{baseClass} {validationClass}".Trim();
+    }
+
+    private string GetHelpMessage(ExerciseWeightTypeDto weightType)
+    {
+        return weightType.Code switch
+        {
+            "BODYWEIGHT_OPTIONAL" => "Add extra weight to bodyweight exercise",
+            "WEIGHT_REQUIRED" => "Enter the weight you'll be lifting",
+            "MACHINE_WEIGHT" => "Enter machine weight stack or setting",
+            _ => weightType.Description ?? "Weight input for this exercise"
+        };
+    }
+
+    private string GetNoWeightMessage(string weightTypeCode)
+    {
+        return weightTypeCode switch
+        {
+            "BODYWEIGHT_ONLY" => "Uses bodyweight only - no additional weight needed",
+            "NO_WEIGHT" => "No weight required for this exercise",
+            _ => "Weight input not available"
+        };
+    }
+
+    private string? GetContextualHelpMessage(ExerciseWeightTypeDto weightType)
+    {
+        return weightType.Code switch
+        {
+            "BODYWEIGHT_OPTIONAL" => "This exercise can be performed with just bodyweight or with additional weight for increased difficulty.",
+            "WEIGHT_REQUIRED" => "This exercise requires external weight (dumbbells, barbells, etc.) to be performed effectively.",
+            "MACHINE_WEIGHT" => "Enter the weight stack setting or pin position on the machine.",
+            "BODYWEIGHT_ONLY" => null, // No help needed - input is disabled
+            "NO_WEIGHT" => null, // No help needed - input is disabled
+            _ => null
+        };
+    }
+
+    private async Task ValidateWeight()
+    {
+        if (Exercise?.WeightType == null)
+        {
+            await SetValidationMessage(null);
+            return;
+        }
+
+        var weightType = Exercise.WeightType;
+        var validationResult = ValidateWeightValue(WeightValue, weightType.Code);
+        
+        await SetValidationMessage(validationResult.IsValid ? null : validationResult.ErrorMessage);
+        await OnValidationStateChanged.InvokeAsync(validationResult.IsValid);
+        await OnWeightValidated.InvokeAsync(validationResult);
+    }
+
+    private WeightValidationResult ValidateWeightValue(decimal? weight, string weightTypeCode)
+    {
+        var isRequired = IsWeightRequired(weightTypeCode);
+        var isAllowed = IsWeightAllowed(weightTypeCode);
+
+        if (!isAllowed)
+        {
+            return new WeightValidationResult { IsValid = true }; // No validation needed for disabled inputs
+        }
+
+        if (isRequired && (!weight.HasValue || weight.Value <= 0))
+        {
+            return new WeightValidationResult 
+            { 
+                IsValid = false, 
+                ErrorMessage = "Weight is required for this exercise" 
+            };
+        }
+
+        if (weight.HasValue)
+        {
+            var min = GetMinWeight(weightTypeCode);
+            var max = GetMaxWeight(weightTypeCode);
+
+            if (weight.Value < min)
+            {
+                return new WeightValidationResult 
+                { 
+                    IsValid = false, 
+                    ErrorMessage = $"Weight must be at least {min} {WeightUnit}" 
+                };
+            }
+
+            if (weight.Value > max)
+            {
+                return new WeightValidationResult 
+                { 
+                    IsValid = false, 
+                    ErrorMessage = $"Weight cannot exceed {max} {WeightUnit}" 
+                };
+            }
+        }
+
+        return new WeightValidationResult { IsValid = true };
+    }
+
+    private async Task SetValidationMessage(string? message)
+    {
+        ValidationMessage = message;
+        await ValidationMessageChanged.InvokeAsync(message);
+    }
+
+    public class WeightValidationResult
+    {
+        public bool IsValid { get; set; }
+        public string? ErrorMessage { get; set; }
+        public decimal? ValidatedWeight { get; set; }
+        public string? WeightUnit { get; set; }
+    }
+}

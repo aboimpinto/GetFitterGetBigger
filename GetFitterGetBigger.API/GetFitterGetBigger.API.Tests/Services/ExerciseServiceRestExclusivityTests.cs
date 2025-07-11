@@ -10,6 +10,7 @@ using GetFitterGetBigger.API.Repositories.Interfaces;
 using GetFitterGetBigger.API.Services.Implementations;
 using GetFitterGetBigger.API.Services.Interfaces;
 using GetFitterGetBigger.API.Tests.TestBuilders;
+using GetFitterGetBigger.API.Tests.TestBuilders.Domain;
 using Moq;
 using Olimpo.EntityFramework.Persistency;
 using Xunit;
@@ -23,7 +24,7 @@ public class ExerciseServiceRestExclusivityTests
     private readonly Mock<IWritableUnitOfWork<FitnessDbContext>> _writableUnitOfWorkMock;
     private readonly Mock<IExerciseRepository> _exerciseRepositoryMock;
     private readonly Mock<IExerciseTypeService> _mockExerciseTypeService;
-    private readonly ExerciseService _exerciseService;
+    private readonly IExerciseService _exerciseService;
     
     public ExerciseServiceRestExclusivityTests()
     {
@@ -61,7 +62,7 @@ public class ExerciseServiceRestExclusivityTests
             .Setup(s => s.ExistsAsync(It.IsAny<ExerciseTypeId>()))
             .ReturnsAsync(true);
         
-        _exerciseService = new ExerciseService(_unitOfWorkProviderMock.Object, _mockExerciseTypeService.Object);
+        _exerciseService = new ExerciseServiceTemp(_unitOfWorkProviderMock.Object, _mockExerciseTypeService.Object);
     }
     
     [Fact]
@@ -71,9 +72,14 @@ public class ExerciseServiceRestExclusivityTests
         var request = CreateExerciseRequestBuilder.ForWorkoutExercise()
             .WithName("Test Exercise")
             .WithDescription("Test Description")
-            .WithExerciseTypes(
-                "exercisetype-11111111-1111-1111-1111-111111111111",
-                "exercisetype-22222222-2222-2222-2222-222222222222")
+            .WithKineticChain(KineticChainTypeTestBuilder.Compound())
+            .WithWeightType(ExerciseWeightTypeTestBuilder.Barbell())
+            .WithExerciseTypes(new[]
+            {
+                ExerciseType.Handler.Create(ExerciseTypeId.From(Guid.Parse("11111111-1111-1111-1111-111111111111")), "Rest", "Rest", 1, true),
+                ExerciseType.Handler.Create(ExerciseTypeId.From(Guid.Parse("22222222-2222-2222-2222-222222222222")), "Workout", "Workout", 2, true)
+            })
+            .AddMuscleGroup(MuscleGroupTestBuilder.Chest(), MuscleRoleTestBuilder.Primary())
             .Build();
         
         _exerciseRepositoryMock.Setup(r => r.ExistsAsync(It.IsAny<string>(), null))
@@ -109,9 +115,14 @@ public class ExerciseServiceRestExclusivityTests
         var request = UpdateExerciseRequestBuilder.ForWorkoutExercise()
             .WithName("Updated Exercise")
             .WithDescription("Updated Description")
-            .WithExerciseTypes(
-                "exercisetype-11111111-1111-1111-1111-111111111111",
-                "exercisetype-33333333-3333-3333-3333-333333333333")
+            .WithKineticChain(KineticChainTypeTestBuilder.Compound())
+            .WithWeightType(ExerciseWeightTypeTestBuilder.Barbell())
+            .WithExerciseTypes(new[]
+            {
+                ExerciseType.Handler.Create(ExerciseTypeId.From(Guid.Parse("11111111-1111-1111-1111-111111111111")), "Rest", "Rest", 1, true),
+                ExerciseType.Handler.Create(ExerciseTypeId.From(Guid.Parse("33333333-3333-3333-3333-333333333333")), "Cooldown", "Cooldown", 3, true)
+            })
+            .AddMuscleGroup(MuscleGroupTestBuilder.Chest(), MuscleRoleTestBuilder.Primary())
             .Build();
         
         _exerciseRepositoryMock.Setup(r => r.ExistsAsync(It.IsAny<string>(), It.IsAny<ExerciseId>()))
@@ -147,7 +158,6 @@ public class ExerciseServiceRestExclusivityTests
         var request = CreateExerciseRequestBuilder.ForRestExercise()
             .WithName("Rest Exercise")
             .WithDescription("Rest Description")
-            .WithExerciseTypes("exercisetype-d4e5f6a7-8b9c-0d1e-2f3a-4b5c6d7e8f9a")
             .Build();
         
         _exerciseRepositoryMock.Setup(r => r.ExistsAsync(It.IsAny<string>(), null))
@@ -180,12 +190,15 @@ public class ExerciseServiceRestExclusivityTests
         var request = CreateExerciseRequestBuilder.ForWorkoutExercise()
             .WithName("Complex Exercise")
             .WithDescription("Complex Description")
-            .WithExerciseTypes(
-                "exercisetype-11223344-5566-7788-99aa-bbccddeeff00", // Warmup
-                "exercisetype-b2c3d4e5-6f7a-8b9c-0d1e-2f3a4b5c6d7e", // Workout
-                "exercisetype-33445566-7788-99aa-bbcc-ddeeff001122"  // Cooldown
-            )
-            .WithMuscleGroups(("musclegroup-chest-123", "musclerole-primary-456"))
+            .WithKineticChain(KineticChainTypeTestBuilder.Compound())
+            .WithWeightType(ExerciseWeightTypeTestBuilder.Barbell())
+            .WithExerciseTypes(new[]
+            {
+                ExerciseType.Handler.Create(ExerciseTypeId.From(Guid.Parse("11223344-5566-7788-99aa-bbccddeeff00")), "Warmup", "Warmup", 1, true),
+                ExerciseType.Handler.Create(ExerciseTypeId.From(Guid.Parse("b2c3d4e5-6f7a-8b9c-0d1e-2f3a4b5c6d7e")), "Workout", "Workout", 2, true),
+                ExerciseType.Handler.Create(ExerciseTypeId.From(Guid.Parse("33445566-7788-99aa-bbcc-ddeeff001122")), "Cooldown", "Cooldown", 3, true)
+            })
+            .AddMuscleGroup(MuscleGroupTestBuilder.Chest(), MuscleRoleTestBuilder.Primary())
             .Build();
         
         _exerciseRepositoryMock.Setup(r => r.ExistsAsync(It.IsAny<string>(), null))
@@ -230,8 +243,10 @@ public class ExerciseServiceRestExclusivityTests
         var request = CreateExerciseRequestBuilder.ForWorkoutExercise()
             .WithName("No Type Exercise")
             .WithDescription("No Type Description")
+            .WithKineticChain(KineticChainTypeTestBuilder.Compound())
+            .WithWeightType(ExerciseWeightTypeTestBuilder.Barbell())
             .WithExerciseTypes() // Empty exercise types = non-REST
-            .WithMuscleGroups(("musclegroup-chest-123", "musclerole-primary-456"))
+            .AddMuscleGroup(MuscleGroupTestBuilder.Chest(), MuscleRoleTestBuilder.Primary())
             .Build();
         
         _exerciseRepositoryMock.Setup(r => r.ExistsAsync(It.IsAny<string>(), null))

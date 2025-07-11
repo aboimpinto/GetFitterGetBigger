@@ -2,6 +2,7 @@
 @using GetFitterGetBigger.Admin.Models.Dtos
 @using GetFitterGetBigger.Admin.Services
 @using GetFitterGetBigger.Admin.Components.Pages.Exercises.ExerciseLinks
+@using GetFitterGetBigger.Admin.Components.Shared
 @using Microsoft.AspNetCore.Authorization
 @attribute [Authorize]
 @rendermode InteractiveServer
@@ -40,6 +41,12 @@
                         <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
                             @exercise.Difficulty?.Value
                         </span>
+                        @if (exercise.WeightType != null)
+                        {
+                            <ExerciseWeightTypeBadge 
+                                WeightType="@exercise.WeightType" 
+                                Size="ExerciseWeightTypeBadge.BadgeSize.Medium" />
+                        }
                         @if (exercise.KineticChain != null)
                         {
                             <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium @GetKineticChainBadgeClass(exercise.KineticChain.Value)" 
@@ -115,6 +122,42 @@
                     }
                 </div>
             </div>
+
+            <!-- Weight Type Information -->
+            @if (exercise.WeightType != null)
+            {
+                <div class="bg-gray-50 p-4 rounded-lg">
+                    <h3 class="text-lg font-medium text-gray-900 mb-3">Weight Type</h3>
+                    <div class="space-y-3">
+                        <div class="flex items-center space-x-3">
+                            <ExerciseWeightTypeBadge 
+                                WeightType="@exercise.WeightType" 
+                                Size="ExerciseWeightTypeBadge.BadgeSize.Large" />
+                            <span class="text-gray-700 font-medium">@exercise.WeightType.Name</span>
+                        </div>
+                        
+                        @if (!string.IsNullOrEmpty(exercise.WeightType.Description))
+                        {
+                            <p class="text-gray-600">@exercise.WeightType.Description</p>
+                        }
+                        
+                        <!-- Weight Validation Rules -->
+                        <div class="bg-blue-50 border border-blue-200 rounded-md p-3">
+                            <h4 class="text-sm font-medium text-blue-900 mb-2">Weight Requirements</h4>
+                            <div class="text-sm text-blue-800 whitespace-pre-line">
+                                @GetWeightTypeRules(exercise.WeightType.Code)
+                            </div>
+                        </div>
+                        
+                        @if (exercise.DefaultWeight.HasValue)
+                        {
+                            <div class="text-sm text-gray-600">
+                                <span class="font-medium">Default Weight:</span> @exercise.DefaultWeight.Value kg
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
 
             <!-- Muscle Groups -->
             <div>
@@ -327,6 +370,19 @@
             "compound" => "bg-purple-100 text-purple-800",
             "isolation" => "bg-blue-100 text-blue-800",
             _ => "bg-gray-100 text-gray-800"
+        };
+    }
+
+    private string GetWeightTypeRules(string weightTypeCode)
+    {
+        return weightTypeCode switch
+        {
+            "BODYWEIGHT_ONLY" => "• No additional weight can be added\n• Exercise uses bodyweight resistance only\n• Focus on form and repetition quality",
+            "NO_WEIGHT" => "• No weight required or used\n• Typically stretches, mobility, or cardio exercises\n• Equipment may be used for support or guidance",
+            "BODYWEIGHT_OPTIONAL" => "• Can be performed with bodyweight alone\n• Additional weight optional for increased difficulty\n• Minimum weight: 0 kg (bodyweight only)\n• Recommended for progressive overload",
+            "WEIGHT_REQUIRED" => "• External weight is mandatory\n• Minimum weight: 0.1 kg\n• Use dumbbells, barbells, or similar equipment\n• Weight must be recorded for tracking progress",
+            "MACHINE_WEIGHT" => "• Uses machine weight stack or pin settings\n• Weight refers to machine setting/stack position\n• Minimum setting: 1 (weight stack position)\n• Maximum recommended: 500 (stack limit)",
+            _ => "• Weight requirements not specified\n• Follow general exercise guidelines"
         };
     }
 

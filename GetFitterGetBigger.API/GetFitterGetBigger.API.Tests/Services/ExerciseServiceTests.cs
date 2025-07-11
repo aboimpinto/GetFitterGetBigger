@@ -9,7 +9,9 @@ using GetFitterGetBigger.API.Models.SpecializedIds;
 using GetFitterGetBigger.API.Repositories.Interfaces;
 using GetFitterGetBigger.API.Services.Implementations;
 using GetFitterGetBigger.API.Services.Interfaces;
+using GetFitterGetBigger.API.Services.Commands;
 using GetFitterGetBigger.API.Tests.TestBuilders;
+using GetFitterGetBigger.API.Tests.TestBuilders.Domain;
 using Moq;
 using Olimpo.EntityFramework.Persistency;
 using Xunit;
@@ -23,7 +25,7 @@ namespace GetFitterGetBigger.API.Tests.Services
         private readonly Mock<IWritableUnitOfWork<FitnessDbContext>> _mockWritableUnitOfWork;
         private readonly Mock<IExerciseRepository> _mockExerciseRepository;
         private readonly Mock<IExerciseTypeService> _mockExerciseTypeService;
-        private readonly ExerciseService _service;
+        private readonly IExerciseService _service;
 
         public ExerciseServiceTests()
         {
@@ -65,7 +67,7 @@ namespace GetFitterGetBigger.API.Tests.Services
                 .Setup(s => s.ExistsAsync(It.IsAny<ExerciseTypeId>()))
                 .ReturnsAsync(true);
 
-            _service = new ExerciseService(_mockUnitOfWorkProvider.Object, _mockExerciseTypeService.Object);
+            _service = new ExerciseServiceTemp(_mockUnitOfWorkProvider.Object, _mockExerciseTypeService.Object);
         }
 
         [Fact]
@@ -93,7 +95,7 @@ namespace GetFitterGetBigger.API.Tests.Services
                     It.IsAny<int>(), 
                     It.IsAny<int>(), 
                     It.IsAny<string>(),
-                    It.IsAny<DifficultyLevelId?>(),
+                    It.IsAny<DifficultyLevelId>(),
                     It.IsAny<IEnumerable<MuscleGroupId>>(),
                     It.IsAny<IEnumerable<EquipmentId>>(),
                     It.IsAny<IEnumerable<MovementPatternId>>(),
@@ -102,7 +104,7 @@ namespace GetFitterGetBigger.API.Tests.Services
                 .ReturnsAsync((exercises, 2));
 
             // Act
-            var result = await _service.GetPagedAsync(filterParams);
+            var result = await _service.GetPagedAsync(filterParams.ToCommand());
 
             // Assert
             Assert.NotNull(result);
@@ -152,7 +154,9 @@ namespace GetFitterGetBigger.API.Tests.Services
             var request = CreateExerciseRequestBuilder.ForWorkoutExercise()
                 .WithName("New Exercise")
                 .WithDescription("Description")
-                .WithCoachNotes(("Instructions", 0))
+                .WithKineticChain(KineticChainTypeTestBuilder.Compound())
+                .WithWeightType(ExerciseWeightTypeTestBuilder.Barbell())
+                .AddMuscleGroup(MuscleGroupTestBuilder.Chest(), MuscleRoleTestBuilder.Primary())
                 .Build();
 
             var difficultyId = DifficultyLevelId.New();
@@ -187,6 +191,9 @@ namespace GetFitterGetBigger.API.Tests.Services
             // Arrange
             var request = CreateExerciseRequestBuilder.ForWorkoutExercise()
                 .WithName("Duplicate Exercise")
+                .WithKineticChain(KineticChainTypeTestBuilder.Compound())
+                .WithWeightType(ExerciseWeightTypeTestBuilder.Barbell())
+                .AddMuscleGroup(MuscleGroupTestBuilder.Chest(), MuscleRoleTestBuilder.Primary())
                 .Build();
 
             _mockExerciseRepository
@@ -206,7 +213,9 @@ namespace GetFitterGetBigger.API.Tests.Services
             var request = UpdateExerciseRequestBuilder.ForWorkoutExercise()
                 .WithName("Updated Exercise")
                 .WithDescription("Updated Description")
-                .WithCoachNotes(("Updated Instructions", 0))
+                .WithKineticChain(KineticChainTypeTestBuilder.Compound())
+                .WithWeightType(ExerciseWeightTypeTestBuilder.Barbell())
+                .AddMuscleGroup(MuscleGroupTestBuilder.Chest(), MuscleRoleTestBuilder.Primary())
                 .WithIsActive(true)
                 .Build();
 
@@ -348,9 +357,17 @@ namespace GetFitterGetBigger.API.Tests.Services
         public async Task CreateAsync_WithRestExerciseAndWeightType_ThrowsException()
         {
             // Arrange
-            var request = CreateExerciseRequestBuilder.ForRestExercise()
-                .WithExerciseWeightTypeId(TestConstants.ExerciseWeightTypeIds.WeightRequired) // Should not be allowed
-                .Build();
+            // Create request manually to test validation
+            var request = new CreateExerciseRequest
+            {
+                Name = "Rest Exercise",
+                Description = "Rest period",
+                DifficultyId = TestConstants.DifficultyLevelIds.Beginner,
+                ExerciseTypeIds = new List<string> { TestConstants.ExerciseTypeIds.Rest },
+                ExerciseWeightTypeId = TestConstants.ExerciseWeightTypeIds.WeightRequired, // Should not be allowed
+                KineticChainId = null,
+                MuscleGroups = new List<MuscleGroupWithRoleRequest>()
+            };
 
             // Mock REST type detection
             _mockExerciseTypeService
@@ -368,9 +385,24 @@ namespace GetFitterGetBigger.API.Tests.Services
         public async Task CreateAsync_WithNonRestExerciseWithoutWeightType_ThrowsException()
         {
             // Arrange
-            var request = CreateExerciseRequestBuilder.ForWorkoutExercise()
-                .WithExerciseWeightTypeId(null) // Should be required
-                .Build();
+            // Create request manually to test validation
+            var request = new CreateExerciseRequest
+            {
+                Name = "Workout Exercise",
+                Description = "Workout description",
+                DifficultyId = TestConstants.DifficultyLevelIds.Beginner,
+                KineticChainId = TestConstants.KineticChainTypeIds.Compound,
+                ExerciseTypeIds = new List<string> { TestConstants.ExerciseTypeIds.Workout },
+                ExerciseWeightTypeId = null, // Should be required
+                MuscleGroups = new List<MuscleGroupWithRoleRequest>
+                {
+                    new MuscleGroupWithRoleRequest
+                    {
+                        MuscleGroupId = TestConstants.MuscleGroupIds.Chest,
+                        MuscleRoleId = TestConstants.MuscleRoleIds.Primary
+                    }
+                }
+            };
 
             // Mock non-REST type detection
             _mockExerciseTypeService

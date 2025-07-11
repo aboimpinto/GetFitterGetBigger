@@ -76,7 +76,15 @@ namespace GetFitterGetBigger.API.Tests.Repositories
             await _context.SaveChangesAsync();
 
             // Act
-            var (exercises, totalCount) = await _repository.GetPagedAsync(1, 10);
+            var (exercises, totalCount) = await _repository.GetPagedAsync(
+                1, 
+                10, 
+                string.Empty,
+                DifficultyLevelId.Empty,
+                new List<MuscleGroupId>(),
+                new List<EquipmentId>(),
+                new List<MovementPatternId>(),
+                new List<BodyPartId>());
 
             // Assert
             Assert.Equal(2, totalCount);
@@ -98,7 +106,16 @@ namespace GetFitterGetBigger.API.Tests.Repositories
             await _context.SaveChangesAsync();
 
             // Act
-            var (exercises, totalCount) = await _repository.GetPagedAsync(1, 10, includeInactive: true);
+            var (exercises, totalCount) = await _repository.GetPagedAsync(
+                1, 
+                10, 
+                string.Empty,
+                DifficultyLevelId.Empty,
+                new List<MuscleGroupId>(),
+                new List<EquipmentId>(),
+                new List<MovementPatternId>(),
+                new List<BodyPartId>(),
+                includeInactive: true);
 
             // Assert
             Assert.Equal(2, totalCount);
@@ -123,7 +140,15 @@ namespace GetFitterGetBigger.API.Tests.Repositories
             await _context.SaveChangesAsync();
 
             // Act
-            var (exercises, totalCount) = await _repository.GetPagedAsync(1, 10, name: "press");
+            var (exercises, totalCount) = await _repository.GetPagedAsync(
+                1, 
+                10, 
+                "press",
+                DifficultyLevelId.Empty,
+                new List<MuscleGroupId>(),
+                new List<EquipmentId>(),
+                new List<MovementPatternId>(),
+                new List<BodyPartId>());
 
             // Assert
             Assert.Equal(2, totalCount);
@@ -144,8 +169,24 @@ namespace GetFitterGetBigger.API.Tests.Repositories
             await _context.SaveChangesAsync();
 
             // Act
-            var (firstPage, totalCount) = await _repository.GetPagedAsync(1, 10);
-            var (secondPage, _) = await _repository.GetPagedAsync(2, 10);
+            var (firstPage, totalCount) = await _repository.GetPagedAsync(
+                1, 
+                10, 
+                string.Empty,
+                DifficultyLevelId.Empty,
+                new List<MuscleGroupId>(),
+                new List<EquipmentId>(),
+                new List<MovementPatternId>(),
+                new List<BodyPartId>());
+            var (secondPage, _) = await _repository.GetPagedAsync(
+                2, 
+                10, 
+                string.Empty,
+                DifficultyLevelId.Empty,
+                new List<MuscleGroupId>(),
+                new List<EquipmentId>(),
+                new List<MovementPatternId>(),
+                new List<BodyPartId>());
 
             // Assert
             Assert.Equal(15, totalCount);
@@ -355,7 +396,15 @@ namespace GetFitterGetBigger.API.Tests.Repositories
             await _context.SaveChangesAsync();
 
             // Act
-            var (exercises, totalCount) = await _repository.GetPagedAsync(1, 10);
+            var (exercises, totalCount) = await _repository.GetPagedAsync(
+                1, 
+                10, 
+                string.Empty,
+                DifficultyLevelId.Empty,
+                new List<MuscleGroupId>(),
+                new List<EquipmentId>(),
+                new List<MovementPatternId>(),
+                new List<BodyPartId>());
 
             // Assert
             Assert.Equal(1, totalCount);

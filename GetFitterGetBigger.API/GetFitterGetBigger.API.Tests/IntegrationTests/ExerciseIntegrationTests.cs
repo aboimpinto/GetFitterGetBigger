@@ -2,6 +2,7 @@ using System.Net;
 using System.Net.Http.Json;
 using GetFitterGetBigger.API.DTOs;
 using GetFitterGetBigger.API.Tests.TestBuilders;
+using GetFitterGetBigger.API.Tests.TestBuilders.Domain;
 using Xunit;
 
 namespace GetFitterGetBigger.API.Tests.IntegrationTests;
@@ -25,17 +26,12 @@ public class ExerciseIntegrationTests : IClassFixture<SharedDatabaseTestFixture>
         var request = CreateExerciseRequestBuilder.ForWorkoutExercise()
             .WithName("Integration Test Squat")
             .WithDescription("Test squat exercise with coach notes")
-            .WithCoachNotes(
-                ("Keep your back straight", 2),
-                ("Warm up properly first", 1),
-                ("Control the descent", 3)
-            )
+            .WithKineticChain(KineticChainTypeTestBuilder.Compound())
+            .WithWeightType(ExerciseWeightTypeTestBuilder.Barbell())
+            .AddMuscleGroup(MuscleGroupTestBuilder.Quadriceps(), MuscleRoleTestBuilder.Primary())
             .WithVideoUrl("https://example.com/squat.mp4")
             .WithImageUrl("https://example.com/squat.jpg")
             .WithIsUnilateral(false)
-            .WithMuscleGroups(
-                ("musclegroup-eeff0011-2233-4455-6677-889900112233", "musclerole-abcdef12-3456-7890-abcd-ef1234567890") // Quadriceps - Primary
-            )
             .Build();
         
         // Act
@@ -69,11 +65,15 @@ public class ExerciseIntegrationTests : IClassFixture<SharedDatabaseTestFixture>
         var request = CreateExerciseRequestBuilder.ForWorkoutExercise()
             .WithName("Integration Test Complex Exercise")
             .WithDescription("Exercise with multiple types")
-            .WithExerciseTypes(
-                "exercisetype-a1b2c3d4-5e6f-7a8b-9c0d-1e2f3a4b5c6d", // Warmup
-                "exercisetype-b2c3d4e5-6f7a-8b9c-0d1e-2f3a4b5c6d7e", // Workout
-                "exercisetype-c3d4e5f6-7a8b-9c0d-1e2f-3a4b5c6d7e8f"  // Cooldown
-            )
+            .WithKineticChain(KineticChainTypeTestBuilder.Compound())
+            .WithWeightType(ExerciseWeightTypeTestBuilder.Barbell())
+            .WithExerciseTypes(new[]
+            {
+                ExerciseTypeTestBuilder.Warmup().Build(),
+                ExerciseTypeTestBuilder.Workout().Build(),
+                ExerciseTypeTestBuilder.Cooldown().Build()
+            })
+            .AddMuscleGroup(MuscleGroupTestBuilder.Chest(), MuscleRoleTestBuilder.Primary())
             .Build();
         
         // Act
@@ -99,11 +99,14 @@ public class ExerciseIntegrationTests : IClassFixture<SharedDatabaseTestFixture>
         var request = CreateExerciseRequestBuilder.ForWorkoutExercise()
             .WithName("Integration Test Rest Exercise")
             .WithDescription("Invalid exercise with Rest and other types")
-            .WithExerciseTypes(
-                "exercisetype-d4e5f6a7-8b9c-0d1e-2f3a-4b5c6d7e8f9a", // Rest (with "rest" in ID)
-                "exercisetype-b2c3d4e5-6f7a-8b9c-0d1e-2f3a4b5c6d7e"  // Workout
-            )
-            .WithKineticChainId(null) // REST exercises should have null KineticChainId
+            .WithKineticChain(KineticChainTypeTestBuilder.Compound())
+            .WithWeightType(ExerciseWeightTypeTestBuilder.Barbell())
+            .WithExerciseTypes(new[]
+            {
+                ExerciseTypeTestBuilder.Rest().Build(),
+                ExerciseTypeTestBuilder.Workout().Build()
+            })
+            .AddMuscleGroup(MuscleGroupTestBuilder.Chest(), MuscleRoleTestBuilder.Primary())
             .Build();
         
         // Act
@@ -123,9 +126,6 @@ public class ExerciseIntegrationTests : IClassFixture<SharedDatabaseTestFixture>
         var request = CreateExerciseRequestBuilder.ForRestExercise()
             .WithName("Integration Test Rest Period")
             .WithDescription("Valid rest exercise")
-            .WithCoachNotes(
-                ("Take a 60 second break", 1)
-            )
             .Build();
         
         // Act
@@ -147,7 +147,9 @@ public class ExerciseIntegrationTests : IClassFixture<SharedDatabaseTestFixture>
         var request = CreateExerciseRequestBuilder.ForWorkoutExercise()
             .WithName("Integration Test No Notes Exercise")
             .WithDescription("Exercise without coach notes")
-            .WithCoachNotes() // Empty
+            .WithKineticChain(KineticChainTypeTestBuilder.Compound())
+            .WithWeightType(ExerciseWeightTypeTestBuilder.Barbell())
+            .AddMuscleGroup(MuscleGroupTestBuilder.Chest(), MuscleRoleTestBuilder.Primary())
             .Build();
         
         // Act
@@ -168,7 +170,9 @@ public class ExerciseIntegrationTests : IClassFixture<SharedDatabaseTestFixture>
         var createRequest = CreateExerciseRequestBuilder.ForWorkoutExercise()
             .WithName("Update Test Exercise")
             .WithDescription("Exercise to test updates")
-            .WithCoachNotes()
+            .WithKineticChain(KineticChainTypeTestBuilder.Compound())
+            .WithWeightType(ExerciseWeightTypeTestBuilder.Barbell())
+            .AddMuscleGroup(MuscleGroupTestBuilder.Chest(), MuscleRoleTestBuilder.Primary())
             .Build();
         
         var createResponse = await _client.PostAsJsonAsync("/api/exercises", createRequest);
@@ -182,11 +186,9 @@ public class ExerciseIntegrationTests : IClassFixture<SharedDatabaseTestFixture>
         var updateRequest = UpdateExerciseRequestBuilder.ForWorkoutExercise()
             .WithName("Updated Test Exercise")
             .WithDescription("Updated description")
-            .WithCoachNotes(
-                ("First step", 1),
-                ("Second step", 2),
-                ("Third step", 3)
-            )
+            .WithKineticChain(KineticChainTypeTestBuilder.Compound())
+            .WithWeightType(ExerciseWeightTypeTestBuilder.Barbell())
+            .AddMuscleGroup(MuscleGroupTestBuilder.Chest(), MuscleRoleTestBuilder.Primary())
             .Build();
         
         // Act
@@ -214,10 +216,11 @@ public class ExerciseIntegrationTests : IClassFixture<SharedDatabaseTestFixture>
         var createRequest = CreateExerciseRequestBuilder.ForWorkoutExercise()
             .WithName("Exercise With Notes")
             .WithDescription("Exercise with existing notes")
-            .WithCoachNotes(
-                ("Original first step", 1),
-                ("Original second step", 2)
-            )
+            .WithKineticChain(KineticChainTypeTestBuilder.Compound())
+            .WithWeightType(ExerciseWeightTypeTestBuilder.Barbell())
+            .AddMuscleGroup(MuscleGroupTestBuilder.Chest(), MuscleRoleTestBuilder.Primary())
+            .AddCoachNote("Original first step", 1)
+            .AddCoachNote("Original second step", 2)
             .Build();
         
         var createResponse = await _client.PostAsJsonAsync("/api/exercises", createRequest);
@@ -228,15 +231,13 @@ public class ExerciseIntegrationTests : IClassFixture<SharedDatabaseTestFixture>
         var updateRequest = UpdateExerciseRequestBuilder.ForWorkoutExercise()
             .WithName("Exercise With Notes")
             .WithDescription("Exercise with existing notes")
+            .WithKineticChain(KineticChainTypeTestBuilder.Compound())
+            .WithWeightType(ExerciseWeightTypeTestBuilder.Barbell())
+            .AddMuscleGroup(MuscleGroupTestBuilder.Chest(), MuscleRoleTestBuilder.Primary())
+            .AddCoachNote(createdExercise.CoachNotes[0].Id, "Modified first step", 1)
+            .AddCoachNote("New second step", 2)
+            .AddCoachNote("New third step", 3)
             .Build();
-        
-        // Manually set coach notes since we need a mix of existing and new notes
-        updateRequest.CoachNotes = new List<CoachNoteRequest>
-        {
-            new() { Id = createdExercise.CoachNotes[0].Id, Text = "Modified first step", Order = 1 },
-            new() { Text = "New second step", Order = 2 }, // New note without ID
-            new() { Text = "New third step", Order = 3 }   // Another new note
-        };
         
         // Act
         var updateResponse = await _client.PutAsJsonAsync($"/api/exercises/{createdExercise.Id}", updateRequest);
@@ -259,10 +260,14 @@ public class ExerciseIntegrationTests : IClassFixture<SharedDatabaseTestFixture>
         var createRequest = CreateExerciseRequestBuilder.ForWorkoutExercise()
             .WithName("Multi-Type Exercise")
             .WithDescription("Exercise with multiple types")
-            .WithExerciseTypes(
-                "exercisetype-a1b2c3d4-5e6f-7a8b-9c0d-1e2f3a4b5c6d", // Warmup
-                "exercisetype-b2c3d4e5-6f7a-8b9c-0d1e-2f3a4b5c6d7e"  // Workout
-            )
+            .WithKineticChain(KineticChainTypeTestBuilder.Compound())
+            .WithWeightType(ExerciseWeightTypeTestBuilder.Barbell())
+            .WithExerciseTypes(new[]
+            {
+                ExerciseTypeTestBuilder.Warmup().Build(),
+                ExerciseTypeTestBuilder.Workout().Build()
+            })
+            .AddMuscleGroup(MuscleGroupTestBuilder.Chest(), MuscleRoleTestBuilder.Primary())
             .Build();
         
         var createResponse = await _client.PostAsJsonAsync("/api/exercises", createRequest);
@@ -273,10 +278,14 @@ public class ExerciseIntegrationTests : IClassFixture<SharedDatabaseTestFixture>
         var updateRequest = UpdateExerciseRequestBuilder.ForWorkoutExercise()
             .WithName("Multi-Type Exercise")
             .WithDescription("Exercise with updated types")
-            .WithExerciseTypes(
-                "exercisetype-b2c3d4e5-6f7a-8b9c-0d1e-2f3a4b5c6d7e", // Workout
-                "exercisetype-c3d4e5f6-7a8b-9c0d-1e2f-3a4b5c6d7e8f"  // Cooldown
-            )
+            .WithKineticChain(KineticChainTypeTestBuilder.Compound())
+            .WithWeightType(ExerciseWeightTypeTestBuilder.Barbell())
+            .WithExerciseTypes(new[]
+            {
+                ExerciseTypeTestBuilder.Workout().Build(),
+                ExerciseTypeTestBuilder.Cooldown().Build()
+            })
+            .AddMuscleGroup(MuscleGroupTestBuilder.Chest(), MuscleRoleTestBuilder.Primary())
             .Build();
         
         // Act
@@ -302,6 +311,9 @@ public class ExerciseIntegrationTests : IClassFixture<SharedDatabaseTestFixture>
         var createRequest = CreateExerciseRequestBuilder.ForWorkoutExercise()
             .WithName("Normal Exercise")
             .WithDescription("Exercise to test Rest validation")
+            .WithKineticChain(KineticChainTypeTestBuilder.Compound())
+            .WithWeightType(ExerciseWeightTypeTestBuilder.Barbell())
+            .AddMuscleGroup(MuscleGroupTestBuilder.Chest(), MuscleRoleTestBuilder.Primary())
             .Build();
         
         var createResponse = await _client.PostAsJsonAsync("/api/exercises", createRequest);
@@ -312,11 +324,14 @@ public class ExerciseIntegrationTests : IClassFixture<SharedDatabaseTestFixture>
         var updateRequest = UpdateExerciseRequestBuilder.ForWorkoutExercise()
             .WithName("Normal Exercise")
             .WithDescription("Exercise to test Rest validation")
-            .WithExerciseTypes(
-                "exercisetype-d4e5f6a7-8b9c-0d1e-2f3a-4b5c6d7e8f9a", // Rest (with "rest" in ID)
-                "exercisetype-b2c3d4e5-6f7a-8b9c-0d1e-2f3a4b5c6d7e"  // Workout
-            )
-            .WithKineticChainId(null) // REST exercises should have null KineticChainId
+            .WithKineticChain(KineticChainTypeTestBuilder.Compound())
+            .WithWeightType(ExerciseWeightTypeTestBuilder.Barbell())
+            .WithExerciseTypes(new[]
+            {
+                ExerciseTypeTestBuilder.Rest().Build(),
+                ExerciseTypeTestBuilder.Workout().Build()
+            })
+            .AddMuscleGroup(MuscleGroupTestBuilder.Chest(), MuscleRoleTestBuilder.Primary())
             .Build();
         
         // Act

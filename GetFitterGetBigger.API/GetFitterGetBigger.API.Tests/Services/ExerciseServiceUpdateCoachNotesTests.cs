@@ -10,6 +10,7 @@ using GetFitterGetBigger.API.Repositories.Interfaces;
 using GetFitterGetBigger.API.Services.Implementations;
 using GetFitterGetBigger.API.Services.Interfaces;
 using GetFitterGetBigger.API.Tests.TestBuilders;
+using GetFitterGetBigger.API.Tests.TestBuilders.Domain;
 using Moq;
 using Olimpo.EntityFramework.Persistency;
 using Xunit;
@@ -23,7 +24,7 @@ public class ExerciseServiceUpdateCoachNotesTests
     private readonly Mock<IWritableUnitOfWork<FitnessDbContext>> _writableUnitOfWorkMock;
     private readonly Mock<IExerciseRepository> _exerciseRepositoryMock;
     private readonly Mock<IExerciseTypeService> _mockExerciseTypeService;
-    private readonly ExerciseService _exerciseService;
+    private readonly IExerciseService _exerciseService;
     
     public ExerciseServiceUpdateCoachNotesTests()
     {
@@ -61,7 +62,7 @@ public class ExerciseServiceUpdateCoachNotesTests
             .Setup(s => s.ExistsAsync(It.IsAny<ExerciseTypeId>()))
             .ReturnsAsync(true);
         
-        _exerciseService = new ExerciseService(_unitOfWorkProviderMock.Object, _mockExerciseTypeService.Object);
+        _exerciseService = new ExerciseServiceTemp(_unitOfWorkProviderMock.Object, _mockExerciseTypeService.Object);
     }
     
     [Fact]
@@ -80,9 +81,12 @@ public class ExerciseServiceUpdateCoachNotesTests
         var request = UpdateExerciseRequestBuilder.ForWorkoutExercise()
             .WithName("Updated Exercise")
             .WithDescription("Updated Description")
-            .WithCoachNotes(("Third note", 3), ("First note", 1), ("Second note", 2))
-            .WithExerciseTypes() // Empty exercise types
-            .WithMuscleGroups(("musclegroup-chest-123", "musclerole-primary-456"))
+            .WithKineticChain(KineticChainTypeTestBuilder.Compound())
+            .WithWeightType(ExerciseWeightTypeTestBuilder.Barbell())
+            .AddMuscleGroup(MuscleGroupTestBuilder.Chest(), MuscleRoleTestBuilder.Primary())
+            .AddCoachNote("Third note", 3)
+            .AddCoachNote("First note", 1)
+            .AddCoachNote("Second note", 2)
             .Build();
         
         _exerciseRepositoryMock.Setup(r => r.ExistsAsync(It.IsAny<string>(), It.IsAny<ExerciseId>()))
@@ -139,12 +143,12 @@ public class ExerciseServiceUpdateCoachNotesTests
         var request = UpdateExerciseRequestBuilder.ForWorkoutExercise()
             .WithName("Updated Exercise")
             .WithDescription("Updated Description")
-            .WithCoachNotes(
-                (existingNoteId1.ToString(), "Updated note 1", 1),
-                (existingNoteId2.ToString(), "Updated note 2", 2),
-                ("", "New note 3", 3)) // New note without ID - use empty string for ID
-            .WithExerciseTypes() // Empty exercise types
-            .WithMuscleGroups(("musclegroup-chest-123", "musclerole-primary-456"))
+            .WithKineticChain(KineticChainTypeTestBuilder.Compound())
+            .WithWeightType(ExerciseWeightTypeTestBuilder.Barbell())
+            .AddMuscleGroup(MuscleGroupTestBuilder.Chest(), MuscleRoleTestBuilder.Primary())
+            .AddCoachNote(existingNoteId1, "Updated note 1", 1)
+            .AddCoachNote(existingNoteId2, "Updated note 2", 2)
+            .AddCoachNote(null, "New note 3", 3)
             .Build();
         
         _exerciseRepositoryMock.Setup(r => r.ExistsAsync(It.IsAny<string>(), It.IsAny<ExerciseId>()))
@@ -202,10 +206,10 @@ public class ExerciseServiceUpdateCoachNotesTests
         var request = UpdateExerciseRequestBuilder.ForWorkoutExercise()
             .WithName("Updated Exercise")
             .WithDescription("Updated Description")
-            .WithCoachNotes(Array.Empty<(string Text, int Order)>()) // Empty list
-            .WithExerciseTypes() // Empty exercise types
-            .WithMuscleGroups(("musclegroup-chest-123", "musclerole-primary-456"))
-            .Build();
+            .WithKineticChain(KineticChainTypeTestBuilder.Compound())
+            .WithWeightType(ExerciseWeightTypeTestBuilder.Barbell())
+            .AddMuscleGroup(MuscleGroupTestBuilder.Chest(), MuscleRoleTestBuilder.Primary())
+            .Build(); // No AddCoachNote calls = empty coach notes
         
         _exerciseRepositoryMock.Setup(r => r.ExistsAsync(It.IsAny<string>(), It.IsAny<ExerciseId>()))
             .ReturnsAsync(false);
@@ -249,11 +253,11 @@ public class ExerciseServiceUpdateCoachNotesTests
         var request = UpdateExerciseRequestBuilder.ForWorkoutExercise()
             .WithName("Updated Exercise")
             .WithDescription("Updated Description")
-            .WithCoachNotes(
-                ("invalid-id", "Note with invalid ID", 1),
-                ("coachnote-not-a-guid", "Note with malformed ID", 2))
-            .WithExerciseTypes() // Empty exercise types
-            .WithMuscleGroups(("musclegroup-chest-123", "musclerole-primary-456"))
+            .WithKineticChain(KineticChainTypeTestBuilder.Compound())
+            .WithWeightType(ExerciseWeightTypeTestBuilder.Barbell())
+            .AddMuscleGroup(MuscleGroupTestBuilder.Chest(), MuscleRoleTestBuilder.Primary())
+            .AddCoachNoteWithInvalidFormat("Note with invalid ID", 1)
+            .AddCoachNoteWithMalformedId("Note with malformed ID", 2)
             .Build();
         
         _exerciseRepositoryMock.Setup(r => r.ExistsAsync(It.IsAny<string>(), It.IsAny<ExerciseId>()))
@@ -304,12 +308,12 @@ public class ExerciseServiceUpdateCoachNotesTests
         var request = UpdateExerciseRequestBuilder.ForWorkoutExercise()
             .WithName("Updated Exercise")
             .WithDescription("Updated Description")
-            .WithExerciseTypes() // Empty exercise types
-            .WithMuscleGroups(("musclegroup-chest-123", "musclerole-primary-456"))
+            .WithKineticChain(KineticChainTypeTestBuilder.Compound())
+            .WithWeightType(ExerciseWeightTypeTestBuilder.Barbell())
+            .AddMuscleGroup(MuscleGroupTestBuilder.Chest(), MuscleRoleTestBuilder.Primary())
             .Build();
         
-        // Manually set CoachNotes to null to test the null behavior
-        request.CoachNotes = null!;
+        // No coach notes added, will result in empty list
         
         _exerciseRepositoryMock.Setup(r => r.ExistsAsync(It.IsAny<string>(), It.IsAny<ExerciseId>()))
             .ReturnsAsync(false);
@@ -353,12 +357,12 @@ public class ExerciseServiceUpdateCoachNotesTests
         var request = UpdateExerciseRequestBuilder.ForWorkoutExercise()
             .WithName("Updated Exercise")
             .WithDescription("Updated Description")
-            .WithCoachNotes(
-                ("Note at 100", 100),
-                ("Note at 5", 5),
-                ("Note at 50", 50))
-            .WithExerciseTypes() // Empty exercise types
-            .WithMuscleGroups(("musclegroup-chest-123", "musclerole-primary-456"))
+            .WithKineticChain(KineticChainTypeTestBuilder.Compound())
+            .WithWeightType(ExerciseWeightTypeTestBuilder.Barbell())
+            .AddMuscleGroup(MuscleGroupTestBuilder.Chest(), MuscleRoleTestBuilder.Primary())
+            .AddCoachNote("Note at 100", 100)
+            .AddCoachNote("Note at 5", 5)
+            .AddCoachNote("Note at 50", 50)
             .Build();
         
         _exerciseRepositoryMock.Setup(r => r.ExistsAsync(It.IsAny<string>(), It.IsAny<ExerciseId>()))

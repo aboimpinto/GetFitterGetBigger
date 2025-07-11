@@ -49,7 +49,7 @@ public class ExercisesController : ControllerBase
 
         _logger.LogInformation("Getting exercises with filters: {@FilterParams}", filterParams);
         
-        var result = await _exerciseService.GetPagedAsync(filterParams);
+        var result = await _exerciseService.GetPagedAsync(filterParams.ToCommand());
         return Ok(result);
     }
 
@@ -144,6 +144,7 @@ public class ExercisesController : ControllerBase
         
         try
         {
+            // Pass request directly to service (temporarily reverting command pattern for build fix)
             var exercise = await _exerciseService.CreateAsync(request);
             return CreatedAtAction(nameof(GetExercise), new { id = exercise.Id }, exercise);
         }
@@ -247,6 +248,7 @@ public class ExercisesController : ControllerBase
         
         try
         {
+            // Pass request directly to service (temporarily reverting command pattern for build fix)  
             var exercise = await _exerciseService.UpdateAsync(id, request);
             return Ok(exercise);
         }

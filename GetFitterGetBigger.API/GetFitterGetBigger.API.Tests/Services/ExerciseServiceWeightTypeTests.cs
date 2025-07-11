@@ -9,6 +9,7 @@ using GetFitterGetBigger.API.Repositories.Interfaces;
 using GetFitterGetBigger.API.Services.Implementations;
 using GetFitterGetBigger.API.Services.Interfaces;
 using GetFitterGetBigger.API.Tests.TestBuilders;
+using GetFitterGetBigger.API.Tests.TestBuilders.Domain;
 using Moq;
 using Olimpo.EntityFramework.Persistency;
 using Xunit;
@@ -25,7 +26,7 @@ public class ExerciseServiceWeightTypeTests
     private readonly Mock<IWritableUnitOfWork<FitnessDbContext>> _mockWritableUnitOfWork;
     private readonly Mock<IExerciseRepository> _mockExerciseRepository;
     private readonly Mock<IExerciseTypeService> _mockExerciseTypeService;
-    private readonly ExerciseService _service;
+    private readonly IExerciseService _service;
     
     public ExerciseServiceWeightTypeTests()
     {
@@ -64,7 +65,7 @@ public class ExerciseServiceWeightTypeTests
             .Setup(s => s.ExistsAsync(It.IsAny<ExerciseTypeId>()))
             .ReturnsAsync(true);
         
-        _service = new ExerciseService(_mockUnitOfWorkProvider.Object, _mockExerciseTypeService.Object);
+        _service = new ExerciseServiceTemp(_mockUnitOfWorkProvider.Object, _mockExerciseTypeService.Object);
     }
     
     [Fact]
@@ -74,10 +75,15 @@ public class ExerciseServiceWeightTypeTests
         var request = CreateExerciseRequestBuilder.ForWorkoutExercise()
             .WithName("Barbell Bench Press")
             .WithDescription("Classic chest exercise")
-            .WithDifficultyId("difficultylevel-8a8adb1d-24d2-4979-a5a6-0d760e6da24b")
-            .WithKineticChainId("kineticchaintype-f5d5a2de-9c4e-4b87-b8c3-5d1e17d0b1f4")
-            .WithExerciseWeightTypeId("exerciseweighttype-c3d5c4b6-7b8c-6d9e-0f1a-2b3c4d5e6f7a")
-            .WithMuscleGroups(("musclegroup-aa112233-4455-6677-8899-aabbccddeeff", "musclerole-abcdef12-3456-7890-abcd-ef1234567890"))
+            .WithDifficulty(DifficultyLevelTestBuilder.Beginner())
+            .WithKineticChain(KineticChainTypeTestBuilder.Compound())
+            .WithWeightType(ExerciseWeightTypeTestBuilder.WeightRequired()
+                .WithId(ExerciseWeightTypeId.From(Guid.Parse("c3d5c4b6-7b8c-6d9e-0f1a-2b3c4d5e6f7a")))
+                .WithCode("WEIGHT_REQUIRED")
+                .WithValue("Weight Required")
+                .WithDescription("Exercises that must have external weight specified")
+                .WithDisplayOrder(3))
+            .AddMuscleGroup(MuscleGroupTestBuilder.Chest(), MuscleRoleTestBuilder.Primary())
             .Build();
         
         var exerciseWeightType = ExerciseWeightType.Handler.Create(
@@ -136,11 +142,24 @@ public class ExerciseServiceWeightTypeTests
     public async Task CreateAsync_WithoutExerciseWeightTypeId_ThrowsException()
     {
         // Arrange - Non-REST exercise without ExerciseWeightTypeId should fail
-        var request = CreateExerciseRequestBuilder.ForWorkoutExercise()
-            .WithName("Running")
-            .WithDescription("Basic cardio exercise")
-            .WithExerciseWeightTypeId(null) // Explicitly set to null to test validation
-            .Build();
+        // Arrange - Build request manually to bypass V2 builder validation
+        var request = new CreateExerciseRequest
+        {
+            Name = "Running",
+            Description = "Basic cardio exercise",
+            DifficultyId = TestConstants.DifficultyLevelIds.Beginner,
+            KineticChainId = TestConstants.KineticChainTypeIds.Compound,
+            ExerciseWeightTypeId = null, // Explicitly null to test validation
+            ExerciseTypeIds = new List<string> { TestConstants.ExerciseTypeIds.Workout },
+            MuscleGroups = new List<MuscleGroupWithRoleRequest>
+            {
+                new MuscleGroupWithRoleRequest
+                {
+                    MuscleGroupId = TestConstants.MuscleGroupIds.Legs,
+                    MuscleRoleId = TestConstants.MuscleRoleIds.Primary
+                }
+            }
+        };
         
         // Set up mocks
         _mockExerciseRepository.Setup(r => r.ExistsAsync(It.IsAny<string>(), It.IsAny<ExerciseId?>())).ReturnsAsync(false);
@@ -199,12 +218,24 @@ public class ExerciseServiceWeightTypeTests
     public async Task CreateAsync_WithInvalidExerciseWeightTypeId_ThrowsArgumentException()
     {
         // Arrange
-        var request = CreateExerciseRequestBuilder.ForWorkoutExercise()
-            .WithName("Invalid Weight Type Exercise")
-            .WithDescription("Exercise with invalid weight type")
-            .WithExerciseWeightTypeId("invalid-weight-type-id")
-            .WithMuscleGroups(("musclegroup-aa112233-4455-6677-8899-aabbccddeeff", "musclerole-abcdef12-3456-7890-abcd-ef1234567890"))
-            .Build();
+        // Arrange - Build request manually to test invalid ID validation
+        var request = new CreateExerciseRequest
+        {
+            Name = "Invalid Weight Type Exercise",
+            Description = "Exercise with invalid weight type",
+            DifficultyId = TestConstants.DifficultyLevelIds.Beginner,
+            KineticChainId = TestConstants.KineticChainTypeIds.Compound,
+            ExerciseWeightTypeId = "invalid-weight-type-id",  // Invalid format
+            ExerciseTypeIds = new List<string> { TestConstants.ExerciseTypeIds.Workout },
+            MuscleGroups = new List<MuscleGroupWithRoleRequest>
+            {
+                new MuscleGroupWithRoleRequest
+                {
+                    MuscleGroupId = TestConstants.MuscleGroupIds.Chest,
+                    MuscleRoleId = TestConstants.MuscleRoleIds.Primary
+                }
+            }
+        };
         
         // Set up mocks
         _mockExerciseRepository.Setup(r => r.ExistsAsync(It.IsAny<string>(), It.IsAny<ExerciseId?>())).ReturnsAsync(false);

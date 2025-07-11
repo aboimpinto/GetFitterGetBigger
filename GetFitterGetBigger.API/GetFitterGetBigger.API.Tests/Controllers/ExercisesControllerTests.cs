@@ -10,6 +10,7 @@ using GetFitterGetBigger.API.Models;
 using GetFitterGetBigger.API.Models.Entities;
 using GetFitterGetBigger.API.Models.SpecializedIds;
 using GetFitterGetBigger.API.Tests.TestBuilders;
+using GetFitterGetBigger.API.Tests.TestBuilders.Domain;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
@@ -49,10 +50,9 @@ public class ExercisesControllerTests : IClassFixture<ApiTestFixture>
         var request = CreateExerciseRequestBuilder.ForWorkoutExercise()
             .WithName("Test Exercise")
             .WithDescription("Test Description")
-            .WithCoachNotes(
-                ("Step 1", 0),
-                ("Step 2", 1)
-            )
+            .WithKineticChain(KineticChainTypeTestBuilder.Compound())
+            .WithWeightType(ExerciseWeightTypeTestBuilder.Barbell())
+            .AddMuscleGroup(MuscleGroupTestBuilder.Chest(), MuscleRoleTestBuilder.Primary())
             .WithVideoUrl("https://example.com/video.mp4")
             .WithImageUrl("https://example.com/image.jpg")
             .Build();
@@ -94,14 +94,14 @@ public class ExercisesControllerTests : IClassFixture<ApiTestFixture>
     {
         // Arrange
         var nonExistentId = ExerciseId.New().ToString();
-        var request = new UpdateExerciseRequest
-        {
-            Name = "Updated Name",
-            Description = "Updated Description",
-            CoachNotes = new List<CoachNoteRequest> { new() { Text = "Step 1", Order = 0 } },
-            DifficultyId = "difficultylevel-8a8adb1d-24d2-4979-a5a6-0d760e6da24b",
-            MuscleGroups = new List<MuscleGroupWithRoleRequest> { new() { MuscleGroupId = "musclegroup-ccddeeff-0011-2233-4455-667788990011", MuscleRoleId = "musclerole-abcdef12-3456-7890-abcd-ef1234567890" } }
-        };
+        var request = UpdateExerciseRequestBuilder.ForWorkoutExercise()
+            .WithName("Updated Name")
+            .WithDescription("Updated Description")
+            .WithDifficulty(DifficultyLevelTestBuilder.Beginner())
+            .WithKineticChain(KineticChainTypeTestBuilder.Compound())
+            .WithWeightType(ExerciseWeightTypeTestBuilder.Barbell())
+            .AddMuscleGroup(MuscleGroupTestBuilder.Chest(), MuscleRoleTestBuilder.Primary())
+            .Build();
 
         // Act
         var response = await _client.PutAsJsonAsync($"/api/exercises/{nonExistentId}", request);

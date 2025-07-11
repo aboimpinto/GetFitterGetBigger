@@ -9,6 +9,7 @@ using GetFitterGetBigger.API.Models.SpecializedIds;
 using GetFitterGetBigger.API.Repositories.Interfaces;
 using GetFitterGetBigger.API.Services.Implementations;
 using GetFitterGetBigger.API.Services.Interfaces;
+using GetFitterGetBigger.API.Services.Commands;
 using Moq;
 using Olimpo.EntityFramework.Persistency;
 using Xunit;
@@ -21,7 +22,7 @@ public class ExerciseServiceMapToDtoTests
     private readonly Mock<IReadOnlyUnitOfWork<FitnessDbContext>> _readOnlyUnitOfWorkMock;
     private readonly Mock<IExerciseRepository> _exerciseRepositoryMock;
     private readonly Mock<IExerciseTypeService> _mockExerciseTypeService;
-    private readonly ExerciseService _exerciseService;
+    private readonly IExerciseService _exerciseService;
     
     public ExerciseServiceMapToDtoTests()
     {
@@ -52,7 +53,7 @@ public class ExerciseServiceMapToDtoTests
             .Setup(s => s.ExistsAsync(It.IsAny<ExerciseTypeId>()))
             .ReturnsAsync(true);
         
-        _exerciseService = new ExerciseService(_unitOfWorkProviderMock.Object, _mockExerciseTypeService.Object);
+        _exerciseService = new ExerciseServiceTemp(_unitOfWorkProviderMock.Object, _mockExerciseTypeService.Object);
     }
     
     [Fact]
@@ -282,12 +283,12 @@ public class ExerciseServiceMapToDtoTests
         _exerciseRepositoryMock.Setup(r => r.GetPagedAsync(
             It.IsAny<int>(),
             It.IsAny<int>(),
-            It.IsAny<string?>(),
-            It.IsAny<DifficultyLevelId?>(),
-            It.IsAny<IEnumerable<MuscleGroupId>?>(),
-            It.IsAny<IEnumerable<EquipmentId>?>(),
-            It.IsAny<IEnumerable<MovementPatternId>?>(),
-            It.IsAny<IEnumerable<BodyPartId>?>(),
+            It.IsAny<string>(),
+            It.IsAny<DifficultyLevelId>(),
+            It.IsAny<IEnumerable<MuscleGroupId>>(),
+            It.IsAny<IEnumerable<EquipmentId>>(),
+            It.IsAny<IEnumerable<MovementPatternId>>(),
+            It.IsAny<IEnumerable<BodyPartId>>(),
             It.IsAny<bool>()))
             .ReturnsAsync((exercises, 2));
         
@@ -298,7 +299,7 @@ public class ExerciseServiceMapToDtoTests
         };
         
         // Act
-        var result = await _exerciseService.GetPagedAsync(filterParams);
+        var result = await _exerciseService.GetPagedAsync(filterParams.ToCommand());
         
         // Assert
         Assert.NotNull(result);

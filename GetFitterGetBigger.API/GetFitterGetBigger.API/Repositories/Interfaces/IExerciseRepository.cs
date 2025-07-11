@@ -14,23 +14,23 @@ public interface IExerciseRepository : IRepository
     /// </summary>
     /// <param name="pageNumber">The page number (1-based)</param>
     /// <param name="pageSize">The number of items per page</param>
-    /// <param name="name">Optional filter by exercise name (partial match)</param>
-    /// <param name="difficultyId">Optional filter by difficulty level</param>
-    /// <param name="muscleGroupIds">Optional filter by muscle groups</param>
-    /// <param name="equipmentIds">Optional filter by equipment</param>
-    /// <param name="movementPatternIds">Optional filter by movement patterns</param>
-    /// <param name="bodyPartIds">Optional filter by body parts</param>
+    /// <param name="name">Filter by exercise name (partial match, use string.Empty for no filter)</param>
+    /// <param name="difficultyId">Filter by difficulty level (use DifficultyLevelId.Empty for no filter)</param>
+    /// <param name="muscleGroupIds">Filter by muscle groups (use empty list for no filter)</param>
+    /// <param name="equipmentIds">Filter by equipment (use empty list for no filter)</param>
+    /// <param name="movementPatternIds">Filter by movement patterns (use empty list for no filter)</param>
+    /// <param name="bodyPartIds">Filter by body parts (use empty list for no filter)</param>
     /// <param name="includeInactive">Whether to include inactive exercises</param>
     /// <returns>A tuple containing the exercises and total count</returns>
     Task<(IEnumerable<Exercise> exercises, int totalCount)> GetPagedAsync(
         int pageNumber,
         int pageSize,
-        string? name = null,
-        DifficultyLevelId? difficultyId = null,
-        IEnumerable<MuscleGroupId>? muscleGroupIds = null,
-        IEnumerable<EquipmentId>? equipmentIds = null,
-        IEnumerable<MovementPatternId>? movementPatternIds = null,
-        IEnumerable<BodyPartId>? bodyPartIds = null,
+        string name,
+        DifficultyLevelId difficultyId,
+        IEnumerable<MuscleGroupId> muscleGroupIds,
+        IEnumerable<EquipmentId> equipmentIds,
+        IEnumerable<MovementPatternId> movementPatternIds,
+        IEnumerable<BodyPartId> bodyPartIds,
         bool includeInactive = false);
     
     /// <summary>

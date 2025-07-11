@@ -23,7 +23,7 @@ namespace GetFitterGetBigger.API.Tests.Services
         private readonly Mock<IWritableUnitOfWork<FitnessDbContext>> _mockWritableUnitOfWork;
         private readonly Mock<IExerciseRepository> _mockExerciseRepository;
         private readonly Mock<IExerciseTypeService> _mockExerciseTypeService;
-        private readonly ExerciseService _service;
+        private readonly IExerciseService _service;
         
         // Reference data IDs
         private readonly DifficultyLevelId _difficultyId = DifficultyLevelId.New();
@@ -64,7 +64,7 @@ namespace GetFitterGetBigger.API.Tests.Services
                 .Setup(s => s.ExistsAsync(It.IsAny<ExerciseTypeId>()))
                 .ReturnsAsync(true);
             
-            _service = new ExerciseService(_mockUnitOfWorkProvider.Object, _mockExerciseTypeService.Object);
+            _service = new ExerciseServiceTemp(_mockUnitOfWorkProvider.Object, _mockExerciseTypeService.Object);
         }
 
         private void SetupMocks()

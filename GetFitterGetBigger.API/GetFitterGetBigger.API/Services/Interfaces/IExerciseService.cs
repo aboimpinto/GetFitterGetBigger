@@ -1,5 +1,6 @@
 using System.Threading.Tasks;
 using GetFitterGetBigger.API.DTOs;
+using GetFitterGetBigger.API.Services.Commands;
 
 namespace GetFitterGetBigger.API.Services.Interfaces;
 
@@ -13,7 +14,7 @@ public interface IExerciseService
     /// </summary>
     /// <param name="filterParams">The filtering and pagination parameters</param>
     /// <returns>A paged response containing exercises</returns>
-    Task<PagedResponse<ExerciseDto>> GetPagedAsync(ExerciseFilterParams filterParams);
+    Task<PagedResponse<ExerciseDto>> GetPagedAsync(GetExercisesCommand filterParams);
     
     /// <summary>
     /// Gets an exercise by its ID

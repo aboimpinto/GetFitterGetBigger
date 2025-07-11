@@ -1,6 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using GetFitterGetBigger.API.Services.Commands;
+using GetFitterGetBigger.API.Models.SpecializedIds;
+using GetFitterGetBigger.API.Extensions;
 
 namespace GetFitterGetBigger.API.DTOs;
 
@@ -25,6 +28,11 @@ public class ExerciseFilterParams
     /// Filter by exercise name (case-insensitive, partial match)
     /// </summary>
     public string? Name { get; set; }
+    
+    /// <summary>
+    /// Search term for filtering exercises (case-insensitive, partial match)
+    /// </summary>
+    public string? SearchTerm { get; set; }
     
     /// <summary>
     /// Filter by difficulty level ID
@@ -55,4 +63,29 @@ public class ExerciseFilterParams
     /// Include inactive exercises in the results
     /// </summary>
     public bool IncludeInactive { get; set; } = false;
+    
+    /// <summary>
+    /// Filter by active status (null = all, true = active only, false = inactive only)
+    /// </summary>
+    public bool? IsActive { get; set; }
+}
+
+public static class ExerciseFilterParamsExtensions
+{
+    public static GetExercisesCommand ToCommand(this ExerciseFilterParams filterParams)
+    {
+        return new GetExercisesCommand(
+            Page: filterParams.Page,
+            PageSize: filterParams.PageSize,
+            Name: filterParams.Name ?? string.Empty,
+            SearchTerm: filterParams.SearchTerm ?? string.Empty,
+            DifficultyLevelId: DifficultyLevelId.ParseOrEmpty(filterParams.DifficultyId),
+            MuscleGroupIds: filterParams.MuscleGroupIds.ParseMuscleGroupIds(),
+            EquipmentIds: filterParams.EquipmentIds.ParseEquipmentIds(),
+            MovementPatternIds: filterParams.MovementPatternIds.ParseMovementPatternIds(),
+            BodyPartIds: filterParams.BodyPartIds.ParseBodyPartIds(),
+            IncludeInactive: filterParams.IncludeInactive,
+            IsActive: filterParams.IsActive ?? false
+        );
+    }
 }

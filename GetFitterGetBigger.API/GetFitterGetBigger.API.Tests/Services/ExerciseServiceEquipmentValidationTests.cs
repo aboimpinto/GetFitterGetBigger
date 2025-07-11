@@ -22,7 +22,7 @@ public class ExerciseServiceEquipmentValidationTests
     private readonly Mock<IWritableUnitOfWork<FitnessDbContext>> _writableUnitOfWorkMock;
     private readonly Mock<IExerciseRepository> _exerciseRepositoryMock;
     private readonly Mock<IExerciseTypeService> _mockExerciseTypeService;
-    private readonly ExerciseService _exerciseService;
+    private readonly IExerciseService _exerciseService;
     
     public ExerciseServiceEquipmentValidationTests()
     {
@@ -60,7 +60,7 @@ public class ExerciseServiceEquipmentValidationTests
             .Setup(s => s.ExistsAsync(It.IsAny<ExerciseTypeId>()))
             .ReturnsAsync(true);
         
-        _exerciseService = new ExerciseService(_unitOfWorkProviderMock.Object, _mockExerciseTypeService.Object);
+        _exerciseService = new ExerciseServiceTemp(_unitOfWorkProviderMock.Object, _mockExerciseTypeService.Object);
     }
     
     [Fact]
