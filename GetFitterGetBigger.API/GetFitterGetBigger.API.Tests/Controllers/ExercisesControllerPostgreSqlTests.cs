@@ -9,6 +9,7 @@ using GetFitterGetBigger.API.DTOs;
 using GetFitterGetBigger.API.Models;
 using GetFitterGetBigger.API.Models.Entities;
 using GetFitterGetBigger.API.Models.SpecializedIds;
+using GetFitterGetBigger.API.Tests.TestBuilders;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
@@ -129,32 +130,17 @@ public class ExercisesControllerPostgreSqlTests : PostgreSqlTestBase
         var exercises = await SeedTestDataAsync();
         var existingExercise = exercises.First();
         
-        var request = new UpdateExerciseRequest
-        {
-            Name = "Updated Exercise Name",
-            Description = "Updated Description",
-            CoachNotes = new List<CoachNoteRequest> 
-            {
-                new() { Text = "Updated Step 1", Order = 0 },
-                new() { Text = "Updated Step 2", Order = 1 }
-            },
-            ExerciseTypeIds = new List<string> { "exercisetype-b2c3d4e5-6f7a-8b9c-0d1e-2f3a4b5c6d7e" }, // Workout
-            VideoUrl = "https://example.com/updated-video.mp4",
-            ImageUrl = "https://example.com/updated-image.jpg",
-            DifficultyId = "difficultylevel-9c7b59a4-bcd8-48a6-971a-cd67b0a7ab5a",
-            KineticChainId = "kineticchaintype-f5d5a2de-9c4e-4b87-b8c3-5d1e17d0b1f4", // Compound
-            MuscleGroups = new List<MuscleGroupWithRoleRequest> 
-            { 
-                new() 
-                { 
-                    MuscleGroupId = "musclegroup-ddeeff00-1122-3344-5566-778899001122",
-                    MuscleRoleId = "musclerole-abcdef12-3456-7890-abcd-ef1234567890"
-                }
-            },
-            EquipmentIds = new List<string> { "equipment-44556677-8899-aabb-ccdd-eeff00112233" },
-            BodyPartIds = new List<string> { "bodypart-b2d89d5c-cb8a-4f5d-8a9e-2c3b76612c5a" },
-            MovementPatternIds = new List<string> { "movementpattern-aabbccdd-eeff-0011-2233-445566778899" }
-        };
+        var request = UpdateExerciseRequestBuilder.ForWorkoutExercise()
+            .WithName("Updated Exercise Name")
+            .WithDescription("Updated Description")
+            .WithCoachNotes(
+                ("Updated Step 1", 0),
+                ("Updated Step 2", 1)
+            )
+            .WithVideoUrl("https://example.com/updated-video.mp4")
+            .WithImageUrl("https://example.com/updated-image.jpg")
+            .WithDifficultyId(TestConstants.DifficultyLevelIds.Intermediate)
+            .Build();
 
         // Act
         var response = await Client.PutAsJsonAsync($"/api/exercises/{existingExercise.Id}", request);
