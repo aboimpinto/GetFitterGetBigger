@@ -308,55 +308,14 @@ public class ExerciseService : IExerciseService
             isRestExercise = await _exerciseTypeService.AnyIsRestTypeAsync(exerciseTypeIdStrings);
         }
         
-        // REST exercises validation
-        if (isRestExercise)
+        // Exercise type-specific validation using pattern matching
+        var typeSpecificErrors = isRestExercise switch
         {
-            if (command.KineticChainId.HasValue && !command.KineticChainId.Value.IsEmpty)
-            {
-                errors.Add(ExerciseErrorMessages.RestExerciseCannotHaveKineticChain);
-            }
-            
-            if (command.ExerciseWeightTypeId.HasValue && !command.ExerciseWeightTypeId.Value.IsEmpty)
-            {
-                errors.Add(ExerciseErrorMessages.RestExerciseCannotHaveWeightType);
-            }
-            
-            // Check if REST is mixed with other types
-            if (validExerciseTypeIds.Count > 1)
-            {
-                errors.Add(ExerciseErrorMessages.RestExerciseCannotBeCombined);
-            }
-        }
-        else
-        {
-            // Non-REST exercises validation
-            if (!command.KineticChainId.HasValue || command.KineticChainId.Value.IsEmpty)
-            {
-                errors.Add(ExerciseErrorMessages.NonRestExerciseMustHaveKineticChain);
-            }
-            
-            if (!command.ExerciseWeightTypeId.HasValue || command.ExerciseWeightTypeId.Value.IsEmpty)
-            {
-                errors.Add(ExerciseErrorMessages.NonRestExerciseMustHaveWeightType);
-            }
-            
-            // Must have muscle groups for non-REST exercises
-            if (!command.MuscleGroups.Any())
-            {
-                errors.Add(ExerciseErrorMessages.NonRestExerciseMustHaveMuscleGroups);
-            }
-            else
-            {
-                // Validate muscle groups don't have empty IDs
-                foreach (var mg in command.MuscleGroups)
-                {
-                    if (mg.MuscleGroupId.IsEmpty)
-                        errors.Add(ExerciseErrorMessages.InvalidMuscleGroupId);
-                    if (mg.MuscleRoleId.IsEmpty)
-                        errors.Add(ExerciseErrorMessages.InvalidMuscleRoleId);
-                }
-            }
-        }
+            true => ValidateRestExercise(command, validExerciseTypeIds),
+            false => ValidateNonRestExercise(command)
+        };
+        
+        errors.AddRange(typeSpecificErrors);
         
         return errors.Any() 
             ? ValidationResult.Failure(errors.ToArray()) 
@@ -385,40 +344,14 @@ public class ExerciseService : IExerciseService
             isRestExercise = await _exerciseTypeService.AnyIsRestTypeAsync(exerciseTypeIdStrings);
         }
         
-        if (isRestExercise)
+        // Exercise type-specific validation using pattern matching
+        var typeSpecificErrors = isRestExercise switch
         {
-            if (command.KineticChainId.HasValue && !command.KineticChainId.Value.IsEmpty)
-            {
-                errors.Add(ExerciseErrorMessages.RestExerciseCannotHaveKineticChain);
-            }
-            
-            if (command.ExerciseWeightTypeId.HasValue && !command.ExerciseWeightTypeId.Value.IsEmpty)
-            {
-                errors.Add(ExerciseErrorMessages.RestExerciseCannotHaveWeightType);
-            }
-            
-            if (command.ExerciseTypeIds.Count > 1)
-            {
-                errors.Add(ExerciseErrorMessages.RestExerciseCannotBeCombined);
-            }
-        }
-        else
-        {
-            if (!command.KineticChainId.HasValue || command.KineticChainId.Value.IsEmpty)
-            {
-                errors.Add(ExerciseErrorMessages.NonRestExerciseMustHaveKineticChainUpdate);
-            }
-            
-            if (!command.ExerciseWeightTypeId.HasValue || command.ExerciseWeightTypeId.Value.IsEmpty)
-            {
-                errors.Add(ExerciseErrorMessages.NonRestExerciseMustHaveWeightType);
-            }
-            
-            if (!command.MuscleGroups.Any())
-            {
-                errors.Add(ExerciseErrorMessages.NonRestExerciseMustHaveMuscleGroups);
-            }
-        }
+            true => ValidateRestExercise(command, command.ExerciseTypeIds),
+            false => ValidateNonRestExercise(command)
+        };
+        
+        errors.AddRange(typeSpecificErrors);
         
         return errors.Any() 
             ? ValidationResult.Failure(errors.ToArray()) 
@@ -442,6 +375,118 @@ public class ExerciseService : IExerciseService
             .WithMovementPatterns()
             .WithReferenceData()
             .Build();
+    }
+
+    #endregion
+
+    #region Exercise Type Validation Methods
+
+    private static List<string> ValidateRestExercise(CreateExerciseCommand command, List<ExerciseTypeId> exerciseTypeIds)
+    {
+        return ValidateRestExerciseInternal(
+            command.KineticChainId,
+            command.ExerciseWeightTypeId,
+            exerciseTypeIds);
+    }
+
+    private static List<string> ValidateRestExercise(UpdateExerciseCommand command, List<ExerciseTypeId> exerciseTypeIds)
+    {
+        return ValidateRestExerciseInternal(
+            command.KineticChainId,
+            command.ExerciseWeightTypeId,
+            exerciseTypeIds);
+    }
+
+    private static List<string> ValidateRestExerciseInternal(
+        KineticChainTypeId kineticChainId,
+        ExerciseWeightTypeId exerciseWeightTypeId,
+        List<ExerciseTypeId> exerciseTypeIds)
+    {
+        var errors = new List<string>();
+
+        if (!kineticChainId.IsEmpty)
+        {
+            errors.Add(ExerciseErrorMessages.RestExerciseCannotHaveKineticChain);
+        }
+        
+        if (!exerciseWeightTypeId.IsEmpty)
+        {
+            errors.Add(ExerciseErrorMessages.RestExerciseCannotHaveWeightType);
+        }
+        
+        // Check if REST is mixed with other types
+        if (exerciseTypeIds.Count > 1)
+        {
+            errors.Add(ExerciseErrorMessages.RestExerciseCannotBeCombined);
+        }
+
+        return errors;
+    }
+
+    private static List<string> ValidateNonRestExercise(CreateExerciseCommand command)
+    {
+        return ValidateNonRestExerciseInternal(
+            command.KineticChainId,
+            command.ExerciseWeightTypeId,
+            command.MuscleGroups,
+            ExerciseErrorMessages.NonRestExerciseMustHaveKineticChain);
+    }
+
+    private static List<string> ValidateNonRestExercise(UpdateExerciseCommand command)
+    {
+        return ValidateNonRestExerciseInternal(
+            command.KineticChainId,
+            command.ExerciseWeightTypeId,
+            command.MuscleGroups,
+            ExerciseErrorMessages.NonRestExerciseMustHaveKineticChainUpdate);
+    }
+
+    private static List<string> ValidateNonRestExerciseInternal(
+        KineticChainTypeId kineticChainId,
+        ExerciseWeightTypeId exerciseWeightTypeId,
+        List<MuscleGroupAssignment> muscleGroups,
+        string kineticChainErrorMessage)
+    {
+        var errors = new List<string>();
+
+        if (kineticChainId.IsEmpty)
+        {
+            errors.Add(kineticChainErrorMessage);
+        }
+        
+        if (exerciseWeightTypeId.IsEmpty)
+        {
+            errors.Add(ExerciseErrorMessages.NonRestExerciseMustHaveWeightType);
+        }
+        
+        // Must have muscle groups for non-REST exercises
+        if (!muscleGroups.Any())
+        {
+            errors.Add(ExerciseErrorMessages.NonRestExerciseMustHaveMuscleGroups);
+        }
+        else
+        {
+            // Validate muscle groups don't have empty IDs
+            var muscleGroupErrors = ValidateMuscleGroups(muscleGroups);
+            errors.AddRange(muscleGroupErrors);
+        }
+
+        return errors;
+    }
+
+    private static List<string> ValidateMuscleGroups(List<MuscleGroupAssignment> muscleGroups)
+    {
+        var errors = new List<string>();
+        
+        foreach (var mg in muscleGroups)
+        {
+            if (mg.MuscleGroupId.IsEmpty)
+                errors.Add(ExerciseErrorMessages.InvalidMuscleGroupId);
+            if (mg.MuscleRoleId.IsEmpty)
+                errors.Add(ExerciseErrorMessages.InvalidMuscleRoleId);
+        }
+        
+        return errors;
     }
 
     #endregion

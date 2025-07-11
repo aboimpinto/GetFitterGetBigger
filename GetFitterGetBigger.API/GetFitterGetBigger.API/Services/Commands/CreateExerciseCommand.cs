@@ -16,8 +16,8 @@ public class CreateExerciseCommand
     
     // Domain IDs - not strings!
     public required DifficultyLevelId DifficultyId { get; init; }
-    public KineticChainTypeId? KineticChainId { get; init; }
-    public ExerciseWeightTypeId? ExerciseWeightTypeId { get; init; }
+    public KineticChainTypeId KineticChainId { get; init; }
+    public ExerciseWeightTypeId ExerciseWeightTypeId { get; init; }
     public required List<ExerciseTypeId> ExerciseTypeIds { get; init; } = new();
     public required List<MuscleGroupAssignment> MuscleGroups { get; init; } = new();
     public List<CoachNoteCommand> CoachNotes { get; init; } = new();
