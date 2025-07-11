@@ -7,6 +7,7 @@
 @inject IReferenceDataService ReferenceDataService
 @inject IEquipmentStateService EquipmentStateService
 @inject IMuscleGroupsStateService MuscleGroupsStateService
+@inject IExerciseWeightTypeStateService ExerciseWeightTypeStateService
 @inject NavigationManager Navigation
 @attribute [Authorize]
 @rendermode InteractiveServer
@@ -158,6 +159,71 @@
             </div>
         </div>
     }
+}
+else if (TableName == "ExerciseWeightTypes")
+{
+    <div class="bg-white rounded-lg shadow-md p-6">
+        <div class="flex justify-between items-center mb-6">
+            <div>
+                <h2 class="text-2xl font-semibold text-gray-800">Exercise Weight Types</h2>
+                <p class="text-gray-600">View exercise weight type classifications and validation rules</p>
+            </div>
+        </div>
+
+        @if (ExerciseWeightTypeStateService.ErrorMessage != null)
+        {
+            <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4">
+                <p>@ExerciseWeightTypeStateService.ErrorMessage</p>
+                <button @onclick="ExerciseWeightTypeStateService.ClearError" class="text-sm underline mt-1">Dismiss</button>
+            </div>
+        }
+
+        @if (ExerciseWeightTypeStateService.IsLoading)
+        {
+            <div class="text-center py-8">
+                <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+                <p class="mt-2 text-gray-600">Loading exercise weight types...</p>
+            </div>
+        }
+        else if (ExerciseWeightTypeStateService.WeightTypes.Any())
+        {
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                @foreach (var weightType in ExerciseWeightTypeStateService.WeightTypes)
+                {
+                    <div class="bg-gray-50 p-6 rounded-lg border border-gray-200 hover:shadow-lg transition-shadow">
+                        <div class="flex items-center justify-between mb-3">
+                            <h3 class="text-lg font-semibold text-gray-800">@weightType.Name</h3>
+                            @{
+                                var badgeColor = weightType.Code switch
+                                {
+                                    "BODYWEIGHT_ONLY" => "bg-blue-100 text-blue-800",
+                                    "NO_WEIGHT" => "bg-gray-100 text-gray-800",
+                                    "BODYWEIGHT_OPTIONAL" => "bg-green-100 text-green-800",
+                                    "WEIGHT_REQUIRED" => "bg-orange-100 text-orange-800",
+                                    "MACHINE_WEIGHT" => "bg-purple-100 text-purple-800",
+                                    _ => "bg-gray-100 text-gray-800"
+                                };
+                            }
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium @badgeColor">
+                                @weightType.Code
+                            </span>
+                        </div>
+                        <p class="text-sm text-gray-600 mb-4">@weightType.Description</p>
+                        <div class="bg-white p-3 rounded border">
+                            <h4 class="text-xs font-medium text-gray-700 mb-2">Validation Rule:</h4>
+                            <p class="text-xs text-gray-600">@ExerciseWeightTypeStateService.GetValidationMessage(weightType.Code)</p>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+        else
+        {
+            <div class="text-center py-8">
+                <p class="text-gray-500">No exercise weight types found.</p>
+            </div>
+        }
+    </div>
 }
 else if (TableName == "MuscleGroups")
 {
@@ -378,6 +444,7 @@ else
         ["BodyParts"] = "Body Parts",
         ["DifficultyLevels"] = "Difficulty Levels",
         ["Equipment"] = "Equipment",
+        ["ExerciseWeightTypes"] = "Exercise Weight Types",
         ["KineticChainTypes"] = "Kinetic Chain Types",
         ["MetricTypes"] = "Metric Types",
         ["MovementPatterns"] = "Movement Patterns",
@@ -418,6 +485,11 @@ else
         {
             EquipmentStateService.OnChange += StateHasChanged;
             await EquipmentStateService.InitializeAsync();
+        }
+        else if (TableName == "ExerciseWeightTypes")
+        {
+            ExerciseWeightTypeStateService.OnChange += StateHasChanged;
+            await ExerciseWeightTypeStateService.LoadWeightTypesAsync();
         }
         else if (TableName == "MuscleGroups")
         {
@@ -544,6 +616,10 @@ else
         if (TableName == "Equipment")
         {
             EquipmentStateService.OnChange -= StateHasChanged;
+        }
+        else if (TableName == "ExerciseWeightTypes")
+        {
+            ExerciseWeightTypeStateService.OnChange -= StateHasChanged;
         }
         else if (TableName == "MuscleGroups")
         {
