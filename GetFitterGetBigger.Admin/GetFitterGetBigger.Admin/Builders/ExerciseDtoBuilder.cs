@@ -16,6 +16,8 @@ namespace GetFitterGetBigger.Admin.Builders
         private List<ExerciseTypeDto> _exerciseTypes = new();
         private ReferenceDataDto? _difficulty = new() { Id = "1", Value = "Intermediate", Description = "Intermediate level" };
         private ReferenceDataDto? _kineticChain = null;
+        private ExerciseWeightTypeDto? _weightType = null;
+        private decimal? _defaultWeight = null;
         private bool _isUnilateral = false;
         private bool _isActive = true;
         private string? _imageUrl = null;
@@ -142,6 +144,46 @@ namespace GetFitterGetBigger.Admin.Builders
             return this;
         }
 
+        public ExerciseDtoBuilder WithWeightType(ExerciseWeightTypeDto? weightType)
+        {
+            _weightType = weightType;
+            return this;
+        }
+
+        public ExerciseDtoBuilder WithWeightType(ReferenceDataDto weightType)
+        {
+            _weightType = new ExerciseWeightTypeDto
+            {
+                Id = Guid.Parse(weightType.Id),
+                Code = $"CODE_{weightType.Value.ToUpper().Replace(" ", "_")}",
+                Name = weightType.Value,
+                Description = weightType.Description ?? weightType.Value,
+                IsActive = true,
+                DisplayOrder = 1
+            };
+            return this;
+        }
+
+        public ExerciseDtoBuilder WithWeightType(string code, string name, string? description = null)
+        {
+            _weightType = new ExerciseWeightTypeDto
+            {
+                Id = Guid.NewGuid(),
+                Code = code,
+                Name = name,
+                Description = description ?? name,
+                IsActive = true,
+                DisplayOrder = 1
+            };
+            return this;
+        }
+
+        public ExerciseDtoBuilder WithDefaultWeight(decimal? weight)
+        {
+            _defaultWeight = weight;
+            return this;
+        }
+
         public ExerciseDtoBuilder AsUnilateral()
         {
             _isUnilateral = true;
@@ -241,6 +283,8 @@ namespace GetFitterGetBigger.Admin.Builders
                 ExerciseTypes = _exerciseTypes,
                 Difficulty = _difficulty,
                 KineticChain = _kineticChain,
+                WeightType = _weightType,
+                DefaultWeight = _defaultWeight,
                 IsUnilateral = _isUnilateral,
                 IsActive = _isActive,
                 ImageUrl = _imageUrl,

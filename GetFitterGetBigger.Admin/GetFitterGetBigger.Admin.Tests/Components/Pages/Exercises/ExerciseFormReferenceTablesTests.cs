@@ -10,18 +10,28 @@ using System.Threading.Tasks;
 using System.Collections.Generic;
 using System.Linq;
 using Xunit;
+using Moq;
 
 namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
 {
     public class ExerciseFormReferenceTablesTests : TestContext
     {
         private readonly MockExerciseStateServiceForReferenceTableTest _mockStateService;
+        private readonly Mock<IExerciseWeightTypeStateService> _mockWeightTypeStateService;
 
         public ExerciseFormReferenceTablesTests()
         {
             _mockStateService = new MockExerciseStateServiceForReferenceTableTest();
+            _mockWeightTypeStateService = new Mock<IExerciseWeightTypeStateService>();
+
+            // Setup basic weight type state service mock
+            _mockWeightTypeStateService.Setup(x => x.WeightTypes).Returns(new List<ExerciseWeightTypeDto>());
+            _mockWeightTypeStateService.Setup(x => x.IsLoading).Returns(false);
+            _mockWeightTypeStateService.Setup(x => x.LoadWeightTypesAsync()).Returns(Task.CompletedTask);
+
             Services.AddSingleton<IExerciseStateService>(_mockStateService);
             Services.AddSingleton<IReferenceDataService>(new MockReferenceDataService());
+            Services.AddSingleton(_mockWeightTypeStateService.Object);
             var navMan = Services.GetRequiredService<FakeNavigationManager>();
             navMan.NavigateTo("http://localhost/exercises/new");
         }

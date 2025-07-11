@@ -45,6 +45,10 @@ namespace GetFitterGetBigger.Admin.Services
                 {
                     Console.WriteLine($"[ExerciseService] GetExercisesAsync - EquipmentIds: {string.Join(", ", filter.EquipmentIds)}");
                 }
+                if (filter.WeightTypeIds?.Any() == true)
+                {
+                    Console.WriteLine($"[ExerciseService] GetExercisesAsync - WeightTypeIds: {string.Join(", ", filter.WeightTypeIds)}");
+                }
 
                 var response = await _httpClient.GetAsync(requestUrl);
 
@@ -202,6 +206,14 @@ namespace GetFitterGetBigger.Admin.Services
                 foreach (var id in filter.EquipmentIds)
                 {
                     query.Add("equipmentIds", id);
+                }
+            }
+
+            if (filter.WeightTypeIds?.Any() == true)
+            {
+                foreach (var id in filter.WeightTypeIds)
+                {
+                    query.Add("weightTypeIds", id);
                 }
             }
 

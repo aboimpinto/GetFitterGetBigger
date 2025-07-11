@@ -9,6 +9,7 @@
 @attribute [Authorize]
 @rendermode InteractiveServer
 @inject IExerciseStateService StateService
+@inject IExerciseWeightTypeStateService WeightTypeStateService
 @inject IReferenceDataService ReferenceDataService
 @inject NavigationManager Navigation
 @implements IDisposable
@@ -187,6 +188,18 @@
                         </div>
                     </div>
 
+                    <div class="mt-6">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">
+                            Weight Type @if (!IsRestTypeSelected && string.IsNullOrWhiteSpace(model.WeightTypeId)) { <span class="text-red-500">*</span> }
+                        </label>
+                        <ExerciseWeightTypeSelector 
+                            @bind-Value="model.WeightTypeId"
+                            Required="@(!IsRestTypeSelected)"
+                            Disabled="@IsRestTypeSelected"
+                            ValidationMessage="@(validationErrors.ContainsKey("WeightType") ? validationErrors["WeightType"] : "")"
+                            ShowValidationError="@validationErrors.ContainsKey("WeightType")" />
+                    </div>
+
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
                         <div class="space-y-4">
                             <div class="flex items-center">
@@ -356,6 +369,7 @@
         .WithInstructions(string.Empty)
         .WithDifficultyId(string.Empty)
         .WithKineticChainId(null)
+        .WithWeightTypeId(null)
         .Build(); // Coach notes are now optional - start with empty list
     private List<MuscleGroupRoleAssignmentDto> muscleGroupAssignments = new();
     private List<string> selectedEquipmentIds = new();
@@ -563,6 +577,24 @@
             if (string.IsNullOrWhiteSpace(model.KineticChainId))
             {
                 validationErrors["KineticChain"] = "Kinetic chain type is required for non-REST exercises";
+            }
+        }
+
+        // Validate weight type
+        if (IsRestTypeSelected)
+        {
+            // REST exercises must have null weight type
+            if (!string.IsNullOrWhiteSpace(model.WeightTypeId))
+            {
+                validationErrors["WeightType"] = "REST exercises cannot have a weight type";
+            }
+        }
+        else
+        {
+            // Non-REST exercises require weight type
+            if (string.IsNullOrWhiteSpace(model.WeightTypeId))
+            {
+                validationErrors["WeightType"] = "Weight type is required for non-REST exercises";
             }
         }
 

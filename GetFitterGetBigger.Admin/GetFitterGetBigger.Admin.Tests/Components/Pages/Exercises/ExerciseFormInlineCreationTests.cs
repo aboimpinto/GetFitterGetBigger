@@ -10,6 +10,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Bunit.TestDoubles;
 using System.Threading.Tasks;
 using System.Linq;
+using Moq;
 
 namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
 {
@@ -23,6 +24,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
         private readonly MockReferenceDataService _mockReferenceDataService;
         private readonly MockEquipmentService _mockEquipmentService;
         private readonly MockMuscleGroupsService _mockMuscleGroupsService;
+        private readonly Mock<IExerciseWeightTypeStateService> _mockWeightTypeStateService;
 
         public ExerciseFormInlineCreationTests()
         {
@@ -30,11 +32,18 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
             _mockReferenceDataService = new MockReferenceDataService();
             _mockEquipmentService = new MockEquipmentService();
             _mockMuscleGroupsService = new MockMuscleGroupsService();
+            _mockWeightTypeStateService = new Mock<IExerciseWeightTypeStateService>();
+
+            // Setup basic weight type state service mock
+            _mockWeightTypeStateService.Setup(x => x.WeightTypes).Returns(new List<ExerciseWeightTypeDto>());
+            _mockWeightTypeStateService.Setup(x => x.IsLoading).Returns(false);
+            _mockWeightTypeStateService.Setup(x => x.LoadWeightTypesAsync()).Returns(Task.CompletedTask);
 
             Services.AddSingleton<IExerciseStateService>(_mockStateService);
             Services.AddSingleton<IReferenceDataService>(_mockReferenceDataService);
             Services.AddSingleton<IEquipmentService>(_mockEquipmentService);
             Services.AddSingleton<IMuscleGroupsService>(_mockMuscleGroupsService);
+            Services.AddSingleton(_mockWeightTypeStateService.Object);
 
             var navMan = Services.GetRequiredService<FakeNavigationManager>();
             navMan.NavigateTo("http://localhost/exercises/new");

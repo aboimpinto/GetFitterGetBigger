@@ -1,0 +1,232 @@
+@using GetFitterGetBigger.Admin.Services
+@inject IExerciseWeightTypeStateService WeightTypeStateService
+
+<div class="space-y-2">
+    @if (ShouldShowWeightInput())
+    {
+        <div class="flex items-end gap-3">
+            <div class="flex-1">
+                <label class="block text-sm font-medium text-gray-700">
+                    Weight
+                    @if (IsWeightRequired())
+                    {
+                        <span class="text-red-500">*</span>
+                    }
+                    <span class="text-xs text-gray-500 ml-1">(@(UseMetricUnits ? "kg" : "lbs"))</span>
+                </label>
+                <input type="number"
+                       @bind="WeightValue"
+                       @bind:after="HandleWeightChanged"
+                       placeholder="@GetPlaceholderText()"
+                       step="@(UseMetricUnits ? "0.5" : "1")"
+                       min="0"
+                       disabled="@Disabled"
+                       data-testid="weight-input"
+                       class="mt-1 w-full px-3 py-2 border @(HasValidationError ? "border-red-300" : "border-gray-300") rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 @(Disabled ? "bg-gray-100 cursor-not-allowed" : "")"
+                       aria-describedby="@(!string.IsNullOrEmpty(ValidationMessage) ? "weight-error" : "weight-help")" />
+            </div>
+
+            <button type="button"
+                    @onclick="ToggleUnits"
+                    disabled="@Disabled"
+                    data-testid="unit-toggle"
+                    class="px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 @(Disabled ? "opacity-50 cursor-not-allowed" : "")"
+                    title="Switch between kg and lbs">
+                @if (UseMetricUnits)
+                {
+                    <span>→ lbs</span>
+                }
+                else
+                {
+                    <span>→ kg</span>
+                }
+            </button>
+        </div>
+
+        @if (!string.IsNullOrEmpty(ValidationMessage))
+        {
+            <p id="weight-error" class="text-sm text-red-600" data-testid="weight-validation-error">
+                @ValidationMessage
+            </p>
+        }
+        else
+        {
+            <p id="weight-help" class="text-xs text-gray-500">
+                @GetHelpText()
+            </p>
+        }
+
+        @if (ShowConversion && WeightValue.HasValue && WeightValue > 0)
+        {
+            <p class="text-xs text-blue-600">
+                ≈ @GetConvertedWeight() @(UseMetricUnits ? "lbs" : "kg")
+            </p>
+        }
+    }
+    else
+    {
+        <div class="p-3 bg-gray-50 border border-gray-200 rounded-md" data-testid="weight-not-applicable">
+            <p class="text-sm text-gray-600">
+                <span class="font-medium">Weight:</span> @GetNotApplicableMessage()
+            </p>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public string WeightTypeId { get; set; } = string.Empty;
+    [Parameter] public decimal? Weight { get; set; }
+    [Parameter] public EventCallback<decimal?> WeightChanged { get; set; }
+    [Parameter] public bool UseMetricUnits { get; set; } = true;
+    [Parameter] public EventCallback<bool> UseMetricUnitsChanged { get; set; }
+    [Parameter] public bool Disabled { get; set; }
+    [Parameter] public string ValidationMessage { get; set; } = string.Empty;
+    [Parameter] public bool ShowConversion { get; set; } = true;
+
+    private decimal? _weightValue;
+    private decimal? WeightValue 
+    { 
+        get => _weightValue;
+        set => _weightValue = value;
+    }
+    private bool HasValidationError => !string.IsNullOrEmpty(ValidationMessage);
+
+    protected override async Task OnParametersSetAsync()
+    {
+        _weightValue = Weight;
+        await base.OnParametersSetAsync();
+    }
+
+    private bool ShouldShowWeightInput()
+    {
+        if (string.IsNullOrEmpty(WeightTypeId))
+            return true; // Show by default if no weight type is selected
+
+        var weightType = WeightTypeStateService.WeightTypes
+            .FirstOrDefault(wt => wt.Id.ToString() == WeightTypeId);
+
+        if (weightType == null)
+            return true;
+
+        return WeightTypeStateService.RequiresWeightInput(weightType.Code);
+    }
+
+    private bool IsWeightRequired()
+    {
+        if (string.IsNullOrEmpty(WeightTypeId))
+            return false;
+
+        var weightType = WeightTypeStateService.WeightTypes
+            .FirstOrDefault(wt => wt.Id.ToString() == WeightTypeId);
+
+        return weightType?.Code == "WEIGHT_REQUIRED" || weightType?.Code == "MACHINE_WEIGHT";
+    }
+
+    private async Task HandleWeightChanged()
+    {
+        await WeightChanged.InvokeAsync(WeightValue);
+    }
+
+    private async Task ToggleUnits()
+    {
+        if (Disabled)
+            return;
+
+        var newUseMetric = !UseMetricUnits;
+        
+        // Convert the weight value
+        if (WeightValue.HasValue && WeightValue > 0)
+        {
+            if (newUseMetric)
+            {
+                // Converting from lbs to kg
+                WeightValue = Math.Round(WeightValue.Value * 0.453592m, 1);
+            }
+            else
+            {
+                // Converting from kg to lbs
+                WeightValue = Math.Round(WeightValue.Value * 2.20462m, 0);
+            }
+        }
+
+        await UseMetricUnitsChanged.InvokeAsync(newUseMetric);
+        await WeightChanged.InvokeAsync(WeightValue);
+        StateHasChanged();
+    }
+
+    private string GetConvertedWeight()
+    {
+        if (!WeightValue.HasValue || WeightValue <= 0)
+            return "0";
+
+        if (UseMetricUnits)
+        {
+            // Show lbs equivalent
+            return Math.Round(WeightValue.Value * 2.20462m, 0).ToString("0");
+        }
+        else
+        {
+            // Show kg equivalent
+            return Math.Round(WeightValue.Value * 0.453592m, 1).ToString("0.#");
+        }
+    }
+
+    private string GetPlaceholderText()
+    {
+        if (string.IsNullOrEmpty(WeightTypeId))
+            return UseMetricUnits ? "0.0" : "0";
+
+        var weightType = WeightTypeStateService.WeightTypes
+            .FirstOrDefault(wt => wt.Id.ToString() == WeightTypeId);
+
+        if (weightType == null)
+            return UseMetricUnits ? "0.0" : "0";
+
+        return weightType.Code switch
+        {
+            "BODYWEIGHT_OPTIONAL" => UseMetricUnits ? "Optional (kg)" : "Optional (lbs)",
+            "WEIGHT_REQUIRED" => UseMetricUnits ? "Required (kg)" : "Required (lbs)",
+            "MACHINE_WEIGHT" => UseMetricUnits ? "Stack weight (kg)" : "Stack weight (lbs)",
+            _ => UseMetricUnits ? "0.0" : "0"
+        };
+    }
+
+    private string GetHelpText()
+    {
+        if (string.IsNullOrEmpty(WeightTypeId))
+            return "Enter the weight for this exercise";
+
+        var weightType = WeightTypeStateService.WeightTypes
+            .FirstOrDefault(wt => wt.Id.ToString() == WeightTypeId);
+
+        if (weightType == null)
+            return "Enter the weight for this exercise";
+
+        return weightType.Code switch
+        {
+            "BODYWEIGHT_OPTIONAL" => "You can add weight to make this exercise harder (e.g., weighted pull-ups)",
+            "WEIGHT_REQUIRED" => "This exercise requires external weight to be specified",
+            "MACHINE_WEIGHT" => "Enter the weight setting on the machine's stack or plates",
+            _ => "Enter the weight for this exercise"
+        };
+    }
+
+    private string GetNotApplicableMessage()
+    {
+        if (string.IsNullOrEmpty(WeightTypeId))
+            return "Select a weight type first";
+
+        var weightType = WeightTypeStateService.WeightTypes
+            .FirstOrDefault(wt => wt.Id.ToString() == WeightTypeId);
+
+        if (weightType == null)
+            return "Unknown weight type";
+
+        return weightType.Code switch
+        {
+            "BODYWEIGHT_ONLY" => "This exercise uses bodyweight only - no external weight can be added",
+            "NO_WEIGHT" => "This exercise does not use weight as a metric (e.g., stretching, cardio)",
+            _ => "Not applicable for this weight type"
+        };
+    }
+}

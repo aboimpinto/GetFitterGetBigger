@@ -10,6 +10,8 @@ namespace GetFitterGetBigger.Admin.Models.Dtos
         public List<ExerciseTypeDto> ExerciseTypes { get; set; } = new();
         public ReferenceDataDto? Difficulty { get; set; }
         public ReferenceDataDto? KineticChain { get; set; }
+        public ExerciseWeightTypeDto? WeightType { get; set; }
+        public decimal? DefaultWeight { get; set; }
         public bool IsUnilateral { get; set; }
         public bool IsActive { get; set; }
         public string? ImageUrl { get; set; }
@@ -40,6 +42,8 @@ namespace GetFitterGetBigger.Admin.Models.Dtos
         public List<string> ExerciseTypeIds { get; set; } = new();
         public string DifficultyId { get; set; } = string.Empty;
         public string? KineticChainId { get; set; }
+        public string? WeightTypeId { get; set; }
+        public decimal? DefaultWeight { get; set; }
         public bool IsUnilateral { get; set; }
         public bool IsActive { get; set; } = true;
         public string? ImageUrl { get; set; }
@@ -80,6 +84,7 @@ namespace GetFitterGetBigger.Admin.Models.Dtos
         public bool IsActive { get; set; }
         public ReferenceDataDto? Difficulty { get; set; }
         public ReferenceDataDto? KineticChain { get; set; }
+        public ExerciseWeightTypeDto? WeightType { get; set; }
         public List<MuscleGroupListItemDto> MuscleGroups { get; set; } = new();
         public List<ReferenceDataDto> Equipment { get; set; } = new();
         public List<ReferenceDataDto> MovementPatterns { get; set; } = new();
@@ -112,6 +117,7 @@ namespace GetFitterGetBigger.Admin.Models.Dtos
         public string? DifficultyId { get; set; }
         public List<string>? MuscleGroupIds { get; set; }
         public List<string>? EquipmentIds { get; set; }
+        public List<string>? WeightTypeIds { get; set; }
         public bool? IsActive { get; set; }
         public bool? HasLinks { get; set; }
         public int Page { get; set; } = 1;

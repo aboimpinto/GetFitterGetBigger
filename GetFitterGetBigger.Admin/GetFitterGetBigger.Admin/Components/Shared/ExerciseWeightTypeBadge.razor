@@ -1,0 +1,77 @@
+@using GetFitterGetBigger.Admin.Models.Dtos
+@using GetFitterGetBigger.Admin.Services
+@inject IExerciseWeightTypeStateService WeightTypeStateService
+
+@if (!string.IsNullOrEmpty(WeightTypeId) || WeightType != null)
+{
+    var weightType = WeightType ?? WeightTypeStateService.WeightTypes.FirstOrDefault(wt => wt.Id.ToString() == WeightTypeId);
+    if (weightType != null)
+    {
+        var (bgColor, textColor, borderColor) = GetWeightTypeColors(weightType.Code);
+        var iconClass = GetWeightTypeIcon(weightType.Code);
+        var sizeClasses = GetSizeClasses(Size);
+        var tooltipText = ShowTooltip ? weightType.Description : null;
+    
+        <span class="inline-flex items-center @sizeClasses.Container rounded-full @bgColor @textColor @borderColor border"
+              data-testid="weight-type-badge"
+              title="@tooltipText"
+              aria-label="@($"Weight type: {weightType.Name}")">
+            @if (ShowIcon)
+            {
+                <span class="@sizeClasses.Icon" aria-hidden="true">@iconClass</span>
+            }
+            <span class="@sizeClasses.Text @(ShowIcon ? "ml-1" : "")">@weightType.Name</span>
+        </span>
+    }
+}
+
+@code {
+    [Parameter] public string? WeightTypeId { get; set; }
+    [Parameter] public ExerciseWeightTypeDto? WeightType { get; set; }
+    [Parameter] public BadgeSize Size { get; set; } = BadgeSize.Medium;
+    [Parameter] public bool ShowIcon { get; set; } = true;
+    [Parameter] public bool ShowTooltip { get; set; } = true;
+
+    public enum BadgeSize
+    {
+        Small,
+        Medium,
+        Large
+    }
+
+    private (string bgColor, string textColor, string borderColor) GetWeightTypeColors(string code)
+    {
+        return code switch
+        {
+            "BODYWEIGHT_ONLY" => ("bg-blue-100", "text-blue-800", "border-blue-200"),
+            "NO_WEIGHT" => ("bg-gray-100", "text-gray-800", "border-gray-200"),
+            "BODYWEIGHT_OPTIONAL" => ("bg-green-100", "text-green-800", "border-green-200"),
+            "WEIGHT_REQUIRED" => ("bg-orange-100", "text-orange-800", "border-orange-200"),
+            "MACHINE_WEIGHT" => ("bg-purple-100", "text-purple-800", "border-purple-200"),
+            _ => ("bg-gray-100", "text-gray-800", "border-gray-200")
+        };
+    }
+
+    private string GetWeightTypeIcon(string code)
+    {
+        return code switch
+        {
+            "BODYWEIGHT_ONLY" => "💪",
+            "NO_WEIGHT" => "🚫",
+            "BODYWEIGHT_OPTIONAL" => "⚖️",
+            "WEIGHT_REQUIRED" => "🏋️",
+            "MACHINE_WEIGHT" => "🎯",
+            _ => "❓"
+        };
+    }
+
+    private (string Container, string Text, string Icon) GetSizeClasses(BadgeSize size)
+    {
+        return size switch
+        {
+            BadgeSize.Small => ("px-2 py-0.5", "text-xs font-medium", "text-xs"),
+            BadgeSize.Large => ("px-4 py-2", "text-base font-semibold", "text-base"),
+            _ => ("px-3 py-1", "text-sm font-medium", "text-sm")
+        };
+    }
+}

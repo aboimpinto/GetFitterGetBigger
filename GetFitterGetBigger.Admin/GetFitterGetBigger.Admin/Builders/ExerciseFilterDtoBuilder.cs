@@ -12,6 +12,7 @@ namespace GetFitterGetBigger.Admin.Builders
         private string? _difficultyId = null;
         private List<string>? _muscleGroupIds = null;
         private List<string>? _equipmentIds = null;
+        private List<string>? _weightTypeIds = null;
         private bool? _isActive = null;
         private int _page = 1;
         private int _pageSize = 10;
@@ -52,6 +53,18 @@ namespace GetFitterGetBigger.Admin.Builders
             return this;
         }
 
+        public ExerciseFilterDtoBuilder WithWeightTypeIds(params string[] weightTypeIds)
+        {
+            _weightTypeIds = weightTypeIds.ToList();
+            return this;
+        }
+
+        public ExerciseFilterDtoBuilder WithWeightTypeIds(List<string> weightTypeIds)
+        {
+            _weightTypeIds = weightTypeIds;
+            return this;
+        }
+
         public ExerciseFilterDtoBuilder WithIsActive(bool isActive)
         {
             _isActive = isActive;
@@ -85,6 +98,7 @@ namespace GetFitterGetBigger.Admin.Builders
                 DifficultyId = _difficultyId,
                 MuscleGroupIds = _muscleGroupIds,
                 EquipmentIds = _equipmentIds,
+                WeightTypeIds = _weightTypeIds,
                 IsActive = _isActive,
                 Page = _page,
                 PageSize = _pageSize

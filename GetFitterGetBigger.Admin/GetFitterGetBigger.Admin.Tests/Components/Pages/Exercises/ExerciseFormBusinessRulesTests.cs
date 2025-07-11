@@ -10,6 +10,7 @@ using AngleSharp.Dom;
 using Bunit.TestDoubles;
 using System.Threading.Tasks;
 using System.Linq;
+using Moq;
 
 namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
 {
@@ -22,14 +23,22 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
     {
         private readonly MockExerciseStateService _mockStateService;
         private readonly MockReferenceDataService _mockReferenceDataService;
+        private readonly Mock<IExerciseWeightTypeStateService> _mockWeightTypeStateService;
 
         public ExerciseFormBusinessRulesTests()
         {
             _mockStateService = new MockExerciseStateService();
             _mockReferenceDataService = new MockReferenceDataService();
+            _mockWeightTypeStateService = new Mock<IExerciseWeightTypeStateService>();
+
+            // Setup basic weight type state service mock
+            _mockWeightTypeStateService.Setup(x => x.WeightTypes).Returns(new List<ExerciseWeightTypeDto>());
+            _mockWeightTypeStateService.Setup(x => x.IsLoading).Returns(false);
+            _mockWeightTypeStateService.Setup(x => x.LoadWeightTypesAsync()).Returns(Task.CompletedTask);
 
             Services.AddSingleton<IExerciseStateService>(_mockStateService);
             Services.AddSingleton<IReferenceDataService>(_mockReferenceDataService);
+            Services.AddSingleton(_mockWeightTypeStateService.Object);
 
             var navMan = Services.GetRequiredService<FakeNavigationManager>();
             navMan.NavigateTo("http://localhost/exercises/new");

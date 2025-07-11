@@ -15,6 +15,8 @@ namespace GetFitterGetBigger.Admin.Builders
         private List<string> _exerciseTypeIds = new();
         private string _difficultyId = string.Empty;
         private string? _kineticChainId = null;
+        private string? _weightTypeId = null;
+        private decimal? _defaultWeight = null;
         private bool _isUnilateral = false;
         private bool _isActive = true;
         private string? _imageUrl = null;
@@ -89,6 +91,18 @@ namespace GetFitterGetBigger.Admin.Builders
         public ExerciseCreateDtoBuilder WithKineticChainId(string? kineticChainId)
         {
             _kineticChainId = kineticChainId;
+            return this;
+        }
+
+        public ExerciseCreateDtoBuilder WithWeightTypeId(string? weightTypeId)
+        {
+            _weightTypeId = weightTypeId;
+            return this;
+        }
+
+        public ExerciseCreateDtoBuilder WithDefaultWeight(decimal? defaultWeight)
+        {
+            _defaultWeight = defaultWeight;
             return this;
         }
 
@@ -201,6 +215,8 @@ namespace GetFitterGetBigger.Admin.Builders
                 ExerciseTypeIds = _exerciseTypeIds,
                 DifficultyId = _difficultyId,
                 KineticChainId = _kineticChainId,
+                WeightTypeId = _weightTypeId,
+                DefaultWeight = _defaultWeight,
                 IsUnilateral = _isUnilateral,
                 IsActive = _isActive,
                 ImageUrl = _imageUrl,
@@ -224,6 +240,8 @@ namespace GetFitterGetBigger.Admin.Builders
                 .WithInstructions(exercise.Instructions)
                 .WithDifficultyId(exercise.Difficulty?.Id ?? string.Empty)
                 .WithKineticChainId(exercise.KineticChain?.Id)
+                .WithWeightTypeId(exercise.WeightType?.Id.ToString())
+                .WithDefaultWeight(exercise.DefaultWeight)
                 .WithIsUnilateral(exercise.IsUnilateral)
                 .WithIsActive(exercise.IsActive)
                 .WithImageUrl(exercise.ImageUrl)
