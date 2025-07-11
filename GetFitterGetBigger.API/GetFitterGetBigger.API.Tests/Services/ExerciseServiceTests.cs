@@ -147,7 +147,7 @@ namespace GetFitterGetBigger.API.Tests.Services
 
             // Assert
             Assert.NotNull(result);
-            Assert.Equal(ExerciseDto.Empty, result);
+            Assert.True(result.IsEmpty);
         }
 
         [Fact]
@@ -209,7 +209,7 @@ namespace GetFitterGetBigger.API.Tests.Services
 
             // Assert
             Assert.False(result.IsSuccess);
-            Assert.Equal(ExerciseDto.Empty, result.Data);
+            Assert.True(result.Data.IsEmpty);
             Assert.Contains("already exists", result.Errors.First());
         }
 

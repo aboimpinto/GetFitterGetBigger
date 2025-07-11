@@ -192,6 +192,44 @@ public class ExerciseRepository : RepositoryBase<FitnessDbContext>, IExerciseRep
                 .LoadAsync();
         }
         
+        // Load ExerciseWeightType navigation property if present
+        if (exercise.ExerciseWeightTypeId.HasValue)
+        {
+            await Context.Entry(exercise)
+                .Reference(e => e.ExerciseWeightType)
+                .LoadAsync();
+        }
+        
+        // Load collections
+        await Context.Entry(exercise)
+            .Collection(e => e.CoachNotes)
+            .LoadAsync();
+            
+        await Context.Entry(exercise)
+            .Collection(e => e.ExerciseMuscleGroups)
+            .Query()
+            .Include(emg => emg.MuscleGroup)
+            .Include(emg => emg.MuscleRole)
+            .LoadAsync();
+            
+        await Context.Entry(exercise)
+            .Collection(e => e.ExerciseEquipment)
+            .Query()
+            .Include(ee => ee.Equipment)
+            .LoadAsync();
+            
+        await Context.Entry(exercise)
+            .Collection(e => e.ExerciseBodyParts)
+            .Query()
+            .Include(ebp => ebp.BodyPart)
+            .LoadAsync();
+            
+        await Context.Entry(exercise)
+            .Collection(e => e.ExerciseMovementPatterns)
+            .Query()
+            .Include(emp => emp.MovementPattern)
+            .LoadAsync();
+        
         return exercise;
     }
     
