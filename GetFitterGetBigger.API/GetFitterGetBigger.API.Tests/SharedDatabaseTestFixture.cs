@@ -246,6 +246,74 @@ public class SharedDatabaseTestFixture : WebApplicationFactory<Program>, IAsyncL
             );
         }
 
+        // Seed KineticChainTypes
+        if (!await context.KineticChainTypes.AnyAsync())
+        {
+            context.KineticChainTypes.AddRange(
+                KineticChainType.Handler.Create(
+                    KineticChainTypeId.From(Guid.Parse("f5d5a2de-9c4e-4b87-b8c3-5d1e17d0b1f4")),
+                    "Compound",
+                    "Exercises that work multiple muscle groups",
+                    1,
+                    true
+                ),
+                KineticChainType.Handler.Create(
+                    KineticChainTypeId.From(Guid.Parse("2b3e7cb2-9a3e-4c9a-88d8-b7c019c90d1b")),
+                    "Isolation",
+                    "Exercises that work a single muscle group",
+                    2,
+                    true
+                )
+            );
+        }
+
+        // Seed ExerciseWeightTypes
+        if (!await context.ExerciseWeightTypes.AnyAsync())
+        {
+            context.ExerciseWeightTypes.AddRange(
+                ExerciseWeightType.Handler.Create(
+                    ExerciseWeightTypeId.From(Guid.Parse("a1f3e2d4-5b6c-4d7e-8f9a-0b1c2d3e4f5a")),
+                    "BODYWEIGHT_ONLY",
+                    "Bodyweight Only",
+                    "Exercises that cannot have external weight added",
+                    1,
+                    true
+                ),
+                ExerciseWeightType.Handler.Create(
+                    ExerciseWeightTypeId.From(Guid.Parse("b2e4d3c5-6a7b-5c8d-9e0f-1a2b3c4d5e6f")),
+                    "BODYWEIGHT_OPTIONAL",
+                    "Bodyweight Optional",
+                    "Exercises that can be performed with or without additional weight",
+                    2,
+                    true
+                ),
+                ExerciseWeightType.Handler.Create(
+                    ExerciseWeightTypeId.From(Guid.Parse("c3d5c4b6-7b8c-6d9e-0f1a-2b3c4d5e6f7a")),
+                    "WEIGHT_REQUIRED",
+                    "Weight Required",
+                    "Exercises that must have external weight specified",
+                    3,
+                    true
+                ),
+                ExerciseWeightType.Handler.Create(
+                    ExerciseWeightTypeId.From(Guid.Parse("d4c6b5a7-8c9d-7e0f-1a2b-3c4d5e6f7a8b")),
+                    "MACHINE_WEIGHT",
+                    "Machine Weight",
+                    "Exercises performed on machines with weight stacks",
+                    4,
+                    true
+                ),
+                ExerciseWeightType.Handler.Create(
+                    ExerciseWeightTypeId.From(Guid.Parse("e5b7a698-9d0e-8f1a-2b3c-4d5e6f7a8b9c")),
+                    "NO_WEIGHT",
+                    "No Weight",
+                    "Exercises that do not involve any weight",
+                    5,
+                    true
+                )
+            );
+        }
+
         // Seed ExerciseTypes
         if (!await context.ExerciseTypes.AnyAsync())
         {

@@ -151,6 +151,21 @@ public class ExerciseService : IExerciseService
         }
     }
     
+    private async Task ValidateExerciseWeightTypeAsync(string? exerciseWeightTypeId, IEnumerable<string> exerciseTypeIds)
+    {
+        var isRestExercise = await IsRestExerciseAsync(exerciseTypeIds);
+        
+        if (isRestExercise && !string.IsNullOrEmpty(exerciseWeightTypeId))
+        {
+            throw new InvalidOperationException("Exercise weight type must not be specified for REST exercises.");
+        }
+        
+        if (!isRestExercise && string.IsNullOrEmpty(exerciseWeightTypeId))
+        {
+            throw new InvalidOperationException("Exercise weight type must be specified for non-REST exercises.");
+        }
+    }
+    
     /// <summary>
     /// Creates a new exercise
     /// </summary>
@@ -194,10 +209,11 @@ public class ExerciseService : IExerciseService
             exerciseWeightTypeId = parsedExerciseWeightTypeId;
         }
         
-        // Validate exercise types, muscle groups, and kinetic chain
+        // Validate exercise types, muscle groups, kinetic chain, and exercise weight type
         await ValidateRestExclusivityAsync(request.ExerciseTypeIds);
         await ValidateMuscleGroupsAsync(request);
         await ValidateKineticChainAsync(request.KineticChainId, request.ExerciseTypeIds);
+        await ValidateExerciseWeightTypeAsync(request.ExerciseWeightTypeId, request.ExerciseTypeIds);
         
         // Create the exercise entity
         var exercise = Exercise.Handler.CreateNew(
@@ -312,10 +328,11 @@ public class ExerciseService : IExerciseService
             exerciseWeightTypeId = parsedExerciseWeightTypeId;
         }
         
-        // Validate exercise types, muscle groups, and kinetic chain
+        // Validate exercise types, muscle groups, kinetic chain, and exercise weight type
         await ValidateRestExclusivityAsync(request.ExerciseTypeIds);
         await ValidateMuscleGroupsAsync(request);
         await ValidateKineticChainAsync(request.KineticChainId, request.ExerciseTypeIds);
+        await ValidateExerciseWeightTypeAsync(request.ExerciseWeightTypeId, request.ExerciseTypeIds);
         
         // Create updated exercise entity, using existing values for nullable fields if not provided
         var exercise = Exercise.Handler.Create(

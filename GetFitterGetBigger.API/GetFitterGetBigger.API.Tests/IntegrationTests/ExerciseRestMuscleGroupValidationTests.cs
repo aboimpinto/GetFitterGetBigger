@@ -4,6 +4,7 @@ using System.Net;
 using System.Net.Http.Json;
 using System.Threading.Tasks;
 using GetFitterGetBigger.API.DTOs;
+using GetFitterGetBigger.API.Tests.TestBuilders;
 using Xunit;
 
 namespace GetFitterGetBigger.API.Tests.IntegrationTests;
@@ -24,21 +25,25 @@ public class ExerciseRestMuscleGroupValidationTests : IClassFixture<SharedDataba
     public async Task CreateExercise_RestExerciseWithoutMuscleGroups_ReturnsCreated()
     {
         // Arrange
-        var request = new CreateExerciseRequest
+        var request = CreateExerciseRequestBuilder.ForRestExercise()
+            .WithName($"Rest Period {Guid.NewGuid()}")
+            .WithDescription("Recovery time between sets")
+            .WithMuscleGroups() // Empty muscle groups
+            .Build();
+        
+        // Debug - let's see what's in the request
+        Assert.NotNull(request.ExerciseTypeIds);
+        Assert.Single(request.ExerciseTypeIds);
+        Assert.Equal(TestConstants.ExerciseTypeIds.Rest, request.ExerciseTypeIds.First());
+        
+        // Verify that the REST type exists in the database
+        var restTypeResponse = await _client.GetAsync($"/api/exercisetypes/{TestConstants.ExerciseTypeIds.Rest}");
+        if (restTypeResponse.StatusCode == HttpStatusCode.OK)
         {
-            Name = $"Rest Period {Guid.NewGuid()}",
-            Description = "Recovery time between sets",
-            DifficultyId = "difficultylevel-8a8adb1d-24d2-4979-a5a6-0d760e6da24b", // Beginner
-            ExerciseTypeIds = new List<string> 
-            { 
-                "exercisetype-d4e5f6a7-8b9c-0d1e-2f3a-4b5c6d7e8f9a" // REST
-            },
-            MuscleGroups = new List<MuscleGroupWithRoleRequest>(), // Empty muscle groups
-            EquipmentIds = new List<string>(),
-            MovementPatternIds = new List<string>(),
-            BodyPartIds = new List<string>(),
-            KineticChainId = null // REST exercises should have null KineticChainId
-        };
+            var restType = await restTypeResponse.Content.ReadFromJsonAsync<ExerciseTypeDto>();
+            Assert.NotNull(restType);
+            Assert.Equal("Rest", restType.Value);
+        }
         
         // Act
         var response = await _client.PostAsJsonAsync("/api/exercises", request);
@@ -62,21 +67,11 @@ public class ExerciseRestMuscleGroupValidationTests : IClassFixture<SharedDataba
     public async Task CreateExercise_NonRestExerciseWithoutMuscleGroups_ReturnsBadRequest()
     {
         // Arrange
-        var request = new CreateExerciseRequest
-        {
-            Name = $"Push Up {Guid.NewGuid()}",
-            Description = "Upper body exercise",
-            DifficultyId = "difficultylevel-8a8adb1d-24d2-4979-a5a6-0d760e6da24b", // Beginner
-            ExerciseTypeIds = new List<string> 
-            { 
-                "exercisetype-b2c3d4e5-6f7a-8b9c-0d1e-2f3a4b5c6d7e" // Workout
-            },
-            MuscleGroups = new List<MuscleGroupWithRoleRequest>(), // Empty muscle groups - should fail
-            EquipmentIds = new List<string>(),
-            MovementPatternIds = new List<string>(),
-            BodyPartIds = new List<string>(),
-            KineticChainId = "kineticchaintype-f5d5a2de-9c4e-4b87-b8c3-5d1e17d0b1f4" // Compound
-        };
+        var request = CreateExerciseRequestBuilder.ForWorkoutExercise()
+            .WithName($"Push Up {Guid.NewGuid()}")
+            .WithDescription("Upper body exercise")
+            .WithMuscleGroups() // Empty muscle groups - should fail
+            .Build();
         
         // Act
         var response = await _client.PostAsJsonAsync("/api/exercises", request);
@@ -92,28 +87,13 @@ public class ExerciseRestMuscleGroupValidationTests : IClassFixture<SharedDataba
     public async Task CreateExercise_RestExerciseWithMuscleGroups_ReturnsCreated()
     {
         // Arrange - REST exercises CAN have muscle groups, they're just not required
-        var request = new CreateExerciseRequest
-        {
-            Name = $"Active Rest {Guid.NewGuid()}",
-            Description = "Light movement during rest",
-            DifficultyId = "difficultylevel-8a8adb1d-24d2-4979-a5a6-0d760e6da24b", // Beginner
-            ExerciseTypeIds = new List<string> 
-            { 
-                "exercisetype-d4e5f6a7-8b9c-0d1e-2f3a-4b5c6d7e8f9a" // REST
-            },
-            MuscleGroups = new List<MuscleGroupWithRoleRequest>
-            {
-                new() 
-                { 
-                    MuscleGroupId = "musclegroup-eeff0011-2233-4455-6677-889900112233", // Quadriceps  
-                    MuscleRoleId = "musclerole-abcdef12-3456-7890-abcd-ef1234567890" // Primary
-                }
-            },
-            EquipmentIds = new List<string>(),
-            MovementPatternIds = new List<string>(),
-            BodyPartIds = new List<string>(),
-            KineticChainId = null // REST exercises should have null KineticChainId
-        };
+        var request = CreateExerciseRequestBuilder.ForRestExercise()
+            .WithName($"Active Rest {Guid.NewGuid()}")
+            .WithDescription("Light movement during rest")
+            .WithMuscleGroups(
+                ("musclegroup-eeff0011-2233-4455-6677-889900112233", "musclerole-abcdef12-3456-7890-abcd-ef1234567890") // Quadriceps - Primary
+            )
+            .Build();
         
         // Act
         var response = await _client.PostAsJsonAsync("/api/exercises", request);
@@ -131,28 +111,13 @@ public class ExerciseRestMuscleGroupValidationTests : IClassFixture<SharedDataba
     public async Task CreateExercise_NonRestExerciseWithMuscleGroups_ReturnsCreated()
     {
         // Arrange - Non-REST exercises with muscle groups should work
-        var request = new CreateExerciseRequest
-        {
-            Name = $"Bench Press {Guid.NewGuid()}",
-            Description = "Chest exercise",
-            DifficultyId = "difficultylevel-8a8adb1d-24d2-4979-a5a6-0d760e6da24b", // Beginner
-            ExerciseTypeIds = new List<string> 
-            { 
-                "exercisetype-b2c3d4e5-6f7a-8b9c-0d1e-2f3a4b5c6d7e" // Workout
-            },
-            MuscleGroups = new List<MuscleGroupWithRoleRequest>
-            {
-                new() 
-                { 
-                    MuscleGroupId = "musclegroup-eeff0011-2233-4455-6677-889900112233", // Quadriceps  
-                    MuscleRoleId = "musclerole-abcdef12-3456-7890-abcd-ef1234567890" // Primary
-                }
-            },
-            EquipmentIds = new List<string>(),
-            MovementPatternIds = new List<string>(),
-            BodyPartIds = new List<string>(),
-            KineticChainId = "kineticchaintype-f5d5a2de-9c4e-4b87-b8c3-5d1e17d0b1f4" // Compound
-        };
+        var request = CreateExerciseRequestBuilder.ForWorkoutExercise()
+            .WithName($"Bench Press {Guid.NewGuid()}")
+            .WithDescription("Chest exercise")
+            .WithMuscleGroups(
+                ("musclegroup-eeff0011-2233-4455-6677-889900112233", "musclerole-abcdef12-3456-7890-abcd-ef1234567890") // Quadriceps - Primary
+            )
+            .Build();
         
         // Act
         var response = await _client.PostAsJsonAsync("/api/exercises", request);

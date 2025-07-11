@@ -9,6 +9,7 @@ using GetFitterGetBigger.API.Models.SpecializedIds;
 using GetFitterGetBigger.API.Repositories.Interfaces;
 using GetFitterGetBigger.API.Services.Implementations;
 using GetFitterGetBigger.API.Services.Interfaces;
+using GetFitterGetBigger.API.Tests.TestBuilders;
 using Moq;
 using Olimpo.EntityFramework.Persistency;
 using Xunit;
@@ -76,27 +77,13 @@ public class ExerciseServiceUpdateCoachNotesTests
             false,
             DifficultyLevelId.New());
         
-        var request = new UpdateExerciseRequest
-        {
-            Name = "Updated Exercise",
-            Description = "Updated Description",
-            DifficultyId = DifficultyLevelId.New().ToString(),
-            CoachNotes = new List<CoachNoteRequest>
-            {
-                new() { Text = "Third note", Order = 3 },
-                new() { Text = "First note", Order = 1 },
-                new() { Text = "Second note", Order = 2 }
-            },
-            ExerciseTypeIds = new List<string>(),
-            MuscleGroups = new List<MuscleGroupWithRoleRequest>
-            {
-                new() { MuscleGroupId = "musclegroup-chest-123", MuscleRoleId = "musclerole-primary-456" }
-            },
-            EquipmentIds = new List<string>(),
-            MovementPatternIds = new List<string>(),
-            BodyPartIds = new List<string>(),
-            KineticChainId = KineticChainTypeId.New().ToString()
-        };
+        var request = UpdateExerciseRequestBuilder.ForWorkoutExercise()
+            .WithName("Updated Exercise")
+            .WithDescription("Updated Description")
+            .WithCoachNotes(("Third note", 3), ("First note", 1), ("Second note", 2))
+            .WithExerciseTypes() // Empty exercise types
+            .WithMuscleGroups(("musclegroup-chest-123", "musclerole-primary-456"))
+            .Build();
         
         _exerciseRepositoryMock.Setup(r => r.ExistsAsync(It.IsAny<string>(), It.IsAny<ExerciseId>()))
             .ReturnsAsync(false);
@@ -149,27 +136,16 @@ public class ExerciseServiceUpdateCoachNotesTests
         existingExercise.CoachNotes.Add(CoachNote.Handler.Create(existingNoteId1, exerciseId, "Old note 1", 1));
         existingExercise.CoachNotes.Add(CoachNote.Handler.Create(existingNoteId2, exerciseId, "Old note 2", 2));
         
-        var request = new UpdateExerciseRequest
-        {
-            Name = "Updated Exercise",
-            Description = "Updated Description",
-            DifficultyId = DifficultyLevelId.New().ToString(),
-            CoachNotes = new List<CoachNoteRequest>
-            {
-                new() { Id = existingNoteId1.ToString(), Text = "Updated note 1", Order = 1 },
-                new() { Id = existingNoteId2.ToString(), Text = "Updated note 2", Order = 2 },
-                new() { Text = "New note 3", Order = 3 } // New note without ID
-            },
-            ExerciseTypeIds = new List<string>(),
-            MuscleGroups = new List<MuscleGroupWithRoleRequest>
-            {
-                new() { MuscleGroupId = "musclegroup-chest-123", MuscleRoleId = "musclerole-primary-456" }
-            },
-            EquipmentIds = new List<string>(),
-            MovementPatternIds = new List<string>(),
-            BodyPartIds = new List<string>(),
-            KineticChainId = KineticChainTypeId.New().ToString()
-        };
+        var request = UpdateExerciseRequestBuilder.ForWorkoutExercise()
+            .WithName("Updated Exercise")
+            .WithDescription("Updated Description")
+            .WithCoachNotes(
+                (existingNoteId1.ToString(), "Updated note 1", 1),
+                (existingNoteId2.ToString(), "Updated note 2", 2),
+                ("", "New note 3", 3)) // New note without ID - use empty string for ID
+            .WithExerciseTypes() // Empty exercise types
+            .WithMuscleGroups(("musclegroup-chest-123", "musclerole-primary-456"))
+            .Build();
         
         _exerciseRepositoryMock.Setup(r => r.ExistsAsync(It.IsAny<string>(), It.IsAny<ExerciseId>()))
             .ReturnsAsync(false);
@@ -223,22 +199,13 @@ public class ExerciseServiceUpdateCoachNotesTests
         existingExercise.CoachNotes.Add(CoachNote.Handler.CreateNew(exerciseId, "Note 1", 1));
         existingExercise.CoachNotes.Add(CoachNote.Handler.CreateNew(exerciseId, "Note 2", 2));
         
-        var request = new UpdateExerciseRequest
-        {
-            Name = "Updated Exercise",
-            Description = "Updated Description",
-            DifficultyId = DifficultyLevelId.New().ToString(),
-            CoachNotes = new List<CoachNoteRequest>(), // Empty list
-            ExerciseTypeIds = new List<string>(),
-            MuscleGroups = new List<MuscleGroupWithRoleRequest>
-            {
-                new() { MuscleGroupId = "musclegroup-chest-123", MuscleRoleId = "musclerole-primary-456" }
-            },
-            EquipmentIds = new List<string>(),
-            MovementPatternIds = new List<string>(),
-            BodyPartIds = new List<string>(),
-            KineticChainId = KineticChainTypeId.New().ToString()
-        };
+        var request = UpdateExerciseRequestBuilder.ForWorkoutExercise()
+            .WithName("Updated Exercise")
+            .WithDescription("Updated Description")
+            .WithCoachNotes(Array.Empty<(string Text, int Order)>()) // Empty list
+            .WithExerciseTypes() // Empty exercise types
+            .WithMuscleGroups(("musclegroup-chest-123", "musclerole-primary-456"))
+            .Build();
         
         _exerciseRepositoryMock.Setup(r => r.ExistsAsync(It.IsAny<string>(), It.IsAny<ExerciseId>()))
             .ReturnsAsync(false);
@@ -279,26 +246,15 @@ public class ExerciseServiceUpdateCoachNotesTests
             false,
             DifficultyLevelId.New());
         
-        var request = new UpdateExerciseRequest
-        {
-            Name = "Updated Exercise",
-            Description = "Updated Description",
-            DifficultyId = DifficultyLevelId.New().ToString(),
-            CoachNotes = new List<CoachNoteRequest>
-            {
-                new() { Id = "invalid-id", Text = "Note with invalid ID", Order = 1 },
-                new() { Id = "coachnote-not-a-guid", Text = "Note with malformed ID", Order = 2 }
-            },
-            ExerciseTypeIds = new List<string>(),
-            MuscleGroups = new List<MuscleGroupWithRoleRequest>
-            {
-                new() { MuscleGroupId = "musclegroup-chest-123", MuscleRoleId = "musclerole-primary-456" }
-            },
-            EquipmentIds = new List<string>(),
-            MovementPatternIds = new List<string>(),
-            BodyPartIds = new List<string>(),
-            KineticChainId = KineticChainTypeId.New().ToString()
-        };
+        var request = UpdateExerciseRequestBuilder.ForWorkoutExercise()
+            .WithName("Updated Exercise")
+            .WithDescription("Updated Description")
+            .WithCoachNotes(
+                ("invalid-id", "Note with invalid ID", 1),
+                ("coachnote-not-a-guid", "Note with malformed ID", 2))
+            .WithExerciseTypes() // Empty exercise types
+            .WithMuscleGroups(("musclegroup-chest-123", "musclerole-primary-456"))
+            .Build();
         
         _exerciseRepositoryMock.Setup(r => r.ExistsAsync(It.IsAny<string>(), It.IsAny<ExerciseId>()))
             .ReturnsAsync(false);
@@ -345,22 +301,15 @@ public class ExerciseServiceUpdateCoachNotesTests
         existingExercise.CoachNotes.Add(existingNote1);
         existingExercise.CoachNotes.Add(existingNote2);
         
-        var request = new UpdateExerciseRequest
-        {
-            Name = "Updated Exercise",
-            Description = "Updated Description",
-            DifficultyId = DifficultyLevelId.New().ToString(),
-            CoachNotes = null!, // Null means don't update
-            ExerciseTypeIds = new List<string>(),
-            MuscleGroups = new List<MuscleGroupWithRoleRequest>
-            {
-                new() { MuscleGroupId = "musclegroup-chest-123", MuscleRoleId = "musclerole-primary-456" }
-            },
-            EquipmentIds = new List<string>(),
-            MovementPatternIds = new List<string>(),
-            BodyPartIds = new List<string>(),
-            KineticChainId = KineticChainTypeId.New().ToString()
-        };
+        var request = UpdateExerciseRequestBuilder.ForWorkoutExercise()
+            .WithName("Updated Exercise")
+            .WithDescription("Updated Description")
+            .WithExerciseTypes() // Empty exercise types
+            .WithMuscleGroups(("musclegroup-chest-123", "musclerole-primary-456"))
+            .Build();
+        
+        // Manually set CoachNotes to null to test the null behavior
+        request.CoachNotes = null!;
         
         _exerciseRepositoryMock.Setup(r => r.ExistsAsync(It.IsAny<string>(), It.IsAny<ExerciseId>()))
             .ReturnsAsync(false);
@@ -401,27 +350,16 @@ public class ExerciseServiceUpdateCoachNotesTests
             false,
             DifficultyLevelId.New());
         
-        var request = new UpdateExerciseRequest
-        {
-            Name = "Updated Exercise",
-            Description = "Updated Description",
-            DifficultyId = DifficultyLevelId.New().ToString(),
-            CoachNotes = new List<CoachNoteRequest>
-            {
-                new() { Text = "Note at 100", Order = 100 },
-                new() { Text = "Note at 5", Order = 5 },
-                new() { Text = "Note at 50", Order = 50 }
-            },
-            ExerciseTypeIds = new List<string>(),
-            MuscleGroups = new List<MuscleGroupWithRoleRequest>
-            {
-                new() { MuscleGroupId = "musclegroup-chest-123", MuscleRoleId = "musclerole-primary-456" }
-            },
-            EquipmentIds = new List<string>(),
-            MovementPatternIds = new List<string>(),
-            BodyPartIds = new List<string>(),
-            KineticChainId = KineticChainTypeId.New().ToString()
-        };
+        var request = UpdateExerciseRequestBuilder.ForWorkoutExercise()
+            .WithName("Updated Exercise")
+            .WithDescription("Updated Description")
+            .WithCoachNotes(
+                ("Note at 100", 100),
+                ("Note at 5", 5),
+                ("Note at 50", 50))
+            .WithExerciseTypes() // Empty exercise types
+            .WithMuscleGroups(("musclegroup-chest-123", "musclerole-primary-456"))
+            .Build();
         
         _exerciseRepositoryMock.Setup(r => r.ExistsAsync(It.IsAny<string>(), It.IsAny<ExerciseId>()))
             .ReturnsAsync(false);

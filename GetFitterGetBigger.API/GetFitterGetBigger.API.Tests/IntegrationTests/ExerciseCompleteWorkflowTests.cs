@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Http.Json;
 using GetFitterGetBigger.API.DTOs;
+using GetFitterGetBigger.API.Tests.TestBuilders;
 using Xunit;
 
 namespace GetFitterGetBigger.API.Tests.IntegrationTests;
@@ -24,55 +25,29 @@ public class ExerciseCompleteWorkflowTests : IClassFixture<SharedDatabaseTestFix
     public async Task CompleteExerciseWorkflow_CreateWithAllFeatures_Success()
     {
         // Arrange
-        var request = new CreateExerciseRequest
-        {
-            Name = "Complete Feature Test Exercise",
-            Description = "A comprehensive exercise demonstrating all features",
-            CoachNotes = new List<CoachNoteRequest>
-            {
-                new() { Text = "Setup: Position yourself at the squat rack", Order = 1 },
-                new() { Text = "Execution: Lower slowly for 3 seconds", Order = 2 },
-                new() { Text = "Hold: Pause at the bottom for 1 second", Order = 3 },
-                new() { Text = "Return: Push through heels to stand", Order = 4 },
-                new() { Text = "Breathing: Inhale down, exhale up", Order = 5 }
-            },
-            ExerciseTypeIds = new List<string>
-            {
+        var request = CreateExerciseRequestBuilder.ForWorkoutExercise()
+            .WithName("Complete Feature Test Exercise")
+            .WithDescription("A comprehensive exercise demonstrating all features")
+            .WithCoachNotes(
+                ("Setup: Position yourself at the squat rack", 1),
+                ("Execution: Lower slowly for 3 seconds", 2),
+                ("Hold: Pause at the bottom for 1 second", 3),
+                ("Return: Push through heels to stand", 4),
+                ("Breathing: Inhale down, exhale up", 5)
+            )
+            .WithExerciseTypes(
                 "exercisetype-a1b2c3d4-5e6f-7a8b-9c0d-1e2f3a4b5c6d", // Warmup
                 "exercisetype-b2c3d4e5-6f7a-8b9c-0d1e-2f3a4b5c6d7e"  // Workout
-            },
-            VideoUrl = "https://example.com/squat-tutorial.mp4",
-            ImageUrl = "https://example.com/squat-form.jpg",
-            IsUnilateral = false,
-            DifficultyId = "difficultylevel-9c7b59a4-bcd8-48a6-971a-cd67b0a7ab5a", // Intermediate
-            MuscleGroups = new List<MuscleGroupWithRoleRequest>
-            {
-                new()
-                {
-                    MuscleGroupId = "musclegroup-eeff0011-2233-4455-6677-889900112233", // Quadriceps
-                    MuscleRoleId = "musclerole-abcdef12-3456-7890-abcd-ef1234567890" // Primary
-                },
-                new()
-                {
-                    MuscleGroupId = "musclegroup-ccddeeff-0011-2233-4455-667788990011", // Pectoralis (as stabilizer)
-                    MuscleRoleId = "musclerole-22334455-6677-8899-aabb-ccddeeff0011" // Stabilizer
-                }
-            },
-            EquipmentIds = new List<string> 
-            { 
-                "equipment-33445566-7788-99aa-bbcc-ddeeff001122" // Barbell
-            },
-            BodyPartIds = new List<string> 
-            { 
-                "bodypart-4a6f1b42-5c9b-4c4e-878a-b3d9f2c1f1f5", // Legs
-                "bodypart-7c5a2d6e-e87e-4c8a-9f1d-9eb734f3df3c"  // Chest (stabilizer)
-            },
-            MovementPatternIds = new List<string> 
-            { 
-                "movementpattern-bbccddee-ff00-1122-3344-556677889900" // Squat
-            },
-            KineticChainId = "kineticchaintype-f5d5a2de-9c4e-4b87-b8c3-5d1e17d0b1f4" // Compound
-        };
+            )
+            .WithVideoUrl("https://example.com/squat-tutorial.mp4")
+            .WithImageUrl("https://example.com/squat-form.jpg")
+            .WithIsUnilateral(false)
+            .WithDifficultyId("difficultylevel-9c7b59a4-bcd8-48a6-971a-cd67b0a7ab5a") // Intermediate
+            .WithMuscleGroups(
+                ("musclegroup-eeff0011-2233-4455-6677-889900112233", "musclerole-abcdef12-3456-7890-abcd-ef1234567890"), // Quadriceps - Primary
+                ("musclegroup-ccddeeff-0011-2233-4455-667788990011", "musclerole-22334455-6677-8899-aabb-ccddeeff0011") // Pectoralis - Stabilizer
+            )
+            .Build();
         
         // Act - Create Exercise
         var createResponse = await _client.PostAsJsonAsync("/api/exercises", request);
@@ -113,33 +88,17 @@ public class ExerciseCompleteWorkflowTests : IClassFixture<SharedDatabaseTestFix
     public async Task CompleteExerciseWorkflow_CreateThenRetrieve_MaintainsCoachNotesOrder()
     {
         // Arrange
-        var request = new CreateExerciseRequest
-        {
-            Name = "Retrieve Order Test Exercise",
-            Description = "Testing coach notes order after retrieval",
-            CoachNotes = new List<CoachNoteRequest>
-            {
-                new() { Text = "Step E", Order = 5 },
-                new() { Text = "Step A", Order = 1 },
-                new() { Text = "Step C", Order = 3 },
-                new() { Text = "Step B", Order = 2 },
-                new() { Text = "Step D", Order = 4 }
-            },
-            ExerciseTypeIds = new List<string> { "exercisetype-b2c3d4e5-6f7a-8b9c-0d1e-2f3a4b5c6d7e" },
-            DifficultyId = "difficultylevel-8a8adb1d-24d2-4979-a5a6-0d760e6da24b",
-            MuscleGroups = new List<MuscleGroupWithRoleRequest>
-            {
-                new()
-                {
-                    MuscleGroupId = "musclegroup-ccddeeff-0011-2233-4455-667788990011",
-                    MuscleRoleId = "musclerole-abcdef12-3456-7890-abcd-ef1234567890"
-                }
-            },
-            EquipmentIds = new List<string>(),
-            BodyPartIds = new List<string> { "bodypart-7c5a2d6e-e87e-4c8a-9f1d-9eb734f3df3c" },
-            MovementPatternIds = new List<string>(),
-            KineticChainId = "kineticchaintype-f5d5a2de-9c4e-4b87-b8c3-5d1e17d0b1f4" // Compound
-        };
+        var request = CreateExerciseRequestBuilder.ForWorkoutExercise()
+            .WithName("Retrieve Order Test Exercise")
+            .WithDescription("Testing coach notes order after retrieval")
+            .WithCoachNotes(
+                ("Step E", 5),
+                ("Step A", 1),
+                ("Step C", 3),
+                ("Step B", 2),
+                ("Step D", 4)
+            )
+            .Build();
         
         // Act - Create
         var createResponse = await _client.PostAsJsonAsync("/api/exercises", request);
@@ -170,26 +129,12 @@ public class ExerciseCompleteWorkflowTests : IClassFixture<SharedDatabaseTestFix
     public async Task CompleteExerciseWorkflow_CreateMinimalExercise_Success()
     {
         // Arrange - Minimal valid exercise
-        var request = new CreateExerciseRequest
-        {
-            Name = "Minimal Exercise Test",
-            Description = "The bare minimum required exercise",
-            CoachNotes = new List<CoachNoteRequest>(), // Empty is allowed
-            ExerciseTypeIds = new List<string>(), // Empty is allowed
-            DifficultyId = "difficultylevel-8a8adb1d-24d2-4979-a5a6-0d760e6da24b",
-            MuscleGroups = new List<MuscleGroupWithRoleRequest>
-            {
-                new()
-                {
-                    MuscleGroupId = "musclegroup-ccddeeff-0011-2233-4455-667788990011",
-                    MuscleRoleId = "musclerole-abcdef12-3456-7890-abcd-ef1234567890"
-                }
-            },
-            EquipmentIds = new List<string>(), // Empty is allowed
-            BodyPartIds = new List<string> { "bodypart-7c5a2d6e-e87e-4c8a-9f1d-9eb734f3df3c" },
-            MovementPatternIds = new List<string>(), // Empty is allowed
-            KineticChainId = "kineticchaintype-f5d5a2de-9c4e-4b87-b8c3-5d1e17d0b1f4" // Compound
-        };
+        var request = CreateExerciseRequestBuilder.ForWorkoutExercise()
+            .WithName("Minimal Exercise Test")
+            .WithDescription("The bare minimum required exercise")
+            .WithCoachNotes() // Empty is allowed
+            .WithExerciseTypes() // Empty is allowed
+            .Build();
         
         // Act
         var response = await _client.PostAsJsonAsync("/api/exercises", request);

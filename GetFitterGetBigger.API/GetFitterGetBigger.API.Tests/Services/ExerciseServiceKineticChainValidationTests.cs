@@ -9,6 +9,7 @@ using GetFitterGetBigger.API.Models.SpecializedIds;
 using GetFitterGetBigger.API.Repositories.Interfaces;
 using GetFitterGetBigger.API.Services.Implementations;
 using GetFitterGetBigger.API.Services.Interfaces;
+using GetFitterGetBigger.API.Tests.TestBuilders;
 using Moq;
 using Olimpo.EntityFramework.Persistency;
 using Xunit;
@@ -102,25 +103,14 @@ namespace GetFitterGetBigger.API.Tests.Services
             // Arrange
             SetupMocks();
             
-            var request = new CreateExerciseRequest
-            {
-                Name = "Test Exercise",
-                Description = "Test Description",
-                DifficultyId = _difficultyId.ToString(),
-                ExerciseTypeIds = new List<string> { _strengthTypeId.ToString() },
-                MuscleGroups = new List<MuscleGroupWithRoleRequest> 
-                { 
-                    new MuscleGroupWithRoleRequest 
-                    { 
-                        MuscleGroupId = MuscleGroupId.New().ToString(), 
-                        MuscleRoleId = MuscleRoleId.New().ToString() 
-                    } 
-                },
-                EquipmentIds = new List<string>(),
-                MovementPatternIds = new List<string>(),
-                BodyPartIds = new List<string>(),
-                KineticChainId = null // No kinetic chain provided
-            };
+            var request = CreateExerciseRequestBuilder.ForWorkoutExercise()
+                .WithName("Test Exercise")
+                .WithDescription("Test Description")
+                .WithDifficultyId(_difficultyId.ToString())
+                .WithExerciseTypes(_strengthTypeId.ToString())
+                .WithKineticChainId(null) // No kinetic chain provided
+                .WithMuscleGroups((MuscleGroupId.New().ToString(), MuscleRoleId.New().ToString()))
+                .Build();
 
             // Act & Assert
             var exception = await Assert.ThrowsAsync<InvalidOperationException>(
@@ -134,18 +124,13 @@ namespace GetFitterGetBigger.API.Tests.Services
             // Arrange
             SetupMocks();
             
-            var request = new CreateExerciseRequest
-            {
-                Name = "Rest Period",
-                Description = "Rest between sets",
-                DifficultyId = _difficultyId.ToString(),
-                ExerciseTypeIds = new List<string> { _restTypeId.ToString() },
-                MuscleGroups = new List<MuscleGroupWithRoleRequest>(),
-                EquipmentIds = new List<string>(),
-                MovementPatternIds = new List<string>(),
-                BodyPartIds = new List<string>(),
-                KineticChainId = _kineticChainId.ToString() // Kinetic chain provided for rest
-            };
+            var request = CreateExerciseRequestBuilder.ForRestExercise()
+                .WithName("Rest Period")
+                .WithDescription("Rest between sets")
+                .WithDifficultyId(_difficultyId.ToString())
+                .WithExerciseTypes(_restTypeId.ToString())
+                .WithKineticChainId(_kineticChainId.ToString()) // Kinetic chain provided for rest
+                .Build();
 
             // Act & Assert
             var exception = await Assert.ThrowsAsync<InvalidOperationException>(
@@ -171,25 +156,14 @@ namespace GetFitterGetBigger.API.Tests.Services
             _mockExerciseRepository.Setup(x => x.AddAsync(It.IsAny<Exercise>()))
                 .ReturnsAsync(createdExercise);
             
-            var request = new CreateExerciseRequest
-            {
-                Name = "Test Exercise",
-                Description = "Test Description",
-                DifficultyId = _difficultyId.ToString(),
-                ExerciseTypeIds = new List<string> { _strengthTypeId.ToString() },
-                MuscleGroups = new List<MuscleGroupWithRoleRequest> 
-                { 
-                    new MuscleGroupWithRoleRequest 
-                    { 
-                        MuscleGroupId = MuscleGroupId.New().ToString(), 
-                        MuscleRoleId = MuscleRoleId.New().ToString() 
-                    } 
-                },
-                EquipmentIds = new List<string>(),
-                MovementPatternIds = new List<string>(),
-                BodyPartIds = new List<string>(),
-                KineticChainId = _kineticChainId.ToString()
-            };
+            var request = CreateExerciseRequestBuilder.ForWorkoutExercise()
+                .WithName("Test Exercise")
+                .WithDescription("Test Description")
+                .WithDifficultyId(_difficultyId.ToString())
+                .WithExerciseTypes(_strengthTypeId.ToString())
+                .WithKineticChainId(_kineticChainId.ToString())
+                .WithMuscleGroups((MuscleGroupId.New().ToString(), MuscleRoleId.New().ToString()))
+                .Build();
 
             // Act
             var result = await _service.CreateAsync(request);
@@ -218,18 +192,12 @@ namespace GetFitterGetBigger.API.Tests.Services
             _mockExerciseRepository.Setup(x => x.AddAsync(It.IsAny<Exercise>()))
                 .ReturnsAsync(createdExercise);
             
-            var request = new CreateExerciseRequest
-            {
-                Name = "Rest Period",
-                Description = "Rest between sets",
-                DifficultyId = _difficultyId.ToString(),
-                ExerciseTypeIds = new List<string> { _restTypeId.ToString() },
-                MuscleGroups = new List<MuscleGroupWithRoleRequest>(),
-                EquipmentIds = new List<string>(),
-                MovementPatternIds = new List<string>(),
-                BodyPartIds = new List<string>(),
-                KineticChainId = null
-            };
+            var request = CreateExerciseRequestBuilder.ForRestExercise()
+                .WithName("Rest Period")
+                .WithDescription("Rest between sets")
+                .WithDifficultyId(_difficultyId.ToString())
+                .WithExerciseTypes(_restTypeId.ToString())
+                .Build();
 
             // Act
             var result = await _service.CreateAsync(request);
@@ -261,25 +229,14 @@ namespace GetFitterGetBigger.API.Tests.Services
             _mockExerciseRepository.Setup(x => x.GetByIdAsync(exerciseId))
                 .ReturnsAsync(existingExercise);
             
-            var request = new UpdateExerciseRequest
-            {
-                Name = "Updated Exercise",
-                Description = "Updated Description",
-                DifficultyId = _difficultyId.ToString(),
-                ExerciseTypeIds = new List<string> { _strengthTypeId.ToString() },
-                MuscleGroups = new List<MuscleGroupWithRoleRequest> 
-                { 
-                    new MuscleGroupWithRoleRequest 
-                    { 
-                        MuscleGroupId = MuscleGroupId.New().ToString(), 
-                        MuscleRoleId = MuscleRoleId.New().ToString() 
-                    } 
-                },
-                EquipmentIds = new List<string>(),
-                MovementPatternIds = new List<string>(),
-                BodyPartIds = new List<string>(),
-                KineticChainId = null // No kinetic chain provided
-            };
+            var request = UpdateExerciseRequestBuilder.ForWorkoutExercise()
+                .WithName("Updated Exercise")
+                .WithDescription("Updated Description")
+                .WithDifficultyId(_difficultyId.ToString())
+                .WithExerciseTypes(_strengthTypeId.ToString())
+                .WithKineticChainId(null) // No kinetic chain provided
+                .WithMuscleGroups((MuscleGroupId.New().ToString(), MuscleRoleId.New().ToString()))
+                .Build();
 
             // Act & Assert
             var exception = await Assert.ThrowsAsync<InvalidOperationException>(
@@ -308,18 +265,13 @@ namespace GetFitterGetBigger.API.Tests.Services
             _mockExerciseRepository.Setup(x => x.GetByIdAsync(exerciseId))
                 .ReturnsAsync(existingExercise);
             
-            var request = new UpdateExerciseRequest
-            {
-                Name = "Updated Rest",
-                Description = "Updated rest period",
-                DifficultyId = _difficultyId.ToString(),
-                ExerciseTypeIds = new List<string> { _restTypeId.ToString() },
-                MuscleGroups = new List<MuscleGroupWithRoleRequest>(),
-                EquipmentIds = new List<string>(),
-                MovementPatternIds = new List<string>(),
-                BodyPartIds = new List<string>(),
-                KineticChainId = _kineticChainId.ToString() // Kinetic chain provided for rest
-            };
+            var request = UpdateExerciseRequestBuilder.ForRestExercise()
+                .WithName("Updated Rest")
+                .WithDescription("Updated rest period")
+                .WithDifficultyId(_difficultyId.ToString())
+                .WithExerciseTypes(_restTypeId.ToString())
+                .WithKineticChainId(_kineticChainId.ToString()) // Kinetic chain provided for rest
+                .Build();
 
             // Act & Assert
             var exception = await Assert.ThrowsAsync<InvalidOperationException>(
@@ -362,25 +314,14 @@ namespace GetFitterGetBigger.API.Tests.Services
             _mockExerciseRepository.Setup(x => x.UpdateAsync(It.IsAny<Exercise>()))
                 .ReturnsAsync(updatedExercise);
             
-            var request = new UpdateExerciseRequest
-            {
-                Name = "Updated Exercise",
-                Description = "Updated Description",
-                DifficultyId = _difficultyId.ToString(),
-                ExerciseTypeIds = new List<string> { _strengthTypeId.ToString() },
-                MuscleGroups = new List<MuscleGroupWithRoleRequest> 
-                { 
-                    new MuscleGroupWithRoleRequest 
-                    { 
-                        MuscleGroupId = MuscleGroupId.New().ToString(), 
-                        MuscleRoleId = MuscleRoleId.New().ToString() 
-                    } 
-                },
-                EquipmentIds = new List<string>(),
-                MovementPatternIds = new List<string>(),
-                BodyPartIds = new List<string>(),
-                KineticChainId = _kineticChainId.ToString()
-            };
+            var request = UpdateExerciseRequestBuilder.ForWorkoutExercise()
+                .WithName("Updated Exercise")
+                .WithDescription("Updated Description")
+                .WithDifficultyId(_difficultyId.ToString())
+                .WithExerciseTypes(_strengthTypeId.ToString())
+                .WithKineticChainId(_kineticChainId.ToString())
+                .WithMuscleGroups((MuscleGroupId.New().ToString(), MuscleRoleId.New().ToString()))
+                .Build();
 
             // Act
             var result = await _service.UpdateAsync(exerciseId.ToString(), request);
@@ -397,25 +338,14 @@ namespace GetFitterGetBigger.API.Tests.Services
             // Arrange
             SetupMocks();
             
-            var request = new CreateExerciseRequest
-            {
-                Name = "Test Exercise",
-                Description = "Test Description",
-                DifficultyId = _difficultyId.ToString(),
-                ExerciseTypeIds = new List<string> { _strengthTypeId.ToString() },
-                MuscleGroups = new List<MuscleGroupWithRoleRequest> 
-                { 
-                    new MuscleGroupWithRoleRequest 
-                    { 
-                        MuscleGroupId = MuscleGroupId.New().ToString(), 
-                        MuscleRoleId = MuscleRoleId.New().ToString() 
-                    } 
-                },
-                EquipmentIds = new List<string>(),
-                MovementPatternIds = new List<string>(),
-                BodyPartIds = new List<string>(),
-                KineticChainId = "invalid-id-format"
-            };
+            var request = CreateExerciseRequestBuilder.ForWorkoutExercise()
+                .WithName("Test Exercise")
+                .WithDescription("Test Description")
+                .WithDifficultyId(_difficultyId.ToString())
+                .WithExerciseTypes(_strengthTypeId.ToString())
+                .WithKineticChainId("invalid-id-format")
+                .WithMuscleGroups((MuscleGroupId.New().ToString(), MuscleRoleId.New().ToString()))
+                .Build();
 
             // Act & Assert
             var exception = await Assert.ThrowsAsync<ArgumentException>(
@@ -443,25 +373,14 @@ namespace GetFitterGetBigger.API.Tests.Services
             _mockExerciseRepository.Setup(x => x.GetByIdAsync(exerciseId))
                 .ReturnsAsync(existingExercise);
             
-            var request = new UpdateExerciseRequest
-            {
-                Name = "Updated Exercise",
-                Description = "Updated Description",
-                DifficultyId = _difficultyId.ToString(),
-                ExerciseTypeIds = new List<string> { _strengthTypeId.ToString() },
-                MuscleGroups = new List<MuscleGroupWithRoleRequest> 
-                { 
-                    new MuscleGroupWithRoleRequest 
-                    { 
-                        MuscleGroupId = MuscleGroupId.New().ToString(), 
-                        MuscleRoleId = MuscleRoleId.New().ToString() 
-                    } 
-                },
-                EquipmentIds = new List<string>(),
-                MovementPatternIds = new List<string>(),
-                BodyPartIds = new List<string>(),
-                KineticChainId = "invalid-id-format"
-            };
+            var request = UpdateExerciseRequestBuilder.ForWorkoutExercise()
+                .WithName("Updated Exercise")
+                .WithDescription("Updated Description")
+                .WithDifficultyId(_difficultyId.ToString())
+                .WithExerciseTypes(_strengthTypeId.ToString())
+                .WithKineticChainId("invalid-id-format")
+                .WithMuscleGroups((MuscleGroupId.New().ToString(), MuscleRoleId.New().ToString()))
+                .Build();
 
             // Act & Assert
             var exception = await Assert.ThrowsAsync<ArgumentException>(

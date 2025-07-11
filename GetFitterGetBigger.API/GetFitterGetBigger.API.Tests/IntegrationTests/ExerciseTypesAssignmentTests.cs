@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Http.Json;
 using GetFitterGetBigger.API.DTOs;
+using GetFitterGetBigger.API.Tests.TestBuilders;
 using Xunit;
 
 namespace GetFitterGetBigger.API.Tests.IntegrationTests;
@@ -24,26 +25,11 @@ public class ExerciseTypesAssignmentTests : IClassFixture<SharedDatabaseTestFixt
     public async Task CreateExercise_WithSingleExerciseType_AssignsTypeCorrectly()
     {
         // Arrange
-        var request = new CreateExerciseRequest
-        {
-            Name = "Single Type Exercise",
-            Description = "Exercise with single type",
-            CoachNotes = new List<CoachNoteRequest>(),
-            ExerciseTypeIds = new List<string> { "exercisetype-b2c3d4e5-6f7a-8b9c-0d1e-2f3a4b5c6d7e" }, // Workout
-            DifficultyId = "difficultylevel-8a8adb1d-24d2-4979-a5a6-0d760e6da24b",
-            MuscleGroups = new List<MuscleGroupWithRoleRequest>
-            {
-                new()
-                {
-                    MuscleGroupId = "musclegroup-ccddeeff-0011-2233-4455-667788990011",
-                    MuscleRoleId = "musclerole-abcdef12-3456-7890-abcd-ef1234567890"
-                }
-            },
-            EquipmentIds = new List<string>(),
-            BodyPartIds = new List<string> { "bodypart-7c5a2d6e-e87e-4c8a-9f1d-9eb734f3df3c" },
-            MovementPatternIds = new List<string>(),
-            KineticChainId = "kineticchaintype-f5d5a2de-9c4e-4b87-b8c3-5d1e17d0b1f4" // Compound
-        };
+        var request = CreateExerciseRequestBuilder.ForWorkoutExercise()
+            .WithName("Single Type Exercise")
+            .WithDescription("Exercise with single type")
+            .WithExerciseTypes("exercisetype-b2c3d4e5-6f7a-8b9c-0d1e-2f3a4b5c6d7e") // Workout
+            .Build();
         
         // Act
         var response = await _client.PostAsJsonAsync("/api/exercises", request);
@@ -62,31 +48,15 @@ public class ExerciseTypesAssignmentTests : IClassFixture<SharedDatabaseTestFixt
     public async Task CreateExercise_WithMultipleExerciseTypes_AssignsAllTypesCorrectly()
     {
         // Arrange
-        var request = new CreateExerciseRequest
-        {
-            Name = "Multi Type Exercise",
-            Description = "Exercise with multiple types",
-            CoachNotes = new List<CoachNoteRequest>(),
-            ExerciseTypeIds = new List<string>
-            {
+        var request = CreateExerciseRequestBuilder.ForWorkoutExercise()
+            .WithName("Multi Type Exercise")
+            .WithDescription("Exercise with multiple types")
+            .WithExerciseTypes(
                 "exercisetype-a1b2c3d4-5e6f-7a8b-9c0d-1e2f3a4b5c6d", // Warmup
                 "exercisetype-b2c3d4e5-6f7a-8b9c-0d1e-2f3a4b5c6d7e", // Workout
                 "exercisetype-c3d4e5f6-7a8b-9c0d-1e2f-3a4b5c6d7e8f"  // Cooldown
-            },
-            DifficultyId = "difficultylevel-8a8adb1d-24d2-4979-a5a6-0d760e6da24b",
-            MuscleGroups = new List<MuscleGroupWithRoleRequest>
-            {
-                new()
-                {
-                    MuscleGroupId = "musclegroup-ccddeeff-0011-2233-4455-667788990011",
-                    MuscleRoleId = "musclerole-abcdef12-3456-7890-abcd-ef1234567890"
-                }
-            },
-            EquipmentIds = new List<string>(),
-            BodyPartIds = new List<string> { "bodypart-7c5a2d6e-e87e-4c8a-9f1d-9eb734f3df3c" },
-            MovementPatternIds = new List<string>(),
-            KineticChainId = "kineticchaintype-f5d5a2de-9c4e-4b87-b8c3-5d1e17d0b1f4" // Compound
-        };
+            )
+            .Build();
         
         // Act
         var response = await _client.PostAsJsonAsync("/api/exercises", request);
@@ -108,26 +78,11 @@ public class ExerciseTypesAssignmentTests : IClassFixture<SharedDatabaseTestFixt
     public async Task CreateExercise_WithNoExerciseTypes_CreatesExerciseWithEmptyTypes()
     {
         // Arrange
-        var request = new CreateExerciseRequest
-        {
-            Name = "No Type Exercise",
-            Description = "Exercise without types",
-            CoachNotes = new List<CoachNoteRequest>(),
-            ExerciseTypeIds = new List<string>(), // Empty
-            DifficultyId = "difficultylevel-8a8adb1d-24d2-4979-a5a6-0d760e6da24b",
-            MuscleGroups = new List<MuscleGroupWithRoleRequest>
-            {
-                new()
-                {
-                    MuscleGroupId = "musclegroup-ccddeeff-0011-2233-4455-667788990011",
-                    MuscleRoleId = "musclerole-abcdef12-3456-7890-abcd-ef1234567890"
-                }
-            },
-            EquipmentIds = new List<string>(),
-            BodyPartIds = new List<string> { "bodypart-7c5a2d6e-e87e-4c8a-9f1d-9eb734f3df3c" },
-            MovementPatternIds = new List<string>(),
-            KineticChainId = "kineticchaintype-f5d5a2de-9c4e-4b87-b8c3-5d1e17d0b1f4" // Compound
-        };
+        var request = CreateExerciseRequestBuilder.ForWorkoutExercise()
+            .WithName("No Type Exercise")
+            .WithDescription("Exercise without types")
+            .WithExerciseTypes() // Empty
+            .Build();
         
         // Act
         var response = await _client.PostAsJsonAsync("/api/exercises", request);
@@ -144,31 +99,15 @@ public class ExerciseTypesAssignmentTests : IClassFixture<SharedDatabaseTestFixt
     public async Task CreateExercise_WithInvalidExerciseTypeId_IgnoresInvalidId()
     {
         // Arrange
-        var request = new CreateExerciseRequest
-        {
-            Name = "Invalid Type Exercise",
-            Description = "Exercise with invalid type ID",
-            CoachNotes = new List<CoachNoteRequest>(),
-            ExerciseTypeIds = new List<string>
-            {
+        var request = CreateExerciseRequestBuilder.ForWorkoutExercise()
+            .WithName("Invalid Type Exercise")
+            .WithDescription("Exercise with invalid type ID")
+            .WithExerciseTypes(
                 "exercisetype-b2c3d4e5-6f7a-8b9c-0d1e-2f3a4b5c6d7e", // Valid
                 "invalid-type-id-format", // Invalid format
                 "exercisetype-99999999-9999-9999-9999-999999999999" // Valid format but non-existent
-            },
-            DifficultyId = "difficultylevel-8a8adb1d-24d2-4979-a5a6-0d760e6da24b",
-            MuscleGroups = new List<MuscleGroupWithRoleRequest>
-            {
-                new()
-                {
-                    MuscleGroupId = "musclegroup-ccddeeff-0011-2233-4455-667788990011",
-                    MuscleRoleId = "musclerole-abcdef12-3456-7890-abcd-ef1234567890"
-                }
-            },
-            EquipmentIds = new List<string>(),
-            BodyPartIds = new List<string> { "bodypart-7c5a2d6e-e87e-4c8a-9f1d-9eb734f3df3c" },
-            MovementPatternIds = new List<string>(),
-            KineticChainId = "kineticchaintype-f5d5a2de-9c4e-4b87-b8c3-5d1e17d0b1f4" // Compound
-        };
+            )
+            .Build();
         
         // Act
         var response = await _client.PostAsJsonAsync("/api/exercises", request);
@@ -187,31 +126,15 @@ public class ExerciseTypesAssignmentTests : IClassFixture<SharedDatabaseTestFixt
     public async Task CreateExercise_WithDuplicateExerciseTypeIds_DeduplicatesTypes()
     {
         // Arrange
-        var request = new CreateExerciseRequest
-        {
-            Name = "Duplicate Type Exercise",
-            Description = "Exercise with duplicate type IDs",
-            CoachNotes = new List<CoachNoteRequest>(),
-            ExerciseTypeIds = new List<string>
-            {
+        var request = CreateExerciseRequestBuilder.ForWorkoutExercise()
+            .WithName("Duplicate Type Exercise")
+            .WithDescription("Exercise with duplicate type IDs")
+            .WithExerciseTypes(
                 "exercisetype-b2c3d4e5-6f7a-8b9c-0d1e-2f3a4b5c6d7e", // Workout
                 "exercisetype-b2c3d4e5-6f7a-8b9c-0d1e-2f3a4b5c6d7e", // Duplicate
                 "exercisetype-a1b2c3d4-5e6f-7a8b-9c0d-1e2f3a4b5c6d"  // Warmup
-            },
-            DifficultyId = "difficultylevel-8a8adb1d-24d2-4979-a5a6-0d760e6da24b",
-            MuscleGroups = new List<MuscleGroupWithRoleRequest>
-            {
-                new()
-                {
-                    MuscleGroupId = "musclegroup-ccddeeff-0011-2233-4455-667788990011",
-                    MuscleRoleId = "musclerole-abcdef12-3456-7890-abcd-ef1234567890"
-                }
-            },
-            EquipmentIds = new List<string>(),
-            BodyPartIds = new List<string> { "bodypart-7c5a2d6e-e87e-4c8a-9f1d-9eb734f3df3c" },
-            MovementPatternIds = new List<string>(),
-            KineticChainId = "kineticchaintype-f5d5a2de-9c4e-4b87-b8c3-5d1e17d0b1f4" // Compound
-        };
+            )
+            .Build();
         
         // Act
         var response = await _client.PostAsJsonAsync("/api/exercises", request);

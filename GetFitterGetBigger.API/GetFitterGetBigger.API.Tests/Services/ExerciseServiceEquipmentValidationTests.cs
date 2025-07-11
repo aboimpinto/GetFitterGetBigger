@@ -8,6 +8,7 @@ using GetFitterGetBigger.API.Models.SpecializedIds;
 using GetFitterGetBigger.API.Repositories.Interfaces;
 using GetFitterGetBigger.API.Services.Implementations;
 using GetFitterGetBigger.API.Services.Interfaces;
+using GetFitterGetBigger.API.Tests.TestBuilders;
 using Moq;
 using Olimpo.EntityFramework.Persistency;
 using Xunit;
@@ -69,18 +70,11 @@ public class ExerciseServiceEquipmentValidationTests
         var restTypeId = ExerciseTypeId.New();
         var restType = ExerciseType.Handler.Create(restTypeId, "Rest", "Rest period", 1, true);
         
-        var request = new CreateExerciseRequest
-        {
-            Name = "Rest Period",
-            Description = "Recovery time between sets",
-            DifficultyId = DifficultyLevelId.New().ToString(),
-            ExerciseTypeIds = new List<string> { restTypeId.ToString() },
-            MuscleGroups = new List<MuscleGroupWithRoleRequest>(), // Empty for REST
-            EquipmentIds = new List<string>(), // Empty equipment - this should be allowed
-            MovementPatternIds = new List<string>(),
-            BodyPartIds = new List<string>(),
-            KineticChainId = null // REST exercise
-        };
+        var request = CreateExerciseRequestBuilder.ForRestExercise()
+            .WithName("Rest Period")
+            .WithDescription("Recovery time between sets")
+            .WithExerciseTypes(restTypeId.ToString())
+            .Build();
         
         _exerciseRepositoryMock.Setup(r => r.ExistsAsync(It.IsAny<string>(), null))
             .ReturnsAsync(false);
@@ -114,21 +108,11 @@ public class ExerciseServiceEquipmentValidationTests
         var workoutTypeId = ExerciseTypeId.New();
         var workoutType = ExerciseType.Handler.Create(workoutTypeId, "Workout", "Main workout", 1, false);
         
-        var request = new CreateExerciseRequest
-        {
-            Name = "Push Up",
-            Description = "Bodyweight upper body exercise",
-            DifficultyId = DifficultyLevelId.New().ToString(),
-            ExerciseTypeIds = new List<string> { workoutTypeId.ToString() },
-            MuscleGroups = new List<MuscleGroupWithRoleRequest>
-            {
-                new() { MuscleGroupId = MuscleGroupId.New().ToString(), MuscleRoleId = MuscleRoleId.New().ToString() }
-            },
-            EquipmentIds = new List<string>(), // Empty equipment - this should be allowed for bodyweight exercises
-            MovementPatternIds = new List<string>(),
-            BodyPartIds = new List<string>(),
-            KineticChainId = KineticChainTypeId.New().ToString() // Non-REST exercise
-        };
+        var request = CreateExerciseRequestBuilder.ForWorkoutExercise()
+            .WithName("Push Up")
+            .WithDescription("Bodyweight upper body exercise")
+            .WithExerciseTypes(workoutTypeId.ToString())
+            .Build();
         
         _exerciseRepositoryMock.Setup(r => r.ExistsAsync(It.IsAny<string>(), null))
             .ReturnsAsync(false);
@@ -163,21 +147,14 @@ public class ExerciseServiceEquipmentValidationTests
         var workoutType = ExerciseType.Handler.Create(workoutTypeId, "Workout", "Main workout", 1, false);
         var equipmentId = EquipmentId.New();
         
-        var request = new CreateExerciseRequest
-        {
-            Name = "Bench Press",
-            Description = "Chest exercise with barbell",
-            DifficultyId = DifficultyLevelId.New().ToString(),
-            ExerciseTypeIds = new List<string> { workoutTypeId.ToString() },
-            MuscleGroups = new List<MuscleGroupWithRoleRequest>
-            {
-                new() { MuscleGroupId = MuscleGroupId.New().ToString(), MuscleRoleId = MuscleRoleId.New().ToString() }
-            },
-            EquipmentIds = new List<string> { equipmentId.ToString() }, // With equipment
-            MovementPatternIds = new List<string>(),
-            BodyPartIds = new List<string>(),
-            KineticChainId = KineticChainTypeId.New().ToString() // Non-REST exercise
-        };
+        var request = CreateExerciseRequestBuilder.ForWorkoutExercise()
+            .WithName("Bench Press")
+            .WithDescription("Chest exercise with barbell")
+            .WithExerciseTypes(workoutTypeId.ToString())
+            .Build();
+        
+        // Add equipment manually for this specific test
+        request.EquipmentIds = new List<string> { equipmentId.ToString() };
         
         _exerciseRepositoryMock.Setup(r => r.ExistsAsync(It.IsAny<string>(), null))
             .ReturnsAsync(false);
@@ -221,21 +198,14 @@ public class ExerciseServiceEquipmentValidationTests
             DifficultyLevelId.New());
         
         // Update to remove all equipment
-        var request = new UpdateExerciseRequest
-        {
-            Name = "Push Up",
-            Description = "Changed to bodyweight exercise",
-            DifficultyId = DifficultyLevelId.New().ToString(),
-            ExerciseTypeIds = new List<string> { workoutTypeId.ToString() },
-            MuscleGroups = new List<MuscleGroupWithRoleRequest>
-            {
-                new() { MuscleGroupId = MuscleGroupId.New().ToString(), MuscleRoleId = MuscleRoleId.New().ToString() }
-            },
-            EquipmentIds = new List<string>(), // Remove all equipment
-            MovementPatternIds = new List<string>(),
-            BodyPartIds = new List<string>(),
-            KineticChainId = KineticChainTypeId.New().ToString() // Non-REST exercise
-        };
+        var request = UpdateExerciseRequestBuilder.ForWorkoutExercise()
+            .WithName("Push Up")
+            .WithDescription("Changed to bodyweight exercise")
+            .WithExerciseTypes(workoutTypeId.ToString())
+            .Build();
+        
+        // Remove all equipment for this specific test
+        request.EquipmentIds = new List<string>();
         
         _exerciseRepositoryMock.Setup(r => r.ExistsAsync(It.IsAny<string>(), It.IsAny<ExerciseId>()))
             .ReturnsAsync(false);

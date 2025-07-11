@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using GetFitterGetBigger.API.DTOs;
 using GetFitterGetBigger.API.Models;
@@ -8,6 +9,7 @@ using GetFitterGetBigger.API.Models.SpecializedIds;
 using GetFitterGetBigger.API.Repositories.Interfaces;
 using GetFitterGetBigger.API.Services.Implementations;
 using GetFitterGetBigger.API.Services.Interfaces;
+using GetFitterGetBigger.API.Tests.TestBuilders;
 using Moq;
 using Olimpo.EntityFramework.Persistency;
 using Xunit;
@@ -66,22 +68,13 @@ public class ExerciseServiceRestExclusivityTests
     public async Task CreateAsync_WithRestTypeAndOtherTypes_ThrowsInvalidOperationException()
     {
         // Arrange
-        var request = new CreateExerciseRequest
-        {
-            Name = "Test Exercise",
-            Description = "Test Description",
-            DifficultyId = DifficultyLevelId.New().ToString(),
-            ExerciseTypeIds = new List<string>
-            {
+        var request = CreateExerciseRequestBuilder.ForWorkoutExercise()
+            .WithName("Test Exercise")
+            .WithDescription("Test Description")
+            .WithExerciseTypes(
                 "exercisetype-11111111-1111-1111-1111-111111111111",
-                "exercisetype-22222222-2222-2222-2222-222222222222"
-            },
-            MuscleGroups = new List<MuscleGroupWithRoleRequest>(),
-            EquipmentIds = new List<string>(),
-            MovementPatternIds = new List<string>(),
-            BodyPartIds = new List<string>(),
-            KineticChainId = KineticChainTypeId.New().ToString() // Mixed types including REST
-        };
+                "exercisetype-22222222-2222-2222-2222-222222222222")
+            .Build();
         
         _exerciseRepositoryMock.Setup(r => r.ExistsAsync(It.IsAny<string>(), null))
             .ReturnsAsync(false);
@@ -113,22 +106,13 @@ public class ExerciseServiceRestExclusivityTests
             false,
             DifficultyLevelId.New());
         
-        var request = new UpdateExerciseRequest
-        {
-            Name = "Updated Exercise",
-            Description = "Updated Description",
-            DifficultyId = DifficultyLevelId.New().ToString(),
-            ExerciseTypeIds = new List<string>
-            {
+        var request = UpdateExerciseRequestBuilder.ForWorkoutExercise()
+            .WithName("Updated Exercise")
+            .WithDescription("Updated Description")
+            .WithExerciseTypes(
                 "exercisetype-11111111-1111-1111-1111-111111111111",
-                "exercisetype-33333333-3333-3333-3333-333333333333"
-            },
-            MuscleGroups = new List<MuscleGroupWithRoleRequest>(),
-            EquipmentIds = new List<string>(),
-            MovementPatternIds = new List<string>(),
-            BodyPartIds = new List<string>(),
-            KineticChainId = KineticChainTypeId.New().ToString() // Mixed types including REST
-        };
+                "exercisetype-33333333-3333-3333-3333-333333333333")
+            .Build();
         
         _exerciseRepositoryMock.Setup(r => r.ExistsAsync(It.IsAny<string>(), It.IsAny<ExerciseId>()))
             .ReturnsAsync(false);
@@ -160,21 +144,11 @@ public class ExerciseServiceRestExclusivityTests
     public async Task CreateAsync_WithOnlyRestType_DoesNotThrow()
     {
         // Arrange
-        var request = new CreateExerciseRequest
-        {
-            Name = "Rest Exercise",
-            Description = "Rest Description",
-            DifficultyId = DifficultyLevelId.New().ToString(),
-            ExerciseTypeIds = new List<string>
-            {
-                "exercisetype-d4e5f6a7-8b9c-0d1e-2f3a-4b5c6d7e8f9a" // Actual REST type ID
-            },
-            MuscleGroups = new List<MuscleGroupWithRoleRequest>(),
-            EquipmentIds = new List<string>(),
-            MovementPatternIds = new List<string>(),
-            BodyPartIds = new List<string>(),
-            KineticChainId = null // REST exercise
-        };
+        var request = CreateExerciseRequestBuilder.ForRestExercise()
+            .WithName("Rest Exercise")
+            .WithDescription("Rest Description")
+            .WithExerciseTypes("exercisetype-d4e5f6a7-8b9c-0d1e-2f3a-4b5c6d7e8f9a")
+            .Build();
         
         _exerciseRepositoryMock.Setup(r => r.ExistsAsync(It.IsAny<string>(), null))
             .ReturnsAsync(false);
@@ -203,26 +177,16 @@ public class ExerciseServiceRestExclusivityTests
     public async Task CreateAsync_WithMultipleNonRestTypes_DoesNotThrow()
     {
         // Arrange
-        var request = new CreateExerciseRequest
-        {
-            Name = "Complex Exercise",
-            Description = "Complex Description",
-            DifficultyId = DifficultyLevelId.New().ToString(),
-            ExerciseTypeIds = new List<string>
-            {
+        var request = CreateExerciseRequestBuilder.ForWorkoutExercise()
+            .WithName("Complex Exercise")
+            .WithDescription("Complex Description")
+            .WithExerciseTypes(
                 "exercisetype-11223344-5566-7788-99aa-bbccddeeff00", // Warmup
                 "exercisetype-b2c3d4e5-6f7a-8b9c-0d1e-2f3a4b5c6d7e", // Workout
                 "exercisetype-33445566-7788-99aa-bbcc-ddeeff001122"  // Cooldown
-            },
-            MuscleGroups = new List<MuscleGroupWithRoleRequest>
-            {
-                new() { MuscleGroupId = "musclegroup-chest-123", MuscleRoleId = "musclerole-primary-456" }
-            },
-            EquipmentIds = new List<string>(),
-            MovementPatternIds = new List<string>(),
-            BodyPartIds = new List<string>(),
-            KineticChainId = KineticChainTypeId.New().ToString() // Non-REST exercises
-        };
+            )
+            .WithMuscleGroups(("musclegroup-chest-123", "musclerole-primary-456"))
+            .Build();
         
         _exerciseRepositoryMock.Setup(r => r.ExistsAsync(It.IsAny<string>(), null))
             .ReturnsAsync(false);
@@ -260,24 +224,15 @@ public class ExerciseServiceRestExclusivityTests
     }
     
     [Fact]
-    public async Task CreateAsync_WithEmptyExerciseTypes_DoesNotThrow()
+    public async Task CreateAsync_WithEmptyExerciseTypes_RequiresExerciseWeightType()
     {
-        // Arrange
-        var request = new CreateExerciseRequest
-        {
-            Name = "No Type Exercise",
-            Description = "No Type Description",
-            DifficultyId = DifficultyLevelId.New().ToString(),
-            ExerciseTypeIds = new List<string>(),
-            MuscleGroups = new List<MuscleGroupWithRoleRequest>
-            {
-                new() { MuscleGroupId = "musclegroup-chest-123", MuscleRoleId = "musclerole-primary-456" }
-            },
-            EquipmentIds = new List<string>(),
-            MovementPatternIds = new List<string>(),
-            BodyPartIds = new List<string>(),
-            KineticChainId = KineticChainTypeId.New().ToString() // No exercise types, so non-REST
-        };
+        // Arrange - Empty exercise types means non-REST, so ExerciseWeightTypeId is required
+        var request = CreateExerciseRequestBuilder.ForWorkoutExercise()
+            .WithName("No Type Exercise")
+            .WithDescription("No Type Description")
+            .WithExerciseTypes() // Empty exercise types = non-REST
+            .WithMuscleGroups(("musclegroup-chest-123", "musclerole-primary-456"))
+            .Build();
         
         _exerciseRepositoryMock.Setup(r => r.ExistsAsync(It.IsAny<string>(), null))
             .ReturnsAsync(false);
@@ -291,7 +246,7 @@ public class ExerciseServiceRestExclusivityTests
         // Act
         var result = await _exerciseService.CreateAsync(request);
         
-        // Assert
+        // Assert - Should succeed because ForWorkoutExercise() includes ExerciseWeightTypeId by default
         Assert.NotNull(result);
         Assert.Equal("No Type Exercise", result.Name);
         Assert.Empty(result.ExerciseTypes);

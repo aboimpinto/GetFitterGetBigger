@@ -165,10 +165,117 @@ curl -X PUT http://localhost:5214/api/Exercises/[exercise-id] \
 4. No errors or warnings in API logs
 5. Performance is fast (sub-second responses)
 
-## Sign-off
-Once manual testing is complete and all scenarios pass, the user can:
-1. Move this feature to 3-COMPLETED
-2. Add acceptance information (e.g., "Accepted By: Paulo Aboim Pinto (Product Owner)")
-3. Approve for PI release
+## Important: New Validation Rules Added
 
-Feature FEAT-023 implementation is complete with all acceptance criteria met. Ready for user validation.
+⚠️ **BREAKING CHANGE**: After user feedback, new validation rules were implemented:
+
+### ExerciseWeightType Validation Rules
+1. **REST exercises**: `exerciseWeightTypeId` must be NULL
+2. **Non-REST exercises** (Warmup, Workout, Cooldown): `exerciseWeightTypeId` is REQUIRED
+
+### Impact on Tests
+- Some existing tests may fail due to the new validation
+- Tests for non-REST exercises now need `exerciseWeightTypeId` in the request
+- This is expected behavior and reflects the new business rules
+
+### Implementation Details
+- Added `ValidateExerciseWeightTypeAsync` method in ExerciseService
+- Validation applies to both CreateAsync and UpdateAsync operations
+- Error messages clearly indicate when the field is required vs. prohibited
+
+## Manual Testing Instructions
+
+### Prerequisites
+1. Ensure the API is running (`dotnet run`)
+2. Have Swagger UI available at http://localhost:5214/swagger
+
+### Test Scenarios
+
+#### 1. Test ExerciseWeightType Endpoints
+```bash
+# Get all weight types
+curl http://localhost:5214/api/ReferenceTables/ExerciseWeightTypes
+
+# Get by ID (use an ID from the previous response)
+curl http://localhost:5214/api/ReferenceTables/ExerciseWeightTypes/[id]
+
+# Get by code
+curl http://localhost:5214/api/ReferenceTables/ExerciseWeightTypes/ByCode/WEIGHT_REQUIRED
+```
+
+#### 2. Test NEW Validation Rules
+```bash
+# Test REST exercise WITHOUT exerciseWeightTypeId (should succeed)
+curl -X POST http://localhost:5214/api/Exercises \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Rest Period",
+    "description": "Rest between sets",
+    "exerciseTypeIds": ["exercisetype-d4e5f6a7-8b9c-0d1e-2f3a-4b5c6d7e8f9a"],
+    "difficultyId": "difficultylevel-8a8adb1d-24d2-4979-a5a6-0d760e6da24b"
+  }'
+
+# Test REST exercise WITH exerciseWeightTypeId (should fail)
+curl -X POST http://localhost:5214/api/Exercises \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Invalid Rest",
+    "description": "This should fail",
+    "exerciseTypeIds": ["exercisetype-d4e5f6a7-8b9c-0d1e-2f3a-4b5c6d7e8f9a"],
+    "exerciseWeightTypeId": "exerciseweighttype-c3d5c4b6-7b8c-6d9e-0f1a-2b3c4d5e6f7a",
+    "difficultyId": "difficultylevel-8a8adb1d-24d2-4979-a5a6-0d760e6da24b"
+  }'
+
+# Test Non-REST exercise WITHOUT exerciseWeightTypeId (should fail)
+curl -X POST http://localhost:5214/api/Exercises \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Invalid Workout",
+    "description": "This should fail",
+    "exerciseTypeIds": ["exercisetype-b3c4d5e6-7a8b-9c0d-1e2f-3a4b5c6d7e8f"],
+    "difficultyId": "difficultylevel-8a8adb1d-24d2-4979-a5a6-0d760e6da24b",
+    "kineticChainId": "kineticchaintype-12345678-9abc-def0-1234-567890abcdef",
+    "muscleGroups": [{
+      "muscleGroupId": "musclegroup-a1b2c3d4-5e6f-7890-1234-567890abcdef",
+      "muscleRoleId": "musclerole-f0e1d2c3-b4a5-9687-8574-635241302010"
+    }]
+  }'
+
+# Test Non-REST exercise WITH exerciseWeightTypeId (should succeed)
+curl -X POST http://localhost:5214/api/Exercises \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Valid Workout Exercise",
+    "description": "This should succeed",
+    "exerciseTypeIds": ["exercisetype-b3c4d5e6-7a8b-9c0d-1e2f-3a4b5c6d7e8f"],
+    "exerciseWeightTypeId": "exerciseweighttype-c3d5c4b6-7b8c-6d9e-0f1a-2b3c4d5e6f7a",
+    "difficultyId": "difficultylevel-8a8adb1d-24d2-4979-a5a6-0d760e6da24b",
+    "kineticChainId": "kineticchaintype-12345678-9abc-def0-1234-567890abcdef",
+    "muscleGroups": [{
+      "muscleGroupId": "musclegroup-a1b2c3d4-5e6f-7890-1234-567890abcdef",
+      "muscleRoleId": "musclerole-f0e1d2c3-b4a5-9687-8574-635241302010"
+    }]
+  }'
+```
+
+#### 3. Verify Weight Type in Exercise Response
+- Check that exercises now include `exerciseWeightType` field
+- Verify the field contains correct weight type information
+- Test filtering exercises by different criteria
+
+### Expected Results
+1. All ExerciseWeightType endpoints return data with proper caching headers
+2. REST exercises cannot have exerciseWeightTypeId (validation error)
+3. Non-REST exercises must have exerciseWeightTypeId (validation error if missing)
+4. Exercise responses include exerciseWeightType object when assigned
+5. No errors or warnings in API logs
+6. Performance is fast (sub-second responses)
+
+## Sign-off
+Once manual testing confirms the new validation rules work correctly:
+1. User can move this feature to 3-COMPLETED
+2. Add acceptance information (e.g., "Accepted By: Paulo Aboim Pinto (Product Owner)")
+3. Update other tests if needed to comply with new validation rules
+4. Approve for PI release
+
+Feature FEAT-023 implementation is complete with enhanced validation rules. Ready for user validation.

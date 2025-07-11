@@ -183,6 +183,19 @@ The exercise endpoints should include the weight type information:
 
 The following validation rules must be implemented in application code (not database constraints):
 
+### Exercise Type to Weight Type Relationship
+When creating or updating exercises:
+
+1. **REST exercises**:
+   - `exerciseWeightTypeId` must be NULL
+   - Weight types are not applicable for rest periods
+   - Validation error if exerciseWeightTypeId is provided
+
+2. **Non-REST exercises** (Warmup, Workout, Cooldown):
+   - `exerciseWeightTypeId` must be specified (required field)
+   - Cannot be NULL or empty
+   - Validation error if exerciseWeightTypeId is not provided
+
 ### Weight Assignment Validation
 When creating or updating workout exercises:
 

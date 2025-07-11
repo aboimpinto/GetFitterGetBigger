@@ -190,7 +190,7 @@ namespace GetFitterGetBigger.Admin.Tests.Services
             // Assert
             _httpMessageHandler.VerifyRequest(req => 
                 req.Method == HttpMethod.Get && 
-                req.RequestUri!.ToString() == "http://localhost:5214/api/exercise-weight-types");
+                req.RequestUri!.ToString() == "http://localhost:5214/api/ReferenceTables/ExerciseWeightTypes");
         }
 
         [Fact]
@@ -213,7 +213,7 @@ namespace GetFitterGetBigger.Admin.Tests.Services
             // Assert
             _httpMessageHandler.VerifyRequest(req => 
                 req.Method == HttpMethod.Get && 
-                req.RequestUri!.ToString() == $"http://localhost:5214/api/exercise-weight-types/{weightTypeId}");
+                req.RequestUri!.ToString() == $"http://localhost:5214/api/ReferenceTables/ExerciseWeightTypes/{weightTypeId}");
         }
 
         [Fact]

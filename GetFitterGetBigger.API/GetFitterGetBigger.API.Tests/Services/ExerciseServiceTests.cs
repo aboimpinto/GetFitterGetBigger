@@ -9,6 +9,7 @@ using GetFitterGetBigger.API.Models.SpecializedIds;
 using GetFitterGetBigger.API.Repositories.Interfaces;
 using GetFitterGetBigger.API.Services.Implementations;
 using GetFitterGetBigger.API.Services.Interfaces;
+using GetFitterGetBigger.API.Tests.TestBuilders;
 using Moq;
 using Olimpo.EntityFramework.Persistency;
 using Xunit;
@@ -148,24 +149,11 @@ namespace GetFitterGetBigger.API.Tests.Services
         public async Task CreateAsync_WithValidRequest_CreatesExercise()
         {
             // Arrange
-            var request = new CreateExerciseRequest
-            {
-                Name = "New Exercise",
-                Description = "Description",
-                CoachNotes = new List<CoachNoteRequest> { new() { Text = "Instructions", Order = 0 } },
-                IsUnilateral = false,
-                DifficultyId = "difficultylevel-" + Guid.NewGuid(),
-                KineticChainId = "kineticchaintype-" + Guid.NewGuid(), // Added for non-REST exercise
-                ExerciseTypeIds = new List<string> { "exercisetype-" + Guid.NewGuid() }, // Non-REST type
-                MuscleGroups = new List<MuscleGroupWithRoleRequest>
-                {
-                    new MuscleGroupWithRoleRequest
-                    {
-                        MuscleGroupId = "musclegroup-" + Guid.NewGuid(),
-                        MuscleRoleId = "musclerole-" + Guid.NewGuid()
-                    }
-                }
-            };
+            var request = CreateExerciseRequestBuilder.ForWorkoutExercise()
+                .WithName("New Exercise")
+                .WithDescription("Description")
+                .WithCoachNotes(("Instructions", 0))
+                .Build();
 
             var difficultyId = DifficultyLevelId.New();
             var difficulty = DifficultyLevel.Handler.Create(difficultyId, "Beginner", "For beginners", 1, true);
@@ -197,23 +185,9 @@ namespace GetFitterGetBigger.API.Tests.Services
         public async Task CreateAsync_WithDuplicateName_ThrowsException()
         {
             // Arrange
-            var request = new CreateExerciseRequest
-            {
-                Name = "Duplicate Exercise",
-                Description = "Description",
-                CoachNotes = new List<CoachNoteRequest> { new() { Text = "Instructions", Order = 0 } },
-                DifficultyId = "difficultylevel-" + Guid.NewGuid(),
-                KineticChainId = "kineticchaintype-" + Guid.NewGuid(), // Added for non-REST exercise
-                ExerciseTypeIds = new List<string> { "exercisetype-" + Guid.NewGuid() }, // Non-REST type
-                MuscleGroups = new List<MuscleGroupWithRoleRequest>
-                {
-                    new MuscleGroupWithRoleRequest
-                    {
-                        MuscleGroupId = "musclegroup-" + Guid.NewGuid(),
-                        MuscleRoleId = "musclerole-" + Guid.NewGuid()
-                    }
-                }
-            };
+            var request = CreateExerciseRequestBuilder.ForWorkoutExercise()
+                .WithName("Duplicate Exercise")
+                .Build();
 
             _mockExerciseRepository
                 .Setup(r => r.ExistsAsync(It.IsAny<string>(), It.IsAny<ExerciseId?>()))
@@ -229,24 +203,12 @@ namespace GetFitterGetBigger.API.Tests.Services
         {
             // Arrange
             var exerciseId = ExerciseId.New();
-            var request = new UpdateExerciseRequest
-            {
-                Name = "Updated Exercise",
-                Description = "Updated Description",
-                CoachNotes = new List<CoachNoteRequest> { new() { Text = "Updated Instructions", Order = 0 } },
-                IsActive = true,
-                DifficultyId = "difficultylevel-" + Guid.NewGuid(),
-                KineticChainId = "kineticchaintype-" + Guid.NewGuid(), // Added for non-REST exercise
-                ExerciseTypeIds = new List<string> { "exercisetype-" + Guid.NewGuid() }, // Non-REST type
-                MuscleGroups = new List<MuscleGroupWithRoleRequest>
-                {
-                    new MuscleGroupWithRoleRequest
-                    {
-                        MuscleGroupId = "musclegroup-" + Guid.NewGuid(),
-                        MuscleRoleId = "musclerole-" + Guid.NewGuid()
-                    }
-                }
-            };
+            var request = UpdateExerciseRequestBuilder.ForWorkoutExercise()
+                .WithName("Updated Exercise")
+                .WithDescription("Updated Description")
+                .WithCoachNotes(("Updated Instructions", 0))
+                .WithIsActive(true)
+                .Build();
 
             var difficultyId = DifficultyLevelId.New();
             var difficulty = DifficultyLevel.Handler.Create(difficultyId, "Beginner", "For beginners", 1, true);
@@ -380,6 +342,179 @@ namespace GetFitterGetBigger.API.Tests.Services
             difficultyProperty?.SetValue(exercise, difficulty);
 
             return exercise;
+        }
+
+        [Fact]
+        public async Task CreateAsync_WithRestExerciseAndWeightType_ThrowsException()
+        {
+            // Arrange
+            var request = CreateExerciseRequestBuilder.ForRestExercise()
+                .WithExerciseWeightTypeId(TestConstants.ExerciseWeightTypeIds.WeightRequired) // Should not be allowed
+                .Build();
+
+            // Mock REST type detection
+            _mockExerciseTypeService
+                .Setup(s => s.AnyIsRestTypeAsync(It.IsAny<IEnumerable<string>>()))
+                .ReturnsAsync(true);
+
+            // Act & Assert
+            var exception = await Assert.ThrowsAsync<InvalidOperationException>(
+                () => _service.CreateAsync(request));
+            
+            Assert.Contains("Exercise weight type must not be specified for REST exercises", exception.Message);
+        }
+
+        [Fact]
+        public async Task CreateAsync_WithNonRestExerciseWithoutWeightType_ThrowsException()
+        {
+            // Arrange
+            var request = CreateExerciseRequestBuilder.ForWorkoutExercise()
+                .WithExerciseWeightTypeId(null) // Should be required
+                .Build();
+
+            // Mock non-REST type detection
+            _mockExerciseTypeService
+                .Setup(s => s.AnyIsRestTypeAsync(It.IsAny<IEnumerable<string>>()))
+                .ReturnsAsync(false);
+
+            // Act & Assert
+            var exception = await Assert.ThrowsAsync<InvalidOperationException>(
+                () => _service.CreateAsync(request));
+            
+            Assert.Contains("Exercise weight type must be specified for non-REST exercises", exception.Message);
+        }
+
+        [Fact]
+        public async Task CreateAsync_WithNonRestExerciseWithWeightType_Succeeds()
+        {
+            // Arrange
+            var request = new CreateExerciseRequest
+            {
+                Name = "Workout Exercise",
+                Description = "Strength exercise",
+                DifficultyId = "difficultylevel-" + Guid.NewGuid(),
+                KineticChainId = "kineticchaintype-" + Guid.NewGuid(),
+                ExerciseTypeIds = new List<string> { "exercisetype-" + Guid.NewGuid() },
+                ExerciseWeightTypeId = "exerciseweighttype-" + Guid.NewGuid(),
+                MuscleGroups = new List<MuscleGroupWithRoleRequest>
+                {
+                    new MuscleGroupWithRoleRequest
+                    {
+                        MuscleGroupId = "musclegroup-" + Guid.NewGuid(),
+                        MuscleRoleId = "musclerole-" + Guid.NewGuid()
+                    }
+                }
+            };
+
+            var difficultyId = DifficultyLevelId.New();
+            var difficulty = DifficultyLevel.Handler.Create(difficultyId, "Beginner", "For beginners", 1, true);
+            var createdExercise = CreateTestExercise("Workout Exercise", difficultyId, difficulty);
+
+            _mockExerciseRepository
+                .Setup(r => r.ExistsAsync(It.IsAny<string>(), It.IsAny<ExerciseId?>()))
+                .ReturnsAsync(false);
+
+            _mockExerciseRepository
+                .Setup(r => r.AddAsync(It.IsAny<Exercise>()))
+                .ReturnsAsync(createdExercise);
+
+            // Mock non-REST type detection
+            _mockExerciseTypeService
+                .Setup(s => s.AnyIsRestTypeAsync(It.IsAny<IEnumerable<string>>()))
+                .ReturnsAsync(false);
+
+            // Act
+            var result = await _service.CreateAsync(request);
+
+            // Assert
+            Assert.NotNull(result);
+            Assert.Equal("Workout Exercise", result.Name);
+            _mockWritableUnitOfWork.Verify(uow => uow.CommitAsync(), Times.Once);
+        }
+
+        [Fact]
+        public async Task UpdateAsync_WithRestExerciseAndWeightType_ThrowsException()
+        {
+            // Arrange
+            var exerciseId = ExerciseId.New();
+            var request = new UpdateExerciseRequest
+            {
+                Name = "Updated Rest Exercise",
+                Description = "Updated rest",
+                DifficultyId = "difficultylevel-" + Guid.NewGuid(),
+                ExerciseTypeIds = new List<string> { "exercisetype-d4e5f6a7-8b9c-0d1e-2f3a-4b5c6d7e8f9a" }, // REST type
+                ExerciseWeightTypeId = "exerciseweighttype-" + Guid.NewGuid() // Should not be allowed
+            };
+
+            var difficultyId = DifficultyLevelId.New();
+            var difficulty = DifficultyLevel.Handler.Create(difficultyId, "Beginner", "For beginners", 1, true);
+            var existingExercise = CreateTestExercise("Rest Exercise", difficultyId, difficulty);
+
+            _mockExerciseRepository
+                .Setup(r => r.GetByIdAsync(exerciseId))
+                .ReturnsAsync(existingExercise);
+
+            _mockExerciseRepository
+                .Setup(r => r.ExistsAsync(It.IsAny<string>(), It.IsAny<ExerciseId?>()))
+                .ReturnsAsync(false);
+
+            // Mock REST type detection
+            _mockExerciseTypeService
+                .Setup(s => s.AnyIsRestTypeAsync(It.IsAny<IEnumerable<string>>()))
+                .ReturnsAsync(true);
+
+            // Act & Assert
+            var exception = await Assert.ThrowsAsync<InvalidOperationException>(
+                () => _service.UpdateAsync(exerciseId.ToString(), request));
+            
+            Assert.Contains("Exercise weight type must not be specified for REST exercises", exception.Message);
+        }
+
+        [Fact]
+        public async Task UpdateAsync_WithNonRestExerciseWithoutWeightType_ThrowsException()
+        {
+            // Arrange
+            var exerciseId = ExerciseId.New();
+            var request = new UpdateExerciseRequest
+            {
+                Name = "Updated Workout Exercise",
+                Description = "Updated strength exercise",
+                DifficultyId = "difficultylevel-" + Guid.NewGuid(),
+                KineticChainId = "kineticchaintype-" + Guid.NewGuid(),
+                ExerciseTypeIds = new List<string> { "exercisetype-" + Guid.NewGuid() },
+                ExerciseWeightTypeId = null, // Should be required
+                MuscleGroups = new List<MuscleGroupWithRoleRequest>
+                {
+                    new MuscleGroupWithRoleRequest
+                    {
+                        MuscleGroupId = "musclegroup-" + Guid.NewGuid(),
+                        MuscleRoleId = "musclerole-" + Guid.NewGuid()
+                    }
+                }
+            };
+
+            var difficultyId = DifficultyLevelId.New();
+            var difficulty = DifficultyLevel.Handler.Create(difficultyId, "Beginner", "For beginners", 1, true);
+            var existingExercise = CreateTestExercise("Workout Exercise", difficultyId, difficulty);
+
+            _mockExerciseRepository
+                .Setup(r => r.GetByIdAsync(exerciseId))
+                .ReturnsAsync(existingExercise);
+
+            _mockExerciseRepository
+                .Setup(r => r.ExistsAsync(It.IsAny<string>(), It.IsAny<ExerciseId?>()))
+                .ReturnsAsync(false);
+
+            // Mock non-REST type detection
+            _mockExerciseTypeService
+                .Setup(s => s.AnyIsRestTypeAsync(It.IsAny<IEnumerable<string>>()))
+                .ReturnsAsync(false);
+
+            // Act & Assert
+            var exception = await Assert.ThrowsAsync<InvalidOperationException>(
+                () => _service.UpdateAsync(exerciseId.ToString(), request));
+            
+            Assert.Contains("Exercise weight type must be specified for non-REST exercises", exception.Message);
         }
     }
 }

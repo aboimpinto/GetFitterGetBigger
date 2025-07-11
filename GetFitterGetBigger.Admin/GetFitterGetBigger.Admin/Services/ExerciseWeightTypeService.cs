@@ -37,7 +37,7 @@ namespace GetFitterGetBigger.Admin.Services
 
             try
             {
-                var response = await _httpClient.GetAsync($"{_apiBaseUrl}/api/exercise-weight-types");
+                var response = await _httpClient.GetAsync($"{_apiBaseUrl}/api/ReferenceTables/ExerciseWeightTypes");
 
                 if (response.IsSuccessStatusCode)
                 {
@@ -67,7 +67,7 @@ namespace GetFitterGetBigger.Admin.Services
         {
             try
             {
-                var response = await _httpClient.GetAsync($"{_apiBaseUrl}/api/exercise-weight-types/{id}");
+                var response = await _httpClient.GetAsync($"{_apiBaseUrl}/api/ReferenceTables/ExerciseWeightTypes/{id}");
 
                 if (response.IsSuccessStatusCode)
                 {
