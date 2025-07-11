@@ -112,6 +112,7 @@ public class ExerciseServiceEquipmentValidationTests
             .WithName("Push Up")
             .WithDescription("Bodyweight upper body exercise")
             .WithExerciseTypes(workoutTypeId.ToString())
+            .WithEquipmentIds() // Empty equipment for bodyweight exercise
             .Build();
         
         _exerciseRepositoryMock.Setup(r => r.ExistsAsync(It.IsAny<string>(), null))

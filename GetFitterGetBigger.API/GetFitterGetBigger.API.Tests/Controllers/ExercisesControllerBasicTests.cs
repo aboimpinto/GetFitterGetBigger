@@ -4,6 +4,7 @@ using System.Net;
 using System.Net.Http.Json;
 using System.Threading.Tasks;
 using GetFitterGetBigger.API.DTOs;
+using GetFitterGetBigger.API.Tests.TestBuilders;
 using Xunit;
 
 namespace GetFitterGetBigger.API.Tests.Controllers;
@@ -24,27 +25,14 @@ public class ExercisesControllerBasicTests : IClassFixture<ApiTestFixture>
     public async Task CreateExercise_WithMinimalValidData_ReturnsCreated()
     {
         // Arrange
-        var request = new CreateExerciseRequest
-        {
-            Name = "Test Exercise " + Guid.NewGuid(),
-            Description = "Test Description",
-            CoachNotes = new List<CoachNoteRequest> 
-            {
-                new() { Text = "Step 1: Starting position", Order = 0 },
-                new() { Text = "Step 2: Execute movement", Order = 1 }
-            },
-            ExerciseTypeIds = new List<string> { "exercisetype-b2c3d4e5-6f7a-8b9c-0d1e-2f3a4b5c6d7e" }, // Workout
-            DifficultyId = "difficultylevel-8a8adb1d-24d2-4979-a5a6-0d760e6da24b",
-            KineticChainId = "kineticchaintype-f5d5a2de-9c4e-4b87-b8c3-5d1e17d0b1f4", // Compound
-            MuscleGroups = new List<MuscleGroupWithRoleRequest> 
-            { 
-                new() 
-                { 
-                    MuscleGroupId = "musclegroup-ccddeeff-0011-2233-4455-667788990011",
-                    MuscleRoleId = "musclerole-abcdef12-3456-7890-abcd-ef1234567890"
-                }
-            }
-        };
+        var request = CreateExerciseRequestBuilder.ForWorkoutExercise()
+            .WithName("Test Exercise " + Guid.NewGuid())
+            .WithDescription("Test Description")
+            .WithCoachNotes(
+                ("Step 1: Starting position", 0),
+                ("Step 2: Execute movement", 1)
+            )
+            .Build();
 
         // Act
         var response = await _client.PostAsJsonAsync("/api/exercises", request);

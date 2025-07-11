@@ -47,6 +47,10 @@ public class ExerciseCompleteWorkflowTests : IClassFixture<SharedDatabaseTestFix
                 (TestConstants.MuscleGroupIds.Legs, TestConstants.MuscleRoleIds.Primary), // Quadriceps - Primary
                 (TestConstants.MuscleGroupIds.Chest, TestConstants.MuscleRoleIds.Stabilizer) // Pectoralis - Stabilizer
             )
+            .WithBodyPartIds(
+                TestConstants.BodyPartIds.Legs,
+                TestConstants.BodyPartIds.Chest
+            )
             .Build();
         
         // Act - Create Exercise
@@ -134,6 +138,8 @@ public class ExerciseCompleteWorkflowTests : IClassFixture<SharedDatabaseTestFix
             .WithDescription("The bare minimum required exercise")
             .WithCoachNotes() // Empty is allowed
             .WithExerciseTypes() // Empty is allowed
+            .WithEquipmentIds() // Empty equipment
+            .WithMovementPatternIds() // Empty movement patterns
             .Build();
         
         // Act

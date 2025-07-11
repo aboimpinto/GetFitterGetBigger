@@ -273,30 +273,30 @@
             // Filter to only show exercises that can be used for the specified link type
             Console.WriteLine($"[AddExerciseLinkModal] SearchExercises - Looking for exercises that can be used as {LinkType}");
             
-            var beforeTypeFilter = _searchResults.Count;
+            var beforeTypeFilter = _searchResults?.Count ?? 0;
             
             if (LinkType == "Warmup")
             {
                 // For warmup, show exercises that have "Warmup" type (including those that are both Warmup and Workout)
                 _searchResults = _searchResults
-                    .Where(e => e.ExerciseTypes?.Any(t => t.Value == "Warmup") == true)
-                    .ToList();
+                    ?.Where(e => e.ExerciseTypes?.Any(t => t.Value == "Warmup") == true)
+                    .ToList() ?? new List<ExerciseListDto>();
                 Console.WriteLine($"[AddExerciseLinkModal] SearchExercises - After Warmup filter: {_searchResults.Count} (was {beforeTypeFilter})");
             }
             else if (LinkType == "Cooldown")
             {
                 // For cooldown, show exercises that have "Cooldown" type (including those that are both Cooldown and Workout)
                 _searchResults = _searchResults
-                    .Where(e => e.ExerciseTypes?.Any(t => t.Value == "Cooldown") == true)
-                    .ToList();
+                    ?.Where(e => e.ExerciseTypes?.Any(t => t.Value == "Cooldown") == true)
+                    .ToList() ?? new List<ExerciseListDto>();
                 Console.WriteLine($"[AddExerciseLinkModal] SearchExercises - After Cooldown filter: {_searchResults.Count} (was {beforeTypeFilter})");
             }
             else
             {
                 // For other types, show workout exercises (shouldn't happen in current design)
                 _searchResults = _searchResults
-                    .Where(e => e.ExerciseTypes?.Any(t => t.Value == "Workout") == true)
-                    .ToList();
+                    ?.Where(e => e.ExerciseTypes?.Any(t => t.Value == "Workout") == true)
+                    .ToList() ?? new List<ExerciseListDto>();
                 Console.WriteLine($"[AddExerciseLinkModal] SearchExercises - After Workout filter: {_searchResults.Count} (was {beforeTypeFilter})");
             }
             

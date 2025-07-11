@@ -9,6 +9,7 @@ using GetFitterGetBigger.API.DTOs;
 using GetFitterGetBigger.API.Models;
 using GetFitterGetBigger.API.Models.Entities;
 using GetFitterGetBigger.API.Models.SpecializedIds;
+using GetFitterGetBigger.API.Tests.TestBuilders;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
@@ -45,32 +46,16 @@ public class ExercisesControllerTests : IClassFixture<ApiTestFixture>
     {
         // Arrange
         await SeedTestDataAsync();
-        var request = new CreateExerciseRequest
-        {
-            Name = "Test Exercise",
-            Description = "Test Description",
-            CoachNotes = new List<CoachNoteRequest> 
-            {
-                new() { Text = "Step 1", Order = 0 },
-                new() { Text = "Step 2", Order = 1 }
-            },
-            ExerciseTypeIds = new List<string> { "exercisetype-b2c3d4e5-6f7a-8b9c-0d1e-2f3a4b5c6d7e" }, // Workout
-            VideoUrl = "https://example.com/video.mp4",
-            ImageUrl = "https://example.com/image.jpg",
-            DifficultyId = "difficultylevel-8a8adb1d-24d2-4979-a5a6-0d760e6da24b",
-            KineticChainId = "kineticchaintype-f5d5a2de-9c4e-4b87-b8c3-5d1e17d0b1f4", // Compound
-            MuscleGroups = new List<MuscleGroupWithRoleRequest> 
-            { 
-                new() 
-                { 
-                    MuscleGroupId = "musclegroup-ccddeeff-0011-2233-4455-667788990011",
-                    MuscleRoleId = "musclerole-abcdef12-3456-7890-abcd-ef1234567890"
-                }
-            },
-            EquipmentIds = new List<string> { "equipment-33445566-7788-99aa-bbcc-ddeeff001122" },
-            BodyPartIds = new List<string> { "bodypart-7c5a2d6e-e87e-4c8a-9f1d-9eb734f3df3c" },
-            MovementPatternIds = new List<string> { "movementpattern-99aabbcc-ddee-ff00-1122-334455667788" }
-        };
+        var request = CreateExerciseRequestBuilder.ForWorkoutExercise()
+            .WithName("Test Exercise")
+            .WithDescription("Test Description")
+            .WithCoachNotes(
+                ("Step 1", 0),
+                ("Step 2", 1)
+            )
+            .WithVideoUrl("https://example.com/video.mp4")
+            .WithImageUrl("https://example.com/image.jpg")
+            .Build();
 
         // Act
         var response = await _client.PostAsJsonAsync("/api/exercises", request);
