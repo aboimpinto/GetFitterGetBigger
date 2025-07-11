@@ -17,13 +17,16 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
     public class ExerciseListWithLinksTests : TestContext
     {
         private readonly Mock<IExerciseStateService> _stateServiceMock;
+        private readonly Mock<IExerciseWeightTypeStateService> _weightTypeStateServiceMock;
         private readonly Mock<NavigationManager> _navigationManagerMock;
         private readonly List<ReferenceDataDto> _difficultyLevels;
         private readonly List<ReferenceDataDto> _muscleGroups;
+        private readonly List<ExerciseWeightTypeDto> _weightTypes;
 
         public ExerciseListWithLinksTests()
         {
             _stateServiceMock = new Mock<IExerciseStateService>();
+            _weightTypeStateServiceMock = new Mock<IExerciseWeightTypeStateService>();
             _navigationManagerMock = new Mock<NavigationManager>();
 
             _difficultyLevels = new List<ReferenceDataDto>
@@ -38,6 +41,12 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
                 new() { Id = "2", Value = "Back" }
             };
 
+            _weightTypes = new List<ExerciseWeightTypeDto>
+            {
+                new() { Id = Guid.NewGuid(), Code = "BODYWEIGHT_ONLY", Name = "Bodyweight Only", IsActive = true, DisplayOrder = 1 },
+                new() { Id = Guid.NewGuid(), Code = "WEIGHT_REQUIRED", Name = "Weight Required", IsActive = true, DisplayOrder = 2 }
+            };
+
             // Setup default state
             _stateServiceMock.SetupGet(x => x.DifficultyLevels).Returns(_difficultyLevels);
             _stateServiceMock.SetupGet(x => x.MuscleGroups).Returns(_muscleGroups);
@@ -45,6 +54,11 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
             _stateServiceMock.SetupGet(x => x.ErrorMessage).Returns((string?)null);
             _stateServiceMock.SetupGet(x => x.HasStoredPage).Returns(false);
             _stateServiceMock.SetupGet(x => x.CurrentFilter).Returns(new ExerciseFilterDto { Page = 1, PageSize = 10 });
+
+            // Setup weight type state service
+            _weightTypeStateServiceMock.SetupGet(x => x.WeightTypes).Returns(_weightTypes);
+            _weightTypeStateServiceMock.SetupGet(x => x.IsLoading).Returns(false);
+            _weightTypeStateServiceMock.SetupGet(x => x.ErrorMessage).Returns((string?)null);
         }
 
         [Fact]
@@ -73,6 +87,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
             _stateServiceMock.SetupGet(x => x.CurrentPage).Returns(pagedResult);
 
             Services.AddSingleton(_stateServiceMock.Object);
+            Services.AddSingleton(_weightTypeStateServiceMock.Object);
             Services.AddSingleton(_navigationManagerMock.Object);
 
             // Act
@@ -115,6 +130,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
             _stateServiceMock.SetupGet(x => x.CurrentPage).Returns(pagedResult);
 
             Services.AddSingleton(_stateServiceMock.Object);
+            Services.AddSingleton(_weightTypeStateServiceMock.Object);
             Services.AddSingleton(_navigationManagerMock.Object);
 
             // Act
@@ -146,6 +162,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
             _stateServiceMock.SetupGet(x => x.CurrentPage).Returns(pagedResult);
 
             Services.AddSingleton(_stateServiceMock.Object);
+            Services.AddSingleton(_weightTypeStateServiceMock.Object);
             Services.AddSingleton(_navigationManagerMock.Object);
 
             // Act
@@ -165,6 +182,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
             SetupEmptyPagedResult();
 
             Services.AddSingleton(_stateServiceMock.Object);
+            Services.AddSingleton(_weightTypeStateServiceMock.Object);
             Services.AddSingleton(_navigationManagerMock.Object);
 
             // Act
@@ -191,6 +209,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
             SetupEmptyPagedResult();
 
             Services.AddSingleton(_stateServiceMock.Object);
+            Services.AddSingleton(_weightTypeStateServiceMock.Object);
             Services.AddSingleton(_navigationManagerMock.Object);
 
             var component = RenderComponent<ExerciseList>();
@@ -217,6 +236,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
             SetupEmptyPagedResult();
 
             Services.AddSingleton(_stateServiceMock.Object);
+            Services.AddSingleton(_weightTypeStateServiceMock.Object);
             Services.AddSingleton(_navigationManagerMock.Object);
 
             var component = RenderComponent<ExerciseList>();
@@ -255,6 +275,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
             SetupEmptyPagedResult();
 
             Services.AddSingleton(_stateServiceMock.Object);
+            Services.AddSingleton(_weightTypeStateServiceMock.Object);
             Services.AddSingleton(_navigationManagerMock.Object);
 
             // Act
@@ -284,6 +305,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
             _stateServiceMock.SetupGet(x => x.CurrentPage).Returns(pagedResult);
 
             Services.AddSingleton(_stateServiceMock.Object);
+            Services.AddSingleton(_weightTypeStateServiceMock.Object);
             Services.AddSingleton(_navigationManagerMock.Object);
 
             // Act
@@ -315,6 +337,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
             _stateServiceMock.SetupGet(x => x.CurrentPage).Returns(pagedResult);
 
             Services.AddSingleton(_stateServiceMock.Object);
+            Services.AddSingleton(_weightTypeStateServiceMock.Object);
             Services.AddSingleton(_navigationManagerMock.Object);
 
             // Act

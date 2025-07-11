@@ -43,6 +43,12 @@ namespace GetFitterGetBigger.Admin.Builders
             return this;
         }
 
+        public ExerciseFilterBuilder WithWeightTypes(IEnumerable<string>? weightTypeIds)
+        {
+            _filter.WeightTypeIds = weightTypeIds?.ToList();
+            return this;
+        }
+
         public ExerciseFilterBuilder WithActiveStatus(bool? isActive)
         {
             _filter.IsActive = isActive;

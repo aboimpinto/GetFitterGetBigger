@@ -20,6 +20,7 @@ namespace GetFitterGetBigger.Admin.Builders
         private bool _isActive = true;
         private ReferenceDataDto? _difficulty = new() { Id = "1", Value = "Intermediate", Description = "Intermediate level" };
         private ReferenceDataDto? _kineticChain = null;
+        private ExerciseWeightTypeDto? _weightType = null;
         private List<MuscleGroupListItemDto> _muscleGroups = new();
         private List<ReferenceDataDto> _equipment = new();
         private List<ReferenceDataDto> _movementPatterns = new();
@@ -166,6 +167,26 @@ namespace GetFitterGetBigger.Admin.Builders
             return this;
         }
 
+        public ExerciseListDtoBuilder WithWeightType(ExerciseWeightTypeDto? weightType)
+        {
+            _weightType = weightType;
+            return this;
+        }
+
+        public ExerciseListDtoBuilder WithWeightType(string code, string name, string? description = null)
+        {
+            _weightType = new ExerciseWeightTypeDto
+            {
+                Id = Guid.NewGuid(),
+                Code = code,
+                Name = name,
+                Description = description ?? $"{name} weight type",
+                IsActive = true,
+                DisplayOrder = 1
+            };
+            return this;
+        }
+
         public ExerciseListDtoBuilder WithMuscleGroups(params (string muscleName, string roleName)[] muscleGroups)
         {
             _muscleGroups = muscleGroups.Select(mg => new MuscleGroupListItemDto
@@ -309,6 +330,7 @@ namespace GetFitterGetBigger.Admin.Builders
                 IsActive = _isActive,
                 Difficulty = _difficulty,
                 KineticChain = _kineticChain,
+                WeightType = _weightType,
                 MuscleGroups = _muscleGroups,
                 Equipment = _equipment,
                 MovementPatterns = _movementPatterns,
