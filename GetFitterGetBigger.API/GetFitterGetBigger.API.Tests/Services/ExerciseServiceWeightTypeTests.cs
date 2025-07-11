@@ -142,7 +142,7 @@ public class ExerciseServiceWeightTypeTests
     }
     
     [Fact]
-    public async Task CreateAsync_WithoutExerciseWeightTypeId_ThrowsException()
+    public async Task CreateAsync_WithoutExerciseWeightTypeId_ReturnsFailure()
     {
         // Arrange - Non-REST exercise without ExerciseWeightTypeId should fail
         // Arrange - Build request manually to bypass V2 builder validation
@@ -167,9 +167,12 @@ public class ExerciseServiceWeightTypeTests
         // Set up mocks
         _mockExerciseRepository.Setup(r => r.ExistsAsync(It.IsAny<string>(), It.IsAny<ExerciseId?>())).ReturnsAsync(false);
         
-        // Act & Assert
-        var exception = await Assert.ThrowsAsync<InvalidOperationException>(() => _service.CreateAsync(request.ToCommand()));
-        Assert.Contains("Exercise weight type must be specified for non-REST exercises", exception.Message);
+        // Act
+        var result = await _service.CreateAsync(request.ToCommand());
+        
+        // Assert
+        Assert.False(result.IsSuccess);
+        Assert.Contains("Non-REST exercises must have a valid weight type.", result.Errors);
     }
     
     [Fact]
@@ -213,13 +216,13 @@ public class ExerciseServiceWeightTypeTests
         Assert.True(result.IsSuccess);
         Assert.Null(result.Data.ExerciseWeightType);
         
-        // Verify the entity was created without weight type ID
+        // Verify the entity was created without weight type ID (Empty is treated as null in Null Object Pattern)
         Assert.NotNull(capturedExercise);
-        Assert.Null(capturedExercise.ExerciseWeightTypeId);
+        Assert.True(capturedExercise.ExerciseWeightTypeId == null || capturedExercise.ExerciseWeightTypeId.Value.IsEmpty);
     }
     
     [Fact]
-    public async Task CreateAsync_WithInvalidExerciseWeightTypeId_ThrowsArgumentException()
+    public async Task CreateAsync_WithInvalidExerciseWeightTypeId_ReturnsFailure()
     {
         // Arrange
         // Arrange - Build request manually to test invalid ID validation
@@ -244,9 +247,12 @@ public class ExerciseServiceWeightTypeTests
         // Set up mocks
         _mockExerciseRepository.Setup(r => r.ExistsAsync(It.IsAny<string>(), It.IsAny<ExerciseId?>())).ReturnsAsync(false);
         
-        // Act & Assert
-        var exception = await Assert.ThrowsAsync<ArgumentException>(() => _service.CreateAsync(request.ToCommand()));
-        Assert.Contains("Invalid exercise weight type ID", exception.Message);
+        // Act
+        var result = await _service.CreateAsync(request.ToCommand());
+        
+        // Assert
+        Assert.False(result.IsSuccess);
+        Assert.Contains("Non-REST exercises must have a valid weight type.", result.Errors);
     }
     
     [Fact]

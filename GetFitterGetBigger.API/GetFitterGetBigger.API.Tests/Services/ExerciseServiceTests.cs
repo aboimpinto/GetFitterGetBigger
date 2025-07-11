@@ -137,7 +137,7 @@ namespace GetFitterGetBigger.API.Tests.Services
         }
 
         [Fact]
-        public async Task GetByIdAsync_WithInvalidId_ReturnsNull()
+        public async Task GetByIdAsync_WithInvalidId_ReturnsEmpty()
         {
             // Arrange
             var invalidId = "invalid-id";
@@ -146,7 +146,8 @@ namespace GetFitterGetBigger.API.Tests.Services
             var result = await _service.GetByIdAsync(ExerciseId.ParseOrEmpty(invalidId));
 
             // Assert
-            Assert.Null(result);
+            Assert.NotNull(result);
+            Assert.Equal(ExerciseDto.Empty, result);
         }
 
         [Fact]
@@ -189,7 +190,7 @@ namespace GetFitterGetBigger.API.Tests.Services
         }
 
         [Fact]
-        public async Task CreateAsync_WithDuplicateName_ThrowsException()
+        public async Task CreateAsync_WithDuplicateName_ReturnsFailure()
         {
             // Arrange
             var request = CreateExerciseRequestBuilder.ForWorkoutExercise()
@@ -203,9 +204,13 @@ namespace GetFitterGetBigger.API.Tests.Services
                 .Setup(r => r.ExistsAsync(It.IsAny<string>(), It.IsAny<ExerciseId?>()))
                 .ReturnsAsync(true);
 
-            // Act & Assert
-            await Assert.ThrowsAsync<InvalidOperationException>(
-                () => _service.CreateAsync(request.ToCommand()));
+            // Act
+            var result = await _service.CreateAsync(request.ToCommand());
+
+            // Assert
+            Assert.False(result.IsSuccess);
+            Assert.Equal(ExerciseDto.Empty, result.Data);
+            Assert.Contains("already exists", result.Errors.First());
         }
 
         [Fact]
@@ -358,7 +363,7 @@ namespace GetFitterGetBigger.API.Tests.Services
         }
 
         [Fact]
-        public async Task CreateAsync_WithRestExerciseAndWeightType_ThrowsException()
+        public async Task CreateAsync_WithRestExerciseAndWeightType_ReturnsFailure()
         {
             // Arrange
             // Create request manually to test validation
@@ -378,15 +383,16 @@ namespace GetFitterGetBigger.API.Tests.Services
                 .Setup(s => s.AnyIsRestTypeAsync(It.IsAny<IEnumerable<string>>()))
                 .ReturnsAsync(true);
 
-            // Act & Assert
-            var exception = await Assert.ThrowsAsync<InvalidOperationException>(
-                () => _service.CreateAsync(request.ToCommand()));
+            // Act
+            var result = await _service.CreateAsync(request.ToCommand());
             
-            Assert.Contains("Exercise weight type must not be specified for REST exercises", exception.Message);
+            // Assert
+            Assert.False(result.IsSuccess);
+            Assert.Contains("REST exercises cannot have a weight type.", result.Errors);
         }
 
         [Fact]
-        public async Task CreateAsync_WithNonRestExerciseWithoutWeightType_ThrowsException()
+        public async Task CreateAsync_WithNonRestExerciseWithoutWeightType_ReturnsFailure()
         {
             // Arrange
             // Create request manually to test validation
@@ -413,11 +419,12 @@ namespace GetFitterGetBigger.API.Tests.Services
                 .Setup(s => s.AnyIsRestTypeAsync(It.IsAny<IEnumerable<string>>()))
                 .ReturnsAsync(false);
 
-            // Act & Assert
-            var exception = await Assert.ThrowsAsync<InvalidOperationException>(
-                () => _service.CreateAsync(request.ToCommand()));
+            // Act
+            var result = await _service.CreateAsync(request.ToCommand());
             
-            Assert.Contains("Exercise weight type must be specified for non-REST exercises", exception.Message);
+            // Assert
+            Assert.False(result.IsSuccess);
+            Assert.Contains("Non-REST exercises must have a valid weight type.", result.Errors);
         }
 
         [Fact]
@@ -470,7 +477,7 @@ namespace GetFitterGetBigger.API.Tests.Services
         }
 
         [Fact]
-        public async Task UpdateAsync_WithRestExerciseAndWeightType_ThrowsException()
+        public async Task UpdateAsync_WithRestExerciseAndWeightType_ReturnsFailure()
         {
             // Arrange
             var exerciseId = ExerciseId.New();
@@ -500,15 +507,16 @@ namespace GetFitterGetBigger.API.Tests.Services
                 .Setup(s => s.AnyIsRestTypeAsync(It.IsAny<IEnumerable<string>>()))
                 .ReturnsAsync(true);
 
-            // Act & Assert
-            var exception = await Assert.ThrowsAsync<InvalidOperationException>(
-                () => _service.UpdateAsync(ExerciseId.ParseOrEmpty(exerciseId.ToString()), request.ToCommand()));
+            // Act
+            var result = await _service.UpdateAsync(ExerciseId.ParseOrEmpty(exerciseId.ToString()), request.ToCommand());
             
-            Assert.Contains("Exercise weight type must not be specified for REST exercises", exception.Message);
+            // Assert
+            Assert.False(result.IsSuccess);
+            Assert.Contains("REST exercises cannot have a weight type.", result.Errors);
         }
 
         [Fact]
-        public async Task UpdateAsync_WithNonRestExerciseWithoutWeightType_ThrowsException()
+        public async Task UpdateAsync_WithNonRestExerciseWithoutWeightType_ReturnsFailure()
         {
             // Arrange
             var exerciseId = ExerciseId.New();
@@ -547,11 +555,12 @@ namespace GetFitterGetBigger.API.Tests.Services
                 .Setup(s => s.AnyIsRestTypeAsync(It.IsAny<IEnumerable<string>>()))
                 .ReturnsAsync(false);
 
-            // Act & Assert
-            var exception = await Assert.ThrowsAsync<InvalidOperationException>(
-                () => _service.UpdateAsync(ExerciseId.ParseOrEmpty(exerciseId.ToString()), request.ToCommand()));
+            // Act
+            var result = await _service.UpdateAsync(ExerciseId.ParseOrEmpty(exerciseId.ToString()), request.ToCommand());
             
-            Assert.Contains("Exercise weight type must be specified for non-REST exercises", exception.Message);
+            // Assert
+            Assert.False(result.IsSuccess);
+            Assert.Contains("Non-REST exercises must have a valid weight type.", result.Errors);
         }
     }
 }

@@ -100,7 +100,7 @@ namespace GetFitterGetBigger.API.Tests.Services
         }
 
         [Fact]
-        public async Task CreateAsync_NonRestExerciseWithoutKineticChain_ShouldThrowException()
+        public async Task CreateAsync_NonRestExerciseWithoutKineticChain_ShouldReturnFailure()
         {
             // Arrange
             SetupMocks();
@@ -114,14 +114,16 @@ namespace GetFitterGetBigger.API.Tests.Services
                 .WithMuscleGroups((MuscleGroupId.New().ToString(), MuscleRoleId.New().ToString()))
                 .Build();
 
-            // Act & Assert
-            var exception = await Assert.ThrowsAsync<InvalidOperationException>(
-                () => _service.CreateAsync(request.ToCommand()));
-            Assert.Equal("Kinetic chain type must be specified for non-REST exercises.", exception.Message);
+            // Act
+            var result = await _service.CreateAsync(request.ToCommand());
+            
+            // Assert
+            Assert.False(result.IsSuccess);
+            Assert.Contains("Non-REST exercises must have a valid kinetic chain.", result.Errors);
         }
 
         [Fact]
-        public async Task CreateAsync_RestExerciseWithKineticChain_ShouldThrowException()
+        public async Task CreateAsync_RestExerciseWithKineticChain_ShouldReturnFailure()
         {
             // Arrange
             SetupMocks();
@@ -134,10 +136,12 @@ namespace GetFitterGetBigger.API.Tests.Services
                 .WithKineticChainId(_kineticChainId.ToString()) // Kinetic chain provided for rest
                 .Build();
 
-            // Act & Assert
-            var exception = await Assert.ThrowsAsync<InvalidOperationException>(
-                () => _service.CreateAsync(request.ToCommand()));
-            Assert.Equal("Kinetic chain type must not be specified for REST exercises.", exception.Message);
+            // Act
+            var result = await _service.CreateAsync(request.ToCommand());
+            
+            // Assert
+            Assert.False(result.IsSuccess);
+            Assert.Contains("Kinetic chain type must not be specified for REST exercises.", result.Errors);
         }
 
         [Fact]
@@ -213,7 +217,7 @@ namespace GetFitterGetBigger.API.Tests.Services
         }
 
         [Fact]
-        public async Task UpdateAsync_NonRestExerciseWithoutKineticChain_ShouldThrowException()
+        public async Task UpdateAsync_NonRestExerciseWithoutKineticChain_ShouldReturnFailure()
         {
             // Arrange
             SetupMocks();
@@ -242,14 +246,16 @@ namespace GetFitterGetBigger.API.Tests.Services
                 .WithMuscleGroups((MuscleGroupId.New().ToString(), MuscleRoleId.New().ToString()))
                 .Build();
 
-            // Act & Assert
-            var exception = await Assert.ThrowsAsync<InvalidOperationException>(
-                () => _service.UpdateAsync(ExerciseId.ParseOrEmpty(exerciseId.ToString()), request.ToCommand()));
-            Assert.Equal("Kinetic chain type must be specified for non-REST exercises.", exception.Message);
+            // Act
+            var result = await _service.UpdateAsync(ExerciseId.ParseOrEmpty(exerciseId.ToString()), request.ToCommand());
+            
+            // Assert
+            Assert.False(result.IsSuccess);
+            Assert.Contains("Non-REST exercises must have a valid kinetic chain.", result.Errors);
         }
 
         [Fact]
-        public async Task UpdateAsync_RestExerciseWithKineticChain_ShouldThrowException()
+        public async Task UpdateAsync_RestExerciseWithKineticChain_ShouldReturnFailure()
         {
             // Arrange
             SetupMocks();
@@ -277,10 +283,12 @@ namespace GetFitterGetBigger.API.Tests.Services
                 .WithKineticChainId(_kineticChainId.ToString()) // Kinetic chain provided for rest
                 .Build();
 
-            // Act & Assert
-            var exception = await Assert.ThrowsAsync<InvalidOperationException>(
-                () => _service.UpdateAsync(ExerciseId.ParseOrEmpty(exerciseId.ToString()), request.ToCommand()));
-            Assert.Equal("Kinetic chain type must not be specified for REST exercises.", exception.Message);
+            // Act
+            var result = await _service.UpdateAsync(ExerciseId.ParseOrEmpty(exerciseId.ToString()), request.ToCommand());
+            
+            // Assert
+            Assert.False(result.IsSuccess);
+            Assert.Contains("Kinetic chain type must not be specified for REST exercises.", result.Errors);
         }
 
         [Fact]
@@ -338,7 +346,7 @@ namespace GetFitterGetBigger.API.Tests.Services
         }
 
         [Fact]
-        public async Task CreateAsync_InvalidKineticChainId_ShouldThrowException()
+        public async Task CreateAsync_InvalidKineticChainId_ShouldReturnFailure()
         {
             // Arrange
             SetupMocks();
@@ -352,14 +360,16 @@ namespace GetFitterGetBigger.API.Tests.Services
                 .WithMuscleGroups((MuscleGroupId.New().ToString(), MuscleRoleId.New().ToString()))
                 .Build();
 
-            // Act & Assert
-            var exception = await Assert.ThrowsAsync<ArgumentException>(
-                () => _service.CreateAsync(request.ToCommand()));
-            Assert.Equal("Invalid kinetic chain ID: invalid-id-format", exception.Message);
+            // Act
+            var result = await _service.CreateAsync(request.ToCommand());
+            
+            // Assert
+            Assert.False(result.IsSuccess);
+            Assert.Contains("Non-REST exercises must have a valid kinetic chain.", result.Errors);
         }
 
         [Fact]
-        public async Task UpdateAsync_InvalidKineticChainId_ShouldThrowException()
+        public async Task UpdateAsync_InvalidKineticChainId_ShouldReturnFailure()
         {
             // Arrange
             SetupMocks();
@@ -387,10 +397,12 @@ namespace GetFitterGetBigger.API.Tests.Services
                 .WithMuscleGroups((MuscleGroupId.New().ToString(), MuscleRoleId.New().ToString()))
                 .Build();
 
-            // Act & Assert
-            var exception = await Assert.ThrowsAsync<ArgumentException>(
-                () => _service.UpdateAsync(ExerciseId.ParseOrEmpty(exerciseId.ToString()), request.ToCommand()));
-            Assert.Equal("Invalid kinetic chain ID: invalid-id-format", exception.Message);
+            // Act
+            var result = await _service.UpdateAsync(ExerciseId.ParseOrEmpty(exerciseId.ToString()), request.ToCommand());
+            
+            // Assert
+            Assert.False(result.IsSuccess);
+            Assert.Contains("Non-REST exercises must have a valid kinetic chain.", result.Errors);
         }
     }
 }

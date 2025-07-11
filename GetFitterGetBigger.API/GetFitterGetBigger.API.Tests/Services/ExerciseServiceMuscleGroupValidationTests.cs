@@ -108,7 +108,7 @@ public class ExerciseServiceMuscleGroupValidationTests
     }
     
     [Fact]
-    public async Task CreateAsync_NonRestExerciseWithoutMuscleGroups_ThrowsInvalidOperationException()
+    public async Task CreateAsync_NonRestExerciseWithoutMuscleGroups_ReturnsFailure()
     {
         // Arrange
         var workoutTypeId = ExerciseTypeId.New();
@@ -130,11 +130,12 @@ public class ExerciseServiceMuscleGroupValidationTests
         _exerciseRepositoryMock.Setup(r => r.ExistsAsync(It.IsAny<string>(), null))
             .ReturnsAsync(false);
         
-        // Act & Assert
-        var exception = await Assert.ThrowsAsync<InvalidOperationException>(
-            () => _exerciseService.CreateAsync(request.ToCommand()));
+        // Act
+        var result = await _exerciseService.CreateAsync(request.ToCommand());
         
-        Assert.Equal("At least one muscle group must be specified for non-REST exercises.", exception.Message);
+        // Assert
+        Assert.False(result.IsSuccess);
+        Assert.Contains("Non-REST exercises must have at least one muscle group.", result.Errors);
         _exerciseRepositoryMock.Verify(r => r.AddAsync(It.IsAny<Exercise>()), Times.Never);
     }
     
@@ -233,7 +234,7 @@ public class ExerciseServiceMuscleGroupValidationTests
     }
     
     [Fact]
-    public async Task UpdateAsync_NonRestExerciseWithoutMuscleGroups_ThrowsInvalidOperationException()
+    public async Task UpdateAsync_NonRestExerciseWithoutMuscleGroups_ReturnsFailure()
     {
         // Arrange
         var exerciseId = ExerciseId.New();
@@ -266,11 +267,12 @@ public class ExerciseServiceMuscleGroupValidationTests
         _exerciseRepositoryMock.Setup(r => r.GetByIdAsync(exerciseId))
             .ReturnsAsync(existingExercise);
         
-        // Act & Assert
-        var exception = await Assert.ThrowsAsync<InvalidOperationException>(
-            () => _exerciseService.UpdateAsync(ExerciseId.ParseOrEmpty(exerciseId.ToString()), request.ToCommand()));
+        // Act
+        var result = await _exerciseService.UpdateAsync(ExerciseId.ParseOrEmpty(exerciseId.ToString()), request.ToCommand());
         
-        Assert.Equal("At least one muscle group must be specified for non-REST exercises.", exception.Message);
+        // Assert
+        Assert.False(result.IsSuccess);
+        Assert.Contains("Non-REST exercises must have at least one muscle group.", result.Errors);
         _exerciseRepositoryMock.Verify(r => r.UpdateAsync(It.IsAny<Exercise>()), Times.Never);
     }
     
@@ -317,7 +319,7 @@ public class ExerciseServiceMuscleGroupValidationTests
     }
     
     [Fact]
-    public async Task CreateAsync_NoExerciseTypes_WithoutMuscleGroups_ThrowsInvalidOperationException()
+    public async Task CreateAsync_NoExerciseTypes_WithoutMuscleGroups_ReturnsFailure()
     {
         // Arrange - No exercise types means it's not a REST exercise
         var request = new CreateExerciseRequest
@@ -371,11 +373,11 @@ public class ExerciseServiceMuscleGroupValidationTests
         _exerciseRepositoryMock.Setup(r => r.ExistsAsync(It.IsAny<string>(), null))
             .ReturnsAsync(false);
         
-        // Act & Assert
-        var exception = await Assert.ThrowsAsync<InvalidOperationException>(
-            () => _exerciseService.CreateAsync(request.ToCommand()));
+        // Act
+        var result = await _exerciseService.CreateAsync(request.ToCommand());
         
-        // This should fail on REST exclusivity, not muscle group validation
-        Assert.Equal("Exercise type 'Rest' cannot be combined with other exercise types.", exception.Message);
+        // Assert - This should fail on REST exclusivity, not muscle group validation
+        Assert.False(result.IsSuccess);
+        Assert.Contains("REST exercises cannot be combined with other exercise types", result.Errors);
     }
 }
