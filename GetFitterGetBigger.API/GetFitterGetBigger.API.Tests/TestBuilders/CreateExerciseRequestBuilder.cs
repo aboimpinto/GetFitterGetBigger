@@ -28,7 +28,10 @@ public class CreateExerciseRequestBuilder
                     MuscleGroupId = TestConstants.MuscleGroupIds.Chest,
                     MuscleRoleId = TestConstants.MuscleRoleIds.Primary
                 }
-            }
+            },
+            EquipmentIds = new List<string> { TestConstants.EquipmentIds.Barbell },
+            BodyPartIds = new List<string> { TestConstants.BodyPartIds.Chest },
+            MovementPatternIds = new List<string> { TestConstants.MovementPatternIds.Push }
         };
     }
 
@@ -42,6 +45,9 @@ public class CreateExerciseRequestBuilder
         builder._request.KineticChainId = null;
         builder._request.ExerciseWeightTypeId = null;
         builder._request.MuscleGroups = new List<MuscleGroupWithRoleRequest>();
+        builder._request.EquipmentIds = new List<string>();
+        builder._request.BodyPartIds = new List<string>();
+        builder._request.MovementPatternIds = new List<string>();
         return builder;
     }
 
@@ -124,6 +130,24 @@ public class CreateExerciseRequestBuilder
     public CreateExerciseRequestBuilder WithIsUnilateral(bool isUnilateral)
     {
         _request.IsUnilateral = isUnilateral;
+        return this;
+    }
+
+    public CreateExerciseRequestBuilder WithEquipmentIds(params string[] equipmentIds)
+    {
+        _request.EquipmentIds = equipmentIds.ToList();
+        return this;
+    }
+
+    public CreateExerciseRequestBuilder WithBodyPartIds(params string[] bodyPartIds)
+    {
+        _request.BodyPartIds = bodyPartIds.ToList();
+        return this;
+    }
+
+    public CreateExerciseRequestBuilder WithMovementPatternIds(params string[] movementPatternIds)
+    {
+        _request.MovementPatternIds = movementPatternIds.ToList();
         return this;
     }
 

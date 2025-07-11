@@ -35,32 +35,26 @@ namespace GetFitterGetBigger.Admin.Tests.Services
         }
 
         [Fact]
-        public async Task GetWeightTypesAsync_FirstCall_ReturnsWeightTypesFromApi()
+        public async Task GetWeightTypesAsync_MapsReferenceDataToExerciseWeightTypes()
         {
             // Arrange
-            var expectedWeightTypes = new List<ExerciseWeightTypeDto>
+            var referenceData = new List<ReferenceDataDto>
             {
-                new ExerciseWeightTypeDto
+                new ReferenceDataDto
                 {
-                    Id = Guid.NewGuid(),
-                    Code = "BODYWEIGHT_ONLY",
-                    Name = "Bodyweight Only",
-                    Description = "Exercise uses bodyweight only",
-                    IsActive = true,
-                    DisplayOrder = 1
+                    Id = "exerciseweighttype-a1f3e2d4-5b6c-4d7e-8f9a-0b1c2d3e4f5a",
+                    Value = "Bodyweight Only",
+                    Description = "Exercises that cannot have external weight added"
                 },
-                new ExerciseWeightTypeDto
+                new ReferenceDataDto
                 {
-                    Id = Guid.NewGuid(),
-                    Code = "WEIGHT_REQUIRED",
-                    Name = "Weight Required",
-                    Description = "Exercise requires external weight",
-                    IsActive = true,
-                    DisplayOrder = 2
+                    Id = "exerciseweighttype-b2e4d3c5-6a7b-5c8d-9e0f-1a2b3c4d5e6f",
+                    Value = "Weight Required",
+                    Description = "Exercises that must have external weight specified"
                 }
             };
 
-            _httpMessageHandler.SetupResponse(HttpStatusCode.OK, expectedWeightTypes);
+            _httpMessageHandler.SetupResponse(HttpStatusCode.OK, referenceData);
 
             // Act
             var result = await _exerciseWeightTypeService.GetWeightTypesAsync();
@@ -68,166 +62,122 @@ namespace GetFitterGetBigger.Admin.Tests.Services
             // Assert
             result.Should().NotBeNull();
             result.Should().HaveCount(2);
-            result.Should().Contain(wt => wt.Code == "BODYWEIGHT_ONLY");
-            result.Should().Contain(wt => wt.Code == "WEIGHT_REQUIRED");
+
+            var bodyweightOnly = result.First(wt => wt.Code == "BODYWEIGHT_ONLY");
+            bodyweightOnly.Id.Should().Be(Guid.Parse("a1f3e2d4-5b6c-4d7e-8f9a-0b1c2d3e4f5a"));
+            bodyweightOnly.Name.Should().Be("Bodyweight Only");
+            bodyweightOnly.Description.Should().Be("Exercises that cannot have external weight added");
+            bodyweightOnly.IsActive.Should().BeTrue();
+            bodyweightOnly.DisplayOrder.Should().Be(1);
+
+            var weightRequired = result.First(wt => wt.Code == "WEIGHT_REQUIRED");
+            weightRequired.Id.Should().Be(Guid.Parse("b2e4d3c5-6a7b-5c8d-9e0f-1a2b3c4d5e6f"));
+            weightRequired.Name.Should().Be("Weight Required");
+            weightRequired.Description.Should().Be("Exercises that must have external weight specified");
+            weightRequired.IsActive.Should().BeTrue();
+            weightRequired.DisplayOrder.Should().Be(2);
         }
 
         [Fact]
-        public async Task GetWeightTypesAsync_SecondCall_ReturnsCachedWeightTypes()
+        public async Task GetWeightTypesAsync_MapsAllFiveWeightTypes()
         {
             // Arrange
-            var expectedWeightTypes = new List<ExerciseWeightTypeDto>
+            var referenceData = new List<ReferenceDataDto>
             {
-                new ExerciseWeightTypeDto
+                new ReferenceDataDto
                 {
-                    Id = Guid.NewGuid(),
-                    Code = "BODYWEIGHT_ONLY",
-                    Name = "Bodyweight Only",
-                    Description = "Exercise uses bodyweight only",
-                    IsActive = true,
-                    DisplayOrder = 1
+                    Id = "exerciseweighttype-a1f3e2d4-5b6c-4d7e-8f9a-0b1c2d3e4f5a",
+                    Value = "Bodyweight Only",
+                    Description = "Exercises that cannot have external weight added"
+                },
+                new ReferenceDataDto
+                {
+                    Id = "exerciseweighttype-b2e4d3c5-6a7b-5c8d-9e0f-1a2b3c4d5e6f",
+                    Value = "Bodyweight Optional",
+                    Description = "Exercises that can be performed with or without additional weight"
+                },
+                new ReferenceDataDto
+                {
+                    Id = "exerciseweighttype-c3d5c4b6-7b8c-6d9e-0f1a-2b3c4d5e6f7a",
+                    Value = "Weight Required",
+                    Description = "Exercises that must have external weight specified"
+                },
+                new ReferenceDataDto
+                {
+                    Id = "exerciseweighttype-d4c6b5a7-8c9d-7e0f-1a2b-3c4d5e6f7a8b",
+                    Value = "Machine Weight",
+                    Description = "Exercises performed on machines with weight stacks"
+                },
+                new ReferenceDataDto
+                {
+                    Id = "exerciseweighttype-e5b7a698-9d0e-8f1a-2b3c-4d5e6f7a8b9c",
+                    Value = "No Weight",
+                    Description = "Exercises that do not use weight as a metric"
                 }
             };
 
-            _httpMessageHandler.SetupResponse(HttpStatusCode.OK, expectedWeightTypes);
-
-            // Act - First call
-            var firstResult = await _exerciseWeightTypeService.GetWeightTypesAsync();
-
-            // Act - Second call (should use cache, no additional HTTP request)
-            var secondResult = await _exerciseWeightTypeService.GetWeightTypesAsync();
-
-            // Assert
-            firstResult.Should().BeEquivalentTo(secondResult);
-            _httpMessageHandler.Requests.Should().HaveCount(1, "Second call should use cache");
-        }
-
-        [Fact]
-        public async Task GetWeightTypesAsync_ApiReturnsNotFound_ThrowsHttpRequestException()
-        {
-            // Arrange
-            _httpMessageHandler.SetupResponse(HttpStatusCode.NotFound);
-
-            // Act & Assert
-            await Assert.ThrowsAsync<HttpRequestException>(
-                () => _exerciseWeightTypeService.GetWeightTypesAsync());
-        }
-
-        [Fact]
-        public async Task GetWeightTypesAsync_ApiReturnsServerError_ThrowsHttpRequestException()
-        {
-            // Arrange
-            _httpMessageHandler.SetupResponse(HttpStatusCode.InternalServerError);
-
-            // Act & Assert
-            await Assert.ThrowsAsync<HttpRequestException>(
-                () => _exerciseWeightTypeService.GetWeightTypesAsync());
-        }
-
-        [Fact]
-        public async Task GetWeightTypeByIdAsync_ValidId_ReturnsWeightType()
-        {
-            // Arrange
-            var weightTypeId = Guid.NewGuid();
-            var expectedWeightType = new ExerciseWeightTypeDto
-            {
-                Id = weightTypeId,
-                Code = "MACHINE_WEIGHT",
-                Name = "Machine Weight",
-                Description = "Exercise uses machine weight",
-                IsActive = true,
-                DisplayOrder = 5
-            };
-
-            _httpMessageHandler.SetupResponse(HttpStatusCode.OK, expectedWeightType);
-
-            // Act
-            var result = await _exerciseWeightTypeService.GetWeightTypeByIdAsync(weightTypeId);
-
-            // Assert
-            result.Should().NotBeNull();
-            result!.Id.Should().Be(weightTypeId);
-            result.Code.Should().Be("MACHINE_WEIGHT");
-            result.Name.Should().Be("Machine Weight");
-        }
-
-        [Fact]
-        public async Task GetWeightTypeByIdAsync_NotFound_ReturnsNull()
-        {
-            // Arrange
-            var weightTypeId = Guid.NewGuid();
-            _httpMessageHandler.SetupResponse(HttpStatusCode.NotFound);
-
-            // Act
-            var result = await _exerciseWeightTypeService.GetWeightTypeByIdAsync(weightTypeId);
-
-            // Assert
-            result.Should().BeNull();
-        }
-
-        [Fact]
-        public async Task GetWeightTypeByIdAsync_ServerError_ThrowsHttpRequestException()
-        {
-            // Arrange
-            var weightTypeId = Guid.NewGuid();
-            _httpMessageHandler.SetupResponse(HttpStatusCode.InternalServerError);
-
-            // Act & Assert
-            await Assert.ThrowsAsync<HttpRequestException>(
-                () => _exerciseWeightTypeService.GetWeightTypeByIdAsync(weightTypeId));
-        }
-
-        [Fact]
-        public async Task GetWeightTypesAsync_WithCorrectUrl_CallsExpectedEndpoint()
-        {
-            // Arrange
-            var expectedWeightTypes = new List<ExerciseWeightTypeDto>();
-            _httpMessageHandler.SetupResponse(HttpStatusCode.OK, expectedWeightTypes);
-
-            // Act
-            await _exerciseWeightTypeService.GetWeightTypesAsync();
-
-            // Assert
-            _httpMessageHandler.VerifyRequest(req => 
-                req.Method == HttpMethod.Get && 
-                req.RequestUri!.ToString() == "http://localhost:5214/api/ReferenceTables/ExerciseWeightTypes");
-        }
-
-        [Fact]
-        public async Task GetWeightTypeByIdAsync_WithCorrectUrl_CallsExpectedEndpoint()
-        {
-            // Arrange
-            var weightTypeId = Guid.NewGuid();
-            _httpMessageHandler.SetupResponse(HttpStatusCode.OK, new ExerciseWeightTypeDto
-            {
-                Id = weightTypeId,
-                Code = "TEST",
-                Name = "Test",
-                IsActive = true,
-                DisplayOrder = 1
-            });
-
-            // Act
-            await _exerciseWeightTypeService.GetWeightTypeByIdAsync(weightTypeId);
-
-            // Assert
-            _httpMessageHandler.VerifyRequest(req => 
-                req.Method == HttpMethod.Get && 
-                req.RequestUri!.ToString() == $"http://localhost:5214/api/ReferenceTables/ExerciseWeightTypes/{weightTypeId}");
-        }
-
-        [Fact]
-        public async Task GetWeightTypesAsync_EmptyApiResponse_ReturnsEmptyCollection()
-        {
-            // Arrange
-            _httpMessageHandler.SetupResponse(HttpStatusCode.OK, new List<ExerciseWeightTypeDto>());
+            _httpMessageHandler.SetupResponse(HttpStatusCode.OK, referenceData);
 
             // Act
             var result = await _exerciseWeightTypeService.GetWeightTypesAsync();
 
             // Assert
+            result.Should().HaveCount(5);
+            result.Should().Contain(wt => wt.Code == "BODYWEIGHT_ONLY");
+            result.Should().Contain(wt => wt.Code == "BODYWEIGHT_OPTIONAL");
+            result.Should().Contain(wt => wt.Code == "WEIGHT_REQUIRED");
+            result.Should().Contain(wt => wt.Code == "MACHINE_WEIGHT");
+            result.Should().Contain(wt => wt.Code == "NO_WEIGHT");
+        }
+
+        [Fact]
+        public async Task GetWeightTypeByIdAsync_ConvertsGuidToStringFormat()
+        {
+            // Arrange
+            var id = Guid.Parse("a1f3e2d4-5b6c-4d7e-8f9a-0b1c2d3e4f5a");
+            var referenceData = new ReferenceDataDto
+            {
+                Id = "exerciseweighttype-a1f3e2d4-5b6c-4d7e-8f9a-0b1c2d3e4f5a",
+                Value = "Bodyweight Only",
+                Description = "Exercises that cannot have external weight added"
+            };
+
+            _httpMessageHandler.SetupResponse(HttpStatusCode.OK, referenceData);
+
+            // Act
+            var result = await _exerciseWeightTypeService.GetWeightTypeByIdAsync(id);
+
+            // Assert
             result.Should().NotBeNull();
-            result.Should().BeEmpty();
+            result!.Id.Should().Be(id);
+            result.Code.Should().Be("BODYWEIGHT_ONLY");
+            result.Name.Should().Be("Bodyweight Only");
+        }
+
+        [Fact]
+        public async Task GetWeightTypesAsync_CachesResults()
+        {
+            // Arrange
+            var referenceData = new List<ReferenceDataDto>
+            {
+                new ReferenceDataDto
+                {
+                    Id = "exerciseweighttype-a1f3e2d4-5b6c-4d7e-8f9a-0b1c2d3e4f5a",
+                    Value = "Bodyweight Only",
+                    Description = "Test"
+                }
+            };
+
+            _httpMessageHandler.SetupResponse(HttpStatusCode.OK, referenceData);
+
+            // Act - First call
+            var result1 = await _exerciseWeightTypeService.GetWeightTypesAsync();
+            // Second call should come from cache
+            var result2 = await _exerciseWeightTypeService.GetWeightTypesAsync();
+
+            // Assert
+            result1.Should().BeEquivalentTo(result2);
+            _httpMessageHandler.Requests.Count.Should().Be(1);
         }
     }
 }

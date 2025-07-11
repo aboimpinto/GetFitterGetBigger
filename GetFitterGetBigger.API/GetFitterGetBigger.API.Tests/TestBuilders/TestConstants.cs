@@ -8,17 +8,17 @@ public static class TestConstants
 {
     public static class ExerciseTypeIds
     {
-        public const string Rest = "exercisetype-44556677-8899-aabb-ccdd-eeff00112233";
-        public const string Workout = "exercisetype-22334455-6677-8899-aabb-ccddeeff0011";
-        public const string Warmup = "exercisetype-11223344-5566-7788-99aa-bbccddeeff00";
-        public const string Cooldown = "exercisetype-33445566-7788-99aa-bbcc-ddeeff001122";
+        public const string Rest = "exercisetype-d4e5f6a7-8b9c-0d1e-2f3a-4b5c6d7e8f9a";
+        public const string Workout = "exercisetype-b2c3d4e5-6f7a-8b9c-0d1e-2f3a4b5c6d7e";
+        public const string Warmup = "exercisetype-a1b2c3d4-5e6f-7a8b-9c0d-1e2f3a4b5c6d";
+        public const string Cooldown = "exercisetype-c3d4e5f6-7a8b-9c0d-1e2f-3a4b5c6d7e8f";
     }
 
     public static class DifficultyLevelIds
     {
         public const string Beginner = "difficultylevel-8a8adb1d-24d2-4979-a5a6-0d760e6da24b";
-        public const string Intermediate = "difficultylevel-9b9bec2e-35e3-5a8a-b6b7-1e871f7eb35c";
-        public const string Advanced = "difficultylevel-acabfd3f-46f4-6b9b-c7c8-2f982a8fc46d";
+        public const string Intermediate = "difficultylevel-9c7b59a4-bcd8-48a6-971a-cd67b0a7ab5a";
+        public const string Advanced = "difficultylevel-3e27f9a7-d5a5-4f8e-8a76-6de2d23c9a3c";
     }
 
     public static class KineticChainTypeIds

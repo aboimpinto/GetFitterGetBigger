@@ -36,16 +36,16 @@ public class ExerciseCompleteWorkflowTests : IClassFixture<SharedDatabaseTestFix
                 ("Breathing: Inhale down, exhale up", 5)
             )
             .WithExerciseTypes(
-                "exercisetype-a1b2c3d4-5e6f-7a8b-9c0d-1e2f3a4b5c6d", // Warmup
-                "exercisetype-b2c3d4e5-6f7a-8b9c-0d1e-2f3a4b5c6d7e"  // Workout
+                TestConstants.ExerciseTypeIds.Warmup,
+                TestConstants.ExerciseTypeIds.Workout
             )
             .WithVideoUrl("https://example.com/squat-tutorial.mp4")
             .WithImageUrl("https://example.com/squat-form.jpg")
             .WithIsUnilateral(false)
-            .WithDifficultyId("difficultylevel-9c7b59a4-bcd8-48a6-971a-cd67b0a7ab5a") // Intermediate
+            .WithDifficultyId(TestConstants.DifficultyLevelIds.Intermediate)
             .WithMuscleGroups(
-                ("musclegroup-eeff0011-2233-4455-6677-889900112233", "musclerole-abcdef12-3456-7890-abcd-ef1234567890"), // Quadriceps - Primary
-                ("musclegroup-ccddeeff-0011-2233-4455-667788990011", "musclerole-22334455-6677-8899-aabb-ccddeeff0011") // Pectoralis - Stabilizer
+                (TestConstants.MuscleGroupIds.Legs, TestConstants.MuscleRoleIds.Primary), // Quadriceps - Primary
+                (TestConstants.MuscleGroupIds.Chest, TestConstants.MuscleRoleIds.Stabilizer) // Pectoralis - Stabilizer
             )
             .Build();
         

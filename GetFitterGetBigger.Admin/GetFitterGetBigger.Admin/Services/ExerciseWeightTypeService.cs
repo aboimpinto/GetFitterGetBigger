@@ -41,8 +41,11 @@ namespace GetFitterGetBigger.Admin.Services
 
                 if (response.IsSuccessStatusCode)
                 {
-                    var weightTypes = await response.Content.ReadFromJsonAsync<IEnumerable<ExerciseWeightTypeDto>>(_jsonOptions)
-                        ?? Enumerable.Empty<ExerciseWeightTypeDto>();
+                    var referenceData = await response.Content.ReadFromJsonAsync<IEnumerable<ReferenceDataDto>>(_jsonOptions)
+                        ?? Enumerable.Empty<ReferenceDataDto>();
+
+                    // Map ReferenceDataDto to ExerciseWeightTypeDto
+                    var weightTypes = MapToExerciseWeightTypes(referenceData);
 
                     // Cache for 30 minutes since this is reference data
                     _cache.Set(cacheKey, weightTypes, TimeSpan.FromMinutes(30));
@@ -67,11 +70,17 @@ namespace GetFitterGetBigger.Admin.Services
         {
             try
             {
-                var response = await _httpClient.GetAsync($"{_apiBaseUrl}/api/ReferenceTables/ExerciseWeightTypes/{id}");
+                // Since the API uses string IDs, we need to convert the GUID to the expected format
+                var stringId = $"exerciseweighttype-{id}";
+                var response = await _httpClient.GetAsync($"{_apiBaseUrl}/api/ReferenceTables/ExerciseWeightTypes/{stringId}");
 
                 if (response.IsSuccessStatusCode)
                 {
-                    return await response.Content.ReadFromJsonAsync<ExerciseWeightTypeDto>(_jsonOptions);
+                    var referenceData = await response.Content.ReadFromJsonAsync<ReferenceDataDto>(_jsonOptions);
+                    if (referenceData != null)
+                    {
+                        return MapToExerciseWeightType(referenceData);
+                    }
                 }
 
                 if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
@@ -90,6 +99,76 @@ namespace GetFitterGetBigger.Admin.Services
             {
                 throw new InvalidOperationException($"An error occurred while retrieving exercise weight type with ID {id}: {ex.Message}", ex);
             }
+        }
+
+        private IEnumerable<ExerciseWeightTypeDto> MapToExerciseWeightTypes(IEnumerable<ReferenceDataDto> referenceData)
+        {
+            var weightTypes = new List<ExerciseWeightTypeDto>();
+            var displayOrder = 1;
+
+            foreach (var item in referenceData)
+            {
+                var weightType = MapToExerciseWeightType(item, displayOrder++);
+                if (weightType != null)
+                {
+                    weightTypes.Add(weightType);
+                }
+            }
+
+            return weightTypes;
+        }
+
+        private ExerciseWeightTypeDto? MapToExerciseWeightType(ReferenceDataDto referenceData, int displayOrder = 1)
+        {
+            // Extract the GUID from the ID string (format: "exerciseweighttype-{guid}")
+            if (!TryExtractGuid(referenceData.Id, out var guid))
+            {
+                return null;
+            }
+
+            // Derive the code from the value
+            var code = DeriveCodeFromValue(referenceData.Value);
+
+            return new ExerciseWeightTypeDto
+            {
+                Id = guid,
+                Code = code,
+                Name = referenceData.Value,
+                Description = referenceData.Description,
+                IsActive = true,
+                DisplayOrder = displayOrder
+            };
+        }
+
+        private bool TryExtractGuid(string id, out Guid guid)
+        {
+            guid = Guid.Empty;
+            if (string.IsNullOrEmpty(id))
+                return false;
+
+            // Expected format: "exerciseweighttype-{guid}"
+            var parts = id.Split('-');
+            if (parts.Length >= 6) // exerciseweighttype-a1f3e2d4-5b6c-4d7e-8f9a-0b1c2d3e4f5a
+            {
+                var guidString = string.Join("-", parts.Skip(1));
+                return Guid.TryParse(guidString, out guid);
+            }
+
+            return false;
+        }
+
+        private string DeriveCodeFromValue(string value)
+        {
+            // Map the display values to their expected codes
+            return value switch
+            {
+                "Bodyweight Only" => "BODYWEIGHT_ONLY",
+                "Bodyweight Optional" => "BODYWEIGHT_OPTIONAL",
+                "Weight Required" => "WEIGHT_REQUIRED",
+                "Machine Weight" => "MACHINE_WEIGHT",
+                "No Weight" => "NO_WEIGHT",
+                _ => value.ToUpperInvariant().Replace(" ", "_")
+            };
         }
     }
 }

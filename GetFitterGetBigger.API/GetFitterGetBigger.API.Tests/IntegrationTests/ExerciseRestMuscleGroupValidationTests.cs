@@ -31,19 +31,6 @@ public class ExerciseRestMuscleGroupValidationTests : IClassFixture<SharedDataba
             .WithMuscleGroups() // Empty muscle groups
             .Build();
         
-        // Debug - let's see what's in the request
-        Assert.NotNull(request.ExerciseTypeIds);
-        Assert.Single(request.ExerciseTypeIds);
-        Assert.Equal(TestConstants.ExerciseTypeIds.Rest, request.ExerciseTypeIds.First());
-        
-        // Verify that the REST type exists in the database
-        var restTypeResponse = await _client.GetAsync($"/api/exercisetypes/{TestConstants.ExerciseTypeIds.Rest}");
-        if (restTypeResponse.StatusCode == HttpStatusCode.OK)
-        {
-            var restType = await restTypeResponse.Content.ReadFromJsonAsync<ExerciseTypeDto>();
-            Assert.NotNull(restType);
-            Assert.Equal("Rest", restType.Value);
-        }
         
         // Act
         var response = await _client.PostAsJsonAsync("/api/exercises", request);
