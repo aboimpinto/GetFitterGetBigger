@@ -8,7 +8,7 @@ This document tracks the migration of existing integration tests from `GetFitter
 **Baseline Coverage**: 89.99% (765 total tests)  
 **Migration Status**: **🎉 FIRST MIGRATION COMPLETE!**
 
-### 🎯 **MILESTONE ACHIEVED** (Commit: TBD)
+### 🎯 **MILESTONE ACHIEVED** (Commit: 8dac951e)
 🎉 **FIRST MIGRATION 100% COMPLETE**: DifficultyLevelsControllerTests → DifficultyLevels.feature  
 ✅ **ALL 11 BDD Tests PASSING**: Complete API functionality proven  
 ✅ **FULL FEATURE COVERAGE**: All original test scenarios migrated successfully  
@@ -90,7 +90,7 @@ Feature: Authentication
 ### Reference Tables (10 controllers)
 | Controller | Tests | BDD Feature | Priority | Complexity | Status |
 |------------|-------|-------------|----------|------------|---------|
-| BodyPartsController | 7 tests | ReferenceData/BodyParts.feature | MEDIUM | Low | ❌ Not Started |
+| BodyPartsController | 8 tests | ReferenceData/BodyParts.feature | MEDIUM | Low | ✅ **COMPLETE** (10 BDD tests) |
 | DifficultyLevelsController | 7 tests | ReferenceData/DifficultyLevels.feature | MEDIUM | Low | ✅ **FIRST MIGRATION COMPLETE** |
 | ExerciseTypesController | 7 tests | ReferenceData/ExerciseTypes.feature | MEDIUM | Low | ❌ Not Started |
 | KineticChainTypesController | 7 tests | ReferenceData/KineticChainTypes.feature | MEDIUM | Low | ❌ Not Started |
@@ -233,9 +233,9 @@ Feature: Authentication
 - **Integration Tests**: ~218 (IntegrationTests + Controllers)
 
 #### Migration Metrics (Updated Weekly)
-- **Tests Migrated**: 0/218 (0%)
+- **Tests Migrated**: 18/218 (8.2%)
 - **Coverage After Migration**: TBD
-- **BDD Tests Created**: 1 (DatabaseConnection)
+- **BDD Tests Created**: 22 (DatabaseConnection + DifficultyLevels + BodyParts)
 
 ### Risk Mitigation
 
