@@ -307,9 +307,10 @@ Feature: Authentication
   - ExerciseBasicOperations: 4/4 tests
   - ExerciseIntegration: 3/9 tests (6 skipped due to missing REST type/PUT issues)
   - EquipmentCrudSimple: 8/8 tests
+  - CacheKeyGenerator: 7/7 tests
 
 ### 🚧 In Progress  
-- **Phase 2**: Core Functionality (67.4% overall complete, 62.5% of Phase 2)
+- **Phase 2**: Core Functionality (70.6% overall complete, 68.75% of Phase 2)
 
 ### ⏳ Next Steps
 1. ✅ Database Operations completed (5 tests)
