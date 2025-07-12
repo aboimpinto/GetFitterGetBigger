@@ -177,7 +177,17 @@ After user explicitly states feature acceptance:
 5. Delete the feature branch locally
 6. Optionally delete the feature branch on remote
 
-### 9. Special Conditions
+### 9. Feature Completion Reports (MANDATORY)
+After user explicitly accepts the feature, create the following reports in the feature folder:
+
+1. **COMPLETION-REPORT.md** - Comprehensive feature summary
+2. **TECHNICAL-SUMMARY.md** - Technical implementation details
+3. **LESSONS-LEARNED.md** - Insights and recommendations
+4. **QUICK-REFERENCE.md** - Quick usage guide
+
+These reports are MANDATORY before moving the feature to COMPLETED status. See the Completion Report Templates section below for detailed templates.
+
+### 10. Special Conditions
 - **Skipping Manual Tests**: Only when user explicitly requests during initial feature specification
 - **Interrupted Implementation**: Next session can resume using existing task list with current statuses
 - **Git Operations**: All git operations require explicit user approval and are not automated
@@ -356,3 +366,444 @@ At feature completion, calculate:
 - Use async/await for all I/O operations
 - Implement pagination for list endpoints
 - Consider using projection for large entities
+
+## Completion Report Templates
+
+When moving a feature to COMPLETED, the following reports MUST be created:
+
+### 1. COMPLETION-REPORT.md Template
+```markdown
+# [Feature Name] - Completion Report
+
+## Feature Overview
+**Feature ID**: FEAT-XXX  
+**Feature Name**: [Full feature name]  
+**Start Date**: [Date implementation started]  
+**Completion Date**: [Date user accepted]  
+**Status**: ✅ COMPLETE
+
+## Summary
+[Brief description of what was accomplished]
+
+## Implementation Details
+
+### API Changes
+1. **Models & Entities**
+   - [What was added/changed]
+   - [Key implementation details]
+
+2. **Repository Layer**
+   - [What was added/changed]
+   - [Key implementation details]
+
+3. **Service Layer**
+   - [What was added/changed]
+   - [Business logic implemented]
+
+4. **Controller/Endpoints**
+   - [New endpoints created]
+   - [Validation rules applied]
+
+## Issues Resolved During Testing
+
+### Issue 1: [Issue Name]
+- **Problem**: [Description]
+- **Solution**: [How it was fixed]
+- **User Feedback**: [What the user reported]
+
+[Repeat for each issue]
+
+## Test Coverage Improvements
+- **Before**: [Coverage %], [Number] tests
+- **After**: [Coverage %], [Number] tests
+- **New Tests Added**: [Number]
+
+### Specific Improvements
+1. **[Component]**: [Before]% → [After]%
+2. **[Component]**: [Before]% → [After]%
+
+## Technical Debt Addressed
+[List any refactoring or improvements made]
+
+## Files Changed
+- **Total Files**: [Number]
+- **Lines Added**: [Number]
+- **Lines Removed**: [Number]
+
+## Key Learnings
+[Important insights gained during implementation]
+
+## Deployment Notes
+- [Database migration requirements]
+- [Configuration changes needed]
+- [Breaking changes]
+
+## Documentation Created
+[List all documentation files created]
+
+## Next Steps
+[Any follow-up work or future enhancements]
+
+## Sign-off
+- ✅ All acceptance criteria met
+- ✅ Manual testing completed successfully
+- ✅ Automated tests passing
+- ✅ Documentation complete
+- ✅ Code review ready
+
+**Feature Status**: COMPLETE and ready for production deployment
+```
+
+### 2. TECHNICAL-SUMMARY.md Template
+```markdown
+# [Feature Name] Technical Implementation Summary
+
+## Architecture Changes
+
+### 1. Data Flow
+```
+[Diagram or description of data flow]
+```
+
+### 2. Key Components Created
+
+#### Models & Entities
+```
+/Models/
+  └── Entities/
+      └── [EntityName].cs    # Description of purpose
+  └── DTOs/
+      └── [DtoName].cs       # Description of purpose
+```
+
+#### Repository Layer
+```
+/Repositories/
+  └── Interfaces/
+      └── I[Name]Repository.cs
+  └── Implementations/
+      └── [Name]Repository.cs
+```
+
+#### Service Layer
+```
+/Services/
+  └── Interfaces/
+      └── I[Name]Service.cs
+  └── Implementations/
+      └── [Name]Service.cs
+```
+
+### 3. Critical Implementation Details
+```csharp
+// Example of key implementation pattern
+public async Task<ServiceResult<T>> CreateAsync(CreateRequest request)
+{
+    // Show critical validation or business logic
+}
+```
+
+### 4. Validation Rules
+- [Business rule 1]
+- [Business rule 2]
+- [Validation pattern used]
+
+### 5. Database Schema Changes
+```sql
+-- Migration summary
+CREATE TABLE [TableName] (
+    -- Show key schema
+);
+```
+
+## Integration Points
+
+### 1. Dependencies
+- [External services used]
+- [Internal services integrated]
+
+### 2. API Endpoints
+```
+GET    /api/[resource]
+POST   /api/[resource]
+PUT    /api/[resource]/{id}
+DELETE /api/[resource]/{id}
+```
+
+## Testing Strategy
+
+### 1. Unit Tests
+- Repository tests: [approach]
+- Service tests: [approach]
+- Controller tests: [approach]
+
+### 2. Integration Tests
+- API endpoint tests: [approach]
+- Database integration: [approach]
+
+### 3. Test Data
+- Seed data approach
+- Test fixtures used
+
+## Performance Considerations
+- [Caching strategy]
+- [Query optimization]
+- [Async patterns]
+
+## Security Considerations
+- [Authorization rules]
+- [Data validation]
+- [Input sanitization]
+
+## Breaking Changes
+[List any breaking changes]
+
+## Configuration
+```json
+// Any configuration added
+{
+  "FeatureName": {
+    "Setting": "value"
+  }
+}
+```
+
+## Deployment
+1. Run database migrations
+2. Update configuration
+3. Deploy API changes
+4. Verify endpoints
+
+## Monitoring
+- [Key metrics to monitor]
+- [Expected performance baseline]
+- [Error patterns to watch]
+```
+
+### 3. LESSONS-LEARNED.md Template
+```markdown
+# [Feature Name] - Lessons Learned
+
+## What Went Well ✅
+
+### 1. [Success Area]
+[Description of what worked well and why]
+
+### 2. [Technical Success]
+[What technical approach worked particularly well]
+
+## Challenges Faced 🔧
+
+### 1. [Challenge Name]
+**Issue**: [Description of the problem]
+```csharp
+// Example code that caused issues
+```
+**Solution**: [How it was resolved]
+```csharp
+// Fixed code
+```
+**Learning**: [Key takeaway]
+
+### 2. [Another Challenge]
+**Issue**: [Description]
+**Solution**: [Resolution]
+**Learning**: [Takeaway]
+
+## Technical Insights 💡
+
+### 1. [Pattern/Approach]
+[Technical learning about patterns, architecture, or implementation]
+
+### 2. [Performance Discovery]
+[Any performance insights gained]
+
+## Process Improvements 📈
+
+### 1. Development Process
+[How the development process could be improved]
+
+### 2. Testing Strategy
+[Testing improvements discovered]
+
+## Recommendations for Future Features 🚀
+
+### 1. Before Starting
+- [ ] [Recommendation based on learnings]
+- [ ] [Pre-implementation consideration]
+
+### 2. During Development
+- [ ] [Development practice recommendation]
+- [ ] [Code quality tip]
+
+### 3. Testing Phase
+- [ ] [Testing recommendation]
+- [ ] [Quality assurance tip]
+
+### 4. Documentation
+- [ ] [Documentation best practice]
+- [ ] [Knowledge sharing tip]
+
+## Key Takeaways 🎯
+
+1. **[Topic]**: [Key learning]
+2. **[Technical Topic]**: [Important insight]
+3. **[Process Topic]**: [Process improvement]
+
+## Time Investment
+- Initial implementation: ~[X] hours
+- Bug fixing and testing: ~[X] hours
+- Documentation: ~[X] hours
+- **Total**: ~[X] hours
+
+## ROI Analysis
+- **Time Saved with AI**: [X]% reduction
+- **Quality Improvements**: [List improvements]
+- **Technical Debt Reduced**: [What was cleaned up]
+- **Future Development Impact**: [How this helps future work]
+
+## Quote of the Feature
+"[Memorable quote or insight from the implementation]"
+```
+
+### 4. QUICK-REFERENCE.md Template
+```markdown
+# [Feature Name] - Quick Reference
+
+## Key Constants/Enums
+```csharp
+public enum [EnumName]
+{
+    Value1 = 1,  // Description
+    Value2 = 2,  // Description
+}
+```
+
+## Business Rules
+- ❌ [Rule about what's NOT allowed]
+- ✅ [Rule about what IS required]
+- ⚠️ [Important consideration]
+
+## API Endpoints
+
+### Get All [Resources]
+```
+GET /api/[resources]
+Authorization: Bearer {token}
+
+Response: 200 OK
+[
+  {
+    "id": "guid",
+    "field": "value"
+  }
+]
+```
+
+### Create [Resource]
+```
+POST /api/[resources]
+Authorization: Bearer {token}
+Content-Type: application/json
+
+{
+  "field": "value",
+  "requiredField": "value"
+}
+
+Response: 201 Created
+{
+  "id": "guid",
+  "field": "value"
+}
+```
+
+### Update [Resource]
+```
+PUT /api/[resources]/{id}
+Authorization: Bearer {token}
+Content-Type: application/json
+
+{
+  "field": "updated value"
+}
+
+Response: 200 OK
+```
+
+### Delete [Resource]
+```
+DELETE /api/[resources]/{id}
+Authorization: Bearer {token}
+
+Response: 204 No Content
+```
+
+## Common Validation Errors
+
+### Missing Required Field
+```json
+{
+  "errors": {
+    "FieldName": ["The FieldName field is required."]
+  }
+}
+```
+
+### Invalid Format
+```json
+{
+  "errors": {
+    "FieldName": ["The field must match pattern X."]
+  }
+}
+```
+
+## C# Usage Examples
+
+### Service Usage
+```csharp
+// Inject service
+private readonly I[Name]Service _service;
+
+// Use in controller
+var result = await _service.CreateAsync(request);
+if (!result.IsSuccess)
+{
+    return BadRequest(result.Error);
+}
+```
+
+### Repository Pattern
+```csharp
+// Query example
+var items = await _repository.GetAllAsync();
+
+// With includes
+var item = await _repository.GetByIdWithIncludesAsync(
+    id, 
+    x => x.Include(i => i.RelatedEntity)
+);
+```
+
+## Testing
+- Unit tests: `/[Feature].Tests/[Component]Tests.cs`
+- Integration tests: `/IntegrationTests/[Feature]Tests.cs`
+- Test data: Use builders in `/Tests/Builders/[Name]Builder.cs`
+
+## Troubleshooting
+
+### Issue: [Common Issue]
+**Symptom**: [What user sees]
+**Cause**: [Root cause]
+**Solution**: [How to fix]
+
+### Issue: [Another Issue]
+**Symptom**: [Description]
+**Solution**: [Fix]
+
+## Related Documentation
+- Entity model: `/Models/Entities/[Name].cs`
+- Service implementation: `/Services/Implementations/[Name]Service.cs`
+- Database configuration: `/Data/Configurations/[Name]Configuration.cs`
+```
