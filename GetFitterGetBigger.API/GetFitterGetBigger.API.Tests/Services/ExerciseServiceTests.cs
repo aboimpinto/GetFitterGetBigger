@@ -353,7 +353,7 @@ namespace GetFitterGetBigger.API.Tests.Services
             var request = CreateExerciseRequestBuilder.ForRestExercise()
                 .WithName("Rest Exercise")
                 .WithDescription("Rest period")
-                .WithExerciseWeightTypeId(SeedDataBuilder.StandardIds.ExerciseWeightTypeIds.WeightRequired) // Should not be allowed
+                .WithExerciseWeightTypeId(TestIds.ExerciseWeightTypeIds.WeightRequired) // Should not be allowed
                 .Build();
 
             // Mock REST type detection
