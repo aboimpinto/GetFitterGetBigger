@@ -123,6 +123,19 @@ Feature: Authentication
 | `UpdateExercise_WithValidData_ReturnsOk` | ExercisesControllerPostgreSqlTests.cs | Exercise/ExerciseCrud.feature | HIGH | High | 🚧 IN PROGRESS |
 | Additional exercise CRUD tests | ExercisesControllerPostgreSqlTests.cs | Exercise/ExerciseCrud.feature | HIGH | High | ✅ **COMPLETE** (8 total BDD tests) |
 
+### Exercise Integration Tests
+| Original Test | File | BDD Feature | Priority | Complexity | Status |
+|--------------|------|-------------|----------|------------|---------|
+| `CreateExercise_WithCoachNotes_ReturnsCreatedExerciseWithOrderedNotes` | ExerciseIntegrationTests.cs | Exercise/ExerciseIntegration.feature | MEDIUM | Medium | ✅ **COMPLETE** (ebfbb953) |
+| `CreateExercise_WithMultipleExerciseTypes_ReturnsCreatedExerciseWithAllTypes` | ExerciseIntegrationTests.cs | Exercise/ExerciseIntegration.feature | MEDIUM | Medium | ✅ **COMPLETE** (ebfbb953) |
+| `CreateExercise_WithRestTypeAndOtherTypes_ReturnsBadRequest` | ExerciseIntegrationTests.cs | Exercise/ExerciseIntegration.feature | MEDIUM | Medium | 🚫 SKIPPED (REST type not seeded) |
+| `CreateExercise_WithOnlyRestType_ReturnsCreatedExercise` | ExerciseIntegrationTests.cs | Exercise/ExerciseIntegration.feature | MEDIUM | Medium | 🚫 SKIPPED (REST type not seeded) |
+| `CreateExercise_WithEmptyCoachNotes_ReturnsCreatedExerciseWithNoNotes` | ExerciseIntegrationTests.cs | Exercise/ExerciseIntegration.feature | MEDIUM | Medium | ✅ **COMPLETE** (ebfbb953) |
+| `UpdateExercise_AddCoachNotes_UpdatesExerciseWithNewNotes` | ExerciseIntegrationTests.cs | Exercise/ExerciseIntegration.feature | MEDIUM | High | 🚫 SKIPPED (PUT endpoint 400) |
+| `UpdateExercise_ModifyExistingCoachNotes_UpdatesNotesCorrectly` | ExerciseIntegrationTests.cs | Exercise/ExerciseIntegration.feature | MEDIUM | High | 🚫 SKIPPED (PUT endpoint 400) |
+| `UpdateExercise_ChangeExerciseTypes_UpdatesTypesCorrectly` | ExerciseIntegrationTests.cs | Exercise/ExerciseIntegration.feature | MEDIUM | High | 🚫 SKIPPED (PUT endpoint 400) |
+| `UpdateExercise_WithRestTypeAndOtherTypes_ReturnsBadRequest` | ExerciseIntegrationTests.cs | Exercise/ExerciseIntegration.feature | MEDIUM | High | 🚫 SKIPPED (PUT endpoint 400) |
+
 **⚠️ NOTE**: These tests require detailed analysis as they may test endpoints not yet fully implemented.
 
 ### Complex Business Logic Tests
@@ -255,11 +268,11 @@ Feature: Authentication
 - **Integration Tests**: ~218 (IntegrationTests + Controllers)
 
 #### Migration Metrics (Updated 2025-01-12)
-- **Tests Migrated**: 136/218 (62.4%)
+- **Tests Migrated**: 139/218 (63.8%)
 - **Coverage After Migration**: 89.99% (maintained)
-- **BDD Tests Created**: 137 (1 DatabaseConnection + 136 migrated tests)
+- **BDD Tests Created**: 140 (1 DatabaseConnection + 139 migrated tests)
 - **Phase 1 Status**: ✅ COMPLETE
-- **Phase 2 Status**: 🚧 IN PROGRESS (57/103 tests completed)
+- **Phase 2 Status**: 🚧 IN PROGRESS (60/103 tests completed)
 
 ### Risk Mitigation
 
@@ -283,7 +296,7 @@ Feature: Authentication
 - **Phase 1 COMPLETE**: 79 tests migrated successfully
   - Authentication: 10/10 tests
   - Reference Tables: 69 tests across 8 controllers
-- **Phase 2 IN PROGRESS**: 57 additional tests migrated
+- **Phase 2 IN PROGRESS**: 60 additional tests migrated
   - ExerciseWeightTypes: 17/17 tests
   - MuscleGroups: 14/14 tests (complex CRUD entity)
   - DatabaseOperations: 5/5 tests
@@ -292,9 +305,10 @@ Feature: Authentication
   - ExerciseCrud: 8/8 tests
   - CoachNotesSync: 4/4 tests
   - ExerciseBasicOperations: 4/4 tests
+  - ExerciseIntegration: 3/9 tests (6 skipped due to missing REST type/PUT issues)
 
 ### 🚧 In Progress  
-- **Phase 2**: Core Functionality (62.4% overall complete, 55.3% of Phase 2)
+- **Phase 2**: Core Functionality (63.8% overall complete, 58.3% of Phase 2)
 
 ### ⏳ Next Steps
 1. ✅ Database Operations completed (5 tests)

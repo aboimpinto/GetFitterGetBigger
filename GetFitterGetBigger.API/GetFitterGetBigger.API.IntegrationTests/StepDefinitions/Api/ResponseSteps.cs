@@ -21,6 +21,15 @@ public class ResponseSteps
     public void ThenTheResponseStatusShouldBe(int expectedStatusCode)
     {
         var actualStatusCode = (int)_scenarioContext.GetLastResponseStatusCode();
+        
+        // Log response content for debugging when status doesn't match
+        if (actualStatusCode != expectedStatusCode)
+        {
+            var content = _scenarioContext.GetLastResponseContent();
+            Console.WriteLine($"Response status: {actualStatusCode}");
+            Console.WriteLine($"Response content: {content}");
+        }
+        
         actualStatusCode.Should().Be(expectedStatusCode, 
             $"expected status code {expectedStatusCode} but got {actualStatusCode}");
     }
@@ -195,6 +204,8 @@ public class ResponseSteps
         
         var value = GetJsonValue(jsonDocument.RootElement, jsonPath);
         value.Should().NotBeNull($"property '{jsonPath}' not found in response");
+        
+        Console.WriteLine($"[Store] Storing '{jsonPath}' = '{value}' as '{variableName}'");
         
         _scenarioContext.SetTestData(variableName, value!);
     }
@@ -474,6 +485,49 @@ public class ResponseSteps
         var actualValue = GetJsonValue(jsonDocument.RootElement, jsonPath);
         actualValue.Should().Be(expectedValue, 
             $"expected property '{jsonPath}' to have value '{expectedValue}' but got '{actualValue}'");
+    }
+    
+    [Then(@"the response should not contain item with property ""(.*)"" equals ""(.*)""")]
+    public void ThenTheResponseShouldNotContainItemWithPropertyEquals(string propertyName, string propertyValue)
+    {
+        var content = _scenarioContext.GetLastResponseContent();
+        var jsonArray = JsonDocument.Parse(content);
+        
+        if (jsonArray.RootElement.ValueKind != JsonValueKind.Array)
+        {
+            throw new InvalidOperationException($"Response is not an array, cannot search for items");
+        }
+        
+        // Resolve placeholder in property value
+        var resolvedValue = _scenarioContext.ResolvePlaceholders(propertyValue);
+        
+        bool found = false;
+        foreach (var item in jsonArray.RootElement.EnumerateArray())
+        {
+            if (item.TryGetProperty(propertyName, out var propElement))
+            {
+                var propValue = propElement.GetString();
+                if (propValue != null && propValue.Equals(resolvedValue, StringComparison.OrdinalIgnoreCase))
+                {
+                    found = true;
+                    break;
+                }
+            }
+        }
+        
+        found.Should().BeFalse($"Expected array to not contain item with property '{propertyName}' equal to '{resolvedValue}'");
+    }
+    
+    [Then(@"the response property ""([^""]+)"" should start with ""([^""]+)""")]
+    public void ThenTheResponsePropertyShouldStartWith(string propertyPath, string expectedPrefix)
+    {
+        var content = _scenarioContext.GetLastResponseContent();
+        var jsonDocument = JsonDocument.Parse(content);
+        
+        var actualValue = GetJsonValue(jsonDocument.RootElement, propertyPath);
+        actualValue.Should().NotBeNull($"property '{propertyPath}' not found");
+        actualValue.Should().StartWith(expectedPrefix, 
+            $"expected property '{propertyPath}' to start with '{expectedPrefix}' but got '{actualValue}'");
     }
     
     private JsonElement? GetJsonElement(JsonElement element, string path)

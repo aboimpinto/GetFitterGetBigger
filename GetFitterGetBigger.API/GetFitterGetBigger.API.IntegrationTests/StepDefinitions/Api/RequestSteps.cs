@@ -55,6 +55,10 @@ public class RequestSteps
         endpoint = _scenarioContext.ResolvePlaceholders(endpoint);
         body = _scenarioContext.ResolvePlaceholders(body);
         
+        // Log for debugging
+        Console.WriteLine($"[Request] {method} {endpoint}");
+        Console.WriteLine($"[Request Body] {body}");
+        
         var content = new StringContent(body, Encoding.UTF8, "application/json");
         
         HttpResponseMessage response = method.ToUpper() switch

@@ -217,6 +217,33 @@ public static class ScenarioContextExtensions
     /// </summary>
     public static string ResolvePlaceholders(this ScenarioContext context, string text)
     {
+        // First, handle simple placeholders in the format <key>
+        var simplePlaceholderPattern = @"<([^.>]+)>";
+        var simpleMatches = System.Text.RegularExpressions.Regex.Matches(text, simplePlaceholderPattern);
+        
+        foreach (System.Text.RegularExpressions.Match match in simpleMatches)
+        {
+            // Skip if this looks like a property placeholder (contains a dot)
+            if (match.Value.Contains('.'))
+                continue;
+                
+            var key = match.Groups[1].Value;
+            
+            try
+            {
+                // Try to get the test data
+                var fullKey = $"{TestDataKeyPrefix}{key}";
+                if (context.TryGetValue(fullKey, out var value) && value != null)
+                {
+                    text = text.Replace(match.Value, value.ToString());
+                }
+            }
+            catch
+            {
+                // If we can't resolve a placeholder, leave it as is
+            }
+        }
+        
         // Find all placeholders in the format <EntityName.PropertyName>
         var placeholderPattern = @"<([^.>]+)\.([^>]+)>";
         var matches = System.Text.RegularExpressions.Regex.Matches(text, placeholderPattern);
