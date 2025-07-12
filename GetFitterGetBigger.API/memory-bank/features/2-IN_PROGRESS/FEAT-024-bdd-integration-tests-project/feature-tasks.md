@@ -3,6 +3,38 @@
 ## Overview
 Create a new BDD-based integration test project using SpecFlow and TestContainers.PostgreSQL.
 
+## Baseline Health Check Results
+**Date**: 2025-01-12
+**Branch**: feature/FEAT-024-bdd-integration-tests
+**Status**: ✅ PASSED
+
+### Build Results
+```
+dotnet build
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+Time Elapsed 00:00:04.68
+```
+
+### Test Results
+```
+dotnet test
+Passed!  - Failed:     0, Passed:   765, Skipped:     0, Total:   765, Duration: 8 s
+
+Code Coverage:
++------------------------------------+--------+--------+--------+
+| Module                             | Line   | Branch | Method |
++------------------------------------+--------+--------+--------+
+| Olimpo.EntityFramework.Persistency | 92.72% | 64.28% | 93.33% |
+| GetFitterGetBigger.API             | 89.95% | 77.38% | 92.09% |
++------------------------------------+--------+--------+--------+
+| Total                              | 89.99% | 77.19% | 92.12% |
++------------------------------------+--------+--------+--------+
+```
+
+**Note**: This establishes our baseline coverage that must be maintained or improved after migration.
+
 ## Prerequisites
 - [ ] Verify Docker is installed and running on development machine
 - [ ] Review existing integration tests in GetFitterGetBigger.API.Tests
@@ -12,14 +44,16 @@ Create a new BDD-based integration test project using SpecFlow and TestContainer
 
 ### 1. Project Setup and Configuration
 **Estimated Time**: 2 hours
-**Status**: [ ] Not Started
+**Status**: [x] Completed - 2025-01-12 14:11
+**Actual Time**: 30 minutes
+**Commit**: Tracked in feature branch `feature/FEAT-024-bdd-integration-tests`
 
 #### Subtasks:
-- [ ] Create new test project `GetFitterGetBigger.API.IntegrationTests`
+- [x] Create new test project `GetFitterGetBigger.API.IntegrationTests`
   - Use .NET 9.0
   - Project type: xUnit Test Project
-- [ ] Add project to solution file
-- [ ] Configure project SDK and target framework in .csproj:
+- [x] Add project to solution file
+- [x] Configure project SDK and target framework in .csproj:
   ```xml
   <Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
@@ -29,17 +63,17 @@ Create a new BDD-based integration test project using SpecFlow and TestContainer
     </PropertyGroup>
   </Project>
   ```
-- [ ] Add NuGet packages:
-  - SpecFlow (4.0.x or latest)
-  - SpecFlow.xUnit (4.0.x or latest)
-  - SpecFlow.Tools.MsBuild.Generation (4.0.x or latest)
-  - Testcontainers.PostgreSql (3.10.x or latest)
-  - Microsoft.AspNetCore.Mvc.Testing (9.0.x)
-  - FluentAssertions (6.12.x or latest)
-  - xunit (2.9.x or latest)
-  - xunit.runner.visualstudio (2.8.x or latest)
-- [ ] Add project reference to API project
-- [ ] Configure SpecFlow.json settings:
+- [x] Add NuGet packages:
+  - SpecFlow (4.0.31-beta) ✓
+  - SpecFlow.xUnit (4.0.31-beta) ✓
+  - SpecFlow.Tools.MsBuild.Generation (4.0.31-beta) ✓ (auto-added)
+  - Testcontainers.PostgreSql (3.10.0) ✓
+  - Microsoft.AspNetCore.Mvc.Testing (9.0.0) ✓
+  - FluentAssertions (6.12.2) ✓
+  - xunit (2.9.2) ✓
+  - xunit.runner.visualstudio (2.8.2) ✓
+- [x] Add project reference to API project
+- [x] Configure SpecFlow.json settings:
   ```json
   {
     "bindingCulture": {
@@ -55,47 +89,57 @@ Create a new BDD-based integration test project using SpecFlow and TestContainer
   }
   ```
 
+#### Results:
+- Build: ✅ Successful
+- Tests: ✅ 765 tests passing (existing tests)
+- Coverage: ✅ 89.99% maintained
+- New project created and integrated into solution
+
 ### 2. Test Infrastructure Setup
 **Estimated Time**: 4 hours
-**Status**: [ ] Not Started
+**Status**: [x] Completed - 2025-01-12 14:35
+**Actual Time**: 25 minutes
+**Commit**: Tracked in feature branch `feature/FEAT-024-bdd-integration-tests`
 
 #### Subtasks:
-- [ ] Create folder structure:
+- [x] Create folder structure:
   ```
   TestInfrastructure/
   ├── Fixtures/
   ├── Helpers/
   └── Configuration/
   ```
-- [ ] Implement `IntegrationTestWebApplicationFactory.cs`:
-  ```csharp
-  public class IntegrationTestWebApplicationFactory : WebApplicationFactory<Program>
-  {
-      private readonly PostgreSqlContainer _postgresContainer;
-      
-      protected override void ConfigureWebHost(IWebHostBuilder builder)
-      {
-          // Override database configuration
-          // Configure test services
-          // Setup authentication mocks
-      }
-  }
-  ```
-- [ ] Create `PostgreSqlTestFixture.cs`:
-  - Implement IAsyncLifetime for container lifecycle
+- [x] Implement `IntegrationTestWebApplicationFactory.cs`:
+  - Extends WebApplicationFactory<Program>
+  - Configures PostgreSQL test container
+  - Handles database migrations and seeding
+  - Provides cleanup methods for test data
+- [x] Create `PostgreSqlTestFixture.cs`:
+  - Implements IAsyncLifetime for container lifecycle
   - PostgreSQL container setup with TestContainers
   - Connection string generation
-  - Database migration execution
-  - Reference data seeding
-- [ ] Implement `TestDatabaseSeeder.cs`:
-  - Seed all reference data (DifficultyLevels, BodyParts, etc.)
-  - Create test data factory methods
-  - Implement data cleanup strategies
-- [ ] Create `ScenarioContextExtensions.cs`:
+  - Database initialization and cleanup methods
+  - HttpClient creation for tests
+- [x] Implement `TestDatabaseSeeder.cs`:
+  - Wraps existing SeedDataBuilder from API.Tests
+  - Provides methods to seed all reference data types
+  - Implements data cleanup for test isolation
+- [x] Create `ScenarioContextExtensions.cs`:
   - Store/retrieve test entities by key
   - Type-safe access to test data
-  - HTTP response storage
+  - HTTP response and status code storage
   - Authentication token management
+  - Placeholder resolution for Gherkin scenarios
+
+#### Results:
+- Build: ✅ Successful
+- Tests: ✅ 765 tests passing (existing tests maintained)
+- Coverage: ✅ 89.99% maintained
+- Infrastructure components created:
+  - IntegrationTestWebApplicationFactory for SpecFlow
+  - PostgreSqlTestFixture for container management
+  - TestDatabaseSeeder for consistent test data
+  - ScenarioContextExtensions for Gherkin support
 
 ### 3. Core Step Definitions
 **Estimated Time**: 4 hours

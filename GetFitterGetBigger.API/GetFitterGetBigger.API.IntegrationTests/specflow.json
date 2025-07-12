@@ -1,0 +1,12 @@
+{
+  "bindingCulture": {
+    "language": "en-US"
+  },
+  "generator": {
+    "allowDebugGeneratedFiles": true,
+    "allowRowTests": true
+  },
+  "runtime": {
+    "missingOrPendingStepsOutcome": "Error"
+  }
+}
