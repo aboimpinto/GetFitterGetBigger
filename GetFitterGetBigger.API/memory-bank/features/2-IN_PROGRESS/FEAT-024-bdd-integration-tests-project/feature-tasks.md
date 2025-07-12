@@ -727,6 +727,14 @@ Scenario: Create exercise with valid data
 ## Definition of Done
 - [ ] All tasks completed
 - [ ] Code reviewed by team lead
-- [ ] Documentation reviewed and approved
-- [ ] Example tests passing in CI/CD
-- [ ] Team training session conducted
+
+## Migration Progress Updates
+
+### Update 2025-01-12 (Later)
+- **Status**: 147/218 tests migrated (67.4%)
+- **Latest Migration**: EquipmentCrudSimple (8 tests)
+- **Changes Made**:
+  - Added support for simple `<key>` placeholder format in ResolvePlaceholders
+  - Added step definitions for array validation without specific items
+  - Added step definition for property prefix validation
+- **Next**: Continue with remaining simple integration tests

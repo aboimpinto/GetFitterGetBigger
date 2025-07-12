@@ -306,9 +306,10 @@ Feature: Authentication
   - CoachNotesSync: 4/4 tests
   - ExerciseBasicOperations: 4/4 tests
   - ExerciseIntegration: 3/9 tests (6 skipped due to missing REST type/PUT issues)
+  - EquipmentCrudSimple: 8/8 tests
 
 ### 🚧 In Progress  
-- **Phase 2**: Core Functionality (63.8% overall complete, 58.3% of Phase 2)
+- **Phase 2**: Core Functionality (67.4% overall complete, 62.5% of Phase 2)
 
 ### ⏳ Next Steps
 1. ✅ Database Operations completed (5 tests)
