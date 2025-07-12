@@ -1,0 +1,82 @@
+name: BDD Integration Tests
+
+on:
+  push:
+    branches: [ main, develop, 'feature/*' ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  bdd-tests:
+    runs-on: ubuntu-latest
+    
+    services:
+      # PostgreSQL service container is handled by TestContainers
+      # No need to define it here
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: '9.0.x'
+    
+    # Ensure Docker is available for TestContainers
+    - name: Verify Docker
+      run: |
+        docker --version
+        docker info
+    
+    - name: Restore dependencies
+      run: dotnet restore
+    
+    - name: Build
+      run: dotnet build --no-restore
+    
+    # Run BDD Integration Tests
+    - name: Run BDD Tests
+      run: |
+        dotnet test GetFitterGetBigger.API.IntegrationTests/GetFitterGetBigger.API.IntegrationTests.csproj \
+          --no-build \
+          --verbosity normal \
+          --logger "trx;LogFileName=bdd-test-results.trx" \
+          --logger "html;LogFileName=bdd-test-results.html" \
+          --collect:"XPlat Code Coverage"
+      env:
+        # TestContainers will use this to pull images
+        DOCKER_HOST: unix:///var/run/docker.sock
+    
+    # Upload test results
+    - name: Upload Test Results
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: bdd-test-results
+        path: |
+          **/TestResults/bdd-test-results.trx
+          **/TestResults/bdd-test-results.html
+    
+    # Upload coverage results
+    - name: Upload Coverage Results
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: coverage-results
+        path: '**/TestResults/**/coverage.cobertura.xml'
+    
+    # Publish test results to GitHub
+    - name: Test Report
+      uses: dorny/test-reporter@v1
+      if: always()
+      with:
+        name: BDD Test Results
+        path: '**/TestResults/bdd-test-results.trx'
+        reporter: dotnet-trx
+    
+    # Add test summary to PR (if applicable)
+    - name: Test Summary
+      uses: test-summary/action@v2
+      if: always()
+      with:
+        paths: '**/TestResults/bdd-test-results.trx'
