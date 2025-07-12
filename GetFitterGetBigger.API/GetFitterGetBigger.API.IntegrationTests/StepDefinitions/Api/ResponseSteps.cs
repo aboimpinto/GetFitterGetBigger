@@ -151,8 +151,20 @@ public class ResponseSteps
         ValidateJsonAgainstSchema(actualJson.RootElement, schemaJson.RootElement);
     }
     
+    [Then(@"the response property ""(.*)"" should be a JSON array")]
+    public void ThenTheResponsePropertyShouldBeAJsonArray(string propertyPath)
+    {
+        var content = _scenarioContext.GetLastResponseContent();
+        var jsonDocument = JsonDocument.Parse(content);
+        
+        var element = GetJsonElement(jsonDocument.RootElement, propertyPath);
+        element.Should().NotBeNull($"Property '{propertyPath}' not found");
+        element!.Value.ValueKind.Should().Be(JsonValueKind.Array, 
+            $"Property '{propertyPath}' should be a JSON array");
+    }
+    
     [Then(@"the response headers should contain ""(.*)"" with value ""(.*)""")]
-    public void ThenTheResponseHeadersShouldContain(string headerName, string headerValue)
+    public void ThenTheResponseHeadersShouldContainWithValue(string headerName, string headerValue)
     {
         var response = _scenarioContext.GetLastResponse();
         
@@ -162,6 +174,15 @@ public class ResponseSteps
         var actualValues = response.Headers.GetValues(headerName);
         actualValues.Should().Contain(headerValue,
             $"expected header '{headerName}' to contain value '{headerValue}'");
+    }
+    
+    [Then(@"the response headers should contain ""(.*)""")]
+    public void ThenTheResponseHeadersShouldContain(string headerName)
+    {
+        var response = _scenarioContext.GetLastResponse();
+        
+        response.Headers.Should().ContainKey(headerName,
+            $"expected response headers to contain '{headerName}'");
     }
     
     [Given(@"I store the response property ""([^""]+)"" as ""([^""]+)""")]
@@ -283,6 +304,26 @@ public class ResponseSteps
         
         var jsonArray = JsonDocument.Parse(content);
         var firstItem = jsonArray.RootElement[0];
+        
+        // Store as JSON string to avoid value type issues
+        _scenarioContext.SetTestData(variableName, firstItem.GetRawText());
+    }
+    
+    [Given(@"I store the first item from the response property ""(.*)"" as ""(.*)""")]
+    [Then(@"I store the first item from the response property ""(.*)"" as ""(.*)""")]
+    public void ThenIStoreTheFirstItemFromTheResponsePropertyAs(string propertyPath, string variableName)
+    {
+        var content = _scenarioContext.GetLastResponseContent();
+        var jsonDocument = JsonDocument.Parse(content);
+        
+        var arrayElement = GetJsonElement(jsonDocument.RootElement, propertyPath);
+        arrayElement.Should().NotBeNull($"Property '{propertyPath}' not found");
+        arrayElement!.Value.ValueKind.Should().Be(JsonValueKind.Array, 
+            $"Property '{propertyPath}' should be an array");
+        arrayElement.Value.GetArrayLength().Should().BeGreaterThan(0,
+            $"Array '{propertyPath}' should not be empty");
+        
+        var firstItem = arrayElement.Value[0];
         
         // Store as JSON string to avoid value type issues
         _scenarioContext.SetTestData(variableName, firstItem.GetRawText());

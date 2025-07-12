@@ -110,18 +110,20 @@ Feature: Authentication
 ### Exercise Management
 | Original Test | File | BDD Feature | Priority | Complexity | Status |
 |--------------|------|-------------|----------|------------|---------|
-| `GetExercises_ReturnsPagedListOfExercises` | ExercisesControllerPostgreSqlTests.cs | ExerciseManagement.feature | HIGH | High | ❌ Not Started |
-| `CreateExercise_WithValidData_ReturnsCreated` | ExercisesControllerPostgreSqlTests.cs | ExerciseManagement.feature | HIGH | High | ❌ Not Started |
-| `UpdateExercise_WithValidData_ReturnsOk` | ExercisesControllerPostgreSqlTests.cs | ExerciseManagement.feature | HIGH | High | ❌ Not Started |
+| `GetExercises_ReturnsPagedListOfExercises` | ExercisesControllerPostgreSqlTests.cs | Exercise/ExerciseCrud.feature | HIGH | High | ✅ **COMPLETE** (1 BDD test) |
+| `CreateExercise_WithValidData_ReturnsCreated` | ExercisesControllerPostgreSqlTests.cs | Exercise/ExerciseCrud.feature | HIGH | High | ✅ **COMPLETE** (2 BDD tests) |
+| `UpdateExercise_WithValidData_ReturnsOk` | ExercisesControllerPostgreSqlTests.cs | Exercise/ExerciseCrud.feature | HIGH | High | 🚧 IN PROGRESS |
+| Additional exercise CRUD tests | ExercisesControllerPostgreSqlTests.cs | Exercise/ExerciseCrud.feature | HIGH | High | ✅ **COMPLETE** (8 total BDD tests) |
 
 **⚠️ NOTE**: These tests require detailed analysis as they may test endpoints not yet fully implemented.
 
 ### Complex Business Logic Tests
 | Original Test | File | BDD Feature | Priority | Complexity | Status |
 |--------------|------|-------------|----------|------------|---------|
-| `ExerciseCompleteWorkflowTests` (3 tests) | ExerciseCompleteWorkflowTests.cs | Exercise/WorkflowTests.feature | MEDIUM | Very High | ❌ Not Started |
+| `ExerciseCompleteWorkflowTests` (3 tests) | ExerciseCompleteWorkflowTests.cs | Exercise/WorkflowTests.feature | MEDIUM | Very High | 🚫 SKIPPED (DB errors) |
 | `ExerciseCoachNotesSyncTests` (4 tests) | ExerciseCoachNotesSyncTests.cs | Exercise/CoachNotesSync.feature | MEDIUM | High | ❌ Not Started |
 | `ExerciseRestExclusivityTests` (5 tests) | ExerciseRestExclusivityTests.cs | Exercise/RestExclusivity.feature | LOW | High | ✅ **COMPLETE** (5 BDD tests - 3d329595) |
+| `RestMuscleGroupValidation` (4 tests) | RestMuscleGroupValidationTests.cs | Exercise/RestMuscleGroupValidation.feature | MEDIUM | High | ✅ **COMPLETE** (3/4 BDD tests - 5ae7fc66) |
 
 ## 3. Priority 3: Exercise Links and Advanced Features (Future)
 *Complex business rules that may be partially implemented*
@@ -245,11 +247,11 @@ Feature: Authentication
 - **Integration Tests**: ~218 (IntegrationTests + Controllers)
 
 #### Migration Metrics (Updated 2025-01-12)
-- **Tests Migrated**: 123/218 (56.4%)
+- **Tests Migrated**: 128/218 (58.7%)
 - **Coverage After Migration**: 89.99% (maintained)
-- **BDD Tests Created**: 124 (1 DatabaseConnection + 123 migrated tests)
+- **BDD Tests Created**: 129 (1 DatabaseConnection + 128 migrated tests)
 - **Phase 1 Status**: ✅ COMPLETE
-- **Phase 2 Status**: 🚧 IN PROGRESS (44/103 tests completed)
+- **Phase 2 Status**: 🚧 IN PROGRESS (49/103 tests completed)
 
 ### Risk Mitigation
 
