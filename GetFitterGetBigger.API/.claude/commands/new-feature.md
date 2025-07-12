@@ -1,0 +1,1 @@
+Please, let's follow @memory-bank/DEVELOPMENT_PROCESS.md and create a new feature: $ARGUMENTS
