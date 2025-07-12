@@ -545,7 +545,14 @@ After initial implementation, tests were simplified to establish working infrast
   - ✅ **API Endpoints Validated**: All 3 endpoints working correctly
   - 🎯 **Infrastructure Proven**: BDD framework + real API integration complete
   - 📋 **Migration Template Established**: Ready for remaining reference tables
-- [ ] Continue with remaining Simple Reference Tables (BodyParts, ExerciseTypes, etc.)
+- [x] Continue with remaining Simple Reference Tables:
+  - [x] **BodyParts**: 10/10 tests passing (Commit: 8244a669)
+  - [x] **ExerciseTypes**: 10/10 tests passing (Commit: 4797464e)
+  - [x] **KineticChainTypes**: 10/10 tests passing (Commit: ab422798)
+  - [x] **MetricTypes**: 4/7 tests passing - no seeded data (Commit: 96d4ae4b)
+  - [x] **MuscleRoles**: 10/10 tests passing (Commit: e2158820)
+  - [x] **MovementPatterns**: 6/11 tests passing - partial data (Commit: 1f60fa43)
+  - [x] **Equipment**: 9/9 tests passing - fixed seeding issue (Commit: 476c83e3)
 - [x] Update MIGRATION-TRACKER.md with progress
 
 #### Migration Results Summary (Final: Commit 8dac951e)

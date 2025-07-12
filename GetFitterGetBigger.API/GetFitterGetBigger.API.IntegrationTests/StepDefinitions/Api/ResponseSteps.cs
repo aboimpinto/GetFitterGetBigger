@@ -164,6 +164,20 @@ public class ResponseSteps
             $"expected header '{headerName}' to contain value '{headerValue}'");
     }
     
+    [Given(@"I store the response property ""([^""]+)"" as ""([^""]+)""")]
+    [When(@"I store the response property ""([^""]+)"" as ""([^""]+)""")]
+    [Then(@"I store the response property ""([^""]+)"" as ""([^""]+)""")]
+    public void WhenIStoreTheResponsePropertyAs(string jsonPath, string variableName)
+    {
+        var content = _scenarioContext.GetLastResponseContent();
+        var jsonDocument = JsonDocument.Parse(content);
+        
+        var value = GetJsonValue(jsonDocument.RootElement, jsonPath);
+        value.Should().NotBeNull($"property '{jsonPath}' not found in response");
+        
+        _scenarioContext.SetTestData(variableName, value!);
+    }
+    
     [Then(@"store the response property ""(.*)"" as ""(.*)""")]
     public void ThenStoreTheResponsePropertyAs(string jsonPath, string variableName)
     {

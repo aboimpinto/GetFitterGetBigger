@@ -19,7 +19,7 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.Authentication
     
     [System.CodeDom.Compiler.GeneratedCodeAttribute("TechTalk.SpecFlow", "4.0.0.0")]
     [System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
-    public partial class AuthenticationAndAuthorizationFeature : object, Xunit.IClassFixture<AuthenticationAndAuthorizationFeature.FixtureData>, Xunit.IAsyncLifetime
+    public partial class AuthenticationFeature : object, Xunit.IClassFixture<AuthenticationFeature.FixtureData>, Xunit.IAsyncLifetime
     {
         
         private static TechTalk.SpecFlow.ITestRunner testRunner;
@@ -28,7 +28,7 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.Authentication
         
         private Xunit.Abstractions.ITestOutputHelper _testOutputHelper;
         
-        public AuthenticationAndAuthorizationFeature(AuthenticationAndAuthorizationFeature.FixtureData fixtureData, Xunit.Abstractions.ITestOutputHelper testOutputHelper)
+        public AuthenticationFeature(AuthenticationFeature.FixtureData fixtureData, Xunit.Abstractions.ITestOutputHelper testOutputHelper)
         {
             this._testOutputHelper = testOutputHelper;
         }
@@ -36,8 +36,8 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.Authentication
         public static async System.Threading.Tasks.Task FeatureSetupAsync()
         {
             testRunner = TechTalk.SpecFlow.TestRunnerManager.GetTestRunnerForAssembly(null, TechTalk.SpecFlow.xUnit.SpecFlowPlugin.XUnitParallelWorkerTracker.Instance.GetWorkerId());
-            TechTalk.SpecFlow.FeatureInfo featureInfo = new TechTalk.SpecFlow.FeatureInfo(new System.Globalization.CultureInfo("en-US"), "Features/Authentication", "Authentication and Authorization", "    As a user of the GetFitterGetBigger platform\n    I want to authenticate secur" +
-                    "ely\n    So that I can access features based on my subscription tier", ProgrammingLanguage.CSharp, featureTags);
+            TechTalk.SpecFlow.FeatureInfo featureInfo = new TechTalk.SpecFlow.FeatureInfo(new System.Globalization.CultureInfo("en-US"), "Features/Authentication", "Authentication", "  As a user of the fitness application\n  I want to authenticate using my email\n  " +
+                    "So that I can access protected resources", ProgrammingLanguage.CSharp, featureTags);
             await testRunner.OnFeatureStartAsync(featureInfo);
         }
         
@@ -74,6 +74,12 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.Authentication
             await testRunner.CollectScenarioErrorsAsync();
         }
         
+        public virtual async System.Threading.Tasks.Task FeatureBackgroundAsync()
+        {
+            await testRunner.GivenAsync("the database is empty", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Given ");
+            await testRunner.AndAsync("the database has reference data", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
+        }
+        
         async System.Threading.Tasks.Task Xunit.IAsyncLifetime.InitializeAsync()
         {
             await this.TestInitializeAsync();
@@ -84,208 +90,18 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.Authentication
             await this.TestTearDownAsync();
         }
         
-        [Xunit.SkippableFactAttribute(DisplayName="Successful authentication with valid email")]
-        [Xunit.TraitAttribute("FeatureTitle", "Authentication and Authorization")]
-        [Xunit.TraitAttribute("Description", "Successful authentication with valid email")]
-        public async System.Threading.Tasks.Task SuccessfulAuthenticationWithValidEmail()
-        {
-            string[] tagsOfScenario = ((string[])(null));
-            System.Collections.Specialized.OrderedDictionary argumentsOfScenario = new System.Collections.Specialized.OrderedDictionary();
-            TechTalk.SpecFlow.ScenarioInfo scenarioInfo = new TechTalk.SpecFlow.ScenarioInfo("Successful authentication with valid email", null, tagsOfScenario, argumentsOfScenario, featureTags);
-            this.ScenarioInitialize(scenarioInfo);
-            if ((TagHelper.ContainsIgnoreTag(tagsOfScenario) || TagHelper.ContainsIgnoreTag(featureTags)))
-            {
-                testRunner.SkipScenario();
-            }
-            else
-            {
-                await this.ScenarioStartAsync();
-                await testRunner.WhenAsync("I authenticate with email \"pt@example.com\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
-                await testRunner.ThenAsync("I should receive a valid authentication token", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
-                await testRunner.AndAsync("the token should contain claim \"email\" with value \"pt@example.com\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
-                await testRunner.AndAsync("the token should contain claim \"access\" with value \"PT-Tier\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
-            }
-            await this.ScenarioCleanupAsync();
-        }
-        
-        [Xunit.SkippableTheoryAttribute(DisplayName="Authentication with different subscription tiers")]
-        [Xunit.TraitAttribute("FeatureTitle", "Authentication and Authorization")]
-        [Xunit.TraitAttribute("Description", "Authentication with different subscription tiers")]
-        [Xunit.InlineDataAttribute("pt@example.com", "PT-Tier", new string[0])]
-        [Xunit.InlineDataAttribute("admin@example.com", "Admin-Tier", new string[0])]
-        [Xunit.InlineDataAttribute("user@example.com", "Free-Tier", new string[0])]
-        public async System.Threading.Tasks.Task AuthenticationWithDifferentSubscriptionTiers(string email, string tier, string[] exampleTags)
-        {
-            string[] tagsOfScenario = exampleTags;
-            System.Collections.Specialized.OrderedDictionary argumentsOfScenario = new System.Collections.Specialized.OrderedDictionary();
-            argumentsOfScenario.Add("email", email);
-            argumentsOfScenario.Add("tier", tier);
-            TechTalk.SpecFlow.ScenarioInfo scenarioInfo = new TechTalk.SpecFlow.ScenarioInfo("Authentication with different subscription tiers", null, tagsOfScenario, argumentsOfScenario, featureTags);
-            this.ScenarioInitialize(scenarioInfo);
-            if ((TagHelper.ContainsIgnoreTag(tagsOfScenario) || TagHelper.ContainsIgnoreTag(featureTags)))
-            {
-                testRunner.SkipScenario();
-            }
-            else
-            {
-                await this.ScenarioStartAsync();
-                await testRunner.WhenAsync(string.Format("I authenticate with email \"{0}\"", email), ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
-                await testRunner.ThenAsync("I should receive a valid authentication token", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
-                await testRunner.AndAsync(string.Format("the token should contain claim \"access\" with value \"{0}\"", tier), ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
-            }
-            await this.ScenarioCleanupAsync();
-        }
-        
-        [Xunit.SkippableFactAttribute(DisplayName="Failed authentication with invalid email")]
-        [Xunit.TraitAttribute("FeatureTitle", "Authentication and Authorization")]
-        [Xunit.TraitAttribute("Description", "Failed authentication with invalid email")]
-        public async System.Threading.Tasks.Task FailedAuthenticationWithInvalidEmail()
-        {
-            string[] tagsOfScenario = ((string[])(null));
-            System.Collections.Specialized.OrderedDictionary argumentsOfScenario = new System.Collections.Specialized.OrderedDictionary();
-            TechTalk.SpecFlow.ScenarioInfo scenarioInfo = new TechTalk.SpecFlow.ScenarioInfo("Failed authentication with invalid email", null, tagsOfScenario, argumentsOfScenario, featureTags);
-            this.ScenarioInitialize(scenarioInfo);
-            if ((TagHelper.ContainsIgnoreTag(tagsOfScenario) || TagHelper.ContainsIgnoreTag(featureTags)))
-            {
-                testRunner.SkipScenario();
-            }
-            else
-            {
-                await this.ScenarioStartAsync();
-                await testRunner.WhenAsync("I send a POST request to \"/api/auth/authenticate\" with body:", "{\n    \"email\": \"nonexistent@example.com\"\n}", ((TechTalk.SpecFlow.Table)(null)), "When ");
-                await testRunner.ThenAsync("the response status should be 401", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
-                await testRunner.AndAsync("the response should contain \"Invalid credentials\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
-            }
-            await this.ScenarioCleanupAsync();
-        }
-        
-        [Xunit.SkippableTheoryAttribute(DisplayName="Access control for different endpoints")]
-        [Xunit.TraitAttribute("FeatureTitle", "Authentication and Authorization")]
-        [Xunit.TraitAttribute("Description", "Access control for different endpoints")]
-        [Xunit.TraitAttribute("Category", "authorization")]
-        [Xunit.InlineDataAttribute("PT-Tier", "/api/exercises", "200", "# PT can view exercises", new string[0])]
-        [Xunit.InlineDataAttribute("PT-Tier", "/api/clients", "200", "# TODO: Confirm PT can view clients", new string[0])]
-        [Xunit.InlineDataAttribute("PT-Tier", "/api/admin/users", "403", "# TODO: Confirm PT cannot access admin", new string[0])]
-        [Xunit.InlineDataAttribute("Admin-Tier", "/api/exercises", "200", "# Admin can view exercises", new string[0])]
-        [Xunit.InlineDataAttribute("Admin-Tier", "/api/admin/users", "200", "# TODO: Confirm Admin can manage users", new string[0])]
-        [Xunit.InlineDataAttribute("Free-Tier", "/api/exercises", "200", "# Free tier can view exercises", new string[0])]
-        [Xunit.InlineDataAttribute("Free-Tier", "/api/clients", "403", "# TODO: Confirm Free cannot view clients", new string[0])]
-        public async System.Threading.Tasks.Task AccessControlForDifferentEndpoints(string role, string endpoint, string status, string notes, string[] exampleTags)
-        {
-            string[] @__tags = new string[] {
-                    "authorization"};
-            if ((exampleTags != null))
-            {
-                @__tags = System.Linq.Enumerable.ToArray(System.Linq.Enumerable.Concat(@__tags, exampleTags));
-            }
-            string[] tagsOfScenario = @__tags;
-            System.Collections.Specialized.OrderedDictionary argumentsOfScenario = new System.Collections.Specialized.OrderedDictionary();
-            argumentsOfScenario.Add("role", role);
-            argumentsOfScenario.Add("endpoint", endpoint);
-            argumentsOfScenario.Add("status", status);
-            argumentsOfScenario.Add("notes", notes);
-            TechTalk.SpecFlow.ScenarioInfo scenarioInfo = new TechTalk.SpecFlow.ScenarioInfo("Access control for different endpoints", null, tagsOfScenario, argumentsOfScenario, featureTags);
-            this.ScenarioInitialize(scenarioInfo);
-            if ((TagHelper.ContainsIgnoreTag(tagsOfScenario) || TagHelper.ContainsIgnoreTag(featureTags)))
-            {
-                testRunner.SkipScenario();
-            }
-            else
-            {
-                await this.ScenarioStartAsync();
-                await testRunner.GivenAsync(string.Format("I am authenticated as a \"{0}\"", role), ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Given ");
-                await testRunner.WhenAsync(string.Format("I send a GET request to \"{0}\"", endpoint), ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
-                await testRunner.ThenAsync(string.Format("the response status should be {0}", status), ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
-            }
-            await this.ScenarioCleanupAsync();
-        }
-        
-        [Xunit.SkippableTheoryAttribute(DisplayName="Unauthenticated access to protected endpoints")]
-        [Xunit.TraitAttribute("FeatureTitle", "Authentication and Authorization")]
-        [Xunit.TraitAttribute("Description", "Unauthenticated access to protected endpoints")]
-        [Xunit.InlineDataAttribute("/api/exercises", new string[0])]
-        [Xunit.InlineDataAttribute("/api/equipment", new string[0])]
-        [Xunit.InlineDataAttribute("/api/clients", new string[0])]
-        [Xunit.InlineDataAttribute("/api/admin/users", new string[0])]
-        public async System.Threading.Tasks.Task UnauthenticatedAccessToProtectedEndpoints(string endpoint, string[] exampleTags)
-        {
-            string[] tagsOfScenario = exampleTags;
-            System.Collections.Specialized.OrderedDictionary argumentsOfScenario = new System.Collections.Specialized.OrderedDictionary();
-            argumentsOfScenario.Add("endpoint", endpoint);
-            TechTalk.SpecFlow.ScenarioInfo scenarioInfo = new TechTalk.SpecFlow.ScenarioInfo("Unauthenticated access to protected endpoints", null, tagsOfScenario, argumentsOfScenario, featureTags);
-            this.ScenarioInitialize(scenarioInfo);
-            if ((TagHelper.ContainsIgnoreTag(tagsOfScenario) || TagHelper.ContainsIgnoreTag(featureTags)))
-            {
-                testRunner.SkipScenario();
-            }
-            else
-            {
-                await this.ScenarioStartAsync();
-                await testRunner.GivenAsync("I am not authenticated", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Given ");
-                await testRunner.WhenAsync(string.Format("I send a GET request to \"{0}\"", endpoint), ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
-                await testRunner.ThenAsync("the response status should be 401", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
-            }
-            await this.ScenarioCleanupAsync();
-        }
-        
-        [Xunit.SkippableFactAttribute(DisplayName="Access with expired token")]
-        [Xunit.TraitAttribute("FeatureTitle", "Authentication and Authorization")]
-        [Xunit.TraitAttribute("Description", "Access with expired token")]
-        public async System.Threading.Tasks.Task AccessWithExpiredToken()
-        {
-            string[] tagsOfScenario = ((string[])(null));
-            System.Collections.Specialized.OrderedDictionary argumentsOfScenario = new System.Collections.Specialized.OrderedDictionary();
-            TechTalk.SpecFlow.ScenarioInfo scenarioInfo = new TechTalk.SpecFlow.ScenarioInfo("Access with expired token", null, tagsOfScenario, argumentsOfScenario, featureTags);
-            this.ScenarioInitialize(scenarioInfo);
-            if ((TagHelper.ContainsIgnoreTag(tagsOfScenario) || TagHelper.ContainsIgnoreTag(featureTags)))
-            {
-                testRunner.SkipScenario();
-            }
-            else
-            {
-                await this.ScenarioStartAsync();
-                await testRunner.GivenAsync("I have an expired JWT token", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Given ");
-                await testRunner.WhenAsync("I send a GET request to \"/api/exercises\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
-                await testRunner.ThenAsync("the response status should be 401", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
-                await testRunner.AndAsync("the response should contain \"token expired\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
-            }
-            await this.ScenarioCleanupAsync();
-        }
-        
-        [Xunit.SkippableFactAttribute(DisplayName="Access with invalid token")]
-        [Xunit.TraitAttribute("FeatureTitle", "Authentication and Authorization")]
-        [Xunit.TraitAttribute("Description", "Access with invalid token")]
-        public async System.Threading.Tasks.Task AccessWithInvalidToken()
-        {
-            string[] tagsOfScenario = ((string[])(null));
-            System.Collections.Specialized.OrderedDictionary argumentsOfScenario = new System.Collections.Specialized.OrderedDictionary();
-            TechTalk.SpecFlow.ScenarioInfo scenarioInfo = new TechTalk.SpecFlow.ScenarioInfo("Access with invalid token", null, tagsOfScenario, argumentsOfScenario, featureTags);
-            this.ScenarioInitialize(scenarioInfo);
-            if ((TagHelper.ContainsIgnoreTag(tagsOfScenario) || TagHelper.ContainsIgnoreTag(featureTags)))
-            {
-                testRunner.SkipScenario();
-            }
-            else
-            {
-                await this.ScenarioStartAsync();
-                await testRunner.GivenAsync("I have an invalid JWT token", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Given ");
-                await testRunner.WhenAsync("I send a GET request to \"/api/exercises\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
-                await testRunner.ThenAsync("the response status should be 401", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
-                await testRunner.AndAsync("the response should contain \"invalid token\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
-            }
-            await this.ScenarioCleanupAsync();
-        }
-        
-        [Xunit.SkippableFactAttribute(DisplayName="Verify token claims for PT-Tier")]
-        [Xunit.TraitAttribute("FeatureTitle", "Authentication and Authorization")]
-        [Xunit.TraitAttribute("Description", "Verify token claims for PT-Tier")]
-        [Xunit.TraitAttribute("Category", "authorization")]
-        public async System.Threading.Tasks.Task VerifyTokenClaimsForPT_Tier()
+        [Xunit.SkippableFactAttribute(DisplayName="Successful login with valid email")]
+        [Xunit.TraitAttribute("FeatureTitle", "Authentication")]
+        [Xunit.TraitAttribute("Description", "Successful login with valid email")]
+        [Xunit.TraitAttribute("Category", "authentication")]
+        [Xunit.TraitAttribute("Category", "smoke")]
+        public async System.Threading.Tasks.Task SuccessfulLoginWithValidEmail()
         {
             string[] tagsOfScenario = new string[] {
-                    "authorization"};
+                    "authentication",
+                    "smoke"};
             System.Collections.Specialized.OrderedDictionary argumentsOfScenario = new System.Collections.Specialized.OrderedDictionary();
-            TechTalk.SpecFlow.ScenarioInfo scenarioInfo = new TechTalk.SpecFlow.ScenarioInfo("Verify token claims for PT-Tier", null, tagsOfScenario, argumentsOfScenario, featureTags);
+            TechTalk.SpecFlow.ScenarioInfo scenarioInfo = new TechTalk.SpecFlow.ScenarioInfo("Successful login with valid email", null, tagsOfScenario, argumentsOfScenario, featureTags);
             this.ScenarioInitialize(scenarioInfo);
             if ((TagHelper.ContainsIgnoreTag(tagsOfScenario) || TagHelper.ContainsIgnoreTag(featureTags)))
             {
@@ -294,24 +110,139 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.Authentication
             else
             {
                 await this.ScenarioStartAsync();
-                await testRunner.GivenAsync("I am authenticated as a \"PT-Tier\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Given ");
-                await testRunner.WhenAsync("I send a GET request to \"/api/auth/claims\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
+                await this.FeatureBackgroundAsync();
+                await testRunner.WhenAsync("I send a POST request to \"/api/Auth/login\" with body:", "{\n  \"email\": \"admin@example.com\"\n}", ((TechTalk.SpecFlow.Table)(null)), "When ");
                 await testRunner.ThenAsync("the response status should be 200", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
+                await testRunner.AndAsync("the response should have property \"token\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
+                await testRunner.AndAsync("the property \"token\" should not be empty", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
+                await testRunner.AndAsync("the response should have property \"claims\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
+                await testRunner.AndAsync("the response should be a valid JSON", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
+            }
+            await this.ScenarioCleanupAsync();
+        }
+        
+        [Xunit.SkippableFactAttribute(DisplayName="Login response contains free tier claims")]
+        [Xunit.TraitAttribute("FeatureTitle", "Authentication")]
+        [Xunit.TraitAttribute("Description", "Login response contains free tier claims")]
+        [Xunit.TraitAttribute("Category", "authentication")]
+        public async System.Threading.Tasks.Task LoginResponseContainsFreeTierClaims()
+        {
+            string[] tagsOfScenario = new string[] {
+                    "authentication"};
+            System.Collections.Specialized.OrderedDictionary argumentsOfScenario = new System.Collections.Specialized.OrderedDictionary();
+            TechTalk.SpecFlow.ScenarioInfo scenarioInfo = new TechTalk.SpecFlow.ScenarioInfo("Login response contains free tier claims", null, tagsOfScenario, argumentsOfScenario, featureTags);
+            this.ScenarioInitialize(scenarioInfo);
+            if ((TagHelper.ContainsIgnoreTag(tagsOfScenario) || TagHelper.ContainsIgnoreTag(featureTags)))
+            {
+                testRunner.SkipScenario();
+            }
+            else
+            {
+                await this.ScenarioStartAsync();
+                await this.FeatureBackgroundAsync();
+                await testRunner.WhenAsync("I send a POST request to \"/api/Auth/login\" with body:", "{\n  \"email\": \"admin@example.com\"\n}", ((TechTalk.SpecFlow.Table)(null)), "When ");
+                await testRunner.ThenAsync("the response status should be 200", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
+                await testRunner.AndAsync("the response should have property \"claims\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
+                await testRunner.AndAsync("the response should contain \"Free-Tier\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
+            }
+            await this.ScenarioCleanupAsync();
+        }
+        
+        [Xunit.SkippableFactAttribute(DisplayName="Login with PT tier email returns free tier")]
+        [Xunit.TraitAttribute("FeatureTitle", "Authentication")]
+        [Xunit.TraitAttribute("Description", "Login with PT tier email returns free tier")]
+        [Xunit.TraitAttribute("Category", "authentication")]
+        public async System.Threading.Tasks.Task LoginWithPTTierEmailReturnsFreeTier()
+        {
+            string[] tagsOfScenario = new string[] {
+                    "authentication"};
+            System.Collections.Specialized.OrderedDictionary argumentsOfScenario = new System.Collections.Specialized.OrderedDictionary();
+            TechTalk.SpecFlow.ScenarioInfo scenarioInfo = new TechTalk.SpecFlow.ScenarioInfo("Login with PT tier email returns free tier", null, tagsOfScenario, argumentsOfScenario, featureTags);
+            this.ScenarioInitialize(scenarioInfo);
+            if ((TagHelper.ContainsIgnoreTag(tagsOfScenario) || TagHelper.ContainsIgnoreTag(featureTags)))
+            {
+                testRunner.SkipScenario();
+            }
+            else
+            {
+                await this.ScenarioStartAsync();
+                await this.FeatureBackgroundAsync();
+                await testRunner.WhenAsync("I send a POST request to \"/api/Auth/login\" with body:", "{\n  \"email\": \"pt@example.com\"\n}", ((TechTalk.SpecFlow.Table)(null)), "When ");
+                await testRunner.ThenAsync("the response status should be 200", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
+                await testRunner.AndAsync("the response should have property \"claims\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
+                await testRunner.AndAsync("the response should contain \"Free-Tier\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
+            }
+            await this.ScenarioCleanupAsync();
+        }
+        
+        [Xunit.SkippableFactAttribute(DisplayName="Login with free tier email")]
+        [Xunit.TraitAttribute("FeatureTitle", "Authentication")]
+        [Xunit.TraitAttribute("Description", "Login with free tier email")]
+        [Xunit.TraitAttribute("Category", "authentication")]
+        public async System.Threading.Tasks.Task LoginWithFreeTierEmail()
+        {
+            string[] tagsOfScenario = new string[] {
+                    "authentication"};
+            System.Collections.Specialized.OrderedDictionary argumentsOfScenario = new System.Collections.Specialized.OrderedDictionary();
+            TechTalk.SpecFlow.ScenarioInfo scenarioInfo = new TechTalk.SpecFlow.ScenarioInfo("Login with free tier email", null, tagsOfScenario, argumentsOfScenario, featureTags);
+            this.ScenarioInitialize(scenarioInfo);
+            if ((TagHelper.ContainsIgnoreTag(tagsOfScenario) || TagHelper.ContainsIgnoreTag(featureTags)))
+            {
+                testRunner.SkipScenario();
+            }
+            else
+            {
+                await this.ScenarioStartAsync();
+                await this.FeatureBackgroundAsync();
+                await testRunner.WhenAsync("I send a POST request to \"/api/Auth/login\" with body:", "{\n  \"email\": \"user@example.com\"\n}", ((TechTalk.SpecFlow.Table)(null)), "When ");
+                await testRunner.ThenAsync("the response status should be 200", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
+                await testRunner.AndAsync("the response should have property \"claims\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
+                await testRunner.AndAsync("the response should contain \"Free-Tier\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
+            }
+            await this.ScenarioCleanupAsync();
+        }
+        
+        [Xunit.SkippableFactAttribute(DisplayName="Login with empty email returns success")]
+        [Xunit.TraitAttribute("FeatureTitle", "Authentication")]
+        [Xunit.TraitAttribute("Description", "Login with empty email returns success")]
+        [Xunit.TraitAttribute("Category", "authentication")]
+        [Xunit.TraitAttribute("Category", "validation")]
+        public async System.Threading.Tasks.Task LoginWithEmptyEmailReturnsSuccess()
+        {
+            string[] tagsOfScenario = new string[] {
+                    "authentication",
+                    "validation"};
+            System.Collections.Specialized.OrderedDictionary argumentsOfScenario = new System.Collections.Specialized.OrderedDictionary();
+            TechTalk.SpecFlow.ScenarioInfo scenarioInfo = new TechTalk.SpecFlow.ScenarioInfo("Login with empty email returns success", null, tagsOfScenario, argumentsOfScenario, featureTags);
+            this.ScenarioInitialize(scenarioInfo);
+            if ((TagHelper.ContainsIgnoreTag(tagsOfScenario) || TagHelper.ContainsIgnoreTag(featureTags)))
+            {
+                testRunner.SkipScenario();
+            }
+            else
+            {
+                await this.ScenarioStartAsync();
+                await this.FeatureBackgroundAsync();
+                await testRunner.WhenAsync("I send a POST request to \"/api/Auth/login\" with body:", "{\n  \"email\": \"\"\n}", ((TechTalk.SpecFlow.Table)(null)), "When ");
+                await testRunner.ThenAsync("the response status should be 200", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
+                await testRunner.AndAsync("the response should have property \"token\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
                 await testRunner.AndAsync("the response should have property \"claims\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
             }
             await this.ScenarioCleanupAsync();
         }
         
-        [Xunit.SkippableFactAttribute(DisplayName="Verify token claims for Admin-Tier")]
-        [Xunit.TraitAttribute("FeatureTitle", "Authentication and Authorization")]
-        [Xunit.TraitAttribute("Description", "Verify token claims for Admin-Tier")]
-        [Xunit.TraitAttribute("Category", "authorization")]
-        public async System.Threading.Tasks.Task VerifyTokenClaimsForAdmin_Tier()
+        [Xunit.SkippableFactAttribute(DisplayName="Login with null email returns bad request")]
+        [Xunit.TraitAttribute("FeatureTitle", "Authentication")]
+        [Xunit.TraitAttribute("Description", "Login with null email returns bad request")]
+        [Xunit.TraitAttribute("Category", "authentication")]
+        [Xunit.TraitAttribute("Category", "validation")]
+        public async System.Threading.Tasks.Task LoginWithNullEmailReturnsBadRequest()
         {
             string[] tagsOfScenario = new string[] {
-                    "authorization"};
+                    "authentication",
+                    "validation"};
             System.Collections.Specialized.OrderedDictionary argumentsOfScenario = new System.Collections.Specialized.OrderedDictionary();
-            TechTalk.SpecFlow.ScenarioInfo scenarioInfo = new TechTalk.SpecFlow.ScenarioInfo("Verify token claims for Admin-Tier", null, tagsOfScenario, argumentsOfScenario, featureTags);
+            TechTalk.SpecFlow.ScenarioInfo scenarioInfo = new TechTalk.SpecFlow.ScenarioInfo("Login with null email returns bad request", null, tagsOfScenario, argumentsOfScenario, featureTags);
             this.ScenarioInitialize(scenarioInfo);
             if ((TagHelper.ContainsIgnoreTag(tagsOfScenario) || TagHelper.ContainsIgnoreTag(featureTags)))
             {
@@ -320,24 +251,25 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.Authentication
             else
             {
                 await this.ScenarioStartAsync();
-                await testRunner.GivenAsync("I am authenticated as a \"Admin-Tier\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Given ");
-                await testRunner.WhenAsync("I send a GET request to \"/api/auth/claims\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
-                await testRunner.ThenAsync("the response status should be 200", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
-                await testRunner.AndAsync("the response should have property \"claims\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
+                await this.FeatureBackgroundAsync();
+                await testRunner.WhenAsync("I send a POST request to \"/api/Auth/login\" with body:", "{\n  \"email\": null\n}", ((TechTalk.SpecFlow.Table)(null)), "When ");
+                await testRunner.ThenAsync("the response status should be 400", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
             }
             await this.ScenarioCleanupAsync();
         }
         
-        [Xunit.SkippableFactAttribute(DisplayName="Verify token claims for Free-Tier")]
-        [Xunit.TraitAttribute("FeatureTitle", "Authentication and Authorization")]
-        [Xunit.TraitAttribute("Description", "Verify token claims for Free-Tier")]
-        [Xunit.TraitAttribute("Category", "authorization")]
-        public async System.Threading.Tasks.Task VerifyTokenClaimsForFree_Tier()
+        [Xunit.SkippableFactAttribute(DisplayName="Login with missing email field returns bad request")]
+        [Xunit.TraitAttribute("FeatureTitle", "Authentication")]
+        [Xunit.TraitAttribute("Description", "Login with missing email field returns bad request")]
+        [Xunit.TraitAttribute("Category", "authentication")]
+        [Xunit.TraitAttribute("Category", "validation")]
+        public async System.Threading.Tasks.Task LoginWithMissingEmailFieldReturnsBadRequest()
         {
             string[] tagsOfScenario = new string[] {
-                    "authorization"};
+                    "authentication",
+                    "validation"};
             System.Collections.Specialized.OrderedDictionary argumentsOfScenario = new System.Collections.Specialized.OrderedDictionary();
-            TechTalk.SpecFlow.ScenarioInfo scenarioInfo = new TechTalk.SpecFlow.ScenarioInfo("Verify token claims for Free-Tier", null, tagsOfScenario, argumentsOfScenario, featureTags);
+            TechTalk.SpecFlow.ScenarioInfo scenarioInfo = new TechTalk.SpecFlow.ScenarioInfo("Login with missing email field returns bad request", null, tagsOfScenario, argumentsOfScenario, featureTags);
             this.ScenarioInitialize(scenarioInfo);
             if ((TagHelper.ContainsIgnoreTag(tagsOfScenario) || TagHelper.ContainsIgnoreTag(featureTags)))
             {
@@ -346,10 +278,109 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.Authentication
             else
             {
                 await this.ScenarioStartAsync();
-                await testRunner.GivenAsync("I am authenticated as a \"Free-Tier\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Given ");
-                await testRunner.WhenAsync("I send a GET request to \"/api/auth/claims\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
+                await this.FeatureBackgroundAsync();
+                await testRunner.WhenAsync("I send a POST request to \"/api/Auth/login\" with body:", "{}", ((TechTalk.SpecFlow.Table)(null)), "When ");
+                await testRunner.ThenAsync("the response status should be 400", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
+            }
+            await this.ScenarioCleanupAsync();
+        }
+        
+        [Xunit.SkippableFactAttribute(DisplayName="Token can be used for authenticated requests")]
+        [Xunit.TraitAttribute("FeatureTitle", "Authentication")]
+        [Xunit.TraitAttribute("Description", "Token can be used for authenticated requests")]
+        [Xunit.TraitAttribute("Category", "authentication")]
+        public async System.Threading.Tasks.Task TokenCanBeUsedForAuthenticatedRequests()
+        {
+            string[] tagsOfScenario = new string[] {
+                    "authentication"};
+            System.Collections.Specialized.OrderedDictionary argumentsOfScenario = new System.Collections.Specialized.OrderedDictionary();
+            TechTalk.SpecFlow.ScenarioInfo scenarioInfo = new TechTalk.SpecFlow.ScenarioInfo("Token can be used for authenticated requests", null, tagsOfScenario, argumentsOfScenario, featureTags);
+            this.ScenarioInitialize(scenarioInfo);
+            if ((TagHelper.ContainsIgnoreTag(tagsOfScenario) || TagHelper.ContainsIgnoreTag(featureTags)))
+            {
+                testRunner.SkipScenario();
+            }
+            else
+            {
+                await this.ScenarioStartAsync();
+                await this.FeatureBackgroundAsync();
+                await testRunner.GivenAsync("I send a POST request to \"/api/Auth/login\" with body:", "{\n  \"email\": \"admin@example.com\"\n}", ((TechTalk.SpecFlow.Table)(null)), "Given ");
+                await testRunner.AndAsync("I store the response property \"token\" as \"authToken\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
+                await testRunner.WhenAsync("I send an authenticated GET request to \"/api/ReferenceTables/DifficultyLevels\" wi" +
+                        "th token \"<authToken>\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
                 await testRunner.ThenAsync("the response status should be 200", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
-                await testRunner.AndAsync("the response should have property \"claims\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
+                await testRunner.AndAsync("the response should be a JSON array", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
+            }
+            await this.ScenarioCleanupAsync();
+        }
+        
+        [Xunit.SkippableFactAttribute(DisplayName="Protected endpoint without authentication")]
+        [Xunit.TraitAttribute("FeatureTitle", "Authentication")]
+        [Xunit.TraitAttribute("Description", "Protected endpoint without authentication")]
+        [Xunit.TraitAttribute("Category", "authentication")]
+        public async System.Threading.Tasks.Task ProtectedEndpointWithoutAuthentication()
+        {
+            string[] tagsOfScenario = new string[] {
+                    "authentication"};
+            System.Collections.Specialized.OrderedDictionary argumentsOfScenario = new System.Collections.Specialized.OrderedDictionary();
+            TechTalk.SpecFlow.ScenarioInfo scenarioInfo = new TechTalk.SpecFlow.ScenarioInfo("Protected endpoint without authentication", null, tagsOfScenario, argumentsOfScenario, featureTags);
+            this.ScenarioInitialize(scenarioInfo);
+            if ((TagHelper.ContainsIgnoreTag(tagsOfScenario) || TagHelper.ContainsIgnoreTag(featureTags)))
+            {
+                testRunner.SkipScenario();
+            }
+            else
+            {
+                await this.ScenarioStartAsync();
+                await this.FeatureBackgroundAsync();
+                await testRunner.WhenAsync("I send a GET request to \"/api/ReferenceTables/DifficultyLevels\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
+                await testRunner.ThenAsync("the response status should be 200", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
+            }
+            await this.ScenarioCleanupAsync();
+        }
+        
+        [Xunit.SkippableFactAttribute(DisplayName="Login response structure validation")]
+        [Xunit.TraitAttribute("FeatureTitle", "Authentication")]
+        [Xunit.TraitAttribute("Description", "Login response structure validation")]
+        [Xunit.TraitAttribute("Category", "authentication")]
+        [Xunit.TraitAttribute("Category", "structure")]
+        public async System.Threading.Tasks.Task LoginResponseStructureValidation()
+        {
+            string[] tagsOfScenario = new string[] {
+                    "authentication",
+                    "structure"};
+            System.Collections.Specialized.OrderedDictionary argumentsOfScenario = new System.Collections.Specialized.OrderedDictionary();
+            TechTalk.SpecFlow.ScenarioInfo scenarioInfo = new TechTalk.SpecFlow.ScenarioInfo("Login response structure validation", null, tagsOfScenario, argumentsOfScenario, featureTags);
+            this.ScenarioInitialize(scenarioInfo);
+            if ((TagHelper.ContainsIgnoreTag(tagsOfScenario) || TagHelper.ContainsIgnoreTag(featureTags)))
+            {
+                testRunner.SkipScenario();
+            }
+            else
+            {
+                await this.ScenarioStartAsync();
+                await this.FeatureBackgroundAsync();
+                await testRunner.WhenAsync("I send a POST request to \"/api/Auth/login\" with body:", "{\n  \"email\": \"test@example.com\"\n}", ((TechTalk.SpecFlow.Table)(null)), "When ");
+                await testRunner.ThenAsync("the response status should be 200", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
+                await testRunner.AndAsync("the response should match the schema:", @"{
+  ""type"": ""object"",
+  ""required"": [""token"", ""claims""],
+  ""properties"": {
+    ""token"": { ""type"": ""string"" },
+    ""claims"": { 
+      ""type"": ""array"",
+      ""items"": {
+        ""type"": ""object"",
+        ""properties"": {
+          ""claimId"": { ""type"": ""string"" },
+          ""claimType"": { ""type"": ""string"" },
+          ""expiresAt"": { ""type"": [""string"", ""null""] },
+          ""resourceId"": { ""type"": [""string"", ""null""] }
+        }
+      }
+    }
+  }
+}", ((TechTalk.SpecFlow.Table)(null)), "And ");
             }
             await this.ScenarioCleanupAsync();
         }
@@ -361,12 +392,12 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.Authentication
             
             async System.Threading.Tasks.Task Xunit.IAsyncLifetime.InitializeAsync()
             {
-                await AuthenticationAndAuthorizationFeature.FeatureSetupAsync();
+                await AuthenticationFeature.FeatureSetupAsync();
             }
             
             async System.Threading.Tasks.Task Xunit.IAsyncLifetime.DisposeAsync()
             {
-                await AuthenticationAndAuthorizationFeature.FeatureTearDownAsync();
+                await AuthenticationFeature.FeatureTearDownAsync();
             }
         }
     }

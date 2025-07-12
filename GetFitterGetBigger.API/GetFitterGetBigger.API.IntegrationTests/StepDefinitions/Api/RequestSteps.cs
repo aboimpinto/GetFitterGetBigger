@@ -177,6 +177,40 @@ public class RequestSteps
         httpClient.Timeout = TimeSpan.FromSeconds(seconds);
     }
     
+    [Given(@"I send an authenticated (GET|POST|PUT|DELETE) request to ""(.*)"" with token ""(.*)""")]
+    [When(@"I send an authenticated (GET|POST|PUT|DELETE) request to ""(.*)"" with token ""(.*)""")]
+    public async Task WhenISendAnAuthenticatedRequestTo(string method, string endpoint, string token)
+    {
+        var httpClient = _scenarioContext.GetHttpClient();
+        
+        // Resolve placeholders in token and endpoint
+        var resolvedToken = _scenarioContext.ResolvePlaceholders(token);
+        endpoint = _scenarioContext.ResolvePlaceholders(endpoint);
+        
+        // Temporarily add Authorization header
+        httpClient.DefaultRequestHeaders.Authorization = 
+            new AuthenticationHeaderValue("Bearer", resolvedToken);
+        
+        try
+        {
+            HttpResponseMessage response = method.ToUpper() switch
+            {
+                "GET" => await httpClient.GetAsync(endpoint),
+                "POST" => await httpClient.PostAsync(endpoint, null),
+                "PUT" => await httpClient.PutAsync(endpoint, null),
+                "DELETE" => await httpClient.DeleteAsync(endpoint),
+                _ => throw new NotSupportedException($"HTTP method {method} is not supported")
+            };
+            
+            await StoreResponse(response);
+        }
+        finally
+        {
+            // Always remove the Authorization header after the request
+            httpClient.DefaultRequestHeaders.Authorization = null;
+        }
+    }
+    
     private void ApplyPendingHeaders(HttpClient httpClient)
     {
         foreach (var header in _pendingHeaders)
