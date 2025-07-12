@@ -1,5 +1,6 @@
 using GetFitterGetBigger.API.IntegrationTests.TestInfrastructure.Helpers;
 using GetFitterGetBigger.API.Models;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Testcontainers.PostgreSql;
 using Xunit;
@@ -67,7 +68,7 @@ public class PostgreSqlTestFixture : IAsyncLifetime, IDisposable
     {
         await Factory.ExecuteDbContextAsync(async context =>
         {
-            await context.Database.EnsureCreatedAsync();
+            await context.Database.MigrateAsync();
             
             // Seed reference data if needed
             if (!context.BodyParts.Any())
