@@ -236,6 +236,60 @@ public class ResponseSteps
         };
     }
     
+    [Then(@"the response should be a JSON array")]
+    public void ThenTheResponseShouldBeAJsonArray()
+    {
+        var content = _scenarioContext.GetLastResponseContent();
+        
+        content.Should().StartWith("[").And.EndWith("]");
+        
+        // Verify it's valid JSON array
+        var jsonArray = JsonDocument.Parse(content);
+        jsonArray.RootElement.ValueKind.Should().Be(JsonValueKind.Array);
+    }
+
+    [Then(@"the response contains at least (\d+) item")]
+    public void ThenTheResponseContainsAtLeastItems(int minimumCount)
+    {
+        var content = _scenarioContext.GetLastResponseContent();
+        
+        var jsonArray = JsonDocument.Parse(content);
+        jsonArray.RootElement.GetArrayLength().Should().BeGreaterThanOrEqualTo(minimumCount);
+    }
+
+    [Then(@"I store the first item from the response as ""(.*)""")]
+    public void ThenIStoreTheFirstItemFromTheResponseAs(string variableName)
+    {
+        var content = _scenarioContext.GetLastResponseContent();
+        
+        var jsonArray = JsonDocument.Parse(content);
+        var firstItem = jsonArray.RootElement[0];
+        
+        // Store as JSON string to avoid value type issues
+        _scenarioContext.SetTestData(variableName, firstItem.GetRawText());
+    }
+
+    [Then(@"the response contains an item with value ""(.*)""")]
+    public void ThenTheResponseContainsAnItemWithValue(string expectedValue)
+    {
+        var content = _scenarioContext.GetLastResponseContent();
+        
+        var jsonArray = JsonDocument.Parse(content);
+        
+        bool found = false;
+        foreach (var item in jsonArray.RootElement.EnumerateArray())
+        {
+            if (item.TryGetProperty("value", out var valueProperty) && 
+                valueProperty.GetString().Equals(expectedValue, StringComparison.OrdinalIgnoreCase))
+            {
+                found = true;
+                break;
+            }
+        }
+        
+        found.Should().BeTrue($"Expected to find an item with value '{expectedValue}' in the response");
+    }
+
     private void ValidateJsonAgainstSchema(JsonElement actual, JsonElement schema)
     {
         // This is a simplified implementation

@@ -1,4 +1,5 @@
 using System.Net;
+using System.Text.Json;
 using TechTalk.SpecFlow;
 
 namespace GetFitterGetBigger.API.IntegrationTests.TestInfrastructure.Helpers;
@@ -231,11 +232,38 @@ public static class ScenarioContextExtensions
                 var fullKey = $"{TestDataKeyPrefix}{entityKey}";
                 if (context.TryGetValue(fullKey, out var entityObj) && entityObj != null)
                 {
-                    // Use reflection to get the property value
-                    var property = entityObj.GetType().GetProperty(propertyName);
-                    if (property != null)
+                    string? value = null;
+                    
+                    // Check if it's a JSON string
+                    if (entityObj is string jsonString && IsValidJson(jsonString))
                     {
-                        var value = property.GetValue(entityObj)?.ToString() ?? string.Empty;
+                        // Parse JSON and extract property
+                        var jsonDoc = JsonDocument.Parse(jsonString);
+                        if (jsonDoc.RootElement.TryGetProperty(propertyName, out var jsonProperty))
+                        {
+                            value = jsonProperty.ValueKind switch
+                            {
+                                JsonValueKind.String => jsonProperty.GetString(),
+                                JsonValueKind.Number => jsonProperty.GetRawText(),
+                                JsonValueKind.True => "true",
+                                JsonValueKind.False => "false",
+                                JsonValueKind.Null => null,
+                                _ => jsonProperty.GetRawText()
+                            };
+                        }
+                    }
+                    else
+                    {
+                        // Use reflection to get the property value (original behavior)
+                        var property = entityObj.GetType().GetProperty(propertyName);
+                        if (property != null)
+                        {
+                            value = property.GetValue(entityObj)?.ToString();
+                        }
+                    }
+                    
+                    if (value != null)
+                    {
                         text = text.Replace(match.Value, value);
                     }
                 }
@@ -247,6 +275,22 @@ public static class ScenarioContextExtensions
         }
         
         return text;
+    }
+    
+    /// <summary>
+    /// Checks if a string is valid JSON
+    /// </summary>
+    private static bool IsValidJson(string jsonString)
+    {
+        try
+        {
+            JsonDocument.Parse(jsonString);
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
     }
     
     #endregion
