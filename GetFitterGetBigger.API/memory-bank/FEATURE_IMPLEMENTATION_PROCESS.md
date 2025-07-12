@@ -1,6 +1,8 @@
 # Feature Implementation Process - API Project
 
-This document outlines the standard process for implementing new features in the GetFitterGetBigger API.
+This document outlines the standard process for implementing new features in the GetFitterGetBigger Minimal API.
+
+**📌 NOTE**: This document extends the [Unified Development Process](UNIFIED_DEVELOPMENT_PROCESS.md) with API-specific implementation details. Always refer to the unified process for core principles and mandatory requirements.
 
 ## Process Overview
 
@@ -26,7 +28,23 @@ Features progress through these workflow states:
 - **4-BLOCKED**: Dependencies preventing progress
 - **5-SKIPPED**: Feature deferred or cancelled
 
-**IMPORTANT**: Every feature MUST start in 0-SUBMITTED state, even in the API project. This ensures consistent workflow tracking across all projects.
+#### Working with Features
+
+**API-Originated Features** (new business functionality):
+1. Create feature in `0-SUBMITTED` with business requirements
+2. Design API contract and endpoints
+3. Create implementation tasks
+4. Move to `1-READY_TO_DEVELOP` when ready
+5. After implementation, propagate to Admin and Clients projects
+
+**UI-Requested Features** (from Admin or Clients):
+1. Feature arrives in `0-SUBMITTED` from UI project request
+2. Analyze data requirements and design endpoints
+3. Create API-specific implementation tasks
+4. Move to `1-READY_TO_DEVELOP` when ready
+5. Notify requesting project when implementation complete
+
+**IMPORTANT**: Every feature MUST start in 0-SUBMITTED state. This ensures consistent workflow tracking and proper feature propagation.
 
 ### 1. Feature Analysis & Planning
 - Feature MUST already exist in `0-SUBMITTED` state
@@ -132,14 +150,19 @@ Before starting ANY implementation:
   - Include bug reference in test comment
   - Example: `[Fact(Skip = "BUG-001: Complex database mocking requires additional setup")]`
 
-### 6. Manual Testing Phase (DEFAULT BEHAVIOR)
+### 6. Manual Testing Phase (MANDATORY)
+**🚨 MANDATORY for ALL features - NO EXCEPTIONS 🚨**
+
 - After all implementation tasks are complete
 - Provide user with:
   - Detailed step-by-step testing instructions
   - Test scenarios covering all endpoints
   - Expected API responses
   - Sample data for testing
-- Wait for user acceptance before proceeding
+  - Postman collection or curl commands
+- Wait for explicit user acceptance before proceeding
+
+**Note**: Manual testing can ONLY be skipped if the user explicitly requests it at feature start AND the feature is purely technical with comprehensive automated test coverage.
 
 ### 7. Quality Comparison Report (MANDATORY)
 After all implementation is complete, add to feature-tasks.md:
@@ -337,35 +360,58 @@ At feature completion, calculate:
 - AI Impact = ((Estimated - Actual) / Estimated) × 100%
 - Document any factors that affected the comparison
 
-## API-Specific Considerations
+## API-Specific Considerations (Minimal API)
 
-### API Standards
-- Follow RESTful conventions
-- Use proper HTTP status codes
-- Implement consistent error responses
-- Document endpoints with XML comments for Swagger
+### Minimal API Patterns
+- Define endpoints using MapGet, MapPost, MapPut, MapDelete in Program.cs
+- Use endpoint filters for cross-cutting concerns
+- Implement proper route grouping with MapGroup
+- Use TypedResults for consistent responses
+- Apply proper endpoint metadata with OpenAPI attributes
+
+### Endpoint Organization
+- Group related endpoints using route groups
+- Use extension methods to organize endpoint registration
+- Implement endpoint filters for validation and authorization
+- Use proper parameter binding (FromRoute, FromQuery, FromBody)
 
 ### Dependency Injection
 - Register all services in Program.cs
-- Use appropriate service lifetimes
-- Follow interface-based design
+- Use appropriate service lifetimes (Scoped for DbContext, etc.)
+- Follow interface-based design for testability
+- Use IServiceCollection extension methods for clean registration
 
 ### Database Patterns
 - Use Entity Framework Core with code-first approach
-- Implement repository pattern
-- Use unit of work pattern where appropriate
+- Implement repository pattern with interfaces
+- Use Unit of Work pattern for transaction management
+- **CRITICAL**: ReadOnlyUnitOfWork for queries, WritableUnitOfWork for modifications
+
+### Request/Response Patterns
+- Use record types for DTOs
+- Implement proper validation with FluentValidation or DataAnnotations
+- Return consistent error responses using ProblemDetails
+- Use proper HTTP status codes (201 for created, 204 for no content, etc.)
 
 ### Security
-- Implement proper authentication/authorization
-- Validate all inputs
+- Implement JWT authentication with proper configuration
+- Use authorization policies for role-based access
+- Validate all inputs with proper validation attributes
 - Sanitize data before persistence
 - Never expose internal implementation details in errors
 
 ### Performance
-- Implement caching where appropriate
-- Use async/await for all I/O operations
-- Implement pagination for list endpoints
-- Consider using projection for large entities
+- Implement memory caching with IMemoryCache
+- Use async/await for all database operations
+- Implement pagination using Skip/Take patterns
+- Use projection (Select) to minimize data transfer
+- Consider response compression for large payloads
+
+### Testing Considerations
+- Use WebApplicationFactory for integration tests
+- Mock external dependencies properly
+- Test all HTTP status code scenarios
+- Verify proper authorization on protected endpoints
 
 ## Completion Report Templates
 

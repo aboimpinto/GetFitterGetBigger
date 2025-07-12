@@ -1,25 +1,49 @@
 # Feature Implementation Process - Admin Project
 
-This document outlines the standard process for implementing new features in the GetFitterGetBigger Admin web application.
+This document outlines the standard process for implementing new features in the GetFitterGetBigger Admin Blazor application.
+
+**📌 NOTE**: This document extends the [Unified Development Process](../../API/memory-bank/UNIFIED_DEVELOPMENT_PROCESS.md) with Admin-specific implementation details. Always refer to the unified process for core principles and mandatory requirements.
 
 ## Process Overview
 
+### File Management Rules
+
+**⚠️ IMPORTANT: Maintain focus on REQUIRED files only! ⚠️**
+
+When implementing features:
+- **Only create files explicitly required** by the unified process
+- **DO NOT add extra documentation files** like README.md, notes.md, etc.
+- **feature-description.md and feature-tasks.md** contain all necessary documentation
+- **Avoid redundancy** - if information exists in required files, don't duplicate it elsewhere
+- **Supporting files** (like test scripts, mockups) are allowed ONLY if they add unique value
+
+Remember: Clean, focused file structure makes features easier to track and maintain.
+
 ### 0. Feature States (Pre-Implementation)
 Features progress through these workflow states:
-- **0-SUBMITTED**: Features propagated from API, needs project-specific refinement
+- **0-SUBMITTED**: MANDATORY starting point for ALL features
 - **1-READY_TO_DEVELOP**: Feature refined with tasks and ready to implement
 - **2-IN_PROGRESS**: Feature currently being implemented
 - **3-COMPLETED**: Feature done and tested
 - **4-BLOCKED**: Dependencies preventing progress
 - **5-SKIPPED**: Feature deferred or cancelled
 
-#### Working with 0-SUBMITTED Features
-When a feature arrives in `0-SUBMITTED` from API propagation:
+#### Working with Features
+
+**API-Originated Features** (in `0-SUBMITTED` from API propagation):
 1. Review the API contract and changes
 2. Analyze impact on Admin UI/UX
 3. Create implementation tasks specific to Admin project
 4. Add time estimates
 5. Move to `1-READY_TO_DEVELOP` when the team is ready
+
+**Admin-Originated Features** (requiring API changes):
+1. Create feature in `0-SUBMITTED` with UI requirements
+2. Request corresponding API feature
+3. Wait for API implementation
+4. Move to `1-READY_TO_DEVELOP` when API is ready
+
+**IMPORTANT**: ALL features MUST start in 0-SUBMITTED state to ensure consistent workflow tracking.
 
 ### 1. Feature Analysis & Planning
 - Feature MUST already exist in `0-SUBMITTED` state
@@ -46,9 +70,8 @@ When a feature arrives in `0-SUBMITTED` from API propagation:
 Before starting ANY implementation:
 1. **Run baseline health check**:
    ```bash
-   npm run build
-   npm test
-   npm run lint
+   dotnet build
+   dotnet test
    ```
 2. **Document results in feature-tasks.md**:
    ```markdown
@@ -68,14 +91,14 @@ Before starting ANY implementation:
    - **Skipped/Ignored**: X
    - **Test Execution Time**: X.XX seconds
 
-   ### Linting Status
+   ### Code Analysis Status
    - **Errors**: X (MUST be 0 to proceed)
-   - **Warnings**: X
+   - **Warnings**: X (should be < 10)
 
    ### Decision to Proceed
    - [ ] All tests passing
    - [ ] Build successful
-   - [ ] No linting errors
+   - [ ] No code analysis errors
    - [ ] Warnings documented and approved
 
    **Approval to Proceed**: Yes/No
@@ -85,7 +108,7 @@ Before starting ANY implementation:
    - ✅ **All Green**: Proceed to implementation
    - ❌ **Build Fails**: STOP - Create Task 0.1 to fix build
    - ❌ **Tests Fail**: STOP - Create Task 0.2 to fix failing tests
-   - ❌ **Lint Errors**: STOP - Create Task 0.3 to fix linting errors
+   - ❌ **Code Analysis Errors**: STOP - Create Task 0.3 to fix code analysis errors
    - ⚠️ **Warnings Exist**: Document and ask for approval
      - If approved: Create Boy Scout tasks (0.4, 0.5, etc.) to fix warnings FIRST
      - Complete Boy Scout tasks before feature tasks
@@ -98,14 +121,13 @@ Before starting ANY implementation:
   2. Write the implementation code
   3. **MANDATORY: Write unit/component tests for the implemented code in the immediately following task**
   4. **MANDATORY: Keep build warnings to a minimum** (address TypeScript errors, unused variables, etc.)
-  5. **MANDATORY: Run `npm run build` to ensure compilation succeeds with minimal warnings**
-  6. **MANDATORY: Run `npm test` to ensure ALL tests pass (100% green)**
-  7. **MANDATORY: Run `npm run lint` to ensure code follows project standards**
+  5. **MANDATORY: Run `dotnet build` to ensure compilation succeeds with minimal warnings**
+  6. **MANDATORY: Run `dotnet test` to ensure ALL tests pass (100% green)**
   8. Only after build succeeds and ALL tests pass, commit the changes
   9. Update the task status to `[Implemented: <hash> | Started: <timestamp> | Finished: YYYY-MM-DD HH:MM | Duration: Xh Ym]`
 - **For EVERY checkpoint:**
-  1. Run `npm run build` - BUILD MUST BE SUCCESSFUL (no errors)
-  2. Run `npm test` - ALL TESTS MUST BE GREEN (no failures)
+  1. Run `dotnet build` - BUILD MUST BE SUCCESSFUL (no errors)
+  2. Run `dotnet test` - ALL TESTS MUST BE GREEN (no failures)
   3. Verify no build warnings exist
   4. **MANDATORY: Update checkpoint status from 🛑 to ✅ when all conditions pass**
   5. Only proceed to next category after checkpoint passes
@@ -227,9 +249,9 @@ Before marking any task as `[Implemented]`, verify:
 
 - [ ] Implementation code is complete
 - [ ] Unit/component tests are written for the new code (in the immediately following task)
-- [ ] `npm run build` runs without errors
-- [ ] Build warnings are minimal (no TypeScript errors, unused variables, etc.)
-- [ ] `npm test` runs with ALL tests passing (100% green, no skipped tests)
+- [ ] `dotnet build` runs without errors
+- [ ] Build warnings are minimal (no C# compiler warnings, unused variables, etc.)
+- [ ] `dotnet test` runs with ALL tests passing (100% green, no skipped tests)
 - [ ] `npm run lint` passes without errors
 - [ ] Code follows React best practices and project conventions
 - [ ] No commented-out code or debug statements
@@ -332,27 +354,46 @@ At feature completion, calculate:
 - AI Impact = ((Estimated - Actual) / Estimated) × 100%
 - Document any factors that affected the comparison
 
-## Admin-Specific Considerations
+## Admin-Specific Considerations (Blazor)
 
-### UI/UX Standards
-- Follow existing Tailwind CSS patterns
-- Use existing component library
-- Ensure accessibility (ARIA labels, keyboard navigation)
-- Test on different screen sizes
-
-### API Integration
-- Use centralized API service
-- Handle authentication tokens properly
-- Implement proper error handling
-- Show loading states during API calls
+### Component Development
+- Use Blazor component lifecycle methods properly (OnInitializedAsync, OnParametersSetAsync, etc.)
+- Implement proper parameter validation with `[Parameter]` attributes
+- Use `@implements IDisposable` when managing resources
+- Follow Blazor naming conventions (*.razor for components, *.razor.cs for code-behind)
+- Use `@ref` sparingly and properly dispose references
 
 ### State Management
-- Use existing state management pattern (Redux/Context)
-- Keep state normalized
-- Implement optimistic updates where appropriate
+- Use Cascading Values and Parameters for cross-component state
+- Implement proper StateHasChanged() calls only when necessary
+- Use dependency injection for service state management
+- Handle async operations with proper cancellation tokens
+- Avoid overuse of static properties for state
 
-### Performance
-- Implement code splitting for large features
-- Use React.memo for expensive components
-- Lazy load images and heavy components
-- Implement proper pagination for lists
+### API Integration
+- Use typed HttpClient with proper DI configuration
+- Implement Polly for retry policies and circuit breakers
+- Handle authentication with AuthenticationStateProvider
+- Use proper exception handling for API calls
+- Implement proper loading and error states
+
+### Testing with bUnit
+- Write component tests using bUnit framework
+- Test component rendering, parameters, and event callbacks
+- Mock services using dependency injection
+- Test JavaScript interop when used
+- Verify proper component disposal
+
+### Performance Optimization
+- Use virtualization for large lists (Virtualize component)
+- Implement proper component disposal to prevent memory leaks
+- Minimize unnecessary re-renders with ShouldRender()
+- Use appropriate render modes (Server vs WebAssembly)
+- Optimize data fetching with proper caching strategies
+
+### Blazor-Specific Patterns
+- Use EditForm with DataAnnotations for form validation
+- Implement proper navigation with NavigationManager
+- Handle JavaScript interop with IJSRuntime carefully
+- Use AuthorizeView for role-based UI rendering
+- Implement proper error boundaries with ErrorBoundary component
