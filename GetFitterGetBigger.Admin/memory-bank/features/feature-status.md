@@ -23,7 +23,7 @@ This file serves as a central dashboard for tracking the status of all features 
 | Floating Action Buttons | COMPLETED | Medium | FEAT-016 | 2025-07-04 | [Details](3-COMPLETED/FEAT-016-floating-action-buttons/feature-description.md) |
 | Exercise Kinetic Chain | COMPLETED | High | FEAT-017 | 2025-07-09 | [Details](3-COMPLETED/FEAT-017-exercise-kinetic-chain/feature-description.md) |
 | Exercise Linking | COMPLETED | High | FEAT-018 | 2025-07-09 | [Details](3-COMPLETED/FEAT-018-exercise-linking/completion-summary.md) |
-| Exercise Weight Type | READY TO DEVELOP | High | FEAT-019 | 2025-07-10 | [Details](1-READY_TO_DEVELOP/FEAT-019-exercise-weight-type/feature-description.md) |
+| Exercise Weight Type | COMPLETED | High | FEAT-019 | 2025-07-12 | [Details](3-COMPLETED/FEAT-019-exercise-weight-type/feature-description.md) |
 
 ## Status Definitions
 

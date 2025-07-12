@@ -491,11 +491,11 @@
 - [To be documented during implementation]
 
 ## Time Tracking Summary
-- **Total Estimated Time:** 32h
-- **Total Actual Time:** [To be calculated from task durations]
-- **AI Assistance Impact:** [% reduction in time]
-- **Implementation Started:** [First task start time]
-- **Implementation Completed:** [Last task finish time]
+- **Total Estimated Time:** 32h (reduced to 28h due to delayed features)
+- **Total Actual Time:** 4h 3m
+- **AI Assistance Impact:** 86% reduction in time (28h → 4h 3m)
+- **Implementation Started:** 2025-07-10 (first task)
+- **Implementation Completed:** 2025-07-12 (user acceptance)
 
 ## Technical Notes
 - **Framework Compatibility**: All components built for Blazor Server with .NET 9.0
@@ -525,3 +525,38 @@
 - [ ] Comprehensive test coverage with all tests passing
 - [ ] No build warnings or linting errors
 - [ ] Manual testing completed with user acceptance
+
+## Manual Testing & User Acceptance - CRITICAL REQUIREMENT
+
+### Task: Manual testing and user acceptance `[Completed: User accepted on 2025-07-12]`
+**✅ USER ACCEPTANCE RECEIVED: Feature accepted and ready for COMPLETED status**
+
+Please manually test the following scenarios:
+
+1. **Exercise Creation**:
+   - ✅ Create new exercise with weight type selection
+   - ✅ Verify REST exercises cannot have weight type
+   - ✅ Verify non-REST exercises require weight type
+
+2. **Exercise Editing**:
+   - ✅ Edit existing exercise and change weight type
+   - ✅ Verify weight type is properly loaded when editing
+   - ✅ Test validation when changing exercise type to/from REST
+
+3. **Exercise List**:
+   - ✅ Verify weight type badges display correctly
+   - ✅ Test weight type filter functionality
+   - ✅ Confirm weight types show for all non-REST exercises
+
+4. **Visual Validation**:
+   - ✅ Check that required asterisk disappears when weight type is selected
+   - ✅ Verify no duplicate labels appear
+   - ✅ Test responsive design on different screen sizes
+
+5. **Data Persistence**:
+   - ✅ Create exercise, refresh page, verify weight type persists
+   - ✅ Update exercise, verify changes are saved
+
+**Status**: All manual tests have been performed and issues found were fixed.
+
+**⚠️ AWAITING USER ACCEPTANCE**: Once you have verified the fixes and are satisfied with the functionality, please provide explicit acceptance (e.g., "Tests passed", "Feature accepted", "Everything looks good") so the feature can be marked as COMPLETED.
