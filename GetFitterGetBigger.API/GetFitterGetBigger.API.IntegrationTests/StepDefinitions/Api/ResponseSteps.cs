@@ -567,4 +567,10 @@ public class ResponseSteps
         
         return current;
     }
+
+    [Then(@"the request should fail with bad request")]
+    public void ThenTheRequestShouldFailWithBadRequest()
+    {
+        ThenTheResponseStatusShouldBe("bad request");
+    }
 }

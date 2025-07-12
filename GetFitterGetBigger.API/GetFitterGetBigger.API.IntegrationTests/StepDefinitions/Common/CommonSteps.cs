@@ -1,5 +1,8 @@
 using GetFitterGetBigger.API.IntegrationTests.TestInfrastructure.Fixtures;
 using GetFitterGetBigger.API.IntegrationTests.TestInfrastructure.Helpers;
+using GetFitterGetBigger.API.Models;
+using GetFitterGetBigger.API.Tests.TestBuilders;
+using Microsoft.Extensions.DependencyInjection;
 using TechTalk.SpecFlow;
 
 namespace GetFitterGetBigger.API.IntegrationTests.StepDefinitions.Common;
@@ -126,6 +129,17 @@ public class CommonSteps
         _scenarioContext.SetTestData($"FeatureFlag_{flagName}", isEnabled.ToString());
     }
     
+    [Given(@"the system has been initialized with seed data")]
+    public async Task GivenTheSystemHasBeenInitializedWithSeedData()
+    {
+        // Initialize seed data using SeedDataBuilder
+        await _fixture.ExecuteDbContextAsync(async context =>
+        {
+            var seedBuilder = new SeedDataBuilder(context);
+            await seedBuilder.WithAllReferenceDataAsync();
+        });
+    }
+
     [BeforeScenario(Order = 1)]
     public void BeforeScenario()
     {

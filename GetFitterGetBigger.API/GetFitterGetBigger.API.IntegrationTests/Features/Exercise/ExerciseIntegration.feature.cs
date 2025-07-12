@@ -271,6 +271,205 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.Exercise
             await this.ScenarioCleanupAsync();
         }
         
+        [Xunit.SkippableFactAttribute(DisplayName="Create exercise with rest and other types returns bad request")]
+        [Xunit.TraitAttribute("FeatureTitle", "Exercise Integration")]
+        [Xunit.TraitAttribute("Description", "Create exercise with rest and other types returns bad request")]
+        [Xunit.TraitAttribute("Category", "exercise")]
+        [Xunit.TraitAttribute("Category", "integration")]
+        [Xunit.TraitAttribute("Category", "rest")]
+        public async System.Threading.Tasks.Task CreateExerciseWithRestAndOtherTypesReturnsBadRequest()
+        {
+            string[] tagsOfScenario = new string[] {
+                    "exercise",
+                    "integration",
+                    "rest"};
+            System.Collections.Specialized.OrderedDictionary argumentsOfScenario = new System.Collections.Specialized.OrderedDictionary();
+            TechTalk.SpecFlow.ScenarioInfo scenarioInfo = new TechTalk.SpecFlow.ScenarioInfo("Create exercise with rest and other types returns bad request", null, tagsOfScenario, argumentsOfScenario, featureTags);
+            this.ScenarioInitialize(scenarioInfo);
+            if ((TagHelper.ContainsIgnoreTag(tagsOfScenario) || TagHelper.ContainsIgnoreTag(featureTags)))
+            {
+                testRunner.SkipScenario();
+            }
+            else
+            {
+                await this.ScenarioStartAsync();
+                await this.FeatureBackgroundAsync();
+                await testRunner.WhenAsync("I create an exercise with rest and other types", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
+                await testRunner.AndAsync("I submit the exercise", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
+                await testRunner.ThenAsync("the response status should be 400", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
+                await testRunner.AndAsync("the response should contain \"REST\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
+            }
+            await this.ScenarioCleanupAsync();
+        }
+        
+        [Xunit.SkippableFactAttribute(DisplayName="Create exercise with only rest type returns created exercise")]
+        [Xunit.TraitAttribute("FeatureTitle", "Exercise Integration")]
+        [Xunit.TraitAttribute("Description", "Create exercise with only rest type returns created exercise")]
+        [Xunit.TraitAttribute("Category", "exercise")]
+        [Xunit.TraitAttribute("Category", "integration")]
+        [Xunit.TraitAttribute("Category", "rest")]
+        public async System.Threading.Tasks.Task CreateExerciseWithOnlyRestTypeReturnsCreatedExercise()
+        {
+            string[] tagsOfScenario = new string[] {
+                    "exercise",
+                    "integration",
+                    "rest"};
+            System.Collections.Specialized.OrderedDictionary argumentsOfScenario = new System.Collections.Specialized.OrderedDictionary();
+            TechTalk.SpecFlow.ScenarioInfo scenarioInfo = new TechTalk.SpecFlow.ScenarioInfo("Create exercise with only rest type returns created exercise", null, tagsOfScenario, argumentsOfScenario, featureTags);
+            this.ScenarioInitialize(scenarioInfo);
+            if ((TagHelper.ContainsIgnoreTag(tagsOfScenario) || TagHelper.ContainsIgnoreTag(featureTags)))
+            {
+                testRunner.SkipScenario();
+            }
+            else
+            {
+                await this.ScenarioStartAsync();
+                await this.FeatureBackgroundAsync();
+                await testRunner.WhenAsync("I create a rest exercise named \"Integration Test Rest Period\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
+                await testRunner.AndAsync("I submit the exercise", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
+                await testRunner.ThenAsync("the response status should be 201", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
+                await testRunner.AndAsync("the response should have property \"name\" with value \"Integration Test Rest Period" +
+                        "\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
+                await testRunner.AndAsync("the response should have property \"exerciseTypes\" as array with length 1", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
+            }
+            await this.ScenarioCleanupAsync();
+        }
+        
+        [Xunit.SkippableFactAttribute(DisplayName="Update exercise add coach notes updates exercise with new notes")]
+        [Xunit.TraitAttribute("FeatureTitle", "Exercise Integration")]
+        [Xunit.TraitAttribute("Description", "Update exercise add coach notes updates exercise with new notes")]
+        [Xunit.TraitAttribute("Category", "exercise")]
+        [Xunit.TraitAttribute("Category", "integration")]
+        [Xunit.TraitAttribute("Category", "update")]
+        public async System.Threading.Tasks.Task UpdateExerciseAddCoachNotesUpdatesExerciseWithNewNotes()
+        {
+            string[] tagsOfScenario = new string[] {
+                    "exercise",
+                    "integration",
+                    "update"};
+            System.Collections.Specialized.OrderedDictionary argumentsOfScenario = new System.Collections.Specialized.OrderedDictionary();
+            TechTalk.SpecFlow.ScenarioInfo scenarioInfo = new TechTalk.SpecFlow.ScenarioInfo("Update exercise add coach notes updates exercise with new notes", null, tagsOfScenario, argumentsOfScenario, featureTags);
+            this.ScenarioInitialize(scenarioInfo);
+            if ((TagHelper.ContainsIgnoreTag(tagsOfScenario) || TagHelper.ContainsIgnoreTag(featureTags)))
+            {
+                testRunner.SkipScenario();
+            }
+            else
+            {
+                await this.ScenarioStartAsync();
+                await this.FeatureBackgroundAsync();
+                await testRunner.WhenAsync("I update the exercise \"Update Test Exercise\" with new coach notes", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
+                await testRunner.AndAsync("I send a PUT request to update the exercise with coach notes", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
+                await testRunner.ThenAsync("the response status should be 200", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
+                await testRunner.AndAsync("the response should have property \"name\" with value \"Updated Test Exercise\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
+                await testRunner.AndAsync("the response should have property \"coachNotes\" as array with length 3", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
+                await testRunner.AndAsync("the response property \"coachNotes[0].text\" should be \"First step\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
+                await testRunner.AndAsync("the response property \"coachNotes[0].order\" should be \"1\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
+                await testRunner.AndAsync("the response property \"coachNotes[1].text\" should be \"Second step\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
+                await testRunner.AndAsync("the response property \"coachNotes[1].order\" should be \"2\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
+                await testRunner.AndAsync("the response property \"coachNotes[2].text\" should be \"Third step\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
+                await testRunner.AndAsync("the response property \"coachNotes[2].order\" should be \"3\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
+            }
+            await this.ScenarioCleanupAsync();
+        }
+        
+        [Xunit.SkippableFactAttribute(DisplayName="Update exercise modify existing coach notes updates notes correctly")]
+        [Xunit.TraitAttribute("FeatureTitle", "Exercise Integration")]
+        [Xunit.TraitAttribute("Description", "Update exercise modify existing coach notes updates notes correctly")]
+        [Xunit.TraitAttribute("Category", "exercise")]
+        [Xunit.TraitAttribute("Category", "integration")]
+        [Xunit.TraitAttribute("Category", "update")]
+        public async System.Threading.Tasks.Task UpdateExerciseModifyExistingCoachNotesUpdatesNotesCorrectly()
+        {
+            string[] tagsOfScenario = new string[] {
+                    "exercise",
+                    "integration",
+                    "update"};
+            System.Collections.Specialized.OrderedDictionary argumentsOfScenario = new System.Collections.Specialized.OrderedDictionary();
+            TechTalk.SpecFlow.ScenarioInfo scenarioInfo = new TechTalk.SpecFlow.ScenarioInfo("Update exercise modify existing coach notes updates notes correctly", null, tagsOfScenario, argumentsOfScenario, featureTags);
+            this.ScenarioInitialize(scenarioInfo);
+            if ((TagHelper.ContainsIgnoreTag(tagsOfScenario) || TagHelper.ContainsIgnoreTag(featureTags)))
+            {
+                testRunner.SkipScenario();
+            }
+            else
+            {
+                await this.ScenarioStartAsync();
+                await this.FeatureBackgroundAsync();
+                await testRunner.WhenAsync("I update the exercise \"Exercise With Notes\" with new coach notes", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
+                await testRunner.AndAsync("I send a PUT request to update the exercise with coach notes", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
+                await testRunner.ThenAsync("the response status should be 200", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
+                await testRunner.AndAsync("the response should have property \"name\" with value \"Updated Test Exercise\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
+                await testRunner.AndAsync("the response should have property \"coachNotes\" as array with length 3", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
+            }
+            await this.ScenarioCleanupAsync();
+        }
+        
+        [Xunit.SkippableFactAttribute(DisplayName="Update exercise change exercise types updates types correctly")]
+        [Xunit.TraitAttribute("FeatureTitle", "Exercise Integration")]
+        [Xunit.TraitAttribute("Description", "Update exercise change exercise types updates types correctly")]
+        [Xunit.TraitAttribute("Category", "exercise")]
+        [Xunit.TraitAttribute("Category", "integration")]
+        [Xunit.TraitAttribute("Category", "update")]
+        public async System.Threading.Tasks.Task UpdateExerciseChangeExerciseTypesUpdatesTypesCorrectly()
+        {
+            string[] tagsOfScenario = new string[] {
+                    "exercise",
+                    "integration",
+                    "update"};
+            System.Collections.Specialized.OrderedDictionary argumentsOfScenario = new System.Collections.Specialized.OrderedDictionary();
+            TechTalk.SpecFlow.ScenarioInfo scenarioInfo = new TechTalk.SpecFlow.ScenarioInfo("Update exercise change exercise types updates types correctly", null, tagsOfScenario, argumentsOfScenario, featureTags);
+            this.ScenarioInitialize(scenarioInfo);
+            if ((TagHelper.ContainsIgnoreTag(tagsOfScenario) || TagHelper.ContainsIgnoreTag(featureTags)))
+            {
+                testRunner.SkipScenario();
+            }
+            else
+            {
+                await this.ScenarioStartAsync();
+                await this.FeatureBackgroundAsync();
+                await testRunner.WhenAsync("I update the exercise \"Multi-Type Exercise\" with new coach notes", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
+                await testRunner.AndAsync("I send a PUT request to update exercise types", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
+                await testRunner.ThenAsync("the response status should be 200", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
+                await testRunner.AndAsync("the response should have property \"name\" with value \"Multi-Type Exercise\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
+                await testRunner.AndAsync("the response should have property \"exerciseTypes\" as array with length 2", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
+            }
+            await this.ScenarioCleanupAsync();
+        }
+        
+        [Xunit.SkippableFactAttribute(DisplayName="Update exercise with rest type and other types returns bad request")]
+        [Xunit.TraitAttribute("FeatureTitle", "Exercise Integration")]
+        [Xunit.TraitAttribute("Description", "Update exercise with rest type and other types returns bad request")]
+        [Xunit.TraitAttribute("Category", "exercise")]
+        [Xunit.TraitAttribute("Category", "integration")]
+        [Xunit.TraitAttribute("Category", "update")]
+        [Xunit.TraitAttribute("Category", "rest")]
+        public async System.Threading.Tasks.Task UpdateExerciseWithRestTypeAndOtherTypesReturnsBadRequest()
+        {
+            string[] tagsOfScenario = new string[] {
+                    "exercise",
+                    "integration",
+                    "update",
+                    "rest"};
+            System.Collections.Specialized.OrderedDictionary argumentsOfScenario = new System.Collections.Specialized.OrderedDictionary();
+            TechTalk.SpecFlow.ScenarioInfo scenarioInfo = new TechTalk.SpecFlow.ScenarioInfo("Update exercise with rest type and other types returns bad request", null, tagsOfScenario, argumentsOfScenario, featureTags);
+            this.ScenarioInitialize(scenarioInfo);
+            if ((TagHelper.ContainsIgnoreTag(tagsOfScenario) || TagHelper.ContainsIgnoreTag(featureTags)))
+            {
+                testRunner.SkipScenario();
+            }
+            else
+            {
+                await this.ScenarioStartAsync();
+                await this.FeatureBackgroundAsync();
+                await testRunner.WhenAsync("I update the exercise \"Normal Exercise\" with new coach notes", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
+                await testRunner.AndAsync("I send a PUT request to update with rest and other types", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
+                await testRunner.ThenAsync("the response status should be 400", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
+                await testRunner.AndAsync("the response should contain \"REST\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
+            }
+            await this.ScenarioCleanupAsync();
+        }
+        
         [System.CodeDom.Compiler.GeneratedCodeAttribute("TechTalk.SpecFlow", "4.0.0.0")]
         [System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
         public class FixtureData : object, Xunit.IAsyncLifetime

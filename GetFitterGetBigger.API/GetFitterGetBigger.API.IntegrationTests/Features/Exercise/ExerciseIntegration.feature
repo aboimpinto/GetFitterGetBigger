@@ -125,6 +125,54 @@ Feature: Exercise Integration
     And the response should have property "name" with value "Exercise Without Notes"
     And the response should have property "coachNotes" as array with length 0
 
-  # REST type scenarios commented out as REST type is not seeded in test database
-  # Also update scenarios commented out as PUT endpoint returns 400 Bad Request
-  # Original test file had 9 tests, we've migrated 3 that work with current API
+  @exercise @integration @rest
+  Scenario: Create exercise with rest and other types returns bad request
+    When I create an exercise with rest and other types
+    And I submit the exercise
+    Then the response status should be 400
+    And the response should contain "REST"
+
+  @exercise @integration @rest
+  Scenario: Create exercise with only rest type returns created exercise
+    When I create a rest exercise named "Integration Test Rest Period"
+    And I submit the exercise
+    Then the response status should be 201
+    And the response should have property "name" with value "Integration Test Rest Period"
+    And the response should have property "exerciseTypes" as array with length 1
+
+  @exercise @integration @update
+  Scenario: Update exercise add coach notes updates exercise with new notes
+    When I update the exercise "Update Test Exercise" with new coach notes
+    And I send a PUT request to update the exercise with coach notes
+    Then the response status should be 200
+    And the response should have property "name" with value "Updated Test Exercise"
+    And the response should have property "coachNotes" as array with length 3
+    And the response property "coachNotes[0].text" should be "First step"
+    And the response property "coachNotes[0].order" should be "1"
+    And the response property "coachNotes[1].text" should be "Second step"
+    And the response property "coachNotes[1].order" should be "2"
+    And the response property "coachNotes[2].text" should be "Third step"
+    And the response property "coachNotes[2].order" should be "3"
+
+  @exercise @integration @update
+  Scenario: Update exercise modify existing coach notes updates notes correctly
+    When I update the exercise "Exercise With Notes" with new coach notes
+    And I send a PUT request to update the exercise with coach notes
+    Then the response status should be 200
+    And the response should have property "name" with value "Updated Test Exercise"
+    And the response should have property "coachNotes" as array with length 3
+
+  @exercise @integration @update
+  Scenario: Update exercise change exercise types updates types correctly
+    When I update the exercise "Multi-Type Exercise" with new coach notes
+    And I send a PUT request to update exercise types
+    Then the response status should be 200
+    And the response should have property "name" with value "Multi-Type Exercise"
+    And the response should have property "exerciseTypes" as array with length 2
+
+  @exercise @integration @update @rest
+  Scenario: Update exercise with rest type and other types returns bad request
+    When I update the exercise "Normal Exercise" with new coach notes
+    And I send a PUT request to update with rest and other types
+    Then the response status should be 400
+    And the response should contain "REST"

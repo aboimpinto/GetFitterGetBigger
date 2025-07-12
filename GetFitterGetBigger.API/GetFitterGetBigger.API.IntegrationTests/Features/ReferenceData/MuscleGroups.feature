@@ -141,7 +141,7 @@ Feature: Muscle Groups Reference Data
     # Note: API returns 400 instead of 404 for non-existent muscle groups
 
   @reference-data
-  Scenario: Delete muscle group returns bad request
+  Scenario: Delete muscle group deactivates successfully
     Given I send a GET request to "/api/ReferenceTables/BodyParts"
     And I store the first item from the response as "bodyPart"
     And I send a POST request to "/api/ReferenceTables/MuscleGroups" with body:
@@ -153,8 +153,8 @@ Feature: Muscle Groups Reference Data
       """
     And I store the response property "id" as "muscleGroupId"
     When I send a DELETE request to "/api/ReferenceTables/MuscleGroups/<muscleGroupId>"
-    Then the response status should be 400
-    # Note: API returns 400 for delete operations, likely DELETE is not implemented
+    Then the response status should be 204
+    # Note: DELETE operation deactivates the muscle group and returns 204 No Content
 
   @reference-data @structure
   Scenario: Muscle group response has correct structure

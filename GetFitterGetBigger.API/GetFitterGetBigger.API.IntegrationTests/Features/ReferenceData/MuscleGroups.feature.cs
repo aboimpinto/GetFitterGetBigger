@@ -447,16 +447,16 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.ReferenceData
             await this.ScenarioCleanupAsync();
         }
         
-        [Xunit.SkippableFactAttribute(DisplayName="Delete muscle group returns bad request")]
+        [Xunit.SkippableFactAttribute(DisplayName="Delete muscle group deactivates successfully")]
         [Xunit.TraitAttribute("FeatureTitle", "Muscle Groups Reference Data")]
-        [Xunit.TraitAttribute("Description", "Delete muscle group returns bad request")]
+        [Xunit.TraitAttribute("Description", "Delete muscle group deactivates successfully")]
         [Xunit.TraitAttribute("Category", "reference-data")]
-        public async System.Threading.Tasks.Task DeleteMuscleGroupReturnsBadRequest()
+        public async System.Threading.Tasks.Task DeleteMuscleGroupDeactivatesSuccessfully()
         {
             string[] tagsOfScenario = new string[] {
                     "reference-data"};
             System.Collections.Specialized.OrderedDictionary argumentsOfScenario = new System.Collections.Specialized.OrderedDictionary();
-            TechTalk.SpecFlow.ScenarioInfo scenarioInfo = new TechTalk.SpecFlow.ScenarioInfo("Delete muscle group returns bad request", null, tagsOfScenario, argumentsOfScenario, featureTags);
+            TechTalk.SpecFlow.ScenarioInfo scenarioInfo = new TechTalk.SpecFlow.ScenarioInfo("Delete muscle group deactivates successfully", null, tagsOfScenario, argumentsOfScenario, featureTags);
             this.ScenarioInitialize(scenarioInfo);
             if ((TagHelper.ContainsIgnoreTag(tagsOfScenario) || TagHelper.ContainsIgnoreTag(featureTags)))
             {
@@ -471,7 +471,7 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.ReferenceData
                 await testRunner.AndAsync("I send a POST request to \"/api/ReferenceTables/MuscleGroups\" with body:", "{\n  \"name\": \"Muscle Group To Delete\",\n  \"bodyPartId\": \"<bodyPart.id>\"\n}", ((TechTalk.SpecFlow.Table)(null)), "And ");
                 await testRunner.AndAsync("I store the response property \"id\" as \"muscleGroupId\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
                 await testRunner.WhenAsync("I send a DELETE request to \"/api/ReferenceTables/MuscleGroups/<muscleGroupId>\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
-                await testRunner.ThenAsync("the response status should be 400", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
+                await testRunner.ThenAsync("the response status should be 204", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
             }
             await this.ScenarioCleanupAsync();
         }
