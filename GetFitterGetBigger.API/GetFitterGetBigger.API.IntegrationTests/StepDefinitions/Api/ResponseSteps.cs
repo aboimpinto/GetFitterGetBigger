@@ -248,6 +248,7 @@ public class ResponseSteps
         jsonArray.RootElement.ValueKind.Should().Be(JsonValueKind.Array);
     }
 
+    [Given(@"the response contains at least (\d+) item")]
     [Then(@"the response contains at least (\d+) item")]
     public void ThenTheResponseContainsAtLeastItems(int minimumCount)
     {
@@ -257,6 +258,7 @@ public class ResponseSteps
         jsonArray.RootElement.GetArrayLength().Should().BeGreaterThanOrEqualTo(minimumCount);
     }
 
+    [Given(@"I store the first item from the response as ""(.*)""")]
     [Then(@"I store the first item from the response as ""(.*)""")]
     public void ThenIStoreTheFirstItemFromTheResponseAs(string variableName)
     {
@@ -269,6 +271,7 @@ public class ResponseSteps
         _scenarioContext.SetTestData(variableName, firstItem.GetRawText());
     }
 
+    [Given(@"the response contains an item with value ""(.*)""")]
     [Then(@"the response contains an item with value ""(.*)""")]
     public void ThenTheResponseContainsAnItemWithValue(string expectedValue)
     {

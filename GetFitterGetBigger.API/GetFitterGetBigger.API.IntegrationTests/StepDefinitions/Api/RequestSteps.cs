@@ -18,6 +18,7 @@ public class RequestSteps
         _scenarioContext = scenarioContext;
     }
     
+    [Given(@"I send a (GET|POST|PUT|DELETE) request to ""(.*)""")]
     [When(@"I send a (GET|POST|PUT|DELETE) request to ""(.*)""")]
     public async Task WhenISendARequestTo(string method, string endpoint)
     {
@@ -41,6 +42,7 @@ public class RequestSteps
         await StoreResponse(response);
     }
     
+    [Given(@"I send a (GET|POST|PUT|DELETE) request to ""(.*)"" with body:")]
     [When(@"I send a (GET|POST|PUT|DELETE) request to ""(.*)"" with body:")]
     public async Task WhenISendARequestWithBody(string method, string endpoint, string body)
     {
