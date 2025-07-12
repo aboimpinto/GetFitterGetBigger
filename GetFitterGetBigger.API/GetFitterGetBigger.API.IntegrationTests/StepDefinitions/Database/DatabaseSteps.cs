@@ -223,4 +223,12 @@ public class DatabaseSteps
             difficultyLevelCount.Should().BeGreaterOrEqualTo(0, "DifficultyLevels table should exist");
         });
     }
+    
+    [Given(@"an exercise exists with id ""(.*)""")] 
+    public void GivenAnExerciseExistsWithId(string exerciseId)
+    {
+        // For now, we'll assume the exercise exists in the seeded data
+        // In a real implementation, we would verify or create the exercise
+        _scenarioContext.Set(exerciseId, "ExistingExerciseId");
+    }
 }

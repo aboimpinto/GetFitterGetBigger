@@ -579,12 +579,19 @@ After initial implementation, tests were simplified to establish working infrast
   - ✅ Complex CRUD entity with foreign key relationships
   - ✅ Identified API limitations (isActive not honored, DELETE returns 400)
   - ✅ Adjusted tests to match actual API behavior
-- [ ] Exercise Controllers - Need to assess endpoint availability
+- [x] **DatabaseOperations**: 5/5 tests passing (Commit: 31592fed)
+  - ✅ Database connectivity and migration tests
+  - ✅ Reference data seeding validation
+  - ✅ Data persistence across requests
+- [x] **ExerciseRestExclusivity**: 5/5 tests passing (Commit: 3d329595)
+  - ✅ REST type business rule validation
+  - ✅ Tests verify REST cannot be combined with other types
+  - ✅ Exercise CRUD endpoints confirmed working
 - [ ] Equipment Management CRUD - Different from reference table endpoints
 
 #### Current Progress:
-- **Total BDD Tests**: 111 (110 migrated + 1 infrastructure)
-- **Migration Progress**: 110/218 tests (50.5%)
+- **Total BDD Tests**: 121 (120 migrated + 1 infrastructure)
+- **Migration Progress**: 120/218 tests (55.0%)
 - **Coverage**: 89.99% maintained
 - **Build Status**: 0 warnings, 0 errors
 

@@ -121,7 +121,7 @@ Feature: Authentication
 |--------------|------|-------------|----------|------------|---------|
 | `ExerciseCompleteWorkflowTests` (3 tests) | ExerciseCompleteWorkflowTests.cs | Exercise/WorkflowTests.feature | MEDIUM | Very High | ❌ Not Started |
 | `ExerciseCoachNotesSyncTests` (4 tests) | ExerciseCoachNotesSyncTests.cs | Exercise/CoachNotesSync.feature | MEDIUM | High | ❌ Not Started |
-| `ExerciseRestExclusivityTests` (5 tests) | ExerciseRestExclusivityTests.cs | Exercise/RestExclusivity.feature | LOW | High | ❌ Not Started |
+| `ExerciseRestExclusivityTests` (5 tests) | ExerciseRestExclusivityTests.cs | Exercise/RestExclusivity.feature | LOW | High | ✅ **COMPLETE** (5 BDD tests - 3d329595) |
 
 ## 3. Priority 3: Exercise Links and Advanced Features (Future)
 *Complex business rules that may be partially implemented*
@@ -245,11 +245,11 @@ Feature: Authentication
 - **Integration Tests**: ~218 (IntegrationTests + Controllers)
 
 #### Migration Metrics (Updated 2025-01-12)
-- **Tests Migrated**: 115/218 (52.8%)
+- **Tests Migrated**: 120/218 (55.0%)
 - **Coverage After Migration**: 89.99% (maintained)
-- **BDD Tests Created**: 116 (1 DatabaseConnection + 115 migrated tests)
+- **BDD Tests Created**: 121 (1 DatabaseConnection + 120 migrated tests)
 - **Phase 1 Status**: ✅ COMPLETE
-- **Phase 2 Status**: 🚧 IN PROGRESS (36/103 tests completed)
+- **Phase 2 Status**: 🚧 IN PROGRESS (41/103 tests completed)
 
 ### Risk Mitigation
 
@@ -273,12 +273,14 @@ Feature: Authentication
 - **Phase 1 COMPLETE**: 79 tests migrated successfully
   - Authentication: 10/10 tests
   - Reference Tables: 69 tests across 8 controllers
-- **Phase 2 IN PROGRESS**: 31 additional tests migrated
+- **Phase 2 IN PROGRESS**: 41 additional tests migrated
   - ExerciseWeightTypes: 17/17 tests
   - MuscleGroups: 14/14 tests (complex CRUD entity)
+  - DatabaseOperations: 5/5 tests
+  - ExerciseRestExclusivity: 5/5 tests
 
 ### 🚧 In Progress  
-- **Phase 2**: Core Functionality (52.8% overall complete, 35% of Phase 2)
+- **Phase 2**: Core Functionality (55.0% overall complete, 40% of Phase 2)
 
 ### ⏳ Next Steps
 1. ✅ Database Operations completed (5 tests)
