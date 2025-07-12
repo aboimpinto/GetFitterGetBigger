@@ -90,6 +90,14 @@ Feature: Authentication
 | `Update_WithValidData_ReturnsOkResult` | EquipmentControllerCrudTests.cs | EquipmentManagement.feature | HIGH | Medium | ❌ Not Started |
 | `Delete_WithValidId_ReturnsNoContent` | EquipmentControllerCrudTests.cs | EquipmentManagement.feature | HIGH | Medium | ❌ Not Started |
 
+### Exercise Controller Basic Tests
+| Original Test | File | BDD Feature | Priority | Complexity | Status |
+|--------------|------|-------------|----------|------------|---------|
+| `CreateExercise_WithMinimalValidData_ReturnsCreated` | ExercisesControllerBasicTests.cs | Exercise/ExerciseBasicOperations.feature | MEDIUM | Low | ✅ **COMPLETE** (0d869df0) |
+| `GetExercises_WithoutAnyExercises_ReturnsEmptyPagedList` | ExercisesControllerBasicTests.cs | Exercise/ExerciseBasicOperations.feature | MEDIUM | Low | ✅ **COMPLETE** (0d869df0) |
+| `GetExercise_WithInvalidFormat_ReturnsBadRequest` | ExercisesControllerBasicTests.cs | Exercise/ExerciseBasicOperations.feature | MEDIUM | Low | ✅ **COMPLETE** (0d869df0) |
+| `CreateExercise_WithMissingRequiredFields_ReturnsBadRequest` | ExercisesControllerBasicTests.cs | Exercise/ExerciseBasicOperations.feature | MEDIUM | Low | ✅ **COMPLETE** (0d869df0) |
+
 ### Reference Tables (10 controllers)
 | Controller | Tests | BDD Feature | Priority | Complexity | Status |
 |------------|-------|-------------|----------|------------|---------|
@@ -247,11 +255,11 @@ Feature: Authentication
 - **Integration Tests**: ~218 (IntegrationTests + Controllers)
 
 #### Migration Metrics (Updated 2025-01-12)
-- **Tests Migrated**: 132/218 (60.6%)
+- **Tests Migrated**: 136/218 (62.4%)
 - **Coverage After Migration**: 89.99% (maintained)
-- **BDD Tests Created**: 133 (1 DatabaseConnection + 132 migrated tests)
+- **BDD Tests Created**: 137 (1 DatabaseConnection + 136 migrated tests)
 - **Phase 1 Status**: ✅ COMPLETE
-- **Phase 2 Status**: 🚧 IN PROGRESS (53/103 tests completed)
+- **Phase 2 Status**: 🚧 IN PROGRESS (57/103 tests completed)
 
 ### Risk Mitigation
 
@@ -275,14 +283,18 @@ Feature: Authentication
 - **Phase 1 COMPLETE**: 79 tests migrated successfully
   - Authentication: 10/10 tests
   - Reference Tables: 69 tests across 8 controllers
-- **Phase 2 IN PROGRESS**: 41 additional tests migrated
+- **Phase 2 IN PROGRESS**: 57 additional tests migrated
   - ExerciseWeightTypes: 17/17 tests
   - MuscleGroups: 14/14 tests (complex CRUD entity)
   - DatabaseOperations: 5/5 tests
   - ExerciseRestExclusivity: 5/5 tests
+  - RestMuscleGroupValidation: 3/4 tests (1 skipped)
+  - ExerciseCrud: 8/8 tests
+  - CoachNotesSync: 4/4 tests
+  - ExerciseBasicOperations: 4/4 tests
 
 ### 🚧 In Progress  
-- **Phase 2**: Core Functionality (56.4% overall complete, 43% of Phase 2)
+- **Phase 2**: Core Functionality (62.4% overall complete, 55.3% of Phase 2)
 
 ### ⏳ Next Steps
 1. ✅ Database Operations completed (5 tests)

@@ -598,11 +598,15 @@ After initial implementation, tests were simplified to establish working infrast
   - ✅ Coach notes ordering verification
   - ✅ Duplicate order handling
   - ✅ Notes included in list responses
+- [x] **ExerciseBasicOperations**: 4/4 tests passing (Commit: 0d869df0)
+  - ✅ Basic validation tests (empty name, missing muscle groups)
+  - ✅ Invalid ID format handling
+  - ✅ Paginated list functionality
 - [ ] Equipment Management CRUD - Different from reference table endpoints
 
 #### Current Progress:
-- **Total BDD Tests**: 133 (132 migrated + 1 infrastructure)
-- **Migration Progress**: 132/218 tests (60.6%)
+- **Total BDD Tests**: 137 (136 migrated + 1 infrastructure)
+- **Migration Progress**: 136/218 tests (62.4%)
 - **Coverage**: 89.99% maintained
 - **Build Status**: 0 warnings, 0 errors
 

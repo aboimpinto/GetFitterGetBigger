@@ -350,6 +350,42 @@ public class ResponseSteps
         
         found.Should().BeTrue($"Expected to find an item with value '{expectedValue}' in the response");
     }
+    
+    [Given(@"I store the item with property ""(.*)"" equals ""(.*)"" from the response as ""(.*)""")]
+    [When(@"I store the item with property ""(.*)"" equals ""(.*)"" from the response as ""(.*)""")]
+    [Then(@"I store the item with property ""(.*)"" equals ""(.*)"" from the response as ""(.*)""")]
+    public void ThenIStoreTheItemWithPropertyEqualsFromResponse(string propertyName, string propertyValue, string key)
+    {
+        var content = _scenarioContext.GetLastResponseContent();
+        var jsonArray = JsonDocument.Parse(content);
+        
+        if (jsonArray.RootElement.ValueKind != JsonValueKind.Array)
+        {
+            throw new InvalidOperationException($"Response is not an array, cannot search for items");
+        }
+        
+        JsonElement? matchingItem = null;
+        foreach (var item in jsonArray.RootElement.EnumerateArray())
+        {
+            if (item.TryGetProperty(propertyName, out var propElement))
+            {
+                var propValue = propElement.GetString();
+                if (propValue != null && propValue.Equals(propertyValue, StringComparison.OrdinalIgnoreCase))
+                {
+                    matchingItem = item;
+                    break;
+                }
+            }
+        }
+        
+        if (matchingItem == null)
+        {
+            throw new InvalidOperationException($"No item found with property '{propertyName}' equal to '{propertyValue}'");
+        }
+        
+        // Store as JSON string to avoid value type issues
+        _scenarioContext.SetTestData(key, matchingItem.Value.GetRawText());
+    }
 
     private void ValidateJsonAgainstSchema(JsonElement actual, JsonElement schema)
     {
