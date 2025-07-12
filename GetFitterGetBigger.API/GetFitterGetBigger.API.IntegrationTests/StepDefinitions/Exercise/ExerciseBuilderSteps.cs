@@ -4,7 +4,7 @@ using FluentAssertions;
 using GetFitterGetBigger.API.DTOs;
 using GetFitterGetBigger.API.IntegrationTests.TestInfrastructure.Helpers;
 using GetFitterGetBigger.API.Models;
-using GetFitterGetBigger.API.Tests.TestBuilders;
+using GetFitterGetBigger.API.IntegrationTests.TestBuilders;
 using Microsoft.EntityFrameworkCore;
 using TechTalk.SpecFlow;
 
@@ -735,5 +735,177 @@ public class ExerciseBuilderSteps
         // In a more comprehensive test, we'd query the database directly
         var response = _scenarioContext.GetLastResponse();
         response.StatusCode.Should().Be(System.Net.HttpStatusCode.NoContent);
+    }
+
+    // Sequential Operations Steps
+    [Given(@"I have (\d+) target exercises named ""(.*)"" with exercise types ""(.*)""")]
+    public async Task GivenIHaveTargetExercisesNamedWithExerciseTypes(int count, string namePattern, string exerciseTypes)
+    {
+        for (int i = 0; i < count; i++)
+        {
+            var exerciseName = namePattern.Replace("{0}", i.ToString());
+            await GivenIHaveAnExerciseNamedWithExerciseTypes(exerciseName, exerciseTypes);
+        }
+    }
+
+    [When(@"I create (\d+) exercise links from ""(.*)""? to target exercises with link type ""(.*)""?")]
+    public async Task WhenICreateExerciseLinksFromToTargetExercisesWithLinkType(int count, string sourceExerciseName, string linkType)
+    {
+        var httpClient = _scenarioContext.GetHttpClient();
+        Console.WriteLine($"[DEBUG] Looking for key: Exercise_{sourceExerciseName}_Id");
+        var sourceExerciseId = _scenarioContext.Get<string>($"Exercise_{sourceExerciseName}_Id");
+
+        for (int i = 0; i < count; i++)
+        {
+            var targetExerciseName = $"Target Exercise {i}";
+            var targetExerciseId = _scenarioContext.Get<string>($"Exercise_{targetExerciseName}_Id");
+
+            var linkDto = new
+            {
+                TargetExerciseId = targetExerciseId,
+                LinkType = linkType,
+                DisplayOrder = i + 1
+            };
+
+            var response = await httpClient.PostAsJsonAsync($"/api/exercises/{sourceExerciseId}/links", linkDto);
+            
+            // Store each response for validation
+            _scenarioContext.Set(response, $"LinkCreationResponse_{i}");
+        }
+    }
+
+    [Then(@"all (\d+) links should be created successfully")]
+    public void ThenAllLinksShouldBeCreatedSuccessfully(int count)
+    {
+        for (int i = 0; i < count; i++)
+        {
+            var response = _scenarioContext.Get<HttpResponseMessage>($"LinkCreationResponse_{i}");
+            response.StatusCode.Should().Be(System.Net.HttpStatusCode.Created);
+        }
+    }
+
+    [When(@"I create (\d+) exercise links manually from ""(.*)""")]
+    public async Task WhenICreateExerciseLinksManuallyFrom(int count, string sourceExerciseName)
+    {
+        var httpClient = _scenarioContext.GetHttpClient();
+        var sourceExerciseId = _scenarioContext.Get<string>($"Exercise_{sourceExerciseName}_Id");
+
+        for (int i = 0; i < count; i++)
+        {
+            var targetExerciseName = $"TargetEx{i}";
+            var targetExerciseId = _scenarioContext.Get<string>($"Exercise_{targetExerciseName}_Id");
+
+            var linkDto = new
+            {
+                TargetExerciseId = targetExerciseId,
+                LinkType = "Warmup",
+                DisplayOrder = i + 1
+            };
+
+            var response = await httpClient.PostAsJsonAsync($"/api/exercises/{sourceExerciseId}/links", linkDto);
+            
+            // Store each response for validation
+            _scenarioContext.Set(response, $"ManualLinkCreationResponse_{i}");
+        }
+    }
+
+    [Then(@"all (\d+) manual links should be created successfully")]
+    public void ThenAllManualLinksShouldBeCreatedSuccessfully(int count)
+    {
+        for (int i = 0; i < count; i++)
+        {
+            var response = _scenarioContext.Get<HttpResponseMessage>($"ManualLinkCreationResponse_{i}");
+            response.StatusCode.Should().Be(System.Net.HttpStatusCode.Created);
+        }
+    }
+
+    // End-to-End Workflow Steps
+    [When(@"I get all links for exercise ""(.*)\"" with exercise details")]
+    public async Task WhenIGetAllLinksForExerciseWithExerciseDetails(string exerciseName)
+    {
+        var exerciseId = _scenarioContext.Get<string>($"Exercise_{exerciseName}_Id");
+        var httpClient = _scenarioContext.GetHttpClient();
+        
+        var response = await httpClient.GetAsync($"/api/exercises/{exerciseId}/links?includeExerciseDetails=true");
+        await StoreResponse(response);
+    }
+
+    [Then(@"the links should include (\d+) ""(.*)\"" type links")]
+    public async Task ThenTheLinksShouldIncludeTypeLinkCount(int expectedCount, string linkType)
+    {
+        var response = _scenarioContext.GetLastResponse();
+        var content = await response.Content.ReadAsStringAsync();
+        var linksResponse = System.Text.Json.JsonSerializer.Deserialize<System.Text.Json.JsonElement>(content);
+        var links = linksResponse.GetProperty("links").EnumerateArray().ToList();
+        
+        var linkTypeCount = links.Count(l => l.GetProperty("linkType").GetString() == linkType);
+        linkTypeCount.Should().Be(expectedCount);
+    }
+
+    [Then(@"all links should have target exercise details")]
+    public async Task ThenAllLinksShouldHaveTargetExerciseDetails()
+    {
+        var response = _scenarioContext.GetLastResponse();
+        var content = await response.Content.ReadAsStringAsync();
+        var linksResponse = System.Text.Json.JsonSerializer.Deserialize<System.Text.Json.JsonElement>(content);
+        var links = linksResponse.GetProperty("links").EnumerateArray().ToList();
+        
+        foreach (var link in links)
+        {
+            link.TryGetProperty("targetExercise", out var targetExercise).Should().BeTrue();
+            targetExercise.TryGetProperty("name", out var name).Should().BeTrue();
+            name.GetString().Should().NotBeNullOrEmpty();
+        }
+    }
+
+    [When(@"I update the first created link to have display order (\d+) and active status (true|false)")]
+    public async Task WhenIUpdateTheFirstCreatedLinkToHaveDisplayOrderAndActiveStatus(int displayOrder, bool isActive)
+    {
+        // Use the first link ID stored from creation
+        var linkId = _scenarioContext.Get<string>("LastCreatedLinkId");
+        var sourceExerciseId = _scenarioContext.Get<string>("LastCreatedLinkSourceExerciseId");
+        var httpClient = _scenarioContext.GetHttpClient();
+        
+        var updateDto = new
+        {
+            DisplayOrder = displayOrder,
+            IsActive = isActive
+        };
+        
+        var response = await httpClient.PutAsJsonAsync($"/api/exercises/{sourceExerciseId}/links/{linkId}", updateDto);
+        await StoreResponse(response);
+    }
+
+    [When(@"I get suggested links for exercise ""(.*)\"" with count (\d+)")]
+    public async Task WhenIGetSuggestedLinksForExerciseWithCount(string exerciseName, int count)
+    {
+        var exerciseId = _scenarioContext.Get<string>($"Exercise_{exerciseName}_Id");
+        var httpClient = _scenarioContext.GetHttpClient();
+        
+        var response = await httpClient.GetAsync($"/api/exercises/{exerciseId}/links/suggested?count={count}");
+        await StoreResponse(response);
+    }
+
+    [When(@"I delete the last created link")]
+    public async Task WhenIDeleteTheLastCreatedLink()
+    {
+        var linkId = _scenarioContext.Get<string>("LastCreatedLinkId");
+        var sourceExerciseId = _scenarioContext.Get<string>("LastCreatedLinkSourceExerciseId");
+        var httpClient = _scenarioContext.GetHttpClient();
+        
+        var response = await httpClient.DeleteAsync($"/api/exercises/{sourceExerciseId}/links/{linkId}");
+        await StoreResponse(response);
+    }
+
+    [Then(@"I should receive (\d+) active exercise links")]
+    public async Task ThenIShouldReceiveActiveExerciseLinks(int expectedCount)
+    {
+        var response = _scenarioContext.GetLastResponse();
+        var content = await response.Content.ReadAsStringAsync();
+        var linksResponse = System.Text.Json.JsonSerializer.Deserialize<System.Text.Json.JsonElement>(content);
+        var links = linksResponse.GetProperty("links").EnumerateArray().ToList();
+        
+        var activeLinks = links.Count(l => l.GetProperty("isActive").GetBoolean());
+        activeLinks.Should().Be(expectedCount);
     }
 }

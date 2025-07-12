@@ -1,0 +1,124 @@
+Feature: Equipment Repository Operations
+  As an API service
+  I want to perform CRUD operations on equipment
+  So that the system can manage equipment data correctly
+
+  Background:
+    Given I am authenticated as a "PT-Tier"
+    And the system has been initialized with seed data
+
+  @equipment @repository @read
+  Scenario: Get all equipment returns only active equipment
+    Given I have equipment "Barbell" that is active
+    And I have equipment "Dumbbell" that is active  
+    And I have equipment "Old Machine" that is inactive
+    When I get all equipment from repository
+    Then I should receive 2 equipment items
+    And all equipment should be active
+    And the equipment should not include "Old Machine"
+
+  @equipment @repository @read
+  Scenario: Get equipment by ID when exists returns equipment
+    Given I have equipment "Barbell" that is active
+    When I get equipment by ID for "Barbell"
+    Then I should receive the equipment
+    And the equipment name should be "Barbell"
+
+  @equipment @repository @read
+  Scenario: Get equipment by ID when not exists returns null
+    Given I have equipment "Barbell" that is active
+    When I get equipment by non-existent ID
+    Then I should receive no equipment
+
+  @equipment @repository @read
+  Scenario: Get equipment by name when active exists returns equipment
+    Given I have equipment "Barbell" that is active
+    When I get equipment by name "Barbell"
+    Then I should receive the equipment
+    And the equipment name should be "Barbell"
+    And the equipment should be active
+
+  @equipment @repository @read
+  Scenario: Get equipment by name when inactive returns null
+    Given I have equipment "Old Machine" that is inactive
+    When I get equipment by name "Old Machine"
+    Then I should receive no equipment
+
+  @equipment @repository @read
+  Scenario: Get equipment by name is case insensitive
+    Given I have equipment "Barbell" that is active
+    When I get equipment by name "BARBELL"
+    Then I should receive the equipment
+    And the equipment name should be "Barbell"
+
+  @equipment @repository @create
+  Scenario: Create new equipment succeeds
+    When I create equipment "Kettlebell" via repository
+    Then the equipment should be created successfully
+    And the equipment name should be "Kettlebell"
+    And the equipment should be active
+    And the equipment should be persisted in database
+
+  @equipment @repository @update
+  Scenario: Update existing equipment succeeds
+    Given I have equipment "Barbell" that is active
+    When I update equipment "Barbell" to name "Olympic Barbell" via repository
+    Then the equipment should be updated successfully
+    And the equipment name should be "Olympic Barbell"
+    And the equipment updated timestamp should be set
+    And the equipment should be persisted in database
+
+  @equipment @repository @delete
+  Scenario: Deactivate existing equipment succeeds
+    Given I have equipment "Barbell" that is active
+    When I deactivate equipment "Barbell" via repository
+    Then the deactivation should succeed
+    And the equipment should be inactive
+    And the equipment updated timestamp should be set
+
+  @equipment @repository @delete
+  Scenario: Deactivate non-existent equipment fails
+    When I deactivate equipment by non-existent ID via repository
+    Then the deactivation should fail
+
+  @equipment @repository @validation
+  Scenario: Check equipment exists when active returns true
+    Given I have equipment "Barbell" that is active
+    When I check if equipment "Barbell" exists via repository
+    Then the existence check should return true
+
+  @equipment @repository @validation
+  Scenario: Check equipment exists when inactive returns false
+    Given I have equipment "Old Machine" that is inactive
+    When I check if equipment "Old Machine" exists via repository
+    Then the existence check should return false
+
+  @equipment @repository @validation
+  Scenario: Check equipment exists when not exists returns false
+    When I check if equipment "NonExistent" exists via repository
+    Then the existence check should return false
+
+  @equipment @repository @validation
+  Scenario: Check equipment exists with exclude ID excludes specified ID
+    Given I have equipment "Barbell" that is active
+    When I check if equipment "Barbell" exists excluding its own ID via repository
+    Then the existence check should return false
+
+  @equipment @repository @validation
+  Scenario: Check equipment exists is case insensitive
+    Given I have equipment "Barbell" that is active
+    When I check if equipment "BARBELL" exists via repository
+    Then the existence check should return true
+
+  @equipment @repository @validation
+  Scenario: Check equipment in use when not used returns false
+    Given I have equipment "Barbell" that is active
+    When I check if equipment "Barbell" is in use via repository
+    Then the in use check should return false
+
+  @equipment @repository @validation
+  Scenario: Check equipment in use when used by exercise returns true
+    Given I have equipment "Barbell" that is active
+    And I have an exercise "Barbell Squat" that uses equipment "Barbell"
+    When I check if equipment "Barbell" is in use via repository
+    Then the in use check should return true

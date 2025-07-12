@@ -4,7 +4,7 @@ using GetFitterGetBigger.API.IntegrationTests.TestInfrastructure.Helpers;
 using GetFitterGetBigger.API.Models;
 using GetFitterGetBigger.API.Models.Entities;
 using GetFitterGetBigger.API.Models.SpecializedIds;
-using GetFitterGetBigger.API.Tests.TestBuilders;
+using GetFitterGetBigger.API.IntegrationTests.TestBuilders;
 using Microsoft.EntityFrameworkCore;
 using TechTalk.SpecFlow;
 using TechTalk.SpecFlow.Assist;

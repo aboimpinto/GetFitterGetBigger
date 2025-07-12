@@ -1,6 +1,6 @@
 using System.Net.Http.Headers;
 using GetFitterGetBigger.API.Models;
-using GetFitterGetBigger.API.Tests.TestBuilders;
+using GetFitterGetBigger.API.IntegrationTests.TestBuilders;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;

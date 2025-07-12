@@ -1,7 +1,7 @@
 using GetFitterGetBigger.API.IntegrationTests.TestInfrastructure.Fixtures;
 using GetFitterGetBigger.API.IntegrationTests.TestInfrastructure.Helpers;
 using GetFitterGetBigger.API.Models;
-using GetFitterGetBigger.API.Tests.TestBuilders;
+using GetFitterGetBigger.API.IntegrationTests.TestBuilders;
 using Microsoft.Extensions.DependencyInjection;
 using TechTalk.SpecFlow;
 

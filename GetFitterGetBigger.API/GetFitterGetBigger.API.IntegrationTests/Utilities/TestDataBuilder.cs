@@ -1,5 +1,5 @@
 using GetFitterGetBigger.API.DTOs;
-using GetFitterGetBigger.API.Tests.TestBuilders;
+using GetFitterGetBigger.API.IntegrationTests.TestBuilders;
 
 namespace GetFitterGetBigger.API.IntegrationTests.Utilities;
 

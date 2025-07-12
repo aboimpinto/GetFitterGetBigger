@@ -1,5 +1,5 @@
 using GetFitterGetBigger.API.Models;
-using GetFitterGetBigger.API.Tests.TestBuilders;
+using GetFitterGetBigger.API.IntegrationTests.TestBuilders;
 using Microsoft.EntityFrameworkCore;
 
 namespace GetFitterGetBigger.API.IntegrationTests.TestInfrastructure.Helpers;

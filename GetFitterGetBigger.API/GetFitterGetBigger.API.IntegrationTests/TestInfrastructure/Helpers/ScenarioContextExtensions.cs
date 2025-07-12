@@ -46,9 +46,23 @@ public static class ScenarioContextExtensions
     /// <summary>
     /// Stores the last HTTP response
     /// </summary>
+    public static async Task SetLastResponseAsync(this ScenarioContext context, HttpResponseMessage response)
+    {
+        context[HttpResponseKey] = response;
+        // Also store the content as string for easier assertion access
+        var content = await response.Content.ReadAsStringAsync();
+        context[HttpResponseContentKey] = content;
+    }
+    
+    /// <summary>
+    /// Stores the last HTTP response (synchronous version)
+    /// </summary>
     public static void SetLastResponse(this ScenarioContext context, HttpResponseMessage response)
     {
         context[HttpResponseKey] = response;
+        // Store content synchronously
+        var content = response.Content.ReadAsStringAsync().Result;
+        context[HttpResponseContentKey] = content;
     }
     
     /// <summary>

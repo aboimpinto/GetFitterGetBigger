@@ -26,7 +26,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\GetFitterGetBigger.API\GetFitterGetBigger.API.csproj" />
-    <ProjectReference Include="..\GetFitterGetBigger.API.Tests\GetFitterGetBigger.API.Tests.csproj" />
   </ItemGroup>
 
   <ItemGroup>
