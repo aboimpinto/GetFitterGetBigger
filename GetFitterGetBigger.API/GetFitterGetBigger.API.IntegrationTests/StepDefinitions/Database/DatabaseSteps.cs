@@ -105,7 +105,7 @@ public class DatabaseSteps
     }
     
     [Then(@"the (.*) with id ""(.*)"" should exist")]
-    public async Task ThenTheEntityWithIdShouldExist(string entityType, string id)
+    public Task ThenTheEntityWithIdShouldExist(string entityType, string id)
     {
         var resolvedId = _scenarioContext.ResolvePlaceholders(id);
         
@@ -115,10 +115,11 @@ public class DatabaseSteps
             .Should().BeTrue($"'{resolvedId}' should be a valid {entityType} ID");
         
         // TODO: Implement actual database checks once entity creation is properly implemented
+        return Task.CompletedTask;
     }
     
     [Then(@"the (.*) with id ""(.*)"" should not exist")]
-    public async Task ThenTheEntityWithIdShouldNotExist(string entityType, string id)
+    public Task ThenTheEntityWithIdShouldNotExist(string entityType, string id)
     {
         var resolvedId = _scenarioContext.ResolvePlaceholders(id);
         
@@ -128,6 +129,7 @@ public class DatabaseSteps
             .Should().BeTrue($"'{resolvedId}' should be a valid {entityType} ID");
         
         // TODO: Implement actual database checks once entity creation is properly implemented
+        return Task.CompletedTask;
     }
     
     [Then(@"the exercise ""(.*)"" should have the following properties:")]
