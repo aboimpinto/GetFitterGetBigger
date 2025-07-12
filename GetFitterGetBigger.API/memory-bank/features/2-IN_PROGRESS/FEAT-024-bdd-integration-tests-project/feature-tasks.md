@@ -594,11 +594,15 @@ After initial implementation, tests were simplified to establish working infrast
   - ✅ Basic exercise CRUD operations (paginated list, create, filters)
   - ✅ Search and pagination functionality
   - ✅ Exercise endpoints confirmed working
+- [x] **CoachNotesSync**: 4/4 tests passing (Commit: ecdc61fe)
+  - ✅ Coach notes ordering verification
+  - ✅ Duplicate order handling
+  - ✅ Notes included in list responses
 - [ ] Equipment Management CRUD - Different from reference table endpoints
 
 #### Current Progress:
-- **Total BDD Tests**: 129 (128 migrated + 1 infrastructure)
-- **Migration Progress**: 128/218 tests (58.7%)
+- **Total BDD Tests**: 133 (132 migrated + 1 infrastructure)
+- **Migration Progress**: 132/218 tests (60.6%)
 - **Coverage**: 89.99% maintained
 - **Build Status**: 0 warnings, 0 errors
 
