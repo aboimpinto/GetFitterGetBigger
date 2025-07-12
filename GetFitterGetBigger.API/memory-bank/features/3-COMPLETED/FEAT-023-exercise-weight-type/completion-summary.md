@@ -1,6 +1,6 @@
 # FEAT-023: Exercise Weight Type Reference Table - Completion Summary
 
-## Status: READY FOR USER TESTING
+## Status: COMPLETED - USER TESTING APPROVED
 
 ## Overview
 Successfully implemented the ExerciseWeightType reference table to define how weight is handled for different types of exercises. This feature provides the foundation for proper weight validation in workout logging.
@@ -272,10 +272,16 @@ curl -X POST http://localhost:5214/api/Exercises \
 6. Performance is fast (sub-second responses)
 
 ## Sign-off
-Once manual testing confirms the new validation rules work correctly:
-1. User can move this feature to 3-COMPLETED
-2. Add acceptance information (e.g., "Accepted By: Paulo Aboim Pinto (Product Owner)")
-3. Update other tests if needed to comply with new validation rules
-4. Approve for PI release
 
-Feature FEAT-023 implementation is complete with enhanced validation rules. Ready for user validation.
+### User Testing Results
+- **Testing Completed**: 2025-07-12
+- **Tested By**: Paulo Aboim Pinto (Product Owner)
+- **Result**: ✅ PASSED
+- **Notes**: All validation rules working as expected. REST exercises correctly reject weight type assignment, non-REST exercises correctly require weight type.
+
+### Feature Acceptance
+- **Accepted By**: Paulo Aboim Pinto (Product Owner)
+- **Acceptance Date**: 2025-07-12
+- **Status**: Approved for PI release
+
+Feature FEAT-023 implementation is complete with enhanced validation rules. User testing has been successfully completed and the feature is approved for production release.
