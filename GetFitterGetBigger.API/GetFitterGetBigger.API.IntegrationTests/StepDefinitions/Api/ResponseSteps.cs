@@ -70,8 +70,8 @@ public class ResponseSteps
         content.Should().BeEmpty("expected response to be empty");
     }
     
-    [Then(@"the response should have property ""(.*)"" with value ""(.*)""")]
-    public void ThenTheResponseShouldHaveProperty(string jsonPath, string expectedValue)
+    [Then(@"the response should have property ""([^""]+)"" with value ""([^""]+)""")]
+    public void ThenTheResponseShouldHavePropertyWithValue(string jsonPath, string expectedValue)
     {
         var content = _scenarioContext.GetLastResponseContent();
         var jsonDocument = JsonDocument.Parse(content);
@@ -81,7 +81,7 @@ public class ResponseSteps
             $"expected property '{jsonPath}' to have value '{expectedValue}' but got '{actualValue}'");
     }
     
-    [Then(@"the response should have property ""(.*)""")]
+    [Then(@"the response should have property ""([^""]+)""$")]
     public void ThenTheResponseShouldHaveProperty(string jsonPath)
     {
         var content = _scenarioContext.GetLastResponseContent();
