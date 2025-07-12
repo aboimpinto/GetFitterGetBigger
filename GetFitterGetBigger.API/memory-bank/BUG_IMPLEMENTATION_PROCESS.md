@@ -43,9 +43,11 @@ Remember: Clean, focused file structure makes bugs easier to track and fix.
 Before starting ANY bug fix:
 1. **Run baseline health check**:
    ```bash
+   dotnet clean
    dotnet build
    dotnet test
    ```
+   **Important**: Always run `dotnet clean` first to ensure all warnings are visible
 2. **Document results in bug-tasks.md**:
    ```markdown
    ## Baseline Health Check Report
@@ -94,14 +96,17 @@ Before starting ANY bug fix:
   2. If it's a fix task: Implement the minimum code to make tests pass
      - **⚠️ For service fixes: Use the service-implementation-checklist.md**
   3. **MANDATORY: Keep build warnings to a minimum**
-  4. **MANDATORY: Run `dotnet build` to ensure compilation succeeds**
+  4. **MANDATORY: Run `dotnet clean && dotnet build` to ensure compilation succeeds**
+     - Always run `dotnet clean` first to catch all warnings
   5. **MANDATORY: Run `dotnet test` to verify test status**
   6. Commit the changes with descriptive message
-  7. Update task status from `[TODO]` to `[IMPLEMENTED: <git-commit-hash>]`
+  7. Update task status from `[TODO]` to `[IMPLEMENTED: <git-commit-hash> | Duration: Xh Ym | Est: Xh Ym]`
+     - Calculate duration immediately when marking as finished
+     - Include original estimate for comparison
 - Task progression states:
   - `[TODO]` - Task identified and ready to implement
-  - `[PROGRESS]` - Currently working on this task
-  - `[IMPLEMENTED: <hash>]` - Task completed with reference commit
+  - `[PROGRESS: Started: YYYY-MM-DD HH:MM]` - Currently working on this task
+  - `[IMPLEMENTED: <hash> | Duration: Xh Ym | Est: Xh Ym]` - Task completed with timing comparison
   - `[BLOCKED: <reason>]` - Task cannot be completed due to dependency
 
 ### 5. Test Development Rules
@@ -178,8 +183,10 @@ When a bug cannot be fixed due to dependencies:
 
 ## Bug Status Definitions
 - `[TODO]` - Task identified and ready to implement
-- `[PROGRESS]` - Currently working on this task
-- `[IMPLEMENTED: <hash>]` - Task completed with reference commit
+- `[PROGRESS: Started: YYYY-MM-DD HH:MM]` - Currently working on this task with start time
+- `[IMPLEMENTED: <hash> | Duration: Xh Ym | Est: Xh Ym]` - Task completed with timing comparison
+  - Duration: Actual time taken
+  - Est: Original estimate for comparison
 - `[BLOCKED: <reason>]` - Task blocked by external dependency
 - `[FIXED]` - Bug completely resolved and verified
 
@@ -210,8 +217,8 @@ When a bug cannot be fixed due to dependencies:
 ## Implementation Tasks
 
 ### Category 1: Test Creation (Reproduce the Bug)
-- **Task 1.1:** Create unit test that reproduces the error [TODO]
-- **Task 1.2:** Create integration test for affected endpoint [TODO]
+- **Task 1.1:** Create unit test that reproduces the error [TODO] (Est: 30m)
+- **Task 1.2:** Create integration test for affected endpoint [TODO] (Est: 45m)
 
 ### Category 2: Fix Implementation
 #### ⚠️ Before Starting: If modifying services, use service-implementation-checklist.md
@@ -256,8 +263,8 @@ Before marking bug as `[FIXED]`:
 - [ ] Failing tests written that reproduce the bug
 - [ ] Fix implemented that makes tests pass
 - [ ] ALL tests are GREEN (no failures, no skipped)
-- [ ] `dotnet build` runs without errors
-- [ ] Build warnings are minimal
+- [ ] `dotnet clean && dotnet build` runs without errors
+- [ ] Build warnings are minimal (clean build reveals all warnings)
 - [ ] Manual test script executes successfully
 - [ ] No regression in existing functionality
 - [ ] Documentation updated with fix details
@@ -296,7 +303,7 @@ Working on task:
 
 Task complete:
 ```
-- **Task 1.1:** Create failing test [IMPLEMENTED: a1b2c3d4]
+- **Task 1.1:** Create failing test [IMPLEMENTED: a1b2c3d4 | Duration: 0h 15m | Est: 0h 30m]
 ```
 
 Blocked task:

@@ -12,6 +12,8 @@ memory-bank/
 ├── BUG_IMPLEMENTATION_PROCESS.md       # How to fix bugs
 ├── BUG_WORKFLOW_PROCESS.md             # Bug state management
 ├── RELEASE_PROCESS.md                  # How to create releases
+├── BUILD-BEST-PRACTICES.md             # Build commands and warning prevention
+├── TIME-TRACKING-GUIDE.md              # How to track estimated vs actual time
 │
 ├── features/                           # Feature tracking by state
 │   ├── 1-READY_TO_DEVELOP/            # Planned features
@@ -118,6 +120,8 @@ echo "  Fixed: $(ls -1 memory-bank/bugs/3-FIXED | wc -l)"
 1. **For Features**: Read `FEATURE_WORKFLOW_PROCESS.md`
 2. **For Bugs**: Read `BUG_WORKFLOW_PROCESS.md`
 3. **For Releases**: Read `RELEASE_PROCESS.md`
+4. **For Build Best Practices**: Read `BUILD-BEST-PRACTICES.md`
+5. **For Time Tracking**: Read `TIME-TRACKING-GUIDE.md`
 
 ## 🔑 Key Principles
 

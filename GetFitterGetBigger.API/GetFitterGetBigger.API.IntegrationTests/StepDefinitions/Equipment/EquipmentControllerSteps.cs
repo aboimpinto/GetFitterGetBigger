@@ -319,7 +319,7 @@ public class EquipmentControllerSteps
     }
 
     [Then(@"I should receive the created equipment")]
-    public async Task ThenIShouldReceiveTheCreatedEquipment()
+    public Task ThenIShouldReceiveTheCreatedEquipment()
     {
         _lastResponse.Should().NotBeNull();
         
@@ -345,10 +345,12 @@ public class EquipmentControllerSteps
             _createdEquipmentIds.Add(_equipmentResult.Id);
             _scenarioContext.Set(_equipmentResult.Id, "CreatedEquipmentId");
         }
+        
+        return Task.CompletedTask;
     }
 
     [Then(@"I should receive the updated equipment")]
-    public async Task ThenIShouldReceiveTheUpdatedEquipment()
+    public Task ThenIShouldReceiveTheUpdatedEquipment()
     {
         _lastResponse.Should().NotBeNull();
         
@@ -359,6 +361,8 @@ public class EquipmentControllerSteps
         // Deserialize from the string
         _equipmentResult = JsonSerializer.Deserialize<EquipmentDto>(responseContent, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
         _equipmentResult.Should().NotBeNull();
+        
+        return Task.CompletedTask;
     }
 
     [Then(@"the equipment created timestamp should be set")]

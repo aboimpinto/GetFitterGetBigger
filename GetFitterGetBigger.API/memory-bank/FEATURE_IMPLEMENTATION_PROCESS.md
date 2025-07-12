@@ -51,13 +51,16 @@ Features progress through these workflow states:
 - Review feature requirements from `feature-description.md`
 - Create a comprehensive implementation plan with granular tasks
 - **MANDATORY**: Create `feature-tasks.md` in the existing feature folder
+- **MANDATORY**: Define BDD scenarios for all API endpoints and business rules
 - Each task must be marked with status `[ReadyToDevelop]`
 - Move feature folder from `0-SUBMITTED` to `1-READY_TO_DEVELOP`
 - Tasks should be specific, actionable, and independently verifiable
 - The task file must include:
   - Feature branch name at the top
+  - **BDD Test Scenarios section** (MANDATORY - see template below)
   - Tasks organized by logical categories (Models, Repository, Service, Controller, etc.)
   - **Unit test tasks immediately following each implementation task**
+  - **BDD integration test tasks for each scenario defined**
   - Clear description of what each task entails
   - Space for commit hashes to be added as tasks are completed
 
@@ -70,9 +73,11 @@ Features progress through these workflow states:
 Before starting ANY implementation:
 1. **Run baseline health check**:
    ```bash
+   dotnet clean
    dotnet build
    dotnet test
    ```
+   **Important**: Always run `dotnet clean` first to ensure all warnings are visible
 2. **Document results in feature-tasks.md**:
    ```markdown
    ## Baseline Health Check Report
@@ -118,12 +123,16 @@ Before starting ANY implementation:
      - **ONLY use WritableUnitOfWork for actual data modifications**
   3. **MANDATORY: Write unit tests for the implemented code in the immediately following task**
   4. **MANDATORY: Keep build warnings to a minimum** (address nullable warnings, unused variables, etc.)
-  5. **MANDATORY: Run `dotnet build` to ensure compilation succeeds with minimal warnings**
+  5. **MANDATORY: Run `dotnet clean && dotnet build` to ensure compilation succeeds with minimal warnings**
+     - Always run `dotnet clean` first to catch all warnings that might be hidden by incremental builds
   6. **MANDATORY: Run `dotnet test` to ensure ALL tests pass (100% green)**
   7. Only after build succeeds and ALL tests pass, commit the changes
-  8. Update the task status to `[Implemented: <hash> | Started: <timestamp> | Finished: YYYY-MM-DD HH:MM | Duration: Xh Ym]`
+  8. Update the task status to `[Implemented: <hash> | Started: <timestamp> | Finished: YYYY-MM-DD HH:MM | Duration: Xh Ym | Est: Xh Ym]`
+     - Calculate duration immediately when marking as finished
+     - Include original estimate for comparison
 - **For EVERY checkpoint:**
-  1. Run `dotnet build` - BUILD MUST BE SUCCESSFUL (no errors)
+  1. Run `dotnet clean && dotnet build` - BUILD MUST BE SUCCESSFUL (no errors)
+     - The `clean` ensures all warnings are visible (incremental builds can hide warnings)
   2. Run `dotnet test` - ALL TESTS MUST BE GREEN (no failures)
   3. Verify no build warnings exist
   4. **MANDATORY: Update checkpoint status from 🛑 to ✅ when all conditions pass**
@@ -141,9 +150,20 @@ Before starting ANY implementation:
     - Any test is failing
 
 ### 5. Test Development & Handling
-- Write unit tests for all business logic
-- Write integration tests for API endpoints
-- Write repository tests for data access
+- **Unit Tests (API.Tests project)**:
+  - Test methods in complete isolation
+  - Mock ALL dependencies (no real implementations)
+  - Focus on business logic verification
+  - Verify method interactions with mocks
+- **Integration Tests (API.IntegrationTests project)**:
+  - Use BDD format with Gherkin scenarios
+  - Test complete API workflows
+  - Verify database persistence
+  - Test with real implementations
+- **Test Separation Rules**:
+  - ANY test requiring database → API.IntegrationTests
+  - ANY test using real services → API.IntegrationTests
+  - ONLY isolated unit tests → API.Tests
 - If a test requires complex mocking or setup:
   - Create a `[BUG: <detailed-reason>]` entry
   - Mark test with skip attribute
@@ -218,7 +238,9 @@ These reports are MANDATORY before moving the feature to COMPLETED status. See t
 ## Task Status Definitions
 - `[ReadyToDevelop]` - Task identified and ready to implement
 - `[InProgress: Started: YYYY-MM-DD HH:MM]` - Task currently being worked on with start timestamp
-- `[Implemented: <hash> | Started: YYYY-MM-DD HH:MM | Finished: YYYY-MM-DD HH:MM | Duration: Xh Ym]` - Task completed with timing data
+- `[Implemented: <hash> | Started: YYYY-MM-DD HH:MM | Finished: YYYY-MM-DD HH:MM | Duration: Xh Ym | Est: Xh Ym]` - Task completed with timing data
+  - Duration: Actual time taken
+  - Est: Original estimate for comparison
 - `[BUG: <reason>]` - Known issue requiring future resolution
 - `[Skipped]` - Task deferred or determined unnecessary
 - `[INCOMPLETE: <reason>]` - Task cannot be completed due to external dependency or bug
@@ -270,7 +292,62 @@ Before marking any task as `[Implemented]`, verify:
 - [ ] Read `/memory-bank/systemPatterns.md` - Architecture rules
 - [ ] Read `/memory-bank/unitOfWorkPattern.md` - Critical ReadOnly vs Writable patterns
 - [ ] Read `/memory-bank/common-implementation-pitfalls.md` - Common mistakes to avoid
+- [ ] Read `/memory-bank/UNIT-VS-INTEGRATION-TESTS.md` - Test separation rules
 - [ ] Run baseline health check (`dotnet build` and `dotnet test`)
+- [ ] Define BDD scenarios for all feature endpoints
+
+## 🧪 BDD Test Scenarios (MANDATORY)
+
+### Scenario 1: Create [Resource] - Happy Path
+```gherkin
+Given I am authenticated as "PT-Tier"
+And I have valid [resource] data
+When I send a POST request to "/api/[resources]"
+Then the response status should be 201
+And the response should contain the created [resource]
+And the [resource] should be persisted in the database
+```
+
+### Scenario 2: Create [Resource] - Validation Error
+```gherkin
+Given I am authenticated as "PT-Tier"
+And I have invalid [resource] data with missing required field
+When I send a POST request to "/api/[resources]"
+Then the response status should be 400
+And the response should contain validation errors
+```
+
+### Scenario 3: Update [Resource] - Success
+```gherkin
+Given I am authenticated as "PT-Tier"
+And a [resource] with id "{id}" exists
+When I send a PUT request to "/api/[resources]/{id}"
+Then the response status should be 200
+And the [resource] should be updated in the database
+```
+
+### Scenario 4: Delete [Resource] - Success
+```gherkin
+Given I am authenticated as "PT-Tier"
+And a [resource] with id "{id}" exists
+When I send a DELETE request to "/api/[resources]/{id}"
+Then the response status should be 204
+And the [resource] should be deactivated in the database
+```
+
+### Scenario 5: Get [Resource] - Unauthorized
+```gherkin
+Given I am not authenticated
+When I send a GET request to "/api/[resources]"
+Then the response status should be 401
+```
+
+### Edge Cases:
+- [ ] Concurrent creation with same unique field
+- [ ] Update non-existent resource
+- [ ] Delete already deleted resource
+- [ ] Invalid data formats
+- [ ] Permission boundaries
 
 ### Category 1 (e.g., Models & DTOs) - Estimated: Xh
 #### 📖 Before Starting: Review entity pattern in `/memory-bank/databaseModelPattern.md`
@@ -296,17 +373,23 @@ Before marking any task as `[Implemented]`, verify:
 #### 📖 Before Starting: Review controller rules - NO direct repository/UnitOfWork access!
 - **Task 4.1:** Create [Name]Controller with CRUD endpoints `[ReadyToDevelop]` (Est: 1.5h)
 - **Task 4.2:** Add authorization and validation `[ReadyToDevelop]` (Est: 45m)
-- **Task 4.3:** Write controller unit tests `[ReadyToDevelop]` (Est: 1.5h)
-- **Task 4.4:** Write integration tests for endpoints `[ReadyToDevelop]` (Est: 2h)
+- **Task 4.3:** Write controller unit tests (ALL dependencies mocked) `[ReadyToDevelop]` (Est: 1.5h)
 
-### Category 5 (e.g., Database & Migrations) - Estimated: Xh
-- **Task 5.1:** Add entity configuration `[ReadyToDevelop]` (Est: 30m)
-- **Task 5.2:** Create database migration `[ReadyToDevelop]` (Est: 15m)
-- **Task 5.3:** Add seed data if needed `[ReadyToDevelop]` (Est: 30m)
+### Category 5 (e.g., BDD Integration Tests) - Estimated: Xh
+#### 📖 Before Starting: Review BDD scenarios defined above
+- **Task 5.1:** Create BDD feature file for [Name] `[ReadyToDevelop]` (Est: 30m)
+- **Task 5.2:** Implement step definitions for happy path scenarios `[ReadyToDevelop]` (Est: 1.5h)
+- **Task 5.3:** Implement step definitions for error scenarios `[ReadyToDevelop]` (Est: 1h)
+- **Task 5.4:** Implement step definitions for edge cases `[ReadyToDevelop]` (Est: 1h)
+
+### Category 6 (e.g., Database & Migrations) - Estimated: Xh
+- **Task 6.1:** Add entity configuration `[ReadyToDevelop]` (Est: 30m)
+- **Task 6.2:** Create database migration `[ReadyToDevelop]` (Est: 15m)
+- **Task 6.3:** Add seed data if needed `[ReadyToDevelop]` (Est: 30m)
 
 ## 🔄 Mid-Implementation Checkpoint
 - [ ] All tests still passing (`dotnet test`)
-- [ ] Build has no errors (`dotnet build`)
+- [ ] Build has no errors (`dotnet clean && dotnet build`)
 - [ ] Re-read `/memory-bank/common-implementation-pitfalls.md` if any issues
 - [ ] Verify correct UnitOfWork usage in all services
 
@@ -317,6 +400,9 @@ Before marking any task as `[Implemented]`, verify:
 
 ## Notes
 - Each implementation task must be immediately followed by its test task
+- BDD scenarios MUST be defined during planning phase
+- Unit tests go in API.Tests with EVERYTHING mocked
+- Integration tests go in API.IntegrationTests in BDD format
 - No task is complete until build passes and all tests are green
 - Keep build warnings to minimum
 - Follow existing API patterns and conventions
@@ -327,7 +413,7 @@ Before marking any task as `[Implemented]`, verify:
 
 - `[ReadyToDevelop]` - Initial status for all tasks
 - `[InProgress: Started: 2025-01-15 14:30]` - Task being actively worked on
-- `[Implemented: a1b2c3d4 | Started: 2025-01-15 14:30 | Finished: 2025-01-15 15:15 | Duration: 0h 45m]` - Completed task
+- `[Implemented: a1b2c3d4 | Started: 2025-01-15 14:30 | Finished: 2025-01-15 15:15 | Duration: 0h 45m | Est: 2h 0m]` - Completed task
 - `[BUG: Complex mock setup for external service]` - Known issue to be addressed later
 - `[Skipped]` - Task determined unnecessary during implementation
 
@@ -349,7 +435,7 @@ Before marking any task as `[Implemented]`, verify:
 ### Example with Interruption
 ```
 Task 2.2: Implement UserRepository 
-[Implemented: abc123 | Started: 2025-01-15 09:00 | Finished: 2025-01-16 11:30 | Duration: 3h 15m]
+[Implemented: abc123 | Started: 2025-01-15 09:00 | Finished: 2025-01-16 11:30 | Duration: 3h 15m | Est: 1h 0m]
 Note: Work sessions: Jan 15 (09:00-10:30), Jan 16 (10:00-11:30)
 ```
 

@@ -48,8 +48,10 @@
 **📖 Primary**: `FEATURE_IMPLEMENTATION_PROCESS.md` - Section "4. Implementation Phase"
 - Follow task list sequentially
 - Update task status with timestamps
+- **Calculate duration when finishing each task** (Duration vs Est comparison)
 - Write tests immediately after implementation
-- Run `dotnet build` and `dotnet test` after each task
+- Run `dotnet clean && dotnet build` and `dotnet test` after each task
+  - Always clean first to catch all warnings
 
 #### Quality Checkpoints
 **📖 Check**: `UNIFIED_DEVELOPMENT_PROCESS.md` - "Baseline Health Check" section
@@ -135,7 +137,8 @@ Create these four MANDATORY reports:
 **📖 Source**: `UNIFIED_DEVELOPMENT_PROCESS.md` - "Baseline Health Check"
 
 **MANDATORY before proceeding**:
-- ✅ `dotnet build` - zero errors
+- ✅ `dotnet clean && dotnet build` - zero errors
+  - Clean build ensures all warnings are visible
 - ✅ `dotnet test` - 100% pass rate
 - ✅ Warnings < 10
 

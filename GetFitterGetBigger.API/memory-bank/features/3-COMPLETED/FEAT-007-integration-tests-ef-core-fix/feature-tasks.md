@@ -78,7 +78,7 @@
 ## Phase 4: Documentation & Cleanup
 
 ### 4.1 Developer Documentation
-- [x] `[Implemented: INTEGRATION-TESTING.md | Started: 2025-01-29 23:04 | Finished: 2025-01-29 23:05 | Duration: 1m]` Create `INTEGRATION-TESTING.md` with:
+- [x] `[Implemented: memory-bank/INTEGRATION-TESTING.md | Started: 2025-01-29 23:04 | Finished: 2025-01-29 23:05 | Duration: 1m]` Create `memory-bank/INTEGRATION-TESTING.md` with:
   - Docker setup requirements
   - How to run tests locally
   - Troubleshooting guide

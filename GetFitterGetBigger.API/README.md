@@ -36,7 +36,7 @@ The API will be available at:
 
 ### Prerequisites for Testing
 - Docker must be installed and running (required for integration tests)
-- See [INTEGRATION-TESTING.md](INTEGRATION-TESTING.md) for detailed setup
+- See [INTEGRATION-TESTING.md](memory-bank/INTEGRATION-TESTING.md) for detailed setup
 
 ### Running Tests
 ```bash
@@ -68,7 +68,7 @@ dotnet test --filter "FullyQualifiedName~PostgreSql"
 
 ## Documentation
 
-- [Integration Testing Guide](INTEGRATION-TESTING.md)
+- [Integration Testing Guide](memory-bank/INTEGRATION-TESTING.md)
 - [Memory Bank](memory-bank/README.md) - Project knowledge base
 - API Documentation: Run the project and visit `/swagger`
 

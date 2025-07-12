@@ -118,8 +118,9 @@ Before ANY implementation:
 
 ```bash
 # All projects use dotnet CLI
-dotnet test      # Must show 100% pass rate
+dotnet clean     # Clean build artifacts to ensure all warnings are visible
 dotnet build     # Must succeed with minimal warnings
+dotnet test      # Must show 100% pass rate
 ```
 
 Document results in feature-tasks.md:
