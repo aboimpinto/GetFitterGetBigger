@@ -152,8 +152,8 @@ public class ExerciseServiceWeightTypeTests
             .WithDescription("Basic cardio exercise")
             .WithExerciseWeightTypeId(null) // Explicitly null to test validation
             .AddMuscleGroup(
-                SeedDataBuilder.StandardIds.MuscleGroupIds.Quadriceps,
-                SeedDataBuilder.StandardIds.MuscleRoleIds.Primary)
+                TestIds.MuscleGroupIds.Quadriceps,
+                TestIds.MuscleRoleIds.Primary)
             .Build();
         
         // Set up mocks
@@ -223,8 +223,8 @@ public class ExerciseServiceWeightTypeTests
             .WithDescription("Exercise with invalid weight type")
             .WithExerciseWeightTypeId("invalid-weight-type-id") // Invalid format
             .AddMuscleGroup(
-                SeedDataBuilder.StandardIds.MuscleGroupIds.Chest,
-                SeedDataBuilder.StandardIds.MuscleRoleIds.Primary)
+                TestIds.MuscleGroupIds.Chest,
+                TestIds.MuscleRoleIds.Primary)
             .Build();
         
         // Set up mocks

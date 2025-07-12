@@ -57,7 +57,7 @@ public class ExerciseServiceRestExclusivityTests
         _mockExerciseTypeService
             .Setup(s => s.AnyIsRestTypeAsync(It.IsAny<IEnumerable<string>>()))
             .ReturnsAsync((IEnumerable<string> ids) => 
-                ids.Any(id => id == "exercisetype-d4e5f6a7-8b9c-0d1e-2f3a-4b5c6d7e8f9a" || 
+                ids.Any(id => id == TestIds.ExerciseTypeIds.Rest || 
                               id.ToLowerInvariant().Contains("rest")));
         
         // Default behavior: all exercise types exist
@@ -177,7 +177,7 @@ public class ExerciseServiceRestExclusivityTests
         // Override mock to return true since it's a REST type
         _mockExerciseTypeService
             .Setup(s => s.AnyIsRestTypeAsync(It.Is<IEnumerable<string>>(ids => 
-                ids.Contains("exercisetype-11111111-1111-1111-1111-111111111111"))))
+                ids.Contains(TestIds.ExerciseTypeIds.Rest))))
             .ReturnsAsync(true);
         
         // Act
@@ -185,7 +185,7 @@ public class ExerciseServiceRestExclusivityTests
         
         // Assert
         Assert.NotNull(result);
-        Assert.True(result.IsSuccess);
+        Assert.True(result.IsSuccess, $"Create failed with errors: {string.Join(", ", result.Errors)}");
         Assert.Equal("Rest Exercise", result.Data.Name);
     }
     
@@ -238,7 +238,7 @@ public class ExerciseServiceRestExclusivityTests
         
         // Assert
         Assert.NotNull(result);
-        Assert.True(result.IsSuccess);
+        Assert.True(result.IsSuccess, $"Create failed with errors: {string.Join(", ", result.Errors)}");
         Assert.Equal("Complex Exercise", result.Data.Name);
         // TODO: Fix mapper to properly include all exercise types
         // Assert.Equal(3, result.Data.ExerciseTypes.Count);
@@ -271,7 +271,7 @@ public class ExerciseServiceRestExclusivityTests
         
         // Assert - Should succeed because ForWorkoutExercise() includes ExerciseWeightTypeId by default
         Assert.NotNull(result);
-        Assert.True(result.IsSuccess);
+        Assert.True(result.IsSuccess, $"Create failed with errors: {string.Join(", ", result.Errors)}");
         Assert.Equal("No Type Exercise", result.Data.Name);
         Assert.Empty(result.Data.ExerciseTypes);
     }

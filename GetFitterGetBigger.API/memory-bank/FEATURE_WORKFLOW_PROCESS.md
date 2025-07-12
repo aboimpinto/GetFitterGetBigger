@@ -54,9 +54,11 @@ When a new feature is identified:
    - Replace XXX with the assigned Feature ID (e.g., FEAT-007-integration-tests-fix)
 3. Create two files in the folder:
    - `feature-description.md` - Detailed feature specification (must include Feature ID)
-   - `feature-tasks.md` - Implementation task list
-4. Update `NEXT_FEATURE_ID.txt` to the next number
-5. Optional: Add any supporting documents, mockups, or scripts
+   - `feature-tasks.md` - Implementation task list (MUST include BDD scenarios)
+4. **MANDATORY**: Define BDD test scenarios for all API endpoints and business rules
+5. **MANDATORY**: Include both unit test and integration test tasks
+6. Update `NEXT_FEATURE_ID.txt` to the next number
+7. Optional: Add any supporting documents, mockups, or scripts
 
 **Folder Structure Example:**
 ```
@@ -178,6 +180,25 @@ If a feature is deferred or cancelled:
 ## Estimated Total Time: [X days / Y hours]
 ## Actual Total Time: [To be calculated at completion]
 
+## BDD Test Scenarios (MANDATORY)
+### Scenario 1: [Happy Path]
+```gherkin
+Given [precondition]
+When [action]
+Then [expected result]
+```
+
+### Scenario 2: [Error Case]
+```gherkin
+Given [error condition]
+When [action]
+Then [error response]
+```
+
+### Edge Cases:
+- [ ] [Edge case 1]
+- [ ] [Edge case 2]
+
 ### Task Categories
 [Tasks organized by logical groupings with time estimates]
 
@@ -189,6 +210,9 @@ If a feature is deferred or cancelled:
 
 ### Tasks
 [Detailed task list following FEATURE_IMPLEMENTATION_PROCESS.md with estimates]
+IMPORTANT: Must include:
+- Unit test tasks (API.Tests project with ALL dependencies mocked)
+- BDD integration test tasks (API.IntegrationTests project)
 
 ### Time Tracking Summary
 - **Total Estimated Time:** [Sum of all estimates]
@@ -218,9 +242,11 @@ If a feature is deferred or cancelled:
 
 1. **One Feature Per Folder**: Keep features atomic and focused
 2. **Complete Documentation**: All files should be comprehensive
-3. **Test Scripts**: Include all test scripts in the feature folder
-4. **Clean Transitions**: Move entire folder, don't leave artifacts
-5. **Audit Trail**: Preserve all history in the moved files
+3. **BDD Test Scenarios**: MUST be defined during planning phase
+4. **Test Separation**: Unit tests (mocked) in API.Tests, Integration tests (BDD) in API.IntegrationTests
+5. **Test Scripts**: Include all test scripts in the feature folder
+6. **Clean Transitions**: Move entire folder, don't leave artifacts
+7. **Audit Trail**: Preserve all history in the moved files
 
 ## Monitoring and Reporting
 
@@ -260,6 +286,8 @@ To get current feature status:
 4. **Not moving folders between states**: Remember to move the entire feature folder as it progresses through states
 5. **Missing feature-description.md**: Both description and tasks files are required from the start
 6. **Using folder paths in references**: Always use Feature IDs (FEAT-XXX) not folder paths when referencing features
+7. **Not defining BDD scenarios**: BDD test scenarios MUST be defined during planning phase
+8. **Wrong test placement**: Unit tests go in API.Tests (ALL mocked), integration tests in API.IntegrationTests
 
 ### Example of Incorrect Start:
 ```
@@ -449,14 +477,15 @@ DELETE /api/[resource]/{id}
 
 ## Testing Strategy
 
-### 1. Unit Tests
-- Repository tests: [approach]
-- Service tests: [approach]
-- Controller tests: [approach]
+### 1. Unit Tests (API.Tests project)
+- Repository tests: ALL dependencies mocked
+- Service tests: ALL dependencies mocked except service under test
+- Controller tests: Service mocked, no real implementations
 
-### 2. Integration Tests
-- API endpoint tests: [approach]
-- Database integration: [approach]
+### 2. Integration Tests (API.IntegrationTests project)
+- BDD scenarios: Gherkin format in .feature files
+- API endpoint tests: Full workflow with real database
+- Database integration: Actual persistence verification
 
 ### 3. Test Data
 - Seed data approach

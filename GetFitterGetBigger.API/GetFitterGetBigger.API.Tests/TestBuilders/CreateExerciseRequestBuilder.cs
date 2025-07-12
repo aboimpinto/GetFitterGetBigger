@@ -13,10 +13,10 @@ public class CreateExerciseRequestBuilder
 {
     private string _name = "Test Exercise";
     private string _description = "Test Description";
-    private string _difficultyId = SeedDataBuilder.StandardIds.DifficultyLevelIds.Beginner;
-    private string? _kineticChainId = SeedDataBuilder.StandardIds.KineticChainTypeIds.Compound;
-    private string? _exerciseWeightTypeId = SeedDataBuilder.StandardIds.ExerciseWeightTypeIds.WeightRequired;
-    private List<string> _exerciseTypeIds = new() { SeedDataBuilder.StandardIds.ExerciseTypeIds.Workout };
+    private string _difficultyId = TestIds.DifficultyLevelIds.Beginner;
+    private string? _kineticChainId = TestIds.KineticChainIds.Open;
+    private string? _exerciseWeightTypeId = TestIds.ExerciseWeightTypeIds.WeightRequired;
+    private List<string> _exerciseTypeIds = new() { TestIds.ExerciseTypeIds.Workout };
     private List<MuscleGroupWithRoleRequest> _muscleGroups = new();
     private List<string> _equipmentIds = new();
     private List<string> _bodyPartIds = new();
@@ -34,7 +34,7 @@ public class CreateExerciseRequestBuilder
     public static CreateExerciseRequestBuilder ForRestExercise()
     {
         return new CreateExerciseRequestBuilder()
-            .WithExerciseTypes(SeedDataBuilder.StandardIds.ExerciseTypeIds.Rest)
+            .WithExerciseTypes(TestIds.ExerciseTypeIds.Rest)
             .WithKineticChainId(null)
             .WithExerciseWeightTypeId(null);
     }

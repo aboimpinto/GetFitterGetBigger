@@ -25,84 +25,84 @@ public class MuscleGroupTestBuilder
     /// </summary>
     public static MuscleGroupTestBuilder Chest() => new MuscleGroupTestBuilder()
         .WithName("Chest")
-        .WithBodyPartId(SeedDataBuilder.StandardIds.BodyPartIds.Chest);
+        .WithBodyPartId(TestIds.BodyPartIds.Chest);
 
     /// <summary>
     /// Creates a builder for back muscle group
     /// </summary>
     public static MuscleGroupTestBuilder Back() => new MuscleGroupTestBuilder()
         .WithName("Back")
-        .WithBodyPartId(SeedDataBuilder.StandardIds.BodyPartIds.Back);
+        .WithBodyPartId(TestIds.BodyPartIds.Back);
 
     /// <summary>
     /// Creates a builder for shoulders muscle group
     /// </summary>
     public static MuscleGroupTestBuilder Shoulders() => new MuscleGroupTestBuilder()
         .WithName("Shoulders")
-        .WithBodyPartId(SeedDataBuilder.StandardIds.BodyPartIds.Shoulders);
+        .WithBodyPartId(TestIds.BodyPartIds.Shoulders);
 
     /// <summary>
     /// Creates a builder for quadriceps muscle group
     /// </summary>
     public static MuscleGroupTestBuilder Quadriceps() => new MuscleGroupTestBuilder()
         .WithName("Quadriceps")
-        .WithBodyPartId(SeedDataBuilder.StandardIds.BodyPartIds.Legs);
+        .WithBodyPartId(TestIds.BodyPartIds.Legs);
 
     /// <summary>
     /// Creates a builder for hamstrings muscle group
     /// </summary>
     public static MuscleGroupTestBuilder Hamstrings() => new MuscleGroupTestBuilder()
         .WithName("Hamstrings")
-        .WithBodyPartId(SeedDataBuilder.StandardIds.BodyPartIds.Legs);
+        .WithBodyPartId(TestIds.BodyPartIds.Legs);
 
     /// <summary>
     /// Creates a builder for biceps muscle group
     /// </summary>
     public static MuscleGroupTestBuilder Biceps() => new MuscleGroupTestBuilder()
         .WithName("Biceps")
-        .WithBodyPartId(SeedDataBuilder.StandardIds.BodyPartIds.Shoulders); // Arms are grouped with shoulders
+        .WithBodyPartId(TestIds.BodyPartIds.Shoulders); // Arms are grouped with shoulders
 
     /// <summary>
     /// Creates a builder for triceps muscle group
     /// </summary>
     public static MuscleGroupTestBuilder Triceps() => new MuscleGroupTestBuilder()
         .WithName("Triceps")
-        .WithBodyPartId(SeedDataBuilder.StandardIds.BodyPartIds.Shoulders); // Arms are grouped with shoulders
+        .WithBodyPartId(TestIds.BodyPartIds.Shoulders); // Arms are grouped with shoulders
 
     /// <summary>
     /// Creates a builder for glutes muscle group
     /// </summary>
     public static MuscleGroupTestBuilder Glutes() => new MuscleGroupTestBuilder()
         .WithName("Glutes")
-        .WithBodyPartId(SeedDataBuilder.StandardIds.BodyPartIds.Legs);
+        .WithBodyPartId(TestIds.BodyPartIds.Legs);
 
     /// <summary>
     /// Creates a builder for calves muscle group
     /// </summary>
     public static MuscleGroupTestBuilder Calves() => new MuscleGroupTestBuilder()
         .WithName("Calves")
-        .WithBodyPartId(SeedDataBuilder.StandardIds.BodyPartIds.Legs);
+        .WithBodyPartId(TestIds.BodyPartIds.Legs);
 
     /// <summary>
     /// Creates a builder for abs muscle group
     /// </summary>
     public static MuscleGroupTestBuilder Abs() => new MuscleGroupTestBuilder()
         .WithName("Abs")
-        .WithBodyPartId(SeedDataBuilder.StandardIds.BodyPartIds.Chest); // Core is grouped with chest
+        .WithBodyPartId(TestIds.BodyPartIds.Chest); // Core is grouped with chest
 
     /// <summary>
     /// Creates a builder for obliques muscle group
     /// </summary>
     public static MuscleGroupTestBuilder Obliques() => new MuscleGroupTestBuilder()
         .WithName("Obliques")
-        .WithBodyPartId(SeedDataBuilder.StandardIds.BodyPartIds.Chest); // Core is grouped with chest
+        .WithBodyPartId(TestIds.BodyPartIds.Chest); // Core is grouped with chest
 
     /// <summary>
     /// Creates a builder for forearms muscle group
     /// </summary>
     public static MuscleGroupTestBuilder Forearms() => new MuscleGroupTestBuilder()
         .WithName("Forearms")
-        .WithBodyPartId(SeedDataBuilder.StandardIds.BodyPartIds.Shoulders); // Arms are grouped with shoulders
+        .WithBodyPartId(TestIds.BodyPartIds.Shoulders); // Arms are grouped with shoulders
 
     /// <summary>
     /// Creates a builder for custom muscle group

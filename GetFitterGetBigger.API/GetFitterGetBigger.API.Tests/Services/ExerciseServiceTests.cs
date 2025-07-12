@@ -62,7 +62,7 @@ namespace GetFitterGetBigger.API.Tests.Services
             _mockExerciseTypeService
                 .Setup(s => s.AnyIsRestTypeAsync(It.IsAny<IEnumerable<string>>()))
                 .ReturnsAsync((IEnumerable<string> ids) => 
-                    ids.Any(id => id == "exercisetype-d4e5f6a7-8b9c-0d1e-2f3a-4b5c6d7e8f9a" || 
+                    ids.Any(id => id == TestIds.ExerciseTypeIds.Rest || 
                                   id.ToLowerInvariant().Contains("rest")));
 
             // Default behavior: all exercise types exist
@@ -353,7 +353,7 @@ namespace GetFitterGetBigger.API.Tests.Services
             var request = CreateExerciseRequestBuilder.ForRestExercise()
                 .WithName("Rest Exercise")
                 .WithDescription("Rest period")
-                .WithExerciseWeightTypeId(SeedDataBuilder.StandardIds.ExerciseWeightTypeIds.WeightRequired) // Should not be allowed
+                .WithExerciseWeightTypeId(TestIds.ExerciseWeightTypeIds.WeightRequired) // Should not be allowed
                 .Build();
 
             // Mock REST type detection
@@ -447,7 +447,7 @@ namespace GetFitterGetBigger.API.Tests.Services
                 .WithName("Updated Rest Exercise")
                 .WithDescription("Updated rest")
                 .WithDifficultyId("difficultylevel-" + Guid.NewGuid())
-                .WithExerciseTypes("exercisetype-d4e5f6a7-8b9c-0d1e-2f3a-4b5c6d7e8f9a") // REST type
+                .WithExerciseTypes(TestIds.ExerciseTypeIds.Rest) // REST type
                 .WithExerciseWeightTypeId("exerciseweighttype-" + Guid.NewGuid()) // Should not be allowed
                 .Build();
 

@@ -54,7 +54,7 @@ public class ExerciseServiceEquipmentValidationTests
         _mockExerciseTypeService
             .Setup(s => s.AnyIsRestTypeAsync(It.IsAny<IEnumerable<string>>()))
             .ReturnsAsync((IEnumerable<string> ids) => 
-                ids.Any(id => id == "exercisetype-d4e5f6a7-8b9c-0d1e-2f3a-4b5c6d7e8f9a" || 
+                ids.Any(id => id == TestIds.ExerciseTypeIds.Rest || 
                               id.ToLowerInvariant().Contains("rest")));
         
         // Default behavior: all exercise types exist

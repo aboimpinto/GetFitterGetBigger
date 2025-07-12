@@ -22,7 +22,7 @@ Successfully replaced EF Core In-Memory database provider with PostgreSQL TestCo
    - 1 test failure due to existing API bug (muscle group filter not working)
 
 3. **Documentation**
-   - Created comprehensive INTEGRATION-TESTING.md guide
+   - Created comprehensive memory-bank/INTEGRATION-TESTING.md guide
    - Created project README.md with testing instructions
    - Updated memory bank with completion status
 

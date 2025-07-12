@@ -95,7 +95,7 @@ public class BuilderComparisonExamples
         // Old pattern - builds successfully even with missing required data
         var request = new CreateExerciseRequestBuilder()
             .WithName("Incomplete Exercise")
-            .WithExerciseTypes(new[] { SeedDataBuilder.StandardIds.ExerciseTypeIds.Workout })
+            .WithExerciseTypes(new[] { TestIds.ExerciseTypeIds.Workout })
             .WithKineticChainId(null)  // Explicitly clearing default
             .WithExerciseWeightTypeId(null)  // Explicitly clearing default
             .WithMuscleGroups()  // Clearing default muscle groups

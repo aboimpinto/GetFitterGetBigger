@@ -1,0 +1,104 @@
+# Azure Pipeline for BDD Integration Tests
+# This pipeline runs the SpecFlow BDD tests using TestContainers
+
+trigger:
+  branches:
+    include:
+    - main
+    - develop
+    - feature/*
+
+pr:
+  branches:
+    include:
+    - main
+    - develop
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+variables:
+  buildConfiguration: 'Release'
+  dotnetVersion: '9.0.x'
+
+steps:
+- task: UseDotNet@2
+  displayName: 'Install .NET SDK'
+  inputs:
+    packageType: 'sdk'
+    version: $(dotnetVersion)
+
+# Docker is pre-installed on Microsoft-hosted agents
+- script: |
+    docker --version
+    docker info
+  displayName: 'Verify Docker'
+
+- task: DotNetCoreCLI@2
+  displayName: 'Restore packages'
+  inputs:
+    command: 'restore'
+    projects: '**/*.csproj'
+
+- task: DotNetCoreCLI@2
+  displayName: 'Build solution'
+  inputs:
+    command: 'build'
+    projects: '**/*.csproj'
+    arguments: '--configuration $(buildConfiguration) --no-restore'
+
+# Run BDD Integration Tests
+- task: DotNetCoreCLI@2
+  displayName: 'Run BDD Integration Tests'
+  inputs:
+    command: 'test'
+    projects: '**/GetFitterGetBigger.API.IntegrationTests.csproj'
+    arguments: >
+      --configuration $(buildConfiguration)
+      --no-build
+      --logger trx
+      --logger html
+      --collect:"XPlat Code Coverage"
+      --results-directory $(Agent.TempDirectory)/TestResults
+    publishTestResults: true
+
+# Generate SpecFlow test execution report
+- script: |
+    dotnet tool install --global SpecFlow.Plus.LivingDoc.CLI
+    export PATH="$PATH:$HOME/.dotnet/tools"
+    livingdoc test-assembly GetFitterGetBigger.API.IntegrationTests/bin/$(buildConfiguration)/net9.0/GetFitterGetBigger.API.IntegrationTests.dll -t $(Agent.TempDirectory)/TestResults/*.trx --output $(Build.ArtifactStagingDirectory)/LivingDoc.html
+  displayName: 'Generate Living Documentation'
+  condition: succeededOrFailed()
+  continueOnError: true
+
+# Publish test results to Azure DevOps
+- task: PublishTestResults@2
+  displayName: 'Publish Test Results'
+  inputs:
+    testResultsFormat: 'VSTest'
+    testResultsFiles: '$(Agent.TempDirectory)/TestResults/*.trx'
+    testRunTitle: 'BDD Integration Tests'
+  condition: succeededOrFailed()
+
+# Publish code coverage
+- task: PublishCodeCoverageResults@2
+  displayName: 'Publish Code Coverage'
+  inputs:
+    summaryFileLocation: '$(Agent.TempDirectory)/TestResults/**/coverage.cobertura.xml'
+    failIfCoverageEmpty: false
+  condition: succeededOrFailed()
+
+# Publish artifacts
+- task: PublishBuildArtifacts@1
+  displayName: 'Publish Test Reports'
+  inputs:
+    PathtoPublish: '$(Agent.TempDirectory)/TestResults'
+    ArtifactName: 'TestResults'
+  condition: succeededOrFailed()
+
+- task: PublishBuildArtifacts@1
+  displayName: 'Publish Living Documentation'
+  inputs:
+    PathtoPublish: '$(Build.ArtifactStagingDirectory)/LivingDoc.html'
+    ArtifactName: 'LivingDocumentation'
+  condition: succeededOrFailed()
