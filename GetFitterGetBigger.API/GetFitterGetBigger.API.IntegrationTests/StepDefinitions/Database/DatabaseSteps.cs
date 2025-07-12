@@ -77,6 +77,7 @@ public class DatabaseSteps
     }
     
     [Given(@"the database has reference data")]
+    [When(@"the database has reference data")]
     public async Task GivenTheDatabaseHasReferenceData()
     {
         await _fixture.InitializeDatabaseAsync();
@@ -151,5 +152,38 @@ public class DatabaseSteps
             exercise.Name.Should().Be(exerciseName);
             // Additional property checks will be implemented when entity creation is fixed
         }
+    }
+    
+    [Then(@"the database should be accessible")]
+    public async Task ThenTheDatabaseShouldBeAccessible()
+    {
+        var canConnect = await _fixture.ExecuteDbContextAsync(async context =>
+        {
+            return await context.Database.CanConnectAsync();
+        });
+        
+        canConnect.Should().BeTrue("database should be accessible");
+    }
+    
+    [Then(@"the database should contain reference data")]
+    public async Task ThenTheDatabaseShouldContainReferenceData()
+    {
+        var counts = await _fixture.ExecuteDbContextAsync(async context =>
+        {
+            return new
+            {
+                DifficultyLevels = await context.DifficultyLevels.CountAsync(),
+                ExerciseTypes = await context.ExerciseTypes.CountAsync(),
+                BodyParts = await context.BodyParts.CountAsync(),
+                MuscleGroups = await context.MuscleGroups.CountAsync(),
+                Equipment = await context.Equipment.CountAsync()
+            };
+        });
+        
+        counts.DifficultyLevels.Should().BeGreaterThan(0, "should have difficulty levels");
+        counts.ExerciseTypes.Should().BeGreaterThan(0, "should have exercise types");
+        counts.BodyParts.Should().BeGreaterThan(0, "should have body parts");
+        counts.MuscleGroups.Should().BeGreaterThan(0, "should have muscle groups");
+        counts.Equipment.Should().BeGreaterThan(0, "should have equipment");
     }
 }
