@@ -186,4 +186,41 @@ public class DatabaseSteps
         counts.MuscleGroups.Should().BeGreaterThan(0, "should have muscle groups");
         counts.Equipment.Should().BeGreaterThan(0, "should have equipment");
     }
+    
+    [When(@"I check database connectivity")]
+    public async Task WhenICheckDatabaseConnectivity()
+    {
+        await _fixture.ExecuteDbContextAsync(async context =>
+        {
+            var canConnect = await context.Database.CanConnectAsync();
+            _scenarioContext.Set(canConnect, "DatabaseConnectivity");
+        });
+    }
+    
+    [Then(@"the database should be connected")]
+    public void ThenTheDatabaseShouldBeConnected()
+    {
+        var isConnected = _scenarioContext.Get<bool>("DatabaseConnectivity");
+        isConnected.Should().BeTrue("database should be accessible");
+    }
+    
+    [Then(@"the database should have the expected schema")]
+    public async Task ThenTheDatabaseShouldHaveTheExpectedSchema()
+    {
+        await _fixture.ExecuteDbContextAsync(async context =>
+        {
+            // Check that key tables exist by attempting to query them
+            var exerciseCount = await context.Exercises.CountAsync();
+            exerciseCount.Should().BeGreaterOrEqualTo(0, "Exercises table should exist");
+            
+            var bodyPartCount = await context.BodyParts.CountAsync();
+            bodyPartCount.Should().BeGreaterOrEqualTo(0, "BodyParts table should exist");
+            
+            var muscleGroupCount = await context.MuscleGroups.CountAsync();
+            muscleGroupCount.Should().BeGreaterOrEqualTo(0, "MuscleGroups table should exist");
+            
+            var difficultyLevelCount = await context.DifficultyLevels.CountAsync();
+            difficultyLevelCount.Should().BeGreaterOrEqualTo(0, "DifficultyLevels table should exist");
+        });
+    }
 }

@@ -99,10 +99,10 @@ Feature: Authentication
 | KineticChainTypesController | 7 tests | ReferenceData/KineticChainTypes.feature | MEDIUM | Low | ✅ **COMPLETE** (10 BDD tests - ab422798) |
 | MetricTypesController | 7 tests | ReferenceData/MetricTypes.feature | MEDIUM | Low | ✅ **COMPLETE** (4/7 BDD tests - 96d4ae4b) |
 | MovementPatternsController | 11 tests | ReferenceData/MovementPatterns.feature | MEDIUM | Low | ✅ **COMPLETE** (6/11 BDD tests - 1f60fa43) |
-| MuscleGroupsController | 15 tests | ReferenceData/MuscleGroups.feature | HIGH | Medium | ⚠️ Too Complex (CRUD entity) |
+| MuscleGroupsController | 15 tests | ReferenceData/MuscleGroups.feature | HIGH | Medium | ✅ **COMPLETE** (14 BDD tests - 0cf110d5) |
 | MuscleRolesController | 7 tests | ReferenceData/MuscleRoles.feature | MEDIUM | Low | ✅ **COMPLETE** (10 BDD tests - e2158820) |
 | EquipmentController | 11 tests | ReferenceData/Equipment.feature | HIGH | Low | ✅ **COMPLETE** (9 BDD tests - 476c83e3) |
-| ExerciseWeightTypesController | 13 tests | ReferenceData/ExerciseWeightTypes.feature | HIGH | Medium | ❌ Not Started |
+| ExerciseWeightTypesController | 13 tests | ReferenceData/ExerciseWeightTypes.feature | HIGH | Medium | ✅ **COMPLETE** (17 BDD tests - 9d98d023) |
 
 ## 2. Priority 2: Complex Exercise Operations (Requires Analysis)
 *Tests that may need API implementation or complex business logic*
@@ -245,10 +245,11 @@ Feature: Authentication
 - **Integration Tests**: ~218 (IntegrationTests + Controllers)
 
 #### Migration Metrics (Updated 2025-01-12)
-- **Tests Migrated**: 79/218 (36.2%)
+- **Tests Migrated**: 110/218 (50.5%)
 - **Coverage After Migration**: 89.99% (maintained)
-- **BDD Tests Created**: 80 (1 DatabaseConnection + 79 migrated tests)
+- **BDD Tests Created**: 111 (1 DatabaseConnection + 110 migrated tests)
 - **Phase 1 Status**: ✅ COMPLETE
+- **Phase 2 Status**: 🚧 IN PROGRESS
 
 ### Risk Mitigation
 
@@ -272,15 +273,18 @@ Feature: Authentication
 - **Phase 1 COMPLETE**: 79 tests migrated successfully
   - Authentication: 10/10 tests
   - Reference Tables: 69 tests across 8 controllers
+- **Phase 2 IN PROGRESS**: 31 additional tests migrated
+  - ExerciseWeightTypes: 17/17 tests
+  - MuscleGroups: 14/14 tests (complex CRUD entity)
 
 ### 🚧 In Progress  
-- **Phase 2**: Core Functionality (starting)
+- **Phase 2**: Core Functionality (50.5% overall complete)
 
 ### ⏳ Next Steps
-1. Start Phase 2: Equipment Management CRUD operations
-2. Migrate MuscleGroups controller (complex CRUD)
-3. Migrate ExerciseWeightTypes controller
-4. Begin Exercise management tests (if endpoints ready)
+1. Assess Exercise controller tests viability
+2. Check Equipment Management CRUD endpoints
+3. Begin IntegrationTests folder migrations
+4. Complete remaining 108 tests for 100% migration
 
 ### 📊 Success Metrics
 - [x] Phase 1 Complete: Authentication + 8 reference tables migrated ✅
