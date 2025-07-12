@@ -71,7 +71,9 @@ public class PostgreSqlTestFixture : IAsyncLifetime, IDisposable
             await context.Database.MigrateAsync();
             
             // Seed reference data if needed
-            if (!context.BodyParts.Any())
+            // Check Equipment instead of BodyParts since BodyParts are seeded by DbContext migrations
+            // but Equipment is only seeded by SeedDataBuilder
+            if (!context.Equipment.Any())
             {
                 var seeder = new TestDatabaseSeeder(context);
                 await seeder.SeedReferenceDataAsync();
