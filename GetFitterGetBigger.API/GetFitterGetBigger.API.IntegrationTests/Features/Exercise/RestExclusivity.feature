@@ -1,0 +1,150 @@
+Feature: Exercise Rest Type Exclusivity
+  As a fitness application
+  I want to ensure that REST type exercises cannot be combined with other types
+  So that exercise categorization remains consistent
+
+  Background:
+    Given I am authenticated as a user
+
+  @exercise @rest-exclusivity
+  Scenario: Create exercise with only REST type succeeds
+    When I send a POST request to "/api/exercises" with body:
+      """
+      {
+        "name": "Valid Rest Period",
+        "description": "A rest period between exercises",
+        "coachNotes": [
+          {
+            "text": "Take a 90 second break",
+            "order": 1
+          },
+          {
+            "text": "Hydrate during this time",
+            "order": 2
+          }
+        ],
+        "exerciseTypeIds": ["exercisetype-44556677-8899-aabb-ccdd-eeff00112233"],
+        "isUnilateral": false,
+        "difficultyId": "difficultylevel-8a8adb1d-24d2-4979-a5a6-0d760e6da24b",
+        "kineticChainId": null,
+        "exerciseWeightTypeId": null,
+        "muscleGroups": [],
+        "equipmentIds": [],
+        "bodyPartIds": [],
+        "movementPatternIds": []
+      }
+      """
+    Then the response status should be 201
+    And the response should have property "name" with value "Valid Rest Period"
+    And the response should have property "exerciseTypes" as array with length 1
+    And the response property "exerciseTypes[0].value" should be "Rest"
+
+  @exercise @rest-exclusivity
+  Scenario: Create exercise with REST and Warmup types returns bad request
+    When I send a POST request to "/api/exercises" with body:
+      """
+      {
+        "name": "Invalid Rest with Warmup",
+        "description": "Trying to combine Rest with Warmup",
+        "coachNotes": [],
+        "exerciseTypeIds": [
+          "exercisetype-44556677-8899-aabb-ccdd-eeff00112233",
+          "exercisetype-11223344-5566-7788-99aa-bbccddeeff00"
+        ],
+        "isUnilateral": false,
+        "difficultyId": "difficultylevel-8a8adb1d-24d2-4979-a5a6-0d760e6da24b",
+        "kineticChainId": null,
+        "exerciseWeightTypeId": null,
+        "muscleGroups": [],
+        "equipmentIds": [],
+        "bodyPartIds": [],
+        "movementPatternIds": []
+      }
+      """
+    Then the response status should be 400
+    And the response body should contain "REST"
+    And the response body should contain "cannot be combined"
+
+  @exercise @rest-exclusivity
+  Scenario: Create exercise with REST and Workout types returns bad request
+    When I send a POST request to "/api/exercises" with body:
+      """
+      {
+        "name": "Invalid Rest with Workout",
+        "description": "Trying to combine Rest with Workout",
+        "coachNotes": [],
+        "exerciseTypeIds": [
+          "exercisetype-22334455-6677-8899-aabb-ccddeeff0011",
+          "exercisetype-44556677-8899-aabb-ccdd-eeff00112233"
+        ],
+        "isUnilateral": false,
+        "difficultyId": "difficultylevel-8a8adb1d-24d2-4979-a5a6-0d760e6da24b",
+        "kineticChainId": null,
+        "exerciseWeightTypeId": null,
+        "muscleGroups": [],
+        "equipmentIds": [],
+        "bodyPartIds": [],
+        "movementPatternIds": []
+      }
+      """
+    Then the response status should be 400
+    And the response body should contain "REST"
+
+  @exercise @rest-exclusivity
+  Scenario: Create exercise with REST and all other types returns bad request
+    When I send a POST request to "/api/exercises" with body:
+      """
+      {
+        "name": "Invalid Rest with All Types",
+        "description": "Trying to combine Rest with all other types",
+        "coachNotes": [],
+        "exerciseTypeIds": [
+          "exercisetype-11223344-5566-7788-99aa-bbccddeeff00",
+          "exercisetype-22334455-6677-8899-aabb-ccddeeff0011",
+          "exercisetype-33445566-7788-99aa-bbcc-ddeeff001122",
+          "exercisetype-44556677-8899-aabb-ccdd-eeff00112233"
+        ],
+        "isUnilateral": false,
+        "difficultyId": "difficultylevel-8a8adb1d-24d2-4979-a5a6-0d760e6da24b",
+        "kineticChainId": null,
+        "exerciseWeightTypeId": null,
+        "muscleGroups": [],
+        "equipmentIds": [],
+        "bodyPartIds": [],
+        "movementPatternIds": []
+      }
+      """
+    Then the response status should be 400
+    And the response body should contain "REST"
+
+  @exercise @rest-exclusivity
+  Scenario: Create exercise without REST type allows multiple types
+    When I send a POST request to "/api/exercises" with body:
+      """
+      {
+        "name": "Multiple Types Without Rest",
+        "description": "Exercise with multiple non-Rest types",
+        "coachNotes": [],
+        "exerciseTypeIds": [
+          "exercisetype-11223344-5566-7788-99aa-bbccddeeff00",
+          "exercisetype-22334455-6677-8899-aabb-ccddeeff0011",
+          "exercisetype-33445566-7788-99aa-bbcc-ddeeff001122"
+        ],
+        "isUnilateral": false,
+        "difficultyId": "difficultylevel-8a8adb1d-24d2-4979-a5a6-0d760e6da24b",
+        "kineticChainId": "kineticchaintype-f5d5a2de-9c4e-4b87-b8c3-5d1e17d0b1f4",
+        "exerciseWeightTypeId": "exerciseweighttype-b2e4d3c5-6a7b-5c8d-9e0f-1a2b3c4d5e6f",
+        "muscleGroups": [
+          {
+            "muscleGroupId": "musclegroup-ccddeeff-0011-2233-4455-667788990011",
+            "muscleRoleId": "musclerole-5d8e9a7b-3c2d-4f6a-9b8c-1e5d7f3a2c9b"
+          }
+        ],
+        "equipmentIds": [],
+        "bodyPartIds": ["bodypart-7c5a2d6e-e87e-4c8a-9f1d-9eb734f3df3c"],
+        "movementPatternIds": []
+      }
+      """
+    Then the response status should be 201
+    And the response should have property "name" with value "Multiple Types Without Rest"
+    And the response should have property "exerciseTypes" as array with length 3

@@ -364,4 +364,76 @@ public class ResponseSteps
         var value = GetJsonValue(jsonDocument.RootElement, propertyName);
         value.Should().NotBeNullOrEmpty($"property '{propertyName}' should not be empty");
     }
+    
+    [Then(@"the response body should contain ""(.*)""")] 
+    public void ThenTheResponseBodyShouldContain(string expectedContent)
+    {
+        var content = _scenarioContext.GetLastResponseContent();
+        content.Should().Contain(expectedContent, 
+            $"Response body should contain '{expectedContent}'");
+    }
+    
+    [Then(@"the response should have property ""(.*)"" as array with length (\d+)")]
+    public void ThenTheResponseShouldHavePropertyAsArrayWithLength(string propertyPath, int expectedLength)
+    {
+        var content = _scenarioContext.GetLastResponseContent();
+        var jsonDocument = JsonDocument.Parse(content);
+        
+        var arrayElement = GetJsonElement(jsonDocument.RootElement, propertyPath);
+        arrayElement.Should().NotBeNull($"Property '{propertyPath}' not found");
+        arrayElement!.Value.ValueKind.Should().Be(JsonValueKind.Array, 
+            $"Property '{propertyPath}' should be an array");
+        arrayElement.Value.GetArrayLength().Should().Be(expectedLength, 
+            $"Array '{propertyPath}' should have {expectedLength} items");
+    }
+    
+    [Then(@"the response property ""([^""]+)"" should be ""([^""]+)""")]
+    public void ThenTheResponsePropertyShouldBe(string jsonPath, string expectedValue)
+    {
+        // Handle array notation like "exerciseTypes[0].value"
+        var content = _scenarioContext.GetLastResponseContent();
+        var jsonDocument = JsonDocument.Parse(content);
+        
+        var actualValue = GetJsonValue(jsonDocument.RootElement, jsonPath);
+        actualValue.Should().Be(expectedValue, 
+            $"expected property '{jsonPath}' to have value '{expectedValue}' but got '{actualValue}'");
+    }
+    
+    private JsonElement? GetJsonElement(JsonElement element, string path)
+    {
+        var segments = path.Split('.');
+        var current = element;
+        
+        foreach (var segment in segments)
+        {
+            // Handle array indexing
+            if (segment.Contains('[') && segment.Contains(']'))
+            {
+                var propertyName = segment.Substring(0, segment.IndexOf('['));
+                var indexStr = segment.Substring(segment.IndexOf('[') + 1, segment.IndexOf(']') - segment.IndexOf('[') - 1);
+                
+                if (!string.IsNullOrEmpty(propertyName))
+                {
+                    if (!current.TryGetProperty(propertyName, out current))
+                        return null;
+                }
+                
+                if (int.TryParse(indexStr, out var index))
+                {
+                    if (current.ValueKind != JsonValueKind.Array || index >= current.GetArrayLength())
+                        return null;
+                    
+                    current = current[index];
+                }
+            }
+            else
+            {
+                // Regular property access
+                if (!current.TryGetProperty(segment, out current))
+                    return null;
+            }
+        }
+        
+        return current;
+    }
 }

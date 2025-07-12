@@ -147,9 +147,9 @@ Feature: Authentication
 
 | Test Category | Tests | BDD Feature | Priority | Complexity | Status |
 |--------------|-------|-------------|----------|------------|---------|
-| Database Migrations | 3 tests | Database/Migrations.feature | LOW | Medium | ❌ Not Started |
-| PostgreSQL Migrations | 4 tests | Database/PostgreSQLMigrations.feature | LOW | Medium | ❌ Not Started |
-| Database Persistence | 1 test | Database/Persistence.feature | MEDIUM | Medium | ❌ Not Started |
+| Database Migrations | 3 tests | Database/DatabaseOperations.feature | LOW | Medium | ✅ **COMPLETE** (5 BDD tests - 31592fed) |
+| PostgreSQL Migrations | 4 tests | Database/DatabaseOperations.feature | LOW | Medium | ✅ **COMPLETE** (merged into DatabaseOperations) |
+| Database Persistence | 1 test | Database/DatabaseOperations.feature | MEDIUM | Medium | ✅ **COMPLETE** (merged into DatabaseOperations) |
 
 ## Migration Execution Plan
 
@@ -245,11 +245,11 @@ Feature: Authentication
 - **Integration Tests**: ~218 (IntegrationTests + Controllers)
 
 #### Migration Metrics (Updated 2025-01-12)
-- **Tests Migrated**: 110/218 (50.5%)
+- **Tests Migrated**: 115/218 (52.8%)
 - **Coverage After Migration**: 89.99% (maintained)
-- **BDD Tests Created**: 111 (1 DatabaseConnection + 110 migrated tests)
+- **BDD Tests Created**: 116 (1 DatabaseConnection + 115 migrated tests)
 - **Phase 1 Status**: ✅ COMPLETE
-- **Phase 2 Status**: 🚧 IN PROGRESS
+- **Phase 2 Status**: 🚧 IN PROGRESS (36/103 tests completed)
 
 ### Risk Mitigation
 
@@ -278,13 +278,14 @@ Feature: Authentication
   - MuscleGroups: 14/14 tests (complex CRUD entity)
 
 ### 🚧 In Progress  
-- **Phase 2**: Core Functionality (50.5% overall complete)
+- **Phase 2**: Core Functionality (52.8% overall complete, 35% of Phase 2)
 
 ### ⏳ Next Steps
-1. Assess Exercise controller tests viability
-2. Check Equipment Management CRUD endpoints
-3. Begin IntegrationTests folder migrations
-4. Complete remaining 108 tests for 100% migration
+1. ✅ Database Operations completed (5 tests)
+2. Assess Exercise controller tests viability
+3. Check Equipment Management CRUD endpoints  
+4. Migrate Exercise domain tests from IntegrationTests folder
+5. Complete remaining 103 tests for 100% migration
 
 ### 📊 Success Metrics
 - [x] Phase 1 Complete: Authentication + 8 reference tables migrated ✅
