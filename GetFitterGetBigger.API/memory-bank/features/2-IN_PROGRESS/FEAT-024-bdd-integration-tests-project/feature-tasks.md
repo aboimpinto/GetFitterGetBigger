@@ -44,9 +44,7 @@ Code Coverage:
 
 ### 1. Project Setup and Configuration
 **Estimated Time**: 2 hours
-**Status**: [x] Completed - 2025-01-12 14:11
-**Actual Time**: 30 minutes
-**Commit**: Tracked in feature branch `feature/FEAT-024-bdd-integration-tests`
+**Status**: [x] Implemented: af9d196a | Started: 2025-01-12 14:00 | Finished: 2025-01-12 14:30 | Duration: 0h 30m
 
 #### Subtasks:
 - [x] Create new test project `GetFitterGetBigger.API.IntegrationTests`
@@ -97,9 +95,7 @@ Code Coverage:
 
 ### 2. Test Infrastructure Setup
 **Estimated Time**: 4 hours
-**Status**: [x] Completed - 2025-01-12 14:35
-**Actual Time**: 25 minutes
-**Commit**: Tracked in feature branch `feature/FEAT-024-bdd-integration-tests`
+**Status**: [x] Implemented: af9d196a | Started: 2025-01-12 14:30 | Finished: 2025-01-12 14:55 | Duration: 0h 25m
 
 #### Subtasks:
 - [x] Create folder structure:
