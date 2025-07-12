@@ -340,4 +340,14 @@ public class ResponseSteps
             }
         }
     }
+
+    [Then(@"the property ""([^""]+)"" should not be empty")]
+    public void ThenThePropertyShouldNotBeEmpty(string propertyName)
+    {
+        var content = _scenarioContext.GetLastResponseContent();
+        var jsonDocument = JsonDocument.Parse(content);
+        
+        var value = GetJsonValue(jsonDocument.RootElement, propertyName);
+        value.Should().NotBeNullOrEmpty($"property '{propertyName}' should not be empty");
+    }
 }
