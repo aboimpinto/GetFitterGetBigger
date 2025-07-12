@@ -286,7 +286,7 @@ public class ResponseSteps
         foreach (var item in jsonArray.RootElement.EnumerateArray())
         {
             if (item.TryGetProperty("value", out var valueProperty) && 
-                valueProperty.GetString().Equals(expectedValue, StringComparison.OrdinalIgnoreCase))
+                valueProperty.GetString()?.Equals(expectedValue, StringComparison.OrdinalIgnoreCase) == true)
             {
                 found = true;
                 break;
