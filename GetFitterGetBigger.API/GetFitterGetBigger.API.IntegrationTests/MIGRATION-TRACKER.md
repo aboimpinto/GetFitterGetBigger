@@ -245,11 +245,11 @@ Feature: Authentication
 - **Integration Tests**: ~218 (IntegrationTests + Controllers)
 
 #### Migration Metrics (Updated 2025-01-12)
-- **Tests Migrated**: 120/218 (55.0%)
+- **Tests Migrated**: 123/218 (56.4%)
 - **Coverage After Migration**: 89.99% (maintained)
-- **BDD Tests Created**: 121 (1 DatabaseConnection + 120 migrated tests)
+- **BDD Tests Created**: 124 (1 DatabaseConnection + 123 migrated tests)
 - **Phase 1 Status**: ✅ COMPLETE
-- **Phase 2 Status**: 🚧 IN PROGRESS (41/103 tests completed)
+- **Phase 2 Status**: 🚧 IN PROGRESS (44/103 tests completed)
 
 ### Risk Mitigation
 
@@ -280,14 +280,14 @@ Feature: Authentication
   - ExerciseRestExclusivity: 5/5 tests
 
 ### 🚧 In Progress  
-- **Phase 2**: Core Functionality (55.0% overall complete, 40% of Phase 2)
+- **Phase 2**: Core Functionality (56.4% overall complete, 43% of Phase 2)
 
 ### ⏳ Next Steps
 1. ✅ Database Operations completed (5 tests)
-2. Assess Exercise controller tests viability
-3. Check Equipment Management CRUD endpoints  
-4. Migrate Exercise domain tests from IntegrationTests folder
-5. Complete remaining 103 tests for 100% migration
+2. ✅ Exercise REST tests completed (8 tests total)
+3. Skip complex Exercise workflow tests (DB dependencies)
+4. Focus on simpler integration tests
+5. Complete remaining 95 tests for 100% migration
 
 ### 📊 Success Metrics
 - [x] Phase 1 Complete: Authentication + 8 reference tables migrated ✅
