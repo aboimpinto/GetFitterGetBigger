@@ -76,9 +76,12 @@ public class ResponseSteps
         var content = _scenarioContext.GetLastResponseContent();
         var jsonDocument = JsonDocument.Parse(content);
         
+        // Resolve placeholders in the expected value
+        var resolvedExpectedValue = _scenarioContext.ResolvePlaceholders(expectedValue);
+        
         var actualValue = GetJsonValue(jsonDocument.RootElement, jsonPath);
-        actualValue.Should().Be(expectedValue, 
-            $"expected property '{jsonPath}' to have value '{expectedValue}' but got '{actualValue}'");
+        actualValue.Should().Be(resolvedExpectedValue, 
+            $"expected property '{jsonPath}' to have value '{resolvedExpectedValue}' but got '{actualValue}'");
     }
     
     [Then(@"the response should have property ""([^""]+)""$")]

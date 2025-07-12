@@ -9,12 +9,12 @@ This document tracks the migration of existing integration tests from `GetFitter
 **Migration Status**: **🎉 FIRST MIGRATION COMPLETE!**
 
 ### 🎯 **MILESTONE ACHIEVED** (Commit: TBD)
-✅ **First Successful Migration**: DifficultyLevelsControllerTests → DifficultyLevels.feature  
-✅ **9 BDD Tests PASSING**: Core API functionality proven  
-⚠️ **2 BDD Tests FAILING**: API endpoint limitations (see analysis below)  
-🚀 **Infrastructure VALIDATED**: BDD framework + real API endpoints working  
+🎉 **FIRST MIGRATION 100% COMPLETE**: DifficultyLevelsControllerTests → DifficultyLevels.feature  
+✅ **ALL 11 BDD Tests PASSING**: Complete API functionality proven  
+✅ **FULL FEATURE COVERAGE**: All original test scenarios migrated successfully  
+🚀 **Infrastructure VALIDATED**: BDD framework + real API endpoints working perfectly  
 
-**Key Achievement**: Proven that migration approach works with real integration tests!
+**Key Achievement**: First complete integration test migration with 100% success rate!
 
 ### ✅ **STEP DEFINITION ISSUE RESOLVED**
 **Initial Analysis Error**: Originally stated "advanced scenarios - refinement needed"  
@@ -22,20 +22,23 @@ This document tracks the migration of existing integration tests from `GetFitter
 **Resolution**: Added `[Given(...)]` attributes to RequestSteps.cs and ResponseSteps.cs  
 **Lesson Learned**: Always provide accurate technical analysis; avoid speculation (documented in ACCURACY-IN-FAILURE-ANALYSIS.md)
 
-### ⚠️ **REMAINING API ENDPOINT ISSUES**
-**2 tests failing due to API limitations, not BDD infrastructure:**
+### ✅ **BUG-001 RESOLVED: JSON Property Casing**
+**Final Issue**: Placeholder resolution property name casing mismatch  
+**Root Cause**: 
+- API returns JSON with lowercase properties: `{"id": "...", "value": "..."}`
+- BDD placeholders used uppercase: `<firstDifficultyLevel.Id>`, `<firstDifficultyLevel.Value>`
+- Placeholders worked in URLs but failed in assertions
 
-1. **Get difficulty level by valid ID** - Returns 400 instead of 200
-   - Issue: `/api/ReferenceTables/DifficultyLevels/<id>` endpoint may not exist or accept ID format
-   - Actual request: `GET /api/ReferenceTables/DifficultyLevels/<firstDifficultyLevel.Id>`
-   - Response: 400 Bad Request (expected 200)
+**Solution Applied**:
+1. Updated placeholders to lowercase: `<firstDifficultyLevel.id>`, `<firstDifficultyLevel.value>`
+2. Added placeholder resolution to response assertion step definitions
 
-2. **Get difficulty level by valid value** - Returns 404 instead of 200  
-   - Issue: `/api/ReferenceTables/DifficultyLevels/ByValue/<value>` endpoint may not exist
-   - Actual request: `GET /api/ReferenceTables/DifficultyLevels/ByValue/<firstDifficultyLevel.Value>`
-   - Response: 404 Not Found (expected 200)
+**Result**: **ALL 11 BDD TESTS PASSING** ✅
 
-**Next Steps**: Verify which endpoints are actually implemented in the API before continuing migration.  
+**API Endpoints Confirmed Working**:
+- ✅ `GET /api/ReferenceTables/DifficultyLevels` (get all)
+- ✅ `GET /api/ReferenceTables/DifficultyLevels/{id}` (get by ID)  
+- ✅ `GET /api/ReferenceTables/DifficultyLevels/ByValue/{value}` (get by value)  
 
 ### Current Integration Test Inventory
 

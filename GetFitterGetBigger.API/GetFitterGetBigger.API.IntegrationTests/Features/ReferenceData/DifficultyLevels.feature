@@ -18,10 +18,10 @@ Feature: Difficulty Levels Reference Data
     Given I send a GET request to "/api/ReferenceTables/DifficultyLevels"
     And the response contains at least 1 item
     And I store the first item from the response as "firstDifficultyLevel"
-    When I send a GET request to "/api/ReferenceTables/DifficultyLevels/<firstDifficultyLevel.Id>"
+    When I send a GET request to "/api/ReferenceTables/DifficultyLevels/<firstDifficultyLevel.id>"
     Then the response status should be 200
-    And the response should have property "id" with value "<firstDifficultyLevel.Id>"
-    And the response should have property "value" with value "<firstDifficultyLevel.Value>"
+    And the response should have property "id" with value "<firstDifficultyLevel.id>"
+    And the response should have property "value" with value "<firstDifficultyLevel.value>"
 
   @reference-data @validation
   Scenario: Get difficulty level by invalid ID format returns bad request
@@ -40,9 +40,9 @@ Feature: Difficulty Levels Reference Data
     Given I send a GET request to "/api/ReferenceTables/DifficultyLevels"
     And the response contains at least 1 item
     And I store the first item from the response as "firstDifficultyLevel"
-    When I send a GET request to "/api/ReferenceTables/DifficultyLevels/ByValue/<firstDifficultyLevel.Value>"
+    When I send a GET request to "/api/ReferenceTables/DifficultyLevels/ByValue/<firstDifficultyLevel.value>"
     Then the response status should be 200
-    And the response should have property "value" with value "<firstDifficultyLevel.Value>"
+    And the response should have property "value" with value "<firstDifficultyLevel.value>"
 
   @reference-data @validation
   Scenario: Get difficulty level by non-existent value returns not found

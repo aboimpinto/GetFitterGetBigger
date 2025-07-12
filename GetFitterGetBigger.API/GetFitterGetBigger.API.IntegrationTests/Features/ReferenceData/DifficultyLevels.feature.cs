@@ -141,10 +141,10 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.ReferenceData
                 await testRunner.AndAsync("the response contains at least 1 item", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
                 await testRunner.AndAsync("I store the first item from the response as \"firstDifficultyLevel\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
                 await testRunner.WhenAsync("I send a GET request to \"/api/ReferenceTables/DifficultyLevels/<firstDifficultyLe" +
-                        "vel.Id>\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
+                        "vel.id>\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
                 await testRunner.ThenAsync("the response status should be 200", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
-                await testRunner.AndAsync("the response should have property \"id\" with value \"<firstDifficultyLevel.Id>\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
-                await testRunner.AndAsync("the response should have property \"value\" with value \"<firstDifficultyLevel.Value" +
+                await testRunner.AndAsync("the response should have property \"id\" with value \"<firstDifficultyLevel.id>\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
+                await testRunner.AndAsync("the response should have property \"value\" with value \"<firstDifficultyLevel.value" +
                         ">\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
             }
             await this.ScenarioCleanupAsync();
@@ -231,9 +231,9 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.ReferenceData
                 await testRunner.AndAsync("the response contains at least 1 item", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
                 await testRunner.AndAsync("I store the first item from the response as \"firstDifficultyLevel\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
                 await testRunner.WhenAsync("I send a GET request to \"/api/ReferenceTables/DifficultyLevels/ByValue/<firstDiff" +
-                        "icultyLevel.Value>\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
+                        "icultyLevel.value>\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
                 await testRunner.ThenAsync("the response status should be 200", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
-                await testRunner.AndAsync("the response should have property \"value\" with value \"<firstDifficultyLevel.Value" +
+                await testRunner.AndAsync("the response should have property \"value\" with value \"<firstDifficultyLevel.value" +
                         ">\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
             }
             await this.ScenarioCleanupAsync();
