@@ -151,19 +151,21 @@ Before starting ANY implementation:
 
 ### 5. Test Development & Handling
 - **Unit Tests (API.Tests project)**:
-  - Test methods in complete isolation
-  - Mock ALL dependencies (no real implementations)
-  - Focus on business logic verification
+  - **CRITICAL**: Test methods in complete isolation with EVERYTHING else mocked
+  - **MANDATORY**: Mock ALL dependencies (repositories, services, validators, loggers, utilities)
+  - **RULE**: If testing class A, only class A is real - EVERYTHING else is mocked
+  - Focus on business logic verification of single methods only
   - Verify method interactions with mocks
 - **Integration Tests (API.IntegrationTests project)**:
-  - Use BDD format with Gherkin scenarios
-  - Test complete API workflows
-  - Verify database persistence
-  - Test with real implementations
+  - **MANDATORY**: Use BDD format with Gherkin scenarios
+  - Test complete API workflows with real database
+  - Verify database persistence and transactions
+  - Test with real implementations and TestContainers
 - **Test Separation Rules**:
   - ANY test requiring database → API.IntegrationTests
   - ANY test using real services → API.IntegrationTests
-  - ONLY isolated unit tests → API.Tests
+  - ANY test testing multiple classes together → API.IntegrationTests
+  - ONLY isolated unit tests with everything mocked → API.Tests
 - If a test requires complex mocking or setup:
   - Create a `[BUG: <detailed-reason>]` entry
   - Mark test with skip attribute
@@ -298,6 +300,9 @@ Before marking any task as `[Implemented]`, verify:
 
 ## 🧪 BDD Test Scenarios (MANDATORY)
 
+⚠️ **CRITICAL REQUIREMENT**: Every feature MUST define comprehensive BDD scenarios during planning phase
+⚠️ **INTEGRATION TESTING RULE**: All database-dependent tests MUST be BDD integration tests
+
 ### Scenario 1: Create [Resource] - Happy Path
 ```gherkin
 Given I am authenticated as "PT-Tier"
@@ -349,6 +354,18 @@ Then the response status should be 401
 - [ ] Invalid data formats
 - [ ] Permission boundaries
 
+### Test Planning Requirements (MANDATORY)
+**During Feature Refinement, MUST define**:
+1. **Unit Test Scope**: Which methods will be unit tested with mocked dependencies
+2. **Integration Test Scope**: Which workflows require database testing
+3. **BDD Scenarios**: Every business rule and API endpoint MUST have BDD coverage
+4. **Migration Tasks**: Any existing integration tests to migrate to BDD format
+
+**Test Placement Rules** (See `/memory-bank/UNIT-VS-INTEGRATION-TESTS.md`):
+- ❌ Database tests in API.Tests project = ARCHITECTURE VIOLATION
+- ✅ Unit tests with ALL dependencies mocked = API.Tests project
+- ✅ Database/workflow tests = API.IntegrationTests project in BDD format
+
 ### Category 1 (e.g., Models & DTOs) - Estimated: Xh
 #### 📖 Before Starting: Review entity pattern in `/memory-bank/databaseModelPattern.md`
 - **Task 1.1:** Create [Name] entity model `[ReadyToDevelop]` (Est: 30m)
@@ -377,10 +394,14 @@ Then the response status should be 401
 
 ### Category 5 (e.g., BDD Integration Tests) - Estimated: Xh
 #### 📖 Before Starting: Review BDD scenarios defined above
+#### ⚠️ MANDATORY: Integration tests MUST be planned during feature refinement
 - **Task 5.1:** Create BDD feature file for [Name] `[ReadyToDevelop]` (Est: 30m)
+  - **REQUIREMENT**: Every business rule from requirements MUST have a BDD scenario
+  - **REQUIREMENT**: Every API endpoint MUST have happy path + error scenarios
 - **Task 5.2:** Implement step definitions for happy path scenarios `[ReadyToDevelop]` (Est: 1.5h)
 - **Task 5.3:** Implement step definitions for error scenarios `[ReadyToDevelop]` (Est: 1h)
 - **Task 5.4:** Implement step definitions for edge cases `[ReadyToDevelop]` (Est: 1h)
+- **Task 5.5:** Migrate any existing integration tests to BDD format `[ReadyToDevelop]` (Est: varies)
 
 ### Category 6 (e.g., Database & Migrations) - Estimated: Xh
 - **Task 6.1:** Add entity configuration `[ReadyToDevelop]` (Est: 30m)
@@ -400,13 +421,16 @@ Then the response status should be 401
 
 ## Notes
 - Each implementation task must be immediately followed by its test task
-- BDD scenarios MUST be defined during planning phase
-- Unit tests go in API.Tests with EVERYTHING mocked
-- Integration tests go in API.IntegrationTests in BDD format
+- **MANDATORY**: BDD scenarios MUST be defined during planning phase
+- **CRITICAL**: Unit tests go in API.Tests with EVERYTHING mocked (NO exceptions!)
+- **CRITICAL**: Integration tests go in API.IntegrationTests in BDD format ONLY
+- **RULE**: Any test requiring database = Integration test = API.IntegrationTests
+- **RULE**: Unit tests test ONLY ONE method with ALL dependencies mocked
 - No task is complete until build passes and all tests are green
 - Keep build warnings to minimum
 - Follow existing API patterns and conventions
 - Time estimates are for a developer without AI assistance
+- **Architecture Enforcement**: Database tests in API.Tests = feature blocked until fixed
 ```
 
 ## Example Task Status Updates

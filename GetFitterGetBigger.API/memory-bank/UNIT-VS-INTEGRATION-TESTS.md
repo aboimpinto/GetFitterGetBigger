@@ -18,6 +18,7 @@ This document provides clear guidelines for distinguishing between unit tests an
 - ✅ Test single classes/methods in isolation
 - ✅ Very fast execution (milliseconds)
 - ✅ No Docker requirement
+- ✅ **EVERYTHING except the class under test MUST be mocked**
 
 **What to Test**:
 - Business logic in services (with ALL dependencies mocked)
@@ -26,31 +27,44 @@ This document provides clear guidelines for distinguishing between unit tests an
 - Validators and utilities (isolated validation logic)
 - Entity business rules (without ANY persistence)
 
+**CRITICAL RULE**: Unit tests MUST test methods in complete isolation. If you're testing method X in class A, then:
+- ✅ Class A is the ONLY real implementation in the test
+- ✅ ALL other classes are mocked (no exceptions!)
+- ✅ EVERY dependency is mocked (repositories, services, validators, loggers, utilities)
+- ✅ You're testing ONLY the behavior of method X, nothing else
+
 **Example**:
 ```csharp
-// Unit test with EVERYTHING mocked
+// Unit test with EVERYTHING mocked - NO EXCEPTIONS!
 public class ExerciseServiceTests
 {
     private readonly Mock<IExerciseRepository> _mockRepository;
     private readonly Mock<IExerciseTypeRepository> _mockTypeRepository;
     private readonly Mock<IValidator<Exercise>> _mockValidator;
     private readonly Mock<ILogger<ExerciseService>> _mockLogger;
-    private readonly ExerciseService _service; // ONLY real class
+    private readonly Mock<IUnitOfWork> _mockUnitOfWork;
+    private readonly Mock<ICacheService> _mockCache;
+    private readonly ExerciseService _service; // ⚠️ ONLY real class - EVERYTHING else is mocked!
     
     public ExerciseServiceTests()
     {
-        // Mock EVERY dependency
+        // Mock EVERY SINGLE dependency - NO EXCEPTIONS!
         _mockRepository = new Mock<IExerciseRepository>();
         _mockTypeRepository = new Mock<IExerciseTypeRepository>();
         _mockValidator = new Mock<IValidator<Exercise>>();
         _mockLogger = new Mock<ILogger<ExerciseService>>();
+        _mockUnitOfWork = new Mock<IUnitOfWork>();
+        _mockCache = new Mock<ICacheService>();
         
-        // ONLY the service under test is real
+        // ⚠️ CRITICAL: ONLY the service under test is real!
+        // Everything else MUST be mocked for true unit testing
         _service = new ExerciseService(
             _mockRepository.Object,
             _mockTypeRepository.Object,
             _mockValidator.Object,
-            _mockLogger.Object
+            _mockLogger.Object,
+            _mockUnitOfWork.Object,
+            _mockCache.Object
         );
     }
     

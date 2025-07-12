@@ -16,9 +16,10 @@ Track actual time vs estimates to measure productivity and AI assistance impact.
 ```
 
 **Key Components:**
-- `Duration`: Actual time taken (calculate immediately when finishing)
+- `Duration`: Actual time taken (**MUST calculate immediately when finishing**)
 - `Est`: Original estimate from task definition
-- Shows productivity gain at a glance
+- **REQUIREMENT**: Calculate duration on the spot when marking task as finished
+- Format shows productivity gain/loss at a glance (Est vs Duration comparison)
 
 ## 📊 Examples
 
@@ -28,6 +29,7 @@ Task 2.1: Create IExerciseRepository interface
 [Implemented: abc123 | Started: 2025-01-15 14:00 | Finished: 2025-01-15 14:05 | Duration: 0h 5m | Est: 0h 15m]
 ```
 **Interpretation**: Estimated 15 minutes, actually took 5 minutes (67% time saved)
+**Quick Comparison**: Duration: 0h 5m | Est: 0h 15m (10 minutes under estimate)
 
 ### Example 2: Task Took Longer Than Estimated
 ```
