@@ -77,8 +77,8 @@ public static class TestIds
     // Kinetic Chain IDs
     public static class KineticChainIds
     {
-        public static readonly string Open = "kineticchain-11111111-1111-1111-1111-111111111111";
-        public static readonly string Closed = "kineticchain-22222222-2222-2222-2222-222222222222";
+        public static readonly string Open = "kineticchaintype-11111111-1111-1111-1111-111111111111";
+        public static readonly string Closed = "kineticchaintype-22222222-2222-2222-2222-222222222222";
     }
     
     // Movement Pattern IDs
