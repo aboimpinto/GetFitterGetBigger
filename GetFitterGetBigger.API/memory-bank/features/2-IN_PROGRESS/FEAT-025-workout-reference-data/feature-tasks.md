@@ -4,6 +4,12 @@
 ## Estimated Total Time: 12 days / 96 hours
 ## Actual Total Time: [To be calculated at completion]
 
+## ⚠️ CHECKPOINT PROTOCOL
+**CRITICAL**: Cannot proceed to next category unless previous checkpoint status is ✅ PASSED
+- If checkpoint fails → Create CHECKPOINT FIX task
+- Fix all issues before continuing
+- Re-run checkpoint until PASSED
+
 ## 📚 Pre-Implementation Checklist
 - [ ] Read `/memory-bank/systemPatterns.md` - Architecture rules
 - [ ] Read `/memory-bank/unitOfWorkPattern.md` - Critical ReadOnly vs Writable patterns
@@ -164,6 +170,7 @@ And the response should contain both active and inactive objectives
 - **Passed**: 723
 - **Failed**: 0
 - **Test Execution Time**: ~8.6 seconds
+- **Command**: `dotnet clean && dotnet test`
 
 #### Verification
 - [x] All tests passing
@@ -197,12 +204,17 @@ And the response should contain both active and inactive objectives
 - **Passed**: XXX
 - **Failed**: XXX (MUST be 0 to proceed)
 - **Test Execution Time**: X.X seconds
+- **Command**: `dotnet clean && dotnet test` (ALL tests, not just new ones)
 
 #### Verification
 - [ ] All tests passing
 - [ ] Build successful with no errors
 - [ ] Zero (0) warnings maintained (BOY SCOUT RULE)
-- [ ] Ready to proceed to Category 3
+- [ ] Ready to proceed to Category
+
+⚠️ **If checkpoint fails**: Create CHECKPOINT FIX task below and resolve before continuing 3
+
+⚠️ **If checkpoint fails**: Create CHECKPOINT FIX task below and resolve before continuing
 
 ### Category 3 (Service Layer) - Estimated: 9h
 #### ⚠️ CRITICAL Before Starting: 
@@ -232,12 +244,15 @@ And the response should contain both active and inactive objectives
 - **Passed**: XXX
 - **Failed**: XXX (MUST be 0 to proceed)
 - **Test Execution Time**: X.X seconds
+- **Command**: `dotnet clean && dotnet test` (ALL tests, not just new ones)
 
 #### Verification
 - [ ] All tests passing
 - [ ] Build successful with no errors
 - [ ] Zero (0) warnings maintained (BOY SCOUT RULE)
-- [ ] Ready to proceed to Category 4
+- [ ] Ready to proceed to Category
+
+⚠️ **If checkpoint fails**: Create CHECKPOINT FIX task below and resolve before continuing 4
 
 ### Category 4 (Controllers) - Estimated: 6h
 #### 📖 Before Starting: Review controller rules - NO direct repository/UnitOfWork access!
@@ -263,12 +278,15 @@ And the response should contain both active and inactive objectives
 - **Passed**: XXX
 - **Failed**: XXX (MUST be 0 to proceed)
 - **Test Execution Time**: X.X seconds
+- **Command**: `dotnet clean && dotnet test` (ALL tests, not just new ones)
 
 #### Verification
 - [ ] All tests passing
 - [ ] Build successful with no errors
 - [ ] Zero (0) warnings maintained (BOY SCOUT RULE)
-- [ ] Ready to proceed to Category 5
+- [ ] Ready to proceed to Category
+
+⚠️ **If checkpoint fails**: Create CHECKPOINT FIX task below and resolve before continuing 5
 
 ### Category 5 (BDD Integration Tests) - Estimated: 8h
 #### 📖 Before Starting: Review BDD scenarios defined above
@@ -297,12 +315,15 @@ And the response should contain both active and inactive objectives
 - **Passed**: XXX
 - **Failed**: XXX (MUST be 0 to proceed)
 - **Test Execution Time**: X.X seconds
+- **Command**: `dotnet clean && dotnet test` (ALL tests, not just new ones)
 
 #### Verification
 - [ ] All tests passing
 - [ ] Build successful with no errors
 - [ ] Zero (0) warnings maintained (BOY SCOUT RULE)
-- [ ] Ready to proceed to Category 6
+- [ ] Ready to proceed to Category
+
+⚠️ **If checkpoint fails**: Create CHECKPOINT FIX task below and resolve before continuing 6
 
 ### Category 6 (Database & Migrations) - Estimated: 3h
 - **Task 6.1:** Add WorkoutObjective entity configuration `[ReadyToDevelop]` (Est: 30m)
@@ -328,12 +349,15 @@ And the response should contain both active and inactive objectives
 - **Passed**: XXX
 - **Failed**: XXX (MUST be 0 to proceed)
 - **Test Execution Time**: X.X seconds
+- **Command**: `dotnet clean && dotnet test` (ALL tests, not just new ones)
 
 #### Verification
 - [ ] All tests passing
 - [ ] Build successful with no errors
 - [ ] Zero (0) warnings maintained (BOY SCOUT RULE)
-- [ ] Ready to proceed to Category 7
+- [ ] Ready to proceed to Category
+
+⚠️ **If checkpoint fails**: Create CHECKPOINT FIX task below and resolve before continuing
 
 ### Category 7 (Dependency Injection & Configuration) - Estimated: 1h
 - **Task 7.1:** Register repositories in DI container `[ReadyToDevelop]` (Est: 15m)
@@ -355,6 +379,7 @@ And the response should contain both active and inactive objectives
 - **Passed**: XXX
 - **Failed**: XXX (MUST be 0 to proceed)
 - **Test Execution Time**: X.X seconds
+- **Command**: `dotnet clean && dotnet test` (ALL tests, not just new ones)
 
 #### Verification
 - [ ] All tests passing
