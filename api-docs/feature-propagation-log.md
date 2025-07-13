@@ -156,3 +156,19 @@ This document tracks features that have been propagated from the API to Admin an
   - Comprehensive seed data for all fitness industry standard values
   - Aggressive caching strategy (1-hour TTL) for reference data
   - Full BDD test scenario coverage for all business rules
+
+#### 6. Workout Reference Data (Admin)
+- **Source**: Features/Workouts/WorkoutTemplate/WorkoutReferenceData/
+- **Admin Feature ID**: FEAT-020
+- **Created**: 2025-07-13
+- **Status**: Propagated to 0-SUBMITTED
+- **Summary**: Personal Trainer UI components for workout reference data consultation
+- **Components**: WorkoutObjectivesComponent, WorkoutCategoriesComponent, ExecutionProtocolsComponent
+- **Dependencies**: API FEAT-025 (Workout Reference Data endpoints)
+- **Key Changes**:
+  - Read-only reference data browsing integrated into existing Reference Tables menu
+  - Search and filter functionality across all reference data types
+  - Visual grid layout for workout categories with icons and colors
+  - Detail modal dialogs with comprehensive programming guidance
+  - Professional table view for execution protocols with methodology details
+  - Responsive design optimized for tablet and desktop Personal Trainer workflows
