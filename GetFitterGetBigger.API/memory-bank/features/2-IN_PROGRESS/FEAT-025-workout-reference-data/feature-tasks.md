@@ -148,11 +148,11 @@ And the response should contain both active and inactive objectives
 - **Task 1.5:** Create WorkoutObjectiveDto and response models `[Implemented: ed1aa9ff | Started: 2025-07-13 07:30 | Finished: 2025-07-13 07:37 | Duration: 0h 7m | Est: 30m]`
 - **Task 1.6:** Create WorkoutCategoryDto and response models `[Implemented: 5061cd9a | Started: 2025-07-13 07:38 | Finished: 2025-07-13 07:43 | Duration: 0h 5m | Est: 30m]`
 - **Task 1.7:** Create ExecutionProtocolDto and response models `[Implemented: 76f85a71 | Started: 2025-07-13 07:44 | Finished: 2025-07-13 07:49 | Duration: 0h 5m | Est: 30m]`
-- **Task 1.8:** Write unit tests for DTOs and mapping logic `[InProgress: Started: 2025-07-13 07:55]` (Est: 30m)
+- **Task 1.8:** Write unit tests for DTOs and mapping logic `[Implemented: aa246ba7 | Started: 2025-07-13 07:55 | Finished: 2025-07-13 08:01 | Duration: 0h 6m | Est: 30m]`
 
 ### Category 2 (Repository Layer) - Estimated: 6h
 #### 📖 Before Starting: Review repository patterns in `/memory-bank/unitOfWorkPattern.md`
-- **Task 2.1:** Create IWorkoutObjectiveRepository interface `[ReadyToDevelop]` (Est: 15m)
+- **Task 2.1:** Create IWorkoutObjectiveRepository interface `[InProgress: Started: 2025-07-13 08:02]` (Est: 15m)
 - **Task 2.2:** Create IWorkoutCategoryRepository interface `[ReadyToDevelop]` (Est: 15m)
 - **Task 2.3:** Create IExecutionProtocolRepository interface `[ReadyToDevelop]` (Est: 15m)
 - **Task 2.4:** Implement WorkoutObjectiveRepository `[ReadyToDevelop]` (Est: 1h)
