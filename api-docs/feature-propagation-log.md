@@ -136,3 +136,23 @@ This document tracks features that have been propagated from the API to Admin an
 - FEAT-019 demonstrates the proper propagation process with independent numbering
 - Admin project maintains its own feature sequence (FEAT-017)
 - Process documentation created to standardize future propagations
+
+## Propagation Date: 2025-07-13
+
+### Features Propagated
+
+#### 6. Workout Reference Data
+- **Source**: Features/Workouts/WorkoutTemplate/WorkoutReferenceData/
+- **API Feature ID**: FEAT-025
+- **Created**: 2025-07-13
+- **Status**: Propagated to 0-SUBMITTED
+- **Summary**: Foundational reference tables for workout organization and discovery
+- **Endpoints**: 6 GET endpoints for WorkoutObjective, WorkoutCategory, and ExecutionProtocol reference data
+- **Dependencies**: None (foundational feature)
+- **Key Changes**:
+  - 3 new reference tables: WorkoutObjective, WorkoutCategory, ExecutionProtocol
+  - 1 relationship table: WorkoutMuscles (for future WorkoutTemplate integration)
+  - Read-only endpoints with Free-Tier access minimum
+  - Comprehensive seed data for all fitness industry standard values
+  - Aggressive caching strategy (1-hour TTL) for reference data
+  - Full BDD test scenario coverage for all business rules

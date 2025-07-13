@@ -1,3 +1,15 @@
+## Target Project Validation
+**CRITICAL**: This process is ONLY for the Admin project (/GetFitterGetBigger.Admin/).
+
+Before proceeding, verify:
+- [ ] You are propagating to the Admin project specifically
+- [ ] You will create features in `/GetFitterGetBigger.Admin/memory-bank/features/`
+- [ ] You are focusing on UI components, user workflows, and frontend implementation
+- [ ] You are NOT implementing API endpoints or database schemas
+
+If propagating to API or Clients projects, stop and use the appropriate process document.
+ 
+
 # Feature to Admin Propagation Process
 
 ## Overview
