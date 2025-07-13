@@ -141,9 +141,9 @@ And the response should contain both active and inactive objectives
 
 ### Category 1 (Models & DTOs) - Estimated: 4h
 #### 📖 Before Starting: Review entity pattern in `/memory-bank/databaseModelPattern.md`
-- **Task 1.1:** Create WorkoutObjective entity model `[ReadyToDevelop]` (Est: 45m)
-- **Task 1.2:** Create WorkoutCategory entity model `[ReadyToDevelop]` (Est: 45m)
-- **Task 1.3:** Create ExecutionProtocol entity model `[ReadyToDevelop]` (Est: 45m)
+- **Task 1.1:** Create WorkoutObjective entity model `[Implemented: b2faedf5 | Started: 2025-07-13 02:45 | Finished: 2025-07-13 02:47 | Duration: 0h 2m | Est: 45m]`
+- **Task 1.2:** Create WorkoutCategory entity model `[Implemented: 2ee8fa22 | Started: 2025-07-13 02:47 | Finished: 2025-07-13 02:48 | Duration: 0h 1m | Est: 45m]`
+- **Task 1.3:** Create ExecutionProtocol entity model `[InProgress: Started: 2025-07-13 02:48]` (Est: 45m)
 - **Task 1.4:** Create WorkoutMuscles relationship entity model `[ReadyToDevelop]` (Est: 45m)
 - **Task 1.5:** Create WorkoutObjectiveDto and response models `[ReadyToDevelop]` (Est: 30m)
 - **Task 1.6:** Create WorkoutCategoryDto and response models `[ReadyToDevelop]` (Est: 30m)
