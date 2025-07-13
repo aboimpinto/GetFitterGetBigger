@@ -11,7 +11,7 @@ public static class TestIds
     /// <summary>
     /// Common ID used for testing "not found" scenarios
     /// </summary>
-    public static readonly string NotFoundId = "00000000-0000-0000-0000-000000000000";
+    public static readonly Guid NotFoundId = Guid.Parse("00000000-0000-0000-0000-000000000000");
     // Exercise Type IDs
     public static class ExerciseTypeIds
     {

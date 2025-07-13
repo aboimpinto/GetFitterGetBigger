@@ -3,6 +3,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using GetFitterGetBigger.API.Controllers;
 using GetFitterGetBigger.API.DTOs;
+using GetFitterGetBigger.API.Models.SpecializedIds;
 using GetFitterGetBigger.API.Services.Interfaces;
 using GetFitterGetBigger.API.Tests.TestBuilders;
 using GetFitterGetBigger.API.Tests.TestBuilders.DTOs;
@@ -72,17 +73,17 @@ public class WorkoutCategoriesControllerTests
     public async Task GetWorkoutCategoryById_NotFound_ReturnsNotFoundResult()
     {
         // Arrange
-        var id = $"workoutcategory-{TestIds.NotFoundId}";
-        _mockService.Setup(s => s.GetByIdAsDtoAsync(id)).ReturnsAsync((WorkoutCategoryDto?)null);
+        var id = WorkoutCategoryId.From(TestIds.NotFoundId);
+        _mockService.Setup(s => s.GetByIdAsDtoAsync(id.ToString())).ReturnsAsync((WorkoutCategoryDto?)null);
 
         // Act
-        var result = await _controller.GetWorkoutCategoryById(id);
+        var result = await _controller.GetWorkoutCategoryById(id.ToString());
 
         // Assert
         var notFoundResult = Assert.IsType<NotFoundObjectResult>(result);
         var response = notFoundResult.Value;
         Assert.NotNull(response);
-        _mockService.Verify(s => s.GetByIdAsDtoAsync(id), Times.Once);
+        _mockService.Verify(s => s.GetByIdAsDtoAsync(id.ToString()), Times.Once);
     }
 
     [Fact]

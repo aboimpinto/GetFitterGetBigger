@@ -310,13 +310,13 @@ And the response should contain both active and inactive objectives
 
 ### Category 4 (Controllers) - Estimated: 6h
 #### 📖 Before Starting: Review controller rules - NO direct repository/UnitOfWork access!
-- **Task 4.1:** Create WorkoutObjectivesController with GET endpoints `[Implemented: Current | Started: 2025-07-13 11:00 | Finished: 2025-07-13 11:01 | Duration: 0h 1m | Est: 1h]`
-- **Task 4.2:** Create WorkoutCategoriesController with GET endpoints `[Implemented: Current | Started: 2025-07-13 11:01 | Finished: 2025-07-13 11:02 | Duration: 0h 1m | Est: 1h]`
-- **Task 4.3:** Create ExecutionProtocolsController with GET endpoints and by-code lookup `[Implemented: Current | Started: 2025-07-13 11:02 | Finished: 2025-07-13 11:03 | Duration: 0h 1m | Est: 1.5h]`
-- **Task 4.4:** Add authorization and validation to all controllers `[Implemented: Current | Started: 2025-07-13 11:03 | Finished: 2025-07-13 11:05 | Duration: 0h 2m | Est: 45m]`
-- **Task 4.5:** Write controller unit tests (WorkoutObjectivesController) `[Implemented: Current | Started: 2025-07-13 11:05 | Finished: 2025-07-13 11:06 | Duration: 0h 1m | Est: 45m]`
-- **Task 4.6:** Write controller unit tests (WorkoutCategoriesController) `[Implemented: Current | Started: 2025-07-13 11:06 | Finished: 2025-07-13 11:07 | Duration: 0h 1m | Est: 45m]`
-- **Task 4.7:** Write controller unit tests (ExecutionProtocolsController) `[Implemented: Current | Started: 2025-07-13 11:07 | Finished: 2025-07-13 11:08 | Duration: 0h 1m | Est: 30m]`
+- **Task 4.1:** Create WorkoutObjectivesController with GET endpoints `[Implemented: aaa9682a | Started: 2025-07-13 11:00 | Finished: 2025-07-13 11:01 | Duration: 0h 1m | Est: 1h]`
+- **Task 4.2:** Create WorkoutCategoriesController with GET endpoints `[Implemented: aaa9682a | Started: 2025-07-13 11:01 | Finished: 2025-07-13 11:02 | Duration: 0h 1m | Est: 1h]`
+- **Task 4.3:** Create ExecutionProtocolsController with GET endpoints and by-code lookup `[Implemented: aaa9682a | Started: 2025-07-13 11:02 | Finished: 2025-07-13 11:03 | Duration: 0h 1m | Est: 1.5h]`
+- **Task 4.4:** Add authorization and validation to all controllers `[Implemented: aaa9682a | Started: 2025-07-13 11:03 | Finished: 2025-07-13 11:05 | Duration: 0h 2m | Est: 45m]`
+- **Task 4.5:** Write controller unit tests (WorkoutObjectivesController) `[Implemented: aaa9682a | Started: 2025-07-13 11:05 | Finished: 2025-07-13 11:06 | Duration: 0h 1m | Est: 45m]`
+- **Task 4.6:** Write controller unit tests (WorkoutCategoriesController) `[Implemented: aaa9682a | Started: 2025-07-13 11:06 | Finished: 2025-07-13 11:07 | Duration: 0h 1m | Est: 45m]`
+- **Task 4.7:** Write controller unit tests (ExecutionProtocolsController) `[Implemented: aaa9682a | Started: 2025-07-13 11:07 | Finished: 2025-07-13 11:08 | Duration: 0h 1m | Est: 30m]`
 
 ### 🔄 Category 4 Health Check
 **Date/Time**: 2025-07-13 11:09
@@ -328,8 +328,8 @@ And the response should contain both active and inactive objectives
 - **Command**: `dotnet clean && dotnet build`
 
 #### Test Status
-- **Total Tests**: 788 (593 unit + 195 integration) 
-- **Passed**: 788
+- **Total Tests**: 819 (593 unit + 226 integration) 
+- **Passed**: 819
 - **Failed**: 0
 - **Test Execution Time**: ~8 seconds
 - **Command**: `dotnet test`
@@ -341,9 +341,17 @@ And the response should contain both active and inactive objectives
 - [x] Controllers implemented using services (no direct repository access)
 - [x] No authorization attributes added (per user request)
 - [x] Comprehensive unit tests with proper mocking
+- [x] Controller tests updated to use test builders and TestIds
 - [x] Ready to proceed to Category 5
 
 **Decision**: Category 4 complete. All controllers implemented with proper service usage and comprehensive unit tests. Ready for checkpoint pause.
+
+**CHECKPOINT FIX - Category 4:** Update controller tests to use test builders
+`[Completed: Started: 2025-07-13 10:00 | Finished: 2025-07-13 10:03 | Duration: 0h 3m]` (Est: 0.5h)
+- **Issue**: Controller tests were using inline DTO creation instead of test builders
+- **Root Cause**: Initial implementation didn't follow established patterns
+- **Fix Applied**: Created DTO test builders (ReferenceDataDtoTestBuilder, WorkoutCategoryDtoTestBuilder, ExecutionProtocolDtoTestBuilder) and updated all controller tests to use them with TestIds
+- **Lesson Learned**: Always use test builders for DTO creation in tests to maintain consistency
 
 ### Category 5 (BDD Integration Tests) - Estimated: 8h
 #### 📖 Before Starting: Review BDD scenarios defined above
