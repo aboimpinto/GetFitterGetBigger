@@ -15,6 +15,27 @@ public readonly record struct WorkoutCategoryId
     
     public static WorkoutCategoryId From(Guid guid) => new(guid);
     
+    public static WorkoutCategoryId From(string input)
+    {
+        if (string.IsNullOrEmpty(input))
+            return Empty;
+            
+        // If it's a properly formatted ID string (workoutcategory-{guid})
+        if (input.StartsWith("workoutcategory-"))
+        {
+            var guidPart = input["workoutcategory-".Length..];
+            if (Guid.TryParse(guidPart, out var guid))
+                return new(guid);
+        }
+        // If it's just a GUID string
+        else if (Guid.TryParse(input, out var guid))
+        {
+            return new(guid);
+        }
+        
+        return Empty;
+    }
+    
     public static WorkoutCategoryId Empty => new(Guid.Empty);
     
     public bool IsEmpty => _value == Guid.Empty;

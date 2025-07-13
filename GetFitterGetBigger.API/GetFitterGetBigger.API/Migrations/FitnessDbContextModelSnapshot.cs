@@ -210,6 +210,57 @@ namespace GetFitterGetBigger.API.Migrations
                     b.ToTable("Equipment");
                 });
 
+            modelBuilder.Entity("GetFitterGetBigger.API.Models.Entities.ExecutionProtocol", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<int>("DisplayOrder")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("IntensityLevel")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("RepBase")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("RestPattern")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<bool>("TimeBase")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Value")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Code")
+                        .IsUnique()
+                        .HasDatabaseName("IX_ExecutionProtocol_Code");
+
+                    b.HasIndex("Value")
+                        .HasDatabaseName("IX_ExecutionProtocol_Value");
+
+                    b.ToTable("ExecutionProtocols");
+                });
+
             modelBuilder.Entity("GetFitterGetBigger.API.Models.Entities.Exercise", b =>
                 {
                     b.Property<Guid>("Id")
@@ -728,6 +779,48 @@ namespace GetFitterGetBigger.API.Migrations
                     b.ToTable("Users");
                 });
 
+            modelBuilder.Entity("GetFitterGetBigger.API.Models.Entities.WorkoutCategory", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Color")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<int>("DisplayOrder")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Icon")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("PrimaryMuscleGroups")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("Value")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Value")
+                        .HasDatabaseName("IX_WorkoutCategory_Value");
+
+                    b.ToTable("WorkoutCategories");
+                });
+
             modelBuilder.Entity("GetFitterGetBigger.API.Models.Entities.WorkoutLog", b =>
                 {
                     b.Property<Guid>("Id")
@@ -786,6 +879,34 @@ namespace GetFitterGetBigger.API.Migrations
                     b.HasIndex("LogId");
 
                     b.ToTable("WorkoutLogSets");
+                });
+
+            modelBuilder.Entity("GetFitterGetBigger.API.Models.Entities.WorkoutObjective", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<int>("DisplayOrder")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Value")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Value")
+                        .HasDatabaseName("IX_WorkoutObjective_Value");
+
+                    b.ToTable("WorkoutObjectives");
                 });
 
             modelBuilder.Entity("GetFitterGetBigger.API.Models.Entities.Claim", b =>

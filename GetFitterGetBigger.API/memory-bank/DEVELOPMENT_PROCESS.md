@@ -16,6 +16,11 @@
 ### I need to propagate changes to other projects
 👉 Go to: [Cross-Project Coordination](#cross-project-coordination)
 
+### 🛑 Important: Checkpoint Behavior
+- **DEFAULT**: AI stops after each successful checkpoint for user review
+- **To continue after a pause**: `/continue-implementation`
+- **For continuous mode**: `/continue-implementation don't stop on checkpoints`
+
 ---
 
 ## 📋 Feature Development Process
@@ -66,6 +71,17 @@ dotnet clean && dotnet test     # Run ALL tests (not just new ones)
 - ✅ Build must succeed (zero errors)
 - ✅ ALL tests must pass (100% pass rate)
 - ✅ **BOY SCOUT RULE: ZERO warnings** - If you start with 0 warnings, maintain 0 warnings!
+
+#### 🛑 CHECKPOINT PAUSE BEHAVIOR
+**DEFAULT BEHAVIOR**: AI Assistant MUST STOP after each successful checkpoint!
+- After completing a category and passing the checkpoint, the AI assistant will pause
+- This allows the user to review, refactor, or make any necessary adjustments
+- To continue implementation, use the `/continue-implementation` command
+
+**CONTINUOUS MODE**: To proceed without stopping at checkpoints:
+- Use: `/continue-implementation don't stop on checkpoints`
+- The AI assistant will then continue through all categories without pausing
+- This should only be used when you're confident in the implementation flow
 
 #### 🚨 Checkpoint Failure Protocol
 **If ANY checkpoint fails**:

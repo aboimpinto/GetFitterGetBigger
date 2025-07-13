@@ -15,6 +15,27 @@ public readonly record struct WorkoutObjectiveId
     
     public static WorkoutObjectiveId From(Guid guid) => new(guid);
     
+    public static WorkoutObjectiveId From(string input)
+    {
+        if (string.IsNullOrEmpty(input))
+            return Empty;
+            
+        // If it's a properly formatted ID string (workoutobjective-{guid})
+        if (input.StartsWith("workoutobjective-"))
+        {
+            var guidPart = input["workoutobjective-".Length..];
+            if (Guid.TryParse(guidPart, out var guid))
+                return new(guid);
+        }
+        // If it's just a GUID string
+        else if (Guid.TryParse(input, out var guid))
+        {
+            return new(guid);
+        }
+        
+        return Empty;
+    }
+    
     public static WorkoutObjectiveId Empty => new(Guid.Empty);
     
     public bool IsEmpty => _value == Guid.Empty;

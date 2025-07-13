@@ -26,6 +26,9 @@ public class FitnessDbContext : DbContext
     public DbSet<MuscleRole> MuscleRoles => Set<MuscleRole>();
     public DbSet<ExerciseType> ExerciseTypes => Set<ExerciseType>();
     public DbSet<ExerciseWeightType> ExerciseWeightTypes => Set<ExerciseWeightType>();
+    public DbSet<WorkoutObjective> WorkoutObjectives => Set<WorkoutObjective>();
+    public DbSet<WorkoutCategory> WorkoutCategories => Set<WorkoutCategory>();
+    public DbSet<ExecutionProtocol> ExecutionProtocols => Set<ExecutionProtocol>();
     
     // Linking entities
     public DbSet<ExerciseMovementPattern> ExerciseMovementPatterns => Set<ExerciseMovementPattern>();
@@ -184,6 +187,24 @@ public class FitnessDbContext : DbContext
                 id => (Guid)id,
                 guid => ExerciseWeightTypeId.From(guid));
                 
+        modelBuilder.Entity<WorkoutObjective>()
+            .Property(wo => wo.Id)
+            .HasConversion(
+                id => (Guid)id,
+                guid => WorkoutObjectiveId.From(guid));
+                
+        modelBuilder.Entity<WorkoutCategory>()
+            .Property(wc => wc.Id)
+            .HasConversion(
+                id => (Guid)id,
+                guid => WorkoutCategoryId.From(guid));
+                
+        modelBuilder.Entity<ExecutionProtocol>()
+            .Property(ep => ep.Id)
+            .HasConversion(
+                id => (Guid)id,
+                guid => ExecutionProtocolId.From(guid));
+                
         // Foreign key ID conversions
         modelBuilder.Entity<WorkoutLog>()
             .Property(wl => wl.UserId)
@@ -338,6 +359,80 @@ public class FitnessDbContext : DbContext
         modelBuilder.Entity<ExerciseWeightType>()
             .HasIndex(ewt => ewt.Value)
             .HasDatabaseName("IX_ExerciseWeightType_Value");
+            
+        // Configure WorkoutObjective properties and indexes
+        modelBuilder.Entity<WorkoutObjective>()
+            .Property(wo => wo.Value)
+            .HasMaxLength(100)
+            .IsRequired();
+            
+        modelBuilder.Entity<WorkoutObjective>()
+            .Property(wo => wo.Description)
+            .HasMaxLength(500);
+            
+        modelBuilder.Entity<WorkoutObjective>()
+            .HasIndex(wo => wo.Value)
+            .HasDatabaseName("IX_WorkoutObjective_Value");
+            
+        // Configure WorkoutCategory properties and indexes
+        modelBuilder.Entity<WorkoutCategory>()
+            .Property(wc => wc.Value)
+            .HasMaxLength(100)
+            .IsRequired();
+            
+        modelBuilder.Entity<WorkoutCategory>()
+            .Property(wc => wc.Description)
+            .HasMaxLength(500);
+            
+        modelBuilder.Entity<WorkoutCategory>()
+            .Property(wc => wc.Icon)
+            .HasMaxLength(50)
+            .IsRequired();
+            
+        modelBuilder.Entity<WorkoutCategory>()
+            .Property(wc => wc.Color)
+            .HasMaxLength(10)
+            .IsRequired();
+            
+        modelBuilder.Entity<WorkoutCategory>()
+            .Property(wc => wc.PrimaryMuscleGroups)
+            .HasMaxLength(200);
+            
+        modelBuilder.Entity<WorkoutCategory>()
+            .HasIndex(wc => wc.Value)
+            .HasDatabaseName("IX_WorkoutCategory_Value");
+            
+        // Configure ExecutionProtocol properties and indexes
+        modelBuilder.Entity<ExecutionProtocol>()
+            .Property(ep => ep.Value)
+            .HasMaxLength(100)
+            .IsRequired();
+            
+        modelBuilder.Entity<ExecutionProtocol>()
+            .Property(ep => ep.Description)
+            .HasMaxLength(500);
+            
+        modelBuilder.Entity<ExecutionProtocol>()
+            .Property(ep => ep.Code)
+            .HasMaxLength(50)
+            .IsRequired();
+            
+        modelBuilder.Entity<ExecutionProtocol>()
+            .Property(ep => ep.RestPattern)
+            .HasMaxLength(100);
+            
+        modelBuilder.Entity<ExecutionProtocol>()
+            .Property(ep => ep.IntensityLevel)
+            .HasMaxLength(50);
+            
+        modelBuilder.Entity<ExecutionProtocol>()
+            .HasIndex(ep => ep.Code)
+            .IsUnique()
+            .HasDatabaseName("IX_ExecutionProtocol_Code");
+            
+        modelBuilder.Entity<ExecutionProtocol>()
+            .HasIndex(ep => ep.Value)
+            .HasDatabaseName("IX_ExecutionProtocol_Value");
     }
     
     private static void ConfigureManyToManyRelationships(ModelBuilder modelBuilder)
