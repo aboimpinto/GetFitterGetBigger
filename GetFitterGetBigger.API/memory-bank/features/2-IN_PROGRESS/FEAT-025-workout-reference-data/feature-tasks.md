@@ -271,15 +271,15 @@ And the response should contain both active and inactive objectives
 #### ⚠️ CRITICAL Before Starting: 
 - [x] Re-read `/memory-bank/common-implementation-pitfalls.md` Section 1
 - [x] Remember: ReadOnlyUnitOfWork for validation, WritableUnitOfWork for modifications ONLY
-- **Task 3.1:** Create IWorkoutObjectiveService interface `[Implemented: Current | Started: 2025-07-13 10:30 | Finished: 2025-07-13 10:32 | Duration: 0h 2m | Est: 15m]`
-- **Task 3.2:** Create IWorkoutCategoryService interface `[Implemented: Current | Started: 2025-07-13 10:32 | Finished: 2025-07-13 10:33 | Duration: 0h 1m | Est: 15m]`
-- **Task 3.3:** Create IExecutionProtocolService interface `[Implemented: Current | Started: 2025-07-13 10:33 | Finished: 2025-07-13 10:34 | Duration: 0h 1m | Est: 15m]`
-- **Task 3.4:** Implement WorkoutObjectiveService with caching `[Implemented: Current | Started: 2025-07-13 10:34 | Finished: 2025-07-13 10:36 | Duration: 0h 2m | Est: 2h]`
-- **Task 3.5:** Implement WorkoutCategoryService with caching `[Implemented: Current | Started: 2025-07-13 10:36 | Finished: 2025-07-13 10:37 | Duration: 0h 1m | Est: 2h]`
-- **Task 3.6:** Implement ExecutionProtocolService with caching and code lookup `[Implemented: Current | Started: 2025-07-13 10:37 | Finished: 2025-07-13 10:39 | Duration: 0h 2m | Est: 2.5h]`
-- **Task 3.7:** Write service unit tests (WorkoutObjectiveService) `[Implemented: Current | Started: 2025-07-13 10:39 | Finished: 2025-07-13 10:41 | Duration: 0h 2m | Est: 1h]`
-- **Task 3.8:** Write service unit tests (WorkoutCategoryService) `[Implemented: Current | Started: 2025-07-13 10:41 | Finished: 2025-07-13 10:42 | Duration: 0h 1m | Est: 1h]`
-- **Task 3.9:** Write service unit tests (ExecutionProtocolService) `[Implemented: Current | Started: 2025-07-13 10:42 | Finished: 2025-07-13 10:52 | Duration: 0h 10m | Est: 1h]`
+- **Task 3.1:** Create IWorkoutObjectiveService interface `[Implemented: 5f1d2fd0 | Started: 2025-07-13 10:30 | Finished: 2025-07-13 10:32 | Duration: 0h 2m | Est: 15m]`
+- **Task 3.2:** Create IWorkoutCategoryService interface `[Implemented: 5f1d2fd0 | Started: 2025-07-13 10:32 | Finished: 2025-07-13 10:33 | Duration: 0h 1m | Est: 15m]`
+- **Task 3.3:** Create IExecutionProtocolService interface `[Implemented: 5f1d2fd0 | Started: 2025-07-13 10:33 | Finished: 2025-07-13 10:34 | Duration: 0h 1m | Est: 15m]`
+- **Task 3.4:** Implement WorkoutObjectiveService with caching `[Implemented: 5f1d2fd0 | Started: 2025-07-13 10:34 | Finished: 2025-07-13 10:36 | Duration: 0h 2m | Est: 2h]`
+- **Task 3.5:** Implement WorkoutCategoryService with caching `[Implemented: 5f1d2fd0 | Started: 2025-07-13 10:36 | Finished: 2025-07-13 10:37 | Duration: 0h 1m | Est: 2h]`
+- **Task 3.6:** Implement ExecutionProtocolService with caching and code lookup `[Implemented: 5f1d2fd0 | Started: 2025-07-13 10:37 | Finished: 2025-07-13 10:39 | Duration: 0h 2m | Est: 2.5h]`
+- **Task 3.7:** Write service unit tests (WorkoutObjectiveService) `[Implemented: 5f1d2fd0 | Started: 2025-07-13 10:39 | Finished: 2025-07-13 10:41 | Duration: 0h 2m | Est: 1h]`
+- **Task 3.8:** Write service unit tests (WorkoutCategoryService) `[Implemented: 5f1d2fd0 | Started: 2025-07-13 10:41 | Finished: 2025-07-13 10:42 | Duration: 0h 1m | Est: 1h]`
+- **Task 3.9:** Write service unit tests (ExecutionProtocolService) `[Implemented: 5f1d2fd0 | Started: 2025-07-13 10:42 | Finished: 2025-07-13 10:52 | Duration: 0h 10m | Est: 1h]`
 
 ### 🔄 Category 3 Health Check
 **Date/Time**: 2025-07-13 10:53
