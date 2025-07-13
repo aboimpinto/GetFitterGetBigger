@@ -131,7 +131,7 @@ From `UNIFIED_DEVELOPMENT_PROCESS.md`:
 Before committing, ask yourself:
 - [ ] Did I run `dotnet clean` first?
 - [ ] Are there zero build errors?
-- [ ] Are warnings minimized (< 10)?
+- [ ] Are warnings at baseline level or better? (BOY SCOUT RULE: Leave code better than you found it)
 - [ ] Do all tests pass?
 
 ## Pro Tips

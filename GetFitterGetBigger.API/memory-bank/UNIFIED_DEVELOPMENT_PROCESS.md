@@ -131,7 +131,7 @@ Document results in feature-tasks.md:
 
 ### Build Status
 - **Result**: ✅ Success / ❌ Failed
-- **Warnings**: X (must be < 10)
+- **Warnings**: X (BOY SCOUT RULE: maintain baseline level or better)
 
 ### Test Status  
 - **Total Tests**: X
@@ -141,7 +141,7 @@ Document results in feature-tasks.md:
 ### Decision
 - [ ] All tests passing (REQUIRED)
 - [ ] Build successful (REQUIRED)
-- [ ] Warnings acceptable (< 10)
+- [ ] Warnings at baseline level or better (BOY SCOUT RULE)
 
 **Proceed**: Yes/No
 ```
@@ -159,7 +159,7 @@ Document results in feature-tasks.md:
 After EVERY task:
 - ✅ Code compiles without errors
 - ✅ All tests pass (no failures, no skips)
-- ✅ Build warnings < 10
+- ✅ Build warnings at baseline level or better (BOY SCOUT RULE)
 - ✅ Feature remains functional
 
 ## Manual Testing Policy

@@ -168,7 +168,7 @@ And the response should contain both active and inactive objectives
 #### Verification
 - [x] All tests passing
 - [x] Build successful with no errors
-- [x] No warnings
+- [x] Zero (0) warnings maintained
 - [x] Ready to proceed to Category 2
 
 ### Category 2 (Repository Layer) - Estimated: 6h
@@ -201,7 +201,7 @@ And the response should contain both active and inactive objectives
 #### Verification
 - [ ] All tests passing
 - [ ] Build successful with no errors
-- [ ] Warnings < 10
+- [ ] Zero (0) warnings maintained (BOY SCOUT RULE)
 - [ ] Ready to proceed to Category 3
 
 ### Category 3 (Service Layer) - Estimated: 9h
@@ -236,7 +236,7 @@ And the response should contain both active and inactive objectives
 #### Verification
 - [ ] All tests passing
 - [ ] Build successful with no errors
-- [ ] Warnings < 10
+- [ ] Zero (0) warnings maintained (BOY SCOUT RULE)
 - [ ] Ready to proceed to Category 4
 
 ### Category 4 (Controllers) - Estimated: 6h
@@ -267,7 +267,7 @@ And the response should contain both active and inactive objectives
 #### Verification
 - [ ] All tests passing
 - [ ] Build successful with no errors
-- [ ] Warnings < 10
+- [ ] Zero (0) warnings maintained (BOY SCOUT RULE)
 - [ ] Ready to proceed to Category 5
 
 ### Category 5 (BDD Integration Tests) - Estimated: 8h
@@ -301,7 +301,7 @@ And the response should contain both active and inactive objectives
 #### Verification
 - [ ] All tests passing
 - [ ] Build successful with no errors
-- [ ] Warnings < 10
+- [ ] Zero (0) warnings maintained (BOY SCOUT RULE)
 - [ ] Ready to proceed to Category 6
 
 ### Category 6 (Database & Migrations) - Estimated: 3h
@@ -332,7 +332,7 @@ And the response should contain both active and inactive objectives
 #### Verification
 - [ ] All tests passing
 - [ ] Build successful with no errors
-- [ ] Warnings < 10
+- [ ] Zero (0) warnings maintained (BOY SCOUT RULE)
 - [ ] Ready to proceed to Category 7
 
 ### Category 7 (Dependency Injection & Configuration) - Estimated: 1h
@@ -359,7 +359,7 @@ And the response should contain both active and inactive objectives
 #### Verification
 - [ ] All tests passing
 - [ ] Build successful with no errors
-- [ ] Warnings < 10
+- [ ] Zero (0) warnings maintained (BOY SCOUT RULE)
 - [ ] Feature implementation complete
 - [ ] Ready for final testing
 

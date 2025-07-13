@@ -57,7 +57,7 @@
 **📖 Check**: `UNIFIED_DEVELOPMENT_PROCESS.md` - "Baseline Health Check" section
 - Build must succeed
 - All tests must pass
-- Warnings < 10
+- **🚨 BOY SCOUT RULE: ZERO warnings** - If you start with 0 warnings, maintain 0 warnings!
 
 ### When Completing a Feature
 
@@ -140,7 +140,10 @@ Create these four MANDATORY reports:
 - ✅ `dotnet clean && dotnet build` - zero errors
   - Clean build ensures all warnings are visible
 - ✅ `dotnet test` - 100% pass rate
-- ✅ Warnings < 10
+- ✅ **BOY SCOUT RULE**: Maintain ZERO (0) warnings
+  - If baseline has 0 warnings → maintain 0 warnings
+  - If baseline has warnings → reduce them (never increase)
+  - Leave the code better than you found it!
 
 ### Manual Testing Policy
 **📖 Source**: `UNIFIED_DEVELOPMENT_PROCESS.md` - "Manual Testing Policy"
