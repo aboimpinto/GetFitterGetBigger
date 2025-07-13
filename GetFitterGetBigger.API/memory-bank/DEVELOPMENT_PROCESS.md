@@ -55,9 +55,47 @@
 
 #### Quality Checkpoints
 **📖 Check**: `UNIFIED_DEVELOPMENT_PROCESS.md` - "Baseline Health Check" section
-- Build must succeed
-- All tests must pass
-- **🚨 BOY SCOUT RULE: ZERO warnings** - If you start with 0 warnings, maintain 0 warnings!
+
+**MANDATORY Checkpoint Commands**:
+```bash
+dotnet clean && dotnet build    # Check for errors and warnings
+dotnet clean && dotnet test     # Run ALL tests (not just new ones)
+```
+
+**Checkpoint Requirements**:
+- ✅ Build must succeed (zero errors)
+- ✅ ALL tests must pass (100% pass rate)
+- ✅ **BOY SCOUT RULE: ZERO warnings** - If you start with 0 warnings, maintain 0 warnings!
+
+#### 🚨 Checkpoint Failure Protocol
+**If ANY checkpoint fails**:
+1. **STOP** - Do NOT proceed to next category
+2. **CREATE** a "CHECKPOINT FIX" task in feature-tasks.md
+3. **FIX** all issues before continuing
+4. **RE-RUN** checkpoint to verify fixes
+5. **UPDATE** checkpoint status to ✅ PASSED
+
+**Checkpoint Status Types**:
+- 🛑 **PENDING** - Not yet run
+- ❌ **FAILED** - Issues found, fix in progress
+- ✅ **PASSED** - All checks passed, ready to proceed
+
+**⚠️ CRITICAL**: You CANNOT start the next category if the previous checkpoint is not ✅ PASSED!
+
+#### CHECKPOINT FIX Task Format
+When creating a fix task, use this format:
+```markdown
+**CHECKPOINT FIX - Category X:** Brief description of issue
+`[InProgress: Started: YYYY-MM-DD HH:MM]` (Est: Xh)
+- **Issue**: Specific failing tests or warnings
+- **Root Cause**: Why did this happen?
+- **Fix Applied**: What was done to resolve it
+- **Lesson Learned**: How to prevent this in future
+```
+
+**Task Placement**: Insert immediately after the last task in the current category
+
+**Time Tracking**: Track time spent on checkpoint fixes separately to understand the true cost of quality issues
 
 ### When Completing a Feature
 

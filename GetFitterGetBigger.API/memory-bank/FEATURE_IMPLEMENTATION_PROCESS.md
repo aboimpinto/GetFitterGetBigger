@@ -133,9 +133,19 @@ Before starting ANY implementation:
 - **For EVERY checkpoint:**
   1. Run `dotnet clean && dotnet build` - BUILD MUST BE SUCCESSFUL (no errors)
      - The `clean` ensures all warnings are visible (incremental builds can hide warnings)
-  2. Run `dotnet test` - ALL TESTS MUST BE GREEN (no failures)
-  3. Verify no build warnings exist
-  4. **MANDATORY: Update checkpoint status from 🛑 to ✅ when all conditions pass**
+  2. Run `dotnet clean && dotnet test` - ALL TESTS MUST BE GREEN (no failures)
+     - Run ALL tests in the solution, not just new ones
+  3. Verify ZERO warnings (BOY SCOUT RULE)
+  4. **If checkpoint FAILS**:
+     - **STOP immediately** - do NOT proceed to next category
+     - Create a **CHECKPOINT FIX** task in feature-tasks.md
+     - Fix all issues before continuing
+     - Re-run checkpoint until it passes
+  5. **MANDATORY: Update checkpoint status**:
+     - 🛑 PENDING → ❌ FAILED (if issues found)
+     - ❌ FAILED → ✅ PASSED (after fixes verified)
+     - 🛑 PENDING → ✅ PASSED (if no issues found)
+  6. **CRITICAL**: Cannot start next category unless checkpoint is ✅ PASSED
 - Follow existing API patterns and conventions
 - Use dependency injection and repository patterns
 - The task tracking file serves as both documentation and audit trail
@@ -407,6 +417,78 @@ Then the response status should be 401
 - **Task 6.1:** Add entity configuration `[ReadyToDevelop]` (Est: 30m)
 - **Task 6.2:** Create database migration `[ReadyToDevelop]` (Est: 15m)
 - **Task 6.3:** Add seed data if needed `[ReadyToDevelop]` (Est: 30m)
+
+### 🔄 Category 2 Health Check
+**Date/Time**: YYYY-MM-DD HH:MM
+**Status**: 🛑 PENDING / ❌ FAILED / ✅ PASSED
+
+#### Build Status
+- **Build Result**: [ ] Success / [ ] Failed / [ ] Success with warnings
+- **Warning Count**: X warnings
+- **Command**: `dotnet clean && dotnet build`
+
+#### Test Status
+- **Total Tests**: XXX
+- **Passed**: XXX
+- **Failed**: XXX (MUST be 0 to proceed)
+- **Command**: `dotnet clean && dotnet test`
+
+#### Verification
+- [ ] All tests passing
+- [ ] Build successful with no errors
+- [ ] Zero warnings maintained (BOY SCOUT RULE)
+- [ ] Ready to proceed to Category 3
+
+### Example: Failed Checkpoint with Fix Task
+
+### 🔄 Category 3 Health Check
+**Date/Time**: 2024-03-15 14:30
+**Status**: ❌ FAILED - Fix in progress
+
+#### Build Status
+- **Build Result**: ⚠️ Success with warnings
+- **Warning Count**: 2 warnings
+- **Command**: `dotnet clean && dotnet build`
+
+#### Test Status
+- **Total Tests**: 523
+- **Passed**: 520
+- **Failed**: 3
+- **Command**: `dotnet clean && dotnet test`
+
+#### Issues Found
+- [x] Warning CS0219: Variable 'unused' is declared but never used
+- [ ] Warning CS8602: Dereference of a possibly null reference
+- [ ] Test failure: ServiceTests.Update_ShouldValidateInput
+- [ ] Test failure: ServiceTests.Delete_ShouldCheckPermissions
+- [ ] Test failure: RepositoryTests.GetAll_ShouldFilterInactive
+
+#### Fix Task Created
+**CHECKPOINT FIX - Category 3:** Fix service tests and null reference warning
+`[Implemented: abc123 | Started: 2024-03-15 14:35 | Finished: 2024-03-15 15:20 | Duration: 0h 45m]`
+- **Issue**: 3 tests failing due to missing mock setup, 2 build warnings
+- **Root Cause**: Forgot to mock IAuthorizationService in tests, unused variable from refactoring
+- **Fix Applied**: Added proper mock setup, removed unused variable, fixed null check
+- **Lesson Learned**: Always check for required mocks when adding authorization checks
+
+### 🔄 Category 3 Health Check (Re-run)
+**Date/Time**: 2024-03-15 15:25
+**Status**: ✅ PASSED
+
+#### Build Status
+- **Build Result**: ✅ Success
+- **Warning Count**: 0 warnings
+
+#### Test Status
+- **Total Tests**: 523
+- **Passed**: 523
+- **Failed**: 0
+
+#### Verification
+- [x] All tests passing
+- [x] Build successful with no errors
+- [x] Zero warnings maintained
+- [x] Ready to proceed to Category 4
 
 ## 🔄 Mid-Implementation Checkpoint
 - [ ] All tests still passing (`dotnet test`)
