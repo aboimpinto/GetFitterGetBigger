@@ -145,8 +145,8 @@ And the response should contain both active and inactive objectives
 - **Task 1.2:** Create WorkoutCategory entity model `[Implemented: 2ee8fa22 | Started: 2025-07-13 02:47 | Finished: 2025-07-13 02:48 | Duration: 0h 1m | Est: 45m]`
 - **Task 1.3:** Create ExecutionProtocol entity model `[Implemented: d2f5e2c2 | Started: 2025-07-13 02:48 | Finished: 2025-07-13 02:50 | Duration: 0h 2m | Est: 45m]`
 - **Task 1.4:** Create WorkoutMuscles relationship entity model `[Implemented: a88328a8 | Started: 2025-07-13 02:50 | Finished: 2025-07-13 07:22 | Duration: 0h 32m | Est: 45m]`
-- **Task 1.5:** Create WorkoutObjectiveDto and response models `[InProgress: Started: 2025-07-13 07:30]` (Est: 30m)
-- **Task 1.6:** Create WorkoutCategoryDto and response models `[ReadyToDevelop]` (Est: 30m)
+- **Task 1.5:** Create WorkoutObjectiveDto and response models `[Implemented: ed1aa9ff | Started: 2025-07-13 07:30 | Finished: 2025-07-13 07:37 | Duration: 0h 7m | Est: 30m]`
+- **Task 1.6:** Create WorkoutCategoryDto and response models `[InProgress: Started: 2025-07-13 07:38]` (Est: 30m)
 - **Task 1.7:** Create ExecutionProtocolDto and response models `[ReadyToDevelop]` (Est: 30m)
 - **Task 1.8:** Write unit tests for DTOs and mapping logic `[ReadyToDevelop]` (Est: 30m)
 
