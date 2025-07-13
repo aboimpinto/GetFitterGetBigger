@@ -24,6 +24,13 @@ public interface IExecutionProtocolService
     Task<IEnumerable<ExecutionProtocolDto>> GetAllAsDtosAsync();
     
     /// <summary>
+    /// Get all execution protocols as ExecutionProtocolDto (with option to include inactive)
+    /// </summary>
+    /// <param name="includeInactive">Whether to include inactive protocols</param>
+    /// <returns>Collection of execution protocol DTOs</returns>
+    Task<IEnumerable<ExecutionProtocolDto>> GetAllAsExecutionProtocolDtosAsync(bool includeInactive = false);
+    
+    /// <summary>
     /// Get execution protocol by ID
     /// </summary>
     /// <param name="id">The execution protocol ID</param>
@@ -36,6 +43,14 @@ public interface IExecutionProtocolService
     /// <param name="id">The execution protocol ID as string</param>
     /// <returns>The execution protocol DTO or null if not found</returns>
     Task<ExecutionProtocolDto?> GetByIdAsDtoAsync(string id);
+    
+    /// <summary>
+    /// Get execution protocol by ID as ExecutionProtocolDto (with option to include inactive)
+    /// </summary>
+    /// <param name="id">The execution protocol ID as string</param>
+    /// <param name="includeInactive">Whether to include inactive protocols</param>
+    /// <returns>The execution protocol DTO or null if not found</returns>
+    Task<ExecutionProtocolDto?> GetByIdAsExecutionProtocolDtoAsync(string id, bool includeInactive = false);
     
     /// <summary>
     /// Get execution protocol by value

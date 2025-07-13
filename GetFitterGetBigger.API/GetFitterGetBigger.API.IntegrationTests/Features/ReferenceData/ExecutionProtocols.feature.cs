@@ -88,7 +88,7 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.ReferenceData
                         "DisplayOrder",
                         "IsActive"});
             table1.AddRow(new string[] {
-                        "executionprotocol-11111111-1111-1111-1111-111111111111",
+                        "executionprotocol-30000003-3000-4000-8000-300000000001",
                         "Standard",
                         "Standard protocol with balanced rep and time components",
                         "STANDARD",
@@ -99,7 +99,7 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.ReferenceData
                         "1",
                         "true"});
             table1.AddRow(new string[] {
-                        "executionprotocol-22222222-2222-2222-2222-222222222222",
+                        "executionprotocol-30000003-3000-4000-8000-300000000002",
                         "Superset",
                         "Perform exercises back-to-back without rest",
                         "SUPERSET",
@@ -110,7 +110,7 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.ReferenceData
                         "2",
                         "true"});
             table1.AddRow(new string[] {
-                        "executionprotocol-33333333-3333-3333-3333-333333333333",
+                        "executionprotocol-30000003-3000-4000-8000-300000000003",
                         "Drop Set",
                         "Reduce weight after reaching failure",
                         "DROP_SET",
@@ -121,7 +121,7 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.ReferenceData
                         "3",
                         "true"});
             table1.AddRow(new string[] {
-                        "executionprotocol-44444444-4444-4444-4444-444444444444",
+                        "executionprotocol-30000003-3000-4000-8000-300000000004",
                         "AMRAP",
                         "As Many Reps As Possible in given time",
                         "AMRAP",
@@ -268,15 +268,15 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.ReferenceData
             {
                 await this.ScenarioStartAsync();
                 await this.FeatureBackgroundAsync();
-                await testRunner.WhenAsync("I send a GET request to \"/api/execution-protocols/executionprotocol-11111111-1111" +
-                        "-1111-1111-111111111111\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
+                await testRunner.WhenAsync("I send a GET request to \"/api/execution-protocols/executionprotocol-30000003-3000" +
+                        "-4000-8000-300000000001\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
                 await testRunner.ThenAsync("the response status should be 200", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
                 TechTalk.SpecFlow.Table table3 = new TechTalk.SpecFlow.Table(new string[] {
                             "Field",
                             "Value"});
                 table3.AddRow(new string[] {
                             "executionProtocolId",
-                            "executionprotocol-11111111-1111-1111-1111-111111111111"});
+                            "executionprotocol-30000003-3000-4000-8000-300000000001"});
                 table3.AddRow(new string[] {
                             "value",
                             "Standard"});
@@ -394,7 +394,7 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.ReferenceData
                             "Value"});
                 table6.AddRow(new string[] {
                             "executionProtocolId",
-                            "executionprotocol-11111111-1111-1111-1111-111111111111"});
+                            "executionprotocol-30000003-3000-4000-8000-300000000001"});
                 table6.AddRow(new string[] {
                             "value",
                             "Standard"});

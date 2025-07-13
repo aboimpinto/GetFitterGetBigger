@@ -6,10 +6,10 @@ Feature: Execution Protocols Reference Data
   Background:
     Given the following execution protocols exist in the database:
       | ExecutionProtocolId                           | Value      | Description                                    | Code       | TimeBase | RepBase | RestPattern                      | IntensityLevel | DisplayOrder | IsActive |
-      | executionprotocol-11111111-1111-1111-1111-111111111111 | Standard   | Standard protocol with balanced rep and time components | STANDARD   | true     | true    | 60-90 seconds between sets       | Moderate to High | 1            | true     |
-      | executionprotocol-22222222-2222-2222-2222-222222222222 | Superset   | Perform exercises back-to-back without rest    | SUPERSET   | false    | true    | Rest after completing both exercises | High           | 2            | true     |
-      | executionprotocol-33333333-3333-3333-3333-333333333333 | Drop Set   | Reduce weight after reaching failure           | DROP_SET   | false    | true    | Minimal rest between drops       | Very High      | 3            | true     |
-      | executionprotocol-44444444-4444-4444-4444-444444444444 | AMRAP      | As Many Reps As Possible in given time        | AMRAP      | true     | false   | Fixed rest periods               | High           | 4            | true     |
+      | executionprotocol-30000003-3000-4000-8000-300000000001 | Standard   | Standard protocol with balanced rep and time components | STANDARD   | true     | true    | 60-90 seconds between sets       | Moderate to High | 1            | true     |
+      | executionprotocol-30000003-3000-4000-8000-300000000002 | Superset   | Perform exercises back-to-back without rest    | SUPERSET   | false    | true    | Rest after completing both exercises | High           | 2            | true     |
+      | executionprotocol-30000003-3000-4000-8000-300000000003 | Drop Set   | Reduce weight after reaching failure           | DROP_SET   | false    | true    | Minimal rest between drops       | Very High      | 3            | true     |
+      | executionprotocol-30000003-3000-4000-8000-300000000004 | AMRAP      | As Many Reps As Possible in given time        | AMRAP      | true     | false   | Fixed rest periods               | High           | 4            | true     |
       | executionprotocol-55555555-5555-5555-5555-555555555555 | Inactive   | This protocol is no longer used                | INACTIVE   | false    | false   | N/A                              | N/A            | 5            | false    |
 
   Scenario: Get all active execution protocols
@@ -38,11 +38,11 @@ Feature: Execution Protocols Reference Data
     And the response should include both active and inactive protocols
 
   Scenario: Get execution protocol by valid ID
-    When I send a GET request to "/api/execution-protocols/executionprotocol-11111111-1111-1111-1111-111111111111"
+    When I send a GET request to "/api/execution-protocols/executionprotocol-30000003-3000-4000-8000-300000000001"
     Then the response status should be 200
     And the response should contain an execution protocol with:
       | Field              | Value                                                  |
-      | executionProtocolId | executionprotocol-11111111-1111-1111-1111-111111111111 |
+      | executionProtocolId | executionprotocol-30000003-3000-4000-8000-300000000001 |
       | value              | Standard                                               |
       | description        | Standard protocol with balanced rep and time components |
       | code               | STANDARD                                               |
@@ -72,7 +72,7 @@ Feature: Execution Protocols Reference Data
     Then the response status should be 200
     And the response should contain an execution protocol with:
       | Field              | Value                                                  |
-      | executionProtocolId | executionprotocol-11111111-1111-1111-1111-111111111111 |
+      | executionProtocolId | executionprotocol-30000003-3000-4000-8000-300000000001 |
       | value              | Standard                                               |
       | code               | STANDARD                                               |
       | isActive           | true                                                   |

@@ -78,6 +78,47 @@ public class ExecutionProtocolService : IExecutionProtocolService
     }
     
     /// <inheritdoc />
+    public async Task<IEnumerable<ExecutionProtocolDto>> GetAllAsExecutionProtocolDtosAsync(bool includeInactive = false)
+    {
+        var cacheKey = CacheKeyGenerator.GetAllKey($"{CacheKeyPrefix}_{(includeInactive ? "All" : "Active")}");
+        var cached = await _cacheService.GetAsync<IEnumerable<ExecutionProtocolDto>>(cacheKey);
+        if (cached != null)
+        {
+            _logger.LogDebug("Cache hit for key: {CacheKey}", cacheKey);
+            return cached;
+        }
+        
+        using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
+        var repository = unitOfWork.GetRepository<IExecutionProtocolRepository>();
+        
+        var protocols = includeInactive 
+            ? await repository.GetAllAsync() 
+            : await repository.GetAllActiveAsync();
+            
+        var dtoList = protocols
+            .OrderBy(ep => ep.DisplayOrder)
+            .Select(ep => new ExecutionProtocolDto
+            {
+                ExecutionProtocolId = ep.Id.ToString(),
+                Value = ep.Value,
+                Description = ep.Description,
+                Code = ep.Code,
+                TimeBase = ep.TimeBase,
+                RepBase = ep.RepBase,
+                RestPattern = ep.RestPattern,
+                IntensityLevel = ep.IntensityLevel,
+                DisplayOrder = ep.DisplayOrder,
+                IsActive = ep.IsActive
+            })
+            .ToList();
+        
+        await _cacheService.SetAsync(cacheKey, dtoList, CacheDuration);
+        _logger.LogDebug("Cached {Count} execution protocol DTOs with key: {CacheKey}", dtoList.Count, cacheKey);
+        
+        return dtoList;
+    }
+    
+    /// <inheritdoc />
     public async Task<ExecutionProtocol?> GetByIdAsync(ExecutionProtocolId id)
     {
         if (id.IsEmpty)
@@ -133,6 +174,53 @@ public class ExecutionProtocolService : IExecutionProtocolService
             DisplayOrder = protocol.DisplayOrder,
             IsActive = protocol.IsActive
         };
+    }
+    
+    /// <inheritdoc />
+    public async Task<ExecutionProtocolDto?> GetByIdAsExecutionProtocolDtoAsync(string id, bool includeInactive = false)
+    {
+        var protocolId = ExecutionProtocolId.From(id);
+        if (protocolId.IsEmpty)
+        {
+            _logger.LogWarning("Invalid execution protocol ID format: {Id}", id);
+            return null;
+        }
+        
+        var cacheKey = CacheKeyGenerator.GetByIdKey($"{CacheKeyPrefix}_{(includeInactive ? "All" : "Active")}", id);
+        var cached = await _cacheService.GetAsync<ExecutionProtocolDto>(cacheKey);
+        if (cached != null)
+        {
+            _logger.LogDebug("Cache hit for key: {CacheKey}", cacheKey);
+            return cached;
+        }
+        
+        using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
+        var repository = unitOfWork.GetRepository<IExecutionProtocolRepository>();
+        var protocol = await repository.GetByIdAsync(protocolId);
+        
+        if (protocol == null || (!includeInactive && !protocol.IsActive))
+        {
+            return null;
+        }
+        
+        var dto = new ExecutionProtocolDto
+        {
+            ExecutionProtocolId = protocol.Id.ToString(),
+            Value = protocol.Value,
+            Description = protocol.Description,
+            Code = protocol.Code,
+            TimeBase = protocol.TimeBase,
+            RepBase = protocol.RepBase,
+            RestPattern = protocol.RestPattern,
+            IntensityLevel = protocol.IntensityLevel,
+            DisplayOrder = protocol.DisplayOrder,
+            IsActive = protocol.IsActive
+        };
+        
+        await _cacheService.SetAsync(cacheKey, dto, CacheDuration);
+        _logger.LogDebug("Cached execution protocol DTO with key: {CacheKey}", cacheKey);
+        
+        return dto;
     }
     
     /// <inheritdoc />

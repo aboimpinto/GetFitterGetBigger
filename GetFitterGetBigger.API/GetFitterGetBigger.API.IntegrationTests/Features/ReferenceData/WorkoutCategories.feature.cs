@@ -86,7 +86,7 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.ReferenceData
                         "DisplayOrder",
                         "IsActive"});
             table12.AddRow(new string[] {
-                        "workoutcategory-11111111-1111-1111-1111-111111111111",
+                        "workoutcategory-20000002-2000-4000-8000-200000000001",
                         "Upper Body - Push",
                         "Push exercises targeting chest, shoulders, and triceps",
                         "💪",
@@ -95,7 +95,7 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.ReferenceData
                         "1",
                         "true"});
             table12.AddRow(new string[] {
-                        "workoutcategory-22222222-2222-2222-2222-222222222222",
+                        "workoutcategory-20000002-2000-4000-8000-200000000002",
                         "Upper Body - Pull",
                         "Pull exercises targeting back and biceps",
                         "🏋️",
@@ -104,7 +104,7 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.ReferenceData
                         "2",
                         "true"});
             table12.AddRow(new string[] {
-                        "workoutcategory-33333333-3333-3333-3333-333333333333",
+                        "workoutcategory-20000002-2000-4000-8000-200000000003",
                         "Lower Body",
                         "Lower body exercises for legs and glutes",
                         "🦵",
@@ -113,7 +113,7 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.ReferenceData
                         "3",
                         "true"});
             table12.AddRow(new string[] {
-                        "workoutcategory-44444444-4444-4444-4444-444444444444",
+                        "workoutcategory-20000002-2000-4000-8000-200000000004",
                         "Core",
                         "Core stability and strength exercises",
                         "🎯",
@@ -122,13 +122,22 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.ReferenceData
                         "4",
                         "true"});
             table12.AddRow(new string[] {
+                        "workoutcategory-20000002-2000-4000-8000-200000000005",
+                        "Full Body",
+                        "Compound exercises engaging multiple muscle groups",
+                        "🏃",
+                        "#FF9800",
+                        "Multiple",
+                        "5",
+                        "true"});
+            table12.AddRow(new string[] {
                         "workoutcategory-55555555-5555-5555-5555-555555555555",
                         "Inactive Category",
                         "This category is no longer used",
                         "❌",
                         "#757575",
                         "None",
-                        "5",
+                        "6",
                         "false"});
             await testRunner.GivenAsync("the following workout categories exist in the database:", ((string)(null)), table12, "Given ");
         }
@@ -162,7 +171,7 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.ReferenceData
                 await this.FeatureBackgroundAsync();
                 await testRunner.WhenAsync("I send a GET request to \"/api/workout-categories\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
                 await testRunner.ThenAsync("the response status should be 200", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
-                await testRunner.AndAsync("the response should contain 4 workout categories", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
+                await testRunner.AndAsync("the response should contain 5 workout categories", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
                 TechTalk.SpecFlow.Table table13 = new TechTalk.SpecFlow.Table(new string[] {
                             "Field",
                             "Type",
@@ -225,7 +234,7 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.ReferenceData
                 await this.FeatureBackgroundAsync();
                 await testRunner.WhenAsync("I send a GET request to \"/api/workout-categories?includeInactive=true\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
                 await testRunner.ThenAsync("the response status should be 200", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
-                await testRunner.AndAsync("the response should contain 5 workout categories", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
+                await testRunner.AndAsync("the response should contain 6 workout categories", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
                 await testRunner.AndAsync("the response should include both active and inactive categories", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
             }
             await this.ScenarioCleanupAsync();
@@ -248,15 +257,15 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.ReferenceData
             {
                 await this.ScenarioStartAsync();
                 await this.FeatureBackgroundAsync();
-                await testRunner.WhenAsync("I send a GET request to \"/api/workout-categories/workoutcategory-11111111-1111-11" +
-                        "11-1111-111111111111\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
+                await testRunner.WhenAsync("I send a GET request to \"/api/workout-categories/workoutcategory-20000002-2000-40" +
+                        "00-8000-200000000001\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
                 await testRunner.ThenAsync("the response status should be 200", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
                 TechTalk.SpecFlow.Table table14 = new TechTalk.SpecFlow.Table(new string[] {
                             "Field",
                             "Value"});
                 table14.AddRow(new string[] {
                             "workoutCategoryId",
-                            "workoutcategory-11111111-1111-1111-1111-111111111111"});
+                            "workoutcategory-20000002-2000-4000-8000-200000000001"});
                 table14.AddRow(new string[] {
                             "value",
                             "Upper Body - Push"});

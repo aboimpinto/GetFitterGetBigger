@@ -71,6 +71,42 @@ public class WorkoutObjectiveService : IWorkoutObjectiveService
     }
     
     /// <inheritdoc />
+    public async Task<IEnumerable<WorkoutObjectiveDto>> GetAllAsWorkoutObjectiveDtosAsync(bool includeInactive = false)
+    {
+        var cacheKey = CacheKeyGenerator.GetAllKey($"{CacheKeyPrefix}_{(includeInactive ? "All" : "Active")}");
+        var cached = await _cacheService.GetAsync<IEnumerable<WorkoutObjectiveDto>>(cacheKey);
+        if (cached != null)
+        {
+            _logger.LogDebug("Cache hit for key: {CacheKey}", cacheKey);
+            return cached;
+        }
+        
+        using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
+        var repository = unitOfWork.GetRepository<IWorkoutObjectiveRepository>();
+        
+        var objectives = includeInactive 
+            ? await repository.GetAllAsync() 
+            : await repository.GetAllActiveAsync();
+            
+        var dtoList = objectives
+            .OrderBy(wo => wo.DisplayOrder)
+            .Select(wo => new WorkoutObjectiveDto
+            {
+                WorkoutObjectiveId = wo.Id.ToString(),
+                Value = wo.Value,
+                Description = wo.Description,
+                DisplayOrder = wo.DisplayOrder,
+                IsActive = wo.IsActive
+            })
+            .ToList();
+        
+        await _cacheService.SetAsync(cacheKey, dtoList, CacheDuration);
+        _logger.LogDebug("Cached {Count} workout objective DTOs with key: {CacheKey}", dtoList.Count, cacheKey);
+        
+        return dtoList;
+    }
+    
+    /// <inheritdoc />
     public async Task<WorkoutObjective?> GetByIdAsync(WorkoutObjectiveId id)
     {
         if (id.IsEmpty)
@@ -119,6 +155,48 @@ public class WorkoutObjectiveService : IWorkoutObjectiveService
             Value = objective.Value,
             Description = objective.Description
         };
+    }
+    
+    /// <inheritdoc />
+    public async Task<WorkoutObjectiveDto?> GetByIdAsWorkoutObjectiveDtoAsync(string id, bool includeInactive = false)
+    {
+        var objectiveId = WorkoutObjectiveId.From(id);
+        if (objectiveId.IsEmpty)
+        {
+            _logger.LogWarning("Invalid workout objective ID format: {Id}", id);
+            return null;
+        }
+        
+        var cacheKey = CacheKeyGenerator.GetByIdKey($"{CacheKeyPrefix}_{(includeInactive ? "All" : "Active")}", id);
+        var cached = await _cacheService.GetAsync<WorkoutObjectiveDto>(cacheKey);
+        if (cached != null)
+        {
+            _logger.LogDebug("Cache hit for key: {CacheKey}", cacheKey);
+            return cached;
+        }
+        
+        using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
+        var repository = unitOfWork.GetRepository<IWorkoutObjectiveRepository>();
+        var objective = await repository.GetByIdAsync(objectiveId);
+        
+        if (objective == null || (!includeInactive && !objective.IsActive))
+        {
+            return null;
+        }
+        
+        var dto = new WorkoutObjectiveDto
+        {
+            WorkoutObjectiveId = objective.Id.ToString(),
+            Value = objective.Value,
+            Description = objective.Description,
+            DisplayOrder = objective.DisplayOrder,
+            IsActive = objective.IsActive
+        };
+        
+        await _cacheService.SetAsync(cacheKey, dto, CacheDuration);
+        _logger.LogDebug("Cached workout objective DTO with key: {CacheKey}", cacheKey);
+        
+        return dto;
     }
     
     /// <inheritdoc />

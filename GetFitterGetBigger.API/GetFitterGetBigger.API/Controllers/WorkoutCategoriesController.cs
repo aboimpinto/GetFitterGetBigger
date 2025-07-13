@@ -31,51 +31,74 @@ public class WorkoutCategoriesController : ControllerBase
     }
 
     /// <summary>
-    /// Gets all active workout categories
+    /// Gets all workout categories
     /// </summary>
-    /// <returns>A collection of active workout categories</returns>
+    /// <param name="includeInactive">Optional parameter to include inactive categories (default: false)</param>
+    /// <returns>A collection of workout categories</returns>
     /// <response code="200">Returns the collection of workout categories</response>
     /// <response code="401">If the user is not authenticated</response>
     [HttpGet]
-    [ProducesResponseType(typeof(IEnumerable<WorkoutCategoryDto>), StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public async Task<IActionResult> GetAllWorkoutCategories()
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetAllWorkoutCategories([FromQuery] bool includeInactive = false)
     {
-        _logger.LogInformation("Getting all workout categories");
+        _logger.LogInformation("Getting all workout categories (includeInactive: {IncludeInactive})", includeInactive);
         
-        var categories = await _workoutCategoryService.GetAllAsDtosAsync();
+        var categories = await _workoutCategoryService.GetAllAsWorkoutCategoryDtosAsync(includeInactive);
+        var response = new WorkoutCategoriesResponseDto
+        {
+            WorkoutCategories = categories.ToList()
+        };
         
         _logger.LogInformation("Retrieved {Count} workout categories", categories.Count());
         
-        return Ok(categories);
+        // Set cache headers for reference data (1 hour cache)
+        if (Response != null)
+        {
+            Response.Headers.CacheControl = "public, max-age=3600";
+        }
+        
+        return Ok(response);
     }
 
     /// <summary>
     /// Gets a workout category by ID
     /// </summary>
     /// <param name="id">The ID of the workout category in the format "workoutcategory-{guid}"</param>
+    /// <param name="includeInactive">Optional parameter to include inactive categories (default: false)</param>
     /// <returns>The workout category if found</returns>
     /// <response code="200">Returns the workout category</response>
     /// <response code="400">If the ID format is invalid</response>
     /// <response code="401">If the user is not authenticated</response>
     /// <response code="404">If the workout category is not found</response>
     [HttpGet("{id}")]
-    [ProducesResponseType(typeof(WorkoutCategoryDto), StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> GetWorkoutCategoryById(string id)
+    public async Task<IActionResult> GetWorkoutCategoryById(string id, [FromQuery] bool includeInactive = false)
     {
-        _logger.LogInformation("Getting workout category by ID: {Id}", id);
+        _logger.LogInformation("Getting workout category by ID: {Id} (includeInactive: {IncludeInactive})", id, includeInactive);
         
-        var category = await _workoutCategoryService.GetByIdAsDtoAsync(id);
-        
-        if (category == null)
+        try
         {
-            _logger.LogWarning("Workout category not found: {Id}", id);
-            return NotFound(new { message = $"Workout category with ID '{id}' not found" });
+            var category = await _workoutCategoryService.GetByIdAsWorkoutCategoryDtoAsync(id, includeInactive);
+            
+            if (category == null)
+            {
+                _logger.LogWarning("Workout category not found: {Id}", id);
+                return NotFound(new { message = "Workout category not found" });
+            }
+            
+            // Set cache headers for reference data (1 hour cache)
+            if (Response != null)
+            {
+                Response.Headers.CacheControl = "public, max-age=3600";
+            }
+            
+            return Ok(category);
         }
-        
-        return Ok(category);
+        catch (ArgumentException ex)
+        {
+            _logger.LogWarning("Invalid workout category ID format: {Id}. Error: {Error}", id, ex.Message);
+            return NotFound(new { message = "Workout category not found" });
+        }
     }
 }

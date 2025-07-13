@@ -24,6 +24,13 @@ public interface IWorkoutCategoryService
     Task<IEnumerable<WorkoutCategoryDto>> GetAllAsDtosAsync();
     
     /// <summary>
+    /// Get all workout categories as WorkoutCategoryDto (with option to include inactive)
+    /// </summary>
+    /// <param name="includeInactive">Whether to include inactive categories</param>
+    /// <returns>Collection of workout category DTOs</returns>
+    Task<IEnumerable<WorkoutCategoryDto>> GetAllAsWorkoutCategoryDtosAsync(bool includeInactive = false);
+    
+    /// <summary>
     /// Get workout category by ID
     /// </summary>
     /// <param name="id">The workout category ID</param>
@@ -36,6 +43,14 @@ public interface IWorkoutCategoryService
     /// <param name="id">The workout category ID as string</param>
     /// <returns>The workout category DTO or null if not found</returns>
     Task<WorkoutCategoryDto?> GetByIdAsDtoAsync(string id);
+    
+    /// <summary>
+    /// Get workout category by ID as WorkoutCategoryDto (with option to include inactive)
+    /// </summary>
+    /// <param name="id">The workout category ID as string</param>
+    /// <param name="includeInactive">Whether to include inactive categories</param>
+    /// <returns>The workout category DTO or null if not found</returns>
+    Task<WorkoutCategoryDto?> GetByIdAsWorkoutCategoryDtoAsync(string id, bool includeInactive = false);
     
     /// <summary>
     /// Get workout category by value

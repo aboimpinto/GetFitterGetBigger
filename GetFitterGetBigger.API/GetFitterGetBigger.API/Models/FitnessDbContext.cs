@@ -29,6 +29,7 @@ public class FitnessDbContext : DbContext
     public DbSet<WorkoutObjective> WorkoutObjectives => Set<WorkoutObjective>();
     public DbSet<WorkoutCategory> WorkoutCategories => Set<WorkoutCategory>();
     public DbSet<ExecutionProtocol> ExecutionProtocols => Set<ExecutionProtocol>();
+    public DbSet<WorkoutMuscles> WorkoutMuscles => Set<WorkoutMuscles>();
     
     // Linking entities
     public DbSet<ExerciseMovementPattern> ExerciseMovementPatterns => Set<ExerciseMovementPattern>();
@@ -204,6 +205,18 @@ public class FitnessDbContext : DbContext
             .HasConversion(
                 id => (Guid)id,
                 guid => ExecutionProtocolId.From(guid));
+                
+        modelBuilder.Entity<WorkoutMuscles>()
+            .Property(wm => wm.Id)
+            .HasConversion(
+                id => (Guid)id,
+                guid => WorkoutMusclesId.From(guid));
+                
+        modelBuilder.Entity<WorkoutMuscles>()
+            .Property(wm => wm.MuscleGroupId)
+            .HasConversion(
+                id => (Guid)id,
+                guid => MuscleGroupId.From(guid));
                 
         // Foreign key ID conversions
         modelBuilder.Entity<WorkoutLog>()
@@ -871,6 +884,131 @@ public class FitnessDbContext : DbContext
                 "No Weight",
                 "Exercises that do not use weight as a metric",
                 5,
+                true)
+        );
+        
+        // Seed WorkoutObjectives
+        modelBuilder.Entity<WorkoutObjective>().HasData(
+            WorkoutObjective.Handler.Create(
+                WorkoutObjectiveId.From(Guid.Parse("10000001-1000-4000-8000-100000000001")),
+                "Muscular Strength",
+                "Build maximum strength through heavy loads and low repetitions",
+                1,
+                true),
+            WorkoutObjective.Handler.Create(
+                WorkoutObjectiveId.From(Guid.Parse("10000001-1000-4000-8000-100000000002")),
+                "Muscular Hypertrophy",
+                "Increase muscle size through moderate loads and volume",
+                2,
+                true),
+            WorkoutObjective.Handler.Create(
+                WorkoutObjectiveId.From(Guid.Parse("10000001-1000-4000-8000-100000000003")),
+                "Muscular Endurance",
+                "Improve ability to sustain effort over time",
+                3,
+                true),
+            WorkoutObjective.Handler.Create(
+                WorkoutObjectiveId.From(Guid.Parse("10000001-1000-4000-8000-100000000004")),
+                "Power Development",
+                "Develop explosive strength and speed",
+                4,
+                true)
+        );
+        
+        // Seed WorkoutCategories
+        modelBuilder.Entity<WorkoutCategory>().HasData(
+            WorkoutCategory.Handler.Create(
+                WorkoutCategoryId.From(Guid.Parse("20000002-2000-4000-8000-200000000001")),
+                "Upper Body - Push",
+                "Push exercises targeting chest, shoulders, and triceps",
+                "💪",
+                "#FF5722",
+                "Chest,Shoulders,Triceps",
+                1,
+                true),
+            WorkoutCategory.Handler.Create(
+                WorkoutCategoryId.From(Guid.Parse("20000002-2000-4000-8000-200000000002")),
+                "Upper Body - Pull",
+                "Pull exercises targeting back and biceps",
+                "🏋️",
+                "#4CAF50",
+                "Back,Biceps",
+                2,
+                true),
+            WorkoutCategory.Handler.Create(
+                WorkoutCategoryId.From(Guid.Parse("20000002-2000-4000-8000-200000000003")),
+                "Lower Body",
+                "Lower body exercises for legs and glutes",
+                "🦵",
+                "#2196F3",
+                "Quadriceps,Hamstrings,Glutes,Calves",
+                3,
+                true),
+            WorkoutCategory.Handler.Create(
+                WorkoutCategoryId.From(Guid.Parse("20000002-2000-4000-8000-200000000004")),
+                "Core",
+                "Core stability and strength exercises",
+                "🎯",
+                "#9C27B0",
+                "Abs,Obliques,Lower Back",
+                4,
+                true),
+            WorkoutCategory.Handler.Create(
+                WorkoutCategoryId.From(Guid.Parse("20000002-2000-4000-8000-200000000005")),
+                "Full Body",
+                "Compound exercises engaging multiple muscle groups",
+                "🏃",
+                "#FF9800",
+                "Multiple",
+                5,
+                true)
+        );
+        
+        // Seed ExecutionProtocols
+        modelBuilder.Entity<ExecutionProtocol>().HasData(
+            ExecutionProtocol.Handler.Create(
+                ExecutionProtocolId.From(Guid.Parse("30000003-3000-4000-8000-300000000001")),
+                "Standard",
+                "Standard protocol with balanced rep and time components",
+                "STANDARD",
+                true,
+                true,
+                "60-90 seconds between sets",
+                "Moderate to High",
+                1,
+                true),
+            ExecutionProtocol.Handler.Create(
+                ExecutionProtocolId.From(Guid.Parse("30000003-3000-4000-8000-300000000002")),
+                "Superset",
+                "Perform exercises back-to-back without rest",
+                "SUPERSET",
+                false,
+                true,
+                "Rest after completing both exercises",
+                "High",
+                2,
+                true),
+            ExecutionProtocol.Handler.Create(
+                ExecutionProtocolId.From(Guid.Parse("30000003-3000-4000-8000-300000000003")),
+                "Drop Set",
+                "Reduce weight after reaching failure",
+                "DROP_SET",
+                false,
+                true,
+                "Minimal rest between drops",
+                "Very High",
+                3,
+                true),
+            ExecutionProtocol.Handler.Create(
+                ExecutionProtocolId.From(Guid.Parse("30000003-3000-4000-8000-300000000004")),
+                "AMRAP",
+                "As Many Reps As Possible in given time",
+                "AMRAP",
+                true,
+                false,
+                "Fixed rest periods",
+                "High",
+                4,
                 true)
         );
     }

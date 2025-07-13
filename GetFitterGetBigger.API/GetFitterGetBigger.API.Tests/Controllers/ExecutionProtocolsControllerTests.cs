@@ -37,16 +37,16 @@ public class ExecutionProtocolsControllerTests
             ExecutionProtocolDtoTestBuilder.Standard().Build(),
             ExecutionProtocolDtoTestBuilder.Superset().Build()
         };
-        _mockService.Setup(s => s.GetAllAsDtosAsync()).ReturnsAsync(protocols);
+        _mockService.Setup(s => s.GetAllAsExecutionProtocolDtosAsync(false)).ReturnsAsync(protocols);
 
         // Act
         var result = await _controller.GetAllExecutionProtocols();
 
         // Assert
         var okResult = Assert.IsType<OkObjectResult>(result);
-        var returnedProtocols = Assert.IsAssignableFrom<IEnumerable<ExecutionProtocolDto>>(okResult.Value);
-        Assert.Equal(2, returnedProtocols.Count());
-        _mockService.Verify(s => s.GetAllAsDtosAsync(), Times.Once);
+        var response = Assert.IsType<ExecutionProtocolsResponseDto>(okResult.Value);
+        Assert.Equal(2, response.ExecutionProtocols.Count);
+        _mockService.Verify(s => s.GetAllAsExecutionProtocolDtosAsync(false), Times.Once);
     }
 
     [Fact]
@@ -55,7 +55,7 @@ public class ExecutionProtocolsControllerTests
         // Arrange
         var id = TestIds.ExecutionProtocolIds.Standard;
         var protocol = ExecutionProtocolDtoTestBuilder.Standard().Build();
-        _mockService.Setup(s => s.GetByIdAsDtoAsync(id)).ReturnsAsync(protocol);
+        _mockService.Setup(s => s.GetByIdAsExecutionProtocolDtoAsync(id, false)).ReturnsAsync(protocol);
 
         // Act
         var result = await _controller.GetExecutionProtocolById(id);
@@ -66,7 +66,7 @@ public class ExecutionProtocolsControllerTests
         Assert.Equal(id, returnedProtocol.ExecutionProtocolId);
         Assert.Equal("Standard", returnedProtocol.Value);
         Assert.Equal("STANDARD", returnedProtocol.Code);
-        _mockService.Verify(s => s.GetByIdAsDtoAsync(id), Times.Once);
+        _mockService.Verify(s => s.GetByIdAsExecutionProtocolDtoAsync(id, false), Times.Once);
     }
 
     [Fact]
@@ -74,7 +74,7 @@ public class ExecutionProtocolsControllerTests
     {
         // Arrange
         var id = ExecutionProtocolId.From(TestIds.NotFoundId);
-        _mockService.Setup(s => s.GetByIdAsDtoAsync(id.ToString())).ReturnsAsync((ExecutionProtocolDto?)null);
+        _mockService.Setup(s => s.GetByIdAsExecutionProtocolDtoAsync(id.ToString(), false)).ReturnsAsync((ExecutionProtocolDto?)null);
 
         // Act
         var result = await _controller.GetExecutionProtocolById(id.ToString());
@@ -83,7 +83,7 @@ public class ExecutionProtocolsControllerTests
         var notFoundResult = Assert.IsType<NotFoundObjectResult>(result);
         var response = notFoundResult.Value;
         Assert.NotNull(response);
-        _mockService.Verify(s => s.GetByIdAsDtoAsync(id.ToString()), Times.Once);
+        _mockService.Verify(s => s.GetByIdAsExecutionProtocolDtoAsync(id.ToString(), false), Times.Once);
     }
 
     [Fact]
@@ -127,15 +127,15 @@ public class ExecutionProtocolsControllerTests
     {
         // Arrange
         var protocols = new List<ExecutionProtocolDto>();
-        _mockService.Setup(s => s.GetAllAsDtosAsync()).ReturnsAsync(protocols);
+        _mockService.Setup(s => s.GetAllAsExecutionProtocolDtosAsync(false)).ReturnsAsync(protocols);
 
         // Act
         var result = await _controller.GetAllExecutionProtocols();
 
         // Assert
         var okResult = Assert.IsType<OkObjectResult>(result);
-        var returnedProtocols = Assert.IsAssignableFrom<IEnumerable<ExecutionProtocolDto>>(okResult.Value);
-        Assert.Empty(returnedProtocols);
+        var response = Assert.IsType<ExecutionProtocolsResponseDto>(okResult.Value);
+        Assert.Empty(response.ExecutionProtocols);
         _mockLogger.Verify(
             x => x.Log(
                 LogLevel.Information,

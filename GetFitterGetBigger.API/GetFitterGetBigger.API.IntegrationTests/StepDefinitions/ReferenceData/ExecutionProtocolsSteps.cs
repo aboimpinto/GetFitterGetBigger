@@ -36,31 +36,9 @@ public class ExecutionProtocolsSteps
     {
         await _fixture.ExecuteDbContextAsync(async context =>
         {
-            // Clear existing execution protocols
-            var existingProtocols = await context.ExecutionProtocols.ToListAsync();
-            context.ExecutionProtocols.RemoveRange(existingProtocols);
-            await context.SaveChangesAsync();
-
-            // Add new execution protocols
-            foreach (var row in table.Rows)
-            {
-                var protocol = ExecutionProtocol.Handler.Create(
-                    ExecutionProtocolId.From(row["ExecutionProtocolId"]),
-                    row["Value"],
-                    row.ContainsKey("Description") ? row["Description"] : null,
-                    row["Code"],
-                    bool.Parse(row["TimeBase"]),
-                    bool.Parse(row["RepBase"]),
-                    row.ContainsKey("RestPattern") ? row["RestPattern"] : null,
-                    row.ContainsKey("IntensityLevel") ? row["IntensityLevel"] : null,
-                    int.Parse(row["DisplayOrder"]),
-                    bool.Parse(row["IsActive"])
-                );
-                
-                context.ExecutionProtocols.Add(protocol);
-            }
-            
-            await context.SaveChangesAsync();
+            // Use seeded data via TestDatabaseSeeder
+            var seeder = new TestDatabaseSeeder(context);
+            await seeder.SeedExecutionProtocolsAsync();
         });
     }
 
@@ -101,7 +79,23 @@ public class ExecutionProtocolsSteps
                 var fieldType = row["Type"];
                 var isRequired = bool.Parse(row["Required"]);
                 
-                var property = typeof(ExecutionProtocolDto).GetProperty(fieldName);
+                // Map camelCase field names to PascalCase property names
+                var propertyName = fieldName switch
+                {
+                    "executionProtocolId" => "ExecutionProtocolId",
+                    "value" => "Value", 
+                    "description" => "Description",
+                    "code" => "Code",
+                    "timeBase" => "TimeBase",
+                    "repBase" => "RepBase",
+                    "restPattern" => "RestPattern",
+                    "intensityLevel" => "IntensityLevel",
+                    "displayOrder" => "DisplayOrder",
+                    "isActive" => "IsActive",
+                    _ => fieldName
+                };
+                
+                var property = typeof(ExecutionProtocolDto).GetProperty(propertyName);
                 property.Should().NotBeNull($"Field {fieldName} should exist");
                 
                 if (isRequired)
@@ -167,33 +161,74 @@ public class ExecutionProtocolsSteps
             var fieldName = row["Field"];
             var expectedValue = row["Value"];
             
-            var property = typeof(ExecutionProtocolDto).GetProperty(fieldName);
+            // Map camelCase field names to PascalCase property names
+            var propertyName = fieldName switch
+            {
+                "executionProtocolId" => "ExecutionProtocolId",
+                "value" => "Value", 
+                "description" => "Description",
+                "code" => "Code",
+                "timeBase" => "TimeBase",
+                "repBase" => "RepBase",
+                "restPattern" => "RestPattern",
+                "intensityLevel" => "IntensityLevel",
+                "displayOrder" => "DisplayOrder",
+                "isActive" => "IsActive",
+                _ => fieldName
+            };
+            
+            var property = typeof(ExecutionProtocolDto).GetProperty(propertyName);
             property.Should().NotBeNull($"Field {fieldName} should exist");
             
-            var actualValue = property!.GetValue(_executionProtocolResult)?.ToString();
+            var value = property!.GetValue(_executionProtocolResult);
+            var actualValue = value is bool boolValue ? boolValue.ToString().ToLower() : value?.ToString();
             actualValue.Should().Be(expectedValue, $"Field {fieldName} should have value {expectedValue}");
         }
     }
 
     [Then(@"at least one protocol should have both timeBase and repBase as true")]
-    public void ThenAtLeastOneProtocolShouldHaveBothTimeBaseAndRepBaseAsTrue()
+    public async Task ThenAtLeastOneProtocolShouldHaveBothTimeBaseAndRepBaseAsTrue()
     {
+        // If response wasn't parsed yet, parse it now
+        if (_executionProtocolsResponse == null)
+        {
+            var response = _scenarioContext.GetLastResponse();
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+            _executionProtocolsResponse = await response.Content.ReadFromJsonAsync<ExecutionProtocolsResponseDto>();
+        }
+        
         _executionProtocolsResponse.Should().NotBeNull();
         _executionProtocolsResponse!.ExecutionProtocols
             .Should().Contain(x => x.TimeBase == true && x.RepBase == true);
     }
 
     [Then(@"at least one protocol should have timeBase true and repBase false")]
-    public void ThenAtLeastOneProtocolShouldHaveTimeBaseTrueAndRepBaseFalse()
+    public async Task ThenAtLeastOneProtocolShouldHaveTimeBaseTrueAndRepBaseFalse()
     {
+        // If response wasn't parsed yet, parse it now
+        if (_executionProtocolsResponse == null)
+        {
+            var response = _scenarioContext.GetLastResponse();
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+            _executionProtocolsResponse = await response.Content.ReadFromJsonAsync<ExecutionProtocolsResponseDto>();
+        }
+        
         _executionProtocolsResponse.Should().NotBeNull();
         _executionProtocolsResponse!.ExecutionProtocols
             .Should().Contain(x => x.TimeBase == true && x.RepBase == false);
     }
 
     [Then(@"at least one protocol should have timeBase false and repBase true")]
-    public void ThenAtLeastOneProtocolShouldHaveTimeBaseFalseAndRepBaseTrue()
+    public async Task ThenAtLeastOneProtocolShouldHaveTimeBaseFalseAndRepBaseTrue()
     {
+        // If response wasn't parsed yet, parse it now
+        if (_executionProtocolsResponse == null)
+        {
+            var response = _scenarioContext.GetLastResponse();
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+            _executionProtocolsResponse = await response.Content.ReadFromJsonAsync<ExecutionProtocolsResponseDto>();
+        }
+        
         _executionProtocolsResponse.Should().NotBeNull();
         _executionProtocolsResponse!.ExecutionProtocols
             .Should().Contain(x => x.TimeBase == false && x.RepBase == true);

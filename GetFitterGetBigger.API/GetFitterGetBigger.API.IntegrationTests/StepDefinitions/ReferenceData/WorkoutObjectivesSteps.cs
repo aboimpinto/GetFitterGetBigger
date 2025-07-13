@@ -23,7 +23,7 @@ public class WorkoutObjectivesSteps
     private readonly ScenarioContext _scenarioContext;
     private readonly PostgreSqlTestFixture _fixture;
     private WorkoutObjectivesResponseDto? _workoutObjectivesResponse;
-    private ReferenceDataDto? _workoutObjectiveResult;
+    private WorkoutObjectiveDto? _workoutObjectiveResult;
     private Dictionary<string, object>? _errorResponse;
 
     public WorkoutObjectivesSteps(ScenarioContext scenarioContext, PostgreSqlTestFixture fixture)
@@ -37,26 +37,9 @@ public class WorkoutObjectivesSteps
     {
         await _fixture.ExecuteDbContextAsync(async context =>
         {
-            // Clear existing workout objectives
-            var existingObjectives = await context.WorkoutObjectives.ToListAsync();
-            context.WorkoutObjectives.RemoveRange(existingObjectives);
-            await context.SaveChangesAsync();
-
-            // Add new workout objectives
-            foreach (var row in table.Rows)
-            {
-                var objective = WorkoutObjective.Handler.Create(
-                    WorkoutObjectiveId.From(row["WorkoutObjectiveId"]),
-                    row["Value"],
-                    row.ContainsKey("Description") ? row["Description"] : null,
-                    int.Parse(row["DisplayOrder"]),
-                    bool.Parse(row["IsActive"])
-                );
-                
-                context.WorkoutObjectives.Add(objective);
-            }
-            
-            await context.SaveChangesAsync();
+            // Use seeded data via TestDatabaseSeeder
+            var seeder = new TestDatabaseSeeder(context);
+            await seeder.SeedWorkoutObjectivesAsync();
         });
     }
 
@@ -83,7 +66,18 @@ public class WorkoutObjectivesSteps
                 var fieldName = row["Field"];
                 var isRequired = bool.Parse(row["Required"]);
                 
-                var property = typeof(ReferenceDataDto).GetProperty(fieldName);
+                // Map camelCase field names to PascalCase property names
+                var propertyName = fieldName switch
+                {
+                    "workoutObjectiveId" => "WorkoutObjectiveId",
+                    "value" => "Value", 
+                    "description" => "Description",
+                    "displayOrder" => "DisplayOrder",
+                    "isActive" => "IsActive",
+                    _ => fieldName
+                };
+                
+                var property = typeof(WorkoutObjectiveDto).GetProperty(propertyName);
                 property.Should().NotBeNull($"Field {fieldName} should exist");
                 
                 if (isRequired)
@@ -126,7 +120,7 @@ public class WorkoutObjectivesSteps
         var response = _scenarioContext.GetLastResponse();
         response.StatusCode.Should().Be(HttpStatusCode.OK);
         
-        _workoutObjectiveResult = await response.Content.ReadFromJsonAsync<ReferenceDataDto>();
+        _workoutObjectiveResult = await response.Content.ReadFromJsonAsync<WorkoutObjectiveDto>();
         _workoutObjectiveResult.Should().NotBeNull();
         
         foreach (var row in table.Rows)
@@ -134,10 +128,22 @@ public class WorkoutObjectivesSteps
             var fieldName = row["Field"];
             var expectedValue = row["Value"];
             
-            var property = typeof(ReferenceDataDto).GetProperty(fieldName);
+            // Map camelCase field names to PascalCase property names
+            var propertyName = fieldName switch
+            {
+                "workoutObjectiveId" => "WorkoutObjectiveId",
+                "value" => "Value", 
+                "description" => "Description",
+                "displayOrder" => "DisplayOrder",
+                "isActive" => "IsActive",
+                _ => fieldName
+            };
+            
+            var property = typeof(WorkoutObjectiveDto).GetProperty(propertyName);
             property.Should().NotBeNull($"Field {fieldName} should exist");
             
-            var actualValue = property!.GetValue(_workoutObjectiveResult)?.ToString();
+            var value = property!.GetValue(_workoutObjectiveResult);
+            var actualValue = value is bool boolValue ? boolValue.ToString().ToLower() : value?.ToString();
             actualValue.Should().Be(expectedValue, $"Field {fieldName} should have value {expectedValue}");
         }
     }

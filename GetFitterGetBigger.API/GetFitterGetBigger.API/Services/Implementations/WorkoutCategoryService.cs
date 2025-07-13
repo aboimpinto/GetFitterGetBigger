@@ -76,6 +76,45 @@ public class WorkoutCategoryService : IWorkoutCategoryService
     }
     
     /// <inheritdoc />
+    public async Task<IEnumerable<WorkoutCategoryDto>> GetAllAsWorkoutCategoryDtosAsync(bool includeInactive = false)
+    {
+        var cacheKey = CacheKeyGenerator.GetAllKey($"{CacheKeyPrefix}_{(includeInactive ? "All" : "Active")}");
+        var cached = await _cacheService.GetAsync<IEnumerable<WorkoutCategoryDto>>(cacheKey);
+        if (cached != null)
+        {
+            _logger.LogDebug("Cache hit for key: {CacheKey}", cacheKey);
+            return cached;
+        }
+        
+        using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
+        var repository = unitOfWork.GetRepository<IWorkoutCategoryRepository>();
+        
+        var categories = includeInactive 
+            ? await repository.GetAllAsync() 
+            : await repository.GetAllActiveAsync();
+            
+        var dtoList = categories
+            .OrderBy(wc => wc.DisplayOrder)
+            .Select(wc => new WorkoutCategoryDto
+            {
+                WorkoutCategoryId = wc.Id.ToString(),
+                Value = wc.Value,
+                Description = wc.Description,
+                Icon = wc.Icon,
+                Color = wc.Color,
+                PrimaryMuscleGroups = wc.PrimaryMuscleGroups,
+                DisplayOrder = wc.DisplayOrder,
+                IsActive = wc.IsActive
+            })
+            .ToList();
+        
+        await _cacheService.SetAsync(cacheKey, dtoList, CacheDuration);
+        _logger.LogDebug("Cached {Count} workout category DTOs with key: {CacheKey}", dtoList.Count, cacheKey);
+        
+        return dtoList;
+    }
+    
+    /// <inheritdoc />
     public async Task<WorkoutCategory?> GetByIdAsync(WorkoutCategoryId id)
     {
         if (id.IsEmpty)
@@ -129,6 +168,51 @@ public class WorkoutCategoryService : IWorkoutCategoryService
             DisplayOrder = category.DisplayOrder,
             IsActive = category.IsActive
         };
+    }
+    
+    /// <inheritdoc />
+    public async Task<WorkoutCategoryDto?> GetByIdAsWorkoutCategoryDtoAsync(string id, bool includeInactive = false)
+    {
+        var categoryId = WorkoutCategoryId.From(id);
+        if (categoryId.IsEmpty)
+        {
+            _logger.LogWarning("Invalid workout category ID format: {Id}", id);
+            return null;
+        }
+        
+        var cacheKey = CacheKeyGenerator.GetByIdKey($"{CacheKeyPrefix}_{(includeInactive ? "All" : "Active")}", id);
+        var cached = await _cacheService.GetAsync<WorkoutCategoryDto>(cacheKey);
+        if (cached != null)
+        {
+            _logger.LogDebug("Cache hit for key: {CacheKey}", cacheKey);
+            return cached;
+        }
+        
+        using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
+        var repository = unitOfWork.GetRepository<IWorkoutCategoryRepository>();
+        var category = await repository.GetByIdAsync(categoryId);
+        
+        if (category == null || (!includeInactive && !category.IsActive))
+        {
+            return null;
+        }
+        
+        var dto = new WorkoutCategoryDto
+        {
+            WorkoutCategoryId = category.Id.ToString(),
+            Value = category.Value,
+            Description = category.Description,
+            Icon = category.Icon,
+            Color = category.Color,
+            PrimaryMuscleGroups = category.PrimaryMuscleGroups,
+            DisplayOrder = category.DisplayOrder,
+            IsActive = category.IsActive
+        };
+        
+        await _cacheService.SetAsync(cacheKey, dto, CacheDuration);
+        _logger.LogDebug("Cached workout category DTO with key: {CacheKey}", cacheKey);
+        
+        return dto;
     }
     
     /// <inheritdoc />

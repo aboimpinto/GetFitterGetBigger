@@ -259,6 +259,60 @@ namespace GetFitterGetBigger.API.Migrations
                         .HasDatabaseName("IX_ExecutionProtocol_Value");
 
                     b.ToTable("ExecutionProtocols");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("30000003-3000-4000-8000-300000000001"),
+                            Code = "STANDARD",
+                            Description = "Standard protocol with balanced rep and time components",
+                            DisplayOrder = 1,
+                            IntensityLevel = "Moderate to High",
+                            IsActive = true,
+                            RepBase = true,
+                            RestPattern = "60-90 seconds between sets",
+                            TimeBase = true,
+                            Value = "Standard"
+                        },
+                        new
+                        {
+                            Id = new Guid("30000003-3000-4000-8000-300000000002"),
+                            Code = "SUPERSET",
+                            Description = "Perform exercises back-to-back without rest",
+                            DisplayOrder = 2,
+                            IntensityLevel = "High",
+                            IsActive = true,
+                            RepBase = true,
+                            RestPattern = "Rest after completing both exercises",
+                            TimeBase = false,
+                            Value = "Superset"
+                        },
+                        new
+                        {
+                            Id = new Guid("30000003-3000-4000-8000-300000000003"),
+                            Code = "DROP_SET",
+                            Description = "Reduce weight after reaching failure",
+                            DisplayOrder = 3,
+                            IntensityLevel = "Very High",
+                            IsActive = true,
+                            RepBase = true,
+                            RestPattern = "Minimal rest between drops",
+                            TimeBase = false,
+                            Value = "Drop Set"
+                        },
+                        new
+                        {
+                            Id = new Guid("30000003-3000-4000-8000-300000000004"),
+                            Code = "AMRAP",
+                            Description = "As Many Reps As Possible in given time",
+                            DisplayOrder = 4,
+                            IntensityLevel = "High",
+                            IsActive = true,
+                            RepBase = false,
+                            RestPattern = "Fixed rest periods",
+                            TimeBase = true,
+                            Value = "AMRAP"
+                        });
                 });
 
             modelBuilder.Entity("GetFitterGetBigger.API.Models.Entities.Exercise", b =>
@@ -819,6 +873,63 @@ namespace GetFitterGetBigger.API.Migrations
                         .HasDatabaseName("IX_WorkoutCategory_Value");
 
                     b.ToTable("WorkoutCategories");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("20000002-2000-4000-8000-200000000001"),
+                            Color = "#FF5722",
+                            Description = "Push exercises targeting chest, shoulders, and triceps",
+                            DisplayOrder = 1,
+                            Icon = "💪",
+                            IsActive = true,
+                            PrimaryMuscleGroups = "Chest,Shoulders,Triceps",
+                            Value = "Upper Body - Push"
+                        },
+                        new
+                        {
+                            Id = new Guid("20000002-2000-4000-8000-200000000002"),
+                            Color = "#4CAF50",
+                            Description = "Pull exercises targeting back and biceps",
+                            DisplayOrder = 2,
+                            Icon = "🏋️",
+                            IsActive = true,
+                            PrimaryMuscleGroups = "Back,Biceps",
+                            Value = "Upper Body - Pull"
+                        },
+                        new
+                        {
+                            Id = new Guid("20000002-2000-4000-8000-200000000003"),
+                            Color = "#2196F3",
+                            Description = "Lower body exercises for legs and glutes",
+                            DisplayOrder = 3,
+                            Icon = "🦵",
+                            IsActive = true,
+                            PrimaryMuscleGroups = "Quadriceps,Hamstrings,Glutes,Calves",
+                            Value = "Lower Body"
+                        },
+                        new
+                        {
+                            Id = new Guid("20000002-2000-4000-8000-200000000004"),
+                            Color = "#9C27B0",
+                            Description = "Core stability and strength exercises",
+                            DisplayOrder = 4,
+                            Icon = "🎯",
+                            IsActive = true,
+                            PrimaryMuscleGroups = "Abs,Obliques,Lower Back",
+                            Value = "Core"
+                        },
+                        new
+                        {
+                            Id = new Guid("20000002-2000-4000-8000-200000000005"),
+                            Color = "#FF9800",
+                            Description = "Compound exercises engaging multiple muscle groups",
+                            DisplayOrder = 5,
+                            Icon = "🏃",
+                            IsActive = true,
+                            PrimaryMuscleGroups = "Multiple",
+                            Value = "Full Body"
+                        });
                 });
 
             modelBuilder.Entity("GetFitterGetBigger.API.Models.Entities.WorkoutLog", b =>
@@ -881,6 +992,33 @@ namespace GetFitterGetBigger.API.Migrations
                     b.ToTable("WorkoutLogSets");
                 });
 
+            modelBuilder.Entity("GetFitterGetBigger.API.Models.Entities.WorkoutMuscles", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("EngagementLevel")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<int>("LoadEstimation")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("MuscleGroupId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("WorkoutTemplateId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("MuscleGroupId");
+
+                    b.ToTable("WorkoutMuscles");
+                });
+
             modelBuilder.Entity("GetFitterGetBigger.API.Models.Entities.WorkoutObjective", b =>
                 {
                     b.Property<Guid>("Id")
@@ -907,6 +1045,40 @@ namespace GetFitterGetBigger.API.Migrations
                         .HasDatabaseName("IX_WorkoutObjective_Value");
 
                     b.ToTable("WorkoutObjectives");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("10000001-1000-4000-8000-100000000001"),
+                            Description = "Build maximum strength through heavy loads and low repetitions",
+                            DisplayOrder = 1,
+                            IsActive = true,
+                            Value = "Muscular Strength"
+                        },
+                        new
+                        {
+                            Id = new Guid("10000001-1000-4000-8000-100000000002"),
+                            Description = "Increase muscle size through moderate loads and volume",
+                            DisplayOrder = 2,
+                            IsActive = true,
+                            Value = "Muscular Hypertrophy"
+                        },
+                        new
+                        {
+                            Id = new Guid("10000001-1000-4000-8000-100000000003"),
+                            Description = "Improve ability to sustain effort over time",
+                            DisplayOrder = 3,
+                            IsActive = true,
+                            Value = "Muscular Endurance"
+                        },
+                        new
+                        {
+                            Id = new Guid("10000001-1000-4000-8000-100000000004"),
+                            Description = "Develop explosive strength and speed",
+                            DisplayOrder = 4,
+                            IsActive = true,
+                            Value = "Power Development"
+                        });
                 });
 
             modelBuilder.Entity("GetFitterGetBigger.API.Models.Entities.Claim", b =>
@@ -1161,6 +1333,17 @@ namespace GetFitterGetBigger.API.Migrations
                     b.Navigation("Exercise");
 
                     b.Navigation("WorkoutLog");
+                });
+
+            modelBuilder.Entity("GetFitterGetBigger.API.Models.Entities.WorkoutMuscles", b =>
+                {
+                    b.HasOne("GetFitterGetBigger.API.Models.Entities.MuscleGroup", "MuscleGroup")
+                        .WithMany()
+                        .HasForeignKey("MuscleGroupId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("MuscleGroup");
                 });
 
             modelBuilder.Entity("GetFitterGetBigger.API.Models.Entities.DifficultyLevel", b =>

@@ -13,6 +13,12 @@ public interface IReferenceDataRepository<TEntity, TId> : IRepository
     where TId : struct
 {
     /// <summary>
+    /// Gets all reference data items (active and inactive) ordered by display order
+    /// </summary>
+    /// <returns>A collection of all reference data items</returns>
+    Task<IEnumerable<TEntity>> GetAllAsync();
+    
+    /// <summary>
     /// Gets all active reference data items ordered by display order
     /// </summary>
     /// <returns>A collection of active reference data items</returns>

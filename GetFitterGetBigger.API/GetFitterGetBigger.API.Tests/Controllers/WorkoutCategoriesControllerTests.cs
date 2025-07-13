@@ -37,16 +37,16 @@ public class WorkoutCategoriesControllerTests
             WorkoutCategoryDtoTestBuilder.UpperBodyPush().Build(),
             WorkoutCategoryDtoTestBuilder.UpperBodyPull().Build()
         };
-        _mockService.Setup(s => s.GetAllAsDtosAsync()).ReturnsAsync(categories);
+        _mockService.Setup(s => s.GetAllAsWorkoutCategoryDtosAsync(false)).ReturnsAsync(categories);
 
         // Act
         var result = await _controller.GetAllWorkoutCategories();
 
         // Assert
         var okResult = Assert.IsType<OkObjectResult>(result);
-        var returnedCategories = Assert.IsAssignableFrom<IEnumerable<WorkoutCategoryDto>>(okResult.Value);
-        Assert.Equal(2, returnedCategories.Count());
-        _mockService.Verify(s => s.GetAllAsDtosAsync(), Times.Once);
+        var response = Assert.IsType<WorkoutCategoriesResponseDto>(okResult.Value);
+        Assert.Equal(2, response.WorkoutCategories.Count);
+        _mockService.Verify(s => s.GetAllAsWorkoutCategoryDtosAsync(false), Times.Once);
     }
 
     [Fact]
@@ -55,7 +55,7 @@ public class WorkoutCategoriesControllerTests
         // Arrange
         var id = TestIds.WorkoutCategoryIds.UpperBodyPush;
         var category = WorkoutCategoryDtoTestBuilder.UpperBodyPush().Build();
-        _mockService.Setup(s => s.GetByIdAsDtoAsync(id)).ReturnsAsync(category);
+        _mockService.Setup(s => s.GetByIdAsWorkoutCategoryDtoAsync(id, false)).ReturnsAsync(category);
 
         // Act
         var result = await _controller.GetWorkoutCategoryById(id);
@@ -66,7 +66,7 @@ public class WorkoutCategoriesControllerTests
         Assert.Equal(id, returnedCategory.WorkoutCategoryId);
         Assert.Equal("Upper Body - Push", returnedCategory.Value);
         Assert.Equal("💪", returnedCategory.Icon);
-        _mockService.Verify(s => s.GetByIdAsDtoAsync(id), Times.Once);
+        _mockService.Verify(s => s.GetByIdAsWorkoutCategoryDtoAsync(id, false), Times.Once);
     }
 
     [Fact]
@@ -74,7 +74,7 @@ public class WorkoutCategoriesControllerTests
     {
         // Arrange
         var id = WorkoutCategoryId.From(TestIds.NotFoundId);
-        _mockService.Setup(s => s.GetByIdAsDtoAsync(id.ToString())).ReturnsAsync((WorkoutCategoryDto?)null);
+        _mockService.Setup(s => s.GetByIdAsWorkoutCategoryDtoAsync(id.ToString(), false)).ReturnsAsync((WorkoutCategoryDto?)null);
 
         // Act
         var result = await _controller.GetWorkoutCategoryById(id.ToString());
@@ -83,7 +83,7 @@ public class WorkoutCategoriesControllerTests
         var notFoundResult = Assert.IsType<NotFoundObjectResult>(result);
         var response = notFoundResult.Value;
         Assert.NotNull(response);
-        _mockService.Verify(s => s.GetByIdAsDtoAsync(id.ToString()), Times.Once);
+        _mockService.Verify(s => s.GetByIdAsWorkoutCategoryDtoAsync(id.ToString(), false), Times.Once);
     }
 
     [Fact]
@@ -91,15 +91,15 @@ public class WorkoutCategoriesControllerTests
     {
         // Arrange
         var categories = new List<WorkoutCategoryDto>();
-        _mockService.Setup(s => s.GetAllAsDtosAsync()).ReturnsAsync(categories);
+        _mockService.Setup(s => s.GetAllAsWorkoutCategoryDtosAsync(false)).ReturnsAsync(categories);
 
         // Act
         var result = await _controller.GetAllWorkoutCategories();
 
         // Assert
         var okResult = Assert.IsType<OkObjectResult>(result);
-        var returnedCategories = Assert.IsAssignableFrom<IEnumerable<WorkoutCategoryDto>>(okResult.Value);
-        Assert.Empty(returnedCategories);
+        var response = Assert.IsType<WorkoutCategoriesResponseDto>(okResult.Value);
+        Assert.Empty(response.WorkoutCategories);
         _mockLogger.Verify(
             x => x.Log(
                 LogLevel.Information,

@@ -20,6 +20,16 @@ public abstract class ReferenceDataRepository<TEntity, TId, TContext> :
     where TContext : DbContext
 {
     /// <summary>
+    /// Gets all reference data items (active and inactive) ordered by display order
+    /// </summary>
+    /// <returns>A collection of all reference data items</returns>
+    public async Task<IEnumerable<TEntity>> GetAllAsync() =>
+        await Context.Set<TEntity>()
+            .AsNoTracking()
+            .OrderBy(x => x.DisplayOrder)
+            .ToListAsync();
+
+    /// <summary>
     /// Gets all active reference data items ordered by display order
     /// </summary>
     /// <returns>A collection of active reference data items</returns>

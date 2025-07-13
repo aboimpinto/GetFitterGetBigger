@@ -6,16 +6,17 @@ Feature: Workout Categories Reference Data
   Background:
     Given the following workout categories exist in the database:
       | WorkoutCategoryId                            | Value              | Description                                        | Icon | Color   | PrimaryMuscleGroups             | DisplayOrder | IsActive |
-      | workoutcategory-11111111-1111-1111-1111-111111111111 | Upper Body - Push  | Push exercises targeting chest, shoulders, and triceps | 💪   | #FF5722 | Chest,Shoulders,Triceps         | 1            | true     |
-      | workoutcategory-22222222-2222-2222-2222-222222222222 | Upper Body - Pull  | Pull exercises targeting back and biceps           | 🏋️   | #4CAF50 | Back,Biceps                     | 2            | true     |
-      | workoutcategory-33333333-3333-3333-3333-333333333333 | Lower Body         | Lower body exercises for legs and glutes           | 🦵   | #2196F3 | Quadriceps,Hamstrings,Glutes,Calves | 3            | true     |
-      | workoutcategory-44444444-4444-4444-4444-444444444444 | Core               | Core stability and strength exercises              | 🎯   | #9C27B0 | Abs,Obliques,Lower Back         | 4            | true     |
-      | workoutcategory-55555555-5555-5555-5555-555555555555 | Inactive Category  | This category is no longer used                    | ❌   | #757575 | None                            | 5            | false    |
+      | workoutcategory-20000002-2000-4000-8000-200000000001 | Upper Body - Push  | Push exercises targeting chest, shoulders, and triceps | 💪   | #FF5722 | Chest,Shoulders,Triceps         | 1            | true     |
+      | workoutcategory-20000002-2000-4000-8000-200000000002 | Upper Body - Pull  | Pull exercises targeting back and biceps           | 🏋️   | #4CAF50 | Back,Biceps                     | 2            | true     |
+      | workoutcategory-20000002-2000-4000-8000-200000000003 | Lower Body         | Lower body exercises for legs and glutes           | 🦵   | #2196F3 | Quadriceps,Hamstrings,Glutes,Calves | 3            | true     |
+      | workoutcategory-20000002-2000-4000-8000-200000000004 | Core               | Core stability and strength exercises              | 🎯   | #9C27B0 | Abs,Obliques,Lower Back         | 4            | true     |
+      | workoutcategory-20000002-2000-4000-8000-200000000005 | Full Body          | Compound exercises engaging multiple muscle groups | 🏃   | #FF9800 | Multiple                        | 5            | true     |
+      | workoutcategory-55555555-5555-5555-5555-555555555555 | Inactive Category  | This category is no longer used                    | ❌   | #757575 | None                            | 6            | false    |
 
   Scenario: Get all active workout categories
     When I send a GET request to "/api/workout-categories"
     Then the response status should be 200
-    And the response should contain 4 workout categories
+    And the response should contain 5 workout categories
     And each workout category should have the following fields:
       | Field               | Type    | Required |
       | workoutCategoryId   | string  | true     |
@@ -32,15 +33,15 @@ Feature: Workout Categories Reference Data
   Scenario: Get all workout categories including inactive
     When I send a GET request to "/api/workout-categories?includeInactive=true"
     Then the response status should be 200
-    And the response should contain 5 workout categories
+    And the response should contain 6 workout categories
     And the response should include both active and inactive categories
 
   Scenario: Get workout category by valid ID
-    When I send a GET request to "/api/workout-categories/workoutcategory-11111111-1111-1111-1111-111111111111"
+    When I send a GET request to "/api/workout-categories/workoutcategory-20000002-2000-4000-8000-200000000001"
     Then the response status should be 200
     And the response should contain a workout category with:
       | Field               | Value                                                  |
-      | workoutCategoryId   | workoutcategory-11111111-1111-1111-1111-111111111111   |
+      | workoutCategoryId   | workoutcategory-20000002-2000-4000-8000-200000000001   |
       | value               | Upper Body - Push                                      |
       | description         | Push exercises targeting chest, shoulders, and triceps |
       | icon                | 💪                                                     |

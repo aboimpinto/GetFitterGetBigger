@@ -32,21 +32,21 @@ public class WorkoutObjectivesControllerTests
     public async Task GetAllWorkoutObjectives_ReturnsOkResultWithObjectives()
     {
         // Arrange
-        var objectives = new List<ReferenceDataDto>
+        var objectives = new List<WorkoutObjectiveDto>
         {
-            ReferenceDataDtoTestBuilder.MuscularStrength().Build(),
-            ReferenceDataDtoTestBuilder.MuscularHypertrophy().Build()
+            new WorkoutObjectiveDtoTestBuilder().WithMuscularStrength().Build(),
+            new WorkoutObjectiveDtoTestBuilder().WithMuscularHypertrophy().Build()
         };
-        _mockService.Setup(s => s.GetAllAsDtosAsync()).ReturnsAsync(objectives);
+        _mockService.Setup(s => s.GetAllAsWorkoutObjectiveDtosAsync(false)).ReturnsAsync(objectives);
 
         // Act
         var result = await _controller.GetAllWorkoutObjectives();
 
         // Assert
         var okResult = Assert.IsType<OkObjectResult>(result);
-        var returnedObjectives = Assert.IsAssignableFrom<IEnumerable<ReferenceDataDto>>(okResult.Value);
-        Assert.Equal(2, returnedObjectives.Count());
-        _mockService.Verify(s => s.GetAllAsDtosAsync(), Times.Once);
+        var response = Assert.IsType<WorkoutObjectivesResponseDto>(okResult.Value);
+        Assert.Equal(2, response.WorkoutObjectives.Count);
+        _mockService.Verify(s => s.GetAllAsWorkoutObjectiveDtosAsync(false), Times.Once);
     }
 
     [Fact]
@@ -54,18 +54,18 @@ public class WorkoutObjectivesControllerTests
     {
         // Arrange
         var id = TestIds.WorkoutObjectiveIds.MuscularStrength;
-        var objective = ReferenceDataDtoTestBuilder.MuscularStrength().Build();
-        _mockService.Setup(s => s.GetByIdAsDtoAsync(id)).ReturnsAsync(objective);
+        var objective = new WorkoutObjectiveDtoTestBuilder().WithMuscularStrength().Build();
+        _mockService.Setup(s => s.GetByIdAsWorkoutObjectiveDtoAsync(id, false)).ReturnsAsync(objective);
 
         // Act
         var result = await _controller.GetWorkoutObjectiveById(id);
 
         // Assert
         var okResult = Assert.IsType<OkObjectResult>(result);
-        var returnedObjective = Assert.IsType<ReferenceDataDto>(okResult.Value);
-        Assert.Equal(id, returnedObjective.Id);
+        var returnedObjective = Assert.IsType<WorkoutObjectiveDto>(okResult.Value);
+        Assert.Equal(id, returnedObjective.WorkoutObjectiveId);
         Assert.Equal("Muscular Strength", returnedObjective.Value);
-        _mockService.Verify(s => s.GetByIdAsDtoAsync(id), Times.Once);
+        _mockService.Verify(s => s.GetByIdAsWorkoutObjectiveDtoAsync(id, false), Times.Once);
     }
 
     [Fact]
@@ -73,7 +73,7 @@ public class WorkoutObjectivesControllerTests
     {
         // Arrange
         var id = WorkoutObjectiveId.From(TestIds.NotFoundId);
-        _mockService.Setup(s => s.GetByIdAsDtoAsync(id.ToString())).ReturnsAsync((ReferenceDataDto?)null);
+        _mockService.Setup(s => s.GetByIdAsWorkoutObjectiveDtoAsync(id.ToString(), false)).ReturnsAsync((WorkoutObjectiveDto?)null);
 
         // Act
         var result = await _controller.GetWorkoutObjectiveById(id.ToString());
@@ -82,23 +82,23 @@ public class WorkoutObjectivesControllerTests
         var notFoundResult = Assert.IsType<NotFoundObjectResult>(result);
         var response = notFoundResult.Value;
         Assert.NotNull(response);
-        _mockService.Verify(s => s.GetByIdAsDtoAsync(id.ToString()), Times.Once);
+        _mockService.Verify(s => s.GetByIdAsWorkoutObjectiveDtoAsync(id.ToString(), false), Times.Once);
     }
 
     [Fact]
     public async Task GetWorkoutObjectiveById_EmptyObjectiveList_LogsCorrectCount()
     {
         // Arrange
-        var objectives = new List<ReferenceDataDto>();
-        _mockService.Setup(s => s.GetAllAsDtosAsync()).ReturnsAsync(objectives);
+        var objectives = new List<WorkoutObjectiveDto>();
+        _mockService.Setup(s => s.GetAllAsWorkoutObjectiveDtosAsync(false)).ReturnsAsync(objectives);
 
         // Act
         var result = await _controller.GetAllWorkoutObjectives();
 
         // Assert
         var okResult = Assert.IsType<OkObjectResult>(result);
-        var returnedObjectives = Assert.IsAssignableFrom<IEnumerable<ReferenceDataDto>>(okResult.Value);
-        Assert.Empty(returnedObjectives);
+        var response = Assert.IsType<WorkoutObjectivesResponseDto>(okResult.Value);
+        Assert.Empty(response.WorkoutObjectives);
         _mockLogger.Verify(
             x => x.Log(
                 LogLevel.Information,

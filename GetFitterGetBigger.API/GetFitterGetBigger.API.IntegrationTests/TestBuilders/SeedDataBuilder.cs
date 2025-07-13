@@ -105,6 +105,32 @@ public class SeedDataBuilder
             public static readonly string Core = $"bodypart-{CoreBodyPartId}";
         }
 
+        public static class WorkoutObjectiveIds
+        {
+            public static readonly string MuscularStrength = $"workoutobjective-{MuscularStrengthObjectiveId}";
+            public static readonly string MuscularHypertrophy = $"workoutobjective-{MuscularHypertrophyObjectiveId}";
+            public static readonly string MuscularEndurance = $"workoutobjective-{MuscularEnduranceObjectiveId}";
+            public static readonly string PowerDevelopment = $"workoutobjective-{PowerDevelopmentObjectiveId}";
+        }
+
+        public static class WorkoutCategoryIds
+        {
+            public static readonly string UpperBodyPush = $"workoutcategory-{UpperBodyPushCategoryId}";
+            public static readonly string UpperBodyPull = $"workoutcategory-{UpperBodyPullCategoryId}";
+            public static readonly string LowerBody = $"workoutcategory-{LowerBodyCategoryId}";
+            public static readonly string Core = $"workoutcategory-{CoreCategoryId}";
+            public static readonly string FullBody = $"workoutcategory-{FullBodyCategoryId}";
+        }
+
+        public static class ExecutionProtocolIds
+        {
+            public static readonly string Standard = $"executionprotocol-{StandardProtocolId}";
+            public static readonly string Superset = $"executionprotocol-{SupersetProtocolId}";
+            public static readonly string DropSet = $"executionprotocol-{DropSetProtocolId}";
+            public static readonly string AMRAP = $"executionprotocol-{AMRAPProtocolId}";
+            public static readonly string RestPause = $"executionprotocol-{RestPauseProtocolId}";
+        }
+
         /// <summary>
         /// Generate a new GUID-based ID for the given entity type
         /// Use this when you need unique IDs that don't conflict with seeded data
@@ -184,6 +210,26 @@ public class SeedDataBuilder
         public static readonly Guid WeightRequiredWeightTypeId = Guid.Parse("c3d5c4b6-7b8c-6d9e-0f1a-2b3c4d5e6f7a");
         public static readonly Guid MachineWeightWeightTypeId = Guid.Parse("d4c6b5a7-8c9d-7e0f-1a2b-3c4d5e6f7a8b");
         public static readonly Guid NoWeightWeightTypeId = Guid.Parse("e5b7a698-9d0e-8f1a-2b3c-4d5e6f7a8b9c");
+        
+        // WorkoutObjectives - Using WO prefix for uniqueness
+        public static readonly Guid MuscularStrengthObjectiveId = Guid.Parse("10000001-1000-4000-8000-100000000001");
+        public static readonly Guid MuscularHypertrophyObjectiveId = Guid.Parse("10000001-1000-4000-8000-100000000002");
+        public static readonly Guid MuscularEnduranceObjectiveId = Guid.Parse("10000001-1000-4000-8000-100000000003");
+        public static readonly Guid PowerDevelopmentObjectiveId = Guid.Parse("10000001-1000-4000-8000-100000000004");
+        
+        // WorkoutCategories - Using WC prefix for uniqueness
+        public static readonly Guid UpperBodyPushCategoryId = Guid.Parse("20000002-2000-4000-8000-200000000001");
+        public static readonly Guid UpperBodyPullCategoryId = Guid.Parse("20000002-2000-4000-8000-200000000002");
+        public static readonly Guid LowerBodyCategoryId = Guid.Parse("20000002-2000-4000-8000-200000000003");
+        public static readonly Guid CoreCategoryId = Guid.Parse("20000002-2000-4000-8000-200000000004");
+        public static readonly Guid FullBodyCategoryId = Guid.Parse("20000002-2000-4000-8000-200000000005");
+        
+        // ExecutionProtocols - Using EP prefix for uniqueness
+        public static readonly Guid StandardProtocolId = Guid.Parse("30000003-3000-4000-8000-300000000001");
+        public static readonly Guid SupersetProtocolId = Guid.Parse("30000003-3000-4000-8000-300000000002");
+        public static readonly Guid DropSetProtocolId = Guid.Parse("30000003-3000-4000-8000-300000000003");
+        public static readonly Guid AMRAPProtocolId = Guid.Parse("30000003-3000-4000-8000-300000000004");
+        public static readonly Guid RestPauseProtocolId = Guid.Parse("30000003-3000-4000-8000-300000000005");
     }
     
     public SeedDataBuilder(FitnessDbContext context)
@@ -493,6 +539,97 @@ public class SeedDataBuilder
     }
     
     /// <summary>
+    /// Ensures WorkoutObjectives exist in the database. Only inserts if they don't already exist.
+    /// </summary>
+    public async Task<SeedDataBuilder> WithWorkoutObjectivesAsync()
+    {
+        var workoutObjectivesToCheck = new[]
+        {
+            (StandardIds.MuscularStrengthObjectiveId, "Muscular Strength", "Build maximum strength through heavy loads and low repetitions", 1, true),
+            (StandardIds.MuscularHypertrophyObjectiveId, "Muscular Hypertrophy", "Increase muscle size through moderate loads and volume", 2, true),
+            (StandardIds.MuscularEnduranceObjectiveId, "Muscular Endurance", "Improve ability to sustain effort over time", 3, true),
+            (StandardIds.PowerDevelopmentObjectiveId, "Power Development", "Develop explosive strength and speed", 4, true),
+            (Guid.Parse("55555555-5555-5555-5555-555555555555"), "Inactive Objective", "This objective is no longer used", 5, false)
+        };
+
+        foreach (var (id, value, description, displayOrder, isActive) in workoutObjectivesToCheck)
+        {
+            var workoutObjectiveId = WorkoutObjectiveId.From(id);
+            var exists = await _context.WorkoutObjectives.AnyAsync(wo => wo.Id == workoutObjectiveId);
+            
+            if (!exists)
+            {
+                var workoutObjective = WorkoutObjective.Handler.Create(workoutObjectiveId, value, description, displayOrder, isActive);
+                await _context.WorkoutObjectives.AddAsync(workoutObjective);
+            }
+        }
+        
+        await _context.SaveChangesAsync();
+        return this;
+    }
+    
+    /// <summary>
+    /// Ensures WorkoutCategories exist in the database. Only inserts if they don't already exist.
+    /// </summary>
+    public async Task<SeedDataBuilder> WithWorkoutCategoriesAsync()
+    {
+        var workoutCategoriesToCheck = new[]
+        {
+            (StandardIds.UpperBodyPushCategoryId, "Upper Body - Push", "Push exercises targeting chest, shoulders, and triceps", "💪", "#FF5722", "Chest,Shoulders,Triceps", 1, true),
+            (StandardIds.UpperBodyPullCategoryId, "Upper Body - Pull", "Pull exercises targeting back and biceps", "🏋️", "#4CAF50", "Back,Biceps", 2, true),
+            (StandardIds.LowerBodyCategoryId, "Lower Body", "Lower body exercises for legs and glutes", "🦵", "#2196F3", "Quadriceps,Hamstrings,Glutes,Calves", 3, true),
+            (StandardIds.CoreCategoryId, "Core", "Core stability and strength exercises", "🎯", "#9C27B0", "Abs,Obliques,Lower Back", 4, true),
+            (StandardIds.FullBodyCategoryId, "Full Body", "Compound exercises engaging multiple muscle groups", "🏃", "#FF9800", "Multiple", 5, true),
+            (Guid.Parse("55555555-5555-5555-5555-555555555555"), "Inactive Category", "This category is no longer used", "❌", "#757575", "None", 6, false)
+        };
+
+        foreach (var (id, value, description, icon, color, primaryMuscleGroups, displayOrder, isActive) in workoutCategoriesToCheck)
+        {
+            var workoutCategoryId = WorkoutCategoryId.From(id);
+            var exists = await _context.WorkoutCategories.AnyAsync(wc => wc.Id == workoutCategoryId);
+            
+            if (!exists)
+            {
+                var workoutCategory = WorkoutCategory.Handler.Create(workoutCategoryId, value, description, icon, color, primaryMuscleGroups, displayOrder, isActive);
+                await _context.WorkoutCategories.AddAsync(workoutCategory);
+            }
+        }
+        
+        await _context.SaveChangesAsync();
+        return this;
+    }
+    
+    /// <summary>
+    /// Ensures ExecutionProtocols exist in the database. Only inserts if they don't already exist.
+    /// </summary>
+    public async Task<SeedDataBuilder> WithExecutionProtocolsAsync()
+    {
+        var executionProtocolsToCheck = new[]
+        {
+            (StandardIds.StandardProtocolId, "Standard", "Standard protocol with balanced rep and time components", "STANDARD", true, true, "60-90 seconds between sets", "Moderate to High", 1, true),
+            (StandardIds.SupersetProtocolId, "Superset", "Perform exercises back-to-back without rest", "SUPERSET", false, true, "Rest after completing both exercises", "High", 2, true),
+            (StandardIds.DropSetProtocolId, "Drop Set", "Reduce weight after reaching failure", "DROP_SET", false, true, "Minimal rest between drops", "Very High", 3, true),
+            (StandardIds.AMRAPProtocolId, "AMRAP", "As Many Reps As Possible in given time", "AMRAP", true, false, "Fixed rest periods", "High", 4, true),
+            (Guid.Parse("55555555-5555-5555-5555-555555555555"), "Inactive", "This protocol is no longer used", "INACTIVE", false, false, "N/A", "N/A", 5, false)
+        };
+
+        foreach (var (id, value, description, code, timeBase, repBase, restPattern, intensityLevel, displayOrder, isActive) in executionProtocolsToCheck)
+        {
+            var executionProtocolId = ExecutionProtocolId.From(id);
+            var exists = await _context.ExecutionProtocols.AnyAsync(ep => ep.Id == executionProtocolId);
+            
+            if (!exists)
+            {
+                var executionProtocol = ExecutionProtocol.Handler.Create(executionProtocolId, value, description, code, timeBase, repBase, restPattern, intensityLevel, displayOrder, isActive);
+                await _context.ExecutionProtocols.AddAsync(executionProtocol);
+            }
+        }
+        
+        await _context.SaveChangesAsync();
+        return this;
+    }
+    
+    /// <summary>
     /// Ensures all reference data exists in the database.
     /// Calls all WithXXXAsync() methods in the correct dependency order.
     /// </summary>
@@ -508,6 +645,9 @@ public class SeedDataBuilder
         await WithMovementPatternsAsync();
         await WithExerciseTypesAsync();
         await WithExerciseWeightTypesAsync();
+        await WithWorkoutObjectivesAsync();
+        await WithWorkoutCategoriesAsync();
+        await WithExecutionProtocolsAsync();
         
         // Step 2: Tables that depend on others (MuscleGroups depends on BodyParts)
         await WithMuscleGroupsAsync();

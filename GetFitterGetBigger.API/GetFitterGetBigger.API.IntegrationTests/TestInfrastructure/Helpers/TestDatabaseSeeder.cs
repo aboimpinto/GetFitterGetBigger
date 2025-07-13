@@ -100,6 +100,30 @@ public class TestDatabaseSeeder
     }
     
     /// <summary>
+    /// Seeds specific workout objectives
+    /// </summary>
+    public async Task SeedWorkoutObjectivesAsync()
+    {
+        await _seedBuilder.WithWorkoutObjectivesAsync();
+    }
+    
+    /// <summary>
+    /// Seeds specific workout categories
+    /// </summary>
+    public async Task SeedWorkoutCategoriesAsync()
+    {
+        await _seedBuilder.WithWorkoutCategoriesAsync();
+    }
+    
+    /// <summary>
+    /// Seeds specific execution protocols
+    /// </summary>
+    public async Task SeedExecutionProtocolsAsync()
+    {
+        await _seedBuilder.WithExecutionProtocolsAsync();
+    }
+    
+    /// <summary>
     /// Clears all non-reference data from the database
     /// </summary>
     public async Task ClearTestDataAsync()

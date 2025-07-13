@@ -24,6 +24,13 @@ public interface IWorkoutObjectiveService
     Task<IEnumerable<ReferenceDataDto>> GetAllAsDtosAsync();
     
     /// <summary>
+    /// Get all workout objectives as WorkoutObjectiveDto (with option to include inactive)
+    /// </summary>
+    /// <param name="includeInactive">Whether to include inactive objectives</param>
+    /// <returns>Collection of workout objective DTOs</returns>
+    Task<IEnumerable<WorkoutObjectiveDto>> GetAllAsWorkoutObjectiveDtosAsync(bool includeInactive = false);
+    
+    /// <summary>
     /// Get workout objective by ID
     /// </summary>
     /// <param name="id">The workout objective ID</param>
@@ -36,6 +43,14 @@ public interface IWorkoutObjectiveService
     /// <param name="id">The workout objective ID as string</param>
     /// <returns>The workout objective DTO or null if not found</returns>
     Task<ReferenceDataDto?> GetByIdAsDtoAsync(string id);
+    
+    /// <summary>
+    /// Get workout objective by ID as WorkoutObjectiveDto (with option to include inactive)
+    /// </summary>
+    /// <param name="id">The workout objective ID as string</param>
+    /// <param name="includeInactive">Whether to include inactive objectives</param>
+    /// <returns>The workout objective DTO or null if not found</returns>
+    Task<WorkoutObjectiveDto?> GetByIdAsWorkoutObjectiveDtoAsync(string id, bool includeInactive = false);
     
     /// <summary>
     /// Get workout objective by value
