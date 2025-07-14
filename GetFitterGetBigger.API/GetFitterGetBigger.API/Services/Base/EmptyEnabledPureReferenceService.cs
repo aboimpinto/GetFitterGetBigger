@@ -1,7 +1,6 @@
 using GetFitterGetBigger.API.Models;
 using GetFitterGetBigger.API.Services.Interfaces;
 using GetFitterGetBigger.API.Services.Results;
-using Microsoft.Extensions.Logging;
 using Olimpo.EntityFramework.Persistency;
 
 namespace GetFitterGetBigger.API.Services.Base;
@@ -26,16 +25,12 @@ public abstract class EmptyEnabledPureReferenceService<TEntity, TDto> : EntitySe
     /// <param name="logger">The logger</param>
     protected EmptyEnabledPureReferenceService(
         IUnitOfWorkProvider<FitnessDbContext> unitOfWorkProvider,
-        ICacheService cacheService,
+        IEmptyEnabledCacheService cacheService,
         ILogger logger)
         : base(cacheService, logger)
     {
         _unitOfWorkProvider = unitOfWorkProvider;
     }
-    
-    // Common cache helper methods
-    private async Task<T?> TryGetFromCacheAsync<T>(string cacheKey) where T : class =>
-        await _cacheService.GetAsync<T>(cacheKey);
     
     /// <summary>
     /// Gets all active entities
@@ -44,11 +39,13 @@ public abstract class EmptyEnabledPureReferenceService<TEntity, TDto> : EntitySe
     public virtual async Task<ServiceResult<IEnumerable<TDto>>> GetAllAsync()
     {
         var cacheKey = GetAllCacheKey();
+        var cacheService = (IEmptyEnabledCacheService)_cacheService;
+        var cacheResult = await cacheService.GetAsync<IEnumerable<TDto>>(cacheKey);
         
-        return await TryGetFromCacheAsync<IEnumerable<TDto>>(cacheKey) switch
+        return cacheResult switch
         {
-            { } cached => LogCacheHitAndReturn(cached),
-            null => await LoadAndCacheAllAsync(cacheKey)
+            { IsHit: true } => LogCacheHitAndReturn(cacheResult.Value),
+            _ => await LoadAndCacheAllAsync(cacheKey)
         };
     }
     
@@ -79,9 +76,9 @@ public abstract class EmptyEnabledPureReferenceService<TEntity, TDto> : EntitySe
         return loadResult switch
         {
             { IsSuccess: true } => ServiceResult<IEnumerable<TDto>>.Success(
-                loadResult.Data.Select(MapToDto).ToList()),
+                [.. loadResult.Data.Select(MapToDto)]),
             _ => ServiceResult<IEnumerable<TDto>>.Failure(
-                Enumerable.Empty<TDto>(),
+                [],
                 $"Failed to load {typeof(TEntity).Name} data from database")
         };
     }
@@ -133,11 +130,13 @@ public abstract class EmptyEnabledPureReferenceService<TEntity, TDto> : EntitySe
     private async Task<ServiceResult<TDto>> LoadByIdWithCachingAsync(string id)
     {
         var cacheKey = GetCacheKey(id);
+        var cacheService = (IEmptyEnabledCacheService)_cacheService;
+        var cacheResult = await cacheService.GetAsync<TDto>(cacheKey);
         
-        return await TryGetFromCacheAsync<TDto>(cacheKey) switch
+        return cacheResult switch
         {
-            { } cached => LogCacheHitAndReturn(cached, id),
-            null => await LoadAndCacheByIdAsync(id, cacheKey)
+            { IsHit: true } => LogCacheHitAndReturn(cacheResult.Value, id),
+            _ => await LoadAndCacheByIdAsync(id, cacheKey)
         };
     }
     

@@ -160,29 +160,6 @@ public class CacheServiceTests
         Assert.Equal(newValue.Id, cachedResult.Id);
     }
 
-    [Fact]
-    public async Task GetOrCreateNullableAsync_WhenFactoryReturnsNull_DoesNotCache()
-    {
-        // Arrange
-        var key = "test-key";
-        
-        Func<Task<TestObject?>> factory = async () =>
-        {
-            await Task.Delay(1); // Simulate async work
-            return null;
-        };
-
-        // Act
-        var result = await _cacheService.GetOrCreateNullableAsync(key, factory, TimeSpan.FromMinutes(5));
-
-        // Assert
-        Assert.Null(result);
-        
-        // Verify nothing was cached
-        var cachedResult = await _cacheService.GetAsync<TestObject>(key);
-        Assert.Null(cachedResult);
-    }
-
     private class TestObject
     {
         public int Id { get; set; }

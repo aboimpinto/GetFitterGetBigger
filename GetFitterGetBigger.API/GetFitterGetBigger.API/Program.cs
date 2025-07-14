@@ -27,6 +27,10 @@ builder.Services.Configure<CacheConfiguration>(
 
 // Register cache service
 builder.Services.AddSingleton<ICacheService, CacheService>();
+// TEMPORARY: Register Empty-enabled cache service interface
+// This will be removed once all services are migrated to Empty pattern
+builder.Services.AddSingleton<IEmptyEnabledCacheService>(provider => 
+    (IEmptyEnabledCacheService)provider.GetRequiredService<ICacheService>());
 
 // Add controllers with JSON options
 builder.Services.AddControllers()

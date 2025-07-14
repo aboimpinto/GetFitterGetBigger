@@ -27,6 +27,13 @@
 
 ### When Starting a Feature
 
+#### Step 0: Read Code Quality Standards
+**🚨 MANDATORY**: Read `CODE_QUALITY_STANDARDS.md` before ANY implementation
+- Pattern matching requirements
+- Empty/Null Object Pattern rules
+- Method quality guidelines
+- NO EXCEPTIONS - This is non-negotiable!
+
 #### Step 1: Create Feature Structure
 **📖 Use**: `FEATURE_WORKFLOW_PROCESS.md` - Section "0. Feature Submission"
 1. Assign Feature ID from `NEXT_FEATURE_ID.txt`
@@ -174,6 +181,16 @@ Create these four MANDATORY reports:
 
 ## 📊 Development Standards
 
+### 🚨 MANDATORY: Code Quality Standards
+**📖 Source**: `CODE_QUALITY_STANDARDS.md` - **MUST READ BEFORE ANY IMPLEMENTATION**
+
+**Core Requirements**:
+- ✅ Pattern matching over if-else chains
+- ✅ Empty/Null Object Pattern (NO nulls!)
+- ✅ Short, focused methods (< 20 lines)
+- ✅ No fake async
+- ✅ No defensive programming without justification
+
 ### File Management Rules
 **📖 Source**: `UNIFIED_DEVELOPMENT_PROCESS.md` - "Mandatory File Management Rules"
 
@@ -230,18 +247,22 @@ Create these four MANDATORY reports:
 
 ```
 What am I doing?
+├── 🚨 FIRST TIME or NEED REMINDER?
+│   └── READ → CODE_QUALITY_STANDARDS.md (MANDATORY!)
+│
 ├── 🆕 New Feature
-│   ├── Starting? → FEATURE_WORKFLOW_PROCESS.md
+│   ├── Starting? → CODE_QUALITY_STANDARDS.md + FEATURE_WORKFLOW_PROCESS.md
 │   ├── Planning? → FEATURE_IMPLEMENTATION_PROCESS.md (Section 1)
 │   ├── Coding? → FEATURE_IMPLEMENTATION_PROCESS.md (Section 4)
 │   └── Completing? → FEATURE_WORKFLOW_PROCESS.md (Completion)
 │
 ├── 🐛 Bug Fix
-│   ├── Starting? → BUG_WORKFLOW_PROCESS.md
+│   ├── Starting? → CODE_QUALITY_STANDARDS.md + BUG_WORKFLOW_PROCESS.md
 │   ├── Analyzing? → BUG_IMPLEMENTATION_PROCESS.md (Section 2)
 │   └── Fixing? → BUG_IMPLEMENTATION_PROCESS.md (Section 4)
 │
 ├── 📋 Process Question
+│   ├── Code Quality? → CODE_QUALITY_STANDARDS.md
 │   ├── Quality Standards? → UNIFIED_DEVELOPMENT_PROCESS.md
 │   ├── File Rules? → UNIFIED_DEVELOPMENT_PROCESS.md
 │   └── Testing Policy? → UNIFIED_DEVELOPMENT_PROCESS.md
@@ -255,11 +276,12 @@ What am I doing?
 ## 📚 Document Reference
 
 ### Core Process Documents
-1. **UNIFIED_DEVELOPMENT_PROCESS.md** - Standards and policies for all projects
-2. **FEATURE_WORKFLOW_PROCESS.md** - Feature states and transitions
-3. **FEATURE_IMPLEMENTATION_PROCESS.md** - Step-by-step feature implementation
-4. **BUG_WORKFLOW_PROCESS.md** - Bug states and transitions
-5. **BUG_IMPLEMENTATION_PROCESS.md** - Step-by-step bug fixing
+1. **CODE_QUALITY_STANDARDS.md** - 🚨 MANDATORY code quality rules (READ FIRST!)
+2. **UNIFIED_DEVELOPMENT_PROCESS.md** - Standards and policies for all projects
+3. **FEATURE_WORKFLOW_PROCESS.md** - Feature states and transitions
+4. **FEATURE_IMPLEMENTATION_PROCESS.md** - Step-by-step feature implementation
+5. **BUG_WORKFLOW_PROCESS.md** - Bug states and transitions
+6. **BUG_IMPLEMENTATION_PROCESS.md** - Step-by-step bug fixing
 
 ### When to Use Multiple Documents
 - **Starting work**: Usually need 2 documents (Workflow + Implementation)

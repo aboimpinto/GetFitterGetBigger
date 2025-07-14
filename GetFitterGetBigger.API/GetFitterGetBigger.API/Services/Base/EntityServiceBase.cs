@@ -24,6 +24,18 @@ public abstract class EntityServiceBase<TEntity> where TEntity : class, IEntity
         _cacheService = cacheService ?? throw new ArgumentNullException(nameof(cacheService));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
+
+    /// <summary>
+    /// Initializes a new instance of the EntityServiceBase class with Empty-enabled cache service
+    /// This constructor supports services migrated to the Empty pattern
+    /// </summary>
+    /// <param name="cacheService">The Empty-enabled cache service</param>
+    /// <param name="logger">The logger</param>
+    protected EntityServiceBase(IEmptyEnabledCacheService cacheService, ILogger logger)
+    {
+        _cacheService = cacheService ?? throw new ArgumentNullException(nameof(cacheService));
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+    }
     
     /// <summary>
     /// Gets the cache duration for this entity type based on its tier

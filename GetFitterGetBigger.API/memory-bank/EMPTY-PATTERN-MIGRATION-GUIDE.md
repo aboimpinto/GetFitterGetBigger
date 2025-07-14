@@ -11,6 +11,7 @@ We have successfully implemented the Empty pattern for `BodyPart` as a proof of 
 - Temporary `EmptyEnabledReferenceDataRepository` for migrated entities
 - Temporary `IEmptyEnabledReferenceDataRepository` interface
 - Temporary `EmptyEnabledPureReferenceService` for migrated service layer
+- Temporary `IEmptyEnabledCacheService` with `CacheResult<T>` instead of nullable returns
 - BodyPart fully migrated and tested at all layers
 
 ## Migration Strategy
@@ -88,12 +89,31 @@ We have successfully implemented the Empty pattern for `BodyPart` as a proof of 
    .ReturnsAsync(EntityName.Empty);
    ```
 
+10. **Update cache service usage (if applicable)**
+   ```csharp
+   // If service directly uses cache, update constructor:
+   public EntityNameService(
+       IUnitOfWorkProvider<FitnessDbContext> unitOfWorkProvider,
+       IEmptyEnabledCacheService cacheService, // Changed from ICacheService
+       ILogger<EntityNameService> logger)
+   
+   // Cache usage changes from:
+   var cached = await _cacheService.GetAsync<EntityDto>(key);
+   if (cached != null) { ... }
+   
+   // To:
+   var cacheResult = await _cacheService.GetAsync<EntityDto>(key);
+   if (cacheResult.IsHit) { ... cacheResult.Value ... }
+   ```
+
 ### Phase 2: Final Consolidation (After All Entities Migrated)
 
 1. **Merge EmptyEnabledReferenceDataRepository into ReferenceDataRepository**
 2. **Merge EmptyEnabledPureReferenceService into PureReferenceService**
-3. **Delete temporary interfaces and classes**
-4. **Update all entities to use the consolidated repository and services**
+3. **Merge IEmptyEnabledCacheService into ICacheService**
+4. **Delete temporary interfaces and classes**
+5. **Update all entities to use the consolidated repository and services**
+6. **Remove duplicate DI registrations from Program.cs**
 
 ## Entity Migration Checklist
 
@@ -182,6 +202,26 @@ return entity switch
 };
 ```
 
+## CacheResult Pattern
+
+The Empty pattern extends to cache operations through `CacheResult<T>`:
+
+```csharp
+public readonly struct CacheResult<T> where T : class
+{
+    public bool IsHit { get; }      // true = cached, false = not cached
+    public bool IsMiss => !IsHit;   // convenience property
+    public T Value { get; }          // throws if accessed on cache miss
+    
+    // Pattern matching support
+    public void Deconstruct(out bool isHit, out T? value);
+}
+```
+
+This eliminates null as a cache miss indicator, making cache operations explicit:
+- **Cache Hit**: `CacheResult<T>.Hit(value)` with `IsHit = true`
+- **Cache Miss**: `CacheResult<T>.Miss()` with `IsMiss = true`
+
 ## Implementation Notes
 
 1. **Static Abstract Members**: Requires C# 11 or later
@@ -189,6 +229,7 @@ return entity switch
 3. **Testing**: All tests must be updated to use Empty instead of null
 4. **Performance**: No impact - Empty is a singleton instance
 5. **No Guard Clauses**: Remove null checks from DI constructor parameters (see DI-CONSTRUCTOR-PATTERN.md)
+6. **Cache Service**: Uses parallel interface pattern (IEmptyEnabledCacheService) for gradual migration
 
 ## Next Steps
 

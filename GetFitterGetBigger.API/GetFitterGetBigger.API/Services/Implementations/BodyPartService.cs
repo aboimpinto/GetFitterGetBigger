@@ -19,7 +19,7 @@ public class BodyPartService : EmptyEnabledPureReferenceService<BodyPart, BodyPa
 {
     public BodyPartService(
         IUnitOfWorkProvider<FitnessDbContext> unitOfWorkProvider,
-        ICacheService cacheService,
+        IEmptyEnabledCacheService cacheService,
         ILogger<BodyPartService> logger)
         : base(unitOfWorkProvider, cacheService, logger)
     {
@@ -56,11 +56,12 @@ public class BodyPartService : EmptyEnabledPureReferenceService<BodyPart, BodyPa
         Func<Task<BodyPart>> loadFunc,
         string identifier)
     {
-        var cached = await _cacheService.GetAsync<BodyPartDto>(cacheKey);
-        if (cached != null)
+        var cacheService = (IEmptyEnabledCacheService)_cacheService;
+        var cacheResult = await cacheService.GetAsync<BodyPartDto>(cacheKey);
+        if (cacheResult.IsHit)
         {
             _logger.LogDebug("Cache hit for {CacheKey}", cacheKey);
-            return ServiceResult<BodyPartDto>.Success(cached);
+            return ServiceResult<BodyPartDto>.Success(cacheResult.Value);
         }
         
         var entity = await loadFunc();
