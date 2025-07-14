@@ -43,7 +43,7 @@ public readonly record struct BodyPartId
         return TryParse(input, out var result) ? result : Empty;
     }
     
-    public override string ToString() => IsEmpty ? string.Empty : $"bodypart-{this._value}";
+    public override string ToString() => $"bodypart-{this._value}";
     
     // Conversion to/from Guid for EF Core
     public static implicit operator Guid(BodyPartId id) => id._value;

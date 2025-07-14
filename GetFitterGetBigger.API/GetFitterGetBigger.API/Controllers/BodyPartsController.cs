@@ -1,33 +1,30 @@
-using GetFitterGetBigger.API.Models;
-using GetFitterGetBigger.API.Models.SpecializedIds;
-using GetFitterGetBigger.API.Repositories.Interfaces;
 using Microsoft.AspNetCore.Mvc;
-using Olimpo.EntityFramework.Persistency;
 using GetFitterGetBigger.API.Services.Interfaces;
-using GetFitterGetBigger.API.Configuration;
-using Microsoft.Extensions.Options;
+using GetFitterGetBigger.API.Models.SpecializedIds;
 
 namespace GetFitterGetBigger.API.Controllers;
 
 /// <summary>
 /// Controller for retrieving body part reference data
 /// </summary>
-public class BodyPartsController : ReferenceTablesBaseController
+[ApiController]
+[Route("api/ReferenceTables/BodyParts")]
+public class BodyPartsController : ControllerBase
 {
+    private readonly IBodyPartService _bodyPartService;
+    private readonly ILogger<BodyPartsController> _logger;
+    
     /// <summary>
     /// Initializes a new instance of the <see cref="BodyPartsController"/> class
     /// </summary>
-    /// <param name="unitOfWorkProvider">The unit of work provider</param>
-    /// <param name="cacheService">The cache service</param>
-    /// <param name="cacheConfiguration">The cache configuration</param>
+    /// <param name="bodyPartService">The body part service</param>
     /// <param name="logger">The logger</param>
     public BodyPartsController(
-        IUnitOfWorkProvider<FitnessDbContext> unitOfWorkProvider,
-        ICacheService cacheService,
-        IOptions<CacheConfiguration> cacheConfiguration,
+        IBodyPartService bodyPartService,
         ILogger<BodyPartsController> logger)
-        : base(unitOfWorkProvider, cacheService, cacheConfiguration, logger)
     {
+        _bodyPartService = bodyPartService;
+        _logger = logger;
     }
 
     /// <summary>
@@ -38,17 +35,15 @@ public class BodyPartsController : ReferenceTablesBaseController
     [ProducesResponseType(StatusCodes.Status200OK)]
     public async Task<IActionResult> GetBodyParts()
     {
-        var bodyParts = await GetAllWithCacheAsync(async () =>
+        _logger.LogInformation("Getting all active body parts");
+        
+        var result = await _bodyPartService.GetAllActiveAsync();
+        
+        return result switch
         {
-            using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
-            var repository = unitOfWork.GetRepository<IBodyPartRepository>();
-            return await repository.GetAllActiveAsync();
-        });
-        
-        // Map to DTOs
-        var result = bodyParts.Select(MapToDto);
-        
-        return Ok(result);
+            { IsSuccess: true } => Ok(result.Data),
+            { Errors: var errors } => BadRequest(new { errors })
+        };
     }
 
     /// <summary>
@@ -62,27 +57,16 @@ public class BodyPartsController : ReferenceTablesBaseController
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> GetBodyPartById(string id)
     {
-        // Try to parse the ID from the format "bodypart-{guid}"
-        if (!BodyPartId.TryParse(id, out var bodyPartId))
+        _logger.LogInformation("Getting body part with ID: {Id}", id);
+        
+        var result = await _bodyPartService.GetByIdAsync(BodyPartId.ParseOrEmpty(id));
+        
+        return result switch
         {
-            return BadRequest($"Invalid ID format. Expected format: 'bodypart-{{guid}}', got: '{id}'");
-        }
-        
-        var bodyPart = await GetByIdWithCacheAsync(id, async () =>
-        {
-            using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
-            var repository = unitOfWork.GetRepository<IBodyPartRepository>();
-            var entity = await repository.GetByIdAsync(bodyPartId);
-            return (entity != null && entity.IsActive) ? entity : null;
-        });
-        
-        if (bodyPart == null)
-            return NotFound();
-            
-        // Map to DTO
-        var result = MapToDto(bodyPart);
-        
-        return Ok(result);
+            { IsSuccess: true } => Ok(result.Data),
+            { Errors: var errors } when errors.Any(e => e.Contains("not found")) => NotFound(),
+            { Errors: var errors } => BadRequest(new { errors })
+        };
     }
 
     /// <summary>
@@ -93,21 +77,18 @@ public class BodyPartsController : ReferenceTablesBaseController
     [HttpGet("ByValue/{value}")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> GetBodyPartByValue(string value)
     {
-        var bodyPart = await GetByValueWithCacheAsync(value, async () =>
+        _logger.LogInformation("Getting body part with value: {Value}", value);
+        
+        var result = await _bodyPartService.GetByValueAsync(value);
+        
+        return result switch
         {
-            using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
-            var repository = unitOfWork.GetRepository<IBodyPartRepository>();
-            return await repository.GetByValueAsync(value);
-        });
-        
-        if (bodyPart == null)
-            return NotFound();
-            
-        // Map to DTO
-        var result = MapToDto(bodyPart);
-        
-        return Ok(result);
+            { IsSuccess: true } => Ok(result.Data),
+            { Errors: var errors } when errors.Any(e => e.Contains("not found")) => NotFound(),
+            { Errors: var errors } => BadRequest(new { errors })
+        };
     }
 }

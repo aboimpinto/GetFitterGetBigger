@@ -1,16 +1,45 @@
+using GetFitterGetBigger.API.DTOs;
 using GetFitterGetBigger.API.Models.SpecializedIds;
+using GetFitterGetBigger.API.Services.Results;
 
 namespace GetFitterGetBigger.API.Services.Interfaces;
 
 /// <summary>
-/// Service interface for body part operations
+/// Service interface for managing body part reference data
 /// </summary>
 public interface IBodyPartService
 {
+    /// <summary>
+    /// Gets all active body parts
+    /// </summary>
+    /// <returns>A service result containing all active body parts</returns>
+    Task<ServiceResult<IEnumerable<BodyPartDto>>> GetAllActiveAsync();
+    
+    /// <summary>
+    /// Gets a body part by its ID
+    /// </summary>
+    /// <param name="id">The body part ID</param>
+    /// <returns>A service result containing the body part if found</returns>
+    Task<ServiceResult<BodyPartDto>> GetByIdAsync(BodyPartId id);
+    
+    /// <summary>
+    /// Gets a body part by its value
+    /// </summary>
+    /// <param name="value">The body part value</param>
+    /// <returns>A service result containing the body part if found</returns>
+    Task<ServiceResult<BodyPartDto>> GetByValueAsync(string value);
+    
     /// <summary>
     /// Checks if a body part exists
     /// </summary>
     /// <param name="id">The body part ID to check</param>
     /// <returns>True if the body part exists, false otherwise</returns>
     Task<bool> ExistsAsync(BodyPartId id);
+    
+    /// <summary>
+    /// Checks if a body part exists with the given string ID
+    /// </summary>
+    /// <param name="id">The body part ID in string format</param>
+    /// <returns>True if the body part exists and is active, false otherwise</returns>
+    Task<bool> ExistsAsync(string id);
 }

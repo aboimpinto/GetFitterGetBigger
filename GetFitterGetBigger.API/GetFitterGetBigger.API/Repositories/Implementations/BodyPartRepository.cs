@@ -7,9 +7,10 @@ namespace GetFitterGetBigger.API.Repositories.Implementations;
 
 /// <summary>
 /// Repository implementation for BodyPart reference data
+/// TEMPORARY: Using EmptyEnabledReferenceDataRepository until all entities are migrated
 /// </summary>
 public class BodyPartRepository : 
-    ReferenceDataRepository<BodyPart, BodyPartId, FitnessDbContext>,
+    EmptyEnabledReferenceDataRepository<BodyPart, BodyPartId, FitnessDbContext>,
     IBodyPartRepository
 {
     // Add any BodyPart-specific repository methods here if needed

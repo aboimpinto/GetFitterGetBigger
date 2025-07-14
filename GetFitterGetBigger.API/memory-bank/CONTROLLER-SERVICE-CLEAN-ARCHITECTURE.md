@@ -417,8 +417,73 @@ private async Task<ValidationResult> ValidateCreateCommand(CreateExerciseCommand
 6. **Maintainability**: Consistent patterns across all controllers
 7. **Performance**: No exception overhead for validation
 
+## 🏗️ **Integration with Three-Tier Entity Architecture**
+
+This clean architecture pattern works seamlessly with the Three-Tier Entity Architecture:
+
+### **Tier-Specific Service Patterns**
+
+1. **Pure References (e.g., BodyPart)**
+   ```csharp
+   public class BodyPartService : PureReferenceService<BodyPart, BodyPartDto>, IBodyPartService
+   {
+       // Inherits eternal caching and read-only operations
+       // ServiceResult pattern built into base class
+   }
+   ```
+
+2. **Enhanced References (e.g., MuscleGroup)**
+   ```csharp
+   public class MuscleGroupService : EnhancedReferenceService<MuscleGroup, MuscleGroupDto, CreateMuscleGroupCommand, UpdateMuscleGroupCommand>, IMuscleGroupService
+   {
+       // Inherits cache invalidation and admin-only writes
+       // ServiceResult pattern for all operations
+   }
+   ```
+
+3. **Domain Entities (e.g., Exercise)**
+   ```csharp
+   public class ExerciseService : DomainEntityService<Exercise, ExerciseDto, CreateExerciseCommand, UpdateExerciseCommand>, IExerciseService
+   {
+       // Complex business logic with minimal caching
+       // Full ServiceResult pattern implementation
+   }
+   ```
+
+### **Controller Pattern Remains Consistent**
+
+Regardless of entity tier, controllers follow the same pattern:
+
+```csharp
+[ApiController]
+public class EntityController : ControllerBase
+{
+    private readonly IEntityService _service;
+    
+    [HttpGet]
+    public async Task<IActionResult> GetAll()
+    {
+        var result = await _service.GetAllAsync();
+        return result switch
+        {
+            { IsSuccess: true } => Ok(result.Data),
+            { Errors: var errors } => BadRequest(new { errors })
+        };
+    }
+}
+```
+
+### **Benefits of Combined Architecture**
+
+1. **Consistency**: Same controller patterns for all entity types
+2. **Appropriate Optimization**: Each tier gets optimal caching and access patterns
+3. **Clean Separation**: Controllers don't know about entity tiers
+4. **Type Safety**: Command objects and specialized IDs throughout
+5. **Error Handling**: ServiceResult pattern works across all tiers
+
 ## 📚 **Related Documentation**
 
+- [`THREE-TIER-ENTITY-ARCHITECTURE.md`](./THREE-TIER-ENTITY-ARCHITECTURE.md) - Entity classification and tier-specific patterns
 - [`SERVICE-RESULT-PATTERN.md`](./SERVICE-RESULT-PATTERN.md) - Detailed ServiceResult implementation
 - [`NULL-OBJECT-PATTERN-GUIDE.md`](./NULL-OBJECT-PATTERN-GUIDE.md) - Complete Null Object Pattern guide
 - [`CLEAN-ARCHITECTURE-COMMAND-PATTERN.md`](./CLEAN-ARCHITECTURE-COMMAND-PATTERN.md) - Command pattern details

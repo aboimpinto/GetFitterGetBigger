@@ -165,10 +165,17 @@ public class FitnessDbContext : DbContext
                 guid => KineticChainTypeId.From(guid));
                 
         modelBuilder.Entity<BodyPart>()
-            .Property(bp => bp.Id)
+            .HasKey(bp => bp.BodyPartId);
+            
+        modelBuilder.Entity<BodyPart>()
+            .Property(bp => bp.BodyPartId)
+            .HasColumnName("Id")
             .HasConversion(
                 id => (Guid)id,
                 guid => BodyPartId.From(guid));
+                
+        modelBuilder.Entity<BodyPart>()
+            .Ignore(bp => bp.Id);
                 
         modelBuilder.Entity<MuscleRole>()
             .Property(mr => mr.Id)

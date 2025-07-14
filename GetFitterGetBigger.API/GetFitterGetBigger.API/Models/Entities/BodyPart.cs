@@ -4,11 +4,28 @@ using GetFitterGetBigger.API.Models.SpecializedIds;
 
 namespace GetFitterGetBigger.API.Models.Entities;
 
-public record BodyPart : ReferenceDataBase
+public record BodyPart : ReferenceDataBase, IPureReference, IEmptyEntity<BodyPart>
 {
-    public BodyPartId Id { get; init; }
+    public BodyPartId BodyPartId { get; init; }
+    
+    public string Id => BodyPartId.ToString();
+    
+    public bool IsEmpty => BodyPartId.IsEmpty;
     
     private BodyPart() { }
+    
+    public CacheStrategy GetCacheStrategy() => CacheStrategy.Eternal;
+    
+    public TimeSpan? GetCacheDuration() => null; // Eternal caching
+    
+    public static BodyPart Empty { get; } = new()
+    {
+        BodyPartId = BodyPartId.Empty,
+        Value = string.Empty,
+        Description = null,
+        DisplayOrder = 0,
+        IsActive = false
+    };
     
     public static class Handler
     {
@@ -23,7 +40,7 @@ public record BodyPart : ReferenceDataBase
                 
             return new()
             {
-                Id = BodyPartId.New(),
+                BodyPartId = BodyPartId.New(),
                 Value = value,
                 Description = description,
                 DisplayOrder = displayOrder,
@@ -39,7 +56,7 @@ public record BodyPart : ReferenceDataBase
             bool isActive = true) =>
             new()
             {
-                Id = id,
+                BodyPartId = id,
                 Value = value,
                 Description = description,
                 DisplayOrder = displayOrder,

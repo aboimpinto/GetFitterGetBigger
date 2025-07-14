@@ -1,9 +1,15 @@
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
+using GetFitterGetBigger.API.DTOs;
 using GetFitterGetBigger.API.Models;
 using GetFitterGetBigger.API.Models.Entities;
 using GetFitterGetBigger.API.Models.SpecializedIds;
 using GetFitterGetBigger.API.Repositories.Interfaces;
 using GetFitterGetBigger.API.Services.Implementations;
+using GetFitterGetBigger.API.Services.Interfaces;
+using GetFitterGetBigger.API.Services.Results;
+using Microsoft.Extensions.Logging;
 using Moq;
 using Olimpo.EntityFramework.Persistency;
 using Xunit;
@@ -15,6 +21,8 @@ namespace GetFitterGetBigger.API.Tests.Services
         private readonly Mock<IUnitOfWorkProvider<FitnessDbContext>> _mockUnitOfWorkProvider;
         private readonly Mock<IReadOnlyUnitOfWork<FitnessDbContext>> _mockReadOnlyUnitOfWork;
         private readonly Mock<IBodyPartRepository> _mockBodyPartRepository;
+        private readonly Mock<ICacheService> _mockCacheService;
+        private readonly Mock<ILogger<BodyPartService>> _mockLogger;
         private readonly BodyPartService _bodyPartService;
 
         public BodyPartServiceTests()
@@ -22,6 +30,8 @@ namespace GetFitterGetBigger.API.Tests.Services
             _mockUnitOfWorkProvider = new Mock<IUnitOfWorkProvider<FitnessDbContext>>();
             _mockReadOnlyUnitOfWork = new Mock<IReadOnlyUnitOfWork<FitnessDbContext>>();
             _mockBodyPartRepository = new Mock<IBodyPartRepository>();
+            _mockCacheService = new Mock<ICacheService>();
+            _mockLogger = new Mock<ILogger<BodyPartService>>();
 
             _mockUnitOfWorkProvider
                 .Setup(x => x.CreateReadOnly())
@@ -32,11 +42,13 @@ namespace GetFitterGetBigger.API.Tests.Services
                 .Returns(_mockBodyPartRepository.Object);
 
             _bodyPartService = new BodyPartService(
-                _mockUnitOfWorkProvider.Object);
+                _mockUnitOfWorkProvider.Object,
+                _mockCacheService.Object,
+                _mockLogger.Object);
         }
 
         [Fact]
-        public async Task ExistsAsync_WhenBodyPartExists_ReturnsTrue()
+        public async Task ExistsAsync_WithBodyPartId_WhenBodyPartExists_ReturnsTrue()
         {
             // Arrange
             var bodyPartId = BodyPartId.New();
@@ -46,6 +58,10 @@ namespace GetFitterGetBigger.API.Tests.Services
                 "Chest muscles",
                 1,
                 true);
+
+            _mockCacheService
+                .Setup(x => x.GetAsync<BodyPartDto>(It.IsAny<string>()))
+                .ReturnsAsync((BodyPartDto?)null);
 
             _mockBodyPartRepository
                 .Setup(x => x.GetByIdAsync(bodyPartId))
@@ -58,18 +74,21 @@ namespace GetFitterGetBigger.API.Tests.Services
             Assert.True(result);
             _mockUnitOfWorkProvider.Verify(x => x.CreateReadOnly(), Times.Once);
             _mockBodyPartRepository.Verify(x => x.GetByIdAsync(bodyPartId), Times.Once);
-            _mockReadOnlyUnitOfWork.Verify(x => x.Dispose(), Times.Once);
         }
 
         [Fact]
-        public async Task ExistsAsync_WhenBodyPartDoesNotExist_ReturnsFalse()
+        public async Task ExistsAsync_WithBodyPartId_WhenBodyPartDoesNotExist_ReturnsFalse()
         {
             // Arrange
             var bodyPartId = BodyPartId.New();
 
+            _mockCacheService
+                .Setup(x => x.GetAsync<BodyPartDto>(It.IsAny<string>()))
+                .ReturnsAsync((BodyPartDto?)null);
+
             _mockBodyPartRepository
                 .Setup(x => x.GetByIdAsync(bodyPartId))
-                .ReturnsAsync((BodyPart?)null);
+                .ReturnsAsync(BodyPart.Empty);
 
             // Act
             var result = await _bodyPartService.ExistsAsync(bodyPartId);
@@ -78,7 +97,230 @@ namespace GetFitterGetBigger.API.Tests.Services
             Assert.False(result);
             _mockUnitOfWorkProvider.Verify(x => x.CreateReadOnly(), Times.Once);
             _mockBodyPartRepository.Verify(x => x.GetByIdAsync(bodyPartId), Times.Once);
-            _mockReadOnlyUnitOfWork.Verify(x => x.Dispose(), Times.Once);
+        }
+
+        [Fact]
+        public async Task ExistsAsync_WithStringId_WhenBodyPartExists_ReturnsTrue()
+        {
+            // Arrange
+            var bodyPartId = BodyPartId.New();
+            var bodyPartIdString = bodyPartId.ToString();
+            var bodyPartDto = new BodyPartDto
+            {
+                Id = bodyPartIdString,
+                Value = "Chest",
+                Description = "Chest muscles"
+            };
+
+            _mockCacheService
+                .Setup(x => x.GetAsync<BodyPartDto>(It.IsAny<string>()))
+                .ReturnsAsync(bodyPartDto);
+
+            // Act
+            var result = await _bodyPartService.ExistsAsync(bodyPartIdString);
+
+            // Assert
+            Assert.True(result);
+            _mockCacheService.Verify(x => x.GetAsync<BodyPartDto>(It.IsAny<string>()), Times.Once);
+            _mockUnitOfWorkProvider.Verify(x => x.CreateReadOnly(), Times.Never);
+        }
+
+        [Fact]
+        public async Task GetAllActiveAsync_ReturnsSuccessWithBodyParts()
+        {
+            // Arrange
+            var bodyParts = new List<BodyPart>
+            {
+                BodyPart.Handler.Create(BodyPartId.New(), "Chest", "Chest muscles", 1, true),
+                BodyPart.Handler.Create(BodyPartId.New(), "Back", "Back muscles", 2, true)
+            };
+
+            _mockCacheService
+                .Setup(x => x.GetAsync<IEnumerable<BodyPartDto>>(It.IsAny<string>()))
+                .ReturnsAsync((IEnumerable<BodyPartDto>?)null);
+
+            _mockBodyPartRepository
+                .Setup(x => x.GetAllActiveAsync())
+                .ReturnsAsync(bodyParts);
+
+            _mockCacheService
+                .Setup(x => x.SetAsync(It.IsAny<string>(), It.IsAny<IEnumerable<BodyPartDto>>(), It.IsAny<TimeSpan>()))
+                .Returns(Task.CompletedTask);
+
+            // Act
+            var result = await _bodyPartService.GetAllActiveAsync();
+
+            // Assert
+            Assert.True(result.IsSuccess);
+            Assert.NotNull(result.Data);
+            Assert.Equal(2, result.Data.Count());
+            Assert.Empty(result.Errors);
+            _mockBodyPartRepository.Verify(x => x.GetAllActiveAsync(), Times.Once);
+        }
+
+        [Fact]
+        public async Task GetByIdAsync_WithValidId_ReturnsSuccessWithBodyPart()
+        {
+            // Arrange
+            var bodyPartId = BodyPartId.New();
+            var bodyPartIdString = bodyPartId.ToString();
+            var bodyPart = BodyPart.Handler.Create(
+                bodyPartId,
+                "Chest",
+                "Chest muscles",
+                1,
+                true);
+
+            _mockCacheService
+                .Setup(x => x.GetAsync<BodyPartDto>(It.IsAny<string>()))
+                .ReturnsAsync((BodyPartDto?)null);
+
+            _mockBodyPartRepository
+                .Setup(x => x.GetByIdAsync(bodyPartId))
+                .ReturnsAsync(bodyPart);
+
+            _mockCacheService
+                .Setup(x => x.SetAsync(It.IsAny<string>(), It.IsAny<BodyPartDto>(), It.IsAny<TimeSpan>()))
+                .Returns(Task.CompletedTask);
+
+            // Act
+            var result = await _bodyPartService.GetByIdAsync(bodyPartIdString);
+
+            // Assert
+            Assert.True(result.IsSuccess);
+            Assert.NotNull(result.Data);
+            Assert.Equal(bodyPartIdString, result.Data.Id);
+            Assert.Equal("Chest", result.Data.Value);
+            Assert.Empty(result.Errors);
+        }
+
+        [Fact]
+        public async Task GetByIdAsync_WithBodyPartId_ReturnsSuccessWithBodyPart()
+        {
+            // Arrange
+            var bodyPartId = BodyPartId.New();
+            var bodyPart = BodyPart.Handler.Create(
+                bodyPartId,
+                "Back",
+                "Back muscles",
+                2,
+                true);
+
+            _mockCacheService
+                .Setup(x => x.GetAsync<BodyPartDto>(It.IsAny<string>()))
+                .ReturnsAsync((BodyPartDto?)null);
+
+            _mockBodyPartRepository
+                .Setup(x => x.GetByIdAsync(bodyPartId))
+                .ReturnsAsync(bodyPart);
+
+            _mockCacheService
+                .Setup(x => x.SetAsync(It.IsAny<string>(), It.IsAny<BodyPartDto>(), It.IsAny<TimeSpan>()))
+                .Returns(Task.CompletedTask);
+
+            // Act
+            var result = await _bodyPartService.GetByIdAsync(bodyPartId);
+
+            // Assert
+            Assert.True(result.IsSuccess);
+            Assert.NotNull(result.Data);
+            Assert.Equal(bodyPartId.ToString(), result.Data.Id);
+            Assert.Equal("Back", result.Data.Value);
+            Assert.Empty(result.Errors);
+        }
+
+        [Fact]
+        public async Task GetByIdAsync_WithEmptyBodyPartId_ReturnsValidationError()
+        {
+            // Arrange
+            var emptyBodyPartId = BodyPartId.Empty;
+
+            // Act
+            var result = await _bodyPartService.GetByIdAsync(emptyBodyPartId);
+
+            // Assert
+            Assert.False(result.IsSuccess);
+            Assert.NotNull(result.Data);
+            Assert.NotEmpty(result.Errors);
+            Assert.Contains("Invalid body part ID format", result.Errors[0]);
+            // Verify the repository was never called
+            _mockBodyPartRepository.Verify(x => x.GetByIdAsync(It.IsAny<BodyPartId>()), Times.Never);
+        }
+
+        [Fact]
+        public async Task GetByIdAsync_WithInvalidIdFormat_ReturnsFailure()
+        {
+            // Arrange
+            var invalidId = "invalid-id-format";
+
+            // Act
+            var result = await _bodyPartService.GetByIdAsync(invalidId);
+
+            // Assert
+            Assert.False(result.IsSuccess);
+            Assert.NotNull(result.Data);
+            Assert.NotEmpty(result.Errors);
+            Assert.Contains("Invalid body part ID format", result.Errors[0]);
+            _mockBodyPartRepository.Verify(x => x.GetByIdAsync(It.IsAny<BodyPartId>()), Times.Never);
+        }
+
+        [Fact]
+        public async Task GetByValueAsync_WithExistingValue_ReturnsSuccess()
+        {
+            // Arrange
+            var value = "Chest";
+            var bodyPartId = BodyPartId.New();
+            var bodyPart = BodyPart.Handler.Create(
+                bodyPartId,
+                value,
+                "Chest muscles",
+                1,
+                true);
+
+            _mockCacheService
+                .Setup(x => x.GetAsync<BodyPartDto>(It.IsAny<string>()))
+                .ReturnsAsync((BodyPartDto?)null);
+
+            _mockBodyPartRepository
+                .Setup(x => x.GetByValueAsync(value))
+                .ReturnsAsync(bodyPart);
+
+            _mockCacheService
+                .Setup(x => x.SetAsync(It.IsAny<string>(), It.IsAny<BodyPartDto>(), It.IsAny<TimeSpan>()))
+                .Returns(Task.CompletedTask);
+
+            // Act
+            var result = await _bodyPartService.GetByValueAsync(value);
+
+            // Assert
+            Assert.True(result.IsSuccess);
+            Assert.NotNull(result.Data);
+            Assert.Equal(value, result.Data.Value);
+            Assert.Empty(result.Errors);
+        }
+
+        [Fact]
+        public async Task GetByValueAsync_WithNonExistingValue_ReturnsFailure()
+        {
+            // Arrange
+            var value = "NonExistent";
+
+            _mockCacheService
+                .Setup(x => x.GetAsync<BodyPartDto>(It.IsAny<string>()))
+                .ReturnsAsync((BodyPartDto?)null);
+
+            _mockBodyPartRepository
+                .Setup(x => x.GetByValueAsync(value))
+                .ReturnsAsync(BodyPart.Empty);
+
+            // Act
+            var result = await _bodyPartService.GetByValueAsync(value);
+
+            // Assert
+            Assert.False(result.IsSuccess);
+            Assert.NotNull(result.Data);
+            Assert.NotEmpty(result.Errors);
+            Assert.Contains("not found", result.Errors[0]);
         }
     }
 }

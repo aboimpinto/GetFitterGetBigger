@@ -255,7 +255,7 @@ public class SeedDataBuilder
         foreach (var (id, name, description, displayOrder) in bodyPartsToCheck)
         {
             var bodyPartId = BodyPartId.From(id);
-            var exists = await _context.BodyParts.AnyAsync(bp => bp.Id == bodyPartId);
+            var exists = await _context.BodyParts.AnyAsync(bp => bp.BodyPartId == bodyPartId);
             
             if (!exists)
             {

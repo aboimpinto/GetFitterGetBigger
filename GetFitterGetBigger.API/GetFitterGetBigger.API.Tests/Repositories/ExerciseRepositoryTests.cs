@@ -45,7 +45,7 @@ namespace GetFitterGetBigger.API.Tests.Repositories
             
             // Add muscle groups
             var chestMuscle = MuscleGroup.Handler.Create(
-                MuscleGroupId.New(), "Chest", bodyPart.Id);
+                MuscleGroupId.New(), "Chest", bodyPart.BodyPartId);
             _context.MuscleGroups.Add(chestMuscle);
             
             // Add muscle roles
@@ -390,7 +390,7 @@ namespace GetFitterGetBigger.API.Tests.Repositories
             
             // Create a second muscle group (Triceps)
             var tricepsMuscle = MuscleGroup.Handler.Create(
-                MuscleGroupId.New(), "Triceps", _context.BodyParts.First().Id);
+                MuscleGroupId.New(), "Triceps", _context.BodyParts.First().BodyPartId);
             _context.MuscleGroups.Add(tricepsMuscle);
             await _context.SaveChangesAsync();
             
