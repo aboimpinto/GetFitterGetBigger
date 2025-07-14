@@ -80,7 +80,8 @@ public class MuscleGroupService : ReferenceTableServiceBase<MuscleGroup>, IMuscl
     /// </summary>
     public async Task<IEnumerable<MuscleGroupDto>> GetByBodyPartAsync(string bodyPartId)
     {
-        if (!BodyPartId.TryParse(bodyPartId, out var parsedBodyPartId))
+        var parsedBodyPartId = BodyPartId.ParseOrEmpty(bodyPartId);
+        if (parsedBodyPartId.IsEmpty)
         {
             throw new ArgumentException($"Invalid body part ID format. Expected format: 'bodypart-{{guid}}', got: '{bodyPartId}'");
         }
@@ -179,7 +180,8 @@ public class MuscleGroupService : ReferenceTableServiceBase<MuscleGroup>, IMuscl
     public async Task<MuscleGroupDto> CreateMuscleGroupAsync(CreateMuscleGroupDto request)
     {
         // Validate BodyPart ID format
-        if (!BodyPartId.TryParse(request.BodyPartId, out var bodyPartId))
+        var bodyPartId = BodyPartId.ParseOrEmpty(request.BodyPartId);
+        if (bodyPartId.IsEmpty)
         {
             throw new ArgumentException($"Invalid BodyPart ID format. Expected format: 'bodypart-{{guid}}', got: '{request.BodyPartId}'");
         }
@@ -242,7 +244,8 @@ public class MuscleGroupService : ReferenceTableServiceBase<MuscleGroup>, IMuscl
         _specificLogger.LogInformation("Parsed MuscleGroupId: {MuscleGroupId}", muscleGroupId);
         
         // Validate BodyPart ID format
-        if (!BodyPartId.TryParse(request.BodyPartId, out var bodyPartId))
+        var bodyPartId = BodyPartId.ParseOrEmpty(request.BodyPartId);
+        if (bodyPartId.IsEmpty)
         {
             _specificLogger.LogError("Invalid body part ID format: {BodyPartId}", request.BodyPartId);
             throw new ArgumentException($"Invalid BodyPart ID format. Expected format: 'bodypart-{{guid}}', got: '{request.BodyPartId}'");

@@ -131,7 +131,8 @@ public class BodyPartService : EmptyEnabledPureReferenceService<BodyPart, BodyPa
             return ValidationResult.Failure("Body part ID cannot be empty");
         }
         
-        if (!BodyPartId.TryParse(id, out _))
+        var parsedId = BodyPartId.ParseOrEmpty(id);
+        if (parsedId.IsEmpty)
         {
             return ValidationResult.Failure($"Invalid body part ID format. Expected format: 'bodypart-{{guid}}', got: '{id}'");
         }
