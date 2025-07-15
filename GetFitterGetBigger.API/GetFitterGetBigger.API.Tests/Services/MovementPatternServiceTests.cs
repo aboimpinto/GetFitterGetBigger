@@ -197,10 +197,10 @@ namespace GetFitterGetBigger.API.Tests.Services
         public async Task GetByIdAsync_WithNullString_ReturnsValidationFailure()
         {
             // Arrange
-            string nullId = null;
+            string? nullId = null;
 
             // Act
-            var result = await _movementPatternService.GetByIdAsync(nullId);
+            var result = await _movementPatternService.GetByIdAsync(nullId!);
 
             // Assert
             Assert.False(result.IsSuccess);
