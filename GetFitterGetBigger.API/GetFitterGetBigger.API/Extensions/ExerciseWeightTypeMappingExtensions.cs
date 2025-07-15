@@ -12,12 +12,17 @@ public static class ExerciseWeightTypeMappingExtensions
     /// Maps an ExerciseWeightType entity to a ReferenceDataDto
     /// </summary>
     /// <param name="entity">The ExerciseWeightType entity to map</param>
-    /// <returns>A ReferenceDataDto representation of the entity, or null if the entity is null</returns>
-    public static ReferenceDataDto? ToReferenceDataDto(this ExerciseWeightType? entity)
+    /// <returns>A ReferenceDataDto representation of the entity, or empty DTO if entity is empty</returns>
+    public static ReferenceDataDto ToReferenceDataDto(this ExerciseWeightType entity)
     {
-        if (entity == null)
+        if (entity.IsEmpty)
         {
-            return null;
+            return new ReferenceDataDto
+            {
+                Id = string.Empty,
+                Value = string.Empty,
+                Description = null
+            };
         }
         
         return new ReferenceDataDto
@@ -35,6 +40,6 @@ public static class ExerciseWeightTypeMappingExtensions
     /// <returns>A collection of ReferenceDataDto objects</returns>
     public static IEnumerable<ReferenceDataDto> ToReferenceDataDtos(this IEnumerable<ExerciseWeightType> entities)
     {
-        return entities.Select(e => e.ToReferenceDataDto()!);
+        return entities.Select(e => e.ToReferenceDataDto());
     }
 }

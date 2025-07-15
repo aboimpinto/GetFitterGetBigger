@@ -1,10 +1,7 @@
-using GetFitterGetBigger.API.Configuration;
-using GetFitterGetBigger.API.Models;
-using GetFitterGetBigger.API.Models.SpecializedIds;
-using GetFitterGetBigger.API.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Options;
-using Olimpo.EntityFramework.Persistency;
+using GetFitterGetBigger.API.Services.Interfaces;
+using GetFitterGetBigger.API.Services.Results;
+using GetFitterGetBigger.API.Models.SpecializedIds;
 
 namespace GetFitterGetBigger.API.Controllers;
 
@@ -15,27 +12,22 @@ namespace GetFitterGetBigger.API.Controllers;
 [Route("api/ReferenceTables/[controller]")]
 [Produces("application/json")]
 [Tags("Reference Tables")]
-public class ExerciseWeightTypesController : ReferenceTablesBaseController
+public class ExerciseWeightTypesController : ControllerBase
 {
     private readonly IExerciseWeightTypeService _exerciseWeightTypeService;
+    private readonly ILogger<ExerciseWeightTypesController> _logger;
     
     /// <summary>
     /// Initializes a new instance of the <see cref="ExerciseWeightTypesController"/> class
     /// </summary>
-    /// <param name="unitOfWorkProvider">The unit of work provider</param>
-    /// <param name="cacheService">The cache service</param>
-    /// <param name="cacheConfiguration">The cache configuration</param>
     /// <param name="exerciseWeightTypeService">The exercise weight type service</param>
     /// <param name="logger">The logger</param>
     public ExerciseWeightTypesController(
-        IUnitOfWorkProvider<FitnessDbContext> unitOfWorkProvider,
-        ICacheService cacheService,
-        IOptions<CacheConfiguration> cacheConfiguration,
         IExerciseWeightTypeService exerciseWeightTypeService,
         ILogger<ExerciseWeightTypesController> logger)
-        : base(unitOfWorkProvider, cacheService, cacheConfiguration, logger)
     {
         _exerciseWeightTypeService = exerciseWeightTypeService;
+        _logger = logger;
     }
     
     /// <summary>
@@ -55,8 +47,15 @@ public class ExerciseWeightTypesController : ReferenceTablesBaseController
     [ProducesResponseType(StatusCodes.Status200OK)]
     public async Task<IActionResult> GetAll()
     {
-        var dtos = await _exerciseWeightTypeService.GetAllAsDtosAsync();
-        return Ok(dtos);
+        _logger.LogInformation("Getting all active exercise weight types");
+        
+        var result = await _exerciseWeightTypeService.GetAllActiveAsync();
+        
+        return result switch
+        {
+            { IsSuccess: true } => Ok(result.Data),
+            _ => Ok(result.Data) // GetAll should always succeed, even if empty
+        };
     }
     
     /// <summary>
@@ -66,19 +65,23 @@ public class ExerciseWeightTypesController : ReferenceTablesBaseController
     /// <returns>The exercise weight type if found</returns>
     /// <response code="200">Returns the exercise weight type</response>
     /// <response code="404">If the exercise weight type is not found</response>
+    /// <response code="400">If the ID format is invalid</response>
     [HttpGet("{id}")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> GetById(string id)
     {
-        var dto = await _exerciseWeightTypeService.GetByIdAsDtoAsync(id);
+        _logger.LogInformation("Getting exercise weight type with ID: {Id}", id);
         
-        if (dto == null)
+        var result = await _exerciseWeightTypeService.GetByIdAsync(ExerciseWeightTypeId.ParseOrEmpty(id));
+        
+        return result switch
         {
-            return NotFound();
-        }
-        
-        return Ok(dto);
+            { IsSuccess: true } => Ok(result.Data),
+            { PrimaryErrorCode: ServiceErrorCode.NotFound } => NotFound(),
+            _ => BadRequest(new { errors = result.StructuredErrors })
+        };
     }
     
     /// <summary>
@@ -88,22 +91,26 @@ public class ExerciseWeightTypesController : ReferenceTablesBaseController
     /// <returns>The exercise weight type if found</returns>
     /// <response code="200">Returns the exercise weight type</response>
     /// <response code="404">If the exercise weight type is not found</response>
+    /// <response code="400">If the value is empty</response>
     /// <remarks>
     /// The search is case-insensitive
     /// </remarks>
     [HttpGet("ByValue/{value}")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> GetByValue(string value)
     {
-        var dto = await _exerciseWeightTypeService.GetByValueAsDtoAsync(value);
+        _logger.LogInformation("Getting exercise weight type with value: {Value}", value);
         
-        if (dto == null)
+        var result = await _exerciseWeightTypeService.GetByValueAsync(value);
+        
+        return result switch
         {
-            return NotFound();
-        }
-        
-        return Ok(dto);
+            { IsSuccess: true } => Ok(result.Data),
+            { PrimaryErrorCode: ServiceErrorCode.NotFound } => NotFound(),
+            _ => BadRequest(new { errors = result.StructuredErrors })
+        };
     }
     
     /// <summary>
@@ -113,6 +120,7 @@ public class ExerciseWeightTypesController : ReferenceTablesBaseController
     /// <returns>The exercise weight type if found</returns>
     /// <response code="200">Returns the exercise weight type</response>
     /// <response code="404">If the exercise weight type is not found</response>
+    /// <response code="400">If the code is empty</response>
     /// <remarks>
     /// The code search is case-sensitive. Valid codes are:
     /// - BODYWEIGHT_ONLY
@@ -124,15 +132,18 @@ public class ExerciseWeightTypesController : ReferenceTablesBaseController
     [HttpGet("ByCode/{code}")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> GetByCode(string code)
     {
-        var dto = await _exerciseWeightTypeService.GetByCodeAsDtoAsync(code);
+        _logger.LogInformation("Getting exercise weight type with code: {Code}", code);
         
-        if (dto == null)
+        var result = await _exerciseWeightTypeService.GetByCodeAsync(code);
+        
+        return result switch
         {
-            return NotFound();
-        }
-        
-        return Ok(dto);
+            { IsSuccess: true } => Ok(result.Data),
+            { PrimaryErrorCode: ServiceErrorCode.NotFound } => NotFound(),
+            _ => BadRequest(new { errors = result.StructuredErrors })
+        };
     }
 }

@@ -192,7 +192,7 @@ public class ExerciseWeightTypeTestBuilder
             description: _description,
             displayOrder: _displayOrder,
             isActive: _isActive
-        );
+        ).Value;
     }
 
     /// <summary>

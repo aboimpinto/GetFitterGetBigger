@@ -1,10 +1,12 @@
+using GetFitterGetBigger.API.Constants;
 using GetFitterGetBigger.API.DTOs;
 using GetFitterGetBigger.API.Models;
 using GetFitterGetBigger.API.Models.Entities;
 using GetFitterGetBigger.API.Models.SpecializedIds;
 using GetFitterGetBigger.API.Repositories.Interfaces;
+using GetFitterGetBigger.API.Services.Base;
 using GetFitterGetBigger.API.Services.Interfaces;
-using GetFitterGetBigger.API.Utilities;
+using GetFitterGetBigger.API.Services.Results;
 using Microsoft.Extensions.Logging;
 using Olimpo.EntityFramework.Persistency;
 
@@ -13,195 +15,173 @@ namespace GetFitterGetBigger.API.Services.Implementations;
 /// <summary>
 /// Service implementation for exercise weight type operations
 /// </summary>
-public class ExerciseWeightTypeService : IExerciseWeightTypeService
+public class ExerciseWeightTypeService : EmptyEnabledPureReferenceService<ExerciseWeightType, ReferenceDataDto>, IExerciseWeightTypeService
 {
-    private readonly IUnitOfWorkProvider<FitnessDbContext> _unitOfWorkProvider;
-    private readonly ICacheService _cacheService;
-    private readonly ILogger<ExerciseWeightTypeService> _logger;
-    
-    private const string CacheKeyPrefix = "ExerciseWeightTypes";
-    private static readonly TimeSpan CacheDuration = TimeSpan.FromHours(24); // Static reference table
-    
     public ExerciseWeightTypeService(
         IUnitOfWorkProvider<FitnessDbContext> unitOfWorkProvider,
-        ICacheService cacheService,
+        IEmptyEnabledCacheService cacheService,
         ILogger<ExerciseWeightTypeService> logger)
+        : base(unitOfWorkProvider, cacheService, logger)
     {
-        _unitOfWorkProvider = unitOfWorkProvider;
-        _cacheService = cacheService;
-        _logger = logger;
     }
+
+    /// <inheritdoc/>
+    public async Task<ServiceResult<IEnumerable<ReferenceDataDto>>> GetAllActiveAsync()
+    {
+        return await GetAllAsync();
+    }
+
+    /// <inheritdoc/>
+    public async Task<ServiceResult<ReferenceDataDto>> GetByIdAsync(ExerciseWeightTypeId id) => 
+        id.IsEmpty 
+            ? ServiceResult<ReferenceDataDto>.Failure(CreateEmptyDto(), ServiceError.ValidationFailed(ExerciseWeightTypeErrorMessages.InvalidIdFormat))
+            : await GetByIdAsync(id.ToString());
     
     /// <inheritdoc/>
-    public async Task<IEnumerable<ExerciseWeightType>> GetAllAsync()
-    {
-        var cacheKey = CacheKeyGenerator.GetAllKey(CacheKeyPrefix);
-        
-        var cached = await _cacheService.GetAsync<IEnumerable<ExerciseWeightType>>(cacheKey);
-        if (cached != null)
-        {
-            _logger.LogDebug("Retrieved {Count} exercise weight types from cache", cached.Count());
-            return cached;
-        }
-        
-        using var uow = _unitOfWorkProvider.CreateReadOnly();
-        var repository = uow.GetRepository<IExerciseWeightTypeRepository>();
-        var weightTypes = await repository.GetAllActiveAsync();
-        
-        var weightTypesList = weightTypes.ToList();
-        await _cacheService.SetAsync(cacheKey, weightTypesList, CacheDuration);
-        _logger.LogInformation("Cached {Count} exercise weight types", weightTypesList.Count);
-        
-        return weightTypesList;
-    }
+    public async Task<ServiceResult<ReferenceDataDto>> GetByValueAsync(string value) => 
+        string.IsNullOrWhiteSpace(value)
+            ? ServiceResult<ReferenceDataDto>.Failure(CreateEmptyDto(), ServiceError.ValidationFailed(ExerciseWeightTypeErrorMessages.ValueCannotBeEmpty))
+            : await GetFromCacheOrLoadAsync(
+                GetValueCacheKey(value),
+                () => LoadByValueAsync(value),
+                value);
     
     /// <inheritdoc/>
-    public async Task<IEnumerable<ReferenceDataDto>> GetAllAsDtosAsync()
-    {
-        var weightTypes = await GetAllAsync();
-        return weightTypes.Select(MapToDto);
-    }
+    public async Task<ServiceResult<ReferenceDataDto>> GetByCodeAsync(string code) => 
+        string.IsNullOrWhiteSpace(code)
+            ? ServiceResult<ReferenceDataDto>.Failure(CreateEmptyDto(), ServiceError.ValidationFailed(ExerciseWeightTypeErrorMessages.CodeCannotBeEmpty))
+            : await GetFromCacheOrLoadAsync(
+                GetCodeCacheKey(code),
+                () => LoadByCodeAsync(code),
+                code);
+
+    /// <inheritdoc/>
+    public async Task<bool> ExistsAsync(ExerciseWeightTypeId id) => 
+        !id.IsEmpty && (await GetByIdAsync(id)).IsSuccess;
     
     /// <inheritdoc/>
-    public async Task<ExerciseWeightType?> GetByIdAsync(ExerciseWeightTypeId id)
-    {
-        var cacheKey = CacheKeyGenerator.GetByIdKey(CacheKeyPrefix, id.ToString());
-        
-        var cached = await _cacheService.GetAsync<ExerciseWeightType>(cacheKey);
-        if (cached != null)
-        {
-            return cached;
-        }
-        
-        using var uow = _unitOfWorkProvider.CreateReadOnly();
-        var repository = uow.GetRepository<IExerciseWeightTypeRepository>();
-        var weightType = await repository.GetByIdAsync(id);
-        
-        if (weightType != null && weightType.IsActive)
-        {
-            await _cacheService.SetAsync(cacheKey, weightType, CacheDuration);
-        }
-        
-        return weightType;
-    }
-    
-    /// <inheritdoc/>
-    public async Task<ReferenceDataDto?> GetByIdAsDtoAsync(string id)
-    {
-        if (!ExerciseWeightTypeId.TryParse(id, out var weightTypeId))
-        {
-            return null;
-        }
-        
-        var weightType = await GetByIdAsync(weightTypeId);
-        return weightType != null ? MapToDto(weightType) : null;
-    }
-    
-    /// <inheritdoc/>
-    public async Task<ExerciseWeightType?> GetByValueAsync(string value)
-    {
-        if (string.IsNullOrWhiteSpace(value))
-        {
-            return null;
-        }
-        
-        var cacheKey = CacheKeyGenerator.GetByValueKey(CacheKeyPrefix, value);
-        
-        var cached = await _cacheService.GetAsync<ExerciseWeightType>(cacheKey);
-        if (cached != null)
-        {
-            return cached;
-        }
-        
-        using var uow = _unitOfWorkProvider.CreateReadOnly();
-        var repository = uow.GetRepository<IExerciseWeightTypeRepository>();
-        var weightType = await repository.GetByValueAsync(value);
-        
-        if (weightType != null && weightType.IsActive)
-        {
-            await _cacheService.SetAsync(cacheKey, weightType, CacheDuration);
-        }
-        
-        return weightType;
-    }
-    
-    /// <inheritdoc/>
-    public async Task<ReferenceDataDto?> GetByValueAsDtoAsync(string value)
-    {
-        var weightType = await GetByValueAsync(value);
-        return weightType != null ? MapToDto(weightType) : null;
-    }
-    
-    /// <inheritdoc/>
-    public async Task<ExerciseWeightType?> GetByCodeAsync(string code)
-    {
-        if (string.IsNullOrWhiteSpace(code))
-        {
-            return null;
-        }
-        
-        var cacheKey = $"{CacheKeyPrefix}:code:{code}";
-        
-        var cached = await _cacheService.GetAsync<ExerciseWeightType>(cacheKey);
-        if (cached != null)
-        {
-            return cached;
-        }
-        
-        using var uow = _unitOfWorkProvider.CreateReadOnly();
-        var repository = uow.GetRepository<IExerciseWeightTypeRepository>();
-        var weightType = await repository.GetByCodeAsync(code);
-        
-        if (weightType != null && weightType.IsActive)
-        {
-            await _cacheService.SetAsync(cacheKey, weightType, CacheDuration);
-        }
-        
-        return weightType;
-    }
-    
-    /// <inheritdoc/>
-    public async Task<ReferenceDataDto?> GetByCodeAsDtoAsync(string code)
-    {
-        var weightType = await GetByCodeAsync(code);
-        return weightType != null ? MapToDto(weightType) : null;
-    }
-    
-    /// <inheritdoc/>
-    public async Task<bool> ExistsAsync(ExerciseWeightTypeId id)
-    {
-        var weightType = await GetByIdAsync(id);
-        return weightType != null && weightType.IsActive;
-    }
+    public override async Task<bool> ExistsAsync(string id) => 
+        await ExistsAsync(ExerciseWeightTypeId.ParseOrEmpty(id));
     
     /// <inheritdoc/>
     public async Task<bool> IsValidWeightForTypeAsync(ExerciseWeightTypeId weightTypeId, decimal? weight)
     {
-        var weightType = await GetByIdAsync(weightTypeId);
-        if (weightType == null)
-        {
+        if (weightTypeId.IsEmpty)
             return false;
-        }
+            
+        var result = await GetByIdAsync(weightTypeId);
+        if (!result.IsSuccess)
+            return false;
+        
+        // Need to load the entity to check the code
+        using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
+        var repository = unitOfWork.GetRepository<IExerciseWeightTypeRepository>();
+        var weightType = await repository.GetByIdAsync(weightTypeId);
+        
+        if (weightType.IsEmpty)
+            return false;
         
         // Validate based on weight type code
         return weightType.Code switch
         {
-            "BODYWEIGHT_ONLY" => weight == null || weight == 0,
-            "BODYWEIGHT_OPTIONAL" => true, // Any weight value is valid
-            "WEIGHT_REQUIRED" => weight > 0,
-            "MACHINE_WEIGHT" => weight > 0,
-            "NO_WEIGHT" => weight == null || weight == 0,
+            ExerciseWeightTypeCodes.BodyweightOnly => weight == null || weight == 0,
+            ExerciseWeightTypeCodes.BodyweightOptional => true, // Any weight value is valid
+            ExerciseWeightTypeCodes.WeightRequired => weight > 0,
+            ExerciseWeightTypeCodes.MachineWeight => weight > 0,
+            ExerciseWeightTypeCodes.NoWeight => weight == null || weight == 0,
             _ => false // Unknown weight type
         };
     }
     
-    private static ReferenceDataDto MapToDto(ExerciseWeightType weightType)
+    private string GetValueCacheKey(string value) => $"{GetCacheKeyPrefix()}value:{value}";
+    private string GetCodeCacheKey(string code) => $"{GetCacheKeyPrefix()}code:{code}";
+    
+    private async Task<ServiceResult<ReferenceDataDto>> GetFromCacheOrLoadAsync(
+        string cacheKey, 
+        Func<Task<ExerciseWeightType>> loadFunc,
+        string identifier)
+    {
+        var cacheService = (IEmptyEnabledCacheService)_cacheService;
+        var cacheResult = await cacheService.GetAsync<ReferenceDataDto>(cacheKey);
+        if (cacheResult.IsHit)
+        {
+            _logger.LogDebug("Cache hit for {CacheKey}", cacheKey);
+            return ServiceResult<ReferenceDataDto>.Success(cacheResult.Value);
+        }
+        
+        var entity = await loadFunc();
+        return entity switch
+        {
+            { IsEmpty: true } or { IsActive: false } => ServiceResult<ReferenceDataDto>.Failure(
+                CreateEmptyDto(), 
+                ServiceError.NotFound(ExerciseWeightTypeErrorMessages.NotFound, identifier)),
+            _ => await CacheAndReturnSuccessAsync(cacheKey, MapToDto(entity))
+        };
+    }
+    
+    private async Task<ServiceResult<ReferenceDataDto>> CacheAndReturnSuccessAsync(string cacheKey, ReferenceDataDto dto)
+    {
+        await _cacheService.SetAsync(cacheKey, dto, TimeSpan.FromDays(365));
+        return ServiceResult<ReferenceDataDto>.Success(dto);
+    }
+    
+    private async Task<ExerciseWeightType> LoadByValueAsync(string value)
+    {
+        using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
+        var repository = unitOfWork.GetRepository<IExerciseWeightTypeRepository>();
+        return await repository.GetByValueAsync(value);
+    }
+    
+    private async Task<ExerciseWeightType> LoadByCodeAsync(string code)
+    {
+        using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
+        var repository = unitOfWork.GetRepository<IExerciseWeightTypeRepository>();
+        return await repository.GetByCodeAsync(code);
+    }
+    
+    protected override async Task<IEnumerable<ExerciseWeightType>> LoadAllEntitiesAsync(IReadOnlyUnitOfWork<FitnessDbContext> unitOfWork)
+    {
+        var repository = unitOfWork.GetRepository<IExerciseWeightTypeRepository>();
+        return await repository.GetAllActiveAsync();
+    }
+    
+    // Returns ExerciseWeightType.Empty instead of null (Null Object Pattern)
+    protected override async Task<ExerciseWeightType> LoadEntityByIdAsync(IReadOnlyUnitOfWork<FitnessDbContext> unitOfWork, string id) =>
+        ExerciseWeightTypeId.ParseOrEmpty(id) switch
+        {
+            { IsEmpty: true } => ExerciseWeightType.Empty,
+            var exerciseWeightTypeId => await unitOfWork.GetRepository<IExerciseWeightTypeRepository>().GetByIdAsync(exerciseWeightTypeId)
+        };
+    
+    protected override ReferenceDataDto MapToDto(ExerciseWeightType entity)
     {
         return new ReferenceDataDto
         {
-            Id = weightType.Id.ToString(),
-            Value = weightType.Value,
-            Description = weightType.Description
+            Id = entity.Id.ToString(),
+            Value = entity.Value,
+            Description = entity.Description
         };
+    }
+    
+    protected override ReferenceDataDto CreateEmptyDto()
+    {
+        return new ReferenceDataDto();
+    }
+    
+    protected override ValidationResult ValidateAndParseId(string id)
+    {
+        // This is called by the base class when using the string overload
+        // Since we always use the typed overload from the controller,
+        // this should validate the string format
+        if (string.IsNullOrWhiteSpace(id))
+        {
+            return ValidationResult.Failure(ExerciseWeightTypeErrorMessages.IdCannotBeEmpty);
+        }
+        
+        // No additional validation - let the controller handle format validation
+        // This allows empty GUIDs to pass through and be treated as NotFound
+        
+        // Valid format (including empty GUID) - let the database determine if it exists
+        return ValidationResult.Success();
     }
 }

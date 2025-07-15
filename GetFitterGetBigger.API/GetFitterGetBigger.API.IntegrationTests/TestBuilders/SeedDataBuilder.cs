@@ -497,7 +497,7 @@ public class SeedDataBuilder
             
             if (!exists)
             {
-                var exerciseWeightType = ExerciseWeightType.Handler.Create(exerciseWeightTypeId, code, value, description, displayOrder, true);
+                var exerciseWeightType = ExerciseWeightType.Handler.Create(exerciseWeightTypeId, code, value, description, displayOrder, true).Value;
                 await _context.ExerciseWeightTypes.AddAsync(exerciseWeightType);
             }
         }

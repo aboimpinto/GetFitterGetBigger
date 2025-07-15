@@ -1,6 +1,6 @@
 using GetFitterGetBigger.API.DTOs;
-using GetFitterGetBigger.API.Models.Entities;
 using GetFitterGetBigger.API.Models.SpecializedIds;
+using GetFitterGetBigger.API.Services.Results;
 
 namespace GetFitterGetBigger.API.Services.Interfaces;
 
@@ -12,63 +12,43 @@ public interface IExerciseWeightTypeService
     /// <summary>
     /// Gets all active exercise weight types
     /// </summary>
-    /// <returns>Collection of exercise weight types</returns>
-    Task<IEnumerable<ExerciseWeightType>> GetAllAsync();
-    
-    /// <summary>
-    /// Gets all active exercise weight types as DTOs
-    /// </summary>
-    /// <returns>Collection of reference data DTOs</returns>
-    Task<IEnumerable<ReferenceDataDto>> GetAllAsDtosAsync();
+    /// <returns>Service result containing collection of reference data DTOs</returns>
+    Task<ServiceResult<IEnumerable<ReferenceDataDto>>> GetAllActiveAsync();
     
     /// <summary>
     /// Gets an exercise weight type by ID
     /// </summary>
     /// <param name="id">The exercise weight type ID</param>
-    /// <returns>The exercise weight type if found, null otherwise</returns>
-    Task<ExerciseWeightType?> GetByIdAsync(ExerciseWeightTypeId id);
-    
-    /// <summary>
-    /// Gets an exercise weight type by ID as DTO
-    /// </summary>
-    /// <param name="id">The exercise weight type ID string</param>
-    /// <returns>The reference data DTO if found, null otherwise</returns>
-    Task<ReferenceDataDto?> GetByIdAsDtoAsync(string id);
+    /// <returns>Service result containing the reference data DTO</returns>
+    Task<ServiceResult<ReferenceDataDto>> GetByIdAsync(ExerciseWeightTypeId id);
     
     /// <summary>
     /// Gets an exercise weight type by value
     /// </summary>
     /// <param name="value">The value (name) of the weight type</param>
-    /// <returns>The exercise weight type if found, null otherwise</returns>
-    Task<ExerciseWeightType?> GetByValueAsync(string value);
-    
-    /// <summary>
-    /// Gets an exercise weight type by value as DTO
-    /// </summary>
-    /// <param name="value">The value (name) of the weight type</param>
-    /// <returns>The reference data DTO if found, null otherwise</returns>
-    Task<ReferenceDataDto?> GetByValueAsDtoAsync(string value);
+    /// <returns>Service result containing the reference data DTO</returns>
+    Task<ServiceResult<ReferenceDataDto>> GetByValueAsync(string value);
     
     /// <summary>
     /// Gets an exercise weight type by code
     /// </summary>
     /// <param name="code">The code of the weight type (e.g., "BODYWEIGHT_ONLY")</param>
-    /// <returns>The exercise weight type if found, null otherwise</returns>
-    Task<ExerciseWeightType?> GetByCodeAsync(string code);
-    
-    /// <summary>
-    /// Gets an exercise weight type by code as DTO
-    /// </summary>
-    /// <param name="code">The code of the weight type (e.g., "BODYWEIGHT_ONLY")</param>
-    /// <returns>The reference data DTO if found, null otherwise</returns>
-    Task<ReferenceDataDto?> GetByCodeAsDtoAsync(string code);
+    /// <returns>Service result containing the reference data DTO</returns>
+    Task<ServiceResult<ReferenceDataDto>> GetByCodeAsync(string code);
     
     /// <summary>
     /// Checks if an exercise weight type exists
     /// </summary>
     /// <param name="id">The exercise weight type ID to check</param>
-    /// <returns>True if the weight type exists, false otherwise</returns>
+    /// <returns>True if the weight type exists and is active, false otherwise</returns>
     Task<bool> ExistsAsync(ExerciseWeightTypeId id);
+    
+    /// <summary>
+    /// Checks if an exercise weight type exists by string ID
+    /// </summary>
+    /// <param name="id">The exercise weight type ID string to check</param>
+    /// <returns>True if the weight type exists and is active, false otherwise</returns>
+    Task<bool> ExistsAsync(string id);
     
     /// <summary>
     /// Validates if a weight value is appropriate for the given weight type

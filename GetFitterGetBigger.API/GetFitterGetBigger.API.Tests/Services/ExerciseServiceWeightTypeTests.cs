@@ -96,7 +96,7 @@ public class ExerciseServiceWeightTypeTests
             "Exercises that must have external weight specified",
             3,
             true
-        );
+        ).Value;
         
         // Create a proper difficulty for testing
         var difficulty = DifficultyLevel.Handler.Create(
@@ -250,7 +250,7 @@ public class ExerciseServiceWeightTypeTests
             "Exercises performed on machines with weight stacks",
             4,
             true
-        );
+        ).Value;
         
         var difficulty = DifficultyLevel.Handler.Create(
             DifficultyLevelId.From(Guid.Parse("8a8adb1d-24d2-4979-a5a6-0d760e6da24b")),

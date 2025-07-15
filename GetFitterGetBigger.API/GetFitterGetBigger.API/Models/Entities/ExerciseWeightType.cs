@@ -1,6 +1,10 @@
 using System;
 using System.Collections.Generic;
+using GetFitterGetBigger.API.Constants;
+using GetFitterGetBigger.API.Models;
 using GetFitterGetBigger.API.Models.SpecializedIds;
+using GetFitterGetBigger.API.Models.Results;
+using GetFitterGetBigger.API.Models.Validation;
 
 namespace GetFitterGetBigger.API.Models.Entities;
 
@@ -15,12 +19,17 @@ namespace GetFitterGetBigger.API.Models.Entities;
 /// - MACHINE_WEIGHT: Exercises performed on machines with weight stacks (e.g., lat pulldown)
 /// - NO_WEIGHT: Exercises that do not use weight as a metric (e.g., stretching, mobility work)
 /// </remarks>
-public record ExerciseWeightType : ReferenceDataBase
+public record ExerciseWeightType : ReferenceDataBase, IEmptyEntity<ExerciseWeightType>, IPureReference
 {
     /// <summary>
     /// The unique identifier for the exercise weight type
     /// </summary>
     public ExerciseWeightTypeId Id { get; init; }
+    
+    /// <summary>
+    /// Gets the unique identifier as a string (required by IEntity)
+    /// </summary>
+    string IEntity.Id => Id.ToString();
     
     /// <summary>
     /// The code that uniquely identifies this weight type (e.g., "BODYWEIGHT_ONLY", "WEIGHT_REQUIRED")
@@ -39,7 +48,7 @@ public record ExerciseWeightType : ReferenceDataBase
     /// <summary>
     /// Static factory for creating an empty ExerciseWeightType instance
     /// </summary>
-    public static ExerciseWeightType Empty => new() 
+    public static ExerciseWeightType Empty { get; } = new() 
     { 
         Id = ExerciseWeightTypeId.Empty,
         Code = string.Empty,
@@ -50,6 +59,16 @@ public record ExerciseWeightType : ReferenceDataBase
     };
     
     private ExerciseWeightType() { }
+    
+    /// <summary>
+    /// Gets the caching strategy for this entity type
+    /// </summary>
+    public CacheStrategy GetCacheStrategy() => CacheStrategy.Eternal;
+    
+    /// <summary>
+    /// Gets the cache duration for this entity type
+    /// </summary>
+    public TimeSpan? GetCacheDuration() => null; // Eternal caching
     
     /// <summary>
     /// Handler for creating ExerciseWeightType instances
@@ -64,29 +83,27 @@ public record ExerciseWeightType : ReferenceDataBase
         /// <param name="description">Optional description</param>
         /// <param name="displayOrder">The order for display purposes</param>
         /// <param name="isActive">Whether this weight type is active</param>
-        /// <returns>A new ExerciseWeightType instance</returns>
-        /// <exception cref="ArgumentException">Thrown when code or value is null or empty</exception>
-        public static ExerciseWeightType CreateNew(
+        /// <returns>An EntityResult containing the new ExerciseWeightType or validation errors</returns>
+        public static EntityResult<ExerciseWeightType> CreateNew(
             string code,
             string value,
             string? description,
             int displayOrder,
             bool isActive = true)
         {
-            if (string.IsNullOrEmpty(code))
-                throw new ArgumentException("Code cannot be empty", nameof(code));
-            if (string.IsNullOrEmpty(value))
-                throw new ArgumentException("Value cannot be empty", nameof(value));
-                
-            return new()
-            {
-                Id = ExerciseWeightTypeId.New(),
-                Code = code,
-                Value = value,
-                Description = description,
-                DisplayOrder = displayOrder,
-                IsActive = isActive
-            };
+            return Validate.For<ExerciseWeightType>()
+                .EnsureNotEmpty(code, ExerciseWeightTypeErrorMessages.CodeCannotBeEmpty)
+                .EnsureNotEmpty(value, ExerciseWeightTypeErrorMessages.ValueCannotBeEmptyEntity)
+                .EnsureMinValue(displayOrder, 0, ExerciseWeightTypeErrorMessages.DisplayOrderMustBeNonNegative)
+                .OnSuccess(() => new ExerciseWeightType
+                {
+                    Id = ExerciseWeightTypeId.New(),
+                    Code = code,
+                    Value = value,
+                    Description = description,
+                    DisplayOrder = displayOrder,
+                    IsActive = isActive
+                });
         }
         
         /// <summary>
@@ -98,22 +115,28 @@ public record ExerciseWeightType : ReferenceDataBase
         /// <param name="description">Optional description</param>
         /// <param name="displayOrder">The order for display purposes</param>
         /// <param name="isActive">Whether this weight type is active</param>
-        /// <returns>An ExerciseWeightType instance with the specified ID</returns>
-        public static ExerciseWeightType Create(
+        /// <returns>An EntityResult containing the ExerciseWeightType or validation errors</returns>
+        public static EntityResult<ExerciseWeightType> Create(
             ExerciseWeightTypeId id,
             string code,
             string value,
             string? description,
             int displayOrder,
-            bool isActive = true) =>
-            new()
-            {
-                Id = id,
-                Code = code,
-                Value = value,
-                Description = description,
-                DisplayOrder = displayOrder,
-                IsActive = isActive
-            };
+            bool isActive = true)
+        {
+            return Validate.For<ExerciseWeightType>()
+                .EnsureNotEmpty(code, ExerciseWeightTypeErrorMessages.CodeCannotBeEmpty)
+                .EnsureNotEmpty(value, ExerciseWeightTypeErrorMessages.ValueCannotBeEmptyEntity)
+                .EnsureMinValue(displayOrder, 0, ExerciseWeightTypeErrorMessages.DisplayOrderMustBeNonNegative)
+                .OnSuccess(() => new ExerciseWeightType
+                {
+                    Id = id,
+                    Code = code,
+                    Value = value,
+                    Description = description,
+                    DisplayOrder = displayOrder,
+                    IsActive = isActive
+                });
+        }
     }
 }

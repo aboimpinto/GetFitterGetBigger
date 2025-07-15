@@ -1,6 +1,8 @@
 using System;
+using GetFitterGetBigger.API.Constants;
 using GetFitterGetBigger.API.Models.Entities;
 using GetFitterGetBigger.API.Models.SpecializedIds;
+using GetFitterGetBigger.API.Tests.Constants;
 using Xunit;
 
 namespace GetFitterGetBigger.API.Tests.Models.Entities;
@@ -11,15 +13,17 @@ public class ExerciseWeightTypeTests
     public void CreateNew_ValidInput_CreatesExerciseWeightType()
     {
         // Arrange
-        var code = "BODYWEIGHT_ONLY";
+        var code = ExerciseWeightTypeTestConstants.BodyweightOnlyCode;
         var value = "Bodyweight Only";
         var description = "Exercises that cannot have external weight added";
         var displayOrder = 1;
         
         // Act
-        var exerciseWeightType = ExerciseWeightType.Handler.CreateNew(code, value, description, displayOrder);
+        var result = ExerciseWeightType.Handler.CreateNew(code, value, description, displayOrder);
         
         // Assert
+        Assert.True(result.IsSuccess);
+        var exerciseWeightType = result.Value;
         Assert.NotEqual(default(ExerciseWeightTypeId), exerciseWeightType.Id);
         Assert.Equal(code, exerciseWeightType.Code);
         Assert.Equal(value, exerciseWeightType.Value);
@@ -39,10 +43,11 @@ public class ExerciseWeightTypeTests
         var isActive = false;
         
         // Act
-        var exerciseWeightType = ExerciseWeightType.Handler.CreateNew(code, value, description, displayOrder, isActive);
+        var result = ExerciseWeightType.Handler.CreateNew(code, value, description, displayOrder, isActive);
         
         // Assert
-        Assert.False(exerciseWeightType.IsActive);
+        Assert.True(result.IsSuccess);
+        Assert.False(result.Value.IsActive);
     }
     
     [Fact]
@@ -50,16 +55,18 @@ public class ExerciseWeightTypeTests
     {
         // Arrange
         var id = ExerciseWeightTypeId.New();
-        var code = "WEIGHT_REQUIRED";
+        var code = ExerciseWeightTypeTestConstants.WeightRequiredCode;
         var value = "Weight Required";
         var description = "Exercises that must have external weight specified";
         var displayOrder = 3;
         var isActive = true;
         
         // Act
-        var exerciseWeightType = ExerciseWeightType.Handler.Create(id, code, value, description, displayOrder, isActive);
+        var result = ExerciseWeightType.Handler.Create(id, code, value, description, displayOrder, isActive);
         
         // Assert
+        Assert.True(result.IsSuccess);
+        var exerciseWeightType = result.Value;
         Assert.Equal(id, exerciseWeightType.Id);
         Assert.Equal(code, exerciseWeightType.Code);
         Assert.Equal(value, exerciseWeightType.Value);
@@ -70,78 +77,95 @@ public class ExerciseWeightTypeTests
     
     [Theory]
     [InlineData("")]
-    public void CreateNew_EmptyCode_ThrowsArgumentException(string code)
+    public void CreateNew_EmptyCode_ReturnsFailureResult(string code)
     {
         // Arrange
-        var value = "Test Value";
-        var description = "Description";
+        var value = ExerciseWeightTypeTestConstants.TestValue;
+        var description = ExerciseWeightTypeTestConstants.TestDescription;
         var displayOrder = 1;
         
-        // Act & Assert
-        var exception = Assert.Throws<ArgumentException>(() => 
-            ExerciseWeightType.Handler.CreateNew(code, value, description, displayOrder));
-        Assert.Contains("Code cannot be empty", exception.Message);
+        // Act
+        var result = ExerciseWeightType.Handler.CreateNew(code, value, description, displayOrder);
+        
+        // Assert
+        Assert.False(result.IsSuccess);
+        Assert.True(result.IsFailure);
+        Assert.Contains(ExerciseWeightTypeErrorMessages.CodeCannotBeEmpty, result.Errors);
+        Assert.True(result.Value.IsEmpty);
     }
     
     [Fact]
-    public void CreateNew_NullCode_ThrowsArgumentException()
+    public void CreateNew_NullCode_ReturnsFailureResult()
     {
         // Arrange
         string? code = null;
-        var value = "Test Value";
-        var description = "Description";
+        var value = ExerciseWeightTypeTestConstants.TestValue;
+        var description = ExerciseWeightTypeTestConstants.TestDescription;
         var displayOrder = 1;
         
-        // Act & Assert
-        var exception = Assert.Throws<ArgumentException>(() => 
-            ExerciseWeightType.Handler.CreateNew(code!, value, description, displayOrder));
-        Assert.Contains("Code cannot be empty", exception.Message);
+        // Act
+        var result = ExerciseWeightType.Handler.CreateNew(code!, value, description, displayOrder);
+        
+        // Assert
+        Assert.False(result.IsSuccess);
+        Assert.True(result.IsFailure);
+        Assert.Contains(ExerciseWeightTypeErrorMessages.CodeCannotBeEmpty, result.Errors);
+        Assert.True(result.Value.IsEmpty);
     }
     
     [Theory]
     [InlineData("")]
-    public void CreateNew_EmptyValue_ThrowsArgumentException(string value)
+    public void CreateNew_EmptyValue_ReturnsFailureResult(string value)
     {
         // Arrange
-        var code = "TEST_CODE";
-        var description = "Description";
+        var code = ExerciseWeightTypeTestConstants.TestCode;
+        var description = ExerciseWeightTypeTestConstants.TestDescription;
         var displayOrder = 1;
         
-        // Act & Assert
-        var exception = Assert.Throws<ArgumentException>(() => 
-            ExerciseWeightType.Handler.CreateNew(code, value, description, displayOrder));
-        Assert.Contains("Value cannot be empty", exception.Message);
+        // Act
+        var result = ExerciseWeightType.Handler.CreateNew(code, value, description, displayOrder);
+        
+        // Assert
+        Assert.False(result.IsSuccess);
+        Assert.True(result.IsFailure);
+        Assert.Contains(ExerciseWeightTypeErrorMessages.ValueCannotBeEmptyEntity, result.Errors);
+        Assert.True(result.Value.IsEmpty);
     }
     
     [Fact]
-    public void CreateNew_NullValue_ThrowsArgumentException()
+    public void CreateNew_NullValue_ReturnsFailureResult()
     {
         // Arrange
-        var code = "TEST_CODE";
+        var code = ExerciseWeightTypeTestConstants.TestCode;
         string? value = null;
-        var description = "Description";
+        var description = ExerciseWeightTypeTestConstants.TestDescription;
         var displayOrder = 1;
         
-        // Act & Assert
-        var exception = Assert.Throws<ArgumentException>(() => 
-            ExerciseWeightType.Handler.CreateNew(code, value!, description, displayOrder));
-        Assert.Contains("Value cannot be empty", exception.Message);
+        // Act
+        var result = ExerciseWeightType.Handler.CreateNew(code, value!, description, displayOrder);
+        
+        // Assert
+        Assert.False(result.IsSuccess);
+        Assert.True(result.IsFailure);
+        Assert.Contains(ExerciseWeightTypeErrorMessages.ValueCannotBeEmptyEntity, result.Errors);
+        Assert.True(result.Value.IsEmpty);
     }
     
     [Fact]
     public void CreateNew_NullDescription_CreatesExerciseWeightTypeWithNullDescription()
     {
         // Arrange
-        var code = "NO_WEIGHT";
+        var code = ExerciseWeightTypeTestConstants.NoWeightCode;
         var value = "No Weight";
         string? description = null;
         var displayOrder = 5;
         
         // Act
-        var exerciseWeightType = ExerciseWeightType.Handler.CreateNew(code, value, description, displayOrder);
+        var result = ExerciseWeightType.Handler.CreateNew(code, value, description, displayOrder);
         
         // Assert
-        Assert.Null(exerciseWeightType.Description);
+        Assert.True(result.IsSuccess);
+        Assert.Null(result.Value.Description);
     }
     
     [Fact]
@@ -149,15 +173,15 @@ public class ExerciseWeightTypeTests
     {
         // Arrange
         var id = ExerciseWeightTypeId.New();
-        var code = "MACHINE_WEIGHT";
+        var code = ExerciseWeightTypeTestConstants.MachineWeightCode;
         var value = "Machine Weight";
         var description = "Machine exercises";
         var order = 4;
         var isActive = true;
         
         // Act
-        var type1 = ExerciseWeightType.Handler.Create(id, code, value, description, order, isActive);
-        var type2 = ExerciseWeightType.Handler.Create(id, code, value, description, order, isActive);
+        var type1 = ExerciseWeightType.Handler.Create(id, code, value, description, order, isActive).Value;
+        var type2 = ExerciseWeightType.Handler.Create(id, code, value, description, order, isActive).Value;
         
         // Assert - ExerciseWeightType is a record with a collection property (Exercises),
         // so two instances will not be equal even with the same values (collections are compared by reference)
@@ -177,10 +201,11 @@ public class ExerciseWeightTypeTests
     public void ExerciseWeightType_ExtendsReferenceDataBase()
     {
         // Arrange & Act
-        var exerciseWeightType = ExerciseWeightType.Handler.CreateNew("TEST", "Test", "Description", 1);
+        var result = ExerciseWeightType.Handler.CreateNew("TEST", "Test", ExerciseWeightTypeTestConstants.TestDescription, 1);
         
         // Assert
-        Assert.IsAssignableFrom<ReferenceDataBase>(exerciseWeightType);
+        Assert.True(result.IsSuccess);
+        Assert.IsAssignableFrom<ReferenceDataBase>(result.Value);
     }
     
     [Fact]
@@ -189,11 +214,11 @@ public class ExerciseWeightTypeTests
         // This test documents the expected weight type codes
         var expectedCodes = new[]
         {
-            "BODYWEIGHT_ONLY",
-            "BODYWEIGHT_OPTIONAL",
-            "WEIGHT_REQUIRED",
-            "MACHINE_WEIGHT",
-            "NO_WEIGHT"
+            ExerciseWeightTypeTestConstants.BodyweightOnlyCode,
+            ExerciseWeightTypeTestConstants.BodyweightOptionalCode,
+            ExerciseWeightTypeTestConstants.WeightRequiredCode,
+            ExerciseWeightTypeTestConstants.MachineWeightCode,
+            ExerciseWeightTypeTestConstants.NoWeightCode
         };
         
         // This is just documentation - actual validation will happen during seed data creation

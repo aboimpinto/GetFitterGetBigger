@@ -440,7 +440,7 @@ public class ExerciseWeightValidatorTests
             $"{code} Description",
             1,
             true
-        );
+        ).Value;
         
         _mockWeightTypeRepository
             .Setup(r => r.GetByIdAsync(id))

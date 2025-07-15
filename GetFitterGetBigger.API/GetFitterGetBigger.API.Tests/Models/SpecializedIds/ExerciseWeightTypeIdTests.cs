@@ -7,99 +7,125 @@ namespace GetFitterGetBigger.API.Tests.Models.SpecializedIds;
 public class ExerciseWeightTypeIdTests
 {
     [Fact]
-    public void TryParse_ValidExerciseWeightTypeId_ReturnsTrue()
+    public void ParseOrEmpty_ValidExerciseWeightTypeId_ReturnsId()
     {
         // Arrange
         var guid = Guid.NewGuid();
         var input = $"exerciseweighttype-{guid}";
 
         // Act
-        var result = ExerciseWeightTypeId.TryParse(input, out ExerciseWeightTypeId exerciseWeightTypeId);
+        var result = ExerciseWeightTypeId.ParseOrEmpty(input);
 
         // Assert
-        Assert.True(result);
-        Assert.Equal(guid, (Guid)exerciseWeightTypeId);
-        Assert.Equal(input, exerciseWeightTypeId.ToString());
+        Assert.False(result.IsEmpty);
+        Assert.Equal(guid, (Guid)result);
+        Assert.Equal(input, result.ToString());
     }
 
     [Fact]
-    public void TryParse_NullInput_ReturnsFalse()
+    public void ParseOrEmpty_NullInput_ReturnsEmpty()
     {
         // Act
-        var result = ExerciseWeightTypeId.TryParse(null, out ExerciseWeightTypeId exerciseWeightTypeId);
+        var result = ExerciseWeightTypeId.ParseOrEmpty(null);
 
         // Assert
-        Assert.False(result);
-        Assert.Equal(default, exerciseWeightTypeId);
+        Assert.True(result.IsEmpty);
+        Assert.Equal(ExerciseWeightTypeId.Empty, result);
     }
 
     [Fact]
-    public void TryParse_EmptyString_ReturnsFalse()
+    public void ParseOrEmpty_EmptyString_ReturnsEmpty()
     {
         // Act
-        var result = ExerciseWeightTypeId.TryParse(string.Empty, out ExerciseWeightTypeId exerciseWeightTypeId);
+        var result = ExerciseWeightTypeId.ParseOrEmpty(string.Empty);
 
         // Assert
-        Assert.False(result);
-        Assert.Equal(default, exerciseWeightTypeId);
+        Assert.True(result.IsEmpty);
+        Assert.Equal(ExerciseWeightTypeId.Empty, result);
     }
 
     [Fact]
-    public void TryParse_WrongPrefix_ReturnsFalse()
+    public void ParseOrEmpty_WrongPrefix_ReturnsEmpty()
     {
         // Arrange
         var guid = Guid.NewGuid();
         var input = $"exercisetype-{guid}";
 
         // Act
-        var result = ExerciseWeightTypeId.TryParse(input, out ExerciseWeightTypeId exerciseWeightTypeId);
+        var result = ExerciseWeightTypeId.ParseOrEmpty(input);
 
         // Assert
-        Assert.False(result);
-        Assert.Equal(default, exerciseWeightTypeId);
+        Assert.True(result.IsEmpty);
+        Assert.Equal(ExerciseWeightTypeId.Empty, result);
     }
 
     [Fact]
-    public void TryParse_NoPrefix_ReturnsFalse()
+    public void ParseOrEmpty_NoPrefix_ReturnsEmpty()
     {
         // Arrange
         var guid = Guid.NewGuid();
         var input = guid.ToString();
 
         // Act
-        var result = ExerciseWeightTypeId.TryParse(input, out ExerciseWeightTypeId exerciseWeightTypeId);
+        var result = ExerciseWeightTypeId.ParseOrEmpty(input);
 
         // Assert
-        Assert.False(result);
-        Assert.Equal(default, exerciseWeightTypeId);
+        Assert.True(result.IsEmpty);
+        Assert.Equal(ExerciseWeightTypeId.Empty, result);
     }
 
     [Fact]
-    public void TryParse_InvalidGuid_ReturnsFalse()
+    public void ParseOrEmpty_InvalidGuid_ReturnsEmpty()
     {
         // Arrange
         var input = "exerciseweighttype-not-a-guid";
 
         // Act
-        var result = ExerciseWeightTypeId.TryParse(input, out ExerciseWeightTypeId exerciseWeightTypeId);
+        var result = ExerciseWeightTypeId.ParseOrEmpty(input);
 
         // Assert
-        Assert.False(result);
-        Assert.Equal(default, exerciseWeightTypeId);
+        Assert.True(result.IsEmpty);
+        Assert.Equal(ExerciseWeightTypeId.Empty, result);
     }
 
     [Fact]
-    public void TryParse_PrefixOnly_ReturnsFalse()
+    public void ParseOrEmpty_PrefixOnly_ReturnsEmpty()
     {
         // Arrange
         var input = "exerciseweighttype-";
 
         // Act
-        var result = ExerciseWeightTypeId.TryParse(input, out ExerciseWeightTypeId exerciseWeightTypeId);
+        var result = ExerciseWeightTypeId.ParseOrEmpty(input);
 
         // Assert
-        Assert.False(result);
-        Assert.Equal(default, exerciseWeightTypeId);
+        Assert.True(result.IsEmpty);
+        Assert.Equal(ExerciseWeightTypeId.Empty, result);
+    }
+
+    [Fact]
+    public void ParseOrEmpty_EmptyGuid_ReturnsValidId()
+    {
+        // Arrange
+        var input = "exerciseweighttype-00000000-0000-0000-0000-000000000000";
+
+        // Act
+        var result = ExerciseWeightTypeId.ParseOrEmpty(input);
+
+        // Assert
+        Assert.True(result.IsEmpty); // Empty GUID should result in IsEmpty being true
+        Assert.Equal(Guid.Empty, (Guid)result);
+    }
+
+    [Fact]
+    public void Empty_ReturnsEmptyId()
+    {
+        // Act
+        var empty = ExerciseWeightTypeId.Empty;
+
+        // Assert
+        Assert.True(empty.IsEmpty);
+        Assert.Equal(Guid.Empty, (Guid)empty);
+        Assert.Equal("exerciseweighttype-00000000-0000-0000-0000-000000000000", empty.ToString());
     }
 
     [Fact]
@@ -112,6 +138,8 @@ public class ExerciseWeightTypeIdTests
         // Assert
         Assert.NotEqual(id1, id2);
         Assert.NotEqual(id1.ToString(), id2.ToString());
+        Assert.False(id1.IsEmpty);
+        Assert.False(id2.IsEmpty);
     }
 
     [Fact]
@@ -126,6 +154,18 @@ public class ExerciseWeightTypeIdTests
         // Assert
         Assert.Equal(guid, (Guid)id);
         Assert.Equal($"exerciseweighttype-{guid}", id.ToString());
+        Assert.False(id.IsEmpty);
+    }
+
+    [Fact]
+    public void From_WithEmptyGuid_CreatesEmptyId()
+    {
+        // Act
+        var id = ExerciseWeightTypeId.From(Guid.Empty);
+
+        // Assert
+        Assert.True(id.IsEmpty);
+        Assert.Equal(ExerciseWeightTypeId.Empty, id);
     }
 
     [Fact]

@@ -36,9 +36,9 @@ Feature: Exercise Weight Types Reference Data
     Then the response status should be 404
 
   @reference-data @validation
-  Scenario: Get exercise weight type by invalid ID format returns not found
+  Scenario: Get exercise weight type by invalid ID format returns bad request
     When I send a GET request to "/api/ReferenceTables/ExerciseWeightTypes/invalid-id"
-    Then the response status should be 404
+    Then the response status should be 400
 
   @reference-data
   Scenario: Get exercise weight type by value - Bodyweight Only
