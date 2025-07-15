@@ -67,28 +67,13 @@ public class MuscleRoleTestBuilder
 
     public MuscleRoleTestBuilder WithId(string idString)
     {
-        if (!idString.StartsWith("musclerole-"))
-        {
-            throw new ArgumentException($"Invalid MuscleRoleId format: '{idString}'. Expected format: 'musclerole-{{guid}}'");
-        }
-        
-        var guidPart = idString["musclerole-".Length..];
-        if (!Guid.TryParse(guidPart, out var guid))
-        {
-            throw new ArgumentException($"Invalid GUID in MuscleRoleId: '{guidPart}'");
-        }
-        
-        _id = MuscleRoleId.From(guid);
+        _id = MuscleRoleId.ParseOrEmpty(idString);
         return this;
     }
 
     public MuscleRoleTestBuilder WithValue(string value)
     {
-        if (string.IsNullOrWhiteSpace(value))
-        {
-            throw new ArgumentException("Muscle role value cannot be empty", nameof(value));
-        }
-        _value = value;
+        _value = value ?? string.Empty;
         return this;
     }
 
@@ -100,11 +85,7 @@ public class MuscleRoleTestBuilder
 
     public MuscleRoleTestBuilder WithDisplayOrder(int displayOrder)
     {
-        if (displayOrder < 0)
-        {
-            throw new ArgumentException("Display order must be non-negative", nameof(displayOrder));
-        }
-        _displayOrder = displayOrder;
+        _displayOrder = Math.Max(0, displayOrder); // Ensure non-negative
         return this;
     }
 
@@ -132,10 +113,7 @@ public class MuscleRoleTestBuilder
                 isActive: _isActive
             );
             
-            if (!result.IsSuccess)
-                throw new InvalidOperationException($"Failed to create MuscleRole: {result.FirstError}");
-                
-            return result.Value;
+            return result.IsSuccess ? result.Value : MuscleRole.Empty;
         }
         else
         {
@@ -146,10 +124,7 @@ public class MuscleRoleTestBuilder
                 isActive: _isActive
             );
 
-            if (!result.IsSuccess)
-                throw new InvalidOperationException($"Failed to create MuscleRole: {result.FirstError}");
-                
-            return result.Value;
+            return result.IsSuccess ? result.Value : MuscleRole.Empty;
         }
     }
 

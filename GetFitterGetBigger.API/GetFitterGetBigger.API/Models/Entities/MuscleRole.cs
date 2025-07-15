@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using GetFitterGetBigger.API.Constants;
 using GetFitterGetBigger.API.Models.SpecializedIds;
 using GetFitterGetBigger.API.Models.Results;
 using GetFitterGetBigger.API.Models.Validation;
@@ -37,17 +38,13 @@ public record MuscleRole : ReferenceDataBase, IPureReference, IEmptyEntity<Muscl
             int displayOrder,
             bool isActive = true)
         {
-            if (string.IsNullOrEmpty(value))
-                return EntityResult<MuscleRole>.Failure("Value cannot be empty");
-                
-            return EntityResult<MuscleRole>.Success(new()
-            {
-                MuscleRoleId = MuscleRoleId.New(),
-                Value = value,
-                Description = description,
-                DisplayOrder = displayOrder,
-                IsActive = isActive
-            });
+            return Create(
+                MuscleRoleId.New(),
+                value,
+                description,
+                displayOrder,
+                isActive
+            );
         }
         
         public static EntityResult<MuscleRole> Create(
@@ -57,17 +54,17 @@ public record MuscleRole : ReferenceDataBase, IPureReference, IEmptyEntity<Muscl
             int displayOrder,
             bool isActive = true)
         {
-            if (string.IsNullOrEmpty(value))
-                return EntityResult<MuscleRole>.Failure("Value cannot be empty");
-                
-            return EntityResult<MuscleRole>.Success(new()
-            {
-                MuscleRoleId = id,
-                Value = value,
-                Description = description,
-                DisplayOrder = displayOrder,
-                IsActive = isActive
-            });
+            return Validate.For<MuscleRole>()
+                .EnsureNotEmpty(value, MuscleRoleErrorMessages.ValueCannotBeEmptyEntity)
+                .EnsureMinValue(displayOrder, 0, MuscleRoleErrorMessages.DisplayOrderMustBeNonNegative)
+                .OnSuccess(() => new MuscleRole
+                {
+                    MuscleRoleId = id,
+                    Value = value,
+                    Description = description,
+                    DisplayOrder = displayOrder,
+                    IsActive = isActive
+                });
         }
     }
 }

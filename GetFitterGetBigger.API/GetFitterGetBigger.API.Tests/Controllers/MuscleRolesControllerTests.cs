@@ -7,6 +7,7 @@ using GetFitterGetBigger.API.Models.SpecializedIds;
 using GetFitterGetBigger.API.Services.Interfaces;
 using GetFitterGetBigger.API.Services.Results;
 using GetFitterGetBigger.API.Tests.TestBuilders;
+using GetFitterGetBigger.API.Tests.TestConstants;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Moq;
@@ -33,8 +34,8 @@ public class MuscleRolesControllerTests
         // Arrange
         var muscleRoles = new List<ReferenceDataDto>
         {
-            new() { Id = TestIds.MuscleRoleIds.Primary, Value = "PRIMARY", Description = "Primary muscle" },
-            new() { Id = TestIds.MuscleRoleIds.Secondary, Value = "SECONDARY", Description = "Secondary muscle" }
+            new() { Id = TestIds.MuscleRoleIds.Primary, Value = MuscleRoleTestConstants.Values.Primary, Description = MuscleRoleTestConstants.Descriptions.Primary },
+            new() { Id = TestIds.MuscleRoleIds.Secondary, Value = MuscleRoleTestConstants.Values.Secondary, Description = MuscleRoleTestConstants.Descriptions.Secondary }
         };
 
         _serviceMock
@@ -74,8 +75,8 @@ public class MuscleRolesControllerTests
         var muscleRole = new ReferenceDataDto
         {
             Id = TestIds.MuscleRoleIds.Primary,
-            Value = "PRIMARY",
-            Description = "Primary muscle used in the exercise"
+            Value = MuscleRoleTestConstants.Values.Primary,
+            Description = MuscleRoleTestConstants.Descriptions.Primary
         };
 
         _serviceMock
@@ -88,7 +89,7 @@ public class MuscleRolesControllerTests
         // Assert
         var okResult = Assert.IsType<OkObjectResult>(result);
         var data = Assert.IsType<ReferenceDataDto>(okResult.Value);
-        Assert.Equal("PRIMARY", data.Value);
+        Assert.Equal(MuscleRoleTestConstants.Values.Primary, data.Value);
     }
 
     [Fact]
@@ -131,21 +132,21 @@ public class MuscleRolesControllerTests
         var muscleRole = new ReferenceDataDto
         {
             Id = TestIds.MuscleRoleIds.Primary,
-            Value = "PRIMARY",
-            Description = "Primary muscle used in the exercise"
+            Value = MuscleRoleTestConstants.Values.Primary,
+            Description = MuscleRoleTestConstants.Descriptions.Primary
         };
 
         _serviceMock
-            .Setup(s => s.GetByValueAsync("PRIMARY"))
+            .Setup(s => s.GetByValueAsync(MuscleRoleTestConstants.Values.Primary))
             .ReturnsAsync(ServiceResult<ReferenceDataDto>.Success(muscleRole));
 
         // Act
-        var result = await _controller.GetMuscleRoleByValue("PRIMARY");
+        var result = await _controller.GetMuscleRoleByValue(MuscleRoleTestConstants.Values.Primary);
 
         // Assert
         var okResult = Assert.IsType<OkObjectResult>(result);
         var data = Assert.IsType<ReferenceDataDto>(okResult.Value);
-        Assert.Equal("PRIMARY", data.Value);
+        Assert.Equal(MuscleRoleTestConstants.Values.Primary, data.Value);
     }
 
     [Fact]

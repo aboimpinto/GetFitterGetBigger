@@ -14,6 +14,7 @@ using GetFitterGetBigger.API.Services.Interfaces;
 using GetFitterGetBigger.API.Services.Results;
 using GetFitterGetBigger.API.Tests.TestBuilders;
 using GetFitterGetBigger.API.Tests.TestBuilders.Domain;
+using GetFitterGetBigger.API.Tests.TestConstants;
 using Microsoft.Extensions.Logging;
 using Moq;
 using Olimpo.EntityFramework.Persistency;
@@ -58,8 +59,8 @@ public class MuscleRoleServiceTests
         // Arrange
         var muscleRoles = new List<MuscleRole>
         {
-            MuscleRoleTestBuilder.Create(TestIds.MuscleRoleIds.Primary, "Primary", "Primary muscle used"),
-            MuscleRoleTestBuilder.Create(TestIds.MuscleRoleIds.Secondary, "Secondary", "Secondary muscle used")
+            MuscleRoleTestBuilder.Create(TestIds.MuscleRoleIds.Primary, MuscleRoleTestConstants.Values.Primary, MuscleRoleTestConstants.Descriptions.Primary),
+            MuscleRoleTestBuilder.Create(TestIds.MuscleRoleIds.Secondary, MuscleRoleTestConstants.Values.Secondary, MuscleRoleTestConstants.Descriptions.Secondary)
         };
 
         _cacheServiceMock
@@ -89,7 +90,7 @@ public class MuscleRoleServiceTests
     {
         // Arrange
         var id = MuscleRoleId.From(Guid.Parse(TestIds.MuscleRoleIds.Primary.Replace("musclerole-", "")));
-        var entity = MuscleRoleTestBuilder.Create(TestIds.MuscleRoleIds.Primary, "Primary", "Primary muscle");
+        var entity = MuscleRoleTestBuilder.Create(TestIds.MuscleRoleIds.Primary, MuscleRoleTestConstants.Values.Primary, MuscleRoleTestConstants.Descriptions.Primary);
 
         _cacheServiceMock
             .Setup(c => c.GetAsync<ReferenceDataDto>(It.IsAny<string>()))
@@ -153,7 +154,7 @@ public class MuscleRoleServiceTests
     public async Task GetByValueAsync_WithValidValue_ReturnsSuccess()
     {
         // Arrange
-        var value = "Primary";
+        var value = MuscleRoleTestConstants.Values.Primary;
         var entity = MuscleRoleTestBuilder.Create(TestIds.MuscleRoleIds.Primary, value, "Primary muscle");
 
         _cacheServiceMock
@@ -184,7 +185,7 @@ public class MuscleRoleServiceTests
     public async Task GetByValueAsync_WithNonExistentValue_ReturnsNotFound()
     {
         // Arrange
-        var value = "NonExistent";
+        var value = MuscleRoleTestConstants.Values.NonExistent;
 
         _cacheServiceMock
             .Setup(c => c.GetAsync<ReferenceDataDto>(It.IsAny<string>()))
@@ -220,7 +221,7 @@ public class MuscleRoleServiceTests
     {
         // Arrange
         var id = MuscleRoleId.New();
-        var entity = MuscleRoleTestBuilder.Create(TestIds.MuscleRoleIds.Primary, "Primary", "Primary muscle");
+        var entity = MuscleRoleTestBuilder.Create(TestIds.MuscleRoleIds.Primary, MuscleRoleTestConstants.Values.Primary, MuscleRoleTestConstants.Descriptions.Primary);
 
         _cacheServiceMock
             .Setup(c => c.GetAsync<ReferenceDataDto>(It.IsAny<string>()))
@@ -268,8 +269,8 @@ public class MuscleRoleServiceTests
         // Arrange
         var cachedData = new List<ReferenceDataDto>
         {
-            new() { Id = TestIds.MuscleRoleIds.Primary.ToString(), Value = "Primary", Description = "Primary muscle" },
-            new() { Id = TestIds.MuscleRoleIds.Secondary.ToString(), Value = "Secondary", Description = "Secondary muscle" }
+            new() { Id = TestIds.MuscleRoleIds.Primary.ToString(), Value = MuscleRoleTestConstants.Values.Primary, Description = MuscleRoleTestConstants.Descriptions.Primary },
+            new() { Id = TestIds.MuscleRoleIds.Secondary.ToString(), Value = MuscleRoleTestConstants.Values.Secondary, Description = MuscleRoleTestConstants.Descriptions.Secondary }
         };
 
         _cacheServiceMock
