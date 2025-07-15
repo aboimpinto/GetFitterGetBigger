@@ -21,13 +21,24 @@ public record ServiceResult<T>
     public List<string> Errors { get; init; } = new();
     
     /// <summary>
+    /// List of structured errors with error codes (empty if operation was successful)
+    /// </summary>
+    public List<ServiceError> StructuredErrors { get; init; } = new();
+    
+    /// <summary>
+    /// Gets the primary error code from the first structured error, or None if no structured errors
+    /// </summary>
+    public ServiceErrorCode PrimaryErrorCode => StructuredErrors.FirstOrDefault()?.Code ?? ServiceErrorCode.None;
+    
+    /// <summary>
     /// Creates a successful result with data
     /// </summary>
     public static ServiceResult<T> Success(T data) => new()
     {
         Data = data,
         IsSuccess = true,
-        Errors = new List<string>()
+        Errors = new List<string>(),
+        StructuredErrors = new List<ServiceError>()
     };
     
     /// <summary>
@@ -37,7 +48,8 @@ public record ServiceResult<T>
     {
         Data = emptyData,
         IsSuccess = false,
-        Errors = errors.ToList()
+        Errors = errors.ToList(),
+        StructuredErrors = new List<ServiceError>()
     };
     
     /// <summary>
@@ -47,7 +59,41 @@ public record ServiceResult<T>
     {
         Data = emptyData,
         IsSuccess = false,
-        Errors = errors
+        Errors = errors,
+        StructuredErrors = new List<ServiceError>()
+    };
+    
+    /// <summary>
+    /// Creates a failed result with a structured error
+    /// </summary>
+    public static ServiceResult<T> Failure(T emptyData, ServiceError error) => new()
+    {
+        Data = emptyData,
+        IsSuccess = false,
+        Errors = new List<string> { error.Message },
+        StructuredErrors = new List<ServiceError> { error }
+    };
+    
+    /// <summary>
+    /// Creates a failed result with multiple structured errors
+    /// </summary>
+    public static ServiceResult<T> Failure(T emptyData, params ServiceError[] errors) => new()
+    {
+        Data = emptyData,
+        IsSuccess = false,
+        Errors = errors.Select(e => e.Message).ToList(),
+        StructuredErrors = errors.ToList()
+    };
+    
+    /// <summary>
+    /// Creates a failed result with multiple structured errors
+    /// </summary>
+    public static ServiceResult<T> Failure(T emptyData, List<ServiceError> errors) => new()
+    {
+        Data = emptyData,
+        IsSuccess = false,
+        Errors = errors.Select(e => e.Message).ToList(),
+        StructuredErrors = errors
     };
 }
 

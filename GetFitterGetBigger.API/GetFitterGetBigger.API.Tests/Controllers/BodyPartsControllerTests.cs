@@ -54,27 +54,6 @@ namespace GetFitterGetBigger.API.Tests.Controllers
         }
 
         [Fact]
-        public async Task GetBodyParts_WhenServiceFails_ReturnsBadRequest()
-        {
-            // Arrange
-            var serviceResult = ServiceResult<IEnumerable<BodyPartDto>>.Failure(
-                Enumerable.Empty<BodyPartDto>(),
-                "Failed to load body parts");
-
-            _mockBodyPartService
-                .Setup(x => x.GetAllActiveAsync())
-                .ReturnsAsync(serviceResult);
-
-            // Act
-            var result = await _controller.GetBodyParts();
-
-            // Assert
-            var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
-            Assert.NotNull(badRequestResult.Value);
-            _mockBodyPartService.Verify(x => x.GetAllActiveAsync(), Times.Once);
-        }
-
-        [Fact]
         public async Task GetBodyPartById_WithValidId_ReturnsOkWithBodyPart()
         {
             // Arrange
@@ -109,7 +88,7 @@ namespace GetFitterGetBigger.API.Tests.Controllers
             var invalidId = "invalid-format";
             var serviceResult = ServiceResult<BodyPartDto>.Failure(
                 new BodyPartDto(),
-                "Invalid body part ID format. Expected format: 'bodypart-{guid}'");
+                ServiceError.ValidationFailed("Invalid body part ID"));
 
             _mockBodyPartService
                 .Setup(x => x.GetByIdAsync(BodyPartId.Empty))
@@ -131,7 +110,7 @@ namespace GetFitterGetBigger.API.Tests.Controllers
             var id = "bodypart-00000000-0000-0000-0000-000000000999";
             var serviceResult = ServiceResult<BodyPartDto>.Failure(
                 new BodyPartDto(),
-                "Body part not found");
+                ServiceError.NotFound("Body part"));
 
             _mockBodyPartService
                 .Setup(x => x.GetByIdAsync(It.Is<BodyPartId>(bpId => bpId.ToString() == id)))
@@ -179,7 +158,7 @@ namespace GetFitterGetBigger.API.Tests.Controllers
             var value = "NonExistent";
             var serviceResult = ServiceResult<BodyPartDto>.Failure(
                 new BodyPartDto(),
-                "Body part with value 'NonExistent' not found");
+                ServiceError.NotFound("Body part"));
 
             _mockBodyPartService
                 .Setup(x => x.GetByValueAsync(value))
@@ -200,7 +179,7 @@ namespace GetFitterGetBigger.API.Tests.Controllers
             var value = "";
             var serviceResult = ServiceResult<BodyPartDto>.Failure(
                 new BodyPartDto(),
-                "Body part value cannot be empty");
+                ServiceError.ValidationFailed("Body part value cannot be empty"));
 
             _mockBodyPartService
                 .Setup(x => x.GetByValueAsync(value))

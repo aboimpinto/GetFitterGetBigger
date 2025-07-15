@@ -87,10 +87,17 @@ public class FitnessDbContext : DbContext
                 
         // Movement Pattern ID
         modelBuilder.Entity<MovementPattern>()
-            .Property(mp => mp.Id)
+            .HasKey(mp => mp.MovementPatternId);
+            
+        modelBuilder.Entity<MovementPattern>()
+            .Property(mp => mp.MovementPatternId)
+            .HasColumnName("Id")
             .HasConversion(
                 id => (Guid)id,
                 guid => MovementPatternId.From(guid));
+                
+        modelBuilder.Entity<MovementPattern>()
+            .Ignore(mp => mp.Id);
                 
         // Muscle Group ID
         modelBuilder.Entity<MuscleGroup>()

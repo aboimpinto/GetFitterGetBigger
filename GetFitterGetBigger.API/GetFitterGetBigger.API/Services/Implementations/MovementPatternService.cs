@@ -6,41 +6,40 @@ using GetFitterGetBigger.API.Repositories.Interfaces;
 using GetFitterGetBigger.API.Services.Base;
 using GetFitterGetBigger.API.Services.Interfaces;
 using GetFitterGetBigger.API.Services.Results;
-using Microsoft.Extensions.Logging;
 using Olimpo.EntityFramework.Persistency;
 
 namespace GetFitterGetBigger.API.Services.Implementations;
 
 /// <summary>
-/// Service implementation for body part operations
-/// TEMPORARY: Extends EmptyEnabledPureReferenceService until all entities are migrated
+/// Service implementation for movement pattern operations
+/// Extends EmptyEnabledPureReferenceService for pure reference data with eternal caching
 /// </summary>
-public class BodyPartService : EmptyEnabledPureReferenceService<BodyPart, BodyPartDto>, IBodyPartService
+public class MovementPatternService : EmptyEnabledPureReferenceService<MovementPattern, ReferenceDataDto>, IMovementPatternService
 {
-    public BodyPartService(
+    public MovementPatternService(
         IUnitOfWorkProvider<FitnessDbContext> unitOfWorkProvider,
         IEmptyEnabledCacheService cacheService,
-        ILogger<BodyPartService> logger)
+        ILogger<MovementPatternService> logger)
         : base(unitOfWorkProvider, cacheService, logger)
     {
     }
 
     /// <inheritdoc/>
-    public async Task<ServiceResult<IEnumerable<BodyPartDto>>> GetAllActiveAsync()
+    public async Task<ServiceResult<IEnumerable<ReferenceDataDto>>> GetAllActiveAsync()
     {
         return await GetAllAsync();
     }
 
     /// <inheritdoc/>
-    public async Task<ServiceResult<BodyPartDto>> GetByIdAsync(BodyPartId id) => 
+    public async Task<ServiceResult<ReferenceDataDto>> GetByIdAsync(MovementPatternId id) => 
         id.IsEmpty 
-            ? ServiceResult<BodyPartDto>.Failure(CreateEmptyDto(), ServiceError.ValidationFailed("Invalid body part ID format"))
+            ? ServiceResult<ReferenceDataDto>.Failure(CreateEmptyDto(), ServiceError.ValidationFailed("Invalid movement pattern ID format"))
             : await GetByIdAsync(id.ToString());
     
     /// <inheritdoc/>
-    public async Task<ServiceResult<BodyPartDto>> GetByValueAsync(string value) => 
+    public async Task<ServiceResult<ReferenceDataDto>> GetByValueAsync(string value) => 
         string.IsNullOrWhiteSpace(value)
-            ? ServiceResult<BodyPartDto>.Failure(CreateEmptyDto(), ServiceError.ValidationFailed("Body part value cannot be empty"))
+            ? ServiceResult<ReferenceDataDto>.Failure(CreateEmptyDto(), ServiceError.ValidationFailed("Movement pattern value cannot be empty"))
             : await GetFromCacheOrLoadAsync(
                 GetValueCacheKey(value),
                 () => LoadByValueAsync(value),
@@ -48,67 +47,67 @@ public class BodyPartService : EmptyEnabledPureReferenceService<BodyPart, BodyPa
 
     private string GetValueCacheKey(string value) => $"{GetCacheKeyPrefix()}value:{value}";
     
-    private async Task<ServiceResult<BodyPartDto>> GetFromCacheOrLoadAsync(
+    private async Task<ServiceResult<ReferenceDataDto>> GetFromCacheOrLoadAsync(
         string cacheKey, 
-        Func<Task<BodyPart>> loadFunc,
+        Func<Task<MovementPattern>> loadFunc,
         string identifier)
     {
         var cacheService = (IEmptyEnabledCacheService)_cacheService;
-        var cacheResult = await cacheService.GetAsync<BodyPartDto>(cacheKey);
+        var cacheResult = await cacheService.GetAsync<ReferenceDataDto>(cacheKey);
         if (cacheResult.IsHit)
         {
             _logger.LogDebug("Cache hit for {CacheKey}", cacheKey);
-            return ServiceResult<BodyPartDto>.Success(cacheResult.Value);
+            return ServiceResult<ReferenceDataDto>.Success(cacheResult.Value);
         }
         
         var entity = await loadFunc();
         return entity switch
         {
-            { IsEmpty: true } or { IsActive: false } => ServiceResult<BodyPartDto>.Failure(
+            { IsEmpty: true } or { IsActive: false } => ServiceResult<ReferenceDataDto>.Failure(
                 CreateEmptyDto(), 
-                ServiceError.NotFound("Body part", identifier)),
+                ServiceError.NotFound("Movement pattern", identifier)),
             _ => await CacheAndReturnSuccessAsync(cacheKey, MapToDto(entity))
         };
     }
     
-    private async Task<ServiceResult<BodyPartDto>> CacheAndReturnSuccessAsync(string cacheKey, BodyPartDto dto)
+    private async Task<ServiceResult<ReferenceDataDto>> CacheAndReturnSuccessAsync(string cacheKey, ReferenceDataDto dto)
     {
         await _cacheService.SetAsync(cacheKey, dto, TimeSpan.FromDays(365));
-        return ServiceResult<BodyPartDto>.Success(dto);
+        return ServiceResult<ReferenceDataDto>.Success(dto);
     }
     
-    private async Task<BodyPart> LoadByValueAsync(string value)
+    private async Task<MovementPattern> LoadByValueAsync(string value)
     {
         using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
-        var repository = unitOfWork.GetRepository<IBodyPartRepository>();
+        var repository = unitOfWork.GetRepository<IMovementPatternRepository>();
         return await repository.GetByValueAsync(value);
     }
 
     /// <inheritdoc/>
-    public async Task<bool> ExistsAsync(BodyPartId id) => 
+    public async Task<bool> ExistsAsync(MovementPatternId id) => 
         !id.IsEmpty && (await GetByIdAsync(id)).IsSuccess;
     
     /// <inheritdoc/>
     public override async Task<bool> ExistsAsync(string id) => 
-        await ExistsAsync(BodyPartId.ParseOrEmpty(id));
+        await ExistsAsync(MovementPatternId.ParseOrEmpty(id));
     
-    protected override async Task<IEnumerable<BodyPart>> LoadAllEntitiesAsync(IReadOnlyUnitOfWork<FitnessDbContext> unitOfWork)
+    protected override async Task<IEnumerable<MovementPattern>> LoadAllEntitiesAsync(IReadOnlyUnitOfWork<FitnessDbContext> unitOfWork)
     {
-        var repository = unitOfWork.GetRepository<IBodyPartRepository>();
+        var repository = unitOfWork.GetRepository<IMovementPatternRepository>();
         return await repository.GetAllActiveAsync();
     }
     
-    // Returns BodyPart.Empty instead of null (Null Object Pattern)
-    protected override async Task<BodyPart> LoadEntityByIdAsync(IReadOnlyUnitOfWork<FitnessDbContext> unitOfWork, string id) =>
-        BodyPartId.ParseOrEmpty(id) switch
+    // Returns MovementPattern.Empty instead of null (Null Object Pattern)
+    protected override async Task<MovementPattern> LoadEntityByIdAsync(IReadOnlyUnitOfWork<FitnessDbContext> unitOfWork, string id) =>
+        MovementPatternId.ParseOrEmpty(id) switch
         {
-            { IsEmpty: true } => BodyPart.Empty,
-            var bodyPartId => await unitOfWork.GetRepository<IBodyPartRepository>().GetByIdAsync(bodyPartId)
+            { IsEmpty: true } => MovementPattern.Empty,
+            var movementPatternId => await unitOfWork.GetRepository<IMovementPatternRepository>().GetByIdAsync(movementPatternId)
         };
     
-    protected override BodyPartDto MapToDto(BodyPart entity)
+    protected override ReferenceDataDto MapToDto(MovementPattern entity)
     {
-        return new BodyPartDto
+        return new ReferenceDataDto
         {
             Id = entity.Id,
             Value = entity.Value,
@@ -116,9 +115,9 @@ public class BodyPartService : EmptyEnabledPureReferenceService<BodyPart, BodyPa
         };
     }
     
-    protected override BodyPartDto CreateEmptyDto()
+    protected override ReferenceDataDto CreateEmptyDto()
     {
-        return new BodyPartDto();
+        return new ReferenceDataDto();
     }
     
     protected override ValidationResult ValidateAndParseId(string id)

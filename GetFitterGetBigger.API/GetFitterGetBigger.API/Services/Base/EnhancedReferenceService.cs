@@ -110,7 +110,7 @@ public abstract class EnhancedReferenceService<TEntity, TDto, TCreateCommand, TU
             {
                 return ServiceResult<TDto>.Failure(
                     CreateEmptyDto(),
-                    $"{typeof(TEntity).Name} not found");
+                    ServiceError.NotFound(typeof(TEntity).Name));
             }
             
             // Map to DTO
@@ -209,7 +209,7 @@ public abstract class EnhancedReferenceService<TEntity, TDto, TCreateCommand, TU
             {
                 return ServiceResult<TDto>.Failure(
                     CreateEmptyDto(),
-                    $"{typeof(TEntity).Name} not found");
+                    ServiceError.NotFound(typeof(TEntity).Name));
             }
             
             // Update entity
@@ -256,7 +256,7 @@ public abstract class EnhancedReferenceService<TEntity, TDto, TCreateCommand, TU
             var deleted = await DeleteEntityAsync(unitOfWork, id);
             if (!deleted)
             {
-                return ServiceResult<bool>.Failure(false, $"{typeof(TEntity).Name} not found");
+                return ServiceResult<bool>.Failure(false, ServiceError.NotFound(typeof(TEntity).Name));
             }
             
             await unitOfWork.CommitAsync();

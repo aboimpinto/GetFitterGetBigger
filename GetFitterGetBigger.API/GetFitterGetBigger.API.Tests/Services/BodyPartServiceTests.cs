@@ -230,10 +230,11 @@ namespace GetFitterGetBigger.API.Tests.Services
         }
 
         [Fact]
-        public async Task GetByIdAsync_WithEmptyBodyPartId_ReturnsValidationError()
+        public async Task GetByIdAsync_WithEmptyBodyPartId_ReturnsValidationFailure()
         {
             // Arrange
             var emptyBodyPartId = BodyPartId.Empty;
+            // No need to setup repository - service returns ValidationFailed immediately for empty IDs
 
             // Act
             var result = await _bodyPartService.GetByIdAsync(emptyBodyPartId);
@@ -241,26 +242,45 @@ namespace GetFitterGetBigger.API.Tests.Services
             // Assert
             Assert.False(result.IsSuccess);
             Assert.NotNull(result.Data);
-            Assert.NotEmpty(result.Errors);
-            Assert.Contains("Invalid body part ID format", result.Errors[0]);
-            // Verify the repository was never called
+            Assert.Equal(ServiceErrorCode.ValidationFailed, result.PrimaryErrorCode);
+            Assert.Contains("Invalid body part ID format", result.Errors);
+            // Verify the repository was NOT called (optimization - empty IDs are rejected immediately)
             _mockBodyPartRepository.Verify(x => x.GetByIdAsync(It.IsAny<BodyPartId>()), Times.Never);
         }
 
         [Fact]
-        public async Task GetByIdAsync_WithInvalidIdFormat_ReturnsFailure()
+        public async Task GetByIdAsync_WithEmptyString_ReturnsValidationFailure()
         {
             // Arrange
-            var invalidId = "invalid-id-format";
+            var emptyId = "";
+            // Note: The service only validates for null/empty. Format validation 
+            // is handled by the controller and BodyPartId.ParseOrEmpty()
 
             // Act
-            var result = await _bodyPartService.GetByIdAsync(invalidId);
+            var result = await _bodyPartService.GetByIdAsync(emptyId);
 
             // Assert
             Assert.False(result.IsSuccess);
             Assert.NotNull(result.Data);
-            Assert.NotEmpty(result.Errors);
-            Assert.Contains("Invalid body part ID format", result.Errors[0]);
+            Assert.Equal(ServiceErrorCode.ValidationFailed, result.PrimaryErrorCode);
+            Assert.Contains("ID cannot be empty", result.Errors);
+            _mockBodyPartRepository.Verify(x => x.GetByIdAsync(It.IsAny<BodyPartId>()), Times.Never);
+        }
+
+        [Fact]
+        public async Task GetByIdAsync_WithNullString_ReturnsValidationFailure()
+        {
+            // Arrange
+            string nullId = null;
+
+            // Act
+            var result = await _bodyPartService.GetByIdAsync(nullId);
+
+            // Assert
+            Assert.False(result.IsSuccess);
+            Assert.NotNull(result.Data);
+            Assert.Equal(ServiceErrorCode.ValidationFailed, result.PrimaryErrorCode);
+            Assert.Contains("ID cannot be empty", result.Errors);
             _mockBodyPartRepository.Verify(x => x.GetByIdAsync(It.IsAny<BodyPartId>()), Times.Never);
         }
 

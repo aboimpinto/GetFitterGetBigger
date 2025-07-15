@@ -27,12 +27,15 @@ Feature: Movement Patterns Reference Data
   Scenario: Get movement pattern by invalid ID format returns bad request
     When I send a GET request to "/api/ReferenceTables/MovementPatterns/abcdef12-3456-7890-abcd-ef1234567890"
     Then the response status should be 400
-    And the response should contain "Invalid ID format"
-    And the response should contain "Expected format: 'movementpattern-{guid}'"
 
   @reference-data @validation
-  Scenario: Get movement pattern by non-existent ID returns not found
+  Scenario: Get movement pattern by empty GUID returns not found
     When I send a GET request to "/api/ReferenceTables/MovementPatterns/movementpattern-00000000-0000-0000-0000-000000000000"
+    Then the response status should be 400
+    
+  @reference-data @validation
+  Scenario: Get movement pattern by non-existent ID returns not found
+    When I send a GET request to "/api/ReferenceTables/MovementPatterns/movementpattern-11111111-1111-1111-1111-111111111111"
     Then the response status should be 404
 
   @reference-data

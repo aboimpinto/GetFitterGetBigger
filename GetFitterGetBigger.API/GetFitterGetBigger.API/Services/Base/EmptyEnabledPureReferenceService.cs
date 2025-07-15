@@ -79,7 +79,7 @@ public abstract class EmptyEnabledPureReferenceService<TEntity, TDto> : EntitySe
                 [.. loadResult.Data.Select(MapToDto)]),
             _ => ServiceResult<IEnumerable<TDto>>.Failure(
                 [],
-                $"Failed to load {typeof(TEntity).Name} data from database")
+                ServiceError.InternalError($"Failed to load {typeof(TEntity).Name} data from database"))
         };
     }
     
@@ -124,7 +124,9 @@ public abstract class EmptyEnabledPureReferenceService<TEntity, TDto> : EntitySe
     
     private ServiceResult<TDto> CreateValidationFailure(ValidationResult validationResult)
     {
-        return ServiceResult<TDto>.Failure(CreateEmptyDto(), validationResult.Errors);
+        // Convert multiple validation errors to ServiceErrors
+        var errors = validationResult.Errors.Select(e => ServiceError.ValidationFailed(e)).ToArray();
+        return ServiceResult<TDto>.Failure(CreateEmptyDto(), errors);
     }
     
     private async Task<ServiceResult<TDto>> LoadByIdWithCachingAsync(string id)
@@ -170,7 +172,7 @@ public abstract class EmptyEnabledPureReferenceService<TEntity, TDto> : EntitySe
     
     private ServiceResult<TDto> CreateNotFoundResult()
     {
-        return ServiceResult<TDto>.Failure(CreateEmptyDto(), $"{typeof(TEntity).Name} not found");
+        return ServiceResult<TDto>.Failure(CreateEmptyDto(), ServiceError.NotFound(typeof(TEntity).Name));
     }
     
     private async Task<ServiceResult<TDto>> CacheAndReturnSuccess(string cacheKey, TDto dto)

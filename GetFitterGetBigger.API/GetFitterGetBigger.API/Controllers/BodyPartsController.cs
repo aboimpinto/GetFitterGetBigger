@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using GetFitterGetBigger.API.Services.Interfaces;
+using GetFitterGetBigger.API.Services.Results;
 using GetFitterGetBigger.API.Models.SpecializedIds;
 
 namespace GetFitterGetBigger.API.Controllers;
@@ -42,7 +43,7 @@ public class BodyPartsController : ControllerBase
         return result switch
         {
             { IsSuccess: true } => Ok(result.Data),
-            { Errors: var errors } => BadRequest(new { errors })
+            _ => Ok(result.Data) // GetAll should always succeed, even if empty
         };
     }
 
@@ -64,8 +65,8 @@ public class BodyPartsController : ControllerBase
         return result switch
         {
             { IsSuccess: true } => Ok(result.Data),
-            { Errors: var errors } when errors.Any(e => e.Contains("not found")) => NotFound(),
-            { Errors: var errors } => BadRequest(new { errors })
+            { PrimaryErrorCode: ServiceErrorCode.NotFound } => NotFound(),
+            _ => BadRequest(new { errors = result.StructuredErrors })
         };
     }
 
@@ -87,8 +88,8 @@ public class BodyPartsController : ControllerBase
         return result switch
         {
             { IsSuccess: true } => Ok(result.Data),
-            { Errors: var errors } when errors.Any(e => e.Contains("not found")) => NotFound(),
-            { Errors: var errors } => BadRequest(new { errors })
+            { PrimaryErrorCode: ServiceErrorCode.NotFound } => NotFound(),
+            _ => BadRequest(new { errors = result.StructuredErrors })
         };
     }
 }

@@ -19,7 +19,7 @@ public readonly record struct BodyPartId
     
     public bool IsEmpty => _value == Guid.Empty;
     
-    public static bool TryParse(string? input, out BodyPartId result)
+    private static bool TryParse(string? input, out BodyPartId result)
     {
         result = default;
         if (string.IsNullOrEmpty(input) || !input.StartsWith("bodypart-"))

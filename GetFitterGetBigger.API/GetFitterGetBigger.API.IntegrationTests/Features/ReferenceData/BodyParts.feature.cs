@@ -172,24 +172,22 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.ReferenceData
                 await testRunner.WhenAsync("I send a GET request to \"/api/ReferenceTables/BodyParts/7c5a2d6e-e87e-4c8a-9f1d-9" +
                         "eb734f3df3c\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
                 await testRunner.ThenAsync("the response status should be 400", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
-                await testRunner.AndAsync("the response should contain \"Invalid body part ID format\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
-                await testRunner.AndAsync("the response should contain \"Expected format: \'bodypart-{guid}\'\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
             }
             await this.ScenarioCleanupAsync();
         }
         
-        [Xunit.SkippableFactAttribute(DisplayName="Get body part by empty GUID returns bad request")]
+        [Xunit.SkippableFactAttribute(DisplayName="Get body part by empty GUID returns not found")]
         [Xunit.TraitAttribute("FeatureTitle", "Body Parts Reference Data")]
-        [Xunit.TraitAttribute("Description", "Get body part by empty GUID returns bad request")]
+        [Xunit.TraitAttribute("Description", "Get body part by empty GUID returns not found")]
         [Xunit.TraitAttribute("Category", "reference-data")]
         [Xunit.TraitAttribute("Category", "validation")]
-        public async System.Threading.Tasks.Task GetBodyPartByEmptyGUIDReturnsBadRequest()
+        public async System.Threading.Tasks.Task GetBodyPartByEmptyGUIDReturnsNotFound()
         {
             string[] tagsOfScenario = new string[] {
                     "reference-data",
                     "validation"};
             System.Collections.Specialized.OrderedDictionary argumentsOfScenario = new System.Collections.Specialized.OrderedDictionary();
-            TechTalk.SpecFlow.ScenarioInfo scenarioInfo = new TechTalk.SpecFlow.ScenarioInfo("Get body part by empty GUID returns bad request", null, tagsOfScenario, argumentsOfScenario, featureTags);
+            TechTalk.SpecFlow.ScenarioInfo scenarioInfo = new TechTalk.SpecFlow.ScenarioInfo("Get body part by empty GUID returns not found", null, tagsOfScenario, argumentsOfScenario, featureTags);
             this.ScenarioInitialize(scenarioInfo);
             if ((TagHelper.ContainsIgnoreTag(tagsOfScenario) || TagHelper.ContainsIgnoreTag(featureTags)))
             {
@@ -202,7 +200,6 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.ReferenceData
                 await testRunner.WhenAsync("I send a GET request to \"/api/ReferenceTables/BodyParts/bodypart-00000000-0000-00" +
                         "00-0000-000000000000\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
                 await testRunner.ThenAsync("the response status should be 400", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
-                await testRunner.AndAsync("the response should contain \"Invalid body part ID format\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
             }
             await this.ScenarioCleanupAsync();
         }

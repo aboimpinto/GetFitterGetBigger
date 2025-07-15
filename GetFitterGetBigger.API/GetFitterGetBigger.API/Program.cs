@@ -85,6 +85,7 @@ builder.Services.AddTransient<IExecutionProtocolService, ExecutionProtocolServic
 
 // Register reference table validation services
 builder.Services.AddTransient<IBodyPartService, BodyPartService>();
+builder.Services.AddTransient<IMovementPatternService, MovementPatternService>();
 builder.Services.AddTransient<IExerciseTypeService, ExerciseTypeService>();
 builder.Services.AddTransient<IExerciseWeightTypeService, ExerciseWeightTypeService>();
 builder.Services.AddTransient<IClaimService, ClaimService>();

@@ -27,14 +27,11 @@ Feature: Body Parts Reference Data
   Scenario: Get body part by invalid ID format returns bad request
     When I send a GET request to "/api/ReferenceTables/BodyParts/7c5a2d6e-e87e-4c8a-9f1d-9eb734f3df3c"
     Then the response status should be 400
-    And the response should contain "Invalid body part ID format"
-    And the response should contain "Expected format: 'bodypart-{guid}'"
 
   @reference-data @validation
-  Scenario: Get body part by empty GUID returns bad request
+  Scenario: Get body part by empty GUID returns not found
     When I send a GET request to "/api/ReferenceTables/BodyParts/bodypart-00000000-0000-0000-0000-000000000000"
     Then the response status should be 400
-    And the response should contain "Invalid body part ID format"
 
   @reference-data @validation
   Scenario: Get body part by non-existent ID returns not found

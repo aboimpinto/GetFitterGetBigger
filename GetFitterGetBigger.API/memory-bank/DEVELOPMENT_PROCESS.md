@@ -191,6 +191,15 @@ Create these four MANDATORY reports:
 - ✅ No fake async
 - ✅ No defensive programming without justification
 
+### Service Layer Error Handling
+**📖 Source**: `SERVICE-RESULT-PATTERN.md` - **MANDATORY for all service implementations**
+
+**Key Pattern**:
+- ✅ Use ServiceResult<T> for all service methods
+- ✅ No exceptions for business logic flow
+- ✅ Use structured error codes (ServiceErrorCode enum)
+- ✅ Pattern matching in controllers for clean responses
+
 ### File Management Rules
 **📖 Source**: `UNIFIED_DEVELOPMENT_PROCESS.md` - "Mandatory File Management Rules"
 
@@ -254,15 +263,18 @@ What am I doing?
 │   ├── Starting? → CODE_QUALITY_STANDARDS.md + FEATURE_WORKFLOW_PROCESS.md
 │   ├── Planning? → FEATURE_IMPLEMENTATION_PROCESS.md (Section 1)
 │   ├── Coding? → FEATURE_IMPLEMENTATION_PROCESS.md (Section 4)
+│   │   └── Services? → SERVICE_RESULT_PATTERN.md (Error handling)
 │   └── Completing? → FEATURE_WORKFLOW_PROCESS.md (Completion)
 │
 ├── 🐛 Bug Fix
 │   ├── Starting? → CODE_QUALITY_STANDARDS.md + BUG_WORKFLOW_PROCESS.md
 │   ├── Analyzing? → BUG_IMPLEMENTATION_PROCESS.md (Section 2)
 │   └── Fixing? → BUG_IMPLEMENTATION_PROCESS.md (Section 4)
+│       └── Services? → SERVICE_RESULT_PATTERN.md (Error handling)
 │
 ├── 📋 Process Question
 │   ├── Code Quality? → CODE_QUALITY_STANDARDS.md
+│   ├── Service Errors? → SERVICE_RESULT_PATTERN.md
 │   ├── Quality Standards? → UNIFIED_DEVELOPMENT_PROCESS.md
 │   ├── File Rules? → UNIFIED_DEVELOPMENT_PROCESS.md
 │   └── Testing Policy? → UNIFIED_DEVELOPMENT_PROCESS.md
@@ -277,11 +289,12 @@ What am I doing?
 
 ### Core Process Documents
 1. **CODE_QUALITY_STANDARDS.md** - 🚨 MANDATORY code quality rules (READ FIRST!)
-2. **UNIFIED_DEVELOPMENT_PROCESS.md** - Standards and policies for all projects
-3. **FEATURE_WORKFLOW_PROCESS.md** - Feature states and transitions
-4. **FEATURE_IMPLEMENTATION_PROCESS.md** - Step-by-step feature implementation
-5. **BUG_WORKFLOW_PROCESS.md** - Bug states and transitions
-6. **BUG_IMPLEMENTATION_PROCESS.md** - Step-by-step bug fixing
+2. **SERVICE_RESULT_PATTERN.md** - 🚨 MANDATORY for service layer implementations
+3. **UNIFIED_DEVELOPMENT_PROCESS.md** - Standards and policies for all projects
+4. **FEATURE_WORKFLOW_PROCESS.md** - Feature states and transitions
+5. **FEATURE_IMPLEMENTATION_PROCESS.md** - Step-by-step feature implementation
+6. **BUG_WORKFLOW_PROCESS.md** - Bug states and transitions
+7. **BUG_IMPLEMENTATION_PROCESS.md** - Step-by-step bug fixing
 
 ### When to Use Multiple Documents
 - **Starting work**: Usually need 2 documents (Workflow + Implementation)

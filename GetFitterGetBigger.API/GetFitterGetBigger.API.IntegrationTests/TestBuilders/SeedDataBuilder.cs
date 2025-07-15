@@ -430,11 +430,12 @@ public class SeedDataBuilder
         foreach (var (id, name, description) in movementPatternsToCheck)
         {
             var movementPatternId = MovementPatternId.From(id);
-            var exists = await _context.MovementPatterns.AnyAsync(mp => mp.Id == movementPatternId);
+            var exists = await _context.MovementPatterns.AnyAsync(mp => mp.MovementPatternId == movementPatternId);
             
             if (!exists)
             {
-                var movementPattern = MovementPattern.Handler.Create(movementPatternId, name, description);
+                var displayOrder = Array.IndexOf(movementPatternsToCheck, (id, name, description)) + 1;
+                var movementPattern = MovementPattern.Handler.Create(movementPatternId, name, description, displayOrder, true);
                 await _context.MovementPatterns.AddAsync(movementPattern);
             }
         }

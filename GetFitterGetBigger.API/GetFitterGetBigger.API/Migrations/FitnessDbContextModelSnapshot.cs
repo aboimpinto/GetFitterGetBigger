@@ -24,8 +24,9 @@ namespace GetFitterGetBigger.API.Migrations
 
             modelBuilder.Entity("GetFitterGetBigger.API.Models.Entities.BodyPart", b =>
                 {
-                    b.Property<Guid>("Id")
-                        .HasColumnType("uuid");
+                    b.Property<Guid>("BodyPartId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("Id");
 
                     b.Property<string>("Description")
                         .HasColumnType("text");
@@ -40,49 +41,49 @@ namespace GetFitterGetBigger.API.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.HasKey("Id");
+                    b.HasKey("BodyPartId");
 
                     b.ToTable("BodyParts");
 
                     b.HasData(
                         new
                         {
-                            Id = new Guid("7c5a2d6e-e87e-4c8a-9f1d-9eb734f3df3c"),
+                            BodyPartId = new Guid("7c5a2d6e-e87e-4c8a-9f1d-9eb734f3df3c"),
                             DisplayOrder = 1,
                             IsActive = true,
                             Value = "Chest"
                         },
                         new
                         {
-                            Id = new Guid("b2d89d5c-cb8a-4f5d-8a9e-2c3b76612c5a"),
+                            BodyPartId = new Guid("b2d89d5c-cb8a-4f5d-8a9e-2c3b76612c5a"),
                             DisplayOrder = 2,
                             IsActive = true,
                             Value = "Back"
                         },
                         new
                         {
-                            Id = new Guid("4a6f1b42-5c9b-4c4e-878a-b3d9f2c1f1f5"),
+                            BodyPartId = new Guid("4a6f1b42-5c9b-4c4e-878a-b3d9f2c1f1f5"),
                             DisplayOrder = 3,
                             IsActive = true,
                             Value = "Legs"
                         },
                         new
                         {
-                            Id = new Guid("d7e0e24c-f8d4-4b8a-b1e0-cf9c2e6b5d0a"),
+                            BodyPartId = new Guid("d7e0e24c-f8d4-4b8a-b1e0-cf9c2e6b5d0a"),
                             DisplayOrder = 4,
                             IsActive = true,
                             Value = "Shoulders"
                         },
                         new
                         {
-                            Id = new Guid("9c5f1b4e-2b8a-4c9d-8e7f-c5a9e2d7b8c1"),
+                            BodyPartId = new Guid("9c5f1b4e-2b8a-4c9d-8e7f-c5a9e2d7b8c1"),
                             DisplayOrder = 5,
                             IsActive = true,
                             Value = "Arms"
                         },
                         new
                         {
-                            Id = new Guid("3e9f8a7d-6c5b-4a3e-8d2f-1b7c9a6d5e4c"),
+                            BodyPartId = new Guid("3e9f8a7d-6c5b-4a3e-8d2f-1b7c9a6d5e4c"),
                             DisplayOrder = 6,
                             IsActive = true,
                             Value = "Core"
@@ -720,17 +721,24 @@ namespace GetFitterGetBigger.API.Migrations
 
             modelBuilder.Entity("GetFitterGetBigger.API.Models.Entities.MovementPattern", b =>
                 {
-                    b.Property<Guid>("Id")
-                        .HasColumnType("uuid");
+                    b.Property<Guid>("MovementPatternId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("Id");
 
                     b.Property<string>("Description")
                         .HasColumnType("text");
 
-                    b.Property<string>("Name")
+                    b.Property<int>("DisplayOrder")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Value")
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.HasKey("Id");
+                    b.HasKey("MovementPatternId");
 
                     b.ToTable("MovementPatterns");
                 });

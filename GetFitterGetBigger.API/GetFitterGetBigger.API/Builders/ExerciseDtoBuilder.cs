@@ -111,7 +111,7 @@ public class ExerciseDtoBuilder
             .Select(emp => new ReferenceDataDto
             {
                 Id = emp.MovementPattern!.Id.ToString(),
-                Value = emp.MovementPattern.Name,
+                Value = emp.MovementPattern.Value,
                 Description = emp.MovementPattern.Description
             })
             .ToList() ?? new List<ReferenceDataDto>();

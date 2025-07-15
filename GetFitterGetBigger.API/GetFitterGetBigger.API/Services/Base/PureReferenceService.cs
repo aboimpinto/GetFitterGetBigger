@@ -107,7 +107,7 @@ public abstract class PureReferenceService<TEntity, TDto> : EntityServiceBase<TE
             {
                 return ServiceResult<TDto>.Failure(
                     CreateEmptyDto(),
-                    $"{typeof(TEntity).Name} not found");
+                    ServiceError.NotFound(typeof(TEntity).Name));
             }
             
             // Map to DTO

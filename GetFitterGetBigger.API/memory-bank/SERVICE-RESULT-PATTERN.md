@@ -278,28 +278,123 @@ public async Task<ServiceResult<bool>> DeleteAsync(ExerciseId id)
 
 ## 🎯 **Advanced Patterns**
 
-### **1. Error Codes Instead of String Matching**
+### **1. Structured Error Codes (Implemented)**
+As of the latest update, ServiceResult now includes structured error support to avoid fragile string matching:
+
 ```csharp
-public record ServiceResult<T>
+// ServiceErrorCode enum
+public enum ServiceErrorCode
 {
-    public List<ServiceError> Errors { get; init; } = new();
+    None = 0,
+    NotFound,
+    InvalidFormat,
+    AlreadyExists,
+    ValidationFailed,
+    Unauthorized,
+    ConcurrencyConflict,
+    DependencyExists,
+    InternalError
 }
 
-public record ServiceError(string Code, string Message);
+// ServiceError record with factory methods
+public record ServiceError(ServiceErrorCode Code, string Message)
+{
+    public static ServiceError NotFound(string entityName) => 
+        new(ServiceErrorCode.NotFound, $"{entityName} not found");
+        
+    public static ServiceError InvalidFormat(string fieldName, string expectedFormat) => 
+        new(ServiceErrorCode.InvalidFormat, $"Invalid {fieldName} format. Expected format: {expectedFormat}");
+        
+    public static ServiceError AlreadyExists(string entityName, string identifier) => 
+        new(ServiceErrorCode.AlreadyExists, $"{entityName} '{identifier}' already exists");
+}
 
-// Usage
-return ServiceResult<ExerciseDto>.Failure(
-    ExerciseDto.Empty, 
-    new ServiceError("EXERCISE_EXISTS", $"Exercise '{name}' already exists"));
+// Enhanced ServiceResult with structured errors
+public record ServiceResult<T>
+{
+    public required T Data { get; init; }
+    public bool IsSuccess { get; init; }
+    public List<string> Errors { get; init; } = new(); // Backward compatibility
+    public List<ServiceError> StructuredErrors { get; init; } = new();
+    public ServiceErrorCode PrimaryErrorCode => StructuredErrors.FirstOrDefault()?.Code ?? ServiceErrorCode.None;
+    
+    // New failure methods
+    public static ServiceResult<T> Failure(T emptyData, ServiceError error) => new()
+    {
+        Data = emptyData,
+        IsSuccess = false,
+        Errors = new List<string> { error.Message },
+        StructuredErrors = new List<ServiceError> { error }
+    };
+}
+```
 
-// Controller
+### **Usage in Services**
+```csharp
+// Service implementation with structured errors
+public async Task<ServiceResult<ReferenceDataDto>> GetByIdAsync(MovementPatternId id) => id switch
+{
+    { IsEmpty: true } => ServiceResult<ReferenceDataDto>.Failure(
+        CreateEmptyDto(),
+        ServiceError.InvalidFormat("movement pattern ID", "'movementpattern-{guid}'")),
+    _ => await GetByIdAsync(id.ToString())
+};
+
+// Base service not found handling
+if (entity == null || !entity.IsActive)
+{
+    return ServiceResult<TDto>.Failure(
+        CreateEmptyDto(),
+        ServiceError.NotFound(typeof(TEntity).Name));
+}
+```
+
+### **Controller Pattern Matching with Error Codes**
+```csharp
+// Clean controller without string matching
 return result switch
 {
     { IsSuccess: true } => Ok(result.Data),
-    { Errors: var errors } when errors.Any(e => e.Code == "EXERCISE_EXISTS") => Conflict(errors),
-    { Errors: var errors } => BadRequest(errors)
+    { PrimaryErrorCode: ServiceErrorCode.NotFound } => NotFound(),
+    { PrimaryErrorCode: ServiceErrorCode.AlreadyExists } => Conflict(new { result.StructuredErrors }),
+    { PrimaryErrorCode: ServiceErrorCode.Unauthorized } => Unauthorized(),
+    { StructuredErrors: var errors } => BadRequest(new { errors })
 };
 ```
+
+### **Extension Methods for Common Patterns**
+```csharp
+// ServiceResultExtensions provides convenience methods
+public static IActionResult ToActionResultWithErrorCodes<T>(
+    this ServiceResult<T> result,
+    ControllerBase controller)
+{
+    return result switch
+    {
+        { IsSuccess: true } => controller.Ok(result.Data),
+        { PrimaryErrorCode: ServiceErrorCode.NotFound } => controller.NotFound(new { result.StructuredErrors }),
+        { PrimaryErrorCode: ServiceErrorCode.AlreadyExists } => controller.Conflict(new { result.StructuredErrors }),
+        { PrimaryErrorCode: ServiceErrorCode.Unauthorized } => controller.Unauthorized(new { result.StructuredErrors }),
+        { StructuredErrors: var errors } => controller.BadRequest(new { errors })
+    };
+}
+
+// Usage in controller
+[HttpGet("{id}")]
+public async Task<IActionResult> GetById(string id)
+{
+    var result = await _service.GetByIdAsync(EntityId.ParseOrEmpty(id));
+    return result.ToActionResultWithErrorCodes(this);
+}
+```
+
+### **Benefits of Structured Errors**
+1. **Type Safety**: Compiler catches missing error code cases
+2. **No String Matching**: Eliminates typos and inconsistencies
+3. **Consistent Messages**: Factory methods ensure consistent error messages
+4. **Backward Compatible**: Existing code using string errors continues to work
+5. **Easy Testing**: Test against enums instead of strings
+6. **Clear Intent**: Error codes explicitly communicate the type of error
 
 ### **2. Generic Result Extensions**
 ```csharp

@@ -1,61 +1,50 @@
 using GetFitterGetBigger.API.DTOs;
-using GetFitterGetBigger.API.Models;
-using GetFitterGetBigger.API.Models.Entities;
 using GetFitterGetBigger.API.Models.SpecializedIds;
-using GetFitterGetBigger.API.Repositories.Interfaces;
-using Microsoft.AspNetCore.Mvc;
-using Olimpo.EntityFramework.Persistency;
 using GetFitterGetBigger.API.Services.Interfaces;
-using GetFitterGetBigger.API.Configuration;
-using Microsoft.Extensions.Options;
+using GetFitterGetBigger.API.Services.Results;
+using Microsoft.AspNetCore.Mvc;
 
 namespace GetFitterGetBigger.API.Controllers;
 
 /// <summary>
 /// Controller for retrieving movement pattern data
+/// Uses service layer for all operations
 /// </summary>
-public class MovementPatternsController : ReferenceTablesBaseController
+[ApiController]
+[Route("api/ReferenceTables/[controller]")]
+[Tags("ReferenceTables")]
+public class MovementPatternsController : ControllerBase
 {
+    private readonly IMovementPatternService _movementPatternService;
+    private readonly ILogger<MovementPatternsController> _logger;
+    
     /// <summary>
     /// Initializes a new instance of the <see cref="MovementPatternsController"/> class
     /// </summary>
-    /// <param name="unitOfWorkProvider">The unit of work provider</param>
-    /// <param name="cacheService">The cache service</param>
-    /// <param name="cacheConfiguration">The cache configuration</param>
+    /// <param name="movementPatternService">The movement pattern service</param>
     /// <param name="logger">The logger</param>
     public MovementPatternsController(
-        IUnitOfWorkProvider<FitnessDbContext> unitOfWorkProvider,
-        ICacheService cacheService,
-        IOptions<CacheConfiguration> cacheConfiguration,
+        IMovementPatternService movementPatternService,
         ILogger<MovementPatternsController> logger)
-        : base(unitOfWorkProvider, cacheService, cacheConfiguration, logger)
     {
+        _movementPatternService = movementPatternService;
+        _logger = logger;
     }
 
     /// <summary>
-    /// Gets all movement patterns
+    /// Gets all active movement patterns
     /// </summary>
     /// <returns>A collection of movement patterns</returns>
     [HttpGet]
     [ProducesResponseType(StatusCodes.Status200OK)]
     public async Task<IActionResult> GetAll()
     {
-        var movementPatterns = await GetAllWithCacheAsync(async () =>
+        var result = await _movementPatternService.GetAllActiveAsync();
+        return result switch
         {
-            using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
-            var repository = unitOfWork.GetRepository<IMovementPatternRepository>();
-            return await repository.GetAllAsync();
-        });
-        
-        // Map to DTOs
-        var result = movementPatterns.Select(mp => new ReferenceDataDto
-        {
-            Id = mp.Id.ToString(),
-            Value = mp.Name,
-            Description = mp.Description
-        });
-        
-        return Ok(result);
+            { IsSuccess: true } => Ok(result.Data),
+            _ => Ok(result.Data) // GetAll should always succeed, even if empty
+        };
     }
 
     /// <summary>
@@ -69,28 +58,16 @@ public class MovementPatternsController : ReferenceTablesBaseController
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> GetById(string id)
     {
-        // Try to parse the ID from the format "movementpattern-{guid}"
-        if (!MovementPatternId.TryParse(id, out var movementPatternId))
-        {
-            return BadRequest($"Invalid ID format. Expected format: 'movementpattern-{{guid}}', got: '{id}'");
-        }
+        _logger.LogInformation("Getting movement pattern with ID: {Id}", id);
         
-        var movementPattern = await GetByIdWithCacheAsync(id, async () =>
-        {
-            using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
-            var repository = unitOfWork.GetRepository<IMovementPatternRepository>();
-            return await repository.GetByIdAsync(movementPatternId);
-        });
+        var result = await _movementPatternService.GetByIdAsync(MovementPatternId.ParseOrEmpty(id));
         
-        if (movementPattern == null)
-            return NotFound();
-            
-        return Ok(new ReferenceDataDto
+        return result switch
         {
-            Id = movementPattern.Id.ToString(),
-            Value = movementPattern.Name,
-            Description = movementPattern.Description
-        });
+            { IsSuccess: true } => Ok(result.Data),
+            { PrimaryErrorCode: ServiceErrorCode.NotFound } => NotFound(),
+            _ => BadRequest(new { errors = result.StructuredErrors })
+        };
     }
 
     /// <summary>
@@ -101,21 +78,16 @@ public class MovementPatternsController : ReferenceTablesBaseController
     [HttpGet("ByName/{name}")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> GetByName(string name)
     {
-        using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
-        var repository = unitOfWork.GetRepository<IMovementPatternRepository>();
-        var movementPattern = await repository.GetByNameAsync(name);
-        
-        if (movementPattern == null)
-            return NotFound();
-            
-        return Ok(new ReferenceDataDto
+        var result = await _movementPatternService.GetByValueAsync(name);
+        return result switch
         {
-            Id = movementPattern.Id.ToString(),
-            Value = movementPattern.Name,
-            Description = movementPattern.Description
-        });
+            { IsSuccess: true } => Ok(result.Data),
+            { PrimaryErrorCode: ServiceErrorCode.NotFound } => NotFound(),
+            _ => BadRequest(new { errors = result.StructuredErrors })
+        };
     }
     
     /// <summary>
@@ -126,23 +98,15 @@ public class MovementPatternsController : ReferenceTablesBaseController
     [HttpGet("ByValue/{value}")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> GetByValue(string value)
     {
-        var movementPattern = await GetByValueWithCacheAsync(value, async () =>
+        var result = await _movementPatternService.GetByValueAsync(value);
+        return result switch
         {
-            using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
-            var repository = unitOfWork.GetRepository<IMovementPatternRepository>();
-            return await repository.GetByNameAsync(value);
-        });
-        
-        if (movementPattern == null)
-            return NotFound();
-            
-        return Ok(new ReferenceDataDto
-        {
-            Id = movementPattern.Id.ToString(),
-            Value = movementPattern.Name,
-            Description = movementPattern.Description
-        });
+            { IsSuccess: true } => Ok(result.Data),
+            { PrimaryErrorCode: ServiceErrorCode.NotFound } => NotFound(),
+            _ => BadRequest(new { errors = result.StructuredErrors })
+        };
     }
 }

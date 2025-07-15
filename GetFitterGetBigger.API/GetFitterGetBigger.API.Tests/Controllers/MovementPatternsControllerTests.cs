@@ -1,0 +1,222 @@
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using GetFitterGetBigger.API.Controllers;
+using GetFitterGetBigger.API.DTOs;
+using GetFitterGetBigger.API.Models.SpecializedIds;
+using GetFitterGetBigger.API.Services.Interfaces;
+using GetFitterGetBigger.API.Services.Results;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
+using Moq;
+using Xunit;
+
+namespace GetFitterGetBigger.API.Tests.Controllers
+{
+    public class MovementPatternsControllerTests
+    {
+        private readonly Mock<IMovementPatternService> _mockMovementPatternService;
+        private readonly Mock<ILogger<MovementPatternsController>> _mockLogger;
+        private readonly MovementPatternsController _controller;
+
+        public MovementPatternsControllerTests()
+        {
+            _mockMovementPatternService = new Mock<IMovementPatternService>();
+            _mockLogger = new Mock<ILogger<MovementPatternsController>>();
+            _controller = new MovementPatternsController(
+                _mockMovementPatternService.Object,
+                _mockLogger.Object);
+        }
+
+        [Fact]
+        public async Task GetAll_ReturnsOkWithMovementPatterns()
+        {
+            // Arrange
+            var movementPatterns = new List<ReferenceDataDto>
+            {
+                new() { Id = "movementpattern-123", Value = "Horizontal Push", Description = "Pushing forward" },
+                new() { Id = "movementpattern-456", Value = "Vertical Pull", Description = "Pulling downward" }
+            };
+            var serviceResult = ServiceResult<IEnumerable<ReferenceDataDto>>.Success(movementPatterns);
+
+            _mockMovementPatternService
+                .Setup(x => x.GetAllActiveAsync())
+                .ReturnsAsync(serviceResult);
+
+            // Act
+            var result = await _controller.GetAll();
+
+            // Assert
+            var okResult = Assert.IsType<OkObjectResult>(result);
+            var returnedMovementPatterns = Assert.IsAssignableFrom<IEnumerable<ReferenceDataDto>>(okResult.Value);
+            Assert.Equal(2, returnedMovementPatterns.Count());
+            _mockMovementPatternService.Verify(x => x.GetAllActiveAsync(), Times.Once);
+        }
+
+        [Fact]
+        public async Task GetById_WithValidId_ReturnsOkWithMovementPattern()
+        {
+            // Arrange
+            var id = "movementpattern-12345678-1234-1234-1234-123456789012";
+            var movementPattern = new ReferenceDataDto
+            {
+                Id = id,
+                Value = "Horizontal Push",
+                Description = "Pushing forward"
+            };
+            var serviceResult = ServiceResult<ReferenceDataDto>.Success(movementPattern);
+
+            _mockMovementPatternService
+                .Setup(x => x.GetByIdAsync(It.Is<MovementPatternId>(mpId => mpId.ToString() == id)))
+                .ReturnsAsync(serviceResult);
+
+            // Act
+            var result = await _controller.GetById(id);
+
+            // Assert
+            var okResult = Assert.IsType<OkObjectResult>(result);
+            var returnedMovementPattern = Assert.IsType<ReferenceDataDto>(okResult.Value);
+            Assert.Equal(id, returnedMovementPattern.Id);
+            Assert.Equal("Horizontal Push", returnedMovementPattern.Value);
+            _mockMovementPatternService.Verify(x => x.GetByIdAsync(It.IsAny<MovementPatternId>()), Times.Once);
+        }
+
+        [Fact]
+        public async Task GetById_WithInvalidIdFormat_ReturnsBadRequest()
+        {
+            // Arrange
+            var invalidId = "invalid-id-format";
+            var dto = new ReferenceDataDto();
+            _mockMovementPatternService
+                .Setup(x => x.GetByIdAsync(It.IsAny<MovementPatternId>()))
+                .ReturnsAsync(ServiceResult<ReferenceDataDto>.Failure(dto, ServiceError.ValidationFailed("Invalid movement pattern ID")));
+
+            // Act
+            var result = await _controller.GetById(invalidId);
+
+            // Assert
+            var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
+            Assert.NotNull(badRequestResult.Value);
+            
+            // Verify the service WAS called since we now let the service handle validation
+            _mockMovementPatternService.Verify(x => x.GetByIdAsync(It.IsAny<MovementPatternId>()), Times.Once);
+        }
+
+        [Fact]
+        public async Task GetById_WhenNotFound_ReturnsNotFound()
+        {
+            // Arrange
+            var id = "movementpattern-12345678-1234-1234-1234-123456789012";
+            var serviceResult = ServiceResult<ReferenceDataDto>.Failure(
+                new ReferenceDataDto(),
+                ServiceError.NotFound("Movement pattern"));
+
+            _mockMovementPatternService
+                .Setup(x => x.GetByIdAsync(It.Is<MovementPatternId>(mpId => mpId.ToString() == id)))
+                .ReturnsAsync(serviceResult);
+
+            // Act
+            var result = await _controller.GetById(id);
+
+            // Assert
+            Assert.IsType<NotFoundResult>(result);
+            _mockMovementPatternService.Verify(x => x.GetByIdAsync(It.IsAny<MovementPatternId>()), Times.Once);
+        }
+
+        [Fact]
+        public async Task GetByName_WithValidName_ReturnsOkWithMovementPattern()
+        {
+            // Arrange
+            var name = "Horizontal Push";
+            var movementPattern = new ReferenceDataDto
+            {
+                Id = "movementpattern-123",
+                Value = name,
+                Description = "Pushing forward"
+            };
+            var serviceResult = ServiceResult<ReferenceDataDto>.Success(movementPattern);
+
+            _mockMovementPatternService
+                .Setup(x => x.GetByValueAsync(name))
+                .ReturnsAsync(serviceResult);
+
+            // Act
+            var result = await _controller.GetByName(name);
+
+            // Assert
+            var okResult = Assert.IsType<OkObjectResult>(result);
+            var returnedMovementPattern = Assert.IsType<ReferenceDataDto>(okResult.Value);
+            Assert.Equal(name, returnedMovementPattern.Value);
+            _mockMovementPatternService.Verify(x => x.GetByValueAsync(name), Times.Once);
+        }
+
+        [Fact]
+        public async Task GetByName_WhenNotFound_ReturnsNotFound()
+        {
+            // Arrange
+            var name = "NonExistent";
+            var serviceResult = ServiceResult<ReferenceDataDto>.Failure(
+                new ReferenceDataDto(),
+                ServiceError.NotFound("Movement pattern"));
+
+            _mockMovementPatternService
+                .Setup(x => x.GetByValueAsync(name))
+                .ReturnsAsync(serviceResult);
+
+            // Act
+            var result = await _controller.GetByName(name);
+
+            // Assert
+            Assert.IsType<NotFoundResult>(result);
+            _mockMovementPatternService.Verify(x => x.GetByValueAsync(name), Times.Once);
+        }
+
+        [Fact]
+        public async Task GetByValue_WithValidValue_ReturnsOkWithMovementPattern()
+        {
+            // Arrange
+            var value = "Vertical Pull";
+            var movementPattern = new ReferenceDataDto
+            {
+                Id = "movementpattern-456",
+                Value = value,
+                Description = "Pulling downward"
+            };
+            var serviceResult = ServiceResult<ReferenceDataDto>.Success(movementPattern);
+
+            _mockMovementPatternService
+                .Setup(x => x.GetByValueAsync(value))
+                .ReturnsAsync(serviceResult);
+
+            // Act
+            var result = await _controller.GetByValue(value);
+
+            // Assert
+            var okResult = Assert.IsType<OkObjectResult>(result);
+            var returnedMovementPattern = Assert.IsType<ReferenceDataDto>(okResult.Value);
+            Assert.Equal(value, returnedMovementPattern.Value);
+            _mockMovementPatternService.Verify(x => x.GetByValueAsync(value), Times.Once);
+        }
+
+        [Fact]
+        public async Task GetByValue_WhenNotFound_ReturnsNotFound()
+        {
+            // Arrange
+            var value = "NonExistent";
+            var serviceResult = ServiceResult<ReferenceDataDto>.Failure(
+                new ReferenceDataDto(),
+                ServiceError.NotFound("Movement pattern"));
+
+            _mockMovementPatternService
+                .Setup(x => x.GetByValueAsync(value))
+                .ReturnsAsync(serviceResult);
+
+            // Act
+            var result = await _controller.GetByValue(value);
+
+            // Assert
+            Assert.IsType<NotFoundResult>(result);
+            _mockMovementPatternService.Verify(x => x.GetByValueAsync(value), Times.Once);
+        }
+    }
+}
