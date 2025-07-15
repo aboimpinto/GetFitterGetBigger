@@ -15,7 +15,7 @@ public class UpdateExerciseRequestBuilder
     private string _name = "Test Exercise";
     private string _description = "Test Description";
     private string _difficultyId = TestIds.DifficultyLevelIds.Beginner;
-    private string? _kineticChainId = TestIds.KineticChainIds.Open;
+    private string? _kineticChainId = TestIds.KineticChainTypeIds.Compound;
     private string? _exerciseWeightTypeId = TestIds.ExerciseWeightTypeIds.WeightRequired;
     private List<string> _exerciseTypeIds = new() { TestIds.ExerciseTypeIds.Workout };
     private List<MuscleGroupWithRoleRequest> _muscleGroups = new();

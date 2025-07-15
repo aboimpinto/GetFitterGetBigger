@@ -20,7 +20,7 @@ public class KineticChainTypeTestBuilder
     /// Creates a builder for COMPOUND kinetic chain type
     /// </summary>
     public static KineticChainTypeTestBuilder Compound() => new KineticChainTypeTestBuilder()
-        .WithId(KineticChainTypeId.From(Guid.Parse("f5d5a2de-9c4e-4b87-b8c3-5d1e17d0b1f4")))
+        .WithId(TestIds.KineticChainTypeIds.Compound)
         .WithValue("COMPOUND")
         .WithDescription("Multi-joint movement engaging multiple muscle groups")
         .WithDisplayOrder(1);
@@ -29,7 +29,7 @@ public class KineticChainTypeTestBuilder
     /// Creates a builder for ISOLATION kinetic chain type
     /// </summary>
     public static KineticChainTypeTestBuilder Isolation() => new KineticChainTypeTestBuilder()
-        .WithId(KineticChainTypeId.From(Guid.Parse("a7c8b9da-0e1f-2a3b-4c5d-6e7f8a9b0c1d")))
+        .WithId(TestIds.KineticChainTypeIds.Isolation)
         .WithValue("ISOLATION")
         .WithDescription("Single-joint movement targeting specific muscle")
         .WithDisplayOrder(2);
@@ -38,7 +38,7 @@ public class KineticChainTypeTestBuilder
     /// Creates a builder for FUNCTIONAL kinetic chain type
     /// </summary>
     public static KineticChainTypeTestBuilder Functional() => new KineticChainTypeTestBuilder()
-        .WithId(KineticChainTypeId.From(Guid.Parse("b8d9c0ea-1f2a-3b4c-5d6e-7f8a9b0c1d2e")))
+        .WithId(TestIds.KineticChainTypeIds.Functional)
         .WithValue("FUNCTIONAL")
         .WithDescription("Movement patterns that mimic daily activities")
         .WithDisplayOrder(3);
@@ -47,7 +47,7 @@ public class KineticChainTypeTestBuilder
     /// Creates a builder for POWER kinetic chain type
     /// </summary>
     public static KineticChainTypeTestBuilder Power() => new KineticChainTypeTestBuilder()
-        .WithId(KineticChainTypeId.From(Guid.Parse("c9e0d1fb-2a3b-4c5d-6e7f-8a9b0c1d2e3f")))
+        .WithId(TestIds.KineticChainTypeIds.Power)
         .WithValue("POWER")
         .WithDescription("Explosive movements focusing on speed and force")
         .WithDisplayOrder(4);
@@ -119,13 +119,20 @@ public class KineticChainTypeTestBuilder
         // If ID is provided, use it, otherwise generate new
         var id = _id ?? KineticChainTypeId.New();
         
-        return KineticChainType.Handler.Create(
+        var result = KineticChainType.Handler.Create(
             id: id,
             value: _value,
             description: _description,
             displayOrder: _displayOrder,
             isActive: _isActive
         );
+        
+        if (!result.IsSuccess)
+        {
+            throw new InvalidOperationException($"Failed to create KineticChainType: {string.Join(", ", result.Errors)}");
+        }
+        
+        return result.Value;
     }
 
     /// <summary>
@@ -133,7 +140,7 @@ public class KineticChainTypeTestBuilder
     /// </summary>
     public string BuildId()
     {
-        return Build().Id.ToString();
+        return Build().Id;
     }
 
     /// <summary>

@@ -9,7 +9,7 @@ namespace GetFitterGetBigger.API.Repositories.Implementations;
 /// Repository implementation for KineticChainType reference data
 /// </summary>
 public class KineticChainTypeRepository : 
-    ReferenceDataRepository<KineticChainType, KineticChainTypeId, FitnessDbContext>,
+    EmptyEnabledReferenceDataRepository<KineticChainType, KineticChainTypeId, FitnessDbContext>,
     IKineticChainTypeRepository
 {
     // Add any KineticChainType-specific repository methods here if needed

@@ -310,12 +310,12 @@ public class SeedDataBuilder
         foreach (var (id, name, description, displayOrder) in kineticChainTypesToCheck)
         {
             var kineticChainId = KineticChainTypeId.From(id);
-            var exists = await _context.KineticChainTypes.AnyAsync(kct => kct.Id == kineticChainId);
+            var exists = await _context.KineticChainTypes.AnyAsync(kct => kct.KineticChainTypeId == kineticChainId);
             
             if (!exists)
             {
                 var kineticChain = KineticChainType.Handler.Create(kineticChainId, name, description, displayOrder, true);
-                await _context.KineticChainTypes.AddAsync(kineticChain);
+                await _context.KineticChainTypes.AddAsync(kineticChain.Value);
             }
         }
         

@@ -150,7 +150,7 @@ public class ExerciseBuilder
     public ExerciseBuilder WithKineticChain(KineticChainType kineticChain)
     {
         _kineticChain = kineticChain;
-        _kineticChainId = kineticChain.Id;
+        _kineticChainId = kineticChain.KineticChainTypeId;
         return this;
     }
     

@@ -78,11 +78,15 @@ public static class TestIds
         public static readonly string Machine = "equipment-e5555555-5555-5555-5555-555555555555";
     }
     
-    // Kinetic Chain IDs
-    public static class KineticChainIds
+    // Kinetic Chain Type IDs
+    public static class KineticChainTypeIds
     {
-        public static readonly string Open = "kineticchaintype-11111111-1111-1111-1111-111111111111";
-        public static readonly string Closed = "kineticchaintype-22222222-2222-2222-2222-222222222222";
+        public static readonly string Compound = "kineticchaintype-f5d5a2de-9c4e-4b87-b8c3-5d1e17d0b1f4";
+        public static readonly string Isolation = "kineticchaintype-a7c8b9da-0e1f-2a3b-4c5d-6e7f8a9b0c1d";
+        public static readonly string Functional = "kineticchaintype-b8d9c0ea-1f2a-3b4c-5d6e-7f8a9b0c1d2e";
+        public static readonly string Power = "kineticchaintype-c9e0d1fb-2a3b-4c5d-6e7f-8a9b0c1d2e3f";
+        public static readonly string NonExistent = "kineticchaintype-99999999-9999-9999-9999-999999999999";
+        public static readonly string EmptyGuid = "kineticchaintype-00000000-0000-0000-0000-000000000000";
     }
     
     // Movement Pattern IDs

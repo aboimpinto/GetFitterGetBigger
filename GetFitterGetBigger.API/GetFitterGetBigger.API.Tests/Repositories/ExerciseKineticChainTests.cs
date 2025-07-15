@@ -35,9 +35,9 @@ namespace GetFitterGetBigger.API.Tests.Repositories
             _context.DifficultyLevels.Add(difficulty);
 
             var kineticChainId = KineticChainTypeId.New();
-            var kineticChain = KineticChainType.Handler.Create(
+            var kineticChainResult = KineticChainType.Handler.Create(
                 kineticChainId, "Closed Chain", "Movement where the distal segment is fixed", 1, true);
-            _context.KineticChainTypes.Add(kineticChain);
+            _context.KineticChainTypes.Add(kineticChainResult.Value);
             
             await _context.SaveChangesAsync();
 

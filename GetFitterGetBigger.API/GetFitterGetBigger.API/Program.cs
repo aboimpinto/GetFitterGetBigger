@@ -90,6 +90,7 @@ builder.Services.AddTransient<IExerciseTypeService, ExerciseTypeService>();
 builder.Services.AddTransient<IExerciseWeightTypeService, ExerciseWeightTypeService>();
 builder.Services.AddTransient<IClaimService, ClaimService>();
 builder.Services.AddTransient<IDifficultyLevelService, DifficultyLevelService>();
+builder.Services.AddTransient<IKineticChainTypeService, KineticChainTypeService>();
 
 // Register authentication services
 builder.Services.AddTransient<IJwtService, JwtService>();

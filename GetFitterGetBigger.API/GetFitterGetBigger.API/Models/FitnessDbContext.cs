@@ -170,10 +170,17 @@ public class FitnessDbContext : DbContext
                 guid => DifficultyLevelId.From(guid));
                 
         modelBuilder.Entity<KineticChainType>()
-            .Property(kct => kct.Id)
+            .HasKey(kct => kct.KineticChainTypeId);
+            
+        modelBuilder.Entity<KineticChainType>()
+            .Property(kct => kct.KineticChainTypeId)
+            .HasColumnName("Id")
             .HasConversion(
                 id => (Guid)id,
                 guid => KineticChainTypeId.From(guid));
+                
+        modelBuilder.Entity<KineticChainType>()
+            .Ignore(kct => kct.Id);
                 
         modelBuilder.Entity<BodyPart>()
             .HasKey(bp => bp.BodyPartId);
@@ -767,13 +774,13 @@ public class FitnessDbContext : DbContext
                 "Compound",
                 "Exercises that work multiple muscle groups",
                 1,
-                true),
+                true).Value,
             KineticChainType.Handler.Create(
                 KineticChainTypeId.From(Guid.Parse("2b3e7cb2-9a3e-4c9a-88d8-b7c019c90d1b")),
                 "Isolation",
                 "Exercises that work a single muscle group",
                 2,
-                true)
+                true).Value
         );
         
         // Seed BodyParts

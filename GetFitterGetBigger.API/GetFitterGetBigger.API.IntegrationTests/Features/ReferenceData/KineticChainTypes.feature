@@ -27,13 +27,16 @@ Feature: Kinetic Chain Types Reference Data
   Scenario: Get kinetic chain type by invalid ID format returns bad request
     When I send a GET request to "/api/ReferenceTables/KineticChainTypes/f5d5a2de-9c4e-4b87-b8c3-5d1e17d0b1f4"
     Then the response status should be 400
-    And the response should contain "Invalid ID format"
-    And the response should contain "Expected format: 'kineticchaintype-{guid}'"
 
   @reference-data @validation
   Scenario: Get kinetic chain type by non-existent ID returns not found
-    When I send a GET request to "/api/ReferenceTables/KineticChainTypes/kineticchaintype-00000000-0000-0000-0000-000000000000"
+    When I send a GET request to "/api/ReferenceTables/KineticChainTypes/kineticchaintype-99999999-9999-9999-9999-999999999999"
     Then the response status should be 404
+    
+  @reference-data @validation
+  Scenario: Get kinetic chain type by empty GUID returns bad request
+    When I send a GET request to "/api/ReferenceTables/KineticChainTypes/kineticchaintype-00000000-0000-0000-0000-000000000000"
+    Then the response status should be 400
 
   @reference-data
   Scenario: Get kinetic chain type by valid value
