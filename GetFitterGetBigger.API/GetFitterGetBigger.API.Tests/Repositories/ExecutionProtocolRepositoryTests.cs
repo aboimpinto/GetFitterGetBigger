@@ -67,7 +67,7 @@ public class ExecutionProtocolRepositoryTests : IDisposable
     public async Task GetByIdAsync_ExistingId_ReturnsCorrectItem()
     {
         // Arrange
-        var id = ExecutionProtocolId.From(TestIds.ExecutionProtocolIds.Standard);
+        var id = ExecutionProtocolId.ParseOrEmpty(TestIds.ExecutionProtocolIds.Standard);
         
         // Act
         var result = await _repository.GetByIdAsync(id);
@@ -86,23 +86,25 @@ public class ExecutionProtocolRepositoryTests : IDisposable
     }
     
     [Fact]
-    public async Task GetByIdAsync_NonExistingId_ReturnsNull()
+    public async Task GetByIdAsync_NonExistingId_ReturnsEmpty()
     {
         // Arrange
-        var id = ExecutionProtocolId.From(Guid.Parse("99999999-9999-9999-9999-999999999999"));
+        var id = ExecutionProtocolId.New();
         
         // Act
         var result = await _repository.GetByIdAsync(id);
         
         // Assert
-        Assert.Null(result);
+        Assert.NotNull(result);
+        Assert.True(result.IsEmpty);
+        Assert.Equal(ExecutionProtocol.Empty, result);
     }
     
     [Fact]
     public async Task GetByIdAsync_InactiveId_ReturnsItem()
     {
         // Arrange
-        var id = ExecutionProtocolId.From(TestIds.ExecutionProtocolIds.InactiveProtocol);
+        var id = ExecutionProtocolId.ParseOrEmpty(TestIds.ExecutionProtocolIds.InactiveProtocol);
         
         // Act
         var result = await _repository.GetByIdAsync(id);
@@ -138,23 +140,25 @@ public class ExecutionProtocolRepositoryTests : IDisposable
     }
     
     [Fact]
-    public async Task GetByValueAsync_InactiveValue_ReturnsNull()
+    public async Task GetByValueAsync_InactiveValue_ReturnsEmpty()
     {
         // Act
         var result = await _repository.GetByValueAsync("Inactive Protocol");
         
         // Assert
-        Assert.Null(result); // Should not return inactive items
+        Assert.NotNull(result);
+        Assert.True(result.IsEmpty); // Should not return inactive items
     }
     
     [Fact]
-    public async Task GetByValueAsync_NonExistingValue_ReturnsNull()
+    public async Task GetByValueAsync_NonExistingValue_ReturnsEmpty()
     {
         // Act
         var result = await _repository.GetByValueAsync("Non-Existing Protocol");
         
         // Assert
-        Assert.Null(result);
+        Assert.NotNull(result);
+        Assert.True(result.IsEmpty);
     }
     
     [Fact]
@@ -183,23 +187,25 @@ public class ExecutionProtocolRepositoryTests : IDisposable
     }
     
     [Fact]
-    public async Task GetByCodeAsync_InactiveCode_ReturnsNull()
+    public async Task GetByCodeAsync_InactiveCode_ReturnsEmpty()
     {
         // Act
         var result = await _repository.GetByCodeAsync("INACTIVE");
         
         // Assert
-        Assert.Null(result); // Should not return inactive items
+        Assert.NotNull(result);
+        Assert.True(result.IsEmpty); // Should not return inactive items
     }
     
     [Fact]
-    public async Task GetByCodeAsync_NonExistingCode_ReturnsNull()
+    public async Task GetByCodeAsync_NonExistingCode_ReturnsEmpty()
     {
         // Act
         var result = await _repository.GetByCodeAsync("NON_EXISTING");
         
         // Assert
-        Assert.Null(result);
+        Assert.NotNull(result);
+        Assert.True(result.IsEmpty);
     }
     
     [Fact]

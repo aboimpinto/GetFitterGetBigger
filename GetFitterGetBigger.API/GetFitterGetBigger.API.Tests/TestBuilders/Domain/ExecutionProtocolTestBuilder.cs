@@ -1,3 +1,4 @@
+using System;
 using GetFitterGetBigger.API.Models.Entities;
 using GetFitterGetBigger.API.Models.SpecializedIds;
 using GetFitterGetBigger.API.Tests.TestBuilders;
@@ -101,8 +102,8 @@ public class ExecutionProtocolTestBuilder
 
     public ExecutionProtocolTestBuilder WithId(string idString)
     {
-        _id = ExecutionProtocolId.From(idString);
-        if (_id == null || _id.Value.IsEmpty)
+        _id = ExecutionProtocolId.ParseOrEmpty(idString);
+        if (_id?.IsEmpty ?? false)
         {
             throw new ArgumentException($"Invalid ExecutionProtocolId format: '{idString}'. Expected format: 'executionprotocol-{{guid}}' or valid GUID");
         }
@@ -184,7 +185,7 @@ public class ExecutionProtocolTestBuilder
         // If ID is provided, use it, otherwise generate new
         var id = _id ?? ExecutionProtocolId.New();
         
-        return ExecutionProtocol.Handler.Create(
+        var result = ExecutionProtocol.Handler.Create(
             id: id,
             value: _value,
             description: _description,
@@ -196,6 +197,13 @@ public class ExecutionProtocolTestBuilder
             displayOrder: _displayOrder,
             isActive: _isActive
         );
+        
+        if (!result.IsSuccess)
+        {
+            throw new InvalidOperationException($"Failed to create ExecutionProtocol: {string.Join(", ", result.Errors)}");
+        }
+        
+        return result.Value;
     }
 
     /// <summary>
@@ -203,7 +211,7 @@ public class ExecutionProtocolTestBuilder
     /// </summary>
     public string BuildId()
     {
-        return Build().Id.ToString();
+        return Build().ExecutionProtocolId.ToString();
     }
 
     /// <summary>

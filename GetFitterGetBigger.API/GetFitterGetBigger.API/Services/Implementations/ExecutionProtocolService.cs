@@ -1,315 +1,175 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using GetFitterGetBigger.API.Constants;
 using GetFitterGetBigger.API.DTOs;
+using GetFitterGetBigger.API.Models;
 using GetFitterGetBigger.API.Models.Entities;
 using GetFitterGetBigger.API.Models.SpecializedIds;
 using GetFitterGetBigger.API.Repositories.Interfaces;
+using GetFitterGetBigger.API.Services.Base;
 using GetFitterGetBigger.API.Services.Interfaces;
-using GetFitterGetBigger.API.Utilities;
+using GetFitterGetBigger.API.Services.Results;
 using Microsoft.Extensions.Logging;
 using Olimpo.EntityFramework.Persistency;
-using GetFitterGetBigger.API.Models;
 
 namespace GetFitterGetBigger.API.Services.Implementations;
 
 /// <summary>
-/// Service implementation for managing execution protocols reference data
+/// Service implementation for execution protocol operations
 /// </summary>
-public class ExecutionProtocolService : IExecutionProtocolService
+public class ExecutionProtocolService : EmptyEnabledPureReferenceService<ExecutionProtocol, ExecutionProtocolDto>, IExecutionProtocolService
 {
-    private const string CacheKeyPrefix = "ExecutionProtocols";
-    private static readonly TimeSpan CacheDuration = TimeSpan.FromHours(1);
-    
-    private readonly IUnitOfWorkProvider<FitnessDbContext> _unitOfWorkProvider;
-    private readonly ICacheService _cacheService;
-    private readonly ILogger<ExecutionProtocolService> _logger;
-    
     public ExecutionProtocolService(
         IUnitOfWorkProvider<FitnessDbContext> unitOfWorkProvider,
-        ICacheService cacheService,
+        IEmptyEnabledCacheService cacheService,
         ILogger<ExecutionProtocolService> logger)
+        : base(unitOfWorkProvider, cacheService, logger)
     {
-        _unitOfWorkProvider = unitOfWorkProvider ?? throw new ArgumentNullException(nameof(unitOfWorkProvider));
-        _cacheService = cacheService ?? throw new ArgumentNullException(nameof(cacheService));
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
-    
-    /// <inheritdoc />
-    public async Task<IEnumerable<ExecutionProtocol>> GetAllAsync()
+
+    /// <inheritdoc/>
+    public async Task<ServiceResult<IEnumerable<ExecutionProtocolDto>>> GetAllActiveAsync()
     {
-        var cacheKey = CacheKeyGenerator.GetAllKey(CacheKeyPrefix);
-        var cached = await _cacheService.GetAsync<IEnumerable<ExecutionProtocol>>(cacheKey);
-        if (cached != null)
+        return await GetAllAsync();
+    }
+
+    /// <inheritdoc/>
+    public async Task<ServiceResult<ExecutionProtocolDto>> GetByIdAsync(ExecutionProtocolId id) => 
+        id.IsEmpty 
+            ? ServiceResult<ExecutionProtocolDto>.Failure(CreateEmptyDto(), ServiceError.ValidationFailed(ExecutionProtocolErrorMessages.InvalidIdFormat))
+            : await GetByIdAsync(id.ToString());
+    
+    /// <inheritdoc/>
+    public async Task<ServiceResult<ExecutionProtocolDto>> GetByValueAsync(string value) => 
+        string.IsNullOrWhiteSpace(value)
+            ? ServiceResult<ExecutionProtocolDto>.Failure(CreateEmptyDto(), ServiceError.ValidationFailed(ExecutionProtocolErrorMessages.ValueCannotBeEmpty))
+            : await GetFromCacheOrLoadAsync(
+                GetValueCacheKey(value),
+                () => LoadByValueAsync(value),
+                value);
+
+    /// <inheritdoc/>
+    public async Task<ServiceResult<ExecutionProtocolDto>> GetByCodeAsync(string code) => 
+        string.IsNullOrWhiteSpace(code)
+            ? ServiceResult<ExecutionProtocolDto>.Failure(CreateEmptyDto(), ServiceError.ValidationFailed(ExecutionProtocolErrorMessages.CodeCannotBeEmpty))
+            : await GetFromCacheOrLoadAsync(
+                GetCodeCacheKey(code),
+                () => LoadByCodeAsync(code),
+                code);
+
+    private string GetValueCacheKey(string value) => $"{GetCacheKeyPrefix()}value:{value}";
+    private string GetCodeCacheKey(string code) => $"{GetCacheKeyPrefix()}code:{code.ToLowerInvariant()}";
+    
+    private async Task<ServiceResult<ExecutionProtocolDto>> GetFromCacheOrLoadAsync(
+        string cacheKey, 
+        Func<Task<ExecutionProtocol>> loadFunc,
+        string identifier)
+    {
+        var cacheService = (IEmptyEnabledCacheService)_cacheService;
+        var cacheResult = await cacheService.GetAsync<ExecutionProtocolDto>(cacheKey);
+        if (cacheResult.IsHit)
         {
-            _logger.LogDebug("Cache hit for key: {CacheKey}", cacheKey);
-            return cached;
+            _logger.LogDebug("Cache hit for {CacheKey}", cacheKey);
+            return ServiceResult<ExecutionProtocolDto>.Success(cacheResult.Value);
         }
         
-        using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
-        var repository = unitOfWork.GetRepository<IExecutionProtocolRepository>();
-        var protocols = await repository.GetAllActiveAsync();
-        var protocolList = protocols.ToList();
-        
-        await _cacheService.SetAsync(cacheKey, protocolList, CacheDuration);
-        _logger.LogDebug("Cached {Count} execution protocols with key: {CacheKey}", protocolList.Count, cacheKey);
-        
-        return protocolList;
+        var entity = await loadFunc();
+        return entity switch
+        {
+            { IsEmpty: true } or { IsActive: false } => ServiceResult<ExecutionProtocolDto>.Failure(
+                CreateEmptyDto(), 
+                ServiceError.NotFound(ExecutionProtocolErrorMessages.NotFound, identifier)),
+            _ => await CacheAndReturnSuccessAsync(cacheKey, MapToDto(entity))
+        };
     }
     
-    /// <inheritdoc />
-    public async Task<IEnumerable<ExecutionProtocolDto>> GetAllAsDtosAsync()
+    private async Task<ServiceResult<ExecutionProtocolDto>> CacheAndReturnSuccessAsync(string cacheKey, ExecutionProtocolDto dto)
     {
-        var protocols = await GetAllAsync();
-        return protocols.Select(ep => new ExecutionProtocolDto
-        {
-            ExecutionProtocolId = ep.Id.ToString(),
-            Value = ep.Value,
-            Description = ep.Description,
-            Code = ep.Code,
-            TimeBase = ep.TimeBase,
-            RepBase = ep.RepBase,
-            RestPattern = ep.RestPattern,
-            IntensityLevel = ep.IntensityLevel,
-            DisplayOrder = ep.DisplayOrder,
-            IsActive = ep.IsActive
-        });
+        await _cacheService.SetAsync(cacheKey, dto, TimeSpan.FromDays(365));
+        return ServiceResult<ExecutionProtocolDto>.Success(dto);
     }
     
-    /// <inheritdoc />
-    public async Task<IEnumerable<ExecutionProtocolDto>> GetAllAsExecutionProtocolDtosAsync(bool includeInactive = false)
+    private async Task<ExecutionProtocol> LoadByValueAsync(string value)
     {
-        var cacheKey = CacheKeyGenerator.GetAllKey($"{CacheKeyPrefix}_{(includeInactive ? "All" : "Active")}");
-        var cached = await _cacheService.GetAsync<IEnumerable<ExecutionProtocolDto>>(cacheKey);
-        if (cached != null)
-        {
-            _logger.LogDebug("Cache hit for key: {CacheKey}", cacheKey);
-            return cached;
-        }
-        
         using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
         var repository = unitOfWork.GetRepository<IExecutionProtocolRepository>();
-        
-        var protocols = includeInactive 
-            ? await repository.GetAllAsync() 
-            : await repository.GetAllActiveAsync();
+        return await repository.GetByValueAsync(value);
+    }
+    
+    private async Task<ExecutionProtocol> LoadByCodeAsync(string code)
+    {
+        using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
+        var repository = unitOfWork.GetRepository<IExecutionProtocolRepository>();
+        return await repository.GetByCodeAsync(code);
+    }
+
+    /// <inheritdoc/>
+    public async Task<bool> ExistsAsync(ExecutionProtocolId id) => 
+        !id.IsEmpty && (await GetByIdAsync(id)).IsSuccess;
+    
+    /// <inheritdoc/>
+    public override async Task<bool> ExistsAsync(string id) => 
+        await ExistsAsync(ExecutionProtocolId.ParseOrEmpty(id));
+    
+    protected override async Task<IEnumerable<ExecutionProtocol>> LoadAllEntitiesAsync(IReadOnlyUnitOfWork<FitnessDbContext> unitOfWork)
+    {
+        var repository = unitOfWork.GetRepository<IExecutionProtocolRepository>();
+        return await repository.GetAllActiveAsync();
+    }
+    
+    protected override async Task<ExecutionProtocol> LoadEntityByIdAsync(IReadOnlyUnitOfWork<FitnessDbContext> unitOfWork, string id)
+    {
+        var executionProtocolId = ExecutionProtocolId.ParseOrEmpty(id);
+        if (executionProtocolId.IsEmpty)
+            return ExecutionProtocol.Empty;
             
-        var dtoList = protocols
-            .OrderBy(ep => ep.DisplayOrder)
-            .Select(ep => new ExecutionProtocolDto
-            {
-                ExecutionProtocolId = ep.Id.ToString(),
-                Value = ep.Value,
-                Description = ep.Description,
-                Code = ep.Code,
-                TimeBase = ep.TimeBase,
-                RepBase = ep.RepBase,
-                RestPattern = ep.RestPattern,
-                IntensityLevel = ep.IntensityLevel,
-                DisplayOrder = ep.DisplayOrder,
-                IsActive = ep.IsActive
-            })
-            .ToList();
-        
-        await _cacheService.SetAsync(cacheKey, dtoList, CacheDuration);
-        _logger.LogDebug("Cached {Count} execution protocol DTOs with key: {CacheKey}", dtoList.Count, cacheKey);
-        
-        return dtoList;
-    }
-    
-    /// <inheritdoc />
-    public async Task<ExecutionProtocol?> GetByIdAsync(ExecutionProtocolId id)
-    {
-        if (id.IsEmpty)
-        {
-            _logger.LogWarning("Attempted to get execution protocol with empty ID");
-            return null;
-        }
-        
-        var cacheKey = CacheKeyGenerator.GetByIdKey(CacheKeyPrefix, id.ToString());
-        var cached = await _cacheService.GetAsync<ExecutionProtocol>(cacheKey);
-        if (cached != null)
-        {
-            _logger.LogDebug("Cache hit for key: {CacheKey}", cacheKey);
-            return cached;
-        }
-        
-        using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
         var repository = unitOfWork.GetRepository<IExecutionProtocolRepository>();
-        var protocol = await repository.GetByIdAsync(id);
-        
-        if (protocol != null && protocol.IsActive)
-        {
-            await _cacheService.SetAsync(cacheKey, protocol, CacheDuration);
-            _logger.LogDebug("Cached execution protocol with key: {CacheKey}", cacheKey);
-        }
-        
-        return protocol?.IsActive == true ? protocol : null;
+        return await repository.GetByIdAsync(executionProtocolId);
     }
     
-    /// <inheritdoc />
-    public async Task<ExecutionProtocolDto?> GetByIdAsDtoAsync(string id)
+    protected override ExecutionProtocolDto MapToDto(ExecutionProtocol entity)
     {
-        var protocolId = ExecutionProtocolId.From(id);
-        if (protocolId.IsEmpty)
-        {
-            _logger.LogWarning("Invalid execution protocol ID format: {Id}", id);
-            return null;
-        }
-        
-        var protocol = await GetByIdAsync(protocolId);
-        if (protocol == null) return null;
-        
         return new ExecutionProtocolDto
         {
-            ExecutionProtocolId = protocol.Id.ToString(),
-            Value = protocol.Value,
-            Description = protocol.Description,
-            Code = protocol.Code,
-            TimeBase = protocol.TimeBase,
-            RepBase = protocol.RepBase,
-            RestPattern = protocol.RestPattern,
-            IntensityLevel = protocol.IntensityLevel,
-            DisplayOrder = protocol.DisplayOrder,
-            IsActive = protocol.IsActive
+            ExecutionProtocolId = entity.ExecutionProtocolId.ToString(),
+            Value = entity.Value,
+            Description = entity.Description,
+            Code = entity.Code,
+            TimeBase = entity.TimeBase,
+            RepBase = entity.RepBase,
+            RestPattern = entity.RestPattern,
+            IntensityLevel = entity.IntensityLevel,
+            DisplayOrder = entity.DisplayOrder,
+            IsActive = entity.IsActive
         };
     }
     
-    /// <inheritdoc />
-    public async Task<ExecutionProtocolDto?> GetByIdAsExecutionProtocolDtoAsync(string id, bool includeInactive = false)
+    protected override ExecutionProtocolDto CreateEmptyDto()
     {
-        var protocolId = ExecutionProtocolId.From(id);
-        if (protocolId.IsEmpty)
-        {
-            _logger.LogWarning("Invalid execution protocol ID format: {Id}", id);
-            return null;
-        }
-        
-        var cacheKey = CacheKeyGenerator.GetByIdKey($"{CacheKeyPrefix}_{(includeInactive ? "All" : "Active")}", id);
-        var cached = await _cacheService.GetAsync<ExecutionProtocolDto>(cacheKey);
-        if (cached != null)
-        {
-            _logger.LogDebug("Cache hit for key: {CacheKey}", cacheKey);
-            return cached;
-        }
-        
-        using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
-        var repository = unitOfWork.GetRepository<IExecutionProtocolRepository>();
-        var protocol = await repository.GetByIdAsync(protocolId);
-        
-        if (protocol == null || (!includeInactive && !protocol.IsActive))
-        {
-            return null;
-        }
-        
-        var dto = new ExecutionProtocolDto
-        {
-            ExecutionProtocolId = protocol.Id.ToString(),
-            Value = protocol.Value,
-            Description = protocol.Description,
-            Code = protocol.Code,
-            TimeBase = protocol.TimeBase,
-            RepBase = protocol.RepBase,
-            RestPattern = protocol.RestPattern,
-            IntensityLevel = protocol.IntensityLevel,
-            DisplayOrder = protocol.DisplayOrder,
-            IsActive = protocol.IsActive
-        };
-        
-        await _cacheService.SetAsync(cacheKey, dto, CacheDuration);
-        _logger.LogDebug("Cached execution protocol DTO with key: {CacheKey}", cacheKey);
-        
-        return dto;
-    }
-    
-    /// <inheritdoc />
-    public async Task<ExecutionProtocol?> GetByValueAsync(string value)
-    {
-        if (string.IsNullOrWhiteSpace(value))
-        {
-            _logger.LogWarning("Attempted to get execution protocol with empty value");
-            return null;
-        }
-        
-        var cacheKey = CacheKeyGenerator.GetByValueKey(CacheKeyPrefix, value);
-        var cached = await _cacheService.GetAsync<ExecutionProtocol>(cacheKey);
-        if (cached != null)
-        {
-            _logger.LogDebug("Cache hit for key: {CacheKey}", cacheKey);
-            return cached;
-        }
-        
-        using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
-        var repository = unitOfWork.GetRepository<IExecutionProtocolRepository>();
-        var protocol = await repository.GetByValueAsync(value);
-        
-        if (protocol != null)
-        {
-            await _cacheService.SetAsync(cacheKey, protocol, CacheDuration);
-            _logger.LogDebug("Cached execution protocol with key: {CacheKey}", cacheKey);
-        }
-        
-        return protocol;
-    }
-    
-    /// <inheritdoc />
-    public async Task<ExecutionProtocol?> GetByCodeAsync(string code)
-    {
-        if (string.IsNullOrWhiteSpace(code))
-        {
-            _logger.LogWarning("Attempted to get execution protocol with empty code");
-            return null;
-        }
-        
-        var cacheKey = $"{CacheKeyPrefix}:byCode:{code.ToLowerInvariant()}";
-        var cached = await _cacheService.GetAsync<ExecutionProtocol>(cacheKey);
-        if (cached != null)
-        {
-            _logger.LogDebug("Cache hit for key: {CacheKey}", cacheKey);
-            return cached;
-        }
-        
-        using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
-        var repository = unitOfWork.GetRepository<IExecutionProtocolRepository>();
-        var protocol = await repository.GetByCodeAsync(code);
-        
-        if (protocol != null)
-        {
-            await _cacheService.SetAsync(cacheKey, protocol, CacheDuration);
-            _logger.LogDebug("Cached execution protocol with key: {CacheKey}", cacheKey);
-        }
-        
-        return protocol;
-    }
-    
-    /// <inheritdoc />
-    public async Task<ExecutionProtocolDto?> GetByCodeAsDtoAsync(string code)
-    {
-        var protocol = await GetByCodeAsync(code);
-        if (protocol == null) return null;
-        
         return new ExecutionProtocolDto
         {
-            ExecutionProtocolId = protocol.Id.ToString(),
-            Value = protocol.Value,
-            Description = protocol.Description,
-            Code = protocol.Code,
-            TimeBase = protocol.TimeBase,
-            RepBase = protocol.RepBase,
-            RestPattern = protocol.RestPattern,
-            IntensityLevel = protocol.IntensityLevel,
-            DisplayOrder = protocol.DisplayOrder,
-            IsActive = protocol.IsActive
+            ExecutionProtocolId = string.Empty,
+            Value = string.Empty,
+            Description = null,
+            Code = string.Empty,
+            TimeBase = false,
+            RepBase = false,
+            RestPattern = null,
+            IntensityLevel = null,
+            DisplayOrder = 0,
+            IsActive = false
         };
     }
     
-    /// <inheritdoc />
-    public async Task<bool> ExistsAsync(ExecutionProtocolId id)
+    protected override ValidationResult ValidateAndParseId(string id)
     {
-        if (id.IsEmpty) return false;
+        // This is called by the base class when using the string overload
+        // Since we always use the typed overload from the controller,
+        // this should validate the string format
+        if (string.IsNullOrWhiteSpace(id))
+        {
+            return ValidationResult.Failure(ExecutionProtocolErrorMessages.IdCannotBeEmpty);
+        }
         
-        var protocol = await GetByIdAsync(id);
-        return protocol != null;
+        // No additional validation - let the controller handle format validation
+        return ValidationResult.Success();
     }
 }

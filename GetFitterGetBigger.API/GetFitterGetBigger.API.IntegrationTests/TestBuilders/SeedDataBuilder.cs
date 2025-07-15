@@ -617,12 +617,15 @@ public class SeedDataBuilder
         foreach (var (id, value, description, code, timeBase, repBase, restPattern, intensityLevel, displayOrder, isActive) in executionProtocolsToCheck)
         {
             var executionProtocolId = ExecutionProtocolId.From(id);
-            var exists = await _context.ExecutionProtocols.AnyAsync(ep => ep.Id == executionProtocolId);
+            var exists = await _context.ExecutionProtocols.AnyAsync(ep => ep.ExecutionProtocolId == executionProtocolId);
             
             if (!exists)
             {
-                var executionProtocol = ExecutionProtocol.Handler.Create(executionProtocolId, value, description, code, timeBase, repBase, restPattern, intensityLevel, displayOrder, isActive);
-                await _context.ExecutionProtocols.AddAsync(executionProtocol);
+                var executionProtocolResult = ExecutionProtocol.Handler.Create(executionProtocolId, value, description, code, timeBase, repBase, restPattern, intensityLevel, displayOrder, isActive);
+                if (executionProtocolResult.IsSuccess)
+                {
+                    await _context.ExecutionProtocols.AddAsync(executionProtocolResult.Value);
+                }
             }
         }
         

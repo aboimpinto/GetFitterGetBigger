@@ -22,7 +22,7 @@ public class ExecutionProtocolsSteps
 {
     private readonly ScenarioContext _scenarioContext;
     private readonly PostgreSqlTestFixture _fixture;
-    private ExecutionProtocolsResponseDto? _executionProtocolsResponse;
+    private List<ExecutionProtocolDto>? _executionProtocolsResponse;
     private ExecutionProtocolDto? _executionProtocolResult;
 
     public ExecutionProtocolsSteps(ScenarioContext scenarioContext, PostgreSqlTestFixture fixture)
@@ -61,9 +61,9 @@ public class ExecutionProtocolsSteps
         var response = _scenarioContext.GetLastResponse();
         response.StatusCode.Should().Be(HttpStatusCode.OK);
         
-        _executionProtocolsResponse = await response.Content.ReadFromJsonAsync<ExecutionProtocolsResponseDto>();
+        _executionProtocolsResponse = await response.Content.ReadFromJsonAsync<List<ExecutionProtocolDto>>();
         _executionProtocolsResponse.Should().NotBeNull();
-        _executionProtocolsResponse!.ExecutionProtocols.Should().HaveCount(expectedCount);
+        _executionProtocolsResponse!.Should().HaveCount(expectedCount);
     }
 
     [Then(@"each execution protocol should have the following fields:")]
@@ -71,7 +71,7 @@ public class ExecutionProtocolsSteps
     {
         _executionProtocolsResponse.Should().NotBeNull();
         
-        foreach (var protocol in _executionProtocolsResponse!.ExecutionProtocols)
+        foreach (var protocol in _executionProtocolsResponse!)
         {
             foreach (var row in table.Rows)
             {
@@ -126,7 +126,7 @@ public class ExecutionProtocolsSteps
     public void ThenTheExecutionProtocolsShouldBeOrderedByDisplayOrderAscending()
     {
         _executionProtocolsResponse.Should().NotBeNull();
-        _executionProtocolsResponse!.ExecutionProtocols
+        _executionProtocolsResponse!
             .Should().BeInAscendingOrder(x => x.DisplayOrder);
     }
 
@@ -134,7 +134,7 @@ public class ExecutionProtocolsSteps
     public void ThenNoInactiveProtocolsShouldBeIncluded()
     {
         _executionProtocolsResponse.Should().NotBeNull();
-        _executionProtocolsResponse!.ExecutionProtocols
+        _executionProtocolsResponse!
             .Should().OnlyContain(x => x.IsActive == true);
     }
 
@@ -142,7 +142,7 @@ public class ExecutionProtocolsSteps
     public void ThenTheResponseShouldIncludeBothActiveAndInactiveProtocols()
     {
         _executionProtocolsResponse.Should().NotBeNull();
-        _executionProtocolsResponse!.ExecutionProtocols
+        _executionProtocolsResponse!
             .Should().Contain(x => x.IsActive == true)
             .And.Contain(x => x.IsActive == false);
     }
@@ -194,11 +194,11 @@ public class ExecutionProtocolsSteps
         {
             var response = _scenarioContext.GetLastResponse();
             response.StatusCode.Should().Be(HttpStatusCode.OK);
-            _executionProtocolsResponse = await response.Content.ReadFromJsonAsync<ExecutionProtocolsResponseDto>();
+            _executionProtocolsResponse = await response.Content.ReadFromJsonAsync<List<ExecutionProtocolDto>>();
         }
         
         _executionProtocolsResponse.Should().NotBeNull();
-        _executionProtocolsResponse!.ExecutionProtocols
+        _executionProtocolsResponse!
             .Should().Contain(x => x.TimeBase == true && x.RepBase == true);
     }
 
@@ -210,11 +210,11 @@ public class ExecutionProtocolsSteps
         {
             var response = _scenarioContext.GetLastResponse();
             response.StatusCode.Should().Be(HttpStatusCode.OK);
-            _executionProtocolsResponse = await response.Content.ReadFromJsonAsync<ExecutionProtocolsResponseDto>();
+            _executionProtocolsResponse = await response.Content.ReadFromJsonAsync<List<ExecutionProtocolDto>>();
         }
         
         _executionProtocolsResponse.Should().NotBeNull();
-        _executionProtocolsResponse!.ExecutionProtocols
+        _executionProtocolsResponse!
             .Should().Contain(x => x.TimeBase == true && x.RepBase == false);
     }
 
@@ -226,11 +226,11 @@ public class ExecutionProtocolsSteps
         {
             var response = _scenarioContext.GetLastResponse();
             response.StatusCode.Should().Be(HttpStatusCode.OK);
-            _executionProtocolsResponse = await response.Content.ReadFromJsonAsync<ExecutionProtocolsResponseDto>();
+            _executionProtocolsResponse = await response.Content.ReadFromJsonAsync<List<ExecutionProtocolDto>>();
         }
         
         _executionProtocolsResponse.Should().NotBeNull();
-        _executionProtocolsResponse!.ExecutionProtocols
+        _executionProtocolsResponse!
             .Should().Contain(x => x.TimeBase == false && x.RepBase == true);
     }
 }

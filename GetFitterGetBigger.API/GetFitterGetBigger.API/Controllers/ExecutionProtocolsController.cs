@@ -1,22 +1,20 @@
-using GetFitterGetBigger.API.DTOs;
-using GetFitterGetBigger.API.Models.SpecializedIds;
-using GetFitterGetBigger.API.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
+using GetFitterGetBigger.API.Services.Interfaces;
+using GetFitterGetBigger.API.Services.Results;
+using GetFitterGetBigger.API.Models.SpecializedIds;
 
 namespace GetFitterGetBigger.API.Controllers;
 
 /// <summary>
-/// Controller for managing execution protocols reference data
+/// Controller for retrieving execution protocol reference data
 /// </summary>
 [ApiController]
-[Route("api/execution-protocols")]
-[Produces("application/json")]
-[Tags("Workout Reference Data")]
+[Route("api/ReferenceTables/ExecutionProtocols")]
 public class ExecutionProtocolsController : ControllerBase
 {
     private readonly IExecutionProtocolService _executionProtocolService;
     private readonly ILogger<ExecutionProtocolsController> _logger;
-
+    
     /// <summary>
     /// Initializes a new instance of the <see cref="ExecutionProtocolsController"/> class
     /// </summary>
@@ -26,111 +24,95 @@ public class ExecutionProtocolsController : ControllerBase
         IExecutionProtocolService executionProtocolService,
         ILogger<ExecutionProtocolsController> logger)
     {
-        _executionProtocolService = executionProtocolService ?? throw new ArgumentNullException(nameof(executionProtocolService));
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        _executionProtocolService = executionProtocolService;
+        _logger = logger;
     }
 
     /// <summary>
-    /// Gets all execution protocols
+    /// Gets all active execution protocols
     /// </summary>
-    /// <param name="includeInactive">Optional parameter to include inactive protocols (default: false)</param>
-    /// <returns>A collection of execution protocols</returns>
-    /// <response code="200">Returns the collection of execution protocols</response>
-    /// <response code="401">If the user is not authenticated</response>
+    /// <returns>A collection of active execution protocols</returns>
     [HttpGet]
     [ProducesResponseType(StatusCodes.Status200OK)]
-    public async Task<IActionResult> GetAllExecutionProtocols([FromQuery] bool includeInactive = false)
+    public async Task<IActionResult> GetExecutionProtocols()
     {
-        _logger.LogInformation("Getting all execution protocols (includeInactive: {IncludeInactive})", includeInactive);
+        _logger.LogInformation("Getting all active execution protocols");
         
-        var protocols = await _executionProtocolService.GetAllAsExecutionProtocolDtosAsync(includeInactive);
-        var response = new ExecutionProtocolsResponseDto
+        var result = await _executionProtocolService.GetAllActiveAsync();
+        
+        return result switch
         {
-            ExecutionProtocols = protocols.ToList()
+            { IsSuccess: true } => Ok(result.Data),
+            _ => Ok(result.Data) // GetAll should always succeed, even if empty
         };
-        
-        _logger.LogInformation("Retrieved {Count} execution protocols", protocols.Count());
-        
-        // Set cache headers for reference data (1 hour cache)
-        if (Response != null)
-        {
-            Response.Headers.CacheControl = "public, max-age=3600";
-        }
-        
-        return Ok(response);
     }
 
     /// <summary>
     /// Gets an execution protocol by ID
     /// </summary>
-    /// <param name="id">The ID of the execution protocol in the format "executionprotocol-{guid}"</param>
-    /// <param name="includeInactive">Optional parameter to include inactive protocols (default: false)</param>
-    /// <returns>The execution protocol if found</returns>
-    /// <response code="200">Returns the execution protocol</response>
-    /// <response code="400">If the ID format is invalid</response>
-    /// <response code="401">If the user is not authenticated</response>
-    /// <response code="404">If the execution protocol is not found</response>
+    /// <param name="id">The ID of the execution protocol to retrieve in the format "executionprotocol-{guid}"</param>
+    /// <returns>The execution protocol if found, 404 Not Found otherwise</returns>
     [HttpGet("{id}")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> GetExecutionProtocolById(string id, [FromQuery] bool includeInactive = false)
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> GetExecutionProtocolById(string id)
     {
-        _logger.LogInformation("Getting execution protocol by ID: {Id} (includeInactive: {IncludeInactive})", id, includeInactive);
+        _logger.LogInformation("Getting execution protocol with ID: {Id}", id);
         
-        try
+        var result = await _executionProtocolService.GetByIdAsync(ExecutionProtocolId.ParseOrEmpty(id));
+        
+        return result switch
         {
-            var protocol = await _executionProtocolService.GetByIdAsExecutionProtocolDtoAsync(id, includeInactive);
-            
-            if (protocol == null)
-            {
-                _logger.LogWarning("Execution protocol not found: {Id}", id);
-                return NotFound(new { message = "Execution protocol not found" });
-            }
-            
-            // Set cache headers for reference data (1 hour cache)
-            if (Response != null)
+            { IsSuccess: true } => Ok(result.Data),
+            { PrimaryErrorCode: ServiceErrorCode.NotFound } => NotFound(),
+            _ => BadRequest(new { errors = result.StructuredErrors })
+        };
+    }
+
+    /// <summary>
+    /// Gets an execution protocol by value
+    /// </summary>
+    /// <param name="value">The value of the execution protocol to retrieve</param>
+    /// <returns>The execution protocol if found, 404 Not Found otherwise</returns>
+    [HttpGet("ByValue/{value}")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> GetExecutionProtocolByValue(string value)
+    {
+        _logger.LogInformation("Getting execution protocol with value: {Value}", value);
+        
+        var result = await _executionProtocolService.GetByValueAsync(value);
+        
+        return result switch
         {
-            Response.Headers.CacheControl = "public, max-age=3600";
-        }
-            
-            return Ok(protocol);
-        }
-        catch (ArgumentException ex)
-        {
-            _logger.LogWarning("Invalid execution protocol ID format: {Id}. Error: {Error}", id, ex.Message);
-            return NotFound(new { message = "Execution protocol not found" });
-        }
+            { IsSuccess: true } => Ok(result.Data),
+            { PrimaryErrorCode: ServiceErrorCode.NotFound } => NotFound(),
+            _ => BadRequest(new { errors = result.StructuredErrors })
+        };
     }
 
     /// <summary>
     /// Gets an execution protocol by code
     /// </summary>
-    /// <param name="code">The code of the execution protocol (e.g., "STANDARD", "SUPERSET")</param>
-    /// <returns>The execution protocol if found</returns>
-    /// <response code="200">Returns the execution protocol</response>
-    /// <response code="401">If the user is not authenticated</response>
-    /// <response code="404">If the execution protocol is not found</response>
-    [HttpGet("by-code/{code}")]
+    /// <param name="code">The code of the execution protocol to retrieve</param>
+    /// <returns>The execution protocol if found, 404 Not Found otherwise</returns>
+    [HttpGet("ByCode/{code}")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> GetExecutionProtocolByCode(string code)
     {
-        _logger.LogInformation("Getting execution protocol by code: {Code}", code);
+        _logger.LogInformation("Getting execution protocol with code: {Code}", code);
         
-        var protocol = await _executionProtocolService.GetByCodeAsDtoAsync(code);
+        var result = await _executionProtocolService.GetByCodeAsync(code);
         
-        if (protocol == null)
+        return result switch
         {
-            _logger.LogWarning("Execution protocol not found with code: {Code}", code);
-            return NotFound(new { message = "Execution protocol not found" });
-        }
-        
-        // Set cache headers for reference data (1 hour cache)
-        if (Response != null)
-        {
-            Response.Headers.CacheControl = "public, max-age=3600";
-        }
-        
-        return Ok(protocol);
+            { IsSuccess: true } => Ok(result.Data),
+            { PrimaryErrorCode: ServiceErrorCode.NotFound } => NotFound(),
+            _ => BadRequest(new { errors = result.StructuredErrors })
+        };
     }
 }

@@ -76,7 +76,7 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.ReferenceData
         
         public virtual async System.Threading.Tasks.Task FeatureBackgroundAsync()
         {
-            TechTalk.SpecFlow.Table table12 = new TechTalk.SpecFlow.Table(new string[] {
+            TechTalk.SpecFlow.Table table6 = new TechTalk.SpecFlow.Table(new string[] {
                         "WorkoutCategoryId",
                         "Value",
                         "Description",
@@ -85,7 +85,7 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.ReferenceData
                         "PrimaryMuscleGroups",
                         "DisplayOrder",
                         "IsActive"});
-            table12.AddRow(new string[] {
+            table6.AddRow(new string[] {
                         "workoutcategory-20000002-2000-4000-8000-200000000001",
                         "Upper Body - Push",
                         "Push exercises targeting chest, shoulders, and triceps",
@@ -94,7 +94,7 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.ReferenceData
                         "Chest,Shoulders,Triceps",
                         "1",
                         "true"});
-            table12.AddRow(new string[] {
+            table6.AddRow(new string[] {
                         "workoutcategory-20000002-2000-4000-8000-200000000002",
                         "Upper Body - Pull",
                         "Pull exercises targeting back and biceps",
@@ -103,7 +103,7 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.ReferenceData
                         "Back,Biceps",
                         "2",
                         "true"});
-            table12.AddRow(new string[] {
+            table6.AddRow(new string[] {
                         "workoutcategory-20000002-2000-4000-8000-200000000003",
                         "Lower Body",
                         "Lower body exercises for legs and glutes",
@@ -112,7 +112,7 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.ReferenceData
                         "Quadriceps,Hamstrings,Glutes,Calves",
                         "3",
                         "true"});
-            table12.AddRow(new string[] {
+            table6.AddRow(new string[] {
                         "workoutcategory-20000002-2000-4000-8000-200000000004",
                         "Core",
                         "Core stability and strength exercises",
@@ -121,7 +121,7 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.ReferenceData
                         "Abs,Obliques,Lower Back",
                         "4",
                         "true"});
-            table12.AddRow(new string[] {
+            table6.AddRow(new string[] {
                         "workoutcategory-20000002-2000-4000-8000-200000000005",
                         "Full Body",
                         "Compound exercises engaging multiple muscle groups",
@@ -130,7 +130,7 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.ReferenceData
                         "Multiple",
                         "5",
                         "true"});
-            table12.AddRow(new string[] {
+            table6.AddRow(new string[] {
                         "workoutcategory-55555555-5555-5555-5555-555555555555",
                         "Inactive Category",
                         "This category is no longer used",
@@ -139,7 +139,7 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.ReferenceData
                         "None",
                         "6",
                         "false"});
-            await testRunner.GivenAsync("the following workout categories exist in the database:", ((string)(null)), table12, "Given ");
+            await testRunner.GivenAsync("the following workout categories exist in the database:", ((string)(null)), table6, "Given ");
         }
         
         async System.Threading.Tasks.Task Xunit.IAsyncLifetime.InitializeAsync()
@@ -172,43 +172,43 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.ReferenceData
                 await testRunner.WhenAsync("I send a GET request to \"/api/workout-categories\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
                 await testRunner.ThenAsync("the response status should be 200", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
                 await testRunner.AndAsync("the response should contain 5 workout categories", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
-                TechTalk.SpecFlow.Table table13 = new TechTalk.SpecFlow.Table(new string[] {
+                TechTalk.SpecFlow.Table table7 = new TechTalk.SpecFlow.Table(new string[] {
                             "Field",
                             "Type",
                             "Required"});
-                table13.AddRow(new string[] {
+                table7.AddRow(new string[] {
                             "workoutCategoryId",
                             "string",
                             "true"});
-                table13.AddRow(new string[] {
+                table7.AddRow(new string[] {
                             "value",
                             "string",
                             "true"});
-                table13.AddRow(new string[] {
+                table7.AddRow(new string[] {
                             "description",
                             "string",
                             "false"});
-                table13.AddRow(new string[] {
+                table7.AddRow(new string[] {
                             "icon",
                             "string",
                             "true"});
-                table13.AddRow(new string[] {
+                table7.AddRow(new string[] {
                             "color",
                             "string",
                             "true"});
-                table13.AddRow(new string[] {
+                table7.AddRow(new string[] {
                             "primaryMuscleGroups",
                             "string",
                             "false"});
-                table13.AddRow(new string[] {
+                table7.AddRow(new string[] {
                             "displayOrder",
                             "number",
                             "true"});
-                table13.AddRow(new string[] {
+                table7.AddRow(new string[] {
                             "isActive",
                             "boolean",
                             "true"});
-                await testRunner.AndAsync("each workout category should have the following fields:", ((string)(null)), table13, "And ");
+                await testRunner.AndAsync("each workout category should have the following fields:", ((string)(null)), table7, "And ");
                 await testRunner.AndAsync("the workout categories should be ordered by displayOrder ascending", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
                 await testRunner.AndAsync("no inactive categories should be included", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
             }
@@ -260,34 +260,34 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.ReferenceData
                 await testRunner.WhenAsync("I send a GET request to \"/api/workout-categories/workoutcategory-20000002-2000-40" +
                         "00-8000-200000000001\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
                 await testRunner.ThenAsync("the response status should be 200", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
-                TechTalk.SpecFlow.Table table14 = new TechTalk.SpecFlow.Table(new string[] {
+                TechTalk.SpecFlow.Table table8 = new TechTalk.SpecFlow.Table(new string[] {
                             "Field",
                             "Value"});
-                table14.AddRow(new string[] {
+                table8.AddRow(new string[] {
                             "workoutCategoryId",
                             "workoutcategory-20000002-2000-4000-8000-200000000001"});
-                table14.AddRow(new string[] {
+                table8.AddRow(new string[] {
                             "value",
                             "Upper Body - Push"});
-                table14.AddRow(new string[] {
+                table8.AddRow(new string[] {
                             "description",
                             "Push exercises targeting chest, shoulders, and triceps"});
-                table14.AddRow(new string[] {
+                table8.AddRow(new string[] {
                             "icon",
                             "💪"});
-                table14.AddRow(new string[] {
+                table8.AddRow(new string[] {
                             "color",
                             "#FF5722"});
-                table14.AddRow(new string[] {
+                table8.AddRow(new string[] {
                             "primaryMuscleGroups",
                             "Chest,Shoulders,Triceps"});
-                table14.AddRow(new string[] {
+                table8.AddRow(new string[] {
                             "displayOrder",
                             "1"});
-                table14.AddRow(new string[] {
+                table8.AddRow(new string[] {
                             "isActive",
                             "true"});
-                await testRunner.AndAsync("the response should contain a workout category with:", ((string)(null)), table14, "And ");
+                await testRunner.AndAsync("the response should contain a workout category with:", ((string)(null)), table8, "And ");
             }
             await this.ScenarioCleanupAsync();
         }
@@ -312,13 +312,13 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.ReferenceData
                 await testRunner.WhenAsync("I send a GET request to \"/api/workout-categories/workoutcategory-00000000-0000-00" +
                         "00-0000-000000000000\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
                 await testRunner.ThenAsync("the response status should be 404", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
-                TechTalk.SpecFlow.Table table15 = new TechTalk.SpecFlow.Table(new string[] {
+                TechTalk.SpecFlow.Table table9 = new TechTalk.SpecFlow.Table(new string[] {
                             "Field",
                             "Value"});
-                table15.AddRow(new string[] {
+                table9.AddRow(new string[] {
                             "message",
                             "Workout category not found"});
-                await testRunner.AndAsync("the response should contain an error with:", ((string)(null)), table15, "And ");
+                await testRunner.AndAsync("the response should contain an error with:", ((string)(null)), table9, "And ");
             }
             await this.ScenarioCleanupAsync();
         }
@@ -342,13 +342,13 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.ReferenceData
                 await this.FeatureBackgroundAsync();
                 await testRunner.WhenAsync("I send a GET request to \"/api/workout-categories/invalid-id-format\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
                 await testRunner.ThenAsync("the response status should be 404", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
-                TechTalk.SpecFlow.Table table16 = new TechTalk.SpecFlow.Table(new string[] {
+                TechTalk.SpecFlow.Table table10 = new TechTalk.SpecFlow.Table(new string[] {
                             "Field",
                             "Value"});
-                table16.AddRow(new string[] {
+                table10.AddRow(new string[] {
                             "message",
                             "Workout category not found"});
-                await testRunner.AndAsync("the response should contain an error with:", ((string)(null)), table16, "And ");
+                await testRunner.AndAsync("the response should contain an error with:", ((string)(null)), table10, "And ");
             }
             await this.ScenarioCleanupAsync();
         }
@@ -398,13 +398,13 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.ReferenceData
                 await testRunner.WhenAsync("I send a GET request to \"/api/workout-categories/workoutcategory-55555555-5555-55" +
                         "55-5555-555555555555\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
                 await testRunner.ThenAsync("the response status should be 404", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
-                TechTalk.SpecFlow.Table table17 = new TechTalk.SpecFlow.Table(new string[] {
+                TechTalk.SpecFlow.Table table11 = new TechTalk.SpecFlow.Table(new string[] {
                             "Field",
                             "Value"});
-                table17.AddRow(new string[] {
+                table11.AddRow(new string[] {
                             "message",
                             "Workout category not found"});
-                await testRunner.AndAsync("the response should contain an error with:", ((string)(null)), table17, "And ");
+                await testRunner.AndAsync("the response should contain an error with:", ((string)(null)), table11, "And ");
             }
             await this.ScenarioCleanupAsync();
         }
@@ -429,19 +429,19 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.ReferenceData
                 await testRunner.WhenAsync("I send a GET request to \"/api/workout-categories/workoutcategory-55555555-5555-55" +
                         "55-5555-555555555555?includeInactive=true\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
                 await testRunner.ThenAsync("the response status should be 200", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
-                TechTalk.SpecFlow.Table table18 = new TechTalk.SpecFlow.Table(new string[] {
+                TechTalk.SpecFlow.Table table12 = new TechTalk.SpecFlow.Table(new string[] {
                             "Field",
                             "Value"});
-                table18.AddRow(new string[] {
+                table12.AddRow(new string[] {
                             "workoutCategoryId",
                             "workoutcategory-55555555-5555-5555-5555-555555555555"});
-                table18.AddRow(new string[] {
+                table12.AddRow(new string[] {
                             "value",
                             "Inactive Category"});
-                table18.AddRow(new string[] {
+                table12.AddRow(new string[] {
                             "isActive",
                             "false"});
-                await testRunner.AndAsync("the response should contain a workout category with:", ((string)(null)), table18, "And ");
+                await testRunner.AndAsync("the response should contain a workout category with:", ((string)(null)), table12, "And ");
             }
             await this.ScenarioCleanupAsync();
         }

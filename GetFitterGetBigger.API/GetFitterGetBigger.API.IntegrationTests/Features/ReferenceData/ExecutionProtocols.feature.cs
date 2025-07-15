@@ -172,7 +172,7 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.ReferenceData
             {
                 await this.ScenarioStartAsync();
                 await this.FeatureBackgroundAsync();
-                await testRunner.WhenAsync("I send a GET request to \"/api/execution-protocols\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
+                await testRunner.WhenAsync("I send a GET request to \"/api/ReferenceTables/ExecutionProtocols\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
                 await testRunner.ThenAsync("the response status should be 200", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
                 await testRunner.AndAsync("the response should contain 4 execution protocols", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
                 TechTalk.SpecFlow.Table table2 = new TechTalk.SpecFlow.Table(new string[] {
@@ -226,31 +226,6 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.ReferenceData
             await this.ScenarioCleanupAsync();
         }
         
-        [Xunit.SkippableFactAttribute(DisplayName="Get all execution protocols including inactive")]
-        [Xunit.TraitAttribute("FeatureTitle", "Execution Protocols Reference Data")]
-        [Xunit.TraitAttribute("Description", "Get all execution protocols including inactive")]
-        public async System.Threading.Tasks.Task GetAllExecutionProtocolsIncludingInactive()
-        {
-            string[] tagsOfScenario = ((string[])(null));
-            System.Collections.Specialized.OrderedDictionary argumentsOfScenario = new System.Collections.Specialized.OrderedDictionary();
-            TechTalk.SpecFlow.ScenarioInfo scenarioInfo = new TechTalk.SpecFlow.ScenarioInfo("Get all execution protocols including inactive", null, tagsOfScenario, argumentsOfScenario, featureTags);
-            this.ScenarioInitialize(scenarioInfo);
-            if ((TagHelper.ContainsIgnoreTag(tagsOfScenario) || TagHelper.ContainsIgnoreTag(featureTags)))
-            {
-                testRunner.SkipScenario();
-            }
-            else
-            {
-                await this.ScenarioStartAsync();
-                await this.FeatureBackgroundAsync();
-                await testRunner.WhenAsync("I send a GET request to \"/api/execution-protocols?includeInactive=true\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
-                await testRunner.ThenAsync("the response status should be 200", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
-                await testRunner.AndAsync("the response should contain 5 execution protocols", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
-                await testRunner.AndAsync("the response should include both active and inactive protocols", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
-            }
-            await this.ScenarioCleanupAsync();
-        }
-        
         [Xunit.SkippableFactAttribute(DisplayName="Get execution protocol by valid ID")]
         [Xunit.TraitAttribute("FeatureTitle", "Execution Protocols Reference Data")]
         [Xunit.TraitAttribute("Description", "Get execution protocol by valid ID")]
@@ -268,8 +243,8 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.ReferenceData
             {
                 await this.ScenarioStartAsync();
                 await this.FeatureBackgroundAsync();
-                await testRunner.WhenAsync("I send a GET request to \"/api/execution-protocols/executionprotocol-30000003-3000" +
-                        "-4000-8000-300000000001\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
+                await testRunner.WhenAsync("I send a GET request to \"/api/ReferenceTables/ExecutionProtocols/executionprotoco" +
+                        "l-30000003-3000-4000-8000-300000000001\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
                 await testRunner.ThenAsync("the response status should be 200", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
                 TechTalk.SpecFlow.Table table3 = new TechTalk.SpecFlow.Table(new string[] {
                             "Field",
@@ -326,16 +301,9 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.ReferenceData
             {
                 await this.ScenarioStartAsync();
                 await this.FeatureBackgroundAsync();
-                await testRunner.WhenAsync("I send a GET request to \"/api/execution-protocols/executionprotocol-00000000-0000" +
-                        "-0000-0000-000000000000\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
+                await testRunner.WhenAsync("I send a GET request to \"/api/ReferenceTables/ExecutionProtocols/executionprotoco" +
+                        "l-99999999-9999-9999-9999-999999999999\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
                 await testRunner.ThenAsync("the response status should be 404", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
-                TechTalk.SpecFlow.Table table4 = new TechTalk.SpecFlow.Table(new string[] {
-                            "Field",
-                            "Value"});
-                table4.AddRow(new string[] {
-                            "message",
-                            "Execution protocol not found"});
-                await testRunner.AndAsync("the response should contain an error with:", ((string)(null)), table4, "And ");
             }
             await this.ScenarioCleanupAsync();
         }
@@ -357,15 +325,9 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.ReferenceData
             {
                 await this.ScenarioStartAsync();
                 await this.FeatureBackgroundAsync();
-                await testRunner.WhenAsync("I send a GET request to \"/api/execution-protocols/invalid-id-format\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
-                await testRunner.ThenAsync("the response status should be 404", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
-                TechTalk.SpecFlow.Table table5 = new TechTalk.SpecFlow.Table(new string[] {
-                            "Field",
-                            "Value"});
-                table5.AddRow(new string[] {
-                            "message",
-                            "Execution protocol not found"});
-                await testRunner.AndAsync("the response should contain an error with:", ((string)(null)), table5, "And ");
+                await testRunner.WhenAsync("I send a GET request to \"/api/ReferenceTables/ExecutionProtocols/invalid-id-forma" +
+                        "t\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
+                await testRunner.ThenAsync("the response status should be 400", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
             }
             await this.ScenarioCleanupAsync();
         }
@@ -387,24 +349,25 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.ReferenceData
             {
                 await this.ScenarioStartAsync();
                 await this.FeatureBackgroundAsync();
-                await testRunner.WhenAsync("I send a GET request to \"/api/execution-protocols/by-code/STANDARD\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
+                await testRunner.WhenAsync("I send a GET request to \"/api/ReferenceTables/ExecutionProtocols/ByCode/STANDARD\"" +
+                        "", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
                 await testRunner.ThenAsync("the response status should be 200", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
-                TechTalk.SpecFlow.Table table6 = new TechTalk.SpecFlow.Table(new string[] {
+                TechTalk.SpecFlow.Table table4 = new TechTalk.SpecFlow.Table(new string[] {
                             "Field",
                             "Value"});
-                table6.AddRow(new string[] {
+                table4.AddRow(new string[] {
                             "executionProtocolId",
                             "executionprotocol-30000003-3000-4000-8000-300000000001"});
-                table6.AddRow(new string[] {
+                table4.AddRow(new string[] {
                             "value",
                             "Standard"});
-                table6.AddRow(new string[] {
+                table4.AddRow(new string[] {
                             "code",
                             "STANDARD"});
-                table6.AddRow(new string[] {
+                table4.AddRow(new string[] {
                             "isActive",
                             "true"});
-                await testRunner.AndAsync("the response should contain an execution protocol with:", ((string)(null)), table6, "And ");
+                await testRunner.AndAsync("the response should contain an execution protocol with:", ((string)(null)), table4, "And ");
             }
             await this.ScenarioCleanupAsync();
         }
@@ -426,15 +389,16 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.ReferenceData
             {
                 await this.ScenarioStartAsync();
                 await this.FeatureBackgroundAsync();
-                await testRunner.WhenAsync("I send a GET request to \"/api/execution-protocols/by-code/standard\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
+                await testRunner.WhenAsync("I send a GET request to \"/api/ReferenceTables/ExecutionProtocols/ByCode/standard\"" +
+                        "", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
                 await testRunner.ThenAsync("the response status should be 200", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
-                TechTalk.SpecFlow.Table table7 = new TechTalk.SpecFlow.Table(new string[] {
+                TechTalk.SpecFlow.Table table5 = new TechTalk.SpecFlow.Table(new string[] {
                             "Field",
                             "Value"});
-                table7.AddRow(new string[] {
+                table5.AddRow(new string[] {
                             "code",
                             "STANDARD"});
-                await testRunner.AndAsync("the response should contain an execution protocol with:", ((string)(null)), table7, "And ");
+                await testRunner.AndAsync("the response should contain an execution protocol with:", ((string)(null)), table5, "And ");
             }
             await this.ScenarioCleanupAsync();
         }
@@ -456,15 +420,9 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.ReferenceData
             {
                 await this.ScenarioStartAsync();
                 await this.FeatureBackgroundAsync();
-                await testRunner.WhenAsync("I send a GET request to \"/api/execution-protocols/by-code/NONEXISTENT\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
+                await testRunner.WhenAsync("I send a GET request to \"/api/ReferenceTables/ExecutionProtocols/ByCode/NONEXISTE" +
+                        "NT\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
                 await testRunner.ThenAsync("the response status should be 404", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
-                TechTalk.SpecFlow.Table table8 = new TechTalk.SpecFlow.Table(new string[] {
-                            "Field",
-                            "Value"});
-                table8.AddRow(new string[] {
-                            "message",
-                            "Execution protocol not found"});
-                await testRunner.AndAsync("the response should contain an error with:", ((string)(null)), table8, "And ");
             }
             await this.ScenarioCleanupAsync();
         }
@@ -486,27 +444,21 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.ReferenceData
             {
                 await this.ScenarioStartAsync();
                 await this.FeatureBackgroundAsync();
-                await testRunner.WhenAsync("I send a GET request to \"/api/execution-protocols/by-code/INACTIVE\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
+                await testRunner.WhenAsync("I send a GET request to \"/api/ReferenceTables/ExecutionProtocols/ByCode/INACTIVE\"" +
+                        "", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
                 await testRunner.ThenAsync("the response status should be 404", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
-                TechTalk.SpecFlow.Table table9 = new TechTalk.SpecFlow.Table(new string[] {
-                            "Field",
-                            "Value"});
-                table9.AddRow(new string[] {
-                            "message",
-                            "Execution protocol not found"});
-                await testRunner.AndAsync("the response should contain an error with:", ((string)(null)), table9, "And ");
             }
             await this.ScenarioCleanupAsync();
         }
         
-        [Xunit.SkippableFactAttribute(DisplayName="Response caching headers are set correctly")]
+        [Xunit.SkippableFactAttribute(DisplayName="Get inactive execution protocol by ID")]
         [Xunit.TraitAttribute("FeatureTitle", "Execution Protocols Reference Data")]
-        [Xunit.TraitAttribute("Description", "Response caching headers are set correctly")]
-        public async System.Threading.Tasks.Task ResponseCachingHeadersAreSetCorrectly()
+        [Xunit.TraitAttribute("Description", "Get inactive execution protocol by ID")]
+        public async System.Threading.Tasks.Task GetInactiveExecutionProtocolByID()
         {
             string[] tagsOfScenario = ((string[])(null));
             System.Collections.Specialized.OrderedDictionary argumentsOfScenario = new System.Collections.Specialized.OrderedDictionary();
-            TechTalk.SpecFlow.ScenarioInfo scenarioInfo = new TechTalk.SpecFlow.ScenarioInfo("Response caching headers are set correctly", null, tagsOfScenario, argumentsOfScenario, featureTags);
+            TechTalk.SpecFlow.ScenarioInfo scenarioInfo = new TechTalk.SpecFlow.ScenarioInfo("Get inactive execution protocol by ID", null, tagsOfScenario, argumentsOfScenario, featureTags);
             this.ScenarioInitialize(scenarioInfo);
             if ((TagHelper.ContainsIgnoreTag(tagsOfScenario) || TagHelper.ContainsIgnoreTag(featureTags)))
             {
@@ -516,78 +468,9 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.ReferenceData
             {
                 await this.ScenarioStartAsync();
                 await this.FeatureBackgroundAsync();
-                await testRunner.WhenAsync("I send a GET request to \"/api/execution-protocols\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
-                await testRunner.ThenAsync("the response status should be 200", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
-                await testRunner.AndAsync("the response should have cache control headers", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
-                await testRunner.AndAsync("the cache duration should be 3600 seconds", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
-            }
-            await this.ScenarioCleanupAsync();
-        }
-        
-        [Xunit.SkippableFactAttribute(DisplayName="Get inactive execution protocol by ID without includeInactive flag")]
-        [Xunit.TraitAttribute("FeatureTitle", "Execution Protocols Reference Data")]
-        [Xunit.TraitAttribute("Description", "Get inactive execution protocol by ID without includeInactive flag")]
-        public async System.Threading.Tasks.Task GetInactiveExecutionProtocolByIDWithoutIncludeInactiveFlag()
-        {
-            string[] tagsOfScenario = ((string[])(null));
-            System.Collections.Specialized.OrderedDictionary argumentsOfScenario = new System.Collections.Specialized.OrderedDictionary();
-            TechTalk.SpecFlow.ScenarioInfo scenarioInfo = new TechTalk.SpecFlow.ScenarioInfo("Get inactive execution protocol by ID without includeInactive flag", null, tagsOfScenario, argumentsOfScenario, featureTags);
-            this.ScenarioInitialize(scenarioInfo);
-            if ((TagHelper.ContainsIgnoreTag(tagsOfScenario) || TagHelper.ContainsIgnoreTag(featureTags)))
-            {
-                testRunner.SkipScenario();
-            }
-            else
-            {
-                await this.ScenarioStartAsync();
-                await this.FeatureBackgroundAsync();
-                await testRunner.WhenAsync("I send a GET request to \"/api/execution-protocols/executionprotocol-55555555-5555" +
-                        "-5555-5555-555555555555\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
+                await testRunner.WhenAsync("I send a GET request to \"/api/ReferenceTables/ExecutionProtocols/executionprotoco" +
+                        "l-55555555-5555-5555-5555-555555555555\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
                 await testRunner.ThenAsync("the response status should be 404", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
-                TechTalk.SpecFlow.Table table10 = new TechTalk.SpecFlow.Table(new string[] {
-                            "Field",
-                            "Value"});
-                table10.AddRow(new string[] {
-                            "message",
-                            "Execution protocol not found"});
-                await testRunner.AndAsync("the response should contain an error with:", ((string)(null)), table10, "And ");
-            }
-            await this.ScenarioCleanupAsync();
-        }
-        
-        [Xunit.SkippableFactAttribute(DisplayName="Get inactive execution protocol by ID with includeInactive flag")]
-        [Xunit.TraitAttribute("FeatureTitle", "Execution Protocols Reference Data")]
-        [Xunit.TraitAttribute("Description", "Get inactive execution protocol by ID with includeInactive flag")]
-        public async System.Threading.Tasks.Task GetInactiveExecutionProtocolByIDWithIncludeInactiveFlag()
-        {
-            string[] tagsOfScenario = ((string[])(null));
-            System.Collections.Specialized.OrderedDictionary argumentsOfScenario = new System.Collections.Specialized.OrderedDictionary();
-            TechTalk.SpecFlow.ScenarioInfo scenarioInfo = new TechTalk.SpecFlow.ScenarioInfo("Get inactive execution protocol by ID with includeInactive flag", null, tagsOfScenario, argumentsOfScenario, featureTags);
-            this.ScenarioInitialize(scenarioInfo);
-            if ((TagHelper.ContainsIgnoreTag(tagsOfScenario) || TagHelper.ContainsIgnoreTag(featureTags)))
-            {
-                testRunner.SkipScenario();
-            }
-            else
-            {
-                await this.ScenarioStartAsync();
-                await this.FeatureBackgroundAsync();
-                await testRunner.WhenAsync("I send a GET request to \"/api/execution-protocols/executionprotocol-55555555-5555" +
-                        "-5555-5555-555555555555?includeInactive=true\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
-                await testRunner.ThenAsync("the response status should be 200", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
-                TechTalk.SpecFlow.Table table11 = new TechTalk.SpecFlow.Table(new string[] {
-                            "Field",
-                            "Value"});
-                table11.AddRow(new string[] {
-                            "executionProtocolId",
-                            "executionprotocol-55555555-5555-5555-5555-555555555555"});
-                table11.AddRow(new string[] {
-                            "value",
-                            "Inactive"});
-                table11.AddRow(new string[] {
-                            "isActive",
-                            "false"});
-                await testRunner.AndAsync("the response should contain an execution protocol with:", ((string)(null)), table11, "And ");
             }
             await this.ScenarioCleanupAsync();
         }
@@ -609,7 +492,7 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.ReferenceData
             {
                 await this.ScenarioStartAsync();
                 await this.FeatureBackgroundAsync();
-                await testRunner.WhenAsync("I send a GET request to \"/api/execution-protocols\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
+                await testRunner.WhenAsync("I send a GET request to \"/api/ReferenceTables/ExecutionProtocols\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
                 await testRunner.ThenAsync("the response status should be 200", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
                 await testRunner.AndAsync("at least one protocol should have both timeBase and repBase as true", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
                 await testRunner.AndAsync("at least one protocol should have timeBase true and repBase false", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");

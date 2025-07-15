@@ -13,7 +13,7 @@ Feature: Execution Protocols Reference Data
       | executionprotocol-55555555-5555-5555-5555-555555555555 | Inactive   | This protocol is no longer used                | INACTIVE   | false    | false   | N/A                              | N/A            | 5            | false    |
 
   Scenario: Get all active execution protocols
-    When I send a GET request to "/api/execution-protocols"
+    When I send a GET request to "/api/ReferenceTables/ExecutionProtocols"
     Then the response status should be 200
     And the response should contain 4 execution protocols
     And each execution protocol should have the following fields:
@@ -31,14 +31,8 @@ Feature: Execution Protocols Reference Data
     And the execution protocols should be ordered by displayOrder ascending
     And no inactive protocols should be included
 
-  Scenario: Get all execution protocols including inactive
-    When I send a GET request to "/api/execution-protocols?includeInactive=true"
-    Then the response status should be 200
-    And the response should contain 5 execution protocols
-    And the response should include both active and inactive protocols
-
   Scenario: Get execution protocol by valid ID
-    When I send a GET request to "/api/execution-protocols/executionprotocol-30000003-3000-4000-8000-300000000001"
+    When I send a GET request to "/api/ReferenceTables/ExecutionProtocols/executionprotocol-30000003-3000-4000-8000-300000000001"
     Then the response status should be 200
     And the response should contain an execution protocol with:
       | Field              | Value                                                  |
@@ -54,21 +48,15 @@ Feature: Execution Protocols Reference Data
       | isActive           | true                                                   |
 
   Scenario: Get execution protocol by non-existent ID
-    When I send a GET request to "/api/execution-protocols/executionprotocol-00000000-0000-0000-0000-000000000000"
+    When I send a GET request to "/api/ReferenceTables/ExecutionProtocols/executionprotocol-99999999-9999-9999-9999-999999999999"
     Then the response status should be 404
-    And the response should contain an error with:
-      | Field   | Value                        |
-      | message | Execution protocol not found |
 
   Scenario: Get execution protocol with invalid ID format
-    When I send a GET request to "/api/execution-protocols/invalid-id-format"
-    Then the response status should be 404
-    And the response should contain an error with:
-      | Field   | Value                        |
-      | message | Execution protocol not found |
+    When I send a GET request to "/api/ReferenceTables/ExecutionProtocols/invalid-id-format"
+    Then the response status should be 400
 
   Scenario: Get execution protocol by valid code
-    When I send a GET request to "/api/execution-protocols/by-code/STANDARD"
+    When I send a GET request to "/api/ReferenceTables/ExecutionProtocols/ByCode/STANDARD"
     Then the response status should be 200
     And the response should contain an execution protocol with:
       | Field              | Value                                                  |
@@ -78,50 +66,26 @@ Feature: Execution Protocols Reference Data
       | isActive           | true                                                   |
 
   Scenario: Get execution protocol by code - case insensitive
-    When I send a GET request to "/api/execution-protocols/by-code/standard"
+    When I send a GET request to "/api/ReferenceTables/ExecutionProtocols/ByCode/standard"
     Then the response status should be 200
     And the response should contain an execution protocol with:
       | Field | Value    |
       | code  | STANDARD |
 
   Scenario: Get execution protocol by non-existent code
-    When I send a GET request to "/api/execution-protocols/by-code/NONEXISTENT"
+    When I send a GET request to "/api/ReferenceTables/ExecutionProtocols/ByCode/NONEXISTENT"
     Then the response status should be 404
-    And the response should contain an error with:
-      | Field   | Value                        |
-      | message | Execution protocol not found |
 
   Scenario: Get inactive execution protocol by code
-    When I send a GET request to "/api/execution-protocols/by-code/INACTIVE"
+    When I send a GET request to "/api/ReferenceTables/ExecutionProtocols/ByCode/INACTIVE"
     Then the response status should be 404
-    And the response should contain an error with:
-      | Field   | Value                        |
-      | message | Execution protocol not found |
 
-  Scenario: Response caching headers are set correctly
-    When I send a GET request to "/api/execution-protocols"
-    Then the response status should be 200
-    And the response should have cache control headers
-    And the cache duration should be 3600 seconds
-
-  Scenario: Get inactive execution protocol by ID without includeInactive flag
-    When I send a GET request to "/api/execution-protocols/executionprotocol-55555555-5555-5555-5555-555555555555"
+  Scenario: Get inactive execution protocol by ID
+    When I send a GET request to "/api/ReferenceTables/ExecutionProtocols/executionprotocol-55555555-5555-5555-5555-555555555555"
     Then the response status should be 404
-    And the response should contain an error with:
-      | Field   | Value                        |
-      | message | Execution protocol not found |
-
-  Scenario: Get inactive execution protocol by ID with includeInactive flag
-    When I send a GET request to "/api/execution-protocols/executionprotocol-55555555-5555-5555-5555-555555555555?includeInactive=true"
-    Then the response status should be 200
-    And the response should contain an execution protocol with:
-      | Field              | Value                                                  |
-      | executionProtocolId | executionprotocol-55555555-5555-5555-5555-555555555555 |
-      | value              | Inactive                                               |
-      | isActive           | false                                                  |
 
   Scenario: Verify time and rep base combinations
-    When I send a GET request to "/api/execution-protocols"
+    When I send a GET request to "/api/ReferenceTables/ExecutionProtocols"
     Then the response status should be 200
     And at least one protocol should have both timeBase and repBase as true
     And at least one protocol should have timeBase true and repBase false

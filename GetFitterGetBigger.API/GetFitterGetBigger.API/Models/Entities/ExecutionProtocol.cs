@@ -1,25 +1,50 @@
 using System;
 using System.Text.RegularExpressions;
+using GetFitterGetBigger.API.Constants;
 using GetFitterGetBigger.API.Models.SpecializedIds;
+using GetFitterGetBigger.API.Models.Results;
+using GetFitterGetBigger.API.Models.Validation;
 
 namespace GetFitterGetBigger.API.Models.Entities;
 
-public record ExecutionProtocol : ReferenceDataBase
+public record ExecutionProtocol : ReferenceDataBase, IPureReference, IEmptyEntity<ExecutionProtocol>
 {
-    public ExecutionProtocolId Id { get; init; }
+    public ExecutionProtocolId ExecutionProtocolId { get; init; }
     public string Code { get; init; } = string.Empty;
     public bool TimeBase { get; init; }
     public bool RepBase { get; init; }
     public string? RestPattern { get; init; }
     public string? IntensityLevel { get; init; }
     
+    public string Id => ExecutionProtocolId.ToString();
+    
+    public bool IsEmpty => ExecutionProtocolId.IsEmpty;
+    
     private ExecutionProtocol() { }
+    
+    public CacheStrategy GetCacheStrategy() => CacheStrategy.Eternal;
+    
+    public TimeSpan? GetCacheDuration() => null; // Eternal caching
+    
+    public static ExecutionProtocol Empty { get; } = new()
+    {
+        ExecutionProtocolId = ExecutionProtocolId.Empty,
+        Value = string.Empty,
+        Description = null,
+        Code = string.Empty,
+        TimeBase = false,
+        RepBase = false,
+        RestPattern = null,
+        IntensityLevel = null,
+        DisplayOrder = 0,
+        IsActive = false
+    };
     
     public static class Handler
     {
         private static readonly Regex CodeRegex = new(@"^[A-Z]+(_[A-Z]+)*$", RegexOptions.Compiled);
         
-        public static ExecutionProtocol CreateNew(
+        public static EntityResult<ExecutionProtocol> CreateNew(
             string value,
             string? description,
             string code,
@@ -30,24 +55,21 @@ public record ExecutionProtocol : ReferenceDataBase
             int displayOrder,
             bool isActive = true)
         {
-            ValidateParameters(value, code);
-                
-            return new()
-            {
-                Id = ExecutionProtocolId.New(),
-                Value = value,
-                Description = description,
-                Code = code,
-                TimeBase = timeBase,
-                RepBase = repBase,
-                RestPattern = restPattern,
-                IntensityLevel = intensityLevel,
-                DisplayOrder = displayOrder,
-                IsActive = isActive
-            };
+            return Create(
+                ExecutionProtocolId.New(),
+                value,
+                description,
+                code,
+                timeBase,
+                repBase,
+                restPattern,
+                intensityLevel,
+                displayOrder,
+                isActive
+            );
         }
         
-        public static ExecutionProtocol Create(
+        public static EntityResult<ExecutionProtocol> Create(
             ExecutionProtocolId id,
             string value,
             string? description,
@@ -59,73 +81,26 @@ public record ExecutionProtocol : ReferenceDataBase
             int displayOrder,
             bool isActive = true)
         {
-            ValidateParameters(value, code);
-            
-            return new()
-            {
-                Id = id,
-                Value = value,
-                Description = description,
-                Code = code,
-                TimeBase = timeBase,
-                RepBase = repBase,
-                RestPattern = restPattern,
-                IntensityLevel = intensityLevel,
-                DisplayOrder = displayOrder,
-                IsActive = isActive
-            };
-        }
-            
-        public static ExecutionProtocol Update(
-            ExecutionProtocol protocol,
-            string? value = null,
-            string? description = null,
-            string? code = null,
-            bool? timeBase = null,
-            bool? repBase = null,
-            string? restPattern = null,
-            string? intensityLevel = null,
-            int? displayOrder = null,
-            bool? isActive = null)
-        {
-            var newValue = value ?? protocol.Value;
-            var newCode = code ?? protocol.Code;
-            
-            ValidateParameters(newValue, newCode);
-            
-            return protocol with
-            {
-                Value = newValue,
-                Description = description ?? protocol.Description,
-                Code = newCode,
-                TimeBase = timeBase ?? protocol.TimeBase,
-                RepBase = repBase ?? protocol.RepBase,
-                RestPattern = restPattern ?? protocol.RestPattern,
-                IntensityLevel = intensityLevel ?? protocol.IntensityLevel,
-                DisplayOrder = displayOrder ?? protocol.DisplayOrder,
-                IsActive = isActive ?? protocol.IsActive
-            };
-        }
-            
-        public static ExecutionProtocol Deactivate(ExecutionProtocol protocol) =>
-            protocol with { IsActive = false };
-            
-        private static void ValidateParameters(string value, string code)
-        {
-            if (string.IsNullOrEmpty(value))
-                throw new ArgumentException("Value cannot be empty", nameof(value));
-            
-            if (value.Length > 100)
-                throw new ArgumentException("Value cannot exceed 100 characters", nameof(value));
-                
-            if (string.IsNullOrEmpty(code))
-                throw new ArgumentException("Code is required", nameof(code));
-                
-            if (code.Length > 50)
-                throw new ArgumentException("Code cannot exceed 50 characters", nameof(code));
-                
-            if (!CodeRegex.IsMatch(code))
-                throw new ArgumentException("Code must be uppercase with underscores only", nameof(code));
+            return Validate.For<ExecutionProtocol>()
+                .EnsureNotEmpty(value, ExecutionProtocolErrorMessages.ValueCannotBeEmptyEntity)
+                .EnsureMaxLength(value, 100, ExecutionProtocolErrorMessages.ValueTooLong)
+                .EnsureNotEmpty(code, ExecutionProtocolErrorMessages.CodeCannotBeEmpty)
+                .EnsureMaxLength(code, 50, ExecutionProtocolErrorMessages.CodeTooLong)
+                .Ensure(() => CodeRegex.IsMatch(code), ExecutionProtocolErrorMessages.CodeInvalidFormat)
+                .EnsureMinValue(displayOrder, 0, ExecutionProtocolErrorMessages.DisplayOrderMustBeNonNegative)
+                .OnSuccess(() => new ExecutionProtocol
+                {
+                    ExecutionProtocolId = id,
+                    Value = value,
+                    Description = description,
+                    Code = code,
+                    TimeBase = timeBase,
+                    RepBase = repBase,
+                    RestPattern = restPattern,
+                    IntensityLevel = intensityLevel,
+                    DisplayOrder = displayOrder,
+                    IsActive = isActive
+                });
         }
     }
 }

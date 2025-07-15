@@ -141,8 +141,9 @@ namespace GetFitterGetBigger.API.Migrations
 
             modelBuilder.Entity("GetFitterGetBigger.API.Models.Entities.DifficultyLevel", b =>
                 {
-                    b.Property<Guid>("Id")
-                        .HasColumnType("uuid");
+                    b.Property<Guid>("DifficultyLevelId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("Id");
 
                     b.Property<string>("Description")
                         .HasColumnType("text");
@@ -157,14 +158,14 @@ namespace GetFitterGetBigger.API.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.HasKey("Id");
+                    b.HasKey("DifficultyLevelId");
 
                     b.ToTable("DifficultyLevels");
 
                     b.HasData(
                         new
                         {
-                            Id = new Guid("8a8adb1d-24d2-4979-a5a6-0d760e6da24b"),
+                            DifficultyLevelId = new Guid("8a8adb1d-24d2-4979-a5a6-0d760e6da24b"),
                             Description = "Suitable for those new to fitness",
                             DisplayOrder = 1,
                             IsActive = true,
@@ -172,7 +173,7 @@ namespace GetFitterGetBigger.API.Migrations
                         },
                         new
                         {
-                            Id = new Guid("9c7b59a4-bcd8-48a6-971a-cd67b0a7ab5a"),
+                            DifficultyLevelId = new Guid("9c7b59a4-bcd8-48a6-971a-cd67b0a7ab5a"),
                             Description = "Suitable for those with some fitness experience",
                             DisplayOrder = 2,
                             IsActive = true,
@@ -180,7 +181,7 @@ namespace GetFitterGetBigger.API.Migrations
                         },
                         new
                         {
-                            Id = new Guid("3e27f9a7-d5a5-4f8e-8a76-6de2d23c9a3c"),
+                            DifficultyLevelId = new Guid("3e27f9a7-d5a5-4f8e-8a76-6de2d23c9a3c"),
                             Description = "Suitable for those with significant fitness experience",
                             DisplayOrder = 3,
                             IsActive = true,
@@ -213,7 +214,7 @@ namespace GetFitterGetBigger.API.Migrations
 
             modelBuilder.Entity("GetFitterGetBigger.API.Models.Entities.ExecutionProtocol", b =>
                 {
-                    b.Property<Guid>("Id")
+                    b.Property<Guid>("ExecutionProtocolId")
                         .HasColumnType("uuid");
 
                     b.Property<string>("Code")
@@ -250,7 +251,7 @@ namespace GetFitterGetBigger.API.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
 
-                    b.HasKey("Id");
+                    b.HasKey("ExecutionProtocolId");
 
                     b.HasIndex("Code")
                         .IsUnique()
@@ -264,7 +265,7 @@ namespace GetFitterGetBigger.API.Migrations
                     b.HasData(
                         new
                         {
-                            Id = new Guid("30000003-3000-4000-8000-300000000001"),
+                            ExecutionProtocolId = new Guid("30000003-3000-4000-8000-300000000001"),
                             Code = "STANDARD",
                             Description = "Standard protocol with balanced rep and time components",
                             DisplayOrder = 1,
@@ -277,7 +278,7 @@ namespace GetFitterGetBigger.API.Migrations
                         },
                         new
                         {
-                            Id = new Guid("30000003-3000-4000-8000-300000000002"),
+                            ExecutionProtocolId = new Guid("30000003-3000-4000-8000-300000000002"),
                             Code = "SUPERSET",
                             Description = "Perform exercises back-to-back without rest",
                             DisplayOrder = 2,
@@ -290,7 +291,7 @@ namespace GetFitterGetBigger.API.Migrations
                         },
                         new
                         {
-                            Id = new Guid("30000003-3000-4000-8000-300000000003"),
+                            ExecutionProtocolId = new Guid("30000003-3000-4000-8000-300000000003"),
                             Code = "DROP_SET",
                             Description = "Reduce weight after reaching failure",
                             DisplayOrder = 3,
@@ -303,7 +304,7 @@ namespace GetFitterGetBigger.API.Migrations
                         },
                         new
                         {
-                            Id = new Guid("30000003-3000-4000-8000-300000000004"),
+                            ExecutionProtocolId = new Guid("30000003-3000-4000-8000-300000000004"),
                             Code = "AMRAP",
                             Description = "As Many Reps As Possible in given time",
                             DisplayOrder = 4,

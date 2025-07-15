@@ -76,43 +76,43 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.ReferenceData
         
         public virtual async System.Threading.Tasks.Task FeatureBackgroundAsync()
         {
-            TechTalk.SpecFlow.Table table19 = new TechTalk.SpecFlow.Table(new string[] {
+            TechTalk.SpecFlow.Table table13 = new TechTalk.SpecFlow.Table(new string[] {
                         "WorkoutObjectiveId",
                         "Value",
                         "Description",
                         "DisplayOrder",
                         "IsActive"});
-            table19.AddRow(new string[] {
+            table13.AddRow(new string[] {
                         "workoutobjective-10000001-1000-4000-8000-100000000001",
                         "Muscular Strength",
                         "Build maximum strength through heavy loads and low repetitions",
                         "1",
                         "true"});
-            table19.AddRow(new string[] {
+            table13.AddRow(new string[] {
                         "workoutobjective-10000001-1000-4000-8000-100000000002",
                         "Muscular Hypertrophy",
                         "Increase muscle size through moderate loads and volume",
                         "2",
                         "true"});
-            table19.AddRow(new string[] {
+            table13.AddRow(new string[] {
                         "workoutobjective-10000001-1000-4000-8000-100000000003",
                         "Muscular Endurance",
                         "Improve ability to sustain effort over time",
                         "3",
                         "true"});
-            table19.AddRow(new string[] {
+            table13.AddRow(new string[] {
                         "workoutobjective-10000001-1000-4000-8000-100000000004",
                         "Power Development",
                         "Develop explosive strength and speed",
                         "4",
                         "true"});
-            table19.AddRow(new string[] {
+            table13.AddRow(new string[] {
                         "workoutobjective-55555555-5555-5555-5555-555555555555",
                         "Inactive Objective",
                         "This objective is no longer used",
                         "5",
                         "false"});
-            await testRunner.GivenAsync("the following workout objectives exist in the database:", ((string)(null)), table19, "Given ");
+            await testRunner.GivenAsync("the following workout objectives exist in the database:", ((string)(null)), table13, "Given ");
         }
         
         async System.Threading.Tasks.Task Xunit.IAsyncLifetime.InitializeAsync()
@@ -145,31 +145,31 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.ReferenceData
                 await testRunner.WhenAsync("I send a GET request to \"/api/workout-objectives\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
                 await testRunner.ThenAsync("the response status should be 200", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
                 await testRunner.AndAsync("the response should contain 4 workout objectives", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
-                TechTalk.SpecFlow.Table table20 = new TechTalk.SpecFlow.Table(new string[] {
+                TechTalk.SpecFlow.Table table14 = new TechTalk.SpecFlow.Table(new string[] {
                             "Field",
                             "Type",
                             "Required"});
-                table20.AddRow(new string[] {
+                table14.AddRow(new string[] {
                             "workoutObjectiveId",
                             "string",
                             "true"});
-                table20.AddRow(new string[] {
+                table14.AddRow(new string[] {
                             "value",
                             "string",
                             "true"});
-                table20.AddRow(new string[] {
+                table14.AddRow(new string[] {
                             "description",
                             "string",
                             "false"});
-                table20.AddRow(new string[] {
+                table14.AddRow(new string[] {
                             "displayOrder",
                             "number",
                             "true"});
-                table20.AddRow(new string[] {
+                table14.AddRow(new string[] {
                             "isActive",
                             "boolean",
                             "true"});
-                await testRunner.AndAsync("each workout objective should have the following fields:", ((string)(null)), table20, "And ");
+                await testRunner.AndAsync("each workout objective should have the following fields:", ((string)(null)), table14, "And ");
                 await testRunner.AndAsync("the workout objectives should be ordered by displayOrder ascending", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
                 await testRunner.AndAsync("no inactive objectives should be included", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
             }
@@ -221,25 +221,25 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.ReferenceData
                 await testRunner.WhenAsync("I send a GET request to \"/api/workout-objectives/workoutobjective-10000001-1000-4" +
                         "000-8000-100000000001\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
                 await testRunner.ThenAsync("the response status should be 200", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
-                TechTalk.SpecFlow.Table table21 = new TechTalk.SpecFlow.Table(new string[] {
+                TechTalk.SpecFlow.Table table15 = new TechTalk.SpecFlow.Table(new string[] {
                             "Field",
                             "Value"});
-                table21.AddRow(new string[] {
+                table15.AddRow(new string[] {
                             "workoutObjectiveId",
                             "workoutobjective-10000001-1000-4000-8000-100000000001"});
-                table21.AddRow(new string[] {
+                table15.AddRow(new string[] {
                             "value",
                             "Muscular Strength"});
-                table21.AddRow(new string[] {
+                table15.AddRow(new string[] {
                             "description",
                             "Build maximum strength through heavy loads and low repetitions"});
-                table21.AddRow(new string[] {
+                table15.AddRow(new string[] {
                             "displayOrder",
                             "1"});
-                table21.AddRow(new string[] {
+                table15.AddRow(new string[] {
                             "isActive",
                             "true"});
-                await testRunner.AndAsync("the response should contain a workout objective with:", ((string)(null)), table21, "And ");
+                await testRunner.AndAsync("the response should contain a workout objective with:", ((string)(null)), table15, "And ");
             }
             await this.ScenarioCleanupAsync();
         }
@@ -264,13 +264,13 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.ReferenceData
                 await testRunner.WhenAsync("I send a GET request to \"/api/workout-objectives/workoutobjective-00000000-0000-0" +
                         "000-0000-000000000000\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
                 await testRunner.ThenAsync("the response status should be 404", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
-                TechTalk.SpecFlow.Table table22 = new TechTalk.SpecFlow.Table(new string[] {
+                TechTalk.SpecFlow.Table table16 = new TechTalk.SpecFlow.Table(new string[] {
                             "Field",
                             "Value"});
-                table22.AddRow(new string[] {
+                table16.AddRow(new string[] {
                             "message",
                             "Workout objective not found"});
-                await testRunner.AndAsync("the response should contain an error with:", ((string)(null)), table22, "And ");
+                await testRunner.AndAsync("the response should contain an error with:", ((string)(null)), table16, "And ");
             }
             await this.ScenarioCleanupAsync();
         }
@@ -294,13 +294,13 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.ReferenceData
                 await this.FeatureBackgroundAsync();
                 await testRunner.WhenAsync("I send a GET request to \"/api/workout-objectives/invalid-id-format\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
                 await testRunner.ThenAsync("the response status should be 404", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
-                TechTalk.SpecFlow.Table table23 = new TechTalk.SpecFlow.Table(new string[] {
+                TechTalk.SpecFlow.Table table17 = new TechTalk.SpecFlow.Table(new string[] {
                             "Field",
                             "Value"});
-                table23.AddRow(new string[] {
+                table17.AddRow(new string[] {
                             "message",
                             "Workout objective not found"});
-                await testRunner.AndAsync("the response should contain an error with:", ((string)(null)), table23, "And ");
+                await testRunner.AndAsync("the response should contain an error with:", ((string)(null)), table17, "And ");
             }
             await this.ScenarioCleanupAsync();
         }
@@ -350,13 +350,13 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.ReferenceData
                 await testRunner.WhenAsync("I send a GET request to \"/api/workout-objectives/workoutobjective-55555555-5555-5" +
                         "555-5555-555555555555\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
                 await testRunner.ThenAsync("the response status should be 404", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
-                TechTalk.SpecFlow.Table table24 = new TechTalk.SpecFlow.Table(new string[] {
+                TechTalk.SpecFlow.Table table18 = new TechTalk.SpecFlow.Table(new string[] {
                             "Field",
                             "Value"});
-                table24.AddRow(new string[] {
+                table18.AddRow(new string[] {
                             "message",
                             "Workout objective not found"});
-                await testRunner.AndAsync("the response should contain an error with:", ((string)(null)), table24, "And ");
+                await testRunner.AndAsync("the response should contain an error with:", ((string)(null)), table18, "And ");
             }
             await this.ScenarioCleanupAsync();
         }
@@ -381,19 +381,19 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.ReferenceData
                 await testRunner.WhenAsync("I send a GET request to \"/api/workout-objectives/workoutobjective-55555555-5555-5" +
                         "555-5555-555555555555?includeInactive=true\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
                 await testRunner.ThenAsync("the response status should be 200", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
-                TechTalk.SpecFlow.Table table25 = new TechTalk.SpecFlow.Table(new string[] {
+                TechTalk.SpecFlow.Table table19 = new TechTalk.SpecFlow.Table(new string[] {
                             "Field",
                             "Value"});
-                table25.AddRow(new string[] {
+                table19.AddRow(new string[] {
                             "workoutObjectiveId",
                             "workoutobjective-55555555-5555-5555-5555-555555555555"});
-                table25.AddRow(new string[] {
+                table19.AddRow(new string[] {
                             "value",
                             "Inactive Objective"});
-                table25.AddRow(new string[] {
+                table19.AddRow(new string[] {
                             "isActive",
                             "false"});
-                await testRunner.AndAsync("the response should contain a workout objective with:", ((string)(null)), table25, "And ");
+                await testRunner.AndAsync("the response should contain a workout objective with:", ((string)(null)), table19, "And ");
             }
             await this.ScenarioCleanupAsync();
         }

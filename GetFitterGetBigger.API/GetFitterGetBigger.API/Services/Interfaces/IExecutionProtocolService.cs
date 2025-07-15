@@ -1,82 +1,52 @@
-using System.Collections.Generic;
-using System.Threading.Tasks;
 using GetFitterGetBigger.API.DTOs;
-using GetFitterGetBigger.API.Models.Entities;
 using GetFitterGetBigger.API.Models.SpecializedIds;
+using GetFitterGetBigger.API.Services.Results;
 
 namespace GetFitterGetBigger.API.Services.Interfaces;
 
 /// <summary>
-/// Service for managing execution protocols reference data
+/// Service interface for managing execution protocol reference data
 /// </summary>
 public interface IExecutionProtocolService
 {
     /// <summary>
-    /// Get all active execution protocols
+    /// Gets all active execution protocols
     /// </summary>
-    /// <returns>Collection of active execution protocols</returns>
-    Task<IEnumerable<ExecutionProtocol>> GetAllAsync();
+    /// <returns>A service result containing all active execution protocols</returns>
+    Task<ServiceResult<IEnumerable<ExecutionProtocolDto>>> GetAllActiveAsync();
     
     /// <summary>
-    /// Get all active execution protocols as DTOs
-    /// </summary>
-    /// <returns>Collection of execution protocol DTOs</returns>
-    Task<IEnumerable<ExecutionProtocolDto>> GetAllAsDtosAsync();
-    
-    /// <summary>
-    /// Get all execution protocols as ExecutionProtocolDto (with option to include inactive)
-    /// </summary>
-    /// <param name="includeInactive">Whether to include inactive protocols</param>
-    /// <returns>Collection of execution protocol DTOs</returns>
-    Task<IEnumerable<ExecutionProtocolDto>> GetAllAsExecutionProtocolDtosAsync(bool includeInactive = false);
-    
-    /// <summary>
-    /// Get execution protocol by ID
+    /// Gets an execution protocol by its ID
     /// </summary>
     /// <param name="id">The execution protocol ID</param>
-    /// <returns>The execution protocol or null if not found</returns>
-    Task<ExecutionProtocol?> GetByIdAsync(ExecutionProtocolId id);
+    /// <returns>A service result containing the execution protocol if found</returns>
+    Task<ServiceResult<ExecutionProtocolDto>> GetByIdAsync(ExecutionProtocolId id);
     
     /// <summary>
-    /// Get execution protocol by ID as DTO
+    /// Gets an execution protocol by its value
     /// </summary>
-    /// <param name="id">The execution protocol ID as string</param>
-    /// <returns>The execution protocol DTO or null if not found</returns>
-    Task<ExecutionProtocolDto?> GetByIdAsDtoAsync(string id);
+    /// <param name="value">The execution protocol value</param>
+    /// <returns>A service result containing the execution protocol if found</returns>
+    Task<ServiceResult<ExecutionProtocolDto>> GetByValueAsync(string value);
     
     /// <summary>
-    /// Get execution protocol by ID as ExecutionProtocolDto (with option to include inactive)
+    /// Gets an execution protocol by its code
     /// </summary>
-    /// <param name="id">The execution protocol ID as string</param>
-    /// <param name="includeInactive">Whether to include inactive protocols</param>
-    /// <returns>The execution protocol DTO or null if not found</returns>
-    Task<ExecutionProtocolDto?> GetByIdAsExecutionProtocolDtoAsync(string id, bool includeInactive = false);
+    /// <param name="code">The execution protocol code</param>
+    /// <returns>A service result containing the execution protocol if found</returns>
+    Task<ServiceResult<ExecutionProtocolDto>> GetByCodeAsync(string code);
     
     /// <summary>
-    /// Get execution protocol by value
+    /// Checks if an execution protocol exists
     /// </summary>
-    /// <param name="value">The execution protocol value (case insensitive)</param>
-    /// <returns>The execution protocol or null if not found</returns>
-    Task<ExecutionProtocol?> GetByValueAsync(string value);
-    
-    /// <summary>
-    /// Get execution protocol by code
-    /// </summary>
-    /// <param name="code">The execution protocol code (case insensitive)</param>
-    /// <returns>The execution protocol or null if not found</returns>
-    Task<ExecutionProtocol?> GetByCodeAsync(string code);
-    
-    /// <summary>
-    /// Get execution protocol by code as DTO
-    /// </summary>
-    /// <param name="code">The execution protocol code (case insensitive)</param>
-    /// <returns>The execution protocol DTO or null if not found</returns>
-    Task<ExecutionProtocolDto?> GetByCodeAsDtoAsync(string code);
-    
-    /// <summary>
-    /// Check if execution protocol exists
-    /// </summary>
-    /// <param name="id">The execution protocol ID</param>
-    /// <returns>True if exists, false otherwise</returns>
+    /// <param name="id">The execution protocol ID to check</param>
+    /// <returns>True if the execution protocol exists, false otherwise</returns>
     Task<bool> ExistsAsync(ExecutionProtocolId id);
+    
+    /// <summary>
+    /// Checks if an execution protocol exists with the given string ID
+    /// </summary>
+    /// <param name="id">The execution protocol ID in string format</param>
+    /// <returns>True if the execution protocol exists and is active, false otherwise</returns>
+    Task<bool> ExistsAsync(string id);
 }

@@ -219,7 +219,7 @@ public class FitnessDbContext : DbContext
                 guid => WorkoutCategoryId.From(guid));
                 
         modelBuilder.Entity<ExecutionProtocol>()
-            .Property(ep => ep.Id)
+            .Property(ep => ep.ExecutionProtocolId)
             .HasConversion(
                 id => (Guid)id,
                 guid => ExecutionProtocolId.From(guid));
@@ -994,7 +994,7 @@ public class FitnessDbContext : DbContext
                 "60-90 seconds between sets",
                 "Moderate to High",
                 1,
-                true),
+                true).Value,
             ExecutionProtocol.Handler.Create(
                 ExecutionProtocolId.From(Guid.Parse("30000003-3000-4000-8000-300000000002")),
                 "Superset",
@@ -1005,7 +1005,7 @@ public class FitnessDbContext : DbContext
                 "Rest after completing both exercises",
                 "High",
                 2,
-                true),
+                true).Value,
             ExecutionProtocol.Handler.Create(
                 ExecutionProtocolId.From(Guid.Parse("30000003-3000-4000-8000-300000000003")),
                 "Drop Set",
@@ -1016,7 +1016,7 @@ public class FitnessDbContext : DbContext
                 "Minimal rest between drops",
                 "Very High",
                 3,
-                true),
+                true).Value,
             ExecutionProtocol.Handler.Create(
                 ExecutionProtocolId.From(Guid.Parse("30000003-3000-4000-8000-300000000004")),
                 "AMRAP",
@@ -1027,7 +1027,7 @@ public class FitnessDbContext : DbContext
                 "Fixed rest periods",
                 "High",
                 4,
-                true)
+                true).Value
         );
     }
 }
