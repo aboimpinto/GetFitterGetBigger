@@ -37,31 +37,31 @@ public class ExerciseTypeRepositoryTests : IDisposable
                 "Warmup", 
                 "Exercises to prepare the body for workout", 
                 1, 
-                true),
+                true).Value,
             ExerciseType.Handler.Create(
                 ExerciseTypeId.From(Guid.Parse("22222222-2222-2222-2222-222222222222")),
                 "Workout", 
                 "Main workout exercises", 
                 2, 
-                true),
+                true).Value,
             ExerciseType.Handler.Create(
                 ExerciseTypeId.From(Guid.Parse("33333333-3333-3333-3333-333333333333")),
                 "Cooldown", 
                 "Exercises to cool down after workout", 
                 3, 
-                true),
+                true).Value,
             ExerciseType.Handler.Create(
                 ExerciseTypeId.From(Guid.Parse("44444444-4444-4444-4444-444444444444")),
                 "Rest", 
                 "Rest period between exercises", 
                 4, 
-                true),
+                true).Value,
             ExerciseType.Handler.Create(
                 ExerciseTypeId.From(Guid.Parse("55555555-5555-5555-5555-555555555555")),
                 "Inactive Type", 
                 "This type is inactive", 
                 5, 
-                false) // Inactive
+                false).Value // Inactive
         };
         
         _context.Set<ExerciseType>().AddRange(exerciseTypes);
@@ -97,6 +97,7 @@ public class ExerciseTypeRepositoryTests : IDisposable
         
         // Assert
         Assert.NotNull(result);
+        Assert.False(result.IsEmpty);
         Assert.Equal("Warmup", result.Value);
         Assert.Equal("Exercises to prepare the body for workout", result.Description);
         Assert.Equal(1, result.DisplayOrder);
@@ -104,7 +105,7 @@ public class ExerciseTypeRepositoryTests : IDisposable
     }
     
     [Fact]
-    public async Task GetByIdAsync_NonExistingId_ReturnsNull()
+    public async Task GetByIdAsync_NonExistingId_ReturnsEmpty()
     {
         // Arrange
         var id = ExerciseTypeId.New();
@@ -113,7 +114,9 @@ public class ExerciseTypeRepositoryTests : IDisposable
         var result = await _repository.GetByIdAsync(id);
         
         // Assert
-        Assert.Null(result);
+        Assert.NotNull(result);
+        Assert.True(result.IsEmpty);
+        Assert.Equal(ExerciseType.Empty, result);
     }
     
     [Fact]
@@ -138,6 +141,7 @@ public class ExerciseTypeRepositoryTests : IDisposable
         
         // Assert
         Assert.NotNull(result);
+        Assert.False(result.IsEmpty);
         Assert.Equal("Workout", result.Value);
         Assert.Equal("Main workout exercises", result.Description);
     }
@@ -150,27 +154,30 @@ public class ExerciseTypeRepositoryTests : IDisposable
         
         // Assert
         Assert.NotNull(result);
+        Assert.False(result.IsEmpty);
         Assert.Equal("Cooldown", result.Value); // Original casing preserved
     }
     
     [Fact]
-    public async Task GetByValueAsync_InactiveItem_ReturnsNull()
+    public async Task GetByValueAsync_InactiveItem_ReturnsEmpty()
     {
         // Act
         var result = await _repository.GetByValueAsync("Inactive Type");
         
         // Assert
-        Assert.Null(result);
+        Assert.NotNull(result);
+        Assert.True(result.IsEmpty);
     }
     
     [Fact]
-    public async Task GetByValueAsync_NonExistingValue_ReturnsNull()
+    public async Task GetByValueAsync_NonExistingValue_ReturnsEmpty()
     {
         // Act
         var result = await _repository.GetByValueAsync("NonExistent");
         
         // Assert
-        Assert.Null(result);
+        Assert.NotNull(result);
+        Assert.True(result.IsEmpty);
     }
     
     public void Dispose()

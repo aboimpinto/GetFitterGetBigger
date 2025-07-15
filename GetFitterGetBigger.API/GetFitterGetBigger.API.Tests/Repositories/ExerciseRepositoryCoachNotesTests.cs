@@ -38,11 +38,11 @@ namespace GetFitterGetBigger.API.Tests.Repositories
             
             // Add exercise types from seed data
             var warmupType = ExerciseType.Handler.Create(
-                ExerciseTypeId.New(), "Warmup", "Exercises for warming up", 1, true);
+                ExerciseTypeId.New(), "Warmup", "Exercises for warming up", 1, true).Value;
             var workoutType = ExerciseType.Handler.Create(
-                ExerciseTypeId.New(), "Workout", "Main workout exercises", 2, true);
+                ExerciseTypeId.New(), "Workout", "Main workout exercises", 2, true).Value;
             var cooldownType = ExerciseType.Handler.Create(
-                ExerciseTypeId.New(), "Cooldown", "Cool down exercises", 3, true);
+                ExerciseTypeId.New(), "Cooldown", "Cool down exercises", 3, true).Value;
             
             _context.ExerciseTypes.AddRange(warmupType, workoutType, cooldownType);
             _context.SaveChanges();
@@ -88,8 +88,8 @@ namespace GetFitterGetBigger.API.Tests.Repositories
         {
             // Arrange
             var difficultyId = _context.DifficultyLevels.First().DifficultyLevelId;
-            var warmupTypeId = _context.ExerciseTypes.First(et => et.Value == "Warmup").Id;
-            var workoutTypeId = _context.ExerciseTypes.First(et => et.Value == "Workout").Id;
+            var warmupTypeId = _context.ExerciseTypes.First(et => et.Value == "Warmup").ExerciseTypeId;
+            var workoutTypeId = _context.ExerciseTypes.First(et => et.Value == "Workout").ExerciseTypeId;
             
             var exercise = Exercise.Handler.CreateNew(
                 "Jumping Jacks", "Full body warmup", null, null, false, difficultyId);
@@ -167,7 +167,7 @@ namespace GetFitterGetBigger.API.Tests.Repositories
         {
             // Arrange
             var difficultyId = _context.DifficultyLevels.First().DifficultyLevelId;
-            var cooldownTypeId = _context.ExerciseTypes.First(et => et.Value == "Cooldown").Id;
+            var cooldownTypeId = _context.ExerciseTypes.First(et => et.Value == "Cooldown").ExerciseTypeId;
             
             var exercise = Exercise.Handler.CreateNew(
                 "Stretching", "Cool down exercise", null, null, false, difficultyId);

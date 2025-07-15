@@ -70,7 +70,7 @@ public class ExerciseServiceEquipmentValidationTests
     {
         // Arrange
         var restTypeId = ExerciseTypeId.New();
-        var restType = ExerciseType.Handler.Create(restTypeId, "Rest", "Rest period", 1, true);
+        var restType = ExerciseType.Handler.Create(restTypeId, "Rest", "Rest period", 1, true).Value;
         
         var request = CreateExerciseRequestBuilder.ForRestExercise()
             .WithName("Rest Period")
@@ -109,7 +109,7 @@ public class ExerciseServiceEquipmentValidationTests
     {
         // Arrange
         var workoutTypeId = ExerciseTypeId.New();
-        var workoutType = ExerciseType.Handler.Create(workoutTypeId, "Workout", "Main workout", 1, false);
+        var workoutType = ExerciseType.Handler.Create(workoutTypeId, "Workout", "Main workout", 1, false).Value;
         
         var request = CreateExerciseRequestBuilder.ForWorkoutExercise()
             .WithName("Push Up")
@@ -150,7 +150,7 @@ public class ExerciseServiceEquipmentValidationTests
     {
         // Arrange
         var workoutTypeId = ExerciseTypeId.New();
-        var workoutType = ExerciseType.Handler.Create(workoutTypeId, "Workout", "Main workout", 1, false);
+        var workoutType = ExerciseType.Handler.Create(workoutTypeId, "Workout", "Main workout", 1, false).Value;
         var equipmentId = EquipmentId.New();
         
         var request = CreateExerciseRequestBuilder.ForWorkoutExercise()
@@ -199,7 +199,7 @@ public class ExerciseServiceEquipmentValidationTests
         // Arrange
         var exerciseId = ExerciseId.New();
         var workoutTypeId = ExerciseTypeId.New();
-        var workoutType = ExerciseType.Handler.Create(workoutTypeId, "Workout", "Main workout", 1, false);
+        var workoutType = ExerciseType.Handler.Create(workoutTypeId, "Workout", "Main workout", 1, false).Value;
         
         var existingExercise = Exercise.Handler.CreateNew(
             "Bench Press",

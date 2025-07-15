@@ -460,12 +460,15 @@ public class SeedDataBuilder
         foreach (var (id, name, description, displayOrder) in exerciseTypesToCheck)
         {
             var exerciseTypeId = ExerciseTypeId.From(id);
-            var exists = await _context.ExerciseTypes.AnyAsync(et => et.Id == exerciseTypeId);
+            var exists = await _context.ExerciseTypes.AnyAsync(et => et.ExerciseTypeId == exerciseTypeId);
             
             if (!exists)
             {
-                var exerciseType = ExerciseType.Handler.Create(exerciseTypeId, name, description, displayOrder, true);
-                await _context.ExerciseTypes.AddAsync(exerciseType);
+                var result = ExerciseType.Handler.Create(exerciseTypeId, name, description, displayOrder, true);
+                if (result.IsSuccess)
+                {
+                    await _context.ExerciseTypes.AddAsync(result.Value);
+                }
             }
         }
         

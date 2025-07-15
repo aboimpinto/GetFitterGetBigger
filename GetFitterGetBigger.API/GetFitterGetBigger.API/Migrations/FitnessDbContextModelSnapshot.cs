@@ -527,7 +527,7 @@ namespace GetFitterGetBigger.API.Migrations
 
             modelBuilder.Entity("GetFitterGetBigger.API.Models.Entities.ExerciseType", b =>
                 {
-                    b.Property<Guid>("Id")
+                    b.Property<Guid>("ExerciseTypeId")
                         .HasColumnType("uuid");
 
                     b.Property<string>("Description")
@@ -543,14 +543,14 @@ namespace GetFitterGetBigger.API.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.HasKey("Id");
+                    b.HasKey("ExerciseTypeId");
 
                     b.ToTable("ExerciseTypes");
 
                     b.HasData(
                         new
                         {
-                            Id = new Guid("a1b2c3d4-5e6f-7a8b-9c0d-1e2f3a4b5c6d"),
+                            ExerciseTypeId = new Guid("a1b2c3d4-5e6f-7a8b-9c0d-1e2f3a4b5c6d"),
                             Description = "Exercises performed to prepare the body for more intense activity",
                             DisplayOrder = 1,
                             IsActive = true,
@@ -558,7 +558,7 @@ namespace GetFitterGetBigger.API.Migrations
                         },
                         new
                         {
-                            Id = new Guid("b2c3d4e5-6f7a-8b9c-0d1e-2f3a4b5c6d7e"),
+                            ExerciseTypeId = new Guid("b2c3d4e5-6f7a-8b9c-0d1e-2f3a4b5c6d7e"),
                             Description = "Main exercises that form the core of the training session",
                             DisplayOrder = 2,
                             IsActive = true,
@@ -566,7 +566,7 @@ namespace GetFitterGetBigger.API.Migrations
                         },
                         new
                         {
-                            Id = new Guid("c3d4e5f6-7a8b-9c0d-1e2f-3a4b5c6d7e8f"),
+                            ExerciseTypeId = new Guid("c3d4e5f6-7a8b-9c0d-1e2f-3a4b5c6d7e8f"),
                             Description = "Exercises performed to help the body recover after intense activity",
                             DisplayOrder = 3,
                             IsActive = true,
@@ -574,7 +574,7 @@ namespace GetFitterGetBigger.API.Migrations
                         },
                         new
                         {
-                            Id = new Guid("d4e5f6a7-8b9c-0d1e-2f3a-4b5c6d7e8f9a"),
+                            ExerciseTypeId = new Guid("d4e5f6a7-8b9c-0d1e-2f3a-4b5c6d7e8f9a"),
                             Description = "Periods of rest between exercises or sets",
                             DisplayOrder = 4,
                             IsActive = true,

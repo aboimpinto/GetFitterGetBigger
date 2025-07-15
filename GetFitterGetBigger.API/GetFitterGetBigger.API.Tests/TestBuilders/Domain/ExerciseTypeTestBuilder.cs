@@ -118,26 +118,28 @@ public class ExerciseTypeTestBuilder
     public ExerciseType Build()
     {
         // If ID is provided, use Create method, otherwise generate new
-        if (_id.HasValue)
-        {
-            return ExerciseType.Handler.Create(
+        var result = _id.HasValue
+            ? ExerciseType.Handler.Create(
                 id: _id.Value,
                 value: _value,
                 description: _description,
                 displayOrder: _displayOrder,
                 isActive: true
-            );
-        }
-        else
-        {
-            return ExerciseType.Handler.Create(
+            )
+            : ExerciseType.Handler.Create(
                 id: ExerciseTypeId.New(),
                 value: _value,
                 description: _description,
                 displayOrder: _displayOrder,
                 isActive: true
             );
+
+        if (!result.IsSuccess)
+        {
+            throw new InvalidOperationException($"Failed to create ExerciseType: {string.Join(", ", result.Errors)}");
         }
+
+        return result.Value;
     }
 
     /// <summary>
@@ -145,7 +147,7 @@ public class ExerciseTypeTestBuilder
     /// </summary>
     public string BuildId()
     {
-        return Build().Id.ToString();
+        return Build().ExerciseTypeId.ToString();
     }
 
     /// <summary>

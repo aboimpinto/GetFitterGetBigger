@@ -1,55 +1,68 @@
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using GetFitterGetBigger.API.Constants;
+using GetFitterGetBigger.API.DTOs;
 using GetFitterGetBigger.API.Models;
+using GetFitterGetBigger.API.Models.Entities;
 using GetFitterGetBigger.API.Models.SpecializedIds;
 using GetFitterGetBigger.API.Repositories.Interfaces;
+using GetFitterGetBigger.API.Services.Base;
 using GetFitterGetBigger.API.Services.Interfaces;
+using GetFitterGetBigger.API.Services.Results;
+using Microsoft.Extensions.Logging;
 using Olimpo.EntityFramework.Persistency;
 
 namespace GetFitterGetBigger.API.Services.Implementations;
 
 /// <summary>
 /// Service implementation for exercise type operations
+/// TEMPORARY: Extends EmptyEnabledPureReferenceService until all entities are migrated
 /// </summary>
-public class ExerciseTypeService : IExerciseTypeService
+public class ExerciseTypeService : EmptyEnabledPureReferenceService<ExerciseType, ReferenceDataDto>, IExerciseTypeService
 {
-    private readonly IUnitOfWorkProvider<FitnessDbContext> _unitOfWorkProvider;
-
     public ExerciseTypeService(
-        IUnitOfWorkProvider<FitnessDbContext> unitOfWorkProvider)
+        IUnitOfWorkProvider<FitnessDbContext> unitOfWorkProvider,
+        IEmptyEnabledCacheService cacheService,
+        ILogger<ExerciseTypeService> logger)
+        : base(unitOfWorkProvider, cacheService, logger)
     {
-        _unitOfWorkProvider = unitOfWorkProvider;
     }
 
     /// <inheritdoc/>
-    public async Task<bool> ExistsAsync(ExerciseTypeId id)
+    public async Task<ServiceResult<IEnumerable<ReferenceDataDto>>> GetAllActiveAsync()
     {
-        using var uow = _unitOfWorkProvider.CreateReadOnly();
-        var repository = uow.GetRepository<IExerciseTypeRepository>();
-        var exerciseType = await repository.GetByIdAsync(id);
-        return exerciseType != null && exerciseType.IsActive;
+        return await GetAllAsync();
     }
+
+    /// <inheritdoc/>
+    public async Task<ServiceResult<ReferenceDataDto>> GetByIdAsync(ExerciseTypeId id) => 
+        id.IsEmpty 
+            ? ServiceResult<ReferenceDataDto>.Failure(CreateEmptyDto(), ServiceError.ValidationFailed(ExerciseTypeErrorMessages.InvalidIdFormat))
+            : await GetByIdAsync(id.ToString());
+    
+    /// <inheritdoc/>
+    public async Task<ServiceResult<ReferenceDataDto>> GetByValueAsync(string value) => 
+        string.IsNullOrWhiteSpace(value)
+            ? ServiceResult<ReferenceDataDto>.Failure(CreateEmptyDto(), ServiceError.ValidationFailed(ExerciseTypeErrorMessages.ValueCannotBeEmpty))
+            : await GetFromCacheOrLoadAsync(
+                GetValueCacheKey(value),
+                () => LoadByValueAsync(value),
+                value);
+
+    /// <inheritdoc/>
+    public async Task<bool> ExistsAsync(ExerciseTypeId id) => 
+        !id.IsEmpty && (await GetByIdAsync(id)).IsSuccess;
+    
+    /// <inheritdoc/>
+    public override async Task<bool> ExistsAsync(string id) => 
+        await ExistsAsync(ExerciseTypeId.ParseOrEmpty(id));
 
     /// <inheritdoc/>
     public async Task<bool> AllExistAsync(IEnumerable<string> ids)
     {
-        using var uow = _unitOfWorkProvider.CreateReadOnly();
-        var repository = uow.GetRepository<IExerciseTypeRepository>();
-        
         foreach (var idString in ids)
         {
-            if (ExerciseTypeId.TryParse(idString, out var id))
+            var id = ExerciseTypeId.ParseOrEmpty(idString);
+            if (id.IsEmpty || !(await ExistsAsync(id)))
             {
-                var exerciseType = await repository.GetByIdAsync(id);
-                if (exerciseType == null || !exerciseType.IsActive)
-                {
-                    return false;
-                }
-            }
-            else
-            {
-                // Invalid ID format
                 return false;
             }
         }
@@ -60,15 +73,13 @@ public class ExerciseTypeService : IExerciseTypeService
     /// <inheritdoc/>
     public async Task<bool> AnyIsRestTypeAsync(IEnumerable<string> ids)
     {
-        using var uow = _unitOfWorkProvider.CreateReadOnly();
-        var repository = uow.GetRepository<IExerciseTypeRepository>();
-        
         foreach (var idString in ids)
         {
-            if (ExerciseTypeId.TryParse(idString, out var id))
+            var id = ExerciseTypeId.ParseOrEmpty(idString);
+            if (!id.IsEmpty)
             {
-                var exerciseType = await repository.GetByIdAsync(id);
-                if (exerciseType != null && exerciseType.Value.ToLowerInvariant() == "rest")
+                var result = await GetByIdAsync(id);
+                if (result.IsSuccess && result.Data.Value.ToLowerInvariant() == "rest")
                 {
                     return true;
                 }
@@ -76,5 +87,89 @@ public class ExerciseTypeService : IExerciseTypeService
         }
         
         return false;
+    }
+
+    private string GetValueCacheKey(string value) => $"{GetCacheKeyPrefix()}value:{value}";
+    
+    private async Task<ServiceResult<ReferenceDataDto>> GetFromCacheOrLoadAsync(
+        string cacheKey, 
+        Func<Task<ExerciseType>> loadFunc,
+        string identifier)
+    {
+        var cacheService = (IEmptyEnabledCacheService)_cacheService;
+        var cacheResult = await cacheService.GetAsync<ReferenceDataDto>(cacheKey);
+        if (cacheResult.IsHit)
+        {
+            _logger.LogDebug("Cache hit for {CacheKey}", cacheKey);
+            return ServiceResult<ReferenceDataDto>.Success(cacheResult.Value);
+        }
+        
+        var entity = await loadFunc();
+        return entity switch
+        {
+            { IsEmpty: true } or { IsActive: false } => ServiceResult<ReferenceDataDto>.Failure(
+                CreateEmptyDto(), 
+                ServiceError.NotFound(ExerciseTypeErrorMessages.NotFound, identifier)),
+            _ => await CacheAndReturnSuccessAsync(cacheKey, MapToDto(entity))
+        };
+    }
+    
+    private async Task<ServiceResult<ReferenceDataDto>> CacheAndReturnSuccessAsync(string cacheKey, ReferenceDataDto dto)
+    {
+        await _cacheService.SetAsync(cacheKey, dto, TimeSpan.FromDays(365));
+        return ServiceResult<ReferenceDataDto>.Success(dto);
+    }
+    
+    private async Task<ExerciseType> LoadByValueAsync(string value)
+    {
+        using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
+        var repository = unitOfWork.GetRepository<IExerciseTypeRepository>();
+        return await repository.GetByValueAsync(value) ?? ExerciseType.Empty;
+    }
+    
+    protected override async Task<IEnumerable<ExerciseType>> LoadAllEntitiesAsync(IReadOnlyUnitOfWork<FitnessDbContext> unitOfWork)
+    {
+        var repository = unitOfWork.GetRepository<IExerciseTypeRepository>();
+        return await repository.GetAllActiveAsync();
+    }
+    
+    // Returns ExerciseType.Empty instead of null (Null Object Pattern)
+    protected override async Task<ExerciseType> LoadEntityByIdAsync(IReadOnlyUnitOfWork<FitnessDbContext> unitOfWork, string id) =>
+        ExerciseTypeId.ParseOrEmpty(id) switch
+        {
+            { IsEmpty: true } => ExerciseType.Empty,
+            var exerciseTypeId => await unitOfWork.GetRepository<IExerciseTypeRepository>().GetByIdAsync(exerciseTypeId) ?? ExerciseType.Empty
+        };
+    
+    protected override ReferenceDataDto MapToDto(ExerciseType entity)
+    {
+        return new ReferenceDataDto
+        {
+            Id = entity.Id,
+            Value = entity.Value,
+            Description = entity.Description
+        };
+    }
+    
+    protected override ReferenceDataDto CreateEmptyDto()
+    {
+        return new ReferenceDataDto();
+    }
+    
+    protected override ValidationResult ValidateAndParseId(string id)
+    {
+        // This is called by the base class when using the string overload
+        // Since we always use the typed overload from the controller,
+        // this should validate the string format
+        if (string.IsNullOrWhiteSpace(id))
+        {
+            return ValidationResult.Failure(ExerciseTypeErrorMessages.IdCannotBeEmpty);
+        }
+        
+        // No additional validation - let the controller handle format validation
+        // This allows empty GUIDs to pass through and be treated as NotFound
+        
+        // Valid format (including empty GUID) - let the database determine if it exists
+        return ValidationResult.Success();
     }
 }

@@ -7,98 +7,98 @@ namespace GetFitterGetBigger.API.Tests.Models.SpecializedIds;
 public class ExerciseTypeIdTests
 {
     [Fact]
-    public void TryParse_ValidExerciseTypeId_ReturnsTrue()
+    public void ParseOrEmpty_ValidExerciseTypeId_ReturnsValidId()
     {
         // Arrange
         var guid = Guid.NewGuid();
         var input = $"exercisetype-{guid}";
 
         // Act
-        var result = ExerciseTypeId.TryParse(input, out ExerciseTypeId exerciseTypeId);
+        var exerciseTypeId = ExerciseTypeId.ParseOrEmpty(input);
 
         // Assert
-        Assert.True(result);
+        Assert.False(exerciseTypeId.IsEmpty);
         Assert.Equal(guid, (Guid)exerciseTypeId);
         Assert.Equal(input, exerciseTypeId.ToString());
     }
 
     [Fact]
-    public void TryParse_NullInput_ReturnsFalse()
+    public void ParseOrEmpty_NullInput_ReturnsEmpty()
     {
         // Act
-        var result = ExerciseTypeId.TryParse(null, out ExerciseTypeId exerciseTypeId);
+        var exerciseTypeId = ExerciseTypeId.ParseOrEmpty(null);
 
         // Assert
-        Assert.False(result);
-        Assert.Equal(default, exerciseTypeId);
+        Assert.True(exerciseTypeId.IsEmpty);
+        Assert.Equal(ExerciseTypeId.Empty, exerciseTypeId);
     }
 
     [Fact]
-    public void TryParse_EmptyString_ReturnsFalse()
+    public void ParseOrEmpty_EmptyString_ReturnsEmpty()
     {
         // Act
-        var result = ExerciseTypeId.TryParse(string.Empty, out ExerciseTypeId exerciseTypeId);
+        var exerciseTypeId = ExerciseTypeId.ParseOrEmpty(string.Empty);
 
         // Assert
-        Assert.False(result);
-        Assert.Equal(default, exerciseTypeId);
+        Assert.True(exerciseTypeId.IsEmpty);
+        Assert.Equal(ExerciseTypeId.Empty, exerciseTypeId);
     }
 
     [Fact]
-    public void TryParse_WrongPrefix_ReturnsFalse()
+    public void ParseOrEmpty_WrongPrefix_ReturnsEmpty()
     {
         // Arrange
         var guid = Guid.NewGuid();
         var input = $"exercise-{guid}";
 
         // Act
-        var result = ExerciseTypeId.TryParse(input, out ExerciseTypeId exerciseTypeId);
+        var exerciseTypeId = ExerciseTypeId.ParseOrEmpty(input);
 
         // Assert
-        Assert.False(result);
-        Assert.Equal(default, exerciseTypeId);
+        Assert.True(exerciseTypeId.IsEmpty);
+        Assert.Equal(ExerciseTypeId.Empty, exerciseTypeId);
     }
 
     [Fact]
-    public void TryParse_NoPrefix_ReturnsFalse()
+    public void ParseOrEmpty_NoPrefix_ReturnsEmpty()
     {
         // Arrange
         var guid = Guid.NewGuid();
         var input = guid.ToString();
 
         // Act
-        var result = ExerciseTypeId.TryParse(input, out ExerciseTypeId exerciseTypeId);
+        var exerciseTypeId = ExerciseTypeId.ParseOrEmpty(input);
 
         // Assert
-        Assert.False(result);
-        Assert.Equal(default, exerciseTypeId);
+        Assert.True(exerciseTypeId.IsEmpty);
+        Assert.Equal(ExerciseTypeId.Empty, exerciseTypeId);
     }
 
     [Fact]
-    public void TryParse_InvalidGuid_ReturnsFalse()
+    public void ParseOrEmpty_InvalidGuid_ReturnsEmpty()
     {
         // Arrange
         var input = "exercisetype-not-a-guid";
 
         // Act
-        var result = ExerciseTypeId.TryParse(input, out ExerciseTypeId exerciseTypeId);
+        var exerciseTypeId = ExerciseTypeId.ParseOrEmpty(input);
 
         // Assert
-        Assert.False(result);
-        Assert.Equal(default, exerciseTypeId);
+        Assert.True(exerciseTypeId.IsEmpty);
+        Assert.Equal(ExerciseTypeId.Empty, exerciseTypeId);
     }
 
     [Fact]
-    public void TryParse_PrefixOnly_ReturnsFalse()
+    public void ParseOrEmpty_PrefixOnly_ReturnsEmpty()
     {
         // Arrange
         var input = "exercisetype-";
 
         // Act
-        var result = ExerciseTypeId.TryParse(input, out ExerciseTypeId exerciseTypeId);
+        var exerciseTypeId = ExerciseTypeId.ParseOrEmpty(input);
 
         // Assert
-        Assert.False(result);
-        Assert.Equal(default, exerciseTypeId);
+        Assert.True(exerciseTypeId.IsEmpty);
+        Assert.Equal(ExerciseTypeId.Empty, exerciseTypeId);
     }
 }

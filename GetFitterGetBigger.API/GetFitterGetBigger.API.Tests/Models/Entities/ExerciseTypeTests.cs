@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using GetFitterGetBigger.API.Models.Entities;
 using GetFitterGetBigger.API.Models.SpecializedIds;
 using Xunit;
@@ -16,10 +17,12 @@ public class ExerciseTypeTests
         var displayOrder = 1;
         
         // Act
-        var exerciseType = ExerciseType.Handler.CreateNew(value, description, displayOrder);
+        var result = ExerciseType.Handler.CreateNew(value, description, displayOrder);
         
         // Assert
-        Assert.NotEqual(default(ExerciseTypeId), exerciseType.Id);
+        Assert.True(result.IsSuccess);
+        var exerciseType = result.Value;
+        Assert.NotEqual(default(ExerciseTypeId), exerciseType.ExerciseTypeId);
         Assert.Equal(value, exerciseType.Value);
         Assert.Equal(description, exerciseType.Description);
         Assert.Equal(displayOrder, exerciseType.DisplayOrder);
@@ -36,10 +39,11 @@ public class ExerciseTypeTests
         var isActive = false;
         
         // Act
-        var exerciseType = ExerciseType.Handler.CreateNew(value, description, displayOrder, isActive);
+        var result = ExerciseType.Handler.CreateNew(value, description, displayOrder, isActive);
         
         // Assert
-        Assert.False(exerciseType.IsActive);
+        Assert.True(result.IsSuccess);
+        Assert.False(result.Value.IsActive);
     }
     
     [Fact]
@@ -53,10 +57,12 @@ public class ExerciseTypeTests
         var isActive = true;
         
         // Act
-        var exerciseType = ExerciseType.Handler.Create(id, value, description, displayOrder, isActive);
+        var result = ExerciseType.Handler.Create(id, value, description, displayOrder, isActive);
         
         // Assert
-        Assert.Equal(id, exerciseType.Id);
+        Assert.True(result.IsSuccess);
+        var exerciseType = result.Value;
+        Assert.Equal(id, exerciseType.ExerciseTypeId);
         Assert.Equal(value, exerciseType.Value);
         Assert.Equal(description, exerciseType.Description);
         Assert.Equal(displayOrder, exerciseType.DisplayOrder);
@@ -65,30 +71,34 @@ public class ExerciseTypeTests
     
     [Theory]
     [InlineData("")]
-    public void CreateNew_EmptyValue_ThrowsArgumentException(string value)
+    public void CreateNew_EmptyValue_ReturnsFailure(string value)
     {
         // Arrange
         var description = "Description";
         var displayOrder = 1;
         
-        // Act & Assert
-        var exception = Assert.Throws<ArgumentException>(() => 
-            ExerciseType.Handler.CreateNew(value, description, displayOrder));
-        Assert.Contains("Value cannot be empty", exception.Message);
+        // Act
+        var result = ExerciseType.Handler.CreateNew(value, description, displayOrder);
+        
+        // Assert
+        Assert.False(result.IsSuccess);
+        Assert.Contains("Exercise type value cannot be empty", result.Errors.First());
     }
     
     [Fact]
-    public void CreateNew_NullValue_ThrowsArgumentException()
+    public void CreateNew_NullValue_ReturnsFailure()
     {
         // Arrange
         string? value = null;
         var description = "Description";
         var displayOrder = 1;
         
-        // Act & Assert
-        var exception = Assert.Throws<ArgumentException>(() => 
-            ExerciseType.Handler.CreateNew(value!, description, displayOrder));
-        Assert.Contains("Value cannot be empty", exception.Message);
+        // Act
+        var result = ExerciseType.Handler.CreateNew(value!, description, displayOrder);
+        
+        // Assert
+        Assert.False(result.IsSuccess);
+        Assert.Contains("Exercise type value cannot be empty", result.Errors.First());
     }
     
     [Fact]
@@ -100,10 +110,11 @@ public class ExerciseTypeTests
         var displayOrder = 4;
         
         // Act
-        var exerciseType = ExerciseType.Handler.CreateNew(value, description, displayOrder);
+        var result = ExerciseType.Handler.CreateNew(value, description, displayOrder);
         
         // Assert
-        Assert.Null(exerciseType.Description);
+        Assert.True(result.IsSuccess);
+        Assert.Null(result.Value.Description);
     }
     
     [Fact]
@@ -117,12 +128,19 @@ public class ExerciseTypeTests
         var isActive = true;
         
         // Act
-        var type1 = ExerciseType.Handler.Create(id, value, description, order, isActive);
-        var type2 = ExerciseType.Handler.Create(id, value, description, order, isActive);
+        var result1 = ExerciseType.Handler.Create(id, value, description, order, isActive);
+        var result2 = ExerciseType.Handler.Create(id, value, description, order, isActive);
+        
+        // Assert
+        Assert.True(result1.IsSuccess);
+        Assert.True(result2.IsSuccess);
+        
+        var type1 = result1.Value;
+        var type2 = result2.Value;
         
         // Assert - Since ExerciseType is a record without collections, 
         // two instances with the same values should be equal
-        Assert.Equal(type1.Id, type2.Id);
+        Assert.Equal(type1.ExerciseTypeId, type2.ExerciseTypeId);
         Assert.Equal(type1.Value, type2.Value);
         Assert.Equal(type1.Description, type2.Description);
         Assert.Equal(type1.DisplayOrder, type2.DisplayOrder);
@@ -137,9 +155,41 @@ public class ExerciseTypeTests
     public void ExerciseType_ExtendsReferenceDataBase()
     {
         // Arrange & Act
-        var exerciseType = ExerciseType.Handler.CreateNew("Test", "Description", 1);
+        var result = ExerciseType.Handler.CreateNew("Test", "Description", 1);
         
         // Assert
-        Assert.IsAssignableFrom<ReferenceDataBase>(exerciseType);
+        Assert.True(result.IsSuccess);
+        Assert.IsAssignableFrom<ReferenceDataBase>(result.Value);
+    }
+    
+    [Fact]
+    public void CreateNew_NegativeDisplayOrder_ReturnsFailure()
+    {
+        // Arrange
+        var value = "Test";
+        var description = "Description";
+        var displayOrder = -1;
+        
+        // Act
+        var result = ExerciseType.Handler.CreateNew(value, description, displayOrder);
+        
+        // Assert
+        Assert.False(result.IsSuccess);
+        Assert.Contains("Display order must be non-negative", result.Errors.First());
+    }
+    
+    [Fact]
+    public void ExerciseType_ImplementsIEmptyEntity()
+    {
+        // Arrange & Act
+        var empty = ExerciseType.Empty;
+        
+        // Assert
+        Assert.True(empty.IsEmpty);
+        Assert.Equal(ExerciseTypeId.Empty, empty.ExerciseTypeId);
+        Assert.Equal(string.Empty, empty.Value);
+        Assert.Null(empty.Description);
+        Assert.Equal(0, empty.DisplayOrder);
+        Assert.False(empty.IsActive);
     }
 }

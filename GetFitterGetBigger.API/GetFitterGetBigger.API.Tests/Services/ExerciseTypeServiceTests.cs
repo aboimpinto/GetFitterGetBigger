@@ -1,10 +1,15 @@
+using GetFitterGetBigger.API.DTOs;
 using GetFitterGetBigger.API.Models;
 using GetFitterGetBigger.API.Models.Entities;
 using GetFitterGetBigger.API.Models.SpecializedIds;
 using GetFitterGetBigger.API.Repositories.Interfaces;
 using GetFitterGetBigger.API.Services.Implementations;
+using GetFitterGetBigger.API.Services.Interfaces;
+using GetFitterGetBigger.API.Services.Results;
+using Microsoft.Extensions.Logging;
 using Moq;
 using Olimpo.EntityFramework.Persistency;
+using Xunit;
 
 namespace GetFitterGetBigger.API.Tests.Services
 {
@@ -13,6 +18,8 @@ namespace GetFitterGetBigger.API.Tests.Services
         private readonly Mock<IUnitOfWorkProvider<FitnessDbContext>> _mockUnitOfWorkProvider;
         private readonly Mock<IReadOnlyUnitOfWork<FitnessDbContext>> _mockReadOnlyUnitOfWork;
         private readonly Mock<IExerciseTypeRepository> _mockExerciseTypeRepository;
+        private readonly Mock<IEmptyEnabledCacheService> _mockCacheService;
+        private readonly Mock<ILogger<ExerciseTypeService>> _mockLogger;
         private readonly ExerciseTypeService _exerciseTypeService;
 
         public ExerciseTypeServiceTests()
@@ -20,6 +27,8 @@ namespace GetFitterGetBigger.API.Tests.Services
             _mockUnitOfWorkProvider = new Mock<IUnitOfWorkProvider<FitnessDbContext>>();
             _mockReadOnlyUnitOfWork = new Mock<IReadOnlyUnitOfWork<FitnessDbContext>>();
             _mockExerciseTypeRepository = new Mock<IExerciseTypeRepository>();
+            _mockCacheService = new Mock<IEmptyEnabledCacheService>();
+            _mockLogger = new Mock<ILogger<ExerciseTypeService>>();
 
             _mockUnitOfWorkProvider
                 .Setup(x => x.CreateReadOnly())
@@ -30,7 +39,121 @@ namespace GetFitterGetBigger.API.Tests.Services
                 .Returns(_mockExerciseTypeRepository.Object);
 
             _exerciseTypeService = new ExerciseTypeService(
-                _mockUnitOfWorkProvider.Object);
+                _mockUnitOfWorkProvider.Object,
+                _mockCacheService.Object,
+                _mockLogger.Object);
+        }
+
+        [Fact]
+        public async Task GetAllActiveAsync_ReturnsAllActiveExerciseTypes()
+        {
+            // Arrange
+            var exerciseTypes = new List<ExerciseType>
+            {
+                ExerciseType.Handler.Create(ExerciseTypeId.New(), "Warmup", "Warmup exercises", 1, true).Value,
+                ExerciseType.Handler.Create(ExerciseTypeId.New(), "Workout", "Main workout", 2, true).Value,
+                ExerciseType.Handler.Create(ExerciseTypeId.New(), "Rest", "Rest period", 3, true).Value
+            };
+
+            _mockExerciseTypeRepository
+                .Setup(x => x.GetAllActiveAsync())
+                .ReturnsAsync(exerciseTypes);
+
+            _mockCacheService
+                .Setup(x => x.GetAsync<IEnumerable<ReferenceDataDto>>(It.IsAny<string>()))
+                .ReturnsAsync(CacheResult<IEnumerable<ReferenceDataDto>>.Miss());
+
+            // Act
+            var result = await _exerciseTypeService.GetAllActiveAsync();
+
+            // Assert
+            Assert.True(result.IsSuccess);
+            Assert.Equal(3, result.Data.Count());
+        }
+
+        [Fact]
+        public async Task GetByIdAsync_WithValidId_ReturnsExerciseType()
+        {
+            // Arrange
+            var exerciseTypeId = ExerciseTypeId.New();
+            var exerciseType = ExerciseType.Handler.Create(
+                exerciseTypeId,
+                "Strength",
+                "Strength training exercises",
+                1,
+                true).Value;
+
+            _mockExerciseTypeRepository
+                .Setup(x => x.GetByIdAsync(exerciseTypeId))
+                .ReturnsAsync(exerciseType);
+
+            _mockCacheService
+                .Setup(x => x.GetAsync<ReferenceDataDto>(It.IsAny<string>()))
+                .ReturnsAsync(CacheResult<ReferenceDataDto>.Miss());
+
+            // Act
+            var result = await _exerciseTypeService.GetByIdAsync(exerciseTypeId);
+
+            // Assert
+            Assert.True(result.IsSuccess);
+            Assert.Equal(exerciseTypeId.ToString(), result.Data.Id);
+            Assert.Equal("Strength", result.Data.Value);
+        }
+
+        [Fact]
+        public async Task GetByIdAsync_WithEmptyId_ReturnsValidationError()
+        {
+            // Arrange
+            var emptyId = ExerciseTypeId.Empty;
+
+            // Act
+            var result = await _exerciseTypeService.GetByIdAsync(emptyId);
+
+            // Assert
+            Assert.False(result.IsSuccess);
+            Assert.Equal(ServiceErrorCode.ValidationFailed, result.PrimaryErrorCode);
+        }
+
+        [Fact]
+        public async Task GetByValueAsync_WithValidValue_ReturnsExerciseType()
+        {
+            // Arrange
+            var value = "Warmup";
+            var exerciseType = ExerciseType.Handler.Create(
+                ExerciseTypeId.New(),
+                value,
+                "Warmup exercises",
+                1,
+                true).Value;
+
+            _mockExerciseTypeRepository
+                .Setup(x => x.GetByValueAsync(value))
+                .ReturnsAsync(exerciseType);
+
+            _mockCacheService
+                .Setup(x => x.GetAsync<ReferenceDataDto>(It.IsAny<string>()))
+                .ReturnsAsync(CacheResult<ReferenceDataDto>.Miss());
+
+            // Act
+            var result = await _exerciseTypeService.GetByValueAsync(value);
+
+            // Assert
+            Assert.True(result.IsSuccess);
+            Assert.Equal(value, result.Data.Value);
+        }
+
+        [Fact]
+        public async Task GetByValueAsync_WithEmptyValue_ReturnsValidationError()
+        {
+            // Arrange
+            var value = "";
+
+            // Act
+            var result = await _exerciseTypeService.GetByValueAsync(value);
+
+            // Assert
+            Assert.False(result.IsSuccess);
+            Assert.Equal(ServiceErrorCode.ValidationFailed, result.PrimaryErrorCode);
         }
 
         [Fact]
@@ -43,20 +166,21 @@ namespace GetFitterGetBigger.API.Tests.Services
                 "Strength",
                 "Strength training exercises",
                 1,
-                true);
+                true).Value;
 
             _mockExerciseTypeRepository
                 .Setup(x => x.GetByIdAsync(exerciseTypeId))
                 .ReturnsAsync(exerciseType);
+
+            _mockCacheService
+                .Setup(x => x.GetAsync<ReferenceDataDto>(It.IsAny<string>()))
+                .ReturnsAsync(CacheResult<ReferenceDataDto>.Miss());
 
             // Act
             var result = await _exerciseTypeService.ExistsAsync(exerciseTypeId);
 
             // Assert
             Assert.True(result);
-            _mockUnitOfWorkProvider.Verify(x => x.CreateReadOnly(), Times.Once);
-            _mockExerciseTypeRepository.Verify(x => x.GetByIdAsync(exerciseTypeId), Times.Once);
-            _mockReadOnlyUnitOfWork.Verify(x => x.Dispose(), Times.Once);
         }
 
         [Fact]
@@ -67,16 +191,30 @@ namespace GetFitterGetBigger.API.Tests.Services
 
             _mockExerciseTypeRepository
                 .Setup(x => x.GetByIdAsync(exerciseTypeId))
-                .ReturnsAsync((ExerciseType?)null);
+                .ReturnsAsync(ExerciseType.Empty);
+
+            _mockCacheService
+                .Setup(x => x.GetAsync<ReferenceDataDto>(It.IsAny<string>()))
+                .ReturnsAsync(CacheResult<ReferenceDataDto>.Miss());
 
             // Act
             var result = await _exerciseTypeService.ExistsAsync(exerciseTypeId);
 
             // Assert
             Assert.False(result);
-            _mockUnitOfWorkProvider.Verify(x => x.CreateReadOnly(), Times.Once);
-            _mockExerciseTypeRepository.Verify(x => x.GetByIdAsync(exerciseTypeId), Times.Once);
-            _mockReadOnlyUnitOfWork.Verify(x => x.Dispose(), Times.Once);
+        }
+
+        [Fact]
+        public async Task ExistsAsync_WithEmptyId_ReturnsFalse()
+        {
+            // Arrange
+            var emptyId = ExerciseTypeId.Empty;
+
+            // Act
+            var result = await _exerciseTypeService.ExistsAsync(emptyId);
+
+            // Assert
+            Assert.False(result);
         }
 
         [Fact]
@@ -92,33 +230,29 @@ namespace GetFitterGetBigger.API.Tests.Services
             
             var idStrings = typeIds.Select(id => id.ToString()).ToList();
 
-            var exerciseTypes = typeIds.Select((id, index) => 
-                ExerciseType.Handler.Create(
-                    id,
-                    $"Type{index}",
-                    $"Description{index}",
-                    index,
-                    true)
-            ).ToList();
-
-            foreach (var pair in typeIds.Zip(exerciseTypes, (id, type) => new { id, type }))
+            foreach (var id in typeIds)
             {
+                var exerciseType = ExerciseType.Handler.Create(
+                    id,
+                    $"Type{id}",
+                    $"Description{id}",
+                    1,
+                    true).Value;
+
                 _mockExerciseTypeRepository
-                    .Setup(x => x.GetByIdAsync(pair.id))
-                    .ReturnsAsync(pair.type);
+                    .Setup(x => x.GetByIdAsync(id))
+                    .ReturnsAsync(exerciseType);
             }
+
+            _mockCacheService
+                .Setup(x => x.GetAsync<ReferenceDataDto>(It.IsAny<string>()))
+                .ReturnsAsync(CacheResult<ReferenceDataDto>.Miss());
 
             // Act
             var result = await _exerciseTypeService.AllExistAsync(idStrings);
 
             // Assert
             Assert.True(result);
-            _mockUnitOfWorkProvider.Verify(x => x.CreateReadOnly(), Times.Once);
-            foreach (var id in typeIds)
-            {
-                _mockExerciseTypeRepository.Verify(x => x.GetByIdAsync(id), Times.Once);
-            }
-            _mockReadOnlyUnitOfWork.Verify(x => x.Dispose(), Times.Once);
         }
 
         [Fact]
@@ -137,25 +271,25 @@ namespace GetFitterGetBigger.API.Tests.Services
             // First two exist, third does not
             _mockExerciseTypeRepository
                 .Setup(x => x.GetByIdAsync(typeIds[0]))
-                .ReturnsAsync(ExerciseType.Handler.Create(typeIds[0], "Type1", "Desc1", 1, true));
+                .ReturnsAsync(ExerciseType.Handler.Create(typeIds[0], "Type1", "Desc1", 1, true).Value);
 
             _mockExerciseTypeRepository
                 .Setup(x => x.GetByIdAsync(typeIds[1]))
-                .ReturnsAsync(ExerciseType.Handler.Create(typeIds[1], "Type2", "Desc2", 2, true));
+                .ReturnsAsync(ExerciseType.Handler.Create(typeIds[1], "Type2", "Desc2", 2, true).Value);
 
             _mockExerciseTypeRepository
                 .Setup(x => x.GetByIdAsync(typeIds[2]))
-                .ReturnsAsync((ExerciseType?)null);
+                .ReturnsAsync(ExerciseType.Empty);
+
+            _mockCacheService
+                .Setup(x => x.GetAsync<ReferenceDataDto>(It.IsAny<string>()))
+                .ReturnsAsync(CacheResult<ReferenceDataDto>.Miss());
 
             // Act
             var result = await _exerciseTypeService.AllExistAsync(idStrings);
 
             // Assert
             Assert.False(result);
-            _mockUnitOfWorkProvider.Verify(x => x.CreateReadOnly(), Times.Once);
-            // Should stop checking after finding the first non-existent one
-            _mockExerciseTypeRepository.Verify(x => x.GetByIdAsync(It.IsAny<ExerciseTypeId>()), Times.Exactly(3));
-            _mockReadOnlyUnitOfWork.Verify(x => x.Dispose(), Times.Once);
         }
 
         [Fact]
@@ -169,9 +303,6 @@ namespace GetFitterGetBigger.API.Tests.Services
 
             // Assert
             Assert.True(result);
-            _mockUnitOfWorkProvider.Verify(x => x.CreateReadOnly(), Times.Once);
-            _mockExerciseTypeRepository.Verify(x => x.GetByIdAsync(It.IsAny<ExerciseTypeId>()), Times.Never);
-            _mockReadOnlyUnitOfWork.Verify(x => x.Dispose(), Times.Once);
         }
         
         [Fact]
@@ -185,9 +316,6 @@ namespace GetFitterGetBigger.API.Tests.Services
 
             // Assert
             Assert.False(result);
-            _mockUnitOfWorkProvider.Verify(x => x.CreateReadOnly(), Times.Once);
-            _mockExerciseTypeRepository.Verify(x => x.GetByIdAsync(It.IsAny<ExerciseTypeId>()), Times.Never);
-            _mockReadOnlyUnitOfWork.Verify(x => x.Dispose(), Times.Once);
         }
         
         [Fact]
@@ -198,26 +326,21 @@ namespace GetFitterGetBigger.API.Tests.Services
             var nonRestTypeId = ExerciseTypeId.New();
             var ids = new List<string> { restTypeId.ToString(), nonRestTypeId.ToString() };
             
-            var restType = ExerciseType.Handler.Create(restTypeId, "Rest", "Rest period", 1, true);
-            var nonRestType = ExerciseType.Handler.Create(nonRestTypeId, "Strength", "Strength training", 2, true);
+            var restType = ExerciseType.Handler.Create(restTypeId, "Rest", "Rest period", 1, true).Value;
             
             _mockExerciseTypeRepository
                 .Setup(x => x.GetByIdAsync(restTypeId))
                 .ReturnsAsync(restType);
-                
-            _mockExerciseTypeRepository
-                .Setup(x => x.GetByIdAsync(nonRestTypeId))
-                .ReturnsAsync(nonRestType);
+
+            _mockCacheService
+                .Setup(x => x.GetAsync<ReferenceDataDto>(It.IsAny<string>()))
+                .ReturnsAsync(CacheResult<ReferenceDataDto>.Miss());
 
             // Act
             var result = await _exerciseTypeService.AnyIsRestTypeAsync(ids);
 
             // Assert
             Assert.True(result);
-            _mockUnitOfWorkProvider.Verify(x => x.CreateReadOnly(), Times.Once);
-            _mockExerciseTypeRepository.Verify(x => x.GetByIdAsync(restTypeId), Times.Once);
-            // Should stop checking after finding REST type
-            _mockReadOnlyUnitOfWork.Verify(x => x.Dispose(), Times.Once);
         }
         
         [Fact]
@@ -228,8 +351,8 @@ namespace GetFitterGetBigger.API.Tests.Services
             var typeId2 = ExerciseTypeId.New();
             var ids = new List<string> { typeId1.ToString(), typeId2.ToString() };
             
-            var type1 = ExerciseType.Handler.Create(typeId1, "Strength", "Strength training", 1, true);
-            var type2 = ExerciseType.Handler.Create(typeId2, "Cardio", "Cardio training", 2, true);
+            var type1 = ExerciseType.Handler.Create(typeId1, "Strength", "Strength training", 1, true).Value;
+            var type2 = ExerciseType.Handler.Create(typeId2, "Cardio", "Cardio training", 2, true).Value;
             
             _mockExerciseTypeRepository
                 .Setup(x => x.GetByIdAsync(typeId1))
@@ -239,14 +362,15 @@ namespace GetFitterGetBigger.API.Tests.Services
                 .Setup(x => x.GetByIdAsync(typeId2))
                 .ReturnsAsync(type2);
 
+            _mockCacheService
+                .Setup(x => x.GetAsync<ReferenceDataDto>(It.IsAny<string>()))
+                .ReturnsAsync(CacheResult<ReferenceDataDto>.Miss());
+
             // Act
             var result = await _exerciseTypeService.AnyIsRestTypeAsync(ids);
 
             // Assert
             Assert.False(result);
-            _mockUnitOfWorkProvider.Verify(x => x.CreateReadOnly(), Times.Once);
-            _mockExerciseTypeRepository.Verify(x => x.GetByIdAsync(It.IsAny<ExerciseTypeId>()), Times.Exactly(2));
-            _mockReadOnlyUnitOfWork.Verify(x => x.Dispose(), Times.Once);
         }
     }
 }

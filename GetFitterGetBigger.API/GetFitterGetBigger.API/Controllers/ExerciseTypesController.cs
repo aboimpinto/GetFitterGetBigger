@@ -1,44 +1,37 @@
-using GetFitterGetBigger.API.Configuration;
-using GetFitterGetBigger.API.Models;
-using GetFitterGetBigger.API.Models.Entities;
-using GetFitterGetBigger.API.Models.SpecializedIds;
-using GetFitterGetBigger.API.Repositories.Interfaces;
-using GetFitterGetBigger.API.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Options;
-using Olimpo.EntityFramework.Persistency;
+using GetFitterGetBigger.API.Services.Interfaces;
+using GetFitterGetBigger.API.Services.Results;
+using GetFitterGetBigger.API.Models.SpecializedIds;
 
 namespace GetFitterGetBigger.API.Controllers;
 
 /// <summary>
-/// Controller for managing exercise types reference data
+/// Controller for retrieving exercise type reference data
 /// </summary>
 [ApiController]
-[Route("api/ReferenceTables/[controller]")]
-[Produces("application/json")]
-[Tags("Reference Tables")]
-public class ExerciseTypesController : ReferenceTablesBaseController
+[Route("api/ReferenceTables/ExerciseTypes")]
+public class ExerciseTypesController : ControllerBase
 {
+    private readonly IExerciseTypeService _exerciseTypeService;
+    private readonly ILogger<ExerciseTypesController> _logger;
+    
     /// <summary>
     /// Initializes a new instance of the <see cref="ExerciseTypesController"/> class
     /// </summary>
-    /// <param name="unitOfWorkProvider">The unit of work provider</param>
-    /// <param name="cacheService">The cache service</param>
-    /// <param name="cacheConfiguration">The cache configuration</param>
+    /// <param name="exerciseTypeService">The exercise type service</param>
     /// <param name="logger">The logger</param>
     public ExerciseTypesController(
-        IUnitOfWorkProvider<FitnessDbContext> unitOfWorkProvider,
-        ICacheService cacheService,
-        IOptions<CacheConfiguration> cacheConfiguration,
+        IExerciseTypeService exerciseTypeService,
         ILogger<ExerciseTypesController> logger)
-        : base(unitOfWorkProvider, cacheService, cacheConfiguration, logger)
     {
+        _exerciseTypeService = exerciseTypeService;
+        _logger = logger;
     }
-    
+
     /// <summary>
-    /// Gets all exercise types
+    /// Gets all active exercise types
     /// </summary>
-    /// <returns>List of all exercise types</returns>
+    /// <returns>A collection of active exercise types</returns>
     /// <response code="200">Returns the list of exercise types</response>
     /// <remarks>
     /// Exercise types include:
@@ -51,76 +44,68 @@ public class ExerciseTypesController : ReferenceTablesBaseController
     /// </remarks>
     [HttpGet]
     [ProducesResponseType(StatusCodes.Status200OK)]
-    public async Task<IActionResult> GetAll()
+    public async Task<IActionResult> GetExerciseTypes()
     {
-        var exerciseTypes = await GetAllWithCacheAsync(async () =>
-        {
-            using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
-            var repository = unitOfWork.GetRepository<IExerciseTypeRepository>();
-            return await repository.GetAllActiveAsync();
-        });
+        _logger.LogInformation("Getting all active exercise types");
         
-        var result = exerciseTypes.Select(MapToDto);
-        return Ok(result);
+        var result = await _exerciseTypeService.GetAllActiveAsync();
+        
+        return result switch
+        {
+            { IsSuccess: true } => Ok(result.Data),
+            _ => Ok(result.Data) // GetAll should always succeed, even if empty
+        };
     }
-    
+
     /// <summary>
     /// Gets an exercise type by ID
     /// </summary>
-    /// <param name="id">The exercise type ID in format "exercisetype-{guid}"</param>
-    /// <returns>The exercise type if found</returns>
+    /// <param name="id">The ID of the exercise type to retrieve in the format "exercisetype-{guid}"</param>
+    /// <returns>The exercise type if found, 404 Not Found otherwise</returns>
     /// <response code="200">Returns the exercise type</response>
     /// <response code="404">If the exercise type is not found</response>
+    /// <response code="400">If the exercise type ID format is invalid</response>
     [HttpGet("{id}")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> GetById(string id)
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> GetExerciseTypeById(string id)
     {
-        var exerciseType = await GetByIdWithCacheAsync(id, async () =>
-        {
-            using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
-            var repository = unitOfWork.GetRepository<IExerciseTypeRepository>();
-            
-            if (!ExerciseTypeId.TryParse(id, out var exerciseTypeId))
-            {
-                return null;
-            }
-            
-            return await repository.GetByIdAsync(exerciseTypeId);
-        });
+        _logger.LogInformation("Getting exercise type with ID: {Id}", id);
         
-        if (exerciseType == null)
-        {
-            return NotFound();
-        }
+        var result = await _exerciseTypeService.GetByIdAsync(ExerciseTypeId.ParseOrEmpty(id));
         
-        return Ok(MapToDto(exerciseType));
+        return result switch
+        {
+            { IsSuccess: true } => Ok(result.Data),
+            { PrimaryErrorCode: ServiceErrorCode.NotFound } => NotFound(),
+            _ => BadRequest(new { errors = result.StructuredErrors })
+        };
     }
-    
+
     /// <summary>
     /// Gets an exercise type by value
     /// </summary>
-    /// <param name="value">The exercise type value (e.g., "Warmup", "Workout", "Cooldown", "Rest")</param>
-    /// <returns>The exercise type if found</returns>
+    /// <param name="value">The value of the exercise type to retrieve (e.g., "Warmup", "Workout", "Cooldown", "Rest")</param>
+    /// <returns>The exercise type if found, 404 Not Found otherwise</returns>
     /// <response code="200">Returns the exercise type</response>
     /// <response code="404">If the exercise type is not found</response>
+    /// <response code="400">If the exercise type value is invalid</response>
     [HttpGet("ByValue/{value}")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> GetByValue(string value)
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> GetExerciseTypeByValue(string value)
     {
-        var exerciseType = await GetByValueWithCacheAsync(value, async () =>
-        {
-            using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
-            var repository = unitOfWork.GetRepository<IExerciseTypeRepository>();
-            return await repository.GetByValueAsync(value);
-        });
+        _logger.LogInformation("Getting exercise type with value: {Value}", value);
         
-        if (exerciseType == null)
-        {
-            return NotFound();
-        }
+        var result = await _exerciseTypeService.GetByValueAsync(value);
         
-        return Ok(MapToDto(exerciseType));
+        return result switch
+        {
+            { IsSuccess: true } => Ok(result.Data),
+            { PrimaryErrorCode: ServiceErrorCode.NotFound } => NotFound(),
+            _ => BadRequest(new { errors = result.StructuredErrors })
+        };
     }
 }

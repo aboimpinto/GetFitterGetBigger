@@ -73,7 +73,7 @@ public class ExerciseServiceMuscleGroupValidationTests
     {
         // Arrange
         var restTypeId = ExerciseTypeId.From(Guid.Parse("d4e5f6a7-8b9c-0d1e-2f3a-4b5c6d7e8f9a"));
-        var restType = ExerciseType.Handler.Create(restTypeId, "Rest", "Rest period", 1, true);
+        var restType = ExerciseType.Handler.Create(restTypeId, "Rest", "Rest period", 1, true).Value;
         
         var request = new CreateExerciseRequest
         {
@@ -113,7 +113,7 @@ public class ExerciseServiceMuscleGroupValidationTests
     {
         // Arrange
         var workoutTypeId = ExerciseTypeId.New();
-        var workoutType = ExerciseType.Handler.Create(workoutTypeId, "Workout", "Main workout", 1, false);
+        var workoutType = ExerciseType.Handler.Create(workoutTypeId, "Workout", "Main workout", 1, false).Value;
         
         var request = new CreateExerciseRequest
         {
@@ -145,7 +145,7 @@ public class ExerciseServiceMuscleGroupValidationTests
     {
         // Arrange - REST exercises CAN have muscle groups, they're just not required
         var restTypeId = ExerciseTypeId.From(Guid.Parse("d4e5f6a7-8b9c-0d1e-2f3a-4b5c6d7e8f9a"));
-        var restType = ExerciseType.Handler.Create(restTypeId, "Rest", "Rest period", 1, true);
+        var restType = ExerciseType.Handler.Create(restTypeId, "Rest", "Rest period", 1, true).Value;
         
         var request = new CreateExerciseRequest
         {
@@ -193,7 +193,7 @@ public class ExerciseServiceMuscleGroupValidationTests
         // Arrange
         var exerciseId = ExerciseId.New();
         var restTypeId = ExerciseTypeId.From(Guid.Parse("d4e5f6a7-8b9c-0d1e-2f3a-4b5c6d7e8f9a"));
-        var restType = ExerciseType.Handler.Create(restTypeId, "Rest", "Rest period", 1, true);
+        var restType = ExerciseType.Handler.Create(restTypeId, "Rest", "Rest period", 1, true).Value;
         
         var existingExercise = Exercise.Handler.CreateNew(
             "Old Exercise",
@@ -251,7 +251,7 @@ public class ExerciseServiceMuscleGroupValidationTests
         // Arrange
         var exerciseId = ExerciseId.New();
         var workoutTypeId = ExerciseTypeId.New();
-        var workoutType = ExerciseType.Handler.Create(workoutTypeId, "Workout", "Main workout", 1, false);
+        var workoutType = ExerciseType.Handler.Create(workoutTypeId, "Workout", "Main workout", 1, false).Value;
         
         var existingExercise = Exercise.Handler.CreateNew(
             "Old Exercise",
@@ -297,7 +297,7 @@ public class ExerciseServiceMuscleGroupValidationTests
     {
         // Arrange
         var restTypeId = ExerciseTypeId.From(Guid.Parse("d4e5f6a7-8b9c-0d1e-2f3a-4b5c6d7e8f9a"));
-        var restType = ExerciseType.Handler.Create(restTypeId, restValue, "Rest period", 1, true);
+        var restType = ExerciseType.Handler.Create(restTypeId, restValue, "Rest period", 1, true).Value;
         
         var request = new CreateExerciseRequest
         {
@@ -364,8 +364,8 @@ public class ExerciseServiceMuscleGroupValidationTests
         // Arrange - REST can't be combined with other types (REST exclusivity rule)
         var restTypeId = ExerciseTypeId.From(Guid.Parse("d4e5f6a7-8b9c-0d1e-2f3a-4b5c6d7e8f9a"));
         var workoutTypeId = ExerciseTypeId.New();
-        var restType = ExerciseType.Handler.Create(restTypeId, "Rest", "Rest period", 1, true);
-        var workoutType = ExerciseType.Handler.Create(workoutTypeId, "Workout", "Main workout", 2, false);
+        var restType = ExerciseType.Handler.Create(restTypeId, "Rest", "Rest period", 1, true).Value;
+        var workoutType = ExerciseType.Handler.Create(workoutTypeId, "Workout", "Main workout", 2, false).Value;
         
         var request = new CreateExerciseRequest
         {

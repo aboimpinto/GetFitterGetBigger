@@ -24,9 +24,9 @@ Feature: Exercise Types Reference Data
     And the response should have property "value" with value "<firstExerciseType.value>"
 
   @reference-data @validation
-  Scenario: Get exercise type by invalid ID format returns not found
+  Scenario: Get exercise type by invalid ID format returns bad request
     When I send a GET request to "/api/ReferenceTables/ExerciseTypes/invalid-id"
-    Then the response status should be 404
+    Then the response status should be 400
 
   @reference-data @validation
   Scenario: Get exercise type by non-existent ID returns not found

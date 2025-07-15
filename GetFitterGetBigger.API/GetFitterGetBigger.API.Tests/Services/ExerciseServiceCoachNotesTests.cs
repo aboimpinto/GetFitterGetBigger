@@ -115,8 +115,8 @@ public class ExerciseServiceCoachNotesTests
         var exerciseTypeId1 = ExerciseTypeId.New();
         var exerciseTypeId2 = ExerciseTypeId.New();
         
-        var exerciseType1 = ExerciseType.Handler.Create(exerciseTypeId1, "Type1", "Description1", 1, false);
-        var exerciseType2 = ExerciseType.Handler.Create(exerciseTypeId2, "Type2", "Description2", 2, false);
+        var exerciseType1 = ExerciseType.Handler.Create(exerciseTypeId1, "Type1", "Description1", 1, false).Value;
+        var exerciseType2 = ExerciseType.Handler.Create(exerciseTypeId2, "Type2", "Description2", 2, false).Value;
         
         var request = CreateExerciseRequestBuilder.ForWorkoutExercise()
             .WithName("Exercise with Types")

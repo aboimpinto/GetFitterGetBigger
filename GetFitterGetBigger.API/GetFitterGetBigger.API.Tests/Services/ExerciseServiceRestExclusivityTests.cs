@@ -79,8 +79,8 @@ public class ExerciseServiceRestExclusivityTests
             .WithWeightType(ExerciseWeightTypeTestBuilder.Barbell())
             .WithExerciseTypes(new[]
             {
-                ExerciseType.Handler.Create(ExerciseTypeId.From(Guid.Parse("11111111-1111-1111-1111-111111111111")), "Rest", "Rest", 1, true),
-                ExerciseType.Handler.Create(ExerciseTypeId.From(Guid.Parse("22222222-2222-2222-2222-222222222222")), "Workout", "Workout", 2, true)
+                ExerciseType.Handler.Create(ExerciseTypeId.From(Guid.Parse("11111111-1111-1111-1111-111111111111")), "Rest", "Rest", 1, true).Value,
+                ExerciseType.Handler.Create(ExerciseTypeId.From(Guid.Parse("22222222-2222-2222-2222-222222222222")), "Workout", "Workout", 2, true).Value
             })
             .AddMuscleGroup(MuscleGroupTestBuilder.Chest(), MuscleRoleTestBuilder.Primary())
             .Build();
@@ -123,8 +123,8 @@ public class ExerciseServiceRestExclusivityTests
             .WithWeightType(ExerciseWeightTypeTestBuilder.Barbell())
             .WithExerciseTypes(new[]
             {
-                ExerciseType.Handler.Create(ExerciseTypeId.From(Guid.Parse("11111111-1111-1111-1111-111111111111")), "Rest", "Rest", 1, true),
-                ExerciseType.Handler.Create(ExerciseTypeId.From(Guid.Parse("33333333-3333-3333-3333-333333333333")), "Cooldown", "Cooldown", 3, true)
+                ExerciseType.Handler.Create(ExerciseTypeId.From(Guid.Parse("11111111-1111-1111-1111-111111111111")), "Rest", "Rest", 1, true).Value,
+                ExerciseType.Handler.Create(ExerciseTypeId.From(Guid.Parse("33333333-3333-3333-3333-333333333333")), "Cooldown", "Cooldown", 3, true).Value
             })
             .AddMuscleGroup(MuscleGroupTestBuilder.Chest(), MuscleRoleTestBuilder.Primary())
             .Build();
@@ -139,8 +139,8 @@ public class ExerciseServiceRestExclusivityTests
         var restTypeId = ExerciseTypeId.From(Guid.Parse("11111111-1111-1111-1111-111111111111"));
         var cooldownTypeId = ExerciseTypeId.From(Guid.Parse("33333333-3333-3333-3333-333333333333"));
         
-        var restType = ExerciseType.Handler.Create(restTypeId, "Rest", "Rest period", 1, true);
-        var cooldownType = ExerciseType.Handler.Create(cooldownTypeId, "Cooldown", "Cooldown exercise", 3, false);
+        var restType = ExerciseType.Handler.Create(restTypeId, "Rest", "Rest period", 1, true).Value;
+        var cooldownType = ExerciseType.Handler.Create(cooldownTypeId, "Cooldown", "Cooldown exercise", 3, false).Value;
         
         // Override the default mock to return true for REST type
         _mockExerciseTypeService
@@ -200,9 +200,9 @@ public class ExerciseServiceRestExclusivityTests
             .WithWeightType(ExerciseWeightTypeTestBuilder.Barbell())
             .WithExerciseTypes(new[]
             {
-                ExerciseType.Handler.Create(ExerciseTypeId.From(Guid.Parse("11223344-5566-7788-99aa-bbccddeeff00")), "Warmup", "Warmup", 1, true),
-                ExerciseType.Handler.Create(ExerciseTypeId.From(Guid.Parse("b2c3d4e5-6f7a-8b9c-0d1e-2f3a4b5c6d7e")), "Workout", "Workout", 2, true),
-                ExerciseType.Handler.Create(ExerciseTypeId.From(Guid.Parse("33445566-7788-99aa-bbcc-ddeeff001122")), "Cooldown", "Cooldown", 3, true)
+                ExerciseType.Handler.Create(ExerciseTypeId.From(Guid.Parse("11223344-5566-7788-99aa-bbccddeeff00")), "Warmup", "Warmup", 1, true).Value,
+                ExerciseType.Handler.Create(ExerciseTypeId.From(Guid.Parse("b2c3d4e5-6f7a-8b9c-0d1e-2f3a4b5c6d7e")), "Workout", "Workout", 2, true).Value,
+                ExerciseType.Handler.Create(ExerciseTypeId.From(Guid.Parse("33445566-7788-99aa-bbcc-ddeeff001122")), "Cooldown", "Cooldown", 3, true).Value
             })
             .AddMuscleGroup(MuscleGroupTestBuilder.Chest(), MuscleRoleTestBuilder.Primary())
             .Build();
@@ -221,9 +221,9 @@ public class ExerciseServiceRestExclusivityTests
         var workoutTypeId = ExerciseTypeId.From(Guid.Parse("b2c3d4e5-6f7a-8b9c-0d1e-2f3a4b5c6d7e"));
         var cooldownTypeId = ExerciseTypeId.From(Guid.Parse("33445566-7788-99aa-bbcc-ddeeff001122"));
         
-        var warmupType = ExerciseType.Handler.Create(warmupTypeId, "Warmup", "Warmup exercise", 1, false);
-        var workoutType = ExerciseType.Handler.Create(workoutTypeId, "Workout", "Workout exercise", 2, false);
-        var cooldownType = ExerciseType.Handler.Create(cooldownTypeId, "Cooldown", "Cooldown exercise", 3, false);
+        var warmupType = ExerciseType.Handler.Create(warmupTypeId, "Warmup", "Warmup exercise", 1, false).Value;
+        var workoutType = ExerciseType.Handler.Create(workoutTypeId, "Workout", "Workout exercise", 2, false).Value;
+        var cooldownType = ExerciseType.Handler.Create(cooldownTypeId, "Cooldown", "Cooldown exercise", 3, false).Value;
         
         // Override the default mock to return false for all non-REST types
         _mockExerciseTypeService

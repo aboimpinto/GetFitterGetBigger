@@ -195,7 +195,7 @@ public class FitnessDbContext : DbContext
                 guid => MuscleRoleId.From(guid));
                 
         modelBuilder.Entity<ExerciseType>()
-            .Property(et => et.Id)
+            .Property(et => et.ExerciseTypeId)
             .HasConversion(
                 id => (Guid)id,
                 guid => ExerciseTypeId.From(guid));
@@ -845,25 +845,25 @@ public class FitnessDbContext : DbContext
                 "Warmup",
                 "Exercises performed to prepare the body for more intense activity",
                 1,
-                true),
+                true).Value,
             ExerciseType.Handler.Create(
                 ExerciseTypeId.From(Guid.Parse("b2c3d4e5-6f7a-8b9c-0d1e-2f3a4b5c6d7e")),
                 "Workout",
                 "Main exercises that form the core of the training session",
                 2,
-                true),
+                true).Value,
             ExerciseType.Handler.Create(
                 ExerciseTypeId.From(Guid.Parse("c3d4e5f6-7a8b-9c0d-1e2f-3a4b5c6d7e8f")),
                 "Cooldown",
                 "Exercises performed to help the body recover after intense activity",
                 3,
-                true),
+                true).Value,
             ExerciseType.Handler.Create(
                 ExerciseTypeId.From(Guid.Parse("d4e5f6a7-8b9c-0d1e-2f3a-4b5c6d7e8f9a")),
                 "Rest",
                 "Periods of rest between exercises or sets",
                 4,
-                true)
+                true).Value
         );
         
         // Seed ExerciseWeightTypes

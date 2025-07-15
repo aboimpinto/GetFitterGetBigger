@@ -48,8 +48,8 @@ namespace GetFitterGetBigger.API.Tests.Services
             _mockExerciseTypeService = new Mock<IExerciseTypeService>();
             
             // Create reference data entities
-            _restType = ExerciseType.Handler.Create(_restTypeId, "Rest", "Rest period between exercises", 1);
-            _strengthType = ExerciseType.Handler.Create(_strengthTypeId, "Strength", "Strength training exercise", 2);
+            _restType = ExerciseType.Handler.Create(_restTypeId, "Rest", "Rest period between exercises", 1).Value;
+            _strengthType = ExerciseType.Handler.Create(_strengthTypeId, "Strength", "Strength training exercise", 2).Value;
             
             // Setup default mock behaviors for ExerciseTypeService
             _mockExerciseTypeService

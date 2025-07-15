@@ -187,16 +187,16 @@ public class ExerciseServiceMapToDtoTests
             DifficultyLevelId.New());
         
         // Create exercise types
-        var warmupType = ExerciseType.Handler.CreateNew("Warmup", "Warmup exercises", 1);
-        var workoutType = ExerciseType.Handler.CreateNew("Workout", "Main workout", 2);
+        var warmupType = ExerciseType.Handler.CreateNew("Warmup", "Warmup exercises", 1).Value;
+        var workoutType = ExerciseType.Handler.CreateNew("Workout", "Main workout", 2).Value;
         
         // Add exercise types through junction table
-        var eet1 = ExerciseExerciseType.Handler.Create(exerciseId, warmupType.Id);
+        var eet1 = ExerciseExerciseType.Handler.Create(exerciseId, warmupType.ExerciseTypeId);
         exercise.ExerciseExerciseTypes.Add(eet1);
         // Manually set navigation property for testing
         eet1.GetType().GetProperty("ExerciseType")?.SetValue(eet1, warmupType);
         
-        var eet2 = ExerciseExerciseType.Handler.Create(exerciseId, workoutType.Id);
+        var eet2 = ExerciseExerciseType.Handler.Create(exerciseId, workoutType.ExerciseTypeId);
         exercise.ExerciseExerciseTypes.Add(eet2);
         // Manually set navigation property for testing
         eet2.GetType().GetProperty("ExerciseType")?.SetValue(eet2, workoutType);
@@ -272,8 +272,8 @@ public class ExerciseServiceMapToDtoTests
         exercise1.CoachNotes.Add(CoachNote.Handler.CreateNew(exercise1.Id, "Note 2", 2));
         
         // Add exercise types to exercise2
-        var exerciseType = ExerciseType.Handler.CreateNew("Cooldown", "Cooldown exercises", 3);
-        var eet = ExerciseExerciseType.Handler.Create(exercise2.Id, exerciseType.Id);
+        var exerciseType = ExerciseType.Handler.CreateNew("Cooldown", "Cooldown exercises", 3).Value;
+        var eet = ExerciseExerciseType.Handler.Create(exercise2.Id, exerciseType.ExerciseTypeId);
         exercise2.ExerciseExerciseTypes.Add(eet);
         // Manually set navigation property for testing
         eet.GetType().GetProperty("ExerciseType")?.SetValue(eet, exerciseType);
