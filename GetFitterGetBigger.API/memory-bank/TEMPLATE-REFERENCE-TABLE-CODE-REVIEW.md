@@ -64,7 +64,16 @@ Perform a critical code review of the {EntityName} refactor to ensure it fully i
 
 **Expected**: Zero obsolete method usage - only current patterns
 
-### 4. Pattern Adherence Verification
+### 4. Magic String Check
+**CRITICAL**: Report ANY magic strings in tests:
+- [ ] No hard-coded error messages in assertions
+- [ ] All error message assertions use constants
+- [ ] No hard-coded IDs or values (use TestConstants or builders)
+- [ ] No string literals for comparison (except empty string "")
+
+**Expected**: Zero magic strings - all should use constants or test builders
+
+### 5. Pattern Adherence Verification
 
 #### Entity Implementation
 - [ ] Implements `IEmptyEntity<{EntityName}>`
@@ -92,7 +101,7 @@ Perform a critical code review of the {EntityName} refactor to ensure it fully i
 - [ ] Returns appropriate HTTP status codes (200/400/404)
 - [ ] No business logic in controller
 
-### 5. Code Flow Analysis
+### 6. Code Flow Analysis
 
 Trace the complete flow for these scenarios:
 
@@ -131,7 +140,7 @@ GET /api/ReferenceTables/{EntityName}s/{entityname}-{non-existent-guid}
 - [ ] Entity not found, returns NotFound error
 - [ ] Controller returns 404 Not Found
 
-### 6. Comparison with Reference Implementations
+### 7. Comparison with Reference Implementations
 
 Compare line-by-line with:
 - [ ] BodyPartService.cs - Service pattern
@@ -180,6 +189,13 @@ Report ANY deviations from these patterns.
    **Issue**: [obsolete method usage]
    **Fix**: [use current pattern instead]
 
+### Magic String Instances
+1. **File**: [path]
+   **Line**: [number]
+   **Code**: `[offending code]`
+   **Issue**: [hard-coded string instead of constant]
+   **Fix**: [use appropriate constant or test builder]
+
 ## Code Flow Verification
 - [ ] Valid ID flow: PASS/FAIL
 - [ ] Invalid format flow: PASS/FAIL
@@ -192,6 +208,7 @@ Report ANY deviations from these patterns.
 - [ ] No null handling present
 - [ ] No exceptions thrown
 - [ ] No obsolete methods used
+- [ ] No magic strings in tests
 - [ ] Follows Empty pattern exactly
 - [ ] Matches reference implementations
 - [ ] All tests updated appropriately
@@ -206,9 +223,10 @@ Report ANY deviations from these patterns.
 - Ensure pattern matching prevents redundant operations
 
 ### Test Quality
-- Tests should NOT check magic strings
+- Tests MUST NOT use magic strings - all error messages should use constants
 - Tests should verify behavior, not implementation
 - Integration tests should match BodyParts.feature pattern
+- All test data should use TestConstants or builder patterns
 
 ### Documentation
 - Verify all public methods have XML documentation
