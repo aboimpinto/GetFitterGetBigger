@@ -1,3 +1,4 @@
+using GetFitterGetBigger.API.Constants;
 using GetFitterGetBigger.API.DTOs;
 using GetFitterGetBigger.API.Models;
 using GetFitterGetBigger.API.Models.Entities;
@@ -33,13 +34,13 @@ public class MovementPatternService : EmptyEnabledPureReferenceService<MovementP
     /// <inheritdoc/>
     public async Task<ServiceResult<ReferenceDataDto>> GetByIdAsync(MovementPatternId id) => 
         id.IsEmpty 
-            ? ServiceResult<ReferenceDataDto>.Failure(CreateEmptyDto(), ServiceError.ValidationFailed("Invalid movement pattern ID format"))
+            ? ServiceResult<ReferenceDataDto>.Failure(CreateEmptyDto(), ServiceError.ValidationFailed(MovementPatternErrorMessages.InvalidIdFormat))
             : await GetByIdAsync(id.ToString());
     
     /// <inheritdoc/>
     public async Task<ServiceResult<ReferenceDataDto>> GetByValueAsync(string value) => 
         string.IsNullOrWhiteSpace(value)
-            ? ServiceResult<ReferenceDataDto>.Failure(CreateEmptyDto(), ServiceError.ValidationFailed("Movement pattern value cannot be empty"))
+            ? ServiceResult<ReferenceDataDto>.Failure(CreateEmptyDto(), ServiceError.ValidationFailed(MovementPatternErrorMessages.ValueCannotBeEmpty))
             : await GetFromCacheOrLoadAsync(
                 GetValueCacheKey(value),
                 () => LoadByValueAsync(value),
@@ -65,7 +66,7 @@ public class MovementPatternService : EmptyEnabledPureReferenceService<MovementP
         {
             { IsEmpty: true } or { IsActive: false } => ServiceResult<ReferenceDataDto>.Failure(
                 CreateEmptyDto(), 
-                ServiceError.NotFound("Movement pattern", identifier)),
+                ServiceError.NotFound(MovementPatternErrorMessages.NotFound, identifier)),
             _ => await CacheAndReturnSuccessAsync(cacheKey, MapToDto(entity))
         };
     }

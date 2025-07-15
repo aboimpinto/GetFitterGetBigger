@@ -1,3 +1,4 @@
+using GetFitterGetBigger.API.Constants;
 using GetFitterGetBigger.API.DTOs;
 using GetFitterGetBigger.API.Models;
 using GetFitterGetBigger.API.Models.Entities;
@@ -34,13 +35,13 @@ public class BodyPartService : EmptyEnabledPureReferenceService<BodyPart, BodyPa
     /// <inheritdoc/>
     public async Task<ServiceResult<BodyPartDto>> GetByIdAsync(BodyPartId id) => 
         id.IsEmpty 
-            ? ServiceResult<BodyPartDto>.Failure(CreateEmptyDto(), ServiceError.ValidationFailed("Invalid body part ID format"))
+            ? ServiceResult<BodyPartDto>.Failure(CreateEmptyDto(), ServiceError.ValidationFailed(BodyPartErrorMessages.InvalidIdFormat))
             : await GetByIdAsync(id.ToString());
     
     /// <inheritdoc/>
     public async Task<ServiceResult<BodyPartDto>> GetByValueAsync(string value) => 
         string.IsNullOrWhiteSpace(value)
-            ? ServiceResult<BodyPartDto>.Failure(CreateEmptyDto(), ServiceError.ValidationFailed("Body part value cannot be empty"))
+            ? ServiceResult<BodyPartDto>.Failure(CreateEmptyDto(), ServiceError.ValidationFailed(BodyPartErrorMessages.ValueCannotBeEmpty))
             : await GetFromCacheOrLoadAsync(
                 GetValueCacheKey(value),
                 () => LoadByValueAsync(value),
@@ -66,7 +67,7 @@ public class BodyPartService : EmptyEnabledPureReferenceService<BodyPart, BodyPa
         {
             { IsEmpty: true } or { IsActive: false } => ServiceResult<BodyPartDto>.Failure(
                 CreateEmptyDto(), 
-                ServiceError.NotFound("Body part", identifier)),
+                ServiceError.NotFound(BodyPartErrorMessages.NotFound, identifier)),
             _ => await CacheAndReturnSuccessAsync(cacheKey, MapToDto(entity))
         };
     }

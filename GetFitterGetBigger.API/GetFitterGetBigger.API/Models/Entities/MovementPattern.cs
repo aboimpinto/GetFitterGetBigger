@@ -58,8 +58,8 @@ public record MovementPattern : ReferenceDataBase, IPureReference, IEmptyEntity<
             bool isActive = true)
         {
             return Validate.For<MovementPattern>()
-                .EnsureNotEmpty(value, ReferenceDataErrorMessages.ValueCannotBeEmpty)
-                .EnsureMinValue(displayOrder, 0, ReferenceDataErrorMessages.DisplayOrderMustBeNonNegative)
+                .EnsureNotEmpty(value, MovementPatternErrorMessages.ValueCannotBeEmptyEntity)
+                .EnsureMinValue(displayOrder, 0, MovementPatternErrorMessages.DisplayOrderMustBeNonNegative)
                 .OnSuccess(() => new MovementPattern
                 {
                     MovementPatternId = id,

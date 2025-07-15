@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using GetFitterGetBigger.API.Constants;
 using GetFitterGetBigger.API.DTOs;
 using GetFitterGetBigger.API.Models;
 using GetFitterGetBigger.API.Models.Entities;
@@ -243,7 +244,7 @@ namespace GetFitterGetBigger.API.Tests.Services
             Assert.False(result.IsSuccess);
             Assert.NotNull(result.Data);
             Assert.Equal(ServiceErrorCode.ValidationFailed, result.PrimaryErrorCode);
-            Assert.Contains("Invalid body part ID format", result.Errors);
+            Assert.Contains(BodyPartErrorMessages.InvalidIdFormat, result.Errors);
             // Verify the repository was NOT called (optimization - empty IDs are rejected immediately)
             _mockBodyPartRepository.Verify(x => x.GetByIdAsync(It.IsAny<BodyPartId>()), Times.Never);
         }

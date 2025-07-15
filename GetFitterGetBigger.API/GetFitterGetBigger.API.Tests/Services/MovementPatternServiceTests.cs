@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using GetFitterGetBigger.API.Constants;
 using GetFitterGetBigger.API.DTOs;
 using GetFitterGetBigger.API.Models;
 using GetFitterGetBigger.API.Models.Entities;
@@ -166,7 +167,7 @@ namespace GetFitterGetBigger.API.Tests.Services
             Assert.False(result.IsSuccess);
             Assert.NotNull(result.Data);
             Assert.Equal(ServiceErrorCode.ValidationFailed, result.PrimaryErrorCode);
-            Assert.Contains("Invalid movement pattern ID format", result.Errors);
+            Assert.Contains(MovementPatternErrorMessages.InvalidIdFormat, result.Errors);
             // Verify the repository was NOT called (optimization - empty IDs are rejected immediately)
             _mockMovementPatternRepository.Verify(x => x.GetByIdAsync(It.IsAny<MovementPatternId>()), Times.Never);
         }
@@ -246,7 +247,7 @@ namespace GetFitterGetBigger.API.Tests.Services
 
             // Assert
             Assert.False(result.IsSuccess);
-            Assert.Contains("Movement pattern value cannot be empty", string.Join(", ", result.Errors));
+            Assert.Contains(MovementPatternErrorMessages.ValueCannotBeEmpty, string.Join(", ", result.Errors));
             
             _mockMovementPatternRepository.Verify(x => x.GetByValueAsync(It.IsAny<string>()), Times.Never);
         }

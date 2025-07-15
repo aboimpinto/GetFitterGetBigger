@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using GetFitterGetBigger.API.Constants;
 using GetFitterGetBigger.API.Controllers;
 using GetFitterGetBigger.API.DTOs;
 using GetFitterGetBigger.API.Models.SpecializedIds;
@@ -88,7 +89,7 @@ namespace GetFitterGetBigger.API.Tests.Controllers
             var invalidId = "invalid-format";
             var serviceResult = ServiceResult<BodyPartDto>.Failure(
                 new BodyPartDto(),
-                ServiceError.ValidationFailed("Invalid body part ID"));
+                ServiceError.ValidationFailed(BodyPartErrorMessages.InvalidIdFormat));
 
             _mockBodyPartService
                 .Setup(x => x.GetByIdAsync(BodyPartId.Empty))
@@ -110,7 +111,7 @@ namespace GetFitterGetBigger.API.Tests.Controllers
             var id = "bodypart-00000000-0000-0000-0000-000000000999";
             var serviceResult = ServiceResult<BodyPartDto>.Failure(
                 new BodyPartDto(),
-                ServiceError.NotFound("Body part"));
+                ServiceError.NotFound(BodyPartErrorMessages.NotFound));
 
             _mockBodyPartService
                 .Setup(x => x.GetByIdAsync(It.Is<BodyPartId>(bpId => bpId.ToString() == id)))
@@ -158,7 +159,7 @@ namespace GetFitterGetBigger.API.Tests.Controllers
             var value = "NonExistent";
             var serviceResult = ServiceResult<BodyPartDto>.Failure(
                 new BodyPartDto(),
-                ServiceError.NotFound("Body part"));
+                ServiceError.NotFound(BodyPartErrorMessages.NotFound));
 
             _mockBodyPartService
                 .Setup(x => x.GetByValueAsync(value))
@@ -179,7 +180,7 @@ namespace GetFitterGetBigger.API.Tests.Controllers
             var value = "";
             var serviceResult = ServiceResult<BodyPartDto>.Failure(
                 new BodyPartDto(),
-                ServiceError.ValidationFailed("Body part value cannot be empty"));
+                ServiceError.ValidationFailed(BodyPartErrorMessages.ValueCannotBeEmpty));
 
             _mockBodyPartService
                 .Setup(x => x.GetByValueAsync(value))

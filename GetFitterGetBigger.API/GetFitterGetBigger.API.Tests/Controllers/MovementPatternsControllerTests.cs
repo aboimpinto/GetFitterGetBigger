@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using GetFitterGetBigger.API.Constants;
 using GetFitterGetBigger.API.Controllers;
 using GetFitterGetBigger.API.DTOs;
 using GetFitterGetBigger.API.Models.SpecializedIds;
@@ -89,7 +90,7 @@ namespace GetFitterGetBigger.API.Tests.Controllers
             var dto = new ReferenceDataDto();
             _mockMovementPatternService
                 .Setup(x => x.GetByIdAsync(It.IsAny<MovementPatternId>()))
-                .ReturnsAsync(ServiceResult<ReferenceDataDto>.Failure(dto, ServiceError.ValidationFailed("Invalid movement pattern ID")));
+                .ReturnsAsync(ServiceResult<ReferenceDataDto>.Failure(dto, ServiceError.ValidationFailed(MovementPatternErrorMessages.InvalidIdFormat)));
 
             // Act
             var result = await _controller.GetById(invalidId);
@@ -109,7 +110,7 @@ namespace GetFitterGetBigger.API.Tests.Controllers
             var id = "movementpattern-12345678-1234-1234-1234-123456789012";
             var serviceResult = ServiceResult<ReferenceDataDto>.Failure(
                 new ReferenceDataDto(),
-                ServiceError.NotFound("Movement pattern"));
+                ServiceError.NotFound(MovementPatternErrorMessages.NotFound));
 
             _mockMovementPatternService
                 .Setup(x => x.GetByIdAsync(It.Is<MovementPatternId>(mpId => mpId.ToString() == id)))
@@ -157,7 +158,7 @@ namespace GetFitterGetBigger.API.Tests.Controllers
             var name = "NonExistent";
             var serviceResult = ServiceResult<ReferenceDataDto>.Failure(
                 new ReferenceDataDto(),
-                ServiceError.NotFound("Movement pattern"));
+                ServiceError.NotFound(MovementPatternErrorMessages.NotFound));
 
             _mockMovementPatternService
                 .Setup(x => x.GetByValueAsync(name))
@@ -205,7 +206,7 @@ namespace GetFitterGetBigger.API.Tests.Controllers
             var value = "NonExistent";
             var serviceResult = ServiceResult<ReferenceDataDto>.Failure(
                 new ReferenceDataDto(),
-                ServiceError.NotFound("Movement pattern"));
+                ServiceError.NotFound(MovementPatternErrorMessages.NotFound));
 
             _mockMovementPatternService
                 .Setup(x => x.GetByValueAsync(value))

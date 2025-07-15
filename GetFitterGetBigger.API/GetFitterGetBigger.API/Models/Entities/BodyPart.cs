@@ -55,8 +55,8 @@ public record BodyPart : ReferenceDataBase, IPureReference, IEmptyEntity<BodyPar
             bool isActive = true)
         {
             return Validate.For<BodyPart>()
-                .EnsureNotEmpty(value, ReferenceDataErrorMessages.ValueCannotBeEmpty)
-                .EnsureMinValue(displayOrder, 0, ReferenceDataErrorMessages.DisplayOrderMustBeNonNegative)
+                .EnsureNotEmpty(value, BodyPartErrorMessages.ValueCannotBeEmptyEntity)
+                .EnsureMinValue(displayOrder, 0, BodyPartErrorMessages.DisplayOrderMustBeNonNegative)
                 .OnSuccess(() => new BodyPart
                 {
                     BodyPartId = id,
