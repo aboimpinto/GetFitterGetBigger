@@ -178,6 +178,34 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.ReferenceData
             await this.ScenarioCleanupAsync();
         }
         
+        [Xunit.SkippableFactAttribute(DisplayName="Get muscle role by empty GUID returns bad request")]
+        [Xunit.TraitAttribute("FeatureTitle", "Muscle Roles Reference Data")]
+        [Xunit.TraitAttribute("Description", "Get muscle role by empty GUID returns bad request")]
+        [Xunit.TraitAttribute("Category", "reference-data")]
+        [Xunit.TraitAttribute("Category", "validation")]
+        public async System.Threading.Tasks.Task GetMuscleRoleByEmptyGUIDReturnsBadRequest()
+        {
+            string[] tagsOfScenario = new string[] {
+                    "reference-data",
+                    "validation"};
+            System.Collections.Specialized.OrderedDictionary argumentsOfScenario = new System.Collections.Specialized.OrderedDictionary();
+            TechTalk.SpecFlow.ScenarioInfo scenarioInfo = new TechTalk.SpecFlow.ScenarioInfo("Get muscle role by empty GUID returns bad request", null, tagsOfScenario, argumentsOfScenario, featureTags);
+            this.ScenarioInitialize(scenarioInfo);
+            if ((TagHelper.ContainsIgnoreTag(tagsOfScenario) || TagHelper.ContainsIgnoreTag(featureTags)))
+            {
+                testRunner.SkipScenario();
+            }
+            else
+            {
+                await this.ScenarioStartAsync();
+                await this.FeatureBackgroundAsync();
+                await testRunner.WhenAsync("I send a GET request to \"/api/ReferenceTables/MuscleRoles/musclerole-00000000-000" +
+                        "0-0000-0000-000000000000\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
+                await testRunner.ThenAsync("the response status should be 400", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
+            }
+            await this.ScenarioCleanupAsync();
+        }
+        
         [Xunit.SkippableFactAttribute(DisplayName="Get muscle role by non-existent ID returns not found")]
         [Xunit.TraitAttribute("FeatureTitle", "Muscle Roles Reference Data")]
         [Xunit.TraitAttribute("Description", "Get muscle role by non-existent ID returns not found")]
@@ -199,8 +227,8 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.ReferenceData
             {
                 await this.ScenarioStartAsync();
                 await this.FeatureBackgroundAsync();
-                await testRunner.WhenAsync("I send a GET request to \"/api/ReferenceTables/MuscleRoles/musclerole-00000000-000" +
-                        "0-0000-0000-000000000000\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
+                await testRunner.WhenAsync("I send a GET request to \"/api/ReferenceTables/MuscleRoles/musclerole-11111111-111" +
+                        "1-1111-1111-111111111111\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
                 await testRunner.ThenAsync("the response status should be 404", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
             }
             await this.ScenarioCleanupAsync();

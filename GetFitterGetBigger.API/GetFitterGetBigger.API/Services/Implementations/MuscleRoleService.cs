@@ -1,0 +1,139 @@
+using GetFitterGetBigger.API.Constants;
+using GetFitterGetBigger.API.DTOs;
+using GetFitterGetBigger.API.Models;
+using GetFitterGetBigger.API.Models.Entities;
+using GetFitterGetBigger.API.Models.SpecializedIds;
+using GetFitterGetBigger.API.Models.Validation;
+using GetFitterGetBigger.API.Repositories.Interfaces;
+using GetFitterGetBigger.API.Services.Base;
+using GetFitterGetBigger.API.Services.Interfaces;
+using GetFitterGetBigger.API.Services.Results;
+using Microsoft.Extensions.Logging;
+using Olimpo.EntityFramework.Persistency;
+
+namespace GetFitterGetBigger.API.Services.Implementations;
+
+/// <summary>
+/// Service implementation for muscle role operations
+/// </summary>
+public class MuscleRoleService : EmptyEnabledPureReferenceService<MuscleRole, ReferenceDataDto>, IMuscleRoleService
+{
+    public MuscleRoleService(
+        IUnitOfWorkProvider<FitnessDbContext> unitOfWorkProvider,
+        IEmptyEnabledCacheService cacheService,
+        ILogger<MuscleRoleService> logger)
+        : base(unitOfWorkProvider, cacheService, logger)
+    {
+    }
+
+    /// <inheritdoc/>
+    public async Task<ServiceResult<IEnumerable<ReferenceDataDto>>> GetAllActiveAsync()
+    {
+        return await GetAllAsync();
+    }
+
+    /// <inheritdoc/>
+    public async Task<ServiceResult<ReferenceDataDto>> GetByIdAsync(MuscleRoleId id) => 
+        id.IsEmpty 
+            ? ServiceResult<ReferenceDataDto>.Failure(CreateEmptyDto(), ServiceError.ValidationFailed(MuscleRoleErrorMessages.InvalidIdFormat))
+            : await GetByIdAsync(id.ToString());
+    
+    /// <inheritdoc/>
+    public async Task<ServiceResult<ReferenceDataDto>> GetByValueAsync(string value) => 
+        string.IsNullOrWhiteSpace(value)
+            ? ServiceResult<ReferenceDataDto>.Failure(CreateEmptyDto(), ServiceError.ValidationFailed(MuscleRoleErrorMessages.ValueCannotBeEmpty))
+            : await GetFromCacheOrLoadAsync(
+                GetValueCacheKey(value),
+                () => LoadByValueAsync(value),
+                value);
+
+    private string GetValueCacheKey(string value) => $"{GetCacheKeyPrefix()}value:{value}";
+    
+    private async Task<ServiceResult<ReferenceDataDto>> GetFromCacheOrLoadAsync(
+        string cacheKey, 
+        Func<Task<MuscleRole>> loadFunc,
+        string identifier)
+    {
+        var cacheService = (IEmptyEnabledCacheService)_cacheService;
+        var cacheResult = await cacheService.GetAsync<ReferenceDataDto>(cacheKey);
+        if (cacheResult.IsHit)
+        {
+            _logger.LogDebug("Cache hit for {CacheKey}", cacheKey);
+            return ServiceResult<ReferenceDataDto>.Success(cacheResult.Value);
+        }
+        
+        var entity = await loadFunc();
+        return entity switch
+        {
+            { IsEmpty: true } or { IsActive: false } => ServiceResult<ReferenceDataDto>.Failure(
+                CreateEmptyDto(), 
+                ServiceError.NotFound(MuscleRoleErrorMessages.NotFound, identifier)),
+            _ => await CacheAndReturnSuccessAsync(cacheKey, MapToDto(entity))
+        };
+    }
+    
+    private async Task<ServiceResult<ReferenceDataDto>> CacheAndReturnSuccessAsync(string cacheKey, ReferenceDataDto dto)
+    {
+        await _cacheService.SetAsync(cacheKey, dto, TimeSpan.FromDays(365));
+        return ServiceResult<ReferenceDataDto>.Success(dto);
+    }
+
+    private async Task<MuscleRole> LoadByValueAsync(string value)
+    {
+        using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
+        var repository = unitOfWork.GetRepository<IMuscleRoleRepository>();
+        return await repository.GetByValueAsync(value);
+    }
+    
+    /// <inheritdoc/>
+    public async Task<bool> ExistsAsync(MuscleRoleId id) => 
+        await ExistsAsync(id.ToString());
+
+    /// <inheritdoc/>
+    protected override async Task<MuscleRole> LoadEntityByIdAsync(
+        IReadOnlyUnitOfWork<FitnessDbContext> unitOfWork, 
+        string id) =>
+        MuscleRoleId.ParseOrEmpty(id) switch
+        {
+            { IsEmpty: true } => MuscleRole.Empty,
+            var muscleRoleId => await unitOfWork.GetRepository<IMuscleRoleRepository>()
+                .GetByIdAsync(muscleRoleId)
+        };
+
+    /// <inheritdoc/>
+    protected override async Task<IEnumerable<MuscleRole>> LoadAllEntitiesAsync(
+        IReadOnlyUnitOfWork<FitnessDbContext> unitOfWork)
+    {
+        var repository = unitOfWork.GetRepository<IMuscleRoleRepository>();
+        return await repository.GetAllActiveAsync();
+    }
+
+    /// <inheritdoc/>
+    protected override ValidationResult ValidateAndParseId(string id)
+    {
+        var parsedId = MuscleRoleId.ParseOrEmpty(id);
+        return parsedId.IsEmpty 
+            ? ValidationResult.Failure(MuscleRoleErrorMessages.InvalidIdFormat) 
+            : ValidationResult.Success();
+    }
+
+    /// <inheritdoc/>
+    protected override ReferenceDataDto MapToDto(MuscleRole entity) =>
+        new()
+        {
+            Id = entity.Id,
+            Value = entity.Value,
+            Description = entity.Description
+        };
+
+    /// <inheritdoc/>
+    protected override ReferenceDataDto CreateEmptyDto() =>
+        new()
+        {
+            Id = string.Empty,
+            Value = string.Empty,
+            Description = null
+        };
+
+    protected override string GetCacheKeyPrefix() => "musclerole:";
+}

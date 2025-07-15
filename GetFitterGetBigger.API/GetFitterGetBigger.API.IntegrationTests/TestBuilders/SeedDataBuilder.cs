@@ -338,12 +338,15 @@ public class SeedDataBuilder
         foreach (var (id, name, description, displayOrder) in muscleRolesToCheck)
         {
             var muscleRoleId = MuscleRoleId.From(id);
-            var exists = await _context.MuscleRoles.AnyAsync(mr => mr.Id == muscleRoleId);
+            var exists = await _context.MuscleRoles.AnyAsync(mr => mr.MuscleRoleId == muscleRoleId);
             
             if (!exists)
             {
-                var muscleRole = MuscleRole.Handler.Create(muscleRoleId, name, description, displayOrder, true);
-                await _context.MuscleRoles.AddAsync(muscleRole);
+                var muscleRoleResult = MuscleRole.Handler.Create(muscleRoleId, name, description, displayOrder, true);
+                if (muscleRoleResult.IsSuccess)
+                {
+                    await _context.MuscleRoles.AddAsync(muscleRoleResult.Value);
+                }
             }
         }
         

@@ -49,9 +49,10 @@ namespace GetFitterGetBigger.API.Tests.Repositories
             _context.MuscleGroups.Add(chestMuscle);
             
             // Add muscle roles
-            var primaryRole = MuscleRole.Handler.Create(
+            var primaryRoleResult = MuscleRole.Handler.Create(
                 MuscleRoleId.New(), "Primary", "Primary muscle", 1, true);
-            _context.MuscleRoles.Add(primaryRole);
+            if (primaryRoleResult.IsSuccess)
+                _context.MuscleRoles.Add(primaryRoleResult.Value);
             
             // Add equipment
             var barbell = Equipment.Handler.Create(
@@ -216,7 +217,7 @@ namespace GetFitterGetBigger.API.Tests.Repositories
             // Arrange
             var difficultyId = _context.DifficultyLevels.First().DifficultyLevelId;
             var muscleGroupId = _context.MuscleGroups.First().Id;
-            var muscleRoleId = _context.MuscleRoles.First().Id;
+            var muscleRoleId = _context.MuscleRoles.First().MuscleRoleId;
             var equipmentId = _context.Equipment.First().Id;
             
             var exercise = Exercise.Handler.CreateNew(
@@ -386,7 +387,7 @@ namespace GetFitterGetBigger.API.Tests.Repositories
             // Arrange
             var difficultyId = _context.DifficultyLevels.First().DifficultyLevelId;
             var chestMuscleId = _context.MuscleGroups.First().Id;
-            var muscleRoleId = _context.MuscleRoles.First().Id;
+            var muscleRoleId = _context.MuscleRoles.First().MuscleRoleId;
             
             // Create a second muscle group (Triceps)
             var tricepsMuscle = MuscleGroup.Handler.Create(

@@ -52,6 +52,7 @@ public static class TestIds
         public static readonly string Primary = "musclerole-11111111-1111-1111-1111-111111111111";
         public static readonly string Secondary = "musclerole-22222222-2222-2222-2222-222222222222";
         public static readonly string Stabilizer = "musclerole-33333333-3333-3333-3333-333333333333";
+        public static readonly string NonExistent = "musclerole-99999999-9999-9999-9999-999999999999";
     }
     
     // Body Part IDs

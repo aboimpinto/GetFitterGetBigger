@@ -22,6 +22,20 @@ public class MuscleRoleTestBuilder
     public static MuscleRoleTestBuilder Default() => new MuscleRoleTestBuilder();
 
     /// <summary>
+    /// Creates a MuscleRole directly with specified values
+    /// </summary>
+    public static MuscleRole Create(string id, string value, string? description, int displayOrder = 1, bool isActive = true)
+    {
+        return new MuscleRoleTestBuilder()
+            .WithId(id)
+            .WithValue(value)
+            .WithDescription(description)
+            .WithDisplayOrder(displayOrder)
+            .IsActive(isActive)
+            .Build();
+    }
+
+    /// <summary>
     /// Creates a builder for Primary muscle role
     /// </summary>
     public static MuscleRoleTestBuilder Primary() => new MuscleRoleTestBuilder()
@@ -110,24 +124,32 @@ public class MuscleRoleTestBuilder
         // If ID is provided, use Create method, otherwise use CreateNew
         if (_id.HasValue)
         {
-            return MuscleRole.Handler.Create(
+            var result = MuscleRole.Handler.Create(
                 id: _id.Value,
                 value: _value,
                 description: _description,
                 displayOrder: _displayOrder,
                 isActive: _isActive
             );
+            
+            if (!result.IsSuccess)
+                throw new InvalidOperationException($"Failed to create MuscleRole: {result.FirstError}");
+                
+            return result.Value;
         }
         else
         {
-            var muscleRole = MuscleRole.Handler.CreateNew(
+            var result = MuscleRole.Handler.CreateNew(
                 value: _value,
                 description: _description,
                 displayOrder: _displayOrder,
                 isActive: _isActive
             );
 
-            return muscleRole;
+            if (!result.IsSuccess)
+                throw new InvalidOperationException($"Failed to create MuscleRole: {result.FirstError}");
+                
+            return result.Value;
         }
     }
 

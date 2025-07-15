@@ -196,10 +196,13 @@ public class FitnessDbContext : DbContext
             .Ignore(bp => bp.Id);
                 
         modelBuilder.Entity<MuscleRole>()
-            .Property(mr => mr.Id)
+            .Property(mr => mr.MuscleRoleId)
             .HasConversion(
                 id => (Guid)id,
                 guid => MuscleRoleId.From(guid));
+                
+        modelBuilder.Entity<MuscleRole>()
+            .Ignore(mr => mr.Id);
                 
         modelBuilder.Entity<ExerciseType>()
             .Property(et => et.ExerciseTypeId)
@@ -830,19 +833,19 @@ public class FitnessDbContext : DbContext
                 "Primary",
                 "The main muscle targeted by the exercise",
                 1,
-                true),
+                true).Value,
             MuscleRole.Handler.Create(
                 MuscleRoleId.From(Guid.Parse("8c7d6b5a-4e3f-2a1b-9c8d-7e6f5d4c3b2a")),
                 "Secondary",
                 "A muscle that assists in the exercise",
                 2,
-                true),
+                true).Value,
             MuscleRole.Handler.Create(
                 MuscleRoleId.From(Guid.Parse("1a2b3c4d-5e6f-7a8b-9c0d-1e2f3a4b5c6d")),
                 "Stabilizer",
                 "A muscle that helps stabilize the body during the exercise",
                 3,
-                true)
+                true).Value
         );
         
         // Seed ExerciseTypes

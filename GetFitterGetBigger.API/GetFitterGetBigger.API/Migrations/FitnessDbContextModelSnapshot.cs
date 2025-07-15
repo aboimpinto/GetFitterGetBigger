@@ -667,8 +667,9 @@ namespace GetFitterGetBigger.API.Migrations
 
             modelBuilder.Entity("GetFitterGetBigger.API.Models.Entities.KineticChainType", b =>
                 {
-                    b.Property<Guid>("Id")
-                        .HasColumnType("uuid");
+                    b.Property<Guid>("KineticChainTypeId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("Id");
 
                     b.Property<string>("Description")
                         .HasColumnType("text");
@@ -683,14 +684,14 @@ namespace GetFitterGetBigger.API.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.HasKey("Id");
+                    b.HasKey("KineticChainTypeId");
 
                     b.ToTable("KineticChainTypes");
 
                     b.HasData(
                         new
                         {
-                            Id = new Guid("f5d5a2de-9c4e-4b87-b8c3-5d1e17d0b1f4"),
+                            KineticChainTypeId = new Guid("f5d5a2de-9c4e-4b87-b8c3-5d1e17d0b1f4"),
                             Description = "Exercises that work multiple muscle groups",
                             DisplayOrder = 1,
                             IsActive = true,
@@ -698,7 +699,7 @@ namespace GetFitterGetBigger.API.Migrations
                         },
                         new
                         {
-                            Id = new Guid("2b3e7cb2-9a3e-4c9a-88d8-b7c019c90d1b"),
+                            KineticChainTypeId = new Guid("2b3e7cb2-9a3e-4c9a-88d8-b7c019c90d1b"),
                             Description = "Exercises that work a single muscle group",
                             DisplayOrder = 2,
                             IsActive = true,
@@ -778,7 +779,7 @@ namespace GetFitterGetBigger.API.Migrations
 
             modelBuilder.Entity("GetFitterGetBigger.API.Models.Entities.MuscleRole", b =>
                 {
-                    b.Property<Guid>("Id")
+                    b.Property<Guid>("MuscleRoleId")
                         .HasColumnType("uuid");
 
                     b.Property<string>("Description")
@@ -794,14 +795,14 @@ namespace GetFitterGetBigger.API.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.HasKey("Id");
+                    b.HasKey("MuscleRoleId");
 
                     b.ToTable("MuscleRoles");
 
                     b.HasData(
                         new
                         {
-                            Id = new Guid("5d8e9a7b-3c2d-4f6a-9b8c-1e5d7f3a2c9b"),
+                            MuscleRoleId = new Guid("5d8e9a7b-3c2d-4f6a-9b8c-1e5d7f3a2c9b"),
                             Description = "The main muscle targeted by the exercise",
                             DisplayOrder = 1,
                             IsActive = true,
@@ -809,7 +810,7 @@ namespace GetFitterGetBigger.API.Migrations
                         },
                         new
                         {
-                            Id = new Guid("8c7d6b5a-4e3f-2a1b-9c8d-7e6f5d4c3b2a"),
+                            MuscleRoleId = new Guid("8c7d6b5a-4e3f-2a1b-9c8d-7e6f5d4c3b2a"),
                             Description = "A muscle that assists in the exercise",
                             DisplayOrder = 2,
                             IsActive = true,
@@ -817,7 +818,7 @@ namespace GetFitterGetBigger.API.Migrations
                         },
                         new
                         {
-                            Id = new Guid("1a2b3c4d-5e6f-7a8b-9c0d-1e2f3a4b5c6d"),
+                            MuscleRoleId = new Guid("1a2b3c4d-5e6f-7a8b-9c0d-1e2f3a4b5c6d"),
                             Description = "A muscle that helps stabilize the body during the exercise",
                             DisplayOrder = 3,
                             IsActive = true,

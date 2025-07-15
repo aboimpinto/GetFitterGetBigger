@@ -72,15 +72,17 @@ namespace GetFitterGetBigger.API.Tests.Repositories
             _context.Exercises.Add(benchPress);
             
             // Add muscle role for the relationship
-            var primaryRole = MuscleRole.Handler.Create(
+            var primaryRoleResult = MuscleRole.Handler.Create(
                 MuscleRoleId.New(), "Primary", "Primary muscle", 1, true);
-            _context.MuscleRoles.Add(primaryRole);
+            if (!primaryRoleResult.IsSuccess)
+                throw new InvalidOperationException("Failed to create primary role");
+            _context.MuscleRoles.Add(primaryRoleResult.Value);
             
             // Add exercise-muscle group relationship
             var exerciseMuscleGroup = ExerciseMuscleGroup.Handler.Create(
                 benchPress.Id,
                 chest.Id,
-                primaryRole.Id);
+                primaryRoleResult.Value.MuscleRoleId);
             _context.ExerciseMuscleGroups.Add(exerciseMuscleGroup);
             
             _context.SaveChanges();

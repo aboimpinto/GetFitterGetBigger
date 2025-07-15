@@ -31,8 +31,13 @@ Feature: Muscle Roles Reference Data
     And the response should contain "Expected format: 'musclerole-{guid}'"
 
   @reference-data @validation
-  Scenario: Get muscle role by non-existent ID returns not found
+  Scenario: Get muscle role by empty GUID returns bad request
     When I send a GET request to "/api/ReferenceTables/MuscleRoles/musclerole-00000000-0000-0000-0000-000000000000"
+    Then the response status should be 400
+
+  @reference-data @validation
+  Scenario: Get muscle role by non-existent ID returns not found
+    When I send a GET request to "/api/ReferenceTables/MuscleRoles/musclerole-11111111-1111-1111-1111-111111111111"
     Then the response status should be 404
 
   @reference-data
