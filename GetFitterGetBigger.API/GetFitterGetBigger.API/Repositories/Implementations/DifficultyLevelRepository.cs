@@ -7,9 +7,10 @@ namespace GetFitterGetBigger.API.Repositories.Implementations;
 
 /// <summary>
 /// Repository implementation for DifficultyLevel reference data
+/// TEMPORARY: Extends EmptyEnabledReferenceDataRepository until all entities are migrated
 /// </summary>
 public class DifficultyLevelRepository : 
-    ReferenceDataRepository<DifficultyLevel, DifficultyLevelId, FitnessDbContext>,
+    EmptyEnabledReferenceDataRepository<DifficultyLevel, DifficultyLevelId, FitnessDbContext>,
     IDifficultyLevelRepository
 {
     // Add any DifficultyLevel-specific repository methods here if needed

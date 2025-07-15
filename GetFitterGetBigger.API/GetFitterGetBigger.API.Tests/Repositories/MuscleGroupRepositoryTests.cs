@@ -39,9 +39,9 @@ namespace GetFitterGetBigger.API.Tests.Repositories
         {
             // Add body parts
             var upperBody = BodyPart.Handler.Create(
-                _upperBodyId, "Upper Body", null, 1, true);
+                _upperBodyId, "Upper Body", null, 1, true).Value;
             var lowerBody = BodyPart.Handler.Create(
-                _lowerBodyId, "Lower Body", null, 2, true);
+                _lowerBodyId, "Lower Body", null, 2, true).Value;
             _context.BodyParts.AddRange(upperBody, lowerBody);
             
             // Add muscle groups
@@ -58,7 +58,7 @@ namespace GetFitterGetBigger.API.Tests.Repositories
             
             // Add difficulty level for exercises
             var beginnerDifficulty = DifficultyLevel.Handler.Create(
-                DifficultyLevelId.New(), "Beginner", "For beginners", 1, true);
+                DifficultyLevelId.New(), "Beginner", "For beginners", 1, true).Value;
             _context.DifficultyLevels.Add(beginnerDifficulty);
             
             // Add an exercise that uses the chest muscle group
@@ -68,7 +68,7 @@ namespace GetFitterGetBigger.API.Tests.Repositories
                 null, // videoUrl
                 null, // imageUrl
                 false, // isUnilateral
-                beginnerDifficulty.Id);
+                beginnerDifficulty.DifficultyLevelId);
             _context.Exercises.Add(benchPress);
             
             // Add muscle role for the relationship

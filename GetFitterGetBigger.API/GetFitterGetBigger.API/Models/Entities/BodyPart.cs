@@ -1,6 +1,9 @@
 using System;
 using System.Collections.Generic;
+using GetFitterGetBigger.API.Constants;
 using GetFitterGetBigger.API.Models.SpecializedIds;
+using GetFitterGetBigger.API.Models.Results;
+using GetFitterGetBigger.API.Models.Validation;
 
 namespace GetFitterGetBigger.API.Models.Entities;
 
@@ -29,38 +32,39 @@ public record BodyPart : ReferenceDataBase, IPureReference, IEmptyEntity<BodyPar
     
     public static class Handler
     {
-        public static BodyPart CreateNew(
+        public static EntityResult<BodyPart> CreateNew(
             string value,
             string? description,
             int displayOrder,
             bool isActive = true)
         {
-            if (string.IsNullOrEmpty(value))
-                throw new ArgumentException("Value cannot be empty", nameof(value));
-                
-            return new()
-            {
-                BodyPartId = BodyPartId.New(),
-                Value = value,
-                Description = description,
-                DisplayOrder = displayOrder,
-                IsActive = isActive
-            };
+            return Create(
+                BodyPartId.New(),
+                value,
+                description,
+                displayOrder,
+                isActive
+            );
         }
         
-        public static BodyPart Create(
+        public static EntityResult<BodyPart> Create(
             BodyPartId id,
             string value,
             string? description,
             int displayOrder,
-            bool isActive = true) =>
-            new()
-            {
-                BodyPartId = id,
-                Value = value,
-                Description = description,
-                DisplayOrder = displayOrder,
-                IsActive = isActive
-            };
+            bool isActive = true)
+        {
+            return Validate.For<BodyPart>()
+                .EnsureNotEmpty(value, ReferenceDataErrorMessages.ValueCannotBeEmpty)
+                .EnsureMinValue(displayOrder, 0, ReferenceDataErrorMessages.DisplayOrderMustBeNonNegative)
+                .OnSuccess(() => new BodyPart
+                {
+                    BodyPartId = id,
+                    Value = value,
+                    Description = description,
+                    DisplayOrder = displayOrder,
+                    IsActive = isActive
+                });
+        }
     }
 }

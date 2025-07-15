@@ -129,7 +129,7 @@ public class ExerciseBuilder
     public ExerciseBuilder WithDifficulty(DifficultyLevel difficulty)
     {
         _difficulty = difficulty;
-        _difficultyId = difficulty.Id;
+        _difficultyId = difficulty.DifficultyLevelId;
         return this;
     }
 

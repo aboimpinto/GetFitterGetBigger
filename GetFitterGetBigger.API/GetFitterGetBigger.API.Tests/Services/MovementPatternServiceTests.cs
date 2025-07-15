@@ -58,13 +58,13 @@ namespace GetFitterGetBigger.API.Tests.Services
                     "Horizontal Push",
                     "Pushing forward",
                     1,
-                    true),
+                    true).Value,
                 MovementPattern.Handler.Create(
                     MovementPatternId.New(),
                     "Vertical Pull",
                     "Pulling downward",
                     2,
-                    true)
+                    true).Value
             };
 
             _mockCacheService
@@ -130,7 +130,7 @@ namespace GetFitterGetBigger.API.Tests.Services
                 "Horizontal Push",
                 "Pushing forward",
                 1,
-                true);
+                true).Value;
 
             _mockCacheService
                 .Setup(x => x.GetAsync<ReferenceDataDto>(It.IsAny<string>()))
@@ -217,7 +217,7 @@ namespace GetFitterGetBigger.API.Tests.Services
                 value,
                 "Pushing forward",
                 1,
-                true);
+                true).Value;
 
             _mockCacheService
                 .Setup(x => x.GetAsync<ReferenceDataDto>(It.IsAny<string>()))
@@ -283,7 +283,7 @@ namespace GetFitterGetBigger.API.Tests.Services
                 "Horizontal Push",
                 "Pushing forward",
                 1,
-                true);
+                true).Value;
 
             _mockCacheService
                 .Setup(x => x.GetAsync<ReferenceDataDto>(It.IsAny<string>()))
@@ -332,7 +332,7 @@ namespace GetFitterGetBigger.API.Tests.Services
                 "Horizontal Push",
                 "Pushing forward",
                 1,
-                true);
+                true).Value;
 
             _mockCacheService
                 .Setup(x => x.GetAsync<ReferenceDataDto>(It.IsAny<string>()))

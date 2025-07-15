@@ -124,7 +124,7 @@ public class DifficultyLevelTestBuilder
             description: _description,
             displayOrder: _displayOrder,
             isActive: _isActive
-        );
+        ).Value;
     }
 
     /// <summary>

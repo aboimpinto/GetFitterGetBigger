@@ -19,7 +19,7 @@ public readonly record struct DifficultyLevelId
     
     public bool IsEmpty => _value == Guid.Empty;
     
-    public static bool TryParse(string? input, out DifficultyLevelId result)
+    private static bool TryParse(string? input, out DifficultyLevelId result)
     {
         result = default;
         if (string.IsNullOrEmpty(input) || !input.StartsWith("difficultylevel-"))
@@ -43,7 +43,7 @@ public readonly record struct DifficultyLevelId
         return TryParse(input, out var result) ? result : Empty;
     }
     
-    public override string ToString() => IsEmpty ? string.Empty : $"difficultylevel-{this._value}";
+    public override string ToString() => $"difficultylevel-{this._value}";
     
     // Conversion to/from Guid for EF Core
     public static implicit operator Guid(DifficultyLevelId id) => id._value;

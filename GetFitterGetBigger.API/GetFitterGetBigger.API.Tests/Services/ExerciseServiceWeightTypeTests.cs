@@ -105,7 +105,7 @@ public class ExerciseServiceWeightTypeTests
             "For beginners",
             1,
             true
-        );
+        ).Value;
         
         // Set up mocks
         _mockExerciseRepository.Setup(r => r.ExistsAsync(It.IsAny<string>(), It.IsAny<ExerciseId?>())).ReturnsAsync(false);
@@ -183,7 +183,7 @@ public class ExerciseServiceWeightTypeTests
             "For beginners",
             1,
             true
-        );
+        ).Value;
         
         // Set up mocks
         _mockExerciseRepository.Setup(r => r.ExistsAsync(It.IsAny<string>(), It.IsAny<ExerciseId?>())).ReturnsAsync(false);
@@ -258,13 +258,13 @@ public class ExerciseServiceWeightTypeTests
             "For beginners",
             1,
             true
-        );
+        ).Value;
         
         var exercise = ExerciseBuilder.AWorkoutExercise()
             .WithId(exerciseId)
             .WithName("Lat Pulldown")
             .WithDescription("Back exercise on machine")
-            .WithDifficultyId(difficulty.Id)
+            .WithDifficultyId(difficulty.DifficultyLevelId)
             .WithKineticChainId(KineticChainTypeId.From(Guid.Parse("f5d5a2de-9c4e-4b87-b8c3-5d1e17d0b1f4")))
             .WithExerciseWeightTypeId(exerciseWeightType.Id)
             .Build();

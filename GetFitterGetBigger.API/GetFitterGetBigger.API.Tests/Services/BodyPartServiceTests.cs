@@ -57,7 +57,7 @@ namespace GetFitterGetBigger.API.Tests.Services
                 "Chest",
                 "Chest muscles",
                 1,
-                true);
+                true).Value;
 
             _mockCacheService
                 .Setup(x => x.GetAsync<BodyPartDto>(It.IsAny<string>()))
@@ -131,8 +131,8 @@ namespace GetFitterGetBigger.API.Tests.Services
             // Arrange
             var bodyParts = new List<BodyPart>
             {
-                BodyPart.Handler.Create(BodyPartId.New(), "Chest", "Chest muscles", 1, true),
-                BodyPart.Handler.Create(BodyPartId.New(), "Back", "Back muscles", 2, true)
+                BodyPart.Handler.Create(BodyPartId.New(), "Chest", "Chest muscles", 1, true).Value,
+                BodyPart.Handler.Create(BodyPartId.New(), "Back", "Back muscles", 2, true).Value
             };
 
             _mockCacheService
@@ -169,7 +169,7 @@ namespace GetFitterGetBigger.API.Tests.Services
                 "Chest",
                 "Chest muscles",
                 1,
-                true);
+                true).Value;
 
             _mockCacheService
                 .Setup(x => x.GetAsync<BodyPartDto>(It.IsAny<string>()))
@@ -204,7 +204,7 @@ namespace GetFitterGetBigger.API.Tests.Services
                 "Back",
                 "Back muscles",
                 2,
-                true);
+                true).Value;
 
             _mockCacheService
                 .Setup(x => x.GetAsync<BodyPartDto>(It.IsAny<string>()))
@@ -294,7 +294,7 @@ namespace GetFitterGetBigger.API.Tests.Services
                 "Chest",
                 "Chest muscles",
                 1,
-                false); // IsActive = false
+                false).Value; // IsActive = false
 
             _mockCacheService
                 .Setup(x => x.GetAsync<BodyPartDto>(It.IsAny<string>()))
@@ -326,7 +326,7 @@ namespace GetFitterGetBigger.API.Tests.Services
                 value,
                 "Chest muscles",
                 1,
-                true);
+                true).Value;
 
             _mockCacheService
                 .Setup(x => x.GetAsync<BodyPartDto>(It.IsAny<string>()))
@@ -384,7 +384,7 @@ namespace GetFitterGetBigger.API.Tests.Services
                 value,
                 "Inactive body part",
                 1,
-                false); // IsActive = false
+                false).Value; // IsActive = false
 
             _mockCacheService
                 .Setup(x => x.GetAsync<BodyPartDto>(It.IsAny<string>()))

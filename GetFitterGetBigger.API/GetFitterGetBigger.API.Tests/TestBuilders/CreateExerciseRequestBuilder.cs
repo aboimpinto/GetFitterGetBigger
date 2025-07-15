@@ -59,7 +59,7 @@ public class CreateExerciseRequestBuilder
 
     public CreateExerciseRequestBuilder WithDifficulty(DifficultyLevel difficulty)
     {
-        _difficultyId = difficulty.Id.ToString();
+        _difficultyId = difficulty.DifficultyLevelId.ToString();
         return this;
     }
 

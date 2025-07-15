@@ -33,7 +33,7 @@ namespace GetFitterGetBigger.API.Tests.Repositories
         {
             // Add difficulty levels
             var beginnerDifficulty = DifficultyLevel.Handler.Create(
-                DifficultyLevelId.New(), "Beginner", "For beginners", 1, true);
+                DifficultyLevelId.New(), "Beginner", "For beginners", 1, true).Value;
             _context.DifficultyLevels.Add(beginnerDifficulty);
             
             // Add exercise types from seed data
@@ -52,7 +52,7 @@ namespace GetFitterGetBigger.API.Tests.Repositories
         public async Task GetByIdAsync_WithCoachNotes_ReturnsExerciseWithOrderedCoachNotes()
         {
             // Arrange
-            var difficultyId = _context.DifficultyLevels.First().Id;
+            var difficultyId = _context.DifficultyLevels.First().DifficultyLevelId;
             var exercise = Exercise.Handler.CreateNew(
                 "Squat", "Lower body exercise", null, null, false, difficultyId);
             
@@ -87,7 +87,7 @@ namespace GetFitterGetBigger.API.Tests.Repositories
         public async Task GetByIdAsync_WithExerciseTypes_ReturnsExerciseWithTypes()
         {
             // Arrange
-            var difficultyId = _context.DifficultyLevels.First().Id;
+            var difficultyId = _context.DifficultyLevels.First().DifficultyLevelId;
             var warmupTypeId = _context.ExerciseTypes.First(et => et.Value == "Warmup").Id;
             var workoutTypeId = _context.ExerciseTypes.First(et => et.Value == "Workout").Id;
             
@@ -118,7 +118,7 @@ namespace GetFitterGetBigger.API.Tests.Repositories
         public async Task GetPagedAsync_WithCoachNotes_ReturnsExercisesWithCoachNotes()
         {
             // Arrange
-            var difficultyId = _context.DifficultyLevels.First().Id;
+            var difficultyId = _context.DifficultyLevels.First().DifficultyLevelId;
             
             // Create exercises
             var exercise1 = Exercise.Handler.CreateNew(
@@ -166,7 +166,7 @@ namespace GetFitterGetBigger.API.Tests.Repositories
         public async Task GetPagedAsync_WithExerciseTypes_ReturnsExercisesWithTypes()
         {
             // Arrange
-            var difficultyId = _context.DifficultyLevels.First().Id;
+            var difficultyId = _context.DifficultyLevels.First().DifficultyLevelId;
             var cooldownTypeId = _context.ExerciseTypes.First(et => et.Value == "Cooldown").Id;
             
             var exercise = Exercise.Handler.CreateNew(

@@ -259,7 +259,7 @@ public class SeedDataBuilder
             
             if (!exists)
             {
-                var bodyPart = BodyPart.Handler.Create(bodyPartId, name, description, displayOrder, true);
+                var bodyPart = BodyPart.Handler.Create(bodyPartId, name, description, displayOrder, true).Value;
                 await _context.BodyParts.AddAsync(bodyPart);
             }
         }
@@ -283,11 +283,11 @@ public class SeedDataBuilder
         foreach (var (id, name, description, displayOrder) in difficultyLevelsToCheck)
         {
             var difficultyId = DifficultyLevelId.From(id);
-            var exists = await _context.DifficultyLevels.AnyAsync(dl => dl.Id == difficultyId);
+            var exists = await _context.DifficultyLevels.AnyAsync(dl => dl.DifficultyLevelId == difficultyId);
             
             if (!exists)
             {
-                var difficulty = DifficultyLevel.Handler.Create(difficultyId, name, description, displayOrder, true);
+                var difficulty = DifficultyLevel.Handler.Create(difficultyId, name, description, displayOrder, true).Value!;
                 await _context.DifficultyLevels.AddAsync(difficulty);
             }
         }
@@ -435,7 +435,7 @@ public class SeedDataBuilder
             if (!exists)
             {
                 var displayOrder = Array.IndexOf(movementPatternsToCheck, (id, name, description)) + 1;
-                var movementPattern = MovementPattern.Handler.Create(movementPatternId, name, description, displayOrder, true);
+                var movementPattern = MovementPattern.Handler.Create(movementPatternId, name, description, displayOrder, true).Value;
                 await _context.MovementPatterns.AddAsync(movementPattern);
             }
         }

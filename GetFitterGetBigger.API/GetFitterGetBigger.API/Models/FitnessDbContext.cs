@@ -160,7 +160,11 @@ public class FitnessDbContext : DbContext
                 
         // Reference data IDs
         modelBuilder.Entity<DifficultyLevel>()
-            .Property(dl => dl.Id)
+            .HasKey(dl => dl.DifficultyLevelId);
+            
+        modelBuilder.Entity<DifficultyLevel>()
+            .Property(dl => dl.DifficultyLevelId)
+            .HasColumnName("Id")
             .HasConversion(
                 id => (Guid)id,
                 guid => DifficultyLevelId.From(guid));
@@ -741,19 +745,19 @@ public class FitnessDbContext : DbContext
                 "Beginner",
                 "Suitable for those new to fitness",
                 1,
-                true),
+                true).Value!,
             DifficultyLevel.Handler.Create(
                 DifficultyLevelId.From(Guid.Parse("9c7b59a4-bcd8-48a6-971a-cd67b0a7ab5a")),
                 "Intermediate",
                 "Suitable for those with some fitness experience",
                 2,
-                true),
+                true).Value!,
             DifficultyLevel.Handler.Create(
                 DifficultyLevelId.From(Guid.Parse("3e27f9a7-d5a5-4f8e-8a76-6de2d23c9a3c")),
                 "Advanced",
                 "Suitable for those with significant fitness experience",
                 3,
-                true)
+                true).Value!
         );
         
         // Seed KineticChainTypes
@@ -779,37 +783,37 @@ public class FitnessDbContext : DbContext
                 "Chest",
                 null,
                 1,
-                true),
+                true).Value,
             BodyPart.Handler.Create(
                 BodyPartId.From(Guid.Parse("b2d89d5c-cb8a-4f5d-8a9e-2c3b76612c5a")),
                 "Back",
                 null,
                 2,
-                true),
+                true).Value,
             BodyPart.Handler.Create(
                 BodyPartId.From(Guid.Parse("4a6f1b42-5c9b-4c4e-878a-b3d9f2c1f1f5")),
                 "Legs",
                 null,
                 3,
-                true),
+                true).Value,
             BodyPart.Handler.Create(
                 BodyPartId.From(Guid.Parse("d7e0e24c-f8d4-4b8a-b1e0-cf9c2e6b5d0a")),
                 "Shoulders",
                 null,
                 4,
-                true),
+                true).Value,
             BodyPart.Handler.Create(
                 BodyPartId.From(Guid.Parse("9c5f1b4e-2b8a-4c9d-8e7f-c5a9e2d7b8c1")),
                 "Arms",
                 null,
                 5,
-                true),
+                true).Value,
             BodyPart.Handler.Create(
                 BodyPartId.From(Guid.Parse("3e9f8a7d-6c5b-4a3e-8d2f-1b7c9a6d5e4c")),
                 "Core",
                 null,
                 6,
-                true)
+                true).Value
         );
         
         // Seed MuscleRoles

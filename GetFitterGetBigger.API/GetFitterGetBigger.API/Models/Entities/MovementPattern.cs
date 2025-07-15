@@ -1,6 +1,9 @@
 using System;
 using System.Collections.Generic;
+using GetFitterGetBigger.API.Constants;
 using GetFitterGetBigger.API.Models.SpecializedIds;
+using GetFitterGetBigger.API.Models.Results;
+using GetFitterGetBigger.API.Models.Validation;
 
 namespace GetFitterGetBigger.API.Models.Entities;
 
@@ -32,38 +35,39 @@ public record MovementPattern : ReferenceDataBase, IPureReference, IEmptyEntity<
     
     public static class Handler
     {
-        public static MovementPattern CreateNew(
+        public static EntityResult<MovementPattern> CreateNew(
             string value,
             string? description,
             int displayOrder,
             bool isActive = true)
         {
-            if (string.IsNullOrEmpty(value))
-                throw new ArgumentException("Value cannot be empty", nameof(value));
-                
-            return new()
-            {
-                MovementPatternId = MovementPatternId.New(),
-                Value = value,
-                Description = description,
-                DisplayOrder = displayOrder,
-                IsActive = isActive
-            };
+            return Create(
+                MovementPatternId.New(),
+                value,
+                description,
+                displayOrder,
+                isActive
+            );
         }
         
-        public static MovementPattern Create(
+        public static EntityResult<MovementPattern> Create(
             MovementPatternId id,
             string value,
             string? description,
             int displayOrder,
-            bool isActive = true) =>
-            new()
-            {
-                MovementPatternId = id,
-                Value = value,
-                Description = description,
-                DisplayOrder = displayOrder,
-                IsActive = isActive
-            };
+            bool isActive = true)
+        {
+            return Validate.For<MovementPattern>()
+                .EnsureNotEmpty(value, ReferenceDataErrorMessages.ValueCannotBeEmpty)
+                .EnsureMinValue(displayOrder, 0, ReferenceDataErrorMessages.DisplayOrderMustBeNonNegative)
+                .OnSuccess(() => new MovementPattern
+                {
+                    MovementPatternId = id,
+                    Value = value,
+                    Description = description,
+                    DisplayOrder = displayOrder,
+                    IsActive = isActive
+                });
+        }
     }
 }

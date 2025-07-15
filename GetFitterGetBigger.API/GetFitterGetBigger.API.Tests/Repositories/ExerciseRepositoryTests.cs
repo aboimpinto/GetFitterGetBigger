@@ -35,12 +35,12 @@ namespace GetFitterGetBigger.API.Tests.Repositories
         {
             // Add difficulty levels
             var beginnerDifficulty = DifficultyLevel.Handler.Create(
-                DifficultyLevelId.New(), "Beginner", "For beginners", 1, true);
+                DifficultyLevelId.New(), "Beginner", "For beginners", 1, true).Value;
             _context.DifficultyLevels.Add(beginnerDifficulty);
             
             // Add body parts
             var bodyPart = BodyPart.Handler.Create(
-                BodyPartId.New(), "Upper Body", null, 1, true);
+                BodyPartId.New(), "Upper Body", null, 1, true).Value;
             _context.BodyParts.Add(bodyPart);
             
             // Add muscle groups
@@ -65,7 +65,7 @@ namespace GetFitterGetBigger.API.Tests.Repositories
         public async Task GetPagedAsync_WithNoFilters_ReturnsAllActiveExercises()
         {
             // Arrange
-            var difficultyId = _context.DifficultyLevels.First().Id;
+            var difficultyId = _context.DifficultyLevels.First().DifficultyLevelId;
             var exercise1 = ExerciseBuilder.AWorkoutExercise()
                 .WithName("Push-up")
                 .WithDescription("Basic push-up")
@@ -106,7 +106,7 @@ namespace GetFitterGetBigger.API.Tests.Repositories
         public async Task GetPagedAsync_WithIncludeInactive_ReturnsAllExercises()
         {
             // Arrange
-            var difficultyId = _context.DifficultyLevels.First().Id;
+            var difficultyId = _context.DifficultyLevels.First().DifficultyLevelId;
             var activeExercise = ExerciseBuilder.AWorkoutExercise()
                 .WithName("Active Exercise")
                 .WithDescription("Active description")
@@ -144,7 +144,7 @@ namespace GetFitterGetBigger.API.Tests.Repositories
         public async Task GetPagedAsync_WithNameFilter_ReturnsMatchingExercises()
         {
             // Arrange
-            var difficultyId = _context.DifficultyLevels.First().Id;
+            var difficultyId = _context.DifficultyLevels.First().DifficultyLevelId;
             var exercise1 = Exercise.Handler.CreateNew(
                 "Bench Press", "Chest exercise", null, null, false, difficultyId);
             var exercise2 = Exercise.Handler.CreateNew(
@@ -175,7 +175,7 @@ namespace GetFitterGetBigger.API.Tests.Repositories
         public async Task GetPagedAsync_WithPagination_ReturnsCorrectPage()
         {
             // Arrange
-            var difficultyId = _context.DifficultyLevels.First().Id;
+            var difficultyId = _context.DifficultyLevels.First().DifficultyLevelId;
             for (int i = 1; i <= 15; i++)
             {
                 var exercise = Exercise.Handler.CreateNew(
@@ -214,7 +214,7 @@ namespace GetFitterGetBigger.API.Tests.Repositories
         public async Task GetByIdAsync_WithExistingId_ReturnsExerciseWithRelatedData()
         {
             // Arrange
-            var difficultyId = _context.DifficultyLevels.First().Id;
+            var difficultyId = _context.DifficultyLevels.First().DifficultyLevelId;
             var muscleGroupId = _context.MuscleGroups.First().Id;
             var muscleRoleId = _context.MuscleRoles.First().Id;
             var equipmentId = _context.Equipment.First().Id;
@@ -248,7 +248,7 @@ namespace GetFitterGetBigger.API.Tests.Repositories
         public async Task GetByNameAsync_WithExistingName_ReturnsExercise()
         {
             // Arrange
-            var difficultyId = _context.DifficultyLevels.First().Id;
+            var difficultyId = _context.DifficultyLevels.First().DifficultyLevelId;
             var exercise = Exercise.Handler.CreateNew(
                 "Unique Exercise Name", "Description", null, null, false, difficultyId);
             
@@ -267,7 +267,7 @@ namespace GetFitterGetBigger.API.Tests.Repositories
         public async Task ExistsAsync_WithExistingName_ReturnsTrue()
         {
             // Arrange
-            var difficultyId = _context.DifficultyLevels.First().Id;
+            var difficultyId = _context.DifficultyLevels.First().DifficultyLevelId;
             var exercise = Exercise.Handler.CreateNew(
                 "Existing Exercise", "Description", null, null, false, difficultyId);
             
@@ -285,7 +285,7 @@ namespace GetFitterGetBigger.API.Tests.Repositories
         public async Task ExistsAsync_WithExcludeId_ExcludesSpecifiedExercise()
         {
             // Arrange
-            var difficultyId = _context.DifficultyLevels.First().Id;
+            var difficultyId = _context.DifficultyLevels.First().DifficultyLevelId;
             var exercise = Exercise.Handler.CreateNew(
                 "My Exercise", "Description", null, null, false, difficultyId);
             
@@ -305,7 +305,7 @@ namespace GetFitterGetBigger.API.Tests.Repositories
         public async Task HasReferencesAsync_WithNoReferences_ReturnsFalse()
         {
             // Arrange
-            var difficultyId = _context.DifficultyLevels.First().Id;
+            var difficultyId = _context.DifficultyLevels.First().DifficultyLevelId;
             var exercise = Exercise.Handler.CreateNew(
                 "Exercise", "Description", null, null, false, difficultyId);
             
@@ -323,7 +323,7 @@ namespace GetFitterGetBigger.API.Tests.Repositories
         public async Task AddAsync_CreatesNewExercise()
         {
             // Arrange
-            var difficultyId = _context.DifficultyLevels.First().Id;
+            var difficultyId = _context.DifficultyLevels.First().DifficultyLevelId;
             var exercise = Exercise.Handler.CreateNew(
                 "New Exercise", "Description", null, null, false, difficultyId);
 
@@ -341,7 +341,7 @@ namespace GetFitterGetBigger.API.Tests.Repositories
         public async Task UpdateAsync_UpdatesExistingExercise()
         {
             // Arrange
-            var difficultyId = _context.DifficultyLevels.First().Id;
+            var difficultyId = _context.DifficultyLevels.First().DifficultyLevelId;
             var exercise = Exercise.Handler.CreateNew(
                 "Original Name", "Description", null, null, false, difficultyId);
             
@@ -364,7 +364,7 @@ namespace GetFitterGetBigger.API.Tests.Repositories
         public async Task DeleteAsync_RemovesExercise()
         {
             // Arrange
-            var difficultyId = _context.DifficultyLevels.First().Id;
+            var difficultyId = _context.DifficultyLevels.First().DifficultyLevelId;
             var exercise = Exercise.Handler.CreateNew(
                 "To Delete", "Description", null, null, false, difficultyId);
             
@@ -384,7 +384,7 @@ namespace GetFitterGetBigger.API.Tests.Repositories
         public async Task GetPagedAsync_WithMultipleMuscleGroups_ReturnsExercise()
         {
             // Arrange
-            var difficultyId = _context.DifficultyLevels.First().Id;
+            var difficultyId = _context.DifficultyLevels.First().DifficultyLevelId;
             var chestMuscleId = _context.MuscleGroups.First().Id;
             var muscleRoleId = _context.MuscleRoles.First().Id;
             

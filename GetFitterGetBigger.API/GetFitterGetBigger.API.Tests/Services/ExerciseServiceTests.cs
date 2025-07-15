@@ -85,7 +85,7 @@ namespace GetFitterGetBigger.API.Tests.Services
             };
 
             var difficultyId = DifficultyLevelId.New();
-            var difficulty = DifficultyLevel.Handler.Create(difficultyId, "Beginner", "For beginners", 1, true);
+            var difficulty = DifficultyLevel.Handler.Create(difficultyId, "Beginner", "For beginners", 1, true).Value;
             
             var exercises = new List<Exercise>
             {
@@ -128,7 +128,7 @@ namespace GetFitterGetBigger.API.Tests.Services
             // Arrange
             var exerciseId = ExerciseId.New();
             var difficultyId = DifficultyLevelId.New();
-            var difficulty = DifficultyLevel.Handler.Create(difficultyId, "Beginner", "For beginners", 1, true);
+            var difficulty = DifficultyLevel.Handler.Create(difficultyId, "Beginner", "For beginners", 1, true).Value;
             var exercise = CreateTestExercise("Test Exercise", difficultyId, difficulty);
 
             _mockExerciseRepository
@@ -170,7 +170,7 @@ namespace GetFitterGetBigger.API.Tests.Services
                 .Build();
 
             var difficultyId = DifficultyLevelId.New();
-            var difficulty = DifficultyLevel.Handler.Create(difficultyId, "Beginner", "For beginners", 1, true);
+            var difficulty = DifficultyLevel.Handler.Create(difficultyId, "Beginner", "For beginners", 1, true).Value;
             var createdExercise = CreateTestExercise("New Exercise", difficultyId, difficulty);
 
             _mockExerciseRepository
@@ -235,7 +235,7 @@ namespace GetFitterGetBigger.API.Tests.Services
                 .Build();
 
             var difficultyId = DifficultyLevelId.New();
-            var difficulty = DifficultyLevel.Handler.Create(difficultyId, "Beginner", "For beginners", 1, true);
+            var difficulty = DifficultyLevel.Handler.Create(difficultyId, "Beginner", "For beginners", 1, true).Value;
             
             // Create existing exercise with the same ID we're updating
             var existingExercise = ExerciseBuilder.AWorkoutExercise()
@@ -298,7 +298,7 @@ namespace GetFitterGetBigger.API.Tests.Services
             // Arrange
             var exerciseId = ExerciseId.New();
             var difficultyId = DifficultyLevelId.New();
-            var difficulty = DifficultyLevel.Handler.Create(difficultyId, "Beginner", "For beginners", 1, true);
+            var difficulty = DifficultyLevel.Handler.Create(difficultyId, "Beginner", "For beginners", 1, true).Value;
             var exercise = CreateTestExercise("To Delete", difficultyId, difficulty);
 
             _mockExerciseRepository
@@ -412,7 +412,7 @@ namespace GetFitterGetBigger.API.Tests.Services
                 .Build();
 
             var difficultyId = DifficultyLevelId.New();
-            var difficulty = DifficultyLevel.Handler.Create(difficultyId, "Beginner", "For beginners", 1, true);
+            var difficulty = DifficultyLevel.Handler.Create(difficultyId, "Beginner", "For beginners", 1, true).Value;
             var createdExercise = CreateTestExercise("Workout Exercise", difficultyId, difficulty);
 
             _mockExerciseRepository
@@ -452,7 +452,7 @@ namespace GetFitterGetBigger.API.Tests.Services
                 .Build();
 
             var difficultyId = DifficultyLevelId.New();
-            var difficulty = DifficultyLevel.Handler.Create(difficultyId, "Beginner", "For beginners", 1, true);
+            var difficulty = DifficultyLevel.Handler.Create(difficultyId, "Beginner", "For beginners", 1, true).Value;
             var existingExercise = CreateTestExercise("Rest Exercise", difficultyId, difficulty);
 
             _mockExerciseRepository
@@ -494,7 +494,7 @@ namespace GetFitterGetBigger.API.Tests.Services
                 .Build();
 
             var difficultyId = DifficultyLevelId.New();
-            var difficulty = DifficultyLevel.Handler.Create(difficultyId, "Beginner", "For beginners", 1, true);
+            var difficulty = DifficultyLevel.Handler.Create(difficultyId, "Beginner", "For beginners", 1, true).Value;
             var existingExercise = CreateTestExercise("Workout Exercise", difficultyId, difficulty);
 
             _mockExerciseRepository

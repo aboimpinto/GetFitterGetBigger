@@ -31,7 +31,7 @@ namespace GetFitterGetBigger.API.Tests.Repositories
             // Arrange
             var difficultyId = DifficultyLevelId.New();
             var difficulty = DifficultyLevel.Handler.Create(
-                difficultyId, "Intermediate", "For intermediate users", 2, true);
+                difficultyId, "Intermediate", "For intermediate users", 2, true).Value;
             _context.DifficultyLevels.Add(difficulty);
 
             var kineticChainId = KineticChainTypeId.New();
@@ -73,7 +73,7 @@ namespace GetFitterGetBigger.API.Tests.Repositories
             // Arrange
             var difficultyId = DifficultyLevelId.New();
             var difficulty = DifficultyLevel.Handler.Create(
-                difficultyId, "Beginner", "For beginners", 1, true);
+                difficultyId, "Beginner", "For beginners", 1, true).Value;
             _context.DifficultyLevels.Add(difficulty);
             await _context.SaveChangesAsync();
 

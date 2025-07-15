@@ -27,12 +27,15 @@ Feature: Difficulty Levels Reference Data
   Scenario: Get difficulty level by invalid ID format returns bad request
     When I send a GET request to "/api/ReferenceTables/DifficultyLevels/8a8adb1d-24d2-4979-a5a6-0d760e6da24b"
     Then the response status should be 400
-    And the response should contain "Invalid ID format"
-    And the response should contain "Expected format: 'difficultylevel-{guid}'"
+
+  @reference-data @validation
+  Scenario: Get difficulty level by empty GUID returns bad request
+    When I send a GET request to "/api/ReferenceTables/DifficultyLevels/difficultylevel-00000000-0000-0000-0000-000000000000"
+    Then the response status should be 400
 
   @reference-data @validation
   Scenario: Get difficulty level by non-existent ID returns not found
-    When I send a GET request to "/api/ReferenceTables/DifficultyLevels/difficultylevel-00000000-0000-0000-0000-000000000000"
+    When I send a GET request to "/api/ReferenceTables/DifficultyLevels/difficultylevel-11111111-1111-1111-1111-111111111111"
     Then the response status should be 404
 
   @reference-data

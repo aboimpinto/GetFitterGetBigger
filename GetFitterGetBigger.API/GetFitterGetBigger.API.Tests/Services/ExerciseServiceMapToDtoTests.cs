@@ -64,7 +64,7 @@ public class ExerciseServiceMapToDtoTests
         var difficultyId = DifficultyLevelId.New();
         var kineticChainId = KineticChainTypeId.New();
         
-        var difficulty = DifficultyLevel.Handler.Create(difficultyId, "Intermediate", "Medium difficulty", 3);
+        var difficulty = DifficultyLevel.Handler.Create(difficultyId, "Intermediate", "Medium difficulty", 3).Value;
         var kineticChain = KineticChainType.Handler.Create(kineticChainId, "Open Chain", "Open kinetic chain movement", 1);
         
         var exercise = Exercise.Handler.CreateNew(
@@ -101,7 +101,7 @@ public class ExerciseServiceMapToDtoTests
         var exerciseId = ExerciseId.New();
         var difficultyId = DifficultyLevelId.New();
         
-        var difficulty = DifficultyLevel.Handler.Create(difficultyId, "Beginner", "Easy difficulty", 1);
+        var difficulty = DifficultyLevel.Handler.Create(difficultyId, "Beginner", "Easy difficulty", 1).Value;
         
         var exercise = Exercise.Handler.CreateNew(
             "Rest Exercise",
