@@ -14,6 +14,8 @@ using Microsoft.Extensions.Logging;
 using Moq;
 using Olimpo.EntityFramework.Persistency;
 using Xunit;
+using GetFitterGetBigger.API.Tests.TestConstants;
+using GetFitterGetBigger.API.Tests.TestBuilders;
 
 namespace GetFitterGetBigger.API.Tests.Services
 {
@@ -56,15 +58,15 @@ namespace GetFitterGetBigger.API.Tests.Services
             {
                 MovementPattern.Handler.Create(
                     MovementPatternId.New(),
-                    "Horizontal Push",
-                    "Pushing forward",
-                    1,
+                    MovementPatternTestConstants.HorizontalPushName,
+                    MovementPatternTestConstants.PushingForwardDescription,
+                    MovementPatternTestConstants.TestDisplayOrder,
                     true).Value,
                 MovementPattern.Handler.Create(
                     MovementPatternId.New(),
-                    "Vertical Pull",
-                    "Pulling downward",
-                    2,
+                    MovementPatternTestConstants.VerticalPullName,
+                    MovementPatternTestConstants.PullingDownwardDescription,
+                    MovementPatternTestConstants.UpdatedDisplayOrder,
                     true).Value
             };
 
@@ -98,8 +100,8 @@ namespace GetFitterGetBigger.API.Tests.Services
             // Arrange
             var cachedDtos = new List<ReferenceDataDto>
             {
-                new() { Id = "movementpattern-123", Value = "Horizontal Push", Description = "Pushing forward" },
-                new() { Id = "movementpattern-456", Value = "Vertical Pull", Description = "Pulling downward" }
+                new() { Id = TestIds.MovementPatternIds.Push, Value = MovementPatternTestConstants.HorizontalPushName, Description = MovementPatternTestConstants.PushingForwardDescription },
+                new() { Id = TestIds.MovementPatternIds.Pull, Value = MovementPatternTestConstants.VerticalPullName, Description = MovementPatternTestConstants.PullingDownwardDescription }
             };
 
             _mockCacheService
@@ -128,9 +130,9 @@ namespace GetFitterGetBigger.API.Tests.Services
             var movementPatternId = MovementPatternId.New();
             var movementPattern = MovementPattern.Handler.Create(
                 movementPatternId,
-                "Horizontal Push",
-                "Pushing forward",
-                1,
+                MovementPatternTestConstants.HorizontalPushName,
+                MovementPatternTestConstants.PushingForwardDescription,
+                MovementPatternTestConstants.TestDisplayOrder,
                 true).Value;
 
             _mockCacheService
@@ -147,8 +149,8 @@ namespace GetFitterGetBigger.API.Tests.Services
             // Assert
             Assert.True(result.IsSuccess);
             Assert.NotNull(result.Data);
-            Assert.Equal("Horizontal Push", result.Data.Value);
-            Assert.Equal("Pushing forward", result.Data.Description);
+            Assert.Equal(MovementPatternTestConstants.HorizontalPushName, result.Data.Value);
+            Assert.Equal(MovementPatternTestConstants.PushingForwardDescription, result.Data.Description);
             
             _mockMovementPatternRepository.Verify(x => x.GetByIdAsync(movementPatternId), Times.Once);
         }
@@ -176,7 +178,7 @@ namespace GetFitterGetBigger.API.Tests.Services
         public async Task GetByIdAsync_WithEmptyString_ReturnsValidationFailure()
         {
             // Arrange
-            var emptyId = "";
+            var emptyId = MovementPatternTestConstants.EmptyString;
             // Note: The service only validates for null/empty. Format validation 
             // is handled by the controller and MovementPatternId.ParseOrEmpty()
 
@@ -212,12 +214,12 @@ namespace GetFitterGetBigger.API.Tests.Services
         public async Task GetByValueAsync_WithValidValue_ReturnsMovementPattern()
         {
             // Arrange
-            var value = "Horizontal Push";
+            var value = MovementPatternTestConstants.HorizontalPushName;
             var movementPattern = MovementPattern.Handler.Create(
                 MovementPatternId.New(),
                 value,
-                "Pushing forward",
-                1,
+                MovementPatternTestConstants.PushingForwardDescription,
+                MovementPatternTestConstants.TestDisplayOrder,
                 true).Value;
 
             _mockCacheService
@@ -243,7 +245,7 @@ namespace GetFitterGetBigger.API.Tests.Services
         public async Task GetByValueAsync_WithEmptyValue_ReturnsFailure()
         {
             // Act
-            var result = await _movementPatternService.GetByValueAsync("");
+            var result = await _movementPatternService.GetByValueAsync(MovementPatternTestConstants.EmptyString);
 
             // Assert
             Assert.False(result.IsSuccess);
@@ -281,9 +283,9 @@ namespace GetFitterGetBigger.API.Tests.Services
             var movementPatternId = MovementPatternId.New();
             var movementPattern = MovementPattern.Handler.Create(
                 movementPatternId,
-                "Horizontal Push",
-                "Pushing forward",
-                1,
+                MovementPatternTestConstants.HorizontalPushName,
+                MovementPatternTestConstants.PushingForwardDescription,
+                MovementPatternTestConstants.TestDisplayOrder,
                 true).Value;
 
             _mockCacheService
@@ -330,9 +332,9 @@ namespace GetFitterGetBigger.API.Tests.Services
             var stringId = movementPatternId.ToString();
             var movementPattern = MovementPattern.Handler.Create(
                 movementPatternId,
-                "Horizontal Push",
-                "Pushing forward",
-                1,
+                MovementPatternTestConstants.HorizontalPushName,
+                MovementPatternTestConstants.PushingForwardDescription,
+                MovementPatternTestConstants.TestDisplayOrder,
                 true).Value;
 
             _mockCacheService
@@ -354,7 +356,7 @@ namespace GetFitterGetBigger.API.Tests.Services
         public async Task ExistsAsync_WithNonEmptyInvalidFormat_ReturnsFalse()
         {
             // Arrange
-            var invalidFormatId = "invalid-id";
+            var invalidFormatId = MovementPatternTestConstants.InvalidFormatId;
             // Note: Service allows any non-empty string to pass validation.
             // MovementPatternId.ParseOrEmpty() will convert this to Empty,
             // causing ExistsAsync to return false.

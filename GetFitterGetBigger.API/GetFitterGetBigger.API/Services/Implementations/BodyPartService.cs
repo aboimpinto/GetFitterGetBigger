@@ -129,7 +129,7 @@ public class BodyPartService : EmptyEnabledPureReferenceService<BodyPart, BodyPa
         // this should validate the string format
         if (string.IsNullOrWhiteSpace(id))
         {
-            return ValidationResult.Failure("ID cannot be empty");
+            return ValidationResult.Failure(BodyPartErrorMessages.IdCannotBeEmpty);
         }
         
         // No additional validation - let the controller handle format validation

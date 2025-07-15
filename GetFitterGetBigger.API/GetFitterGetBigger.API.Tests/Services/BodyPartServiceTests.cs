@@ -10,6 +10,7 @@ using GetFitterGetBigger.API.Repositories.Interfaces;
 using GetFitterGetBigger.API.Services.Implementations;
 using GetFitterGetBigger.API.Services.Interfaces;
 using GetFitterGetBigger.API.Services.Results;
+using GetFitterGetBigger.API.Tests.TestConstants;
 using Microsoft.Extensions.Logging;
 using Moq;
 using Olimpo.EntityFramework.Persistency;
@@ -264,7 +265,7 @@ namespace GetFitterGetBigger.API.Tests.Services
             Assert.False(result.IsSuccess);
             Assert.NotNull(result.Data);
             Assert.Equal(ServiceErrorCode.ValidationFailed, result.PrimaryErrorCode);
-            Assert.Contains("ID cannot be empty", result.Errors);
+            Assert.Contains(BodyPartErrorMessages.IdCannotBeEmpty, result.Errors);
             _mockBodyPartRepository.Verify(x => x.GetByIdAsync(It.IsAny<BodyPartId>()), Times.Never);
         }
 
@@ -281,7 +282,7 @@ namespace GetFitterGetBigger.API.Tests.Services
             Assert.False(result.IsSuccess);
             Assert.NotNull(result.Data);
             Assert.Equal(ServiceErrorCode.ValidationFailed, result.PrimaryErrorCode);
-            Assert.Contains("ID cannot be empty", result.Errors);
+            Assert.Contains(BodyPartErrorMessages.IdCannotBeEmpty, result.Errors);
             _mockBodyPartRepository.Verify(x => x.GetByIdAsync(It.IsAny<BodyPartId>()), Times.Never);
         }
 
@@ -312,7 +313,7 @@ namespace GetFitterGetBigger.API.Tests.Services
             Assert.False(result.IsSuccess);
             Assert.NotNull(result.Data);
             Assert.NotEmpty(result.Errors);
-            Assert.Contains("not found", result.Errors[0]);
+            Assert.Contains(BodyPartTestConstants.NotFoundPartialMessage, result.Errors[0]);
             _mockBodyPartRepository.Verify(x => x.GetByIdAsync(bodyPartId), Times.Once);
         }
 
@@ -372,7 +373,7 @@ namespace GetFitterGetBigger.API.Tests.Services
             Assert.False(result.IsSuccess);
             Assert.NotNull(result.Data);
             Assert.NotEmpty(result.Errors);
-            Assert.Contains("not found", result.Errors[0]);
+            Assert.Contains(BodyPartTestConstants.NotFoundPartialMessage, result.Errors[0]);
         }
 
         [Fact]
@@ -402,7 +403,7 @@ namespace GetFitterGetBigger.API.Tests.Services
             Assert.False(result.IsSuccess);
             Assert.NotNull(result.Data);
             Assert.NotEmpty(result.Errors);
-            Assert.Contains("not found", result.Errors[0]);
+            Assert.Contains(BodyPartTestConstants.NotFoundPartialMessage, result.Errors[0]);
             _mockBodyPartRepository.Verify(x => x.GetByValueAsync(value), Times.Once);
         }
     }

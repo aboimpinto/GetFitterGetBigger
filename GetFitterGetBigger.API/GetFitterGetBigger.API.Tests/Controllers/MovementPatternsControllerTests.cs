@@ -11,6 +11,8 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Moq;
 using Xunit;
+using GetFitterGetBigger.API.Tests.TestConstants;
+using GetFitterGetBigger.API.Tests.TestBuilders;
 
 namespace GetFitterGetBigger.API.Tests.Controllers
 {
@@ -35,8 +37,8 @@ namespace GetFitterGetBigger.API.Tests.Controllers
             // Arrange
             var movementPatterns = new List<ReferenceDataDto>
             {
-                new() { Id = "movementpattern-123", Value = "Horizontal Push", Description = "Pushing forward" },
-                new() { Id = "movementpattern-456", Value = "Vertical Pull", Description = "Pulling downward" }
+                new() { Id = TestIds.MovementPatternIds.Push, Value = MovementPatternTestConstants.HorizontalPushName, Description = MovementPatternTestConstants.PushingForwardDescription },
+                new() { Id = TestIds.MovementPatternIds.Pull, Value = MovementPatternTestConstants.VerticalPullName, Description = MovementPatternTestConstants.PullingDownwardDescription }
             };
             var serviceResult = ServiceResult<IEnumerable<ReferenceDataDto>>.Success(movementPatterns);
 
@@ -58,12 +60,12 @@ namespace GetFitterGetBigger.API.Tests.Controllers
         public async Task GetById_WithValidId_ReturnsOkWithMovementPattern()
         {
             // Arrange
-            var id = "movementpattern-12345678-1234-1234-1234-123456789012";
+            var id = TestIds.MovementPatternIds.Push;
             var movementPattern = new ReferenceDataDto
             {
                 Id = id,
-                Value = "Horizontal Push",
-                Description = "Pushing forward"
+                Value = MovementPatternTestConstants.HorizontalPushName,
+                Description = MovementPatternTestConstants.PushingForwardDescription
             };
             var serviceResult = ServiceResult<ReferenceDataDto>.Success(movementPattern);
 
@@ -78,7 +80,7 @@ namespace GetFitterGetBigger.API.Tests.Controllers
             var okResult = Assert.IsType<OkObjectResult>(result);
             var returnedMovementPattern = Assert.IsType<ReferenceDataDto>(okResult.Value);
             Assert.Equal(id, returnedMovementPattern.Id);
-            Assert.Equal("Horizontal Push", returnedMovementPattern.Value);
+            Assert.Equal(MovementPatternTestConstants.HorizontalPushName, returnedMovementPattern.Value);
             _mockMovementPatternService.Verify(x => x.GetByIdAsync(It.IsAny<MovementPatternId>()), Times.Once);
         }
 
@@ -86,7 +88,7 @@ namespace GetFitterGetBigger.API.Tests.Controllers
         public async Task GetById_WithInvalidIdFormat_ReturnsBadRequest()
         {
             // Arrange
-            var invalidId = "invalid-id-format";
+            var invalidId = MovementPatternTestConstants.InvalidFormatId;
             var dto = new ReferenceDataDto();
             _mockMovementPatternService
                 .Setup(x => x.GetByIdAsync(It.IsAny<MovementPatternId>()))
@@ -107,7 +109,7 @@ namespace GetFitterGetBigger.API.Tests.Controllers
         public async Task GetById_WhenNotFound_ReturnsNotFound()
         {
             // Arrange
-            var id = "movementpattern-12345678-1234-1234-1234-123456789012";
+            var id = MovementPatternTestConstants.NonExistentId;
             var serviceResult = ServiceResult<ReferenceDataDto>.Failure(
                 new ReferenceDataDto(),
                 ServiceError.NotFound(MovementPatternErrorMessages.NotFound));
@@ -128,12 +130,12 @@ namespace GetFitterGetBigger.API.Tests.Controllers
         public async Task GetByName_WithValidName_ReturnsOkWithMovementPattern()
         {
             // Arrange
-            var name = "Horizontal Push";
+            var name = MovementPatternTestConstants.HorizontalPushName;
             var movementPattern = new ReferenceDataDto
             {
-                Id = "movementpattern-123",
+                Id = TestIds.MovementPatternIds.Push,
                 Value = name,
-                Description = "Pushing forward"
+                Description = MovementPatternTestConstants.PushingForwardDescription
             };
             var serviceResult = ServiceResult<ReferenceDataDto>.Success(movementPattern);
 
@@ -176,12 +178,12 @@ namespace GetFitterGetBigger.API.Tests.Controllers
         public async Task GetByValue_WithValidValue_ReturnsOkWithMovementPattern()
         {
             // Arrange
-            var value = "Vertical Pull";
+            var value = MovementPatternTestConstants.VerticalPullName;
             var movementPattern = new ReferenceDataDto
             {
-                Id = "movementpattern-456",
+                Id = TestIds.MovementPatternIds.Pull,
                 Value = value,
-                Description = "Pulling downward"
+                Description = MovementPatternTestConstants.PullingDownwardDescription
             };
             var serviceResult = ServiceResult<ReferenceDataDto>.Success(movementPattern);
 
