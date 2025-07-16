@@ -146,35 +146,143 @@ public interface IEmptyEnabledCacheService : ICacheService
 
 ---
 
-## 📊 Code Review Checklist
+## 🏗️ Architecture Standards
 
-Before submitting ANY code, verify:
+### 1. **Domain-Driven Design (DDD) Principles**
+- **Clean Architecture**: Strict layer separation (Controllers → Services → Repositories → Database)
+- **Dependency Rules**: Dependencies flow inward only (outer layers depend on inner)
+- **No Cross-Layer Violations**: Controllers never access repositories directly
+- **Business Logic Location**: All business logic in service layer, NOT in controllers or repositories
 
-### ✅ Pattern Matching
+### 2. **Service Layer Standards**
+```csharp
+// ✅ GOOD - ServiceResult pattern for all service methods
+public async Task<ServiceResult<EntityDto>> GetByIdAsync(string id)
+{
+    return id.IsEmpty 
+        ? ServiceResult<EntityDto>.Failure(ServiceErrorCode.ValidationFailed, "Invalid ID")
+        : await base.GetByIdAsync(id);
+}
+
+// ❌ BAD - Throwing exceptions for control flow
+public async Task<EntityDto> GetByIdAsync(string id)
+{
+    if (string.IsNullOrEmpty(id))
+        throw new ArgumentException("Invalid ID");
+    return await base.GetByIdAsync(id);
+}
+```
+
+### 3. **Repository Pattern Standards**
+- **ReadOnlyUnitOfWork**: For ALL query operations (no SaveChanges)
+- **WritableUnitOfWork**: ONLY for Create/Update/Delete operations
+- **No Business Logic**: Repositories are data access only
+- **Pattern Consistency**: All repositories follow same base patterns
+
+### 4. **Controller Standards**
+- **Clean Pass-Through**: Controllers only orchestrate, no business logic
+- **Pattern Matching**: Use pattern matching for ServiceResult handling
+- **HTTP Status Codes**: Consistent mapping (200/201/400/404/500)
+- **No Direct Database Access**: Never inject repositories or UnitOfWork
+
+---
+
+## 📊 Comprehensive Code Review Checklist
+
+### ✅ Architecture & Design Patterns
+- [ ] **Layer Separation**: No cross-layer dependencies
+- [ ] **DDD Compliance**: Domain logic properly encapsulated
+- [ ] **SOLID Principles**: Single responsibility, dependency inversion
+- [ ] **Repository Pattern**: Correct UnitOfWork usage (ReadOnly vs Writable)
+- [ ] **Service Pattern**: All methods return ServiceResult<T>
+- [ ] **Controller Pattern**: Clean pass-through, no business logic
+
+### ✅ Pattern Matching & Modern C#
 - [ ] All conditional returns use switch expressions where applicable
 - [ ] No if-else chains that could be pattern matches
 - [ ] Tuple deconstruction used where appropriate
+- [ ] Target-typed new expressions used
+- [ ] Record types for DTOs where applicable
 
-### ✅ Empty Pattern
+### ✅ Empty/Null Object Pattern
 - [ ] No methods return null (except legacy/obsolete)
 - [ ] All entities implement IEmptyEntity<T>
 - [ ] IsEmpty checks instead of null checks
+- [ ] Empty static property on all entities
+- [ ] No null propagation operators (?.) except in DTOs
 
-### ✅ Method Quality
+### ✅ Method Quality & Complexity
 - [ ] Methods are < 20 lines
 - [ ] Single responsibility per method
 - [ ] Clear, descriptive names
 - [ ] No fake async
+- [ ] Cyclomatic complexity < 10
+- [ ] No deeply nested code (max 3 levels)
 
-### ✅ Error Handling
+### ✅ Error Handling & Exceptions
 - [ ] No unnecessary try-catch blocks
 - [ ] Only catch exceptions for external resources
 - [ ] Let framework handle validation
+- [ ] No exceptions for control flow
+- [ ] ServiceResult pattern for error propagation
+- [ ] Proper error codes (ServiceErrorCode enum)
 
-### ✅ Documentation
+### ✅ Performance & Efficiency
+- [ ] **Caching Strategy**: Proper cache implementation for reference data
+- [ ] **Async Patterns**: No blocking async calls (.Result, .Wait())
+- [ ] **Database Queries**: Efficient queries, no N+1 problems
+- [ ] **Memory Usage**: No unnecessary object allocations
+- [ ] **Lazy Loading**: Disabled to prevent performance issues
+
+### ✅ Security Standards
+- [ ] **Input Validation**: All inputs validated at service layer
+- [ ] **SQL Injection**: No raw SQL, use EF Core properly
+- [ ] **Authorization**: Proper claim checks in controllers
+- [ ] **Sensitive Data**: No logging of sensitive information
+- [ ] **CORS**: Properly configured if applicable
+
+### ✅ Testing Standards
+- [ ] **Unit Tests**: Everything mocked, test single units
+- [ ] **Integration Tests**: BDD scenarios, real database
+- [ ] **Test Separation**: Unit in API.Tests, Integration in API.IntegrationTests
+- [ ] **No Magic Strings**: Use constants or builders in tests
+- [ ] **Test Coverage**: Critical paths covered
+- [ ] **Test Naming**: Clear Given_When_Then pattern
+
+### ✅ Documentation & Maintainability
 - [ ] XML comments on all public methods
 - [ ] Remarks for non-obvious design decisions
 - [ ] Obsolete attributes with migration guidance
+- [ ] Clear variable and method names
+- [ ] No commented-out code
+- [ ] README updates if needed
+
+### ✅ Code Consistency
+- [ ] **Naming Conventions**: PascalCase, camelCase properly used
+- [ ] **File Organization**: One class per file
+- [ ] **Namespace Structure**: Matches folder structure
+- [ ] **Code Formatting**: Consistent indentation and spacing
+- [ ] **Import Organization**: System imports first, then project
+
+### ✅ Dependency Injection
+- [ ] **Service Registration**: Proper lifetime (Scoped/Singleton/Transient)
+- [ ] **Interface Segregation**: Small, focused interfaces
+- [ ] **No Service Locator**: Constructor injection only
+- [ ] **Circular Dependencies**: None present
+
+### ✅ Database & EF Core
+- [ ] **Migrations**: Clean, reversible migrations
+- [ ] **Seed Data**: Proper seed data for reference tables
+- [ ] **Entity Configuration**: Fluent API over attributes
+- [ ] **Navigation Properties**: Properly configured
+- [ ] **Indexes**: Added for frequently queried fields
+
+### ✅ API Design
+- [ ] **RESTful Conventions**: Proper HTTP verbs and routes
+- [ ] **API Versioning**: Considered if breaking changes
+- [ ] **OpenAPI/Swagger**: Properly documented endpoints
+- [ ] **Request/Response DTOs**: Separate from domain models
+- [ ] **Consistent Error Responses**: Standard error format
 
 ---
 

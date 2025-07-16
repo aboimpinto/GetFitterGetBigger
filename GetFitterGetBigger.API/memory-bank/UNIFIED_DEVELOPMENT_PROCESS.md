@@ -98,19 +98,24 @@ Admin/Clients Need → API Feature Request → API Implementation → UI Impleme
 
 ### Phase 4: Quality Assurance
 1. **MANDATORY**: All automated tests must pass (100% green)
-2. **MANDATORY**: Manual testing by user
-3. **MANDATORY**: Code review
-4. Create four completion reports
-5. Calculate time metrics and AI impact
+2. **MANDATORY**: Code review for each category (APPROVED status)
+3. **MANDATORY**: Final overall code review (use FINAL-CODE-REVIEW-TEMPLATE.md)
+4. **MANDATORY**: Manual testing by user
+5. Create four completion reports
+6. Calculate time metrics and AI impact
 
 ### Phase 5: Completion (3-COMPLETED)
-**⚠️ ONLY after explicit user acceptance! ⚠️**
+**⚠️ ONLY after explicit user acceptance AND final code review approval! ⚠️**
 
-1. User provides explicit acceptance ("tests passed", "feature accepted")
-2. Update completion reports with acceptance details
-3. Move folder to `3-COMPLETED`
-4. Update feature tracking documents
-5. Prepare for release
+1. Final code review must be:
+   - **APPROVED**: Can proceed directly
+   - **APPROVED_WITH_NOTES**: Requires user approval
+   - **REQUIRES_CHANGES**: Must fix and re-review
+2. User provides explicit acceptance ("tests passed", "feature accepted")
+3. Update completion reports with acceptance details
+4. Move folder to `3-COMPLETED`
+5. Update feature tracking documents
+6. Prepare for release
 
 ## Baseline Health Check (MANDATORY)
 
@@ -156,11 +161,12 @@ Document results in feature-tasks.md:
 5. `[Skipped]` - Not needed
 
 ### Checkpoint Requirements
-After EVERY task:
+After EVERY category:
 - ✅ Code compiles without errors
 - ✅ All tests pass (no failures, no skips)
 - ✅ Build warnings at baseline level or better (BOY SCOUT RULE)
 - ✅ Feature remains functional
+- ✅ Code review APPROVED (use CODE-REVIEW-TEMPLATE.md)
 
 ## Manual Testing Policy
 
@@ -203,6 +209,70 @@ Duration: Xh Ym (e.g., "2h 30m", "0h 45m")
 ```
 AI Impact = ((Estimated - Actual) / Estimated) × 100%
 ```
+
+## Code Review Standards
+
+### When Code Reviews Are Required
+1. **Category Completion**: After each category in feature-tasks.md
+2. **Bug Fixes**: After implementation, before testing
+3. **Final Review**: Before moving feature to COMPLETED
+
+### Code Review Process
+
+#### Category Reviews
+1. Use `CODE-REVIEW-TEMPLATE.md` for each category
+2. Store in `/2-IN_PROGRESS/FEAT-XXX/code-reviews/Category_X/`
+3. File naming: `Code-Review-Category-X-YYYY-MM-DD-HH-MM-{STATUS}.md`
+4. Review all files created/modified in that category
+5. Check compliance with `CODE_QUALITY_STANDARDS.md`
+
+#### Final Overall Review
+1. Use `FINAL-CODE-REVIEW-TEMPLATE.md`
+2. Store in `/2-IN_PROGRESS/FEAT-XXX/code-reviews/`
+3. File naming: `Final-Code-Review-YYYY-MM-DD-HH-MM-{STATUS}.md`
+4. Combine all category reviews
+5. Scan entire feature against quality standards
+6. Verify no technical debt accumulation
+
+### Review Outcomes and Actions
+
+#### APPROVED ✅
+- All critical checks passed
+- No blocking issues
+- Can proceed to next phase
+
+#### APPROVED_WITH_NOTES ⚠️
+- Minor issues documented
+- Not blocking progress
+- For final review: requires user approval to proceed
+- Document issues for future cleanup
+
+#### REQUIRES_CHANGES ❌
+- Critical issues found
+- Must fix before proceeding
+- Create new review after fixes
+- Cannot move to next category/phase
+
+### Code Review Storage Structure
+```
+2-IN_PROGRESS/FEAT-XXX/code-reviews/
+├── Category_1/
+│   ├── Code-Review-Category-1-2025-01-16-09-00-REQUIRES_CHANGES.md
+│   └── Code-Review-Category-1-2025-01-16-10-00-APPROVED.md
+├── Category_2/
+│   └── Code-Review-Category-2-2025-01-16-14-00-APPROVED.md
+├── Category_3/
+│   └── Code-Review-Category-3-2025-01-16-16-00-APPROVED_WITH_NOTES.md
+└── Final-Code-Review-2025-01-16-18-00-APPROVED.md
+```
+
+### Review Focus Areas
+1. **Architecture Compliance**: Layer separation, DDD principles
+2. **Pattern Consistency**: Empty pattern, ServiceResult pattern
+3. **Code Quality**: No nulls, pattern matching, method length
+4. **Testing Standards**: Proper separation, no magic strings
+5. **Performance & Security**: Caching, validation, no SQL injection
+6. **Documentation**: XML comments, clear naming
 
 ## Cross-Project Coordination
 

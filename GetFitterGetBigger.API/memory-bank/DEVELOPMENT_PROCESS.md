@@ -78,6 +78,7 @@ dotnet clean && dotnet test     # Run ALL tests (not just new ones)
 - ✅ Build must succeed (zero errors)
 - ✅ ALL tests must pass (100% pass rate)
 - ✅ **BOY SCOUT RULE: ZERO warnings** - If you start with 0 warnings, maintain 0 warnings!
+- ✅ **Code Review APPROVED** - Must have approved code review for the category
 
 #### 🛑 CHECKPOINT PAUSE BEHAVIOR
 **DEFAULT BEHAVIOR**: AI Assistant MUST STOP after each successful checkpoint!
@@ -90,6 +91,28 @@ dotnet clean && dotnet test     # Run ALL tests (not just new ones)
 - The AI assistant will then continue through all categories without pausing
 - This should only be used when you're confident in the implementation flow
 
+#### 📝 Code Review Process
+**After completing a category's implementation**:
+1. **CREATE** code review using `CODE-REVIEW-TEMPLATE.md`
+2. **SAVE** in `/2-IN_PROGRESS/FEAT-XXX/code-reviews/Category_X/`
+3. **NAME** as `Code-Review-Category-X-YYYY-MM-DD-HH-MM-{STATUS}.md`
+4. **REVIEW** all files created/modified in the category
+5. **UPDATE** status based on findings:
+   - **APPROVED**: Can proceed to next category
+   - **APPROVED_WITH_NOTES**: Can proceed, but document issues for later
+   - **REQUIRES_CHANGES**: Must fix and create new review
+
+**Code Review Storage Structure**:
+```
+2-IN_PROGRESS/FEAT-XXX/code-reviews/
+├── Category_1/
+│   ├── Code-Review-Category-1-2025-01-16-10-00-REQUIRES_CHANGES.md
+│   └── Code-Review-Category-1-2025-01-16-11-00-APPROVED.md
+├── Category_2/
+│   └── Code-Review-Category-2-2025-01-16-14-00-APPROVED.md
+└── Final-Code-Review-2025-01-16-18-00-APPROVED.md
+```
+
 #### 🚨 Checkpoint Failure Protocol
 **If ANY checkpoint fails**:
 1. **STOP** - Do NOT proceed to next category
@@ -97,6 +120,7 @@ dotnet clean && dotnet test     # Run ALL tests (not just new ones)
 3. **FIX** all issues before continuing
 4. **RE-RUN** checkpoint to verify fixes
 5. **UPDATE** checkpoint status to ✅ PASSED
+6. **CREATE** new code review if code was changed
 
 **Checkpoint Status Types**:
 - 🛑 **PENDING** - Not yet run
@@ -122,13 +146,25 @@ When creating a fix task, use this format:
 
 ### When Completing a Feature
 
-#### Step 1: Final Testing
+#### Step 1: Final Code Review
+**📖 Use**: `FINAL-CODE-REVIEW-TEMPLATE.md`
+- **MANDATORY**: Complete final overall code review
+- **COMBINE**: Summary of all category reviews
+- **SCAN**: All files against CODE_QUALITY_STANDARDS.md
+- **SAVE**: As `Final-Code-Review-YYYY-MM-DD-HH-MM-{STATUS}.md` in `/code-reviews/`
+
+**Final Review Outcomes**:
+- **APPROVED** ✅: Can move directly to COMPLETED
+- **APPROVED_WITH_NOTES** ⚠️: Requires user approval to proceed
+- **REQUIRES_CHANGES** ❌: Must fix all issues and create new final review
+
+#### Step 2: Final Testing
 **📖 Use**: `UNIFIED_DEVELOPMENT_PROCESS.md` - "Manual Testing Policy"
 - **MANDATORY**: Manual testing by user
 - Provide test scenarios
 - Wait for explicit acceptance
 
-#### Step 2: Create Completion Reports
+#### Step 3: Create Completion Reports
 **📖 Use**: `FEATURE_WORKFLOW_PROCESS.md` - "Completion Report Templates"
 Create these four MANDATORY reports:
 1. `COMPLETION-REPORT.md`
@@ -136,8 +172,9 @@ Create these four MANDATORY reports:
 3. `LESSONS-LEARNED.md`
 4. `QUICK-REFERENCE.md`
 
-#### Step 3: Move to Completed
+#### Step 4: Move to Completed
 **📖 Use**: `FEATURE_WORKFLOW_PROCESS.md` - Section "3. Feature Completion"
+- **REQUIRES**: Final code review APPROVED (or APPROVED_WITH_NOTES + user approval)
 - Only after user acceptance
 - Move folder to `3-COMPLETED`
 - Update tracking files
@@ -224,6 +261,9 @@ Create these four MANDATORY reports:
   - If baseline has 0 warnings → maintain 0 warnings
   - If baseline has warnings → reduce them (never increase)
   - Leave the code better than you found it!
+- ✅ **Code Review**: APPROVED status for each category
+  - Use CODE-REVIEW-TEMPLATE.md after each category
+  - Final review before moving to COMPLETED
 
 ### Manual Testing Policy
 **📖 Source**: `UNIFIED_DEVELOPMENT_PROCESS.md` - "Manual Testing Policy"

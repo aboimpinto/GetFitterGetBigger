@@ -97,6 +97,10 @@ When all implementation tasks are done:
    - Ensure all automated tests are green
    - Calculate final time metrics in feature-tasks.md
    - Update all checkboxes to checked [x] in feature-tasks.md
+   - **MANDATORY: Complete final code review** using `FINAL-CODE-REVIEW-TEMPLATE.md`
+     - Store as `Final-Code-Review-YYYY-MM-DD-HH-MM-{STATUS}.md` in `/code-reviews/`
+     - Review must be APPROVED or APPROVED_WITH_NOTES to proceed
+     - If REQUIRES_CHANGES, fix all issues and create new review
    - **MANDATORY: Create four completion reports** (see templates at end of document):
      - `COMPLETION-REPORT.md` - Comprehensive feature summary
      - `TECHNICAL-SUMMARY.md` - Technical implementation details
@@ -117,6 +121,7 @@ When all implementation tasks are done:
 
 **IMPORTANT**: Features CANNOT be moved to COMPLETED if:
 - Any tasks remain in `[ReadyToDevelop]` or `[InProgress]` state
+- Final code review is not APPROVED (or APPROVED_WITH_NOTES + user approval)
 - Completion reports are not created
 - User has not performed manual testing
 - User has not explicitly stated acceptance
