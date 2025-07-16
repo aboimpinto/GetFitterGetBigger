@@ -1,240 +1,140 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using GetFitterGetBigger.API.Constants;
 using GetFitterGetBigger.API.DTOs;
+using GetFitterGetBigger.API.Models;
 using GetFitterGetBigger.API.Models.Entities;
 using GetFitterGetBigger.API.Models.SpecializedIds;
 using GetFitterGetBigger.API.Repositories.Interfaces;
+using GetFitterGetBigger.API.Services.Base;
 using GetFitterGetBigger.API.Services.Interfaces;
-using GetFitterGetBigger.API.Utilities;
+using GetFitterGetBigger.API.Services.Results;
 using Microsoft.Extensions.Logging;
 using Olimpo.EntityFramework.Persistency;
-using GetFitterGetBigger.API.Models;
 
 namespace GetFitterGetBigger.API.Services.Implementations;
 
 /// <summary>
-/// Service implementation for managing workout objectives reference data
+/// Service implementation for workout objective operations
 /// </summary>
-public class WorkoutObjectiveService : IWorkoutObjectiveService
+public class WorkoutObjectiveService : EmptyEnabledPureReferenceService<WorkoutObjective, ReferenceDataDto>, IWorkoutObjectiveService
 {
-    private const string CacheKeyPrefix = "WorkoutObjectives";
-    private static readonly TimeSpan CacheDuration = TimeSpan.FromHours(1);
-    
-    private readonly IUnitOfWorkProvider<FitnessDbContext> _unitOfWorkProvider;
-    private readonly ICacheService _cacheService;
-    private readonly ILogger<WorkoutObjectiveService> _logger;
-    
     public WorkoutObjectiveService(
         IUnitOfWorkProvider<FitnessDbContext> unitOfWorkProvider,
-        ICacheService cacheService,
+        IEmptyEnabledCacheService cacheService,
         ILogger<WorkoutObjectiveService> logger)
+        : base(unitOfWorkProvider, cacheService, logger)
     {
-        _unitOfWorkProvider = unitOfWorkProvider ?? throw new ArgumentNullException(nameof(unitOfWorkProvider));
-        _cacheService = cacheService ?? throw new ArgumentNullException(nameof(cacheService));
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
-    
-    /// <inheritdoc />
-    public async Task<IEnumerable<WorkoutObjective>> GetAllAsync()
+
+    /// <inheritdoc/>
+    public async Task<ServiceResult<IEnumerable<ReferenceDataDto>>> GetAllActiveAsync()
     {
-        var cacheKey = CacheKeyGenerator.GetAllKey(CacheKeyPrefix);
-        var cached = await _cacheService.GetAsync<IEnumerable<WorkoutObjective>>(cacheKey);
-        if (cached != null)
+        return await GetAllAsync();
+    }
+
+    /// <inheritdoc/>
+    public async Task<ServiceResult<ReferenceDataDto>> GetByIdAsync(WorkoutObjectiveId id) => 
+        id.IsEmpty 
+            ? ServiceResult<ReferenceDataDto>.Failure(CreateEmptyDto(), ServiceError.ValidationFailed("Invalid workout objective ID format"))
+            : await GetByIdAsync(id.ToString());
+    
+    /// <inheritdoc/>
+    public async Task<ServiceResult<ReferenceDataDto>> GetByValueAsync(string value) => 
+        string.IsNullOrWhiteSpace(value)
+            ? ServiceResult<ReferenceDataDto>.Failure(CreateEmptyDto(), ServiceError.ValidationFailed(WorkoutObjectiveErrorMessages.ValueCannotBeEmpty))
+            : await GetFromCacheOrLoadAsync(
+                GetValueCacheKey(value),
+                () => LoadByValueAsync(value),
+                value);
+
+    private string GetValueCacheKey(string value) => $"{GetCacheKeyPrefix()}value:{value}";
+    
+    private async Task<ServiceResult<ReferenceDataDto>> GetFromCacheOrLoadAsync(
+        string cacheKey, 
+        Func<Task<WorkoutObjective>> loadFunc,
+        string identifier)
+    {
+        var cacheService = (IEmptyEnabledCacheService)_cacheService;
+        var cacheResult = await cacheService.GetAsync<ReferenceDataDto>(cacheKey);
+        if (cacheResult.IsHit)
         {
-            _logger.LogDebug("Cache hit for key: {CacheKey}", cacheKey);
-            return cached;
+            _logger.LogDebug("Cache hit for {CacheKey}", cacheKey);
+            return ServiceResult<ReferenceDataDto>.Success(cacheResult.Value);
         }
         
+        var entity = await loadFunc();
+        return entity switch
+        {
+            { IsEmpty: true } or { IsActive: false } => ServiceResult<ReferenceDataDto>.Failure(
+                CreateEmptyDto(), 
+                ServiceError.NotFound(WorkoutObjectiveErrorMessages.NotFound, identifier)),
+            _ => await CacheAndReturnSuccessAsync(cacheKey, MapToDto(entity))
+        };
+    }
+    
+    private async Task<ServiceResult<ReferenceDataDto>> CacheAndReturnSuccessAsync(string cacheKey, ReferenceDataDto dto)
+    {
+        await _cacheService.SetAsync(cacheKey, dto, TimeSpan.FromDays(365));
+        return ServiceResult<ReferenceDataDto>.Success(dto);
+    }
+    
+    private async Task<WorkoutObjective> LoadByValueAsync(string value)
+    {
         using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
         var repository = unitOfWork.GetRepository<IWorkoutObjectiveRepository>();
-        var objectives = await repository.GetAllActiveAsync();
-        var objectiveList = objectives.ToList();
-        
-        await _cacheService.SetAsync(cacheKey, objectiveList, CacheDuration);
-        _logger.LogDebug("Cached {Count} workout objectives with key: {CacheKey}", objectiveList.Count, cacheKey);
-        
-        return objectiveList;
+        return await repository.GetByValueAsync(value);
     }
+
+    /// <inheritdoc/>
+    public async Task<bool> ExistsAsync(WorkoutObjectiveId id) => 
+        !id.IsEmpty && (await GetByIdAsync(id)).IsSuccess;
     
-    /// <inheritdoc />
-    public async Task<IEnumerable<ReferenceDataDto>> GetAllAsDtosAsync()
-    {
-        var objectives = await GetAllAsync();
-        return objectives.Select(wo => new ReferenceDataDto
-        {
-            Id = wo.Id.ToString(),
-            Value = wo.Value,
-            Description = wo.Description
-        });
-    }
+    /// <inheritdoc/>
+    public override async Task<bool> ExistsAsync(string id) => 
+        await ExistsAsync(WorkoutObjectiveId.ParseOrEmpty(id));
     
-    /// <inheritdoc />
-    public async Task<IEnumerable<WorkoutObjectiveDto>> GetAllAsWorkoutObjectiveDtosAsync(bool includeInactive = false)
+    protected override async Task<IEnumerable<WorkoutObjective>> LoadAllEntitiesAsync(IReadOnlyUnitOfWork<FitnessDbContext> unitOfWork)
     {
-        var cacheKey = CacheKeyGenerator.GetAllKey($"{CacheKeyPrefix}_{(includeInactive ? "All" : "Active")}");
-        var cached = await _cacheService.GetAsync<IEnumerable<WorkoutObjectiveDto>>(cacheKey);
-        if (cached != null)
-        {
-            _logger.LogDebug("Cache hit for key: {CacheKey}", cacheKey);
-            return cached;
-        }
-        
-        using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
         var repository = unitOfWork.GetRepository<IWorkoutObjectiveRepository>();
-        
-        var objectives = includeInactive 
-            ? await repository.GetAllAsync() 
-            : await repository.GetAllActiveAsync();
-            
-        var dtoList = objectives
-            .OrderBy(wo => wo.DisplayOrder)
-            .Select(wo => new WorkoutObjectiveDto
-            {
-                WorkoutObjectiveId = wo.Id.ToString(),
-                Value = wo.Value,
-                Description = wo.Description,
-                DisplayOrder = wo.DisplayOrder,
-                IsActive = wo.IsActive
-            })
-            .ToList();
-        
-        await _cacheService.SetAsync(cacheKey, dtoList, CacheDuration);
-        _logger.LogDebug("Cached {Count} workout objective DTOs with key: {CacheKey}", dtoList.Count, cacheKey);
-        
-        return dtoList;
+        return await repository.GetAllActiveAsync();
     }
     
-    /// <inheritdoc />
-    public async Task<WorkoutObjective?> GetByIdAsync(WorkoutObjectiveId id)
-    {
-        if (id.IsEmpty)
+    // Returns WorkoutObjective.Empty instead of null (Null Object Pattern)
+    protected override async Task<WorkoutObjective> LoadEntityByIdAsync(IReadOnlyUnitOfWork<FitnessDbContext> unitOfWork, string id) =>
+        WorkoutObjectiveId.ParseOrEmpty(id) switch
         {
-            _logger.LogWarning("Attempted to get workout objective with empty ID");
-            return null;
-        }
-        
-        var cacheKey = CacheKeyGenerator.GetByIdKey(CacheKeyPrefix, id.ToString());
-        var cached = await _cacheService.GetAsync<WorkoutObjective>(cacheKey);
-        if (cached != null)
-        {
-            _logger.LogDebug("Cache hit for key: {CacheKey}", cacheKey);
-            return cached;
-        }
-        
-        using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
-        var repository = unitOfWork.GetRepository<IWorkoutObjectiveRepository>();
-        var objective = await repository.GetByIdAsync(id);
-        
-        if (objective != null && objective.IsActive)
-        {
-            await _cacheService.SetAsync(cacheKey, objective, CacheDuration);
-            _logger.LogDebug("Cached workout objective with key: {CacheKey}", cacheKey);
-        }
-        
-        return objective?.IsActive == true ? objective : null;
-    }
+            { IsEmpty: true } => WorkoutObjective.Empty,
+            var workoutObjectiveId => await unitOfWork.GetRepository<IWorkoutObjectiveRepository>().GetByIdAsync(workoutObjectiveId)
+        };
     
-    /// <inheritdoc />
-    public async Task<ReferenceDataDto?> GetByIdAsDtoAsync(string id)
+    protected override ReferenceDataDto MapToDto(WorkoutObjective entity)
     {
-        var objectiveId = WorkoutObjectiveId.From(id);
-        if (objectiveId.IsEmpty)
-        {
-            _logger.LogWarning("Invalid workout objective ID format: {Id}", id);
-            return null;
-        }
-        
-        var objective = await GetByIdAsync(objectiveId);
-        if (objective == null) return null;
-        
         return new ReferenceDataDto
         {
-            Id = objective.Id.ToString(),
-            Value = objective.Value,
-            Description = objective.Description
+            Id = entity.Id,
+            Value = entity.Value,
+            Description = entity.Description
         };
     }
     
-    /// <inheritdoc />
-    public async Task<WorkoutObjectiveDto?> GetByIdAsWorkoutObjectiveDtoAsync(string id, bool includeInactive = false)
+    protected override ReferenceDataDto CreateEmptyDto()
     {
-        var objectiveId = WorkoutObjectiveId.From(id);
-        if (objectiveId.IsEmpty)
-        {
-            _logger.LogWarning("Invalid workout objective ID format: {Id}", id);
-            return null;
-        }
-        
-        var cacheKey = CacheKeyGenerator.GetByIdKey($"{CacheKeyPrefix}_{(includeInactive ? "All" : "Active")}", id);
-        var cached = await _cacheService.GetAsync<WorkoutObjectiveDto>(cacheKey);
-        if (cached != null)
-        {
-            _logger.LogDebug("Cache hit for key: {CacheKey}", cacheKey);
-            return cached;
-        }
-        
-        using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
-        var repository = unitOfWork.GetRepository<IWorkoutObjectiveRepository>();
-        var objective = await repository.GetByIdAsync(objectiveId);
-        
-        if (objective == null || (!includeInactive && !objective.IsActive))
-        {
-            return null;
-        }
-        
-        var dto = new WorkoutObjectiveDto
-        {
-            WorkoutObjectiveId = objective.Id.ToString(),
-            Value = objective.Value,
-            Description = objective.Description,
-            DisplayOrder = objective.DisplayOrder,
-            IsActive = objective.IsActive
-        };
-        
-        await _cacheService.SetAsync(cacheKey, dto, CacheDuration);
-        _logger.LogDebug("Cached workout objective DTO with key: {CacheKey}", cacheKey);
-        
-        return dto;
+        return new ReferenceDataDto();
     }
     
-    /// <inheritdoc />
-    public async Task<WorkoutObjective?> GetByValueAsync(string value)
+    protected override ValidationResult ValidateAndParseId(string id)
     {
-        if (string.IsNullOrWhiteSpace(value))
+        // This is called by the base class when using the string overload
+        // Since we always use the typed overload from the controller,
+        // this should validate the string format
+        if (string.IsNullOrWhiteSpace(id))
         {
-            _logger.LogWarning("Attempted to get workout objective with empty value");
-            return null;
+            return ValidationResult.Failure(WorkoutObjectiveErrorMessages.IdCannotBeEmpty);
         }
         
-        var cacheKey = CacheKeyGenerator.GetByValueKey(CacheKeyPrefix, value);
-        var cached = await _cacheService.GetAsync<WorkoutObjective>(cacheKey);
-        if (cached != null)
-        {
-            _logger.LogDebug("Cache hit for key: {CacheKey}", cacheKey);
-            return cached;
-        }
+        // No additional validation - let the controller handle format validation
+        // This allows empty GUIDs to pass through and be treated as NotFound
         
-        using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
-        var repository = unitOfWork.GetRepository<IWorkoutObjectiveRepository>();
-        var objective = await repository.GetByValueAsync(value);
-        
-        if (objective != null)
-        {
-            await _cacheService.SetAsync(cacheKey, objective, CacheDuration);
-            _logger.LogDebug("Cached workout objective with key: {CacheKey}", cacheKey);
-        }
-        
-        return objective;
-    }
-    
-    /// <inheritdoc />
-    public async Task<bool> ExistsAsync(WorkoutObjectiveId id)
-    {
-        if (id.IsEmpty) return false;
-        
-        var objective = await GetByIdAsync(id);
-        return objective != null;
+        // Valid format (including empty GUID) - let the database determine if it exists
+        return ValidationResult.Success();
     }
 }

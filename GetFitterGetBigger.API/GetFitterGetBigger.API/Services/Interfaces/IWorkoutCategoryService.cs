@@ -23,13 +23,6 @@ public interface IWorkoutCategoryService
     Task<ServiceResult<WorkoutCategoryDto>> GetByIdAsync(WorkoutCategoryId id);
     
     /// <summary>
-    /// Get workout category by ID string
-    /// </summary>
-    /// <param name="id">The workout category ID as string</param>
-    /// <returns>Service result containing the workout category or error</returns>
-    Task<ServiceResult<WorkoutCategoryDto>> GetByIdAsync(string id);
-    
-    /// <summary>
     /// Get workout category by value
     /// </summary>
     /// <param name="value">The workout category value (case insensitive)</param>

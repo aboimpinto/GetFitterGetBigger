@@ -1,3 +1,4 @@
+using GetFitterGetBigger.API.Constants;
 using GetFitterGetBigger.API.DTOs;
 using GetFitterGetBigger.API.Models;
 using GetFitterGetBigger.API.Models.Entities;
@@ -27,13 +28,13 @@ public class WorkoutCategoryService : EmptyEnabledPureReferenceService<WorkoutCa
     /// <inheritdoc/>
     public async Task<ServiceResult<WorkoutCategoryDto>> GetByIdAsync(WorkoutCategoryId id) => 
         id.IsEmpty 
-            ? ServiceResult<WorkoutCategoryDto>.Failure(CreateEmptyDto(), ServiceError.ValidationFailed("Invalid workout category ID format"))
+            ? ServiceResult<WorkoutCategoryDto>.Failure(CreateEmptyDto(), ServiceError.ValidationFailed(WorkoutCategoryErrorMessages.InvalidIdFormat))
             : await GetByIdAsync(id.ToString());
     
     /// <inheritdoc/>
     public async Task<ServiceResult<WorkoutCategoryDto>> GetByValueAsync(string value) => 
         string.IsNullOrWhiteSpace(value)
-            ? ServiceResult<WorkoutCategoryDto>.Failure(CreateEmptyDto(), ServiceError.ValidationFailed("Value cannot be empty"))
+            ? ServiceResult<WorkoutCategoryDto>.Failure(CreateEmptyDto(), ServiceError.ValidationFailed(WorkoutCategoryErrorMessages.ValueCannotBeEmpty))
             : await GetFromCacheOrLoadAsync(
                 GetValueCacheKey(value),
                 () => LoadByValueAsync(value),
@@ -59,7 +60,7 @@ public class WorkoutCategoryService : EmptyEnabledPureReferenceService<WorkoutCa
         {
             { IsEmpty: true } or { IsActive: false } => ServiceResult<WorkoutCategoryDto>.Failure(
                 CreateEmptyDto(), 
-                ServiceError.NotFound("Workout category not found", identifier)),
+                ServiceError.NotFound(WorkoutCategoryErrorMessages.NotFound, identifier)),
             _ => await CacheAndReturnSuccessAsync(cacheKey, MapToDto(entity))
         };
     }
@@ -133,17 +134,13 @@ public class WorkoutCategoryService : EmptyEnabledPureReferenceService<WorkoutCa
     protected override ValidationResult ValidateAndParseId(string id)
     {
         // This is called by the base class when using the string overload
-        // Since we always use the typed overload from the controller,
-        // this should validate the string format
         if (string.IsNullOrWhiteSpace(id))
         {
-            return ValidationResult.Failure("ID cannot be empty");
+            return ValidationResult.Failure(WorkoutCategoryErrorMessages.IdCannotBeEmpty);
         }
         
-        // No additional validation - let the controller handle format validation
-        // This allows empty GUIDs to pass through and be treated as NotFound
-        
-        // Valid format (including empty GUID) - let the database determine if it exists
+        // Let ParseOrEmpty handle invalid formats, which will convert them to Empty
+        // and be treated as NotFound
         return ValidationResult.Success();
     }
 }
