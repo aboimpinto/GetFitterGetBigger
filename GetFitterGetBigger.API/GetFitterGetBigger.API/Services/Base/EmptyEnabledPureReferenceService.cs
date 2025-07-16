@@ -102,7 +102,8 @@ public abstract class EmptyEnabledPureReferenceService<TEntity, TDto> : EntitySe
     private async Task<ServiceResult<IEnumerable<TDto>>> CacheAndReturnAllAsync(string cacheKey, IEnumerable<TDto> dtos)
     {
         var dtoList = dtos.ToList();
-        await _cacheService.SetAsync(cacheKey, dtoList, TimeSpan.FromDays(365));
+        var cacheDuration = GetEntityCacheDuration();
+        await _cacheService.SetAsync(cacheKey, dtoList, cacheDuration);
         
         _logger.LogInformation("Loaded and cached {Count} {EntityType} entities", dtoList.Count, typeof(TEntity).Name);
         return ServiceResult<IEnumerable<TDto>>.Success(dtoList);
@@ -177,8 +178,8 @@ public abstract class EmptyEnabledPureReferenceService<TEntity, TDto> : EntitySe
     
     private async Task<ServiceResult<TDto>> CacheAndReturnSuccess(string cacheKey, TDto dto)
     {
-        // Cache forever (until app restart)
-        await _cacheService.SetAsync(cacheKey, dto, TimeSpan.FromDays(365));
+        var cacheDuration = GetEntityCacheDuration();
+        await _cacheService.SetAsync(cacheKey, dto, cacheDuration);
         return ServiceResult<TDto>.Success(dto);
     }
     
@@ -233,4 +234,25 @@ public abstract class EmptyEnabledPureReferenceService<TEntity, TDto> : EntitySe
     /// <param name="id">The ID string to validate</param>
     /// <returns>A validation result</returns>
     protected abstract ValidationResult ValidateAndParseId(string id);
+    
+    /// <summary>
+    /// Gets the cache duration based on the entity's cache strategy
+    /// </summary>
+    /// <returns>The appropriate cache duration</returns>
+    private TimeSpan GetEntityCacheDuration()
+    {
+        // Get cache strategy from the entity
+        var cacheStrategy = TEntity.Empty.GetCacheStrategy();
+        var cacheDuration = TEntity.Empty.GetCacheDuration();
+        
+        // If entity specifies eternal caching with null duration, use TimeSpan.MaxValue
+        // Otherwise use the specified duration or default based on strategy
+        return cacheStrategy switch
+        {
+            CacheStrategy.Eternal => cacheDuration ?? TimeSpan.MaxValue,
+            CacheStrategy.Invalidatable => cacheDuration ?? TimeSpan.FromHours(1),
+            CacheStrategy.ShortLived => cacheDuration ?? TimeSpan.FromMinutes(5),
+            _ => TimeSpan.FromHours(1)
+        };
+    }
 }

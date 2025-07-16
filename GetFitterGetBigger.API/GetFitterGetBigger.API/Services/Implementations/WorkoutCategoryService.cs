@@ -1,256 +1,149 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using GetFitterGetBigger.API.DTOs;
+using GetFitterGetBigger.API.Models;
 using GetFitterGetBigger.API.Models.Entities;
 using GetFitterGetBigger.API.Models.SpecializedIds;
 using GetFitterGetBigger.API.Repositories.Interfaces;
+using GetFitterGetBigger.API.Services.Base;
 using GetFitterGetBigger.API.Services.Interfaces;
-using GetFitterGetBigger.API.Utilities;
+using GetFitterGetBigger.API.Services.Results;
 using Microsoft.Extensions.Logging;
 using Olimpo.EntityFramework.Persistency;
-using GetFitterGetBigger.API.Models;
 
 namespace GetFitterGetBigger.API.Services.Implementations;
 
 /// <summary>
-/// Service implementation for managing workout categories reference data
+/// Service implementation for workout category operations with Empty pattern support
 /// </summary>
-public class WorkoutCategoryService : IWorkoutCategoryService
+public class WorkoutCategoryService : EmptyEnabledPureReferenceService<WorkoutCategory, WorkoutCategoryDto>, IWorkoutCategoryService
 {
-    private const string CacheKeyPrefix = "WorkoutCategories";
-    private static readonly TimeSpan CacheDuration = TimeSpan.FromHours(1);
-    
-    private readonly IUnitOfWorkProvider<FitnessDbContext> _unitOfWorkProvider;
-    private readonly ICacheService _cacheService;
-    private readonly ILogger<WorkoutCategoryService> _logger;
-    
     public WorkoutCategoryService(
         IUnitOfWorkProvider<FitnessDbContext> unitOfWorkProvider,
-        ICacheService cacheService,
+        IEmptyEnabledCacheService cacheService,
         ILogger<WorkoutCategoryService> logger)
+        : base(unitOfWorkProvider, cacheService, logger)
     {
-        _unitOfWorkProvider = unitOfWorkProvider ?? throw new ArgumentNullException(nameof(unitOfWorkProvider));
-        _cacheService = cacheService ?? throw new ArgumentNullException(nameof(cacheService));
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
+
+    /// <inheritdoc/>
+    public async Task<ServiceResult<WorkoutCategoryDto>> GetByIdAsync(WorkoutCategoryId id) => 
+        id.IsEmpty 
+            ? ServiceResult<WorkoutCategoryDto>.Failure(CreateEmptyDto(), ServiceError.ValidationFailed("Invalid workout category ID format"))
+            : await GetByIdAsync(id.ToString());
     
-    /// <inheritdoc />
-    public async Task<IEnumerable<WorkoutCategory>> GetAllAsync()
+    /// <inheritdoc/>
+    public async Task<ServiceResult<WorkoutCategoryDto>> GetByValueAsync(string value) => 
+        string.IsNullOrWhiteSpace(value)
+            ? ServiceResult<WorkoutCategoryDto>.Failure(CreateEmptyDto(), ServiceError.ValidationFailed("Value cannot be empty"))
+            : await GetFromCacheOrLoadAsync(
+                GetValueCacheKey(value),
+                () => LoadByValueAsync(value),
+                value);
+
+    private string GetValueCacheKey(string value) => $"{GetCacheKeyPrefix()}value:{value}";
+    
+    private async Task<ServiceResult<WorkoutCategoryDto>> GetFromCacheOrLoadAsync(
+        string cacheKey, 
+        Func<Task<WorkoutCategory>> loadFunc,
+        string identifier)
     {
-        var cacheKey = CacheKeyGenerator.GetAllKey(CacheKeyPrefix);
-        var cached = await _cacheService.GetAsync<IEnumerable<WorkoutCategory>>(cacheKey);
-        if (cached != null)
+        var cacheService = (IEmptyEnabledCacheService)_cacheService;
+        var cacheResult = await cacheService.GetAsync<WorkoutCategoryDto>(cacheKey);
+        if (cacheResult.IsHit)
         {
-            _logger.LogDebug("Cache hit for key: {CacheKey}", cacheKey);
-            return cached;
+            _logger.LogDebug("Cache hit for {CacheKey}", cacheKey);
+            return ServiceResult<WorkoutCategoryDto>.Success(cacheResult.Value);
         }
         
+        var entity = await loadFunc();
+        return entity switch
+        {
+            { IsEmpty: true } or { IsActive: false } => ServiceResult<WorkoutCategoryDto>.Failure(
+                CreateEmptyDto(), 
+                ServiceError.NotFound("Workout category not found", identifier)),
+            _ => await CacheAndReturnSuccessAsync(cacheKey, MapToDto(entity))
+        };
+    }
+    
+    private async Task<ServiceResult<WorkoutCategoryDto>> CacheAndReturnSuccessAsync(string cacheKey, WorkoutCategoryDto dto)
+    {
+        // Use TimeSpan.MaxValue for eternal caching as per entity's cache strategy
+        await _cacheService.SetAsync(cacheKey, dto, TimeSpan.MaxValue);
+        return ServiceResult<WorkoutCategoryDto>.Success(dto);
+    }
+    
+    private async Task<WorkoutCategory> LoadByValueAsync(string value)
+    {
         using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
         var repository = unitOfWork.GetRepository<IWorkoutCategoryRepository>();
-        var categories = await repository.GetAllActiveAsync();
-        var categoryList = categories.ToList();
-        
-        await _cacheService.SetAsync(cacheKey, categoryList, CacheDuration);
-        _logger.LogDebug("Cached {Count} workout categories with key: {CacheKey}", categoryList.Count, cacheKey);
-        
-        return categoryList;
+        return await repository.GetByValueAsync(value);
     }
+
+    /// <inheritdoc/>
+    public async Task<bool> ExistsAsync(WorkoutCategoryId id) => 
+        !id.IsEmpty && (await GetByIdAsync(id)).IsSuccess;
     
-    /// <inheritdoc />
-    public async Task<IEnumerable<WorkoutCategoryDto>> GetAllAsDtosAsync()
-    {
-        var categories = await GetAllAsync();
-        return categories.Select(wc => new WorkoutCategoryDto
-        {
-            WorkoutCategoryId = wc.Id.ToString(),
-            Value = wc.Value,
-            Description = wc.Description,
-            Icon = wc.Icon,
-            Color = wc.Color,
-            PrimaryMuscleGroups = wc.PrimaryMuscleGroups,
-            DisplayOrder = wc.DisplayOrder,
-            IsActive = wc.IsActive
-        });
-    }
+    /// <inheritdoc/>
+    public override async Task<bool> ExistsAsync(string id) => 
+        await ExistsAsync(WorkoutCategoryId.ParseOrEmpty(id));
     
-    /// <inheritdoc />
-    public async Task<IEnumerable<WorkoutCategoryDto>> GetAllAsWorkoutCategoryDtosAsync(bool includeInactive = false)
+    protected override async Task<IEnumerable<WorkoutCategory>> LoadAllEntitiesAsync(IReadOnlyUnitOfWork<FitnessDbContext> unitOfWork)
     {
-        var cacheKey = CacheKeyGenerator.GetAllKey($"{CacheKeyPrefix}_{(includeInactive ? "All" : "Active")}");
-        var cached = await _cacheService.GetAsync<IEnumerable<WorkoutCategoryDto>>(cacheKey);
-        if (cached != null)
-        {
-            _logger.LogDebug("Cache hit for key: {CacheKey}", cacheKey);
-            return cached;
-        }
-        
-        using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
         var repository = unitOfWork.GetRepository<IWorkoutCategoryRepository>();
-        
-        var categories = includeInactive 
-            ? await repository.GetAllAsync() 
-            : await repository.GetAllActiveAsync();
-            
-        var dtoList = categories
-            .OrderBy(wc => wc.DisplayOrder)
-            .Select(wc => new WorkoutCategoryDto
-            {
-                WorkoutCategoryId = wc.Id.ToString(),
-                Value = wc.Value,
-                Description = wc.Description,
-                Icon = wc.Icon,
-                Color = wc.Color,
-                PrimaryMuscleGroups = wc.PrimaryMuscleGroups,
-                DisplayOrder = wc.DisplayOrder,
-                IsActive = wc.IsActive
-            })
-            .ToList();
-        
-        await _cacheService.SetAsync(cacheKey, dtoList, CacheDuration);
-        _logger.LogDebug("Cached {Count} workout category DTOs with key: {CacheKey}", dtoList.Count, cacheKey);
-        
-        return dtoList;
+        return await repository.GetAllActiveAsync();
     }
     
-    /// <inheritdoc />
-    public async Task<WorkoutCategory?> GetByIdAsync(WorkoutCategoryId id)
-    {
-        if (id.IsEmpty)
+    // Returns WorkoutCategory.Empty instead of null (Null Object Pattern)
+    protected override async Task<WorkoutCategory> LoadEntityByIdAsync(IReadOnlyUnitOfWork<FitnessDbContext> unitOfWork, string id) =>
+        WorkoutCategoryId.ParseOrEmpty(id) switch
         {
-            _logger.LogWarning("Attempted to get workout category with empty ID");
-            return null;
-        }
-        
-        var cacheKey = CacheKeyGenerator.GetByIdKey(CacheKeyPrefix, id.ToString());
-        var cached = await _cacheService.GetAsync<WorkoutCategory>(cacheKey);
-        if (cached != null)
-        {
-            _logger.LogDebug("Cache hit for key: {CacheKey}", cacheKey);
-            return cached;
-        }
-        
-        using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
-        var repository = unitOfWork.GetRepository<IWorkoutCategoryRepository>();
-        var category = await repository.GetByIdAsync(id);
-        
-        if (category != null && category.IsActive)
-        {
-            await _cacheService.SetAsync(cacheKey, category, CacheDuration);
-            _logger.LogDebug("Cached workout category with key: {CacheKey}", cacheKey);
-        }
-        
-        return category?.IsActive == true ? category : null;
-    }
+            { IsEmpty: true } => WorkoutCategory.Empty,
+            var workoutCategoryId => await unitOfWork.GetRepository<IWorkoutCategoryRepository>().GetByIdAsync(workoutCategoryId)
+        };
     
-    /// <inheritdoc />
-    public async Task<WorkoutCategoryDto?> GetByIdAsDtoAsync(string id)
+    protected override WorkoutCategoryDto MapToDto(WorkoutCategory entity)
     {
-        var categoryId = WorkoutCategoryId.From(id);
-        if (categoryId.IsEmpty)
-        {
-            _logger.LogWarning("Invalid workout category ID format: {Id}", id);
-            return null;
-        }
-        
-        var category = await GetByIdAsync(categoryId);
-        if (category == null) return null;
-        
         return new WorkoutCategoryDto
         {
-            WorkoutCategoryId = category.Id.ToString(),
-            Value = category.Value,
-            Description = category.Description,
-            Icon = category.Icon,
-            Color = category.Color,
-            PrimaryMuscleGroups = category.PrimaryMuscleGroups,
-            DisplayOrder = category.DisplayOrder,
-            IsActive = category.IsActive
+            WorkoutCategoryId = entity.WorkoutCategoryId.ToString(),
+            Value = entity.Value,
+            Description = entity.Description,
+            Icon = entity.Icon,
+            Color = entity.Color,
+            PrimaryMuscleGroups = entity.PrimaryMuscleGroups,
+            DisplayOrder = entity.DisplayOrder,
+            IsActive = entity.IsActive
         };
     }
     
-    /// <inheritdoc />
-    public async Task<WorkoutCategoryDto?> GetByIdAsWorkoutCategoryDtoAsync(string id, bool includeInactive = false)
+    protected override WorkoutCategoryDto CreateEmptyDto()
     {
-        var categoryId = WorkoutCategoryId.From(id);
-        if (categoryId.IsEmpty)
+        return new WorkoutCategoryDto
         {
-            _logger.LogWarning("Invalid workout category ID format: {Id}", id);
-            return null;
-        }
-        
-        var cacheKey = CacheKeyGenerator.GetByIdKey($"{CacheKeyPrefix}_{(includeInactive ? "All" : "Active")}", id);
-        var cached = await _cacheService.GetAsync<WorkoutCategoryDto>(cacheKey);
-        if (cached != null)
-        {
-            _logger.LogDebug("Cache hit for key: {CacheKey}", cacheKey);
-            return cached;
-        }
-        
-        using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
-        var repository = unitOfWork.GetRepository<IWorkoutCategoryRepository>();
-        var category = await repository.GetByIdAsync(categoryId);
-        
-        if (category == null || (!includeInactive && !category.IsActive))
-        {
-            return null;
-        }
-        
-        var dto = new WorkoutCategoryDto
-        {
-            WorkoutCategoryId = category.Id.ToString(),
-            Value = category.Value,
-            Description = category.Description,
-            Icon = category.Icon,
-            Color = category.Color,
-            PrimaryMuscleGroups = category.PrimaryMuscleGroups,
-            DisplayOrder = category.DisplayOrder,
-            IsActive = category.IsActive
+            WorkoutCategoryId = string.Empty,
+            Value = string.Empty,
+            Description = null,
+            Icon = string.Empty,
+            Color = "#000000",
+            PrimaryMuscleGroups = null,
+            DisplayOrder = 0,
+            IsActive = false
         };
-        
-        await _cacheService.SetAsync(cacheKey, dto, CacheDuration);
-        _logger.LogDebug("Cached workout category DTO with key: {CacheKey}", cacheKey);
-        
-        return dto;
     }
     
-    /// <inheritdoc />
-    public async Task<WorkoutCategory?> GetByValueAsync(string value)
+    protected override ValidationResult ValidateAndParseId(string id)
     {
-        if (string.IsNullOrWhiteSpace(value))
+        // This is called by the base class when using the string overload
+        // Since we always use the typed overload from the controller,
+        // this should validate the string format
+        if (string.IsNullOrWhiteSpace(id))
         {
-            _logger.LogWarning("Attempted to get workout category with empty value");
-            return null;
+            return ValidationResult.Failure("ID cannot be empty");
         }
         
-        var cacheKey = CacheKeyGenerator.GetByValueKey(CacheKeyPrefix, value);
-        var cached = await _cacheService.GetAsync<WorkoutCategory>(cacheKey);
-        if (cached != null)
-        {
-            _logger.LogDebug("Cache hit for key: {CacheKey}", cacheKey);
-            return cached;
-        }
+        // No additional validation - let the controller handle format validation
+        // This allows empty GUIDs to pass through and be treated as NotFound
         
-        using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
-        var repository = unitOfWork.GetRepository<IWorkoutCategoryRepository>();
-        var category = await repository.GetByValueAsync(value);
-        
-        if (category != null)
-        {
-            await _cacheService.SetAsync(cacheKey, category, CacheDuration);
-            _logger.LogDebug("Cached workout category with key: {CacheKey}", cacheKey);
-        }
-        
-        return category;
-    }
-    
-    /// <inheritdoc />
-    public async Task<bool> ExistsAsync(WorkoutCategoryId id)
-    {
-        if (id.IsEmpty) return false;
-        
-        var category = await GetByIdAsync(id);
-        return category != null;
+        // Valid format (including empty GUID) - let the database determine if it exists
+        return ValidationResult.Success();
     }
 }

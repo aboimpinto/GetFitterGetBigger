@@ -854,7 +854,7 @@ namespace GetFitterGetBigger.API.Migrations
 
             modelBuilder.Entity("GetFitterGetBigger.API.Models.Entities.WorkoutCategory", b =>
                 {
-                    b.Property<Guid>("Id")
+                    b.Property<Guid>("WorkoutCategoryId")
                         .HasColumnType("uuid");
 
                     b.Property<string>("Color")
@@ -886,7 +886,7 @@ namespace GetFitterGetBigger.API.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
 
-                    b.HasKey("Id");
+                    b.HasKey("WorkoutCategoryId");
 
                     b.HasIndex("Value")
                         .HasDatabaseName("IX_WorkoutCategory_Value");
@@ -896,7 +896,7 @@ namespace GetFitterGetBigger.API.Migrations
                     b.HasData(
                         new
                         {
-                            Id = new Guid("20000002-2000-4000-8000-200000000001"),
+                            WorkoutCategoryId = new Guid("20000002-2000-4000-8000-200000000001"),
                             Color = "#FF5722",
                             Description = "Push exercises targeting chest, shoulders, and triceps",
                             DisplayOrder = 1,
@@ -907,7 +907,7 @@ namespace GetFitterGetBigger.API.Migrations
                         },
                         new
                         {
-                            Id = new Guid("20000002-2000-4000-8000-200000000002"),
+                            WorkoutCategoryId = new Guid("20000002-2000-4000-8000-200000000002"),
                             Color = "#4CAF50",
                             Description = "Pull exercises targeting back and biceps",
                             DisplayOrder = 2,
@@ -918,7 +918,7 @@ namespace GetFitterGetBigger.API.Migrations
                         },
                         new
                         {
-                            Id = new Guid("20000002-2000-4000-8000-200000000003"),
+                            WorkoutCategoryId = new Guid("20000002-2000-4000-8000-200000000003"),
                             Color = "#2196F3",
                             Description = "Lower body exercises for legs and glutes",
                             DisplayOrder = 3,
@@ -929,7 +929,7 @@ namespace GetFitterGetBigger.API.Migrations
                         },
                         new
                         {
-                            Id = new Guid("20000002-2000-4000-8000-200000000004"),
+                            WorkoutCategoryId = new Guid("20000002-2000-4000-8000-200000000004"),
                             Color = "#9C27B0",
                             Description = "Core stability and strength exercises",
                             DisplayOrder = 4,
@@ -940,7 +940,7 @@ namespace GetFitterGetBigger.API.Migrations
                         },
                         new
                         {
-                            Id = new Guid("20000002-2000-4000-8000-200000000005"),
+                            WorkoutCategoryId = new Guid("20000002-2000-4000-8000-200000000005"),
                             Color = "#FF9800",
                             Description = "Compound exercises engaging multiple muscle groups",
                             DisplayOrder = 5,

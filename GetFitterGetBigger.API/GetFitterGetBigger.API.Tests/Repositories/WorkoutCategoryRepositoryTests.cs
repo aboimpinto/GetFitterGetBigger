@@ -67,7 +67,7 @@ public class WorkoutCategoryRepositoryTests : IDisposable
     public async Task GetByIdAsync_ExistingId_ReturnsCorrectItem()
     {
         // Arrange
-        var id = WorkoutCategoryId.From(TestIds.WorkoutCategoryIds.UpperBodyPush);
+        var id = WorkoutCategoryId.ParseOrEmpty(TestIds.WorkoutCategoryIds.UpperBodyPush);
         
         // Act
         var result = await _repository.GetByIdAsync(id);
@@ -84,7 +84,7 @@ public class WorkoutCategoryRepositoryTests : IDisposable
     }
     
     [Fact]
-    public async Task GetByIdAsync_NonExistingId_ReturnsNull()
+    public async Task GetByIdAsync_NonExistingId_ReturnsEmpty()
     {
         // Arrange
         var id = WorkoutCategoryId.From(Guid.Parse("99999999-9999-9999-9999-999999999999"));
@@ -93,14 +93,16 @@ public class WorkoutCategoryRepositoryTests : IDisposable
         var result = await _repository.GetByIdAsync(id);
         
         // Assert
-        Assert.Null(result);
+        Assert.NotNull(result);
+        Assert.True(result.IsEmpty);
+        Assert.Equal(WorkoutCategory.Empty, result);
     }
     
     [Fact]
     public async Task GetByIdAsync_InactiveId_ReturnsItem()
     {
         // Arrange
-        var id = WorkoutCategoryId.From(TestIds.WorkoutCategoryIds.InactiveCategory);
+        var id = WorkoutCategoryId.ParseOrEmpty(TestIds.WorkoutCategoryIds.InactiveCategory);
         
         // Act
         var result = await _repository.GetByIdAsync(id);
@@ -135,23 +137,27 @@ public class WorkoutCategoryRepositoryTests : IDisposable
     }
     
     [Fact]
-    public async Task GetByValueAsync_InactiveValue_ReturnsNull()
+    public async Task GetByValueAsync_InactiveValue_ReturnsEmpty()
     {
         // Act
         var result = await _repository.GetByValueAsync("Inactive Category");
         
         // Assert
-        Assert.Null(result); // Should not return inactive items
+        Assert.NotNull(result);
+        Assert.True(result.IsEmpty); // Should return Empty for inactive items
+        Assert.Equal(WorkoutCategory.Empty, result);
     }
     
     [Fact]
-    public async Task GetByValueAsync_NonExistingValue_ReturnsNull()
+    public async Task GetByValueAsync_NonExistingValue_ReturnsEmpty()
     {
         // Act
         var result = await _repository.GetByValueAsync("Non-Existing Category");
         
         // Assert
-        Assert.Null(result);
+        Assert.NotNull(result);
+        Assert.True(result.IsEmpty);
+        Assert.Equal(WorkoutCategory.Empty, result);
     }
     
     public void Dispose()

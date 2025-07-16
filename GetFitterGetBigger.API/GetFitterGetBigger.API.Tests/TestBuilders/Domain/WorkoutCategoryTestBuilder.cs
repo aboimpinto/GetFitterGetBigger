@@ -1,5 +1,6 @@
 using GetFitterGetBigger.API.Models.Entities;
 using GetFitterGetBigger.API.Models.SpecializedIds;
+using GetFitterGetBigger.API.Models.Results;
 
 namespace GetFitterGetBigger.API.Tests.TestBuilders.Domain;
 
@@ -90,10 +91,10 @@ public class WorkoutCategoryTestBuilder
 
     public WorkoutCategoryTestBuilder WithId(string idString)
     {
-        _id = WorkoutCategoryId.From(idString);
-        if (_id == null || _id.Value.IsEmpty)
+        _id = WorkoutCategoryId.ParseOrEmpty(idString);
+        if (_id.Value.IsEmpty)
         {
-            throw new ArgumentException($"Invalid WorkoutCategoryId format: '{idString}'. Expected format: 'workoutcategory-{{guid}}' or valid GUID");
+            throw new ArgumentException($"Invalid WorkoutCategoryId format: '{idString}'. Expected format: 'workoutcategory-{{guid}}'");
         }
         return this;
     }
@@ -156,7 +157,7 @@ public class WorkoutCategoryTestBuilder
         // If ID is provided, use it, otherwise generate new
         var id = _id ?? WorkoutCategoryId.New();
         
-        return WorkoutCategory.Handler.Create(
+        var result = WorkoutCategory.Handler.Create(
             id: id,
             value: _value,
             description: _description,
@@ -166,6 +167,13 @@ public class WorkoutCategoryTestBuilder
             displayOrder: _displayOrder,
             isActive: _isActive
         );
+        
+        if (!result.IsSuccess)
+        {
+            throw new InvalidOperationException($"Failed to create WorkoutCategory: {result.FirstError}");
+        }
+        
+        return result.Value;
     }
 
     /// <summary>
@@ -173,7 +181,7 @@ public class WorkoutCategoryTestBuilder
     /// </summary>
     public string BuildId()
     {
-        return Build().Id.ToString();
+        return Build().WorkoutCategoryId.ToString();
     }
 
     /// <summary>

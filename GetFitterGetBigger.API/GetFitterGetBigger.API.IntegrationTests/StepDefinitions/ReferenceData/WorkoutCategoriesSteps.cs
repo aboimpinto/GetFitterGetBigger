@@ -49,9 +49,12 @@ public class WorkoutCategoriesSteps
         var response = _scenarioContext.GetLastResponse();
         response.StatusCode.Should().Be(HttpStatusCode.OK);
         
-        _workoutCategoriesResponse = await response.Content.ReadFromJsonAsync<WorkoutCategoriesResponseDto>();
-        _workoutCategoriesResponse.Should().NotBeNull();
-        _workoutCategoriesResponse!.WorkoutCategories.Should().HaveCount(expectedCount);
+        var workoutCategories = await response.Content.ReadFromJsonAsync<List<WorkoutCategoryDto>>();
+        workoutCategories.Should().NotBeNull();
+        workoutCategories!.Should().HaveCount(expectedCount);
+        
+        // Store in wrapper for backward compatibility with other steps
+        _workoutCategoriesResponse = new WorkoutCategoriesResponseDto { WorkoutCategories = workoutCategories };
     }
 
     [Then(@"each workout category should have the following fields:")]
@@ -162,7 +165,9 @@ public class WorkoutCategoriesSteps
         {
             var response = _scenarioContext.GetLastResponse();
             response.StatusCode.Should().Be(HttpStatusCode.OK);
-            _workoutCategoriesResponse = await response.Content.ReadFromJsonAsync<WorkoutCategoriesResponseDto>();
+            var workoutCategories = await response.Content.ReadFromJsonAsync<List<WorkoutCategoryDto>>();
+            workoutCategories.Should().NotBeNull();
+            _workoutCategoriesResponse = new WorkoutCategoriesResponseDto { WorkoutCategories = workoutCategories! };
         }
         
         _workoutCategoriesResponse.Should().NotBeNull();

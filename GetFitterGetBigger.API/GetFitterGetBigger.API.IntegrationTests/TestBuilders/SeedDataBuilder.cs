@@ -593,12 +593,15 @@ public class SeedDataBuilder
         foreach (var (id, value, description, icon, color, primaryMuscleGroups, displayOrder, isActive) in workoutCategoriesToCheck)
         {
             var workoutCategoryId = WorkoutCategoryId.From(id);
-            var exists = await _context.WorkoutCategories.AnyAsync(wc => wc.Id == workoutCategoryId);
+            var exists = await _context.WorkoutCategories.AnyAsync(wc => wc.WorkoutCategoryId == workoutCategoryId);
             
             if (!exists)
             {
-                var workoutCategory = WorkoutCategory.Handler.Create(workoutCategoryId, value, description, icon, color, primaryMuscleGroups, displayOrder, isActive);
-                await _context.WorkoutCategories.AddAsync(workoutCategory);
+                var result = WorkoutCategory.Handler.Create(workoutCategoryId, value, description, icon, color, primaryMuscleGroups, displayOrder, isActive);
+                if (result.IsSuccess)
+                {
+                    await _context.WorkoutCategories.AddAsync(result.Value);
+                }
             }
         }
         

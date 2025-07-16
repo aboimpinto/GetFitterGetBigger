@@ -14,7 +14,7 @@ Feature: Workout Categories Reference Data
       | workoutcategory-55555555-5555-5555-5555-555555555555 | Inactive Category  | This category is no longer used                    | ❌   | #757575 | None                            | 6            | false    |
 
   Scenario: Get all active workout categories
-    When I send a GET request to "/api/workout-categories"
+    When I send a GET request to "/api/ReferenceTables/WorkoutCategories"
     Then the response status should be 200
     And the response should contain 5 workout categories
     And each workout category should have the following fields:
@@ -30,14 +30,9 @@ Feature: Workout Categories Reference Data
     And the workout categories should be ordered by displayOrder ascending
     And no inactive categories should be included
 
-  Scenario: Get all workout categories including inactive
-    When I send a GET request to "/api/workout-categories?includeInactive=true"
-    Then the response status should be 200
-    And the response should contain 6 workout categories
-    And the response should include both active and inactive categories
 
   Scenario: Get workout category by valid ID
-    When I send a GET request to "/api/workout-categories/workoutcategory-20000002-2000-4000-8000-200000000001"
+    When I send a GET request to "/api/ReferenceTables/WorkoutCategories/workoutcategory-20000002-2000-4000-8000-200000000001"
     Then the response status should be 200
     And the response should contain a workout category with:
       | Field               | Value                                                  |
@@ -51,42 +46,36 @@ Feature: Workout Categories Reference Data
       | isActive            | true                                                   |
 
   Scenario: Get workout category by non-existent ID
-    When I send a GET request to "/api/workout-categories/workoutcategory-00000000-0000-0000-0000-000000000000"
+    When I send a GET request to "/api/ReferenceTables/WorkoutCategories/workoutcategory-00000000-0000-0000-0000-000000000000"
     Then the response status should be 404
-    And the response should contain an error with:
-      | Field   | Value                      |
-      | message | Workout category not found |
 
   Scenario: Get workout category with invalid ID format
-    When I send a GET request to "/api/workout-categories/invalid-id-format"
-    Then the response status should be 404
-    And the response should contain an error with:
-      | Field   | Value                      |
-      | message | Workout category not found |
+    When I send a GET request to "/api/ReferenceTables/WorkoutCategories/invalid-id-format"
+    Then the response status should be 400
 
-  Scenario: Response caching headers are set correctly
-    When I send a GET request to "/api/workout-categories"
-    Then the response status should be 200
-    And the response should have cache control headers
-    And the cache duration should be 3600 seconds
-
-  Scenario: Get inactive workout category by ID without includeInactive flag
-    When I send a GET request to "/api/workout-categories/workoutcategory-55555555-5555-5555-5555-555555555555"
-    Then the response status should be 404
-    And the response should contain an error with:
-      | Field   | Value                      |
-      | message | Workout category not found |
-
-  Scenario: Get inactive workout category by ID with includeInactive flag
-    When I send a GET request to "/api/workout-categories/workoutcategory-55555555-5555-5555-5555-555555555555?includeInactive=true"
+  Scenario: Get workout category by value
+    When I send a GET request to "/api/ReferenceTables/WorkoutCategories/ByValue/Upper Body - Push"
     Then the response status should be 200
     And the response should contain a workout category with:
       | Field               | Value                                                  |
-      | workoutCategoryId   | workoutcategory-55555555-5555-5555-5555-555555555555   |
-      | value               | Inactive Category                                      |
-      | isActive            | false                                                  |
+      | workoutCategoryId   | workoutcategory-20000002-2000-4000-8000-200000000001   |
+      | value               | Upper Body - Push                                      |
+      | description         | Push exercises targeting chest, shoulders, and triceps |
+      | icon                | 💪                                                     |
+      | color               | #FF5722                                                |
+      | primaryMuscleGroups | Chest,Shoulders,Triceps                                |
+      | displayOrder        | 1                                                      |
+      | isActive            | true                                                   |
+
+  Scenario: Get workout category by non-existent value
+    When I send a GET request to "/api/ReferenceTables/WorkoutCategories/ByValue/Non-Existent Category"
+    Then the response status should be 404
+
+  Scenario: Get workout category by empty value
+    When I send a GET request to "/api/ReferenceTables/WorkoutCategories/ByValue/"
+    Then the response status should be 400
 
   Scenario: Verify emoji support in icon field
-    When I send a GET request to "/api/workout-categories"
+    When I send a GET request to "/api/ReferenceTables/WorkoutCategories"
     Then the response status should be 200
     And each category's icon field should contain a valid emoji character

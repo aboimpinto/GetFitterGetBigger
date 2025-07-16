@@ -223,7 +223,7 @@ public class FitnessDbContext : DbContext
                 guid => WorkoutObjectiveId.From(guid));
                 
         modelBuilder.Entity<WorkoutCategory>()
-            .Property(wc => wc.Id)
+            .Property(wc => wc.WorkoutCategoryId)
             .HasConversion(
                 id => (Guid)id,
                 guid => WorkoutCategoryId.From(guid));
@@ -953,7 +953,7 @@ public class FitnessDbContext : DbContext
                 "#FF5722",
                 "Chest,Shoulders,Triceps",
                 1,
-                true),
+                true).Value,
             WorkoutCategory.Handler.Create(
                 WorkoutCategoryId.From(Guid.Parse("20000002-2000-4000-8000-200000000002")),
                 "Upper Body - Pull",
@@ -962,7 +962,7 @@ public class FitnessDbContext : DbContext
                 "#4CAF50",
                 "Back,Biceps",
                 2,
-                true),
+                true).Value,
             WorkoutCategory.Handler.Create(
                 WorkoutCategoryId.From(Guid.Parse("20000002-2000-4000-8000-200000000003")),
                 "Lower Body",
@@ -971,7 +971,7 @@ public class FitnessDbContext : DbContext
                 "#2196F3",
                 "Quadriceps,Hamstrings,Glutes,Calves",
                 3,
-                true),
+                true).Value,
             WorkoutCategory.Handler.Create(
                 WorkoutCategoryId.From(Guid.Parse("20000002-2000-4000-8000-200000000004")),
                 "Core",
@@ -980,7 +980,7 @@ public class FitnessDbContext : DbContext
                 "#9C27B0",
                 "Abs,Obliques,Lower Back",
                 4,
-                true),
+                true).Value,
             WorkoutCategory.Handler.Create(
                 WorkoutCategoryId.From(Guid.Parse("20000002-2000-4000-8000-200000000005")),
                 "Full Body",
@@ -989,7 +989,7 @@ public class FitnessDbContext : DbContext
                 "#FF9800",
                 "Multiple",
                 5,
-                true)
+                true).Value
         );
         
         // Seed ExecutionProtocols
