@@ -11,6 +11,10 @@ namespace GetFitterGetBigger.API.Services.Base;
 /// <typeparam name="TEntity">The entity type this service manages</typeparam>
 public abstract class EntityServiceBase<TEntity> where TEntity : class, IEntity
 {
+    private const string CacheKeySeparator = ":";
+    private const string AllEntitiesSuffix = "all";
+    private const string CacheWildcardPattern = "*";
+    
     protected readonly ICacheService _cacheService;
     protected readonly ILogger _logger;
     
@@ -80,7 +84,7 @@ public abstract class EntityServiceBase<TEntity> where TEntity : class, IEntity
     /// <returns>The cache key prefix</returns>
     protected virtual string GetCacheKeyPrefix()
     {
-        return $"{typeof(TEntity).Name}:";
+        return $"{typeof(TEntity).Name}{CacheKeySeparator}";
     }
     
     /// <summary>
@@ -90,7 +94,7 @@ public abstract class EntityServiceBase<TEntity> where TEntity : class, IEntity
     {
         var prefix = GetCacheKeyPrefix();
         _logger.LogInformation("Invalidating all caches with prefix: {Prefix}", prefix);
-        await _cacheService.RemoveByPatternAsync($"{prefix}*");
+        await _cacheService.RemoveByPatternAsync($"{prefix}{CacheWildcardPattern}");
     }
     
     /// <summary>
@@ -109,6 +113,6 @@ public abstract class EntityServiceBase<TEntity> where TEntity : class, IEntity
     /// <returns>The cache key for all entities</returns>
     protected string GetAllCacheKey()
     {
-        return $"{GetCacheKeyPrefix()}all";
+        return $"{GetCacheKeyPrefix()}{AllEntitiesSuffix}";
     }
 }
