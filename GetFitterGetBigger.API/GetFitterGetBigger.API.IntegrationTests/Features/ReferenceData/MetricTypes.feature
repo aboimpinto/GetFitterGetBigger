@@ -18,12 +18,16 @@ Feature: Metric Types Reference Data
   Scenario: Get metric type by invalid ID format returns bad request
     When I send a GET request to "/api/ReferenceTables/MetricTypes/abcdef12-3456-7890-abcd-ef1234567890"
     Then the response status should be 400
-    And the response should contain "Invalid ID format"
-    And the response should contain "Expected format: 'metrictype-{guid}'"
+    And the response should contain "Invalid metric type ID format"
+
+  @reference-data @validation
+  Scenario: Get metric type by empty GUID returns bad request
+    When I send a GET request to "/api/ReferenceTables/MetricTypes/metrictype-00000000-0000-0000-0000-000000000000"
+    Then the response status should be 400
 
   @reference-data @validation
   Scenario: Get metric type by non-existent ID returns not found
-    When I send a GET request to "/api/ReferenceTables/MetricTypes/metrictype-00000000-0000-0000-0000-000000000000"
+    When I send a GET request to "/api/ReferenceTables/MetricTypes/metrictype-11111111-1111-1111-1111-111111111111"
     Then the response status should be 404
 
   @reference-data @validation

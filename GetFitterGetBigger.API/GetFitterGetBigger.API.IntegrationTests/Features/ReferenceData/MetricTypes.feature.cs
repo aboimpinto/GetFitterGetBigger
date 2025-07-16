@@ -142,8 +142,35 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.ReferenceData
                 await testRunner.WhenAsync("I send a GET request to \"/api/ReferenceTables/MetricTypes/abcdef12-3456-7890-abcd" +
                         "-ef1234567890\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
                 await testRunner.ThenAsync("the response status should be 400", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
-                await testRunner.AndAsync("the response should contain \"Invalid ID format\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
-                await testRunner.AndAsync("the response should contain \"Expected format: \'metrictype-{guid}\'\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
+                await testRunner.AndAsync("the response should contain \"Invalid metric type ID format\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
+            }
+            await this.ScenarioCleanupAsync();
+        }
+        
+        [Xunit.SkippableFactAttribute(DisplayName="Get metric type by empty GUID returns bad request")]
+        [Xunit.TraitAttribute("FeatureTitle", "Metric Types Reference Data")]
+        [Xunit.TraitAttribute("Description", "Get metric type by empty GUID returns bad request")]
+        [Xunit.TraitAttribute("Category", "reference-data")]
+        [Xunit.TraitAttribute("Category", "validation")]
+        public async System.Threading.Tasks.Task GetMetricTypeByEmptyGUIDReturnsBadRequest()
+        {
+            string[] tagsOfScenario = new string[] {
+                    "reference-data",
+                    "validation"};
+            System.Collections.Specialized.OrderedDictionary argumentsOfScenario = new System.Collections.Specialized.OrderedDictionary();
+            TechTalk.SpecFlow.ScenarioInfo scenarioInfo = new TechTalk.SpecFlow.ScenarioInfo("Get metric type by empty GUID returns bad request", null, tagsOfScenario, argumentsOfScenario, featureTags);
+            this.ScenarioInitialize(scenarioInfo);
+            if ((TagHelper.ContainsIgnoreTag(tagsOfScenario) || TagHelper.ContainsIgnoreTag(featureTags)))
+            {
+                testRunner.SkipScenario();
+            }
+            else
+            {
+                await this.ScenarioStartAsync();
+                await this.FeatureBackgroundAsync();
+                await testRunner.WhenAsync("I send a GET request to \"/api/ReferenceTables/MetricTypes/metrictype-00000000-000" +
+                        "0-0000-0000-000000000000\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
+                await testRunner.ThenAsync("the response status should be 400", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
             }
             await this.ScenarioCleanupAsync();
         }
@@ -169,8 +196,8 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.ReferenceData
             {
                 await this.ScenarioStartAsync();
                 await this.FeatureBackgroundAsync();
-                await testRunner.WhenAsync("I send a GET request to \"/api/ReferenceTables/MetricTypes/metrictype-00000000-000" +
-                        "0-0000-0000-000000000000\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
+                await testRunner.WhenAsync("I send a GET request to \"/api/ReferenceTables/MetricTypes/metrictype-11111111-111" +
+                        "1-1111-1111-111111111111\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
                 await testRunner.ThenAsync("the response status should be 404", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
             }
             await this.ScenarioCleanupAsync();

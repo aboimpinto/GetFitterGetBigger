@@ -709,14 +709,23 @@ namespace GetFitterGetBigger.API.Migrations
 
             modelBuilder.Entity("GetFitterGetBigger.API.Models.Entities.MetricType", b =>
                 {
-                    b.Property<Guid>("Id")
+                    b.Property<Guid>("MetricTypeId")
                         .HasColumnType("uuid");
 
-                    b.Property<string>("Name")
+                    b.Property<string>("Description")
+                        .HasColumnType("text");
+
+                    b.Property<int>("DisplayOrder")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Value")
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.HasKey("Id");
+                    b.HasKey("MetricTypeId");
 
                     b.ToTable("MetricTypes");
                 });

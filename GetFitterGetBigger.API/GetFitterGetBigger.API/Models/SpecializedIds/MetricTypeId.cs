@@ -4,6 +4,7 @@ namespace GetFitterGetBigger.API.Models.SpecializedIds;
 
 public readonly record struct MetricTypeId
 {
+    private const string Prefix = "metrictype-";
     private readonly Guid _value;
     
     private MetricTypeId(Guid value)
@@ -15,13 +16,17 @@ public readonly record struct MetricTypeId
     
     public static MetricTypeId From(Guid guid) => new(guid);
     
-    public static bool TryParse(string? input, out MetricTypeId result)
+    public static MetricTypeId Empty => new(Guid.Empty);
+    
+    public bool IsEmpty => _value == Guid.Empty;
+    
+    private static bool TryParse(string? input, out MetricTypeId result)
     {
         result = default;
-        if (string.IsNullOrEmpty(input) || !input.StartsWith("metrictype-"))
+        if (string.IsNullOrEmpty(input) || !input.StartsWith(Prefix))
             return false;
             
-        string guidPart = input["metrictype-".Length..];
+        string guidPart = input[Prefix.Length..];
         if (Guid.TryParse(guidPart, out Guid guid))
         {
             result = From(guid);
@@ -31,7 +36,15 @@ public readonly record struct MetricTypeId
         return false;
     }
     
-    public override string ToString() => $"metrictype-{this._value}";
+    public static MetricTypeId ParseOrEmpty(string? input)
+    {
+        if (string.IsNullOrEmpty(input))
+            return Empty;
+            
+        return TryParse(input, out var result) ? result : Empty;
+    }
+    
+    public override string ToString() => $"{Prefix}{this._value}";
     
     // Conversion to/from Guid for EF Core
     public static implicit operator Guid(MetricTypeId id) => id._value;

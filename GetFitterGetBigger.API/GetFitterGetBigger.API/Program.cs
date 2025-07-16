@@ -92,6 +92,7 @@ builder.Services.AddTransient<IClaimService, ClaimService>();
 builder.Services.AddTransient<IDifficultyLevelService, DifficultyLevelService>();
 builder.Services.AddTransient<IKineticChainTypeService, KineticChainTypeService>();
 builder.Services.AddTransient<IMuscleRoleService, MuscleRoleService>();
+builder.Services.AddTransient<IMetricTypeService, MetricTypeService>();
 
 // Register authentication services
 builder.Services.AddTransient<IJwtService, JwtService>();

@@ -399,12 +399,12 @@ public class SeedDataBuilder
         foreach (var (id, name) in metricTypesToCheck)
         {
             var metricTypeId = MetricTypeId.From(id);
-            var exists = await _context.MetricTypes.AnyAsync(mt => mt.Id == metricTypeId);
+            var exists = await _context.MetricTypes.AnyAsync(mt => mt.MetricTypeId == metricTypeId);
             
             if (!exists)
             {
-                var metricType = MetricType.Handler.Create(metricTypeId, name);
-                await _context.MetricTypes.AddAsync(metricType);
+                var metricType = MetricType.Handler.Create(metricTypeId, name, null, 1);
+                await _context.MetricTypes.AddAsync(metricType.Value);
             }
         }
         

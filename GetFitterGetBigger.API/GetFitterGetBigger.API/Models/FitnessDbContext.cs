@@ -115,7 +115,7 @@ public class FitnessDbContext : DbContext
                 
         // Metric Type ID
         modelBuilder.Entity<MetricType>()
-            .Property(mt => mt.Id)
+            .Property(mt => mt.MetricTypeId)
             .HasConversion(
                 id => (Guid)id,
                 guid => MetricTypeId.From(guid));
