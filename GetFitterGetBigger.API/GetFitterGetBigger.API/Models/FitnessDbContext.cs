@@ -217,7 +217,7 @@ public class FitnessDbContext : DbContext
                 guid => ExerciseWeightTypeId.From(guid));
                 
         modelBuilder.Entity<WorkoutObjective>()
-            .Property(wo => wo.Id)
+            .Property(wo => wo.WorkoutObjectiveId)
             .HasConversion(
                 id => (Guid)id,
                 guid => WorkoutObjectiveId.From(guid));
@@ -922,25 +922,25 @@ public class FitnessDbContext : DbContext
                 "Muscular Strength",
                 "Build maximum strength through heavy loads and low repetitions",
                 1,
-                true),
+                true).Value,
             WorkoutObjective.Handler.Create(
                 WorkoutObjectiveId.From(Guid.Parse("10000001-1000-4000-8000-100000000002")),
                 "Muscular Hypertrophy",
                 "Increase muscle size through moderate loads and volume",
                 2,
-                true),
+                true).Value,
             WorkoutObjective.Handler.Create(
                 WorkoutObjectiveId.From(Guid.Parse("10000001-1000-4000-8000-100000000003")),
                 "Muscular Endurance",
                 "Improve ability to sustain effort over time",
                 3,
-                true),
+                true).Value,
             WorkoutObjective.Handler.Create(
                 WorkoutObjectiveId.From(Guid.Parse("10000001-1000-4000-8000-100000000004")),
                 "Power Development",
                 "Develop explosive strength and speed",
                 4,
-                true)
+                true).Value
         );
         
         // Seed WorkoutCategories

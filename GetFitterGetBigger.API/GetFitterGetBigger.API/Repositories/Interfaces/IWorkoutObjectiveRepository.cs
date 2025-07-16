@@ -6,7 +6,7 @@ namespace GetFitterGetBigger.API.Repositories.Interfaces;
 /// <summary>
 /// Repository interface for WorkoutObjective reference data
 /// </summary>
-public interface IWorkoutObjectiveRepository : IReferenceDataRepository<WorkoutObjective, WorkoutObjectiveId>
+public interface IWorkoutObjectiveRepository : IEmptyEnabledReferenceDataRepository<WorkoutObjective, WorkoutObjectiveId>
 {
     // Add any WorkoutObjective-specific repository methods here if needed
 }

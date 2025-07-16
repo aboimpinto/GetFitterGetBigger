@@ -1,68 +1,45 @@
-using System.Collections.Generic;
-using System.Threading.Tasks;
 using GetFitterGetBigger.API.DTOs;
-using GetFitterGetBigger.API.Models.Entities;
 using GetFitterGetBigger.API.Models.SpecializedIds;
+using GetFitterGetBigger.API.Services.Results;
 
 namespace GetFitterGetBigger.API.Services.Interfaces;
 
 /// <summary>
-/// Service for managing workout objectives reference data
+/// Service interface for workout objective operations
 /// </summary>
 public interface IWorkoutObjectiveService
 {
     /// <summary>
-    /// Get all active workout objectives
+    /// Gets all active workout objectives
     /// </summary>
-    /// <returns>Collection of active workout objectives</returns>
-    Task<IEnumerable<WorkoutObjective>> GetAllAsync();
+    /// <returns>Service result containing collection of workout objectives</returns>
+    Task<ServiceResult<IEnumerable<ReferenceDataDto>>> GetAllActiveAsync();
     
     /// <summary>
-    /// Get all active workout objectives as DTOs
-    /// </summary>
-    /// <returns>Collection of workout objective DTOs</returns>
-    Task<IEnumerable<ReferenceDataDto>> GetAllAsDtosAsync();
-    
-    /// <summary>
-    /// Get all workout objectives as WorkoutObjectiveDto (with option to include inactive)
-    /// </summary>
-    /// <param name="includeInactive">Whether to include inactive objectives</param>
-    /// <returns>Collection of workout objective DTOs</returns>
-    Task<IEnumerable<WorkoutObjectiveDto>> GetAllAsWorkoutObjectiveDtosAsync(bool includeInactive = false);
-    
-    /// <summary>
-    /// Get workout objective by ID
+    /// Gets a workout objective by ID
     /// </summary>
     /// <param name="id">The workout objective ID</param>
-    /// <returns>The workout objective or null if not found</returns>
-    Task<WorkoutObjective?> GetByIdAsync(WorkoutObjectiveId id);
+    /// <returns>Service result containing the workout objective</returns>
+    Task<ServiceResult<ReferenceDataDto>> GetByIdAsync(WorkoutObjectiveId id);
     
     /// <summary>
-    /// Get workout objective by ID as DTO
+    /// Gets a workout objective by value
     /// </summary>
-    /// <param name="id">The workout objective ID as string</param>
-    /// <returns>The workout objective DTO or null if not found</returns>
-    Task<ReferenceDataDto?> GetByIdAsDtoAsync(string id);
+    /// <param name="value">The workout objective value</param>
+    /// <returns>Service result containing the workout objective</returns>
+    Task<ServiceResult<ReferenceDataDto>> GetByValueAsync(string value);
     
     /// <summary>
-    /// Get workout objective by ID as WorkoutObjectiveDto (with option to include inactive)
-    /// </summary>
-    /// <param name="id">The workout objective ID as string</param>
-    /// <param name="includeInactive">Whether to include inactive objectives</param>
-    /// <returns>The workout objective DTO or null if not found</returns>
-    Task<WorkoutObjectiveDto?> GetByIdAsWorkoutObjectiveDtoAsync(string id, bool includeInactive = false);
-    
-    /// <summary>
-    /// Get workout objective by value
-    /// </summary>
-    /// <param name="value">The workout objective value (case insensitive)</param>
-    /// <returns>The workout objective or null if not found</returns>
-    Task<WorkoutObjective?> GetByValueAsync(string value);
-    
-    /// <summary>
-    /// Check if workout objective exists
+    /// Checks if a workout objective exists
     /// </summary>
     /// <param name="id">The workout objective ID</param>
     /// <returns>True if exists, false otherwise</returns>
     Task<bool> ExistsAsync(WorkoutObjectiveId id);
+    
+    /// <summary>
+    /// Checks if a workout objective exists with the given string ID
+    /// </summary>
+    /// <param name="id">The workout objective ID in string format</param>
+    /// <returns>True if the workout objective exists and is active, false otherwise</returns>
+    Task<bool> ExistsAsync(string id);
 }

@@ -5,9 +5,7 @@ using GetFitterGetBigger.API.Controllers;
 using GetFitterGetBigger.API.DTOs;
 using GetFitterGetBigger.API.Models.SpecializedIds;
 using GetFitterGetBigger.API.Services.Interfaces;
-using GetFitterGetBigger.API.Tests.TestBuilders;
-using GetFitterGetBigger.API.Tests.TestBuilders.DTOs;
-using Microsoft.AspNetCore.Http;
+using GetFitterGetBigger.API.Services.Results;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Moq;
@@ -17,95 +15,96 @@ namespace GetFitterGetBigger.API.Tests.Controllers;
 
 public class WorkoutObjectivesControllerTests
 {
-    private readonly Mock<IWorkoutObjectiveService> _mockService;
-    private readonly Mock<ILogger<WorkoutObjectivesController>> _mockLogger;
+    private readonly Mock<IWorkoutObjectiveService> _serviceMock;
+    private readonly Mock<ILogger<WorkoutObjectivesController>> _loggerMock;
     private readonly WorkoutObjectivesController _controller;
 
     public WorkoutObjectivesControllerTests()
     {
-        _mockService = new Mock<IWorkoutObjectiveService>();
-        _mockLogger = new Mock<ILogger<WorkoutObjectivesController>>();
-        _controller = new WorkoutObjectivesController(_mockService.Object, _mockLogger.Object);
+        _serviceMock = new Mock<IWorkoutObjectiveService>();
+        _loggerMock = new Mock<ILogger<WorkoutObjectivesController>>();
+        _controller = new WorkoutObjectivesController(_serviceMock.Object, _loggerMock.Object);
     }
 
     [Fact]
-    public async Task GetAllWorkoutObjectives_ReturnsOkResultWithObjectives()
+    public async Task GetWorkoutObjectives_ReturnsOkResult()
     {
         // Arrange
-        var objectives = new List<WorkoutObjectiveDto>
+        var workoutObjectives = new List<ReferenceDataDto>
         {
-            new WorkoutObjectiveDtoTestBuilder().WithMuscularStrength().Build(),
-            new WorkoutObjectiveDtoTestBuilder().WithMuscularHypertrophy().Build()
+            new ReferenceDataDto
+            {
+                Id = "workoutobjective-10000001-1000-4000-8000-100000000001",
+                Value = "Muscular Strength",
+                Description = "Build maximum strength through heavy loads and low repetitions"
+            }
         };
-        _mockService.Setup(s => s.GetAllAsWorkoutObjectiveDtosAsync(false)).ReturnsAsync(objectives);
+
+        _serviceMock.Setup(x => x.GetAllActiveAsync())
+            .ReturnsAsync(ServiceResult<IEnumerable<ReferenceDataDto>>.Success(workoutObjectives));
 
         // Act
-        var result = await _controller.GetAllWorkoutObjectives();
+        var result = await _controller.GetWorkoutObjectives();
 
         // Assert
         var okResult = Assert.IsType<OkObjectResult>(result);
-        var response = Assert.IsType<WorkoutObjectivesResponseDto>(okResult.Value);
-        Assert.Equal(2, response.WorkoutObjectives.Count);
-        _mockService.Verify(s => s.GetAllAsWorkoutObjectiveDtosAsync(false), Times.Once);
+        var returnedObjectives = Assert.IsAssignableFrom<IEnumerable<ReferenceDataDto>>(okResult.Value);
+        Assert.Equal(workoutObjectives.Count(), returnedObjectives.Count());
     }
 
     [Fact]
-    public async Task GetWorkoutObjectiveById_ValidId_ReturnsOkResultWithObjective()
+    public async Task GetWorkoutObjectiveById_WithValidId_ReturnsOkResult()
     {
         // Arrange
-        var id = TestIds.WorkoutObjectiveIds.MuscularStrength;
-        var objective = new WorkoutObjectiveDtoTestBuilder().WithMuscularStrength().Build();
-        _mockService.Setup(s => s.GetByIdAsWorkoutObjectiveDtoAsync(id, false)).ReturnsAsync(objective);
+        var workoutObjectiveId = "workoutobjective-10000001-1000-4000-8000-100000000001";
+        var workoutObjective = new ReferenceDataDto
+        {
+            Id = workoutObjectiveId,
+            Value = "Muscular Strength",
+            Description = "Build maximum strength through heavy loads and low repetitions"
+        };
+
+        _serviceMock.Setup(x => x.GetByIdAsync(It.IsAny<WorkoutObjectiveId>()))
+            .ReturnsAsync(ServiceResult<ReferenceDataDto>.Success(workoutObjective));
 
         // Act
-        var result = await _controller.GetWorkoutObjectiveById(id);
+        var result = await _controller.GetWorkoutObjectiveById(workoutObjectiveId);
 
         // Assert
         var okResult = Assert.IsType<OkObjectResult>(result);
-        var returnedObjective = Assert.IsType<WorkoutObjectiveDto>(okResult.Value);
-        Assert.Equal(id, returnedObjective.WorkoutObjectiveId);
-        Assert.Equal("Muscular Strength", returnedObjective.Value);
-        _mockService.Verify(s => s.GetByIdAsWorkoutObjectiveDtoAsync(id, false), Times.Once);
+        var returnedObjective = Assert.IsAssignableFrom<ReferenceDataDto>(okResult.Value);
+        Assert.Equal(workoutObjective.Id, returnedObjective.Id);
     }
 
     [Fact]
-    public async Task GetWorkoutObjectiveById_NotFound_ReturnsNotFoundResult()
+    public async Task GetWorkoutObjectiveById_WithNotFoundId_ReturnsNotFound()
     {
         // Arrange
-        var id = WorkoutObjectiveId.From(TestIds.NotFoundId);
-        _mockService.Setup(s => s.GetByIdAsWorkoutObjectiveDtoAsync(id.ToString(), false)).ReturnsAsync((WorkoutObjectiveDto?)null);
+        var workoutObjectiveId = "workoutobjective-00000000-0000-0000-0000-000000000000";
+
+        _serviceMock.Setup(x => x.GetByIdAsync(It.IsAny<WorkoutObjectiveId>()))
+            .ReturnsAsync(ServiceResult<ReferenceDataDto>.Failure(new ReferenceDataDto(), ServiceError.NotFound("Not found")));
 
         // Act
-        var result = await _controller.GetWorkoutObjectiveById(id.ToString());
+        var result = await _controller.GetWorkoutObjectiveById(workoutObjectiveId);
 
         // Assert
-        var notFoundResult = Assert.IsType<NotFoundObjectResult>(result);
-        var response = notFoundResult.Value;
-        Assert.NotNull(response);
-        _mockService.Verify(s => s.GetByIdAsWorkoutObjectiveDtoAsync(id.ToString(), false), Times.Once);
+        Assert.IsType<NotFoundObjectResult>(result);
     }
 
     [Fact]
-    public async Task GetWorkoutObjectiveById_EmptyObjectiveList_LogsCorrectCount()
+    public async Task GetWorkoutObjectiveById_WithInvalidId_ReturnsNotFound()
     {
         // Arrange
-        var objectives = new List<WorkoutObjectiveDto>();
-        _mockService.Setup(s => s.GetAllAsWorkoutObjectiveDtosAsync(false)).ReturnsAsync(objectives);
+        var invalidId = "invalid-id-format";
+
+        _serviceMock.Setup(x => x.GetByIdAsync(It.IsAny<WorkoutObjectiveId>()))
+            .ReturnsAsync(ServiceResult<ReferenceDataDto>.Failure(new ReferenceDataDto(), ServiceError.NotFound("Workout objective not found")));
 
         // Act
-        var result = await _controller.GetAllWorkoutObjectives();
+        var result = await _controller.GetWorkoutObjectiveById(invalidId);
 
         // Assert
-        var okResult = Assert.IsType<OkObjectResult>(result);
-        var response = Assert.IsType<WorkoutObjectivesResponseDto>(okResult.Value);
-        Assert.Empty(response.WorkoutObjectives);
-        _mockLogger.Verify(
-            x => x.Log(
-                LogLevel.Information,
-                It.IsAny<EventId>(),
-                It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains("Retrieved 0 workout objectives")),
-                It.IsAny<Exception>(),
-                It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
-            Times.Once);
+        Assert.IsType<NotFoundObjectResult>(result);
     }
 }

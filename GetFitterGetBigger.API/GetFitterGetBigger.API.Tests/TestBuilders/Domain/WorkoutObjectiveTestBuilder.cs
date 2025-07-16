@@ -14,7 +14,7 @@ public class WorkoutObjectiveTestBuilder
     private string? _description = "Build maximum strength through heavy loads and low repetitions";
     private int _displayOrder = 1;
     private bool _isActive = true;
-    private WorkoutObjectiveId? _id = null;
+    private WorkoutObjectiveId _id = WorkoutObjectiveId.Empty;
 
     private WorkoutObjectiveTestBuilder() { }
 
@@ -72,8 +72,8 @@ public class WorkoutObjectiveTestBuilder
 
     public WorkoutObjectiveTestBuilder WithId(string idString)
     {
-        _id = WorkoutObjectiveId.From(idString);
-        if (_id == null || _id.Value.IsEmpty)
+        _id = WorkoutObjectiveId.ParseOrEmpty(idString);
+        if (_id.IsEmpty)
         {
             throw new ArgumentException($"Invalid WorkoutObjectiveId format: '{idString}'. Expected format: 'workoutobjective-{{guid}}' or valid GUID");
         }
@@ -118,15 +118,22 @@ public class WorkoutObjectiveTestBuilder
     public WorkoutObjective Build()
     {
         // If ID is provided, use it, otherwise generate new
-        var id = _id ?? WorkoutObjectiveId.New();
+        var id = _id.IsEmpty ? WorkoutObjectiveId.New() : _id;
         
-        return WorkoutObjective.Handler.Create(
+        var result = WorkoutObjective.Handler.Create(
             id: id,
             value: _value,
             description: _description,
             displayOrder: _displayOrder,
             isActive: _isActive
         );
+        
+        if (!result.IsSuccess)
+        {
+            throw new InvalidOperationException($"Failed to create WorkoutObjective: {string.Join(", ", result.Errors)}");
+        }
+        
+        return result.Value;
     }
 
     /// <summary>

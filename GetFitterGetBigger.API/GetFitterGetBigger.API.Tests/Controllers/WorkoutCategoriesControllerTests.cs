@@ -46,8 +46,8 @@ public class WorkoutCategoriesControllerTests
 
         // Assert
         var okResult = Assert.IsType<OkObjectResult>(result);
-        var returnedCategories = Assert.IsAssignableFrom<IEnumerable<WorkoutCategoryDto>>(okResult.Value);
-        Assert.Equal(2, returnedCategories.Count());
+        var response = Assert.IsAssignableFrom<WorkoutCategoriesResponseDto>(okResult.Value);
+        Assert.Equal(2, response.WorkoutCategories.Count());
         _mockService.Verify(s => s.GetAllAsync(), Times.Once);
     }
 
@@ -101,8 +101,8 @@ public class WorkoutCategoriesControllerTests
 
         // Assert
         var okResult = Assert.IsType<OkObjectResult>(result);
-        var returnedCategories = Assert.IsAssignableFrom<IEnumerable<WorkoutCategoryDto>>(okResult.Value);
-        Assert.Empty(returnedCategories);
+        var response = Assert.IsAssignableFrom<WorkoutCategoriesResponseDto>(okResult.Value);
+        Assert.Empty(response.WorkoutCategories);
         _mockLogger.Verify(
             x => x.Log(
                 LogLevel.Information,

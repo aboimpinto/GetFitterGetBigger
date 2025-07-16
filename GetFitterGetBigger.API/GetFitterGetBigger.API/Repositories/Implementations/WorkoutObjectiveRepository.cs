@@ -9,8 +9,8 @@ namespace GetFitterGetBigger.API.Repositories.Implementations;
 /// Repository implementation for WorkoutObjective reference data
 /// </summary>
 public class WorkoutObjectiveRepository : 
-    ReferenceDataRepository<WorkoutObjective, WorkoutObjectiveId, FitnessDbContext>, 
+    EmptyEnabledReferenceDataRepository<WorkoutObjective, WorkoutObjectiveId, FitnessDbContext>, 
     IWorkoutObjectiveRepository
 {
-    // All required methods are implemented by the base ReferenceDataRepository class
+    // All required methods are implemented by the base EmptyEnabledReferenceDataRepository class
 }

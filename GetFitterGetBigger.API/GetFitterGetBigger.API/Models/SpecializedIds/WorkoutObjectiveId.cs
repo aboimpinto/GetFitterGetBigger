@@ -15,32 +15,12 @@ public readonly record struct WorkoutObjectiveId
     
     public static WorkoutObjectiveId From(Guid guid) => new(guid);
     
-    public static WorkoutObjectiveId From(string input)
-    {
-        if (string.IsNullOrEmpty(input))
-            return Empty;
-            
-        // If it's a properly formatted ID string (workoutobjective-{guid})
-        if (input.StartsWith("workoutobjective-"))
-        {
-            var guidPart = input["workoutobjective-".Length..];
-            if (Guid.TryParse(guidPart, out var guid))
-                return new(guid);
-        }
-        // If it's just a GUID string
-        else if (Guid.TryParse(input, out var guid))
-        {
-            return new(guid);
-        }
-        
-        return Empty;
-    }
     
     public static WorkoutObjectiveId Empty => new(Guid.Empty);
     
     public bool IsEmpty => _value == Guid.Empty;
     
-    public static bool TryParse(string? input, out WorkoutObjectiveId result)
+    private static bool TryParse(string? input, out WorkoutObjectiveId result)
     {
         result = default;
         if (string.IsNullOrEmpty(input) || !input.StartsWith("workoutobjective-"))
@@ -61,13 +41,10 @@ public readonly record struct WorkoutObjectiveId
         if (string.IsNullOrEmpty(input))
             return Empty;
             
-        if (TryParse(input, out var result))
-            return result;
-            
-        return Empty;
+        return TryParse(input, out var result) ? result : Empty;
     }
     
-    public override string ToString() => IsEmpty ? string.Empty : $"workoutobjective-{this._value}";
+    public override string ToString() => $"workoutobjective-{this._value}";
     
     // Conversion to/from Guid for EF Core
     public static implicit operator Guid(WorkoutObjectiveId id) => id._value;

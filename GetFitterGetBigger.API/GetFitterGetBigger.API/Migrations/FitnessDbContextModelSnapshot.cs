@@ -1040,7 +1040,7 @@ namespace GetFitterGetBigger.API.Migrations
 
             modelBuilder.Entity("GetFitterGetBigger.API.Models.Entities.WorkoutObjective", b =>
                 {
-                    b.Property<Guid>("Id")
+                    b.Property<Guid>("WorkoutObjectiveId")
                         .HasColumnType("uuid");
 
                     b.Property<string>("Description")
@@ -1058,7 +1058,7 @@ namespace GetFitterGetBigger.API.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
 
-                    b.HasKey("Id");
+                    b.HasKey("WorkoutObjectiveId");
 
                     b.HasIndex("Value")
                         .HasDatabaseName("IX_WorkoutObjective_Value");
@@ -1068,7 +1068,7 @@ namespace GetFitterGetBigger.API.Migrations
                     b.HasData(
                         new
                         {
-                            Id = new Guid("10000001-1000-4000-8000-100000000001"),
+                            WorkoutObjectiveId = new Guid("10000001-1000-4000-8000-100000000001"),
                             Description = "Build maximum strength through heavy loads and low repetitions",
                             DisplayOrder = 1,
                             IsActive = true,
@@ -1076,7 +1076,7 @@ namespace GetFitterGetBigger.API.Migrations
                         },
                         new
                         {
-                            Id = new Guid("10000001-1000-4000-8000-100000000002"),
+                            WorkoutObjectiveId = new Guid("10000001-1000-4000-8000-100000000002"),
                             Description = "Increase muscle size through moderate loads and volume",
                             DisplayOrder = 2,
                             IsActive = true,
@@ -1084,7 +1084,7 @@ namespace GetFitterGetBigger.API.Migrations
                         },
                         new
                         {
-                            Id = new Guid("10000001-1000-4000-8000-100000000003"),
+                            WorkoutObjectiveId = new Guid("10000001-1000-4000-8000-100000000003"),
                             Description = "Improve ability to sustain effort over time",
                             DisplayOrder = 3,
                             IsActive = true,
@@ -1092,7 +1092,7 @@ namespace GetFitterGetBigger.API.Migrations
                         },
                         new
                         {
-                            Id = new Guid("10000001-1000-4000-8000-100000000004"),
+                            WorkoutObjectiveId = new Guid("10000001-1000-4000-8000-100000000004"),
                             Description = "Develop explosive strength and speed",
                             DisplayOrder = 4,
                             IsActive = true,

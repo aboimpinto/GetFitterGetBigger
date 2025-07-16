@@ -46,8 +46,12 @@ Feature: Workout Categories Reference Data
       | isActive            | true                                                   |
 
   Scenario: Get workout category by non-existent ID
-    When I send a GET request to "/api/ReferenceTables/WorkoutCategories/workoutcategory-00000000-0000-0000-0000-000000000000"
+    When I send a GET request to "/api/ReferenceTables/WorkoutCategories/workoutcategory-11111111-1111-1111-1111-111111111111"
     Then the response status should be 404
+
+  Scenario: Get workout category by empty GUID
+    When I send a GET request to "/api/ReferenceTables/WorkoutCategories/workoutcategory-00000000-0000-0000-0000-000000000000"
+    Then the response status should be 400
 
   Scenario: Get workout category with invalid ID format
     When I send a GET request to "/api/ReferenceTables/WorkoutCategories/invalid-id-format"

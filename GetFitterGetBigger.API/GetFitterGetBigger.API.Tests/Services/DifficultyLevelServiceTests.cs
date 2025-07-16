@@ -147,7 +147,7 @@ namespace GetFitterGetBigger.API.Tests.Services
             Assert.True(result.IsSuccess);
             Assert.Equal("Intermediate", result.Data.Value);
             Assert.Equal("For intermediate users", result.Data.Description);
-            _mockCacheService.Verify(x => x.SetAsync(It.IsAny<string>(), It.IsAny<ReferenceDataDto>(), TimeSpan.FromDays(365)), Times.Once);
+            _mockCacheService.Verify(x => x.SetAsync<ReferenceDataDto>(It.IsAny<string>(), It.IsAny<ReferenceDataDto>(), It.IsAny<TimeSpan>()), Times.Once);
         }
 
         [Fact]
@@ -297,7 +297,7 @@ namespace GetFitterGetBigger.API.Tests.Services
             Assert.Contains("Beginner", values);
             Assert.Contains("Intermediate", values);
             Assert.Contains("Advanced", values);
-            _mockCacheService.Verify(x => x.SetAsync(It.IsAny<string>(), It.IsAny<IEnumerable<ReferenceDataDto>>(), TimeSpan.FromDays(365)), Times.Once);
+            _mockCacheService.Verify(x => x.SetAsync<List<ReferenceDataDto>>(It.IsAny<string>(), It.IsAny<List<ReferenceDataDto>>(), It.IsAny<TimeSpan>()), Times.Once);
         }
 
         [Fact]

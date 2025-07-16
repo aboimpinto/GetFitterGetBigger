@@ -68,7 +68,7 @@ public class WorkoutCategoriesController : ControllerBase
         {
             { IsSuccess: true } => Ok(result.Data),
             { PrimaryErrorCode: ServiceErrorCode.NotFound } => NotFound(),
-            _ => BadRequest()
+            _ => BadRequest(new { errors = result.StructuredErrors })
         };
     }
 
@@ -77,7 +77,7 @@ public class WorkoutCategoriesController : ControllerBase
     /// </summary>
     /// <param name="value">The value of the workout category to retrieve</param>
     /// <returns>The workout category if found, 404 Not Found otherwise</returns>
-    [HttpGet("ByValue/{value}")]
+    [HttpGet("ByValue/{value?}")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -85,13 +85,13 @@ public class WorkoutCategoriesController : ControllerBase
     {
         _logger.LogInformation("Getting workout category with value: {Value}", value);
         
-        var result = await _workoutCategoryService.GetByValueAsync(value);
+        var result = await _workoutCategoryService.GetByValueAsync(value ?? string.Empty);
         
         return result switch
         {
             { IsSuccess: true } => Ok(result.Data),
             { PrimaryErrorCode: ServiceErrorCode.NotFound } => NotFound(),
-            _ => BadRequest()
+            _ => BadRequest(new { errors = result.StructuredErrors })
         };
     }
 }

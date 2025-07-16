@@ -1,22 +1,21 @@
-using GetFitterGetBigger.API.DTOs;
-using GetFitterGetBigger.API.Models.SpecializedIds;
-using GetFitterGetBigger.API.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
+using GetFitterGetBigger.API.Services.Interfaces;
+using GetFitterGetBigger.API.Services.Results;
+using GetFitterGetBigger.API.Models.SpecializedIds;
 
 namespace GetFitterGetBigger.API.Controllers;
 
 /// <summary>
-/// Controller for managing workout objectives reference data
+/// Controller for retrieving workout objective reference data
 /// </summary>
 [ApiController]
-[Route("api/workout-objectives")]
-[Produces("application/json")]
-[Tags("Workout Reference Data")]
+[Route("api/ReferenceTables/WorkoutObjectives")]
+[Tags("ReferenceTables")]
 public class WorkoutObjectivesController : ControllerBase
 {
     private readonly IWorkoutObjectiveService _workoutObjectiveService;
     private readonly ILogger<WorkoutObjectivesController> _logger;
-
+    
     /// <summary>
     /// Initializes a new instance of the <see cref="WorkoutObjectivesController"/> class
     /// </summary>
@@ -26,79 +25,72 @@ public class WorkoutObjectivesController : ControllerBase
         IWorkoutObjectiveService workoutObjectiveService,
         ILogger<WorkoutObjectivesController> logger)
     {
-        _workoutObjectiveService = workoutObjectiveService ?? throw new ArgumentNullException(nameof(workoutObjectiveService));
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        _workoutObjectiveService = workoutObjectiveService;
+        _logger = logger;
     }
 
     /// <summary>
-    /// Gets all workout objectives
+    /// Gets all active workout objectives
     /// </summary>
-    /// <param name="includeInactive">Optional parameter to include inactive objectives (default: false)</param>
-    /// <returns>A collection of workout objectives</returns>
-    /// <response code="200">Returns the collection of workout objectives</response>
-    /// <response code="401">If the user is not authenticated</response>
+    /// <returns>A collection of active workout objectives</returns>
     [HttpGet]
     [ProducesResponseType(StatusCodes.Status200OK)]
-    public async Task<IActionResult> GetAllWorkoutObjectives([FromQuery] bool includeInactive = false)
+    public async Task<IActionResult> GetWorkoutObjectives()
     {
-        _logger.LogInformation("Getting all workout objectives (includeInactive: {IncludeInactive})", includeInactive);
+        _logger.LogInformation("Getting all active workout objectives");
         
-        var objectives = await _workoutObjectiveService.GetAllAsWorkoutObjectiveDtosAsync(includeInactive);
-        var response = new WorkoutObjectivesResponseDto
+        var result = await _workoutObjectiveService.GetAllActiveAsync();
+        
+        return result switch
         {
-            WorkoutObjectives = objectives.ToList()
+            { IsSuccess: true } => Ok(result.Data),
+            _ => Ok(result.Data) // GetAll should always succeed, even if empty
         };
-        
-        _logger.LogInformation("Retrieved {Count} workout objectives", objectives.Count());
-        
-        // Set cache headers for reference data (1 hour cache)
-        if (Response != null)
-        {
-            Response.Headers.CacheControl = "public, max-age=3600";
-        }
-        
-        return Ok(response);
     }
 
     /// <summary>
     /// Gets a workout objective by ID
     /// </summary>
-    /// <param name="id">The ID of the workout objective in the format "workoutobjective-{guid}"</param>
-    /// <param name="includeInactive">Optional parameter to include inactive objectives (default: false)</param>
-    /// <returns>The workout objective if found</returns>
-    /// <response code="200">Returns the workout objective</response>
-    /// <response code="400">If the ID format is invalid</response>
-    /// <response code="401">If the user is not authenticated</response>
-    /// <response code="404">If the workout objective is not found</response>
+    /// <param name="id">The ID of the workout objective to retrieve in the format "workoutobjective-{guid}"</param>
+    /// <returns>The workout objective if found, 404 Not Found otherwise</returns>
     [HttpGet("{id}")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> GetWorkoutObjectiveById(string id, [FromQuery] bool includeInactive = false)
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> GetWorkoutObjectiveById(string id)
     {
-        _logger.LogInformation("Getting workout objective by ID: {Id} (includeInactive: {IncludeInactive})", id, includeInactive);
+        _logger.LogInformation("Getting workout objective with ID: {Id}", id);
         
-        try
+        var result = await _workoutObjectiveService.GetByIdAsync(WorkoutObjectiveId.ParseOrEmpty(id));
+        
+        return result switch
         {
-            var objective = await _workoutObjectiveService.GetByIdAsWorkoutObjectiveDtoAsync(id, includeInactive);
-            
-            if (objective == null)
-            {
-                _logger.LogWarning("Workout objective not found: {Id}", id);
-                return NotFound(new { message = "Workout objective not found" });
-            }
-            
-            // Set cache headers for reference data (1 hour cache)
-            if (Response != null)
-            {
-                Response.Headers.CacheControl = "public, max-age=3600";
-            }
-            
-            return Ok(objective);
-        }
-        catch (ArgumentException ex)
+            { IsSuccess: true } => Ok(result.Data),
+            { PrimaryErrorCode: ServiceErrorCode.NotFound } => NotFound(new { message = "Workout objective not found" }),
+            _ => BadRequest(new { errors = result.StructuredErrors })
+        };
+    }
+
+    /// <summary>
+    /// Gets a workout objective by value
+    /// </summary>
+    /// <param name="value">The value of the workout objective to retrieve</param>
+    /// <returns>The workout objective if found, 404 Not Found otherwise</returns>
+    [HttpGet("ByValue/{value}")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> GetWorkoutObjectiveByValue(string value)
+    {
+        _logger.LogInformation("Getting workout objective with value: {Value}", value);
+        
+        var result = await _workoutObjectiveService.GetByValueAsync(value);
+        
+        return result switch
         {
-            _logger.LogWarning("Invalid workout objective ID format: {Id}. Error: {Error}", id, ex.Message);
-            return NotFound(new { message = "Workout objective not found" });
-        }
+            { IsSuccess: true } => Ok(result.Data),
+            { PrimaryErrorCode: ServiceErrorCode.NotFound } => NotFound(new { message = "Workout objective not found" }),
+            _ => BadRequest(new { errors = result.StructuredErrors })
+        };
     }
 }

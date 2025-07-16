@@ -142,7 +142,7 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.ReferenceData
             {
                 await this.ScenarioStartAsync();
                 await this.FeatureBackgroundAsync();
-                await testRunner.WhenAsync("I send a GET request to \"/api/workout-objectives\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
+                await testRunner.WhenAsync("I send a GET request to \"/api/ReferenceTables/WorkoutObjectives\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
                 await testRunner.ThenAsync("the response status should be 200", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
                 await testRunner.AndAsync("the response should contain 4 workout objectives", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
                 TechTalk.SpecFlow.Table table11 = new TechTalk.SpecFlow.Table(new string[] {
@@ -150,7 +150,7 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.ReferenceData
                             "Type",
                             "Required"});
                 table11.AddRow(new string[] {
-                            "workoutObjectiveId",
+                            "id",
                             "string",
                             "true"});
                 table11.AddRow(new string[] {
@@ -161,42 +161,8 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.ReferenceData
                             "description",
                             "string",
                             "false"});
-                table11.AddRow(new string[] {
-                            "displayOrder",
-                            "number",
-                            "true"});
-                table11.AddRow(new string[] {
-                            "isActive",
-                            "boolean",
-                            "true"});
                 await testRunner.AndAsync("each workout objective should have the following fields:", ((string)(null)), table11, "And ");
-                await testRunner.AndAsync("the workout objectives should be ordered by displayOrder ascending", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
                 await testRunner.AndAsync("no inactive objectives should be included", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
-            }
-            await this.ScenarioCleanupAsync();
-        }
-        
-        [Xunit.SkippableFactAttribute(DisplayName="Get all workout objectives including inactive")]
-        [Xunit.TraitAttribute("FeatureTitle", "Workout Objectives Reference Data")]
-        [Xunit.TraitAttribute("Description", "Get all workout objectives including inactive")]
-        public async System.Threading.Tasks.Task GetAllWorkoutObjectivesIncludingInactive()
-        {
-            string[] tagsOfScenario = ((string[])(null));
-            System.Collections.Specialized.OrderedDictionary argumentsOfScenario = new System.Collections.Specialized.OrderedDictionary();
-            TechTalk.SpecFlow.ScenarioInfo scenarioInfo = new TechTalk.SpecFlow.ScenarioInfo("Get all workout objectives including inactive", null, tagsOfScenario, argumentsOfScenario, featureTags);
-            this.ScenarioInitialize(scenarioInfo);
-            if ((TagHelper.ContainsIgnoreTag(tagsOfScenario) || TagHelper.ContainsIgnoreTag(featureTags)))
-            {
-                testRunner.SkipScenario();
-            }
-            else
-            {
-                await this.ScenarioStartAsync();
-                await this.FeatureBackgroundAsync();
-                await testRunner.WhenAsync("I send a GET request to \"/api/workout-objectives?includeInactive=true\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
-                await testRunner.ThenAsync("the response status should be 200", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
-                await testRunner.AndAsync("the response should contain 5 workout objectives", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
-                await testRunner.AndAsync("the response should include both active and inactive objectives", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
             }
             await this.ScenarioCleanupAsync();
         }
@@ -218,14 +184,14 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.ReferenceData
             {
                 await this.ScenarioStartAsync();
                 await this.FeatureBackgroundAsync();
-                await testRunner.WhenAsync("I send a GET request to \"/api/workout-objectives/workoutobjective-10000001-1000-4" +
-                        "000-8000-100000000001\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
+                await testRunner.WhenAsync("I send a GET request to \"/api/ReferenceTables/WorkoutObjectives/workoutobjective-" +
+                        "10000001-1000-4000-8000-100000000001\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
                 await testRunner.ThenAsync("the response status should be 200", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
                 TechTalk.SpecFlow.Table table12 = new TechTalk.SpecFlow.Table(new string[] {
                             "Field",
                             "Value"});
                 table12.AddRow(new string[] {
-                            "workoutObjectiveId",
+                            "id",
                             "workoutobjective-10000001-1000-4000-8000-100000000001"});
                 table12.AddRow(new string[] {
                             "value",
@@ -233,12 +199,6 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.ReferenceData
                 table12.AddRow(new string[] {
                             "description",
                             "Build maximum strength through heavy loads and low repetitions"});
-                table12.AddRow(new string[] {
-                            "displayOrder",
-                            "1"});
-                table12.AddRow(new string[] {
-                            "isActive",
-                            "true"});
                 await testRunner.AndAsync("the response should contain a workout objective with:", ((string)(null)), table12, "And ");
             }
             await this.ScenarioCleanupAsync();
@@ -261,8 +221,8 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.ReferenceData
             {
                 await this.ScenarioStartAsync();
                 await this.FeatureBackgroundAsync();
-                await testRunner.WhenAsync("I send a GET request to \"/api/workout-objectives/workoutobjective-00000000-0000-0" +
-                        "000-0000-000000000000\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
+                await testRunner.WhenAsync("I send a GET request to \"/api/ReferenceTables/WorkoutObjectives/workoutobjective-" +
+                        "11111111-1111-1111-1111-111111111111\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
                 await testRunner.ThenAsync("the response status should be 404", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
                 TechTalk.SpecFlow.Table table13 = new TechTalk.SpecFlow.Table(new string[] {
                             "Field",
@@ -271,6 +231,30 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.ReferenceData
                             "message",
                             "Workout objective not found"});
                 await testRunner.AndAsync("the response should contain an error with:", ((string)(null)), table13, "And ");
+            }
+            await this.ScenarioCleanupAsync();
+        }
+        
+        [Xunit.SkippableFactAttribute(DisplayName="Get workout objective by empty GUID")]
+        [Xunit.TraitAttribute("FeatureTitle", "Workout Objectives Reference Data")]
+        [Xunit.TraitAttribute("Description", "Get workout objective by empty GUID")]
+        public async System.Threading.Tasks.Task GetWorkoutObjectiveByEmptyGUID()
+        {
+            string[] tagsOfScenario = ((string[])(null));
+            System.Collections.Specialized.OrderedDictionary argumentsOfScenario = new System.Collections.Specialized.OrderedDictionary();
+            TechTalk.SpecFlow.ScenarioInfo scenarioInfo = new TechTalk.SpecFlow.ScenarioInfo("Get workout objective by empty GUID", null, tagsOfScenario, argumentsOfScenario, featureTags);
+            this.ScenarioInitialize(scenarioInfo);
+            if ((TagHelper.ContainsIgnoreTag(tagsOfScenario) || TagHelper.ContainsIgnoreTag(featureTags)))
+            {
+                testRunner.SkipScenario();
+            }
+            else
+            {
+                await this.ScenarioStartAsync();
+                await this.FeatureBackgroundAsync();
+                await testRunner.WhenAsync("I send a GET request to \"/api/ReferenceTables/WorkoutObjectives/workoutobjective-" +
+                        "00000000-0000-0000-0000-000000000000\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
+                await testRunner.ThenAsync("the response status should be 400", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
             }
             await this.ScenarioCleanupAsync();
         }
@@ -292,108 +276,33 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.ReferenceData
             {
                 await this.ScenarioStartAsync();
                 await this.FeatureBackgroundAsync();
-                await testRunner.WhenAsync("I send a GET request to \"/api/workout-objectives/invalid-id-format\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
+                await testRunner.WhenAsync("I send a GET request to \"/api/ReferenceTables/WorkoutObjectives/invalid-id-format" +
+                        "\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
+                await testRunner.ThenAsync("the response status should be 400", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
+            }
+            await this.ScenarioCleanupAsync();
+        }
+        
+        [Xunit.SkippableFactAttribute(DisplayName="Get inactive workout objective by ID")]
+        [Xunit.TraitAttribute("FeatureTitle", "Workout Objectives Reference Data")]
+        [Xunit.TraitAttribute("Description", "Get inactive workout objective by ID")]
+        public async System.Threading.Tasks.Task GetInactiveWorkoutObjectiveByID()
+        {
+            string[] tagsOfScenario = ((string[])(null));
+            System.Collections.Specialized.OrderedDictionary argumentsOfScenario = new System.Collections.Specialized.OrderedDictionary();
+            TechTalk.SpecFlow.ScenarioInfo scenarioInfo = new TechTalk.SpecFlow.ScenarioInfo("Get inactive workout objective by ID", null, tagsOfScenario, argumentsOfScenario, featureTags);
+            this.ScenarioInitialize(scenarioInfo);
+            if ((TagHelper.ContainsIgnoreTag(tagsOfScenario) || TagHelper.ContainsIgnoreTag(featureTags)))
+            {
+                testRunner.SkipScenario();
+            }
+            else
+            {
+                await this.ScenarioStartAsync();
+                await this.FeatureBackgroundAsync();
+                await testRunner.WhenAsync("I send a GET request to \"/api/ReferenceTables/WorkoutObjectives/workoutobjective-" +
+                        "55555555-5555-5555-5555-555555555555\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
                 await testRunner.ThenAsync("the response status should be 404", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
-                TechTalk.SpecFlow.Table table14 = new TechTalk.SpecFlow.Table(new string[] {
-                            "Field",
-                            "Value"});
-                table14.AddRow(new string[] {
-                            "message",
-                            "Workout objective not found"});
-                await testRunner.AndAsync("the response should contain an error with:", ((string)(null)), table14, "And ");
-            }
-            await this.ScenarioCleanupAsync();
-        }
-        
-        [Xunit.SkippableFactAttribute(DisplayName="Response caching headers are set correctly")]
-        [Xunit.TraitAttribute("FeatureTitle", "Workout Objectives Reference Data")]
-        [Xunit.TraitAttribute("Description", "Response caching headers are set correctly")]
-        public async System.Threading.Tasks.Task ResponseCachingHeadersAreSetCorrectly()
-        {
-            string[] tagsOfScenario = ((string[])(null));
-            System.Collections.Specialized.OrderedDictionary argumentsOfScenario = new System.Collections.Specialized.OrderedDictionary();
-            TechTalk.SpecFlow.ScenarioInfo scenarioInfo = new TechTalk.SpecFlow.ScenarioInfo("Response caching headers are set correctly", null, tagsOfScenario, argumentsOfScenario, featureTags);
-            this.ScenarioInitialize(scenarioInfo);
-            if ((TagHelper.ContainsIgnoreTag(tagsOfScenario) || TagHelper.ContainsIgnoreTag(featureTags)))
-            {
-                testRunner.SkipScenario();
-            }
-            else
-            {
-                await this.ScenarioStartAsync();
-                await this.FeatureBackgroundAsync();
-                await testRunner.WhenAsync("I send a GET request to \"/api/workout-objectives\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
-                await testRunner.ThenAsync("the response status should be 200", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
-                await testRunner.AndAsync("the response should have cache control headers", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
-                await testRunner.AndAsync("the cache duration should be 3600 seconds", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
-            }
-            await this.ScenarioCleanupAsync();
-        }
-        
-        [Xunit.SkippableFactAttribute(DisplayName="Get inactive workout objective by ID without includeInactive flag")]
-        [Xunit.TraitAttribute("FeatureTitle", "Workout Objectives Reference Data")]
-        [Xunit.TraitAttribute("Description", "Get inactive workout objective by ID without includeInactive flag")]
-        public async System.Threading.Tasks.Task GetInactiveWorkoutObjectiveByIDWithoutIncludeInactiveFlag()
-        {
-            string[] tagsOfScenario = ((string[])(null));
-            System.Collections.Specialized.OrderedDictionary argumentsOfScenario = new System.Collections.Specialized.OrderedDictionary();
-            TechTalk.SpecFlow.ScenarioInfo scenarioInfo = new TechTalk.SpecFlow.ScenarioInfo("Get inactive workout objective by ID without includeInactive flag", null, tagsOfScenario, argumentsOfScenario, featureTags);
-            this.ScenarioInitialize(scenarioInfo);
-            if ((TagHelper.ContainsIgnoreTag(tagsOfScenario) || TagHelper.ContainsIgnoreTag(featureTags)))
-            {
-                testRunner.SkipScenario();
-            }
-            else
-            {
-                await this.ScenarioStartAsync();
-                await this.FeatureBackgroundAsync();
-                await testRunner.WhenAsync("I send a GET request to \"/api/workout-objectives/workoutobjective-55555555-5555-5" +
-                        "555-5555-555555555555\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
-                await testRunner.ThenAsync("the response status should be 404", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
-                TechTalk.SpecFlow.Table table15 = new TechTalk.SpecFlow.Table(new string[] {
-                            "Field",
-                            "Value"});
-                table15.AddRow(new string[] {
-                            "message",
-                            "Workout objective not found"});
-                await testRunner.AndAsync("the response should contain an error with:", ((string)(null)), table15, "And ");
-            }
-            await this.ScenarioCleanupAsync();
-        }
-        
-        [Xunit.SkippableFactAttribute(DisplayName="Get inactive workout objective by ID with includeInactive flag")]
-        [Xunit.TraitAttribute("FeatureTitle", "Workout Objectives Reference Data")]
-        [Xunit.TraitAttribute("Description", "Get inactive workout objective by ID with includeInactive flag")]
-        public async System.Threading.Tasks.Task GetInactiveWorkoutObjectiveByIDWithIncludeInactiveFlag()
-        {
-            string[] tagsOfScenario = ((string[])(null));
-            System.Collections.Specialized.OrderedDictionary argumentsOfScenario = new System.Collections.Specialized.OrderedDictionary();
-            TechTalk.SpecFlow.ScenarioInfo scenarioInfo = new TechTalk.SpecFlow.ScenarioInfo("Get inactive workout objective by ID with includeInactive flag", null, tagsOfScenario, argumentsOfScenario, featureTags);
-            this.ScenarioInitialize(scenarioInfo);
-            if ((TagHelper.ContainsIgnoreTag(tagsOfScenario) || TagHelper.ContainsIgnoreTag(featureTags)))
-            {
-                testRunner.SkipScenario();
-            }
-            else
-            {
-                await this.ScenarioStartAsync();
-                await this.FeatureBackgroundAsync();
-                await testRunner.WhenAsync("I send a GET request to \"/api/workout-objectives/workoutobjective-55555555-5555-5" +
-                        "555-5555-555555555555?includeInactive=true\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
-                await testRunner.ThenAsync("the response status should be 200", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
-                TechTalk.SpecFlow.Table table16 = new TechTalk.SpecFlow.Table(new string[] {
-                            "Field",
-                            "Value"});
-                table16.AddRow(new string[] {
-                            "workoutObjectiveId",
-                            "workoutobjective-55555555-5555-5555-5555-555555555555"});
-                table16.AddRow(new string[] {
-                            "value",
-                            "Inactive Objective"});
-                table16.AddRow(new string[] {
-                            "isActive",
-                            "false"});
-                await testRunner.AndAsync("the response should contain a workout objective with:", ((string)(null)), table16, "And ");
             }
             await this.ScenarioCleanupAsync();
         }

@@ -562,12 +562,15 @@ public class SeedDataBuilder
         foreach (var (id, value, description, displayOrder, isActive) in workoutObjectivesToCheck)
         {
             var workoutObjectiveId = WorkoutObjectiveId.From(id);
-            var exists = await _context.WorkoutObjectives.AnyAsync(wo => wo.Id == workoutObjectiveId);
+            var exists = await _context.WorkoutObjectives.AnyAsync(wo => wo.WorkoutObjectiveId == workoutObjectiveId);
             
             if (!exists)
             {
-                var workoutObjective = WorkoutObjective.Handler.Create(workoutObjectiveId, value, description, displayOrder, isActive);
-                await _context.WorkoutObjectives.AddAsync(workoutObjective);
+                var workoutObjectiveResult = WorkoutObjective.Handler.Create(workoutObjectiveId, value, description, displayOrder, isActive);
+                if (workoutObjectiveResult.IsSuccess)
+                {
+                    await _context.WorkoutObjectives.AddAsync(workoutObjectiveResult.Value);
+                }
             }
         }
         

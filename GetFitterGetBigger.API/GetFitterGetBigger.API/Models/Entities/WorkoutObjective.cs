@@ -1,65 +1,69 @@
 using System;
+using GetFitterGetBigger.API.Constants;
 using GetFitterGetBigger.API.Models.SpecializedIds;
+using GetFitterGetBigger.API.Models.Results;
+using GetFitterGetBigger.API.Models.Validation;
 
 namespace GetFitterGetBigger.API.Models.Entities;
 
-public record WorkoutObjective : ReferenceDataBase
+public record WorkoutObjective : ReferenceDataBase, IPureReference, IEmptyEntity<WorkoutObjective>
 {
-    public WorkoutObjectiveId Id { get; init; }
+    public WorkoutObjectiveId WorkoutObjectiveId { get; init; }
+    
+    public string Id => WorkoutObjectiveId.ToString();
+    
+    public bool IsEmpty => WorkoutObjectiveId.IsEmpty;
     
     private WorkoutObjective() { }
     
+    public CacheStrategy GetCacheStrategy() => CacheStrategy.Eternal;
+    
+    public TimeSpan? GetCacheDuration() => null; // Eternal caching
+    
+    public static WorkoutObjective Empty { get; } = new()
+    {
+        WorkoutObjectiveId = WorkoutObjectiveId.Empty,
+        Value = string.Empty,
+        Description = null,
+        DisplayOrder = 0,
+        IsActive = false
+    };
+    
     public static class Handler
     {
-        public static WorkoutObjective CreateNew(
+        public static EntityResult<WorkoutObjective> CreateNew(
             string value,
             string? description,
             int displayOrder,
             bool isActive = true)
         {
-            if (string.IsNullOrEmpty(value))
-                throw new ArgumentException("Value cannot be empty", nameof(value));
-                
-            return new()
-            {
-                Id = WorkoutObjectiveId.New(),
-                Value = value,
-                Description = description,
-                DisplayOrder = displayOrder,
-                IsActive = isActive
-            };
+            return Create(
+                WorkoutObjectiveId.New(),
+                value,
+                description,
+                displayOrder,
+                isActive
+            );
         }
         
-        public static WorkoutObjective Create(
+        public static EntityResult<WorkoutObjective> Create(
             WorkoutObjectiveId id,
             string value,
             string? description,
             int displayOrder,
-            bool isActive = true) =>
-            new()
-            {
-                Id = id,
-                Value = value,
-                Description = description,
-                DisplayOrder = displayOrder,
-                IsActive = isActive
-            };
-            
-        public static WorkoutObjective Update(
-            WorkoutObjective objective,
-            string? value = null,
-            string? description = null,
-            int? displayOrder = null,
-            bool? isActive = null) =>
-            objective with
-            {
-                Value = value ?? objective.Value,
-                Description = description ?? objective.Description,
-                DisplayOrder = displayOrder ?? objective.DisplayOrder,
-                IsActive = isActive ?? objective.IsActive
-            };
-            
-        public static WorkoutObjective Deactivate(WorkoutObjective objective) =>
-            objective with { IsActive = false };
+            bool isActive = true)
+        {
+            return Validate.For<WorkoutObjective>()
+                .EnsureNotEmpty(value, WorkoutObjectiveErrorMessages.ValueCannotBeEmptyEntity)
+                .EnsureMinValue(displayOrder, 0, WorkoutObjectiveErrorMessages.DisplayOrderMustBeNonNegative)
+                .OnSuccess(() => new WorkoutObjective
+                {
+                    WorkoutObjectiveId = id,
+                    Value = value,
+                    Description = description,
+                    DisplayOrder = displayOrder,
+                    IsActive = isActive
+                });
+        }
     }
 }
