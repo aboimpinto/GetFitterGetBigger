@@ -54,7 +54,7 @@ public abstract class ReferenceTableServiceBase<T> : IReferenceTableService<T> w
         var entities = await GetAllEntitiesAsync(unitOfWork);
         
         var entityList = entities.ToList();
-        await _cacheService.SetAsync(cacheKey, entityList, CacheDuration);
+        await _cacheService.SetAsync(cacheKey, entityList);
         _logger.LogInformation("[Cache] Filled {EntityType} cache with {Count} items", typeof(T).Name, entityList.Count);
         
         return entityList;
@@ -77,7 +77,7 @@ public abstract class ReferenceTableServiceBase<T> : IReferenceTableService<T> w
         
         if (entity != null)
         {
-            await _cacheService.SetAsync(cacheKey, entity, CacheDuration);
+            await _cacheService.SetAsync(cacheKey, entity);
         }
         
         return entity;
@@ -100,7 +100,7 @@ public abstract class ReferenceTableServiceBase<T> : IReferenceTableService<T> w
         
         if (entity != null)
         {
-            await _cacheService.SetAsync(cacheKey, entity, CacheDuration);
+            await _cacheService.SetAsync(cacheKey, entity);
         }
         
         return entity;
@@ -123,7 +123,7 @@ public abstract class ReferenceTableServiceBase<T> : IReferenceTableService<T> w
         
         if (entity != null)
         {
-            await _cacheService.SetAsync(cacheKey, entity, CacheDuration);
+            await _cacheService.SetAsync(cacheKey, entity);
         }
         
         return entity;

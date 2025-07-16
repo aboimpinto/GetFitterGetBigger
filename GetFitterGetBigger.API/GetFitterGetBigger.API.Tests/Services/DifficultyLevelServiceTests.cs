@@ -23,7 +23,7 @@ namespace GetFitterGetBigger.API.Tests.Services
         private readonly Mock<IUnitOfWorkProvider<FitnessDbContext>> _mockUnitOfWorkProvider;
         private readonly Mock<IReadOnlyUnitOfWork<FitnessDbContext>> _mockReadOnlyUnitOfWork;
         private readonly Mock<IDifficultyLevelRepository> _mockDifficultyLevelRepository;
-        private readonly Mock<IEmptyEnabledCacheService> _mockCacheService;
+        private readonly Mock<IEternalCacheService> _mockCacheService;
         private readonly Mock<ILogger<DifficultyLevelService>> _mockLogger;
         private readonly DifficultyLevelService _difficultyLevelService;
 
@@ -32,7 +32,7 @@ namespace GetFitterGetBigger.API.Tests.Services
             _mockUnitOfWorkProvider = new Mock<IUnitOfWorkProvider<FitnessDbContext>>();
             _mockReadOnlyUnitOfWork = new Mock<IReadOnlyUnitOfWork<FitnessDbContext>>();
             _mockDifficultyLevelRepository = new Mock<IDifficultyLevelRepository>();
-            _mockCacheService = new Mock<IEmptyEnabledCacheService>();
+            _mockCacheService = new Mock<IEternalCacheService>();
             _mockLogger = new Mock<ILogger<DifficultyLevelService>>();
 
             _mockUnitOfWorkProvider
@@ -137,7 +137,7 @@ namespace GetFitterGetBigger.API.Tests.Services
                 .ReturnsAsync(difficultyLevel);
 
             _mockCacheService
-                .Setup(x => x.SetAsync(It.IsAny<string>(), It.IsAny<ReferenceDataDto>(), It.IsAny<TimeSpan>()))
+                .Setup(x => x.SetAsync(It.IsAny<string>(), It.IsAny<ReferenceDataDto>()))
                 .Returns(Task.CompletedTask);
 
             // Act
@@ -147,7 +147,7 @@ namespace GetFitterGetBigger.API.Tests.Services
             Assert.True(result.IsSuccess);
             Assert.Equal("Intermediate", result.Data.Value);
             Assert.Equal("For intermediate users", result.Data.Description);
-            _mockCacheService.Verify(x => x.SetAsync<ReferenceDataDto>(It.IsAny<string>(), It.IsAny<ReferenceDataDto>(), It.IsAny<TimeSpan>()), Times.Once);
+            _mockCacheService.Verify(x => x.SetAsync<ReferenceDataDto>(It.IsAny<string>(), It.IsAny<ReferenceDataDto>()), Times.Once);
         }
 
         [Fact]
@@ -213,7 +213,7 @@ namespace GetFitterGetBigger.API.Tests.Services
                 .ReturnsAsync(difficultyLevel);
 
             _mockCacheService
-                .Setup(x => x.SetAsync(It.IsAny<string>(), It.IsAny<ReferenceDataDto>(), It.IsAny<TimeSpan>()))
+                .Setup(x => x.SetAsync(It.IsAny<string>(), It.IsAny<ReferenceDataDto>()))
                 .Returns(Task.CompletedTask);
 
             // Act
@@ -284,7 +284,7 @@ namespace GetFitterGetBigger.API.Tests.Services
                 .ReturnsAsync(difficultyLevels);
 
             _mockCacheService
-                .Setup(x => x.SetAsync(It.IsAny<string>(), It.IsAny<IEnumerable<ReferenceDataDto>>(), It.IsAny<TimeSpan>()))
+                .Setup(x => x.SetAsync(It.IsAny<string>(), It.IsAny<IEnumerable<ReferenceDataDto>>()))
                 .Returns(Task.CompletedTask);
 
             // Act
@@ -297,7 +297,7 @@ namespace GetFitterGetBigger.API.Tests.Services
             Assert.Contains("Beginner", values);
             Assert.Contains("Intermediate", values);
             Assert.Contains("Advanced", values);
-            _mockCacheService.Verify(x => x.SetAsync<List<ReferenceDataDto>>(It.IsAny<string>(), It.IsAny<List<ReferenceDataDto>>(), It.IsAny<TimeSpan>()), Times.Once);
+            _mockCacheService.Verify(x => x.SetAsync<List<ReferenceDataDto>>(It.IsAny<string>(), It.IsAny<List<ReferenceDataDto>>()), Times.Once);
         }
 
         [Fact]
@@ -319,7 +319,7 @@ namespace GetFitterGetBigger.API.Tests.Services
                 .ReturnsAsync(difficultyLevels);
 
             _mockCacheService
-                .Setup(x => x.SetAsync(It.IsAny<string>(), It.IsAny<IEnumerable<ReferenceDataDto>>(), It.IsAny<TimeSpan>()))
+                .Setup(x => x.SetAsync(It.IsAny<string>(), It.IsAny<IEnumerable<ReferenceDataDto>>()))
                 .Returns(Task.CompletedTask);
 
             // Act

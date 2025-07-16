@@ -15,11 +15,11 @@ namespace GetFitterGetBigger.API.Services.Implementations;
 /// <summary>
 /// Service implementation for execution protocol operations
 /// </summary>
-public class ExecutionProtocolService : EmptyEnabledPureReferenceService<ExecutionProtocol, ExecutionProtocolDto>, IExecutionProtocolService
+public class ExecutionProtocolService : PureReferenceService<ExecutionProtocol, ExecutionProtocolDto>, IExecutionProtocolService
 {
     public ExecutionProtocolService(
         IUnitOfWorkProvider<FitnessDbContext> unitOfWorkProvider,
-        IEmptyEnabledCacheService cacheService,
+        IEternalCacheService cacheService,
         ILogger<ExecutionProtocolService> logger)
         : base(unitOfWorkProvider, cacheService, logger)
     {
@@ -63,7 +63,7 @@ public class ExecutionProtocolService : EmptyEnabledPureReferenceService<Executi
         Func<Task<ExecutionProtocol>> loadFunc,
         string identifier)
     {
-        var cacheService = (IEmptyEnabledCacheService)_cacheService;
+        var cacheService = (IEternalCacheService)_cacheService;
         var cacheResult = await cacheService.GetAsync<ExecutionProtocolDto>(cacheKey);
         if (cacheResult.IsHit)
         {
@@ -83,7 +83,8 @@ public class ExecutionProtocolService : EmptyEnabledPureReferenceService<Executi
     
     private async Task<ServiceResult<ExecutionProtocolDto>> CacheAndReturnSuccessAsync(string cacheKey, ExecutionProtocolDto dto)
     {
-        await _cacheService.SetAsync(cacheKey, dto, TimeSpan.FromDays(365));
+        var cacheService = (IEternalCacheService)_cacheService;
+        await cacheService.SetAsync(cacheKey, dto);
         return ServiceResult<ExecutionProtocolDto>.Success(dto);
     }
     

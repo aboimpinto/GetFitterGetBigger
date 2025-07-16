@@ -25,7 +25,7 @@ public class WorkoutCategoryServiceTests
     private readonly Mock<IUnitOfWorkProvider<FitnessDbContext>> _mockUnitOfWorkProvider;
     private readonly Mock<IReadOnlyUnitOfWork<FitnessDbContext>> _mockReadOnlyUnitOfWork;
     private readonly Mock<IWorkoutCategoryRepository> _mockRepository;
-    private readonly Mock<IEmptyEnabledCacheService> _mockCacheService;
+    private readonly Mock<IEternalCacheService> _mockCacheService;
     private readonly Mock<ILogger<WorkoutCategoryService>> _mockLogger;
     private readonly WorkoutCategoryService _service;
     
@@ -36,7 +36,7 @@ public class WorkoutCategoryServiceTests
         _mockUnitOfWorkProvider = new Mock<IUnitOfWorkProvider<FitnessDbContext>>();
         _mockReadOnlyUnitOfWork = new Mock<IReadOnlyUnitOfWork<FitnessDbContext>>();
         _mockRepository = new Mock<IWorkoutCategoryRepository>();
-        _mockCacheService = new Mock<IEmptyEnabledCacheService>();
+        _mockCacheService = new Mock<IEternalCacheService>();
         _mockLogger = new Mock<ILogger<WorkoutCategoryService>>();
         
         _mockUnitOfWorkProvider
@@ -103,8 +103,7 @@ public class WorkoutCategoryServiceTests
         _mockRepository.Verify(x => x.GetAllActiveAsync(), Times.Once);
         _mockCacheService.Verify(x => x.SetAsync<List<WorkoutCategoryDto>>(
             It.IsAny<string>(),
-            It.IsAny<List<WorkoutCategoryDto>>(),
-            It.IsAny<TimeSpan>()), Times.Once);
+            It.IsAny<List<WorkoutCategoryDto>>()), Times.Once);
         _mockUnitOfWorkProvider.Verify(x => x.CreateReadOnly(), Times.Once);
         _mockReadOnlyUnitOfWork.Verify(x => x.Dispose(), Times.Once);
     }
@@ -205,8 +204,7 @@ public class WorkoutCategoryServiceTests
         _mockRepository.Verify(x => x.GetByIdAsync(category.WorkoutCategoryId), Times.Once);
         _mockCacheService.Verify(x => x.SetAsync<WorkoutCategoryDto>(
             It.IsAny<string>(),
-            It.Is<WorkoutCategoryDto>(wc => wc.WorkoutCategoryId == category.WorkoutCategoryId.ToString()),
-            It.IsAny<TimeSpan>()), Times.Once);
+            It.Is<WorkoutCategoryDto>(wc => wc.WorkoutCategoryId == category.WorkoutCategoryId.ToString())), Times.Once);
     }
     
     [Fact]
@@ -243,8 +241,7 @@ public class WorkoutCategoryServiceTests
         Assert.Equal(ServiceErrorCode.NotFound, result.PrimaryErrorCode);
         _mockCacheService.Verify(x => x.SetAsync(
             It.IsAny<string>(),
-            It.IsAny<WorkoutCategoryDto>(),
-            It.IsAny<TimeSpan>()), Times.Never);
+            It.IsAny<WorkoutCategoryDto>()), Times.Never);
     }
     
     [Fact]

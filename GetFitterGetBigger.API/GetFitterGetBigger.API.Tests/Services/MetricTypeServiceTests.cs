@@ -23,7 +23,7 @@ namespace GetFitterGetBigger.API.Tests.Services
         private readonly Mock<IUnitOfWorkProvider<FitnessDbContext>> _mockUnitOfWorkProvider;
         private readonly Mock<IReadOnlyUnitOfWork<FitnessDbContext>> _mockReadOnlyUnitOfWork;
         private readonly Mock<IMetricTypeRepository> _mockMetricTypeRepository;
-        private readonly Mock<IEmptyEnabledCacheService> _mockCacheService;
+        private readonly Mock<IEternalCacheService> _mockCacheService;
         private readonly Mock<ILogger<MetricTypeService>> _mockLogger;
         private readonly MetricTypeService _metricTypeService;
 
@@ -32,7 +32,7 @@ namespace GetFitterGetBigger.API.Tests.Services
             _mockUnitOfWorkProvider = new Mock<IUnitOfWorkProvider<FitnessDbContext>>();
             _mockReadOnlyUnitOfWork = new Mock<IReadOnlyUnitOfWork<FitnessDbContext>>();
             _mockMetricTypeRepository = new Mock<IMetricTypeRepository>();
-            _mockCacheService = new Mock<IEmptyEnabledCacheService>();
+            _mockCacheService = new Mock<IEternalCacheService>();
             _mockLogger = new Mock<ILogger<MetricTypeService>>();
 
             _mockUnitOfWorkProvider
@@ -137,7 +137,7 @@ namespace GetFitterGetBigger.API.Tests.Services
                 .ReturnsAsync(metricType);
 
             _mockCacheService
-                .Setup(x => x.SetAsync(It.IsAny<string>(), It.IsAny<ReferenceDataDto>(), It.IsAny<TimeSpan>()))
+                .Setup(x => x.SetAsync(It.IsAny<string>(), It.IsAny<ReferenceDataDto>()))
                 .Returns(Task.CompletedTask);
 
             // Act
@@ -186,7 +186,7 @@ namespace GetFitterGetBigger.API.Tests.Services
                 .ReturnsAsync(metricType);
 
             _mockCacheService
-                .Setup(x => x.SetAsync(It.IsAny<string>(), It.IsAny<ReferenceDataDto>(), It.IsAny<TimeSpan>()))
+                .Setup(x => x.SetAsync(It.IsAny<string>(), It.IsAny<ReferenceDataDto>()))
                 .Returns(Task.CompletedTask);
 
             // Act
@@ -234,7 +234,7 @@ namespace GetFitterGetBigger.API.Tests.Services
                 .ReturnsAsync(metricTypes);
 
             _mockCacheService
-                .Setup(x => x.SetAsync(It.IsAny<string>(), It.IsAny<IEnumerable<ReferenceDataDto>>(), It.IsAny<TimeSpan>()))
+                .Setup(x => x.SetAsync(It.IsAny<string>(), It.IsAny<IEnumerable<ReferenceDataDto>>()))
                 .Returns(Task.CompletedTask);
 
             // Act

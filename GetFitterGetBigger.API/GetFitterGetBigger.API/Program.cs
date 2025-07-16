@@ -25,12 +25,11 @@ builder.Services.AddMemoryCache();
 builder.Services.Configure<CacheConfiguration>(
     builder.Configuration.GetSection("CacheConfiguration"));
 
-// Register cache service
+// Register cache services
+// Standard cache service for lookup/enhanced reference tables (Equipment, MuscleGroup)
 builder.Services.AddSingleton<ICacheService, CacheService>();
-// TEMPORARY: Register Empty-enabled cache service interface
-// This will be removed once all services are migrated to Empty pattern
-builder.Services.AddSingleton<IEmptyEnabledCacheService>(provider => 
-    (IEmptyEnabledCacheService)provider.GetRequiredService<ICacheService>());
+// Eternal cache service for pure reference data (BodyPart, DifficultyLevel, etc.)
+builder.Services.AddSingleton<IEternalCacheService, EternalCacheService>();
 
 // Add controllers with JSON options
 builder.Services.AddControllers()

@@ -16,11 +16,11 @@ namespace GetFitterGetBigger.API.Services.Implementations;
 /// Service implementation for difficulty level operations
 /// TEMPORARY: Extends EmptyEnabledPureReferenceService until all entities are migrated
 /// </summary>
-public class DifficultyLevelService : EmptyEnabledPureReferenceService<DifficultyLevel, ReferenceDataDto>, IDifficultyLevelService
+public class DifficultyLevelService : PureReferenceService<DifficultyLevel, ReferenceDataDto>, IDifficultyLevelService
 {
     public DifficultyLevelService(
         IUnitOfWorkProvider<FitnessDbContext> unitOfWorkProvider,
-        IEmptyEnabledCacheService cacheService,
+        IEternalCacheService cacheService,
         ILogger<DifficultyLevelService> logger)
         : base(unitOfWorkProvider, cacheService, logger)
     {
@@ -54,7 +54,7 @@ public class DifficultyLevelService : EmptyEnabledPureReferenceService<Difficult
         Func<Task<DifficultyLevel>> loadFunc,
         string identifier)
     {
-        var cacheService = (IEmptyEnabledCacheService)_cacheService;
+        var cacheService = (IEternalCacheService)_cacheService;
         var cacheResult = await cacheService.GetAsync<ReferenceDataDto>(cacheKey);
         if (cacheResult.IsHit)
         {
@@ -74,7 +74,8 @@ public class DifficultyLevelService : EmptyEnabledPureReferenceService<Difficult
     
     private async Task<ServiceResult<ReferenceDataDto>> CacheAndReturnSuccessAsync(string cacheKey, ReferenceDataDto dto)
     {
-        await _cacheService.SetAsync(cacheKey, dto, TimeSpan.FromDays(365));
+        var cacheService = (IEternalCacheService)_cacheService;
+        await cacheService.SetAsync(cacheKey, dto);
         return ServiceResult<ReferenceDataDto>.Success(dto);
     }
     

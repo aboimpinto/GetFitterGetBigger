@@ -27,7 +27,7 @@ public class MuscleRoleServiceTests
     private readonly Mock<IUnitOfWorkProvider<FitnessDbContext>> _unitOfWorkProviderMock;
     private readonly Mock<IReadOnlyUnitOfWork<FitnessDbContext>> _readOnlyUnitOfWorkMock;
     private readonly Mock<IMuscleRoleRepository> _repositoryMock;
-    private readonly Mock<IEmptyEnabledCacheService> _cacheServiceMock;
+    private readonly Mock<IEternalCacheService> _cacheServiceMock;
     private readonly Mock<ILogger<MuscleRoleService>> _loggerMock;
     private readonly MuscleRoleService _service;
 
@@ -36,7 +36,7 @@ public class MuscleRoleServiceTests
         _unitOfWorkProviderMock = new Mock<IUnitOfWorkProvider<FitnessDbContext>>();
         _readOnlyUnitOfWorkMock = new Mock<IReadOnlyUnitOfWork<FitnessDbContext>>();
         _repositoryMock = new Mock<IMuscleRoleRepository>();
-        _cacheServiceMock = new Mock<IEmptyEnabledCacheService>();
+        _cacheServiceMock = new Mock<IEternalCacheService>();
         _loggerMock = new Mock<ILogger<MuscleRoleService>>();
 
         _unitOfWorkProviderMock
@@ -72,7 +72,7 @@ public class MuscleRoleServiceTests
             .ReturnsAsync(muscleRoles);
 
         _cacheServiceMock
-            .Setup(c => c.SetAsync(It.IsAny<string>(), It.IsAny<IEnumerable<ReferenceDataDto>>(), It.IsAny<TimeSpan>()))
+            .Setup(c => c.SetAsync(It.IsAny<string>(), It.IsAny<IEnumerable<ReferenceDataDto>>()))
             .Returns(Task.CompletedTask);
 
         // Act
@@ -101,7 +101,7 @@ public class MuscleRoleServiceTests
             .ReturnsAsync(entity);
 
         _cacheServiceMock
-            .Setup(c => c.SetAsync(It.IsAny<string>(), It.IsAny<ReferenceDataDto>(), It.IsAny<TimeSpan>()))
+            .Setup(c => c.SetAsync(It.IsAny<string>(), It.IsAny<ReferenceDataDto>()))
             .Returns(Task.CompletedTask);
 
         // Act
@@ -166,7 +166,7 @@ public class MuscleRoleServiceTests
             .ReturnsAsync(entity);
 
         _cacheServiceMock
-            .Setup(c => c.SetAsync(It.IsAny<string>(), It.IsAny<ReferenceDataDto>(), It.IsAny<TimeSpan>()))
+            .Setup(c => c.SetAsync(It.IsAny<string>(), It.IsAny<ReferenceDataDto>()))
             .Returns(Task.CompletedTask);
 
         // Act
@@ -232,7 +232,7 @@ public class MuscleRoleServiceTests
             .ReturnsAsync(entity);
 
         _cacheServiceMock
-            .Setup(c => c.SetAsync(It.IsAny<string>(), It.IsAny<ReferenceDataDto>(), It.IsAny<TimeSpan>()))
+            .Setup(c => c.SetAsync(It.IsAny<string>(), It.IsAny<ReferenceDataDto>()))
             .Returns(Task.CompletedTask);
 
         // Act

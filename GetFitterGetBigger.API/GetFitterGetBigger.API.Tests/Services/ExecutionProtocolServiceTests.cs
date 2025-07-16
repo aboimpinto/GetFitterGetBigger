@@ -26,7 +26,7 @@ public class ExecutionProtocolServiceTests
     private readonly Mock<IUnitOfWorkProvider<FitnessDbContext>> _mockUnitOfWorkProvider;
     private readonly Mock<IReadOnlyUnitOfWork<FitnessDbContext>> _mockReadOnlyUnitOfWork;
     private readonly Mock<IExecutionProtocolRepository> _mockRepository;
-    private readonly Mock<IEmptyEnabledCacheService> _mockCacheService;
+    private readonly Mock<IEternalCacheService> _mockCacheService;
     private readonly Mock<ILogger<ExecutionProtocolService>> _mockLogger;
     private readonly ExecutionProtocolService _service;
     
@@ -37,7 +37,7 @@ public class ExecutionProtocolServiceTests
         _mockUnitOfWorkProvider = new Mock<IUnitOfWorkProvider<FitnessDbContext>>();
         _mockReadOnlyUnitOfWork = new Mock<IReadOnlyUnitOfWork<FitnessDbContext>>();
         _mockRepository = new Mock<IExecutionProtocolRepository>();
-        _mockCacheService = new Mock<IEmptyEnabledCacheService>();
+        _mockCacheService = new Mock<IEternalCacheService>();
         _mockLogger = new Mock<ILogger<ExecutionProtocolService>>();
         
         _mockUnitOfWorkProvider
@@ -109,7 +109,7 @@ public class ExecutionProtocolServiceTests
             .ReturnsAsync(_testData);
             
         _mockCacheService
-            .Setup(x => x.SetAsync(It.IsAny<string>(), It.IsAny<IEnumerable<ExecutionProtocolDto>>(), It.IsAny<TimeSpan>()))
+            .Setup(x => x.SetAsync(It.IsAny<string>(), It.IsAny<IEnumerable<ExecutionProtocolDto>>()))
             .Returns(Task.CompletedTask);
             
         // Act
@@ -123,8 +123,7 @@ public class ExecutionProtocolServiceTests
         _mockRepository.Verify(x => x.GetAllActiveAsync(), Times.Once);
         _mockCacheService.Verify(x => x.SetAsync(
             It.IsAny<string>(),
-            It.IsAny<IEnumerable<ExecutionProtocolDto>>(),
-            It.IsAny<TimeSpan>()), Times.Once);
+            It.IsAny<IEnumerable<ExecutionProtocolDto>>()), Times.Once);
         _mockUnitOfWorkProvider.Verify(x => x.CreateReadOnly(), Times.Once);
         _mockReadOnlyUnitOfWork.Verify(x => x.Dispose(), Times.Once);
     }
@@ -142,7 +141,7 @@ public class ExecutionProtocolServiceTests
         _mockRepository.Setup(x => x.GetAllActiveAsync()).ReturnsAsync(_testData);
         
         _mockCacheService
-            .Setup(x => x.SetAsync(It.IsAny<string>(), It.IsAny<IEnumerable<ExecutionProtocolDto>>(), It.IsAny<TimeSpan>()))
+            .Setup(x => x.SetAsync(It.IsAny<string>(), It.IsAny<IEnumerable<ExecutionProtocolDto>>()))
             .Returns(Task.CompletedTask);
         
         // Act
@@ -179,7 +178,7 @@ public class ExecutionProtocolServiceTests
             .ReturnsAsync(executionProtocol);
 
         _mockCacheService
-            .Setup(x => x.SetAsync(It.IsAny<string>(), It.IsAny<ExecutionProtocolDto>(), It.IsAny<TimeSpan>()))
+            .Setup(x => x.SetAsync(It.IsAny<string>(), It.IsAny<ExecutionProtocolDto>()))
             .Returns(Task.CompletedTask);
 
         // Act
@@ -219,7 +218,7 @@ public class ExecutionProtocolServiceTests
             .ReturnsAsync(executionProtocol);
 
         _mockCacheService
-            .Setup(x => x.SetAsync(It.IsAny<string>(), It.IsAny<ExecutionProtocolDto>(), It.IsAny<TimeSpan>()))
+            .Setup(x => x.SetAsync(It.IsAny<string>(), It.IsAny<ExecutionProtocolDto>()))
             .Returns(Task.CompletedTask);
 
         // Act
@@ -332,7 +331,7 @@ public class ExecutionProtocolServiceTests
             .ReturnsAsync(executionProtocol);
 
         _mockCacheService
-            .Setup(x => x.SetAsync(It.IsAny<string>(), It.IsAny<ExecutionProtocolDto>(), It.IsAny<TimeSpan>()))
+            .Setup(x => x.SetAsync(It.IsAny<string>(), It.IsAny<ExecutionProtocolDto>()))
             .Returns(Task.CompletedTask);
 
         // Act
@@ -397,7 +396,7 @@ public class ExecutionProtocolServiceTests
             .ReturnsAsync(executionProtocol);
 
         _mockCacheService
-            .Setup(x => x.SetAsync(It.IsAny<string>(), It.IsAny<ExecutionProtocolDto>(), It.IsAny<TimeSpan>()))
+            .Setup(x => x.SetAsync(It.IsAny<string>(), It.IsAny<ExecutionProtocolDto>()))
             .Returns(Task.CompletedTask);
 
         // Act

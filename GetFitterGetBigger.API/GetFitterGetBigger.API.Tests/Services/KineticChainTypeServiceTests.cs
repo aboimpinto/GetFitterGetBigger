@@ -25,7 +25,7 @@ public class KineticChainTypeServiceTests
     private readonly Mock<IUnitOfWorkProvider<FitnessDbContext>> _unitOfWorkProviderMock;
     private readonly Mock<IReadOnlyUnitOfWork<FitnessDbContext>> _unitOfWorkMock;
     private readonly Mock<IKineticChainTypeRepository> _repositoryMock;
-    private readonly Mock<IEmptyEnabledCacheService> _cacheServiceMock;
+    private readonly Mock<IEternalCacheService> _cacheServiceMock;
     private readonly Mock<ILogger<KineticChainTypeService>> _loggerMock;
     private readonly KineticChainTypeService _service;
 
@@ -34,7 +34,7 @@ public class KineticChainTypeServiceTests
         _unitOfWorkProviderMock = new Mock<IUnitOfWorkProvider<FitnessDbContext>>();
         _unitOfWorkMock = new Mock<IReadOnlyUnitOfWork<FitnessDbContext>>();
         _repositoryMock = new Mock<IKineticChainTypeRepository>();
-        _cacheServiceMock = new Mock<IEmptyEnabledCacheService>();
+        _cacheServiceMock = new Mock<IEternalCacheService>();
         _loggerMock = new Mock<ILogger<KineticChainTypeService>>();
 
         _unitOfWorkProviderMock

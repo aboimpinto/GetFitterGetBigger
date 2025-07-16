@@ -16,11 +16,11 @@ namespace GetFitterGetBigger.API.Services.Implementations;
 /// <summary>
 /// Service implementation for muscle role operations
 /// </summary>
-public class MuscleRoleService : EmptyEnabledPureReferenceService<MuscleRole, ReferenceDataDto>, IMuscleRoleService
+public class MuscleRoleService : PureReferenceService<MuscleRole, ReferenceDataDto>, IMuscleRoleService
 {
     public MuscleRoleService(
         IUnitOfWorkProvider<FitnessDbContext> unitOfWorkProvider,
-        IEmptyEnabledCacheService cacheService,
+        IEternalCacheService cacheService,
         ILogger<MuscleRoleService> logger)
         : base(unitOfWorkProvider, cacheService, logger)
     {
@@ -54,7 +54,7 @@ public class MuscleRoleService : EmptyEnabledPureReferenceService<MuscleRole, Re
         Func<Task<MuscleRole>> loadFunc,
         string identifier)
     {
-        var cacheService = (IEmptyEnabledCacheService)_cacheService;
+        var cacheService = (IEternalCacheService)_cacheService;
         var cacheResult = await cacheService.GetAsync<ReferenceDataDto>(cacheKey);
         if (cacheResult.IsHit)
         {
@@ -74,7 +74,8 @@ public class MuscleRoleService : EmptyEnabledPureReferenceService<MuscleRole, Re
     
     private async Task<ServiceResult<ReferenceDataDto>> CacheAndReturnSuccessAsync(string cacheKey, ReferenceDataDto dto)
     {
-        await _cacheService.SetAsync(cacheKey, dto, TimeSpan.FromDays(365));
+        var cacheService = (IEternalCacheService)_cacheService;
+        await cacheService.SetAsync(cacheKey, dto);
         return ServiceResult<ReferenceDataDto>.Success(dto);
     }
 

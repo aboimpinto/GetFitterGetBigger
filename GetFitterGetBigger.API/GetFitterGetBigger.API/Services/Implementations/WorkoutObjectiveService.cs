@@ -15,11 +15,11 @@ namespace GetFitterGetBigger.API.Services.Implementations;
 /// <summary>
 /// Service implementation for workout objective operations
 /// </summary>
-public class WorkoutObjectiveService : EmptyEnabledPureReferenceService<WorkoutObjective, ReferenceDataDto>, IWorkoutObjectiveService
+public class WorkoutObjectiveService : PureReferenceService<WorkoutObjective, ReferenceDataDto>, IWorkoutObjectiveService
 {
     public WorkoutObjectiveService(
         IUnitOfWorkProvider<FitnessDbContext> unitOfWorkProvider,
-        IEmptyEnabledCacheService cacheService,
+        IEternalCacheService cacheService,
         ILogger<WorkoutObjectiveService> logger)
         : base(unitOfWorkProvider, cacheService, logger)
     {
@@ -53,7 +53,7 @@ public class WorkoutObjectiveService : EmptyEnabledPureReferenceService<WorkoutO
         Func<Task<WorkoutObjective>> loadFunc,
         string identifier)
     {
-        var cacheService = (IEmptyEnabledCacheService)_cacheService;
+        var cacheService = (IEternalCacheService)_cacheService;
         var cacheResult = await cacheService.GetAsync<ReferenceDataDto>(cacheKey);
         if (cacheResult.IsHit)
         {
@@ -73,7 +73,8 @@ public class WorkoutObjectiveService : EmptyEnabledPureReferenceService<WorkoutO
     
     private async Task<ServiceResult<ReferenceDataDto>> CacheAndReturnSuccessAsync(string cacheKey, ReferenceDataDto dto)
     {
-        await _cacheService.SetAsync(cacheKey, dto, TimeSpan.FromDays(365));
+        var cacheService = (IEternalCacheService)_cacheService;
+        await cacheService.SetAsync(cacheKey, dto);
         return ServiceResult<ReferenceDataDto>.Success(dto);
     }
     

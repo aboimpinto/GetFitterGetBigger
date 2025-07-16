@@ -16,11 +16,11 @@ namespace GetFitterGetBigger.API.Services.Implementations;
 /// Service implementation for body part operations
 /// TEMPORARY: Extends EmptyEnabledPureReferenceService until all entities are migrated
 /// </summary>
-public class BodyPartService : EmptyEnabledPureReferenceService<BodyPart, BodyPartDto>, IBodyPartService
+public class BodyPartService : PureReferenceService<BodyPart, BodyPartDto>, IBodyPartService
 {
     public BodyPartService(
         IUnitOfWorkProvider<FitnessDbContext> unitOfWorkProvider,
-        IEmptyEnabledCacheService cacheService,
+        IEternalCacheService cacheService,
         ILogger<BodyPartService> logger)
         : base(unitOfWorkProvider, cacheService, logger)
     {
@@ -54,7 +54,7 @@ public class BodyPartService : EmptyEnabledPureReferenceService<BodyPart, BodyPa
         Func<Task<BodyPart>> loadFunc,
         string identifier)
     {
-        var cacheService = (IEmptyEnabledCacheService)_cacheService;
+        var cacheService = (IEternalCacheService)_cacheService;
         var cacheResult = await cacheService.GetAsync<BodyPartDto>(cacheKey);
         if (cacheResult.IsHit)
         {
@@ -74,7 +74,8 @@ public class BodyPartService : EmptyEnabledPureReferenceService<BodyPart, BodyPa
     
     private async Task<ServiceResult<BodyPartDto>> CacheAndReturnSuccessAsync(string cacheKey, BodyPartDto dto)
     {
-        await _cacheService.SetAsync(cacheKey, dto, TimeSpan.FromDays(365));
+        var cacheService = (IEternalCacheService)_cacheService;
+        await cacheService.SetAsync(cacheKey, dto);
         return ServiceResult<BodyPartDto>.Success(dto);
     }
     

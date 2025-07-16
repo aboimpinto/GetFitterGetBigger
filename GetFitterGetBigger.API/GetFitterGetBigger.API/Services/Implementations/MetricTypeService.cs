@@ -16,13 +16,13 @@ namespace GetFitterGetBigger.API.Services.Implementations;
 /// Service implementation for metric type operations
 /// TEMPORARY: Extends EmptyEnabledPureReferenceService until all entities are migrated
 /// </summary>
-public class MetricTypeService : EmptyEnabledPureReferenceService<MetricType, ReferenceDataDto>, IMetricTypeService
+public class MetricTypeService : PureReferenceService<MetricType, ReferenceDataDto>, IMetricTypeService
 {
     private const string ValueCacheKeySuffix = "value:";
     
     public MetricTypeService(
         IUnitOfWorkProvider<FitnessDbContext> unitOfWorkProvider,
-        IEmptyEnabledCacheService cacheService,
+        IEternalCacheService cacheService,
         ILogger<MetricTypeService> logger)
         : base(unitOfWorkProvider, cacheService, logger)
     {
@@ -56,7 +56,7 @@ public class MetricTypeService : EmptyEnabledPureReferenceService<MetricType, Re
         Func<Task<MetricType>> loadFunc,
         string identifier)
     {
-        var cacheService = (IEmptyEnabledCacheService)_cacheService;
+        var cacheService = (IEternalCacheService)_cacheService;
         var cacheResult = await cacheService.GetAsync<ReferenceDataDto>(cacheKey);
         if (cacheResult.IsHit)
         {
@@ -76,7 +76,8 @@ public class MetricTypeService : EmptyEnabledPureReferenceService<MetricType, Re
     
     private async Task<ServiceResult<ReferenceDataDto>> CacheAndReturnSuccessAsync(string cacheKey, ReferenceDataDto dto)
     {
-        await _cacheService.SetAsync(cacheKey, dto, TimeSpan.FromDays(365));
+        var cacheService = (IEternalCacheService)_cacheService;
+        await cacheService.SetAsync(cacheKey, dto);
         return ServiceResult<ReferenceDataDto>.Success(dto);
     }
     

@@ -17,11 +17,11 @@ namespace GetFitterGetBigger.API.Services.Implementations;
 /// Service implementation for kinetic chain type operations
 /// TEMPORARY: Extends EmptyEnabledPureReferenceService until all entities are migrated
 /// </summary>
-public class KineticChainTypeService : EmptyEnabledPureReferenceService<KineticChainType, ReferenceDataDto>, IKineticChainTypeService
+public class KineticChainTypeService : PureReferenceService<KineticChainType, ReferenceDataDto>, IKineticChainTypeService
 {
     public KineticChainTypeService(
         IUnitOfWorkProvider<FitnessDbContext> unitOfWorkProvider,
-        IEmptyEnabledCacheService cacheService,
+        IEternalCacheService cacheService,
         ILogger<KineticChainTypeService> logger)
         : base(unitOfWorkProvider, cacheService, logger)
     {
@@ -55,7 +55,7 @@ public class KineticChainTypeService : EmptyEnabledPureReferenceService<KineticC
         Func<Task<KineticChainType>> loadFunc,
         string identifier)
     {
-        var cacheService = (IEmptyEnabledCacheService)_cacheService;
+        var cacheService = (IEternalCacheService)_cacheService;
         var cacheResult = await cacheService.GetAsync<ReferenceDataDto>(cacheKey);
         if (cacheResult.IsHit)
         {
@@ -75,7 +75,8 @@ public class KineticChainTypeService : EmptyEnabledPureReferenceService<KineticC
     
     private async Task<ServiceResult<ReferenceDataDto>> CacheAndReturnSuccessAsync(string cacheKey, ReferenceDataDto dto)
     {
-        await _cacheService.SetAsync(cacheKey, dto, TimeSpan.FromDays(365));
+        var cacheService = (IEternalCacheService)_cacheService;
+        await cacheService.SetAsync(cacheKey, dto);
         return ServiceResult<ReferenceDataDto>.Success(dto);
     }
     

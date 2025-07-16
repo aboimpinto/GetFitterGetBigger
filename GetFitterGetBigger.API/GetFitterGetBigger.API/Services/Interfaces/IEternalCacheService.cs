@@ -4,10 +4,14 @@ using GetFitterGetBigger.API.Services.Results;
 namespace GetFitterGetBigger.API.Services.Interfaces;
 
 /// <summary>
-/// TEMPORARY: Cache service interface that supports the Empty/Null Object Pattern
-/// This interface will be merged with ICacheService once all services are migrated
+/// Cache service interface for eternal/immutable Pure Reference data
+/// This cache stores data that never changes after deployment (e.g., BodyParts, DifficultyLevels)
+/// Features:
+/// - Supports Empty/Null Object Pattern with CacheResult
+/// - No remove operations (data is eternal)
+/// - Optimized for read-heavy, write-once scenarios
 /// </summary>
-public interface IEmptyEnabledCacheService : ICacheService
+public interface IEternalCacheService
 {
     /// <summary>
     /// Gets a value from the cache with explicit cache hit/miss result
@@ -15,7 +19,7 @@ public interface IEmptyEnabledCacheService : ICacheService
     /// <typeparam name="T">The type of the cached value</typeparam>
     /// <param name="key">The cache key</param>
     /// <returns>CacheResult indicating hit/miss and containing the value if hit</returns>
-    new Task<CacheResult<T>> GetAsync<T>(string key) where T : class;
+    Task<CacheResult<T>> GetAsync<T>(string key) where T : class;
 
     /// <summary>
     /// Gets a value from the cache, returning Empty for cache misses
@@ -27,23 +31,23 @@ public interface IEmptyEnabledCacheService : ICacheService
     Task<T> GetOrEmptyAsync<T>(string key) where T : class, IEmptyEntity<T>;
 
     /// <summary>
-    /// Gets a value from the cache using the legacy nullable pattern
-    /// This method is inherited from ICacheService for backward compatibility
+    /// Sets a value in the eternal cache with automatic 365-day expiration
+    /// Once set, values remain cached for effectively forever (365 days)
     /// </summary>
-    [Obsolete("This method returns null and will be removed after Empty pattern migration. " +
-              "Use GetAsync<T>(key) for CacheResult<T>, or GetOrEmptyAsync<T>(key) for types implementing IEmptyEntity<T>.")]
-    Task<T?> ICacheService.GetAsync<T>(string key) where T : class => 
-        GetAsync<T>(key).ContinueWith(t => t.Result.IsHit ? t.Result.Value : null);
+    /// <typeparam name="T">The type of the value to cache</typeparam>
+    /// <param name="key">The cache key</param>
+    /// <param name="value">The value to cache</param>
+    /// <returns>A task representing the asynchronous operation</returns>
+    Task SetAsync<T>(string key, T value) where T : class;
 
     /// <summary>
-    /// Gets or creates a cached value using the Empty pattern
+    /// Gets or creates a cached value using the Empty pattern with automatic 365-day expiration
     /// If the factory returns Empty, the value is NOT cached
     /// </summary>
     /// <typeparam name="T">The type that implements IEmptyEntity</typeparam>
     /// <param name="key">The cache key</param>
     /// <param name="factory">The factory function to create the value if not cached</param>
-    /// <param name="expiration">The cache expiration time</param>
     /// <returns>The cached value, or the result from factory (which may be Empty)</returns>
-    Task<T> GetOrCreateEmptyAwareAsync<T>(string key, Func<Task<T>> factory, TimeSpan expiration) 
+    Task<T> GetOrCreateEmptyAwareAsync<T>(string key, Func<Task<T>> factory) 
         where T : class, IEmptyEntity<T>;
 }

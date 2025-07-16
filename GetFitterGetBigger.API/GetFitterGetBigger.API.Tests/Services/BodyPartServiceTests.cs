@@ -23,7 +23,7 @@ namespace GetFitterGetBigger.API.Tests.Services
         private readonly Mock<IUnitOfWorkProvider<FitnessDbContext>> _mockUnitOfWorkProvider;
         private readonly Mock<IReadOnlyUnitOfWork<FitnessDbContext>> _mockReadOnlyUnitOfWork;
         private readonly Mock<IBodyPartRepository> _mockBodyPartRepository;
-        private readonly Mock<IEmptyEnabledCacheService> _mockCacheService;
+        private readonly Mock<IEternalCacheService> _mockCacheService;
         private readonly Mock<ILogger<BodyPartService>> _mockLogger;
         private readonly BodyPartService _bodyPartService;
 
@@ -32,7 +32,7 @@ namespace GetFitterGetBigger.API.Tests.Services
             _mockUnitOfWorkProvider = new Mock<IUnitOfWorkProvider<FitnessDbContext>>();
             _mockReadOnlyUnitOfWork = new Mock<IReadOnlyUnitOfWork<FitnessDbContext>>();
             _mockBodyPartRepository = new Mock<IBodyPartRepository>();
-            _mockCacheService = new Mock<IEmptyEnabledCacheService>();
+            _mockCacheService = new Mock<IEternalCacheService>();
             _mockLogger = new Mock<ILogger<BodyPartService>>();
 
             _mockUnitOfWorkProvider
@@ -146,7 +146,7 @@ namespace GetFitterGetBigger.API.Tests.Services
                 .ReturnsAsync(bodyParts);
 
             _mockCacheService
-                .Setup(x => x.SetAsync(It.IsAny<string>(), It.IsAny<IEnumerable<BodyPartDto>>(), It.IsAny<TimeSpan>()))
+                .Setup(x => x.SetAsync(It.IsAny<string>(), It.IsAny<IEnumerable<BodyPartDto>>()))
                 .Returns(Task.CompletedTask);
 
             // Act
@@ -182,7 +182,7 @@ namespace GetFitterGetBigger.API.Tests.Services
                 .ReturnsAsync(bodyPart);
 
             _mockCacheService
-                .Setup(x => x.SetAsync(It.IsAny<string>(), It.IsAny<BodyPartDto>(), It.IsAny<TimeSpan>()))
+                .Setup(x => x.SetAsync(It.IsAny<string>(), It.IsAny<BodyPartDto>()))
                 .Returns(Task.CompletedTask);
 
             // Act
@@ -217,7 +217,7 @@ namespace GetFitterGetBigger.API.Tests.Services
                 .ReturnsAsync(bodyPart);
 
             _mockCacheService
-                .Setup(x => x.SetAsync(It.IsAny<string>(), It.IsAny<BodyPartDto>(), It.IsAny<TimeSpan>()))
+                .Setup(x => x.SetAsync(It.IsAny<string>(), It.IsAny<BodyPartDto>()))
                 .Returns(Task.CompletedTask);
 
             // Act
@@ -339,7 +339,7 @@ namespace GetFitterGetBigger.API.Tests.Services
                 .ReturnsAsync(bodyPart);
 
             _mockCacheService
-                .Setup(x => x.SetAsync(It.IsAny<string>(), It.IsAny<BodyPartDto>(), It.IsAny<TimeSpan>()))
+                .Setup(x => x.SetAsync(It.IsAny<string>(), It.IsAny<BodyPartDto>()))
                 .Returns(Task.CompletedTask);
 
             // Act

@@ -15,11 +15,11 @@ namespace GetFitterGetBigger.API.Services.Implementations;
 /// Service implementation for movement pattern operations
 /// Extends EmptyEnabledPureReferenceService for pure reference data with eternal caching
 /// </summary>
-public class MovementPatternService : EmptyEnabledPureReferenceService<MovementPattern, ReferenceDataDto>, IMovementPatternService
+public class MovementPatternService : PureReferenceService<MovementPattern, ReferenceDataDto>, IMovementPatternService
 {
     public MovementPatternService(
         IUnitOfWorkProvider<FitnessDbContext> unitOfWorkProvider,
-        IEmptyEnabledCacheService cacheService,
+        IEternalCacheService cacheService,
         ILogger<MovementPatternService> logger)
         : base(unitOfWorkProvider, cacheService, logger)
     {
@@ -53,7 +53,7 @@ public class MovementPatternService : EmptyEnabledPureReferenceService<MovementP
         Func<Task<MovementPattern>> loadFunc,
         string identifier)
     {
-        var cacheService = (IEmptyEnabledCacheService)_cacheService;
+        var cacheService = (IEternalCacheService)_cacheService;
         var cacheResult = await cacheService.GetAsync<ReferenceDataDto>(cacheKey);
         if (cacheResult.IsHit)
         {
@@ -73,7 +73,8 @@ public class MovementPatternService : EmptyEnabledPureReferenceService<MovementP
     
     private async Task<ServiceResult<ReferenceDataDto>> CacheAndReturnSuccessAsync(string cacheKey, ReferenceDataDto dto)
     {
-        await _cacheService.SetAsync(cacheKey, dto, TimeSpan.FromDays(365));
+        var cacheService = (IEternalCacheService)_cacheService;
+        await cacheService.SetAsync(cacheKey, dto);
         return ServiceResult<ReferenceDataDto>.Success(dto);
     }
     

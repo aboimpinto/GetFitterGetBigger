@@ -18,7 +18,7 @@ namespace GetFitterGetBigger.API.Tests.Services
         private readonly Mock<IUnitOfWorkProvider<FitnessDbContext>> _mockUnitOfWorkProvider;
         private readonly Mock<IReadOnlyUnitOfWork<FitnessDbContext>> _mockReadOnlyUnitOfWork;
         private readonly Mock<IExerciseTypeRepository> _mockExerciseTypeRepository;
-        private readonly Mock<IEmptyEnabledCacheService> _mockCacheService;
+        private readonly Mock<IEternalCacheService> _mockCacheService;
         private readonly Mock<ILogger<ExerciseTypeService>> _mockLogger;
         private readonly ExerciseTypeService _exerciseTypeService;
 
@@ -27,7 +27,7 @@ namespace GetFitterGetBigger.API.Tests.Services
             _mockUnitOfWorkProvider = new Mock<IUnitOfWorkProvider<FitnessDbContext>>();
             _mockReadOnlyUnitOfWork = new Mock<IReadOnlyUnitOfWork<FitnessDbContext>>();
             _mockExerciseTypeRepository = new Mock<IExerciseTypeRepository>();
-            _mockCacheService = new Mock<IEmptyEnabledCacheService>();
+            _mockCacheService = new Mock<IEternalCacheService>();
             _mockLogger = new Mock<ILogger<ExerciseTypeService>>();
 
             _mockUnitOfWorkProvider

@@ -24,7 +24,7 @@ namespace GetFitterGetBigger.API.Tests.Services
         private readonly Mock<IUnitOfWorkProvider<FitnessDbContext>> _mockUnitOfWorkProvider;
         private readonly Mock<IReadOnlyUnitOfWork<FitnessDbContext>> _mockReadOnlyUnitOfWork;
         private readonly Mock<IMovementPatternRepository> _mockMovementPatternRepository;
-        private readonly Mock<IEmptyEnabledCacheService> _mockCacheService;
+        private readonly Mock<IEternalCacheService> _mockCacheService;
         private readonly Mock<ILogger<MovementPatternService>> _mockLogger;
         private readonly MovementPatternService _movementPatternService;
 
@@ -33,7 +33,7 @@ namespace GetFitterGetBigger.API.Tests.Services
             _mockUnitOfWorkProvider = new Mock<IUnitOfWorkProvider<FitnessDbContext>>();
             _mockReadOnlyUnitOfWork = new Mock<IReadOnlyUnitOfWork<FitnessDbContext>>();
             _mockMovementPatternRepository = new Mock<IMovementPatternRepository>();
-            _mockCacheService = new Mock<IEmptyEnabledCacheService>();
+            _mockCacheService = new Mock<IEternalCacheService>();
             _mockLogger = new Mock<ILogger<MovementPatternService>>();
 
             _mockUnitOfWorkProvider
@@ -88,8 +88,7 @@ namespace GetFitterGetBigger.API.Tests.Services
             
             _mockCacheService.Verify(x => x.SetAsync(
                 It.IsAny<string>(), 
-                It.IsAny<IEnumerable<ReferenceDataDto>>(), 
-                It.IsAny<TimeSpan>()), Times.Once);
+                It.IsAny<IEnumerable<ReferenceDataDto>>()), Times.Once);
             
             _mockMovementPatternRepository.Verify(x => x.GetAllActiveAsync(), Times.Once);
         }
@@ -119,8 +118,7 @@ namespace GetFitterGetBigger.API.Tests.Services
             _mockMovementPatternRepository.Verify(x => x.GetAllActiveAsync(), Times.Never);
             _mockCacheService.Verify(x => x.SetAsync(
                 It.IsAny<string>(), 
-                It.IsAny<IEnumerable<ReferenceDataDto>>(), 
-                It.IsAny<TimeSpan>()), Times.Never);
+                It.IsAny<IEnumerable<ReferenceDataDto>>()), Times.Never);
         }
 
         [Fact]

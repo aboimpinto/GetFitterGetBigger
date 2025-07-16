@@ -109,7 +109,7 @@ public class MuscleGroupService : ReferenceTableServiceBase<MuscleGroup>, IMuscl
             UpdatedAt = mg.UpdatedAt
         }).ToList();
         
-        await _cacheService.SetAsync(cacheKey, dtos, CacheDuration);
+        await _cacheService.SetAsync(cacheKey, dtos);
         
         return dtos;
     }

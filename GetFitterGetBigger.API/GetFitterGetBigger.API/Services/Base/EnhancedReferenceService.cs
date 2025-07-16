@@ -44,7 +44,8 @@ public abstract class EnhancedReferenceService<TEntity, TDto, TCreateCommand, TU
         try
         {
             var cacheKey = GetAllCacheKey();
-            var cached = await _cacheService.GetAsync<IEnumerable<TDto>>(cacheKey);
+            var cacheService = (ICacheService)_cacheService;
+            var cached = await cacheService.GetAsync<IEnumerable<TDto>>(cacheKey);
             
             if (cached != null)
             {
@@ -59,9 +60,8 @@ public abstract class EnhancedReferenceService<TEntity, TDto, TCreateCommand, TU
             // Map to DTOs
             var dtos = entities.Select(MapToDto).ToList();
             
-            // Cache with moderate TTL
-            var cacheDuration = GetCacheDuration() ?? TimeSpan.FromHours(1);
-            await _cacheService.SetAsync(cacheKey, dtos, cacheDuration);
+            // Cache with automatic 24-hour expiration for enhanced reference data
+            await cacheService.SetAsync(cacheKey, dtos);
             
             _logger.LogInformation("Loaded and cached {Count} {EntityType} entities", dtos.Count, typeof(TEntity).Name);
             return ServiceResult<IEnumerable<TDto>>.Success(dtos);
@@ -94,7 +94,8 @@ public abstract class EnhancedReferenceService<TEntity, TDto, TCreateCommand, TU
             }
             
             var cacheKey = GetCacheKey(id);
-            var cached = await _cacheService.GetAsync<TDto>(cacheKey);
+            var cacheService = (ICacheService)_cacheService;
+            var cached = await cacheService.GetAsync<TDto>(cacheKey);
             
             if (cached != null)
             {
@@ -116,9 +117,8 @@ public abstract class EnhancedReferenceService<TEntity, TDto, TCreateCommand, TU
             // Map to DTO
             var dto = MapToDto(entity);
             
-            // Cache with moderate TTL
-            var cacheDuration = GetCacheDuration() ?? TimeSpan.FromHours(1);
-            await _cacheService.SetAsync(cacheKey, dto, cacheDuration);
+            // Cache with automatic 24-hour expiration for enhanced reference data
+            await cacheService.SetAsync(cacheKey, dto);
             
             return ServiceResult<TDto>.Success(dto);
         }
@@ -156,7 +156,7 @@ public abstract class EnhancedReferenceService<TEntity, TDto, TCreateCommand, TU
             await unitOfWork.CommitAsync();
             
             // Invalidate caches
-            await InvalidateAllCachesAsync();
+            await InvalidateCacheAsync();
             
             // Map to DTO
             var dto = MapToDto(entity);
@@ -217,7 +217,7 @@ public abstract class EnhancedReferenceService<TEntity, TDto, TCreateCommand, TU
             await unitOfWork.CommitAsync();
             
             // Invalidate caches
-            await InvalidateAllCachesAsync();
+            await InvalidateCacheAsync();
             
             // Map to DTO
             var dto = MapToDto(updatedEntity);
@@ -262,7 +262,7 @@ public abstract class EnhancedReferenceService<TEntity, TDto, TCreateCommand, TU
             await unitOfWork.CommitAsync();
             
             // Invalidate caches
-            await InvalidateAllCachesAsync();
+            await InvalidateCacheAsync();
             
             _logger.LogInformation("Deleted {EntityType} with ID: {Id}", typeof(TEntity).Name, id);
             return ServiceResult<bool>.Success(true);

@@ -1,3 +1,5 @@
+using System.Linq;
+using System.Reflection;
 using GetFitterGetBigger.API.Models;
 using GetFitterGetBigger.API.Services.Interfaces;
 using GetFitterGetBigger.API.Services.Results;
@@ -9,6 +11,7 @@ namespace GetFitterGetBigger.API.Services.Base;
 /// <summary>
 /// Base service for pure reference data that never changes after deployment
 /// Provides read-only operations with eternal caching
+/// Supports both Empty pattern and non-Empty entities
 /// </summary>
 /// <typeparam name="TEntity">The pure reference entity type</typeparam>
 /// <typeparam name="TDto">The DTO type returned by the service</typeparam>
@@ -26,7 +29,7 @@ public abstract class PureReferenceService<TEntity, TDto> : EntityServiceBase<TE
     /// <param name="logger">The logger</param>
     protected PureReferenceService(
         IUnitOfWorkProvider<FitnessDbContext> unitOfWorkProvider,
-        ICacheService cacheService,
+        IEternalCacheService cacheService,
         ILogger logger)
         : base(cacheService, logger)
     {
@@ -39,36 +42,42 @@ public abstract class PureReferenceService<TEntity, TDto> : EntityServiceBase<TE
     /// <returns>A service result containing all active entities as DTOs</returns>
     public virtual async Task<ServiceResult<IEnumerable<TDto>>> GetAllAsync()
     {
+        var cacheKey = GetAllCacheKey();
+        var cacheService = (IEternalCacheService)_cacheService;
+        var cacheResult = await cacheService.GetAsync<IEnumerable<TDto>>(cacheKey);
+        
+        if (cacheResult.IsHit)
+        {
+            _logger.LogDebug("Cache hit for {EntityType}:all", typeof(TEntity).Name);
+            return ServiceResult<IEnumerable<TDto>>.Success(cacheResult.Value);
+        }
+        
+        return await LoadAndCacheAllAsync(cacheKey);
+    }
+    
+    private async Task<ServiceResult<IEnumerable<TDto>>> LoadAndCacheAllAsync(string cacheKey)
+    {
         try
         {
-            var cacheKey = GetAllCacheKey();
-            var cached = await _cacheService.GetAsync<IEnumerable<TDto>>(cacheKey);
-            
-            if (cached != null)
-            {
-                _logger.LogDebug("Cache hit for {EntityType}:all", typeof(TEntity).Name);
-                return ServiceResult<IEnumerable<TDto>>.Success(cached);
-            }
-            
-            // Load from database
             using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
             var entities = await LoadAllEntitiesAsync(unitOfWork);
             
             // Map to DTOs
             var dtos = entities.Select(MapToDto).ToList();
             
-            // Cache forever (until app restart)
-            await _cacheService.SetAsync(cacheKey, dtos, TimeSpan.FromDays(365));
+            // Cache with eternal duration for pure reference data
+            var cacheService = (IEternalCacheService)_cacheService;
+            await cacheService.SetAsync(cacheKey, dtos);
             
             _logger.LogInformation("Loaded and cached {Count} {EntityType} entities", dtos.Count, typeof(TEntity).Name);
             return ServiceResult<IEnumerable<TDto>>.Success(dtos);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error loading all {EntityType} entities", typeof(TEntity).Name);
+            _logger.LogError(ex, "Error loading all {EntityType} entities from database", typeof(TEntity).Name);
             return ServiceResult<IEnumerable<TDto>>.Failure(
-                Enumerable.Empty<TDto>(),
-                $"Failed to load {typeof(TEntity).Name} data");
+                [],
+                ServiceError.InternalError($"Failed to load {typeof(TEntity).Name} data from database"));
         }
     }
     
@@ -79,51 +88,67 @@ public abstract class PureReferenceService<TEntity, TDto> : EntityServiceBase<TE
     /// <returns>A service result containing the entity as a DTO</returns>
     public virtual async Task<ServiceResult<TDto>> GetByIdAsync(string id)
     {
+        // Validate and parse ID
+        var parseResult = ValidateAndParseId(id);
+        if (!parseResult.IsValid)
+        {
+            var errors = parseResult.Errors.Select(e => ServiceError.ValidationFailed(e)).ToArray();
+            return ServiceResult<TDto>.Failure(CreateEmptyDto(), errors);
+        }
+        
+        var cacheKey = GetCacheKey(id);
+        var cacheService = (IEternalCacheService)_cacheService;
+        var cacheResult = await cacheService.GetAsync<TDto>(cacheKey);
+        
+        if (cacheResult.IsHit)
+        {
+            _logger.LogDebug("Cache hit for {EntityType}:{Id}", typeof(TEntity).Name, id);
+            return ServiceResult<TDto>.Success(cacheResult.Value);
+        }
+        
+        return await LoadAndCacheByIdAsync(id, cacheKey);
+    }
+    
+    private async Task<ServiceResult<TDto>> LoadAndCacheByIdAsync(string id, string cacheKey)
+    {
         try
         {
-            // Validate and parse ID
-            var parseResult = ValidateAndParseId(id);
-            if (!parseResult.IsValid)
-            {
-                return ServiceResult<TDto>.Failure(
-                    CreateEmptyDto(),
-                    parseResult.Errors);
-            }
-            
-            var cacheKey = GetCacheKey(id);
-            var cached = await _cacheService.GetAsync<TDto>(cacheKey);
-            
-            if (cached != null)
-            {
-                _logger.LogDebug("Cache hit for {EntityType}:{Id}", typeof(TEntity).Name, id);
-                return ServiceResult<TDto>.Success(cached);
-            }
-            
-            // Load from database
             using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
             var entity = await LoadEntityByIdAsync(unitOfWork, id);
             
-            if (entity == null || !entity.IsActive)
+            // Check if entity is null or inactive
+            // Check if entity is an empty instance (for entities implementing IEmptyEntity)
+            // This is a safe check that doesn't require TEntity to implement IEmptyEntity
+            var entityType = entity.GetType();
+            var isEmptyProperty = entityType.GetProperty("IsEmpty");
+            if (isEmptyProperty != null && isEmptyProperty.GetValue(entity) is bool isEmpty && isEmpty)
             {
                 return ServiceResult<TDto>.Failure(
                     CreateEmptyDto(),
                     ServiceError.NotFound(typeof(TEntity).Name));
             }
             
-            // Map to DTO
-            var dto = MapToDto(entity);
+            // Check if entity is inactive
+            if (!entity.IsActive)
+            {
+                return ServiceResult<TDto>.Failure(
+                    CreateEmptyDto(),
+                    ServiceError.NotFound(typeof(TEntity).Name));
+            }
             
-            // Cache forever (until app restart)
-            await _cacheService.SetAsync(cacheKey, dto, TimeSpan.FromDays(365));
+            // Map to DTO and cache
+            var dto = MapToDto(entity);
+            var cacheService = (IEternalCacheService)_cacheService;
+            await cacheService.SetAsync(cacheKey, dto);
             
             return ServiceResult<TDto>.Success(dto);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error loading {EntityType} with ID: {Id}", typeof(TEntity).Name, id);
+            _logger.LogError(ex, "Error loading {EntityType} with ID: {Id} from database", typeof(TEntity).Name, id);
             return ServiceResult<TDto>.Failure(
                 CreateEmptyDto(),
-                $"Failed to load {typeof(TEntity).Name}");
+                ServiceError.InternalError($"Failed to load {typeof(TEntity).Name}"));
         }
     }
     
@@ -153,7 +178,7 @@ public abstract class PureReferenceService<TEntity, TDto> : EntityServiceBase<TE
     /// <param name="unitOfWork">The read-only unit of work</param>
     /// <param name="id">The entity ID</param>
     /// <returns>The entity if found, null otherwise</returns>
-    protected abstract Task<TEntity?> LoadEntityByIdAsync(IReadOnlyUnitOfWork<FitnessDbContext> unitOfWork, string id);
+    protected abstract Task<TEntity> LoadEntityByIdAsync(IReadOnlyUnitOfWork<FitnessDbContext> unitOfWork, string id);
     
     /// <summary>
     /// Maps an entity to its DTO representation
@@ -177,4 +202,5 @@ public abstract class PureReferenceService<TEntity, TDto> : EntityServiceBase<TE
     /// <param name="id">The ID string to validate</param>
     /// <returns>A validation result</returns>
     protected abstract ValidationResult ValidateAndParseId(string id);
+    
 }

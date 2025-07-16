@@ -15,7 +15,8 @@ public abstract class EntityServiceBase<TEntity> where TEntity : class, IEntity
     private const string AllEntitiesSuffix = "all";
     private const string CacheWildcardPattern = "*";
     
-    protected readonly ICacheService _cacheService;
+    // Note: This can be either ICacheService or IEternalCacheService depending on the service type
+    protected readonly object _cacheService;
     protected readonly ILogger _logger;
     
     /// <summary>
@@ -30,12 +31,12 @@ public abstract class EntityServiceBase<TEntity> where TEntity : class, IEntity
     }
 
     /// <summary>
-    /// Initializes a new instance of the EntityServiceBase class with Empty-enabled cache service
-    /// This constructor supports services migrated to the Empty pattern
+    /// Initializes a new instance of the EntityServiceBase class with Eternal cache service
+    /// This constructor supports Pure Reference services with eternal caching
     /// </summary>
-    /// <param name="cacheService">The Empty-enabled cache service</param>
+    /// <param name="cacheService">The eternal cache service</param>
     /// <param name="logger">The logger</param>
-    protected EntityServiceBase(IEmptyEnabledCacheService cacheService, ILogger logger)
+    protected EntityServiceBase(IEternalCacheService cacheService, ILogger logger)
     {
         _cacheService = cacheService ?? throw new ArgumentNullException(nameof(cacheService));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
@@ -52,30 +53,25 @@ public abstract class EntityServiceBase<TEntity> where TEntity : class, IEntity
         {
             // Create a default instance to get cache strategy
             // This is a compile-time check, so we use the interface definitions
-            return typeof(TEntity) switch
+            // Note: Pure references use TimeSpan.MaxValue (eternal), 
+            // Enhanced references use TimeSpan.FromHours(1),
+            // Domain entities use TimeSpan.FromMinutes(5) or null (no caching)
+            
+            if (typeof(IPureReference).IsAssignableFrom(typeof(TEntity)))
             {
-                Type t when typeof(IPureReference).IsAssignableFrom(t) => TimeSpan.FromDays(365),
-                Type t when typeof(IEnhancedReference).IsAssignableFrom(t) => TimeSpan.FromHours(1),
-                _ => TimeSpan.FromMinutes(5) // Short-lived for domain entities
-            };
+                return TimeSpan.MaxValue; // Eternal caching for pure references
+            }
+            else if (typeof(IEnhancedReference).IsAssignableFrom(typeof(TEntity)))
+            {
+                return TimeSpan.FromHours(1); // Moderate caching for enhanced references
+            }
+            else if (typeof(IDomainEntity).IsAssignableFrom(typeof(TEntity)))
+            {
+                return TimeSpan.FromMinutes(5); // Short caching for domain entities
+            }
         }
         
         return null; // No caching for non-cacheable entities
-    }
-    
-    /// <summary>
-    /// Gets the cache strategy for this entity type
-    /// </summary>
-    /// <returns>The appropriate cache strategy</returns>
-    protected virtual CacheStrategy GetCacheStrategy()
-    {
-        return typeof(TEntity) switch
-        {
-            Type t when typeof(IPureReference).IsAssignableFrom(t) => CacheStrategy.Eternal,
-            Type t when typeof(IEnhancedReference).IsAssignableFrom(t) => CacheStrategy.Invalidatable,
-            Type t when typeof(IDomainEntity).IsAssignableFrom(t) => CacheStrategy.ShortLived,
-            _ => CacheStrategy.None
-        };
     }
     
     /// <summary>
@@ -88,31 +84,49 @@ public abstract class EntityServiceBase<TEntity> where TEntity : class, IEntity
     }
     
     /// <summary>
-    /// Invalidates all caches for this entity type
+    /// Gets the cache key for all entities
     /// </summary>
-    protected async Task InvalidateAllCachesAsync()
+    /// <returns>The cache key for all entities</returns>
+    protected virtual string GetAllCacheKey()
     {
-        var prefix = GetCacheKeyPrefix();
-        _logger.LogInformation("Invalidating all caches with prefix: {Prefix}", prefix);
-        await _cacheService.RemoveByPatternAsync($"{prefix}{CacheWildcardPattern}");
+        return $"{GetCacheKeyPrefix()}{AllEntitiesSuffix}";
     }
     
     /// <summary>
-    /// Gets a specific cache key for an entity ID
+    /// Gets the cache key for a specific entity
     /// </summary>
     /// <param name="id">The entity ID</param>
-    /// <returns>The cache key</returns>
-    protected string GetCacheKey(string id)
+    /// <returns>The cache key for the entity</returns>
+    protected virtual string GetCacheKey(string id)
     {
         return $"{GetCacheKeyPrefix()}{id}";
     }
     
     /// <summary>
-    /// Gets the cache key for all entities
+    /// Gets the cache invalidation pattern for this entity type
     /// </summary>
-    /// <returns>The cache key for all entities</returns>
-    protected string GetAllCacheKey()
+    /// <returns>The cache invalidation pattern</returns>
+    protected virtual string GetCacheInvalidationPattern()
     {
-        return $"{GetCacheKeyPrefix()}{AllEntitiesSuffix}";
+        return $"{GetCacheKeyPrefix()}{CacheWildcardPattern}";
+    }
+    
+    /// <summary>
+    /// Invalidates all cache entries for this entity type
+    /// Only applicable for services using ICacheService (lookup tables)
+    /// </summary>
+    /// <returns>A task representing the asynchronous operation</returns>
+    protected virtual async Task InvalidateCacheAsync()
+    {
+        if (_cacheService is ICacheService cacheService)
+        {
+            var pattern = GetCacheInvalidationPattern();
+            await cacheService.RemoveByPatternAsync(pattern);
+            _logger.LogInformation("Cache invalidated for pattern: {Pattern}", pattern);
+        }
+        else
+        {
+            _logger.LogDebug("Cache invalidation not supported for eternal cache service");
+        }
     }
 }

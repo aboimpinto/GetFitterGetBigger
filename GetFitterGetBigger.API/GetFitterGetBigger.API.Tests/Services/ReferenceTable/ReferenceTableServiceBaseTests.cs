@@ -88,8 +88,7 @@ public class ReferenceTableServiceBaseTests
         Assert.Equal(entities, result);
         _cacheServiceMock.Verify(x => x.SetAsync(
             "test:all",
-            It.IsAny<IEnumerable<TestEntity>>(),
-            TimeSpan.FromHours(24)),
+            It.IsAny<IEnumerable<TestEntity>>()),
             Times.Once);
     }
 
@@ -130,8 +129,7 @@ public class ReferenceTableServiceBaseTests
         Assert.Equal(entity, result);
         _cacheServiceMock.Verify(x => x.SetAsync(
             "test:id:test-1",
-            It.IsAny<TestEntity>(),
-            TimeSpan.FromHours(24)),
+            It.IsAny<TestEntity>()),
             Times.Once);
     }
 

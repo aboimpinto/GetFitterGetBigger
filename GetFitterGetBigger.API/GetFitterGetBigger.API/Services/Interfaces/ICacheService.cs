@@ -11,20 +11,16 @@ public interface ICacheService
     /// <typeparam name="T">The type of the cached value</typeparam>
     /// <param name="key">The cache key</param>
     /// <returns>The cached value if found, otherwise null</returns>
-    [Obsolete("This method returns null and will be removed after Empty pattern migration. " +
-              "Use IEmptyEnabledCacheService.GetAsync<T>(key) for CacheResult<T>, " +
-              "or IEmptyEnabledCacheService.GetOrEmptyAsync<T>(key) for types implementing IEmptyEntity<T>.")]
     Task<T?> GetAsync<T>(string key) where T : class;
 
     /// <summary>
-    /// Sets a value in the cache with the specified expiration
+    /// Sets a value in the cache with automatic 24-hour expiration
     /// </summary>
     /// <typeparam name="T">The type of the value to cache</typeparam>
     /// <param name="key">The cache key</param>
     /// <param name="value">The value to cache</param>
-    /// <param name="expiration">The cache expiration time</param>
     /// <returns>A task representing the asynchronous operation</returns>
-    Task SetAsync<T>(string key, T value, TimeSpan expiration) where T : class;
+    Task SetAsync<T>(string key, T value) where T : class;
 
     /// <summary>
     /// Removes a value from the cache
@@ -41,14 +37,11 @@ public interface ICacheService
     Task RemoveByPatternAsync(string pattern);
 
     /// <summary>
-    /// Gets or creates a cached value
+    /// Gets or creates a cached value with automatic 24-hour expiration
     /// </summary>
     /// <typeparam name="T">The type of the cached value</typeparam>
     /// <param name="key">The cache key</param>
     /// <param name="factory">The factory function to create the value if not cached</param>
-    /// <param name="expiration">The cache expiration time</param>
     /// <returns>The cached or newly created value</returns>
-    [Obsolete("This method handles null values and will be removed after Empty pattern migration. " +
-              "Use IEmptyEnabledCacheService.GetOrCreateEmptyAwareAsync<T> for types implementing IEmptyEntity<T>.")]
-    Task<T> GetOrCreateAsync<T>(string key, Func<Task<T>> factory, TimeSpan expiration) where T : class;
+    Task<T> GetOrCreateAsync<T>(string key, Func<Task<T>> factory) where T : class;
 }

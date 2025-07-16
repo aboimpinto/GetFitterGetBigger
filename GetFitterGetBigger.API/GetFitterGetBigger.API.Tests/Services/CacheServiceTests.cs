@@ -26,7 +26,7 @@ public class CacheServiceTests
         // Arrange
         var key = "test-key";
         var value = new TestObject { Id = 1, Name = "Test" };
-        await _cacheService.SetAsync(key, value, TimeSpan.FromMinutes(5));
+        await _cacheService.SetAsync(key, value);
 
         // Act
         var result = await _cacheService.GetAsync<TestObject>(key);
@@ -58,7 +58,7 @@ public class CacheServiceTests
         var value = new TestObject { Id = 1, Name = "Test" };
 
         // Act
-        await _cacheService.SetAsync(key, value, TimeSpan.FromMinutes(5));
+        await _cacheService.SetAsync(key, value);
         var result = await _cacheService.GetAsync<TestObject>(key);
 
         // Assert
@@ -72,7 +72,7 @@ public class CacheServiceTests
         // Arrange
         var key = "test-key";
         var value = new TestObject { Id = 1, Name = "Test" };
-        await _cacheService.SetAsync(key, value, TimeSpan.FromMinutes(5));
+        await _cacheService.SetAsync(key, value);
 
         // Act
         await _cacheService.RemoveAsync(key);
@@ -91,12 +91,12 @@ public class CacheServiceTests
         var key2 = $"{pattern}item2";
         var key3 = "different-pattern:item3";
         
-        await _cacheService.SetAsync(key1, new TestObject { Id = 1 }, TimeSpan.FromMinutes(5));
-        await _cacheService.SetAsync(key2, new TestObject { Id = 2 }, TimeSpan.FromMinutes(5));
-        await _cacheService.SetAsync(key3, new TestObject { Id = 3 }, TimeSpan.FromMinutes(5));
+        await _cacheService.SetAsync(key1, new TestObject { Id = 1 });
+        await _cacheService.SetAsync(key2, new TestObject { Id = 2 });
+        await _cacheService.SetAsync(key3, new TestObject { Id = 3 });
 
         // Act
-        await _cacheService.RemoveByPatternAsync(pattern);
+        await _cacheService.RemoveByPatternAsync(pattern + "*");
 
         // Assert
         Assert.Null(await _cacheService.GetAsync<TestObject>(key1));
@@ -110,7 +110,7 @@ public class CacheServiceTests
         // Arrange
         var key = "test-key";
         var cachedValue = new TestObject { Id = 1, Name = "Cached" };
-        await _cacheService.SetAsync(key, cachedValue, TimeSpan.FromMinutes(5));
+        await _cacheService.SetAsync(key, cachedValue);
         
         var factoryCalled = false;
         Func<Task<TestObject>> factory = async () =>
@@ -121,7 +121,7 @@ public class CacheServiceTests
         };
 
         // Act
-        var result = await _cacheService.GetOrCreateAsync(key, factory, TimeSpan.FromMinutes(5));
+        var result = await _cacheService.GetOrCreateAsync(key, factory);
 
         // Assert
         Assert.NotNull(result);
@@ -146,7 +146,7 @@ public class CacheServiceTests
         };
 
         // Act
-        var result = await _cacheService.GetOrCreateAsync(key, factory, TimeSpan.FromMinutes(5));
+        var result = await _cacheService.GetOrCreateAsync(key, factory);
 
         // Assert
         Assert.NotNull(result);

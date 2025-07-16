@@ -20,7 +20,7 @@ namespace GetFitterGetBigger.API.Tests.Services;
 public class WorkoutObjectiveServiceTests
 {
     private readonly Mock<IUnitOfWorkProvider<FitnessDbContext>> _unitOfWorkProviderMock;
-    private readonly Mock<IEmptyEnabledCacheService> _cacheServiceMock;
+    private readonly Mock<IEternalCacheService> _cacheServiceMock;
     private readonly Mock<ILogger<WorkoutObjectiveService>> _loggerMock;
     private readonly Mock<IReadOnlyUnitOfWork<FitnessDbContext>> _unitOfWorkMock;
     private readonly Mock<IWorkoutObjectiveRepository> _repositoryMock;
@@ -29,7 +29,7 @@ public class WorkoutObjectiveServiceTests
     public WorkoutObjectiveServiceTests()
     {
         _unitOfWorkProviderMock = new Mock<IUnitOfWorkProvider<FitnessDbContext>>();
-        _cacheServiceMock = new Mock<IEmptyEnabledCacheService>();
+        _cacheServiceMock = new Mock<IEternalCacheService>();
         _loggerMock = new Mock<ILogger<WorkoutObjectiveService>>();
         _unitOfWorkMock = new Mock<IReadOnlyUnitOfWork<FitnessDbContext>>();
         _repositoryMock = new Mock<IWorkoutObjectiveRepository>();

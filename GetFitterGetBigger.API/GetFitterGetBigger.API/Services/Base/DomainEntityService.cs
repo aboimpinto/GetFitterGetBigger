@@ -82,13 +82,15 @@ public abstract class DomainEntityService<TEntity, TDto, TCreateCommand, TUpdate
             }
             
             // For domain entities, we might use short-lived caching
-            var cacheStrategy = GetCacheStrategy();
             TDto? dto = null;
             
-            if (cacheStrategy == CacheStrategy.ShortLived)
+            // Check if caching is enabled for this entity type
+            var cacheDuration = GetCacheDuration();
+            if (cacheDuration.HasValue)
             {
                 var cacheKey = GetCacheKey(id);
-                dto = await _cacheService.GetAsync<TDto>(cacheKey);
+                var cacheService = (ICacheService)_cacheService;
+                dto = await cacheService.GetAsync<TDto>(cacheKey);
                 
                 if (dto != null)
                 {
@@ -112,10 +114,10 @@ public abstract class DomainEntityService<TEntity, TDto, TCreateCommand, TUpdate
             dto = MapToDto(entity);
             
             // Cache if applicable
-            if (cacheStrategy == CacheStrategy.ShortLived)
+            if (cacheDuration.HasValue)
             {
-                var cacheDuration = GetCacheDuration() ?? TimeSpan.FromMinutes(5);
-                await _cacheService.SetAsync(GetCacheKey(id), dto, cacheDuration);
+                var cacheService = (ICacheService)_cacheService;
+                await cacheService.SetAsync(GetCacheKey(id), dto);
             }
             
             return ServiceResult<TDto>.Success(dto);
@@ -159,10 +161,7 @@ public abstract class DomainEntityService<TEntity, TDto, TCreateCommand, TUpdate
             await writableUow.CommitAsync();
             
             // Clear any related caches if needed
-            if (GetCacheStrategy() != CacheStrategy.None)
-            {
-                await InvalidateRelatedCachesAsync(entity);
-            }
+            await InvalidateRelatedCachesAsync(entity);
             
             // Map to DTO
             var dto = MapToDto(entity);
@@ -227,10 +226,7 @@ public abstract class DomainEntityService<TEntity, TDto, TCreateCommand, TUpdate
             await writableUow.CommitAsync();
             
             // Clear any related caches if needed
-            if (GetCacheStrategy() != CacheStrategy.None)
-            {
-                await InvalidateRelatedCachesAsync(updatedEntity);
-            }
+            await InvalidateRelatedCachesAsync(updatedEntity);
             
             // Map to DTO
             var dto = MapToDto(updatedEntity);
@@ -289,10 +285,7 @@ public abstract class DomainEntityService<TEntity, TDto, TCreateCommand, TUpdate
             await unitOfWork.CommitAsync();
             
             // Clear any related caches if needed
-            if (GetCacheStrategy() != CacheStrategy.None)
-            {
-                await InvalidateRelatedCachesAsync(entity);
-            }
+            await InvalidateRelatedCachesAsync(entity);
             
             _logger.LogInformation("Deleted {EntityType} with ID: {Id}", typeof(TEntity).Name, id);
             return ServiceResult<bool>.Success(true);
@@ -323,7 +316,8 @@ public abstract class DomainEntityService<TEntity, TDto, TCreateCommand, TUpdate
     protected virtual async Task InvalidateRelatedCachesAsync(TEntity entity)
     {
         // Remove the specific entity from cache
-        await _cacheService.RemoveAsync(GetCacheKey(entity.Id));
+        var cacheService = (ICacheService)_cacheService;
+        await cacheService.RemoveAsync(GetCacheKey(entity.Id.ToString()));
         
         // Derived classes can override to invalidate additional caches
     }

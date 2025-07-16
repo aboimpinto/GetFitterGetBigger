@@ -16,11 +16,11 @@ namespace GetFitterGetBigger.API.Services.Implementations;
 /// Service implementation for exercise type operations
 /// TEMPORARY: Extends EmptyEnabledPureReferenceService until all entities are migrated
 /// </summary>
-public class ExerciseTypeService : EmptyEnabledPureReferenceService<ExerciseType, ReferenceDataDto>, IExerciseTypeService
+public class ExerciseTypeService : PureReferenceService<ExerciseType, ReferenceDataDto>, IExerciseTypeService
 {
     public ExerciseTypeService(
         IUnitOfWorkProvider<FitnessDbContext> unitOfWorkProvider,
-        IEmptyEnabledCacheService cacheService,
+        IEternalCacheService cacheService,
         ILogger<ExerciseTypeService> logger)
         : base(unitOfWorkProvider, cacheService, logger)
     {
@@ -96,7 +96,7 @@ public class ExerciseTypeService : EmptyEnabledPureReferenceService<ExerciseType
         Func<Task<ExerciseType>> loadFunc,
         string identifier)
     {
-        var cacheService = (IEmptyEnabledCacheService)_cacheService;
+        var cacheService = (IEternalCacheService)_cacheService;
         var cacheResult = await cacheService.GetAsync<ReferenceDataDto>(cacheKey);
         if (cacheResult.IsHit)
         {
@@ -116,7 +116,8 @@ public class ExerciseTypeService : EmptyEnabledPureReferenceService<ExerciseType
     
     private async Task<ServiceResult<ReferenceDataDto>> CacheAndReturnSuccessAsync(string cacheKey, ReferenceDataDto dto)
     {
-        await _cacheService.SetAsync(cacheKey, dto, TimeSpan.FromDays(365));
+        var cacheService = (IEternalCacheService)_cacheService;
+        await cacheService.SetAsync(cacheKey, dto);
         return ServiceResult<ReferenceDataDto>.Success(dto);
     }
     
@@ -134,12 +135,15 @@ public class ExerciseTypeService : EmptyEnabledPureReferenceService<ExerciseType
     }
     
     // Returns ExerciseType.Empty instead of null (Null Object Pattern)
-    protected override async Task<ExerciseType> LoadEntityByIdAsync(IReadOnlyUnitOfWork<FitnessDbContext> unitOfWork, string id) =>
-        ExerciseTypeId.ParseOrEmpty(id) switch
-        {
-            { IsEmpty: true } => ExerciseType.Empty,
-            var exerciseTypeId => await unitOfWork.GetRepository<IExerciseTypeRepository>().GetByIdAsync(exerciseTypeId) ?? ExerciseType.Empty
-        };
+    protected override async Task<ExerciseType> LoadEntityByIdAsync(IReadOnlyUnitOfWork<FitnessDbContext> unitOfWork, string id)
+    {
+        var exerciseTypeId = ExerciseTypeId.ParseOrEmpty(id);
+        if (exerciseTypeId.IsEmpty)
+            return ExerciseType.Empty;
+            
+        var repository = unitOfWork.GetRepository<IExerciseTypeRepository>();
+        return await repository.GetByIdAsync(exerciseTypeId);
+    }
     
     protected override ReferenceDataDto MapToDto(ExerciseType entity)
     {

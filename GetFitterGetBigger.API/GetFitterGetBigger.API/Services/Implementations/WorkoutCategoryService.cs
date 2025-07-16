@@ -15,11 +15,11 @@ namespace GetFitterGetBigger.API.Services.Implementations;
 /// <summary>
 /// Service implementation for workout category operations with Empty pattern support
 /// </summary>
-public class WorkoutCategoryService : EmptyEnabledPureReferenceService<WorkoutCategory, WorkoutCategoryDto>, IWorkoutCategoryService
+public class WorkoutCategoryService : PureReferenceService<WorkoutCategory, WorkoutCategoryDto>, IWorkoutCategoryService
 {
     public WorkoutCategoryService(
         IUnitOfWorkProvider<FitnessDbContext> unitOfWorkProvider,
-        IEmptyEnabledCacheService cacheService,
+        IEternalCacheService cacheService,
         ILogger<WorkoutCategoryService> logger)
         : base(unitOfWorkProvider, cacheService, logger)
     {
@@ -47,7 +47,7 @@ public class WorkoutCategoryService : EmptyEnabledPureReferenceService<WorkoutCa
         Func<Task<WorkoutCategory>> loadFunc,
         string identifier)
     {
-        var cacheService = (IEmptyEnabledCacheService)_cacheService;
+        var cacheService = (IEternalCacheService)_cacheService;
         var cacheResult = await cacheService.GetAsync<WorkoutCategoryDto>(cacheKey);
         if (cacheResult.IsHit)
         {
@@ -68,7 +68,8 @@ public class WorkoutCategoryService : EmptyEnabledPureReferenceService<WorkoutCa
     private async Task<ServiceResult<WorkoutCategoryDto>> CacheAndReturnSuccessAsync(string cacheKey, WorkoutCategoryDto dto)
     {
         // Use TimeSpan.MaxValue for eternal caching as per entity's cache strategy
-        await _cacheService.SetAsync(cacheKey, dto, TimeSpan.MaxValue);
+        var cacheService = (IEternalCacheService)_cacheService;
+        await cacheService.SetAsync(cacheKey, dto);
         return ServiceResult<WorkoutCategoryDto>.Success(dto);
     }
     

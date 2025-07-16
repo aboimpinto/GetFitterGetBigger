@@ -1,16 +1,14 @@
-using GetFitterGetBigger.API.Models;
 using GetFitterGetBigger.API.Services.Interfaces;
-using GetFitterGetBigger.API.Services.Results;
 using Microsoft.Extensions.Caching.Memory;
 using System.Collections.Concurrent;
 
 namespace GetFitterGetBigger.API.Services.Implementations;
 
 /// <summary>
-/// Implementation of cache service using IMemoryCache
-/// Implements both ICacheService (legacy nullable) and IEmptyEnabledCacheService (CacheResult)
+/// Implementation of cache service for lookup/enhanced reference tables
+/// This cache supports standard nullable patterns and cache invalidation
 /// </summary>
-public class CacheService : IEmptyEnabledCacheService
+public class CacheService : ICacheService
 {
     private readonly IMemoryCache _memoryCache;
     private readonly ILogger<CacheService> _logger;
@@ -23,53 +21,45 @@ public class CacheService : IEmptyEnabledCacheService
     }
 
     /// <summary>
-    /// Gets a value from the cache with explicit cache hit/miss result
+    /// Gets a value from the cache
     /// </summary>
-    public Task<CacheResult<T>> GetAsync<T>(string key) where T : class
+    public Task<T?> GetAsync<T>(string key) where T : class
     {
         var value = _memoryCache.Get<T>(key);
-        var result = value != null ? CacheResult<T>.Hit(value) : CacheResult<T>.Miss();
-        return Task.FromResult(result);
+        return Task.FromResult(value);
     }
 
     /// <summary>
-    /// Gets a value from the cache, returning Empty for cache misses
+    /// Gets or creates a cached value with automatic 24-hour expiration
     /// </summary>
-    public async Task<T> GetOrEmptyAsync<T>(string key) where T : class, IEmptyEntity<T>
+    public async Task<T> GetOrCreateAsync<T>(string key, Func<Task<T>> factory) where T : class
     {
-        var result = await GetAsync<T>(key);
-        return result switch
+        var value = await GetAsync<T>(key);
+        if (value != null)
         {
-            { IsHit: true } => result.Value,
-            _ => T.Empty
-        };
+            return value;
+        }
+
+        value = await factory();
+        if (value != null)
+        {
+            await SetAsync(key, value);
+        }
+
+        return value!;
     }
 
     /// <summary>
-    /// Legacy method for backward compatibility - returns null for cache miss
+    /// Sets a value in the cache with automatic 24-hour expiration
     /// </summary>
-    [Obsolete("This method returns null and will be removed after Empty pattern migration. " +
-              "Use GetAsync<T>(key) for CacheResult<T>, or GetOrEmptyAsync<T>(key) for types implementing IEmptyEntity<T>.")]
-    async Task<T?> ICacheService.GetAsync<T>(string key) where T : class
+    public Task SetAsync<T>(string key, T value) where T : class
     {
-        var result = await GetAsync<T>(key);
-        return result switch
-        {
-            { IsHit: true } => result.Value,
-            _ => null
-        };
-    }
-
-    /// <inheritdoc/>
-    /// <remarks>
-    /// This method returns a Task for interface compatibility, but the operation is synchronous
-    /// since we're using in-memory cache (IMemoryCache). If we migrate to a distributed cache
-    /// (Redis, SQL, etc.) in the future, the async signature will be necessary.
-    /// </remarks>
-    public Task SetAsync<T>(string key, T value, TimeSpan expiration) where T : class
-    {
+        // Fixed 24-hour expiration for volatile data
+        const int VOLATILE_HOURS = 24;
+        var expiration = TimeSpan.FromHours(VOLATILE_HOURS);
+        
         var cacheEntryOptions = new MemoryCacheEntryOptions()
-            .SetSlidingExpiration(expiration)
+            .SetAbsoluteExpiration(expiration)
             .RegisterPostEvictionCallback((evictedKey, evictedValue, reason, state) =>
             {
                 _cacheKeys.TryRemove(evictedKey.ToString()!, out _);
@@ -78,15 +68,13 @@ public class CacheService : IEmptyEnabledCacheService
         _memoryCache.Set(key, value, cacheEntryOptions);
         _cacheKeys.TryAdd(key, true);
         
+        _logger.LogDebug("Cache set for key: {Key} with {Hours}-hour expiration", key, VOLATILE_HOURS);
         return Task.CompletedTask;
     }
 
-    /// <inheritdoc/>
-    /// <remarks>
-    /// This method returns a Task for interface compatibility, but the operation is synchronous
-    /// since we're using in-memory cache (IMemoryCache). If we migrate to a distributed cache
-    /// (Redis, SQL, etc.) in the future, the async signature will be necessary.
-    /// </remarks>
+    /// <summary>
+    /// Removes a value from the cache
+    /// </summary>
     public Task RemoveAsync(string key)
     {
         _memoryCache.Remove(key);
@@ -95,88 +83,31 @@ public class CacheService : IEmptyEnabledCacheService
         return Task.CompletedTask;
     }
 
-    /// <inheritdoc/>
-    /// <remarks>
-    /// This method returns a Task for interface compatibility, but the operation is synchronous
-    /// since we're using in-memory cache (IMemoryCache). If we migrate to a distributed cache
-    /// (Redis, SQL, etc.) in the future, the async signature will be necessary.
-    /// </remarks>
+    /// <summary>
+    /// Removes all values from the cache that match a pattern
+    /// </summary>
     public Task RemoveByPatternAsync(string pattern)
     {
-        if (string.IsNullOrEmpty(pattern))
-            return Task.CompletedTask;
-
-        // Handle wildcard pattern (e.g., "MuscleGroups:*" should match all keys starting with "MuscleGroups:")
-        var actualPrefix = pattern.EndsWith("*") ? pattern[..^1] : pattern;
-        var keysToRemove = _cacheKeys.Keys.Where(k => k.StartsWith(actualPrefix)).ToList();
-        
-        if (keysToRemove.Count > 0)
+        if (pattern.EndsWith("*"))
         {
-            _logger.LogDebug("[Cache] Removing {Count} keys matching pattern: {Pattern}", keysToRemove.Count, pattern);
+            var prefix = pattern[..^1];
+            var keysToRemove = _cacheKeys.Keys.Where(k => k.StartsWith(prefix)).ToList();
+            
+            foreach (var key in keysToRemove)
+            {
+                _memoryCache.Remove(key);
+                _cacheKeys.TryRemove(key, out _);
+            }
+            
+            _logger.LogInformation("Removed {Count} cache entries matching pattern: {Pattern}", 
+                keysToRemove.Count, pattern);
         }
-        
-        foreach (var key in keysToRemove)
+        else
         {
-            _memoryCache.Remove(key);
-            _cacheKeys.TryRemove(key, out _);
+            _logger.LogWarning("Unsupported cache pattern: {Pattern}. Only prefix patterns (ending with *) are supported.", 
+                pattern);
         }
         
         return Task.CompletedTask;
-    }
-
-    /// <inheritdoc/>
-    public async Task<T> GetOrCreateAsync<T>(string key, Func<Task<T>> factory, TimeSpan expiration) where T : class
-    {
-        // Try to get from cache using the new CacheResult pattern
-        var cacheResult = await GetAsync<T>(key);
-        
-        // Use pattern matching on CacheResult
-        return cacheResult switch
-        {
-            { IsHit: true } => cacheResult.Value,
-            _ => await CreateAndCacheAsync(key, factory, expiration)
-        };
-    }
-    
-    private async Task<T> CreateAndCacheAsync<T>(string key, Func<Task<T>> factory, TimeSpan expiration) where T : class
-    {
-        var value = await factory();
-        
-        if (value != null)
-        {
-            await SetAsync(key, value, expiration);
-        }
-        
-        return value!;
-    }
-
-    /// <summary>
-    /// Gets or creates a cached value using the Empty pattern
-    /// </summary>
-    public async Task<T> GetOrCreateEmptyAwareAsync<T>(string key, Func<Task<T>> factory, TimeSpan expiration) 
-        where T : class, IEmptyEntity<T>
-    {
-        // Try to get from cache using CacheResult pattern
-        var cacheResult = await GetAsync<T>(key);
-        
-        return cacheResult switch
-        {
-            { IsHit: true } => cacheResult.Value,
-            _ => await CreateAndCacheEmptyAwareAsync(key, factory, expiration)
-        };
-    }
-    
-    private async Task<T> CreateAndCacheEmptyAwareAsync<T>(string key, Func<Task<T>> factory, TimeSpan expiration) 
-        where T : class, IEmptyEntity<T>
-    {
-        var value = await factory();
-        
-        // Only cache non-empty values
-        if (!value.IsEmpty)
-        {
-            await SetAsync(key, value, expiration);
-        }
-        
-        return value;
     }
 }
