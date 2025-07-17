@@ -180,7 +180,35 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.Equipment
                 await this.FeatureBackgroundAsync();
                 await testRunner.WhenAsync("I get equipment by ID \"invalid-format\" via API", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
                 await testRunner.ThenAsync("the response status should be \"bad request\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
-                await testRunner.AndAsync("the response should contain \"Invalid ID format\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
+            }
+            await this.ScenarioCleanupAsync();
+        }
+        
+        [Xunit.SkippableFactAttribute(DisplayName="Get equipment by empty GUID returns bad request")]
+        [Xunit.TraitAttribute("FeatureTitle", "Equipment API Controller Operations")]
+        [Xunit.TraitAttribute("Description", "Get equipment by empty GUID returns bad request")]
+        [Xunit.TraitAttribute("Category", "equipment")]
+        [Xunit.TraitAttribute("Category", "api")]
+        [Xunit.TraitAttribute("Category", "validation")]
+        public async System.Threading.Tasks.Task GetEquipmentByEmptyGUIDReturnsBadRequest()
+        {
+            string[] tagsOfScenario = new string[] {
+                    "equipment",
+                    "api",
+                    "validation"};
+            System.Collections.Specialized.OrderedDictionary argumentsOfScenario = new System.Collections.Specialized.OrderedDictionary();
+            TechTalk.SpecFlow.ScenarioInfo scenarioInfo = new TechTalk.SpecFlow.ScenarioInfo("Get equipment by empty GUID returns bad request", null, tagsOfScenario, argumentsOfScenario, featureTags);
+            this.ScenarioInitialize(scenarioInfo);
+            if ((TagHelper.ContainsIgnoreTag(tagsOfScenario) || TagHelper.ContainsIgnoreTag(featureTags)))
+            {
+                testRunner.SkipScenario();
+            }
+            else
+            {
+                await this.ScenarioStartAsync();
+                await this.FeatureBackgroundAsync();
+                await testRunner.WhenAsync("I get equipment by ID \"equipment-00000000-0000-0000-0000-000000000000\" via API", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
+                await testRunner.ThenAsync("the response status should be \"bad request\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
             }
             await this.ScenarioCleanupAsync();
         }
@@ -208,7 +236,7 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.Equipment
             {
                 await this.ScenarioStartAsync();
                 await this.FeatureBackgroundAsync();
-                await testRunner.WhenAsync("I get equipment by ID \"equipment-00000000-0000-0000-0000-000000000000\" via API", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
+                await testRunner.WhenAsync("I get equipment by ID \"equipment-11111111-1111-1111-1111-111111111111\" via API", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
                 await testRunner.ThenAsync("the response status should be \"not found\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
             }
             await this.ScenarioCleanupAsync();
@@ -270,7 +298,7 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.Equipment
                 await this.ScenarioStartAsync();
                 await this.FeatureBackgroundAsync();
                 await testRunner.GivenAsync("I have created equipment \"Test Barbell\" via API", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Given ");
-                await testRunner.WhenAsync("I get equipment by value \"Test Barbell\" via API", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
+                await testRunner.WhenAsync("I get equipment by name \"Test Barbell\" via API", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
                 await testRunner.ThenAsync("the response status should be \"ok\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
                 await testRunner.AndAsync("I should receive the equipment reference data", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
                 await testRunner.AndAsync("the equipment value should be \"Test Barbell\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
@@ -418,6 +446,36 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.Equipment
             await this.ScenarioCleanupAsync();
         }
         
+        [Xunit.SkippableFactAttribute(DisplayName="Update equipment with empty GUID returns bad request")]
+        [Xunit.TraitAttribute("FeatureTitle", "Equipment API Controller Operations")]
+        [Xunit.TraitAttribute("Description", "Update equipment with empty GUID returns bad request")]
+        [Xunit.TraitAttribute("Category", "equipment")]
+        [Xunit.TraitAttribute("Category", "api")]
+        [Xunit.TraitAttribute("Category", "validation")]
+        public async System.Threading.Tasks.Task UpdateEquipmentWithEmptyGUIDReturnsBadRequest()
+        {
+            string[] tagsOfScenario = new string[] {
+                    "equipment",
+                    "api",
+                    "validation"};
+            System.Collections.Specialized.OrderedDictionary argumentsOfScenario = new System.Collections.Specialized.OrderedDictionary();
+            TechTalk.SpecFlow.ScenarioInfo scenarioInfo = new TechTalk.SpecFlow.ScenarioInfo("Update equipment with empty GUID returns bad request", null, tagsOfScenario, argumentsOfScenario, featureTags);
+            this.ScenarioInitialize(scenarioInfo);
+            if ((TagHelper.ContainsIgnoreTag(tagsOfScenario) || TagHelper.ContainsIgnoreTag(featureTags)))
+            {
+                testRunner.SkipScenario();
+            }
+            else
+            {
+                await this.ScenarioStartAsync();
+                await this.FeatureBackgroundAsync();
+                await testRunner.WhenAsync("I update equipment \"equipment-00000000-0000-0000-0000-000000000000\" to name \"Upda" +
+                        "ted\" via API", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
+                await testRunner.ThenAsync("the response status should be \"bad request\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
+            }
+            await this.ScenarioCleanupAsync();
+        }
+        
         [Xunit.SkippableFactAttribute(DisplayName="Update non-existent equipment returns not found")]
         [Xunit.TraitAttribute("FeatureTitle", "Equipment API Controller Operations")]
         [Xunit.TraitAttribute("Description", "Update non-existent equipment returns not found")]
@@ -441,7 +499,7 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.Equipment
             {
                 await this.ScenarioStartAsync();
                 await this.FeatureBackgroundAsync();
-                await testRunner.WhenAsync("I update equipment \"equipment-00000000-0000-0000-0000-000000000000\" to name \"Upda" +
+                await testRunner.WhenAsync("I update equipment \"equipment-11111111-1111-1111-1111-111111111111\" to name \"Upda" +
                         "ted\" via API", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
                 await testRunner.ThenAsync("the response status should be \"not found\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
             }
@@ -510,6 +568,35 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.Equipment
             await this.ScenarioCleanupAsync();
         }
         
+        [Xunit.SkippableFactAttribute(DisplayName="Delete equipment with empty GUID returns bad request")]
+        [Xunit.TraitAttribute("FeatureTitle", "Equipment API Controller Operations")]
+        [Xunit.TraitAttribute("Description", "Delete equipment with empty GUID returns bad request")]
+        [Xunit.TraitAttribute("Category", "equipment")]
+        [Xunit.TraitAttribute("Category", "api")]
+        [Xunit.TraitAttribute("Category", "validation")]
+        public async System.Threading.Tasks.Task DeleteEquipmentWithEmptyGUIDReturnsBadRequest()
+        {
+            string[] tagsOfScenario = new string[] {
+                    "equipment",
+                    "api",
+                    "validation"};
+            System.Collections.Specialized.OrderedDictionary argumentsOfScenario = new System.Collections.Specialized.OrderedDictionary();
+            TechTalk.SpecFlow.ScenarioInfo scenarioInfo = new TechTalk.SpecFlow.ScenarioInfo("Delete equipment with empty GUID returns bad request", null, tagsOfScenario, argumentsOfScenario, featureTags);
+            this.ScenarioInitialize(scenarioInfo);
+            if ((TagHelper.ContainsIgnoreTag(tagsOfScenario) || TagHelper.ContainsIgnoreTag(featureTags)))
+            {
+                testRunner.SkipScenario();
+            }
+            else
+            {
+                await this.ScenarioStartAsync();
+                await this.FeatureBackgroundAsync();
+                await testRunner.WhenAsync("I delete equipment \"equipment-00000000-0000-0000-0000-000000000000\" via API", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
+                await testRunner.ThenAsync("the response status should be \"bad request\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
+            }
+            await this.ScenarioCleanupAsync();
+        }
+        
         [Xunit.SkippableFactAttribute(DisplayName="Delete non-existent equipment returns not found")]
         [Xunit.TraitAttribute("FeatureTitle", "Equipment API Controller Operations")]
         [Xunit.TraitAttribute("Description", "Delete non-existent equipment returns not found")]
@@ -533,7 +620,7 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.Equipment
             {
                 await this.ScenarioStartAsync();
                 await this.FeatureBackgroundAsync();
-                await testRunner.WhenAsync("I delete equipment \"equipment-00000000-0000-0000-0000-000000000000\" via API", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
+                await testRunner.WhenAsync("I delete equipment \"equipment-11111111-1111-1111-1111-111111111111\" via API", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
                 await testRunner.ThenAsync("the response status should be \"not found\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
             }
             await this.ScenarioCleanupAsync();

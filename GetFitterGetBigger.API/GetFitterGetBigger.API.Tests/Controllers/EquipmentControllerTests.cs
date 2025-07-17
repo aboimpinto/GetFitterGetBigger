@@ -125,14 +125,17 @@ public class EquipmentControllerTests
             .Setup(x => x.GetByIdAsync(It.IsAny<EquipmentId>()))
             .ReturnsAsync(ServiceResult<EquipmentDto>.Failure(
                 new EquipmentDto(),
-                ServiceError.ValidationFailed("Invalid ID format")));
-            
+                ServiceError.ValidationFailed("Invalid ID")));
+        
         // Act
         var result = await _controller.GetById(invalidId);
         
         // Assert
         var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
         Assert.NotNull(badRequestResult.Value);
+        
+        // Verify service WAS called with empty ID
+        _mockService.Verify(x => x.GetByIdAsync(It.IsAny<EquipmentId>()), Times.Once);
     }
     
     #endregion
@@ -332,14 +335,17 @@ public class EquipmentControllerTests
             .Setup(x => x.UpdateAsync(It.IsAny<EquipmentId>(), It.IsAny<UpdateEquipmentCommand>()))
             .ReturnsAsync(ServiceResult<EquipmentDto>.Failure(
                 new EquipmentDto(),
-                ServiceError.ValidationFailed("Invalid ID format")));
-            
+                ServiceError.ValidationFailed("Invalid ID")));
+        
         // Act
         var result = await _controller.Update(invalidId, request);
         
         // Assert
         var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
         Assert.NotNull(badRequestResult.Value);
+        
+        // Verify service WAS called with empty ID
+        _mockService.Verify(x => x.UpdateAsync(It.IsAny<EquipmentId>(), It.IsAny<UpdateEquipmentCommand>()), Times.Once);
     }
     
     #endregion
@@ -412,14 +418,17 @@ public class EquipmentControllerTests
             .Setup(x => x.DeleteAsync(It.IsAny<EquipmentId>()))
             .ReturnsAsync(ServiceResult<bool>.Failure(
                 false,
-                ServiceError.ValidationFailed("Invalid ID format")));
-            
+                ServiceError.ValidationFailed("Invalid ID")));
+        
         // Act
         var result = await _controller.Delete(invalidId);
         
         // Assert
         var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
         Assert.NotNull(badRequestResult.Value);
+        
+        // Verify service WAS called with empty ID
+        _mockService.Verify(x => x.DeleteAsync(It.IsAny<EquipmentId>()), Times.Once);
     }
     
     #endregion

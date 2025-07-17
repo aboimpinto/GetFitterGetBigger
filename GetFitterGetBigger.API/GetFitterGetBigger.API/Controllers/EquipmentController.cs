@@ -37,16 +37,11 @@ public class EquipmentController : ControllerBase
     [HttpGet]
     [ProducesResponseType(typeof(IEnumerable<EquipmentDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<IActionResult> GetAll()
-    {
-        var result = await _equipmentService.GetAllAsync();
-        
-        return result switch
+    public async Task<IActionResult> GetAll() =>
+        await _equipmentService.GetAllAsync() switch
         {
-            { IsSuccess: true } => Ok(result.Data),
-            _ => Ok(result.Data) // GetAll should always succeed, even if empty
+            { Data: var data } => Ok(data) // GetAll should always succeed, even if empty
         };
-    }
 
     /// <summary>
     /// Gets equipment by ID
@@ -57,17 +52,13 @@ public class EquipmentController : ControllerBase
     [ProducesResponseType(typeof(EquipmentDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public async Task<IActionResult> GetById(string id)
-    {
-        var result = await _equipmentService.GetByIdAsync(EquipmentId.ParseOrEmpty(id));
-        
-        return result switch
+    public async Task<IActionResult> GetById(string id) =>
+        await _equipmentService.GetByIdAsync(EquipmentId.ParseOrEmpty(id)) switch
         {
-            { IsSuccess: true } => Ok(result.Data),
+            { IsSuccess: true, Data: var data } => Ok(data),
             { PrimaryErrorCode: ServiceErrorCode.NotFound } => NotFound(),
-            _ => BadRequest(new { errors = result.StructuredErrors })
+            { StructuredErrors: var errors } => BadRequest(new { errors })
         };
-    }
 
     /// <summary>
     /// Gets equipment by name
@@ -78,17 +69,13 @@ public class EquipmentController : ControllerBase
     [ProducesResponseType(typeof(EquipmentDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public async Task<IActionResult> GetByName(string name)
-    {
-        var result = await _equipmentService.GetByNameAsync(name);
-        
-        return result switch
+    public async Task<IActionResult> GetByName(string name) =>
+        await _equipmentService.GetByNameAsync(name) switch
         {
-            { IsSuccess: true } => Ok(result.Data),
+            { IsSuccess: true, Data: var data } => Ok(data),
             { PrimaryErrorCode: ServiceErrorCode.NotFound } => NotFound(),
-            _ => BadRequest(new { errors = result.StructuredErrors })
+            { StructuredErrors: var errors } => BadRequest(new { errors })
         };
-    }
     
     /// <summary>
     /// Creates new equipment
@@ -98,16 +85,14 @@ public class EquipmentController : ControllerBase
     [HttpPost]
     [ProducesResponseType(typeof(EquipmentDto), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public async Task<IActionResult> Create([FromBody] CreateEquipmentDto request)
-    {
-        var result = await _equipmentService.CreateAsync(request.ToCommand());
-        
-        return result switch
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> Create([FromBody] CreateEquipmentDto request) =>
+        await _equipmentService.CreateAsync(request.ToCommand()) switch
         {
-            { IsSuccess: true } => CreatedAtAction(nameof(GetById), new { id = result.Data.Id }, result.Data),
-            _ => BadRequest(new { errors = result.StructuredErrors })
+            { IsSuccess: true, Data: var data } => CreatedAtAction(nameof(GetById), new { id = data.Id }, data),
+            { PrimaryErrorCode: ServiceErrorCode.AlreadyExists, StructuredErrors: var errors } => Conflict(new { errors }),
+            { StructuredErrors: var errors } => BadRequest(new { errors })
         };
-    }
     
     /// <summary>
     /// Updates existing equipment
@@ -119,17 +104,15 @@ public class EquipmentController : ControllerBase
     [ProducesResponseType(typeof(EquipmentDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> Update(string id, [FromBody] UpdateEquipmentDto request)
-    {
-        var result = await _equipmentService.UpdateAsync(EquipmentId.ParseOrEmpty(id), request.ToCommand());
-        
-        return result switch
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> Update(string id, [FromBody] UpdateEquipmentDto request) =>
+        await _equipmentService.UpdateAsync(EquipmentId.ParseOrEmpty(id), request.ToCommand()) switch
         {
-            { IsSuccess: true } => Ok(result.Data),
+            { IsSuccess: true, Data: var data } => Ok(data),
             { PrimaryErrorCode: ServiceErrorCode.NotFound } => NotFound(),
-            _ => BadRequest(new { errors = result.StructuredErrors })
+            { PrimaryErrorCode: ServiceErrorCode.AlreadyExists, StructuredErrors: var errors } => Conflict(new { errors }),
+            { StructuredErrors: var errors } => BadRequest(new { errors })
         };
-    }
     
     /// <summary>
     /// Deletes equipment (soft delete)
@@ -141,16 +124,12 @@ public class EquipmentController : ControllerBase
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
-    public async Task<IActionResult> Delete(string id)
-    {
-        var result = await _equipmentService.DeleteAsync(EquipmentId.ParseOrEmpty(id));
-        
-        return result switch
+    public async Task<IActionResult> Delete(string id) =>
+        await _equipmentService.DeleteAsync(EquipmentId.ParseOrEmpty(id)) switch
         {
             { IsSuccess: true } => NoContent(),
             { PrimaryErrorCode: ServiceErrorCode.NotFound } => NotFound(),
-            { PrimaryErrorCode: ServiceErrorCode.DependencyExists } => Conflict(new { errors = result.StructuredErrors }),
-            _ => BadRequest(new { errors = result.StructuredErrors })
+            { PrimaryErrorCode: ServiceErrorCode.DependencyExists, StructuredErrors: var errors } => Conflict(new { errors }),
+            { StructuredErrors: var errors } => BadRequest(new { errors })
         };
-    }
 }

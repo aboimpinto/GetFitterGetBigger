@@ -420,8 +420,8 @@ public class EquipmentServiceTests
         
         // Assert
         Assert.False(result.IsSuccess);
-        Assert.Equal(ServiceErrorCode.None, result.PrimaryErrorCode); // Base class uses string errors
-        Assert.Contains($"Equipment with the name '{request.Name}' already exists", result.Errors.FirstOrDefault() ?? "");
+        Assert.Equal(ServiceErrorCode.AlreadyExists, result.PrimaryErrorCode);
+        Assert.Contains($"Equipment '{request.Name}' already exists", result.Errors.FirstOrDefault() ?? "");
     }
     
     [Fact]
@@ -548,8 +548,8 @@ public class EquipmentServiceTests
         
         // Assert
         Assert.False(result.IsSuccess);
-        Assert.Equal(ServiceErrorCode.None, result.PrimaryErrorCode); // Base class uses string errors
-        Assert.Contains($"Equipment with the name '{request.Name}' already exists", result.Errors.FirstOrDefault() ?? "");
+        Assert.Equal(ServiceErrorCode.AlreadyExists, result.PrimaryErrorCode);
+        Assert.Contains($"Equipment '{request.Name}' already exists", result.Errors.FirstOrDefault() ?? "");
     }
     
     #endregion

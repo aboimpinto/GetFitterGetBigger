@@ -20,9 +20,8 @@ public class EquipmentControllerSteps
 {
     private readonly ScenarioContext _scenarioContext;
     private HttpResponseMessage? _lastResponse;
-    private List<ReferenceDataDto>? _equipmentCollection;
+    private List<EquipmentDto>? _equipmentCollection;
     private EquipmentDto? _equipmentResult;
-    private ReferenceDataDto? _referenceDataResult;
     private readonly List<string> _createdEquipmentIds = new();
 
     public EquipmentControllerSteps(ScenarioContext scenarioContext)
@@ -161,7 +160,7 @@ public class EquipmentControllerSteps
     public async Task WhenIGetEquipmentByValueViaAPI(string equipmentValue)
     {
         var httpClient = _scenarioContext.GetHttpClient();
-        _lastResponse = await httpClient.GetAsync($"/api/ReferenceTables/Equipment/ByValue/{equipmentValue}");
+        _lastResponse = await httpClient.GetAsync($"/api/ReferenceTables/Equipment/ByName/{equipmentValue}");
         _scenarioContext.SetLastResponse(_lastResponse);
     }
 
@@ -246,7 +245,7 @@ public class EquipmentControllerSteps
     public async Task ThenIShouldReceiveACollectionOfEquipment()
     {
         _lastResponse.Should().NotBeNull();
-        _equipmentCollection = await _lastResponse!.Content.ReadFromJsonAsync<List<ReferenceDataDto>>();
+        _equipmentCollection = await _lastResponse!.Content.ReadFromJsonAsync<List<EquipmentDto>>();
         _equipmentCollection.Should().NotBeNull();
     }
 
@@ -254,27 +253,25 @@ public class EquipmentControllerSteps
     public void ThenAllEquipmentItemsShouldBeActive()
     {
         _equipmentCollection.Should().NotBeNull();
-        // Since we're using ReferenceDataDto which doesn't have IsActive,
-        // and the GetAll endpoint only returns active equipment by design,
-        // we just verify that we got items
         _equipmentCollection!.Should().NotBeEmpty();
+        _equipmentCollection.Should().OnlyContain(e => e.IsActive);
     }
 
     [Then(@"I should receive the equipment")]
     public async Task ThenIShouldReceiveTheEquipment()
     {
         _lastResponse.Should().NotBeNull();
-        // GetById returns ReferenceDataDto
-        _referenceDataResult = await _lastResponse!.Content.ReadFromJsonAsync<ReferenceDataDto>();
-        _referenceDataResult.Should().NotBeNull();
+        // GetById returns EquipmentDto
+        _equipmentResult = await _lastResponse!.Content.ReadFromJsonAsync<EquipmentDto>();
+        _equipmentResult.Should().NotBeNull();
     }
 
     [Then(@"I should receive the equipment reference data")]
     public async Task ThenIShouldReceiveTheEquipmentReferenceData()
     {
         _lastResponse.Should().NotBeNull();
-        _referenceDataResult = await _lastResponse!.Content.ReadFromJsonAsync<ReferenceDataDto>();
-        _referenceDataResult.Should().NotBeNull();
+        _equipmentResult = await _lastResponse!.Content.ReadFromJsonAsync<EquipmentDto>();
+        _equipmentResult.Should().NotBeNull();
     }
 
     [Then(@"the equipment name should be ""(.*)""")]
@@ -294,10 +291,6 @@ public class EquipmentControllerSteps
             
             _equipmentResult.Name.Should().Be(expectedName);
         }
-        else if (_referenceDataResult != null)
-        {
-            _referenceDataResult.Value.Should().Be(expectedName);
-        }
         else
         {
             throw new InvalidOperationException("No equipment result available");
@@ -307,8 +300,8 @@ public class EquipmentControllerSteps
     [Then(@"the equipment value should be ""(.*)""")]
     public void ThenTheEquipmentValueShouldBe(string expectedValue)
     {
-        _referenceDataResult.Should().NotBeNull();
-        _referenceDataResult!.Value.Should().Be(expectedValue);
+        _equipmentResult.Should().NotBeNull();
+        _equipmentResult!.Name.Should().Be(expectedValue);
     }
 
     [Then(@"the equipment should be active")]

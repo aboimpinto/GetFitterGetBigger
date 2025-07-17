@@ -28,11 +28,15 @@ Feature: Equipment API Controller Operations
   Scenario: Get equipment by invalid ID format returns bad request
     When I get equipment by ID "invalid-format" via API
     Then the response status should be "bad request"
-    And the response should contain "Invalid ID format"
+
+  @equipment @api @validation
+  Scenario: Get equipment by empty GUID returns bad request
+    When I get equipment by ID "equipment-00000000-0000-0000-0000-000000000000" via API
+    Then the response status should be "bad request"
 
   @equipment @api @validation
   Scenario: Get equipment by non-existent ID returns not found
-    When I get equipment by ID "equipment-00000000-0000-0000-0000-000000000000" via API
+    When I get equipment by ID "equipment-11111111-1111-1111-1111-111111111111" via API
     Then the response status should be "not found"
 
   @equipment @api @read
@@ -46,7 +50,7 @@ Feature: Equipment API Controller Operations
   @equipment @api @read
   Scenario: Get equipment by value returns equipment
     Given I have created equipment "Test Barbell" via API
-    When I get equipment by value "Test Barbell" via API
+    When I get equipment by name "Test Barbell" via API
     Then the response status should be "ok"
     And I should receive the equipment reference data
     And the equipment value should be "Test Barbell"
@@ -93,8 +97,13 @@ Feature: Equipment API Controller Operations
     And the equipment updated timestamp should be set
 
   @equipment @api @validation
-  Scenario: Update non-existent equipment returns not found
+  Scenario: Update equipment with empty GUID returns bad request
     When I update equipment "equipment-00000000-0000-0000-0000-000000000000" to name "Updated" via API
+    Then the response status should be "bad request"
+
+  @equipment @api @validation
+  Scenario: Update non-existent equipment returns not found
+    When I update equipment "equipment-11111111-1111-1111-1111-111111111111" to name "Updated" via API
     Then the response status should be "not found"
 
   @equipment @api @validation
@@ -112,8 +121,13 @@ Feature: Equipment API Controller Operations
     And the equipment should no longer be retrievable
 
   @equipment @api @validation
-  Scenario: Delete non-existent equipment returns not found
+  Scenario: Delete equipment with empty GUID returns bad request
     When I delete equipment "equipment-00000000-0000-0000-0000-000000000000" via API
+    Then the response status should be "bad request"
+
+  @equipment @api @validation
+  Scenario: Delete non-existent equipment returns not found
+    When I delete equipment "equipment-11111111-1111-1111-1111-111111111111" via API
     Then the response status should be "not found"
 
   @equipment @api @validation

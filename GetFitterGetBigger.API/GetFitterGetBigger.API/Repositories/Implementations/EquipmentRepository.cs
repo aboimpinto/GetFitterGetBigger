@@ -70,34 +70,12 @@ public class EquipmentRepository : RepositoryBase<FitnessDbContext>, IEquipmentR
     /// <returns>The updated equipment</returns>
     public async Task<Equipment> UpdateAsync(Equipment entity)
     {
-        // Log the entity state before any operations
-        Console.WriteLine($"[Equipment Repository] UpdateAsync called with entity: ID={entity.EquipmentId}, Name='{entity.Name}', IsActive={entity.IsActive}, CreatedAt={entity.CreatedAt}, UpdatedAt={entity.UpdatedAt}");
-        Console.WriteLine($"[Equipment Repository] ID as GUID: {(Guid)entity.EquipmentId}");
+        DetachTrackedEntity(entity.EquipmentId);
         
-        // First, check if there's already a tracked entity with the same ID
-        var tracked = Context.ChangeTracker.Entries<Equipment>()
-            .FirstOrDefault(e => e.Entity.EquipmentId == entity.EquipmentId);
-        
-        if (tracked != null)
-        {
-            Console.WriteLine($"[Equipment Repository] Found tracked entity with same ID, detaching it");
-            // Detach the existing tracked entity
-            tracked.State = EntityState.Detached;
-        }
-        
-        // Attach the entity and mark it as modified
         Context.Equipment.Attach(entity);
         Context.Entry(entity).State = EntityState.Modified;
         
-        // Log the tracked entity values before save
-        var entry = Context.Entry(entity);
-        Console.WriteLine($"[Equipment Repository] Entity state before SaveChanges: {entry.State}");
-        Console.WriteLine($"[Equipment Repository] Current values: ID={entry.CurrentValues["Id"]}, Name='{entry.CurrentValues["Name"]}', IsActive={entry.CurrentValues["IsActive"]}, CreatedAt={entry.CurrentValues["CreatedAt"]}, UpdatedAt={entry.CurrentValues["UpdatedAt"]}");
-        Console.WriteLine($"[Equipment Repository] Original values: ID={entry.OriginalValues["Id"]}, Name='{entry.OriginalValues["Name"]}', IsActive={entry.OriginalValues["IsActive"]}, CreatedAt={entry.OriginalValues["CreatedAt"]}, UpdatedAt={entry.OriginalValues["UpdatedAt"]}");
-        
         await Context.SaveChangesAsync();
-        
-        Console.WriteLine($"[Equipment Repository] After SaveChanges - Entity state: {entry.State}");
         
         return entity;
     }
@@ -157,5 +135,20 @@ public class EquipmentRepository : RepositoryBase<FitnessDbContext>, IEquipmentR
             .AnyAsync();
         
         return hasExercises;
+    }
+    
+    /// <summary>
+    /// Detaches any tracked entity with the same ID to prevent tracking conflicts
+    /// </summary>
+    /// <param name="equipmentId">The ID of the equipment to detach</param>
+    private void DetachTrackedEntity(EquipmentId equipmentId)
+    {
+        var tracked = Context.ChangeTracker.Entries<Equipment>()
+            .FirstOrDefault(e => e.Entity.EquipmentId == equipmentId);
+        
+        if (tracked != null)
+        {
+            tracked.State = EntityState.Detached;
+        }
     }
 }

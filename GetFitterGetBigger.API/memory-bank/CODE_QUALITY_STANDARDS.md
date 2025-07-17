@@ -118,11 +118,94 @@ catch (Exception ex)
 return _cache.Get<T>(key);
 ```
 
+#### Minimal Try-Catch Blocks
+Keep try-catch blocks focused on the specific operation that can fail:
+
+```csharp
+// ❌ BAD - Large try-catch block encompassing entire method
+public async Task<ServiceResult<bool>> DeleteAsync(EquipmentId id)
+{
+    try
+    {
+        using var unitOfWork = _unitOfWorkProvider.CreateWritable();
+        var repository = unitOfWork.GetRepository<IEquipmentRepository>();
+        
+        var existingEntity = await repository.GetByIdAsync(id);
+        if (existingEntity == null)
+            return ServiceResult<bool>.Failure(false, ServiceError.NotFound("Equipment"));
+        
+        await repository.DeleteAsync(existingEntity);
+        await unitOfWork.CommitAsync();
+        
+        _logger.LogInformation("Equipment deleted");
+        InvalidateCache();
+        
+        return ServiceResult<bool>.Success(true);
+    }
+    catch (Exception ex)
+    {
+        _logger.LogError(ex, "Error deleting equipment");
+        return ServiceResult<bool>.Failure(false, "Failed to delete equipment");
+    }
+}
+
+// ✅ GOOD - Validate preconditions, no unnecessary try-catch
+public async Task<ServiceResult<bool>> DeleteAsync(EquipmentId id)
+{
+    // Validate existence first using existing method
+    var existingResult = await GetByIdAsync(id);
+    if (!existingResult.IsSuccess)
+        return ServiceResult<bool>.Failure(false, existingResult.StructuredErrors.First());
+    
+    using var unitOfWork = _unitOfWorkProvider.CreateWritable();
+    var repository = unitOfWork.GetRepository<IEquipmentRepository>();
+    
+    await repository.DeleteAsync(id);
+    await unitOfWork.CommitAsync();
+    
+    _logger.LogInformation("Equipment {EquipmentId} deleted", id);
+    InvalidateCache();
+    
+    return ServiceResult<bool>.Success(true);
+}
+```
+
+#### Precondition Validation Over Exception Handling
+Always validate preconditions instead of relying on database exceptions:
+
+```csharp
+// ❌ BAD - Waiting for database constraint violation
+try
+{
+    await repository.CreateAsync(entity);
+    await unitOfWork.CommitAsync();
+}
+catch (DbUpdateException ex) when (ex.InnerException?.Message.Contains("duplicate") ?? false)
+{
+    return ServiceResult<T>.Failure(ServiceErrorCode.Conflict, "Name already exists");
+}
+
+// ✅ GOOD - Check preconditions first
+var existingEntity = await GetByNameAsync(entity.Name);
+if (!existingEntity.IsEmpty)
+    return ServiceResult<T>.Failure(ServiceErrorCode.Conflict, "Name already exists");
+
+await repository.CreateAsync(entity);
+await unitOfWork.CommitAsync();
+```
+
+#### Database Connectivity
+If the database is offline, that's a critical infrastructure issue - let it fail:
+- Don't wrap database operations in try-catch for connectivity issues
+- Infrastructure problems should bubble up and trigger alerts
+- The app should not continue operating with a dead database
+
 #### Resource Access Requires Try-Catch
-Only use try-catch for operations that access external resources:
-- File System operations
-- Network/HTTP calls
-- Database operations
+Only use try-catch for operations that access external resources AND can be recovered from:
+- File System operations (file might not exist)
+- Network/HTTP calls (service might be temporarily down)
+- Third-party API calls (external service issues)
+- NOT for database operations (precondition validation instead)
 - NOT for in-memory operations
 
 ### 3. **Null Handling During Migration**
@@ -179,11 +262,99 @@ public async Task<EntityDto> GetByIdAsync(string id)
 - **No Business Logic**: Repositories are data access only
 - **Pattern Consistency**: All repositories follow same base patterns
 
+#### Single UnitOfWork Per Method Principle
+Each method MUST have one and only one UnitOfWork. This ensures:
+- Clear separation of read vs write operations
+- Single responsibility per method
+- Proper transaction boundaries
+- Avoiding unnecessary database locks
+
+```csharp
+// ❌ BAD - Multiple responsibilities, mixing read and write in same UnitOfWork
+public async Task<ServiceResult<bool>> DeleteAsync(EquipmentId id)
+{
+    using var unitOfWork = _unitOfWorkProvider.CreateWritable(); // Wrong! Used for validation
+    var repository = unitOfWork.GetRepository<IEquipmentRepository>();
+    
+    // Validation query using WritableUnitOfWork
+    var existingEntity = await repository.GetByIdAsync(id);
+    if (existingEntity == null)
+        return ServiceResult<bool>.Failure(false, ServiceError.NotFound("Equipment"));
+    
+    // Delete operation
+    await repository.DeleteAsync(existingEntity);
+    await unitOfWork.CommitAsync();
+    return ServiceResult<bool>.Success(true);
+}
+
+// ✅ GOOD - Separated concerns, method orchestration
+public async Task<ServiceResult<bool>> DeleteAsync(EquipmentId id)
+{
+    // Use existing GetByIdAsync method for validation
+    var existingResult = await GetByIdAsync(id);
+    if (!existingResult.IsSuccess)
+        return ServiceResult<bool>.Failure(false, existingResult.StructuredErrors.First());
+    
+    // Now perform the actual deletion
+    return await PerformDeleteAsync(id);
+}
+
+private async Task<ServiceResult<bool>> PerformDeleteAsync(EquipmentId id)
+{
+    using var unitOfWork = _unitOfWorkProvider.CreateWritable();
+    var repository = unitOfWork.GetRepository<IEquipmentRepository>();
+    
+    await repository.DeleteAsync(id);
+    await unitOfWork.CommitAsync();
+    
+    _logger.LogInformation("Equipment {EquipmentId} deleted successfully", id);
+    return ServiceResult<bool>.Success(true);
+}
+```
+
+Key benefits:
+- Reuses existing validated methods (GetByIdAsync already returns Empty for non-existent entities)
+- Each method has single focus
+- ReadOnly operations remain separate from Write operations
+- Better testability and maintainability
+
 ### 4. **Controller Standards**
 - **Clean Pass-Through**: Controllers only orchestrate, no business logic
 - **Pattern Matching**: Use pattern matching for ServiceResult handling
 - **HTTP Status Codes**: Consistent mapping (200/201/400/404/500)
 - **No Direct Database Access**: Never inject repositories or UnitOfWork
+- **No ID Format Validation**: Controllers should NOT validate ID formats - just ParseOrEmpty and let service handle validation
+- **Single Expression Methods**: Controller actions should be simple expression-bodied methods when possible
+- **Low Cyclomatic Complexity**: Each action should have a single return statement using pattern matching
+
+```csharp
+// ❌ BAD - Multiple returns, ID validation in controller
+public async Task<IActionResult> GetById(string id)
+{
+    if (string.IsNullOrWhiteSpace(id) || !id.StartsWith("equipment-"))
+        return BadRequest(new { errors = new[] { new { code = 2, message = "Invalid ID" } } });
+        
+    var equipmentId = EquipmentId.ParseOrEmpty(id);
+    if (equipmentId.IsEmpty)
+        return BadRequest(new { errors = new[] { new { code = 2, message = "Invalid ID" } } });
+        
+    return await _service.GetByIdAsync(equipmentId) switch
+    {
+        { IsSuccess: true, Data: var data } => Ok(data),
+        { PrimaryErrorCode: ServiceErrorCode.NotFound } => NotFound(),
+        { StructuredErrors: var errors } => BadRequest(new { errors })
+    };
+}
+
+// ✅ GOOD - Single expression, no validation in controller
+public async Task<IActionResult> GetById(string id) =>
+    await _service.GetByIdAsync(EquipmentId.ParseOrEmpty(id)) switch
+    {
+        { IsSuccess: true, Data: var data } => Ok(data),
+        { PrimaryErrorCode: ServiceErrorCode.NotFound } => NotFound(),
+        { StructuredErrors: var errors } => BadRequest(new { errors })
+    };
+```
 
 ---
 
@@ -194,6 +365,8 @@ public async Task<EntityDto> GetByIdAsync(string id)
 - [ ] **DDD Compliance**: Domain logic properly encapsulated
 - [ ] **SOLID Principles**: Single responsibility, dependency inversion
 - [ ] **Repository Pattern**: Correct UnitOfWork usage (ReadOnly vs Writable)
+- [ ] **Single UnitOfWork Per Method**: Each method has one and only one UnitOfWork
+- [ ] **Method Orchestration**: Complex operations use method composition, not mixed concerns
 - [ ] **Service Pattern**: All methods return ServiceResult<T>
 - [ ] **Controller Pattern**: Clean pass-through, no business logic
 
@@ -221,8 +394,11 @@ public async Task<EntityDto> GetByIdAsync(string id)
 
 ### ✅ Error Handling & Exceptions
 - [ ] No unnecessary try-catch blocks
-- [ ] Only catch exceptions for external resources
+- [ ] Minimal try-catch scope (only wrap specific failing operations)
+- [ ] Precondition validation instead of catching database exceptions
+- [ ] Only catch exceptions for recoverable external resource failures
 - [ ] Let framework handle validation
+- [ ] Let database connectivity issues fail (infrastructure problem)
 - [ ] No exceptions for control flow
 - [ ] ServiceResult pattern for error propagation
 - [ ] Proper error codes (ServiceErrorCode enum)

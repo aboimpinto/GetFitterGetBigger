@@ -52,8 +52,18 @@ Feature: Equipment CRUD Simple Operations
     Then the response status should be 400
 
   @equipment @validation
-  Scenario: Update non-existent equipment returns not found
+  Scenario: Update equipment with empty GUID returns bad request
     When I send a PUT request to "/api/ReferenceTables/Equipment/equipment-00000000-0000-0000-0000-000000000000" with body:
+      """
+      {
+        "name": "Updated"
+      }
+      """
+    Then the response status should be 400
+
+  @equipment @validation
+  Scenario: Update non-existent equipment returns not found
+    When I send a PUT request to "/api/ReferenceTables/Equipment/equipment-11111111-1111-1111-1111-111111111111" with body:
       """
       {
         "name": "Updated"
@@ -62,8 +72,13 @@ Feature: Equipment CRUD Simple Operations
     Then the response status should be 404
 
   @equipment @validation
-  Scenario: Delete non-existent equipment returns not found
+  Scenario: Delete equipment with empty GUID returns bad request
     When I send a DELETE request to "/api/ReferenceTables/Equipment/equipment-00000000-0000-0000-0000-000000000000"
+    Then the response status should be 400
+
+  @equipment @validation
+  Scenario: Delete non-existent equipment returns not found
+    When I send a DELETE request to "/api/ReferenceTables/Equipment/equipment-11111111-1111-1111-1111-111111111111"
     Then the response status should be 404
 
   @equipment @validation
@@ -105,7 +120,7 @@ Feature: Equipment CRUD Simple Operations
     When I send a GET request to "/api/ReferenceTables/Equipment/<equipmentId>"
     Then the response status should be 200
     And the response should have property "id" with value "<equipmentId>"
-    And the response should have property "value" with value "Test GetById Equipment"
+    And the response should have property "name" with value "Test GetById Equipment"
     
     # Cleanup
     When I send a DELETE request to "/api/ReferenceTables/Equipment/<equipmentId>"
