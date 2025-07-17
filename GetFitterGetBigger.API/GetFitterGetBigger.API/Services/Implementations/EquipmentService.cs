@@ -1,14 +1,13 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using GetFitterGetBigger.API.Constants;
 using GetFitterGetBigger.API.DTOs;
 using GetFitterGetBigger.API.Models;
 using GetFitterGetBigger.API.Models.Entities;
 using GetFitterGetBigger.API.Models.SpecializedIds;
 using GetFitterGetBigger.API.Repositories.Interfaces;
+using GetFitterGetBigger.API.Services.Base;
+using GetFitterGetBigger.API.Services.Commands.Equipment;
 using GetFitterGetBigger.API.Services.Interfaces;
-using GetFitterGetBigger.API.Services.ReferenceTable;
+using GetFitterGetBigger.API.Services.Results;
 using Microsoft.Extensions.Logging;
 using Olimpo.EntityFramework.Persistency;
 
@@ -17,7 +16,7 @@ namespace GetFitterGetBigger.API.Services.Implementations;
 /// <summary>
 /// Service implementation for equipment operations
 /// </summary>
-public class EquipmentService : ReferenceTableServiceBase<Equipment>, IEquipmentService
+public class EquipmentService : EnhancedReferenceService<Equipment, EquipmentDto, CreateEquipmentCommand, UpdateEquipmentCommand>, IEquipmentService
 {
     public EquipmentService(
         IUnitOfWorkProvider<FitnessDbContext> unitOfWorkProvider,
@@ -27,204 +26,272 @@ public class EquipmentService : ReferenceTableServiceBase<Equipment>, IEquipment
     {
     }
     
-    protected override string CacheKeyPrefix => "Equipment";
-    protected override TimeSpan CacheDuration => TimeSpan.FromHours(1); // Dynamic table
-    
     /// <summary>
-    /// Gets all equipment as DTOs
+    /// Gets equipment by ID using strongly-typed ID
     /// </summary>
-    public async Task<IEnumerable<ReferenceDataDto>> GetAllAsDtosAsync()
+    public async Task<ServiceResult<EquipmentDto>> GetByIdAsync(EquipmentId id)
     {
-        var equipment = await GetAllAsync();
-        return equipment.Select(e => new ReferenceDataDto
-        {
-            Id = e.Id.ToString(),
-            Value = e.Name
-        });
+        // Let the base class handle validation through ValidateAndParseId
+        return await GetByIdAsync(id.ToString());
     }
     
     /// <summary>
-    /// Gets equipment by ID as DTO
+    /// Creates new equipment using command
     /// </summary>
-    public async Task<ReferenceDataDto?> GetByIdAsDtoAsync(string id)
+    public override async Task<ServiceResult<EquipmentDto>> CreateAsync(CreateEquipmentCommand command)
     {
-        var equipment = await GetByIdAsync(id);
-        if (equipment == null || !equipment.IsActive)
-            return null;
+        return await base.CreateAsync(command);
+    }
+    
+    /// <summary>
+    /// Updates existing equipment using command and strongly-typed ID
+    /// </summary>
+    public async Task<ServiceResult<EquipmentDto>> UpdateAsync(EquipmentId id, UpdateEquipmentCommand command)
+    {
+        return await base.UpdateAsync(id.ToString(), command);
+    }
+    
+    /// <summary>
+    /// Deletes equipment using strongly-typed ID
+    /// </summary>
+    public async Task<ServiceResult<bool>> DeleteAsync(EquipmentId id)
+    {
+        try
+        {
+            // Validate ID
+            if (id.IsEmpty)
+            {
+                return ServiceResult<bool>.Failure(false, EquipmentErrorMessages.IdCannotBeEmpty);
+            }
             
-        return new ReferenceDataDto
+            using var unitOfWork = _unitOfWorkProvider.CreateWritable();
+            var repository = unitOfWork.GetRepository<IEquipmentRepository>();
+            
+            // Check if equipment exists
+            var existingEntity = await repository.GetByIdAsync(id);
+            if (existingEntity == null)
+            {
+                return ServiceResult<bool>.Failure(false, ServiceError.NotFound("Equipment"));
+            }
+            
+            // Check if equipment is in use
+            if (await repository.IsInUseAsync(id))
+            {
+                _logger.LogWarning("Cannot delete equipment with ID {Id} as it is in use by exercises", id);
+                return ServiceResult<bool>.Failure(false, ServiceError.DependencyExists("Equipment", "exercises that reference it"));
+            }
+            
+            // Perform soft delete
+            var deleted = await repository.DeactivateAsync(id);
+            if (!deleted)
+            {
+                return ServiceResult<bool>.Failure(false, EquipmentErrorMessages.FailedToDelete);
+            }
+            
+            await unitOfWork.CommitAsync();
+            
+            // Invalidate caches
+            await InvalidateCacheAsync();
+            
+            _logger.LogInformation("Deleted Equipment with ID: {Id}", id);
+            return ServiceResult<bool>.Success(true);
+        }
+        catch (Exception ex)
         {
-            Id = equipment.Id.ToString(),
-            Value = equipment.Name
-        };
+            _logger.LogError(ex, "Error deleting Equipment with ID: {Id}", id);
+            return ServiceResult<bool>.Failure(false, "Failed to delete Equipment");
+        }
     }
     
     /// <summary>
-    /// Creates equipment and returns as DTO
+    /// Checks if equipment exists using strongly-typed ID
     /// </summary>
-    public async Task<EquipmentDto> CreateEquipmentAsync(CreateEquipmentDto request)
+    public async Task<bool> ExistsAsync(EquipmentId id)
     {
-        var created = await CreateAsync(request);
-        
-        return new EquipmentDto
-        {
-            Id = created.Id.ToString(),
-            Name = created.Name,
-            IsActive = created.IsActive,
-            CreatedAt = created.CreatedAt,
-            UpdatedAt = created.UpdatedAt
-        };
+        return await base.ExistsAsync(id.ToString());
     }
     
     /// <summary>
-    /// Updates equipment and returns as DTO
+    /// Gets equipment by name (case-insensitive)
     /// </summary>
-    public async Task<EquipmentDto> UpdateEquipmentAsync(string id, UpdateEquipmentDto request)
+    public async Task<ServiceResult<EquipmentDto>> GetByNameAsync(string name)
     {
-        var updated = await UpdateAsync(id, request);
-        
-        return new EquipmentDto
+        try
         {
-            Id = updated.Id.ToString(),
-            Name = updated.Name,
-            IsActive = updated.IsActive,
-            CreatedAt = updated.CreatedAt,
-            UpdatedAt = updated.UpdatedAt
-        };
+            if (string.IsNullOrWhiteSpace(name))
+            {
+                return ServiceResult<EquipmentDto>.Failure(
+                    CreateEmptyDto(),
+                    EquipmentErrorMessages.NameCannotBeEmpty);
+            }
+            
+            var cacheKey = GetCacheKey($"name:{name.ToLowerInvariant()}");
+            var cacheService = (ICacheService)_cacheService;
+            var cached = await cacheService.GetAsync<EquipmentDto>(cacheKey);
+            
+            if (cached != null)
+            {
+                _logger.LogDebug("Cache hit for Equipment by name: {Name}", name);
+                return ServiceResult<EquipmentDto>.Success(cached);
+            }
+            
+            // Load from database
+            using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
+            var repository = unitOfWork.GetRepository<IEquipmentRepository>();
+            var entity = await repository.GetByNameAsync(name);
+            
+            if (entity == null || entity.IsEmpty || !entity.IsActive)
+            {
+                return ServiceResult<EquipmentDto>.Failure(
+                    CreateEmptyDto(),
+                    ServiceError.NotFound("Equipment"));
+            }
+            
+            // Map to DTO
+            var dto = MapToDto(entity);
+            
+            // Cache with 1-hour expiration for enhanced reference data
+            await cacheService.SetAsync(cacheKey, dto);
+            
+            return ServiceResult<EquipmentDto>.Success(dto);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error loading Equipment by name: {Name}", name);
+            return ServiceResult<EquipmentDto>.Failure(
+                CreateEmptyDto(),
+                EquipmentErrorMessages.FailedToLoad);
+        }
     }
     
-    /// <summary>
-    /// Deactivates equipment
-    /// </summary>
-    public async Task DeactivateAsync(string id)
-    {
-        
-        using var unitOfWork = _unitOfWorkProvider.CreateWritable();
-        var repository = unitOfWork.GetRepository<IEquipmentRepository>();
-        
-        if (!EquipmentId.TryParse(id, out var equipmentId))
-        {
-            throw new ArgumentException($"Invalid ID format. Expected format: 'equipment-{{guid}}', got: '{id}'");
-        }
-        
-        // Check if equipment exists
-        var existing = await repository.GetByIdAsync(equipmentId);
-        if (existing == null || !existing.IsActive)
-        {
-            throw new InvalidOperationException($"Equipment with ID '{id}' not found or already inactive");
-        }
-        
-        
-        // Check if equipment is in use
-        if (await repository.IsInUseAsync(equipmentId))
-        {
-            _logger.LogWarning("Cannot deactivate equipment '{Name}' (ID: {Id}) as it is in use by exercises", existing.Name, id);
-            throw new InvalidOperationException("Cannot deactivate equipment that is in use by exercises");
-        }
-        
-        // Deactivate
-        var deactivated = await repository.DeactivateAsync(equipmentId);
-        if (!deactivated)
-        {
-            throw new InvalidOperationException($"Failed to deactivate equipment with ID '{id}'");
-        }
-        
-        await unitOfWork.CommitAsync();
-        
-        // Invalidate cache
-        await InvalidateCacheAsync();
-    }
+    // Abstract method implementations
     
-    protected override async Task<IEnumerable<Equipment>> GetAllEntitiesAsync(IReadOnlyUnitOfWork<FitnessDbContext> unitOfWork)
+    protected override async Task<IEnumerable<Equipment>> LoadAllEntitiesAsync(IReadOnlyUnitOfWork<FitnessDbContext> unitOfWork)
     {
         var repository = unitOfWork.GetRepository<IEquipmentRepository>();
         return await repository.GetAllAsync();
     }
     
-    protected override async Task<Equipment?> GetEntityByIdAsync(IReadOnlyUnitOfWork<FitnessDbContext> unitOfWork, string id)
+    protected override async Task<Equipment?> LoadEntityByIdAsync(IReadOnlyUnitOfWork<FitnessDbContext> unitOfWork, string id)
     {
-        if (!EquipmentId.TryParse(id, out var equipmentId))
-        {
-            throw new ArgumentException($"Invalid ID format. Expected format: 'equipment-{{guid}}', got: '{id}'");
-        }
+        var equipmentId = EquipmentId.ParseOrEmpty(id);
+        if (equipmentId.IsEmpty)
+            return null;
             
         var repository = unitOfWork.GetRepository<IEquipmentRepository>();
         return await repository.GetByIdAsync(equipmentId);
     }
     
-    protected override async Task<Equipment?> GetEntityByNameAsync(IReadOnlyUnitOfWork<FitnessDbContext> unitOfWork, string name)
+    protected override async Task<Equipment?> LoadEntityByIdAsync(IWritableUnitOfWork<FitnessDbContext> unitOfWork, string id)
     {
-        var repository = unitOfWork.GetRepository<IEquipmentRepository>();
-        return await repository.GetByNameAsync(name);
-    }
-    
-    protected override async Task<Equipment?> GetEntityByValueAsync(IReadOnlyUnitOfWork<FitnessDbContext> unitOfWork, string value)
-    {
-        // For equipment, value is the same as name
-        return await GetEntityByNameAsync(unitOfWork, value);
-    }
-    
-    protected override async Task<Equipment> CreateEntityAsync(IWritableUnitOfWork<FitnessDbContext> unitOfWork, object createDto)
-    {
-        if (createDto is not CreateEquipmentDto request)
-            throw new ArgumentException("Invalid DTO type");
+        var equipmentId = EquipmentId.ParseOrEmpty(id);
+        if (equipmentId.IsEmpty)
+            return null;
             
         var repository = unitOfWork.GetRepository<IEquipmentRepository>();
-        
-        // Check for duplicate name
-        if (await repository.ExistsAsync(request.Name))
+        return await repository.GetByIdAsync(equipmentId);
+    }
+    
+    protected override EquipmentDto MapToDto(Equipment entity)
+    {
+        return new EquipmentDto
         {
-            throw new InvalidOperationException($"Equipment with the name '{request.Name}' already exists");
-        }
+            Id = entity.EquipmentId.ToString(),
+            Name = entity.Name,
+            IsActive = entity.IsActive,
+            CreatedAt = entity.CreatedAt,
+            UpdatedAt = entity.UpdatedAt
+        };
+    }
+    
+    protected override EquipmentDto CreateEmptyDto()
+    {
+        return new EquipmentDto
+        {
+            Id = string.Empty,
+            Name = string.Empty,
+            IsActive = false,
+            CreatedAt = DateTime.MinValue,
+            UpdatedAt = null
+        };
+    }
+    
+    protected override ValidationResult ValidateAndParseId(string id)
+    {
+        if (string.IsNullOrWhiteSpace(id))
+            return ValidationResult.Failure(EquipmentErrorMessages.IdCannotBeEmpty);
+            
+        var equipmentId = EquipmentId.ParseOrEmpty(id);
+        // If ParseOrEmpty returns Empty for a non-empty string, it means invalid format
+        if (equipmentId.IsEmpty && !string.IsNullOrWhiteSpace(id))
+            return ValidationResult.Failure(string.Format(EquipmentErrorMessages.InvalidIdFormat, id));
+            
+        return ValidationResult.Success();
+    }
+    
+    protected override async Task<ValidationResult> ValidateCreateCommand(CreateEquipmentCommand command)
+    {
+        if (command == null)
+            return ValidationResult.Failure(EquipmentErrorMessages.RequestCannotBeNull);
+            
+        if (string.IsNullOrWhiteSpace(command.Name))
+            return ValidationResult.Failure(EquipmentErrorMessages.NameCannotBeEmpty);
+            
+        // Check for duplicate name
+        using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
+        var repository = unitOfWork.GetRepository<IEquipmentRepository>();
         
-        // Create the equipment
-        var equipment = Equipment.Handler.CreateNew(request.Name.Trim());
+        if (await repository.ExistsAsync(command.Name.Trim()))
+            return ValidationResult.Failure(string.Format(EquipmentErrorMessages.DuplicateNameFormat, command.Name));
+            
+        return ValidationResult.Success();
+    }
+    
+    protected override async Task<ValidationResult> ValidateUpdateCommand(string id, UpdateEquipmentCommand command)
+    {
+        if (command == null)
+            return ValidationResult.Failure(EquipmentErrorMessages.RequestCannotBeNull);
+            
+        if (string.IsNullOrWhiteSpace(command.Name))
+            return ValidationResult.Failure(EquipmentErrorMessages.NameCannotBeEmpty);
+            
+        var equipmentId = EquipmentId.ParseOrEmpty(id);
+        if (equipmentId.IsEmpty)
+            return ValidationResult.Failure(EquipmentErrorMessages.InvalidEquipmentId);
+            
+        // Check for duplicate name (excluding current)
+        using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
+        var repository = unitOfWork.GetRepository<IEquipmentRepository>();
+        
+        if (await repository.ExistsAsync(command.Name.Trim(), equipmentId))
+            return ValidationResult.Failure(string.Format(EquipmentErrorMessages.DuplicateNameFormat, command.Name));
+            
+        return ValidationResult.Success();
+    }
+    
+    protected override async Task<Equipment> CreateEntityAsync(IWritableUnitOfWork<FitnessDbContext> unitOfWork, CreateEquipmentCommand command)
+    {
+        var repository = unitOfWork.GetRepository<IEquipmentRepository>();
+        var equipment = Equipment.Handler.CreateNew(command.Name.Trim());
         return await repository.CreateAsync(equipment);
     }
     
-    protected override async Task<Equipment> UpdateEntityAsync(IWritableUnitOfWork<FitnessDbContext> unitOfWork, string id, object updateDto)
+    protected override async Task<Equipment> UpdateEntityAsync(IWritableUnitOfWork<FitnessDbContext> unitOfWork, Equipment existingEntity, UpdateEquipmentCommand command)
     {
-        if (updateDto is not UpdateEquipmentDto request)
-            throw new ArgumentException("Invalid DTO type");
-            
-        if (!EquipmentId.TryParse(id, out var equipmentId))
-            throw new ArgumentException($"Invalid ID format. Expected format: 'equipment-{{guid}}', got: '{id}'");
-            
         var repository = unitOfWork.GetRepository<IEquipmentRepository>();
-        
-        // Get existing equipment
-        var existing = await repository.GetByIdAsync(equipmentId);
-        if (existing == null || !existing.IsActive)
-        {
-            throw new InvalidOperationException($"Equipment with ID '{id}' not found or inactive");
-        }
-        
-        // Check for duplicate name (excluding current)
-        if (request.Name != null && await repository.ExistsAsync(request.Name, equipmentId))
-        {
-            throw new InvalidOperationException($"Equipment with the name '{request.Name}' already exists");
-        }
-        
-        // Update the equipment
-        var updated = Equipment.Handler.Update(existing, request.Name!.Trim());
+        var updated = Equipment.Handler.Update(existingEntity, command.Name.Trim());
         return await repository.UpdateAsync(updated);
     }
     
-    protected override Task DeleteEntityAsync(IWritableUnitOfWork<FitnessDbContext> unitOfWork, string id)
+    protected override async Task<bool> DeleteEntityAsync(IWritableUnitOfWork<FitnessDbContext> unitOfWork, string id)
     {
-        // Use DeactivateAsync instead
-        throw new NotSupportedException("Use DeactivateAsync method instead");
-    }
-    
-    protected override async Task<bool> CheckEntityExistsAsync(IWritableUnitOfWork<FitnessDbContext> unitOfWork, string id)
-    {
-        if (!EquipmentId.TryParse(id, out var equipmentId))
-        {
-            throw new ArgumentException($"Invalid ID format. Expected format: 'equipment-{{guid}}', got: '{id}'");
-        }
+        // This method is not used when DeleteAsync(EquipmentId) is overridden
+        // But we need to provide an implementation for the abstract method
+        var equipmentId = EquipmentId.ParseOrEmpty(id);
+        if (equipmentId.IsEmpty)
+            return false;
             
         var repository = unitOfWork.GetRepository<IEquipmentRepository>();
-        var entity = await repository.GetByIdAsync(equipmentId);
-        return entity != null && entity.IsActive;
+        return await repository.DeactivateAsync(equipmentId);
     }
 }

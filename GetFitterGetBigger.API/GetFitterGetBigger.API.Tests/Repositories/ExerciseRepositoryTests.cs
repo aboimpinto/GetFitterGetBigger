@@ -218,7 +218,7 @@ namespace GetFitterGetBigger.API.Tests.Repositories
             var difficultyId = _context.DifficultyLevels.First().DifficultyLevelId;
             var muscleGroupId = _context.MuscleGroups.First().Id;
             var muscleRoleId = _context.MuscleRoles.First().MuscleRoleId;
-            var equipmentId = _context.Equipment.First().Id;
+            var equipmentId = _context.Equipment.First().EquipmentId;
             
             var exercise = Exercise.Handler.CreateNew(
                 "Bench Press", "Chest exercise", null, null, false, difficultyId);

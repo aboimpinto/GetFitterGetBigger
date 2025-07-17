@@ -19,7 +19,7 @@ public readonly record struct EquipmentId
     
     public bool IsEmpty => _value == Guid.Empty;
     
-    public static bool TryParse(string? input, out EquipmentId result)
+    private static bool TryParse(string? input, out EquipmentId result)
     {
         result = default;
         if (string.IsNullOrEmpty(input) || !input.StartsWith("equipment-"))

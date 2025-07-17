@@ -108,7 +108,10 @@ public class FitnessDbContext : DbContext
                 
         // Equipment ID
         modelBuilder.Entity<Equipment>()
-            .Property(e => e.Id)
+            .HasKey(e => e.EquipmentId);
+            
+        modelBuilder.Entity<Equipment>()
+            .Property(e => e.EquipmentId)
             .HasConversion(
                 id => (Guid)id,
                 guid => EquipmentId.From(guid));

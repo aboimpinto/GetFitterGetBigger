@@ -371,7 +371,7 @@ public class SeedDataBuilder
         foreach (var (id, name) in equipmentToCheck)
         {
             var equipmentId = EquipmentId.From(id);
-            var exists = await _context.Equipment.AnyAsync(e => e.Id == equipmentId);
+            var exists = await _context.Equipment.AnyAsync(e => e.EquipmentId == equipmentId);
             
             if (!exists)
             {

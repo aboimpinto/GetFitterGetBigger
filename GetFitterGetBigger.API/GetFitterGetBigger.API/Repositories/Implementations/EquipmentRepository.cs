@@ -34,7 +34,7 @@ public class EquipmentRepository : RepositoryBase<FitnessDbContext>, IEquipmentR
         // Use AsNoTracking for read operations to avoid tracking conflicts
         var equipment = await Context.Equipment
             .AsNoTracking()
-            .FirstOrDefaultAsync(e => e.Id == id);
+            .FirstOrDefaultAsync(e => e.EquipmentId == id);
         
         return equipment;
     }
@@ -71,12 +71,12 @@ public class EquipmentRepository : RepositoryBase<FitnessDbContext>, IEquipmentR
     public async Task<Equipment> UpdateAsync(Equipment entity)
     {
         // Log the entity state before any operations
-        Console.WriteLine($"[Equipment Repository] UpdateAsync called with entity: ID={entity.Id}, Name='{entity.Name}', IsActive={entity.IsActive}, CreatedAt={entity.CreatedAt}, UpdatedAt={entity.UpdatedAt}");
-        Console.WriteLine($"[Equipment Repository] ID as GUID: {(Guid)entity.Id}");
+        Console.WriteLine($"[Equipment Repository] UpdateAsync called with entity: ID={entity.EquipmentId}, Name='{entity.Name}', IsActive={entity.IsActive}, CreatedAt={entity.CreatedAt}, UpdatedAt={entity.UpdatedAt}");
+        Console.WriteLine($"[Equipment Repository] ID as GUID: {(Guid)entity.EquipmentId}");
         
         // First, check if there's already a tracked entity with the same ID
         var tracked = Context.ChangeTracker.Entries<Equipment>()
-            .FirstOrDefault(e => e.Entity.Id == entity.Id);
+            .FirstOrDefault(e => e.Entity.EquipmentId == entity.EquipmentId);
         
         if (tracked != null)
         {
@@ -110,7 +110,7 @@ public class EquipmentRepository : RepositoryBase<FitnessDbContext>, IEquipmentR
     public async Task<bool> DeactivateAsync(EquipmentId id)
     {
         var equipment = await Context.Equipment
-            .FirstOrDefaultAsync(e => e.Id == id);
+            .FirstOrDefaultAsync(e => e.EquipmentId == id);
         
         if (equipment == null)
             return false;
@@ -138,7 +138,7 @@ public class EquipmentRepository : RepositoryBase<FitnessDbContext>, IEquipmentR
         
         if (excludeId != null)
         {
-            query = query.Where(e => e.Id != excludeId);
+            query = query.Where(e => e.EquipmentId != excludeId);
         }
         
         return await query.AnyAsync();

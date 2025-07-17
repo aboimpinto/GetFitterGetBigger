@@ -1,36 +1,47 @@
 using GetFitterGetBigger.API.DTOs;
-using GetFitterGetBigger.API.Models.Entities;
-using GetFitterGetBigger.API.Services.ReferenceTable;
+using GetFitterGetBigger.API.Models.SpecializedIds;
+using GetFitterGetBigger.API.Services.Commands.Equipment;
+using GetFitterGetBigger.API.Services.Results;
 
 namespace GetFitterGetBigger.API.Services.Interfaces;
 
 /// <summary>
 /// Service interface for equipment operations
 /// </summary>
-public interface IEquipmentService : IReferenceTableService<Equipment>
+public interface IEquipmentService
 {
     /// <summary>
-    /// Gets equipment as DTOs
+    /// Gets all active equipment
     /// </summary>
-    Task<IEnumerable<ReferenceDataDto>> GetAllAsDtosAsync();
+    Task<ServiceResult<IEnumerable<EquipmentDto>>> GetAllAsync();
     
     /// <summary>
-    /// Gets equipment by ID as DTO
+    /// Gets equipment by ID
     /// </summary>
-    Task<ReferenceDataDto?> GetByIdAsDtoAsync(string id);
+    Task<ServiceResult<EquipmentDto>> GetByIdAsync(EquipmentId id);
     
     /// <summary>
-    /// Creates equipment and returns as DTO
+    /// Gets equipment by name (case-insensitive)
     /// </summary>
-    Task<EquipmentDto> CreateEquipmentAsync(CreateEquipmentDto request);
+    Task<ServiceResult<EquipmentDto>> GetByNameAsync(string name);
     
     /// <summary>
-    /// Updates equipment and returns as DTO
+    /// Creates new equipment
     /// </summary>
-    Task<EquipmentDto> UpdateEquipmentAsync(string id, UpdateEquipmentDto request);
+    Task<ServiceResult<EquipmentDto>> CreateAsync(CreateEquipmentCommand command);
     
     /// <summary>
-    /// Deactivates equipment
+    /// Updates existing equipment
     /// </summary>
-    Task DeactivateAsync(string id);
+    Task<ServiceResult<EquipmentDto>> UpdateAsync(EquipmentId id, UpdateEquipmentCommand command);
+    
+    /// <summary>
+    /// Deletes equipment (soft delete)
+    /// </summary>
+    Task<ServiceResult<bool>> DeleteAsync(EquipmentId id);
+    
+    /// <summary>
+    /// Checks if equipment exists with the given ID
+    /// </summary>
+    Task<bool> ExistsAsync(EquipmentId id);
 }

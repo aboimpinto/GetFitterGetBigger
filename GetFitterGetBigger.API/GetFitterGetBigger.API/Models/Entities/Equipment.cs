@@ -4,13 +4,39 @@ using GetFitterGetBigger.API.Models.SpecializedIds;
 
 namespace GetFitterGetBigger.API.Models.Entities;
 
-public record Equipment
+public record Equipment : IEnhancedReference, IEmptyEntity<Equipment>
 {
-    public EquipmentId Id { get; init; }
+    public EquipmentId EquipmentId { get; init; }
     public string Name { get; init; } = string.Empty;
     public bool IsActive { get; init; } = true;
     public DateTime CreatedAt { get; init; }
     public DateTime? UpdatedAt { get; init; }
+    
+    // IEntity implementation (through IEnhancedReference)
+    public string Id => EquipmentId.ToString();
+    
+    // IEnhancedReference implementation
+    public string Value => Name;
+    public string? Description => null; // Equipment doesn't have descriptions
+    
+    // ITrackedEntity implementation (through IEnhancedReference)
+    DateTime ITrackedEntity.UpdatedAt => UpdatedAt ?? CreatedAt;
+    
+    // IEmptyEntity implementation
+    public bool IsEmpty => EquipmentId.IsEmpty;
+    
+    public static Equipment Empty { get; } = new()
+    {
+        EquipmentId = EquipmentId.Empty,
+        Name = string.Empty,
+        IsActive = false,
+        CreatedAt = DateTime.MinValue,
+        UpdatedAt = null
+    };
+    
+    // ICacheableEntity implementation (through IEnhancedReference)
+    public CacheStrategy GetCacheStrategy() => CacheStrategy.Invalidatable;
+    public TimeSpan? GetCacheDuration() => TimeSpan.FromHours(1);
     
     // Navigation properties
     public ICollection<ExerciseEquipment> Exercises { get; init; } = new List<ExerciseEquipment>();
@@ -28,7 +54,7 @@ public record Equipment
             
             return new()
             {
-                Id = EquipmentId.New(),
+                EquipmentId = EquipmentId.New(),
                 Name = name,
                 IsActive = true,
                 CreatedAt = DateTime.UtcNow,
@@ -39,7 +65,7 @@ public record Equipment
         public static Equipment Create(EquipmentId id, string name, bool isActive = true, DateTime? createdAt = null, DateTime? updatedAt = null) =>
             new()
             {
-                Id = id,
+                EquipmentId = id,
                 Name = name,
                 IsActive = isActive,
                 CreatedAt = createdAt ?? DateTime.UtcNow,

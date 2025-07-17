@@ -191,7 +191,7 @@ namespace GetFitterGetBigger.API.Migrations
 
             modelBuilder.Entity("GetFitterGetBigger.API.Models.Entities.Equipment", b =>
                 {
-                    b.Property<Guid>("Id")
+                    b.Property<Guid>("EquipmentId")
                         .HasColumnType("uuid");
 
                     b.Property<DateTime>("CreatedAt")
@@ -207,7 +207,7 @@ namespace GetFitterGetBigger.API.Migrations
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
 
-                    b.HasKey("Id");
+                    b.HasKey("EquipmentId");
 
                     b.ToTable("Equipment");
                 });
