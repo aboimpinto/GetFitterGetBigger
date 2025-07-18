@@ -128,19 +128,21 @@ public class ExerciseTypeService : PureReferenceService<ExerciseType, ReferenceD
         return await repository.GetByValueAsync(value) ?? ExerciseType.Empty;
     }
     
-    protected override async Task<IEnumerable<ExerciseType>> LoadAllEntitiesAsync(IReadOnlyUnitOfWork<FitnessDbContext> unitOfWork)
+    protected override async Task<IEnumerable<ExerciseType>> LoadAllEntitiesAsync()
     {
+        using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
         var repository = unitOfWork.GetRepository<IExerciseTypeRepository>();
         return await repository.GetAllActiveAsync();
     }
     
     // Returns ExerciseType.Empty instead of null (Null Object Pattern)
-    protected override async Task<ExerciseType> LoadEntityByIdAsync(IReadOnlyUnitOfWork<FitnessDbContext> unitOfWork, string id)
+    protected override async Task<ExerciseType> LoadEntityByIdAsync(string id)
     {
         var exerciseTypeId = ExerciseTypeId.ParseOrEmpty(id);
         if (exerciseTypeId.IsEmpty)
             return ExerciseType.Empty;
             
+        using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
         var repository = unitOfWork.GetRepository<IExerciseTypeRepository>();
         return await repository.GetByIdAsync(exerciseTypeId);
     }

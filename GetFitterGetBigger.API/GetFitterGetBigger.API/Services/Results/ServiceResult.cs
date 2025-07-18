@@ -113,12 +113,18 @@ public record ValidationResult
     public List<string> Errors { get; init; } = new();
     
     /// <summary>
+    /// The service error if validation failed with a specific error code
+    /// </summary>
+    public ServiceError? ServiceError { get; init; }
+    
+    /// <summary>
     /// Creates a successful validation result
     /// </summary>
     public static ValidationResult Success() => new()
     {
         IsValid = true,
-        Errors = new List<string>()
+        Errors = new List<string>(),
+        ServiceError = null
     };
     
     /// <summary>
@@ -127,7 +133,8 @@ public record ValidationResult
     public static ValidationResult Failure(params string[] errors) => new()
     {
         IsValid = false,
-        Errors = errors.ToList()
+        Errors = errors.ToList(),
+        ServiceError = null
     };
     
     /// <summary>
@@ -136,6 +143,17 @@ public record ValidationResult
     public static ValidationResult Failure(string error) => new()
     {
         IsValid = false,
-        Errors = new List<string> { error }
+        Errors = new List<string> { error },
+        ServiceError = null
+    };
+    
+    /// <summary>
+    /// Creates a failed validation result with a service error
+    /// </summary>
+    public static ValidationResult Failure(ServiceError serviceError) => new()
+    {
+        IsValid = false,
+        Errors = new List<string> { serviceError.Message },
+        ServiceError = serviceError
     };
 }

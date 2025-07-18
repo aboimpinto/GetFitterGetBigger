@@ -110,18 +110,20 @@ public class ExecutionProtocolService : PureReferenceService<ExecutionProtocol, 
     public override async Task<bool> ExistsAsync(string id) => 
         await ExistsAsync(ExecutionProtocolId.ParseOrEmpty(id));
     
-    protected override async Task<IEnumerable<ExecutionProtocol>> LoadAllEntitiesAsync(IReadOnlyUnitOfWork<FitnessDbContext> unitOfWork)
+    protected override async Task<IEnumerable<ExecutionProtocol>> LoadAllEntitiesAsync()
     {
+        using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
         var repository = unitOfWork.GetRepository<IExecutionProtocolRepository>();
         return await repository.GetAllActiveAsync();
     }
     
-    protected override async Task<ExecutionProtocol> LoadEntityByIdAsync(IReadOnlyUnitOfWork<FitnessDbContext> unitOfWork, string id)
+    protected override async Task<ExecutionProtocol> LoadEntityByIdAsync(string id)
     {
         var executionProtocolId = ExecutionProtocolId.ParseOrEmpty(id);
         if (executionProtocolId.IsEmpty)
             return ExecutionProtocol.Empty;
             
+        using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
         var repository = unitOfWork.GetRepository<IExecutionProtocolRepository>();
         return await repository.GetByIdAsync(executionProtocolId);
     }

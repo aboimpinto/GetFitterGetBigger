@@ -140,19 +140,24 @@ public class ExerciseWeightTypeService : PureReferenceService<ExerciseWeightType
         return await repository.GetByCodeAsync(code);
     }
     
-    protected override async Task<IEnumerable<ExerciseWeightType>> LoadAllEntitiesAsync(IReadOnlyUnitOfWork<FitnessDbContext> unitOfWork)
+    protected override async Task<IEnumerable<ExerciseWeightType>> LoadAllEntitiesAsync()
     {
+        using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
         var repository = unitOfWork.GetRepository<IExerciseWeightTypeRepository>();
         return await repository.GetAllActiveAsync();
     }
     
     // Returns ExerciseWeightType.Empty instead of null (Null Object Pattern)
-    protected override async Task<ExerciseWeightType> LoadEntityByIdAsync(IReadOnlyUnitOfWork<FitnessDbContext> unitOfWork, string id) =>
-        ExerciseWeightTypeId.ParseOrEmpty(id) switch
-        {
-            { IsEmpty: true } => ExerciseWeightType.Empty,
-            var exerciseWeightTypeId => await unitOfWork.GetRepository<IExerciseWeightTypeRepository>().GetByIdAsync(exerciseWeightTypeId)
-        };
+    protected override async Task<ExerciseWeightType> LoadEntityByIdAsync(string id)
+    {
+        var exerciseWeightTypeId = ExerciseWeightTypeId.ParseOrEmpty(id);
+        if (exerciseWeightTypeId.IsEmpty)
+            return ExerciseWeightType.Empty;
+            
+        using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
+        var repository = unitOfWork.GetRepository<IExerciseWeightTypeRepository>();
+        return await repository.GetByIdAsync(exerciseWeightTypeId);
+    }
     
     protected override ReferenceDataDto MapToDto(ExerciseWeightType entity)
     {

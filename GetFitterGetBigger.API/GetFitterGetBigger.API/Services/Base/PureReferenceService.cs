@@ -59,8 +59,7 @@ public abstract class PureReferenceService<TEntity, TDto> : EntityServiceBase<TE
     {
         try
         {
-            using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
-            var entities = await LoadAllEntitiesAsync(unitOfWork);
+            var entities = await LoadAllEntitiesAsync();
             
             // Map to DTOs
             var dtos = entities.Select(MapToDto).ToList();
@@ -113,8 +112,7 @@ public abstract class PureReferenceService<TEntity, TDto> : EntityServiceBase<TE
     {
         try
         {
-            using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
-            var entity = await LoadEntityByIdAsync(unitOfWork, id);
+            var entity = await LoadEntityByIdAsync(id);
             
             // Check if entity is null or inactive
             // Check if entity is an empty instance (for entities implementing IEmptyEntity)
@@ -167,18 +165,16 @@ public abstract class PureReferenceService<TEntity, TDto> : EntityServiceBase<TE
     /// Loads all entities from the database
     /// Must be implemented by derived classes
     /// </summary>
-    /// <param name="unitOfWork">The read-only unit of work</param>
     /// <returns>A collection of all active entities</returns>
-    protected abstract Task<IEnumerable<TEntity>> LoadAllEntitiesAsync(IReadOnlyUnitOfWork<FitnessDbContext> unitOfWork);
+    protected abstract Task<IEnumerable<TEntity>> LoadAllEntitiesAsync();
     
     /// <summary>
     /// Loads a single entity by ID from the database
     /// Must be implemented by derived classes
     /// </summary>
-    /// <param name="unitOfWork">The read-only unit of work</param>
     /// <param name="id">The entity ID</param>
-    /// <returns>The entity if found, null otherwise</returns>
-    protected abstract Task<TEntity> LoadEntityByIdAsync(IReadOnlyUnitOfWork<FitnessDbContext> unitOfWork, string id);
+    /// <returns>The entity or Empty if not found</returns>
+    protected abstract Task<TEntity> LoadEntityByIdAsync(string id);
     
     /// <summary>
     /// Maps an entity to its DTO representation

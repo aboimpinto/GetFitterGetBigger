@@ -1,3 +1,4 @@
+using System.Reflection;
 using GetFitterGetBigger.API.Models;
 using GetFitterGetBigger.API.Services.Interfaces;
 using GetFitterGetBigger.API.Services.Results;
@@ -41,38 +42,27 @@ public abstract class EnhancedReferenceService<TEntity, TDto, TCreateCommand, TU
     /// <returns>A service result containing all active entities as DTOs</returns>
     public virtual async Task<ServiceResult<IEnumerable<TDto>>> GetAllAsync()
     {
-        try
+        var cacheKey = GetAllCacheKey();
+        var cacheService = (ICacheService)_cacheService;
+        var cached = await cacheService.GetAsync<IEnumerable<TDto>>(cacheKey);
+        
+        if (cached != null)
         {
-            var cacheKey = GetAllCacheKey();
-            var cacheService = (ICacheService)_cacheService;
-            var cached = await cacheService.GetAsync<IEnumerable<TDto>>(cacheKey);
-            
-            if (cached != null)
-            {
-                _logger.LogDebug("Cache hit for {EntityType}:all", typeof(TEntity).Name);
-                return ServiceResult<IEnumerable<TDto>>.Success(cached);
-            }
-            
-            // Load from database
-            using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
-            var entities = await LoadAllEntitiesAsync(unitOfWork);
-            
-            // Map to DTOs
-            var dtos = entities.Select(MapToDto).ToList();
-            
-            // Cache with automatic 24-hour expiration for enhanced reference data
-            await cacheService.SetAsync(cacheKey, dtos);
-            
-            _logger.LogInformation("Loaded and cached {Count} {EntityType} entities", dtos.Count, typeof(TEntity).Name);
-            return ServiceResult<IEnumerable<TDto>>.Success(dtos);
+            _logger.LogDebug("Cache hit for {EntityType}:all", typeof(TEntity).Name);
+            return ServiceResult<IEnumerable<TDto>>.Success(cached);
         }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error loading all {EntityType} entities", typeof(TEntity).Name);
-            return ServiceResult<IEnumerable<TDto>>.Failure(
-                Enumerable.Empty<TDto>(),
-                $"Failed to load {typeof(TEntity).Name} data");
-        }
+        
+        // Load from database
+        var entities = await LoadAllEntitiesAsync();
+        
+        // Map to DTOs
+        var dtos = entities.Select(MapToDto).ToList();
+        
+        // Cache with automatic 24-hour expiration for enhanced reference data
+        await cacheService.SetAsync(cacheKey, dtos);
+        
+        _logger.LogInformation("Loaded and cached {Count} {EntityType} entities", dtos.Count, typeof(TEntity).Name);
+        return ServiceResult<IEnumerable<TDto>>.Success(dtos);
     }
     
     /// <summary>
@@ -82,53 +72,86 @@ public abstract class EnhancedReferenceService<TEntity, TDto, TCreateCommand, TU
     /// <returns>A service result containing the entity as a DTO</returns>
     public virtual async Task<ServiceResult<TDto>> GetByIdAsync(string id)
     {
-        try
+        var parseResult = ValidateAndParseId(id);
+        if (parseResult.IsValid)
+            return await LoadEntityAsync(id);
+            
+        if (parseResult.ServiceError != null)
+            return ServiceResult<TDto>.Failure(CreateEmptyDto(), parseResult.ServiceError);
+            
+        return ServiceResult<TDto>.Failure(CreateEmptyDto(), parseResult.Errors);
+    }
+    
+    /// <summary>
+    /// Loads an entity, checking cache first
+    /// </summary>
+    protected virtual async Task<ServiceResult<TDto>> LoadEntityAsync(string id)
+    {
+        var cacheResult = await TryLoadFromCacheAsync(id);
+        return cacheResult.IsHit
+            ? ServiceResult<TDto>.Success(cacheResult.Value)
+            : await LoadEntityFromDatabaseAsync(id);
+    }
+    
+    /// <summary>
+    /// Attempts to load entity from cache
+    /// </summary>
+    private async Task<CacheResult<TDto>> TryLoadFromCacheAsync(string id)
+    {
+        var cacheKey = GetCacheKey(id);
+        var cacheService = (ICacheService)_cacheService;
+        var cachedDto = await cacheService.GetAsync<TDto>(cacheKey);
+        
+        if (cachedDto != null)
         {
-            // Validate and parse ID
-            var parseResult = ValidateAndParseId(id);
-            if (!parseResult.IsValid)
-            {
-                return ServiceResult<TDto>.Failure(
-                    CreateEmptyDto(),
-                    parseResult.Errors);
-            }
-            
-            var cacheKey = GetCacheKey(id);
-            var cacheService = (ICacheService)_cacheService;
-            var cached = await cacheService.GetAsync<TDto>(cacheKey);
-            
-            if (cached != null)
-            {
-                _logger.LogDebug("Cache hit for {EntityType}:{Id}", typeof(TEntity).Name, id);
-                return ServiceResult<TDto>.Success(cached);
-            }
-            
-            // Load from database
-            using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
-            var entity = await LoadEntityByIdAsync(unitOfWork, id);
-            
-            if (entity == null || !entity.IsActive)
-            {
-                return ServiceResult<TDto>.Failure(
-                    CreateEmptyDto(),
-                    ServiceError.NotFound(typeof(TEntity).Name));
-            }
-            
-            // Map to DTO
-            var dto = MapToDto(entity);
-            
-            // Cache with automatic 24-hour expiration for enhanced reference data
-            await cacheService.SetAsync(cacheKey, dto);
-            
-            return ServiceResult<TDto>.Success(dto);
+            _logger.LogDebug("Cache hit for {EntityType}:{Id}", typeof(TEntity).Name, id);
+            return CacheResult<TDto>.Hit(cachedDto);
         }
-        catch (Exception ex)
+        
+        return CacheResult<TDto>.Miss();
+    }
+    
+    /// <summary>
+    /// Loads entity from database and processes it
+    /// </summary>
+    protected virtual async Task<ServiceResult<TDto>> LoadEntityFromDatabaseAsync(string id)
+    {
+        var entity = await LoadEntityByIdAsync(id);
+        
+        return IsEntityValidForReturn(entity) switch
         {
-            _logger.LogError(ex, "Error loading {EntityType} with ID: {Id}", typeof(TEntity).Name, id);
-            return ServiceResult<TDto>.Failure(
-                CreateEmptyDto(),
-                $"Failed to load {typeof(TEntity).Name}");
-        }
+            false => ServiceResult<TDto>.Failure(CreateEmptyDto(), ServiceError.NotFound(typeof(TEntity).Name)),
+            true => await MapAndCacheEntityAsync(entity, id)
+        };
+    }
+    
+    /// <summary>
+    /// Checks if entity is valid for returning to client
+    /// </summary>
+    protected virtual bool IsEntityValidForReturn(TEntity entity)
+    {
+        // Check if entity is empty (for entities implementing IEmptyEntity)
+        var entityType = entity.GetType();
+        var isEmptyProperty = entityType.GetProperty("IsEmpty");
+        if (isEmptyProperty?.GetValue(entity) is bool isEmpty && isEmpty)
+            return false;
+            
+        return entity.IsActive;
+    }
+    
+    /// <summary>
+    /// Maps entity to DTO and caches it
+    /// </summary>
+    protected virtual async Task<ServiceResult<TDto>> MapAndCacheEntityAsync(TEntity entity, string id)
+    {
+        var dto = MapToDto(entity);
+        
+        // Cache with automatic 24-hour expiration for enhanced reference data
+        var cacheKey = GetCacheKey(id);
+        var cacheService = (ICacheService)_cacheService;
+        await cacheService.SetAsync(cacheKey, dto);
+        
+        return ServiceResult<TDto>.Success(dto);
     }
     
     /// <summary>
@@ -138,39 +161,35 @@ public abstract class EnhancedReferenceService<TEntity, TDto, TCreateCommand, TU
     /// <returns>A service result containing the created entity as a DTO</returns>
     public virtual async Task<ServiceResult<TDto>> CreateAsync(TCreateCommand command)
     {
-        try
+        // Validate command
+        var validationResult = await ValidateCreateCommand(command);
+        if (!validationResult.IsValid)
         {
-            // Validate command
-            var validationResult = await ValidateCreateCommand(command);
-            if (!validationResult.IsValid)
+            if (validationResult.ServiceError != null)
             {
                 return ServiceResult<TDto>.Failure(
                     CreateEmptyDto(),
-                    validationResult.Errors);
+                    validationResult.ServiceError);
             }
-            
-            using var unitOfWork = _unitOfWorkProvider.CreateWritable();
-            
-            // Create entity
-            var entity = await CreateEntityAsync(unitOfWork, command);
-            await unitOfWork.CommitAsync();
-            
-            // Invalidate caches
-            await InvalidateCacheAsync();
-            
-            // Map to DTO
-            var dto = MapToDto(entity);
-            
-            _logger.LogInformation("Created new {EntityType} with ID: {Id}", typeof(TEntity).Name, entity.Id);
-            return ServiceResult<TDto>.Success(dto);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error creating {EntityType}", typeof(TEntity).Name);
             return ServiceResult<TDto>.Failure(
                 CreateEmptyDto(),
-                $"Failed to create {typeof(TEntity).Name}");
+                validationResult.Errors);
         }
+        
+        using var unitOfWork = _unitOfWorkProvider.CreateWritable();
+        
+        // Create entity
+        var entity = await CreateEntityAsync(unitOfWork, command);
+        await unitOfWork.CommitAsync();
+        
+        // Invalidate caches
+        await InvalidateCacheAsync();
+        
+        // Map to DTO
+        var dto = MapToDto(entity);
+        
+        _logger.LogInformation("Created new {EntityType} with ID: {Id}", typeof(TEntity).Name, entity.Id);
+        return ServiceResult<TDto>.Success(dto);
     }
     
     /// <summary>
@@ -181,57 +200,44 @@ public abstract class EnhancedReferenceService<TEntity, TDto, TCreateCommand, TU
     /// <returns>A service result containing the updated entity as a DTO</returns>
     public virtual async Task<ServiceResult<TDto>> UpdateAsync(string id, TUpdateCommand command)
     {
-        try
+        // Validate existence using existing GetByIdAsync
+        var existingResult = await GetByIdAsync(id);
+        if (!existingResult.IsSuccess)
+            return existingResult;
+        
+        // Validate command
+        var validationResult = await ValidateUpdateCommand(id, command);
+        if (!validationResult.IsValid)
         {
-            // Validate ID
-            var parseResult = ValidateAndParseId(id);
-            if (!parseResult.IsValid)
+            if (validationResult.ServiceError != null)
             {
                 return ServiceResult<TDto>.Failure(
                     CreateEmptyDto(),
-                    parseResult.Errors);
+                    validationResult.ServiceError);
             }
-            
-            // Validate command
-            var validationResult = await ValidateUpdateCommand(id, command);
-            if (!validationResult.IsValid)
-            {
-                return ServiceResult<TDto>.Failure(
-                    CreateEmptyDto(),
-                    validationResult.Errors);
-            }
-            
-            using var unitOfWork = _unitOfWorkProvider.CreateWritable();
-            
-            // Load existing entity
-            var existingEntity = await LoadEntityByIdAsync(unitOfWork, id);
-            if (existingEntity == null)
-            {
-                return ServiceResult<TDto>.Failure(
-                    CreateEmptyDto(),
-                    ServiceError.NotFound(typeof(TEntity).Name));
-            }
-            
-            // Update entity
-            var updatedEntity = await UpdateEntityAsync(unitOfWork, existingEntity, command);
-            await unitOfWork.CommitAsync();
-            
-            // Invalidate caches
-            await InvalidateCacheAsync();
-            
-            // Map to DTO
-            var dto = MapToDto(updatedEntity);
-            
-            _logger.LogInformation("Updated {EntityType} with ID: {Id}", typeof(TEntity).Name, id);
-            return ServiceResult<TDto>.Success(dto);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error updating {EntityType} with ID: {Id}", typeof(TEntity).Name, id);
             return ServiceResult<TDto>.Failure(
                 CreateEmptyDto(),
-                $"Failed to update {typeof(TEntity).Name}");
+                validationResult.Errors);
         }
+        
+        // Perform update with WritableUnitOfWork
+        using var unitOfWork = _unitOfWorkProvider.CreateWritable();
+        
+        // Fresh load in write context
+        var existingEntity = await LoadEntityByIdForUpdateAsync(unitOfWork, id);
+        
+        // Update entity
+        var updatedEntity = await UpdateEntityAsync(unitOfWork, existingEntity, command);
+        await unitOfWork.CommitAsync();
+        
+        // Invalidate caches
+        await InvalidateCacheAsync();
+        
+        // Map to DTO
+        var dto = MapToDto(updatedEntity);
+        
+        _logger.LogInformation("Updated {EntityType} with ID: {Id}", typeof(TEntity).Name, id);
+        return ServiceResult<TDto>.Success(dto);
     }
     
     /// <summary>
@@ -241,37 +247,32 @@ public abstract class EnhancedReferenceService<TEntity, TDto, TCreateCommand, TU
     /// <returns>A service result indicating success or failure</returns>
     public virtual async Task<ServiceResult<bool>> DeleteAsync(string id)
     {
-        try
+        // Validate existence using existing GetByIdAsync
+        var existingResult = await GetByIdAsync(id);
+        if (!existingResult.IsSuccess)
         {
-            // Validate ID
-            var parseResult = ValidateAndParseId(id);
-            if (!parseResult.IsValid)
-            {
-                return ServiceResult<bool>.Failure(false, parseResult.Errors);
-            }
-            
-            using var unitOfWork = _unitOfWorkProvider.CreateWritable();
-            
-            // Perform delete
-            var deleted = await DeleteEntityAsync(unitOfWork, id);
-            if (!deleted)
-            {
-                return ServiceResult<bool>.Failure(false, ServiceError.NotFound(typeof(TEntity).Name));
-            }
-            
-            await unitOfWork.CommitAsync();
-            
-            // Invalidate caches
-            await InvalidateCacheAsync();
-            
-            _logger.LogInformation("Deleted {EntityType} with ID: {Id}", typeof(TEntity).Name, id);
-            return ServiceResult<bool>.Success(true);
+            if (existingResult.StructuredErrors.Any())
+                return ServiceResult<bool>.Failure(false, existingResult.StructuredErrors.ToArray());
+            else
+                return ServiceResult<bool>.Failure(false, existingResult.Errors);
         }
-        catch (Exception ex)
+        
+        using var unitOfWork = _unitOfWorkProvider.CreateWritable();
+        
+        // Perform delete
+        var deleted = await DeleteEntityAsync(unitOfWork, id);
+        if (!deleted)
         {
-            _logger.LogError(ex, "Error deleting {EntityType} with ID: {Id}", typeof(TEntity).Name, id);
-            return ServiceResult<bool>.Failure(false, $"Failed to delete {typeof(TEntity).Name}");
+            return ServiceResult<bool>.Failure(false, ServiceError.NotFound(typeof(TEntity).Name));
         }
+        
+        await unitOfWork.CommitAsync();
+        
+        // Invalidate caches
+        await InvalidateCacheAsync();
+        
+        _logger.LogInformation("Deleted {EntityType} with ID: {Id}", typeof(TEntity).Name, id);
+        return ServiceResult<bool>.Success(true);
     }
     
     /// <summary>
@@ -287,15 +288,62 @@ public abstract class EnhancedReferenceService<TEntity, TDto, TCreateCommand, TU
     
     // Abstract methods that must be implemented by derived classes
     
-    protected abstract Task<IEnumerable<TEntity>> LoadAllEntitiesAsync(IReadOnlyUnitOfWork<FitnessDbContext> unitOfWork);
-    protected abstract Task<TEntity?> LoadEntityByIdAsync(IReadOnlyUnitOfWork<FitnessDbContext> unitOfWork, string id);
-    protected abstract Task<TEntity?> LoadEntityByIdAsync(IWritableUnitOfWork<FitnessDbContext> unitOfWork, string id);
+    /// <summary>
+    /// Loads all active entities from the repository
+    /// </summary>
+    /// <returns>Collection of entities (never null, use Empty pattern)</returns>
+    protected abstract Task<IEnumerable<TEntity>> LoadAllEntitiesAsync();
+    
+    /// <summary>
+    /// Loads an entity by ID using ReadOnlyUnitOfWork internally
+    /// </summary>
+    /// <param name="id">The entity ID</param>
+    /// <returns>The entity or Empty if not found</returns>
+    protected abstract Task<TEntity> LoadEntityByIdAsync(string id);
+    
+    /// <summary>
+    /// Maps an entity to its DTO representation
+    /// </summary>
     protected abstract TDto MapToDto(TEntity entity);
+    
+    /// <summary>
+    /// Creates an empty DTO instance
+    /// </summary>
     protected abstract TDto CreateEmptyDto();
+    
+    /// <summary>
+    /// Validates and parses the ID format
+    /// </summary>
     protected abstract ValidationResult ValidateAndParseId(string id);
+    
+    /// <summary>
+    /// Validates the create command
+    /// </summary>
     protected abstract Task<ValidationResult> ValidateCreateCommand(TCreateCommand command);
+    
+    /// <summary>
+    /// Validates the update command
+    /// </summary>
     protected abstract Task<ValidationResult> ValidateUpdateCommand(string id, TUpdateCommand command);
+    
+    /// <summary>
+    /// Creates a new entity in the repository
+    /// </summary>
     protected abstract Task<TEntity> CreateEntityAsync(IWritableUnitOfWork<FitnessDbContext> unitOfWork, TCreateCommand command);
+    
+    /// <summary>
+    /// Updates an existing entity in the repository
+    /// </summary>
     protected abstract Task<TEntity> UpdateEntityAsync(IWritableUnitOfWork<FitnessDbContext> unitOfWork, TEntity existingEntity, TUpdateCommand command);
+    
+    /// <summary>
+    /// Deletes (soft delete) an entity in the repository
+    /// </summary>
     protected abstract Task<bool> DeleteEntityAsync(IWritableUnitOfWork<FitnessDbContext> unitOfWork, string id);
+    
+    /// <summary>
+    /// Helper method to load entity in writable context for updates
+    /// This is only used internally by UpdateAsync to get a fresh entity in the write context
+    /// </summary>
+    protected abstract Task<TEntity> LoadEntityByIdForUpdateAsync(IWritableUnitOfWork<FitnessDbContext> unitOfWork, string id);
 }

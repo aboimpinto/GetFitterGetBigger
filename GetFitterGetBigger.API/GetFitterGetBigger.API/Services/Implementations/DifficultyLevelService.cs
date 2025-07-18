@@ -94,19 +94,24 @@ public class DifficultyLevelService : PureReferenceService<DifficultyLevel, Refe
     public override async Task<bool> ExistsAsync(string id) => 
         await ExistsAsync(DifficultyLevelId.ParseOrEmpty(id));
     
-    protected override async Task<IEnumerable<DifficultyLevel>> LoadAllEntitiesAsync(IReadOnlyUnitOfWork<FitnessDbContext> unitOfWork)
+    protected override async Task<IEnumerable<DifficultyLevel>> LoadAllEntitiesAsync()
     {
+        using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
         var repository = unitOfWork.GetRepository<IDifficultyLevelRepository>();
         return await repository.GetAllActiveAsync();
     }
     
     // Returns DifficultyLevel.Empty instead of null (Null Object Pattern)
-    protected override async Task<DifficultyLevel> LoadEntityByIdAsync(IReadOnlyUnitOfWork<FitnessDbContext> unitOfWork, string id) =>
-        DifficultyLevelId.ParseOrEmpty(id) switch
-        {
-            { IsEmpty: true } => DifficultyLevel.Empty,
-            var difficultyLevelId => await unitOfWork.GetRepository<IDifficultyLevelRepository>().GetByIdAsync(difficultyLevelId)
-        };
+    protected override async Task<DifficultyLevel> LoadEntityByIdAsync(string id)
+    {
+        var difficultyLevelId = DifficultyLevelId.ParseOrEmpty(id);
+        if (difficultyLevelId.IsEmpty)
+            return DifficultyLevel.Empty;
+            
+        using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
+        var repository = unitOfWork.GetRepository<IDifficultyLevelRepository>();
+        return await repository.GetByIdAsync(difficultyLevelId);
+    }
     
     protected override ReferenceDataDto MapToDto(DifficultyLevel entity)
     {

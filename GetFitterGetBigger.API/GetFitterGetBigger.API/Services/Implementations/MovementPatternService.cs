@@ -93,19 +93,24 @@ public class MovementPatternService : PureReferenceService<MovementPattern, Refe
     public override async Task<bool> ExistsAsync(string id) => 
         await ExistsAsync(MovementPatternId.ParseOrEmpty(id));
     
-    protected override async Task<IEnumerable<MovementPattern>> LoadAllEntitiesAsync(IReadOnlyUnitOfWork<FitnessDbContext> unitOfWork)
+    protected override async Task<IEnumerable<MovementPattern>> LoadAllEntitiesAsync()
     {
+        using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
         var repository = unitOfWork.GetRepository<IMovementPatternRepository>();
         return await repository.GetAllActiveAsync();
     }
     
     // Returns MovementPattern.Empty instead of null (Null Object Pattern)
-    protected override async Task<MovementPattern> LoadEntityByIdAsync(IReadOnlyUnitOfWork<FitnessDbContext> unitOfWork, string id) =>
-        MovementPatternId.ParseOrEmpty(id) switch
-        {
-            { IsEmpty: true } => MovementPattern.Empty,
-            var movementPatternId => await unitOfWork.GetRepository<IMovementPatternRepository>().GetByIdAsync(movementPatternId)
-        };
+    protected override async Task<MovementPattern> LoadEntityByIdAsync(string id)
+    {
+        var movementPatternId = MovementPatternId.ParseOrEmpty(id);
+        if (movementPatternId.IsEmpty)
+            return MovementPattern.Empty;
+            
+        using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
+        var repository = unitOfWork.GetRepository<IMovementPatternRepository>();
+        return await repository.GetByIdAsync(movementPatternId);
+    }
     
     protected override ReferenceDataDto MapToDto(MovementPattern entity)
     {

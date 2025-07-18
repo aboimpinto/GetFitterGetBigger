@@ -91,20 +91,21 @@ public class MuscleRoleService : PureReferenceService<MuscleRole, ReferenceDataD
         await ExistsAsync(id.ToString());
 
     /// <inheritdoc/>
-    protected override async Task<MuscleRole> LoadEntityByIdAsync(
-        IReadOnlyUnitOfWork<FitnessDbContext> unitOfWork, 
-        string id) =>
-        MuscleRoleId.ParseOrEmpty(id) switch
-        {
-            { IsEmpty: true } => MuscleRole.Empty,
-            var muscleRoleId => await unitOfWork.GetRepository<IMuscleRoleRepository>()
-                .GetByIdAsync(muscleRoleId)
-        };
+    protected override async Task<MuscleRole> LoadEntityByIdAsync(string id)
+    {
+        var muscleRoleId = MuscleRoleId.ParseOrEmpty(id);
+        if (muscleRoleId.IsEmpty)
+            return MuscleRole.Empty;
+            
+        using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
+        var repository = unitOfWork.GetRepository<IMuscleRoleRepository>();
+        return await repository.GetByIdAsync(muscleRoleId);
+    }
 
     /// <inheritdoc/>
-    protected override async Task<IEnumerable<MuscleRole>> LoadAllEntitiesAsync(
-        IReadOnlyUnitOfWork<FitnessDbContext> unitOfWork)
+    protected override async Task<IEnumerable<MuscleRole>> LoadAllEntitiesAsync()
     {
+        using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
         var repository = unitOfWork.GetRepository<IMuscleRoleRepository>();
         return await repository.GetAllActiveAsync();
     }

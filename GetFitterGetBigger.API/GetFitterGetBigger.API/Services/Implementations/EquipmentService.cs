@@ -45,7 +45,12 @@ public class EquipmentService : EnhancedReferenceService<Equipment, EquipmentDto
         // Validate using existing method
         var existingResult = await GetByIdAsync(id);
         if (!existingResult.IsSuccess)
-            return ServiceResult<bool>.Failure(false, existingResult.StructuredErrors.First());
+        {
+            if (existingResult.StructuredErrors.Any())
+                return ServiceResult<bool>.Failure(false, existingResult.StructuredErrors.ToArray());
+            else
+                return ServiceResult<bool>.Failure(false, existingResult.Errors);
+        }
         
         // Check if in use
         var inUseResult = await CheckIfInUseAsync(id);
@@ -56,7 +61,7 @@ public class EquipmentService : EnhancedReferenceService<Equipment, EquipmentDto
         var deleteResult = await DeleteAsync(id.ToString());
         return deleteResult.IsSuccess 
             ? ServiceResult<bool>.Success(true)
-            : ServiceResult<bool>.Failure(false, deleteResult.StructuredErrors.First());
+            : ServiceResult<bool>.Failure(false, deleteResult.StructuredErrors.ToArray());
     }
     
     /// <summary>
@@ -132,35 +137,43 @@ public class EquipmentService : EnhancedReferenceService<Equipment, EquipmentDto
     
     // Abstract method implementations
     
-    protected override async Task<IEnumerable<Equipment>> LoadAllEntitiesAsync(
-        IReadOnlyUnitOfWork<FitnessDbContext> unitOfWork)
+    protected override async Task<IEnumerable<Equipment>> LoadAllEntitiesAsync()
     {
+        using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
         var repository = unitOfWork.GetRepository<IEquipmentRepository>();
         return await repository.GetAllAsync();
     }
     
-    protected override async Task<Equipment?> LoadEntityByIdAsync(
-        IReadOnlyUnitOfWork<FitnessDbContext> unitOfWork, 
-        string id)
+    protected override async Task<Equipment> LoadEntityByIdAsync(string id)
     {
         var equipmentId = EquipmentId.ParseOrEmpty(id);
-        if (equipmentId.IsEmpty)
-            return null;
-            
-        var repository = unitOfWork.GetRepository<IEquipmentRepository>();
-        return await repository.GetByIdAsync(equipmentId);
+        
+        return equipmentId.IsEmpty switch
+        {
+            true => Equipment.Empty,
+            false => await LoadFromRepositoryAsync(equipmentId)
+        };
     }
     
-    protected override async Task<Equipment?> LoadEntityByIdAsync(
+    private async Task<Equipment> LoadFromRepositoryAsync(EquipmentId equipmentId)
+    {
+        using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
+        var repository = unitOfWork.GetRepository<IEquipmentRepository>();
+        var entity = await repository.GetByIdAsync(equipmentId);
+        return entity ?? Equipment.Empty;
+    }
+    
+    protected override async Task<Equipment> LoadEntityByIdForUpdateAsync(
         IWritableUnitOfWork<FitnessDbContext> unitOfWork, 
         string id)
     {
         var equipmentId = EquipmentId.ParseOrEmpty(id);
         if (equipmentId.IsEmpty)
-            return null;
+            return Equipment.Empty;
             
         var repository = unitOfWork.GetRepository<IEquipmentRepository>();
-        return await repository.GetByIdAsync(equipmentId);
+        var entity = await repository.GetByIdAsync(equipmentId);
+        return entity ?? Equipment.Empty;
     }
     
     protected override EquipmentDto MapToDto(Equipment entity) =>
@@ -206,9 +219,12 @@ public class EquipmentService : EnhancedReferenceService<Equipment, EquipmentDto
         using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
         var repository = unitOfWork.GetRepository<IEquipmentRepository>();
         
-        return await repository.ExistsAsync(command.Name.Trim())
-            ? ValidationResult.Failure(string.Format(EquipmentErrorMessages.BusinessRules.DuplicateNameFormat, command.Name))
-            : ValidationResult.Success();
+        if (await repository.ExistsAsync(command.Name.Trim()))
+        {
+            return ValidationResult.Failure(ServiceError.AlreadyExists("Equipment", command.Name));
+        }
+        
+        return ValidationResult.Success();
     }
     
     protected override async Task<ValidationResult> ValidateUpdateCommand(string id, UpdateEquipmentCommand command)
@@ -227,9 +243,12 @@ public class EquipmentService : EnhancedReferenceService<Equipment, EquipmentDto
         using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
         var repository = unitOfWork.GetRepository<IEquipmentRepository>();
         
-        return await repository.ExistsAsync(command.Name.Trim(), equipmentId)
-            ? ValidationResult.Failure(string.Format(EquipmentErrorMessages.BusinessRules.DuplicateNameFormat, command.Name))
-            : ValidationResult.Success();
+        if (await repository.ExistsAsync(command.Name.Trim(), equipmentId))
+        {
+            return ValidationResult.Failure(ServiceError.AlreadyExists("Equipment", command.Name));
+        }
+        
+        return ValidationResult.Success();
     }
     
     protected override async Task<Equipment> CreateEntityAsync(

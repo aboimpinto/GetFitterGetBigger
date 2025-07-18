@@ -96,19 +96,24 @@ public class MetricTypeService : PureReferenceService<MetricType, ReferenceDataD
     public override async Task<bool> ExistsAsync(string id) => 
         await ExistsAsync(MetricTypeId.ParseOrEmpty(id));
     
-    protected override async Task<IEnumerable<MetricType>> LoadAllEntitiesAsync(IReadOnlyUnitOfWork<FitnessDbContext> unitOfWork)
+    protected override async Task<IEnumerable<MetricType>> LoadAllEntitiesAsync()
     {
+        using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
         var repository = unitOfWork.GetRepository<IMetricTypeRepository>();
         return await repository.GetAllActiveAsync();
     }
     
     // Returns MetricType.Empty instead of null (Null Object Pattern)
-    protected override async Task<MetricType> LoadEntityByIdAsync(IReadOnlyUnitOfWork<FitnessDbContext> unitOfWork, string id) =>
-        MetricTypeId.ParseOrEmpty(id) switch
-        {
-            { IsEmpty: true } => MetricType.Empty,
-            var metricTypeId => await unitOfWork.GetRepository<IMetricTypeRepository>().GetByIdAsync(metricTypeId)
-        };
+    protected override async Task<MetricType> LoadEntityByIdAsync(string id)
+    {
+        var metricTypeId = MetricTypeId.ParseOrEmpty(id);
+        if (metricTypeId.IsEmpty)
+            return MetricType.Empty;
+            
+        using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
+        var repository = unitOfWork.GetRepository<IMetricTypeRepository>();
+        return await repository.GetByIdAsync(metricTypeId);
+    }
     
     protected override ReferenceDataDto MapToDto(MetricType entity)
     {

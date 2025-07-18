@@ -93,19 +93,24 @@ public class WorkoutObjectiveService : PureReferenceService<WorkoutObjective, Re
     public override async Task<bool> ExistsAsync(string id) => 
         await ExistsAsync(WorkoutObjectiveId.ParseOrEmpty(id));
     
-    protected override async Task<IEnumerable<WorkoutObjective>> LoadAllEntitiesAsync(IReadOnlyUnitOfWork<FitnessDbContext> unitOfWork)
+    protected override async Task<IEnumerable<WorkoutObjective>> LoadAllEntitiesAsync()
     {
+        using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
         var repository = unitOfWork.GetRepository<IWorkoutObjectiveRepository>();
         return await repository.GetAllActiveAsync();
     }
     
     // Returns WorkoutObjective.Empty instead of null (Null Object Pattern)
-    protected override async Task<WorkoutObjective> LoadEntityByIdAsync(IReadOnlyUnitOfWork<FitnessDbContext> unitOfWork, string id) =>
-        WorkoutObjectiveId.ParseOrEmpty(id) switch
-        {
-            { IsEmpty: true } => WorkoutObjective.Empty,
-            var workoutObjectiveId => await unitOfWork.GetRepository<IWorkoutObjectiveRepository>().GetByIdAsync(workoutObjectiveId)
-        };
+    protected override async Task<WorkoutObjective> LoadEntityByIdAsync(string id)
+    {
+        var workoutObjectiveId = WorkoutObjectiveId.ParseOrEmpty(id);
+        if (workoutObjectiveId.IsEmpty)
+            return WorkoutObjective.Empty;
+            
+        using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
+        var repository = unitOfWork.GetRepository<IWorkoutObjectiveRepository>();
+        return await repository.GetByIdAsync(workoutObjectiveId);
+    }
     
     protected override ReferenceDataDto MapToDto(WorkoutObjective entity)
     {

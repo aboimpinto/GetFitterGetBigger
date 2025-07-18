@@ -92,20 +92,21 @@ public class KineticChainTypeService : PureReferenceService<KineticChainType, Re
     }
 
     /// <inheritdoc/>
-    protected override async Task<KineticChainType> LoadEntityByIdAsync(
-        IReadOnlyUnitOfWork<FitnessDbContext> unitOfWork, 
-        string id) =>
-        KineticChainTypeId.ParseOrEmpty(id) switch
-        {
-            { IsEmpty: true } => KineticChainType.Empty,
-            var kineticChainTypeId => await unitOfWork.GetRepository<IKineticChainTypeRepository>()
-                .GetByIdAsync(kineticChainTypeId)
-        };
+    protected override async Task<KineticChainType> LoadEntityByIdAsync(string id)
+    {
+        var kineticChainTypeId = KineticChainTypeId.ParseOrEmpty(id);
+        if (kineticChainTypeId.IsEmpty)
+            return KineticChainType.Empty;
+            
+        using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
+        var repository = unitOfWork.GetRepository<IKineticChainTypeRepository>();
+        return await repository.GetByIdAsync(kineticChainTypeId);
+    }
 
     /// <inheritdoc/>
-    protected override async Task<IEnumerable<KineticChainType>> LoadAllEntitiesAsync(
-        IReadOnlyUnitOfWork<FitnessDbContext> unitOfWork)
+    protected override async Task<IEnumerable<KineticChainType>> LoadAllEntitiesAsync()
     {
+        using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
         var repository = unitOfWork.GetRepository<IKineticChainTypeRepository>();
         return await repository.GetAllActiveAsync();
     }

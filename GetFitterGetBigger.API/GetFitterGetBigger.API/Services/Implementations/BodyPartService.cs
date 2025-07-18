@@ -94,19 +94,24 @@ public class BodyPartService : PureReferenceService<BodyPart, BodyPartDto>, IBod
     public override async Task<bool> ExistsAsync(string id) => 
         await ExistsAsync(BodyPartId.ParseOrEmpty(id));
     
-    protected override async Task<IEnumerable<BodyPart>> LoadAllEntitiesAsync(IReadOnlyUnitOfWork<FitnessDbContext> unitOfWork)
+    protected override async Task<IEnumerable<BodyPart>> LoadAllEntitiesAsync()
     {
+        using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
         var repository = unitOfWork.GetRepository<IBodyPartRepository>();
         return await repository.GetAllActiveAsync();
     }
     
     // Returns BodyPart.Empty instead of null (Null Object Pattern)
-    protected override async Task<BodyPart> LoadEntityByIdAsync(IReadOnlyUnitOfWork<FitnessDbContext> unitOfWork, string id) =>
-        BodyPartId.ParseOrEmpty(id) switch
-        {
-            { IsEmpty: true } => BodyPart.Empty,
-            var bodyPartId => await unitOfWork.GetRepository<IBodyPartRepository>().GetByIdAsync(bodyPartId)
-        };
+    protected override async Task<BodyPart> LoadEntityByIdAsync(string id)
+    {
+        var bodyPartId = BodyPartId.ParseOrEmpty(id);
+        if (bodyPartId.IsEmpty)
+            return BodyPart.Empty;
+            
+        using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
+        var repository = unitOfWork.GetRepository<IBodyPartRepository>();
+        return await repository.GetByIdAsync(bodyPartId);
+    }
     
     protected override BodyPartDto MapToDto(BodyPart entity)
     {
