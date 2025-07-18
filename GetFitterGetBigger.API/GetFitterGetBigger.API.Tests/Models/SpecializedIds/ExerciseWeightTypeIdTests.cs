@@ -11,7 +11,7 @@ public class ExerciseWeightTypeIdTests
     {
         // Arrange
         var guid = Guid.NewGuid();
-        var input = $"exerciseweighttype-{guid}";
+        var input = $"{ExerciseWeightTypeId.Empty.GetPrefix()}-{guid}";
 
         // Act
         var result = ExerciseWeightTypeId.ParseOrEmpty(input);
@@ -49,7 +49,7 @@ public class ExerciseWeightTypeIdTests
     {
         // Arrange
         var guid = Guid.NewGuid();
-        var input = $"exercisetype-{guid}";
+        var input = $"exercisetype-{guid}"; // Wrong prefix to test failure
 
         // Act
         var result = ExerciseWeightTypeId.ParseOrEmpty(input);
@@ -78,7 +78,7 @@ public class ExerciseWeightTypeIdTests
     public void ParseOrEmpty_InvalidGuid_ReturnsEmpty()
     {
         // Arrange
-        var input = "exerciseweighttype-not-a-guid";
+        var input = $"{ExerciseWeightTypeId.Empty.GetPrefix()}-not-a-guid";
 
         // Act
         var result = ExerciseWeightTypeId.ParseOrEmpty(input);
@@ -92,7 +92,7 @@ public class ExerciseWeightTypeIdTests
     public void ParseOrEmpty_PrefixOnly_ReturnsEmpty()
     {
         // Arrange
-        var input = "exerciseweighttype-";
+        var input = $"{ExerciseWeightTypeId.Empty.GetPrefix()}-";
 
         // Act
         var result = ExerciseWeightTypeId.ParseOrEmpty(input);
@@ -106,7 +106,7 @@ public class ExerciseWeightTypeIdTests
     public void ParseOrEmpty_EmptyGuid_ReturnsValidId()
     {
         // Arrange
-        var input = "exerciseweighttype-00000000-0000-0000-0000-000000000000";
+        var input = $"{ExerciseWeightTypeId.Empty.GetPrefix()}-00000000-0000-0000-0000-000000000000";
 
         // Act
         var result = ExerciseWeightTypeId.ParseOrEmpty(input);
@@ -125,7 +125,7 @@ public class ExerciseWeightTypeIdTests
         // Assert
         Assert.True(empty.IsEmpty);
         Assert.Equal(Guid.Empty, (Guid)empty);
-        Assert.Equal("exerciseweighttype-00000000-0000-0000-0000-000000000000", empty.ToString());
+        Assert.Equal(string.Empty, empty.ToString());
     }
 
     [Fact]
@@ -153,7 +153,7 @@ public class ExerciseWeightTypeIdTests
 
         // Assert
         Assert.Equal(guid, (Guid)id);
-        Assert.Equal($"exerciseweighttype-{guid}", id.ToString());
+        Assert.Equal($"{ExerciseWeightTypeId.Empty.GetPrefix()}-{guid}", id.ToString());
         Assert.False(id.IsEmpty);
     }
 
@@ -179,7 +179,7 @@ public class ExerciseWeightTypeIdTests
         var result = id.ToString();
 
         // Assert
-        Assert.Equal("exerciseweighttype-11111111-1111-1111-1111-111111111111", result);
+        Assert.Equal($"{ExerciseWeightTypeId.Empty.GetPrefix()}-11111111-1111-1111-1111-111111111111", result);
     }
 
     [Fact]

@@ -1,10 +1,12 @@
 using System;
+using GetFitterGetBigger.API.Models.Interfaces;
 
 namespace GetFitterGetBigger.API.Models.SpecializedIds;
 
-public readonly record struct ExerciseWeightTypeId
+public readonly record struct ExerciseWeightTypeId : ISpecializedId<ExerciseWeightTypeId>
 {
     private readonly Guid _value;
+    private const string Prefix = "exerciseweighttype";
     
     private ExerciseWeightTypeId(Guid value)
     {
@@ -19,13 +21,17 @@ public readonly record struct ExerciseWeightTypeId
     
     public bool IsEmpty => _value == Guid.Empty;
     
+    // ISpecializedId<ExerciseWeightTypeId> implementation
+    public Guid ToGuid() => _value;
+    
     private static bool TryParse(string? input, out ExerciseWeightTypeId result)
     {
         result = default;
-        if (string.IsNullOrEmpty(input) || !input.StartsWith("exerciseweighttype-"))
+        var prefix = $"{Prefix}-";
+        if (string.IsNullOrEmpty(input) || !input.StartsWith(prefix))
             return false;
             
-        string guidPart = input["exerciseweighttype-".Length..];
+        string guidPart = input[prefix.Length..];
         if (Guid.TryParse(guidPart, out Guid guid))
         {
             result = From(guid);
@@ -43,7 +49,9 @@ public readonly record struct ExerciseWeightTypeId
         return TryParse(input, out var result) ? result : Empty;
     }
     
-    public override string ToString() => $"exerciseweighttype-{this._value}";
+    public override string ToString() => IsEmpty ? string.Empty : $"{Prefix}-{this._value}";
+    
+    public string GetPrefix() => Prefix;
     
     // Conversion to/from Guid for EF Core
     public static implicit operator Guid(ExerciseWeightTypeId id) => id._value;

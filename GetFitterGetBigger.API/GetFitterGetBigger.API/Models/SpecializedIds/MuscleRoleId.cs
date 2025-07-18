@@ -1,10 +1,12 @@
 using System;
+using GetFitterGetBigger.API.Models.Interfaces;
 
 namespace GetFitterGetBigger.API.Models.SpecializedIds;
 
-public readonly record struct MuscleRoleId
+public readonly record struct MuscleRoleId : ISpecializedId<MuscleRoleId>
 {
     private readonly Guid _value;
+    private const string Prefix = "musclerole";
     
     private MuscleRoleId(Guid value)
     {
@@ -19,13 +21,17 @@ public readonly record struct MuscleRoleId
     
     public bool IsEmpty => _value == Guid.Empty;
     
-    public static bool TryParse(string? input, out MuscleRoleId result)
+    // ISpecializedId<MuscleRoleId> implementation
+    public Guid ToGuid() => _value;
+    
+    private static bool TryParse(string? input, out MuscleRoleId result)
     {
         result = default;
-        if (string.IsNullOrEmpty(input) || !input.StartsWith("musclerole-"))
+        var prefix = $"{Prefix}-";
+        if (string.IsNullOrEmpty(input) || !input.StartsWith(prefix))
             return false;
             
-        string guidPart = input["musclerole-".Length..];
+        string guidPart = input[prefix.Length..];
         if (Guid.TryParse(guidPart, out Guid guid))
         {
             result = From(guid);
@@ -46,7 +52,9 @@ public readonly record struct MuscleRoleId
         return Empty;
     }
     
-    public override string ToString() => IsEmpty ? string.Empty : $"musclerole-{this._value}";
+    public override string ToString() => IsEmpty ? string.Empty : $"{Prefix}-{this._value}";
+    
+    public string GetPrefix() => Prefix;
     
     // Conversion to/from Guid for EF Core
     public static implicit operator Guid(MuscleRoleId id) => id._value;

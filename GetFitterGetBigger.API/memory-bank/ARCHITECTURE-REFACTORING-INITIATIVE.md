@@ -108,6 +108,36 @@ Use the existing compliant controllers as examples:
 5. **Transaction Management**: Centralized in service layer
 6. **Business Logic**: Properly encapsulated in services
 
+## Recent Architecture Improvements (2025-07-18)
+
+### BUG-009: Enhanced Reference Service Architecture Flaw
+**Status**: FIXED (Commit: 11fb3734)
+
+#### Problems Addressed
+1. **Duplicate LoadEntityByIdAsync Methods**: Services were forced to implement two identical versions (ReadOnly and Writable)
+2. **Single UnitOfWork Violation**: Base class mixed read/write operations in single methods
+3. **Null Returns**: Methods returned null instead of using Empty pattern
+4. **Poor Method Organization**: Large methods violating single responsibility
+
+#### Solutions Implemented
+1. **Unified LoadEntityByIdAsync**: Single method that creates its own ReadOnlyUnitOfWork
+2. **Proper UnitOfWork Separation**: 
+   - `LoadEntityByIdAsync` - Uses ReadOnlyUnitOfWork for queries
+   - `LoadEntityByIdForUpdateAsync` - Accepts WritableUnitOfWork for updates only
+3. **Empty Pattern**: All methods return Empty objects instead of null
+4. **Method Decomposition**: GetByIdAsync refactored into smaller, focused methods:
+   - `ValidateAndParseId` - ID validation
+   - `LoadEntityAsync` - Orchestration
+   - `TryLoadFromCacheAsync` - Cache operations
+   - `LoadEntityFromDatabaseAsync` - Database operations
+   - `IsEntityValidForReturn` - Business validation
+   - `MapAndCacheEntityAsync` - DTO mapping and caching
+
+#### Pattern Improvements
+- **Pattern Matching**: Replaced if-else chains with switch expressions
+- **ServiceError Support**: ValidationResult now supports structured errors
+- **Consistent Error Handling**: Proper error propagation throughout the stack
+
 ## Notes
 - This refactoring does not change any external API contracts
 - All existing endpoints remain the same

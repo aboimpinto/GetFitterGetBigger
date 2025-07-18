@@ -18,26 +18,57 @@ This is a quick reference checklist to use **EVERY TIME** you implement or modif
 - [ ] Am I updating existing entities? → Use `WritableUnitOfWork`
 - [ ] Am I deleting entities? → Use `WritableUnitOfWork`
 
-### 3. Correct Pattern Template
+### 3. Correct Pattern Template (Simplified after BUG-009)
 ```csharp
-public async Task<ResultDto> UpdateSomethingAsync(string id, UpdateDto request)
+public async Task<ServiceResult<TDto>> UpdateAsync(string id, TUpdateCommand command)
 {
-    // STEP 1: ALL validation with ReadOnlyUnitOfWork
-    using (var readOnlyUow = _unitOfWorkProvider.CreateReadOnly())
+    // STEP 1: Validate existence using existing GetByIdAsync (uses ReadOnly internally)
+    var existingResult = await GetByIdAsync(id);
+    if (!existingResult.IsSuccess)
+        return existingResult;
+    
+    // STEP 2: Validate command
+    var validationResult = await ValidateUpdateCommand(id, command);
+    if (!validationResult.IsValid)
     {
-        // Check related entities exist
-        // Validate business rules
-        // Load reference data
+        return ServiceResult<TDto>.Failure(
+            CreateEmptyDto(),
+            validationResult.Errors);
     }
     
-    // STEP 2: Modifications with WritableUnitOfWork
-    using var writableUow = _unitOfWorkProvider.CreateWritable();
-    // Perform actual updates
-    await writableUow.CommitAsync();
+    // STEP 3: Load entity using regular LoadEntityByIdAsync (uses ReadOnly)
+    var existingEntity = await LoadEntityByIdAsync(id);
     
-    // STEP 3: Invalidate cache if needed
+    // STEP 4: Perform update with WritableUnitOfWork
+    using var unitOfWork = _unitOfWorkProvider.CreateWritable();
+    
+    // Update entity (repository handles tracking via Detach/Attach)
+    var updatedEntity = await UpdateEntityAsync(unitOfWork, existingEntity, command);
+    await unitOfWork.CommitAsync();
+    
+    // STEP 5: Invalidate cache
     await InvalidateCacheAsync();
+    
+    return ServiceResult<TDto>.Success(MapToDto(updatedEntity));
 }
+```
+
+### For Loading Entities (Simplified Pattern)
+```csharp
+// Single method for ALL loading - creates its own ReadOnlyUnitOfWork
+protected override async Task<Equipment> LoadEntityByIdAsync(string id)
+{
+    var equipmentId = EquipmentId.ParseOrEmpty(id);
+    
+    return equipmentId.IsEmpty switch
+    {
+        true => Equipment.Empty,
+        false => await LoadFromRepositoryAsync(equipmentId)
+    };
+}
+
+// Note: No separate LoadEntityByIdForUpdateAsync needed!
+// The repository handles entity tracking internally using Detach/Attach pattern
 ```
 
 ### 4. Post-Implementation Verification

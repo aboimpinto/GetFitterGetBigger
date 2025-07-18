@@ -1,10 +1,12 @@
 using System;
+using GetFitterGetBigger.API.Models.Interfaces;
 
 namespace GetFitterGetBigger.API.Models.SpecializedIds;
 
-public readonly record struct ExecutionProtocolId
+public readonly record struct ExecutionProtocolId : ISpecializedId<ExecutionProtocolId>
 {
     private readonly Guid _value;
+    private const string Prefix = "executionprotocol";
     
     private ExecutionProtocolId(Guid value)
     {
@@ -19,13 +21,17 @@ public readonly record struct ExecutionProtocolId
     
     public bool IsEmpty => _value == Guid.Empty;
     
+    // ISpecializedId<ExecutionProtocolId> implementation
+    public Guid ToGuid() => _value;
+    
     private static bool TryParse(string? input, out ExecutionProtocolId result)
     {
         result = default;
-        if (string.IsNullOrEmpty(input) || !input.StartsWith("executionprotocol-"))
+        var prefix = $"{Prefix}-";
+        if (string.IsNullOrEmpty(input) || !input.StartsWith(prefix))
             return false;
             
-        string guidPart = input["executionprotocol-".Length..];
+        string guidPart = input[prefix.Length..];
         if (Guid.TryParse(guidPart, out Guid guid))
         {
             result = From(guid);
@@ -46,7 +52,9 @@ public readonly record struct ExecutionProtocolId
         return Empty;
     }
     
-    public override string ToString() => IsEmpty ? string.Empty : $"executionprotocol-{this._value}";
+    public override string ToString() => IsEmpty ? string.Empty : $"{Prefix}-{this._value}";
+    
+    public string GetPrefix() => Prefix;
     
     // Conversion to/from Guid for EF Core
     public static implicit operator Guid(ExecutionProtocolId id) => id._value;

@@ -1,8 +1,9 @@
 using System;
+using GetFitterGetBigger.API.Models.Interfaces;
 
 namespace GetFitterGetBigger.API.Models.SpecializedIds;
 
-public readonly record struct EquipmentId
+public readonly record struct EquipmentId : ISpecializedId<EquipmentId>
 {
     private readonly Guid _value;
     
@@ -19,13 +20,17 @@ public readonly record struct EquipmentId
     
     public bool IsEmpty => _value == Guid.Empty;
     
+    // ISpecializedId<EquipmentId> implementation
+    public Guid ToGuid() => _value;
+    
     private static bool TryParse(string? input, out EquipmentId result)
     {
         result = default;
-        if (string.IsNullOrEmpty(input) || !input.StartsWith("equipment-"))
+        var prefix = $"{Prefix}-";
+        if (string.IsNullOrEmpty(input) || !input.StartsWith(prefix))
             return false;
             
-        string guidPart = input["equipment-".Length..];
+        string guidPart = input[prefix.Length..];
         if (Guid.TryParse(guidPart, out Guid guid))
         {
             result = From(guid);
@@ -43,7 +48,11 @@ public readonly record struct EquipmentId
         return TryParse(input, out var result) ? result : Empty;
     }
     
-    public override string ToString() => IsEmpty ? string.Empty : $"equipment-{this._value}";
+    public override string ToString() => IsEmpty ? string.Empty : $"{Prefix}-{this._value}";
+    
+    private const string Prefix = "equipment";
+    
+    public string GetPrefix() => Prefix;
     
     // Conversion to/from Guid for EF Core
     public static implicit operator Guid(EquipmentId id) => id._value;

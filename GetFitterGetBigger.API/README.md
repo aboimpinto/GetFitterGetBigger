@@ -57,6 +57,16 @@ dotnet test --filter "FullyQualifiedName~PostgreSql"
 - **Caching**: In-memory caching with configurable TTL
 - **Testing**: xUnit with TestContainers for integration tests
 
+### CRITICAL ARCHITECTURE PRINCIPLE: STRONGLY-TYPED IDS
+
+**ALL CODE MUST ALIGN WITH THIS VISION:**
+- **MAINTAIN STRONGLY-TYPED IDS THROUGHOUT THE SERVICE LAYER**
+- **USE ISpecializedIdBase INTERFACE IN BASE CLASSES TO REMAIN GENERIC**
+- **NEVER CONVERT IDS TO STRINGS FOR INTERNAL PROCESSING**
+- **CAST DIRECTLY TO CONCRETE ID TYPES WHEN NEEDED**
+
+This architecture ensures type safety, eliminates unnecessary conversions, and provides a clean, maintainable API. Every service implementation MUST follow this pattern.
+
 ## Key Features
 
 - JWT-based authentication

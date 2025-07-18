@@ -117,7 +117,8 @@ public class MuscleGroupTestBuilder
 
     public MuscleGroupTestBuilder WithId(string idString)
     {
-        if (!MuscleGroupId.TryParse(idString, out var id))
+        var id = MuscleGroupId.ParseOrEmpty(idString);
+        if (id.IsEmpty)
         {
             throw new ArgumentException($"Invalid MuscleGroupId format: '{idString}'. Expected format: 'musclegroup-{{guid}}'");
         }

@@ -11,7 +11,7 @@ public class ExerciseTypeIdTests
     {
         // Arrange
         var guid = Guid.NewGuid();
-        var input = $"exercisetype-{guid}";
+        var input = $"{ExerciseTypeId.Empty.GetPrefix()}-{guid}";
 
         // Act
         var exerciseTypeId = ExerciseTypeId.ParseOrEmpty(input);
@@ -49,7 +49,7 @@ public class ExerciseTypeIdTests
     {
         // Arrange
         var guid = Guid.NewGuid();
-        var input = $"exercise-{guid}";
+        var input = $"exercise-{guid}"; // Wrong prefix to test failure
 
         // Act
         var exerciseTypeId = ExerciseTypeId.ParseOrEmpty(input);
@@ -78,7 +78,7 @@ public class ExerciseTypeIdTests
     public void ParseOrEmpty_InvalidGuid_ReturnsEmpty()
     {
         // Arrange
-        var input = "exercisetype-not-a-guid";
+        var input = $"{ExerciseTypeId.Empty.GetPrefix()}-not-a-guid";
 
         // Act
         var exerciseTypeId = ExerciseTypeId.ParseOrEmpty(input);
@@ -92,7 +92,7 @@ public class ExerciseTypeIdTests
     public void ParseOrEmpty_PrefixOnly_ReturnsEmpty()
     {
         // Arrange
-        var input = "exercisetype-";
+        var input = $"{ExerciseTypeId.Empty.GetPrefix()}-";
 
         // Act
         var exerciseTypeId = ExerciseTypeId.ParseOrEmpty(input);

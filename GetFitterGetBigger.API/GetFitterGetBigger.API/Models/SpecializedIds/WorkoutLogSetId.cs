@@ -1,4 +1,5 @@
 using System;
+using GetFitterGetBigger.API.Models.Interfaces;
 
 namespace GetFitterGetBigger.API.Models.SpecializedIds;
 

@@ -123,13 +123,25 @@ public class MuscleGroupService : ReferenceTableServiceBase<MuscleGroup>, IMuscl
     
     protected override async Task<MuscleGroup?> GetEntityByIdAsync(IReadOnlyUnitOfWork<FitnessDbContext> unitOfWork, string id)
     {
-        if (!MuscleGroupId.TryParse(id, out var muscleGroupId))
+        // First check if it's a properly formatted ID
+        if (!string.IsNullOrEmpty(id) && id.StartsWith("musclegroup-"))
         {
+            // It's properly formatted, so let's parse it
+            var muscleGroupId = MuscleGroupId.ParseOrEmpty(id);
+            
+            // Even if it's empty (zero GUID), we should check the database
+            // This allows the repository to return null, which triggers 404
+            var repository = unitOfWork.GetRepository<IMuscleGroupRepository>();
+            var result = await repository.GetByIdAsync(muscleGroupId);
+            _specificLogger.LogDebug("GetEntityByIdAsync: Repository returned {Result} for {Id}", result == null ? "null" : "entity", id);
+            return result;
+        }
+        else
+        {
+            // Invalid format - this will eventually cause a 400 Bad Request
+            _specificLogger.LogDebug("GetEntityByIdAsync: Invalid format for {Id}, throwing exception", id);
             throw new ArgumentException($"Invalid ID format. Expected format: 'musclegroup-{{guid}}', got: '{id}'");
         }
-            
-        var repository = unitOfWork.GetRepository<IMuscleGroupRepository>();
-        return await repository.GetByIdAsync(muscleGroupId);
     }
     
     protected override async Task<MuscleGroup?> GetEntityByNameAsync(IReadOnlyUnitOfWork<FitnessDbContext> unitOfWork, string name)
@@ -164,7 +176,8 @@ public class MuscleGroupService : ReferenceTableServiceBase<MuscleGroup>, IMuscl
     
     protected override async Task<bool> CheckEntityExistsAsync(IWritableUnitOfWork<FitnessDbContext> unitOfWork, string id)
     {
-        if (!MuscleGroupId.TryParse(id, out var muscleGroupId))
+        var muscleGroupId = MuscleGroupId.ParseOrEmpty(id);
+        if (muscleGroupId.IsEmpty)
         {
             throw new ArgumentException($"Invalid ID format. Expected format: 'musclegroup-{{guid}}', got: '{id}'");
         }
@@ -235,11 +248,14 @@ public class MuscleGroupService : ReferenceTableServiceBase<MuscleGroup>, IMuscl
         _specificLogger.LogInformation("Received BodyPartId: {BodyPartId}", request.BodyPartId);
         
         // Validate muscle group ID format
-        if (!MuscleGroupId.TryParse(id, out var muscleGroupId))
+        if (string.IsNullOrEmpty(id) || !id.StartsWith("musclegroup-"))
         {
             _specificLogger.LogError("Invalid muscle group ID format: {Id}", id);
             throw new ArgumentException($"Invalid ID format. Expected format: 'musclegroup-{{guid}}', got: '{id}'");
         }
+        
+        var muscleGroupId = MuscleGroupId.ParseOrEmpty(id);
+        // Even if it's empty (zero GUID), continue - let the repository check handle not found
         
         _specificLogger.LogInformation("Parsed MuscleGroupId: {MuscleGroupId}", muscleGroupId);
         
@@ -339,10 +355,13 @@ public class MuscleGroupService : ReferenceTableServiceBase<MuscleGroup>, IMuscl
     public async Task DeactivateMuscleGroupAsync(string id)
     {
         // Validate muscle group ID format
-        if (!MuscleGroupId.TryParse(id, out var muscleGroupId))
+        if (string.IsNullOrEmpty(id) || !id.StartsWith("musclegroup-"))
         {
             throw new ArgumentException($"Invalid ID format. Expected format: 'musclegroup-{{guid}}', got: '{id}'");
         }
+        
+        var muscleGroupId = MuscleGroupId.ParseOrEmpty(id);
+        // Even if it's empty (zero GUID), continue - let the repository check handle not found
         
         using var unitOfWork = _unitOfWorkProvider.CreateWritable();
         var repository = unitOfWork.GetRepository<IMuscleGroupRepository>();

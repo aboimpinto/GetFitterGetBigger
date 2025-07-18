@@ -14,7 +14,8 @@ namespace GetFitterGetBigger.API.Models.SpecializedIds.JsonConverters
             }
 
             var value = reader.GetString();
-            if (UserId.TryParse(value, out var userId))
+            var userId = UserId.ParseOrEmpty(value);
+            if (!userId.IsEmpty)
             {
                 return userId;
             }

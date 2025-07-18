@@ -1,10 +1,12 @@
 using System;
+using GetFitterGetBigger.API.Models.Interfaces;
 
 namespace GetFitterGetBigger.API.Models.SpecializedIds;
 
-public readonly record struct WorkoutObjectiveId
+public readonly record struct WorkoutObjectiveId : ISpecializedId<WorkoutObjectiveId>
 {
     private readonly Guid _value;
+    private const string Prefix = "workoutobjective";
     
     private WorkoutObjectiveId(Guid value)
     {
@@ -20,13 +22,17 @@ public readonly record struct WorkoutObjectiveId
     
     public bool IsEmpty => _value == Guid.Empty;
     
+    // ISpecializedId<WorkoutObjectiveId> implementation
+    public Guid ToGuid() => _value;
+    
     private static bool TryParse(string? input, out WorkoutObjectiveId result)
     {
         result = default;
-        if (string.IsNullOrEmpty(input) || !input.StartsWith("workoutobjective-"))
+        var prefix = $"{Prefix}-";
+        if (string.IsNullOrEmpty(input) || !input.StartsWith(prefix))
             return false;
             
-        string guidPart = input["workoutobjective-".Length..];
+        string guidPart = input[prefix.Length..];
         if (Guid.TryParse(guidPart, out Guid guid))
         {
             result = From(guid);
@@ -44,7 +50,9 @@ public readonly record struct WorkoutObjectiveId
         return TryParse(input, out var result) ? result : Empty;
     }
     
-    public override string ToString() => $"workoutobjective-{this._value}";
+    public override string ToString() => IsEmpty ? string.Empty : $"{Prefix}-{this._value}";
+    
+    public string GetPrefix() => Prefix;
     
     // Conversion to/from Guid for EF Core
     public static implicit operator Guid(WorkoutObjectiveId id) => id._value;

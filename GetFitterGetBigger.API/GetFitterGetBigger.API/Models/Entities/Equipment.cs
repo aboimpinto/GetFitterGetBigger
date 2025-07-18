@@ -4,7 +4,7 @@ using GetFitterGetBigger.API.Models.SpecializedIds;
 
 namespace GetFitterGetBigger.API.Models.Entities;
 
-public record Equipment : IEnhancedReference, IEmptyEntity<Equipment>
+public record Equipment : IEnhancedReference<EquipmentId>, IEmptyEntity<Equipment, EquipmentId>
 {
     public EquipmentId EquipmentId { get; init; }
     public string Name { get; init; } = string.Empty;
@@ -12,8 +12,11 @@ public record Equipment : IEnhancedReference, IEmptyEntity<Equipment>
     public DateTime CreatedAt { get; init; }
     public DateTime? UpdatedAt { get; init; }
     
-    // IEntity implementation (through IEnhancedReference)
-    public string Id => EquipmentId.ToString();
+    // IEntity<EquipmentId> implementation
+    public EquipmentId Id => EquipmentId;
+    
+    // IEntity implementation (backward compatibility)
+    string IEntity.Id => EquipmentId.ToString();
     
     // IEnhancedReference implementation
     public string Value => Name;

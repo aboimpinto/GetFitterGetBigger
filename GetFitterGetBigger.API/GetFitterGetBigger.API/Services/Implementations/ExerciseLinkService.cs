@@ -37,12 +37,14 @@ public class ExerciseLinkService : IExerciseLinkService
     public async Task<ExerciseLinkDto> CreateLinkAsync(string sourceExerciseId, CreateExerciseLinkDto dto)
     {
         // Validate input IDs
-        if (!ExerciseId.TryParse(sourceExerciseId, out var sourceId))
+        var sourceId = ExerciseId.ParseOrEmpty(sourceExerciseId);
+        if (sourceId.IsEmpty)
         {
             throw new ArgumentException($"Invalid source exercise ID format: {sourceExerciseId}");
         }
         
-        if (!ExerciseId.TryParse(dto.TargetExerciseId, out var targetId))
+        var targetId = ExerciseId.ParseOrEmpty(dto.TargetExerciseId);
+        if (targetId.IsEmpty)
         {
             throw new ArgumentException($"Invalid target exercise ID format: {dto.TargetExerciseId}");
         }
@@ -153,7 +155,8 @@ public class ExerciseLinkService : IExerciseLinkService
     /// </summary>
     public async Task<ExerciseLinksResponseDto> GetLinksAsync(string exerciseId, string? linkType = null, bool includeExerciseDetails = false)
     {
-        if (!ExerciseId.TryParse(exerciseId, out var parsedExerciseId))
+        var parsedExerciseId = ExerciseId.ParseOrEmpty(exerciseId);
+        if (parsedExerciseId.IsEmpty)
         {
             throw new ArgumentException($"Invalid exercise ID format: {exerciseId}");
         }
@@ -190,12 +193,14 @@ public class ExerciseLinkService : IExerciseLinkService
     /// </summary>
     public async Task<ExerciseLinkDto> UpdateLinkAsync(string exerciseId, string linkId, UpdateExerciseLinkDto dto)
     {
-        if (!ExerciseId.TryParse(exerciseId, out var parsedExerciseId))
+        var parsedExerciseId = ExerciseId.ParseOrEmpty(exerciseId);
+        if (parsedExerciseId.IsEmpty)
         {
             throw new ArgumentException($"Invalid exercise ID format: {exerciseId}");
         }
         
-        if (!ExerciseLinkId.TryParse(linkId, out var parsedLinkId))
+        var parsedLinkId = ExerciseLinkId.ParseOrEmpty(linkId);
+        if (parsedLinkId.IsEmpty)
         {
             throw new ArgumentException($"Invalid link ID format: {linkId}");
         }
@@ -236,12 +241,14 @@ public class ExerciseLinkService : IExerciseLinkService
     /// </summary>
     public async Task<bool> DeleteLinkAsync(string exerciseId, string linkId)
     {
-        if (!ExerciseId.TryParse(exerciseId, out var parsedExerciseId))
+        var parsedExerciseId = ExerciseId.ParseOrEmpty(exerciseId);
+        if (parsedExerciseId.IsEmpty)
         {
             throw new ArgumentException($"Invalid exercise ID format: {exerciseId}");
         }
         
-        if (!ExerciseLinkId.TryParse(linkId, out var parsedLinkId))
+        var parsedLinkId = ExerciseLinkId.ParseOrEmpty(linkId);
+        if (parsedLinkId.IsEmpty)
         {
             throw new ArgumentException($"Invalid link ID format: {linkId}");
         }
@@ -271,7 +278,8 @@ public class ExerciseLinkService : IExerciseLinkService
     /// </summary>
     public async Task<List<ExerciseLinkDto>> GetSuggestedLinksAsync(string exerciseId, int count = 5)
     {
-        if (!ExerciseId.TryParse(exerciseId, out var parsedExerciseId))
+        var parsedExerciseId = ExerciseId.ParseOrEmpty(exerciseId);
+        if (parsedExerciseId.IsEmpty)
         {
             throw new ArgumentException($"Invalid exercise ID format: {exerciseId}");
         }

@@ -14,7 +14,8 @@ namespace GetFitterGetBigger.API.Models.SpecializedIds.JsonConverters
             }
 
             var value = reader.GetString();
-            if (ClaimId.TryParse(value, out var claimId))
+            var claimId = ClaimId.ParseOrEmpty(value);
+            if (!claimId.IsEmpty)
             {
                 return claimId;
             }

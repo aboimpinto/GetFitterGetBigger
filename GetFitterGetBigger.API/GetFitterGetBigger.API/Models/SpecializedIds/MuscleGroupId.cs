@@ -1,10 +1,12 @@
 using System;
+using GetFitterGetBigger.API.Models.Interfaces;
 
 namespace GetFitterGetBigger.API.Models.SpecializedIds;
 
-public readonly record struct MuscleGroupId
+public readonly record struct MuscleGroupId : ISpecializedId<MuscleGroupId>
 {
     private readonly Guid _value;
+    private const string Prefix = "musclegroup";
     
     private MuscleGroupId(Guid value)
     {
@@ -19,13 +21,17 @@ public readonly record struct MuscleGroupId
     
     public bool IsEmpty => _value == Guid.Empty;
     
-    public static bool TryParse(string? input, out MuscleGroupId result)
+    // ISpecializedId<MuscleGroupId> implementation
+    public Guid ToGuid() => _value;
+    
+    private static bool TryParse(string? input, out MuscleGroupId result)
     {
         result = default;
-        if (string.IsNullOrEmpty(input) || !input.StartsWith("musclegroup-"))
+        var prefix = $"{Prefix}-";
+        if (string.IsNullOrEmpty(input) || !input.StartsWith(prefix))
             return false;
             
-        string guidPart = input["musclegroup-".Length..];
+        string guidPart = input[prefix.Length..];
         if (Guid.TryParse(guidPart, out Guid guid))
         {
             result = From(guid);
@@ -46,7 +52,9 @@ public readonly record struct MuscleGroupId
         return Empty;
     }
     
-    public override string ToString() => IsEmpty ? string.Empty : $"musclegroup-{this._value}";
+    public override string ToString() => IsEmpty ? string.Empty : $"{Prefix}-{this._value}";
+    
+    public string GetPrefix() => Prefix;
     
     // Conversion to/from Guid for EF Core
     public static implicit operator Guid(MuscleGroupId id) => id._value;

@@ -1,5 +1,6 @@
 using System.Reflection;
 using GetFitterGetBigger.API.Models;
+using GetFitterGetBigger.API.Models.Interfaces;
 using GetFitterGetBigger.API.Services.Interfaces;
 using GetFitterGetBigger.API.Services.Results;
 using Microsoft.Extensions.Logging;
@@ -68,9 +69,9 @@ public abstract class EnhancedReferenceService<TEntity, TDto, TCreateCommand, TU
     /// <summary>
     /// Gets an entity by its ID
     /// </summary>
-    /// <param name="id">The entity ID in string format</param>
+    /// <param name="id">The entity ID</param>
     /// <returns>A service result containing the entity as a DTO</returns>
-    public virtual async Task<ServiceResult<TDto>> GetByIdAsync(string id)
+    public virtual async Task<ServiceResult<TDto>> GetByIdAsync(ISpecializedIdBase id)
     {
         var parseResult = ValidateAndParseId(id);
         if (parseResult.IsValid)
@@ -85,7 +86,7 @@ public abstract class EnhancedReferenceService<TEntity, TDto, TCreateCommand, TU
     /// <summary>
     /// Loads an entity, checking cache first
     /// </summary>
-    protected virtual async Task<ServiceResult<TDto>> LoadEntityAsync(string id)
+    protected virtual async Task<ServiceResult<TDto>> LoadEntityAsync(ISpecializedIdBase id)
     {
         var cacheResult = await TryLoadFromCacheAsync(id);
         return cacheResult.IsHit
@@ -96,15 +97,15 @@ public abstract class EnhancedReferenceService<TEntity, TDto, TCreateCommand, TU
     /// <summary>
     /// Attempts to load entity from cache
     /// </summary>
-    private async Task<CacheResult<TDto>> TryLoadFromCacheAsync(string id)
+    private async Task<CacheResult<TDto>> TryLoadFromCacheAsync(ISpecializedIdBase id)
     {
-        var cacheKey = GetCacheKey(id);
+        var cacheKey = GetCacheKey(id.ToString());
         var cacheService = (ICacheService)_cacheService;
         var cachedDto = await cacheService.GetAsync<TDto>(cacheKey);
         
         if (cachedDto != null)
         {
-            _logger.LogDebug("Cache hit for {EntityType}:{Id}", typeof(TEntity).Name, id);
+            _logger.LogDebug("Cache hit for {EntityType}:{Id}", typeof(TEntity).Name, id.ToString());
             return CacheResult<TDto>.Hit(cachedDto);
         }
         
@@ -114,7 +115,7 @@ public abstract class EnhancedReferenceService<TEntity, TDto, TCreateCommand, TU
     /// <summary>
     /// Loads entity from database and processes it
     /// </summary>
-    protected virtual async Task<ServiceResult<TDto>> LoadEntityFromDatabaseAsync(string id)
+    protected virtual async Task<ServiceResult<TDto>> LoadEntityFromDatabaseAsync(ISpecializedIdBase id)
     {
         var entity = await LoadEntityByIdAsync(id);
         
@@ -142,12 +143,12 @@ public abstract class EnhancedReferenceService<TEntity, TDto, TCreateCommand, TU
     /// <summary>
     /// Maps entity to DTO and caches it
     /// </summary>
-    protected virtual async Task<ServiceResult<TDto>> MapAndCacheEntityAsync(TEntity entity, string id)
+    protected virtual async Task<ServiceResult<TDto>> MapAndCacheEntityAsync(TEntity entity, ISpecializedIdBase id)
     {
         var dto = MapToDto(entity);
         
         // Cache with automatic 24-hour expiration for enhanced reference data
-        var cacheKey = GetCacheKey(id);
+        var cacheKey = GetCacheKey(id.ToString());
         var cacheService = (ICacheService)_cacheService;
         await cacheService.SetAsync(cacheKey, dto);
         
@@ -198,7 +199,7 @@ public abstract class EnhancedReferenceService<TEntity, TDto, TCreateCommand, TU
     /// <param name="id">The entity ID</param>
     /// <param name="command">The update command</param>
     /// <returns>A service result containing the updated entity as a DTO</returns>
-    public virtual async Task<ServiceResult<TDto>> UpdateAsync(string id, TUpdateCommand command)
+    public virtual async Task<ServiceResult<TDto>> UpdateAsync(ISpecializedIdBase id, TUpdateCommand command)
     {
         // Validate existence using existing GetByIdAsync
         var existingResult = await GetByIdAsync(id);
@@ -220,13 +221,13 @@ public abstract class EnhancedReferenceService<TEntity, TDto, TCreateCommand, TU
                 validationResult.Errors);
         }
         
+        // Load entity using regular LoadEntityByIdAsync (uses ReadOnly)
+        var existingEntity = await LoadEntityByIdAsync(id);
+        
         // Perform update with WritableUnitOfWork
         using var unitOfWork = _unitOfWorkProvider.CreateWritable();
         
-        // Fresh load in write context
-        var existingEntity = await LoadEntityByIdForUpdateAsync(unitOfWork, id);
-        
-        // Update entity
+        // Update entity (repository handles tracking)
         var updatedEntity = await UpdateEntityAsync(unitOfWork, existingEntity, command);
         await unitOfWork.CommitAsync();
         
@@ -236,7 +237,7 @@ public abstract class EnhancedReferenceService<TEntity, TDto, TCreateCommand, TU
         // Map to DTO
         var dto = MapToDto(updatedEntity);
         
-        _logger.LogInformation("Updated {EntityType} with ID: {Id}", typeof(TEntity).Name, id);
+        _logger.LogInformation("Updated {EntityType} with ID: {Id}", typeof(TEntity).Name, id.ToString());
         return ServiceResult<TDto>.Success(dto);
     }
     
@@ -245,7 +246,7 @@ public abstract class EnhancedReferenceService<TEntity, TDto, TCreateCommand, TU
     /// </summary>
     /// <param name="id">The entity ID</param>
     /// <returns>A service result indicating success or failure</returns>
-    public virtual async Task<ServiceResult<bool>> DeleteAsync(string id)
+    public virtual async Task<ServiceResult<bool>> DeleteAsync(ISpecializedIdBase id)
     {
         // Validate existence using existing GetByIdAsync
         var existingResult = await GetByIdAsync(id);
@@ -271,7 +272,7 @@ public abstract class EnhancedReferenceService<TEntity, TDto, TCreateCommand, TU
         // Invalidate caches
         await InvalidateCacheAsync();
         
-        _logger.LogInformation("Deleted {EntityType} with ID: {Id}", typeof(TEntity).Name, id);
+        _logger.LogInformation("Deleted {EntityType} with ID: {Id}", typeof(TEntity).Name, id.ToString());
         return ServiceResult<bool>.Success(true);
     }
     
@@ -280,7 +281,7 @@ public abstract class EnhancedReferenceService<TEntity, TDto, TCreateCommand, TU
     /// </summary>
     /// <param name="id">The entity ID</param>
     /// <returns>True if the entity exists and is active, false otherwise</returns>
-    public virtual async Task<bool> ExistsAsync(string id)
+    public virtual async Task<bool> ExistsAsync(ISpecializedIdBase id)
     {
         var result = await GetByIdAsync(id);
         return result.IsSuccess;
@@ -299,7 +300,7 @@ public abstract class EnhancedReferenceService<TEntity, TDto, TCreateCommand, TU
     /// </summary>
     /// <param name="id">The entity ID</param>
     /// <returns>The entity or Empty if not found</returns>
-    protected abstract Task<TEntity> LoadEntityByIdAsync(string id);
+    protected abstract Task<TEntity> LoadEntityByIdAsync(ISpecializedIdBase id);
     
     /// <summary>
     /// Maps an entity to its DTO representation
@@ -314,7 +315,7 @@ public abstract class EnhancedReferenceService<TEntity, TDto, TCreateCommand, TU
     /// <summary>
     /// Validates and parses the ID format
     /// </summary>
-    protected abstract ValidationResult ValidateAndParseId(string id);
+    protected abstract ValidationResult ValidateAndParseId(ISpecializedIdBase id);
     
     /// <summary>
     /// Validates the create command
@@ -324,7 +325,7 @@ public abstract class EnhancedReferenceService<TEntity, TDto, TCreateCommand, TU
     /// <summary>
     /// Validates the update command
     /// </summary>
-    protected abstract Task<ValidationResult> ValidateUpdateCommand(string id, TUpdateCommand command);
+    protected abstract Task<ValidationResult> ValidateUpdateCommand(ISpecializedIdBase id, TUpdateCommand command);
     
     /// <summary>
     /// Creates a new entity in the repository
@@ -339,11 +340,5 @@ public abstract class EnhancedReferenceService<TEntity, TDto, TCreateCommand, TU
     /// <summary>
     /// Deletes (soft delete) an entity in the repository
     /// </summary>
-    protected abstract Task<bool> DeleteEntityAsync(IWritableUnitOfWork<FitnessDbContext> unitOfWork, string id);
-    
-    /// <summary>
-    /// Helper method to load entity in writable context for updates
-    /// This is only used internally by UpdateAsync to get a fresh entity in the write context
-    /// </summary>
-    protected abstract Task<TEntity> LoadEntityByIdForUpdateAsync(IWritableUnitOfWork<FitnessDbContext> unitOfWork, string id);
+    protected abstract Task<bool> DeleteEntityAsync(IWritableUnitOfWork<FitnessDbContext> unitOfWork, ISpecializedIdBase id);
 }

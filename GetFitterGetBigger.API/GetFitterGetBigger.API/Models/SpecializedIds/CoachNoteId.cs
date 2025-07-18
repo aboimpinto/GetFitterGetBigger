@@ -1,10 +1,12 @@
 using System;
+using GetFitterGetBigger.API.Models.Interfaces;
 
 namespace GetFitterGetBigger.API.Models.SpecializedIds;
 
-public readonly record struct CoachNoteId
+public readonly record struct CoachNoteId : ISpecializedId<CoachNoteId>
 {
     private readonly Guid _value;
+    private const string Prefix = "coachnote";
     
     private CoachNoteId(Guid value)
     {
@@ -19,13 +21,17 @@ public readonly record struct CoachNoteId
     
     public bool IsEmpty => _value == Guid.Empty;
     
-    public static bool TryParse(string? input, out CoachNoteId result)
+    // ISpecializedId<CoachNoteId> implementation
+    public Guid ToGuid() => _value;
+    
+    private static bool TryParse(string? input, out CoachNoteId result)
     {
         result = default;
-        if (string.IsNullOrEmpty(input) || !input.StartsWith("coachnote-"))
+        var prefix = $"{Prefix}-";
+        if (string.IsNullOrEmpty(input) || !input.StartsWith(prefix))
             return false;
             
-        string guidPart = input["coachnote-".Length..];
+        string guidPart = input[prefix.Length..];
         if (Guid.TryParse(guidPart, out Guid guid))
         {
             result = From(guid);
@@ -46,7 +52,9 @@ public readonly record struct CoachNoteId
         return Empty;
     }
     
-    public override string ToString() => IsEmpty ? string.Empty : $"coachnote-{this._value}";
+    public override string ToString() => IsEmpty ? string.Empty : $"{Prefix}-{this._value}";
+    
+    public string GetPrefix() => Prefix;
     
     // Conversion to/from Guid for EF Core
     public static implicit operator Guid(CoachNoteId id) => id._value;
