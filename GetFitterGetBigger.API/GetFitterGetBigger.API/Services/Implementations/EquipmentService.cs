@@ -184,21 +184,6 @@ public class EquipmentService : EnhancedReferenceService<Equipment, EquipmentDto
             UpdatedAt = null
         };
     
-    protected override ValidationResult ValidateAndParseId(ISpecializedIdBase id)
-    {
-        if (id == null)
-            return ValidationResult.Failure(EquipmentErrorMessages.Validation.IdCannotBeEmpty);
-            
-        // Check if it's the correct type
-        if (id is not EquipmentId equipmentId)
-            return ValidationResult.Failure(string.Format(EquipmentErrorMessages.Validation.InvalidIdFormat, id.ToString()));
-            
-        // Check if it's empty
-        if (equipmentId.IsEmpty)
-            return ValidationResult.Failure(EquipmentErrorMessages.Validation.IdCannotBeEmpty);
-            
-        return ValidationResult.Success();
-    }
     
     protected override async Task<ValidationResult> ValidateCreateCommand(CreateEquipmentCommand command)
     {

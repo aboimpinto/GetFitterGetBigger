@@ -73,14 +73,11 @@ public abstract class EnhancedReferenceService<TEntity, TDto, TCreateCommand, TU
     /// <returns>A service result containing the entity as a DTO</returns>
     public virtual async Task<ServiceResult<TDto>> GetByIdAsync(ISpecializedIdBase id)
     {
-        var parseResult = ValidateAndParseId(id);
-        if (parseResult.IsValid)
-            return await LoadEntityAsync(id);
-            
-        if (parseResult.ServiceError != null)
-            return ServiceResult<TDto>.Failure(CreateEmptyDto(), parseResult.ServiceError);
-            
-        return ServiceResult<TDto>.Failure(CreateEmptyDto(), parseResult.Errors);
+        return id.IsEmpty switch
+        {
+            true => ServiceResult<TDto>.Failure(CreateEmptyDto(), ServiceError.ValidationFailed("Invalid ID provided")),
+            false => await LoadEntityAsync(id)
+        };
     }
     
     /// <summary>
@@ -311,11 +308,6 @@ public abstract class EnhancedReferenceService<TEntity, TDto, TCreateCommand, TU
     /// Creates an empty DTO instance
     /// </summary>
     protected abstract TDto CreateEmptyDto();
-    
-    /// <summary>
-    /// Validates and parses the ID format
-    /// </summary>
-    protected abstract ValidationResult ValidateAndParseId(ISpecializedIdBase id);
     
     /// <summary>
     /// Validates the create command

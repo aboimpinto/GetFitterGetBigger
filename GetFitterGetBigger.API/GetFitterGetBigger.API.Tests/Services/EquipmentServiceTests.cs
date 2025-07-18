@@ -221,8 +221,8 @@ public class EquipmentServiceTests
         
         // Assert
         Assert.False(result.IsSuccess);
-        Assert.Equal(ServiceErrorCode.None, result.PrimaryErrorCode); // Base class uses string errors
-        Assert.Contains("ID cannot be empty", result.Errors.FirstOrDefault() ?? "");
+        Assert.Equal(ServiceErrorCode.ValidationFailed, result.PrimaryErrorCode);
+        Assert.Contains("Invalid ID provided", result.Errors.FirstOrDefault() ?? "");
     }
     
     [Fact]
@@ -233,8 +233,8 @@ public class EquipmentServiceTests
         
         // Assert
         Assert.False(result.IsSuccess);
-        Assert.Equal(ServiceErrorCode.None, result.PrimaryErrorCode); // Base class uses string errors
-        Assert.Contains("ID cannot be empty", result.Errors.FirstOrDefault() ?? "");
+        Assert.Equal(ServiceErrorCode.ValidationFailed, result.PrimaryErrorCode);
+        Assert.Contains("Invalid ID provided", result.Errors.FirstOrDefault() ?? "");
     }
     
     [Fact]
@@ -505,8 +505,8 @@ public class EquipmentServiceTests
         
         // Assert
         Assert.False(result.IsSuccess);
-        Assert.Equal(ServiceErrorCode.None, result.PrimaryErrorCode); // Base class uses string errors
-        Assert.Contains("ID cannot be empty", result.Errors.FirstOrDefault() ?? "");
+        Assert.Equal(ServiceErrorCode.ValidationFailed, result.PrimaryErrorCode);
+        Assert.Contains("Invalid ID provided", result.Errors.FirstOrDefault() ?? "");
     }
     
     [Fact]
@@ -621,8 +621,8 @@ public class EquipmentServiceTests
         
         // Assert
         Assert.False(result.IsSuccess);
-        Assert.Equal(ServiceErrorCode.None, result.PrimaryErrorCode); // Base class uses string errors
-        Assert.Contains("ID cannot be empty", result.Errors.FirstOrDefault() ?? "");
+        Assert.Equal(ServiceErrorCode.ValidationFailed, result.PrimaryErrorCode);
+        Assert.Contains("Invalid ID provided", result.Errors.FirstOrDefault() ?? "");
     }
     
     [Fact]
