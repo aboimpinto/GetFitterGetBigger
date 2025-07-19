@@ -202,12 +202,26 @@ public abstract class EnhancedReferenceService<TEntity, TDto, TCreateCommand, TU
     public virtual async Task<ServiceResult<TDto>> UpdateAsync(ISpecializedIdBase id, TUpdateCommand command)
     {
         var existingResult = await GetByIdAsync(id);
-        if (!existingResult.IsSuccess)
-            return existingResult;
+        var result = existingResult.IsSuccess switch
+        {
+            false => existingResult,
+            true => await ProcessUpdateAsync(id, command)
+        };
         
+        return result;
+    }
+    
+    /// <summary>
+    /// Processes the update operation after entity existence is confirmed
+    /// </summary>
+    /// <param name="id">The entity ID</param>
+    /// <param name="command">The update command</param>
+    /// <returns>A service result containing the updated entity as a DTO</returns>
+    private async Task<ServiceResult<TDto>> ProcessUpdateAsync(ISpecializedIdBase id, TUpdateCommand command)
+    {
         var validationResult = await ValidateUpdateCommand(id, command);
         
-        return validationResult switch
+        var result = validationResult switch
         {
             { IsValid: false, ServiceError: not null } => 
                 ServiceResult<TDto>.Failure(CreateEmptyDto(), validationResult.ServiceError),
@@ -216,6 +230,8 @@ public abstract class EnhancedReferenceService<TEntity, TDto, TCreateCommand, TU
             { IsValid: true } => 
                 await UpdateEntityAndReturnDtoAsync(id, command)
         };
+        
+        return result;
     }
     
     private async Task<ServiceResult<TDto>> UpdateEntityAndReturnDtoAsync(ISpecializedIdBase id, TUpdateCommand command)
