@@ -28,27 +28,31 @@ public class EquipmentRepository : RepositoryBase<FitnessDbContext>, IEquipmentR
     /// Gets equipment by its ID
     /// </summary>
     /// <param name="id">The ID of the equipment to retrieve</param>
-    /// <returns>The equipment if found, null otherwise</returns>
-    public async Task<Equipment?> GetByIdAsync(EquipmentId id)
+    /// <returns>The equipment if found, Equipment.Empty otherwise</returns>
+    public async Task<Equipment> GetByIdAsync(EquipmentId id)
     {
         // Use AsNoTracking for read operations to avoid tracking conflicts
         var equipment = await Context.Equipment
             .AsNoTracking()
             .FirstOrDefaultAsync(e => e.EquipmentId == id);
-        
-        return equipment;
+
+        return equipment ?? Equipment.Empty;
     }
     
     /// <summary>
     /// Gets equipment by its name (case-insensitive)
     /// </summary>
     /// <param name="name">The name of the equipment to retrieve</param>
-    /// <returns>The equipment if found, null otherwise</returns>
-    public async Task<Equipment?> GetByNameAsync(string name) =>
-        await Context.Equipment
+    /// <returns>The equipment if found, Equipment.Empty otherwise</returns>
+    public async Task<Equipment> GetByNameAsync(string name)
+    {
+        var equipment = await Context.Equipment
             .AsNoTracking()
             .Where(e => e.IsActive)
             .FirstOrDefaultAsync(e => e.Name.ToLower() == name.ToLower());
+            
+        return equipment ?? Equipment.Empty;
+    }
     
     /// <summary>
     /// Creates new equipment
@@ -90,7 +94,7 @@ public class EquipmentRepository : RepositoryBase<FitnessDbContext>, IEquipmentR
         var equipment = await Context.Equipment
             .FirstOrDefaultAsync(e => e.EquipmentId == id);
         
-        if (equipment == null)
+        if (equipment == null || equipment.IsEmpty)
             return false;
         
         var deactivated = Equipment.Handler.Deactivate(equipment);

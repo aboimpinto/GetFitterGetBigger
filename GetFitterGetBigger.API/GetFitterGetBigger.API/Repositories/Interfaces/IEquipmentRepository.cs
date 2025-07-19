@@ -19,15 +19,15 @@ public interface IEquipmentRepository : IRepository
     /// Gets equipment by its ID
     /// </summary>
     /// <param name="id">The ID of the equipment to retrieve</param>
-    /// <returns>The equipment if found, null otherwise</returns>
-    Task<Equipment?> GetByIdAsync(EquipmentId id);
+    /// <returns>The equipment if found, Equipment.Empty otherwise</returns>
+    Task<Equipment> GetByIdAsync(EquipmentId id);
     
     /// <summary>
     /// Gets equipment by its name
     /// </summary>
     /// <param name="name">The name of the equipment to retrieve</param>
-    /// <returns>The equipment if found, null otherwise</returns>
-    Task<Equipment?> GetByNameAsync(string name);
+    /// <returns>The equipment if found, Equipment.Empty otherwise</returns>
+    Task<Equipment> GetByNameAsync(string name);
     
     /// <summary>
     /// Creates new equipment
