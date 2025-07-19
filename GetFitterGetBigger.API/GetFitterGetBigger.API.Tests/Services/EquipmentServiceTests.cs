@@ -248,7 +248,7 @@ public class EquipmentServiceTests
             
         _mockRepository
             .Setup(x => x.GetByIdAsync(It.IsAny<EquipmentId>()))
-            .ReturnsAsync((Equipment?)null);
+            .ReturnsAsync(Equipment.Empty);
             
         // Act
         var result = await _service.GetByIdAsync(EquipmentId.ParseOrEmpty(id));
@@ -518,7 +518,7 @@ public class EquipmentServiceTests
         
         _mockRepository
             .Setup(x => x.GetByIdAsync(It.IsAny<EquipmentId>()))
-            .ReturnsAsync((Equipment?)null);
+            .ReturnsAsync(Equipment.Empty);
             
         // Act
         var result = await _service.UpdateAsync(EquipmentId.ParseOrEmpty(id), request);
@@ -633,7 +633,7 @@ public class EquipmentServiceTests
         
         _mockRepository
             .Setup(x => x.GetByIdAsync(It.IsAny<EquipmentId>()))
-            .ReturnsAsync((Equipment?)null);
+            .ReturnsAsync(Equipment.Empty);
             
         // Act
         var result = await _service.DeleteAsync(EquipmentId.ParseOrEmpty(id));
@@ -674,7 +674,7 @@ public class EquipmentServiceTests
         
         _mockRepository
             .Setup(x => x.GetByIdAsync(It.IsAny<EquipmentId>()))
-            .ReturnsAsync((Equipment?)null);
+            .ReturnsAsync(Equipment.Empty);
             
         // Act
         var result = await _service.ExistsAsync(EquipmentId.ParseOrEmpty(id));
