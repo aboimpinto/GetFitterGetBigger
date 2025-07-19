@@ -304,18 +304,6 @@ public abstract class EnhancedReferenceService<TEntity, TDto, TCreateCommand, TU
     /// Checks if an entity exists with the given ID
     /// </summary>
     /// <param name="id">The entity ID</param>
-    /// <returns>True if the entity exists and is active, false otherwise</returns>
-    [Obsolete("Use ExistsAsync instead. This method will be removed in the next version. The new ExistsAsync returns ServiceResult<TDto> for consistent error handling.")]
-    public virtual async Task<bool> ExistsAsyncBool(ISpecializedIdBase id)
-    {
-        var result = await GetByIdAsync(id);
-        return result.IsSuccess;
-    }
-    
-    /// <summary>
-    /// Checks if an entity exists with the given ID
-    /// </summary>
-    /// <param name="id">The entity ID</param>
     /// <returns>Success with the entity DTO if it exists, Failure with error details if not</returns>
     public virtual async Task<ServiceResult<TDto>> ExistsAsync(ISpecializedIdBase id)
     {

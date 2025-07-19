@@ -193,16 +193,6 @@ public abstract class EnhancedReferenceServiceGeneric<TEntity, TDto, TId, TCreat
     }
     
     /// <summary>
-    /// Checks if an entity exists
-    /// </summary>
-    [Obsolete("Use ExistsAsync instead. This method will be removed in the next version. The new ExistsAsync returns ServiceResult<TDto> for consistent error handling.")]
-    public virtual async Task<bool> ExistsAsyncBool(TId id)
-    {
-        var result = await GetByIdAsync(id);
-        return result.IsSuccess;
-    }
-    
-    /// <summary>
     /// Checks if an entity exists with the given ID
     /// </summary>
     /// <param name="id">The entity ID</param>
