@@ -225,6 +225,7 @@ Create these four MANDATORY reports:
 - ✅ Pattern matching over if-else chains
 - ✅ Empty/Null Object Pattern (NO nulls!)
 - ✅ Short, focused methods (< 20 lines)
+- ✅ **Single exit point per method** (NEVER return in the middle or top)
 - ✅ No fake async
 - ✅ No defensive programming without justification
 

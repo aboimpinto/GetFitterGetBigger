@@ -66,6 +66,46 @@ public void SetValue(string key, object value)
 - Extract complex logic into helper methods
 - Use descriptive names that explain the "what" not the "how"
 
+### 5. **Single Exit Point Principle**
+**CRITICAL**: Every method should have ONE and ONLY ONE exit point at the end of the method:
+
+```csharp
+// ❌ BAD - Multiple exit points, early returns
+public async Task<ServiceResult<TDto>> UpdateAsync(ISpecializedIdBase id, TUpdateCommand command)
+{
+    var existingResult = await GetByIdAsync(id);
+    if (!existingResult.IsSuccess)
+        return existingResult;  // Early return in middle of method
+    
+    var validationResult = await ValidateUpdateCommand(id, command);
+    if (!validationResult.IsValid)
+        return ServiceResult<TDto>.Failure(CreateEmptyDto(), validationResult.Errors);
+    
+    return await UpdateEntityAndReturnDtoAsync(id, command);
+}
+
+// ✅ GOOD - Single exit point with pattern matching
+public async Task<ServiceResult<TDto>> UpdateAsync(ISpecializedIdBase id, TUpdateCommand command)
+{
+    var existingResult = await GetByIdAsync(id);
+    var result = existingResult.IsSuccess switch
+    {
+        false => existingResult,
+        true => await ProcessUpdateAsync(id, command)
+    };
+    
+    return result;  // Single exit point at the end
+}
+```
+
+**Key Benefits**:
+- Reduces cyclomatic complexity
+- Easier to debug and trace execution flow
+- Clearer method structure
+- Forces better decomposition into smaller methods
+
+**EXCEPTION**: Only in very special cases where early returns significantly improve readability (e.g., guard clauses in constructors), but these should be rare and well-justified.
+
 ---
 
 ## 🛠️ Implementation Standards
@@ -391,6 +431,7 @@ public async Task<IActionResult> GetById(string id) =>
 - [ ] No fake async
 - [ ] Cyclomatic complexity < 10
 - [ ] No deeply nested code (max 3 levels)
+- [ ] **Single exit point per method** (one return statement at the end)
 
 ### ✅ Error Handling & Exceptions
 - [ ] No unnecessary try-catch blocks
