@@ -86,9 +86,7 @@ public class EquipmentService : EnhancedReferenceService<Equipment, EquipmentDto
     {
         var result = string.IsNullOrWhiteSpace(name) switch
         {
-            true => ServiceResult<EquipmentDto>.Failure(
-                CreateEmptyDto(),
-                EquipmentErrorMessages.Validation.NameCannotBeEmpty),
+            true => ServiceResult<EquipmentDto>.Failure(CreateEmptyDto(), EquipmentErrorMessages.Validation.NameCannotBeEmpty),
             false => await ProcessGetByNameAsync(name)
         };
         
@@ -117,9 +115,7 @@ public class EquipmentService : EnhancedReferenceService<Equipment, EquipmentDto
         return ServiceResult<EquipmentDto>.Success(cached);
     }
     
-    private async Task<ServiceResult<EquipmentDto>> LoadEquipmentByNameAsync(
-        string name, 
-        string cacheKey)
+    private async Task<ServiceResult<EquipmentDto>> LoadEquipmentByNameAsync(string name, string cacheKey)
     {
         using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
         var repository = unitOfWork.GetRepository<IEquipmentRepository>();
@@ -127,12 +123,7 @@ public class EquipmentService : EnhancedReferenceService<Equipment, EquipmentDto
         
         var result = entity switch
         {
-            null => ServiceResult<EquipmentDto>.Failure(
-                CreateEmptyDto(),
-                ServiceError.NotFound("Equipment")),
-            { IsEmpty: true } or { IsActive: false } => ServiceResult<EquipmentDto>.Failure(
-                CreateEmptyDto(),
-                ServiceError.NotFound("Equipment")),
+            { IsEmpty: true } or { IsActive: false } => ServiceResult<EquipmentDto>.Failure(CreateEmptyDto(), ServiceError.NotFound("Equipment")),
             _ => await CreateSuccessResultWithCachingAsync(entity, cacheKey)
         };
         
@@ -195,7 +186,7 @@ public class EquipmentService : EnhancedReferenceService<Equipment, EquipmentDto
         using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
         var repository = unitOfWork.GetRepository<IEquipmentRepository>();
         var entity = await repository.GetByIdAsync(equipmentId);
-        return entity ?? Equipment.Empty;
+        return entity.IsEmpty ? Equipment.Empty : entity;
     }
     
     protected override EquipmentDto MapToDto(Equipment entity) =>
