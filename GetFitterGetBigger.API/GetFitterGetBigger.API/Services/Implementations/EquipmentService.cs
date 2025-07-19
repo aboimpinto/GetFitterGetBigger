@@ -84,23 +84,32 @@ public class EquipmentService : EnhancedReferenceService<Equipment, EquipmentDto
     /// </summary>
     public async Task<ServiceResult<EquipmentDto>> GetByNameAsync(string name)
     {
-        if (string.IsNullOrWhiteSpace(name))
-            return ServiceResult<EquipmentDto>.Failure(
+        var result = string.IsNullOrWhiteSpace(name) switch
+        {
+            true => ServiceResult<EquipmentDto>.Failure(
                 CreateEmptyDto(),
-                EquipmentErrorMessages.Validation.NameCannotBeEmpty);
+                EquipmentErrorMessages.Validation.NameCannotBeEmpty),
+            false => await ProcessGetByNameAsync(name)
+        };
         
+        return result;
+    }
+    
+    private async Task<ServiceResult<EquipmentDto>> ProcessGetByNameAsync(string name)
+    {
         var cacheKey = GetCacheKey($"name:{name.ToLowerInvariant()}");
         var cacheService = (ICacheService)_cacheService;
         var cached = await cacheService.GetAsync<EquipmentDto>(cacheKey);
         
-        return cached switch
+        var result = cached switch
         {
             not null => LogCacheHitAndReturn(cached, name),
-            _ => await LoadEquipmentByNameAsync(name, cacheKey, cacheService)
+            _ => await LoadEquipmentByNameAsync(name, cacheKey)
         };
+        
+        return result;
     }
     
-    // Helper methods
     
     private ServiceResult<EquipmentDto> LogCacheHitAndReturn(EquipmentDto cached, string name)
     {
@@ -110,21 +119,33 @@ public class EquipmentService : EnhancedReferenceService<Equipment, EquipmentDto
     
     private async Task<ServiceResult<EquipmentDto>> LoadEquipmentByNameAsync(
         string name, 
-        string cacheKey, 
-        ICacheService cacheService)
+        string cacheKey)
     {
         using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
         var repository = unitOfWork.GetRepository<IEquipmentRepository>();
         var entity = await repository.GetByNameAsync(name);
         
-        if (entity == null || entity.IsEmpty || !entity.IsActive)
-            return ServiceResult<EquipmentDto>.Failure(
+        var result = entity switch
+        {
+            null => ServiceResult<EquipmentDto>.Failure(
                 CreateEmptyDto(),
-                ServiceError.NotFound("Equipment"));
+                ServiceError.NotFound("Equipment")),
+            { IsEmpty: true } or { IsActive: false } => ServiceResult<EquipmentDto>.Failure(
+                CreateEmptyDto(),
+                ServiceError.NotFound("Equipment")),
+            _ => await CreateSuccessResultWithCachingAsync(entity, cacheKey)
+        };
         
+        return result;
+    }
+    
+    private async Task<ServiceResult<EquipmentDto>> CreateSuccessResultWithCachingAsync(
+        Equipment entity,
+        string cacheKey)
+    {
         var dto = MapToDto(entity);
+        var cacheService = (ICacheService)_cacheService;
         await cacheService.SetAsync(cacheKey, dto);
-        
         return ServiceResult<EquipmentDto>.Success(dto);
     }
     
@@ -132,19 +153,24 @@ public class EquipmentService : EnhancedReferenceService<Equipment, EquipmentDto
     {
         using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
         var repository = unitOfWork.GetRepository<IEquipmentRepository>();
+        var isInUse = await repository.IsInUseAsync(id);
         
-        if (await repository.IsInUseAsync(id))
+        var result = isInUse switch
         {
-            _logger.LogWarning("Cannot delete equipment with ID {Id} as it is in use by exercises", id);
-            return ServiceResult<bool>.Failure(
-                false, 
-                ServiceError.DependencyExists("Equipment", "exercises that are in use"));
-        }
+            true => LogAndReturnInUseError(id),
+            false => ServiceResult<bool>.Success(true)
+        };
         
-        return ServiceResult<bool>.Success(true);
+        return result;
     }
     
-    // Abstract method implementations
+    private ServiceResult<bool> LogAndReturnInUseError(EquipmentId id)
+    {
+        _logger.LogWarning("Cannot delete equipment with ID {Id} as it is in use by exercises", id);
+        return ServiceResult<bool>.Failure(
+            false, 
+            ServiceError.DependencyExists("Equipment", "exercises that are in use"));
+    }
     
     protected override async Task<IEnumerable<Equipment>> LoadAllEntitiesAsync()
     {
@@ -195,18 +221,28 @@ public class EquipmentService : EnhancedReferenceService<Equipment, EquipmentDto
     
     protected override async Task<ValidationResult> ValidateCreateCommand(CreateEquipmentCommand command)
     {
-        var validation = ServiceValidate.For()
+        var basicValidation = ServiceValidate.For()
             .EnsureNotNull(command, EquipmentErrorMessages.Validation.RequestCannotBeNull)
             .EnsureNotWhiteSpace(command?.Name, EquipmentErrorMessages.Validation.NameCannotBeEmpty);
             
-        if (command != null)
+        var result = command switch
         {
-            validation = await validation.EnsureAsync(
-                async () => !await CheckDuplicateNameAsync(command.Name),
-                ServiceError.AlreadyExists("Equipment", command.Name));
-        }
+            null => basicValidation.ToResult(),
+            _ => await ValidateWithDuplicateCheckAsync(basicValidation, command.Name)
+        };
         
-        return validation.ToResult();
+        return result;
+    }
+    
+    private async Task<ValidationResult> ValidateWithDuplicateCheckAsync(
+        ServiceValidation validation,
+        string name)
+    {
+        var enhancedValidation = await validation.EnsureAsync(
+            async () => !await CheckDuplicateNameAsync(name),
+            ServiceError.AlreadyExists("Equipment", name));
+            
+        return enhancedValidation.ToResult();
     }
     
     private async Task<bool> CheckDuplicateNameAsync(string name)
@@ -220,19 +256,30 @@ public class EquipmentService : EnhancedReferenceService<Equipment, EquipmentDto
     {
         var equipmentId = (EquipmentId)id;
         
-        var validation = ServiceValidate.For()
+        var basicValidation = ServiceValidate.For()
             .EnsureNotNull(command, EquipmentErrorMessages.Validation.RequestCannotBeNull)
             .EnsureNotWhiteSpace(command?.Name, EquipmentErrorMessages.Validation.NameCannotBeEmpty)
             .Ensure(() => !equipmentId.IsEmpty, EquipmentErrorMessages.Validation.InvalidEquipmentId);
             
-        if (command != null)
+        var result = command switch
         {
-            validation = await validation.EnsureAsync(
-                async () => !await CheckDuplicateNameAsync(command.Name, equipmentId),
-                ServiceError.AlreadyExists("Equipment", command.Name));
-        }
+            null => basicValidation.ToResult(),
+            _ => await ValidateUpdateWithDuplicateCheckAsync(basicValidation, command.Name, equipmentId)
+        };
         
-        return validation.ToResult();
+        return result;
+    }
+    
+    private async Task<ValidationResult> ValidateUpdateWithDuplicateCheckAsync(
+        ServiceValidation validation,
+        string name,
+        EquipmentId excludeId)
+    {
+        var enhancedValidation = await validation.EnsureAsync(
+            async () => !await CheckDuplicateNameAsync(name, excludeId),
+            ServiceError.AlreadyExists("Equipment", name));
+            
+        return enhancedValidation.ToResult();
     }
     
     private async Task<bool> CheckDuplicateNameAsync(string name, EquipmentId excludeId)
