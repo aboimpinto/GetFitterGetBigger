@@ -9,6 +9,7 @@ using GetFitterGetBigger.API.Services.Base;
 using GetFitterGetBigger.API.Services.Commands.Equipment;
 using GetFitterGetBigger.API.Services.Interfaces;
 using GetFitterGetBigger.API.Services.Results;
+using GetFitterGetBigger.API.Services.Validation;
 using Olimpo.EntityFramework.Persistency;
 
 namespace GetFitterGetBigger.API.Services.Implementations;
@@ -187,46 +188,51 @@ public class EquipmentService : EnhancedReferenceService<Equipment, EquipmentDto
     
     protected override async Task<ValidationResult> ValidateCreateCommand(CreateEquipmentCommand command)
     {
-        if (command == null)
-            return ValidationResult.Failure(EquipmentErrorMessages.Validation.RequestCannotBeNull);
+        var validation = ServiceValidate.For()
+            .EnsureNotNull(command, EquipmentErrorMessages.Validation.RequestCannotBeNull)
+            .EnsureNotWhiteSpace(command?.Name, EquipmentErrorMessages.Validation.NameCannotBeEmpty);
             
-        if (string.IsNullOrWhiteSpace(command.Name))
-            return ValidationResult.Failure(EquipmentErrorMessages.Validation.NameCannotBeEmpty);
-            
-        // Check for duplicate name
-        using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
-        var repository = unitOfWork.GetRepository<IEquipmentRepository>();
-        
-        if (await repository.ExistsAsync(command.Name.Trim()))
+        if (command != null)
         {
-            return ValidationResult.Failure(ServiceError.AlreadyExists("Equipment", command.Name));
+            validation = await validation.EnsureAsync(
+                async () => !await CheckDuplicateNameAsync(command.Name),
+                ServiceError.AlreadyExists("Equipment", command.Name));
         }
         
-        return ValidationResult.Success();
+        return validation.ToResult();
+    }
+    
+    private async Task<bool> CheckDuplicateNameAsync(string name)
+    {
+        using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
+        var repository = unitOfWork.GetRepository<IEquipmentRepository>();
+        return await repository.ExistsAsync(name.Trim());
     }
     
     protected override async Task<ValidationResult> ValidateUpdateCommand(ISpecializedIdBase id, UpdateEquipmentCommand command)
     {
-        if (command == null)
-            return ValidationResult.Failure(EquipmentErrorMessages.Validation.RequestCannotBeNull);
-            
-        if (string.IsNullOrWhiteSpace(command.Name))
-            return ValidationResult.Failure(EquipmentErrorMessages.Validation.NameCannotBeEmpty);
-            
         var equipmentId = (EquipmentId)id;
-        if (equipmentId.IsEmpty)
-            return ValidationResult.Failure(EquipmentErrorMessages.Validation.InvalidEquipmentId);
-            
-        // Check for duplicate name (excluding current)
-        using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
-        var repository = unitOfWork.GetRepository<IEquipmentRepository>();
         
-        if (await repository.ExistsAsync(command.Name.Trim(), equipmentId))
+        var validation = ServiceValidate.For()
+            .EnsureNotNull(command, EquipmentErrorMessages.Validation.RequestCannotBeNull)
+            .EnsureNotWhiteSpace(command?.Name, EquipmentErrorMessages.Validation.NameCannotBeEmpty)
+            .Ensure(() => !equipmentId.IsEmpty, EquipmentErrorMessages.Validation.InvalidEquipmentId);
+            
+        if (command != null)
         {
-            return ValidationResult.Failure(ServiceError.AlreadyExists("Equipment", command.Name));
+            validation = await validation.EnsureAsync(
+                async () => !await CheckDuplicateNameAsync(command.Name, equipmentId),
+                ServiceError.AlreadyExists("Equipment", command.Name));
         }
         
-        return ValidationResult.Success();
+        return validation.ToResult();
+    }
+    
+    private async Task<bool> CheckDuplicateNameAsync(string name, EquipmentId excludeId)
+    {
+        using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
+        var repository = unitOfWork.GetRepository<IEquipmentRepository>();
+        return await repository.ExistsAsync(name.Trim(), excludeId);
     }
     
     protected override async Task<Equipment> CreateEntityAsync(
