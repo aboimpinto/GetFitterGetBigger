@@ -661,7 +661,9 @@ public class EquipmentServiceTests
         var result = await _service.ExistsAsync(equipment.EquipmentId);
         
         // Assert
-        Assert.True(result);
+        Assert.True(result.IsSuccess);
+        Assert.Equal(equipment.EquipmentId.ToString(), result.Data.Id);
+        Assert.Equal(equipment.Name, result.Data.Name);
     }
     
     [Fact]
@@ -678,7 +680,8 @@ public class EquipmentServiceTests
         var result = await _service.ExistsAsync(EquipmentId.ParseOrEmpty(id));
         
         // Assert
-        Assert.False(result);
+        Assert.False(result.IsSuccess);
+        Assert.Equal(ServiceErrorCode.NotFound, result.PrimaryErrorCode);
     }
     
     [Fact]
@@ -688,7 +691,8 @@ public class EquipmentServiceTests
         var result = await _service.ExistsAsync(EquipmentId.ParseOrEmpty("invalid-id"));
         
         // Assert
-        Assert.False(result);
+        Assert.False(result.IsSuccess);
+        Assert.Equal(ServiceErrorCode.ValidationFailed, result.PrimaryErrorCode);
     }
     
     #endregion

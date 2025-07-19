@@ -201,7 +201,7 @@ public abstract class EnhancedReferenceService<TEntity, TDto, TCreateCommand, TU
     /// <returns>A service result containing the updated entity as a DTO</returns>
     public virtual async Task<ServiceResult<TDto>> UpdateAsync(ISpecializedIdBase id, TUpdateCommand command)
     {
-        var existingResult = await GetByIdAsync(id);
+        var existingResult = await ExistsAsync(id);
         var result = existingResult.IsSuccess switch
         {
             false => existingResult,
@@ -257,31 +257,46 @@ public abstract class EnhancedReferenceService<TEntity, TDto, TCreateCommand, TU
     /// <returns>A service result indicating success or failure</returns>
     public virtual async Task<ServiceResult<bool>> DeleteAsync(ISpecializedIdBase id)
     {
-        // Validate existence using existing GetByIdAsync
-        var existingResult = await GetByIdAsync(id);
-        if (!existingResult.IsSuccess)
+        var existingResult = await ExistsAsync(id);
+        var result = existingResult.IsSuccess switch
         {
-            if (existingResult.StructuredErrors.Any())
-                return ServiceResult<bool>.Failure(false, existingResult.StructuredErrors.ToArray());
-            else
-                return ServiceResult<bool>.Failure(false, existingResult.Errors);
-        }
+            false => ConvertToDeleteResult(existingResult),
+            true => await ProcessDeleteAsync(id)
+        };
         
+        return result;
+    }
+    
+    /// <summary>
+    /// Converts a failed TDto result to a boolean result for delete operations
+    /// </summary>
+    /// <param name="existingResult">The result from GetByIdAsync</param>
+    /// <returns>A boolean service result with the same error information</returns>
+    private ServiceResult<bool> ConvertToDeleteResult(ServiceResult<TDto> existingResult)
+    {
+        return existingResult.StructuredErrors.Any() switch
+        {
+            true => ServiceResult<bool>.Failure(false, existingResult.StructuredErrors.ToArray()),
+            false => ServiceResult<bool>.Failure(false, existingResult.Errors)
+        };
+    }
+    
+    /// <summary>
+    /// Processes the delete operation after entity existence is confirmed
+    /// </summary>
+    /// <param name="id">The entity ID</param>
+    /// <returns>A service result indicating success or failure</returns>
+    private async Task<ServiceResult<bool>> ProcessDeleteAsync(ISpecializedIdBase id)
+    {
         using var unitOfWork = _unitOfWorkProvider.CreateWritable();
         
-        // Perform delete
         var deleted = await DeleteEntityAsync(unitOfWork, id);
-        if (!deleted)
-        {
-            return ServiceResult<bool>.Failure(false, ServiceError.NotFound(typeof(TEntity).Name));
-        }
-        
         await unitOfWork.CommitAsync();
         
-        // Invalidate caches
         await InvalidateCacheAsync();
         
         _logger.LogInformation("Deleted {EntityType} with ID: {Id}", typeof(TEntity).Name, id.ToString());
+        
         return ServiceResult<bool>.Success(true);
     }
     
@@ -290,10 +305,21 @@ public abstract class EnhancedReferenceService<TEntity, TDto, TCreateCommand, TU
     /// </summary>
     /// <param name="id">The entity ID</param>
     /// <returns>True if the entity exists and is active, false otherwise</returns>
-    public virtual async Task<bool> ExistsAsync(ISpecializedIdBase id)
+    [Obsolete("Use ExistsAsync instead. This method will be removed in the next version. The new ExistsAsync returns ServiceResult<TDto> for consistent error handling.")]
+    public virtual async Task<bool> ExistsAsyncBool(ISpecializedIdBase id)
     {
         var result = await GetByIdAsync(id);
         return result.IsSuccess;
+    }
+    
+    /// <summary>
+    /// Checks if an entity exists with the given ID
+    /// </summary>
+    /// <param name="id">The entity ID</param>
+    /// <returns>Success with the entity DTO if it exists, Failure with error details if not</returns>
+    public virtual async Task<ServiceResult<TDto>> ExistsAsync(ISpecializedIdBase id)
+    {
+        return await GetByIdAsync(id);
     }
     
     // Abstract methods that must be implemented by derived classes

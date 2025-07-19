@@ -115,7 +115,7 @@ public abstract class EnhancedReferenceServiceGeneric<TEntity, TDto, TId, TCreat
     public virtual async Task<ServiceResult<TDto>> UpdateAsync(TId id, TUpdateCommand command)
     {
         // No more string conversion!
-        var existingResult = await GetByIdAsync(id);
+        var existingResult = await ExistsAsync(id);
         if (!existingResult.IsSuccess)
             return existingResult;
         
@@ -153,38 +153,63 @@ public abstract class EnhancedReferenceServiceGeneric<TEntity, TDto, TId, TCreat
     /// </summary>
     public virtual async Task<ServiceResult<bool>> DeleteAsync(TId id)
     {
-        var existingResult = await GetByIdAsync(id);
-        if (!existingResult.IsSuccess)
+        var existingResult = await ExistsAsync(id);
+        var result = existingResult.IsSuccess switch
         {
-            if (existingResult.StructuredErrors.Any())
-                return ServiceResult<bool>.Failure(false, existingResult.StructuredErrors.ToArray());
-            else
-                return ServiceResult<bool>.Failure(false, existingResult.Errors);
-        }
+            false => ConvertToDeleteResult(existingResult),
+            true => await ProcessDeleteAsync(id)
+        };
         
+        return result;
+    }
+    
+    /// <summary>
+    /// Converts a failed TDto result to a boolean result for delete operations
+    /// </summary>
+    private ServiceResult<bool> ConvertToDeleteResult(ServiceResult<TDto> existingResult)
+    {
+        return existingResult.StructuredErrors.Any() switch
+        {
+            true => ServiceResult<bool>.Failure(false, existingResult.StructuredErrors.ToArray()),
+            false => ServiceResult<bool>.Failure(false, existingResult.Errors)
+        };
+    }
+    
+    /// <summary>
+    /// Processes the delete operation after entity existence is confirmed
+    /// </summary>
+    private async Task<ServiceResult<bool>> ProcessDeleteAsync(TId id)
+    {
         using var unitOfWork = _unitOfWorkProvider.CreateWritable();
         
         var deleted = await DeleteEntityAsync(unitOfWork, id);
-        if (!deleted)
-        {
-            return ServiceResult<bool>.Failure(false, ServiceError.NotFound(typeof(TEntity).Name));
-        }
-        
         await unitOfWork.CommitAsync();
         
         await InvalidateCacheAsync();
         
         _logger.LogInformation("Deleted {EntityType} with ID: {Id}", typeof(TEntity).Name, id);
+        
         return ServiceResult<bool>.Success(true);
     }
     
     /// <summary>
     /// Checks if an entity exists
     /// </summary>
-    public virtual async Task<bool> ExistsAsync(TId id)
+    [Obsolete("Use ExistsAsync instead. This method will be removed in the next version. The new ExistsAsync returns ServiceResult<TDto> for consistent error handling.")]
+    public virtual async Task<bool> ExistsAsyncBool(TId id)
     {
         var result = await GetByIdAsync(id);
         return result.IsSuccess;
+    }
+    
+    /// <summary>
+    /// Checks if an entity exists with the given ID
+    /// </summary>
+    /// <param name="id">The entity ID</param>
+    /// <returns>Success with the entity DTO if it exists, Failure with error details if not</returns>
+    public virtual async Task<ServiceResult<TDto>> ExistsAsync(TId id)
+    {
+        return await GetByIdAsync(id);
     }
     
     // Protected helper methods

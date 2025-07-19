@@ -43,5 +43,5 @@ public interface IEquipmentService
     /// <summary>
     /// Checks if equipment exists with the given ID
     /// </summary>
-    Task<bool> ExistsAsync(EquipmentId id);
+    Task<ServiceResult<EquipmentDto>> ExistsAsync(EquipmentId id);
 }

@@ -44,32 +44,39 @@ public class EquipmentService : EnhancedReferenceService<Equipment, EquipmentDto
     /// </summary>
     public async Task<ServiceResult<bool>> DeleteAsync(EquipmentId id)
     {
-        // Validate using existing method
-        var existingResult = await GetByIdAsync(id);
-        if (!existingResult.IsSuccess)
+        var existingResult = await ExistsAsync(id);
+        var result = existingResult.IsSuccess switch
         {
-            if (existingResult.StructuredErrors.Any())
-                return ServiceResult<bool>.Failure(false, existingResult.StructuredErrors.ToArray());
-            else
-                return ServiceResult<bool>.Failure(false, existingResult.Errors);
-        }
+            false => ConvertToDeleteResult(existingResult),
+            true => await ProcessEquipmentDeleteAsync(id)
+        };
         
-        // Check if in use
+        return result;
+    }
+    
+    private ServiceResult<bool> ConvertToDeleteResult(ServiceResult<EquipmentDto> existingResult)
+    {
+        return existingResult.StructuredErrors.Any() switch
+        {
+            true => ServiceResult<bool>.Failure(false, existingResult.StructuredErrors.ToArray()),
+            false => ServiceResult<bool>.Failure(false, existingResult.Errors)
+        };
+    }
+    
+    private async Task<ServiceResult<bool>> ProcessEquipmentDeleteAsync(EquipmentId id)
+    {
         var inUseResult = await CheckIfInUseAsync(id);
-        if (!inUseResult.IsSuccess)
-            return inUseResult;
-        
-        // Delegate to base class delete
-        var deleteResult = await base.DeleteAsync(id);
-        return deleteResult.IsSuccess 
-            ? ServiceResult<bool>.Success(true)
-            : ServiceResult<bool>.Failure(false, deleteResult.StructuredErrors.ToArray());
+        return inUseResult.IsSuccess switch
+        {
+            false => inUseResult,
+            true => await base.DeleteAsync(id)
+        };
     }
     
     /// <summary>
     /// Checks if equipment exists using strongly-typed ID
     /// </summary>
-    public async Task<bool> ExistsAsync(EquipmentId id) =>
+    public async Task<ServiceResult<EquipmentDto>> ExistsAsync(EquipmentId id) =>
         await base.ExistsAsync(id);
     
     /// <summary>
