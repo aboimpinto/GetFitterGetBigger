@@ -24,6 +24,7 @@ This file serves as a central dashboard for tracking the status of all features 
 | Exercise Kinetic Chain | COMPLETED | High | FEAT-017 | 2025-07-09 | [Details](3-COMPLETED/FEAT-017-exercise-kinetic-chain/feature-description.md) |
 | Exercise Linking | COMPLETED | High | FEAT-018 | 2025-07-09 | [Details](3-COMPLETED/FEAT-018-exercise-linking/completion-summary.md) |
 | Exercise Weight Type | COMPLETED | High | FEAT-019 | 2025-07-12 | [Details](3-COMPLETED/FEAT-019-exercise-weight-type/feature-description.md) |
+| Workout Reference Data | READY TO DEVELOP | High | FEAT-020 | 2025-07-19 | [Details](1-READY_TO_DEVELOP/FEAT-020-workout-reference-data/feature-description.md) |
 
 ## Status Definitions
 
