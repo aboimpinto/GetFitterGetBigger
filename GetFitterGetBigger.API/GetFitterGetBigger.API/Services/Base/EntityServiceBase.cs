@@ -1,7 +1,5 @@
 using GetFitterGetBigger.API.Models;
 using GetFitterGetBigger.API.Services.Interfaces;
-using GetFitterGetBigger.API.Services.Results;
-using Microsoft.Extensions.Logging;
 
 namespace GetFitterGetBigger.API.Services.Base;
 
@@ -118,15 +116,21 @@ public abstract class EntityServiceBase<TEntity> where TEntity : class, IEntity
     /// <returns>A task representing the asynchronous operation</returns>
     protected virtual async Task InvalidateCacheAsync()
     {
-        if (_cacheService is ICacheService cacheService)
+        switch (_cacheService)
         {
-            var pattern = GetCacheInvalidationPattern();
-            await cacheService.RemoveByPatternAsync(pattern);
-            _logger.LogInformation("Cache invalidated for pattern: {Pattern}", pattern);
-        }
-        else
-        {
-            _logger.LogDebug("Cache invalidation not supported for eternal cache service");
+            case ICacheService cacheService:
+                var pattern = GetCacheInvalidationPattern();
+                await cacheService.RemoveByPatternAsync(pattern);
+                _logger.LogInformation("Cache invalidated for pattern: {Pattern}", pattern);
+                break;
+            
+            case IEternalCacheService:
+                _logger.LogDebug("Cache invalidation not supported for eternal cache service");
+                break;
+            
+            default:
+                _logger.LogWarning("Unknown cache service type: {Type}", _cacheService?.GetType().Name ?? "null");
+                break;
         }
     }
 }
