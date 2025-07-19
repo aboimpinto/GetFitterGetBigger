@@ -54,9 +54,22 @@ Features progress through these workflow states:
 - Each task must be marked with status `[ReadyToDevelop]`
 - Move feature folder from `0-SUBMITTED` to `1-READY_TO_DEVELOP`
 - Tasks should be specific, actionable, and independently verifiable
+- **CRITICAL: Proper Implementation Order**:
+  - **Infrastructure First**: Always implement foundational components before dependent ones
+  - **API Services → Data Models → Components → Pages → Integration**
+  - **Example**: Don't create UI components that depend on services not yet implemented
+  - **Testing Order**: Service tests can run independently, component tests need services
 - The task file must include:
   - Feature branch name at the top
-  - Tasks organized by logical categories (Components, Services, State Management, API Integration, etc.)
+  - Tasks organized by logical categories in dependency order:
+    1. API Service Layer (foundation)
+    2. Data Models and Types
+    3. State Management
+    4. Shared/Base Components
+    5. Feature Components (that use shared components)
+    6. Page Components and Routing
+    7. UI/UX Polish
+    8. Integration Testing
   - **Unit/Component test tasks immediately following each implementation task**
   - Clear description of what each task entails
   - Space for commit hashes to be added as tasks are completed
@@ -125,12 +138,49 @@ Before starting ANY implementation:
   6. **MANDATORY: Run `dotnet test` to ensure ALL tests pass (100% green)**
   8. Only after build succeeds and ALL tests pass, commit the changes
   9. Update the task status to `[Implemented: <hash> | Started: <timestamp> | Finished: YYYY-MM-DD HH:MM | Duration: Xh Ym]`
-- **For EVERY checkpoint:**
+- **For EVERY checkpoint (After Each Category):**
   1. Run `dotnet build` - BUILD MUST BE SUCCESSFUL (no errors)
   2. Run `dotnet test` - ALL TESTS MUST BE GREEN (no failures)
   3. Verify no build warnings exist
-  4. **MANDATORY: Update checkpoint status from 🛑 to ✅ when all conditions pass**
-  5. Only proceed to next category after checkpoint passes
+  4. **MANDATORY: Perform Code Review for all uncommitted files in the category**
+     - Create folder: `code-reviews/Category-{X}/` in the feature folder
+     - Generate code review report using CODE_REVIEW_PROCESS.md template
+     - File naming: `Code-Review-Category-{X}-{YYYY-MM-DD}-{HH-MM}-{STATUS}.md`
+     - Review outcomes:
+       - **APPROVED**: Can proceed to git commit and next category
+       - **APPROVED_WITH_NOTES**: User decides if notes must be addressed
+         - If ignored, include justification in review report and commit message
+       - **REQUIRES_CHANGES**: MUST fix issues before proceeding
+         - Update code based on review
+         - Generate new review after fixes
+         - Cannot start next category until APPROVED
+  5. **Git Commit Requirements (Only if code review is APPROVED or APPROVED_WITH_NOTES with justification):**
+     - Include in commit message:
+       - Number of tests passed
+       - Number of new tests created
+       - Build summary (no warnings confirmation)
+       - Code review status (APPROVED or APPROVED_WITH_NOTES)
+       - Justification if proceeding with APPROVED_WITH_NOTES
+     - Example commit format:
+       ```
+       feat: implement Category X - [Category Name]
+       
+       - Tests: X passed (Y new tests added)
+       - Build: Success with 0 warnings
+       - Code Review: APPROVED
+       
+       [Detailed changes...]
+       
+       🤖 Generated with [Claude Code](https://claude.ai/code)
+       
+       Authored-By: Paulo Aboim Pinto <aboimpinto@gmail.com>
+       ```
+  6. **MANDATORY: Update checkpoint status from 🛑 to ✅ only when:**
+     - Build successful
+     - All tests passing
+     - Code review APPROVED (or APPROVED_WITH_NOTES with justification)
+     - Git commit completed
+  7. Only proceed to next category after checkpoint passes
 - Follow existing React patterns and conventions
 - Use existing UI components and design system
 - The task tracking file serves as both documentation and audit trail
@@ -138,12 +188,14 @@ Before starting ANY implementation:
   - **NO broken builds between tasks** - each task must leave the application in a working state
   - **ALL tests must be green** after implementing a task (no skipped, no failures)
   - **Tests are written immediately after implementation** (not deferred to a later phase)
+  - **Code review MUST be performed after each category**
   - Never move to the next task if:
     - The build is failing
     - Build warnings are excessive
     - Tests are not written
     - Any test is failing
     - Linting errors exist
+    - Code review shows REQUIRES_CHANGES
 
 ### 5. Test Development & Handling
 - Write unit tests for all business logic
@@ -201,16 +253,45 @@ After all implementation is complete, add to feature-tasks.md:
 - ✅ Documentation updated
 ```
 
-### 8. Feature Finalization
-After user explicitly states feature acceptance:
-1. Create descriptive commit message summarizing all changes
-2. Push feature branch to remote repository
-3. Merge feature branch into master locally
-4. **MANDATORY: Push the merged master branch to remote repository**
-5. Delete the feature branch locally
-6. Optionally delete the feature branch on remote
+### 8. Final Code Review (MANDATORY)
+Before moving feature to COMPLETED:
+1. **Create Final Code Review**:
+   - Review all code changes across the entire feature
+   - Verify all previous review issues are resolved
+   - Check cross-cutting concerns and integration points
+   - File location: `code-reviews/Final-Code-Review-{YYYY-MM-DD}-{HH-MM}-{STATUS}.md`
+   - Use Final Review Template from CODE_REVIEW_PROCESS.md
 
-### 9. Special Conditions
+2. **Review Outcomes**:
+   - **APPROVED**: Can proceed with feature completion
+   - **APPROVED_WITH_NOTES**: Document notes for future reference
+   - **REQUIRES_CHANGES**: Must fix issues before completion
+     - Cannot move to COMPLETED until final review is APPROVED
+
+3. **Update feature-tasks.md** with final review status:
+   ```markdown
+   ## Final Code Review
+   **Date**: YYYY-MM-DD HH:MM
+   **Status**: APPROVED
+   **Review File**: code-reviews/Final-Code-Review-YYYY-MM-DD-HH-MM-APPROVED.md
+   ```
+
+### 9. Feature Finalization
+After user explicitly states feature acceptance AND final code review is APPROVED:
+1. Create the four MANDATORY completion reports:
+   - COMPLETION-REPORT.md
+   - TECHNICAL-SUMMARY.md
+   - LESSONS-LEARNED.md
+   - QUICK-REFERENCE.md
+2. Create descriptive commit message summarizing all changes
+3. Push feature branch to remote repository
+4. Merge feature branch into master locally
+5. **MANDATORY: Push the merged master branch to remote repository**
+6. Delete the feature branch locally
+7. Optionally delete the feature branch on remote
+8. Move feature folder to 3-COMPLETED only after all above steps
+
+### 10. Special Conditions
 - **Skipping Manual Tests**: Only when user explicitly requests during initial feature specification
 - **Interrupted Implementation**: Next session can resume using existing task list with current statuses
 - **Git Operations**: All git operations require explicit user approval and are not automated
@@ -296,11 +377,32 @@ Before marking any task as `[Implemented]`, verify:
 - **Task 5.3:** Add animations and transitions `[ReadyToDevelop]` (Est: 1h)
 - **Task 5.4:** Ensure responsive design across breakpoints `[ReadyToDevelop]` (Est: 45m)
 
-### Checkpoints
+### Checkpoints (Code Review + Quality Gates)
+- **Checkpoint after Category 1:** Service layer working, tests passing 🛑
+  - [ ] Build successful (0 warnings)
+  - [ ] All tests green
+  - [ ] Code Review: [Status]
+  - [ ] Git commit completed
 - **Checkpoint after Category 2:** All state management working 🛑
+  - [ ] Build successful (0 warnings)
+  - [ ] All tests green
+  - [ ] Code Review: [Status]
+  - [ ] Git commit completed
 - **Checkpoint after Category 3:** All components tested 🛑
+  - [ ] Build successful (0 warnings)
+  - [ ] All tests green
+  - [ ] Code Review: [Status]
+  - [ ] Git commit completed
 - **Checkpoint after Category 4:** Full feature flow working 🛑
-- **Final Checkpoint:** All tests green, build clean 🛑
+  - [ ] Build successful (0 warnings)
+  - [ ] All tests green
+  - [ ] Code Review: [Status]
+  - [ ] Git commit completed
+- **Final Checkpoint:** All implementation complete 🛑
+  - [ ] All category reviews approved
+  - [ ] Final Code Review: [Status]
+  - [ ] User acceptance received
+  - [ ] Ready for completion reports
 
 ## Time Tracking Summary
 - **Total Estimated Time:** [Sum of all estimates]

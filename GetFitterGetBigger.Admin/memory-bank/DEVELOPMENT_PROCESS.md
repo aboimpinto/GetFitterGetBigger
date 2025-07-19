@@ -53,9 +53,11 @@
 
 #### Quality Checkpoints
 **📖 Check**: `UNIFIED_DEVELOPMENT_PROCESS.md` - "Baseline Health Check" section
+**📖 NEW**: `CODE_REVIEW_PROCESS.md` - For code review requirements
 - Build must succeed
 - All tests must pass
 - Warnings < 10
+- **NEW**: Code review APPROVED after each category
 
 ### When Completing a Feature
 
@@ -65,7 +67,13 @@
 - Provide test scenarios
 - Wait for explicit acceptance
 
-#### Step 2: Create Completion Reports
+#### Step 2: Final Code Review
+**📖 Use**: `CODE_REVIEW_PROCESS.md` - "Final Review Template"
+- **MANDATORY**: Perform final comprehensive code review
+- Must achieve APPROVED status
+- Cannot proceed without approval
+
+#### Step 3: Create Completion Reports
 **📖 Use**: `FEATURE_WORKFLOW_PROCESS.md` - "Completion Report Templates"
 Create these four MANDATORY reports:
 1. `COMPLETION-REPORT.md`
@@ -73,7 +81,7 @@ Create these four MANDATORY reports:
 3. `LESSONS-LEARNED.md`
 4. `QUICK-REFERENCE.md`
 
-#### Step 3: Move to Completed
+#### Step 4: Move to Completed
 **📖 Use**: `FEATURE_WORKFLOW_PROCESS.md` - Section "3. Feature Completion"
 - Only after user acceptance
 - Move folder to `3-COMPLETED`
@@ -200,6 +208,7 @@ What am I doing?
 3. **FEATURE_IMPLEMENTATION_PROCESS.md** - Step-by-step feature implementation
 4. **BUG_WORKFLOW_PROCESS.md** - Bug states and transitions
 5. **BUG_IMPLEMENTATION_PROCESS.md** - Step-by-step bug fixing
+6. **CODE_REVIEW_PROCESS.md** - Code review standards and templates
 
 ### When to Use Multiple Documents
 - **Starting work**: Usually need 2 documents (Workflow + Implementation)
