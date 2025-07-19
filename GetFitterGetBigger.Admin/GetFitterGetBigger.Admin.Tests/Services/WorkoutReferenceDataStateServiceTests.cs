@@ -63,7 +63,7 @@ public class WorkoutReferenceDataStateServiceTests
     }
 
     [Fact]
-    public void FilteredWorkoutObjectives_WithSearchTerm_FiltersCorrectly()
+    public async Task FilteredWorkoutObjectives_WithSearchTerm_FiltersCorrectly()
     {
         // Arrange
         var objectives = new List<ReferenceDataDto>
@@ -75,7 +75,7 @@ public class WorkoutReferenceDataStateServiceTests
         _mockService.Setup(x => x.GetWorkoutObjectivesAsync()).ReturnsAsync(objectives);
 
         // Act
-        _stateService.LoadWorkoutObjectivesAsync().Wait();
+        await _stateService.LoadWorkoutObjectivesAsync();
         _stateService.ObjectivesSearchTerm = "muscle";
 
         // Assert
@@ -100,11 +100,11 @@ public class WorkoutReferenceDataStateServiceTests
     }
 
     [Fact]
-    public void ClearObjectivesError_ClearsErrorAndNotifies()
+    public async Task ClearObjectivesError_ClearsErrorAndNotifies()
     {
         // Arrange
         _mockService.Setup(x => x.GetWorkoutObjectivesAsync()).ThrowsAsync(new Exception("Error"));
-        _stateService.LoadWorkoutObjectivesAsync().Wait();
+        await _stateService.LoadWorkoutObjectivesAsync();
         _stateChangeCount = 0;
 
         // Act
@@ -141,7 +141,7 @@ public class WorkoutReferenceDataStateServiceTests
     }
 
     [Fact]
-    public void FilteredWorkoutCategories_WithMuscleGroupSearch_FiltersCorrectly()
+    public async Task FilteredWorkoutCategories_WithMuscleGroupSearch_FiltersCorrectly()
     {
         // Arrange
         var categories = new List<WorkoutCategoryDto>
@@ -152,7 +152,7 @@ public class WorkoutReferenceDataStateServiceTests
         _mockService.Setup(x => x.GetWorkoutCategoriesAsync()).ReturnsAsync(categories);
 
         // Act
-        _stateService.LoadWorkoutCategoriesAsync().Wait();
+        await _stateService.LoadWorkoutCategoriesAsync();
         _stateService.CategoriesSearchTerm = "chest";
 
         // Assert
@@ -187,7 +187,7 @@ public class WorkoutReferenceDataStateServiceTests
     }
 
     [Fact]
-    public void FilteredExecutionProtocols_WithIntensityFilter_FiltersCorrectly()
+    public async Task FilteredExecutionProtocols_WithIntensityFilter_FiltersCorrectly()
     {
         // Arrange
         var protocols = new List<ExecutionProtocolDto>
@@ -199,7 +199,7 @@ public class WorkoutReferenceDataStateServiceTests
         _mockService.Setup(x => x.GetExecutionProtocolsAsync()).ReturnsAsync(protocols);
 
         // Act
-        _stateService.LoadExecutionProtocolsAsync().Wait();
+        await _stateService.LoadExecutionProtocolsAsync();
         _stateService.SelectedIntensityLevel = "High";
 
         // Assert
@@ -209,7 +209,7 @@ public class WorkoutReferenceDataStateServiceTests
     }
 
     [Fact]
-    public void FilteredExecutionProtocols_WithSearchAndIntensity_AppliesBothFilters()
+    public async Task FilteredExecutionProtocols_WithSearchAndIntensity_AppliesBothFilters()
     {
         // Arrange
         var protocols = new List<ExecutionProtocolDto>
@@ -221,7 +221,7 @@ public class WorkoutReferenceDataStateServiceTests
         _mockService.Setup(x => x.GetExecutionProtocolsAsync()).ReturnsAsync(protocols);
 
         // Act
-        _stateService.LoadExecutionProtocolsAsync().Wait();
+        await _stateService.LoadExecutionProtocolsAsync();
         _stateService.SelectedIntensityLevel = "High";
         _stateService.ProtocolsSearchTerm = "Training";
 
