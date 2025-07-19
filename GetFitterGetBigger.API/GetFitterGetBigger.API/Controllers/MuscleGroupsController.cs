@@ -1,11 +1,14 @@
 using GetFitterGetBigger.API.DTOs;
+using GetFitterGetBigger.API.Mappers;
+using GetFitterGetBigger.API.Models.SpecializedIds;
 using Microsoft.AspNetCore.Mvc;
 using GetFitterGetBigger.API.Services.Interfaces;
+using GetFitterGetBigger.API.Services.Results;
 
 namespace GetFitterGetBigger.API.Controllers;
 
 /// <summary>
-/// Controller for retrieving muscle group data
+/// Controller for managing muscle group data
 /// </summary>
 [ApiController]
 [Route("api/ReferenceTables/[controller]")]
@@ -33,11 +36,11 @@ public class MuscleGroupsController : ControllerBase
     /// <returns>A collection of muscle groups with full details including body part information</returns>
     [HttpGet]
     [ProducesResponseType(typeof(IEnumerable<MuscleGroupDto>), StatusCodes.Status200OK)]
-    public async Task<IActionResult> GetAll()
-    {
-        var result = await _muscleGroupService.GetAllAsDtosAsync();
-        return Ok(result);
-    }
+    public async Task<IActionResult> GetAll() =>
+        await _muscleGroupService.GetAllAsync() switch
+        {
+            { Data: var data } => Ok(data) // GetAll should always succeed, even if empty
+        };
 
     /// <summary>
     /// Gets a muscle group by ID
@@ -48,21 +51,17 @@ public class MuscleGroupsController : ControllerBase
     [ProducesResponseType(typeof(MuscleGroupDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public async Task<IActionResult> GetById(string id)
-    {
-        try
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    public async Task<IActionResult> GetById(string id) =>
+        await _muscleGroupService.GetByIdAsync(MuscleGroupId.ParseOrEmpty(id)) switch
         {
-            var muscleGroup = await _muscleGroupService.GetByIdAsDtoAsync(id);
-            if (muscleGroup == null)
-                return NotFound();
-                
-            return Ok(muscleGroup);
-        }
-        catch (ArgumentException ex)
-        {
-            return BadRequest(ex.Message);
-        }
-    }
+            { IsSuccess: true, Data: var data } => Ok(data),
+            { PrimaryErrorCode: ServiceErrorCode.NotFound } => NotFound(),
+            { PrimaryErrorCode: ServiceErrorCode.InvalidFormat, StructuredErrors: var errors } => BadRequest(new { errors }),
+            { PrimaryErrorCode: ServiceErrorCode.ValidationFailed, StructuredErrors: var errors } => BadRequest(new { errors }),
+            { PrimaryErrorCode: ServiceErrorCode.InternalError, StructuredErrors: var errors } => StatusCode(StatusCodes.Status500InternalServerError, new { errors }),
+            { StructuredErrors: var errors } => BadRequest(new { errors })
+        };
 
     /// <summary>
     /// Gets a muscle group by name
@@ -72,51 +71,19 @@ public class MuscleGroupsController : ControllerBase
     [HttpGet("ByName/{name}")]
     [ProducesResponseType(typeof(MuscleGroupDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> GetByName(string name)
-    {
-        var muscleGroup = await _muscleGroupService.GetByNameAsync(name);
-        
-        if (muscleGroup == null)
-            return NotFound();
-            
-        return Ok(new MuscleGroupDto
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    public async Task<IActionResult> GetByName(string name) =>
+        await _muscleGroupService.GetByNameAsync(name) switch
         {
-            Id = muscleGroup.Id.ToString(),
-            Name = muscleGroup.Name,
-            BodyPartId = muscleGroup.BodyPartId.ToString(),
-            BodyPartName = muscleGroup.BodyPart?.Value,
-            IsActive = muscleGroup.IsActive,
-            CreatedAt = muscleGroup.CreatedAt,
-            UpdatedAt = muscleGroup.UpdatedAt
-        });
-    }
+            { IsSuccess: true, Data: var data } => Ok(data),
+            { PrimaryErrorCode: ServiceErrorCode.NotFound } => NotFound(),
+            { PrimaryErrorCode: ServiceErrorCode.InvalidFormat, StructuredErrors: var errors } => BadRequest(new { errors }),
+            { PrimaryErrorCode: ServiceErrorCode.ValidationFailed, StructuredErrors: var errors } => BadRequest(new { errors }),
+            { PrimaryErrorCode: ServiceErrorCode.InternalError, StructuredErrors: var errors } => StatusCode(StatusCodes.Status500InternalServerError, new { errors }),
+            { StructuredErrors: var errors } => BadRequest(new { errors })
+        };
     
-    /// <summary>
-    /// Gets a muscle group by value (name)
-    /// </summary>
-    /// <param name="value">The value (name) of the muscle group to retrieve</param>
-    /// <returns>The muscle group if found, 404 Not Found otherwise</returns>
-    [HttpGet("ByValue/{value}")]
-    [ProducesResponseType(typeof(MuscleGroupDto), StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> GetByValue(string value)
-    {
-        var muscleGroup = await _muscleGroupService.GetByValueAsync(value);
-        
-        if (muscleGroup == null)
-            return NotFound();
-            
-        return Ok(new MuscleGroupDto
-        {
-            Id = muscleGroup.Id.ToString(),
-            Name = muscleGroup.Name,
-            BodyPartId = muscleGroup.BodyPartId.ToString(),
-            BodyPartName = muscleGroup.BodyPart?.Value,
-            IsActive = muscleGroup.IsActive,
-            CreatedAt = muscleGroup.CreatedAt,
-            UpdatedAt = muscleGroup.UpdatedAt
-        });
-    }
     
     /// <summary>
     /// Gets all muscle groups for a specific body part
@@ -126,18 +93,16 @@ public class MuscleGroupsController : ControllerBase
     [HttpGet("ByBodyPart/{bodyPartId}")]
     [ProducesResponseType(typeof(IEnumerable<MuscleGroupDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public async Task<IActionResult> GetByBodyPart(string bodyPartId)
-    {
-        try
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    public async Task<IActionResult> GetByBodyPart(string bodyPartId) =>
+        await _muscleGroupService.GetByBodyPartAsync(BodyPartId.ParseOrEmpty(bodyPartId)) switch
         {
-            var result = await _muscleGroupService.GetByBodyPartAsync(bodyPartId);
-            return Ok(result);
-        }
-        catch (ArgumentException ex)
-        {
-            return BadRequest(ex.Message);
-        }
-    }
+            { IsSuccess: true, Data: var data } => Ok(data),
+            { PrimaryErrorCode: ServiceErrorCode.InvalidFormat, StructuredErrors: var errors } => BadRequest(new { errors }),
+            { PrimaryErrorCode: ServiceErrorCode.ValidationFailed, StructuredErrors: var errors } => BadRequest(new { errors }),
+            { PrimaryErrorCode: ServiceErrorCode.InternalError, StructuredErrors: var errors } => StatusCode(StatusCodes.Status500InternalServerError, new { errors }),
+            { StructuredErrors: var errors } => BadRequest(new { errors })
+        };
     
     /// <summary>
     /// Creates a new muscle group
@@ -148,22 +113,18 @@ public class MuscleGroupsController : ControllerBase
     [ProducesResponseType(typeof(MuscleGroupDto), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
-    public async Task<IActionResult> Create([FromBody] CreateMuscleGroupDto request)
-    {
-        try
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    public async Task<IActionResult> Create([FromBody] CreateMuscleGroupDto request) =>
+        await _muscleGroupService.CreateAsync(request.ToCommand()) switch
         {
-            var dto = await _muscleGroupService.CreateMuscleGroupAsync(request);
-            return CreatedAtAction(nameof(GetById), new { id = dto.Id }, dto);
-        }
-        catch (InvalidOperationException ex) when (ex.Message.Contains("already exists"))
-        {
-            return Conflict(ex.Message);
-        }
-        catch (ArgumentException ex)
-        {
-            return BadRequest(ex.Message);
-        }
-    }
+            { IsSuccess: true, Data: var data } => CreatedAtAction(nameof(GetById), new { id = data.Id }, data),
+            { PrimaryErrorCode: ServiceErrorCode.AlreadyExists, StructuredErrors: var errors } => Conflict(new { errors }),
+            { PrimaryErrorCode: ServiceErrorCode.InvalidFormat, StructuredErrors: var errors } => BadRequest(new { errors }),
+            { PrimaryErrorCode: ServiceErrorCode.ValidationFailed, StructuredErrors: var errors } => BadRequest(new { errors }),
+            { PrimaryErrorCode: ServiceErrorCode.NotFound, StructuredErrors: var errors } => BadRequest(new { errors }), // Body part not found
+            { PrimaryErrorCode: ServiceErrorCode.InternalError, StructuredErrors: var errors } => StatusCode(StatusCodes.Status500InternalServerError, new { errors }),
+            { StructuredErrors: var errors } => BadRequest(new { errors })
+        };
     
     /// <summary>
     /// Updates an existing muscle group
@@ -176,61 +137,41 @@ public class MuscleGroupsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
-    public async Task<IActionResult> Update(string id, [FromBody] UpdateMuscleGroupDto request)
-    {
-        _logger.LogInformation("=== MuscleGroup Update Request ===");
-        _logger.LogInformation("ID: {Id}", id);
-        _logger.LogInformation("Request Name: {Name}", request.Name);
-        _logger.LogInformation("Request BodyPartId: {BodyPartId}", request.BodyPartId);
-        _logger.LogInformation("=================================");
-        
-        try
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    public async Task<IActionResult> Update(string id, [FromBody] UpdateMuscleGroupDto request) =>
+        await _muscleGroupService.UpdateAsync(MuscleGroupId.ParseOrEmpty(id), request.ToCommand()) switch
         {
-            var dto = await _muscleGroupService.UpdateMuscleGroupAsync(id, request);
-            return Ok(dto);
-        }
-        catch (InvalidOperationException ex) when (ex.Message.Contains("not found"))
-        {
-            return NotFound();
-        }
-        catch (InvalidOperationException ex) when (ex.Message.Contains("already exists"))
-        {
-            return Conflict(ex.Message);
-        }
-        catch (ArgumentException ex)
-        {
-            return BadRequest(ex.Message);
-        }
-    }
+            { IsSuccess: true, Data: var data } => Ok(data),
+            { PrimaryErrorCode: ServiceErrorCode.NotFound } => NotFound(),
+            { PrimaryErrorCode: ServiceErrorCode.AlreadyExists, StructuredErrors: var errors } => Conflict(new { errors }),
+            { PrimaryErrorCode: ServiceErrorCode.InvalidFormat, StructuredErrors: var errors } => BadRequest(new { errors }),
+            { PrimaryErrorCode: ServiceErrorCode.ValidationFailed, StructuredErrors: var errors } => BadRequest(new { errors }),
+            { PrimaryErrorCode: ServiceErrorCode.ConcurrencyConflict, StructuredErrors: var errors } => Conflict(new { errors }),
+            { PrimaryErrorCode: ServiceErrorCode.InternalError, StructuredErrors: var errors } => StatusCode(StatusCodes.Status500InternalServerError, new { errors }),
+            { StructuredErrors: var errors } => BadRequest(new { errors })
+        };
     
     /// <summary>
-    /// Deactivates a muscle group
+    /// Deletes muscle group (soft delete)
     /// </summary>
-    /// <param name="id">The ID of the muscle group to deactivate</param>
+    /// <param name="id">The ID of the muscle group to delete</param>
     /// <returns>No content if successful</returns>
     [HttpDelete("{id}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
-    public async Task<IActionResult> Delete(string id)
-    {
-        try
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    public async Task<IActionResult> Delete(string id) =>
+        await _muscleGroupService.DeleteAsync(MuscleGroupId.ParseOrEmpty(id)) switch
         {
-            await _muscleGroupService.DeactivateMuscleGroupAsync(id);
-            return NoContent();
-        }
-        catch (InvalidOperationException ex) when (ex.Message.Contains("not found"))
-        {
-            return NotFound();
-        }
-        catch (InvalidOperationException ex) when (ex.Message.Contains("being used"))
-        {
-            return Conflict(ex.Message);
-        }
-        catch (ArgumentException ex)
-        {
-            return BadRequest(ex.Message);
-        }
-    }
+            { IsSuccess: true } => NoContent(),
+            { PrimaryErrorCode: ServiceErrorCode.NotFound } => NotFound(),
+            { PrimaryErrorCode: ServiceErrorCode.DependencyExists, StructuredErrors: var errors } => Conflict(new { errors }),
+            { PrimaryErrorCode: ServiceErrorCode.InvalidFormat, StructuredErrors: var errors } => BadRequest(new { errors }),
+            { PrimaryErrorCode: ServiceErrorCode.ValidationFailed, StructuredErrors: var errors } => BadRequest(new { errors }),
+            { PrimaryErrorCode: ServiceErrorCode.ConcurrencyConflict, StructuredErrors: var errors } => Conflict(new { errors }),
+            { PrimaryErrorCode: ServiceErrorCode.InternalError, StructuredErrors: var errors } => StatusCode(StatusCodes.Status500InternalServerError, new { errors }),
+            { StructuredErrors: var errors } => BadRequest(new { errors })
+        };
 }

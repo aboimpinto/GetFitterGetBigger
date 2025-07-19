@@ -24,14 +24,17 @@ Feature: Muscle Groups API Controller Operations
 
   @reference-data @muscle-groups @validation
   Scenario: Get muscle group by invalid ID format returns bad request
-    When I get muscle group by ID "abcdef12-3456-7890-abcd-ef1234567890" via API
+    When I get muscle group by ID "invalid-format" via API
     Then the response status should be "bad request"
-    And the response should contain "Invalid ID format"
-    And the response should contain "Expected format: 'musclegroup-{guid}'"
+
+  @reference-data @muscle-groups @validation
+  Scenario: Get muscle group by empty GUID returns bad request
+    When I get muscle group by ID "musclegroup-00000000-0000-0000-0000-000000000000" via API
+    Then the response status should be "bad request"
 
   @reference-data @muscle-groups @validation  
   Scenario: Get muscle group by non-existent ID returns not found
-    When I get muscle group by ID "musclegroup-00000000-0000-0000-0000-000000000000" via API
+    When I get muscle group by ID "musclegroup-11111111-1111-1111-1111-111111111111" via API
     Then the response status should be "not found"
 
   @reference-data @muscle-groups @read
@@ -99,9 +102,15 @@ Feature: Muscle Groups API Controller Operations
     And I clean up the created muscle group
 
   @reference-data @muscle-groups @validation
-  Scenario: Update non-existent muscle group returns not found
+  Scenario: Update muscle group with empty GUID returns bad request
     Given I have body parts available in the system
     When I update muscle group "musclegroup-00000000-0000-0000-0000-000000000000" to name "UpdatedName" via API
+    Then the response status should be "bad request"
+
+  @reference-data @muscle-groups @validation
+  Scenario: Update non-existent muscle group returns not found
+    Given I have body parts available in the system
+    When I update muscle group "musclegroup-11111111-1111-1111-1111-111111111111" to name "UpdatedName" via API
     Then the response status should be "not found"
 
   @reference-data @muscle-groups @delete
@@ -113,6 +122,11 @@ Feature: Muscle Groups API Controller Operations
     And the muscle group should no longer be retrievable
 
   @reference-data @muscle-groups @validation
-  Scenario: Delete non-existent muscle group returns not found
+  Scenario: Delete muscle group with empty GUID returns bad request
     When I delete muscle group "musclegroup-00000000-0000-0000-0000-000000000000" via API
+    Then the response status should be "bad request"
+
+  @reference-data @muscle-groups @validation
+  Scenario: Delete non-existent muscle group returns not found
+    When I delete muscle group "musclegroup-11111111-1111-1111-1111-111111111111" via API
     Then the response status should be "not found"

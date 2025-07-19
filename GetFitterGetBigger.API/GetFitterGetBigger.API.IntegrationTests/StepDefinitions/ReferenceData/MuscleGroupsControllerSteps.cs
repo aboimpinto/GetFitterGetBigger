@@ -149,7 +149,7 @@ public class MuscleGroupsControllerSteps
         _scenarioContext.Set(firstMuscleGroup.Name, "RequestedMuscleGroupValue");
         
         var httpClient = _scenarioContext.GetHttpClient();
-        _lastResponse = await httpClient.GetAsync($"/api/ReferenceTables/MuscleGroups/ByValue/{firstMuscleGroup.Name}");
+        _lastResponse = await httpClient.GetAsync($"/api/ReferenceTables/MuscleGroups/ByName/{firstMuscleGroup.Name}");
         _scenarioContext.SetLastResponse(_lastResponse);
     }
 
@@ -157,7 +157,7 @@ public class MuscleGroupsControllerSteps
     public async Task WhenIGetMuscleGroupByValueViaAPI(string muscleGroupValue)
     {
         var httpClient = _scenarioContext.GetHttpClient();
-        _lastResponse = await httpClient.GetAsync($"/api/ReferenceTables/MuscleGroups/ByValue/{muscleGroupValue}");
+        _lastResponse = await httpClient.GetAsync($"/api/ReferenceTables/MuscleGroups/ByName/{muscleGroupValue}");
         _scenarioContext.SetLastResponse(_lastResponse);
     }
 

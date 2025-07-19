@@ -176,10 +176,38 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.ReferenceData
             {
                 await this.ScenarioStartAsync();
                 await this.FeatureBackgroundAsync();
-                await testRunner.WhenAsync("I get muscle group by ID \"abcdef12-3456-7890-abcd-ef1234567890\" via API", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
+                await testRunner.WhenAsync("I get muscle group by ID \"invalid-format\" via API", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
                 await testRunner.ThenAsync("the response status should be \"bad request\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
-                await testRunner.AndAsync("the response should contain \"Invalid ID format\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
-                await testRunner.AndAsync("the response should contain \"Expected format: \'musclegroup-{guid}\'\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
+            }
+            await this.ScenarioCleanupAsync();
+        }
+        
+        [Xunit.SkippableFactAttribute(DisplayName="Get muscle group by empty GUID returns bad request")]
+        [Xunit.TraitAttribute("FeatureTitle", "Muscle Groups API Controller Operations")]
+        [Xunit.TraitAttribute("Description", "Get muscle group by empty GUID returns bad request")]
+        [Xunit.TraitAttribute("Category", "reference-data")]
+        [Xunit.TraitAttribute("Category", "muscle-groups")]
+        [Xunit.TraitAttribute("Category", "validation")]
+        public async System.Threading.Tasks.Task GetMuscleGroupByEmptyGUIDReturnsBadRequest()
+        {
+            string[] tagsOfScenario = new string[] {
+                    "reference-data",
+                    "muscle-groups",
+                    "validation"};
+            System.Collections.Specialized.OrderedDictionary argumentsOfScenario = new System.Collections.Specialized.OrderedDictionary();
+            TechTalk.SpecFlow.ScenarioInfo scenarioInfo = new TechTalk.SpecFlow.ScenarioInfo("Get muscle group by empty GUID returns bad request", null, tagsOfScenario, argumentsOfScenario, featureTags);
+            this.ScenarioInitialize(scenarioInfo);
+            if ((TagHelper.ContainsIgnoreTag(tagsOfScenario) || TagHelper.ContainsIgnoreTag(featureTags)))
+            {
+                testRunner.SkipScenario();
+            }
+            else
+            {
+                await this.ScenarioStartAsync();
+                await this.FeatureBackgroundAsync();
+                await testRunner.WhenAsync("I get muscle group by ID \"musclegroup-00000000-0000-0000-0000-000000000000\" via A" +
+                        "PI", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
+                await testRunner.ThenAsync("the response status should be \"bad request\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
             }
             await this.ScenarioCleanupAsync();
         }
@@ -207,7 +235,7 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.ReferenceData
             {
                 await this.ScenarioStartAsync();
                 await this.FeatureBackgroundAsync();
-                await testRunner.WhenAsync("I get muscle group by ID \"musclegroup-00000000-0000-0000-0000-000000000000\" via A" +
+                await testRunner.WhenAsync("I get muscle group by ID \"musclegroup-11111111-1111-1111-1111-111111111111\" via A" +
                         "PI", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
                 await testRunner.ThenAsync("the response status should be \"not found\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
             }
@@ -451,6 +479,37 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.ReferenceData
             await this.ScenarioCleanupAsync();
         }
         
+        [Xunit.SkippableFactAttribute(DisplayName="Update muscle group with empty GUID returns bad request")]
+        [Xunit.TraitAttribute("FeatureTitle", "Muscle Groups API Controller Operations")]
+        [Xunit.TraitAttribute("Description", "Update muscle group with empty GUID returns bad request")]
+        [Xunit.TraitAttribute("Category", "reference-data")]
+        [Xunit.TraitAttribute("Category", "muscle-groups")]
+        [Xunit.TraitAttribute("Category", "validation")]
+        public async System.Threading.Tasks.Task UpdateMuscleGroupWithEmptyGUIDReturnsBadRequest()
+        {
+            string[] tagsOfScenario = new string[] {
+                    "reference-data",
+                    "muscle-groups",
+                    "validation"};
+            System.Collections.Specialized.OrderedDictionary argumentsOfScenario = new System.Collections.Specialized.OrderedDictionary();
+            TechTalk.SpecFlow.ScenarioInfo scenarioInfo = new TechTalk.SpecFlow.ScenarioInfo("Update muscle group with empty GUID returns bad request", null, tagsOfScenario, argumentsOfScenario, featureTags);
+            this.ScenarioInitialize(scenarioInfo);
+            if ((TagHelper.ContainsIgnoreTag(tagsOfScenario) || TagHelper.ContainsIgnoreTag(featureTags)))
+            {
+                testRunner.SkipScenario();
+            }
+            else
+            {
+                await this.ScenarioStartAsync();
+                await this.FeatureBackgroundAsync();
+                await testRunner.GivenAsync("I have body parts available in the system", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Given ");
+                await testRunner.WhenAsync("I update muscle group \"musclegroup-00000000-0000-0000-0000-000000000000\" to name " +
+                        "\"UpdatedName\" via API", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
+                await testRunner.ThenAsync("the response status should be \"bad request\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
+            }
+            await this.ScenarioCleanupAsync();
+        }
+        
         [Xunit.SkippableFactAttribute(DisplayName="Update non-existent muscle group returns not found")]
         [Xunit.TraitAttribute("FeatureTitle", "Muscle Groups API Controller Operations")]
         [Xunit.TraitAttribute("Description", "Update non-existent muscle group returns not found")]
@@ -475,7 +534,7 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.ReferenceData
                 await this.ScenarioStartAsync();
                 await this.FeatureBackgroundAsync();
                 await testRunner.GivenAsync("I have body parts available in the system", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Given ");
-                await testRunner.WhenAsync("I update muscle group \"musclegroup-00000000-0000-0000-0000-000000000000\" to name " +
+                await testRunner.WhenAsync("I update muscle group \"musclegroup-11111111-1111-1111-1111-111111111111\" to name " +
                         "\"UpdatedName\" via API", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
                 await testRunner.ThenAsync("the response status should be \"not found\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
             }
@@ -514,6 +573,35 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.ReferenceData
             await this.ScenarioCleanupAsync();
         }
         
+        [Xunit.SkippableFactAttribute(DisplayName="Delete muscle group with empty GUID returns bad request")]
+        [Xunit.TraitAttribute("FeatureTitle", "Muscle Groups API Controller Operations")]
+        [Xunit.TraitAttribute("Description", "Delete muscle group with empty GUID returns bad request")]
+        [Xunit.TraitAttribute("Category", "reference-data")]
+        [Xunit.TraitAttribute("Category", "muscle-groups")]
+        [Xunit.TraitAttribute("Category", "validation")]
+        public async System.Threading.Tasks.Task DeleteMuscleGroupWithEmptyGUIDReturnsBadRequest()
+        {
+            string[] tagsOfScenario = new string[] {
+                    "reference-data",
+                    "muscle-groups",
+                    "validation"};
+            System.Collections.Specialized.OrderedDictionary argumentsOfScenario = new System.Collections.Specialized.OrderedDictionary();
+            TechTalk.SpecFlow.ScenarioInfo scenarioInfo = new TechTalk.SpecFlow.ScenarioInfo("Delete muscle group with empty GUID returns bad request", null, tagsOfScenario, argumentsOfScenario, featureTags);
+            this.ScenarioInitialize(scenarioInfo);
+            if ((TagHelper.ContainsIgnoreTag(tagsOfScenario) || TagHelper.ContainsIgnoreTag(featureTags)))
+            {
+                testRunner.SkipScenario();
+            }
+            else
+            {
+                await this.ScenarioStartAsync();
+                await this.FeatureBackgroundAsync();
+                await testRunner.WhenAsync("I delete muscle group \"musclegroup-00000000-0000-0000-0000-000000000000\" via API", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
+                await testRunner.ThenAsync("the response status should be \"bad request\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
+            }
+            await this.ScenarioCleanupAsync();
+        }
+        
         [Xunit.SkippableFactAttribute(DisplayName="Delete non-existent muscle group returns not found")]
         [Xunit.TraitAttribute("FeatureTitle", "Muscle Groups API Controller Operations")]
         [Xunit.TraitAttribute("Description", "Delete non-existent muscle group returns not found")]
@@ -537,7 +625,7 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.ReferenceData
             {
                 await this.ScenarioStartAsync();
                 await this.FeatureBackgroundAsync();
-                await testRunner.WhenAsync("I delete muscle group \"musclegroup-00000000-0000-0000-0000-000000000000\" via API", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
+                await testRunner.WhenAsync("I delete muscle group \"musclegroup-11111111-1111-1111-1111-111111111111\" via API", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
                 await testRunner.ThenAsync("the response status should be \"not found\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
             }
             await this.ScenarioCleanupAsync();

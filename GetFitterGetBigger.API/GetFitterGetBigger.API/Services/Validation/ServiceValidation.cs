@@ -85,6 +85,17 @@ public class ServiceValidation
     }
 
     /// <summary>
+    /// Validates that an object is not null with a ServiceError.
+    /// </summary>
+    /// <param name="value">The object to validate</param>
+    /// <param name="serviceError">The service error if validation fails</param>
+    /// <returns>The current validation instance for chaining</returns>
+    public ServiceValidation EnsureNotNull(object? value, ServiceError serviceError)
+    {
+        return Ensure(() => value != null, serviceError);
+    }
+
+    /// <summary>
     /// Validates that a string value is not null or whitespace.
     /// </summary>
     /// <param name="value">The string value to validate</param>
@@ -93,6 +104,17 @@ public class ServiceValidation
     public ServiceValidation EnsureNotWhiteSpace(string? value, string errorMessage)
     {
         return Ensure(() => !string.IsNullOrWhiteSpace(value), errorMessage);
+    }
+
+    /// <summary>
+    /// Validates that a string value is not null or whitespace with a ServiceError.
+    /// </summary>
+    /// <param name="value">The string value to validate</param>
+    /// <param name="serviceError">The service error if validation fails</param>
+    /// <returns>The current validation instance for chaining</returns>
+    public ServiceValidation EnsureNotWhiteSpace(string? value, ServiceError serviceError)
+    {
+        return Ensure(() => !string.IsNullOrWhiteSpace(value), serviceError);
     }
 
     /// <summary>

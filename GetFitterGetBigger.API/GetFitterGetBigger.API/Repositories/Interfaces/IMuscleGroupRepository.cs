@@ -19,15 +19,15 @@ public interface IMuscleGroupRepository : IRepository
     /// Gets a muscle group by its ID
     /// </summary>
     /// <param name="id">The ID of the muscle group to retrieve</param>
-    /// <returns>The muscle group if found, null otherwise</returns>
-    Task<MuscleGroup?> GetByIdAsync(MuscleGroupId id);
+    /// <returns>The muscle group if found, MuscleGroup.Empty otherwise</returns>
+    Task<MuscleGroup> GetByIdAsync(MuscleGroupId id);
     
     /// <summary>
     /// Gets a muscle group by its name
     /// </summary>
     /// <param name="name">The name of the muscle group to retrieve</param>
-    /// <returns>The muscle group if found, null otherwise</returns>
-    Task<MuscleGroup?> GetByNameAsync(string name);
+    /// <returns>The muscle group if found, MuscleGroup.Empty otherwise</returns>
+    Task<MuscleGroup> GetByNameAsync(string name);
     
     /// <summary>
     /// Gets all muscle groups for a specific body part

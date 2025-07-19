@@ -116,13 +116,15 @@ namespace GetFitterGetBigger.API.Tests.Repositories
         }
         
         [Fact]
-        public async Task GetByIdAsync_NonExistingId_ReturnsNull()
+        public async Task GetByIdAsync_NonExistingId_ReturnsEmpty()
         {
             // Act
             var result = await _repository.GetByIdAsync(MuscleGroupId.New());
             
             // Assert
-            Assert.Null(result);
+            Assert.NotNull(result);
+            Assert.True(result.IsEmpty);
+            Assert.Equal(MuscleGroupId.Empty, result.Id);
         }
         
         [Fact]
@@ -138,13 +140,15 @@ namespace GetFitterGetBigger.API.Tests.Repositories
         }
         
         [Fact]
-        public async Task GetByNameAsync_InactiveName_ReturnsNull()
+        public async Task GetByNameAsync_InactiveName_ReturnsEmpty()
         {
             // Act
             var result = await _repository.GetByNameAsync("Inactive Group");
             
             // Assert
-            Assert.Null(result);
+            Assert.NotNull(result);
+            Assert.True(result.IsEmpty);
+            Assert.Equal(MuscleGroupId.Empty, result.Id);
         }
         
         [Fact]

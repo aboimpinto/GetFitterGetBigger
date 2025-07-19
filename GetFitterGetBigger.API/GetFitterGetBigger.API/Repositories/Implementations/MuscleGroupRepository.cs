@@ -28,26 +28,32 @@ public class MuscleGroupRepository : RepositoryBase<FitnessDbContext>, IMuscleGr
     /// Gets a muscle group by its ID
     /// </summary>
     /// <param name="id">The ID of the muscle group to retrieve</param>
-    /// <returns>The muscle group if found, null otherwise</returns>
-    public async Task<MuscleGroup?> GetByIdAsync(MuscleGroupId id)
+    /// <returns>The muscle group if found, MuscleGroup.Empty otherwise</returns>
+    public async Task<MuscleGroup> GetByIdAsync(MuscleGroupId id)
     {
-        return await Context.MuscleGroups
+        var muscleGroup = await Context.MuscleGroups
             .AsNoTracking()
             .Include(mg => mg.BodyPart)
             .FirstOrDefaultAsync(mg => mg.Id == id);
+            
+        return muscleGroup ?? MuscleGroup.Empty;
     }
     
     /// <summary>
     /// Gets a muscle group by its name (case-insensitive)
     /// </summary>
     /// <param name="name">The name of the muscle group to retrieve</param>
-    /// <returns>The muscle group if found, null otherwise</returns>
-    public async Task<MuscleGroup?> GetByNameAsync(string name) =>
-        await Context.MuscleGroups
+    /// <returns>The muscle group if found, MuscleGroup.Empty otherwise</returns>
+    public async Task<MuscleGroup> GetByNameAsync(string name)
+    {
+        var muscleGroup = await Context.MuscleGroups
             .AsNoTracking()
             .Include(mg => mg.BodyPart)
             .Where(mg => mg.IsActive)
             .FirstOrDefaultAsync(mg => mg.Name.ToLower() == name.ToLower());
+            
+        return muscleGroup ?? MuscleGroup.Empty;
+    }
     
     /// <summary>
     /// Gets all muscle groups for a specific body part
@@ -119,7 +125,8 @@ public class MuscleGroupRepository : RepositoryBase<FitnessDbContext>, IMuscleGr
         // Now reload the entity with its navigation property
         Context.Entry(cleanEntity).State = EntityState.Detached;
         
-        return await GetByIdAsync(entity.Id) ?? entity;
+        var updated = await GetByIdAsync(entity.Id);
+        return updated.IsEmpty ? entity : updated;
     }
     
     /// <summary>
@@ -132,7 +139,7 @@ public class MuscleGroupRepository : RepositoryBase<FitnessDbContext>, IMuscleGr
         var muscleGroup = await Context.MuscleGroups
             .FirstOrDefaultAsync(mg => mg.Id == id);
         
-        if (muscleGroup == null)
+        if (muscleGroup == null || muscleGroup.IsEmpty)
             return false;
         
         var deactivated = MuscleGroup.Handler.Deactivate(muscleGroup);

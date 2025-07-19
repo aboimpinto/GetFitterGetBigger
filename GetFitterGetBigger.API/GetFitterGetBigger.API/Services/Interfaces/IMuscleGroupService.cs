@@ -1,41 +1,52 @@
 using GetFitterGetBigger.API.DTOs;
-using GetFitterGetBigger.API.Models.Entities;
-using GetFitterGetBigger.API.Services.ReferenceTable;
+using GetFitterGetBigger.API.Models.SpecializedIds;
+using GetFitterGetBigger.API.Services.Commands.MuscleGroup;
+using GetFitterGetBigger.API.Services.Results;
 
 namespace GetFitterGetBigger.API.Services.Interfaces;
 
 /// <summary>
 /// Service interface for muscle group operations
 /// </summary>
-public interface IMuscleGroupService : IReferenceTableService<MuscleGroup>
+public interface IMuscleGroupService
 {
     /// <summary>
-    /// Gets all muscle groups as DTOs
+    /// Gets all active muscle groups
     /// </summary>
-    Task<IEnumerable<MuscleGroupDto>> GetAllAsDtosAsync();
+    Task<ServiceResult<IEnumerable<MuscleGroupDto>>> GetAllAsync();
     
     /// <summary>
-    /// Gets muscle group by ID as DTO
+    /// Gets muscle group by ID
     /// </summary>
-    Task<MuscleGroupDto?> GetByIdAsDtoAsync(string id);
+    Task<ServiceResult<MuscleGroupDto>> GetByIdAsync(MuscleGroupId id);
+    
+    /// <summary>
+    /// Gets muscle group by name (case-insensitive)
+    /// </summary>
+    Task<ServiceResult<MuscleGroupDto>> GetByNameAsync(string name);
     
     /// <summary>
     /// Gets muscle groups by body part
     /// </summary>
-    Task<IEnumerable<MuscleGroupDto>> GetByBodyPartAsync(string bodyPartId);
+    Task<ServiceResult<IEnumerable<MuscleGroupDto>>> GetByBodyPartAsync(BodyPartId bodyPartId);
     
     /// <summary>
-    /// Creates a new muscle group
+    /// Creates new muscle group
     /// </summary>
-    Task<MuscleGroupDto> CreateMuscleGroupAsync(CreateMuscleGroupDto request);
+    Task<ServiceResult<MuscleGroupDto>> CreateAsync(CreateMuscleGroupCommand command);
     
     /// <summary>
-    /// Updates an existing muscle group
+    /// Updates existing muscle group
     /// </summary>
-    Task<MuscleGroupDto> UpdateMuscleGroupAsync(string id, UpdateMuscleGroupDto request);
+    Task<ServiceResult<MuscleGroupDto>> UpdateAsync(MuscleGroupId id, UpdateMuscleGroupCommand command);
     
     /// <summary>
-    /// Deactivates a muscle group
+    /// Deletes muscle group (soft delete)
     /// </summary>
-    Task DeactivateMuscleGroupAsync(string id);
+    Task<ServiceResult<bool>> DeleteAsync(MuscleGroupId id);
+    
+    /// <summary>
+    /// Checks if muscle group exists with the given ID
+    /// </summary>
+    Task<ServiceResult<MuscleGroupDto>> ExistsAsync(MuscleGroupId id);
 }
