@@ -1,0 +1,144 @@
+@typeparam TItem
+
+<div class="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center p-4 z-50 animate-fade-in" 
+     data-testid="detail-modal-backdrop"
+     @onclick="HandleBackdropClick"
+     @onkeydown="HandleKeyDown"
+     role="dialog"
+     aria-modal="true"
+     aria-labelledby="modal-title"
+     aria-describedby="modal-description"
+     tabindex="-1">
+    <div class="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col animate-scale-in" 
+         data-testid="detail-modal-content"
+         @onclick:stopPropagation="true">
+        
+        <div class="flex items-center justify-between p-6 border-b border-gray-200">
+            <h2 id="modal-title" class="text-xl font-semibold text-gray-900" data-testid="modal-title">
+                @Title
+            </h2>
+            <button type="button"
+                    @onclick="OnClose"
+                    class="text-gray-400 hover:text-gray-600 transition-colors"
+                    data-testid="close-button"
+                    aria-label="Close modal">
+                <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+        </div>
+
+        <div id="modal-description" class="sr-only">
+            @($"Detailed view of {Title}")
+        </div>
+
+        <div class="flex-1 overflow-y-auto p-6" data-testid="modal-body">
+            @if (Item != null)
+            {
+                @if (ContentTemplate != null)
+                {
+                    @ContentTemplate(Item)
+                }
+                else
+                {
+                    <div class="text-gray-600">
+                        <p>No content template provided.</p>
+                    </div>
+                }
+            }
+            else
+            {
+                <div class="text-center py-8">
+                    <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+                    <p class="mt-2 text-gray-600">Loading...</p>
+                </div>
+            }
+        </div>
+
+        @if (ShowFooter)
+        {
+            <div class="border-t border-gray-200 px-6 py-4 bg-gray-50">
+                @if (FooterTemplate != null)
+                {
+                    @FooterTemplate
+                }
+                else
+                {
+                    <div class="flex justify-end">
+                        <button type="button"
+                                @onclick="OnClose"
+                                class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                                data-testid="footer-close-button">
+                            Close
+                        </button>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+</div>
+
+<style>
+    @@keyframes fade-in {
+        from {
+            opacity: 0;
+        }
+        to {
+            opacity: 1;
+        }
+    }
+
+    @@keyframes scale-in {
+        from {
+            transform: scale(0.95);
+            opacity: 0;
+        }
+        to {
+            transform: scale(1);
+            opacity: 1;
+        }
+    }
+
+    .animate-fade-in {
+        animation: fade-in 0.2s ease-out;
+    }
+
+    .animate-scale-in {
+        animation: scale-in 0.2s ease-out;
+    }
+</style>
+
+@code {
+    [Parameter] public TItem? Item { get; set; }
+    [Parameter] public string Title { get; set; } = "Details";
+    [Parameter] public RenderFragment<TItem>? ContentTemplate { get; set; }
+    [Parameter] public RenderFragment? FooterTemplate { get; set; }
+    [Parameter] public bool ShowFooter { get; set; } = true;
+    [Parameter] public EventCallback OnClose { get; set; }
+    [Parameter] public bool CloseOnBackdropClick { get; set; } = true;
+    [Parameter] public bool CloseOnEscape { get; set; } = true;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private async Task HandleBackdropClick()
+    {
+        if (CloseOnBackdropClick)
+        {
+            await OnClose.InvokeAsync();
+        }
+    }
+
+    private async Task HandleKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key == "Escape" && CloseOnEscape)
+        {
+            await OnClose.InvokeAsync();
+        }
+    }
+}
