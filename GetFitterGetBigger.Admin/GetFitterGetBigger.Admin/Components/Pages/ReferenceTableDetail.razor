@@ -41,10 +41,12 @@
 
         @if (EquipmentStateService.ErrorMessage != null)
         {
-            <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4">
-                <p>@EquipmentStateService.ErrorMessage</p>
-                <button @onclick="EquipmentStateService.ClearError" class="text-sm underline mt-1">Dismiss</button>
-            </div>
+            <ErrorAlert 
+                ErrorMessage="@EquipmentStateService.ErrorMessage"
+                OnDismiss="EquipmentStateService.ClearError"
+                OnRetry="async () => await EquipmentStateService.LoadEquipmentAsync()"
+                RetryTestId="equipment-retry-button"
+                DismissTestId="equipment-dismiss-button" />
         }
 
         <div class="mb-4">
@@ -56,10 +58,7 @@
 
         @if (EquipmentStateService.IsLoading)
         {
-            <div class="text-center py-8">
-                <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
-                <p class="mt-2 text-gray-600">Loading equipment...</p>
-            </div>
+            <EquipmentSkeleton />
         }
         else if (EquipmentStateService.FilteredEquipment.Any())
         {
@@ -174,18 +173,17 @@ else if (TableName == "ExerciseWeightTypes")
 
         @if (ExerciseWeightTypeStateService.ErrorMessage != null)
         {
-            <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4">
-                <p>@ExerciseWeightTypeStateService.ErrorMessage</p>
-                <button @onclick="ExerciseWeightTypeStateService.ClearError" class="text-sm underline mt-1">Dismiss</button>
-            </div>
+            <ErrorAlert 
+                ErrorMessage="@ExerciseWeightTypeStateService.ErrorMessage"
+                OnDismiss="ExerciseWeightTypeStateService.ClearError"
+                OnRetry="async () => await ExerciseWeightTypeStateService.LoadWeightTypesAsync()"
+                RetryTestId="weighttype-retry-button"
+                DismissTestId="weighttype-dismiss-button" />
         }
 
         @if (ExerciseWeightTypeStateService.IsLoading)
         {
-            <div class="text-center py-8">
-                <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
-                <p class="mt-2 text-gray-600">Loading exercise weight types...</p>
-            </div>
+            <ExerciseWeightTypesSkeleton />
         }
         else if (ExerciseWeightTypeStateService.WeightTypes.Any())
         {
@@ -242,10 +240,12 @@ else if (TableName == "MuscleGroups")
 
         @if (MuscleGroupsStateService.ErrorMessage != null)
         {
-            <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4">
-                <p>@MuscleGroupsStateService.ErrorMessage</p>
-                <button @onclick="MuscleGroupsStateService.ClearError" class="text-sm underline mt-1">Dismiss</button>
-            </div>
+            <ErrorAlert 
+                ErrorMessage="@MuscleGroupsStateService.ErrorMessage"
+                OnDismiss="MuscleGroupsStateService.ClearError"
+                OnRetry="async () => await MuscleGroupsStateService.LoadMuscleGroupsAsync()"
+                RetryTestId="musclegroups-retry-button"
+                DismissTestId="musclegroups-dismiss-button" />
         }
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
@@ -277,10 +277,7 @@ else if (TableName == "MuscleGroups")
 
         @if (MuscleGroupsStateService.IsLoading)
         {
-            <div class="text-center py-8">
-                <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
-                <p class="mt-2 text-gray-600">Loading muscle groups...</p>
-            </div>
+            <MuscleGroupsSkeleton />
         }
         else if (MuscleGroupsStateService.FilteredMuscleGroups.Any())
         {
@@ -412,20 +409,15 @@ else if (TableName == "WorkoutObjectives")
 
         @if (WorkoutReferenceDataStateService.ObjectivesError != null)
         {
-            <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4">
-                <p>@WorkoutReferenceDataStateService.ObjectivesError</p>
-                <button @onclick="async () => await WorkoutReferenceDataStateService.LoadWorkoutObjectivesAsync()" 
-                        class="text-sm underline mt-1"
-                        data-testid="objectives-retry-button">Retry</button>
-            </div>
+            <ErrorAlert 
+                ErrorMessage="@WorkoutReferenceDataStateService.ObjectivesError"
+                OnRetry="async () => await WorkoutReferenceDataStateService.LoadWorkoutObjectivesAsync()"
+                RetryTestId="objectives-retry-button" />
         }
 
         @if (WorkoutReferenceDataStateService.IsLoadingObjectives)
         {
-            <div class="text-center py-8">
-                <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
-                <p class="mt-2 text-gray-600">Loading workout objectives...</p>
-            </div>
+            <WorkoutObjectivesSkeleton />
         }
         else if (WorkoutReferenceDataStateService.FilteredWorkoutObjectives.Any())
         {
@@ -501,20 +493,15 @@ else if (TableName == "WorkoutCategories")
 
         @if (WorkoutReferenceDataStateService.CategoriesError != null)
         {
-            <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4">
-                <p>@WorkoutReferenceDataStateService.CategoriesError</p>
-                <button @onclick="async () => await WorkoutReferenceDataStateService.LoadWorkoutCategoriesAsync()" 
-                        class="text-sm underline mt-1"
-                        data-testid="categories-retry-button">Retry</button>
-            </div>
+            <ErrorAlert 
+                ErrorMessage="@WorkoutReferenceDataStateService.CategoriesError"
+                OnRetry="async () => await WorkoutReferenceDataStateService.LoadWorkoutCategoriesAsync()"
+                RetryTestId="categories-retry-button" />
         }
 
         @if (WorkoutReferenceDataStateService.IsLoadingCategories)
         {
-            <div class="text-center py-8">
-                <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
-                <p class="mt-2 text-gray-600">Loading workout categories...</p>
-            </div>
+            <WorkoutCategoriesSkeleton />
         }
         else if (WorkoutReferenceDataStateService.FilteredWorkoutCategories.Any())
         {
@@ -629,20 +616,15 @@ else if (TableName == "ExecutionProtocols")
 
         @if (WorkoutReferenceDataStateService.ProtocolsError != null)
         {
-            <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4">
-                <p>@WorkoutReferenceDataStateService.ProtocolsError</p>
-                <button @onclick="async () => await WorkoutReferenceDataStateService.LoadExecutionProtocolsAsync()" 
-                        class="text-sm underline mt-1"
-                        data-testid="protocols-retry-button">Retry</button>
-            </div>
+            <ErrorAlert 
+                ErrorMessage="@WorkoutReferenceDataStateService.ProtocolsError"
+                OnRetry="async () => await WorkoutReferenceDataStateService.LoadExecutionProtocolsAsync()"
+                RetryTestId="protocols-retry-button" />
         }
 
         @if (WorkoutReferenceDataStateService.IsLoadingProtocols)
         {
-            <div class="text-center py-8">
-                <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
-                <p class="mt-2 text-gray-600">Loading execution protocols...</p>
-            </div>
+            <ExecutionProtocolsSkeleton />
         }
         else if (WorkoutReferenceDataStateService.FilteredExecutionProtocols.Any())
         {
@@ -781,7 +763,7 @@ else
 
         @if (items == null)
         {
-            <p class="text-gray-600"><em>Loading...</em></p>
+            <ReferenceTableSkeleton />
         }
         else
         {

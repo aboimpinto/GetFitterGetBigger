@@ -1,0 +1,29 @@
+@* Loading skeleton for Workout Categories card grid *@
+
+<div class="animate-pulse">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        @for (int i = 0; i < 6; i++)
+        {
+            <div class="bg-gray-50 p-6 rounded-lg border border-gray-200">
+                <div class="flex items-start gap-4">
+                    <!-- Icon skeleton -->
+                    <div class="w-12 h-12 bg-gray-300 rounded"></div>
+                    
+                    <div class="flex-1">
+                        <!-- Title skeleton -->
+                        <div class="h-6 bg-gray-300 rounded w-3/4 mb-2"></div>
+                        
+                        <!-- Description skeleton -->
+                        <div class="space-y-2 mb-3">
+                            <div class="h-4 bg-gray-200 rounded"></div>
+                            <div class="h-4 bg-gray-200 rounded w-5/6"></div>
+                        </div>
+                        
+                        <!-- Muscle groups skeleton -->
+                        <div class="h-3 bg-gray-200 rounded w-2/3"></div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</div>

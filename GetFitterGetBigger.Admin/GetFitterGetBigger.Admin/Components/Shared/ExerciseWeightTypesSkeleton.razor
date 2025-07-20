@@ -1,0 +1,32 @@
+@* Loading skeleton for Exercise Weight Types card grid *@
+
+<div class="animate-pulse">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        @for (int i = 0; i < 6; i++)
+        {
+            <div class="bg-gray-50 p-6 rounded-lg border border-gray-200">
+                <!-- Title skeleton -->
+                <h3 class="h-6 bg-gray-300 rounded w-3/4 mb-4"></h3>
+                
+                <!-- Description skeleton -->
+                <div class="space-y-2 mb-4">
+                    <div class="h-4 bg-gray-200 rounded"></div>
+                    <div class="h-4 bg-gray-200 rounded"></div>
+                    <div class="h-4 bg-gray-200 rounded w-5/6"></div>
+                </div>
+                
+                <!-- Details skeleton -->
+                <div class="space-y-3">
+                    <div>
+                        <div class="h-3 bg-gray-200 rounded w-32 mb-1"></div>
+                        <div class="h-4 bg-gray-300 rounded w-48"></div>
+                    </div>
+                    <div>
+                        <div class="h-3 bg-gray-200 rounded w-40 mb-1"></div>
+                        <div class="h-4 bg-gray-300 rounded w-64"></div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</div>

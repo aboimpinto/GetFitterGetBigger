@@ -78,10 +78,10 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages
             var component = RenderComponent<ReferenceTableDetail>(parameters => parameters
                 .Add(p => p.TableName, "WorkoutObjectives"));
 
-            // Assert
-            component.Find(".animate-spin").Should().NotBeNull();
-            var loadingTexts = component.FindAll("p");
-            loadingTexts.Any(p => p.TextContent.Contains("Loading workout objectives...")).Should().BeTrue();
+            // Assert - Now using skeleton instead of spinner
+            component.Find(".animate-pulse").Should().NotBeNull();
+            var skeletonCards = component.FindAll(".bg-gray-50");
+            skeletonCards.Should().HaveCountGreaterThan(0);
         }
 
         [Fact]
@@ -228,10 +228,10 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages
             var component = RenderComponent<ReferenceTableDetail>(parameters => parameters
                 .Add(p => p.TableName, "WorkoutCategories"));
 
-            // Assert
-            component.Find(".animate-spin").Should().NotBeNull();
-            var loadingTexts = component.FindAll("p");
-            loadingTexts.Any(p => p.TextContent.Contains("Loading workout categories...")).Should().BeTrue();
+            // Assert - Now using skeleton instead of spinner
+            component.Find(".animate-pulse").Should().NotBeNull();
+            var skeletonCards = component.FindAll(".bg-gray-50");
+            skeletonCards.Should().HaveCountGreaterThan(0);
         }
 
         [Fact]
@@ -384,10 +384,10 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages
             var component = RenderComponent<ReferenceTableDetail>(parameters => parameters
                 .Add(p => p.TableName, "ExecutionProtocols"));
 
-            // Assert
-            component.Find(".animate-spin").Should().NotBeNull();
-            var loadingTexts = component.FindAll("p");
-            loadingTexts.Any(p => p.TextContent.Contains("Loading execution protocols...")).Should().BeTrue();
+            // Assert - Now using skeleton instead of spinner
+            component.Find(".animate-pulse").Should().NotBeNull();
+            var skeletonCards = component.FindAll(".bg-gray-50");
+            skeletonCards.Should().HaveCountGreaterThan(0);
         }
 
         [Fact]

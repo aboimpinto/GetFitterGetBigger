@@ -1,0 +1,37 @@
+@* Generic loading skeleton for reference table lists *@
+
+<div class="animate-pulse">
+    <!-- Search bar skeleton -->
+    <div class="mb-4">
+        <div class="h-10 bg-gray-200 rounded w-full max-w-md"></div>
+    </div>
+    
+    <!-- Table skeleton -->
+    <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th class="px-6 py-3 text-left">
+                        <div class="h-4 bg-gray-300 rounded w-24"></div>
+                    </th>
+                    <th class="px-6 py-3 text-left">
+                        <div class="h-4 bg-gray-300 rounded w-32"></div>
+                    </th>
+                </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+                @for (int i = 0; i < 8; i++)
+                {
+                    <tr>
+                        <td class="px-6 py-4">
+                            <div class="h-4 bg-gray-200 rounded w-32"></div>
+                        </td>
+                        <td class="px-6 py-4">
+                            <div class="h-4 bg-gray-200 rounded w-64"></div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

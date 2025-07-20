@@ -71,10 +71,10 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages
             var component = RenderComponent<ReferenceTableDetail>(parameters => parameters
                 .Add(p => p.TableName, "ExerciseWeightTypes"));
 
-            // Assert
-            component.Find(".animate-spin").Should().NotBeNull();
-            var loadingTexts = component.FindAll("p");
-            loadingTexts.Any(p => p.TextContent.Contains("Loading exercise weight types...")).Should().BeTrue();
+            // Assert - Now using skeleton instead of spinner
+            component.Find(".animate-pulse").Should().NotBeNull();
+            var skeletonCards = component.FindAll(".bg-gray-50");
+            skeletonCards.Should().HaveCountGreaterThan(0);
         }
 
         [Fact]
@@ -211,12 +211,14 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages
             _exerciseWeightTypeStateServiceMock.Setup(x => x.ErrorMessage).Returns(errorMessage);
             _exerciseWeightTypeStateServiceMock.Setup(x => x.IsLoading).Returns(false);
             _exerciseWeightTypeStateServiceMock.Setup(x => x.WeightTypes).Returns(new List<ExerciseWeightTypeDto>());
+            _exerciseWeightTypeStateServiceMock.Setup(x => x.ClearError());
+            _exerciseWeightTypeStateServiceMock.Setup(x => x.LoadWeightTypesAsync()).Returns(Task.CompletedTask);
 
             var component = RenderComponent<ReferenceTableDetail>(parameters => parameters
                 .Add(p => p.TableName, "ExerciseWeightTypes"));
 
             // Act
-            var dismissButton = component.Find(".bg-red-50 button");
+            var dismissButton = component.Find("[data-testid='weighttype-dismiss-button']");
             dismissButton.Click();
 
             // Assert
