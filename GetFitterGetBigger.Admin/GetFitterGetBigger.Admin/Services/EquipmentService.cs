@@ -12,16 +12,23 @@ namespace GetFitterGetBigger.Admin.Services
         private readonly IMemoryCache _cache;
         private readonly IConfiguration _configuration;
         private readonly ICacheHelperService _cacheHelper;
+        private readonly ILogger<EquipmentService> _logger;
         private readonly string _apiBaseUrl;
         private readonly JsonSerializerOptions _jsonOptions;
         private const string CacheKey = "EquipmentDto_Full";
 
-        public EquipmentService(HttpClient httpClient, IMemoryCache cache, IConfiguration configuration, ICacheHelperService cacheHelper)
+        public EquipmentService(
+            HttpClient httpClient, 
+            IMemoryCache cache, 
+            IConfiguration configuration, 
+            ICacheHelperService cacheHelper,
+            ILogger<EquipmentService> logger)
         {
             _httpClient = httpClient;
             _cache = cache;
             _configuration = configuration;
             _cacheHelper = cacheHelper;
+            _logger = logger;
             _apiBaseUrl = _configuration["ApiBaseUrl"] ?? string.Empty;
             _jsonOptions = new JsonSerializerOptions
             {
@@ -35,6 +42,8 @@ namespace GetFitterGetBigger.Admin.Services
             if (!_cache.TryGetValue(CacheKey, out IEnumerable<EquipmentDto>? cachedData))
             {
                 var requestUrl = $"{_apiBaseUrl}/api/ReferenceTables/Equipment";
+                _logger.LogInformation("Fetching equipment from: {Url}", requestUrl);
+                
                 var response = await _httpClient.GetAsync(requestUrl);
 
                 if (!response.IsSuccessStatusCode)
@@ -42,20 +51,40 @@ namespace GetFitterGetBigger.Admin.Services
                     throw new HttpRequestException($"Failed to get equipment: {response.StatusCode}");
                 }
 
-                // The API returns ReferenceDataDto, we need to convert to EquipmentDto
-                var referenceData = await response.Content.ReadFromJsonAsync<IEnumerable<ReferenceDataDto>>(_jsonOptions);
-
-                if (referenceData != null)
+                // Try to deserialize the response - the API might return either format
+                var responseContent = await response.Content.ReadAsStringAsync();
+                _logger.LogDebug("Equipment API response: {Response}", responseContent);
+                
+                try
                 {
-                    cachedData = referenceData.Select(rd => new EquipmentDto
+                    // First try as EquipmentDto array (new format)
+                    _logger.LogDebug("Attempting to deserialize as EquipmentDto array");
+                    cachedData = JsonSerializer.Deserialize<IEnumerable<EquipmentDto>>(responseContent, _jsonOptions);
+                    _logger.LogInformation("Successfully deserialized {Count} equipment items as EquipmentDto", cachedData?.Count() ?? 0);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Failed to deserialize as EquipmentDto, trying ReferenceDataDto format");
+                    
+                    // If that fails, try as ReferenceDataDto array (old format)
+                    var referenceData = JsonSerializer.Deserialize<IEnumerable<ReferenceDataDto>>(responseContent, _jsonOptions);
+                    
+                    if (referenceData != null)
                     {
-                        Id = rd.Id,
-                        Name = rd.Value, // Map 'value' to 'name'
-                        IsActive = true, // Reference data is always active
-                        CreatedAt = DateTime.UtcNow, // Default since not provided by API
-                        UpdatedAt = null
-                    }).ToList();
+                        cachedData = referenceData.Select(rd => new EquipmentDto
+                        {
+                            Id = rd.Id,
+                            Name = rd.Value, // Map 'value' to 'name'
+                            IsActive = true, // Reference data is always active
+                            CreatedAt = DateTime.UtcNow, // Default since not provided by API
+                            UpdatedAt = null
+                        }).ToList();
+                        _logger.LogInformation("Successfully converted {Count} ReferenceDataDto items to EquipmentDto", cachedData.Count());
+                    }
+                }
 
+                if (cachedData != null)
+                {
                     _cache.Set(CacheKey, cachedData, TimeSpan.FromHours(24));
                 }
             }

@@ -105,7 +105,10 @@ builder.Services.AddHttpClient<GetFitterGetBigger.Admin.Services.IExerciseWeight
 builder.Services.AddScoped<GetFitterGetBigger.Admin.Services.IExerciseWeightTypeStateService, GetFitterGetBigger.Admin.Services.ExerciseWeightTypeStateService>();
 
 // Add HttpClient for WorkoutReferenceDataService
-builder.Services.AddHttpClient<GetFitterGetBigger.Admin.Services.IWorkoutReferenceDataService, GetFitterGetBigger.Admin.Services.WorkoutReferenceDataService>();
+builder.Services.AddHttpClient<GetFitterGetBigger.Admin.Services.IWorkoutReferenceDataService, GetFitterGetBigger.Admin.Services.WorkoutReferenceDataService>(client =>
+{
+    client.BaseAddress = new Uri(builder.Configuration["ApiBaseUrl"] ?? "http://localhost:5214");
+});
 
 // Add WorkoutReferenceDataStateService
 builder.Services.AddScoped<GetFitterGetBigger.Admin.Services.IWorkoutReferenceDataStateService, GetFitterGetBigger.Admin.Services.WorkoutReferenceDataStateService>();

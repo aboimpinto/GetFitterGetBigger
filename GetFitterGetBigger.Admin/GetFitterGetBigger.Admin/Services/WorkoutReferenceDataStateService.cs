@@ -5,6 +5,7 @@ namespace GetFitterGetBigger.Admin.Services;
 public class WorkoutReferenceDataStateService : IWorkoutReferenceDataStateService
 {
     private readonly IWorkoutReferenceDataService _workoutReferenceDataService;
+    private readonly ILogger<WorkoutReferenceDataStateService> _logger;
     
     // Workout Objectives state
     private List<ReferenceDataDto> _workoutObjectives = new();
@@ -30,9 +31,12 @@ public class WorkoutReferenceDataStateService : IWorkoutReferenceDataStateServic
 
     public event Action? OnChange;
 
-    public WorkoutReferenceDataStateService(IWorkoutReferenceDataService workoutReferenceDataService)
+    public WorkoutReferenceDataStateService(
+        IWorkoutReferenceDataService workoutReferenceDataService,
+        ILogger<WorkoutReferenceDataStateService> logger)
     {
         _workoutReferenceDataService = workoutReferenceDataService;
+        _logger = logger;
     }
     
     public async Task InitializeAsync()
@@ -159,17 +163,21 @@ public class WorkoutReferenceDataStateService : IWorkoutReferenceDataStateServic
     // Methods
     public async Task LoadWorkoutObjectivesAsync()
     {
+        _logger.LogInformation("LoadWorkoutObjectivesAsync called");
         try
         {
             _isLoadingObjectives = true;
             _objectivesError = null;
             NotifyStateChanged();
 
+            _logger.LogInformation("Calling WorkoutReferenceDataService.GetWorkoutObjectivesAsync");
             var objectives = await _workoutReferenceDataService.GetWorkoutObjectivesAsync();
             _workoutObjectives = objectives.OrderBy(o => o.Value).ToList();
+            _logger.LogInformation("Successfully loaded {Count} workout objectives", _workoutObjectives.Count);
         }
         catch (Exception ex)
         {
+            _logger.LogError(ex, "Failed to load workout objectives");
             _objectivesError = $"Failed to load workout objectives: {ex.Message}";
         }
         finally

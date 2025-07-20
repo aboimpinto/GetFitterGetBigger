@@ -29,15 +29,22 @@ public class WorkoutReferenceDataService : IWorkoutReferenceDataService
 
     public async Task<List<ReferenceDataDto>> GetWorkoutObjectivesAsync()
     {
+        _logger.LogInformation("Getting workout objectives...");
+        _logger.LogInformation("HttpClient BaseAddress: {BaseAddress}", _httpClient.BaseAddress);
+        
         return await GetCachedDataAsync(
             WorkoutObjectivesCacheKey,
             async () =>
             {
+                var endpoint = "/api/ReferenceTables/WorkoutObjectives";
+                _logger.LogInformation("Fetching workout objectives from endpoint: {Endpoint}", endpoint);
+                
                 var response = await ExecuteWithRetryAsync(
-                    async () => await _httpClient.GetAsync("/api/ReferenceTables/WorkoutObjectives"));
+                    async () => await _httpClient.GetAsync(endpoint));
                 
                 response.EnsureSuccessStatusCode();
                 var data = await response.Content.ReadFromJsonAsync<List<ReferenceDataDto>>();
+                _logger.LogInformation("Successfully fetched {Count} workout objectives", data?.Count ?? 0);
                 return data ?? new List<ReferenceDataDto>();
             });
     }
@@ -188,7 +195,10 @@ public class WorkoutReferenceDataService : IWorkoutReferenceDataService
         {
             try
             {
+                _logger.LogDebug("Executing HTTP request, attempt {Attempt} of {MaxRetries}", attempt + 1, MaxRetries);
                 var response = await operation();
+                
+                _logger.LogDebug("HTTP response: {StatusCode} {ReasonPhrase}", response.StatusCode, response.ReasonPhrase);
                 
                 // If successful or a client error (4xx), return immediately
                 if (response.IsSuccessStatusCode || (int)response.StatusCode >= 400 && (int)response.StatusCode < 500)
@@ -208,6 +218,12 @@ public class WorkoutReferenceDataService : IWorkoutReferenceDataService
                 {
                     return response; // Return the failed response on last attempt
                 }
+            }
+            catch (InvalidOperationException ex) when (ex.Message.Contains("invalid request URI"))
+            {
+                _logger.LogError(ex, "Invalid request URI. BaseAddress: {BaseAddress}. This usually means BaseAddress is not set on HttpClient", 
+                    _httpClient.BaseAddress?.ToString() ?? "NULL");
+                throw;
             }
             catch (HttpRequestException ex) when (attempt < MaxRetries - 1)
             {
