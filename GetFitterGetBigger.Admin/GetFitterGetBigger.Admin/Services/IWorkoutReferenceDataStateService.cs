@@ -5,6 +5,8 @@ namespace GetFitterGetBigger.Admin.Services;
 public interface IWorkoutReferenceDataStateService
 {
     event Action? OnChange;
+    
+    Task InitializeAsync();
 
     // Workout Objectives state
     IEnumerable<ReferenceDataDto> WorkoutObjectives { get; }

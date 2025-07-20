@@ -34,6 +34,18 @@ public class WorkoutReferenceDataStateService : IWorkoutReferenceDataStateServic
     {
         _workoutReferenceDataService = workoutReferenceDataService;
     }
+    
+    public async Task InitializeAsync()
+    {
+        var loadTasks = new List<Task>
+        {
+            LoadWorkoutObjectivesAsync(),
+            LoadWorkoutCategoriesAsync(),
+            LoadExecutionProtocolsAsync()
+        };
+        
+        await Task.WhenAll(loadTasks);
+    }
 
     // Workout Objectives properties
     public IEnumerable<ReferenceDataDto> WorkoutObjectives => _workoutObjectives;

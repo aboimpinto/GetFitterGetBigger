@@ -17,6 +17,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages
         private readonly Mock<IEquipmentStateService> _equipmentStateServiceMock;
         private readonly Mock<IMuscleGroupsStateService> _muscleGroupsStateServiceMock;
         private readonly Mock<IExerciseWeightTypeStateService> _exerciseWeightTypeStateServiceMock;
+        private readonly Mock<IWorkoutReferenceDataStateService> _workoutReferenceDataStateServiceMock;
         private readonly Mock<NavigationManager> _navigationManagerMock;
 
         public ExerciseWeightTypeReferenceTests()
@@ -25,12 +26,14 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages
             _equipmentStateServiceMock = new Mock<IEquipmentStateService>();
             _muscleGroupsStateServiceMock = new Mock<IMuscleGroupsStateService>();
             _exerciseWeightTypeStateServiceMock = new Mock<IExerciseWeightTypeStateService>();
+            _workoutReferenceDataStateServiceMock = new Mock<IWorkoutReferenceDataStateService>();
             _navigationManagerMock = new Mock<NavigationManager>();
 
             Services.AddSingleton(_referenceDataServiceMock.Object);
             Services.AddSingleton(_equipmentStateServiceMock.Object);
             Services.AddSingleton(_muscleGroupsStateServiceMock.Object);
             Services.AddSingleton(_exerciseWeightTypeStateServiceMock.Object);
+            Services.AddSingleton(_workoutReferenceDataStateServiceMock.Object);
             Services.AddSingleton(_navigationManagerMock.Object);
             
             this.AddTestAuthorization().SetAuthorized("test-user");
