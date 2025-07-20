@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using GetFitterGetBigger.Admin.Models.Dtos;
 using GetFitterGetBigger.Admin.Services;
+using Microsoft.Extensions.Logging;
 using Moq;
 using Xunit;
 
@@ -12,13 +13,15 @@ namespace GetFitterGetBigger.Admin.Tests.Services;
 public class WorkoutReferenceDataStateServiceTests
 {
     private readonly Mock<IWorkoutReferenceDataService> _mockService;
+    private readonly Mock<ILogger<WorkoutReferenceDataStateService>> _mockLogger;
     private readonly WorkoutReferenceDataStateService _stateService;
     private int _stateChangeCount;
 
     public WorkoutReferenceDataStateServiceTests()
     {
         _mockService = new Mock<IWorkoutReferenceDataService>();
-        _stateService = new WorkoutReferenceDataStateService(_mockService.Object);
+        _mockLogger = new Mock<ILogger<WorkoutReferenceDataStateService>>();
+        _stateService = new WorkoutReferenceDataStateService(_mockService.Object, _mockLogger.Object);
         _stateService.OnChange += () => _stateChangeCount++;
     }
 

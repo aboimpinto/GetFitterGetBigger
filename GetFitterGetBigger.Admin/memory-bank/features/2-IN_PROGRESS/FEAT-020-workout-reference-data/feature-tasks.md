@@ -137,15 +137,15 @@
   - Test responsive table behavior
 
 ### Category 5: Page Integration & Routing - Estimated: 3h
-- **Task 5.1:** Update ReferenceTables.razor to include new menu items `[ReadyToDevelop]` (Est: 1h)
+- **Task 5.1:** Update ReferenceTables.razor to include new menu items `[Completed]` (Est: 1h, Actual: 10m)
   - Add WorkoutObjectives, WorkoutCategories, ExecutionProtocols to menu
   - Implement routing for each component
   - Maintain existing menu structure
-- **Task 5.2:** Configure dependency injection for new services `[ReadyToDevelop]` (Est: 30m)
+- **Task 5.2:** Configure dependency injection for new services `[Completed]` (Est: 30m, Actual: 10m)
   - Register WorkoutReferenceDataService
   - Register WorkoutReferenceDataStateService
   - Configure HttpClient for the service
-- **Task 5.3:** Write integration tests for reference table navigation `[ReadyToDevelop]` (Est: 1.5h)
+- **Task 5.3:** Write integration tests for reference table navigation `[Completed]` (Est: 1.5h, Actual: 30m)
   - Test menu navigation to each new component
   - Test data loading on component mount
   - Test state persistence between navigations
