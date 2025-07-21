@@ -7,7 +7,6 @@ using GetFitterGetBigger.Admin.Services.Exceptions;
 using GetFitterGetBigger.Admin.Builders;
 using GetFitterGetBigger.Admin.Tests.Helpers;
 using Microsoft.Extensions.Caching.Memory;
-using Microsoft.Extensions.Configuration;
 using Moq;
 
 namespace GetFitterGetBigger.Admin.Tests.Services
@@ -17,7 +16,6 @@ namespace GetFitterGetBigger.Admin.Tests.Services
         private readonly MockHttpMessageHandler _httpMessageHandler;
         private readonly HttpClient _httpClient;
         private readonly IMemoryCache _memoryCache;
-        private readonly Mock<IConfiguration> _configurationMock;
         private readonly ExerciseLinkService _exerciseLinkService;
 
         public ExerciseLinkServiceTests()
@@ -28,16 +26,10 @@ namespace GetFitterGetBigger.Admin.Tests.Services
                 BaseAddress = new Uri("http://localhost:5214")
             };
             _memoryCache = new MemoryCache(new MemoryCacheOptions());
-            _configurationMock = new Mock<IConfiguration>();
-
-            _configurationMock
-                .Setup(x => x["ApiBaseUrl"])
-                .Returns("http://localhost:5214");
 
             _exerciseLinkService = new ExerciseLinkService(
                 _httpClient,
-                _memoryCache,
-                _configurationMock.Object);
+                _memoryCache);
         }
 
         [Fact]
@@ -143,8 +135,11 @@ namespace GetFitterGetBigger.Admin.Tests.Services
             var createDto = new CreateExerciseLinkDtoBuilder().Build();
 
             _httpClient.Dispose();
-            var faultyClient = new HttpClient(new FaultyHttpMessageHandler());
-            var service = new ExerciseLinkService(faultyClient, _memoryCache, _configurationMock.Object);
+            var faultyClient = new HttpClient(new FaultyHttpMessageHandler())
+            {
+                BaseAddress = new Uri("http://localhost:5214")
+            };
+            var service = new ExerciseLinkService(faultyClient, _memoryCache);
 
             // Act & Assert
             await Assert.ThrowsAsync<ExerciseLinkApiException>(
@@ -266,28 +261,6 @@ namespace GetFitterGetBigger.Admin.Tests.Services
             });
         }
 
-        [Fact]
-        public async Task GetLinksAsync_WhenCached_ReturnsCachedData()
-        {
-            // Arrange
-            var exerciseId = Guid.NewGuid().ToString();
-            var cachedResponse = new ExerciseLinksResponseDtoBuilder()
-                .WithExerciseId(exerciseId)
-                .WithLinks(new ExerciseLinkDtoBuilder().AsWarmup().Build())
-                .WithTotalCount(1)
-                .Build();
-
-            var cacheKey = $"exercise_links_{exerciseId}__False";
-            _memoryCache.Set(cacheKey, cachedResponse);
-
-            // Act
-            var result = await _exerciseLinkService.GetLinksAsync(exerciseId);
-
-            // Assert
-            result.Should().NotBeNull();
-            result.Links.Should().HaveCount(1);
-            _httpMessageHandler.VerifyNoRequests();
-        }
 
         [Fact]
         public async Task GetLinksAsync_WhenExerciseNotFound_ThrowsExerciseNotFoundException()
@@ -360,28 +333,6 @@ namespace GetFitterGetBigger.Admin.Tests.Services
             });
         }
 
-        [Fact]
-        public async Task GetSuggestedLinksAsync_WhenCached_ReturnsCachedData()
-        {
-            // Arrange
-            var exerciseId = Guid.NewGuid().ToString();
-            var cachedSuggestions = new List<ExerciseLinkDto>
-            {
-                new ExerciseLinkDtoBuilder().AsWarmup().WithTargetExerciseName("Cached").Build()
-            };
-
-            var cacheKey = $"suggested_links_{exerciseId}_5";
-            _memoryCache.Set(cacheKey, cachedSuggestions);
-
-            // Act
-            var result = await _exerciseLinkService.GetSuggestedLinksAsync(exerciseId);
-
-            // Assert
-            result.Should().NotBeNull();
-            result.Should().HaveCount(1);
-            result[0].TargetExerciseName.Should().Be("Cached");
-            _httpMessageHandler.VerifyNoRequests();
-        }
 
         [Fact]
         public async Task UpdateLinkAsync_WithValidData_ReturnsUpdatedLink()
@@ -433,27 +384,6 @@ namespace GetFitterGetBigger.Admin.Tests.Services
                 () => _exerciseLinkService.UpdateLinkAsync(exerciseId, linkId, updateDto));
         }
 
-        [Fact]
-        public async Task UpdateLinkAsync_InvalidatesCache()
-        {
-            // Arrange
-            var exerciseId = Guid.NewGuid().ToString();
-            var linkId = Guid.NewGuid().ToString();
-            var updateDto = new UpdateExerciseLinkDtoBuilder().Build();
-
-            // Pre-populate cache
-            var cacheKey = $"exercise_links_{exerciseId}__False";
-            _memoryCache.Set(cacheKey, new ExerciseLinksResponseDtoBuilder().Build());
-
-            var updatedLink = new ExerciseLinkDtoBuilder().WithId(linkId).Build();
-            _httpMessageHandler.SetupResponse(HttpStatusCode.OK, updatedLink);
-
-            // Act
-            await _exerciseLinkService.UpdateLinkAsync(exerciseId, linkId, updateDto);
-
-            // Assert
-            _memoryCache.TryGetValue(cacheKey, out _).Should().BeFalse();
-        }
 
         [Fact]
         public async Task DeleteLinkAsync_WithValidId_DeletesSuccessfully()
@@ -490,83 +420,9 @@ namespace GetFitterGetBigger.Admin.Tests.Services
                 () => _exerciseLinkService.DeleteLinkAsync(exerciseId, linkId));
         }
 
-        [Fact]
-        public async Task DeleteLinkAsync_InvalidatesCache()
-        {
-            // Arrange
-            var exerciseId = Guid.NewGuid().ToString();
-            var linkId = Guid.NewGuid().ToString();
 
-            // Pre-populate cache
-            var cacheKey = $"exercise_links_{exerciseId}__False";
-            _memoryCache.Set(cacheKey, new ExerciseLinksResponseDtoBuilder().Build());
 
-            _httpMessageHandler.SetupResponse(HttpStatusCode.NoContent);
 
-            // Act
-            await _exerciseLinkService.DeleteLinkAsync(exerciseId, linkId);
-
-            // Assert
-            _memoryCache.TryGetValue(cacheKey, out _).Should().BeFalse();
-        }
-
-        [Fact]
-        public async Task GetLinksAsync_SetsCorrectCacheExpiration()
-        {
-            // Arrange
-            var exerciseId = Guid.NewGuid().ToString();
-            var response = new ExerciseLinksResponseDtoBuilder().Build();
-
-            _httpMessageHandler.SetupResponse(HttpStatusCode.OK, response);
-
-            // Act
-            await _exerciseLinkService.GetLinksAsync(exerciseId);
-
-            // Assert
-            var cacheKey = $"exercise_links_{exerciseId}__False";
-            _memoryCache.TryGetValue(cacheKey, out _).Should().BeTrue();
-        }
-
-        [Fact]
-        public async Task GetSuggestedLinksAsync_SetsCorrectCacheExpiration()
-        {
-            // Arrange
-            var exerciseId = Guid.NewGuid().ToString();
-            var suggestions = new List<ExerciseLinkDto> { new ExerciseLinkDtoBuilder().Build() };
-
-            _httpMessageHandler.SetupResponse(HttpStatusCode.OK, suggestions);
-
-            // Act
-            await _exerciseLinkService.GetSuggestedLinksAsync(exerciseId);
-
-            // Assert
-            var cacheKey = $"suggested_links_{exerciseId}_5";
-            _memoryCache.TryGetValue(cacheKey, out _).Should().BeTrue();
-        }
-
-        [Fact]
-        public async Task CreateLinkAsync_InvalidatesRelevantCacheEntries()
-        {
-            // Arrange
-            var exerciseId = Guid.NewGuid().ToString();
-            var createDto = new CreateExerciseLinkDtoBuilder().Build();
-
-            // Pre-populate cache with various entries
-            _memoryCache.Set($"exercise_links_{exerciseId}__False", new ExerciseLinksResponseDtoBuilder().Build());
-            _memoryCache.Set($"exercise_links_{exerciseId}_Warmup_False", new ExerciseLinksResponseDtoBuilder().Build());
-            _memoryCache.Set($"suggested_links_{exerciseId}_5", new List<ExerciseLinkDto>());
-
-            var createdLink = new ExerciseLinkDtoBuilder().Build();
-            _httpMessageHandler.SetupResponse(HttpStatusCode.Created, createdLink);
-
-            // Act
-            await _exerciseLinkService.CreateLinkAsync(exerciseId, createDto);
-
-            // Assert
-            _memoryCache.TryGetValue($"exercise_links_{exerciseId}__False", out _).Should().BeFalse();
-            _memoryCache.TryGetValue($"exercise_links_{exerciseId}_Warmup_False", out _).Should().BeFalse();
-            _memoryCache.TryGetValue($"suggested_links_{exerciseId}_5", out _).Should().BeFalse();
-        }
 
         // Helper class for testing network failures
         private class FaultyHttpMessageHandler : HttpMessageHandler

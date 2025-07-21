@@ -6,7 +6,6 @@ using GetFitterGetBigger.Admin.Models.Dtos;
 using GetFitterGetBigger.Admin.Services;
 using GetFitterGetBigger.Admin.Tests.Helpers;
 using Microsoft.Extensions.Caching.Memory;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Moq;
 
@@ -17,7 +16,6 @@ namespace GetFitterGetBigger.Admin.Tests.Services
         private readonly MockHttpMessageHandler _httpMessageHandler;
         private readonly HttpClient _httpClient;
         private readonly IMemoryCache _memoryCache;
-        private readonly Mock<IConfiguration> _configurationMock;
         private readonly Mock<ICacheHelperService> _cacheHelperMock;
         private readonly Mock<ILogger<EquipmentService>> _loggerMock;
         private readonly EquipmentService _equipmentService;
@@ -31,18 +29,12 @@ namespace GetFitterGetBigger.Admin.Tests.Services
                 BaseAddress = new Uri("http://localhost:5214")
             };
             _memoryCache = new MemoryCache(new MemoryCacheOptions());
-            _configurationMock = new Mock<IConfiguration>();
             _cacheHelperMock = new Mock<ICacheHelperService>();
             _loggerMock = new Mock<ILogger<EquipmentService>>();
-
-            _configurationMock
-                .Setup(x => x["ApiBaseUrl"])
-                .Returns("http://localhost:5214");
 
             _equipmentService = new EquipmentService(
                 _httpClient,
                 _memoryCache,
-                _configurationMock.Object,
                 _cacheHelperMock.Object,
                 _loggerMock.Object);
 

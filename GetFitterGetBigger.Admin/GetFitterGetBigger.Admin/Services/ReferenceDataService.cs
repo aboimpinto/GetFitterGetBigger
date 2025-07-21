@@ -9,16 +9,12 @@ namespace GetFitterGetBigger.Admin.Services
     {
         private readonly HttpClient _httpClient;
         private readonly IMemoryCache _cache;
-        private readonly IConfiguration _configuration;
-        private readonly string _apiBaseUrl;
         private readonly JsonSerializerOptions _jsonOptions;
 
-        public ReferenceDataService(HttpClient httpClient, IMemoryCache cache, IConfiguration configuration)
+        public ReferenceDataService(HttpClient httpClient, IMemoryCache cache)
         {
             _httpClient = httpClient;
             _cache = cache;
-            _configuration = configuration;
-            _apiBaseUrl = _configuration["ApiBaseUrl"] ?? string.Empty;
             _jsonOptions = new JsonSerializerOptions
             {
                 PropertyNameCaseInsensitive = true,
@@ -33,27 +29,19 @@ namespace GetFitterGetBigger.Admin.Services
                 if (!_cache.TryGetValue(cacheKey, out IEnumerable<ReferenceDataDto>? cachedData))
                 {
                     Console.WriteLine($"[ReferenceDataService] Cache miss for {cacheKey}, fetching from API");
+                    Console.WriteLine($"[ReferenceDataService] HttpClient BaseAddress: {_httpClient.BaseAddress}, Endpoint: {endpoint}");
+                    
                     // Use relative URL since HttpClient has BaseAddress configured
                     var requestUrl = endpoint.StartsWith("/") ? endpoint.Substring(1) : endpoint;
-                    cachedData = await _httpClient.GetFromJsonAsync<IEnumerable<ReferenceDataDto>>(requestUrl, _jsonOptions);
-                    if (cachedData != null)
+                    
+                    // Use FlexibleReferenceDataDto to handle both 'value' and 'name' properties
+                    var flexibleData = await _httpClient.GetFromJsonAsync<IEnumerable<FlexibleReferenceDataDto>>(requestUrl, _jsonOptions);
+                    if (flexibleData != null)
                     {
+                        cachedData = flexibleData.Select(fd => fd.ToReferenceDataDto()).ToList();
                         _cache.Set(cacheKey, cachedData, TimeSpan.FromHours(24));
                         Console.WriteLine($"[ReferenceDataService] Cached {cachedData.Count()} items for {cacheKey}");
                     }
-                }
-                return cachedData ?? Enumerable.Empty<ReferenceDataDto>();
-            }
-            catch (InvalidCastException ex)
-            {
-                Console.WriteLine($"[ReferenceDataService] InvalidCastException for {cacheKey}: {ex.Message}");
-                // Cache contains data of wrong type - clear it and retry
-                _cache.Remove(cacheKey);
-                var requestUrl = endpoint.StartsWith("/") ? endpoint.Substring(1) : endpoint;
-                var cachedData = await _httpClient.GetFromJsonAsync<IEnumerable<ReferenceDataDto>>(requestUrl, _jsonOptions);
-                if (cachedData != null)
-                {
-                    _cache.Set(cacheKey, cachedData, TimeSpan.FromHours(24));
                 }
                 return cachedData ?? Enumerable.Empty<ReferenceDataDto>();
             }
@@ -65,13 +53,15 @@ namespace GetFitterGetBigger.Admin.Services
         }
 
         public Task<IEnumerable<ReferenceDataDto>> GetBodyPartsAsync() => GetDataAsync("/api/ReferenceTables/BodyParts", "RefData_BodyParts");
+        
         public Task<IEnumerable<ReferenceDataDto>> GetDifficultyLevelsAsync() => GetDataAsync("/api/ReferenceTables/DifficultyLevels", "RefData_DifficultyLevels");
-        public Task<IEnumerable<ReferenceDataDto>> GetEquipmentAsync()
-        {
-            return GetDataAsync("/api/ReferenceTables/Equipment", "RefData_Equipment");
-        }
+        
+        public Task<IEnumerable<ReferenceDataDto>> GetEquipmentAsync() => GetDataAsync("/api/ReferenceTables/Equipment", "RefData_Equipment");
+        
         public Task<IEnumerable<ReferenceDataDto>> GetKineticChainTypesAsync() => GetDataAsync("/api/ReferenceTables/KineticChainTypes", "RefData_KineticChainTypes");
+        
         public Task<IEnumerable<ReferenceDataDto>> GetMetricTypesAsync() => GetDataAsync("/api/ReferenceTables/MetricTypes", "RefData_MetricTypes");
+        
         public Task<IEnumerable<ReferenceDataDto>> GetMovementPatternsAsync() => GetDataAsync("/api/ReferenceTables/MovementPatterns", "RefData_MovementPatterns");
         public async Task<IEnumerable<ReferenceDataDto>> GetMuscleGroupsAsync()
         {
@@ -81,7 +71,7 @@ namespace GetFitterGetBigger.Admin.Services
                 if (!_cache.TryGetValue(cacheKey, out IEnumerable<ReferenceDataDto>? cachedData))
                 {
                     Console.WriteLine($"[ReferenceDataService] Cache miss for {cacheKey}, fetching from API");
-                    var requestUrl = "/api/ReferenceTables/MuscleGroups";
+                    var requestUrl = "api/ReferenceTables/MuscleGroups";
 
                     // MuscleGroups endpoint returns MuscleGroupDto, not ReferenceDataDto
                     var muscleGroups = await _httpClient.GetFromJsonAsync<IEnumerable<MuscleGroupDto>>(requestUrl, _jsonOptions);
@@ -150,7 +140,7 @@ namespace GetFitterGetBigger.Admin.Services
         {
             if (!_cache.TryGetValue("RefData_ExerciseTypes", out IEnumerable<ExerciseTypeDto>? cachedData))
             {
-                var requestUrl = "/api/ReferenceTables/ExerciseTypes";
+                var requestUrl = "api/ReferenceTables/ExerciseTypes";
                 var referenceData = await _httpClient.GetFromJsonAsync<IEnumerable<ReferenceDataDto>>(requestUrl, _jsonOptions);
                 if (referenceData != null)
                 {

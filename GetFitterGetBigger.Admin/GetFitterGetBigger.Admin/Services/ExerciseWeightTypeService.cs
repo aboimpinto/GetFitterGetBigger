@@ -9,16 +9,12 @@ namespace GetFitterGetBigger.Admin.Services
     {
         private readonly HttpClient _httpClient;
         private readonly IMemoryCache _cache;
-        private readonly IConfiguration _configuration;
-        private readonly string _apiBaseUrl;
         private readonly JsonSerializerOptions _jsonOptions;
 
-        public ExerciseWeightTypeService(HttpClient httpClient, IMemoryCache cache, IConfiguration configuration)
+        public ExerciseWeightTypeService(HttpClient httpClient, IMemoryCache cache)
         {
             _httpClient = httpClient;
             _cache = cache;
-            _configuration = configuration;
-            _apiBaseUrl = _configuration["ApiBaseUrl"] ?? string.Empty;
             _jsonOptions = new JsonSerializerOptions
             {
                 PropertyNameCaseInsensitive = true,
@@ -37,7 +33,7 @@ namespace GetFitterGetBigger.Admin.Services
 
             try
             {
-                var response = await _httpClient.GetAsync($"{_apiBaseUrl}/api/ReferenceTables/ExerciseWeightTypes");
+                var response = await _httpClient.GetAsync("api/ReferenceTables/ExerciseWeightTypes");
 
                 if (response.IsSuccessStatusCode)
                 {
@@ -72,7 +68,7 @@ namespace GetFitterGetBigger.Admin.Services
             {
                 // Since the API uses string IDs, we need to convert the GUID to the expected format
                 var stringId = $"exerciseweighttype-{id}";
-                var response = await _httpClient.GetAsync($"{_apiBaseUrl}/api/ReferenceTables/ExerciseWeightTypes/{stringId}");
+                var response = await _httpClient.GetAsync($"api/ReferenceTables/ExerciseWeightTypes/{stringId}");
 
                 if (response.IsSuccessStatusCode)
                 {

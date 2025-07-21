@@ -10,26 +10,21 @@ namespace GetFitterGetBigger.Admin.Services
     {
         private readonly HttpClient _httpClient;
         private readonly IMemoryCache _cache;
-        private readonly IConfiguration _configuration;
         private readonly ICacheHelperService _cacheHelper;
         private readonly ILogger<EquipmentService> _logger;
-        private readonly string _apiBaseUrl;
         private readonly JsonSerializerOptions _jsonOptions;
         private const string CacheKey = "EquipmentDto_Full";
 
         public EquipmentService(
             HttpClient httpClient, 
             IMemoryCache cache, 
-            IConfiguration configuration, 
             ICacheHelperService cacheHelper,
             ILogger<EquipmentService> logger)
         {
             _httpClient = httpClient;
             _cache = cache;
-            _configuration = configuration;
             _cacheHelper = cacheHelper;
             _logger = logger;
-            _apiBaseUrl = _configuration["ApiBaseUrl"] ?? string.Empty;
             _jsonOptions = new JsonSerializerOptions
             {
                 PropertyNameCaseInsensitive = true,
@@ -41,7 +36,7 @@ namespace GetFitterGetBigger.Admin.Services
         {
             if (!_cache.TryGetValue(CacheKey, out IEnumerable<EquipmentDto>? cachedData))
             {
-                var requestUrl = $"{_apiBaseUrl}/api/ReferenceTables/Equipment";
+                var requestUrl = "api/ReferenceTables/Equipment";
                 _logger.LogInformation("Fetching equipment from: {Url}", requestUrl);
                 
                 var response = await _httpClient.GetAsync(requestUrl);
@@ -94,7 +89,7 @@ namespace GetFitterGetBigger.Admin.Services
 
         public async Task<EquipmentDto> CreateEquipmentAsync(CreateEquipmentDto dto)
         {
-            var requestUrl = $"{_apiBaseUrl}/api/ReferenceTables/Equipment";
+            var requestUrl = "api/ReferenceTables/Equipment";
 
             // Log the request details
             Console.WriteLine($"[CREATE EQUIPMENT] URL: {requestUrl}");
@@ -149,7 +144,7 @@ namespace GetFitterGetBigger.Admin.Services
 
         public async Task<EquipmentDto> UpdateEquipmentAsync(string id, UpdateEquipmentDto dto)
         {
-            var requestUrl = $"{_apiBaseUrl}/api/ReferenceTables/Equipment/{id}";
+            var requestUrl = $"api/ReferenceTables/Equipment/{id}";
 
             // Log the request details
             Console.WriteLine($"[UPDATE EQUIPMENT] URL: {requestUrl}");
@@ -209,7 +204,7 @@ namespace GetFitterGetBigger.Admin.Services
 
         public async Task DeleteEquipmentAsync(string id)
         {
-            var requestUrl = $"{_apiBaseUrl}/api/ReferenceTables/Equipment/{id}";
+            var requestUrl = $"api/ReferenceTables/Equipment/{id}";
 
             // Log the request details
             Console.WriteLine($"[DELETE EQUIPMENT] URL: {requestUrl}");

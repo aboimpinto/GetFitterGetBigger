@@ -73,7 +73,7 @@ interface UpdateMuscleGroupDto {
 **Response:** Single `MuscleGroupDto`
 
 ### Get Muscle Group by Name
-**Endpoint:** `GET /api/ReferenceTables/MuscleGroups/ByName/{name}`
+**Endpoint:** `GET /api/ReferenceTables/MuscleGroups/ByValue/{value}`
 **Authorization:** Any authenticated user
 **Response:** Single `MuscleGroupDto`
 

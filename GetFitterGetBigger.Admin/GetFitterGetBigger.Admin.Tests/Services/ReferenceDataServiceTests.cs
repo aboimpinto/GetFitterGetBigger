@@ -5,8 +5,6 @@ using GetFitterGetBigger.Admin.Services;
 using GetFitterGetBigger.Admin.Tests.Builders;
 using GetFitterGetBigger.Admin.Tests.Helpers;
 using Microsoft.Extensions.Caching.Memory;
-using Microsoft.Extensions.Configuration;
-using Moq;
 
 namespace GetFitterGetBigger.Admin.Tests.Services
 {
@@ -15,7 +13,6 @@ namespace GetFitterGetBigger.Admin.Tests.Services
         private readonly MockHttpMessageHandler _httpMessageHandler;
         private readonly HttpClient _httpClient;
         private readonly IMemoryCache _memoryCache;
-        private readonly Mock<IConfiguration> _configurationMock;
         private readonly ReferenceDataService _referenceDataService;
 
         public ReferenceDataServiceTests()
@@ -26,16 +23,10 @@ namespace GetFitterGetBigger.Admin.Tests.Services
                 BaseAddress = new Uri("http://localhost:5214")
             };
             _memoryCache = new MemoryCache(new MemoryCacheOptions());
-            _configurationMock = new Mock<IConfiguration>();
-
-            _configurationMock
-                .Setup(x => x["ApiBaseUrl"])
-                .Returns("http://localhost:5214");
 
             _referenceDataService = new ReferenceDataService(
                 _httpClient,
-                _memoryCache,
-                _configurationMock.Object);
+                _memoryCache);
         }
 
         [Fact]
@@ -207,7 +198,7 @@ namespace GetFitterGetBigger.Admin.Tests.Services
                 _memoryCache.Remove(cacheKey);
                 var handler = new MockHttpMessageHandler();
                 var client = new HttpClient(handler) { BaseAddress = new Uri("http://localhost:5214") };
-                var service = new ReferenceDataService(client, _memoryCache, _configurationMock.Object);
+                var service = new ReferenceDataService(client, _memoryCache);
 
                 var expectedData = ReferenceDataDtoBuilder.BuildList(1);
                 handler.SetupResponse(HttpStatusCode.OK, expectedData)
@@ -243,10 +234,7 @@ namespace GetFitterGetBigger.Admin.Tests.Services
         public async Task GetBodyPartsAsync_WhenApiUrlNotConfigured_UsesDefaultUrl()
         {
             // Arrange
-            var configMock = new Mock<IConfiguration>();
-            configMock.Setup(x => x["ApiBaseUrl"]).Returns((string?)null);
-
-            var service = new ReferenceDataService(_httpClient, _memoryCache, configMock.Object);
+            var service = new ReferenceDataService(_httpClient, _memoryCache);
             var expectedData = ReferenceDataDtoBuilder.BuildList(1);
             _httpMessageHandler.SetupResponse(HttpStatusCode.OK, expectedData);
 
@@ -255,7 +243,7 @@ namespace GetFitterGetBigger.Admin.Tests.Services
 
             // Assert
             result.Should().HaveCount(1);
-            // Service should still work even without configured URL (uses HttpClient's base address)
+            // Service should still work (uses HttpClient's base address)
         }
 
         [Fact]

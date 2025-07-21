@@ -10,20 +10,16 @@ namespace GetFitterGetBigger.Admin.Services
     {
         private readonly HttpClient _httpClient;
         private readonly IMemoryCache _cache;
-        private readonly IConfiguration _configuration;
         private readonly ICacheHelperService _cacheHelper;
-        private readonly string _apiBaseUrl;
         private readonly JsonSerializerOptions _jsonOptions;
         private const string CacheKey = "MuscleGroupsDto_Full";
         private const string CacheKeyPrefix = "MuscleGroups_BodyPart_";
 
-        public MuscleGroupsService(HttpClient httpClient, IMemoryCache cache, IConfiguration configuration, ICacheHelperService cacheHelper)
+        public MuscleGroupsService(HttpClient httpClient, IMemoryCache cache, ICacheHelperService cacheHelper)
         {
             _httpClient = httpClient;
             _cache = cache;
-            _configuration = configuration;
             _cacheHelper = cacheHelper;
-            _apiBaseUrl = _configuration["ApiBaseUrl"] ?? string.Empty;
             _jsonOptions = new JsonSerializerOptions
             {
                 PropertyNameCaseInsensitive = true,
@@ -36,7 +32,7 @@ namespace GetFitterGetBigger.Admin.Services
             if (!_cache.TryGetValue(CacheKey, out IEnumerable<MuscleGroupDto>? cachedData))
             {
                 // Try the simple endpoint first (without pagination parameters)
-                var requestUrl = $"{_apiBaseUrl}/api/ReferenceTables/MuscleGroups";
+                var requestUrl = "api/ReferenceTables/MuscleGroups";
                 var response = await _httpClient.GetAsync(requestUrl);
 
                 if (!response.IsSuccessStatusCode)
@@ -110,7 +106,7 @@ namespace GetFitterGetBigger.Admin.Services
 
             if (!_cache.TryGetValue(cacheKey, out IEnumerable<MuscleGroupDto>? cachedData))
             {
-                var requestUrl = $"{_apiBaseUrl}/api/ReferenceTables/MuscleGroups/ByBodyPart/{bodyPartId}";
+                var requestUrl = $"api/ReferenceTables/MuscleGroups/ByBodyPart/{bodyPartId}";
                 var response = await _httpClient.GetAsync(requestUrl);
 
                 if (!response.IsSuccessStatusCode)
@@ -132,7 +128,7 @@ namespace GetFitterGetBigger.Admin.Services
 
         public async Task<MuscleGroupDto> CreateMuscleGroupAsync(CreateMuscleGroupDto dto)
         {
-            var requestUrl = $"{_apiBaseUrl}/api/ReferenceTables/MuscleGroups";
+            var requestUrl = "api/ReferenceTables/MuscleGroups";
 
             // Log the request details
             Console.WriteLine($"[CREATE MUSCLE GROUP] URL: {requestUrl}");
@@ -180,7 +176,7 @@ namespace GetFitterGetBigger.Admin.Services
 
         public async Task<MuscleGroupDto> UpdateMuscleGroupAsync(string id, UpdateMuscleGroupDto dto)
         {
-            var requestUrl = $"{_apiBaseUrl}/api/ReferenceTables/MuscleGroups/{id}";
+            var requestUrl = $"api/ReferenceTables/MuscleGroups/{id}";
 
             // Log the request details
             Console.WriteLine($"[UPDATE MUSCLE GROUP] URL: {requestUrl}");
@@ -245,7 +241,7 @@ namespace GetFitterGetBigger.Admin.Services
 
         public async Task DeleteMuscleGroupAsync(string id)
         {
-            var requestUrl = $"{_apiBaseUrl}/api/ReferenceTables/MuscleGroups/{id}";
+            var requestUrl = $"api/ReferenceTables/MuscleGroups/{id}";
 
             // Log the request details
             Console.WriteLine($"[DELETE MUSCLE GROUP] URL: {requestUrl}");

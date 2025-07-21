@@ -1,10 +1,7 @@
 using GetFitterGetBigger.Admin.Models.Dtos;
 using GetFitterGetBigger.Admin.Services;
 using Microsoft.Extensions.Caching.Memory;
-using Microsoft.Extensions.Configuration;
 using System.Net;
-using System.Net.Http.Json;
-using System.Text;
 using System.Text.Json;
 using Xunit;
 using FluentAssertions;
@@ -15,20 +12,11 @@ namespace GetFitterGetBigger.Admin.Tests.Services
     public class ReferenceDataServiceCacheTests
     {
         private readonly IMemoryCache _cache;
-        private readonly IConfiguration _configuration;
         private readonly JsonSerializerOptions _jsonOptions;
 
         public ReferenceDataServiceCacheTests()
         {
             _cache = new MemoryCache(new MemoryCacheOptions());
-
-            var inMemorySettings = new Dictionary<string, string?>
-            {
-                {"ApiBaseUrl", "http://localhost:5214"}
-            };
-            _configuration = new ConfigurationBuilder()
-                .AddInMemoryCollection(inMemorySettings)
-                .Build();
 
             _jsonOptions = new JsonSerializerOptions
             {
@@ -63,7 +51,7 @@ namespace GetFitterGetBigger.Admin.Tests.Services
             mockHandler.SetupResponse(HttpStatusCode.OK, mockMuscleGroups);
 
             var httpClient = new HttpClient(mockHandler) { BaseAddress = new Uri("http://localhost:5214") };
-            var referenceDataService = new ReferenceDataService(httpClient, _cache, _configuration);
+            var referenceDataService = new ReferenceDataService(httpClient, _cache);
 
             // Act
             var result = await referenceDataService.GetMuscleGroupsAsync();
@@ -100,7 +88,7 @@ namespace GetFitterGetBigger.Admin.Tests.Services
             mockHandler.SetupResponse(HttpStatusCode.OK, mockReferenceData);
 
             var httpClient = new HttpClient(mockHandler) { BaseAddress = new Uri("http://localhost:5214") };
-            var referenceDataService = new ReferenceDataService(httpClient, _cache, _configuration);
+            var referenceDataService = new ReferenceDataService(httpClient, _cache);
 
             // Act
             var result = await referenceDataService.GetEquipmentAsync();
@@ -175,7 +163,7 @@ namespace GetFitterGetBigger.Admin.Tests.Services
             });
 
             var httpClient = new HttpClient(mockHandler) { BaseAddress = new Uri("http://localhost:5214") };
-            var service = new ReferenceDataService(httpClient, _cache, _configuration);
+            var service = new ReferenceDataService(httpClient, _cache);
 
             // Act
             await service.GetBodyPartsAsync();

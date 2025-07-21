@@ -175,7 +175,7 @@ public class WorkoutReferenceDataServiceTests
     }
 
     [Fact]
-    public async Task GetExecutionProtocolByCodeAsync_Success_ReturnsProtocol()
+    public async Task GetExecutionProtocolByValueAsync_Success_ReturnsProtocol()
     {
         // Arrange
         var protocol = new ExecutionProtocolDto
@@ -193,7 +193,7 @@ public class WorkoutReferenceDataServiceTests
         _httpMessageHandler.SetupResponse(HttpStatusCode.OK, protocol);
 
         // Act
-        var result = await _service.GetExecutionProtocolByCodeAsync("AMRAP");
+        var result = await _service.GetExecutionProtocolByValueAsync("AMRAP");
 
         // Assert
         result.Should().NotBeNull();
@@ -202,13 +202,13 @@ public class WorkoutReferenceDataServiceTests
     }
 
     [Fact]
-    public async Task GetExecutionProtocolByCodeAsync_NotFound_ReturnsNull()
+    public async Task GetExecutionProtocolByValueAsync_NotFound_ReturnsNull()
     {
         // Arrange
         _httpMessageHandler.SetupResponse(HttpStatusCode.NotFound);
 
         // Act
-        var result = await _service.GetExecutionProtocolByCodeAsync("INVALID");
+        var result = await _service.GetExecutionProtocolByValueAsync("INVALID");
 
         // Assert
         result.Should().BeNull();

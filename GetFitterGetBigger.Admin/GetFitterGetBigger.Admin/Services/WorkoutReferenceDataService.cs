@@ -126,12 +126,12 @@ public class WorkoutReferenceDataService : IWorkoutReferenceDataService
         return protocols.FirstOrDefault(p => p.ExecutionProtocolId == id);
     }
 
-    public async Task<ExecutionProtocolDto?> GetExecutionProtocolByCodeAsync(string code)
+    public async Task<ExecutionProtocolDto?> GetExecutionProtocolByValueAsync(string value)
     {
         try
         {
             var response = await ExecuteWithRetryAsync(
-                async () => await _httpClient.GetAsync($"/api/ReferenceTables/ExecutionProtocols/ByCode/{code}"));
+                async () => await _httpClient.GetAsync($"/api/ReferenceTables/ExecutionProtocols/ByValue/{value}"));
             
             if (!response.IsSuccessStatusCode)
             {
@@ -155,7 +155,7 @@ public class WorkoutReferenceDataService : IWorkoutReferenceDataService
                 return new ExecutionProtocolDto
                 {
                     ExecutionProtocolId = referenceData.Id,
-                    Code = code,
+                    Code = value,
                     Value = referenceData.Value,
                     Description = referenceData.Description,
                     DisplayOrder = 0,
@@ -169,7 +169,7 @@ public class WorkoutReferenceDataService : IWorkoutReferenceDataService
         }
         catch (HttpRequestException ex)
         {
-            _logger.LogError(ex, "Error fetching execution protocol by code: {Code}", code);
+            _logger.LogError(ex, "Error fetching execution protocol by value: {Value}", value);
             return null;
         }
     }

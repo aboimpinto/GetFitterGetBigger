@@ -13,16 +13,12 @@ public class ExerciseLinkService : IExerciseLinkService
 {
     private readonly HttpClient _httpClient;
     private readonly IMemoryCache _cache;
-    private readonly IConfiguration _configuration;
-    private readonly string _apiBaseUrl;
     private readonly JsonSerializerOptions _jsonOptions;
 
-    public ExerciseLinkService(HttpClient httpClient, IMemoryCache cache, IConfiguration configuration)
+    public ExerciseLinkService(HttpClient httpClient, IMemoryCache cache)
     {
         _httpClient = httpClient;
         _cache = cache;
-        _configuration = configuration;
-        _apiBaseUrl = _configuration["ApiBaseUrl"] ?? string.Empty;
         _jsonOptions = new JsonSerializerOptions
         {
             PropertyNameCaseInsensitive = true,
@@ -34,7 +30,7 @@ public class ExerciseLinkService : IExerciseLinkService
     {
         try
         {
-            var requestUrl = $"{_apiBaseUrl}/api/exercises/{exerciseId}/links";
+            var requestUrl = $"api/exercises/{exerciseId}/links";
 
             Console.WriteLine($"[ExerciseLinkService] CreateLinkAsync called");
             Console.WriteLine($"[ExerciseLinkService] Request URL: {requestUrl}");
@@ -99,7 +95,7 @@ public class ExerciseLinkService : IExerciseLinkService
             if (!_cache.TryGetValue(cacheKey, out ExerciseLinksResponseDto? links))
             {
                 var queryParams = BuildLinksQueryString(linkType, includeExerciseDetails);
-                var requestUrl = $"{_apiBaseUrl}/api/exercises/{exerciseId}/links{queryParams}";
+                var requestUrl = $"api/exercises/{exerciseId}/links{queryParams}";
 
                 var response = await _httpClient.GetAsync(requestUrl);
 
@@ -150,7 +146,7 @@ public class ExerciseLinkService : IExerciseLinkService
             if (!_cache.TryGetValue(cacheKey, out List<ExerciseLinkDto>? suggestions))
             {
                 var queryParams = count != 5 ? $"?count={count}" : "";
-                var requestUrl = $"{_apiBaseUrl}/api/exercises/{exerciseId}/links/suggested{queryParams}";
+                var requestUrl = $"api/exercises/{exerciseId}/links/suggested{queryParams}";
 
                 var response = await _httpClient.GetAsync(requestUrl);
 
@@ -196,7 +192,7 @@ public class ExerciseLinkService : IExerciseLinkService
     {
         try
         {
-            var requestUrl = $"{_apiBaseUrl}/api/exercises/{exerciseId}/links/{linkId}";
+            var requestUrl = $"api/exercises/{exerciseId}/links/{linkId}";
 
             var response = await _httpClient.PutAsJsonAsync(requestUrl, updateLinkDto, _jsonOptions);
 
@@ -238,7 +234,7 @@ public class ExerciseLinkService : IExerciseLinkService
     {
         try
         {
-            var requestUrl = $"{_apiBaseUrl}/api/exercises/{exerciseId}/links/{linkId}";
+            var requestUrl = $"api/exercises/{exerciseId}/links/{linkId}";
 
             var response = await _httpClient.DeleteAsync(requestUrl);
 

@@ -4,8 +4,6 @@ using GetFitterGetBigger.Admin.Models.Dtos;
 using GetFitterGetBigger.Admin.Services;
 using GetFitterGetBigger.Admin.Tests.Helpers;
 using Microsoft.Extensions.Caching.Memory;
-using Microsoft.Extensions.Configuration;
-using Moq;
 
 namespace GetFitterGetBigger.Admin.Tests.Services
 {
@@ -14,24 +12,20 @@ namespace GetFitterGetBigger.Admin.Tests.Services
         private readonly MockHttpMessageHandler _httpMessageHandler;
         private readonly HttpClient _httpClient;
         private readonly IMemoryCache _memoryCache;
-        private readonly Mock<IConfiguration> _configurationMock;
         private readonly ExerciseWeightTypeService _exerciseWeightTypeService;
 
         public ExerciseWeightTypeServiceTests()
         {
             _httpMessageHandler = new MockHttpMessageHandler();
-            _httpClient = new HttpClient(_httpMessageHandler);
+            _httpClient = new HttpClient(_httpMessageHandler)
+            {
+                BaseAddress = new Uri("http://localhost:5214")
+            };
             _memoryCache = new MemoryCache(new MemoryCacheOptions());
-            _configurationMock = new Mock<IConfiguration>();
-
-            _configurationMock
-                .Setup(x => x["ApiBaseUrl"])
-                .Returns("http://localhost:5214");
 
             _exerciseWeightTypeService = new ExerciseWeightTypeService(
                 _httpClient,
-                _memoryCache,
-                _configurationMock.Object);
+                _memoryCache);
         }
 
         [Fact]

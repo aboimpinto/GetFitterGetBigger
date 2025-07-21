@@ -66,19 +66,28 @@ builder.Services.AddHttpClient<GetFitterGetBigger.Admin.Services.IReferenceDataS
 });
 
 // Add HttpClient for ExerciseService
-builder.Services.AddHttpClient<GetFitterGetBigger.Admin.Services.IExerciseService, GetFitterGetBigger.Admin.Services.ExerciseService>();
+builder.Services.AddHttpClient<GetFitterGetBigger.Admin.Services.IExerciseService, GetFitterGetBigger.Admin.Services.ExerciseService>(client =>
+{
+    client.BaseAddress = new Uri(builder.Configuration["ApiBaseUrl"] ?? "http://localhost:5214");
+});
 
 // Add ExerciseStateService
 builder.Services.AddScoped<GetFitterGetBigger.Admin.Services.IExerciseStateService, GetFitterGetBigger.Admin.Services.ExerciseStateService>();
 
 // Add HttpClient for EquipmentService
-builder.Services.AddHttpClient<GetFitterGetBigger.Admin.Services.IEquipmentService, GetFitterGetBigger.Admin.Services.EquipmentService>();
+builder.Services.AddHttpClient<GetFitterGetBigger.Admin.Services.IEquipmentService, GetFitterGetBigger.Admin.Services.EquipmentService>(client =>
+{
+    client.BaseAddress = new Uri(builder.Configuration["ApiBaseUrl"] ?? "http://localhost:5214");
+});
 
 // Add EquipmentStateService
 builder.Services.AddScoped<GetFitterGetBigger.Admin.Services.IEquipmentStateService, GetFitterGetBigger.Admin.Services.EquipmentStateService>();
 
 // Add HttpClient for MuscleGroupsService
-builder.Services.AddHttpClient<GetFitterGetBigger.Admin.Services.IMuscleGroupsService, GetFitterGetBigger.Admin.Services.MuscleGroupsService>();
+builder.Services.AddHttpClient<GetFitterGetBigger.Admin.Services.IMuscleGroupsService, GetFitterGetBigger.Admin.Services.MuscleGroupsService>(client =>
+{
+    client.BaseAddress = new Uri(builder.Configuration["ApiBaseUrl"] ?? "http://localhost:5214");
+});
 
 // Add MuscleGroupsStateService
 builder.Services.AddScoped<GetFitterGetBigger.Admin.Services.IMuscleGroupsStateService, GetFitterGetBigger.Admin.Services.MuscleGroupsStateService>();
@@ -90,7 +99,10 @@ builder.Services.AddScoped<GetFitterGetBigger.Admin.Services.INavigationService,
 builder.Services.AddSingleton<GetFitterGetBigger.Admin.Services.ICacheHelperService, GetFitterGetBigger.Admin.Services.CacheHelperService>();
 
 // Add HttpClient for ExerciseLinkService
-builder.Services.AddHttpClient<GetFitterGetBigger.Admin.Services.IExerciseLinkService, GetFitterGetBigger.Admin.Services.ExerciseLinkService>();
+builder.Services.AddHttpClient<GetFitterGetBigger.Admin.Services.IExerciseLinkService, GetFitterGetBigger.Admin.Services.ExerciseLinkService>(client =>
+{
+    client.BaseAddress = new Uri(builder.Configuration["ApiBaseUrl"] ?? "http://localhost:5214");
+});
 
 // Add ExerciseLinkStateService
 builder.Services.AddScoped<GetFitterGetBigger.Admin.Services.IExerciseLinkStateService, GetFitterGetBigger.Admin.Services.ExerciseLinkStateService>();
@@ -99,7 +111,10 @@ builder.Services.AddScoped<GetFitterGetBigger.Admin.Services.IExerciseLinkStateS
 builder.Services.AddScoped<GetFitterGetBigger.Admin.Services.IExerciseLinkValidationService, GetFitterGetBigger.Admin.Services.ExerciseLinkValidationService>();
 
 // Add HttpClient for ExerciseWeightTypeService
-builder.Services.AddHttpClient<GetFitterGetBigger.Admin.Services.IExerciseWeightTypeService, GetFitterGetBigger.Admin.Services.ExerciseWeightTypeService>();
+builder.Services.AddHttpClient<GetFitterGetBigger.Admin.Services.IExerciseWeightTypeService, GetFitterGetBigger.Admin.Services.ExerciseWeightTypeService>(client =>
+{
+    client.BaseAddress = new Uri(builder.Configuration["ApiBaseUrl"] ?? "http://localhost:5214");
+});
 
 // Add ExerciseWeightTypeStateService
 builder.Services.AddScoped<GetFitterGetBigger.Admin.Services.IExerciseWeightTypeStateService, GetFitterGetBigger.Admin.Services.ExerciseWeightTypeStateService>();

@@ -6,8 +6,6 @@ using GetFitterGetBigger.Admin.Services;
 using GetFitterGetBigger.Admin.Builders;
 using GetFitterGetBigger.Admin.Tests.Helpers;
 using Microsoft.Extensions.Caching.Memory;
-using Microsoft.Extensions.Configuration;
-using Moq;
 
 namespace GetFitterGetBigger.Admin.Tests.Services
 {
@@ -16,7 +14,6 @@ namespace GetFitterGetBigger.Admin.Tests.Services
         private readonly MockHttpMessageHandler _httpMessageHandler;
         private readonly HttpClient _httpClient;
         private readonly IMemoryCache _memoryCache;
-        private readonly Mock<IConfiguration> _configurationMock;
         private readonly ExerciseService _exerciseService;
 
         public ExerciseServiceTests()
@@ -27,16 +24,10 @@ namespace GetFitterGetBigger.Admin.Tests.Services
                 BaseAddress = new Uri("http://localhost:5214")
             };
             _memoryCache = new MemoryCache(new MemoryCacheOptions());
-            _configurationMock = new Mock<IConfiguration>();
-
-            _configurationMock
-                .Setup(x => x["ApiBaseUrl"])
-                .Returns("http://localhost:5214");
 
             _exerciseService = new ExerciseService(
                 _httpClient,
-                _memoryCache,
-                _configurationMock.Object);
+                _memoryCache);
         }
 
         [Fact]

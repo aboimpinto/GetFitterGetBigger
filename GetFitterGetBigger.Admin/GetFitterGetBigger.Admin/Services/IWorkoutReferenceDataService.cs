@@ -12,5 +12,5 @@ public interface IWorkoutReferenceDataService
     
     Task<List<ExecutionProtocolDto>> GetExecutionProtocolsAsync();
     Task<ExecutionProtocolDto?> GetExecutionProtocolByIdAsync(string id);
-    Task<ExecutionProtocolDto?> GetExecutionProtocolByCodeAsync(string code);
+    Task<ExecutionProtocolDto?> GetExecutionProtocolByValueAsync(string value);
 }

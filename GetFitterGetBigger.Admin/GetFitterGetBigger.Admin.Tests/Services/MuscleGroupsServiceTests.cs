@@ -6,7 +6,6 @@ using GetFitterGetBigger.Admin.Models.Dtos;
 using GetFitterGetBigger.Admin.Services;
 using GetFitterGetBigger.Admin.Tests.Helpers;
 using Microsoft.Extensions.Caching.Memory;
-using Microsoft.Extensions.Configuration;
 using Moq;
 using Xunit;
 
@@ -17,7 +16,6 @@ namespace GetFitterGetBigger.Admin.Tests.Services
         private readonly MockHttpMessageHandler _httpMessageHandler;
         private readonly HttpClient _httpClient;
         private readonly IMemoryCache _memoryCache;
-        private readonly IConfiguration _configuration;
         private readonly Mock<ICacheHelperService> _cacheHelperMock;
         private readonly MuscleGroupsService _muscleGroupsService;
         private readonly JsonSerializerOptions _jsonOptions;
@@ -30,18 +28,10 @@ namespace GetFitterGetBigger.Admin.Tests.Services
                 BaseAddress = new Uri("http://localhost:5214")
             };
             _memoryCache = new MemoryCache(new MemoryCacheOptions());
-            var inMemorySettings = new Dictionary<string, string?>
-            {
-                {"ApiBaseUrl", "http://localhost:5214"}
-            };
-            _configuration = new ConfigurationBuilder()
-                .AddInMemoryCollection(inMemorySettings)
-                .Build();
             _cacheHelperMock = new Mock<ICacheHelperService>();
             _muscleGroupsService = new MuscleGroupsService(
                 _httpClient,
                 _memoryCache,
-                _configuration,
                 _cacheHelperMock.Object);
             _jsonOptions = new JsonSerializerOptions
             {

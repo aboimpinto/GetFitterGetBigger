@@ -11,16 +11,12 @@ namespace GetFitterGetBigger.Admin.Services
     {
         private readonly HttpClient _httpClient;
         private readonly IMemoryCache _cache;
-        private readonly IConfiguration _configuration;
-        private readonly string _apiBaseUrl;
         private readonly JsonSerializerOptions _jsonOptions;
 
-        public ExerciseService(HttpClient httpClient, IMemoryCache cache, IConfiguration configuration)
+        public ExerciseService(HttpClient httpClient, IMemoryCache cache)
         {
             _httpClient = httpClient;
             _cache = cache;
-            _configuration = configuration;
-            _apiBaseUrl = _configuration["ApiBaseUrl"] ?? string.Empty;
             _jsonOptions = new JsonSerializerOptions
             {
                 PropertyNameCaseInsensitive = true,
@@ -33,7 +29,7 @@ namespace GetFitterGetBigger.Admin.Services
             try
             {
                 var queryParams = BuildQueryString(filter);
-                var requestUrl = $"{_apiBaseUrl}/api/exercises{queryParams}";
+                var requestUrl = $"api/exercises{queryParams}";
 
                 Console.WriteLine($"[ExerciseService] GetExercisesAsync - Request URL: {requestUrl}");
                 Console.WriteLine($"[ExerciseService] GetExercisesAsync - Filter: Name='{filter.Name}', DifficultyId='{filter.DifficultyId}', IsActive='{filter.IsActive}', Page={filter.Page}, PageSize={filter.PageSize}");
@@ -131,7 +127,7 @@ namespace GetFitterGetBigger.Admin.Services
 
             if (!_cache.TryGetValue(cacheKey, out ExerciseDto? exercise))
             {
-                var requestUrl = $"{_apiBaseUrl}/api/exercises/{id}";
+                var requestUrl = $"api/exercises/{id}";
                 var response = await _httpClient.GetAsync(requestUrl);
 
                 if (response.IsSuccessStatusCode)
@@ -175,7 +171,7 @@ namespace GetFitterGetBigger.Admin.Services
         {
             try
             {
-                var requestUrl = $"{_apiBaseUrl}/api/exercises";
+                var requestUrl = "api/exercises";
                 var json = JsonSerializer.Serialize(exercise, _jsonOptions);
 
                 Console.WriteLine($"[ExerciseService] Creating exercise at URL: {requestUrl}");
@@ -213,7 +209,7 @@ namespace GetFitterGetBigger.Admin.Services
 
         public async Task UpdateExerciseAsync(string id, ExerciseUpdateDto exercise)
         {
-            var requestUrl = $"{_apiBaseUrl}/api/exercises/{id}";
+            var requestUrl = $"api/exercises/{id}";
             var content = new StringContent(
                 JsonSerializer.Serialize(exercise, _jsonOptions),
                 Encoding.UTF8,
@@ -228,7 +224,7 @@ namespace GetFitterGetBigger.Admin.Services
 
         public async Task DeleteExerciseAsync(string id)
         {
-            var requestUrl = $"{_apiBaseUrl}/api/exercises/{id}";
+            var requestUrl = $"api/exercises/{id}";
             var response = await _httpClient.DeleteAsync(requestUrl);
             response.EnsureSuccessStatusCode();
 

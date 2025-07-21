@@ -41,7 +41,7 @@ All workout reference data endpoints have been verified and are available in the
   - GET `/api/ReferenceTables/ExecutionProtocols` - Get all active protocols
   - GET `/api/ReferenceTables/ExecutionProtocols/{id}` - Get by ID
   - GET `/api/ReferenceTables/ExecutionProtocols/ByValue/{value}` - Get by value
-  - GET `/api/ReferenceTables/ExecutionProtocols/ByCode/{code}` - Get by code (unique to this endpoint)
+  - GET `/api/ReferenceTables/ExecutionProtocols/ByValue/{value}` - Get by value (previously ByCode)
 - **Response Type**: `IEnumerable<ReferenceDataDto>`
 - **Controller**: `ExecutionProtocolsController`
 
@@ -66,7 +66,7 @@ All workout reference data endpoints have been verified and are available in the
    }
    ```
 
-2. **ExecutionProtocols Additional Endpoint**: Has a unique `ByCode` endpoint for retrieving by protocol code.
+2. **ExecutionProtocols Standardization**: Previously had a `ByCode` endpoint, now standardized to use `ByValue` like other reference tables.
 
 ### Standard ReferenceDataDto Structure
 ```json
