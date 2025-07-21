@@ -188,8 +188,9 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages
             // Assert
             var gridContainer = component.Find("[data-testid='objectives-grid']");
             (gridContainer.GetAttribute("class") ?? "").Should().Contain("grid-cols-1")
-                .And.Contain("md:grid-cols-2")
-                .And.Contain("lg:grid-cols-3");
+                .And.Contain("sm:grid-cols-2")
+                .And.Contain("lg:grid-cols-3")
+                .And.Contain("xl:grid-cols-4");
         }
 
         #endregion
@@ -299,7 +300,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages
 
             // Assert
             var card = component.Find("[data-testid='category-card']");
-            card.GetAttribute("style")?.Should().Contain("border: 2px solid #FF000020");
+            card.GetAttribute("style")?.Should().Contain("border-color: #FF000030");
             
             var iconContainer = card.QuerySelector("[data-testid='category-icon']");
             iconContainer?.InnerHtml.Should().Contain("<svg>");
