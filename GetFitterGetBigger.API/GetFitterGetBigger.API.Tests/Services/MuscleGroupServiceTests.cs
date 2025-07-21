@@ -291,7 +291,7 @@ public class MuscleGroupServiceTests
     public async Task GetByNameAsync_WithNullName_ReturnsFailure()
     {
         // Act
-        var result = await _service.GetByNameAsync(null);
+        var result = await _service.GetByNameAsync(null!);
         
         // Assert
         Assert.False(result.IsSuccess);
@@ -475,7 +475,7 @@ public class MuscleGroupServiceTests
     public async Task CreateAsync_WithNullCommand_ReturnsValidationError()
     {
         // Act
-        var result = await _service.CreateAsync(null);
+        var result = await _service.CreateAsync(null!);
         
         // Assert
         Assert.False(result.IsSuccess);
@@ -889,12 +889,12 @@ public class MuscleGroupServiceTests
     {
         // Arrange
         var muscleGroup = _testData.First();
-        string expectedCacheKey = null;
+        string? expectedCacheKey = null;
         
         _mockCacheService
             .Setup(x => x.GetAsync<MuscleGroupDto>(It.IsAny<string>()))
             .Callback<string>(key => expectedCacheKey = key)
-            .ReturnsAsync((MuscleGroupDto)null);
+            .ReturnsAsync((MuscleGroupDto?)null);
             
         _mockRepository
             .Setup(x => x.GetByNameAsync(It.IsAny<string>()))
