@@ -64,17 +64,17 @@ public class MuscleGroupsController : ControllerBase
         };
 
     /// <summary>
-    /// Gets a muscle group by name
+    /// Gets a muscle group by value
     /// </summary>
-    /// <param name="name">The name of the muscle group to retrieve</param>
+    /// <param name="value">The value of the muscle group to retrieve</param>
     /// <returns>The muscle group if found, 404 Not Found otherwise</returns>
-    [HttpGet("ByName/{name}")]
+    [HttpGet("ByValue/{value}")]
     [ProducesResponseType(typeof(MuscleGroupDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<IActionResult> GetByName(string name) =>
-        await _muscleGroupService.GetByNameAsync(name) switch
+    public async Task<IActionResult> GetByValue(string value) =>
+        await _muscleGroupService.GetByNameAsync(value) switch
         {
             { IsSuccess: true, Data: var data } => Ok(data),
             { PrimaryErrorCode: ServiceErrorCode.NotFound } => NotFound(),

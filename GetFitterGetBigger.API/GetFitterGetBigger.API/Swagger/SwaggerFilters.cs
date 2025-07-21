@@ -22,35 +22,28 @@ namespace GetFitterGetBigger.API.Swagger
             }
             
             // Create tags for each reference table controller with hierarchical naming
-            var bodyPartsTag = new OpenApiTag
+            var referenceTableTags = new List<OpenApiTag>
             {
-                Name = "ReferenceTables/BodyParts",
-                Description = "Body parts reference data"
+                new() { Name = "ReferenceTables/BodyParts", Description = "Body parts reference data" },
+                new() { Name = "ReferenceTables/DifficultyLevels", Description = "Difficulty levels reference data" },
+                new() { Name = "ReferenceTables/Equipment", Description = "Equipment reference data" },
+                new() { Name = "ReferenceTables/ExecutionProtocols", Description = "Execution protocols reference data" },
+                new() { Name = "ReferenceTables/ExerciseTypes", Description = "Exercise types reference data" },
+                new() { Name = "ReferenceTables/ExerciseWeightTypes", Description = "Exercise weight types reference data" },
+                new() { Name = "ReferenceTables/KineticChainTypes", Description = "Kinetic chain types reference data" },
+                new() { Name = "ReferenceTables/MetricTypes", Description = "Metric types reference data" },
+                new() { Name = "ReferenceTables/MovementPatterns", Description = "Movement patterns reference data" },
+                new() { Name = "ReferenceTables/MuscleGroups", Description = "Muscle groups reference data" },
+                new() { Name = "ReferenceTables/MuscleRoles", Description = "Muscle roles reference data" },
+                new() { Name = "ReferenceTables/WorkoutCategories", Description = "Workout categories reference data" },
+                new() { Name = "ReferenceTables/WorkoutObjectives", Description = "Workout objectives reference data" }
             };
             
-            var difficultyLevelsTag = new OpenApiTag
+            // Add all tags to the document
+            foreach (var tag in referenceTableTags)
             {
-                Name = "ReferenceTables/DifficultyLevels",
-                Description = "Difficulty levels reference data"
-            };
-            
-            var kineticChainTypesTag = new OpenApiTag
-            {
-                Name = "ReferenceTables/KineticChainTypes",
-                Description = "Kinetic chain types reference data"
-            };
-            
-            var muscleRolesTag = new OpenApiTag
-            {
-                Name = "ReferenceTables/MuscleRoles",
-                Description = "Muscle roles reference data"
-            };
-            
-            // Add the tags to the document
-            swaggerDoc.Tags.Add(bodyPartsTag);
-            swaggerDoc.Tags.Add(difficultyLevelsTag);
-            swaggerDoc.Tags.Add(kineticChainTypesTag);
-            swaggerDoc.Tags.Add(muscleRolesTag);
+                swaggerDoc.Tags.Add(tag);
+            }
         }
     }
 
@@ -61,27 +54,22 @@ namespace GetFitterGetBigger.API.Swagger
         {
             var controllerName = context.ApiDescription.ActionDescriptor.RouteValues["controller"];
             
-            if (controllerName == "BodyParts" || 
-                controllerName == "DifficultyLevels" || 
-                controllerName == "KineticChainTypes" || 
-                controllerName == "MuscleRoles")
+            // List of all reference table controllers
+            var referenceTableControllers = new HashSet<string>
+            {
+                "BodyParts", "DifficultyLevels", "Equipment", "ExecutionProtocols",
+                "ExerciseTypes", "ExerciseWeightTypes", "KineticChainTypes",
+                "MetricTypes", "MovementPatterns", "MuscleGroups", "MuscleRoles",
+                "WorkoutCategories", "WorkoutObjectives"
+            };
+            
+            if (controllerName != null && referenceTableControllers.Contains(controllerName))
             {
                 // Set the tag to the hierarchical tag name
                 operation.Tags.Clear();
                 operation.Tags.Add(new OpenApiTag { Name = $"ReferenceTables/{controllerName}" });
                 
-                // Add the controller name as an operation ID prefix
-                operation.OperationId = $"{controllerName}_{operation.OperationId}";
-                
-                // Add a description to indicate the controller
-                if (operation.Summary == null)
-                {
-                    operation.Summary = $"{controllerName} - ";
-                }
-                else
-                {
-                    operation.Summary = $"{controllerName} - {operation.Summary}";
-                }
+                // Don't add controller name to operation ID or summary - keep them clean
             }
         }
     }

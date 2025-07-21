@@ -11,7 +11,6 @@ namespace GetFitterGetBigger.API.Controllers;
 [ApiController]
 [Route("api/ReferenceTables/[controller]")]
 [Produces("application/json")]
-[Tags("Reference Tables")]
 public class ExerciseWeightTypesController : ControllerBase
 {
     private readonly IExerciseWeightTypeService _exerciseWeightTypeService;
@@ -104,40 +103,6 @@ public class ExerciseWeightTypesController : ControllerBase
         _logger.LogInformation("Getting exercise weight type with value: {Value}", value);
         
         var result = await _exerciseWeightTypeService.GetByValueAsync(value);
-        
-        return result switch
-        {
-            { IsSuccess: true } => Ok(result.Data),
-            { PrimaryErrorCode: ServiceErrorCode.NotFound } => NotFound(),
-            _ => BadRequest(new { errors = result.StructuredErrors })
-        };
-    }
-    
-    /// <summary>
-    /// Gets an exercise weight type by code
-    /// </summary>
-    /// <param name="code">The exercise weight type code (e.g., "BODYWEIGHT_ONLY", "WEIGHT_REQUIRED")</param>
-    /// <returns>The exercise weight type if found</returns>
-    /// <response code="200">Returns the exercise weight type</response>
-    /// <response code="404">If the exercise weight type is not found</response>
-    /// <response code="400">If the code is empty</response>
-    /// <remarks>
-    /// The code search is case-sensitive. Valid codes are:
-    /// - BODYWEIGHT_ONLY
-    /// - BODYWEIGHT_OPTIONAL
-    /// - WEIGHT_REQUIRED
-    /// - MACHINE_WEIGHT
-    /// - NO_WEIGHT
-    /// </remarks>
-    [HttpGet("ByCode/{code}")]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public async Task<IActionResult> GetByCode(string code)
-    {
-        _logger.LogInformation("Getting exercise weight type with code: {Code}", code);
-        
-        var result = await _exerciseWeightTypeService.GetByCodeAsync(code);
         
         return result switch
         {

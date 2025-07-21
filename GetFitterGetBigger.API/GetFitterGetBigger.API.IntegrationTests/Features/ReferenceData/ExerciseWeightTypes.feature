@@ -64,36 +64,37 @@ Feature: Exercise Weight Types Reference Data
     Then the response status should be 200
     And the response should have property "value" with value "Machine Weight"
 
-  @reference-data
-  Scenario: Get exercise weight type by code - BODYWEIGHT_ONLY
-    When I send a GET request to "/api/ReferenceTables/ExerciseWeightTypes/ByCode/BODYWEIGHT_ONLY"
-    Then the response status should be 200
-    And the response should have property "value" with value "Bodyweight Only"
-    And the response should contain "cannot have external weight added"
+  # ByCode endpoint has been removed - use ByValue instead
+  # @reference-data
+  # Scenario: Get exercise weight type by code - BODYWEIGHT_ONLY
+  #   When I send a GET request to "/api/ReferenceTables/ExerciseWeightTypes/ByCode/BODYWEIGHT_ONLY"
+  #   Then the response status should be 200
+  #   And the response should have property "value" with value "Bodyweight Only"
+  #   And the response should contain "cannot have external weight added"
 
-  @reference-data
-  Scenario Outline: Get exercise weight type by all valid codes
-    When I send a GET request to "/api/ReferenceTables/ExerciseWeightTypes/ByCode/<code>"
-    Then the response status should be 200
-    And the response should have property "value" with value "<expectedValue>"
+  # @reference-data
+  # Scenario Outline: Get exercise weight type by all valid codes
+  #   When I send a GET request to "/api/ReferenceTables/ExerciseWeightTypes/ByCode/<code>"
+  #   Then the response status should be 200
+  #   And the response should have property "value" with value "<expectedValue>"
 
-    Examples:
-      | code                | expectedValue        |
-      | BODYWEIGHT_ONLY     | Bodyweight Only      |
-      | BODYWEIGHT_OPTIONAL | Bodyweight Optional  |
-      | WEIGHT_REQUIRED     | Weight Required      |
-      | MACHINE_WEIGHT      | Machine Weight       |
-      | NO_WEIGHT           | No Weight            |
+  #   Examples:
+  #     | code                | expectedValue        |
+  #     | BODYWEIGHT_ONLY     | Bodyweight Only      |
+  #     | BODYWEIGHT_OPTIONAL | Bodyweight Optional  |
+  #     | WEIGHT_REQUIRED     | Weight Required      |
+  #     | MACHINE_WEIGHT      | Machine Weight       |
+  #     | NO_WEIGHT           | No Weight            |
 
-  @reference-data @validation
-  Scenario: Get exercise weight type by code is case sensitive
-    When I send a GET request to "/api/ReferenceTables/ExerciseWeightTypes/ByCode/bodyweight_only"
-    Then the response status should be 404
+  # @reference-data @validation
+  # Scenario: Get exercise weight type by code is case sensitive
+  #   When I send a GET request to "/api/ReferenceTables/ExerciseWeightTypes/ByCode/bodyweight_only"
+  #   Then the response status should be 404
 
-  @reference-data @validation
-  Scenario: Get exercise weight type by invalid code returns not found
-    When I send a GET request to "/api/ReferenceTables/ExerciseWeightTypes/ByCode/INVALID_CODE"
-    Then the response status should be 404
+  # @reference-data @validation
+  # Scenario: Get exercise weight type by invalid code returns not found
+  #   When I send a GET request to "/api/ReferenceTables/ExerciseWeightTypes/ByCode/INVALID_CODE"
+  #   Then the response status should be 404
 
   @reference-data @structure
   Scenario: Exercise weight type response has correct structure

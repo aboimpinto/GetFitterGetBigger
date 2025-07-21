@@ -152,7 +152,7 @@ public class EquipmentControllerSteps
     public async Task WhenIGetEquipmentByNameViaAPI(string equipmentName)
     {
         var httpClient = _scenarioContext.GetHttpClient();
-        _lastResponse = await httpClient.GetAsync($"/api/ReferenceTables/Equipment/ByName/{equipmentName}");
+        _lastResponse = await httpClient.GetAsync($"/api/ReferenceTables/Equipment/ByValue/{equipmentName}");
         _scenarioContext.SetLastResponse(_lastResponse);
     }
 
@@ -160,7 +160,7 @@ public class EquipmentControllerSteps
     public async Task WhenIGetEquipmentByValueViaAPI(string equipmentValue)
     {
         var httpClient = _scenarioContext.GetHttpClient();
-        _lastResponse = await httpClient.GetAsync($"/api/ReferenceTables/Equipment/ByName/{equipmentValue}");
+        _lastResponse = await httpClient.GetAsync($"/api/ReferenceTables/Equipment/ByValue/{equipmentValue}");
         _scenarioContext.SetLastResponse(_lastResponse);
     }
 

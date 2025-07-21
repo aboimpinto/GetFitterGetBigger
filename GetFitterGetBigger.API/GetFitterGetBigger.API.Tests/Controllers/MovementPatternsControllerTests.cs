@@ -127,7 +127,7 @@ namespace GetFitterGetBigger.API.Tests.Controllers
         }
 
         [Fact]
-        public async Task GetByName_WithValidName_ReturnsOkWithMovementPattern()
+        public async Task GetByValue_WithValidName_ReturnsOkWithMovementPattern()
         {
             // Arrange
             var name = MovementPatternTestConstants.HorizontalPushName;
@@ -144,7 +144,7 @@ namespace GetFitterGetBigger.API.Tests.Controllers
                 .ReturnsAsync(serviceResult);
 
             // Act
-            var result = await _controller.GetByName(name);
+            var result = await _controller.GetByValue(name);
 
             // Assert
             var okResult = Assert.IsType<OkObjectResult>(result);
@@ -154,7 +154,7 @@ namespace GetFitterGetBigger.API.Tests.Controllers
         }
 
         [Fact]
-        public async Task GetByName_WhenNotFound_ReturnsNotFound()
+        public async Task GetByValue_WhenNotFound_ReturnsNotFound()
         {
             // Arrange
             var name = "NonExistent";
@@ -167,7 +167,7 @@ namespace GetFitterGetBigger.API.Tests.Controllers
                 .ReturnsAsync(serviceResult);
 
             // Act
-            var result = await _controller.GetByName(name);
+            var result = await _controller.GetByValue(name);
 
             // Assert
             Assert.IsType<NotFoundResult>(result);
@@ -198,27 +198,6 @@ namespace GetFitterGetBigger.API.Tests.Controllers
             var okResult = Assert.IsType<OkObjectResult>(result);
             var returnedMovementPattern = Assert.IsType<ReferenceDataDto>(okResult.Value);
             Assert.Equal(value, returnedMovementPattern.Value);
-            _mockMovementPatternService.Verify(x => x.GetByValueAsync(value), Times.Once);
-        }
-
-        [Fact]
-        public async Task GetByValue_WhenNotFound_ReturnsNotFound()
-        {
-            // Arrange
-            var value = "NonExistent";
-            var serviceResult = ServiceResult<ReferenceDataDto>.Failure(
-                new ReferenceDataDto(),
-                ServiceError.NotFound(MovementPatternErrorMessages.NotFound));
-
-            _mockMovementPatternService
-                .Setup(x => x.GetByValueAsync(value))
-                .ReturnsAsync(serviceResult);
-
-            // Act
-            var result = await _controller.GetByValue(value);
-
-            // Assert
-            Assert.IsType<NotFoundResult>(result);
             _mockMovementPatternService.Verify(x => x.GetByValueAsync(value), Times.Once);
         }
     }

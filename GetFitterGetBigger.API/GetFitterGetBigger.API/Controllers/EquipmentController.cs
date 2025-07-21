@@ -61,16 +61,16 @@ public class EquipmentController : ControllerBase
         };
 
     /// <summary>
-    /// Gets equipment by name
+    /// Gets equipment by value
     /// </summary>
-    /// <param name="name">The name of the equipment to retrieve</param>
+    /// <param name="value">The value of the equipment to retrieve</param>
     /// <returns>The equipment if found, 404 Not Found otherwise</returns>
-    [HttpGet("ByName/{name}")]
+    [HttpGet("ByValue/{value}")]
     [ProducesResponseType(typeof(EquipmentDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public async Task<IActionResult> GetByName(string name) =>
-        await _equipmentService.GetByNameAsync(name) switch
+    public async Task<IActionResult> GetByValue(string value) =>
+        await _equipmentService.GetByNameAsync(value) switch
         {
             { IsSuccess: true, Data: var data } => Ok(data),
             { PrimaryErrorCode: ServiceErrorCode.NotFound } => NotFound(),

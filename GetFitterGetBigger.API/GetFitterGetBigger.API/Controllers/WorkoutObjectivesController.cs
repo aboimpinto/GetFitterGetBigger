@@ -10,7 +10,6 @@ namespace GetFitterGetBigger.API.Controllers;
 /// </summary>
 [ApiController]
 [Route("api/ReferenceTables/WorkoutObjectives")]
-[Tags("ReferenceTables")]
 public class WorkoutObjectivesController : ControllerBase
 {
     private readonly IWorkoutObjectiveService _workoutObjectiveService;

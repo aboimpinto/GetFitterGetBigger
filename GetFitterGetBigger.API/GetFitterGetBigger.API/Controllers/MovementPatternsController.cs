@@ -12,7 +12,6 @@ namespace GetFitterGetBigger.API.Controllers;
 /// </summary>
 [ApiController]
 [Route("api/ReferenceTables/[controller]")]
-[Tags("ReferenceTables")]
 public class MovementPatternsController : ControllerBase
 {
     private readonly IMovementPatternService _movementPatternService;
@@ -71,29 +70,9 @@ public class MovementPatternsController : ControllerBase
     }
 
     /// <summary>
-    /// Gets a movement pattern by name
+    /// Gets a movement pattern by value
     /// </summary>
-    /// <param name="name">The name of the movement pattern to retrieve</param>
-    /// <returns>The movement pattern if found, 404 Not Found otherwise</returns>
-    [HttpGet("ByName/{name}")]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public async Task<IActionResult> GetByName(string name)
-    {
-        var result = await _movementPatternService.GetByValueAsync(name);
-        return result switch
-        {
-            { IsSuccess: true } => Ok(result.Data),
-            { PrimaryErrorCode: ServiceErrorCode.NotFound } => NotFound(),
-            _ => BadRequest(new { errors = result.StructuredErrors })
-        };
-    }
-    
-    /// <summary>
-    /// Gets a movement pattern by value (name)
-    /// </summary>
-    /// <param name="value">The value (name) of the movement pattern to retrieve</param>
+    /// <param name="value">The value of the movement pattern to retrieve</param>
     /// <returns>The movement pattern if found, 404 Not Found otherwise</returns>
     [HttpGet("ByValue/{value}")]
     [ProducesResponseType(StatusCodes.Status200OK)]

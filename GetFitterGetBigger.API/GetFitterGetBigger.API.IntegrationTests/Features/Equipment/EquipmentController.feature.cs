@@ -242,38 +242,6 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.Equipment
             await this.ScenarioCleanupAsync();
         }
         
-        [Xunit.SkippableFactAttribute(DisplayName="Get equipment by name returns equipment")]
-        [Xunit.TraitAttribute("FeatureTitle", "Equipment API Controller Operations")]
-        [Xunit.TraitAttribute("Description", "Get equipment by name returns equipment")]
-        [Xunit.TraitAttribute("Category", "equipment")]
-        [Xunit.TraitAttribute("Category", "api")]
-        [Xunit.TraitAttribute("Category", "read")]
-        public async System.Threading.Tasks.Task GetEquipmentByNameReturnsEquipment()
-        {
-            string[] tagsOfScenario = new string[] {
-                    "equipment",
-                    "api",
-                    "read"};
-            System.Collections.Specialized.OrderedDictionary argumentsOfScenario = new System.Collections.Specialized.OrderedDictionary();
-            TechTalk.SpecFlow.ScenarioInfo scenarioInfo = new TechTalk.SpecFlow.ScenarioInfo("Get equipment by name returns equipment", null, tagsOfScenario, argumentsOfScenario, featureTags);
-            this.ScenarioInitialize(scenarioInfo);
-            if ((TagHelper.ContainsIgnoreTag(tagsOfScenario) || TagHelper.ContainsIgnoreTag(featureTags)))
-            {
-                testRunner.SkipScenario();
-            }
-            else
-            {
-                await this.ScenarioStartAsync();
-                await this.FeatureBackgroundAsync();
-                await testRunner.GivenAsync("I have created equipment \"Test Barbell\" via API", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Given ");
-                await testRunner.WhenAsync("I get equipment by name \"Test Barbell\" via API", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
-                await testRunner.ThenAsync("the response status should be \"ok\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
-                await testRunner.AndAsync("I should receive the equipment reference data", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
-                await testRunner.AndAsync("the equipment value should be \"Test Barbell\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
-            }
-            await this.ScenarioCleanupAsync();
-        }
-        
         [Xunit.SkippableFactAttribute(DisplayName="Get equipment by value returns equipment")]
         [Xunit.TraitAttribute("FeatureTitle", "Equipment API Controller Operations")]
         [Xunit.TraitAttribute("Description", "Get equipment by value returns equipment")]
@@ -298,7 +266,7 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.Equipment
                 await this.ScenarioStartAsync();
                 await this.FeatureBackgroundAsync();
                 await testRunner.GivenAsync("I have created equipment \"Test Barbell\" via API", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Given ");
-                await testRunner.WhenAsync("I get equipment by name \"Test Barbell\" via API", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
+                await testRunner.WhenAsync("I get equipment by value \"Test Barbell\" via API", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
                 await testRunner.ThenAsync("the response status should be \"ok\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
                 await testRunner.AndAsync("I should receive the equipment reference data", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
                 await testRunner.AndAsync("the equipment value should be \"Test Barbell\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
@@ -306,9 +274,9 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.Equipment
             await this.ScenarioCleanupAsync();
         }
         
-        [Xunit.SkippableTheoryAttribute(DisplayName="Get equipment by name is case insensitive")]
+        [Xunit.SkippableTheoryAttribute(DisplayName="Get equipment by value is case insensitive")]
         [Xunit.TraitAttribute("FeatureTitle", "Equipment API Controller Operations")]
-        [Xunit.TraitAttribute("Description", "Get equipment by name is case insensitive")]
+        [Xunit.TraitAttribute("Description", "Get equipment by value is case insensitive")]
         [Xunit.TraitAttribute("Category", "equipment")]
         [Xunit.TraitAttribute("Category", "api")]
         [Xunit.TraitAttribute("Category", "read")]
@@ -316,7 +284,7 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.Equipment
         [Xunit.InlineDataAttribute("casesensitivebarbell", new string[0])]
         [Xunit.InlineDataAttribute("CASESENSITIVEBARBELL", new string[0])]
         [Xunit.InlineDataAttribute("CaSeSenSiTiveBaRbElL", new string[0])]
-        public async System.Threading.Tasks.Task GetEquipmentByNameIsCaseInsensitive(string casing_Variant, string[] exampleTags)
+        public async System.Threading.Tasks.Task GetEquipmentByValueIsCaseInsensitive(string casing_Variant, string[] exampleTags)
         {
             string[] @__tags = new string[] {
                     "equipment",
@@ -329,7 +297,7 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.Equipment
             string[] tagsOfScenario = @__tags;
             System.Collections.Specialized.OrderedDictionary argumentsOfScenario = new System.Collections.Specialized.OrderedDictionary();
             argumentsOfScenario.Add("casing_variant", casing_Variant);
-            TechTalk.SpecFlow.ScenarioInfo scenarioInfo = new TechTalk.SpecFlow.ScenarioInfo("Get equipment by name is case insensitive", null, tagsOfScenario, argumentsOfScenario, featureTags);
+            TechTalk.SpecFlow.ScenarioInfo scenarioInfo = new TechTalk.SpecFlow.ScenarioInfo("Get equipment by value is case insensitive", null, tagsOfScenario, argumentsOfScenario, featureTags);
             this.ScenarioInitialize(scenarioInfo);
             if ((TagHelper.ContainsIgnoreTag(tagsOfScenario) || TagHelper.ContainsIgnoreTag(featureTags)))
             {
@@ -340,7 +308,7 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.Equipment
                 await this.ScenarioStartAsync();
                 await this.FeatureBackgroundAsync();
                 await testRunner.GivenAsync("I have created equipment \"CaseSensitiveBarbell\" via API", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Given ");
-                await testRunner.WhenAsync(string.Format("I get equipment by name \"{0}\" via API", casing_Variant), ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
+                await testRunner.WhenAsync(string.Format("I get equipment by value \"{0}\" via API", casing_Variant), ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
                 await testRunner.ThenAsync("the response status should be \"ok\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
                 await testRunner.AndAsync("I should receive the equipment reference data", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
                 await testRunner.AndAsync("the equipment value should be \"CaseSensitiveBarbell\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");

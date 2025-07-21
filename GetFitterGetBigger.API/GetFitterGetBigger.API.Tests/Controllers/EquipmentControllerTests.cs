@@ -140,10 +140,10 @@ public class EquipmentControllerTests
     
     #endregion
     
-    #region GetByName Tests
+    #region GetByValue Tests
     
     [Fact]
-    public async Task GetByName_WhenFound_ReturnsOkWithData()
+    public async Task GetByValue_WhenFound_ReturnsOkWithData()
     {
         // Arrange
         var name = EquipmentTestConstants.TestData.BarbellName;
@@ -154,7 +154,7 @@ public class EquipmentControllerTests
             .ReturnsAsync(ServiceResult<EquipmentDto>.Success(dto));
             
         // Act
-        var result = await _controller.GetByName(name);
+        var result = await _controller.GetByValue(name);
         
         // Assert
         var okResult = Assert.IsType<OkObjectResult>(result);
@@ -163,7 +163,7 @@ public class EquipmentControllerTests
     }
     
     [Fact]
-    public async Task GetByName_WhenNotFound_ReturnsNotFound()
+    public async Task GetByValue_WhenNotFound_ReturnsNotFound()
     {
         // Arrange
         var name = "NonExistent";
@@ -175,14 +175,14 @@ public class EquipmentControllerTests
                 ServiceError.NotFound("Equipment")));
             
         // Act
-        var result = await _controller.GetByName(name);
+        var result = await _controller.GetByValue(name);
         
         // Assert
         Assert.IsType<NotFoundResult>(result);
     }
     
     [Fact]
-    public async Task GetByName_WithEmptyName_ReturnsBadRequest()
+    public async Task GetByValue_WithEmptyName_ReturnsBadRequest()
     {
         // Arrange
         var emptyName = string.Empty;
@@ -194,7 +194,7 @@ public class EquipmentControllerTests
                 ServiceError.ValidationFailed("Name cannot be empty")));
             
         // Act
-        var result = await _controller.GetByName(emptyName);
+        var result = await _controller.GetByValue(emptyName);
         
         // Assert
         var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);

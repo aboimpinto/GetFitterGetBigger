@@ -40,25 +40,17 @@ Feature: Equipment API Controller Operations
     Then the response status should be "not found"
 
   @equipment @api @read
-  Scenario: Get equipment by name returns equipment
-    Given I have created equipment "Test Barbell" via API
-    When I get equipment by name "Test Barbell" via API
-    Then the response status should be "ok"
-    And I should receive the equipment reference data
-    And the equipment value should be "Test Barbell"
-
-  @equipment @api @read
   Scenario: Get equipment by value returns equipment
     Given I have created equipment "Test Barbell" via API
-    When I get equipment by name "Test Barbell" via API
+    When I get equipment by value "Test Barbell" via API
     Then the response status should be "ok"
     And I should receive the equipment reference data
     And the equipment value should be "Test Barbell"
 
   @equipment @api @read
-  Scenario Outline: Get equipment by name is case insensitive
+  Scenario Outline: Get equipment by value is case insensitive
     Given I have created equipment "CaseSensitiveBarbell" via API
-    When I get equipment by name "<casing_variant>" via API
+    When I get equipment by value "<casing_variant>" via API
     Then the response status should be "ok"
     And I should receive the equipment reference data
     And the equipment value should be "CaseSensitiveBarbell"
