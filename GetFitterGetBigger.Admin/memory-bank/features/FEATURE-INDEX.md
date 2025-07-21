@@ -5,7 +5,7 @@
 ### 🏃 In Progress (0)
 *No features currently in progress*
 
-### ✅ Completed (17)
+### ✅ Completed (18)
 - FEAT-001: Service Unit Tests
 - FEAT-002: Exercise Coach Notes Types
 - FEAT-005: Authentication
@@ -20,17 +20,19 @@
 - FEAT-016: Floating Action Buttons
 - FEAT-017: Exercise Kinetic Chain
 - FEAT-018: Exercise Linking
-- FEAT-019: Exercise Weight Type (Completed: July 12, 2025)
+- FEAT-019: Exercise Weight Type
+- FEAT-020: Workout Reference Data (Completed: July 21, 2025)
 - FEAT-TEST-001: Comprehensive Test Improvements
 
 ### 📋 Planned (0)
 *No features currently planned*
 
 ## Statistics
-- Total Features: 1
-- Completed: 1 (100%)
+- Total Features: 18
+- Completed: 18 (100%)
 - In Progress: 0 (0%)
 - Planned: 0 (0%)
 
 ## Recent Updates
+- **July 21, 2025**: FEAT-020 (Workout Reference Data) completed successfully - Read-only views for workout objectives, categories, and execution protocols
 - **July 12, 2025**: FEAT-019 (Exercise Weight Type) completed successfully
