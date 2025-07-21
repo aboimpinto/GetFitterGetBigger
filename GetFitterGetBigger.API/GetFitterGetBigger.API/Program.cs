@@ -146,7 +146,7 @@ if (!app.Environment.IsEnvironment("Testing"))
             var context = scope.ServiceProvider.GetRequiredService<FitnessDbContext>();
             
             // This will create the database if it doesn't exist and apply all pending migrations
-            await context.Database.MigrateAsync();
+            context.Database.Migrate();
             
             logger.LogInformation("Database migration completed successfully");
         }
