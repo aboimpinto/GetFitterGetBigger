@@ -1,0 +1,172 @@
+@implements IDisposable
+@using System.Timers
+
+<div class="relative w-full max-w-md" data-testid="search-bar-container">
+    <label class="block text-sm font-medium text-gray-700 mb-1">
+        @Label
+    </label>
+    <div class="relative">
+        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" />
+            </svg>
+        </div>
+        <input type="text" 
+               value="@searchValue"
+               @oninput="OnSearchInput"
+               @onkeydown="HandleKeyDown"
+               class="block w-full pl-10 pr-10 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+               placeholder="@Placeholder"
+               data-testid="search-input"
+               aria-label="@Label">
+        @if (!string.IsNullOrEmpty(searchValue))
+        {
+            <button type="button"
+                    @onclick="ClearSearch"
+                    class="absolute inset-y-0 right-0 pr-3 flex items-center"
+                    data-testid="clear-button"
+                    aria-label="Clear search">
+                <svg class="h-5 w-5 text-gray-400 hover:text-gray-600" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+                </svg>
+            </button>
+        }
+    </div>
+    @if (ShowResultCount && ResultCount.HasValue)
+    {
+        <p class="mt-1 text-sm text-gray-500" data-testid="result-count">
+            @if (ResultCount == 0)
+            {
+                <text>No results found</text>
+            }
+            else if (ResultCount == 1)
+            {
+                <text>1 result found</text>
+            }
+            else
+            {
+                <text>@ResultCount results found</text>
+            }
+        </p>
+    }
+</div>
+
+@code {
+    [Parameter] public string Value { get; set; } = string.Empty;
+    [Parameter] public EventCallback<string> ValueChanged { get; set; }
+    [Parameter] public string Label { get; set; } = "Search";
+    [Parameter] public string Placeholder { get; set; } = "Search...";
+    [Parameter] public int DebounceDelay { get; set; } = 300;
+    [Parameter] public bool ShowResultCount { get; set; } = false;
+    [Parameter] public int? ResultCount { get; set; }
+    [Parameter] public EventCallback OnEnterPressed { get; set; }
+    [Parameter] public EventCallback OnEscapePressed { get; set; }
+
+    private string searchValue = string.Empty;
+    private Timer? debounceTimer;
+    private string lastNotifiedValue = string.Empty;
+
+    protected override void OnInitialized()
+    {
+        searchValue = Value;
+        lastNotifiedValue = Value;
+        
+        if (DebounceDelay > 0)
+        {
+            debounceTimer = new Timer(DebounceDelay);
+            debounceTimer.Elapsed += OnDebounceElapsed;
+            debounceTimer.AutoReset = false;
+        }
+    }
+
+    protected override void OnParametersSet()
+    {
+        if (Value != searchValue)
+        {
+            searchValue = Value;
+            lastNotifiedValue = Value;
+        }
+    }
+
+    private async void OnDebounceElapsed(object? sender, ElapsedEventArgs e)
+    {
+        await InvokeAsync(async () =>
+        {
+            if (searchValue != lastNotifiedValue)
+            {
+                lastNotifiedValue = searchValue;
+                await ValueChanged.InvokeAsync(searchValue);
+            }
+        });
+    }
+
+    private void OnSearchInput(ChangeEventArgs e)
+    {
+        var value = e.Value?.ToString() ?? string.Empty;
+        if (searchValue != value)
+        {
+            searchValue = value;
+            
+            if (DebounceDelay > 0)
+            {
+                debounceTimer?.Stop();
+                debounceTimer?.Start();
+            }
+            else
+            {
+                _ = NotifyValueChanged();
+            }
+        }
+    }
+
+    private async Task NotifyValueChanged()
+    {
+        if (searchValue != lastNotifiedValue)
+        {
+            lastNotifiedValue = searchValue;
+            await ValueChanged.InvokeAsync(searchValue);
+        }
+    }
+
+    private async Task ClearSearch()
+    {
+        searchValue = string.Empty;
+        lastNotifiedValue = string.Empty;
+        debounceTimer?.Stop();
+        await ValueChanged.InvokeAsync(string.Empty);
+    }
+
+    private async Task HandleKeyDown(KeyboardEventArgs e)
+    {
+        switch (e.Key)
+        {
+            case "Enter":
+                debounceTimer?.Stop();
+                await NotifyValueChanged();
+                if (OnEnterPressed.HasDelegate)
+                {
+                    await OnEnterPressed.InvokeAsync();
+                }
+                break;
+            case "Escape":
+                if (!string.IsNullOrEmpty(searchValue))
+                {
+                    await ClearSearch();
+                }
+                else if (OnEscapePressed.HasDelegate)
+                {
+                    await OnEscapePressed.InvokeAsync();
+                }
+                break;
+        }
+    }
+
+    public void Dispose()
+    {
+        if (debounceTimer != null)
+        {
+            debounceTimer.Elapsed -= OnDebounceElapsed;
+            debounceTimer.Dispose();
+        }
+    }
+}

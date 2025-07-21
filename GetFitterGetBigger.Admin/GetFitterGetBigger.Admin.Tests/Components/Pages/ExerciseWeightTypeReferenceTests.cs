@@ -17,6 +17,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages
         private readonly Mock<IEquipmentStateService> _equipmentStateServiceMock;
         private readonly Mock<IMuscleGroupsStateService> _muscleGroupsStateServiceMock;
         private readonly Mock<IExerciseWeightTypeStateService> _exerciseWeightTypeStateServiceMock;
+        private readonly Mock<IWorkoutReferenceDataStateService> _workoutReferenceDataStateServiceMock;
         private readonly Mock<NavigationManager> _navigationManagerMock;
 
         public ExerciseWeightTypeReferenceTests()
@@ -25,12 +26,14 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages
             _equipmentStateServiceMock = new Mock<IEquipmentStateService>();
             _muscleGroupsStateServiceMock = new Mock<IMuscleGroupsStateService>();
             _exerciseWeightTypeStateServiceMock = new Mock<IExerciseWeightTypeStateService>();
+            _workoutReferenceDataStateServiceMock = new Mock<IWorkoutReferenceDataStateService>();
             _navigationManagerMock = new Mock<NavigationManager>();
 
             Services.AddSingleton(_referenceDataServiceMock.Object);
             Services.AddSingleton(_equipmentStateServiceMock.Object);
             Services.AddSingleton(_muscleGroupsStateServiceMock.Object);
             Services.AddSingleton(_exerciseWeightTypeStateServiceMock.Object);
+            Services.AddSingleton(_workoutReferenceDataStateServiceMock.Object);
             Services.AddSingleton(_navigationManagerMock.Object);
             
             this.AddTestAuthorization().SetAuthorized("test-user");
@@ -68,10 +71,10 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages
             var component = RenderComponent<ReferenceTableDetail>(parameters => parameters
                 .Add(p => p.TableName, "ExerciseWeightTypes"));
 
-            // Assert
-            component.Find(".animate-spin").Should().NotBeNull();
-            var loadingTexts = component.FindAll("p");
-            loadingTexts.Any(p => p.TextContent.Contains("Loading exercise weight types...")).Should().BeTrue();
+            // Assert - Now using skeleton instead of spinner
+            component.Find(".animate-pulse").Should().NotBeNull();
+            var skeletonCards = component.FindAll(".bg-gray-50");
+            skeletonCards.Should().HaveCountGreaterThan(0);
         }
 
         [Fact]
@@ -208,12 +211,14 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages
             _exerciseWeightTypeStateServiceMock.Setup(x => x.ErrorMessage).Returns(errorMessage);
             _exerciseWeightTypeStateServiceMock.Setup(x => x.IsLoading).Returns(false);
             _exerciseWeightTypeStateServiceMock.Setup(x => x.WeightTypes).Returns(new List<ExerciseWeightTypeDto>());
+            _exerciseWeightTypeStateServiceMock.Setup(x => x.ClearError());
+            _exerciseWeightTypeStateServiceMock.Setup(x => x.LoadWeightTypesAsync()).Returns(Task.CompletedTask);
 
             var component = RenderComponent<ReferenceTableDetail>(parameters => parameters
                 .Add(p => p.TableName, "ExerciseWeightTypes"));
 
             // Act
-            var dismissButton = component.Find(".bg-red-50 button");
+            var dismissButton = component.Find("[data-testid='weighttype-dismiss-button']");
             dismissButton.Click();
 
             // Assert

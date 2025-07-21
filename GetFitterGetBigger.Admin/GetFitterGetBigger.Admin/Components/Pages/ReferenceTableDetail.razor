@@ -3,11 +3,13 @@
 @using GetFitterGetBigger.Admin.Services
 @using GetFitterGetBigger.Admin.Components.Pages.Equipment
 @using GetFitterGetBigger.Admin.Components.Pages.MuscleGroups
+@using GetFitterGetBigger.Admin.Components.Shared
 @using Microsoft.AspNetCore.Authorization
 @inject IReferenceDataService ReferenceDataService
 @inject IEquipmentStateService EquipmentStateService
 @inject IMuscleGroupsStateService MuscleGroupsStateService
 @inject IExerciseWeightTypeStateService ExerciseWeightTypeStateService
+@inject IWorkoutReferenceDataStateService WorkoutReferenceDataStateService
 @inject NavigationManager Navigation
 @attribute [Authorize]
 @rendermode InteractiveServer
@@ -39,10 +41,12 @@
 
         @if (EquipmentStateService.ErrorMessage != null)
         {
-            <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4">
-                <p>@EquipmentStateService.ErrorMessage</p>
-                <button @onclick="EquipmentStateService.ClearError" class="text-sm underline mt-1">Dismiss</button>
-            </div>
+            <ErrorAlert 
+                ErrorMessage="@EquipmentStateService.ErrorMessage"
+                OnDismiss="EquipmentStateService.ClearError"
+                OnRetry="async () => await EquipmentStateService.LoadEquipmentAsync()"
+                RetryTestId="equipment-retry-button"
+                DismissTestId="equipment-dismiss-button" />
         }
 
         <div class="mb-4">
@@ -54,10 +58,7 @@
 
         @if (EquipmentStateService.IsLoading)
         {
-            <div class="text-center py-8">
-                <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
-                <p class="mt-2 text-gray-600">Loading equipment...</p>
-            </div>
+            <EquipmentSkeleton />
         }
         else if (EquipmentStateService.FilteredEquipment.Any())
         {
@@ -172,18 +173,17 @@ else if (TableName == "ExerciseWeightTypes")
 
         @if (ExerciseWeightTypeStateService.ErrorMessage != null)
         {
-            <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4">
-                <p>@ExerciseWeightTypeStateService.ErrorMessage</p>
-                <button @onclick="ExerciseWeightTypeStateService.ClearError" class="text-sm underline mt-1">Dismiss</button>
-            </div>
+            <ErrorAlert 
+                ErrorMessage="@ExerciseWeightTypeStateService.ErrorMessage"
+                OnDismiss="ExerciseWeightTypeStateService.ClearError"
+                OnRetry="async () => await ExerciseWeightTypeStateService.LoadWeightTypesAsync()"
+                RetryTestId="weighttype-retry-button"
+                DismissTestId="weighttype-dismiss-button" />
         }
 
         @if (ExerciseWeightTypeStateService.IsLoading)
         {
-            <div class="text-center py-8">
-                <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
-                <p class="mt-2 text-gray-600">Loading exercise weight types...</p>
-            </div>
+            <ExerciseWeightTypesSkeleton />
         }
         else if (ExerciseWeightTypeStateService.WeightTypes.Any())
         {
@@ -240,10 +240,12 @@ else if (TableName == "MuscleGroups")
 
         @if (MuscleGroupsStateService.ErrorMessage != null)
         {
-            <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4">
-                <p>@MuscleGroupsStateService.ErrorMessage</p>
-                <button @onclick="MuscleGroupsStateService.ClearError" class="text-sm underline mt-1">Dismiss</button>
-            </div>
+            <ErrorAlert 
+                ErrorMessage="@MuscleGroupsStateService.ErrorMessage"
+                OnDismiss="MuscleGroupsStateService.ClearError"
+                OnRetry="async () => await MuscleGroupsStateService.LoadMuscleGroupsAsync()"
+                RetryTestId="musclegroups-retry-button"
+                DismissTestId="musclegroups-dismiss-button" />
         }
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
@@ -275,10 +277,7 @@ else if (TableName == "MuscleGroups")
 
         @if (MuscleGroupsStateService.IsLoading)
         {
-            <div class="text-center py-8">
-                <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
-                <p class="mt-2 text-gray-600">Loading muscle groups...</p>
-            </div>
+            <MuscleGroupsSkeleton />
         }
         else if (MuscleGroupsStateService.FilteredMuscleGroups.Any())
         {
@@ -389,6 +388,396 @@ else if (TableName == "MuscleGroups")
         </div>
     }
 }
+else if (TableName == "WorkoutObjectives")
+{
+    <div class="bg-white rounded-lg shadow-md p-6">
+        <div class="flex justify-between items-center mb-6">
+            <div>
+                <h2 class="text-2xl font-semibold text-gray-800">Workout Objectives</h2>
+                <p class="text-gray-600">View workout objectives for training programs</p>
+            </div>
+        </div>
+
+        <div class="mb-4">
+            <ReferenceDataSearchBar
+                Label="Search objectives"
+                Placeholder="Search by name or description..."
+                @bind-Value="@WorkoutReferenceDataStateService.ObjectivesSearchTerm"
+                ShowResultCount="true"
+                ResultCount="@WorkoutReferenceDataStateService.FilteredWorkoutObjectives.Count()" />
+        </div>
+
+        @if (WorkoutReferenceDataStateService.ObjectivesError != null)
+        {
+            <ErrorAlert 
+                ErrorMessage="@WorkoutReferenceDataStateService.ObjectivesError"
+                OnRetry="async () => await WorkoutReferenceDataStateService.LoadWorkoutObjectivesAsync()"
+                RetryTestId="objectives-retry-button" />
+        }
+
+        @if (WorkoutReferenceDataStateService.IsLoadingObjectives)
+        {
+            <WorkoutObjectivesSkeleton />
+        }
+        else if (WorkoutReferenceDataStateService.FilteredWorkoutObjectives.Any())
+        {
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4" data-testid="objectives-grid">
+                @foreach (var objective in WorkoutReferenceDataStateService.FilteredWorkoutObjectives)
+                {
+                    <div class="bg-gray-50 p-5 rounded-lg border border-gray-200 hover:shadow-lg transition-shadow duration-200 ease-out cursor-pointer transform hover:-translate-y-1"
+                         @onclick="() => ShowObjectiveDetails(objective)"
+                         @onkeydown="@(e => HandleCardKeyDown(e, () => ShowObjectiveDetails(objective)))"
+                         data-testid="objective-card"
+                         style="contain: layout style paint;"
+                         tabindex="0"
+                         role="article"
+                         aria-label="@($"Workout objective: {objective.Value}")">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-2 truncate" title="@objective.Value">@objective.Value</h3>
+                        <p class="text-sm text-gray-600 line-clamp-3 mb-3">@(objective.Description ?? "No description available")</p>
+                        <button class="text-blue-600 hover:text-blue-800 text-sm font-medium inline-flex items-center gap-1 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 rounded px-2 py-1 -ml-2"
+                                data-testid="objective-view-details-button"
+                                @onclick:stopPropagation="true"
+                                @onclick="() => ShowObjectiveDetails(objective)"
+                                aria-label="@($"View details for {objective.Value}")">
+                            View Details
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                            </svg>
+                        </button>
+                    </div>
+                }
+            </div>
+        }
+        else
+        {
+            <div class="text-center py-8">
+                <p class="text-gray-500">No workout objectives found.</p>
+            </div>
+        }
+    </div>
+
+    @if (selectedObjective != null)
+    {
+        <ReferenceDataDetailModal 
+            Title="Workout Objective Details"
+            Item="@selectedObjective"
+            OnClose="() => selectedObjective = null"
+            CloseOnBackdropClick="true"
+            CloseOnEscape="true">
+            <ContentTemplate Context="objective">
+                <div class="space-y-4" data-testid="objective-detail-modal-content">
+                    <div>
+                        <h4 class="font-semibold text-gray-700">Name</h4>
+                        <p class="text-gray-900">@objective.Value</p>
+                    </div>
+                    <div>
+                        <h4 class="font-semibold text-gray-700">Description</h4>
+                        <p class="text-gray-900 whitespace-pre-wrap">@(objective.Description ?? "No description available")</p>
+                    </div>
+                    <div>
+                        <h4 class="font-semibold text-gray-700">ID</h4>
+                        <p class="text-gray-500 font-mono text-sm">@objective.Id</p>
+                    </div>
+                </div>
+            </ContentTemplate>
+        </ReferenceDataDetailModal>
+    }
+}
+else if (TableName == "WorkoutCategories")
+{
+    <div class="bg-white rounded-lg shadow-md p-6">
+        <div class="flex justify-between items-center mb-6">
+            <div>
+                <h2 class="text-2xl font-semibold text-gray-800">Workout Categories</h2>
+                <p class="text-gray-600">View workout categories and their muscle group associations</p>
+            </div>
+        </div>
+
+        <div class="mb-4">
+            <ReferenceDataSearchBar
+                Label="Search categories"
+                Placeholder="Search by name or muscle groups..."
+                @bind-Value="@WorkoutReferenceDataStateService.CategoriesSearchTerm"
+                ShowResultCount="true"
+                ResultCount="@WorkoutReferenceDataStateService.FilteredWorkoutCategories.Count()" />
+        </div>
+
+        @if (WorkoutReferenceDataStateService.CategoriesError != null)
+        {
+            <ErrorAlert 
+                ErrorMessage="@WorkoutReferenceDataStateService.CategoriesError"
+                OnRetry="async () => await WorkoutReferenceDataStateService.LoadWorkoutCategoriesAsync()"
+                RetryTestId="categories-retry-button" />
+        }
+
+        @if (WorkoutReferenceDataStateService.IsLoadingCategories)
+        {
+            <WorkoutCategoriesSkeleton />
+        }
+        else if (WorkoutReferenceDataStateService.FilteredWorkoutCategories.Any())
+        {
+            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3" data-testid="categories-grid">
+                @foreach (var category in WorkoutReferenceDataStateService.FilteredWorkoutCategories)
+                {
+                    <div class="bg-gray-50 p-4 rounded-lg border-2 hover:shadow-lg transition-shadow duration-200 ease-out cursor-pointer text-center transform hover:-translate-y-1"
+                         style="border-color: @(category.Color ?? "#E5E7EB")30; contain: layout style paint;"
+                         @onclick="() => ShowCategoryDetails(category)"
+                         @onkeydown="@(e => HandleCardKeyDown(e, () => ShowCategoryDetails(category)))"
+                         data-testid="category-card"
+                         tabindex="0"
+                         role="article"
+                         aria-label="@($"Workout category: {category.Value}. Primary muscles: {category.PrimaryMuscleGroups ?? "None specified"}")">
+                        <div class="w-14 h-14 mx-auto mb-2 flex items-center justify-center rounded-lg"
+                             style="background-color: @(category.Color ?? "#E5E7EB")20"
+                             aria-hidden="true">
+                            @if (!string.IsNullOrEmpty(category.Icon))
+                            {
+                                <div class="w-10 h-10" data-testid="category-icon">
+                                    @((MarkupString)category.Icon)
+                                </div>
+                            }
+                            else
+                            {
+                                <span class="text-xl font-bold" style="color: @(category.Color ?? "#6B7280")">
+                                    @(category.Value?.FirstOrDefault())
+                                </span>
+                            }
+                        </div>
+                        <h3 class="font-semibold text-gray-800 mb-1 text-sm truncate" title="@category.Value">@category.Value</h3>
+                        @if (!string.IsNullOrEmpty(category.PrimaryMuscleGroups))
+                        {
+                            <p class="text-xs text-gray-600 line-clamp-2" data-testid="muscle-groups" title="@category.PrimaryMuscleGroups">@category.PrimaryMuscleGroups</p>
+                        }
+                        <button class="mt-2 text-blue-600 hover:text-blue-800 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 rounded px-2 py-1"
+                                data-testid="category-view-details-button"
+                                @onclick:stopPropagation="true"
+                                @onclick="() => ShowCategoryDetails(category)"
+                                aria-label="@($"View details for {category.Value} category")">
+                            View Details
+                        </button>
+                    </div>
+                }
+            </div>
+        }
+        else
+        {
+            <div class="text-center py-8">
+                <p class="text-gray-500">No workout categories found.</p>
+            </div>
+        }
+    </div>
+
+    @if (selectedCategory != null)
+    {
+        <ReferenceDataDetailModal 
+            Title="Workout Category Details"
+            Item="@selectedCategory"
+            OnClose="() => selectedCategory = null"
+            CloseOnBackdropClick="true"
+            CloseOnEscape="true">
+            <ContentTemplate Context="category">
+                <div class="space-y-4" data-testid="category-detail-modal-content">
+                    <div>
+                        <h4 class="font-semibold text-gray-700">Name</h4>
+                        <p class="text-gray-900">@category.Value</p>
+                    </div>
+                    @if (!string.IsNullOrEmpty(category.Description))
+                    {
+                        <div>
+                            <h4 class="font-semibold text-gray-700">Description</h4>
+                            <p class="text-gray-900 whitespace-pre-wrap">@category.Description</p>
+                        </div>
+                    }
+                    @if (!string.IsNullOrEmpty(category.PrimaryMuscleGroups))
+                    {
+                        <div>
+                            <h4 class="font-semibold text-gray-700">Primary Muscle Groups</h4>
+                            <p class="text-gray-900">@category.PrimaryMuscleGroups</p>
+                        </div>
+                    }
+                    @if (!string.IsNullOrEmpty(category.Color))
+                    {
+                        <div>
+                            <h4 class="font-semibold text-gray-700">Color</h4>
+                            <div class="flex items-center gap-2">
+                                <div class="w-6 h-6 rounded" style="background-color: @category.Color"></div>
+                                <p class="text-gray-900 font-mono">@category.Color</p>
+                            </div>
+                        </div>
+                    }
+                    <div>
+                        <h4 class="font-semibold text-gray-700">ID</h4>
+                        <p class="text-gray-500 font-mono text-sm">@category.WorkoutCategoryId</p>
+                    </div>
+                </div>
+            </ContentTemplate>
+        </ReferenceDataDetailModal>
+    }
+}
+else if (TableName == "ExecutionProtocols")
+{
+    <div class="bg-white rounded-lg shadow-md p-6">
+        <div class="flex justify-between items-center mb-6">
+            <div>
+                <h2 class="text-2xl font-semibold text-gray-800">Execution Protocols</h2>
+                <p class="text-gray-600">View exercise execution protocols and timing patterns</p>
+            </div>
+        </div>
+
+        <div class="mb-4">
+            <ReferenceDataSearchBar
+                Label="Search protocols"
+                Placeholder="Search by name or code..."
+                @bind-Value="@WorkoutReferenceDataStateService.ProtocolsSearchTerm"
+                ShowResultCount="true"
+                ResultCount="@WorkoutReferenceDataStateService.FilteredExecutionProtocols.Count()" />
+        </div>
+
+        @if (WorkoutReferenceDataStateService.ProtocolsError != null)
+        {
+            <ErrorAlert 
+                ErrorMessage="@WorkoutReferenceDataStateService.ProtocolsError"
+                OnRetry="async () => await WorkoutReferenceDataStateService.LoadExecutionProtocolsAsync()"
+                RetryTestId="protocols-retry-button" />
+        }
+
+        @if (WorkoutReferenceDataStateService.IsLoadingProtocols)
+        {
+            <ExecutionProtocolsSkeleton />
+        }
+        else if (WorkoutReferenceDataStateService.FilteredExecutionProtocols.Any())
+        {
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4" data-testid="protocols-grid">
+                @foreach (var protocol in WorkoutReferenceDataStateService.FilteredExecutionProtocols)
+                {
+                    <div class="bg-gray-50 p-5 rounded-lg border border-gray-200 hover:shadow-lg transition-shadow duration-200 ease-out transform hover:-translate-y-1"
+                         data-testid="protocol-card"
+                         style="contain: layout style paint;"
+                         tabindex="0"
+                         role="article"
+                         aria-label="@($"Execution protocol: {protocol.Value}. Code: {protocol.Code}. Intensity: {protocol.IntensityLevel ?? "Not specified"}")">
+                        <div class="flex items-center justify-between mb-3">
+                            <h3 class="text-base font-semibold text-gray-800 truncate flex-1" title="@protocol.Value">@protocol.Value</h3>
+                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 ml-2 flex-shrink-0" aria-label="Protocol code">
+                                @protocol.Code
+                            </span>
+                        </div>
+                        
+                        @if (!string.IsNullOrEmpty(protocol.Description))
+                        {
+                            <p class="text-sm text-gray-600 mb-4 line-clamp-2">@protocol.Description</p>
+                        }
+                        
+                        <div class="bg-white p-3 rounded border mb-3">
+                            <div class="grid grid-cols-2 gap-2 text-xs">
+                                <div>
+                                    <span class="font-medium text-gray-700">Time-Based:</span>
+                                    <span class="text-gray-900">@(protocol.TimeBase ? "Yes" : "No")</span>
+                                </div>
+                                <div>
+                                    <span class="font-medium text-gray-700">Rep-Based:</span>
+                                    <span class="text-gray-900">@(protocol.RepBase ? "Yes" : "No")</span>
+                                </div>
+                            </div>
+                            @if (!string.IsNullOrEmpty(protocol.IntensityLevel))
+                            {
+                                <div class="mt-2">
+                                    <span class="font-medium text-gray-700 text-xs">Intensity:</span>
+                                    @{
+                                        var intensityColor = protocol.IntensityLevel?.ToLower() switch
+                                        {
+                                            "low" => "bg-green-100 text-green-800",
+                                            "medium" => "bg-yellow-100 text-yellow-800",
+                                            "high" => "bg-red-100 text-red-800",
+                                            _ => "bg-gray-100 text-gray-800"
+                                        };
+                                    }
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium @intensityColor ml-1">
+                                        @protocol.IntensityLevel
+                                    </span>
+                                </div>
+                            }
+                        </div>
+                        
+                        <button @onclick="() => ShowProtocolDetails(protocol)"
+                                class="text-blue-600 hover:text-blue-800 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 rounded px-2 py-1 -ml-2 inline-flex items-center gap-1"
+                                data-testid="protocol-view-details-button"
+                                aria-label="@($"View details for {protocol.Value} protocol")">
+                            View Details
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                            </svg>
+                        </button>
+                    </div>
+                }
+            </div>
+        }
+        else
+        {
+            <div class="text-center py-8">
+                <p class="text-gray-500">No execution protocols found.</p>
+            </div>
+        }
+    </div>
+
+    @if (selectedProtocol != null)
+    {
+        <ReferenceDataDetailModal 
+            Title="Execution Protocol Details"
+            Item="@selectedProtocol"
+            OnClose="() => selectedProtocol = null"
+            CloseOnBackdropClick="true"
+            CloseOnEscape="true">
+            <ContentTemplate Context="protocol">
+                <div class="space-y-4" data-testid="protocol-detail-modal-content">
+                    <div>
+                        <h4 class="font-semibold text-gray-700">Name</h4>
+                        <p class="text-gray-900">@protocol.Value</p>
+                    </div>
+                    <div>
+                        <h4 class="font-semibold text-gray-700">Code</h4>
+                        <p class="text-gray-900 font-mono">@protocol.Code</p>
+                    </div>
+                    @if (!string.IsNullOrEmpty(protocol.Description))
+                    {
+                        <div>
+                            <h4 class="font-semibold text-gray-700">Description</h4>
+                            <p class="text-gray-900 whitespace-pre-wrap">@protocol.Description</p>
+                        </div>
+                    }
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <h4 class="font-semibold text-gray-700">Time-Based</h4>
+                            <p class="text-gray-900">@(protocol.TimeBase ? "Yes" : "No")</p>
+                        </div>
+                        <div>
+                            <h4 class="font-semibold text-gray-700">Rep-Based</h4>
+                            <p class="text-gray-900">@(protocol.RepBase ? "Yes" : "No")</p>
+                        </div>
+                    </div>
+                    @if (!string.IsNullOrEmpty(protocol.IntensityLevel))
+                    {
+                        <div>
+                            <h4 class="font-semibold text-gray-700">Intensity Level</h4>
+                            <p class="text-gray-900">@protocol.IntensityLevel</p>
+                        </div>
+                    }
+                    @if (!string.IsNullOrEmpty(protocol.RestPattern))
+                    {
+                        <div>
+                            <h4 class="font-semibold text-gray-700">Rest Pattern</h4>
+                            <p class="text-gray-900">@protocol.RestPattern</p>
+                        </div>
+                    }
+                    <div>
+                        <h4 class="font-semibold text-gray-700">ID</h4>
+                        <p class="text-gray-500 font-mono text-sm">@protocol.ExecutionProtocolId</p>
+                    </div>
+                </div>
+            </ContentTemplate>
+        </ReferenceDataDetailModal>
+    }
+}
 else
 {
     <div class="bg-white rounded-lg shadow-md p-6">
@@ -401,7 +790,7 @@ else
 
         @if (items == null)
         {
-            <p class="text-gray-600"><em>Loading...</em></p>
+            <ReferenceTableSkeleton />
         }
         else
         {
@@ -449,7 +838,10 @@ else
         ["MetricTypes"] = "Metric Types",
         ["MovementPatterns"] = "Movement Patterns",
         ["MuscleGroups"] = "Muscle Groups",
-        ["MuscleRoles"] = "Muscle Roles"
+        ["MuscleRoles"] = "Muscle Roles",
+        ["WorkoutObjectives"] = "Workout Objectives",
+        ["WorkoutCategories"] = "Workout Categories",
+        ["ExecutionProtocols"] = "Execution Protocols"
     };
 
     protected override void OnInitialized()
@@ -477,6 +869,20 @@ else
     private MuscleGroupDto? selectedMuscleGroup;
     private MuscleGroupDto? muscleGroupToDelete;
 
+    // Workout Reference Data fields
+    private ReferenceDataDto? selectedObjective;
+    private WorkoutCategoryDto? selectedCategory;
+    private ExecutionProtocolDto? selectedProtocol;
+
+    // Accessibility helpers
+    private void HandleCardKeyDown(KeyboardEventArgs e, Action clickAction)
+    {
+        if (e.Key == "Enter" || e.Key == " ")
+        {
+            clickAction.Invoke();
+        }
+    }
+
     protected override async Task OnInitializedAsync()
     {
         SetDisplayName();
@@ -495,6 +901,11 @@ else
         {
             MuscleGroupsStateService.OnChange += StateHasChanged;
             await MuscleGroupsStateService.InitializeAsync();
+        }
+        else if (TableName == "WorkoutObjectives" || TableName == "WorkoutCategories" || TableName == "ExecutionProtocols")
+        {
+            WorkoutReferenceDataStateService.OnChange += StateHasChanged;
+            await WorkoutReferenceDataStateService.InitializeAsync();
         }
         else
         {
@@ -611,6 +1022,22 @@ else
         }
     }
 
+    // Workout Reference Data methods
+    private void ShowObjectiveDetails(ReferenceDataDto objective)
+    {
+        selectedObjective = objective;
+    }
+
+    private void ShowCategoryDetails(WorkoutCategoryDto category)
+    {
+        selectedCategory = category;
+    }
+
+    private void ShowProtocolDetails(ExecutionProtocolDto protocol)
+    {
+        selectedProtocol = protocol;
+    }
+
     public void Dispose()
     {
         if (TableName == "Equipment")
@@ -624,6 +1051,10 @@ else
         else if (TableName == "MuscleGroups")
         {
             MuscleGroupsStateService.OnChange -= StateHasChanged;
+        }
+        else if (TableName == "WorkoutObjectives" || TableName == "WorkoutCategories" || TableName == "ExecutionProtocols")
+        {
+            WorkoutReferenceDataStateService.OnChange -= StateHasChanged;
         }
     }
 }

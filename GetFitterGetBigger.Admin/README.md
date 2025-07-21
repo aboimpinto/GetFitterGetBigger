@@ -99,3 +99,19 @@ Current test coverage: Check the latest HTML report for detailed metrics.
 - Test guidelines: See GetFitterGetBigger.Admin.Tests/README.md
 - Feature documentation: See memory-bank/features/
 - API integration: See memory-bank/api-*.md files
+- Code quality standards: See memory-bank/CODE_QUALITY_STANDARDS.md and ADMIN-CODE_QUALITY_STANDARDS.md
+- Code review process: See memory-bank/CODE_REVIEW_PROCESS.md
+
+## Claude AI Assistant
+
+This project includes custom slash commands for Claude AI to assist with development:
+
+- `/feature-code-review` - Comprehensive feature review with Blazor-specific checks
+- `/component-code-review` - Detailed review of Blazor components
+- `/service-code-review` - Review of service implementations
+- `/new-page` - Create a new Blazor page following patterns
+- `/new-component` - Create a reusable component
+- `/start-implementing` - Begin feature implementation
+- `/catch-up` - Get up to speed with project context
+
+See `.claude/commands/README.md` for detailed command documentation.

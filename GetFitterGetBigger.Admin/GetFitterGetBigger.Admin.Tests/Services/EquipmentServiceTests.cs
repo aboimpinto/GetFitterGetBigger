@@ -7,6 +7,7 @@ using GetFitterGetBigger.Admin.Services;
 using GetFitterGetBigger.Admin.Tests.Helpers;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using Moq;
 
 namespace GetFitterGetBigger.Admin.Tests.Services
@@ -18,6 +19,7 @@ namespace GetFitterGetBigger.Admin.Tests.Services
         private readonly IMemoryCache _memoryCache;
         private readonly Mock<IConfiguration> _configurationMock;
         private readonly Mock<ICacheHelperService> _cacheHelperMock;
+        private readonly Mock<ILogger<EquipmentService>> _loggerMock;
         private readonly EquipmentService _equipmentService;
         private readonly JsonSerializerOptions _jsonOptions;
 
@@ -31,6 +33,7 @@ namespace GetFitterGetBigger.Admin.Tests.Services
             _memoryCache = new MemoryCache(new MemoryCacheOptions());
             _configurationMock = new Mock<IConfiguration>();
             _cacheHelperMock = new Mock<ICacheHelperService>();
+            _loggerMock = new Mock<ILogger<EquipmentService>>();
 
             _configurationMock
                 .Setup(x => x["ApiBaseUrl"])
@@ -40,7 +43,8 @@ namespace GetFitterGetBigger.Admin.Tests.Services
                 _httpClient,
                 _memoryCache,
                 _configurationMock.Object,
-                _cacheHelperMock.Object);
+                _cacheHelperMock.Object,
+                _loggerMock.Object);
 
             _jsonOptions = new JsonSerializerOptions
             {

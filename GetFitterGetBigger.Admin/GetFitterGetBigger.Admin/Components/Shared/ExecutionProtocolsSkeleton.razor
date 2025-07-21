@@ -1,0 +1,45 @@
+@* Loading skeleton for Execution Protocols card grid *@
+
+<div class="animate-pulse">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        @for (int i = 0; i < 6; i++)
+        {
+            <div class="bg-gray-50 p-6 rounded-lg border border-gray-200">
+                <!-- Header with title and code badge -->
+                <div class="flex items-center justify-between mb-3">
+                    <div class="h-6 bg-gray-300 rounded w-2/3"></div>
+                    <div class="h-5 bg-gray-300 rounded-full w-16"></div>
+                </div>
+                
+                <!-- Description skeleton -->
+                <div class="space-y-2 mb-4">
+                    <div class="h-4 bg-gray-200 rounded"></div>
+                    <div class="h-4 bg-gray-200 rounded w-4/5"></div>
+                </div>
+                
+                <!-- Properties box skeleton -->
+                <div class="bg-white p-3 rounded border mb-3">
+                    <div class="grid grid-cols-2 gap-2">
+                        <div class="space-y-1">
+                            <div class="h-3 bg-gray-200 rounded w-20"></div>
+                            <div class="h-3 bg-gray-300 rounded w-10"></div>
+                        </div>
+                        <div class="space-y-1">
+                            <div class="h-3 bg-gray-200 rounded w-20"></div>
+                            <div class="h-3 bg-gray-300 rounded w-10"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Intensity level skeleton -->
+                <div class="flex items-center gap-2">
+                    <div class="h-3 bg-gray-200 rounded w-24"></div>
+                    <div class="h-5 bg-gray-300 rounded-full w-16"></div>
+                </div>
+                
+                <!-- Button skeleton -->
+                <div class="h-8 bg-gray-300 rounded w-32 mt-4"></div>
+            </div>
+        }
+    </div>
+</div>

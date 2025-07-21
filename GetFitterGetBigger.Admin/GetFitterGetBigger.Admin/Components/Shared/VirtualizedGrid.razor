@@ -1,0 +1,51 @@
+@typeparam TItem
+@using Microsoft.AspNetCore.Components.Web.Virtualization
+
+<div class="relative">
+    @if (Items.Count() > VirtualizationThreshold)
+    {
+        <div class="mb-2 text-sm text-gray-600 text-right">
+            Showing @Items.Count() items (virtualized for performance)
+        </div>
+        <div style="height: @ContainerHeight; overflow-y: auto;" class="pr-2">
+            <Virtualize Items="@Items.ToList()" ItemSize="@ItemHeight" OverscanCount="3">
+                <ItemContent>
+                    <div style="height: @(ItemHeight)px;">
+                        @ItemTemplate(context)
+                    </div>
+                </ItemContent>
+                <Placeholder>
+                    <div style="height: @(ItemHeight)px;" class="animate-pulse">
+                        @if (PlaceholderTemplate != null)
+                        {
+                            @PlaceholderTemplate
+                        }
+                        else
+                        {
+                            <div class="bg-gray-200 rounded-lg h-full"></div>
+                        }
+                    </div>
+                </Placeholder>
+            </Virtualize>
+        </div>
+    }
+    else
+    {
+        <div class="@GridClass">
+            @foreach (var item in Items)
+            {
+                @ItemTemplate(item)
+            }
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter, EditorRequired] public IEnumerable<TItem> Items { get; set; } = Enumerable.Empty<TItem>();
+    [Parameter, EditorRequired] public RenderFragment<TItem> ItemTemplate { get; set; } = null!;
+    [Parameter] public RenderFragment? PlaceholderTemplate { get; set; }
+    [Parameter] public string GridClass { get; set; } = "grid grid-cols-1 gap-4";
+    [Parameter] public int VirtualizationThreshold { get; set; } = 50;
+    [Parameter] public int ItemHeight { get; set; } = 200;
+    [Parameter] public string ContainerHeight { get; set; } = "600px";
+}

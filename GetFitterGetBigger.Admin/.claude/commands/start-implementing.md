@@ -1,7 +1,18 @@
-Can you please start implementing the feature $ARGUMENT that is already in READY_TO_DEVELOP, follwing the @memory-bank/FEATURE_IMPLEMENTATION_PROCESS.md and @memory-bank/FEATURE_WORKFLOW_PROCESS.md
+Start implementing a new feature from the READY_TO_DEVELOP folder for the Admin project.
 
-Please, do not forget this is a C# Blazor. Please read  the @memory_bank for more details about the project.
+Instructions:
+1. Check /memory-bank/features/1-READY_TO_DEVELOP/ for available features
+2. Select the highest priority feature or ask user which to implement
+3. Move the feature to 2-IN_PROGRESS folder
+4. Create implementation plan specific to Blazor/Admin project
+5. Start with the first task in the implementation plan
 
-Check is we are running in master or in a feature branch. In case that we are in a feature branch, DO NOT CREATE ONE and stay on this one.
+Focus on:
+- Blazor component structure
+- Integration with API services
+- State management approach
+- UI/UX consistency with existing pages
+- Proper error handling and loading states
+- Accessibility requirements
 
-If the feature is not in the right state, do not start it and inform the user the reason.
+Begin implementation following ADMIN-CODE_QUALITY_STANDARDS.md.
