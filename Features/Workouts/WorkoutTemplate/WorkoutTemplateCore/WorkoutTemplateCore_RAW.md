@@ -173,7 +173,7 @@ The workout template follows a defined lifecycle through these states:
 - Personal Trainer can freely modify all aspects of the template
 - Execution Protocol can be changed at any time
 - All execution logs associated with this workout template are automatically deleted when changes are made
-- In client mobile applications, only users with both `admin` and `workout_tester` claims can execute workouts in DRAFT state
+- In client mobile applications, testing of DRAFT workouts is restricted (authentication feature to be implemented in the future)
 - This allows for testing and refinement before public release
 
 **PRODUCTION State:**
@@ -309,3 +309,14 @@ The WorkoutState reference data entity provides a robust lifecycle management sy
 The integration with execution protocols provides future extensibility while the initial Standard protocol implementation ensures immediate usability. The approach of treating rest as exercises and maintaining contextual notes ensures maximum flexibility while keeping the data model clean and intuitive.
 
 This foundation supports professional workout programming while maintaining simplicity for both trainers creating templates and clients executing workouts.
+
+## Future Enhancements
+
+### Authentication and Authorization
+The workout template system will include comprehensive authentication and authorization features in future releases:
+- Role-based access control for different user tiers (admin, workout_tester, etc.)
+- Claims-based authorization for workout execution
+- Restricted access to DRAFT workouts for testing purposes
+- Tiered access control for premium features
+
+Note: These authentication features are planned for future implementation and are not part of the current core feature set. The current implementation focuses on the fundamental workout template structure and management capabilities.
