@@ -136,16 +136,23 @@ Before starting ANY implementation:
   2. Run `dotnet clean && dotnet test` - ALL TESTS MUST BE GREEN (no failures)
      - Run ALL tests in the solution, not just new ones
   3. Verify ZERO warnings (BOY SCOUT RULE)
-  4. **If checkpoint FAILS**:
+  4. **MANDATORY Code Review**: 
+     - Review ALL changed files using `/memory-bank/API-CODE_QUALITY_STANDARDS.md`
+     - Document review using `/memory-bank/CODE-REVIEW-TEMPLATE.md`
+     - Status must be APPROVED or APPROVED_WITH_NOTES (user confirmed)
+  5. **If checkpoint FAILS**:
      - **STOP immediately** - do NOT proceed to next category
      - Create a **CHECKPOINT FIX** task in feature-tasks.md
      - Fix all issues before continuing
      - Re-run checkpoint until it passes
-  5. **MANDATORY: Update checkpoint status**:
+  6. **MANDATORY: Update checkpoint status**:
      - 🛑 PENDING → ❌ FAILED (if issues found)
      - ❌ FAILED → ✅ PASSED (after fixes verified)
      - 🛑 PENDING → ✅ PASSED (if no issues found)
-  6. **CRITICAL**: Cannot start next category unless checkpoint is ✅ PASSED
+  7. **CRITICAL**: Cannot start next category unless checkpoint is ✅ PASSED
+     - Build: 0 errors, 0 warnings
+     - Tests: All green/pass
+     - Code Review: APPROVED
 - Follow existing API patterns and conventions
 - Use dependency injection and repository patterns
 - The task tracking file serves as both documentation and audit trail

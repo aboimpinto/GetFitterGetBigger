@@ -162,11 +162,20 @@ Document results in feature-tasks.md:
 
 ### Checkpoint Requirements
 After EVERY category:
-- ✅ Code compiles without errors
-- ✅ All tests pass (no failures, no skips)
-- ✅ Build warnings at baseline level or better (BOY SCOUT RULE)
+- ✅ Code compiles without errors (run `dotnet clean && dotnet build`)
+- ✅ All tests pass - no failures, no skips (run `dotnet clean && dotnet test`)
+- ✅ Build warnings at baseline level or better (BOY SCOUT RULE - zero warnings)
 - ✅ Feature remains functional
-- ✅ Code review APPROVED (use CODE-REVIEW-TEMPLATE.md)
+- ✅ **MANDATORY Code Review**: All changed files must be reviewed using:
+  - `/memory-bank/API-CODE_QUALITY_STANDARDS.md` for API projects
+  - `/memory-bank/CODE-REVIEW-TEMPLATE.md` for review documentation
+  - Status must be APPROVED or APPROVED_WITH_NOTES (and user confirms)
+  
+**🛑 CRITICAL**: You CANNOT proceed to the next category if checkpoint is not GREEN:
+- Build must have 0 errors and 0 warnings
+- All tests must be green/pass
+- Code review must be APPROVED (or APPROVED_WITH_NOTES confirmed by user)
+- Checkpoint status must be marked as ✅ PASSED before continuing
 
 ## Manual Testing Policy
 
