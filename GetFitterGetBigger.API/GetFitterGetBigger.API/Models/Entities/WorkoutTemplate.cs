@@ -77,13 +77,41 @@ public record WorkoutTemplate : IEmptyEntity<WorkoutTemplate>
             UserId createdBy,
             WorkoutStateId workoutStateId)
         {
+            return Create(
+                WorkoutTemplateId.New(),
+                name,
+                description,
+                categoryId,
+                difficultyId,
+                estimatedDurationMinutes,
+                tags,
+                isPublic,
+                createdBy,
+                workoutStateId,
+                DateTime.UtcNow,
+                DateTime.UtcNow
+            );
+        }
+        
+        public static EntityResult<WorkoutTemplate> Create(
+            WorkoutTemplateId id,
+            string name,
+            string? description,
+            WorkoutCategoryId categoryId,
+            DifficultyLevelId difficultyId,
+            int estimatedDurationMinutes,
+            List<string>? tags,
+            bool isPublic,
+            UserId createdBy,
+            WorkoutStateId workoutStateId,
+            DateTime createdAt,
+            DateTime updatedAt)
+        {
             // Validate tags
             var validatedTags = tags?.Where(t => !string.IsNullOrWhiteSpace(t))
                                      .Select(t => t.Trim())
                                      .Take(10) // Limit to 10 tags
                                      .ToList() ?? new List<string>();
-            
-            var now = DateTime.UtcNow;
             
             return Validate.For<WorkoutTemplate>()
                 .EnsureNotWhiteSpace(name, "Name cannot be empty")
@@ -97,7 +125,7 @@ public record WorkoutTemplate : IEmptyEntity<WorkoutTemplate>
                 .Ensure(() => !workoutStateId.IsEmpty, "Workout state ID cannot be empty")
                 .OnSuccess(() => new WorkoutTemplate
                 {
-                    Id = WorkoutTemplateId.New(),
+                    Id = id,
                     Name = name.Trim(),
                     Description = description?.Trim(),
                     CategoryId = categoryId,
@@ -107,8 +135,8 @@ public record WorkoutTemplate : IEmptyEntity<WorkoutTemplate>
                     IsPublic = isPublic,
                     CreatedBy = createdBy,
                     WorkoutStateId = workoutStateId,
-                    CreatedAt = now,
-                    UpdatedAt = now
+                    CreatedAt = createdAt,
+                    UpdatedAt = updatedAt
                 });
         }
         

@@ -55,6 +55,26 @@ public record SetConfiguration : IEmptyEntity<SetConfiguration>
             int? targetTimeSeconds,
             int restSeconds)
         {
+            return Create(
+                SetConfigurationId.New(),
+                workoutTemplateExerciseId,
+                setNumber,
+                targetReps,
+                targetWeight,
+                targetTimeSeconds,
+                restSeconds
+            );
+        }
+        
+        public static EntityResult<SetConfiguration> Create(
+            SetConfigurationId id,
+            WorkoutTemplateExerciseId workoutTemplateExerciseId,
+            int setNumber,
+            string? targetReps,
+            decimal? targetWeight,
+            int? targetTimeSeconds,
+            int restSeconds)
+        {
             return Validate.For<SetConfiguration>()
                 .Ensure(() => !workoutTemplateExerciseId.IsEmpty, "Workout template exercise ID cannot be empty")
                 .EnsureMinValue(setNumber, 1, "Set number must be at least 1")
@@ -67,7 +87,7 @@ public record SetConfiguration : IEmptyEntity<SetConfiguration>
                     "At least one target metric (reps, weight, or time) must be specified")
                 .OnSuccess(() => new SetConfiguration
                 {
-                    Id = SetConfigurationId.New(),
+                    Id = id,
                     WorkoutTemplateExerciseId = workoutTemplateExerciseId,
                     SetNumber = setNumber,
                     TargetReps = targetReps,

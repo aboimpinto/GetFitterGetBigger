@@ -54,6 +54,24 @@ public record WorkoutTemplateExercise : IEmptyEntity<WorkoutTemplateExercise>
             int sequenceOrder,
             string? notes = null)
         {
+            return Create(
+                WorkoutTemplateExerciseId.New(),
+                workoutTemplateId,
+                exerciseId,
+                zone,
+                sequenceOrder,
+                notes
+            );
+        }
+        
+        public static EntityResult<WorkoutTemplateExercise> Create(
+            WorkoutTemplateExerciseId id,
+            WorkoutTemplateId workoutTemplateId,
+            ExerciseId exerciseId,
+            WorkoutZone zone,
+            int sequenceOrder,
+            string? notes = null)
+        {
             return Validate.For<WorkoutTemplateExercise>()
                 .Ensure(() => !workoutTemplateId.IsEmpty, "Workout template ID cannot be empty")
                 .Ensure(() => !exerciseId.IsEmpty, "Exercise ID cannot be empty")
@@ -61,7 +79,7 @@ public record WorkoutTemplateExercise : IEmptyEntity<WorkoutTemplateExercise>
                 .Ensure(() => notes == null || notes.Length <= 500, "Notes cannot exceed 500 characters")
                 .OnSuccess(() => new WorkoutTemplateExercise
                 {
-                    Id = WorkoutTemplateExerciseId.New(),
+                    Id = id,
                     WorkoutTemplateId = workoutTemplateId,
                     ExerciseId = exerciseId,
                     Zone = zone,
