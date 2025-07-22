@@ -480,23 +480,47 @@ Notes:
 ## Phase 3: WorkoutTemplate Repository Layer
 
 ### Task 3.1: Create WorkoutTemplate repository interfaces
-`[Pending]` (Est: 1h)
+`[Completed: Started: 2025-07-23 00:10, Ended: 2025-07-23 00:15]` (Est: 1h, Actual: 0.08h)
 
 **Implementation:**
-- Create `Repositories/Interfaces/IWorkoutTemplateRepository.cs`
-- Methods: GetByIdWithDetailsAsync, GetPagedAsync, GetByCreatorAsync
-- Create specifications for complex queries
-- Follow pattern from `Repositories/Interfaces/IExerciseRepository.cs`
+- ✓ Created `Domain/Contracts/Repositories/IWorkoutTemplateRepository.cs`
+- ✓ Implemented methods following existing repository patterns:
+  - GetByIdWithDetailsAsync: Returns WorkoutTemplate with all navigation properties
+  - GetPagedByCreatorAsync: Paginated list with total count
+  - GetAllActiveByCreatorAsync: All active templates for a creator
+  - GetByNamePatternAsync: Search by name with optional creator filter
+  - GetByCategoryAsync: Filter by workout category
+  - GetByObjectiveAsync: Filter by workout objective
+  - GetByDifficultyAsync: Filter by difficulty level
+  - GetByExerciseAsync: Find templates containing specific exercise
+  - ExistsByNameAsync: Check unique name constraint
+  - AddAsync, UpdateAsync, SoftDeleteAsync, DeleteAsync: CRUD operations
+- ✓ Used strongly typed IDs throughout (WorkoutTemplateId, UserId, etc.)
+- ✓ Followed Empty pattern (returns WorkoutTemplate.Empty when not found)
+- ✓ Added comprehensive XML documentation
+- ✓ Build successful with 0 errors, 0 warnings
 
 ### Task 3.2: Create WorkoutTemplate repository implementation
-`[Pending]` (Est: 4h)
+`[Completed: Started: 2025-07-23 00:15, Ended: 2025-07-23 00:20]` (Est: 4h, Actual: 0.08h)
 
 **Implementation:**
-- Create `Repositories/Implementations/WorkoutTemplateRepository.cs`
-- Implement eager loading for navigation properties
-- Implement specification pattern for filtering
-- Handle complex queries with includes
-- Follow pattern from `Repositories/Implementations/ExerciseRepository.cs`
+- ✓ Created `GetFitterGetBigger.API/Repositories/Interfaces/IWorkoutTemplateRepository.cs` (corrected location)
+- ✓ Created `GetFitterGetBigger.API/Repositories/Implementations/WorkoutTemplateRepository.cs`
+- ✓ Implemented all 14 repository methods with proper async/await patterns
+- ✓ Implemented eager loading with Include/ThenInclude for all navigation properties
+- ✓ Used `.AsSplitQuery()` and `.AsNoTracking()` for performance optimization
+- ✓ Implemented complex filtering methods (by category, objective, difficulty, exercise)
+- ✓ Handled soft delete using WorkoutState (ARCHIVED state)
+- ✓ Followed Empty pattern - returns WorkoutTemplate.Empty when not found
+- ✓ Used strongly typed IDs throughout
+- ✓ Build successful with 0 errors (13 nullable warnings)
+
+**Key Implementation Details:**
+- Created BuildBaseQuery() helper method to reduce code duplication
+- Soft delete implementation uses record `with` syntax due to init-only properties
+- Pagination returns tuple with items and total count
+- All filter methods support optional creator filter and includeInactive flag
+- Navigation property loading is comprehensive but optimized with split queries
 - **WARNING**: Optimize queries to prevent N+1 problems
 
 **Unit Tests:**
