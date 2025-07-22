@@ -65,37 +65,43 @@ public async Task Given_WorkoutTemplateInProduction_When_UsersHaveExecuted_Then_
 ## Phase 0: Planning and Test Infrastructure
 
 ### Task 0.1: Study codebase for similar implementations
-`[Pending]` (Est: 2h)
-- Search for reference table implementations: Equipment, MuscleGroup
+`[Completed: Started: 2025-07-22 17:45, Ended: 2025-07-22 17:55]` (Est: 2h, Actual: 0.17h)
+- Search for EternalReferenceTable implementations: BodyPart
 - Study Exercise entity for complex relationships pattern
 - Review ExerciseService for state management patterns
 - Document findings with specific file references:
-  - `Models/Entities/Equipment.cs` - Reference table pattern
+  - `Models/Entities/BodyPart.cs` - EternalReferenceTable pattern with IPureReference
+  - `Models/SpecializedIds/BodyPartId.cs` - Specialized ID implementation
+  - `Services/Implementations/BodyPartService.cs` - PureReferenceService pattern
+  - `Repositories/Implementations/BodyPartRepository.cs` - EmptyEnabledReferenceDataRepository pattern
+  - `Services/Base/PureReferenceService.cs` - Base service for eternal caching
   - `Models/Entities/Exercise.cs` - Complex entity with relationships
-  - `Services/Implementations/EquipmentService.cs` - Reference service pattern
   - `Services/Implementations/ExerciseService.cs` - Complex service pattern
 
 ### Task 0.2: Create test builders for WorkoutState
-`[Pending]` (Est: 1h)
-- Create `Tests/Builders/WorkoutStateBuilder.cs`
-- Add to `Tests/Builders/TestIds.cs`:
+`[Completed: Started: 2025-07-22 17:56, Ended: 2025-07-22 18:02]` (Est: 1h, Actual: 0.1h)
+- Create `Tests/TestBuilders/Domain/WorkoutStateTestBuilder.cs` ✓
+- Add to `Tests/TestBuilders/TestIds.cs`: ✓
   ```csharp
   public static class WorkoutStateIds
   {
-      public static readonly WorkoutStateId Draft = WorkoutStateId.ParseOrEmpty("02000001-0000-0000-0000-000000000001");
-      public static readonly WorkoutStateId Production = WorkoutStateId.ParseOrEmpty("02000001-0000-0000-0000-000000000002");
-      public static readonly WorkoutStateId Archived = WorkoutStateId.ParseOrEmpty("02000001-0000-0000-0000-000000000003");
+      public static readonly string Draft = "workoutstate-02000001-0000-0000-0000-000000000001";
+      public static readonly string Production = "workoutstate-02000001-0000-0000-0000-000000000002";
+      public static readonly string Archived = "workoutstate-02000001-0000-0000-0000-000000000003";
   }
   ```
-- Follow pattern from `Tests/Builders/EquipmentBuilder.cs`
+- Follow pattern from `Tests/TestBuilders/Domain/MuscleGroupTestBuilder.cs` ✓
 
 ### Task 0.3: Create test builders for WorkoutTemplate entities
-`[Pending]` (Est: 2h)
-- Create `Tests/Builders/WorkoutTemplateBuilder.cs`
-- Create `Tests/Builders/WorkoutTemplateExerciseBuilder.cs`
-- Create `Tests/Builders/SetConfigurationBuilder.cs`
-- Add appropriate test IDs to `TestIds.cs`
-- Follow complex entity pattern from `Tests/Builders/ExerciseBuilder.cs`
+`[Completed: Started: 2025-07-22 18:03, Ended: 2025-07-22 18:15]` (Est: 2h, Actual: 0.2h)
+- Create `Tests/TestBuilders/Domain/WorkoutTemplateBuilder.cs` ✓
+- Create `Tests/TestBuilders/Domain/WorkoutTemplateExerciseBuilder.cs` ✓
+- Create `Tests/TestBuilders/Domain/SetConfigurationBuilder.cs` ✓
+- Add appropriate test IDs to `TestIds.cs` ✓
+  - WorkoutTemplateIds (03000001 prefix)
+  - WorkoutTemplateExerciseIds (04000001 prefix)
+  - SetConfigurationIds (05000001 prefix)
+- Follow complex entity pattern from `Tests/TestBuilders/Domain/ExerciseBuilder.cs` ✓
 
 ## Phase 1: WorkoutState Reference Table Implementation
 
@@ -103,26 +109,26 @@ public async Task Given_WorkoutTemplateInProduction_When_UsersHaveExecuted_Then_
 `[Pending]` (Est: 1h)
 
 **Implementation:**
-- Create `Models/ValueObjects/WorkoutStateId.cs`
-- Follow pattern from `Models/ValueObjects/EquipmentId.cs`
-- Register in `Models/ValueObjects/SpecializedIdJsonConverterFactory.cs`
-- Add to `Models/ValueObjects/SpecializedIdSwaggerSchemaFilter.cs`
+- Create `Models/SpecializedIds/WorkoutStateId.cs`
+- Follow pattern from `Models/SpecializedIds/BodyPartId.cs`
+- Register in `Models/SpecializedIds/SpecializedIdJsonConverterFactory.cs`
+- Add to `Models/SpecializedIds/SpecializedIdSwaggerSchemaFilter.cs`
 
 **Unit Tests:**
-- Create `Tests/Models/ValueObjects/WorkoutStateIdTests.cs`
+- Create `Tests/Models/SpecializedIds/WorkoutStateIdTests.cs`
 - Test ParseOrEmpty with valid/invalid inputs
 - Test JSON serialization/deserialization
-- Reference: `Tests/Models/ValueObjects/EquipmentIdTests.cs`
+- Reference: `Tests/Models/SpecializedIds/BodyPartIdTests.cs`
 
 ### Task 1.2: Create WorkoutState entity
 `[Pending]` (Est: 2h)
 
 **Implementation:**
 - Create `Models/Entities/WorkoutState.cs`
-- Implement interfaces: `IEnhancedReference<WorkoutStateId>`, `IEmptyEntity<WorkoutState, WorkoutStateId>`
-- Properties: Id, Value (DRAFT/PRODUCTION/ARCHIVED), Name, Description, IsActive, CreatedAt, UpdatedAt
-- Add Handler pattern for Create/Update
-- Follow pattern from `Models/Entities/Equipment.cs`
+- Implement interfaces: `IPureReference`, `IEmptyEntity<WorkoutState>`
+- Properties: WorkoutStateId, Value (DRAFT/PRODUCTION/ARCHIVED), Description, DisplayOrder, IsActive
+- Add Handler pattern for Create only (no updates for EternalReferenceTable)
+- Follow pattern from `Models/Entities/BodyPart.cs`
 - **WARNING**: Use unique GUIDs with 02000001 prefix
 
 **Unit Tests:**
@@ -139,11 +145,11 @@ public async Task Given_WorkoutTemplateInProduction_When_UsersHaveExecuted_Then_
 - Add navigation to `Data/GetFitterGetBiggerContext.cs`
 - Create migration with proper seed data:
   ```csharp
-  new { Id = "02000001-0000-0000-0000-000000000001", Value = "DRAFT", Name = "Draft", Description = "Template under construction" }
-  new { Id = "02000001-0000-0000-0000-000000000002", Value = "PRODUCTION", Name = "Production", Description = "Active template for use" }
-  new { Id = "02000001-0000-0000-0000-000000000003", Value = "ARCHIVED", Name = "Archived", Description = "Retired template" }
+  new { WorkoutStateId = new Guid("02000001-0000-0000-0000-000000000001"), Value = "DRAFT", Description = "Template under construction", DisplayOrder = 1, IsActive = true }
+  new { WorkoutStateId = new Guid("02000001-0000-0000-0000-000000000002"), Value = "PRODUCTION", Description = "Active template for use", DisplayOrder = 2, IsActive = true }
+  new { WorkoutStateId = new Guid("02000001-0000-0000-0000-000000000003"), Value = "ARCHIVED", Description = "Retired template", DisplayOrder = 3, IsActive = true }
   ```
-- Follow pattern from `Data/EntityConfigurations/EquipmentConfiguration.cs`
+- Follow pattern from `Data/EntityConfigurations/BodyPartConfiguration.cs`
 
 **Integration Tests:**
 - Update `Tests/Data/GetFitterGetBiggerContextTests.cs`
@@ -154,17 +160,17 @@ public async Task Given_WorkoutTemplateInProduction_When_UsersHaveExecuted_Then_
 `[Pending]` (Est: 2h)
 
 **Implementation:**
-- Create `Data/Repositories/Interfaces/IWorkoutStateRepository.cs`
-- Create `Data/Repositories/WorkoutStateRepository.cs`
-- Extend `EnhancedReferenceRepository<WorkoutState, WorkoutStateId>`
-- Override LoadAllAsync to return ordered by Value
-- Follow pattern from `Data/Repositories/EquipmentRepository.cs`
+- Create `Repositories/Interfaces/IWorkoutStateRepository.cs`
+- Create `Repositories/Implementations/WorkoutStateRepository.cs`
+- Extend `EmptyEnabledReferenceDataRepository<WorkoutState, WorkoutStateId, FitnessDbContext>`
+- No need to override methods (base class handles everything)
+- Follow pattern from `Repositories/Implementations/BodyPartRepository.cs`
 
 **Unit Tests:**
-- Create `Tests/Data/Repositories/WorkoutStateRepositoryTests.cs`
+- Create `Tests/Repositories/WorkoutStateRepositoryTests.cs`
 - Test GetByValueAsync method
-- Test ordering of LoadAllAsync
-- Reference: `Tests/Data/Repositories/EquipmentRepositoryTests.cs`
+- Test GetAllActiveAsync
+- Reference: `Tests/Repositories/BodyPartRepositoryTests.cs`
 
 ### Task 1.5: Create WorkoutState service
 `[Pending]` (Est: 3h)
@@ -172,34 +178,34 @@ public async Task Given_WorkoutTemplateInProduction_When_UsersHaveExecuted_Then_
 **Implementation:**
 - Create `Services/Interfaces/IWorkoutStateService.cs`
 - Create `Services/Implementations/WorkoutStateService.cs`
-- Extend `PureReferenceService<WorkoutState, WorkoutStateId>`
-- Implement caching with IEternalCacheService
-- Override LoadEntityByIdAsync for non-nullable returns
+- Extend `PureReferenceService<WorkoutState, WorkoutStateDto>`
+- Implement GetByIdAsync(WorkoutStateId), GetByValueAsync(string)
+- Override LoadEntityByIdAsync to return WorkoutState.Empty instead of null
 - **CRITICAL**: Use ReadOnlyUnitOfWork for all operations (no mutations)
-- Follow pattern from `Services/Implementations/EquipmentService.cs`
+- Follow pattern from `Services/Implementations/BodyPartService.cs`
 
 **Unit Tests:**
 - Create `Tests/Services/WorkoutStateServiceTests.cs`
 - Test all service methods
-- Test caching behavior
+- Test eternal caching behavior
 - Test Empty pattern handling
-- Reference: `Tests/Services/EquipmentServiceTests.cs`
+- Reference: `Tests/Services/BodyPartServiceTests.cs`
 
 ### Task 1.6: Create WorkoutState controller
 `[Pending]` (Est: 3h)
 
 **Implementation:**
-- Create `Controllers/WorkoutStateController.cs`
-- Route: `/api/ReferenceTables/WorkoutStates`
-- Implement GetAll, GetById, GetByValue endpoints
+- Create `Controllers/WorkoutStatesController.cs`
+- Route: `/api/workout-states`
+- Implement GetAll, GetById, GetByValue endpoints (read-only)
 - Use pattern matching for ServiceResult handling
-- Follow pattern from `Controllers/EquipmentController.cs`
+- Follow pattern from `Controllers/BodyPartsController.cs`
 
 **Unit Tests:**
-- Create `Tests/Controllers/WorkoutStateControllerTests.cs`
+- Create `Tests/Controllers/WorkoutStatesControllerTests.cs`
 - Test all controller actions
 - Test error handling scenarios
-- Reference: `Tests/Controllers/EquipmentControllerTests.cs`
+- Reference: `Tests/Controllers/BodyPartsControllerTests.cs`
 
 ### Task 1.7: Create WorkoutState integration tests
 `[Pending]` (Est: 2h)
@@ -209,12 +215,12 @@ public async Task Given_WorkoutTemplateInProduction_When_UsersHaveExecuted_Then_
 - Test GetAll returns seeded states
 - Test GetById with valid/invalid IDs
 - Test GetByValue with DRAFT/PRODUCTION/ARCHIVED
-- Follow pattern from `IntegrationTests/Features/Equipment/EquipmentCrudSimple.feature`
+- Follow pattern from `IntegrationTests/Features/ReferenceData/BodyParts.feature`
 
 **Step Definitions:**
 - Create `IntegrationTests/StepDefinitions/WorkoutStateSteps.cs`
 - Implement step definitions for BDD scenarios
-- Reference: `IntegrationTests/StepDefinitions/EquipmentSteps.cs`
+- Reference: `IntegrationTests/StepDefinitions/BodyPartSteps.cs`
 
 ### Task 1.8: Register WorkoutState in dependency injection
 `[Pending]` (Est: 1h)

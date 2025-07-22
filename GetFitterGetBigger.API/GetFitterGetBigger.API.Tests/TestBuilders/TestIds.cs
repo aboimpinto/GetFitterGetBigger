@@ -149,4 +149,36 @@ public static class TestIds
         public static readonly string AMRAP = "executionprotocol-44444444-4444-4444-4444-444444444444";
         public static readonly string InactiveProtocol = "executionprotocol-55555555-5555-5555-5555-555555555555";
     }
+    
+    // Workout State IDs
+    public static class WorkoutStateIds
+    {
+        public static readonly string Draft = "workoutstate-02000001-0000-0000-0000-000000000001";
+        public static readonly string Production = "workoutstate-02000001-0000-0000-0000-000000000002";
+        public static readonly string Archived = "workoutstate-02000001-0000-0000-0000-000000000003";
+    }
+    
+    // Workout Template IDs
+    public static class WorkoutTemplateIds
+    {
+        public static readonly string UpperBodyPushTemplate = "workouttemplate-03000001-1111-1111-1111-111111111111";
+        public static readonly string LowerBodyTemplate = "workouttemplate-03000001-2222-2222-2222-222222222222";
+        public static readonly string FullBodyTemplate = "workouttemplate-03000001-3333-3333-3333-333333333333";
+    }
+    
+    // Workout Template Exercise IDs
+    public static class WorkoutTemplateExerciseIds
+    {
+        public static readonly string TemplateExercise1 = "workouttemplateexercise-04000001-1111-1111-1111-111111111111";
+        public static readonly string TemplateExercise2 = "workouttemplateexercise-04000001-2222-2222-2222-222222222222";
+        public static readonly string TemplateExercise3 = "workouttemplateexercise-04000001-3333-3333-3333-333333333333";
+    }
+    
+    // Set Configuration IDs
+    public static class SetConfigurationIds
+    {
+        public static readonly string SetConfig1 = "setconfiguration-05000001-1111-1111-1111-111111111111";
+        public static readonly string SetConfig2 = "setconfiguration-05000001-2222-2222-2222-222222222222";
+        public static readonly string SetConfig3 = "setconfiguration-05000001-3333-3333-3333-333333333333";
+    }
 }
