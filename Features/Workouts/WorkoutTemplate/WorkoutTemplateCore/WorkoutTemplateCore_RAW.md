@@ -33,6 +33,7 @@ A workout template encapsulates the trainer's expertise and programming knowledg
 - **Version:** Version number for template evolution tracking
 - **Active Status:** Whether the template is currently available for use
 - **Tags:** Searchable tags for enhanced discovery
+- **Workout State:** Reference to the workflow state (DRAFT, PRODUCTION, ARCHIVED) - Reference Data
 
 **Template Goal Definition:**
 The combination of Workout Category, Workout Objective, and Execution Protocol defines the workout's purpose and structure, guiding exercise selection and organization.
@@ -146,7 +147,50 @@ Based on the selected Workout Category, the system provides intelligent exercise
 - Configuration values must be appropriate for the chosen protocol
 - UI adapts based on protocol selection
 
-### 3.2 Safety and User Guidance
+### 3.2 Workout State Management
+
+**WorkoutState Reference Data Entity:**
+
+WorkoutState is a Pure Reference entity (IPureReference) that defines the lifecycle states of a workout template. As reference data, it requires:
+- Database table: WorkoutStates
+- Entity: WorkoutState (inherits from ReferenceDataBase)
+- Service: WorkoutStateService (extends PureReferenceService)
+- Controller: WorkoutStateController with read-only endpoints
+- Endpoints: GET /api/ReferenceTables/WorkoutStates
+- Caching: Eternal (365 days) as per Pure Reference pattern
+
+**Predefined WorkoutState Values:**
+- DRAFT - Initial development state
+- PRODUCTION - Active and available for use
+- ARCHIVED - Retired from active use
+
+**State Transitions and Business Rules:**
+
+The workout template follows a defined lifecycle through these states:
+
+**DRAFT State:**
+- Initial state when a workout template is created
+- Personal Trainer can freely modify all aspects of the template
+- Execution Protocol can be changed at any time
+- All execution logs associated with this workout template are automatically deleted when changes are made
+- In client mobile applications, only users with both `admin` and `workout_tester` claims can execute workouts in DRAFT state
+- This allows for testing and refinement before public release
+
+**PRODUCTION State:**
+- The workout is finalized and ready for public use
+- When transitioning from DRAFT to PRODUCTION, all logs created during the DRAFT phase are permanently deleted
+- Any user with the appropriate subscription plan can execute the workout
+- Personal Trainers can only rollback to DRAFT if no execution logs exist (i.e., no one has performed the workout yet)
+- Once users have executed the workout, it cannot be returned to DRAFT to preserve training history
+
+**ARCHIVED State:**
+- The workout is retired from active use
+- No user can execute an archived workout
+- Users who previously performed the workout can still view their historical performance data
+- Execution logs are preserved for performance tracking and historical reference
+- This state is useful for seasonal workouts or outdated training programs
+
+### 3.3 Safety and User Guidance
 
 **Warmup/Cooldown Alerts:**
 - System tracks warmup/cooldown associations
@@ -196,7 +240,48 @@ Based on the selected Workout Category, the system provides intelligent exercise
 - Rest periods integrated as workout steps
 - Progress tracking against template targets
 
-## Part V: Data Relationships
+## Part V: Reference Data Requirements
+
+### 5.1 WorkoutState Reference Data
+
+**Implementation Requirements:**
+
+As a Pure Reference entity, WorkoutState requires the following implementation:
+
+**Entity Structure:**
+- Inherits from `ReferenceDataBase`
+- Implements `IPureReference`, `IEmptyEntity<WorkoutState>`, `ICacheableEntity`
+- Includes specialized `WorkoutStateId` type for type safety
+- Follows Empty pattern with static `Empty` property
+
+**Database Seeding:**
+The WorkoutStates table must be seeded with these values:
+```
+| Value      | Description                          | DisplayOrder | IsActive |
+|------------|--------------------------------------|--------------|----------|
+| DRAFT      | Template under development           | 1            | true     |
+| PRODUCTION | Active template ready for use        | 2            | true     |
+| ARCHIVED   | Retired template (view only)         | 3            | true     |
+```
+
+**Service Layer:**
+- `WorkoutStateService` extending `PureReferenceService<WorkoutState, WorkoutStateDto>`
+- Provides GetAll, GetById, GetByValue operations
+- Implements eternal caching (365 days)
+- Returns Empty pattern for not found scenarios
+
+**API Endpoints:**
+- `GET /api/ReferenceTables/WorkoutStates` - Returns all active states
+- `GET /api/ReferenceTables/WorkoutStates/{id}` - Get by ID
+- `GET /api/ReferenceTables/WorkoutStates/value/{value}` - Get by value (e.g., "DRAFT")
+
+**Integration Points:**
+- WorkoutTemplate entity includes `WorkoutStateId` property
+- State transitions validated in WorkoutTemplateService
+- UI components use cached states for dropdown/selection
+- Business rules enforce state-specific behaviors
+
+## Part VI: Data Relationships
 
 **Core Relationships:**
 ```
@@ -205,6 +290,7 @@ WorkoutTemplateExercise has many SetConfiguration entries
 WorkoutTemplate references WorkoutCategory (Reference Data)
 WorkoutTemplate references WorkoutObjective (Reference Data)
 WorkoutTemplate references ExecutionProtocol (Reference Data)
+WorkoutTemplate references WorkoutState (Reference Data)
 WorkoutTemplateExercise references Exercise (Exercise Feature)
 SetConfiguration references ExecutionProtocol (Reference Data)
 ```
@@ -217,6 +303,8 @@ SetConfiguration references ExecutionProtocol (Reference Data)
 ## Conclusion
 
 The Workout Template Core feature provides a flexible yet structured approach to workout creation. By treating workouts as goal-oriented containers for exercises, supporting intelligent exercise selection, and automatically managing equipment and warmup/cooldown relationships, the system enables trainers to create effective, safe workout programs.
+
+The WorkoutState reference data entity provides a robust lifecycle management system, ensuring proper testing in DRAFT, controlled deployment to PRODUCTION, and historical preservation through ARCHIVED state. The state-based business rules protect data integrity while providing flexibility for trainers to iterate on their workout designs.
 
 The integration with execution protocols provides future extensibility while the initial Standard protocol implementation ensures immediate usability. The approach of treating rest as exercises and maintaining contextual notes ensures maximum flexibility while keeping the data model clean and intuitive.
 

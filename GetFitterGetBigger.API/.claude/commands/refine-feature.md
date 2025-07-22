@@ -84,6 +84,32 @@ Each task should include:
 - **Unit tests and/or integration tests** as part of the same task
 - Test file locations and specific test scenarios to implement
 
+### 6. Test Structure Requirements
+The feature must include two levels of acceptance tests:
+
+**Global Acceptance Tests** (Cross-Project):
+- Located in feature folder: `acceptance-tests/`
+- Test complete workflows: API → Admin and API → Clients
+- Use high-level Given/When/Then scenarios
+- Focus on end-to-end business processes
+
+**Project-Specific Minimal Acceptance Tests**:
+- Located in API project: `Tests/Features/[FeatureName]/[FeatureName]AcceptanceTests.cs`
+- Use BDD format with Given/When/Then
+- Test critical paths within the API project
+- Based on integration test patterns but feature-focused
+- Example format:
+  ```csharp
+  [Fact]
+  public async Task Given_ValidWorkoutTemplate_When_CreatingInDraftState_Then_ShouldAllowModifications()
+  {
+      // Given: A personal trainer with valid claims
+      // When: Creating a workout template in DRAFT state
+      // Then: Should allow execution protocol changes
+      // And: Should delete associated logs on modification
+  }
+  ```
+
 ## Implementation Steps
 
 1. **Read and analyze ALL files** in the feature folder:
@@ -114,6 +140,10 @@ The command generates a `feature-tasks.md` file with:
 - Pre-implementation checklist (referencing key documents)
 - Note to create test builders early (in planning phase)
 - BDD scenarios defined upfront (to be implemented throughout)
+- **Test Structure Section** including:
+  - Global acceptance test scenarios (for `acceptance-tests/` folder)
+  - Project-specific acceptance test scenarios with Given/When/Then format
+  - Test file locations and naming conventions
 - Tasks organized by category with checkpoints
 - Each task includes:
   - Description and time estimate (implementation + tests)
@@ -193,6 +223,52 @@ The generated task list must:
 - Test ownership validation scenarios
 - Test public/private visibility rules
 - Reference: `/memory-bank/TESTING-QUICK-REFERENCE.md`
+```
+
+## Example Test Structure Section
+
+```markdown
+## Test Structure
+
+### Global Acceptance Tests
+Location: `/memory-bank/features/[FEAT-ID]/acceptance-tests/`
+
+**Scenario 1: Complete Workout Template Creation Flow**
+```gherkin
+Given a Personal Trainer logs into the Admin portal
+When they create a workout template in DRAFT state
+And add exercises with warmup/cooldown associations
+And transition the template to PRODUCTION
+Then the template should be available in the Clients app
+And users with appropriate claims can execute the workout
+```
+
+### Project-Specific Acceptance Tests
+Location: `Tests/Features/WorkoutTemplate/WorkoutTemplateAcceptanceTests.cs`
+
+**Test 1: Draft State Behavior**
+```csharp
+[Fact]
+public async Task Given_WorkoutTemplateInDraft_When_ChangingExecutionProtocol_Then_DeletesAllLogs()
+{
+    // Given: A workout template in DRAFT state with execution logs
+    // When: PT changes the execution protocol
+    // Then: All associated logs are deleted
+    // And: Template remains in DRAFT state
+}
+```
+
+**Test 2: Production State Restrictions**
+```csharp
+[Fact]
+public async Task Given_WorkoutTemplateInProduction_When_UsersHaveExecuted_Then_CannotRollbackToDraft()
+{
+    // Given: A workout template in PRODUCTION with execution logs
+    // When: PT attempts to rollback to DRAFT
+    // Then: Operation fails with appropriate error
+    // And: Template remains in PRODUCTION state
+}
+```
 ```
 
 ## Example Checkpoint with Reports
