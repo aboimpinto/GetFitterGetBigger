@@ -201,3 +201,28 @@ This document tracks features that have been propagated from the API to Admin an
   - Public/private template visibility with ownership controls
   - Comprehensive BDD test scenarios covering all business rules
   - Performance optimizations with caching for public templates
+
+#### 7. Workout Template Core (Admin)
+- **Source**: Features/Workouts/WorkoutTemplate/WorkoutTemplateCore/
+- **Admin Feature ID**: FEAT-021
+- **Created**: 2025-07-22
+- **Status**: Propagated to 0-SUBMITTED
+- **Summary**: Comprehensive workout template management UI for Personal Trainers
+- **UI Components**:
+  - WorkoutTemplateList with search, filters, and pagination
+  - WorkoutTemplateEditor with multi-step form interface
+  - ExerciseManager with three-zone drag-and-drop functionality
+  - ExerciseSelector modal with smart suggestions
+  - SetConfigurationPanel for inline exercise configuration
+- **Dependencies**: 
+  - API FEAT-026 (Workout Template Core endpoints)
+  - Workout Reference Data (categories, objectives, protocols)
+  - Exercise Management UI (for exercise selection)
+- **Key Features**:
+  - Zone-based exercise organization with drag-and-drop
+  - Automatic warmup/cooldown suggestions
+  - Equipment requirement aggregation
+  - Public/private template sharing
+  - Template duplication functionality
+  - Real-time search and advanced filtering
+  - Responsive design optimized for tablets
