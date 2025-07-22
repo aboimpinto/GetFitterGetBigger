@@ -1,5 +1,4 @@
-Start implementing a feature from the READY_TO_DEVELOP folder.
-
+Start implementing a feature from the READY_TO_DEVELOP folder following @memory-bank/DEVELOPMENT_PROCESS.md and @memory-bank/CODE_QUALITY_STANDARDS.md.
 Usage: /start-implementing [FEAT-XXX or feature selection]
 
 Instructions:

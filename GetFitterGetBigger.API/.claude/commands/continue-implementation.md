@@ -1,4 +1,4 @@
-Continue implementing the current in-progress feature following @memory-bank/DEVELOPMENT_PROCESS.md.
+Continue implementing the current in-progress feature following @memory-bank/DEVELOPMENT_PROCESS.md and @memory-bank/CODE_QUALITY_STANDARDS.md
 
 Instructions:
 1. Identify the current feature in /memory-bank/features/2-IN_PROGRESS/
