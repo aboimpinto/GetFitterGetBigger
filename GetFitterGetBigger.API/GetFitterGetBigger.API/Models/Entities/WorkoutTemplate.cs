@@ -28,9 +28,9 @@ public record WorkoutTemplate : IEmptyEntity<WorkoutTemplate>
     public DateTime UpdatedAt { get; init; }
     
     // Navigation properties
-    public WorkoutCategory? Category { get; init; }
-    public DifficultyLevel? Difficulty { get; init; }
-    public WorkoutState? WorkoutState { get; init; }
+    public WorkoutCategory Category { get; init; } = null!;
+    public DifficultyLevel Difficulty { get; init; } = null!;
+    public WorkoutState WorkoutState { get; init; } = null!;
     public ICollection<WorkoutTemplateExercise> Exercises { get; init; } = new List<WorkoutTemplateExercise>();
     public ICollection<WorkoutTemplateObjective> Objectives { get; init; } = new List<WorkoutTemplateObjective>();
     
@@ -57,7 +57,11 @@ public record WorkoutTemplate : IEmptyEntity<WorkoutTemplate>
         CreatedBy = UserId.Empty,
         WorkoutStateId = WorkoutStateId.Empty,
         CreatedAt = DateTime.UtcNow,
-        UpdatedAt = DateTime.UtcNow
+        UpdatedAt = DateTime.UtcNow,
+        // Initialize navigation properties to Empty instances
+        Category = WorkoutCategory.Empty,
+        Difficulty = DifficultyLevel.Empty,
+        WorkoutState = WorkoutState.Empty
     };
     
     public static class Handler
