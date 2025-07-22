@@ -12,6 +12,7 @@ This document defines the immutable structure for organizing feature documentati
 │
 ├── [FeatureName]/               # One directory per feature
 │   ├── README.md                # Feature overview using template
+│   ├── [FeatureName]_RAW.md    # Optional: Unstructured documentation to be refined
 │   ├── api/                     # API-related documentation
 │   │   ├── endpoints.md         # Endpoint specifications
 │   │   ├── models.md            # Data models and DTOs
@@ -123,12 +124,61 @@ This document defines the immutable structure for organizing feature documentati
 4. Add cross-references to related features
 5. Archive or deprecate old documentation
 
+### From RAW Documentation Files
+1. **Identify the RAW file location** (e.g., `/Features/Category/SubCategory/FeatureName/FeatureName_RAW.md`)
+2. **Create refined structure in the SAME directory** as the RAW file
+3. **Do NOT create a new parallel directory**
+4. Extract and organize content from RAW file into proper structure
+5. Preserve the RAW file or rename with `_ARCHIVE` suffix
+6. Ensure all RAW content is incorporated into refined documentation
+
 ### Creating New Features
 1. Create feature directory: `/Features/[FeatureName]/`
 2. Copy FEATURE-TEMPLATE.md to `README.md`
 3. Fill in all required sections
 4. Create subdirectories as needed
 5. Add feature to `/Features/README.md` index
+
+## Refining RAW Documentation
+
+### Purpose
+RAW documentation files (`*_RAW.md`) contain unstructured feature information that needs to be refined into the standard feature structure. When refining these files, the refined structure must be created in the **same directory** as the RAW file.
+
+### Refinement Process
+1. **Locate the RAW file** (e.g., `WorkoutTemplateCore_RAW.md`)
+2. **Create refined structure in the same directory**
+3. **Preserve the RAW file** for reference and history
+4. **Do NOT create a new parallel directory**
+
+### Example: Correct Refinement
+```
+/Features/Workouts/WorkoutTemplate/WorkoutTemplateCore/
+├── WorkoutTemplateCore_RAW.md     # Original RAW documentation (preserved)
+├── README.md                       # Refined feature documentation
+├── api/                           # API documentation (created during refinement)
+│   ├── endpoints.md
+│   └── models.md
+├── admin/                         # Admin documentation (created during refinement)
+│   ├── components.md
+│   └── workflows.md
+└── tests/                         # Test documentation (created during refinement)
+```
+
+### Example: Incorrect Refinement (DO NOT DO THIS)
+```
+/Features/Workouts/WorkoutTemplate/
+├── WorkoutTemplateCore/
+│   └── WorkoutTemplateCore_RAW.md  # RAW file here
+└── WorkoutTemplateCore/            # WRONG: Creates parallel directory
+    ├── README.md
+    └── api/
+```
+
+### RAW File Guidelines
+- RAW files should be preserved after refinement
+- RAW files can be archived by adding `_ARCHIVE` suffix once refinement is complete
+- Multiple RAW files in a directory should be consolidated during refinement
+- RAW file content should be fully incorporated into the refined structure
 
 ## Maintenance Rules
 
@@ -137,12 +187,14 @@ This document defines the immutable structure for organizing feature documentati
 - Modify FEATURE-STRUCTURE.md
 - Change established directory structure
 - Remove required sections from feature README
+- Create parallel directories when refining RAW files
 
 ### DO
 - Add new optional sections to feature documentation
 - Create feature-specific subdirectories as needed
 - Update version and changelog regularly
 - Keep cross-references up to date
+- Refine RAW files in their current directory
 
 ## Example Features
 
@@ -177,5 +229,5 @@ This section documents the current technology choices for reference. Note that f
 ### Technology Independence Principle
 Feature documentation focuses on business requirements and data models using JSON serialization. This approach ensures that features remain valid regardless of technology changes. Implementation details are kept in project-specific repositories, not in feature documentation.
 
-Last Updated: 2025-07-10
-Version: 1.1.0
+Last Updated: 2025-07-22
+Version: 1.2.0
