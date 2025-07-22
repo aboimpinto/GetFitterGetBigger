@@ -172,3 +172,32 @@ This document tracks features that have been propagated from the API to Admin an
   - Detail modal dialogs with comprehensive programming guidance
   - Professional table view for execution protocols with methodology details
   - Responsive design optimized for tablet and desktop Personal Trainer workflows
+
+## Propagation Date: 2025-07-22
+
+### Features Propagated
+
+#### 7. Workout Template Core
+- **Source**: Features/Workouts/WorkoutTemplate/WorkoutTemplateCore/
+- **API Feature ID**: FEAT-026
+- **Created**: 2025-07-22
+- **Status**: Propagated to 0-SUBMITTED
+- **Summary**: Comprehensive workout template management system for creating reusable workout blueprints
+- **Endpoints**: 
+  - `/api/workout-templates` - Full CRUD operations
+  - `/api/workout-templates/{id}/exercises` - Exercise management within templates
+  - `/api/workout-templates/{id}/duplicate` - Template duplication
+  - `/api/workout-templates/{id}/exercise-suggestions` - Smart exercise suggestions
+  - `/api/workout-templates/{id}/validate` - Template validation
+- **Dependencies**: 
+  - Exercise Management feature (for exercise library)
+  - Workout Reference Data (FEAT-025) for categories, objectives, and protocols
+- **Key Changes**:
+  - 3 new entities: WorkoutTemplate, WorkoutTemplateExercise, SetConfiguration
+  - Zone-based exercise organization (Warmup, Main, Cooldown)
+  - Automatic equipment aggregation from selected exercises
+  - Smart warmup/cooldown suggestions based on exercise associations
+  - Rest periods implemented as special exercises
+  - Public/private template visibility with ownership controls
+  - Comprehensive BDD test scenarios covering all business rules
+  - Performance optimizations with caching for public templates
