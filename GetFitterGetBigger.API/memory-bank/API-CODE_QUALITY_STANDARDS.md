@@ -8,6 +8,22 @@ This document extends the universal `CODE_QUALITY_STANDARDS.md`. Read that first
 
 ---
 
+## 🚨 GOLDEN RULES FOR API - NON-NEGOTIABLE
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│ 🔴 CRITICAL: These API rules MUST be followed - NO EXCEPTIONS  │
+├─────────────────────────────────────────────────────────────────┤
+│ 1. Single Exit Point per method - USE PATTERN MATCHING         │
+│ 2. ServiceResult<T> for ALL service methods                    │
+│ 3. No null returns - USE EMPTY PATTERN                         │
+│ 4. ReadOnlyUnitOfWork for queries, WritableUnitOfWork for mods │
+│ 5. Pattern matching in controllers for ServiceResult handling  │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+---
+
 ## 🎯 API-Specific Patterns
 
 ### 1. **Empty/Null Object Pattern (Mandatory)**
@@ -169,6 +185,50 @@ public interface IEquipmentRepository : IRepositoryBase<Equipment, EquipmentId>
 }
 ```
 
+### 4. **Pattern Matching for Single Exit Point** 🚨 CRITICAL
+**NEVER have multiple returns in service methods. Use pattern matching:**
+
+```csharp
+// ❌ VIOLATION - Multiple exit points in service method
+public async Task<ServiceResult<WorkoutStateDto>> GetFromCacheOrLoadAsync(string cacheKey, Func<Task<WorkoutState>> loadFunc)
+{
+    var cacheResult = await _cacheService.GetAsync<WorkoutStateDto>(cacheKey);
+    if (cacheResult.IsHit)
+        return ServiceResult<WorkoutStateDto>.Success(cacheResult.Value);
+    
+    var entity = await loadFunc();
+    if (entity.IsEmpty)
+        return ServiceResult<WorkoutStateDto>.Failure(CreateEmptyDto(), ServiceError.NotFound());
+    
+    return ServiceResult<WorkoutStateDto>.Success(MapToDto(entity));
+}
+
+// ✅ CORRECT - Single exit with pattern matching
+public async Task<ServiceResult<WorkoutStateDto>> GetFromCacheOrLoadAsync(string cacheKey, Func<Task<WorkoutState>> loadFunc)
+{
+    var cacheResult = await _cacheService.GetAsync<WorkoutStateDto>(cacheKey);
+    
+    var result = cacheResult.IsHit
+        ? ServiceResult<WorkoutStateDto>.Success(cacheResult.Value)
+        : await ProcessUncachedEntity(await loadFunc(), cacheKey);
+        
+    return result;
+}
+
+private async Task<ServiceResult<WorkoutStateDto>> ProcessUncachedEntity(WorkoutState entity, string cacheKey) =>
+    entity switch
+    {
+        { IsEmpty: true } => ServiceResult<WorkoutStateDto>.Failure(CreateEmptyDto(), ServiceError.NotFound()),
+        _ => await CacheAndReturnSuccessAsync(cacheKey, MapToDto(entity))
+    };
+```
+
+**Benefits:**
+- Enforces single exit point automatically
+- Reduces method length (often under 20 lines)
+- Lowers cyclomatic complexity
+- More readable and maintainable
+
 ---
 
 ## 🔒 API Security Standards
@@ -279,6 +339,7 @@ var exercises = await context.Exercises
 - [ ] Empty static property for Empty pattern
 
 ### ✅ Service Layer
+- [ ] 🚨 Single exit point per method (use pattern matching)
 - [ ] All methods return ServiceResult<T>
 - [ ] Proper UnitOfWork usage (ReadOnly vs Writable)
 - [ ] Business logic in services, not controllers/repositories

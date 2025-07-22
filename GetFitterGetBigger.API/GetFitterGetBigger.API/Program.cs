@@ -72,6 +72,7 @@ builder.Services.AddTransient<IExerciseLinkRepository, ExerciseLinkRepository>()
 builder.Services.AddTransient<IWorkoutObjectiveRepository, WorkoutObjectiveRepository>();
 builder.Services.AddTransient<IWorkoutCategoryRepository, WorkoutCategoryRepository>();
 builder.Services.AddTransient<IExecutionProtocolRepository, ExecutionProtocolRepository>();
+builder.Services.AddTransient<IWorkoutStateRepository, WorkoutStateRepository>();
 
 // Register services
 builder.Services.AddTransient<IExerciseService, ExerciseService>();
@@ -81,6 +82,7 @@ builder.Services.AddTransient<IExerciseLinkService, ExerciseLinkService>();
 builder.Services.AddTransient<IWorkoutObjectiveService, WorkoutObjectiveService>();
 builder.Services.AddTransient<IWorkoutCategoryService, WorkoutCategoryService>();
 builder.Services.AddTransient<IExecutionProtocolService, ExecutionProtocolService>();
+builder.Services.AddTransient<IWorkoutStateService, WorkoutStateService>();
 
 // Register reference table validation services
 builder.Services.AddTransient<IBodyPartService, BodyPartService>();

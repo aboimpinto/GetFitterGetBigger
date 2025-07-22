@@ -13,35 +13,28 @@ using Olimpo.EntityFramework.Persistency;
 namespace GetFitterGetBigger.API.Services.Implementations;
 
 /// <summary>
-/// Service implementation for body part operations
-/// TEMPORARY: Extends EmptyEnabledPureReferenceService until all entities are migrated
+/// Service implementation for workout state operations
 /// </summary>
-public class BodyPartService : PureReferenceService<BodyPart, BodyPartDto>, IBodyPartService
+public class WorkoutStateService : PureReferenceService<WorkoutState, WorkoutStateDto>, IWorkoutStateService
 {
-    public BodyPartService(
+    public WorkoutStateService(
         IUnitOfWorkProvider<FitnessDbContext> unitOfWorkProvider,
         IEternalCacheService cacheService,
-        ILogger<BodyPartService> logger)
+        ILogger<WorkoutStateService> logger)
         : base(unitOfWorkProvider, cacheService, logger)
     {
     }
 
     /// <inheritdoc/>
-    public async Task<ServiceResult<IEnumerable<BodyPartDto>>> GetAllActiveAsync()
-    {
-        return await GetAllAsync();
-    }
-
-    /// <inheritdoc/>
-    public async Task<ServiceResult<BodyPartDto>> GetByIdAsync(BodyPartId id) => 
+    public async Task<ServiceResult<WorkoutStateDto>> GetByIdAsync(WorkoutStateId id) => 
         id.IsEmpty 
-            ? ServiceResult<BodyPartDto>.Failure(CreateEmptyDto(), ServiceError.ValidationFailed(BodyPartErrorMessages.InvalidIdFormat))
+            ? ServiceResult<WorkoutStateDto>.Failure(CreateEmptyDto(), ServiceError.ValidationFailed(WorkoutStateErrorMessages.InvalidIdFormat))
             : await GetByIdAsync(id.ToString());
     
     /// <inheritdoc/>
-    public async Task<ServiceResult<BodyPartDto>> GetByValueAsync(string value) => 
+    public async Task<ServiceResult<WorkoutStateDto>> GetByValueAsync(string value) => 
         string.IsNullOrWhiteSpace(value)
-            ? ServiceResult<BodyPartDto>.Failure(CreateEmptyDto(), ServiceError.ValidationFailed(BodyPartErrorMessages.ValueCannotBeEmpty))
+            ? ServiceResult<WorkoutStateDto>.Failure(CreateEmptyDto(), ServiceError.ValidationFailed(WorkoutStateErrorMessages.ValueCannotBeEmpty))
             : await GetFromCacheOrLoadAsync(
                 GetValueCacheKey(value),
                 () => LoadByValueAsync(value),
@@ -49,85 +42,85 @@ public class BodyPartService : PureReferenceService<BodyPart, BodyPartDto>, IBod
 
     private string GetValueCacheKey(string value) => $"{GetCacheKeyPrefix()}value:{value}";
     
-    private async Task<ServiceResult<BodyPartDto>> GetFromCacheOrLoadAsync(
+    private async Task<ServiceResult<WorkoutStateDto>> GetFromCacheOrLoadAsync(
         string cacheKey, 
-        Func<Task<BodyPart>> loadFunc,
+        Func<Task<WorkoutState>> loadFunc,
         string identifier)
     {
         var cacheService = (IEternalCacheService)_cacheService;
-        var cacheResult = await cacheService.GetAsync<BodyPartDto>(cacheKey);
+        var cacheResult = await cacheService.GetAsync<WorkoutStateDto>(cacheKey);
         
         if (cacheResult.IsHit)
             _logger.LogDebug("Cache hit for {CacheKey}", cacheKey);
         
         var result = cacheResult.IsHit
-            ? ServiceResult<BodyPartDto>.Success(cacheResult.Value)
+            ? ServiceResult<WorkoutStateDto>.Success(cacheResult.Value)
             : await ProcessUncachedEntity(await loadFunc(), cacheKey, identifier);
             
         return result;
     }
     
-    private async Task<ServiceResult<BodyPartDto>> ProcessUncachedEntity(
-        BodyPart entity, string cacheKey, string identifier) =>
+    private async Task<ServiceResult<WorkoutStateDto>> ProcessUncachedEntity(
+        WorkoutState entity, string cacheKey, string identifier) =>
         entity switch
         {
-            { IsEmpty: true } or { IsActive: false } => ServiceResult<BodyPartDto>.Failure(
+            { IsEmpty: true } or { IsActive: false } => ServiceResult<WorkoutStateDto>.Failure(
                 CreateEmptyDto(), 
-                ServiceError.NotFound(BodyPartErrorMessages.NotFound, identifier)),
+                ServiceError.NotFound(WorkoutStateErrorMessages.NotFound, identifier)),
             _ => await CacheAndReturnSuccessAsync(cacheKey, MapToDto(entity))
         };
     
-    private async Task<ServiceResult<BodyPartDto>> CacheAndReturnSuccessAsync(string cacheKey, BodyPartDto dto)
+    private async Task<ServiceResult<WorkoutStateDto>> CacheAndReturnSuccessAsync(string cacheKey, WorkoutStateDto dto)
     {
         var cacheService = (IEternalCacheService)_cacheService;
         await cacheService.SetAsync(cacheKey, dto);
-        return ServiceResult<BodyPartDto>.Success(dto);
+        return ServiceResult<WorkoutStateDto>.Success(dto);
     }
     
-    private async Task<BodyPart> LoadByValueAsync(string value)
+    private async Task<WorkoutState> LoadByValueAsync(string value)
     {
         using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
-        var repository = unitOfWork.GetRepository<IBodyPartRepository>();
+        var repository = unitOfWork.GetRepository<IWorkoutStateRepository>();
         return await repository.GetByValueAsync(value);
     }
 
     /// <inheritdoc/>
-    public async Task<bool> ExistsAsync(BodyPartId id) => 
+    public async Task<bool> ExistsAsync(WorkoutStateId id) => 
         !id.IsEmpty && (await GetByIdAsync(id)).IsSuccess;
     
     /// <inheritdoc/>
     public override async Task<bool> ExistsAsync(string id) => 
-        await ExistsAsync(BodyPartId.ParseOrEmpty(id));
+        await ExistsAsync(WorkoutStateId.ParseOrEmpty(id));
     
-    protected override async Task<IEnumerable<BodyPart>> LoadAllEntitiesAsync()
+    protected override async Task<IEnumerable<WorkoutState>> LoadAllEntitiesAsync()
     {
         using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
-        var repository = unitOfWork.GetRepository<IBodyPartRepository>();
+        var repository = unitOfWork.GetRepository<IWorkoutStateRepository>();
         return await repository.GetAllActiveAsync();
     }
     
-    // Returns BodyPart.Empty instead of null (Null Object Pattern)
-    protected override async Task<BodyPart> LoadEntityByIdAsync(string id)
+    // Returns WorkoutState.Empty instead of null (Null Object Pattern)
+    protected override async Task<WorkoutState> LoadEntityByIdAsync(string id)
     {
-        var bodyPartId = BodyPartId.ParseOrEmpty(id);
+        var workoutStateId = WorkoutStateId.ParseOrEmpty(id);
         
-        var result = bodyPartId.IsEmpty
-            ? BodyPart.Empty
-            : await LoadFromRepository(bodyPartId);
+        var result = workoutStateId.IsEmpty
+            ? WorkoutState.Empty
+            : await LoadFromRepository(workoutStateId);
             
         return result;
     }
     
-    private async Task<BodyPart> LoadFromRepository(BodyPartId id)
+    private async Task<WorkoutState> LoadFromRepository(WorkoutStateId id)
     {
         using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
-        var repository = unitOfWork.GetRepository<IBodyPartRepository>();
+        var repository = unitOfWork.GetRepository<IWorkoutStateRepository>();
         return await repository.GetByIdAsync(id);
     }
     
-    protected override BodyPartDto MapToDto(BodyPart entity)
+    protected override WorkoutStateDto MapToDto(WorkoutState entity)
     {
-        return new BodyPartDto
+        return new WorkoutStateDto
         {
             Id = entity.Id,
             Value = entity.Value,
@@ -135,9 +128,9 @@ public class BodyPartService : PureReferenceService<BodyPart, BodyPartDto>, IBod
         };
     }
     
-    protected override BodyPartDto CreateEmptyDto()
+    protected override WorkoutStateDto CreateEmptyDto()
     {
-        return new BodyPartDto();
+        return new WorkoutStateDto();
     }
     
     protected override ValidationResult ValidateAndParseId(string id)
@@ -147,7 +140,7 @@ public class BodyPartService : PureReferenceService<BodyPart, BodyPartDto>, IBod
         // this should validate the string format
         if (string.IsNullOrWhiteSpace(id))
         {
-            return ValidationResult.Failure(BodyPartErrorMessages.IdCannotBeEmpty);
+            return ValidationResult.Failure(WorkoutStateErrorMessages.IdCannotBeEmpty);
         }
         
         // No additional validation - let the controller handle format validation

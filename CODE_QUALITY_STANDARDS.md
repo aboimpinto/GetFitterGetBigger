@@ -8,10 +8,25 @@ This document defines the core quality principles that apply regardless of techn
 
 ---
 
+## 🚨 GOLDEN RULES - NON-NEGOTIABLE
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│ 🔴 CRITICAL: These rules MUST be followed - NO EXCEPTIONS      │
+├─────────────────────────────────────────────────────────────────┤
+│ 1. Single Exit Point per method - USE PATTERN MATCHING         │
+│ 2. No null returns - USE EMPTY PATTERN                         │
+│ 3. Methods < 20 lines (achieved by following rule #1)          │
+│ 4. Cyclomatic complexity < 10 (pattern matching helps)         │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+---
+
 ## 📋 Universal Core Principles
 
-### 1. **Pattern Matching Over If-Else**
-Modern languages support pattern matching - use it for cleaner, more readable code:
+### 1. **Pattern Matching Over If-Else** 🔑 KEY TO SINGLE EXIT POINT
+Modern languages support pattern matching - use it for cleaner, more readable code AND to naturally enforce single exit points:
 
 ```csharp
 // ❌ BAD - Traditional if-else chains
@@ -60,8 +75,8 @@ function processUser(user: User) {
 - Extract complex logic into well-named helper methods
 - One level of abstraction per method
 
-### 4. **Single Exit Point Principle**
-**CRITICAL**: Every method should have ONE exit point at the end:
+### 4. **Single Exit Point Principle** 🚨 CRITICAL - USE PATTERN MATCHING
+**🔴 NON-NEGOTIABLE**: Every method MUST have ONE exit point at the end. Pattern matching is your PRIMARY TOOL to achieve this:
 
 ```javascript
 // ❌ BAD - Multiple returns scattered throughout
@@ -92,7 +107,24 @@ function calculateDiscount(customer, amount) {
     
     return discount;
 }
+
+// ✅ BETTER - Pattern matching with single exit (C# example)
+public ServiceResult<DiscountDto> CalculateDiscount(Customer customer, decimal amount) =>
+    customer switch {
+        { IsActive: false } => ServiceResult<DiscountDto>.Success(new DiscountDto { Amount = 0 }),
+        { Tier: "gold" } => ServiceResult<DiscountDto>.Success(new DiscountDto { 
+            Amount = amount > 100 ? amount * 0.2m : amount * 0.1m 
+        }),
+        { Tier: "silver" } => ServiceResult<DiscountDto>.Success(new DiscountDto { Amount = amount * 0.05m }),
+        _ => ServiceResult<DiscountDto>.Success(new DiscountDto { Amount = 0 })
+    };
 ```
+
+**🔑 KEY INSIGHT**: Pattern matching naturally enforces single exit point because:
+- The entire expression evaluates to ONE value
+- No scattered returns throughout the method
+- Cleaner, more readable code
+- Lower cyclomatic complexity
 
 ### 5. **Defensive Programming Balance**
 - Validate at system boundaries (API inputs, user inputs)

@@ -225,9 +225,26 @@ Create these four MANDATORY reports:
 - ✅ Pattern matching over if-else chains
 - ✅ Empty/Null Object Pattern (NO nulls!)
 - ✅ Short, focused methods (< 20 lines)
-- ✅ **Single exit point per method** (NEVER return in the middle or top)
+- ✅ **🚨 Single exit point per method** (NEVER return in the middle or top) - **USE PATTERN MATCHING**
 - ✅ No fake async
 - ✅ No defensive programming without justification
+
+### 🔴 CRITICAL: Single Exit Point Pattern
+**Pattern matching is your PRIMARY TOOL to avoid multiple returns:**
+
+```csharp
+// ❌ VIOLATION - Multiple exit points
+if (cache.HasValue) return cache.Value;
+var result = await LoadData();
+if (result.IsEmpty) return EmptyDto;
+return result.ToDto();
+
+// ✅ CORRECT - Single exit with pattern matching
+var result = cache.HasValue
+    ? ServiceResult.Success(cache.Value)
+    : await LoadAndProcessData();
+return result;
+```
 
 ### Service Layer Error Handling
 **📖 Source**: `SERVICE-RESULT-PATTERN.md` - **MANDATORY for all service implementations**

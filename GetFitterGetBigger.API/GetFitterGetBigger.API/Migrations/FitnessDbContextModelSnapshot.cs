@@ -1100,6 +1100,56 @@ namespace GetFitterGetBigger.API.Migrations
                         });
                 });
 
+            modelBuilder.Entity("GetFitterGetBigger.API.Models.Entities.WorkoutState", b =>
+                {
+                    b.Property<Guid>("WorkoutStateId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("Id");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("text");
+
+                    b.Property<int>("DisplayOrder")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Value")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("WorkoutStateId");
+
+                    b.ToTable("WorkoutStates");
+
+                    b.HasData(
+                        new
+                        {
+                            WorkoutStateId = new Guid("02000001-0000-0000-0000-000000000001"),
+                            Description = "Template under construction",
+                            DisplayOrder = 1,
+                            IsActive = true,
+                            Value = "DRAFT"
+                        },
+                        new
+                        {
+                            WorkoutStateId = new Guid("02000001-0000-0000-0000-000000000002"),
+                            Description = "Active template for use",
+                            DisplayOrder = 2,
+                            IsActive = true,
+                            Value = "PRODUCTION"
+                        },
+                        new
+                        {
+                            WorkoutStateId = new Guid("02000001-0000-0000-0000-000000000003"),
+                            Description = "Retired template",
+                            DisplayOrder = 3,
+                            IsActive = true,
+                            Value = "ARCHIVED"
+                        });
+                });
+
             modelBuilder.Entity("GetFitterGetBigger.API.Models.Entities.Claim", b =>
                 {
                     b.HasOne("GetFitterGetBigger.API.Models.Entities.User", "User")

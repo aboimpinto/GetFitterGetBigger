@@ -30,6 +30,7 @@ public class FitnessDbContext : DbContext
     public DbSet<WorkoutCategory> WorkoutCategories => Set<WorkoutCategory>();
     public DbSet<ExecutionProtocol> ExecutionProtocols => Set<ExecutionProtocol>();
     public DbSet<WorkoutMuscles> WorkoutMuscles => Set<WorkoutMuscles>();
+    public DbSet<WorkoutState> WorkoutStates => Set<WorkoutState>();
     
     // Linking entities
     public DbSet<ExerciseMovementPattern> ExerciseMovementPatterns => Set<ExerciseMovementPattern>();
@@ -197,6 +198,19 @@ public class FitnessDbContext : DbContext
                 
         modelBuilder.Entity<BodyPart>()
             .Ignore(bp => bp.Id);
+                
+        modelBuilder.Entity<WorkoutState>()
+            .HasKey(ws => ws.WorkoutStateId);
+            
+        modelBuilder.Entity<WorkoutState>()
+            .Property(ws => ws.WorkoutStateId)
+            .HasColumnName("Id")
+            .HasConversion(
+                id => (Guid)id,
+                guid => WorkoutStateId.From(guid));
+                
+        modelBuilder.Entity<WorkoutState>()
+            .Ignore(ws => ws.Id);
                 
         modelBuilder.Entity<MuscleRole>()
             .Property(mr => mr.MuscleRoleId)
@@ -1040,6 +1054,28 @@ public class FitnessDbContext : DbContext
                 "Fixed rest periods",
                 "High",
                 4,
+                true).Value
+        );
+        
+        // Seed WorkoutStates
+        modelBuilder.Entity<WorkoutState>().HasData(
+            WorkoutState.Handler.Create(
+                WorkoutStateId.From(Guid.Parse("02000001-0000-0000-0000-000000000001")),
+                "DRAFT",
+                "Template under construction",
+                1,
+                true).Value,
+            WorkoutState.Handler.Create(
+                WorkoutStateId.From(Guid.Parse("02000001-0000-0000-0000-000000000002")),
+                "PRODUCTION",
+                "Active template for use",
+                2,
+                true).Value,
+            WorkoutState.Handler.Create(
+                WorkoutStateId.From(Guid.Parse("02000001-0000-0000-0000-000000000003")),
+                "ARCHIVED",
+                "Retired template",
+                3,
                 true).Value
         );
     }

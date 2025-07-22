@@ -123,7 +123,7 @@ public class WorkoutStateTestBuilder
                 displayOrder: _displayOrder,
                 isActive: _isActive);
 
-        return result.Data;
+        return result.Value;
     }
 
     /// <summary>
