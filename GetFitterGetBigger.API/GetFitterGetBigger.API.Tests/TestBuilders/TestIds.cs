@@ -157,4 +157,40 @@ public static class TestIds
         public static readonly string Production = "workoutstate-02000001-0000-0000-0000-000000000002";
         public static readonly string Archived = "workoutstate-02000001-0000-0000-0000-000000000003";
     }
+    
+    // Workout Template IDs
+    public static class WorkoutTemplateIds
+    {
+        public static readonly string Template1 = "workouttemplate-03000001-0000-0000-0000-000000000001";
+        public static readonly string Template2 = "workouttemplate-03000001-0000-0000-0000-000000000002";
+        public static readonly string Template3 = "workouttemplate-03000001-0000-0000-0000-000000000003";
+        public static readonly string ArchivedTemplate = "workouttemplate-03000001-0000-0000-0000-000000000004";
+    }
+    
+    // Workout Template Exercise IDs
+    public static class WorkoutTemplateExerciseIds
+    {
+        public static readonly string Exercise1 = "workouttemplateexercise-04000001-0000-0000-0000-000000000001";
+        public static readonly string Exercise2 = "workouttemplateexercise-04000001-0000-0000-0000-000000000002";
+        public static readonly string Exercise3 = "workouttemplateexercise-04000001-0000-0000-0000-000000000003";
+        public static readonly string WarmupExercise = "workouttemplateexercise-04000001-0000-0000-0000-000000000004";
+        public static readonly string CooldownExercise = "workouttemplateexercise-04000001-0000-0000-0000-000000000005";
+    }
+    
+    // Set Configuration IDs
+    public static class SetConfigurationIds
+    {
+        public static readonly string Set1 = "setconfiguration-05000001-0000-0000-0000-000000000001";
+        public static readonly string Set2 = "setconfiguration-05000001-0000-0000-0000-000000000002";
+        public static readonly string Set3 = "setconfiguration-05000001-0000-0000-0000-000000000003";
+        public static readonly string Set4 = "setconfiguration-05000001-0000-0000-0000-000000000004";
+    }
+    
+    // User IDs
+    public static class UserIds
+    {
+        public static readonly string PersonalTrainer = "user-06000001-0000-0000-0000-000000000001";
+        public static readonly string Client = "user-06000001-0000-0000-0000-000000000002";
+        public static readonly string Admin = "user-06000001-0000-0000-0000-000000000003";
+    }
 }

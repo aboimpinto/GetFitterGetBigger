@@ -78,7 +78,42 @@ public async Task<ServiceResult<EquipmentDto>> CreateAsync(CreateEquipmentComman
 }
 ```
 
-### 3. **Specialized ID Types**
+### 3. **EntityResult Pattern for Entity Creation** 🚨 NEW
+ALL entity creation methods must return `EntityResult<T>` - NEVER throw exceptions:
+
+```csharp
+// ❌ BAD - Throwing exceptions in entity creation
+public static class Handler
+{
+    public static WorkoutTemplate CreateNew(string name, ...)
+    {
+        if (string.IsNullOrWhiteSpace(name))
+            throw new ArgumentException("Name cannot be empty", nameof(name));
+            
+        return new WorkoutTemplate { Name = name, ... };
+    }
+}
+
+// ✅ GOOD - EntityResult pattern with Fluent Validation
+public static class Handler
+{
+    public static EntityResult<WorkoutTemplate> CreateNew(string name, ...)
+    {
+        return Validate.For<WorkoutTemplate>()
+            .EnsureNotEmpty(name, "Name cannot be empty")
+            .EnsureLength(name, 3, 100, "Name must be between 3 and 100 characters")
+            .OnSuccess(() => new WorkoutTemplate { Name = name, ... });
+    }
+}
+```
+
+**Rules**:
+- Use `Validate.For<T>()` fluent validation
+- Return `EntityResult<T>` from all Handler methods
+- NO exceptions for validation failures
+- Convert to ServiceResult at service layer
+
+### 4. **Specialized ID Types**
 Use specialized ID types for type safety:
 
 ```csharp
