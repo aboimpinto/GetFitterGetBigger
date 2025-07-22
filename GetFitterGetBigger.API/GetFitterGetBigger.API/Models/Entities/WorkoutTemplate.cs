@@ -107,22 +107,10 @@ public record WorkoutTemplate : IEmptyEntity<WorkoutTemplate>
             DateTime createdAt,
             DateTime updatedAt)
         {
-            // Validate tags
-            var validatedTags = tags?.Where(t => !string.IsNullOrWhiteSpace(t))
-                                     .Select(t => t.Trim())
-                                     .Take(10) // Limit to 10 tags
-                                     .ToList() ?? new List<string>();
+            var validatedTags = ValidateTags(tags);
             
-            return Validate.For<WorkoutTemplate>()
-                .EnsureNotWhiteSpace(name, "Name cannot be empty")
-                .EnsureMinLength(name.Trim(), 3, "Name must be at least 3 characters long")
-                .EnsureMaxLength(name.Trim(), 100, "Name cannot exceed 100 characters")
-                .Ensure(() => description == null || description.Length <= 500, "Description cannot exceed 500 characters")
-                .EnsureRange(estimatedDurationMinutes, 5, 300, "Estimated duration must be between 5 and 300 minutes")
-                .Ensure(() => !categoryId.IsEmpty, "Category ID cannot be empty")
-                .Ensure(() => !difficultyId.IsEmpty, "Difficulty ID cannot be empty")
-                .Ensure(() => !createdBy.IsEmpty, "Created by user ID cannot be empty")
-                .Ensure(() => !workoutStateId.IsEmpty, "Workout state ID cannot be empty")
+            return ValidateWorkoutTemplate(name, description, categoryId, difficultyId, 
+                estimatedDurationMinutes, createdBy, workoutStateId)
                 .OnSuccess(() => new WorkoutTemplate
                 {
                     Id = id,
@@ -140,6 +128,41 @@ public record WorkoutTemplate : IEmptyEntity<WorkoutTemplate>
                 });
         }
         
+        /// <summary>
+        /// Shared validation logic for WorkoutTemplate
+        /// </summary>
+        private static EntityValidation<WorkoutTemplate> ValidateWorkoutTemplate(
+            string name,
+            string? description,
+            WorkoutCategoryId categoryId,
+            DifficultyLevelId difficultyId,
+            int estimatedDurationMinutes,
+            UserId createdBy,
+            WorkoutStateId workoutStateId)
+        {
+            return Validate.For<WorkoutTemplate>()
+                .EnsureNotWhiteSpace(name, "Name cannot be empty")
+                .EnsureMinLength(name.Trim(), 3, "Name must be at least 3 characters long")
+                .EnsureMaxLength(name.Trim(), 100, "Name cannot exceed 100 characters")
+                .Ensure(() => description == null || description.Length <= 500, "Description cannot exceed 500 characters")
+                .EnsureRange(estimatedDurationMinutes, 5, 300, "Estimated duration must be between 5 and 300 minutes")
+                .Ensure(() => !categoryId.IsEmpty, "Category ID cannot be empty")
+                .Ensure(() => !difficultyId.IsEmpty, "Difficulty ID cannot be empty")
+                .Ensure(() => !createdBy.IsEmpty, "Created by user ID cannot be empty")
+                .Ensure(() => !workoutStateId.IsEmpty, "Workout state ID cannot be empty");
+        }
+        
+        /// <summary>
+        /// Validates and normalizes tags
+        /// </summary>
+        private static List<string> ValidateTags(List<string>? tags)
+        {
+            return tags?.Where(t => !string.IsNullOrWhiteSpace(t))
+                        .Select(t => t.Trim())
+                        .Take(10) // Limit to 10 tags
+                        .ToList() ?? new List<string>();
+        }
+        
         public static EntityResult<WorkoutTemplate> Update(
             WorkoutTemplate template,
             string? name = null,
@@ -148,54 +171,36 @@ public record WorkoutTemplate : IEmptyEntity<WorkoutTemplate>
             DifficultyLevelId? difficultyId = null,
             int? estimatedDurationMinutes = null,
             List<string>? tags = null,
-            bool? isPublic = null)
+            bool? isPublic = null,
+            WorkoutStateId? workoutStateId = null)
         {
-            // Apply same validation rules as Create
+            // Use current values if not provided
             var newName = name ?? template.Name;
+            var newDescription = description ?? template.Description;
+            var newCategoryId = categoryId ?? template.CategoryId;
+            var newDifficultyId = difficultyId ?? template.DifficultyId;
             var newDuration = estimatedDurationMinutes ?? template.EstimatedDurationMinutes;
+            var newIsPublic = isPublic ?? template.IsPublic;
+            var newWorkoutStateId = workoutStateId ?? template.WorkoutStateId;
             
-            // Validate tags if provided
-            var validatedTags = tags != null
-                ? tags.Where(t => !string.IsNullOrWhiteSpace(t))
-                      .Select(t => t.Trim())
-                      .Take(10)
-                      .ToList()
-                : template.Tags;
+            // Validate and normalize tags
+            var validatedTags = tags != null ? ValidateTags(tags) : template.Tags;
             
-            var validation = Validate.For<WorkoutTemplate>();
-            
-            // Only validate name if it's being changed
-            if (!string.IsNullOrEmpty(name))
-            {
-                validation
-                    .EnsureNotWhiteSpace(name, "Name cannot be empty")
-                    .EnsureMinLength(name.Trim(), 3, "Name must be at least 3 characters long")
-                    .EnsureMaxLength(name.Trim(), 100, "Name cannot exceed 100 characters");
-            }
-            
-            // Only validate description if provided
-            if (description != null)
-            {
-                validation.EnsureMaxLength(description, 500, "Description cannot exceed 500 characters");
-            }
-            
-            // Only validate duration if being changed
-            if (estimatedDurationMinutes.HasValue)
-            {
-                validation.EnsureRange(estimatedDurationMinutes.Value, 5, 300, "Estimated duration must be between 5 and 300 minutes");
-            }
-            
-            return validation.OnSuccess(() => template with
-            {
-                Name = newName.Trim(),
-                Description = description != null ? description.Trim() : template.Description,
-                CategoryId = categoryId ?? template.CategoryId,
-                DifficultyId = difficultyId ?? template.DifficultyId,
-                EstimatedDurationMinutes = newDuration,
-                Tags = validatedTags,
-                IsPublic = isPublic ?? template.IsPublic,
-                UpdatedAt = DateTime.UtcNow
-            });
+            // Use shared validation for all fields
+            return ValidateWorkoutTemplate(newName, newDescription, newCategoryId, newDifficultyId, 
+                newDuration, template.CreatedBy, newWorkoutStateId)
+                .OnSuccess(() => template with
+                {
+                    Name = newName.Trim(),
+                    Description = newDescription?.Trim(),
+                    CategoryId = newCategoryId,
+                    DifficultyId = newDifficultyId,
+                    EstimatedDurationMinutes = newDuration,
+                    Tags = validatedTags,
+                    IsPublic = newIsPublic,
+                    WorkoutStateId = newWorkoutStateId,
+                    UpdatedAt = DateTime.UtcNow
+                });
         }
         
         public static EntityResult<WorkoutTemplate> ChangeState(WorkoutTemplate template, WorkoutStateId newStateId)
