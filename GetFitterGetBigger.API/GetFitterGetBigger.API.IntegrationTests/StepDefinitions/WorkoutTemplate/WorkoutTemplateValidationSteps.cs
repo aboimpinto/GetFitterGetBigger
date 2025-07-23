@@ -1,10 +1,5 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Net;
-using System.Net.Http;
 using System.Net.Http.Json;
-using System.Threading.Tasks;
 using FluentAssertions;
 using GetFitterGetBigger.API.DTOs;
 using GetFitterGetBigger.API.Services.Commands.WorkoutTemplate;
@@ -30,6 +25,16 @@ public class WorkoutTemplateValidationSteps
     {
         _scenarioContext = scenarioContext;
         _fixture = fixture;
+    }
+
+    private HttpClient CreateClientWithUserId()
+    {
+        var client = CreateClientWithUserId();
+        if (!string.IsNullOrEmpty(_currentUserId))
+        {
+            client.DefaultRequestHeaders.Add("X-Test-UserId", _currentUserId);
+        }
+        return client;
     }
 
     [Given(@"I am a Personal Trainer")]
@@ -119,7 +124,7 @@ public class WorkoutTemplateValidationSteps
             var stateId = await GetWorkoutStateId("PRODUCTION");
             var changeStateDto = new { WorkoutStateId = stateId };
             
-            var client = _fixture.CreateClient();
+            var client = CreateClientWithUserId();
             await client.PutAsJsonAsync($"/api/workout-templates/{_existingTemplateId}/state", changeStateDto);
         }
     }
@@ -139,7 +144,7 @@ public class WorkoutTemplateValidationSteps
         var stateId = await GetWorkoutStateId(newState);
         var changeStateDto = new { WorkoutStateId = stateId };
         
-        var client = _fixture.CreateClient();
+        var client = CreateClientWithUserId();
         _lastResponse = await client.PutAsJsonAsync($"/api/workout-templates/{_existingTemplateId}/state", changeStateDto);
         _scenarioContext.SetLastResponse(_lastResponse);
     }
@@ -147,7 +152,7 @@ public class WorkoutTemplateValidationSteps
     [Then(@"the template should remain in ""(.*)"" state")]
     public async Task ThenTheTemplateShouldRemainInState(string expectedState)
     {
-        var client = _fixture.CreateClient();
+        var client = CreateClientWithUserId();
         var response = await client.GetAsync($"/api/workout-templates/{_existingTemplateId}");
         
         if (response.IsSuccessStatusCode)
@@ -179,25 +184,42 @@ public class WorkoutTemplateValidationSteps
     [When(@"I attempt to update the template")]
     public async Task WhenIAttemptToUpdateTheTemplate()
     {
-        var updateCommand = new UpdateWorkoutTemplateCommand
+        // Get the existing template first to have required fields
+        var client = CreateClientWithUserId();
+        var getResponse = await client.GetAsync($"/api/workout-templates/{_existingTemplateId}");
+        
+        if (getResponse.IsSuccessStatusCode)
         {
-            Id = _existingTemplateId,
-            Name = "Unauthorized Update Attempt",
-            Description = "This should fail",
-            UpdatedBy = UserId.ParseOrEmpty(_currentUserId)
-        };
+            var existingTemplate = await getResponse.Content.ReadFromJsonAsync<WorkoutTemplateDto>();
+            
+            var updateDto = new UpdateWorkoutTemplateDto
+            {
+                Name = "Unauthorized Update Attempt",
+                Description = "This should fail",
+                CategoryId = existingTemplate!.Category.Id,
+                DifficultyId = existingTemplate.Difficulty.Id,
+                EstimatedDurationMinutes = existingTemplate.EstimatedDurationMinutes,
+                IsPublic = existingTemplate.IsPublic,
+                Tags = existingTemplate.Tags ?? new List<string>(),
+                ObjectiveIds = existingTemplate.Objectives?.Select(o => o.Id).ToList() ?? new List<string>()
+            };
 
-        var client = _fixture.CreateClient();
-        _lastResponse = await client.PutAsJsonAsync($"/api/workout-templates/{_existingTemplateId}", updateCommand);
+            _lastResponse = await client.PutAsJsonAsync($"/api/workout-templates/{_existingTemplateId}", updateDto);
+        }
+        else
+        {
+            _lastResponse = getResponse;
+        }
+        
         _scenarioContext.SetLastResponse(_lastResponse);
     }
 
     [Given(@"a public workout template exists")]
     public async Task GivenAPublicWorkoutTemplateExists()
     {
-        var command = await CreateTemplateCommand("Public Template", isPublic: true);
-        var client = _fixture.CreateClient();
-        var response = await client.PostAsJsonAsync("/api/workout-templates", command);
+        var dto = await CreateTemplateDto("Public Template", isPublic: true);
+        var client = CreateClientWithUserId();
+        var response = await client.PostAsJsonAsync("/api/workout-templates", dto);
         
         if (response.IsSuccessStatusCode)
         {
@@ -210,7 +232,7 @@ public class WorkoutTemplateValidationSteps
     public async Task WhenIRequestTheTemplateAsAnyUser()
     {
         // Simulate a different user by not sending auth headers
-        var client = _fixture.CreateClient();
+        var client = CreateClientWithUserId();
         _lastResponse = await client.GetAsync($"/api/workout-templates/{_existingTemplateId}");
         _scenarioContext.SetLastResponse(_lastResponse);
     }
@@ -233,9 +255,9 @@ public class WorkoutTemplateValidationSteps
         var originalUserId = _currentUserId;
         _currentUserId = otherUserId;
         
-        var command = await CreateTemplateCommand("Private Template", isPublic: false);
-        var client = _fixture.CreateClient();
-        var response = await client.PostAsJsonAsync("/api/workout-templates", command);
+        var dto = await CreateTemplateDto("Private Template", isPublic: false);
+        var client = CreateClientWithUserId();
+        var response = await client.PostAsJsonAsync("/api/workout-templates", dto);
         
         if (response.IsSuccessStatusCode)
         {
@@ -250,7 +272,7 @@ public class WorkoutTemplateValidationSteps
     [When(@"I request the template")]
     public async Task WhenIRequestTheTemplate()
     {
-        var client = _fixture.CreateClient();
+        var client = CreateClientWithUserId();
         _lastResponse = await client.GetAsync($"/api/workout-templates/{_existingTemplateId}");
         _scenarioContext.SetLastResponse(_lastResponse);
     }
@@ -273,7 +295,7 @@ public class WorkoutTemplateValidationSteps
     {
         var duplicateCommand = new { NewName = newName };
 
-        var client = _fixture.CreateClient();
+        var client = CreateClientWithUserId();
         _lastResponse = await client.PostAsJsonAsync($"/api/workout-templates/{_existingTemplateId}/duplicate", duplicateCommand);
         _scenarioContext.SetLastResponse(_lastResponse);
     }
@@ -311,7 +333,7 @@ public class WorkoutTemplateValidationSteps
     [Then(@"the original template should remain unchanged")]
     public async Task ThenTheOriginalTemplateShouldRemainUnchanged()
     {
-        var client = _fixture.CreateClient();
+        var client = CreateClientWithUserId();
         var response = await client.GetAsync($"/api/workout-templates/{_existingTemplateId}");
         
         response.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -323,48 +345,48 @@ public class WorkoutTemplateValidationSteps
     // Helper methods
     private async Task CreateTemplateWithName(string name)
     {
-        var command = await CreateTemplateCommand(name);
-        var client = _fixture.CreateClient();
-        _lastResponse = await client.PostAsJsonAsync("/api/workout-templates", command);
+        var dto = await CreateTemplateDto(name);
+        var client = CreateClientWithUserId();
+        _lastResponse = await client.PostAsJsonAsync("/api/workout-templates", dto);
         _scenarioContext.SetLastResponse(_lastResponse);
     }
 
     private async Task CreateTemplateWithDuration(int duration)
     {
-        var command = await CreateTemplateCommand($"Duration Test {duration}min");
-        // Create a new command with the duration set
-        var commandWithDuration = new CreateWorkoutTemplateCommand
+        var dto = await CreateTemplateDto($"Duration Test {duration}min");
+        // Create a new DTO with the duration set
+        var dtoWithDuration = new CreateWorkoutTemplateDto
         {
-            Name = command.Name,
-            Description = command.Description,
-            CategoryId = command.CategoryId,
-            DifficultyId = command.DifficultyId,
+            Name = dto.Name,
+            Description = dto.Description,
+            CategoryId = dto.CategoryId,
+            DifficultyId = dto.DifficultyId,
             EstimatedDurationMinutes = duration,
-            IsPublic = command.IsPublic,
-            CreatedBy = command.CreatedBy,
-            Tags = command.Tags
+            IsPublic = dto.IsPublic,
+            Tags = dto.Tags,
+            ObjectiveIds = dto.ObjectiveIds
         };
         
-        var client = _fixture.CreateClient();
-        _lastResponse = await client.PostAsJsonAsync("/api/workout-templates", commandWithDuration);
+        var client = CreateClientWithUserId();
+        _lastResponse = await client.PostAsJsonAsync("/api/workout-templates", dtoWithDuration);
         _scenarioContext.SetLastResponse(_lastResponse);
     }
 
-    private async Task<CreateWorkoutTemplateCommand> CreateTemplateCommand(string name, bool isPublic = true)
+    private async Task<CreateWorkoutTemplateDto> CreateTemplateDto(string name, bool isPublic = true)
     {
         var categoryId = await GetWorkoutCategoryId("Upper Body");
         var difficultyId = await GetDifficultyLevelId("Intermediate");
         
-        return new CreateWorkoutTemplateCommand
+        return new CreateWorkoutTemplateDto
         {
             Name = name,
             Description = $"Test template: {name}",
-            CategoryId = categoryId,
-            DifficultyId = difficultyId,
+            CategoryId = categoryId.ToString(),
+            DifficultyId = difficultyId.ToString(),
             EstimatedDurationMinutes = 60,
             IsPublic = isPublic,
-            CreatedBy = UserId.ParseOrEmpty(_currentUserId),
-            Tags = new List<string> { "test" }
+            Tags = new List<string> { "test" },
+            ObjectiveIds = new List<string>()
         };
     }
 
@@ -372,10 +394,19 @@ public class WorkoutTemplateValidationSteps
     {
         WorkoutCategoryId categoryId = WorkoutCategoryId.Empty;
         
+        // Map test category names to actual database values
+        var categoryMapping = categoryName switch
+        {
+            "Upper Body" => "Full Body", // Map to Full Body since "Upper Body" doesn't exist
+            "Lower Body" => "Lower Body",
+            "Full Body" => "Full Body",
+            _ => categoryName
+        };
+        
         await _fixture.ExecuteDbContextAsync(async context =>
         {
             var category = await context.WorkoutCategories
-                .FirstOrDefaultAsync(c => c.Value == categoryName);
+                .FirstOrDefaultAsync(c => c.Value == categoryMapping);
             
             if (category != null)
             {

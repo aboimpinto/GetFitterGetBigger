@@ -1,13 +1,8 @@
 using FluentAssertions;
 using GetFitterGetBigger.API.IntegrationTests.TestInfrastructure.Fixtures;
 using GetFitterGetBigger.API.IntegrationTests.TestInfrastructure.Helpers;
-using GetFitterGetBigger.API.Models;
-using GetFitterGetBigger.API.Models.Entities;
-using GetFitterGetBigger.API.Models.SpecializedIds;
-using GetFitterGetBigger.API.IntegrationTests.TestBuilders;
 using Microsoft.EntityFrameworkCore;
 using TechTalk.SpecFlow;
-using TechTalk.SpecFlow.Assist;
 
 namespace GetFitterGetBigger.API.IntegrationTests.StepDefinitions.Database;
 
@@ -79,6 +74,12 @@ public class DatabaseSteps
     [Given(@"the database has reference data")]
     [When(@"the database has reference data")]
     public async Task GivenTheDatabaseHasReferenceData()
+    {
+        await _fixture.InitializeDatabaseAsync();
+    }
+    
+    [Given(@"the database is initialized with test data")]
+    public async Task GivenTheDatabaseIsInitializedWithTestData()
     {
         await _fixture.InitializeDatabaseAsync();
     }

@@ -126,6 +126,43 @@ public class TestDatabaseSeeder
     }
     
     /// <summary>
+    /// Seeds workout states if they don't exist
+    /// </summary>
+    public async Task SeedWorkoutStatesAsync()
+    {
+        // Check if workout states already exist from migrations
+        var existingStates = await _context.WorkoutStates.AnyAsync();
+        if (!existingStates)
+        {
+            // Manually seed workout states if migrations didn't create them
+            var states = new[]
+            {
+                WorkoutState.Handler.Create(
+                    WorkoutStateId.From(Guid.Parse("02000001-0000-0000-0000-000000000001")),
+                    "DRAFT",
+                    "Template under construction",
+                    1,
+                    true).Value,
+                WorkoutState.Handler.Create(
+                    WorkoutStateId.From(Guid.Parse("02000001-0000-0000-0000-000000000002")),
+                    "PRODUCTION",
+                    "Active template for use",
+                    2,
+                    true).Value,
+                WorkoutState.Handler.Create(
+                    WorkoutStateId.From(Guid.Parse("02000001-0000-0000-0000-000000000003")),
+                    "ARCHIVED",
+                    "Retired template",
+                    3,
+                    true).Value
+            };
+            
+            _context.WorkoutStates.AddRange(states);
+            await _context.SaveChangesAsync();
+        }
+    }
+    
+    /// <summary>
     /// Clears all non-reference data from the database
     /// </summary>
     public async Task ClearTestDataAsync()
@@ -152,6 +189,15 @@ public class TestDatabaseSeeder
     /// </summary>
     public async Task SeedTestWorkoutTemplateAsync(WorkoutTemplateId templateId)
     {
+        // Check if template already exists
+        var existingTemplate = await _context.WorkoutTemplates
+            .FirstOrDefaultAsync(wt => wt.Id == templateId);
+        
+        if (existingTemplate != null)
+        {
+            return; // Template already seeded
+        }
+        
         var categoryId = await GetOrCreateTestCategoryId();
         var difficultyId = await GetOrCreateTestDifficultyId();
         var stateId = await GetOrCreateTestWorkoutStateId();
@@ -175,6 +221,9 @@ public class TestDatabaseSeeder
         {
             _context.WorkoutTemplates.Add(templateResult.Value);
             await _context.SaveChangesAsync();
+            
+            // Detach the entity to ensure fresh load with navigation properties
+            _context.Entry(templateResult.Value).State = EntityState.Detached;
         }
         else
         {
@@ -184,13 +233,29 @@ public class TestDatabaseSeeder
     
     private async Task<WorkoutCategoryId> GetOrCreateTestCategoryId()
     {
-        var category = await _context.WorkoutCategories.FirstOrDefaultAsync(c => c.Value == "Upper Body");
+        // First try to find any of the expected categories
+        var category = await _context.WorkoutCategories.FirstOrDefaultAsync(c => 
+            c.Value == "Upper Body" || c.Value == "Full Body");
+            
         if (category == null)
         {
             await SeedWorkoutCategoriesAsync();
-            category = await _context.WorkoutCategories.FirstOrDefaultAsync(c => c.Value == "Upper Body");
+            category = await _context.WorkoutCategories.FirstOrDefaultAsync(c => 
+                c.Value == "Upper Body" || c.Value == "Full Body");
+            
+            if (category == null)
+            {
+                // If still not found, just use the first available category
+                category = await _context.WorkoutCategories.FirstOrDefaultAsync();
+                
+                if (category == null)
+                {
+                    throw new InvalidOperationException("Failed to find or create any workout category. Available categories: " + 
+                        string.Join(", ", await _context.WorkoutCategories.Select(c => c.Value).ToListAsync()));
+                }
+            }
         }
-        return category!.WorkoutCategoryId;
+        return category.WorkoutCategoryId;
     }
     
     private async Task<DifficultyLevelId> GetOrCreateTestDifficultyId()
@@ -200,13 +265,31 @@ public class TestDatabaseSeeder
         {
             await SeedDifficultyLevelsAsync();
             difficulty = await _context.DifficultyLevels.FirstOrDefaultAsync(d => d.Value == "Intermediate");
+            
+            if (difficulty == null)
+            {
+                throw new InvalidOperationException("Failed to find or create 'Intermediate' difficulty level. Available levels: " + 
+                    string.Join(", ", await _context.DifficultyLevels.Select(d => d.Value).ToListAsync()));
+            }
         }
-        return difficulty!.DifficultyLevelId;
+        return difficulty.DifficultyLevelId;
     }
     
     private async Task<WorkoutStateId> GetOrCreateTestWorkoutStateId()
     {
         var state = await _context.WorkoutStates.FirstOrDefaultAsync(s => s.Value == "DRAFT");
-        return state?.WorkoutStateId ?? WorkoutStateId.ParseOrEmpty("02000001-0000-0000-0000-000000000001");
+        if (state == null)
+        {
+            // Seed workout states if they don't exist
+            await SeedWorkoutStatesAsync();
+            state = await _context.WorkoutStates.FirstOrDefaultAsync(s => s.Value == "DRAFT");
+        }
+        
+        if (state == null)
+        {
+            throw new InvalidOperationException("Failed to find or create DRAFT workout state");
+        }
+        
+        return state.WorkoutStateId;
     }
 }

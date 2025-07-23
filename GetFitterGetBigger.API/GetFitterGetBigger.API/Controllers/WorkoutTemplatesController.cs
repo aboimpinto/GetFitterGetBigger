@@ -42,6 +42,23 @@ public class WorkoutTemplatesController : ControllerBase
     }
 
     /// <summary>
+    /// Gets the current user ID for the request
+    /// </summary>
+    /// <returns>The current user ID</returns>
+    private UserId GetCurrentUserId()
+    {
+        // TODO: Get from authentication context once auth is implemented
+        // For now, check if we're in integration test mode
+        if (Request.Headers.TryGetValue("X-Test-UserId", out var testUserId) && !string.IsNullOrEmpty(testUserId))
+        {
+            return UserId.ParseOrEmpty(testUserId!);
+        }
+
+        // Default hardcoded user ID until auth is implemented
+        return GetCurrentUserId();
+    }
+
+    /// <summary>
     /// Gets a paginated list of workout templates with optional filtering
     /// </summary>
     /// <param name="page">Page number (default: 1)</param>
@@ -82,8 +99,7 @@ public class WorkoutTemplatesController : ControllerBase
         _logger.LogInformation("Getting workout templates with filters - Page: {Page}, PageSize: {PageSize}, Search: {Search}", 
             page, pageSize, search);
 
-        // TODO: Get actual user ID from authentication context
-        var currentUserId = UserId.ParseOrEmpty("user-12345678-1234-1234-1234-123456789012");
+        var currentUserId = GetCurrentUserId();
 
         // Use GetPagedByCreatorAsync method which exists in the interface
         var result = await _workoutTemplateService.GetPagedByCreatorAsync(
@@ -169,7 +185,7 @@ public class WorkoutTemplatesController : ControllerBase
             Tags = request.Tags,
             IsPublic = request.IsPublic,
             ObjectiveIds = request.ObjectiveIds.Select(WorkoutObjectiveId.ParseOrEmpty).ToList(),
-            CreatedBy = UserId.ParseOrEmpty("user-12345678-1234-1234-1234-123456789012") // TODO: Get from auth context
+            CreatedBy = GetCurrentUserId()
         };
 
         var result = await _workoutTemplateService.CreateAsync(command);
@@ -232,7 +248,7 @@ public class WorkoutTemplatesController : ControllerBase
             Tags = request.Tags,
             IsPublic = request.IsPublic,
             ObjectiveIds = request.ObjectiveIds?.Select(WorkoutObjectiveId.ParseOrEmpty).ToList(),
-            UpdatedBy = UserId.ParseOrEmpty("user-12345678-1234-1234-1234-123456789012") // TODO: Get from auth context
+            UpdatedBy = GetCurrentUserId()
         };
 
         var result = await _workoutTemplateService.UpdateAsync(command.Id, command);
@@ -369,7 +385,7 @@ public class WorkoutTemplatesController : ControllerBase
         var result = await _workoutTemplateService.DuplicateAsync(
             WorkoutTemplateId.ParseOrEmpty(id),
             request.NewName,
-            UserId.ParseOrEmpty("user-12345678-1234-1234-1234-123456789012")); // TODO: Get from auth context
+            GetCurrentUserId());
 
         return result switch
         {
@@ -483,7 +499,7 @@ public class WorkoutTemplatesController : ControllerBase
             Zone = request.Zone,
             Notes = request.Notes,
             SequenceOrder = request.SequenceOrder,
-            UserId = UserId.ParseOrEmpty("user-12345678-1234-1234-1234-123456789012") // TODO: Get from auth context
+            UserId = GetCurrentUserId() // TODO: Get from auth context
         };
 
         var result = await _workoutTemplateExerciseService.AddExerciseAsync(command);
@@ -533,7 +549,7 @@ public class WorkoutTemplatesController : ControllerBase
         {
             WorkoutTemplateExerciseId = WorkoutTemplateExerciseId.ParseOrEmpty(exerciseId),
             Notes = request.Notes,
-            UserId = UserId.ParseOrEmpty("user-12345678-1234-1234-1234-123456789012") // TODO: Get from auth context
+            UserId = GetCurrentUserId() // TODO: Get from auth context
         };
 
         var result = await _workoutTemplateExerciseService.UpdateExerciseAsync(command);
@@ -565,7 +581,7 @@ public class WorkoutTemplatesController : ControllerBase
 
         var result = await _workoutTemplateExerciseService.RemoveExerciseAsync(
             WorkoutTemplateExerciseId.ParseOrEmpty(exerciseId),
-            UserId.ParseOrEmpty("user-12345678-1234-1234-1234-123456789012")); // TODO: Get from auth context
+            GetCurrentUserId()); // TODO: Get from auth context
 
         return result switch
         {
@@ -614,7 +630,7 @@ public class WorkoutTemplatesController : ControllerBase
             WorkoutTemplateExerciseId = WorkoutTemplateExerciseId.ParseOrEmpty(exerciseId),
             NewZone = request.Zone,
             NewSequenceOrder = request.SequenceOrder,
-            UserId = UserId.ParseOrEmpty("user-12345678-1234-1234-1234-123456789012") // TODO: Get from auth context
+            UserId = GetCurrentUserId() // TODO: Get from auth context
         };
 
         var result = await _workoutTemplateExerciseService.ChangeExerciseZoneAsync(command);
@@ -676,7 +692,7 @@ public class WorkoutTemplatesController : ControllerBase
                 .OrderBy(o => o.SequenceOrder)
                 .Select(o => WorkoutTemplateExerciseId.ParseOrEmpty(o.ExerciseId))
                 .ToList(),
-            UserId = UserId.ParseOrEmpty("user-12345678-1234-1234-1234-123456789012") // TODO: Get from auth context
+            UserId = GetCurrentUserId() // TODO: Get from auth context
         };
 
         var result = await _workoutTemplateExerciseService.ReorderExercisesAsync(command);
@@ -798,7 +814,7 @@ public class WorkoutTemplatesController : ControllerBase
             TargetWeight = request.TargetWeight,
             TargetTimeSeconds = request.TargetTimeSeconds,
             RestSeconds = request.RestSeconds,
-            UserId = UserId.ParseOrEmpty("user-12345678-1234-1234-1234-123456789012") // TODO: Get from auth context
+            UserId = GetCurrentUserId() // TODO: Get from auth context
         };
 
         var result = await _setConfigurationService.CreateAsync(command);
@@ -869,7 +885,7 @@ public class WorkoutTemplatesController : ControllerBase
                 TargetTimeSeconds = s.TargetTimeSeconds,
                 RestSeconds = s.RestSeconds
             }).ToList(),
-            UserId = UserId.ParseOrEmpty("user-12345678-1234-1234-1234-123456789012") // TODO: Get from auth context
+            UserId = GetCurrentUserId() // TODO: Get from auth context
         };
 
         var result = await _setConfigurationService.CreateBulkAsync(command);
@@ -925,7 +941,7 @@ public class WorkoutTemplatesController : ControllerBase
             TargetWeight = request.TargetWeight,
             TargetTimeSeconds = request.TargetTimeSeconds,
             RestSeconds = request.RestSeconds ?? 90,
-            UserId = UserId.ParseOrEmpty("user-12345678-1234-1234-1234-123456789012") // TODO: Get from auth context
+            UserId = GetCurrentUserId() // TODO: Get from auth context
         };
 
         var result = await _setConfigurationService.UpdateAsync(command);
@@ -959,7 +975,7 @@ public class WorkoutTemplatesController : ControllerBase
 
         var result = await _setConfigurationService.DeleteAsync(
             SetConfigurationId.ParseOrEmpty(setId),
-            UserId.ParseOrEmpty("user-12345678-1234-1234-1234-123456789012")); // TODO: Get from auth context
+            GetCurrentUserId()); // TODO: Get from auth context
 
         return result switch
         {
@@ -1017,7 +1033,7 @@ public class WorkoutTemplatesController : ControllerBase
             SetReorders = request.SetOrders.ToDictionary(
                 o => SetConfigurationId.ParseOrEmpty(o.SetId),
                 o => o.SetNumber),
-            UserId = UserId.ParseOrEmpty("user-12345678-1234-1234-1234-123456789012") // TODO: Get from auth context
+            UserId = GetCurrentUserId() // TODO: Get from auth context
         };
 
         var result = await _setConfigurationService.ReorderSetsAsync(command);
