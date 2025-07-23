@@ -67,16 +67,14 @@ public class WorkoutTemplateRepository : RepositoryBase<FitnessDbContext>, IWork
     }
 
     /// <summary>
-    /// Gets a paginated list of workout templates for a specific creator
+    /// Gets a paginated list of workout templates
     /// </summary>
-    public async Task<(IEnumerable<WorkoutTemplate> templates, int totalCount)> GetPagedByCreatorAsync(
-        UserId creatorId, 
+    public async Task<(IEnumerable<WorkoutTemplate> templates, int totalCount)> GetPagedAsync(
         int pageNumber, 
         int pageSize, 
         bool includeInactive = false)
     {
-        var query = BuildBaseQuery()
-            .Where(w => w.CreatedBy == creatorId);
+        var query = BuildBaseQuery();
 
         // Apply active filter
         query = includeInactive
@@ -98,12 +96,11 @@ public class WorkoutTemplateRepository : RepositoryBase<FitnessDbContext>, IWork
     }
 
     /// <summary>
-    /// Gets all active workout templates for a specific creator
+    /// Gets all active workout templates
     /// </summary>
-    public async Task<IEnumerable<WorkoutTemplate>> GetAllActiveByCreatorAsync(UserId creatorId)
+    public async Task<IEnumerable<WorkoutTemplate>> GetAllActiveAsync()
     {
         var templates = await BuildBaseQuery()
-            .Where(w => w.CreatedBy == creatorId)
             .Where(w => w.WorkoutState != null && w.WorkoutState.Value != "ARCHIVED")
             .OrderByDescending(w => w.UpdatedAt)
             .ThenByDescending(w => w.CreatedAt)
@@ -117,16 +114,10 @@ public class WorkoutTemplateRepository : RepositoryBase<FitnessDbContext>, IWork
     /// </summary>
     public async Task<IEnumerable<WorkoutTemplate>> GetByNamePatternAsync(
         string namePattern, 
-        UserId creatorId = default, 
         bool includeInactive = false)
     {
         var query = BuildBaseQuery()
             .Where(w => w.Name.ToLower().Contains(namePattern.ToLower()));
-
-        // Apply creator filter if provided
-        query = creatorId.IsEmpty
-            ? query
-            : query.Where(w => w.CreatedBy == creatorId);
 
         // Apply active filter
         query = includeInactive
@@ -145,16 +136,10 @@ public class WorkoutTemplateRepository : RepositoryBase<FitnessDbContext>, IWork
     /// </summary>
     public async Task<IEnumerable<WorkoutTemplate>> GetByCategoryAsync(
         WorkoutCategoryId categoryId, 
-        UserId creatorId = default, 
         bool includeInactive = false)
     {
         var query = BuildBaseQuery()
             .Where(w => w.CategoryId == categoryId);
-
-        // Apply creator filter if provided
-        query = creatorId.IsEmpty
-            ? query
-            : query.Where(w => w.CreatedBy == creatorId);
 
         // Apply active filter
         query = includeInactive
@@ -173,16 +158,10 @@ public class WorkoutTemplateRepository : RepositoryBase<FitnessDbContext>, IWork
     /// </summary>
     public async Task<IEnumerable<WorkoutTemplate>> GetByObjectiveAsync(
         WorkoutObjectiveId objectiveId, 
-        UserId creatorId = default, 
         bool includeInactive = false)
     {
         var query = BuildBaseQuery()
             .Where(w => w.Objectives.Any(o => o.WorkoutObjectiveId == objectiveId));
-
-        // Apply creator filter if provided
-        query = creatorId.IsEmpty
-            ? query
-            : query.Where(w => w.CreatedBy == creatorId);
 
         // Apply active filter
         query = includeInactive
@@ -201,16 +180,10 @@ public class WorkoutTemplateRepository : RepositoryBase<FitnessDbContext>, IWork
     /// </summary>
     public async Task<IEnumerable<WorkoutTemplate>> GetByDifficultyAsync(
         DifficultyLevelId difficultyLevelId, 
-        UserId creatorId = default, 
         bool includeInactive = false)
     {
         var query = BuildBaseQuery()
             .Where(w => w.DifficultyId == difficultyLevelId);
-
-        // Apply creator filter if provided
-        query = creatorId.IsEmpty
-            ? query
-            : query.Where(w => w.CreatedBy == creatorId);
 
         // Apply active filter
         query = includeInactive
@@ -229,16 +202,10 @@ public class WorkoutTemplateRepository : RepositoryBase<FitnessDbContext>, IWork
     /// </summary>
     public async Task<IEnumerable<WorkoutTemplate>> GetByExerciseAsync(
         ExerciseId exerciseId, 
-        UserId creatorId = default, 
         bool includeInactive = false)
     {
         var query = BuildBaseQuery()
             .Where(w => w.Exercises.Any(e => e.ExerciseId == exerciseId));
-
-        // Apply creator filter if provided
-        query = creatorId.IsEmpty
-            ? query
-            : query.Where(w => w.CreatedBy == creatorId);
 
         // Apply active filter
         query = includeInactive
@@ -269,15 +236,13 @@ public class WorkoutTemplateRepository : RepositoryBase<FitnessDbContext>, IWork
     }
 
     /// <summary>
-    /// Checks if a workout template with the given name exists for a creator
+    /// Checks if a workout template with the given name exists
     /// </summary>
     public async Task<bool> ExistsByNameAsync(
         string name, 
-        UserId creatorId, 
         WorkoutTemplateId excludeTemplateId = default)
     {
         var query = Context.WorkoutTemplates
-            .Where(w => w.CreatedBy == creatorId)
             .Where(w => w.Name.ToLower() == name.ToLower());
 
         // Exclude specific template if provided

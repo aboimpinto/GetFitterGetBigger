@@ -43,11 +43,6 @@ public class CreateWorkoutTemplateCommand
     public bool IsPublic { get; init; } = false;
 
     /// <summary>
-    /// The ID of the user creating the template
-    /// </summary>
-    public required UserId CreatedBy { get; init; }
-
-    /// <summary>
     /// The workout objectives associated with this template
     /// </summary>
     public List<WorkoutObjectiveId> ObjectiveIds { get; init; } = new();

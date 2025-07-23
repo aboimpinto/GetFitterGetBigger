@@ -18,84 +18,71 @@ public interface IWorkoutTemplateService
     Task<ServiceResult<WorkoutTemplateDto>> GetByIdAsync(WorkoutTemplateId id);
 
     /// <summary>
-    /// Gets a paginated list of workout templates for a specific creator
+    /// Gets a paginated list of workout templates
     /// </summary>
-    /// <param name="creatorId">The ID of the creator/trainer</param>
     /// <param name="pageNumber">Page number (1-based)</param>
     /// <param name="pageSize">Number of items per page</param>
     /// <param name="categoryFilter">Optional category filter</param>
     /// <param name="difficultyFilter">Optional difficulty filter</param>
     /// <returns>Paginated response containing workout templates</returns>
-    Task<PagedResponse<WorkoutTemplateDto>> GetPagedByCreatorAsync(
-        UserId creatorId, 
+    Task<PagedResponse<WorkoutTemplateDto>> GetPagedAsync(
         int pageNumber = 1, 
         int pageSize = 20,
         WorkoutCategoryId? categoryFilter = null,
         DifficultyLevelId? difficultyFilter = null);
 
     /// <summary>
-    /// Gets all active workout templates for a specific creator
+    /// Gets all active workout templates
     /// </summary>
-    /// <param name="creatorId">The ID of the creator/trainer</param>
     /// <returns>Service result containing collection of workout templates</returns>
-    Task<ServiceResult<IEnumerable<WorkoutTemplateDto>>> GetAllActiveByCreatorAsync(UserId creatorId);
+    Task<ServiceResult<IEnumerable<WorkoutTemplateDto>>> GetAllActiveAsync();
 
     /// <summary>
     /// Searches workout templates by name pattern
     /// </summary>
     /// <param name="namePattern">The pattern to search for in template names</param>
-    /// <param name="creatorFilter">Optional creator filter</param>
     /// <returns>Service result containing matching workout templates</returns>
     Task<ServiceResult<IEnumerable<WorkoutTemplateDto>>> GetByNamePatternAsync(
-        string namePattern, 
-        UserId? creatorFilter = null);
+        string namePattern);
 
     /// <summary>
     /// Gets workout templates by workout category
     /// </summary>
     /// <param name="categoryId">The workout category ID</param>
-    /// <param name="creatorFilter">Optional creator filter</param>
     /// <param name="includeInactive">Whether to include archived templates</param>
     /// <returns>Service result containing workout templates in the specified category</returns>
     Task<ServiceResult<IEnumerable<WorkoutTemplateDto>>> GetByCategoryAsync(
         WorkoutCategoryId categoryId, 
-        UserId? creatorFilter = null,
         bool includeInactive = false);
 
     /// <summary>
     /// Gets workout templates by workout objective
     /// </summary>
     /// <param name="objectiveId">The workout objective ID</param>
-    /// <param name="creatorFilter">Optional creator filter</param>
     /// <param name="includeInactive">Whether to include archived templates</param>
     /// <returns>Service result containing workout templates with the specified objective</returns>
     Task<ServiceResult<IEnumerable<WorkoutTemplateDto>>> GetByObjectiveAsync(
         WorkoutObjectiveId objectiveId,
-        UserId? creatorFilter = null,
         bool includeInactive = false);
 
     /// <summary>
     /// Gets workout templates by difficulty level
     /// </summary>
     /// <param name="difficultyId">The difficulty level ID</param>
-    /// <param name="creatorFilter">Optional creator filter</param>
     /// <param name="includeInactive">Whether to include archived templates</param>
     /// <returns>Service result containing workout templates with the specified difficulty</returns>
     Task<ServiceResult<IEnumerable<WorkoutTemplateDto>>> GetByDifficultyAsync(
         DifficultyLevelId difficultyId,
-        UserId? creatorFilter = null,
         bool includeInactive = false);
 
     /// <summary>
     /// Gets workout templates that contain a specific exercise
     /// </summary>
     /// <param name="exerciseId">The exercise ID</param>
-    /// <param name="creatorFilter">Optional creator filter</param>
     /// <param name="includeInactive">Whether to include archived templates</param>
     /// <returns>Service result containing workout templates containing the specified exercise</returns>
     Task<ServiceResult<IEnumerable<WorkoutTemplateDto>>> GetByExerciseAsync(
         ExerciseId exerciseId,
-        UserId? creatorFilter = null,
         bool includeInactive = false);
 
     /// <summary>
@@ -126,9 +113,8 @@ public interface IWorkoutTemplateService
     /// </summary>
     /// <param name="id">The workout template ID to duplicate</param>
     /// <param name="newName">The name for the new template</param>
-    /// <param name="creatorId">The ID of the creator for the duplicated template</param>
     /// <returns>Service result containing the duplicated workout template</returns>
-    Task<ServiceResult<WorkoutTemplateDto>> DuplicateAsync(WorkoutTemplateId id, string newName, UserId creatorId);
+    Task<ServiceResult<WorkoutTemplateDto>> DuplicateAsync(WorkoutTemplateId id, string newName);
 
     /// <summary>
     /// Soft deletes a workout template (sets state to ARCHIVED)
@@ -159,12 +145,11 @@ public interface IWorkoutTemplateService
     Task<bool> ExistsAsync(string id);
 
     /// <summary>
-    /// Checks if a workout template with the given name exists for a creator
+    /// Checks if a workout template with the given name exists
     /// </summary>
     /// <param name="name">The template name</param>
-    /// <param name="creatorId">The creator ID</param>
-    /// <returns>True if a template with the name exists for the creator</returns>
-    Task<bool> ExistsByNameAsync(string name, UserId creatorId);
+    /// <returns>True if a template with the name exists</returns>
+    Task<bool> ExistsByNameAsync(string name);
 
     /// <summary>
     /// Gets suggested exercises for a workout template based on category and existing exercises

@@ -20,12 +20,11 @@ public class WorkoutTemplateTests
         var difficultyId = DifficultyLevelId.ParseOrEmpty(TestIds.DifficultyLevelIds.Intermediate);
         var duration = 60;
         var tags = new List<string> { "strength", "full-body", "intermediate" };
-        var createdBy = UserId.ParseOrEmpty(TestIds.UserIds.PersonalTrainer);
         var workoutStateId = WorkoutStateId.ParseOrEmpty(TestIds.WorkoutStateIds.Draft);
 
         // Act
         var result = WorkoutTemplate.Handler.CreateNew(
-            name, description, categoryId, difficultyId, duration, tags, true, createdBy, workoutStateId);
+            name, description, categoryId, difficultyId, duration, tags, true, workoutStateId);
 
         // Assert
         Assert.True(result.IsSuccess);
@@ -38,7 +37,6 @@ public class WorkoutTemplateTests
         Assert.Equal(duration, workoutTemplate.EstimatedDurationMinutes);
         Assert.Equal(3, workoutTemplate.Tags.Count);
         Assert.True(workoutTemplate.IsPublic);
-        Assert.Equal(createdBy, workoutTemplate.CreatedBy);
         Assert.Equal(workoutStateId, workoutTemplate.WorkoutStateId);
     }
 
@@ -48,11 +46,10 @@ public class WorkoutTemplateTests
         // Arrange
         var categoryId = WorkoutCategoryId.ParseOrEmpty(TestIds.WorkoutCategoryIds.UpperBodyPush);
         var difficultyId = DifficultyLevelId.ParseOrEmpty(TestIds.DifficultyLevelIds.Intermediate);
-        var createdBy = UserId.ParseOrEmpty(TestIds.UserIds.PersonalTrainer);
         var workoutStateId = WorkoutStateId.ParseOrEmpty(TestIds.WorkoutStateIds.Draft);
 
         // Act
-        var result = WorkoutTemplate.Handler.CreateNew("", null, categoryId, difficultyId, 60, null, true, createdBy, workoutStateId);
+        var result = WorkoutTemplate.Handler.CreateNew("", null, categoryId, difficultyId, 60, null, true, workoutStateId);
         
         // Assert
         Assert.True(result.IsFailure);
@@ -65,11 +62,10 @@ public class WorkoutTemplateTests
         // Arrange
         var categoryId = WorkoutCategoryId.ParseOrEmpty(TestIds.WorkoutCategoryIds.UpperBodyPush);
         var difficultyId = DifficultyLevelId.ParseOrEmpty(TestIds.DifficultyLevelIds.Intermediate);
-        var createdBy = UserId.ParseOrEmpty(TestIds.UserIds.PersonalTrainer);
         var workoutStateId = WorkoutStateId.ParseOrEmpty(TestIds.WorkoutStateIds.Draft);
 
         // Act
-        var result = WorkoutTemplate.Handler.CreateNew("AB", null, categoryId, difficultyId, 60, null, true, createdBy, workoutStateId);
+        var result = WorkoutTemplate.Handler.CreateNew("AB", null, categoryId, difficultyId, 60, null, true, workoutStateId);
         
         // Assert
         Assert.True(result.IsFailure);
@@ -83,11 +79,10 @@ public class WorkoutTemplateTests
         var longName = new string('A', 101);
         var categoryId = WorkoutCategoryId.ParseOrEmpty(TestIds.WorkoutCategoryIds.UpperBodyPush);
         var difficultyId = DifficultyLevelId.ParseOrEmpty(TestIds.DifficultyLevelIds.Intermediate);
-        var createdBy = UserId.ParseOrEmpty(TestIds.UserIds.PersonalTrainer);
         var workoutStateId = WorkoutStateId.ParseOrEmpty(TestIds.WorkoutStateIds.Draft);
 
         // Act
-        var result = WorkoutTemplate.Handler.CreateNew(longName, null, categoryId, difficultyId, 60, null, true, createdBy, workoutStateId);
+        var result = WorkoutTemplate.Handler.CreateNew(longName, null, categoryId, difficultyId, 60, null, true, workoutStateId);
         
         // Assert
         Assert.True(result.IsFailure);
@@ -100,11 +95,10 @@ public class WorkoutTemplateTests
         // Arrange
         var categoryId = WorkoutCategoryId.ParseOrEmpty(TestIds.WorkoutCategoryIds.UpperBodyPush);
         var difficultyId = DifficultyLevelId.ParseOrEmpty(TestIds.DifficultyLevelIds.Intermediate);
-        var createdBy = UserId.ParseOrEmpty(TestIds.UserIds.PersonalTrainer);
         var workoutStateId = WorkoutStateId.ParseOrEmpty(TestIds.WorkoutStateIds.Draft);
 
         // Act
-        var result = WorkoutTemplate.Handler.CreateNew("Valid Name", null, categoryId, difficultyId, 4, null, true, createdBy, workoutStateId);
+        var result = WorkoutTemplate.Handler.CreateNew("Valid Name", null, categoryId, difficultyId, 4, null, true, workoutStateId);
         
         // Assert
         Assert.True(result.IsFailure);
@@ -117,11 +111,10 @@ public class WorkoutTemplateTests
         // Arrange
         var categoryId = WorkoutCategoryId.ParseOrEmpty(TestIds.WorkoutCategoryIds.UpperBodyPush);
         var difficultyId = DifficultyLevelId.ParseOrEmpty(TestIds.DifficultyLevelIds.Intermediate);
-        var createdBy = UserId.ParseOrEmpty(TestIds.UserIds.PersonalTrainer);
         var workoutStateId = WorkoutStateId.ParseOrEmpty(TestIds.WorkoutStateIds.Draft);
 
         // Act
-        var result = WorkoutTemplate.Handler.CreateNew("Valid Name", null, categoryId, difficultyId, 301, null, true, createdBy, workoutStateId);
+        var result = WorkoutTemplate.Handler.CreateNew("Valid Name", null, categoryId, difficultyId, 301, null, true, workoutStateId);
         
         // Assert
         Assert.True(result.IsFailure);
@@ -134,11 +127,10 @@ public class WorkoutTemplateTests
         // Arrange
         var categoryId = WorkoutCategoryId.ParseOrEmpty(TestIds.WorkoutCategoryIds.UpperBodyPush);
         var difficultyId = DifficultyLevelId.ParseOrEmpty(TestIds.DifficultyLevelIds.Intermediate);
-        var createdBy = UserId.ParseOrEmpty(TestIds.UserIds.PersonalTrainer);
         var workoutStateId = WorkoutStateId.ParseOrEmpty(TestIds.WorkoutStateIds.Draft);
         
         var original = WorkoutTemplate.Handler.CreateNew(
-            "Original Name", "Original Description", categoryId, difficultyId, 60, null, true, createdBy, workoutStateId).Unwrap();
+            "Original Name", "Original Description", categoryId, difficultyId, 60, null, true, workoutStateId).Unwrap();
         
         var newName = "Updated Name";
         var newDescription = "Updated Description";
@@ -165,12 +157,11 @@ public class WorkoutTemplateTests
         // Arrange
         var categoryId = WorkoutCategoryId.ParseOrEmpty(TestIds.WorkoutCategoryIds.UpperBodyPush);
         var difficultyId = DifficultyLevelId.ParseOrEmpty(TestIds.DifficultyLevelIds.Intermediate);
-        var createdBy = UserId.ParseOrEmpty(TestIds.UserIds.PersonalTrainer);
         var draftStateId = WorkoutStateId.ParseOrEmpty(TestIds.WorkoutStateIds.Draft);
         var productionStateId = WorkoutStateId.ParseOrEmpty(TestIds.WorkoutStateIds.Production);
         
         var template = WorkoutTemplate.Handler.CreateNew(
-            "Test Template", null, categoryId, difficultyId, 60, null, true, createdBy, draftStateId).Unwrap();
+            "Test Template", null, categoryId, difficultyId, 60, null, true, draftStateId).Unwrap();
 
         // Act
         var result = WorkoutTemplate.Handler.ChangeState(template, productionStateId);
@@ -197,7 +188,6 @@ public class WorkoutTemplateTests
         Assert.Equal(0, empty.EstimatedDurationMinutes);
         Assert.Empty(empty.Tags);
         Assert.False(empty.IsPublic);
-        Assert.Equal(UserId.Empty, empty.CreatedBy);
         Assert.Equal(WorkoutStateId.Empty, empty.WorkoutStateId);
     }
 
@@ -207,7 +197,6 @@ public class WorkoutTemplateTests
         // Arrange
         var categoryId = WorkoutCategoryId.ParseOrEmpty(TestIds.WorkoutCategoryIds.UpperBodyPush);
         var difficultyId = DifficultyLevelId.ParseOrEmpty(TestIds.DifficultyLevelIds.Intermediate);
-        var createdBy = UserId.ParseOrEmpty(TestIds.UserIds.PersonalTrainer);
         var workoutStateId = WorkoutStateId.ParseOrEmpty(TestIds.WorkoutStateIds.Draft);
         var tags = new List<string>();
         for (int i = 0; i < 15; i++)
@@ -217,7 +206,7 @@ public class WorkoutTemplateTests
 
         // Act
         var result = WorkoutTemplate.Handler.CreateNew(
-            "Test Template", null, categoryId, difficultyId, 60, tags, true, createdBy, workoutStateId);
+            "Test Template", null, categoryId, difficultyId, 60, tags, true, workoutStateId);
 
         // Assert
         Assert.True(result.IsSuccess);

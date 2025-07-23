@@ -22,7 +22,6 @@ public record WorkoutTemplate : IEmptyEntity<WorkoutTemplate>
     public int EstimatedDurationMinutes { get; init; }
     public List<string> Tags { get; init; } = new();
     public bool IsPublic { get; init; }
-    public UserId CreatedBy { get; init; }
     public WorkoutStateId WorkoutStateId { get; init; }
     public DateTime CreatedAt { get; init; }
     public DateTime UpdatedAt { get; init; }
@@ -54,7 +53,6 @@ public record WorkoutTemplate : IEmptyEntity<WorkoutTemplate>
         EstimatedDurationMinutes = 0,
         Tags = new List<string>(),
         IsPublic = false,
-        CreatedBy = UserId.Empty,
         WorkoutStateId = WorkoutStateId.Empty,
         CreatedAt = DateTime.UtcNow,
         UpdatedAt = DateTime.UtcNow,
@@ -74,7 +72,6 @@ public record WorkoutTemplate : IEmptyEntity<WorkoutTemplate>
             int estimatedDurationMinutes,
             List<string>? tags,
             bool isPublic,
-            UserId createdBy,
             WorkoutStateId workoutStateId)
         {
             return Create(
@@ -86,7 +83,6 @@ public record WorkoutTemplate : IEmptyEntity<WorkoutTemplate>
                 estimatedDurationMinutes,
                 tags,
                 isPublic,
-                createdBy,
                 workoutStateId,
                 DateTime.UtcNow,
                 DateTime.UtcNow
@@ -102,7 +98,6 @@ public record WorkoutTemplate : IEmptyEntity<WorkoutTemplate>
             int estimatedDurationMinutes,
             List<string>? tags,
             bool isPublic,
-            UserId createdBy,
             WorkoutStateId workoutStateId,
             DateTime createdAt,
             DateTime updatedAt)
@@ -110,7 +105,7 @@ public record WorkoutTemplate : IEmptyEntity<WorkoutTemplate>
             var validatedTags = ValidateTags(tags);
             
             return ValidateWorkoutTemplate(name, description, categoryId, difficultyId, 
-                estimatedDurationMinutes, createdBy, workoutStateId)
+                estimatedDurationMinutes, workoutStateId)
                 .OnSuccess(() => new WorkoutTemplate
                 {
                     Id = id,
@@ -121,7 +116,6 @@ public record WorkoutTemplate : IEmptyEntity<WorkoutTemplate>
                     EstimatedDurationMinutes = estimatedDurationMinutes,
                     Tags = validatedTags,
                     IsPublic = isPublic,
-                    CreatedBy = createdBy,
                     WorkoutStateId = workoutStateId,
                     CreatedAt = createdAt,
                     UpdatedAt = updatedAt
@@ -137,7 +131,6 @@ public record WorkoutTemplate : IEmptyEntity<WorkoutTemplate>
             WorkoutCategoryId categoryId,
             DifficultyLevelId difficultyId,
             int estimatedDurationMinutes,
-            UserId createdBy,
             WorkoutStateId workoutStateId)
         {
             return Validate.For<WorkoutTemplate>()
@@ -148,7 +141,6 @@ public record WorkoutTemplate : IEmptyEntity<WorkoutTemplate>
                 .EnsureRange(estimatedDurationMinutes, 5, 300, "Estimated duration must be between 5 and 300 minutes")
                 .Ensure(() => !categoryId.IsEmpty, "Category ID cannot be empty")
                 .Ensure(() => !difficultyId.IsEmpty, "Difficulty ID cannot be empty")
-                .Ensure(() => !createdBy.IsEmpty, "Created by user ID cannot be empty")
                 .Ensure(() => !workoutStateId.IsEmpty, "Workout state ID cannot be empty");
         }
         
@@ -188,7 +180,7 @@ public record WorkoutTemplate : IEmptyEntity<WorkoutTemplate>
             
             // Use shared validation for all fields
             return ValidateWorkoutTemplate(newName, newDescription, newCategoryId, newDifficultyId, 
-                newDuration, template.CreatedBy, newWorkoutStateId)
+                newDuration, newWorkoutStateId)
                 .OnSuccess(() => template with
                 {
                     Name = newName.Trim(),
@@ -216,11 +208,10 @@ public record WorkoutTemplate : IEmptyEntity<WorkoutTemplate>
         
         public static EntityResult<WorkoutTemplate> Duplicate(
             WorkoutTemplate originalTemplate, 
-            string newName, 
-            UserId newCreatorId)
+            string newName)
         {
             return ValidateWorkoutTemplate(newName, originalTemplate.Description, originalTemplate.CategoryId, 
-                originalTemplate.DifficultyId, originalTemplate.EstimatedDurationMinutes, newCreatorId, originalTemplate.WorkoutStateId)
+                originalTemplate.DifficultyId, originalTemplate.EstimatedDurationMinutes, originalTemplate.WorkoutStateId)
                 .OnSuccess(() => new WorkoutTemplate
                 {
                     Id = WorkoutTemplateId.New(),
@@ -231,7 +222,6 @@ public record WorkoutTemplate : IEmptyEntity<WorkoutTemplate>
                     EstimatedDurationMinutes = originalTemplate.EstimatedDurationMinutes,
                     Tags = originalTemplate.Tags.ToList(), // Create new list to avoid reference sharing
                     IsPublic = originalTemplate.IsPublic,
-                    CreatedBy = newCreatorId,
                     WorkoutStateId = originalTemplate.WorkoutStateId,
                     CreatedAt = DateTime.UtcNow,
                     UpdatedAt = DateTime.UtcNow

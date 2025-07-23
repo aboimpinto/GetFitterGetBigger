@@ -350,12 +350,6 @@ public class FitnessDbContext : DbContext
                 guid => DifficultyLevelId.From(guid));
                 
         modelBuilder.Entity<WorkoutTemplate>()
-            .Property(wt => wt.CreatedBy)
-            .HasConversion(
-                id => (Guid)id,
-                guid => UserId.From(guid));
-                
-        modelBuilder.Entity<WorkoutTemplate>()
             .Property(wt => wt.WorkoutStateId)
             .HasConversion(
                 id => (Guid)id,
@@ -871,8 +865,8 @@ public class FitnessDbContext : DbContext
             .HasDatabaseName("IX_WorkoutTemplate_Name");
             
         modelBuilder.Entity<WorkoutTemplate>()
-            .HasIndex(wt => new { wt.CreatedBy, wt.CreatedAt })
-            .HasDatabaseName("IX_WorkoutTemplate_CreatedBy_CreatedAt");
+            .HasIndex(wt => wt.CreatedAt)
+            .HasDatabaseName("IX_WorkoutTemplate_CreatedAt");
             
         // Configure WorkoutTemplateExercise constraints
         modelBuilder.Entity<WorkoutTemplateExercise>()

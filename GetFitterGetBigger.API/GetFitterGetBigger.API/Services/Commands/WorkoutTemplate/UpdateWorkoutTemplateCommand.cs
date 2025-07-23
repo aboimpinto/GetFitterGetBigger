@@ -51,9 +51,4 @@ public class UpdateWorkoutTemplateCommand
     /// The workout objectives associated with this template
     /// </summary>
     public List<WorkoutObjectiveId>? ObjectiveIds { get; init; }
-
-    /// <summary>
-    /// The ID of the user updating the template
-    /// </summary>
-    public required UserId UpdatedBy { get; init; }
 }

@@ -52,12 +52,6 @@ public record WorkoutTemplateDto
     public required bool IsPublic { get; init; }
 
     /// <summary>
-    /// The ID of the user who created this template
-    /// <example>user-550e8400-e29b-41d4-a716-446655440000</example>
-    /// </summary>
-    public required string CreatedBy { get; init; }
-
-    /// <summary>
     /// The current state of the workout template
     /// </summary>
     public required ReferenceDataDto WorkoutState { get; init; }
@@ -102,7 +96,6 @@ public record WorkoutTemplateDto
         EstimatedDurationMinutes = 0,
         Tags = new List<string>(),
         IsPublic = false,
-        CreatedBy = string.Empty,
         WorkoutState = ReferenceDataDto.Empty,
         Objectives = new List<ReferenceDataDto>(),
         Exercises = new List<WorkoutTemplateExerciseDto>(),

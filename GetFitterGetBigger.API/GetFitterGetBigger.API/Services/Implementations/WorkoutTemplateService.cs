@@ -69,18 +69,13 @@ public class WorkoutTemplateService : IWorkoutTemplateService
         return result;
     }
 
-    public async Task<PagedResponse<WorkoutTemplateDto>> GetPagedByCreatorAsync(
-        UserId creatorId, 
+    public async Task<PagedResponse<WorkoutTemplateDto>> GetPagedAsync(
         int pageNumber = 1, 
         int pageSize = 20,
         WorkoutCategoryId? categoryFilter = null,
         DifficultyLevelId? difficultyFilter = null)
     {
-        var result = creatorId.IsEmpty switch
-        {
-            true => CreateEmptyPagedResponse(pageNumber, pageSize),
-            false => await LoadPagedWorkoutTemplatesByCreatorAsync(creatorId, pageNumber, pageSize)
-        };
+        var result = await LoadPagedWorkoutTemplatesAsync(pageNumber, pageSize);
         
         return result;
     }
@@ -94,16 +89,15 @@ public class WorkoutTemplateService : IWorkoutTemplateService
             PageSize = pageSize
         };
     
-    private async Task<PagedResponse<WorkoutTemplateDto>> LoadPagedWorkoutTemplatesByCreatorAsync(
-        UserId creatorId, 
+    private async Task<PagedResponse<WorkoutTemplateDto>> LoadPagedWorkoutTemplatesAsync(
         int pageNumber, 
         int pageSize)
     {
         using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
         var repository = unitOfWork.GetRepository<IWorkoutTemplateRepository>();
         
-        var (workoutTemplates, totalCount) = await repository.GetPagedByCreatorAsync(
-            creatorId, pageNumber, pageSize);
+        var (workoutTemplates, totalCount) = await repository.GetPagedAsync(
+            pageNumber, pageSize);
 
         var result = new PagedResponse<WorkoutTemplateDto>
         {
