@@ -264,6 +264,29 @@ return result;
 - ✅ Use structured error codes (ServiceErrorCode enum)
 - ✅ Pattern matching in controllers for clean responses
 
+### 🚨 CRITICAL: Service Architecture Boundaries
+**📖 Source**: `API-CODE_QUALITY_STANDARDS.md` - **Service Repository Boundaries section**
+
+**The Single Repository Rule - MANDATORY**:
+- ✅ Each service MUST only access its own repository directly
+- ✅ Cross-domain data access MUST use service dependencies  
+- ❌ **FORBIDDEN**: Service accessing repositories outside its domain
+
+**Example Violations to Check For:**
+```csharp
+// ❌ VIOLATION - WorkoutTemplateService accessing other repositories
+var exerciseRepository = unitOfWork.GetRepository<IExerciseRepository>();
+var templateExerciseRepository = unitOfWork.GetRepository<IWorkoutTemplateExerciseRepository>();
+```
+
+**Architecture Validation Checklist:**
+- [ ] `WorkoutTemplateService` only accesses `IWorkoutTemplateRepository`
+- [ ] `ExerciseService` only accesses `IExerciseRepository`  
+- [ ] Cross-domain operations use service dependencies, not direct repository access
+- [ ] Service constructors inject other services for cross-domain operations
+
+**📖 For Details**: See `/memory-bank/API-CODE_QUALITY_STANDARDS.md` - Service Repository Boundaries section
+
 ### File Management Rules
 **📖 Source**: `UNIFIED_DEVELOPMENT_PROCESS.md` - "Mandatory File Management Rules"
 
@@ -288,6 +311,10 @@ return result;
   - If baseline has 0 warnings → maintain 0 warnings
   - If baseline has warnings → reduce them (never increase)
   - Leave the code better than you found it!
+- ✅ **Architecture Validation**: Service repository boundaries must be correct
+  - Each service only accesses its own repository
+  - Cross-domain access via service dependencies only
+  - NO direct access to repositories outside service domain
 - ✅ **Code Review**: APPROVED status for each category
   - Use CODE-REVIEW-TEMPLATE.md after each category
   - Final review before moving to COMPLETED

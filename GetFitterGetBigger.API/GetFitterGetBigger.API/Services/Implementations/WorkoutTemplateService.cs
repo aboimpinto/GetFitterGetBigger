@@ -3,6 +3,7 @@ using GetFitterGetBigger.API.Models;
 using GetFitterGetBigger.API.Models.Entities;
 using GetFitterGetBigger.API.Models.SpecializedIds;
 using GetFitterGetBigger.API.Repositories.Interfaces;
+using GetFitterGetBigger.API.Services.Commands;
 using GetFitterGetBigger.API.Services.Commands.WorkoutTemplate;
 using GetFitterGetBigger.API.Services.Interfaces;
 using GetFitterGetBigger.API.Services.Results;
@@ -18,13 +19,22 @@ namespace GetFitterGetBigger.API.Services.Implementations;
 public class WorkoutTemplateService : IWorkoutTemplateService
 {
     private readonly IUnitOfWorkProvider<FitnessDbContext> _unitOfWorkProvider;
+    private readonly IWorkoutStateService _workoutStateService;
+    private readonly IExerciseService _exerciseService;
+    private readonly IWorkoutTemplateExerciseService _workoutTemplateExerciseService;
     private readonly ILogger<WorkoutTemplateService> _logger;
 
     public WorkoutTemplateService(
         IUnitOfWorkProvider<FitnessDbContext> unitOfWorkProvider,
+        IWorkoutStateService workoutStateService,
+        IExerciseService exerciseService,
+        IWorkoutTemplateExerciseService workoutTemplateExerciseService,
         ILogger<WorkoutTemplateService> logger)
     {
         _unitOfWorkProvider = unitOfWorkProvider;
+        _workoutStateService = workoutStateService;
+        _exerciseService = exerciseService;
+        _workoutTemplateExerciseService = workoutTemplateExerciseService;
         _logger = logger;
     }
 
@@ -316,9 +326,17 @@ public class WorkoutTemplateService : IWorkoutTemplateService
     
     private async Task<ServiceResult<WorkoutTemplateDto>> CreateWorkoutTemplateEntityAsync(CreateWorkoutTemplateCommand command)
     {
-        // TODO: Get default WorkoutStateId from repository or configuration
-        // For now, using hardcoded Draft state ID which should be the default for new templates
-        var defaultWorkoutStateId = WorkoutStateId.ParseOrEmpty("workoutstate-02000001-0000-0000-0000-000000000001"); // Draft state
+        // Use service layer to get Draft state (follows proper UnitOfWork pattern)
+        var draftStateResult = await _workoutStateService.GetByValueAsync("Draft");
+        
+        if (!draftStateResult.IsSuccess)
+        {
+            return ServiceResult<WorkoutTemplateDto>.Failure(
+                CreateEmptyDto(),
+                ServiceError.InternalError("Draft workout state not found in database"));
+        }
+        
+        var defaultWorkoutStateId = WorkoutStateId.ParseOrEmpty(draftStateResult.Data.Id);
         
         var entityResult = WorkoutTemplate.Handler.CreateNew(
             command.Name,
@@ -627,43 +645,66 @@ public class WorkoutTemplateService : IWorkoutTemplateService
     public async Task<ServiceResult<bool>> SoftDeleteAsync(WorkoutTemplateId id)
     {
         var existingResult = await GetByIdAsync(id);
-        if (!existingResult.IsSuccess)
+        
+        var result = existingResult.IsSuccess switch
         {
-            return ServiceResult<bool>.Failure(false, existingResult.Errors);
-        }
-
+            false => ServiceResult<bool>.Failure(false, existingResult.Errors),
+            true => await PerformSoftDeleteAsync(id)
+        };
+        
+        return result;
+    }
+    
+    private async Task<ServiceResult<bool>> PerformSoftDeleteAsync(WorkoutTemplateId id)
+    {
         using var unitOfWork = _unitOfWorkProvider.CreateWritable();
         var repository = unitOfWork.GetRepository<IWorkoutTemplateRepository>();
         
-        var result = await repository.SoftDeleteAsync(id);
-        if (result)
+        var deleteResult = await repository.SoftDeleteAsync(id);
+        
+        var result = deleteResult switch
         {
-            await unitOfWork.CommitAsync();
-            _logger.LogInformation("Soft deleted workout template {TemplateId}", id);
-        }
-
-        return ServiceResult<bool>.Success(result);
+            true => await CommitAndLogAsync(unitOfWork, id, "Soft deleted workout template {TemplateId}"),
+            false => ServiceResult<bool>.Success(false)
+        };
+        
+        return result;
     }
 
     public async Task<ServiceResult<bool>> DeleteAsync(WorkoutTemplateId id)
     {
         var existingResult = await GetByIdAsync(id);
-        if (!existingResult.IsSuccess)
+        
+        var result = existingResult.IsSuccess switch
         {
-            return ServiceResult<bool>.Failure(false, existingResult.Errors);
-        }
-
+            false => ServiceResult<bool>.Failure(false, existingResult.Errors),
+            true => await PerformDeleteAsync(id)
+        };
+        
+        return result;
+    }
+    
+    private async Task<ServiceResult<bool>> PerformDeleteAsync(WorkoutTemplateId id)
+    {
         using var unitOfWork = _unitOfWorkProvider.CreateWritable();
         var repository = unitOfWork.GetRepository<IWorkoutTemplateRepository>();
         
-        var result = await repository.DeleteAsync(id);
-        if (result)
+        var deleteResult = await repository.DeleteAsync(id);
+        
+        var result = deleteResult switch
         {
-            await unitOfWork.CommitAsync();
-            _logger.LogInformation("Permanently deleted workout template {TemplateId}", id);
-        }
-
-        return ServiceResult<bool>.Success(result);
+            true => await CommitAndLogAsync(unitOfWork, id, "Permanently deleted workout template {TemplateId}"),
+            false => ServiceResult<bool>.Success(false)
+        };
+        
+        return result;
+    }
+    
+    private async Task<ServiceResult<bool>> CommitAndLogAsync(IWritableUnitOfWork<FitnessDbContext> unitOfWork, WorkoutTemplateId id, string logMessage)
+    {
+        await unitOfWork.CommitAsync();
+        _logger.LogInformation(logMessage, id);
+        return ServiceResult<bool>.Success(true);
     }
 
     public async Task<bool> ExistsAsync(WorkoutTemplateId id)
@@ -710,17 +751,75 @@ public class WorkoutTemplateService : IWorkoutTemplateService
         return await repository.ExistsByNameAsync(name, creatorId);
     }
 
-    public Task<ServiceResult<IEnumerable<ExerciseDto>>> GetSuggestedExercisesAsync(
+    public async Task<ServiceResult<IEnumerable<ExerciseDto>>> GetSuggestedExercisesAsync(
         WorkoutCategoryId categoryId,
         IEnumerable<ExerciseId> existingExerciseIds,
         int maxSuggestions = 10)
     {
-        // TODO: Implement exercise suggestion logic based on category and existing exercises
-        // This would require access to ExerciseService or ExerciseRepository
-        // For now, return empty list as placeholder
+        var result = (categoryId.IsEmpty, maxSuggestions <= 0) switch
+        {
+            (true, _) => ServiceResult<IEnumerable<ExerciseDto>>.Failure(
+                new List<ExerciseDto>(),
+                ServiceError.InvalidFormat("CategoryId", "GUID format")),
+            (_, true) => ServiceResult<IEnumerable<ExerciseDto>>.Failure(
+                new List<ExerciseDto>(),
+                ServiceError.ValidationFailed("MaxSuggestions must be greater than 0")),
+            _ => await LoadSuggestedExercisesAsync(categoryId, existingExerciseIds, maxSuggestions)
+        };
         
-        return Task.FromResult(ServiceResult<IEnumerable<ExerciseDto>>.Success(new List<ExerciseDto>()));
+        return result;
     }
+    
+    private async Task<ServiceResult<IEnumerable<ExerciseDto>>> LoadSuggestedExercisesAsync(
+        WorkoutCategoryId categoryId,
+        IEnumerable<ExerciseId> existingExerciseIds,
+        int maxSuggestions)
+    {
+        // Use ExerciseService instead of direct repository access
+        var command = new GetExercisesCommand(
+            Page: 1,
+            PageSize: 100,
+            Name: string.Empty,
+            SearchTerm: string.Empty,
+            DifficultyLevelId: DifficultyLevelId.Empty,
+            MuscleGroupIds: new List<MuscleGroupId>(),
+            EquipmentIds: new List<EquipmentId>(),
+            MovementPatternIds: new List<MovementPatternId>(),
+            BodyPartIds: new List<BodyPartId>(),
+            IncludeInactive: false,
+            IsActive: true);
+            
+        var exercisesResult = await _exerciseService.GetPagedAsync(command);
+        // PagedResponse doesn't have error handling, so we assume it always succeeds
+        
+        var existingIdSet = existingExerciseIds.ToHashSet();
+        
+        // Filter out existing exercises and take the requested amount
+        // Note: This is a basic implementation. A more sophisticated algorithm would:
+        // - Consider muscle group distribution
+        // - Match exercises to workout category characteristics
+        // - Consider difficulty levels and progression
+        var suggestedExercises = exercisesResult.Items
+            .Where(exercise => !existingIdSet.Contains(ExerciseId.ParseOrEmpty(exercise.Id)))
+            .Take(maxSuggestions)
+            .ToList();
+        
+        return ServiceResult<IEnumerable<ExerciseDto>>.Success(suggestedExercises);
+    }
+    
+    private ExerciseDto MapExerciseToDto(Exercise exercise) => new()
+    {
+        Id = exercise.Id.ToString(),
+        Name = exercise.Name,
+        Description = exercise.Description,
+        // Map CoachNotes if available
+        CoachNotes = exercise.CoachNotes?.Select(cn => new CoachNoteDto
+        {
+            Id = cn.Id.ToString(),
+            Text = cn.Text,
+            Order = cn.Order
+        }).ToList() ?? new List<CoachNoteDto>()
+    };
 
     public async Task<ServiceResult<IEnumerable<EquipmentDto>>> GetRequiredEquipmentAsync(WorkoutTemplateId id)
     {
@@ -732,11 +831,66 @@ public class WorkoutTemplateService : IWorkoutTemplateService
                 templateResult.Errors);
         }
 
-        // TODO: Implement equipment aggregation logic
-        // This would require accessing exercise data and aggregating their equipment requirements
-        // For now, return empty list as placeholder
+        // Get all template exercises using WorkoutTemplateExerciseService
+        var templateExercisesResult = await _workoutTemplateExerciseService.GetByWorkoutTemplateAsync(id);
+        if (!templateExercisesResult.IsSuccess)
+        {
+            return ServiceResult<IEnumerable<EquipmentDto>>.Failure(
+                new List<EquipmentDto>(),
+                templateExercisesResult.Errors);
+        }
         
-        return ServiceResult<IEnumerable<EquipmentDto>>.Success(new List<EquipmentDto>());
+        var templateExercises = templateExercisesResult.Data.WarmupExercises
+            .Concat(templateExercisesResult.Data.MainExercises)
+            .Concat(templateExercisesResult.Data.CooldownExercises);
+        if (!templateExercises.Any())
+        {
+            return ServiceResult<IEnumerable<EquipmentDto>>.Success(new List<EquipmentDto>());
+        }
+        
+        // Get all unique exercise IDs
+        var exerciseIds = templateExercises.Select(te => ExerciseId.ParseOrEmpty(te.Exercise.Id)).Distinct().ToList();
+        
+        // Get all exercises with their equipment using ExerciseService
+        var equipmentSet = new HashSet<EquipmentDto>(new EquipmentDtoComparer());
+        
+        foreach (var exerciseId in exerciseIds)
+        {
+            var exerciseDto = await _exerciseService.GetByIdAsync(exerciseId);
+            if (!exerciseDto.IsEmpty && exerciseDto.Equipment?.Any() == true)
+            {
+                foreach (var equipmentRef in exerciseDto.Equipment)
+                {
+                    var equipmentDto = new EquipmentDto
+                    {
+                        Id = equipmentRef.Id,
+                        Name = equipmentRef.Value,
+                        IsActive = true, // Assume active since it's in the exercise
+                        CreatedAt = DateTime.UtcNow
+                    };
+                    equipmentSet.Add(equipmentDto);
+                }
+            }
+        }
+        
+        return ServiceResult<IEnumerable<EquipmentDto>>.Success(equipmentSet.OrderBy(e => e.Name));
+    }
+    
+    
+    // Custom comparer to avoid duplicate equipment based on ID
+    private class EquipmentDtoComparer : IEqualityComparer<EquipmentDto>
+    {
+        public bool Equals(EquipmentDto? x, EquipmentDto? y)
+        {
+            if (x == null && y == null) return true;
+            if (x == null || y == null) return false;
+            return x.Id == y.Id;
+        }
+        
+        public int GetHashCode(EquipmentDto obj)
+        {
+            return obj.Id?.GetHashCode() ?? 0;
+        }
     }
 
     #region Private Methods
@@ -790,24 +944,32 @@ public class WorkoutTemplateService : IWorkoutTemplateService
         new()
         {
             Id = exercise.Id.ToString(),
-            WorkoutTemplateId = exercise.WorkoutTemplateId.ToString(),
-            Exercise = MapToReferenceDataDto(exercise.Exercise),
+            Exercise = exercise.Exercise != null ? new ExerciseDto 
+            { 
+                Id = exercise.Exercise.Id.ToString(),
+                Name = exercise.Exercise.Name,
+                Description = exercise.Exercise.Description
+            } : ExerciseDto.Empty,
             Zone = exercise.Zone.ToString(),
             SequenceOrder = exercise.SequenceOrder,
             Notes = exercise.Notes,
-            Configurations = exercise.Configurations?.Select(MapToSetConfigurationDto).ToList() ?? new()
+            SetConfigurations = exercise.Configurations?.Select(MapToSetConfigurationDto).ToList() ?? new(),
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
         };
 
     private static SetConfigurationDto MapToSetConfigurationDto(SetConfiguration config) =>
         new()
         {
             Id = config.Id.ToString(),
-            WorkoutTemplateExerciseId = config.WorkoutTemplateExerciseId.ToString(),
             SetNumber = config.SetNumber,
             TargetReps = config.TargetReps,
             TargetWeight = config.TargetWeight,
-            TargetDurationSeconds = config.TargetTimeSeconds,
-            RestSeconds = config.RestSeconds
+            TargetTime = config.TargetTimeSeconds,
+            RestSeconds = config.RestSeconds,
+            Notes = null,
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
         };
 
     private Task<ValidationResult> ValidateCreateCommandAsync(CreateWorkoutTemplateCommand command)

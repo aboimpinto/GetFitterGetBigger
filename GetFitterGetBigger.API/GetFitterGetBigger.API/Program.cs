@@ -88,6 +88,7 @@ builder.Services.AddTransient<IExecutionProtocolService, ExecutionProtocolServic
 builder.Services.AddTransient<IWorkoutStateService, WorkoutStateService>();
 builder.Services.AddTransient<IWorkoutTemplateService, WorkoutTemplateService>();
 builder.Services.AddTransient<IWorkoutTemplateExerciseService, WorkoutTemplateExerciseService>();
+builder.Services.AddTransient<ISetConfigurationService, SetConfigurationService>();
 
 // Register reference table validation services
 builder.Services.AddTransient<IBodyPartService, BodyPartService>();

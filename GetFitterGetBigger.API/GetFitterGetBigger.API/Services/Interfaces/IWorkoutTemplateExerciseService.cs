@@ -1,111 +1,91 @@
-using System.Collections.Generic;
-using System.Threading.Tasks;
 using GetFitterGetBigger.API.DTOs;
-using GetFitterGetBigger.API.Models.Entities;
 using GetFitterGetBigger.API.Models.SpecializedIds;
-using GetFitterGetBigger.API.Services.Commands.WorkoutTemplateExercise;
+using GetFitterGetBigger.API.Services.Commands.WorkoutTemplateExercises;
 using GetFitterGetBigger.API.Services.Results;
 
 namespace GetFitterGetBigger.API.Services.Interfaces;
 
 /// <summary>
-/// Service interface for managing exercises within workout templates
+/// Service for managing exercises within workout templates
 /// </summary>
 public interface IWorkoutTemplateExerciseService
 {
     /// <summary>
-    /// Gets a workout template exercise by ID with full details
-    /// </summary>
-    /// <param name="id">The workout template exercise ID</param>
-    /// <returns>ServiceResult containing the exercise details or error</returns>
-    Task<ServiceResult<WorkoutTemplateExerciseDto>> GetByIdAsync(WorkoutTemplateExerciseId id);
-    
-    /// <summary>
     /// Gets all exercises for a workout template
     /// </summary>
     /// <param name="workoutTemplateId">The workout template ID</param>
-    /// <returns>ServiceResult containing list of exercises ordered by zone and sequence</returns>
-    Task<ServiceResult<IEnumerable<WorkoutTemplateExerciseDto>>> GetByTemplateAsync(WorkoutTemplateId workoutTemplateId);
-    
+    /// <returns>List of exercises grouped by zone</returns>
+    Task<ServiceResult<WorkoutTemplateExerciseListDto>> GetByWorkoutTemplateAsync(WorkoutTemplateId workoutTemplateId);
+
     /// <summary>
-    /// Gets exercises for a specific zone within a template
+    /// Gets a specific exercise configuration by ID
     /// </summary>
-    /// <param name="workoutTemplateId">The workout template ID</param>
-    /// <param name="zone">The zone to filter by</param>
-    /// <returns>ServiceResult containing list of exercises in the zone</returns>
-    Task<ServiceResult<IEnumerable<WorkoutTemplateExerciseDto>>> GetByZoneAsync(
-        WorkoutTemplateId workoutTemplateId, 
-        WorkoutZone zone);
-    
+    /// <param name="exerciseId">The workout template exercise ID</param>
+    /// <returns>The exercise configuration with set configurations</returns>
+    Task<ServiceResult<WorkoutTemplateExerciseDto>> GetByIdAsync(WorkoutTemplateExerciseId exerciseId);
+
     /// <summary>
     /// Adds an exercise to a workout template
     /// </summary>
     /// <param name="command">Command containing exercise details</param>
-    /// <returns>ServiceResult containing the created exercise or error</returns>
+    /// <returns>The created exercise configuration</returns>
     Task<ServiceResult<WorkoutTemplateExerciseDto>> AddExerciseAsync(AddExerciseToTemplateCommand command);
-    
+
     /// <summary>
-    /// Adds multiple exercises to a workout template in bulk
+    /// Updates an exercise in a workout template
     /// </summary>
-    /// <param name="command">Command containing multiple exercises</param>
-    /// <returns>ServiceResult containing the created exercises or error</returns>
-    Task<ServiceResult<IEnumerable<WorkoutTemplateExerciseDto>>> AddExercisesAsync(
-        AddExercisesToTemplateCommand command);
-    
-    /// <summary>
-    /// Updates an exercise's notes
-    /// </summary>
-    /// <param name="id">The exercise ID</param>
-    /// <param name="notes">The new notes</param>
-    /// <returns>ServiceResult containing the updated exercise or error</returns>
-    Task<ServiceResult<WorkoutTemplateExerciseDto>> UpdateNotesAsync(
-        WorkoutTemplateExerciseId id, 
-        string? notes);
-    
-    /// <summary>
-    /// Changes an exercise's zone and updates sequence order
-    /// </summary>
-    /// <param name="id">The exercise ID</param>
-    /// <param name="newZone">The new zone</param>
-    /// <param name="sequenceOrder">The sequence order in the new zone</param>
-    /// <returns>ServiceResult containing the updated exercise or error</returns>
-    Task<ServiceResult<WorkoutTemplateExerciseDto>> ChangeZoneAsync(
-        WorkoutTemplateExerciseId id, 
-        WorkoutZone newZone, 
-        int sequenceOrder);
-    
-    /// <summary>
-    /// Reorders exercises within a zone
-    /// </summary>
-    /// <param name="command">Command containing the new order</param>
-    /// <returns>ServiceResult indicating success or error</returns>
-    Task<ServiceResult<bool>> ReorderExercisesAsync(ReorderExercisesCommand command);
-    
+    /// <param name="command">Command containing updated exercise details</param>
+    /// <returns>The updated exercise configuration</returns>
+    Task<ServiceResult<WorkoutTemplateExerciseDto>> UpdateExerciseAsync(UpdateTemplateExerciseCommand command);
+
     /// <summary>
     /// Removes an exercise from a workout template
     /// </summary>
-    /// <param name="id">The exercise ID to remove</param>
-    /// <returns>ServiceResult indicating success or error</returns>
-    Task<ServiceResult<bool>> RemoveExerciseAsync(WorkoutTemplateExerciseId id);
-    
+    /// <param name="workoutTemplateExerciseId">The exercise to remove</param>
+    /// <param name="userId">The user performing the action</param>
+    /// <returns>Success or error result</returns>
+    Task<ServiceResult<bool>> RemoveExerciseAsync(WorkoutTemplateExerciseId workoutTemplateExerciseId, UserId userId);
+
     /// <summary>
-    /// Removes all exercises from a workout template
+    /// Reorders exercises within a zone
+    /// </summary>
+    /// <param name="command">Command containing reordering details</param>
+    /// <returns>Success or error result</returns>
+    Task<ServiceResult<bool>> ReorderExercisesAsync(ReorderTemplateExercisesCommand command);
+
+    /// <summary>
+    /// Changes the zone of an exercise
+    /// </summary>
+    /// <param name="command">Command containing zone change details</param>
+    /// <returns>The updated exercise configuration</returns>
+    Task<ServiceResult<WorkoutTemplateExerciseDto>> ChangeExerciseZoneAsync(ChangeExerciseZoneCommand command);
+
+    /// <summary>
+    /// Duplicates exercises from one template to another
+    /// </summary>
+    /// <param name="command">Command containing duplication details</param>
+    /// <returns>Number of exercises duplicated</returns>
+    Task<ServiceResult<int>> DuplicateExercisesAsync(DuplicateTemplateExercisesCommand command);
+
+    /// <summary>
+    /// Gets suggested exercises based on template objectives and existing exercises
     /// </summary>
     /// <param name="workoutTemplateId">The workout template ID</param>
-    /// <returns>ServiceResult containing the number of exercises removed</returns>
-    Task<ServiceResult<int>> RemoveAllExercisesAsync(WorkoutTemplateId workoutTemplateId);
-    
+    /// <param name="zone">The zone to get suggestions for</param>
+    /// <param name="maxSuggestions">Maximum number of suggestions</param>
+    /// <returns>List of suggested exercises</returns>
+    Task<ServiceResult<List<ExerciseDto>>> GetExerciseSuggestionsAsync(
+        WorkoutTemplateId workoutTemplateId, 
+        string zone, 
+        int maxSuggestions = 5);
+
     /// <summary>
-    /// Checks if an exercise is used in any workout template
+    /// Validates if exercises can be added to a template
     /// </summary>
-    /// <param name="exerciseId">The exercise ID to check</param>
-    /// <returns>True if the exercise is in use</returns>
-    Task<bool> IsExerciseInUseAsync(ExerciseId exerciseId);
-    
-    /// <summary>
-    /// Gets the count of templates using a specific exercise
-    /// </summary>
-    /// <param name="exerciseId">The exercise ID</param>
-    /// <returns>Number of templates using this exercise</returns>
-    Task<int> GetTemplateCountByExerciseAsync(ExerciseId exerciseId);
+    /// <param name="workoutTemplateId">The workout template ID</param>
+    /// <param name="exerciseIds">List of exercise IDs to validate</param>
+    /// <returns>Validation result with any issues found</returns>
+    Task<ServiceResult<bool>> ValidateExercisesAsync(
+        WorkoutTemplateId workoutTemplateId, 
+        List<ExerciseId> exerciseIds);
 }

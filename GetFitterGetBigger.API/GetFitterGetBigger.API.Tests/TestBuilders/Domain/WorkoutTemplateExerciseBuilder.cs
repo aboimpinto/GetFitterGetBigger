@@ -177,7 +177,17 @@ public class WorkoutTemplateExerciseBuilder
     {
         var exercise = Build();
         
-        // For now, tests should mock repository methods to return exercises with navigation properties
+        if (exercise != WorkoutTemplateExercise.Empty)
+        {
+            // Use reflection to set navigation properties since they're init-only
+            var exerciseWithNav = exercise with 
+            { 
+                Exercise = _exercise,
+                WorkoutTemplate = _workoutTemplate,
+                Configurations = _configurations
+            };
+            return exerciseWithNav;
+        }
         
         return exercise;
     }

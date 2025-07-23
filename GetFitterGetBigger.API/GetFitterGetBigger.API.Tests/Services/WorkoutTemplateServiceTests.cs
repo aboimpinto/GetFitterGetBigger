@@ -26,6 +26,10 @@ public class WorkoutTemplateServiceTests
     private readonly Mock<IReadOnlyUnitOfWork<FitnessDbContext>> _mockReadOnlyUnitOfWork;
     private readonly Mock<IWritableUnitOfWork<FitnessDbContext>> _mockWritableUnitOfWork;
     private readonly Mock<IWorkoutTemplateRepository> _mockRepository;
+    private readonly Mock<IWorkoutStateRepository> _mockWorkoutStateRepository;
+    private readonly Mock<IWorkoutStateService> _mockWorkoutStateService;
+    private readonly Mock<IExerciseService> _mockExerciseService;
+    private readonly Mock<IWorkoutTemplateExerciseService> _mockWorkoutTemplateExerciseService;
     private readonly Mock<ILogger<WorkoutTemplateService>> _mockLogger;
     private readonly WorkoutTemplateService _service;
     
@@ -39,6 +43,7 @@ public class WorkoutTemplateServiceTests
         _mockReadOnlyUnitOfWork = new Mock<IReadOnlyUnitOfWork<FitnessDbContext>>();
         _mockWritableUnitOfWork = new Mock<IWritableUnitOfWork<FitnessDbContext>>();
         _mockRepository = new Mock<IWorkoutTemplateRepository>();
+        _mockWorkoutStateRepository = new Mock<IWorkoutStateRepository>();
         _mockLogger = new Mock<ILogger<WorkoutTemplateService>>();
         
         _mockUnitOfWorkProvider
@@ -53,11 +58,24 @@ public class WorkoutTemplateServiceTests
             .Setup(x => x.GetRepository<IWorkoutTemplateRepository>())
             .Returns(_mockRepository.Object);
             
+        _mockReadOnlyUnitOfWork
+            .Setup(x => x.GetRepository<IWorkoutStateRepository>())
+            .Returns(_mockWorkoutStateRepository.Object);
+            
         _mockWritableUnitOfWork
             .Setup(x => x.GetRepository<IWorkoutTemplateRepository>())
             .Returns(_mockRepository.Object);
             
-        _service = new WorkoutTemplateService(_mockUnitOfWorkProvider.Object, _mockLogger.Object);
+        _mockWorkoutStateService = new Mock<IWorkoutStateService>();
+        _mockExerciseService = new Mock<IExerciseService>();
+        _mockWorkoutTemplateExerciseService = new Mock<IWorkoutTemplateExerciseService>();
+        
+        _service = new WorkoutTemplateService(
+            _mockUnitOfWorkProvider.Object, 
+            _mockWorkoutStateService.Object, 
+            _mockExerciseService.Object,
+            _mockWorkoutTemplateExerciseService.Object,
+            _mockLogger.Object);
         
         // Setup test data
         _testTemplateId = WorkoutTemplateId.ParseOrEmpty(TestIds.WorkoutTemplateIds.BasicTemplate);
@@ -68,6 +86,28 @@ public class WorkoutTemplateServiceTests
             .WithDescription("Test Description")
             .WithCreatedBy(_testUserId)
             .Build();
+            
+        // Setup WorkoutState mock to return Draft state
+        var draftWorkoutState = WorkoutStateTestBuilder.Default()
+            .WithValue("Draft")
+            .WithDescription("Draft state for new workout templates")
+            .Build();
+            
+        _mockWorkoutStateRepository
+            .Setup(x => x.GetByValueAsync("Draft"))
+            .ReturnsAsync(draftWorkoutState);
+            
+        // Setup WorkoutStateService mock
+        var draftWorkoutStateDto = new WorkoutStateDto
+        {
+            Id = draftWorkoutState.Id.ToString(),
+            Value = draftWorkoutState.Value,
+            Description = draftWorkoutState.Description
+        };
+            
+        _mockWorkoutStateService
+            .Setup(x => x.GetByValueAsync("Draft"))
+            .ReturnsAsync(ServiceResult<WorkoutStateDto>.Success(draftWorkoutStateDto));
     }
     
     #region GetById Tests
