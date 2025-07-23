@@ -1,4 +1,6 @@
 using GetFitterGetBigger.API.Models;
+using GetFitterGetBigger.API.Models.Entities;
+using GetFitterGetBigger.API.Models.SpecializedIds;
 using GetFitterGetBigger.API.IntegrationTests.TestBuilders;
 using Microsoft.EntityFrameworkCore;
 
@@ -144,4 +146,67 @@ public class TestDatabaseSeeder
     /// Creates a specific entity from the seed builder
     /// </summary>
     public SeedDataBuilder GetSeedBuilder() => _seedBuilder;
+    
+    /// <summary>
+    /// Seeds a test workout template with the specified ID
+    /// </summary>
+    public async Task SeedTestWorkoutTemplateAsync(WorkoutTemplateId templateId)
+    {
+        var categoryId = await GetOrCreateTestCategoryId();
+        var difficultyId = await GetOrCreateTestDifficultyId();
+        var stateId = await GetOrCreateTestWorkoutStateId();
+        
+        var now = DateTime.UtcNow;
+        var templateResult = WorkoutTemplate.Handler.Create(
+            templateId,
+            "Test Workout Template",
+            "A test workout template for integration testing",
+            categoryId,
+            difficultyId,
+            60,
+            new List<string> { "test" },
+            true,
+            UserId.ParseOrEmpty("user-01000001-0000-0000-0000-000000000001"),
+            stateId,
+            now,
+            now);
+        
+        if (templateResult.IsSuccess)
+        {
+            _context.WorkoutTemplates.Add(templateResult.Value);
+            await _context.SaveChangesAsync();
+        }
+        else
+        {
+            throw new InvalidOperationException($"Failed to create test workout template: {templateResult.FirstError}");
+        }
+    }
+    
+    private async Task<WorkoutCategoryId> GetOrCreateTestCategoryId()
+    {
+        var category = await _context.WorkoutCategories.FirstOrDefaultAsync(c => c.Value == "Upper Body");
+        if (category == null)
+        {
+            await SeedWorkoutCategoriesAsync();
+            category = await _context.WorkoutCategories.FirstOrDefaultAsync(c => c.Value == "Upper Body");
+        }
+        return category!.WorkoutCategoryId;
+    }
+    
+    private async Task<DifficultyLevelId> GetOrCreateTestDifficultyId()
+    {
+        var difficulty = await _context.DifficultyLevels.FirstOrDefaultAsync(d => d.Value == "Intermediate");
+        if (difficulty == null)
+        {
+            await SeedDifficultyLevelsAsync();
+            difficulty = await _context.DifficultyLevels.FirstOrDefaultAsync(d => d.Value == "Intermediate");
+        }
+        return difficulty!.DifficultyLevelId;
+    }
+    
+    private async Task<WorkoutStateId> GetOrCreateTestWorkoutStateId()
+    {
+        var state = await _context.WorkoutStates.FirstOrDefaultAsync(s => s.Value == "DRAFT");
+        return state?.WorkoutStateId ?? WorkoutStateId.ParseOrEmpty("02000001-0000-0000-0000-000000000001");
+    }
 }

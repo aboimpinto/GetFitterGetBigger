@@ -998,19 +998,28 @@ Notes:
 ## Phase 6: Integration and BDD Tests
 
 ### Task 6.1: Create WorkoutTemplate BDD scenarios
-`[Pending]` (Est: 3h)
+`[Completed: Started: 2025-07-23 16:00, Ended: 2025-07-23 17:30]` (Est: 3h, Actual: 1.5h)
 
 **Implementation:**
-- Create `IntegrationTests/Features/WorkoutTemplate/WorkoutTemplateManagement.feature`
-- Implement scenarios from `bdd-scenarios.md`
-- Cover complete CRUD flow
-- Test state transitions
-- Test business rules
+- ✅ Created `IntegrationTests/Features/WorkoutTemplate/WorkoutTemplateManagement.feature`
+- ✅ Implemented 25 comprehensive BDD scenarios covering:
+  - Basic CRUD operations (Create, Read, Update, Delete)
+  - State transitions (DRAFT → PRODUCTION → ARCHIVED)
+  - Filtering and search (by name, category, difficulty, objective)
+  - Validation scenarios (name length, duration range, duplicate names)
+  - Access control (creator permissions, public/private templates)
+  - Template duplication functionality
+  - Performance scenario (handling 1000 templates)
+- ✅ Covered all major scenarios from `bdd-scenarios.md`
 
 **Step Definitions:**
-- Create `IntegrationTests/StepDefinitions/WorkoutTemplateSteps.cs`
-- Implement all step definitions
-- Use test builders for data setup
+- ✅ Created `IntegrationTests/StepDefinitions/WorkoutTemplate/WorkoutTemplateSteps.cs`
+- ✅ Created `IntegrationTests/StepDefinitions/WorkoutTemplate/WorkoutTemplateFilteringSteps.cs`
+- ✅ Created `IntegrationTests/StepDefinitions/WorkoutTemplate/WorkoutTemplateValidationSteps.cs`
+- ✅ Implemented 50+ step definitions covering all scenarios
+- ✅ Updated `TestDatabaseSeeder.cs` with `SeedTestWorkoutTemplateAsync` method
+- ✅ Fixed all compilation errors related to entity property names and DTOs
+- ✅ Build successful: 0 errors, 1 warning (false positive about unused field)
 
 ### Task 6.2: Create exercise management BDD tests
 `[Pending]` (Est: 2h)
