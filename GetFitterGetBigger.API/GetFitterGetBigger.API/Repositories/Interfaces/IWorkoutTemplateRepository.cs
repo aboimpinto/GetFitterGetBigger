@@ -10,6 +10,13 @@ namespace GetFitterGetBigger.API.Repositories.Interfaces;
 public interface IWorkoutTemplateRepository : IRepository
 {
     /// <summary>
+    /// Gets a workout template by ID
+    /// </summary>
+    /// <param name="id">The workout template ID</param>
+    /// <returns>The workout template, or WorkoutTemplate.Empty if not found</returns>
+    Task<WorkoutTemplate> GetByIdAsync(WorkoutTemplateId id);
+
+    /// <summary>
     /// Gets a workout template by ID with all related data
     /// </summary>
     /// <param name="id">The workout template ID</param>
@@ -96,6 +103,13 @@ public interface IWorkoutTemplateRepository : IRepository
         ExerciseId exerciseId, 
         UserId creatorId = default, 
         bool includeInactive = false);
+
+    /// <summary>
+    /// Checks if a workout template exists by ID
+    /// </summary>
+    /// <param name="id">The workout template ID</param>
+    /// <returns>True if the template exists, false otherwise</returns>
+    Task<bool> ExistsAsync(WorkoutTemplateId id);
 
     /// <summary>
     /// Checks if a workout template with the given name exists for a creator

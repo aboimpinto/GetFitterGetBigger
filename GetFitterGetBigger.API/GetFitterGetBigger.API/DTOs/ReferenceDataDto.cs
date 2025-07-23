@@ -24,4 +24,19 @@ public record ReferenceDataDto
     /// </summary>
     /// <example>Exercises that cannot have external weight added</example>
     public string? Description { get; init; }
+
+    /// <summary>
+    /// Whether this DTO represents an empty/default state
+    /// </summary>
+    public bool IsEmpty => Id == string.Empty;
+
+    /// <summary>
+    /// Gets an empty ReferenceDataDto instance for the Empty Object Pattern
+    /// </summary>
+    public static ReferenceDataDto Empty => new()
+    {
+        Id = string.Empty,
+        Value = string.Empty,
+        Description = null
+    };
 }
