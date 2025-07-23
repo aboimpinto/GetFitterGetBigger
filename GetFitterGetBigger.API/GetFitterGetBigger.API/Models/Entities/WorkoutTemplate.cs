@@ -213,5 +213,29 @@ public record WorkoutTemplate : IEmptyEntity<WorkoutTemplate>
                     UpdatedAt = DateTime.UtcNow
                 });
         }
+        
+        public static EntityResult<WorkoutTemplate> Duplicate(
+            WorkoutTemplate originalTemplate, 
+            string newName, 
+            UserId newCreatorId)
+        {
+            return ValidateWorkoutTemplate(newName, originalTemplate.Description, originalTemplate.CategoryId, 
+                originalTemplate.DifficultyId, originalTemplate.EstimatedDurationMinutes, newCreatorId, originalTemplate.WorkoutStateId)
+                .OnSuccess(() => new WorkoutTemplate
+                {
+                    Id = WorkoutTemplateId.New(),
+                    Name = newName.Trim(),
+                    Description = originalTemplate.Description,
+                    CategoryId = originalTemplate.CategoryId,
+                    DifficultyId = originalTemplate.DifficultyId,
+                    EstimatedDurationMinutes = originalTemplate.EstimatedDurationMinutes,
+                    Tags = originalTemplate.Tags.ToList(), // Create new list to avoid reference sharing
+                    IsPublic = originalTemplate.IsPublic,
+                    CreatedBy = newCreatorId,
+                    WorkoutStateId = originalTemplate.WorkoutStateId,
+                    CreatedAt = DateTime.UtcNow,
+                    UpdatedAt = DateTime.UtcNow
+                });
+        }
     }
 }

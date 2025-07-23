@@ -123,6 +123,7 @@ public static class TestIds
     // Workout Objective IDs
     public static class WorkoutObjectiveIds
     {
+        public static readonly string BuildMuscle = "workoutobjective-11111111-1111-1111-1111-111111111111";
         public static readonly string MuscularStrength = "workoutobjective-11111111-1111-1111-1111-111111111111";
         public static readonly string MuscularHypertrophy = "workoutobjective-22222222-2222-2222-2222-222222222222";
         public static readonly string MuscularEndurance = "workoutobjective-33333333-3333-3333-3333-333333333333";
@@ -133,6 +134,7 @@ public static class TestIds
     // Workout Category IDs
     public static class WorkoutCategoryIds
     {
+        public static readonly string Strength = "workoutcategory-11111111-1111-1111-1111-111111111111";
         public static readonly string UpperBodyPush = "workoutcategory-11111111-1111-1111-1111-111111111111";
         public static readonly string UpperBodyPull = "workoutcategory-22222222-2222-2222-2222-222222222222";
         public static readonly string LowerBody = "workoutcategory-33333333-3333-3333-3333-333333333333";
@@ -161,6 +163,7 @@ public static class TestIds
     // Workout Template IDs
     public static class WorkoutTemplateIds
     {
+        public static readonly string BasicTemplate = "workouttemplate-03000001-0000-0000-0000-000000000001";
         public static readonly string Template1 = "workouttemplate-03000001-0000-0000-0000-000000000001";
         public static readonly string Template2 = "workouttemplate-03000001-0000-0000-0000-000000000002";
         public static readonly string Template3 = "workouttemplate-03000001-0000-0000-0000-000000000003";
@@ -189,8 +192,19 @@ public static class TestIds
     // User IDs
     public static class UserIds
     {
+        public static readonly string JohnDoe = "user-06000001-0000-0000-0000-000000000001";
+        public static readonly string JaneDoe = "user-06000001-0000-0000-0000-000000000002";
         public static readonly string PersonalTrainer = "user-06000001-0000-0000-0000-000000000001";
         public static readonly string Client = "user-06000001-0000-0000-0000-000000000002";
         public static readonly string Admin = "user-06000001-0000-0000-0000-000000000003";
+    }
+    
+    // Exercise IDs
+    public static class ExerciseIds
+    {
+        public static readonly string BenchPress = "exercise-07000001-0000-0000-0000-000000000001";
+        public static readonly string Squat = "exercise-07000001-0000-0000-0000-000000000002";
+        public static readonly string Deadlift = "exercise-07000001-0000-0000-0000-000000000003";
+        public static readonly string PullUp = "exercise-07000001-0000-0000-0000-000000000004";
     }
 }

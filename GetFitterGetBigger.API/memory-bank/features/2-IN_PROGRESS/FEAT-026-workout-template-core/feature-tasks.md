@@ -729,7 +729,9 @@ Progress Update:
 - Missing: WorkoutTemplateExercise service, SetConfiguration service ❌
 - TODOs: Exercise suggestion algorithm, Equipment aggregation
 
-Git Commit: `85ca4bd4` - feat(FEAT-026): implement WorkoutTemplateService with comprehensive unit tests
+Git Commits: 
+- `85ca4bd4` - feat(FEAT-026): implement WorkoutTemplateService with comprehensive unit tests
+- `9a751fb0` - feat(FEAT-026): complete WorkoutTemplate service layer with DTOs and commands
 
 ## Phase 5: WorkoutTemplate API Controllers
 
