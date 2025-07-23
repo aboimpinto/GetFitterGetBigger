@@ -13,6 +13,29 @@ namespace GetFitterGetBigger.API.Repositories.Implementations;
 public class WorkoutTemplateRepository : RepositoryBase<FitnessDbContext>, IWorkoutTemplateRepository
 {
     /// <summary>
+    /// Gets a workout template by ID
+    /// </summary>
+    public async Task<WorkoutTemplate> GetByIdAsync(WorkoutTemplateId id)
+    {
+        var result = id.IsEmpty switch
+        {
+            true => Task.FromResult(WorkoutTemplate.Empty),
+            false => LoadTemplateByIdAsync(id)
+        };
+        
+        return await result;
+    }
+    
+    private async Task<WorkoutTemplate> LoadTemplateByIdAsync(WorkoutTemplateId id)
+    {
+        var template = await Context.WorkoutTemplates
+            .AsNoTracking()
+            .FirstOrDefaultAsync(w => w.Id == id);
+
+        return template ?? WorkoutTemplate.Empty;
+    }
+
+    /// <summary>
     /// Gets a workout template by ID with all related data
     /// </summary>
     public async Task<WorkoutTemplate> GetByIdWithDetailsAsync(WorkoutTemplateId id)
@@ -230,6 +253,22 @@ public class WorkoutTemplateRepository : RepositoryBase<FitnessDbContext>, IWork
     }
 
     /// <summary>
+    /// Checks if a workout template exists by ID
+    /// </summary>
+    public async Task<bool> ExistsAsync(WorkoutTemplateId id)
+    {
+        var result = id.IsEmpty switch
+        {
+            true => Task.FromResult(false),
+            false => Context.WorkoutTemplates
+                .AsNoTracking()
+                .AnyAsync(w => w.Id == id)
+        };
+        
+        return await result;
+    }
+
+    /// <summary>
     /// Checks if a workout template with the given name exists for a creator
     /// </summary>
     public async Task<bool> ExistsByNameAsync(
@@ -307,9 +346,11 @@ public class WorkoutTemplateRepository : RepositoryBase<FitnessDbContext>, IWork
             .Include(w => w.Objectives)
             .FirstOrDefaultAsync(w => w.Id == workoutTemplate.Id);
 
-        var result = existingTemplate == null
-            ? WorkoutTemplate.Empty
-            : await UpdateTemplateInternal(existingTemplate, workoutTemplate);
+        var result = existingTemplate switch
+        {
+            null => WorkoutTemplate.Empty,
+            _ => await UpdateTemplateInternal(existingTemplate, workoutTemplate)
+        };
 
         return result;
     }
@@ -323,20 +364,32 @@ public class WorkoutTemplateRepository : RepositoryBase<FitnessDbContext>, IWork
             .Include(w => w.WorkoutState)
             .FirstOrDefaultAsync(w => w.Id == id);
 
-        if (template == null || template.IsEmpty)
+        var result = (template == null || template.IsEmpty) switch
         {
-            return false;
-        }
-
+            true => Task.FromResult(false),
+            false => ProcessSoftDeleteAsync(template)
+        };
+        
+        return await result;
+    }
+    
+    private async Task<bool> ProcessSoftDeleteAsync(WorkoutTemplate template)
+    {
         // Set WorkoutState to ARCHIVED
         var archivedState = await Context.WorkoutStates
             .FirstOrDefaultAsync(ws => ws.Value == "ARCHIVED");
 
-        if (archivedState == null || archivedState.IsEmpty)
+        var result = (archivedState == null || archivedState.IsEmpty) switch
         {
-            return false;
-        }
-
+            true => false,
+            false => await ArchiveTemplateAsync(template, archivedState)
+        };
+        
+        return result;
+    }
+    
+    private async Task<bool> ArchiveTemplateAsync(WorkoutTemplate template, WorkoutState archivedState)
+    {
         // Since WorkoutStateId is init-only, we need to remove and re-add the entity
         Context.WorkoutTemplates.Remove(template);
         await Context.SaveChangesAsync();
@@ -355,11 +408,17 @@ public class WorkoutTemplateRepository : RepositoryBase<FitnessDbContext>, IWork
     {
         var template = await Context.WorkoutTemplates.FindAsync(id);
 
-        if (template == null)
+        var result = template switch
         {
-            return false;
-        }
-
+            null => false,
+            _ => await PerformDeleteAsync(template)
+        };
+        
+        return result;
+    }
+    
+    private async Task<bool> PerformDeleteAsync(WorkoutTemplate template)
+    {
         Context.WorkoutTemplates.Remove(template);
         await Context.SaveChangesAsync();
 
