@@ -8,9 +8,14 @@ namespace GetFitterGetBigger.API.Services.Commands.WorkoutTemplate;
 public class UpdateWorkoutTemplateCommand
 {
     /// <summary>
+    /// The ID of the workout template to update
+    /// </summary>
+    public required WorkoutTemplateId Id { get; init; }
+
+    /// <summary>
     /// The name of the workout template
     /// </summary>
-    public required string Name { get; init; }
+    public string? Name { get; init; }
 
     /// <summary>
     /// Optional description of the workout template
@@ -20,30 +25,35 @@ public class UpdateWorkoutTemplateCommand
     /// <summary>
     /// The workout category ID
     /// </summary>
-    public required WorkoutCategoryId CategoryId { get; init; }
+    public WorkoutCategoryId? CategoryId { get; init; }
 
     /// <summary>
     /// The difficulty level ID
     /// </summary>
-    public required DifficultyLevelId DifficultyId { get; init; }
+    public DifficultyLevelId? DifficultyId { get; init; }
 
     /// <summary>
     /// The estimated duration in minutes
     /// </summary>
-    public required int EstimatedDurationMinutes { get; init; }
+    public int? EstimatedDurationMinutes { get; init; }
 
     /// <summary>
     /// Optional tags for the workout template
     /// </summary>
-    public List<string> Tags { get; init; } = new();
+    public List<string>? Tags { get; init; }
 
     /// <summary>
     /// Whether the template is publicly visible
     /// </summary>
-    public bool IsPublic { get; init; } = false;
+    public bool? IsPublic { get; init; }
 
     /// <summary>
     /// The workout objectives associated with this template
     /// </summary>
-    public List<WorkoutObjectiveId> ObjectiveIds { get; init; } = new();
+    public List<WorkoutObjectiveId>? ObjectiveIds { get; init; }
+
+    /// <summary>
+    /// The ID of the user updating the template
+    /// </summary>
+    public required UserId UpdatedBy { get; init; }
 }

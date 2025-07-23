@@ -318,10 +318,12 @@ public class WorkoutTemplateServiceTests
         // Arrange
         var command = new UpdateWorkoutTemplateCommand
         {
+            Id = WorkoutTemplateId.ParseOrEmpty(TestIds.WorkoutTemplateIds.Template1),
             Name = "Updated Workout",
             Description = "Updated Description",
             CategoryId = WorkoutCategoryId.ParseOrEmpty(TestIds.WorkoutCategoryIds.Strength),
             DifficultyId = DifficultyLevelId.ParseOrEmpty(TestIds.DifficultyLevelIds.Intermediate),
+            UpdatedBy = UserId.ParseOrEmpty(TestIds.UserIds.PersonalTrainer),
             EstimatedDurationMinutes = 45,
             Tags = new List<string> { "updated" },
             IsPublic = false
@@ -353,10 +355,12 @@ public class WorkoutTemplateServiceTests
         // Arrange
         var command = new UpdateWorkoutTemplateCommand
         {
+            Id = WorkoutTemplateId.ParseOrEmpty(TestIds.WorkoutTemplateIds.Template1),
             Name = "Updated Workout",
             Description = "Updated Description",
             CategoryId = WorkoutCategoryId.ParseOrEmpty(TestIds.WorkoutCategoryIds.Strength),
             DifficultyId = DifficultyLevelId.ParseOrEmpty(TestIds.DifficultyLevelIds.Intermediate),
+            UpdatedBy = UserId.ParseOrEmpty(TestIds.UserIds.PersonalTrainer),
             EstimatedDurationMinutes = 45,
             Tags = new List<string>(),
             IsPublic = false

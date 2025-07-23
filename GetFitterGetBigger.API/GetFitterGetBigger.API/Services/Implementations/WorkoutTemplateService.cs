@@ -1004,7 +1004,7 @@ public class WorkoutTemplateService : IWorkoutTemplateService
         if (command.EstimatedDurationMinutes < 5 || command.EstimatedDurationMinutes > 300)
             errors.Add("Estimated duration must be between 5 and 300 minutes");
 
-        if (command.Tags.Count > 10)
+        if (command.Tags != null && command.Tags.Count > 10)
             errors.Add("Maximum 10 tags allowed");
 
         if (command.CreatedBy.IsEmpty)
@@ -1036,24 +1036,26 @@ public class WorkoutTemplateService : IWorkoutTemplateService
     {
         var errors = new List<string>();
 
-        if (string.IsNullOrWhiteSpace(command.Name))
-            errors.Add("Name is required");
-        else if (command.Name.Length < 3 || command.Name.Length > 100)
-            errors.Add("Name must be between 3 and 100 characters");
+        if (!string.IsNullOrWhiteSpace(command.Name))
+        {
+            if (command.Name.Length < 3 || command.Name.Length > 100)
+                errors.Add("Name must be between 3 and 100 characters");
+        }
 
         if (!string.IsNullOrEmpty(command.Description) && command.Description.Length > 1000)
             errors.Add("Description cannot exceed 1000 characters");
 
-        if (command.CategoryId.IsEmpty)
-            errors.Add("Category is required");
+        if (command.CategoryId != null && command.CategoryId.Value.IsEmpty)
+            errors.Add("Category ID cannot be empty");
 
-        if (command.DifficultyId.IsEmpty)
-            errors.Add("Difficulty level is required");
+        if (command.DifficultyId != null && command.DifficultyId.Value.IsEmpty)
+            errors.Add("Difficulty level ID cannot be empty");
 
-        if (command.EstimatedDurationMinutes < 5 || command.EstimatedDurationMinutes > 300)
+        if (command.EstimatedDurationMinutes.HasValue && 
+            (command.EstimatedDurationMinutes < 5 || command.EstimatedDurationMinutes > 300))
             errors.Add("Estimated duration must be between 5 and 300 minutes");
 
-        if (command.Tags.Count > 10)
+        if (command.Tags != null && command.Tags.Count > 10)
             errors.Add("Maximum 10 tags allowed");
 
         // TODO: Validate that CategoryId, DifficultyId, and ObjectiveIds exist in the database
