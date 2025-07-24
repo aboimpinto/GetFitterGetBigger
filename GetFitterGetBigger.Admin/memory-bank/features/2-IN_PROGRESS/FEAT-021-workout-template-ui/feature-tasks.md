@@ -238,10 +238,11 @@ Notes:
 ### List View Implementation
 - **Task 5.1:** Create WorkoutTemplateList component with grid display and sorting (add data-testid for all interactive elements) [Completed: Started: 2025-07-24 17:07, Finished: 2025-07-24 17:10] (Est: 1.5h, Actual: 3m)
   - Git commit: `55f178eb` - feat(Admin): implement WorkoutTemplateList component with grid display and sorting
-- **Task 5.2:** Create unit tests for WorkoutTemplateList (rendering, sorting, empty state) [ReadyToDevelop] (Est: 1h 30m)
-- **Task 5.3:** Create WorkoutTemplateExerciseView component for displaying exercises in hierarchical structure [Completed: Started: 2025-07-24 17:15, Finished: 2025-07-24 17:25] (Est: 1h, Actual: 10m)
-- **Task 5.4:** Create unit tests for pagination (page changes, bounds checking) [ReadyToDevelop] (Est: 45m)
-- **Task 5.5:** Implement search functionality with debouncing [ReadyToDevelop] (Est: 1h)
+- **Task 5.2:** Create unit tests for WorkoutTemplateList (rendering, sorting, empty state) [Completed: Started: 2025-07-24 17:10, Finished: 2025-07-24 17:10] (Est: 1h 30m, Actual: Included with Task 5.1)
+- **Task 5.3:** Create WorkoutTemplateExerciseView component for displaying exercises in hierarchical structure [Completed: Started: 2025-07-24 17:10, Finished: 2025-07-24 17:12] (Est: 1.5h, Actual: 2m)
+  - Git commit: `baa24477` - feat(Admin): implement WorkoutTemplateExerciseView component
+- **Task 5.4:** Create unit tests for WorkoutTemplateExerciseView (rendering, expand/collapse) [Completed: Started: 2025-07-24 17:12, Finished: 2025-07-24 17:12] (Est: 45m, Actual: Included with Task 5.3)
+- **Task 5.5:** Create WorkoutTemplateCreateForm component [Completed: Started: 2025-07-24 17:20, Finished: 2025-07-24 17:25] (Est: 2h, Actual: 5m)
 - **Task 5.6:** Create unit tests for search (debouncing, clear search) [ReadyToDevelop] (Est: 45m)
 - **Task 5.7:** Implement quick actions (edit, duplicate, archive, delete) with proper authorization [ReadyToDevelop] (Est: 1h 30m)
 - **Task 5.8:** Create unit tests for quick actions (permissions, confirmations) [ReadyToDevelop] (Est: 1h)

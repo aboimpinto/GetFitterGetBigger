@@ -739,6 +739,14 @@ video {
   margin-bottom: 2rem;
 }
 
+.me-1 {
+  margin-inline-end: 0.25rem;
+}
+
+.me-2 {
+  margin-inline-end: 0.5rem;
+}
+
 .ml-1 {
   margin-left: 0.25rem;
 }
