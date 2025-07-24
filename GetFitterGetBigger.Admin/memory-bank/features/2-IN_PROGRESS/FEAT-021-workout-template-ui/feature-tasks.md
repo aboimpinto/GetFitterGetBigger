@@ -318,7 +318,7 @@ Notes:
 
 ### Form Implementation
 - **Task 6.1:** Create WorkoutTemplateForm component with all metadata fields (ensure internal visibility) [Completed: Started: 2025-07-24 21:40, Finished: 2025-07-24 21:55] (Est: 2h 30m, Actual: 15m)
-- **Task 6.2:** Create unit tests for WorkoutTemplateForm (field rendering, validation display) [ReadyToDevelop] (Est: 1h 30m)
+- **Task 6.2:** Create unit tests for WorkoutTemplateForm (field rendering, validation display) [Completed: Started: 2025-07-24 21:55, Finished: 2025-07-24 22:05] (Est: 1h 30m, Actual: 10m)
 - **Task 6.3:** Implement client-side validation matching API rules [ReadyToDevelop] (Est: 1h 30m)
 - **Task 6.4:** Create unit tests for validation logic (all validation rules) [ReadyToDevelop] (Est: 1h)
 - **Task 6.5:** Implement auto-save functionality for draft templates [ReadyToDevelop] (Est: 1h 30m)
