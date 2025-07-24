@@ -236,7 +236,7 @@ Notes:
 ## Phase 5: Feature Components - List View - Estimated: 10h
 
 ### List View Implementation
-- **Task 5.1:** Create WorkoutTemplateList component with grid display and sorting (add data-testid for all interactive elements) [ReadyToDevelop] (Est: 2h)
+- **Task 5.1:** Create WorkoutTemplateList component with grid display and sorting (add data-testid for all interactive elements) [InProgress: Started: 2025-07-24 17:07] (Est: 1.5h)
 - **Task 5.2:** Create unit tests for WorkoutTemplateList (rendering, sorting, empty state) [ReadyToDevelop] (Est: 1h 30m)
 - **Task 5.3:** Implement pagination controls in WorkoutTemplateList [ReadyToDevelop] (Est: 1h)
 - **Task 5.4:** Create unit tests for pagination (page changes, bounds checking) [ReadyToDevelop] (Est: 45m)
