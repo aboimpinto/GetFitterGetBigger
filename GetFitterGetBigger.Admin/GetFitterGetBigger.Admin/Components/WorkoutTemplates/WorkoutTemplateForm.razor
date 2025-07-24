@@ -227,3 +227,57 @@
         }
     }
 }</style>
+
+@* Unsaved Changes Dialog *@
+@if (ShowUnsavedChangesDialog)
+{
+    <div class="modal fade show d-block" tabindex="-1" role="dialog" style="background-color: rgba(0,0,0,0.5);" data-testid="unsaved-changes-dialog">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Unsaved Changes</h5>
+                </div>
+                <div class="modal-body">
+                    <p>You have unsaved changes. What would you like to do?</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" @onclick="CancelNavigation" data-testid="stay-button">
+                        Stay on Page
+                    </button>
+                    <button type="button" class="btn btn-warning" @onclick="ConfirmNavigation" data-testid="discard-button">
+                        Discard Changes
+                    </button>
+                    <button type="button" class="btn btn-primary" @onclick="SaveAndNavigate" 
+                            disabled="@(!IsFormValid() || IsSubmitting)" data-testid="save-navigate-button">
+                        Save & Continue
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@* Recovery Dialog *@
+@if (ShowRecoveryDialog)
+{
+    <div class="modal fade show d-block" tabindex="-1" role="dialog" style="background-color: rgba(0,0,0,0.5);" data-testid="recovery-dialog">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Recover Unsaved Work?</h5>
+                </div>
+                <div class="modal-body">
+                    <p>We found unsaved changes from a previous session. Would you like to recover them?</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" @onclick="DiscardRecoveryData" data-testid="discard-recovery-button">
+                        Discard
+                    </button>
+                    <button type="button" class="btn btn-primary" @onclick="RecoverFormData" data-testid="recover-button">
+                        Recover
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+}

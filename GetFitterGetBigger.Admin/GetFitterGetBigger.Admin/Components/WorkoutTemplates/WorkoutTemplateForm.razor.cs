@@ -1,6 +1,8 @@
 using GetFitterGetBigger.Admin.Models.Dtos;
 using GetFitterGetBigger.Admin.Services;
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Routing;
+using Microsoft.JSInterop;
 using System.ComponentModel.DataAnnotations;
 
 namespace GetFitterGetBigger.Admin.Components.WorkoutTemplates;
@@ -19,6 +21,8 @@ public partial class WorkoutTemplateForm : ComponentBase, IDisposable
     
     [Inject] private IWorkoutTemplateService WorkoutTemplateService { get; set; } = default!;
     [Inject] private IWorkoutTemplateStateService WorkoutTemplateStateService { get; set; } = default!;
+    [Inject] private NavigationManager NavigationManager { get; set; } = default!;
+    [Inject] private IJSRuntime JSRuntime { get; set; } = default!;
     
     // Reference data
     internal List<ReferenceDataDto> Categories = new();
@@ -44,6 +48,13 @@ public partial class WorkoutTemplateForm : ComponentBase, IDisposable
     private string? lastValidatedName;
     private CancellationTokenSource? nameValidationCts;
     
+    // Unsaved changes handling
+    private const string LocalStorageKey = "workoutTemplateFormData";
+    internal bool ShowUnsavedChangesDialog = false;
+    internal bool ShowRecoveryDialog = false;
+    internal string? pendingNavigationUrl;
+    private IDisposable? navigationRegistration;
+    
     protected override async Task OnInitializedAsync()
     {
         await LoadReferenceData();
@@ -53,6 +64,12 @@ public partial class WorkoutTemplateForm : ComponentBase, IDisposable
         {
             StartAutoSaveTimer();
         }
+        
+        // Register for navigation events
+        navigationRegistration = NavigationManager.RegisterLocationChangingHandler(OnLocationChanging);
+        
+        // Check for recovery data
+        await CheckForRecoveryData();
     }
     
     protected override async Task OnParametersSetAsync()
@@ -162,7 +179,7 @@ public partial class WorkoutTemplateForm : ComponentBase, IDisposable
         return true;
     }
     
-    private async Task HandleValidSubmit()
+    internal async Task HandleValidSubmit()
     {
         try
         {
@@ -173,6 +190,10 @@ public partial class WorkoutTemplateForm : ComponentBase, IDisposable
             ProcessTags();
             
             await OnValidSubmit.InvokeAsync(Model);
+            
+            // Clear dirty flag and recovery data on successful save
+            isDirty = false;
+            await ClearRecoveryData();
         }
         catch (Exception ex)
         {
@@ -199,6 +220,8 @@ public partial class WorkoutTemplateForm : ComponentBase, IDisposable
     private async Task HandleCancel()
     {
         StopAutoSaveTimer();
+        isDirty = false;
+        await ClearRecoveryData();
         await OnCancel.InvokeAsync();
     }
     
@@ -310,11 +333,149 @@ public partial class WorkoutTemplateForm : ComponentBase, IDisposable
             return $"{(int)timeAgo.TotalHours} hour{((int)timeAgo.TotalHours == 1 ? "" : "s")} ago";
     }
     
+    // Unsaved changes handling
+    internal async ValueTask OnLocationChanging(LocationChangingContext context)
+    {
+        if (!isDirty || IsAutoSaving || IsSubmitting)
+        {
+            return;
+        }
+        
+        // Store the navigation URL and prevent navigation
+        pendingNavigationUrl = context.TargetLocation;
+        context.PreventNavigation();
+        
+        // Save form data to local storage for recovery
+        await SaveFormDataToLocalStorage();
+        
+        // Show unsaved changes dialog
+        ShowUnsavedChangesDialog = true;
+        await InvokeAsync(StateHasChanged);
+    }
+    
+    internal async Task CheckForRecoveryData()
+    {
+        try
+        {
+            var savedData = await JSRuntime.InvokeAsync<string?>("localStorage.getItem", LocalStorageKey);
+            if (!string.IsNullOrEmpty(savedData))
+            {
+                ShowRecoveryDialog = true;
+                StateHasChanged();
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"Error checking for recovery data: {ex.Message}");
+        }
+    }
+    
+    internal async Task SaveFormDataToLocalStorage()
+    {
+        try
+        {
+            var formData = System.Text.Json.JsonSerializer.Serialize(Model);
+            await JSRuntime.InvokeVoidAsync("localStorage.setItem", LocalStorageKey, formData);
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"Error saving form data: {ex.Message}");
+        }
+    }
+    
+    internal async Task RecoverFormData()
+    {
+        try
+        {
+            var savedData = await JSRuntime.InvokeAsync<string?>("localStorage.getItem", LocalStorageKey);
+            if (!string.IsNullOrEmpty(savedData))
+            {
+                var recoveredModel = System.Text.Json.JsonSerializer.Deserialize<WorkoutTemplateFormModel>(savedData);
+                if (recoveredModel != null)
+                {
+                    Model = recoveredModel;
+                    InitializeFormState();
+                    MarkAsDirty();
+                    
+                    // Clear recovery data
+                    await ClearRecoveryData();
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"Error recovering form data: {ex.Message}");
+        }
+        finally
+        {
+            ShowRecoveryDialog = false;
+            StateHasChanged();
+        }
+    }
+    
+    internal async Task DiscardRecoveryData()
+    {
+        await ClearRecoveryData();
+        ShowRecoveryDialog = false;
+        StateHasChanged();
+    }
+    
+    private async Task ClearRecoveryData()
+    {
+        try
+        {
+            await JSRuntime.InvokeVoidAsync("localStorage.removeItem", LocalStorageKey);
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"Error clearing recovery data: {ex.Message}");
+        }
+    }
+    
+    internal async Task ConfirmNavigation()
+    {
+        ShowUnsavedChangesDialog = false;
+        isDirty = false;
+        
+        // Clear recovery data
+        await ClearRecoveryData();
+        
+        if (!string.IsNullOrEmpty(pendingNavigationUrl))
+        {
+            NavigationManager.NavigateTo(pendingNavigationUrl);
+        }
+    }
+    
+    internal void CancelNavigation()
+    {
+        ShowUnsavedChangesDialog = false;
+        pendingNavigationUrl = null;
+        StateHasChanged();
+    }
+    
+    internal async Task SaveAndNavigate()
+    {
+        ShowUnsavedChangesDialog = false;
+        
+        // Try to save the form
+        await HandleValidSubmit();
+        
+        // Clear recovery data
+        await ClearRecoveryData();
+        
+        // Navigate after save
+        if (!string.IsNullOrEmpty(pendingNavigationUrl))
+        {
+            NavigationManager.NavigateTo(pendingNavigationUrl);
+        }
+    }
+    
     public void Dispose()
     {
         StopAutoSaveTimer();
         nameValidationCts?.Cancel();
         nameValidationCts?.Dispose();
+        navigationRegistration?.Dispose();
     }
     
     // Form Model for data binding

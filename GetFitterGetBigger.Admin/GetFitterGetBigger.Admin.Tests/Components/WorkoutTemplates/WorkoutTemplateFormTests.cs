@@ -6,7 +6,10 @@ using GetFitterGetBigger.Admin.Models.Dtos;
 using GetFitterGetBigger.Admin.Services;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
+using Microsoft.AspNetCore.Components.Routing;
+using Microsoft.AspNetCore.Components.Web;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.JSInterop;
 using Moq;
 using System.ComponentModel.DataAnnotations;
 using ValidationResult = System.ComponentModel.DataAnnotations.ValidationResult;
@@ -1227,4 +1230,304 @@ public class WorkoutTemplateFormTests : TestContext
         // Assert - Should dispose without errors
         // The cancellation token should be properly disposed
     }
+    
+    #region Unsaved Changes Tests
+    
+    [Fact]
+    public async Task Should_ShowRecoveryDialog_WhenRecoveryDataExists()
+    {
+        // Arrange
+        var jsRuntime = new Mock<IJSRuntime>();
+        jsRuntime.Setup(x => x.InvokeAsync<string?>("localStorage.getItem", 
+            It.Is<object[]>(args => args[0].ToString() == "workoutTemplateFormData")))
+            .ReturnsAsync("{\"Name\":\"Recovered Template\",\"CategoryId\":\"cat1\"}");
+        
+        Services.AddSingleton(jsRuntime.Object);
+        
+        // Act
+        var cut = RenderComponent<WorkoutTemplateForm>();
+        await cut.InvokeAsync(() => cut.Instance.CheckForRecoveryData());
+        
+        // Assert
+        cut.Instance.ShowRecoveryDialog.Should().BeTrue();
+        cut.Find("[data-testid='recovery-dialog']").Should().NotBeNull();
+    }
+    
+    [Fact]
+    public async Task Should_RecoverFormData_WhenRecoverClicked()
+    {
+        // Arrange
+        var jsRuntime = new Mock<IJSRuntime>();
+        var recoveredData = "{\"Name\":\"Recovered Template\",\"CategoryId\":\"cat1\",\"DifficultyId\":\"diff1\",\"EstimatedDurationMinutes\":45}";
+        jsRuntime.Setup(x => x.InvokeAsync<string?>("localStorage.getItem", 
+            It.Is<object[]>(args => args[0].ToString() == "workoutTemplateFormData")))
+            .ReturnsAsync(recoveredData);
+        
+        Services.AddSingleton(jsRuntime.Object);
+        
+        var cut = RenderComponent<WorkoutTemplateForm>();
+        cut.Instance.ShowRecoveryDialog = true;
+        cut.Render();
+        
+        // Act
+        await cut.Find("[data-testid='recover-button']").ClickAsync(new MouseEventArgs());
+        
+        // Assert
+        cut.Instance.Model.Name.Should().Be("Recovered Template");
+        cut.Instance.Model.CategoryId.Should().Be("cat1");
+        cut.Instance.Model.DifficultyId.Should().Be("diff1");
+        cut.Instance.Model.EstimatedDurationMinutes.Should().Be(45);
+        cut.Instance.ShowRecoveryDialog.Should().BeFalse();
+        cut.Instance.isDirty.Should().BeTrue();
+        
+        // Verify recovery data was cleared
+        jsRuntime.Verify(x => x.InvokeVoidAsync("localStorage.removeItem", 
+            It.Is<object[]>(args => args[0].ToString() == "workoutTemplateFormData")), Times.Once);
+    }
+    
+    [Fact]
+    public async Task Should_DiscardRecoveryData_WhenDiscardClicked()
+    {
+        // Arrange
+        var jsRuntime = new Mock<IJSRuntime>();
+        jsRuntime.Setup(x => x.InvokeAsync<string?>("localStorage.getItem", 
+            It.Is<object[]>(args => args[0].ToString() == "workoutTemplateFormData")))
+            .ReturnsAsync("{\"Name\":\"Recovered Template\"}");
+        
+        Services.AddSingleton(jsRuntime.Object);
+        
+        var cut = RenderComponent<WorkoutTemplateForm>();
+        cut.Instance.ShowRecoveryDialog = true;
+        cut.Render();
+        
+        // Act
+        await cut.Find("[data-testid='discard-recovery-button']").ClickAsync(new MouseEventArgs());
+        
+        // Assert
+        cut.Instance.ShowRecoveryDialog.Should().BeFalse();
+        cut.Instance.Model.Name.Should().Be(""); // Not recovered
+        
+        // Verify recovery data was cleared
+        jsRuntime.Verify(x => x.InvokeVoidAsync("localStorage.removeItem", 
+            It.Is<object[]>(args => args[0].ToString() == "workoutTemplateFormData")), Times.Once);
+    }
+    
+    [Fact]
+    public void Should_ShowUnsavedChangesDialog_WhenNavigatingWithDirtyForm()
+    {
+        // Arrange
+        var navigationManager = Services.GetRequiredService<NavigationManager>();
+        var cut = RenderComponent<WorkoutTemplateForm>();
+        
+        // Make form dirty
+        cut.Instance.MarkAsDirty();
+        
+        // Act - Simulate showing dialog
+        cut.Instance.ShowUnsavedChangesDialog = true;
+        cut.Instance.pendingNavigationUrl = "/other-page";
+        cut.Render();
+        
+        // Assert
+        cut.Instance.ShowUnsavedChangesDialog.Should().BeTrue();
+        cut.Find("[data-testid='unsaved-changes-dialog']").Should().NotBeNull();
+    }
+    
+    [Fact]
+    public void Should_NotShowUnsavedChangesDialog_WhenFormNotDirty()
+    {
+        // Arrange
+        var cut = RenderComponent<WorkoutTemplateForm>();
+        
+        // Act - Form is not dirty, so no dialog should appear
+        cut.Render();
+        
+        // Assert
+        cut.Instance.ShowUnsavedChangesDialog.Should().BeFalse();
+        cut.FindAll("[data-testid='unsaved-changes-dialog']").Should().BeEmpty();
+    }
+    
+    [Fact]
+    public async Task Should_NavigateAway_WhenDiscardChangesClicked()
+    {
+        // Arrange
+        var navigationManager = Services.GetRequiredService<NavigationManager>();
+        var jsRuntime = new Mock<IJSRuntime>();
+        Services.AddSingleton(jsRuntime.Object);
+        
+        var cut = RenderComponent<WorkoutTemplateForm>();
+        cut.Instance.ShowUnsavedChangesDialog = true;
+        cut.Instance.pendingNavigationUrl = "/other-page";
+        cut.Render();
+        
+        // Act
+        await cut.Find("[data-testid='discard-button']").ClickAsync(new MouseEventArgs());
+        
+        // Assert
+        cut.Instance.ShowUnsavedChangesDialog.Should().BeFalse();
+        cut.Instance.isDirty.Should().BeFalse();
+        navigationManager.Uri.Should().EndWith("/other-page");
+        
+        // Verify recovery data was cleared
+        jsRuntime.Verify(x => x.InvokeVoidAsync("localStorage.removeItem", 
+            It.Is<object[]>(args => args[0].ToString() == "workoutTemplateFormData")), Times.Once);
+    }
+    
+    [Fact]
+    public async Task Should_StayOnPage_WhenCancelNavigationClicked()
+    {
+        // Arrange
+        var navigationManager = Services.GetRequiredService<NavigationManager>();
+        var originalUri = navigationManager.Uri;
+        
+        var cut = RenderComponent<WorkoutTemplateForm>();
+        cut.Instance.ShowUnsavedChangesDialog = true;
+        cut.Instance.pendingNavigationUrl = "/other-page";
+        cut.Render();
+        
+        // Act
+        await cut.Find("[data-testid='stay-button']").ClickAsync(new MouseEventArgs());
+        
+        // Assert
+        cut.Instance.ShowUnsavedChangesDialog.Should().BeFalse();
+        cut.Instance.isDirty.Should().BeTrue(); // Still dirty
+        navigationManager.Uri.Should().Be(originalUri); // Didn't navigate
+    }
+    
+    [Fact]
+    public async Task Should_SaveAndNavigate_WhenSaveAndContinueClicked()
+    {
+        // Arrange
+        var navigationManager = Services.GetRequiredService<NavigationManager>();
+        var jsRuntime = new Mock<IJSRuntime>();
+        Services.AddSingleton(jsRuntime.Object);
+        
+        var submitInvoked = false;
+        var cut = RenderComponent<WorkoutTemplateForm>(parameters => parameters
+            .Add(p => p.OnValidSubmit, EventCallback.Factory.Create<WorkoutTemplateFormModel>(this, (model) => 
+            {
+                submitInvoked = true;
+            })));
+        
+        // Setup valid form
+        cut.Instance.Model.Name = "Test Template";
+        cut.Instance.Model.CategoryId = "cat1";
+        cut.Instance.Model.DifficultyId = "diff1";
+        cut.Instance.Model.EstimatedDurationMinutes = 30;
+        
+        cut.Instance.ShowUnsavedChangesDialog = true;
+        cut.Instance.pendingNavigationUrl = "/other-page";
+        cut.Render();
+        
+        // Act
+        await cut.Find("[data-testid='save-navigate-button']").ClickAsync(new MouseEventArgs());
+        
+        // Assert
+        submitInvoked.Should().BeTrue();
+        cut.Instance.ShowUnsavedChangesDialog.Should().BeFalse();
+        navigationManager.Uri.Should().EndWith("/other-page");
+        
+        // Verify recovery data was cleared
+        jsRuntime.Verify(x => x.InvokeVoidAsync("localStorage.removeItem", 
+            It.Is<object[]>(args => args[0].ToString() == "workoutTemplateFormData")), Times.Once);
+    }
+    
+    [Fact]
+    public void Should_DisableSaveAndNavigate_WhenFormInvalid()
+    {
+        // Arrange
+        var cut = RenderComponent<WorkoutTemplateForm>();
+        
+        // Make form invalid (missing required fields)
+        cut.Instance.Model.Name = "";
+        cut.Instance.ShowUnsavedChangesDialog = true;
+        cut.Render();
+        
+        // Assert
+        var saveButton = cut.Find("[data-testid='save-navigate-button']");
+        saveButton.GetAttribute("disabled").Should().NotBeNull();
+    }
+    
+    [Fact]
+    public async Task Should_SaveFormDataToLocalStorage_OnNavigation()
+    {
+        // Arrange
+        var jsRuntime = new Mock<IJSRuntime>();
+        Services.AddSingleton(jsRuntime.Object);
+        
+        var cut = RenderComponent<WorkoutTemplateForm>();
+        cut.Instance.Model.Name = "Test Template";
+        cut.Instance.Model.CategoryId = "cat1";
+        cut.Instance.MarkAsDirty();
+        
+        // Act - Save form data to local storage
+        await cut.Instance.SaveFormDataToLocalStorage();
+        
+        // Assert
+        jsRuntime.Verify(x => x.InvokeVoidAsync("localStorage.setItem", 
+            It.Is<object[]>(args => 
+                args[0].ToString() == "workoutTemplateFormData" && 
+                args[1].ToString()!.Contains("Test Template"))), Times.Once);
+    }
+    
+    [Fact]
+    public async Task Should_ClearDirtyFlag_OnSuccessfulSave()
+    {
+        // Arrange
+        var jsRuntime = new Mock<IJSRuntime>();
+        Services.AddSingleton(jsRuntime.Object);
+        
+        var cut = RenderComponent<WorkoutTemplateForm>(parameters => parameters
+            .Add(p => p.OnValidSubmit, EventCallback.Factory.Create<WorkoutTemplateFormModel>(this, (model) => { })));
+        
+        cut.Instance.MarkAsDirty();
+        cut.Instance.isDirty.Should().BeTrue();
+        
+        // Setup valid form
+        cut.Instance.Model.Name = "Test";
+        cut.Instance.Model.CategoryId = "cat1";
+        cut.Instance.Model.DifficultyId = "diff1";
+        cut.Instance.Model.EstimatedDurationMinutes = 30;
+        
+        // Act
+        await cut.Instance.HandleValidSubmit();
+        
+        // Assert
+        cut.Instance.isDirty.Should().BeFalse();
+        
+        // Verify recovery data was cleared
+        jsRuntime.Verify(x => x.InvokeVoidAsync("localStorage.removeItem", 
+            It.Is<object[]>(args => args[0].ToString() == "workoutTemplateFormData")), Times.Once);
+    }
+    
+    [Fact]
+    public void Should_NotShowUnsavedChangesDialog_WhenAutoSaving()
+    {
+        // Arrange
+        var cut = RenderComponent<WorkoutTemplateForm>();
+        cut.Instance.MarkAsDirty();
+        cut.Instance.IsAutoSaving = true;
+        
+        // Act - When auto-saving, navigation should not be blocked
+        cut.Render();
+        
+        // Assert
+        cut.Instance.ShowUnsavedChangesDialog.Should().BeFalse();
+    }
+    
+    [Fact]
+    public void Should_NotShowUnsavedChangesDialog_WhenSubmitting()
+    {
+        // Arrange
+        var cut = RenderComponent<WorkoutTemplateForm>();
+        cut.Instance.MarkAsDirty();
+        cut.Instance.IsSubmitting = true;
+        
+        // Act - When submitting, navigation should not be blocked
+        cut.Render();
+        
+        // Assert
+        cut.Instance.ShowUnsavedChangesDialog.Should().BeFalse();
+    }
+    
+    #endregion
 }
