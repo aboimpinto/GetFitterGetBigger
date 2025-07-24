@@ -1,0 +1,277 @@
+@using GetFitterGetBigger.Admin.Models.Dtos
+@using GetFitterGetBigger.Admin.Services
+
+@if (Template == null)
+{
+    <div class="p-8 text-center text-gray-500" data-testid="no-template">
+        <p>No workout template to display.</p>
+    </div>
+}
+else
+{
+    <div class="bg-white shadow-sm rounded-lg" data-testid="workout-template-detail">
+        @* Header Section *@
+        <div class="px-6 py-4 border-b border-gray-200">
+            <div class="flex items-start justify-between">
+                <div class="flex-1">
+                    <h1 class="text-2xl font-bold text-gray-900" data-testid="template-name">
+                        @Template.Name
+                    </h1>
+                    @if (!string.IsNullOrWhiteSpace(Template.Description))
+                    {
+                        <p class="mt-2 text-gray-600" data-testid="template-description">
+                            @Template.Description
+                        </p>
+                    }
+                </div>
+                <div class="ml-4">
+                    <WorkoutStateIndicator WorkoutState="@Template.WorkoutState" Size="WorkoutStateIndicator.IndicatorSize.Large" />
+                </div>
+            </div>
+        </div>
+
+        @* Metadata Section *@
+        <div class="px-6 py-4 border-b border-gray-200">
+            <h2 class="text-lg font-semibold text-gray-900 mb-4">Details</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                @* Category *@
+                <div data-testid="detail-category">
+                    <span class="text-sm font-medium text-gray-500">Category</span>
+                    <p class="mt-1 text-sm text-gray-900">@(Template.Category?.Value ?? "Not specified")</p>
+                </div>
+
+                @* Difficulty *@
+                <div data-testid="detail-difficulty">
+                    <span class="text-sm font-medium text-gray-500">Difficulty</span>
+                    <p class="mt-1 text-sm text-gray-900">@(Template.Difficulty?.Value ?? "Not specified")</p>
+                </div>
+
+                @* Duration *@
+                <div data-testid="detail-duration">
+                    <span class="text-sm font-medium text-gray-500">Estimated Duration</span>
+                    <p class="mt-1 text-sm text-gray-900">@FormatDuration(Template.EstimatedDurationMinutes)</p>
+                </div>
+
+                @* Visibility *@
+                <div data-testid="detail-visibility">
+                    <span class="text-sm font-medium text-gray-500">Visibility</span>
+                    <p class="mt-1 text-sm text-gray-900">
+                        @if (Template.IsPublic)
+                        {
+                            <span class="text-green-600">🌍 Public</span>
+                        }
+                        else
+                        {
+                            <span class="text-gray-600">🔒 Private</span>
+                        }
+                    </p>
+                </div>
+
+                @* Created Date *@
+                <div data-testid="detail-created">
+                    <span class="text-sm font-medium text-gray-500">Created</span>
+                    <p class="mt-1 text-sm text-gray-900">@Template.CreatedAt.ToString("MMMM d, yyyy 'at' h:mm tt")</p>
+                </div>
+
+                @* Updated Date *@
+                <div data-testid="detail-updated">
+                    <span class="text-sm font-medium text-gray-500">Last Updated</span>
+                    <p class="mt-1 text-sm text-gray-900">@Template.UpdatedAt.ToString("MMMM d, yyyy 'at' h:mm tt")</p>
+                </div>
+            </div>
+        </div>
+
+        @* Tags Section *@
+        @if (Template.Tags?.Any() == true)
+        {
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h2 class="text-lg font-semibold text-gray-900 mb-4">Tags</h2>
+                <div class="flex flex-wrap gap-2" data-testid="detail-tags">
+                    @foreach (var tag in Template.Tags)
+                    {
+                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-800">
+                            @tag
+                        </span>
+                    }
+                </div>
+            </div>
+        }
+
+        @* Objectives Section *@
+        @if (Template.Objectives?.Any() == true)
+        {
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h2 class="text-lg font-semibold text-gray-900 mb-4">Training Objectives</h2>
+                <div class="flex flex-wrap gap-3" data-testid="detail-objectives">
+                    @foreach (var objective in Template.Objectives)
+                    {
+                        <div class="inline-flex items-center px-4 py-2 rounded-md bg-blue-50 text-blue-700 border border-blue-200">
+                            <span class="text-sm font-medium">@objective.Value</span>
+                            @if (!string.IsNullOrWhiteSpace(objective.Description))
+                            {
+                                <span class="ml-2 text-sm text-blue-600" title="@objective.Description">ⓘ</span>
+                            }
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+
+
+        @* Exercises Section *@
+        <div class="px-6 py-4 border-b border-gray-200">
+            <h2 class="text-lg font-semibold text-gray-900 mb-4">Exercises (@Template.Exercises.Count)</h2>
+            @if (Template.Exercises.Any())
+            {
+                <div data-testid="detail-exercises">
+                    <WorkoutTemplateExerciseView Exercises="@Template.Exercises" ExpandAllByDefault="true" />
+                </div>
+            }
+            else
+            {
+                <p class="text-gray-500 text-sm" data-testid="no-exercises">No exercises added to this template yet.</p>
+            }
+        </div>
+
+        @* Equipment Section (Placeholder) *@
+        <div class="px-6 py-4 border-b border-gray-200">
+            <h2 class="text-lg font-semibold text-gray-900 mb-4">Required Equipment</h2>
+            <div class="bg-gray-50 rounded-md p-4" data-testid="equipment-placeholder">
+                <p class="text-gray-600 text-sm">
+                    <span class="font-medium">🚧 Coming Soon:</span> Equipment information will be displayed here once the feature is available.
+                </p>
+            </div>
+        </div>
+
+        @* Action Buttons Section *@
+        @if (ShowActions)
+        {
+            <div class="px-6 py-4 bg-gray-50">
+                <div class="flex flex-wrap gap-3 justify-end">
+                    @* Edit Button - Only for DRAFT state *@
+                    @if (OnEdit.HasDelegate && CanEdit())
+                    {
+                        <button @onclick="HandleEdit"
+                                data-testid="action-edit"
+                                class="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                            <span class="mr-2">✏️</span> Edit Template
+                        </button>
+                    }
+
+                    @* Duplicate Button *@
+                    @if (OnDuplicate.HasDelegate)
+                    {
+                        <button @onclick="HandleDuplicate"
+                                data-testid="action-duplicate"
+                                class="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                            <span class="mr-2">📋</span> Duplicate Template
+                        </button>
+                    }
+
+                    @* State Transition Buttons *@
+                    @if (OnStateChange.HasDelegate)
+                    {
+                        @if (Template.WorkoutState?.Value?.ToUpperInvariant() == "DRAFT")
+                        {
+                            <StateTransitionButton 
+                                WorkoutTemplate="@Template"
+                                TargetState="@(new ReferenceDataDto { Id = "state-production", Value = "PRODUCTION", Description = "Production state" })"
+                                ButtonText="Publish to Production"
+                                Size="StateTransitionButton.ButtonSize.Medium"
+                                Variant="StateTransitionButton.ButtonVariant.Primary"
+                                OnStateChanged="HandleStateChange" />
+                        }
+                        else if (Template.WorkoutState?.Value?.ToUpperInvariant() == "PRODUCTION")
+                        {
+                            <StateTransitionButton 
+                                WorkoutTemplate="@Template"
+                                TargetState="@(new ReferenceDataDto { Id = "state-archived", Value = "ARCHIVED", Description = "Archived state" })"
+                                ButtonText="Archive Template"
+                                Size="StateTransitionButton.ButtonSize.Medium"
+                                Variant="StateTransitionButton.ButtonVariant.Secondary"
+                                OnStateChanged="HandleStateChange" />
+                        }
+                    }
+
+                    @* Delete Button - Only for DRAFT or ARCHIVED state *@
+                    @if (OnDelete.HasDelegate && CanDelete())
+                    {
+                        <button @onclick="HandleDelete"
+                                data-testid="action-delete"
+                                class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-red-600 border border-transparent rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
+                            <span class="mr-2">🗑️</span> Delete Template
+                        </button>
+                    }
+                </div>
+            </div>
+        }
+    </div>
+}
+
+@code {
+    [Parameter, EditorRequired] public WorkoutTemplateDto? Template { get; set; }
+    [Parameter] public bool ShowActions { get; set; } = true;
+    [Parameter] public EventCallback<WorkoutTemplateDto> OnEdit { get; set; }
+    [Parameter] public EventCallback<WorkoutTemplateDto> OnDuplicate { get; set; }
+    [Parameter] public EventCallback<WorkoutTemplateDto> OnDelete { get; set; }
+    [Parameter] public EventCallback<ReferenceDataDto> OnStateChange { get; set; }
+
+    internal bool CanEdit()
+    {
+        // Can only edit templates in DRAFT state
+        return Template?.WorkoutState?.Value?.ToUpperInvariant() == "DRAFT";
+    }
+
+    internal bool CanDelete()
+    {
+        // Can only delete templates in DRAFT or ARCHIVED state
+        var state = Template?.WorkoutState?.Value?.ToUpperInvariant();
+        return state == "DRAFT" || state == "ARCHIVED";
+    }
+
+    internal string FormatDuration(int minutes)
+    {
+        if (minutes < 60)
+            return $"{minutes} minutes";
+        
+        var hours = minutes / 60;
+        var mins = minutes % 60;
+        
+        if (mins == 0)
+            return $"{hours} hour{(hours > 1 ? "s" : "")}";
+        
+        return $"{hours} hour{(hours > 1 ? "s" : "")} {mins} minute{(mins > 1 ? "s" : "")}";
+    }
+
+    private async Task HandleEdit()
+    {
+        if (Template != null && OnEdit.HasDelegate)
+        {
+            await OnEdit.InvokeAsync(Template);
+        }
+    }
+
+    private async Task HandleDuplicate()
+    {
+        if (Template != null && OnDuplicate.HasDelegate)
+        {
+            await OnDuplicate.InvokeAsync(Template);
+        }
+    }
+
+    private async Task HandleDelete()
+    {
+        if (Template != null && OnDelete.HasDelegate)
+        {
+            await OnDelete.InvokeAsync(Template);
+        }
+    }
+
+    private async Task HandleStateChange(ReferenceDataDto newState)
+    {
+        if (OnStateChange.HasDelegate)
+        {
+            await OnStateChange.InvokeAsync(newState);
+        }
+    }
+}

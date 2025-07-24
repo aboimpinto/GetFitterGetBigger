@@ -1,5 +1,6 @@
 using Bunit;
 using GetFitterGetBigger.Admin.Components.WorkoutTemplates;
+using GetFitterGetBigger.Admin.Components.Shared;
 using GetFitterGetBigger.Admin.Models.Dtos;
 using GetFitterGetBigger.Admin.Services;
 using Microsoft.Extensions.DependencyInjection;
@@ -54,7 +55,8 @@ namespace GetFitterGetBigger.Admin.Tests.Components.WorkoutTemplates
             var cut = RenderComponent<WorkoutTemplateList>();
 
             // Assert
-            Assert.NotNull(cut.Find("[data-testid='loading-state']"));
+            // Should render the skeleton component
+            Assert.NotNull(cut.FindComponent<WorkoutTemplateListSkeleton>());
             Assert.Throws<Bunit.ElementNotFoundException>(() => cut.Find("[data-testid='template-grid']"));
             Assert.Throws<Bunit.ElementNotFoundException>(() => cut.Find("[data-testid='empty-state']"));
         }

@@ -4,6 +4,7 @@
 @using GetFitterGetBigger.Admin.Services
 @using GetFitterGetBigger.Admin.Builders
 @using GetFitterGetBigger.Admin.Components.WorkoutTemplates
+@using GetFitterGetBigger.Admin.Components.Shared
 @using Microsoft.AspNetCore.Authorization
 @attribute [Authorize]
 @rendermode InteractiveServer
@@ -14,6 +15,9 @@
 <PageTitle>Workout Templates - GetFitterGetBigger Admin</PageTitle>
 
 <div class="container mx-auto px-4 py-8">
+    <div class="mb-4">
+        <Breadcrumb Items="@breadcrumbItems" />
+    </div>
     <div class="bg-white rounded-lg shadow-md p-6">
         @* Header *@
         <div class="flex justify-between items-center mb-6">
@@ -105,10 +109,18 @@
     private string filterCategory = "";
     private string filterDifficulty = "";
     private string filterState = "";
+    private List<Breadcrumb.BreadcrumbItem> breadcrumbItems = new();
 
     protected override async Task OnInitializedAsync()
     {
         StateService.OnChange += StateHasChanged;
+
+        // Initialize breadcrumb
+        breadcrumbItems = new List<Breadcrumb.BreadcrumbItem>
+        {
+            new() { Text = "Home", Href = "/" },
+            new() { Text = "Workout Templates" }
+        };
 
         // Initialize the state service if needed
         if (StateService.CurrentPage == null)

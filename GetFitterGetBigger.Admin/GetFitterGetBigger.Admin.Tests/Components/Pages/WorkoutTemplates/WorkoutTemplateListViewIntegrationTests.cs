@@ -2,6 +2,7 @@ using Bunit;
 using FluentAssertions;
 using GetFitterGetBigger.Admin.Components.Pages.WorkoutTemplates;
 using GetFitterGetBigger.Admin.Components.WorkoutTemplates;
+using GetFitterGetBigger.Admin.Components.Shared;
 using GetFitterGetBigger.Admin.Models.Dtos;
 using GetFitterGetBigger.Admin.Services;
 using GetFitterGetBigger.Admin.Builders;
@@ -260,12 +261,10 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.WorkoutTemplates
             
             var component = RenderComponent<GetFitterGetBigger.Admin.Components.Pages.WorkoutTemplates.WorkoutTemplates>();
             
-            // Assert - Loading skeletons displayed
-            var loadingState = component.Find("[data-testid='loading-state']");
-            loadingState.Should().NotBeNull();
-            
-            var skeletons = loadingState.QuerySelectorAll(".animate-pulse");
-            skeletons.Should().HaveCount(8);
+            // Assert - Loading skeleton component displayed
+            var workoutTemplateList = component.FindComponent<WorkoutTemplateList>();
+            var skeletonComponent = workoutTemplateList.FindComponent<WorkoutTemplateListSkeleton>();
+            skeletonComponent.Should().NotBeNull();
             
             // Act - Complete loading
             _mockStateService.IsLoading = false;

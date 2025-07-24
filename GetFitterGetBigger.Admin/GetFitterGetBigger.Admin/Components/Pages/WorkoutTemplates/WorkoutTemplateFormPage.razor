@@ -3,6 +3,7 @@
 @using GetFitterGetBigger.Admin.Models.Dtos
 @using GetFitterGetBigger.Admin.Services
 @using GetFitterGetBigger.Admin.Components.WorkoutTemplates
+@using GetFitterGetBigger.Admin.Components.Shared
 @using Microsoft.AspNetCore.Authorization
 @using static GetFitterGetBigger.Admin.Components.WorkoutTemplates.WorkoutTemplateForm
 @attribute [Authorize]
@@ -15,6 +16,11 @@
 <PageTitle>@(IsEditMode ? "Edit Workout Template" : "New Workout Template") - GetFitterGetBigger Admin</PageTitle>
 
 <div>
+    <div class="container mx-auto px-4 py-6">
+        <div class="mb-4">
+            <Breadcrumb Items="@breadcrumbItems" />
+        </div>
+    </div>
     <div class="bg-white rounded-lg shadow-md p-6 max-w-4xl mx-auto">
         <div class="mb-6">
             <h2 class="text-2xl font-semibold text-gray-800">@(IsEditMode ? "Edit Workout Template" : "Create New Workout Template")</h2>
@@ -31,9 +37,7 @@
 
         @if (IsLoading)
         {
-            <div class="flex justify-center py-8">
-                <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-            </div>
+            <WorkoutTemplateFormSkeleton />
         }
         else
         {
@@ -66,6 +70,7 @@
     private WorkoutTemplateDto? ExistingTemplate;
     private bool IsEditMode => !string.IsNullOrWhiteSpace(Id);
     private bool IsLoading = true;
+    private List<Breadcrumb.BreadcrumbItem> breadcrumbItems = new();
 
     protected override async Task OnInitializedAsync()
     {
@@ -90,6 +95,15 @@
                     return;
                 }
 
+                // Initialize breadcrumb for edit
+                breadcrumbItems = new List<Breadcrumb.BreadcrumbItem>
+                {
+                    new() { Text = "Home", Href = "/" },
+                    new() { Text = "Workout Templates", Href = "/workout-templates" },
+                    new() { Text = ExistingTemplate.Name, Href = $"/workout-templates/{ExistingTemplate.Id}" },
+                    new() { Text = "Edit" }
+                };
+
                 // Initialize form model with existing data
                 FormModel = new WorkoutTemplateFormModel
                 {
@@ -107,6 +121,14 @@
             }
             else
             {
+                // Initialize breadcrumb for new
+                breadcrumbItems = new List<Breadcrumb.BreadcrumbItem>
+                {
+                    new() { Text = "Home", Href = "/" },
+                    new() { Text = "Workout Templates", Href = "/workout-templates" },
+                    new() { Text = "New Template" }
+                };
+
                 // Initialize for new template
                 FormModel = new WorkoutTemplateFormModel
                 {
