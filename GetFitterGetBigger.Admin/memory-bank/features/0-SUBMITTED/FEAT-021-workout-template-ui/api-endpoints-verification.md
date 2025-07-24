@@ -1,4 +1,4 @@
-# API Endpoints Verification: FEAT-026 Workout Template Core
+# API Endpoints Verification: FEAT-021 Workout Template Core
 
 ## Overview
 This document provides a comprehensive comparison between the documented API endpoints specification and the actual implementation in Phase 5 of the Workout Template Core feature.

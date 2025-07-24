@@ -1,10 +1,10 @@
-# FEAT-026 Workout Template UI - Postponed Features from API Implementation
+# FEAT-021 Workout Template UI - Postponed Features from API Implementation
 
-This document captures all features that were postponed or marked as TODO during the API implementation of FEAT-026 (Workout Template Core). These items have direct implications for the UI implementation and must be considered during UI development.
+This document captures all features that were postponed or marked as TODO during the API implementation of FEAT-021 (Workout Template Core). These items have direct implications for the UI implementation and must be considered during UI development.
 
 ## Overview
 
-During the API implementation of FEAT-026, several features were intentionally postponed to maintain architectural integrity and avoid technical debt. These postponements fall into three main categories:
+During the API implementation of FEAT-021, several features were intentionally postponed to maintain architectural integrity and avoid technical debt. These postponements fall into three main categories:
 
 1. **Authentication & Authorization** - Waiting for auth infrastructure
 2. **Domain Entity Caching** - Requires architectural foundation (FEAT-027)

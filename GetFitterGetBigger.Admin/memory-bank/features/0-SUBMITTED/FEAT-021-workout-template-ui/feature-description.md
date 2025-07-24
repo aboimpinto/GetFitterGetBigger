@@ -1,7 +1,7 @@
-# FEAT-026: Workout Template UI
+# FEAT-021: Workout Template UI
 
 ## Overview
-The Workout Template UI feature provides the user interface for Personal Trainers to create, manage, and organize workout templates in the GetFitterGetBigger Admin application. This feature builds upon the API implementation (FEAT-026-workout-template-core) to deliver a comprehensive workout template management experience.
+The Workout Template UI feature provides the user interface for Personal Trainers to create, manage, and organize workout templates in the GetFitterGetBigger Admin application. This feature builds upon the API implementation (FEAT-021-workout-template-core) to deliver a comprehensive workout template management experience.
 
 ## Business Context
 Personal Trainers need an intuitive interface to leverage the workout template system, allowing them to create reusable workout blueprints, organize exercises efficiently, and manage the lifecycle of their training programs. This UI feature enables trainers to encapsulate their programming expertise into structured formats that can be assigned to multiple clients.
@@ -115,7 +115,7 @@ Personal Trainers need an intuitive interface to leverage the workout template s
 - UI state (loading, errors, success messages)
 
 ### API Integration
-- Integrate with all FEAT-026 API endpoints
+- Integrate with all FEAT-021 API endpoints
 - Implement proper error handling
 - Loading states for all async operations
 - Optimistic updates where appropriate
@@ -159,7 +159,7 @@ Personal Trainers need an intuitive interface to leverage the workout template s
 ## Postponed Features (from API Implementation)
 
 ### Caching Implementation
-- **Status**: Postponed pending FEAT-027 (Domain Entity Caching Architecture)
+- **Status**: Postponed pending FEAT-027 (Domain Entity Caching Architecture)  
 - **Impact**: UI should implement loading states and consider client-side caching strategies
 - **Note**: Once API caching is implemented, UI can optimize data fetching
 
@@ -247,7 +247,7 @@ Personal Trainers need an intuitive interface to leverage the workout template s
 - Search and filter functionality
 
 ## Notes
-- This feature depends on the completed API implementation (FEAT-026-workout-template-core)
+- This feature depends on the completed API implementation (FEAT-021-workout-template-core)
 - Should follow established patterns from other Admin features
 - Consider progressive enhancement for complex interactions
 - Prepare UI for future API enhancements without blocking current functionality
