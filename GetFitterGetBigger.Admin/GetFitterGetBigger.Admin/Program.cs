@@ -128,6 +128,15 @@ builder.Services.AddHttpClient<GetFitterGetBigger.Admin.Services.IWorkoutReferen
 // Add WorkoutReferenceDataStateService
 builder.Services.AddScoped<GetFitterGetBigger.Admin.Services.IWorkoutReferenceDataStateService, GetFitterGetBigger.Admin.Services.WorkoutReferenceDataStateService>();
 
+// Add HttpClient for WorkoutTemplateService
+builder.Services.AddHttpClient<GetFitterGetBigger.Admin.Services.IWorkoutTemplateService, GetFitterGetBigger.Admin.Services.WorkoutTemplateService>(client =>
+{
+    client.BaseAddress = new Uri(builder.Configuration["ApiBaseUrl"] ?? "http://localhost:5214");
+});
+
+// Add WorkoutTemplateStateService
+builder.Services.AddScoped<GetFitterGetBigger.Admin.Services.IWorkoutTemplateStateService, GetFitterGetBigger.Admin.Services.WorkoutTemplateStateService>();
+
 var app = builder.Build();
 
 // Clear all caches on startup to avoid cache collision issues
