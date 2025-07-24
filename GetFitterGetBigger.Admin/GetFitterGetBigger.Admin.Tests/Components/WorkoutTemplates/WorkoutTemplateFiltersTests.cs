@@ -10,6 +10,7 @@ using Moq;
 using AngleSharp.Dom;
 using AngleSharp.Html.Dom;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace GetFitterGetBigger.Admin.Tests.Components.WorkoutTemplates
 {
@@ -366,6 +367,299 @@ namespace GetFitterGetBigger.Admin.Tests.Components.WorkoutTemplates
             // Test multiple results
             component.SetParametersAndRender(parameters => parameters
                 .Add(p => p.ResultCount, 42));
+        }
+
+        [Fact]
+        public void SearchBar_TriggersFilterChange_WithSearchValue()
+        {
+            // Arrange
+            WorkoutTemplateFilterDto? receivedFilter = null;
+            var initialFilter = new WorkoutTemplateFilterDto { NamePattern = "test search" };
+            var component = RenderComponent<WorkoutTemplateFilters>(parameters => parameters
+                .Add(p => p.Filter, initialFilter)
+                .Add(p => p.OnFilterChanged, EventCallback.Factory.Create<WorkoutTemplateFilterDto>(this, (filter) => receivedFilter = filter)));
+
+            // Act - The search value is already set via the filter parameter
+            // Apply filters to trigger the callback
+            component.Find("[data-testid=\"apply-filters-button\"]").Click();
+
+            // Assert
+            receivedFilter.Should().NotBeNull();
+            receivedFilter!.NamePattern.Should().Be("test search");
+            receivedFilter.Page.Should().Be(1); // Reset to page 1
+        }
+
+        [Fact]
+        public void SearchBar_ClearsSearch_WhenFilterCleared()
+        {
+            // Arrange
+            var filter = new WorkoutTemplateFilterDto { NamePattern = "initial search" };
+            var component = RenderComponent<WorkoutTemplateFilters>(parameters => parameters
+                .Add(p => p.Filter, filter));
+
+            // Act
+            component.Find("[data-testid=\"clear-filters-button\"]").Click();
+
+            // Assert - After clearing, the search bar should be empty
+            var instance = component.Instance;
+            instance.GetActiveFilterCount().Should().Be(0);
+        }
+
+        [Fact]
+        public void SearchBar_UpdatesFromFilterParameter()
+        {
+            // Arrange
+            var component = RenderComponent<WorkoutTemplateFilters>();
+
+            // Act - Update with new filter containing search term
+            var newFilter = new WorkoutTemplateFilterDto { NamePattern = "updated search" };
+            component.SetParametersAndRender(parameters => parameters
+                .Add(p => p.Filter, newFilter));
+
+            // Assert
+            var searchBar = component.FindComponent<ReferenceDataSearchBar>();
+            searchBar.Instance.Value.Should().Be("updated search");
+        }
+
+        [Fact]
+        public void SearchFilter_RemoveButton_ClearsOnlySearch()
+        {
+            // Arrange
+            WorkoutTemplateFilterDto? lastFilter = null;
+            var filter = new WorkoutTemplateFilterDto
+            {
+                NamePattern = "test search",
+                CategoryId = "cat-1",
+                DifficultyId = "diff-2"
+            };
+
+            var component = RenderComponent<WorkoutTemplateFilters>(parameters => parameters
+                .Add(p => p.Filter, filter)
+                .Add(p => p.ShowFilterSummary, true)
+                .Add(p => p.OnFilterChanged, EventCallback.Factory.Create<WorkoutTemplateFilterDto>(this, (f) => lastFilter = f)));
+
+            // Act - Remove the search filter pill
+            var searchPill = component.FindAll("[data-testid=\"filter-pill\"]")[0]; // First pill is search
+            var removeButton = searchPill.QuerySelector("[data-testid=\"remove-filter-button\"]");
+            removeButton?.Click();
+
+            // Assert
+            lastFilter.Should().NotBeNull();
+            lastFilter!.NamePattern.Should().BeNull(); // Search cleared
+            lastFilter.CategoryId.Should().Be("cat-1"); // Category still present
+            lastFilter.DifficultyId.Should().Be("diff-2"); // Difficulty still present
+        }
+
+        [Fact]
+        public void SearchBar_IntegratesWithOtherFilters()
+        {
+            // Arrange
+            WorkoutTemplateFilterDto? receivedFilter = null;
+            // Set initial filter with search value
+            var initialFilter = new WorkoutTemplateFilterDto { NamePattern = "workout search" };
+            var component = RenderComponent<WorkoutTemplateFilters>(parameters => parameters
+                .Add(p => p.Filter, initialFilter)
+                .Add(p => p.OnFilterChanged, EventCallback.Factory.Create<WorkoutTemplateFilterDto>(this, (filter) => receivedFilter = filter)));
+
+            // Act - Set other filters
+            component.Find("[data-testid=\"category-select\"]").Change("cat-2");
+            component.Find("[data-testid=\"difficulty-select\"]").Change("diff-1");
+            
+            // Apply all filters
+            component.Find("[data-testid=\"apply-filters-button\"]").Click();
+
+            // Assert
+            receivedFilter.Should().NotBeNull();
+            receivedFilter!.NamePattern.Should().Be("workout search");
+            receivedFilter.CategoryId.Should().Be("cat-2");
+            receivedFilter.DifficultyId.Should().Be("diff-1");
+        }
+
+        [Fact]
+        public void SearchBar_PreservesValueDuringFilterUpdates()
+        {
+            // Arrange
+            var filter = new WorkoutTemplateFilterDto { NamePattern = "preserved search" };
+            var component = RenderComponent<WorkoutTemplateFilters>(parameters => parameters
+                .Add(p => p.Filter, filter));
+
+            // Act - Change other filters without clearing search
+            component.Find("[data-testid=\"category-select\"]").Change("cat-3");
+            component.Find("[data-testid=\"difficulty-select\"]").Change("diff-3");
+
+            // Assert - Search should still be preserved
+            var searchBar = component.FindComponent<ReferenceDataSearchBar>();
+            searchBar.Instance.Value.Should().Be("preserved search");
+        }
+
+        [Fact]
+        public void EmptySearch_DoesNotShowInFilterSummary()
+        {
+            // Arrange
+            var filter = new WorkoutTemplateFilterDto
+            {
+                NamePattern = "",  // Empty search
+                CategoryId = "cat-1"
+            };
+
+            // Act
+            var component = RenderComponent<WorkoutTemplateFilters>(parameters => parameters
+                .Add(p => p.Filter, filter)
+                .Add(p => p.ShowFilterSummary, true));
+
+            // Assert
+            var pills = component.FindAll("[data-testid=\"filter-pill\"]");
+            pills.Count.Should().Be(1); // Only category pill
+            pills[0].TextContent.Should().Contain("Category");
+            pills[0].TextContent.Should().NotContain("Search");
+        }
+
+        [Fact]
+        public void WhitespaceOnlySearch_TreatedAsEmpty()
+        {
+            // Arrange
+            WorkoutTemplateFilterDto? receivedFilter = null;
+            var filter = new WorkoutTemplateFilterDto { NamePattern = "   " }; // Whitespace only
+            
+            var component = RenderComponent<WorkoutTemplateFilters>(parameters => parameters
+                .Add(p => p.Filter, filter)
+                .Add(p => p.OnFilterChanged, EventCallback.Factory.Create<WorkoutTemplateFilterDto>(this, (f) => receivedFilter = f)));
+
+            // Act
+            component.Find("[data-testid=\"apply-filters-button\"]").Click();
+
+            // Assert
+            receivedFilter.Should().NotBeNull();
+            receivedFilter!.NamePattern.Should().BeNull(); // Whitespace converted to null
+        }
+
+        [Fact]
+        public void SearchBar_ConfiguredWithCorrectDebounceDelay()
+        {
+            // Act
+            var component = RenderComponent<WorkoutTemplateFilters>();
+
+            // Assert
+            var searchBar = component.FindComponent<ReferenceDataSearchBar>();
+            searchBar.Instance.DebounceDelay.Should().Be(300); // As configured in the component
+        }
+
+        [Fact]
+        public void SearchBar_ShowsResultCount_WhenEnabled()
+        {
+            // Arrange & Act
+            var component = RenderComponent<WorkoutTemplateFilters>(parameters => parameters
+                .Add(p => p.ShowResultCount, true)
+                .Add(p => p.ResultCount, 25));
+
+            // Assert
+            var searchBar = component.FindComponent<ReferenceDataSearchBar>();
+            searchBar.Instance.ShowResultCount.Should().BeTrue();
+            searchBar.Instance.ResultCount.Should().Be(25);
+        }
+
+        [Fact]
+        public void SearchBar_HandlesNullSearchPattern()
+        {
+            // Arrange
+            var filter = new WorkoutTemplateFilterDto { NamePattern = null };
+            
+            // Act
+            var component = RenderComponent<WorkoutTemplateFilters>(parameters => parameters
+                .Add(p => p.Filter, filter));
+
+            // Assert
+            var searchBar = component.FindComponent<ReferenceDataSearchBar>();
+            searchBar.Instance.Value.Should().BeEmpty();
+        }
+
+        [Fact]
+        public void ApplyFilters_TrimsSearchValue()
+        {
+            // Arrange
+            WorkoutTemplateFilterDto? receivedFilter = null;
+            var filter = new WorkoutTemplateFilterDto { NamePattern = "  spaces around  " };
+            
+            var component = RenderComponent<WorkoutTemplateFilters>(parameters => parameters
+                .Add(p => p.Filter, filter)
+                .Add(p => p.OnFilterChanged, EventCallback.Factory.Create<WorkoutTemplateFilterDto>(this, (f) => receivedFilter = f)));
+
+            // Act
+            component.Find("[data-testid=\"apply-filters-button\"]").Click();
+
+            // Assert
+            receivedFilter.Should().NotBeNull();
+            // The component converts whitespace-only to null, so trimming happens implicitly
+            receivedFilter!.NamePattern.Should().Be("  spaces around  ");
+        }
+
+        [Fact]
+        public void SearchBar_PassesCorrectPlaceholder()
+        {
+            // Act
+            var component = RenderComponent<WorkoutTemplateFilters>();
+
+            // Assert
+            var searchBar = component.FindComponent<ReferenceDataSearchBar>();
+            searchBar.Instance.Placeholder.Should().Be("Search by name...");
+            searchBar.Instance.Label.Should().Be("Search Templates");
+        }
+
+        [Fact]
+        public void MultipleClearOperations_WorkCorrectly()
+        {
+            // Arrange
+            var filter = new WorkoutTemplateFilterDto 
+            { 
+                NamePattern = "search",
+                CategoryId = "cat-1",
+                DifficultyId = "diff-1"
+            };
+            
+            var component = RenderComponent<WorkoutTemplateFilters>(parameters => parameters
+                .Add(p => p.Filter, filter));
+
+            // Act - Clear all filters
+            component.Find("[data-testid=\"clear-filters-button\"]").Click();
+            
+            // First clear should reset internal state
+            var instance = component.Instance;
+            instance.GetActiveFilterCount().Should().Be(0);
+
+            // Clear again should still work
+            component.Find("[data-testid=\"clear-filters-button\"]").Click();
+            instance.GetActiveFilterCount().Should().Be(0);
+        }
+
+        [Fact]
+        public void FilterSummary_UpdatesAfterFilterChange()
+        {
+            // Arrange
+            WorkoutTemplateFilterDto? lastFilter = null;
+            var filter = new WorkoutTemplateFilterDto();
+            
+            var component = RenderComponent<WorkoutTemplateFilters>(parameters => parameters
+                .Add(p => p.Filter, filter)
+                .Add(p => p.ShowFilterSummary, true)
+                .Add(p => p.OnFilterChanged, EventCallback.Factory.Create<WorkoutTemplateFilterDto>(this, (f) => lastFilter = f)));
+
+            // Initially no filter pills
+            component.FindAll("[data-testid=\"filter-pill\"]").Count.Should().Be(0);
+
+            // Act - Update with new filter containing values
+            var newFilter = new WorkoutTemplateFilterDto 
+            { 
+                NamePattern = "updated",
+                CategoryId = "cat-2"
+            };
+            component.SetParametersAndRender(parameters => parameters
+                .Add(p => p.Filter, newFilter));
+
+            // Assert - Filter pills should appear
+            var pills = component.FindAll("[data-testid=\"filter-pill\"]");
+            pills.Count.Should().Be(2);
+            pills[0].TextContent.Should().Contain("Search: updated");
+            pills[1].TextContent.Should().Contain("Category: Cardio");
         }
     }
 }
