@@ -110,23 +110,12 @@ public class WorkoutTemplateService : IWorkoutTemplateService
         return result;
     }
 
-    public async Task<ServiceResult<IEnumerable<WorkoutTemplateDto>>> GetAllActiveByCreatorAsync(UserId creatorId)
-    {
-        var result = creatorId.IsEmpty switch
-        {
-            true => ServiceResult<IEnumerable<WorkoutTemplateDto>>.Success(new List<WorkoutTemplateDto>()),
-            false => await LoadAllActiveByCreatorAsync(creatorId)
-        };
-        
-        return result;
-    }
-    
-    private async Task<ServiceResult<IEnumerable<WorkoutTemplateDto>>> LoadAllActiveByCreatorAsync(UserId creatorId)
+    public async Task<ServiceResult<IEnumerable<WorkoutTemplateDto>>> GetAllActiveAsync()
     {
         using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
         var repository = unitOfWork.GetRepository<IWorkoutTemplateRepository>();
         
-        var workoutTemplates = await repository.GetAllActiveByCreatorAsync(creatorId);
+        var workoutTemplates = await repository.GetAllActiveAsync();
         
         var result = ServiceResult<IEnumerable<WorkoutTemplateDto>>.Success(
             workoutTemplates.Select(MapToDto));
@@ -135,26 +124,24 @@ public class WorkoutTemplateService : IWorkoutTemplateService
     }
 
     public async Task<ServiceResult<IEnumerable<WorkoutTemplateDto>>> GetByNamePatternAsync(
-        string namePattern, 
-        UserId? creatorFilter = null)
+        string namePattern)
     {
         var result = string.IsNullOrWhiteSpace(namePattern) switch
         {
             true => ServiceResult<IEnumerable<WorkoutTemplateDto>>.Success(new List<WorkoutTemplateDto>()),
-            false => await LoadByNamePatternAsync(namePattern, creatorFilter)
+            false => await LoadByNamePatternAsync(namePattern)
         };
         
         return result;
     }
     
     private async Task<ServiceResult<IEnumerable<WorkoutTemplateDto>>> LoadByNamePatternAsync(
-        string namePattern, 
-        UserId? creatorFilter)
+        string namePattern)
     {
         using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
         var repository = unitOfWork.GetRepository<IWorkoutTemplateRepository>();
         
-        var workoutTemplates = await repository.GetByNamePatternAsync(namePattern, creatorFilter ?? UserId.Empty);
+        var workoutTemplates = await repository.GetByNamePatternAsync(namePattern);
         
         var result = ServiceResult<IEnumerable<WorkoutTemplateDto>>.Success(
             workoutTemplates.Select(MapToDto));
@@ -164,7 +151,6 @@ public class WorkoutTemplateService : IWorkoutTemplateService
 
     public async Task<ServiceResult<IEnumerable<WorkoutTemplateDto>>> GetByCategoryAsync(
         WorkoutCategoryId categoryId, 
-        UserId? creatorFilter = null,
         bool includeInactive = false)
     {
         var result = categoryId.IsEmpty switch
@@ -172,7 +158,7 @@ public class WorkoutTemplateService : IWorkoutTemplateService
             true => ServiceResult<IEnumerable<WorkoutTemplateDto>>.Failure(
                 new List<WorkoutTemplateDto>(),
                 ServiceError.InvalidFormat("CategoryId", "GUID format")),
-            false => await LoadByCategoryAsync(categoryId, creatorFilter, includeInactive)
+            false => await LoadByCategoryAsync(categoryId, includeInactive)
         };
         
         return result;
@@ -180,13 +166,12 @@ public class WorkoutTemplateService : IWorkoutTemplateService
     
     private async Task<ServiceResult<IEnumerable<WorkoutTemplateDto>>> LoadByCategoryAsync(
         WorkoutCategoryId categoryId,
-        UserId? creatorFilter,
         bool includeInactive)
     {
         using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
         var repository = unitOfWork.GetRepository<IWorkoutTemplateRepository>();
         
-        var workoutTemplates = await repository.GetByCategoryAsync(categoryId, creatorFilter ?? UserId.Empty, includeInactive);
+        var workoutTemplates = await repository.GetByCategoryAsync(categoryId, includeInactive);
         
         var result = ServiceResult<IEnumerable<WorkoutTemplateDto>>.Success(
             workoutTemplates.Select(MapToDto));
@@ -196,7 +181,6 @@ public class WorkoutTemplateService : IWorkoutTemplateService
 
     public async Task<ServiceResult<IEnumerable<WorkoutTemplateDto>>> GetByObjectiveAsync(
         WorkoutObjectiveId objectiveId,
-        UserId? creatorFilter = null,
         bool includeInactive = false)
     {
         var result = objectiveId.IsEmpty switch
@@ -204,7 +188,7 @@ public class WorkoutTemplateService : IWorkoutTemplateService
             true => ServiceResult<IEnumerable<WorkoutTemplateDto>>.Failure(
                 new List<WorkoutTemplateDto>(),
                 ServiceError.InvalidFormat("ObjectiveId", "GUID format")),
-            false => await LoadByObjectiveAsync(objectiveId, creatorFilter, includeInactive)
+            false => await LoadByObjectiveAsync(objectiveId, includeInactive)
         };
         
         return result;
@@ -212,13 +196,12 @@ public class WorkoutTemplateService : IWorkoutTemplateService
     
     private async Task<ServiceResult<IEnumerable<WorkoutTemplateDto>>> LoadByObjectiveAsync(
         WorkoutObjectiveId objectiveId,
-        UserId? creatorFilter,
         bool includeInactive)
     {
         using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
         var repository = unitOfWork.GetRepository<IWorkoutTemplateRepository>();
         
-        var workoutTemplates = await repository.GetByObjectiveAsync(objectiveId, creatorFilter ?? UserId.Empty, includeInactive);
+        var workoutTemplates = await repository.GetByObjectiveAsync(objectiveId, includeInactive);
         
         var result = ServiceResult<IEnumerable<WorkoutTemplateDto>>.Success(
             workoutTemplates.Select(MapToDto));
@@ -228,7 +211,6 @@ public class WorkoutTemplateService : IWorkoutTemplateService
 
     public async Task<ServiceResult<IEnumerable<WorkoutTemplateDto>>> GetByDifficultyAsync(
         DifficultyLevelId difficultyId,
-        UserId? creatorFilter = null,
         bool includeInactive = false)
     {
         var result = difficultyId.IsEmpty switch
@@ -236,7 +218,7 @@ public class WorkoutTemplateService : IWorkoutTemplateService
             true => ServiceResult<IEnumerable<WorkoutTemplateDto>>.Failure(
                 new List<WorkoutTemplateDto>(),
                 ServiceError.InvalidFormat("DifficultyId", "GUID format")),
-            false => await LoadByDifficultyAsync(difficultyId, creatorFilter, includeInactive)
+            false => await LoadByDifficultyAsync(difficultyId, includeInactive)
         };
         
         return result;
@@ -244,13 +226,12 @@ public class WorkoutTemplateService : IWorkoutTemplateService
     
     private async Task<ServiceResult<IEnumerable<WorkoutTemplateDto>>> LoadByDifficultyAsync(
         DifficultyLevelId difficultyId,
-        UserId? creatorFilter,
         bool includeInactive)
     {
         using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
         var repository = unitOfWork.GetRepository<IWorkoutTemplateRepository>();
         
-        var workoutTemplates = await repository.GetByDifficultyAsync(difficultyId, creatorFilter ?? UserId.Empty, includeInactive);
+        var workoutTemplates = await repository.GetByDifficultyAsync(difficultyId, includeInactive);
         
         var result = ServiceResult<IEnumerable<WorkoutTemplateDto>>.Success(
             workoutTemplates.Select(MapToDto));
@@ -260,7 +241,6 @@ public class WorkoutTemplateService : IWorkoutTemplateService
 
     public async Task<ServiceResult<IEnumerable<WorkoutTemplateDto>>> GetByExerciseAsync(
         ExerciseId exerciseId,
-        UserId? creatorFilter = null,
         bool includeInactive = false)
     {
         var result = exerciseId.IsEmpty switch
@@ -268,7 +248,7 @@ public class WorkoutTemplateService : IWorkoutTemplateService
             true => ServiceResult<IEnumerable<WorkoutTemplateDto>>.Failure(
                 new List<WorkoutTemplateDto>(),
                 ServiceError.InvalidFormat("ExerciseId", "GUID format")),
-            false => await LoadByExerciseAsync(exerciseId, creatorFilter, includeInactive)
+            false => await LoadByExerciseAsync(exerciseId, includeInactive)
         };
         
         return result;
@@ -276,13 +256,12 @@ public class WorkoutTemplateService : IWorkoutTemplateService
     
     private async Task<ServiceResult<IEnumerable<WorkoutTemplateDto>>> LoadByExerciseAsync(
         ExerciseId exerciseId,
-        UserId? creatorFilter,
         bool includeInactive)
     {
         using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
         var repository = unitOfWork.GetRepository<IWorkoutTemplateRepository>();
         
-        var workoutTemplates = await repository.GetByExerciseAsync(exerciseId, creatorFilter ?? UserId.Empty, includeInactive);
+        var workoutTemplates = await repository.GetByExerciseAsync(exerciseId, includeInactive);
         
         var result = ServiceResult<IEnumerable<WorkoutTemplateDto>>.Success(
             workoutTemplates.Select(MapToDto));
@@ -306,7 +285,7 @@ public class WorkoutTemplateService : IWorkoutTemplateService
     
     private async Task<ServiceResult<WorkoutTemplateDto>> ProcessCreateWorkoutTemplateAsync(CreateWorkoutTemplateCommand command)
     {
-        var nameExistsResult = await ExistsByNameAsync(command.Name, command.CreatedBy);
+        var nameExistsResult = await ExistsByNameAsync(command.Name);
         var result = nameExistsResult switch
         {
             true => ServiceResult<WorkoutTemplateDto>.Failure(
@@ -340,7 +319,6 @@ public class WorkoutTemplateService : IWorkoutTemplateService
             command.EstimatedDurationMinutes,
             command.Tags,
             command.IsPublic,
-            command.CreatedBy,
             defaultWorkoutStateId);
 
         var result = entityResult.IsSuccess switch
@@ -348,13 +326,13 @@ public class WorkoutTemplateService : IWorkoutTemplateService
             false => ServiceResult<WorkoutTemplateDto>.Failure(
                 CreateEmptyDto(),
                 ServiceError.ValidationFailed(string.Join(", ", entityResult.Errors))),
-            true => await PersistWorkoutTemplateAsync(entityResult.Value, command.CreatedBy)
+            true => await PersistWorkoutTemplateAsync(entityResult.Value)
         };
         
         return result;
     }
     
-    private async Task<ServiceResult<WorkoutTemplateDto>> PersistWorkoutTemplateAsync(WorkoutTemplate workoutTemplate, UserId creatorId)
+    private async Task<ServiceResult<WorkoutTemplateDto>> PersistWorkoutTemplateAsync(WorkoutTemplate workoutTemplate)
     {
         using var unitOfWork = _unitOfWorkProvider.CreateWritable();
         var repository = unitOfWork.GetRepository<IWorkoutTemplateRepository>();
@@ -362,8 +340,8 @@ public class WorkoutTemplateService : IWorkoutTemplateService
         var createdTemplate = await repository.AddAsync(workoutTemplate);
         await unitOfWork.CommitAsync();
 
-        _logger.LogInformation("Created workout template {TemplateId} for creator {CreatorId}", 
-            createdTemplate.Id, creatorId);
+        _logger.LogInformation("Created workout template {TemplateId}", 
+            createdTemplate.Id);
 
         return ServiceResult<WorkoutTemplateDto>.Success(MapToDto(createdTemplate));
     }
@@ -529,61 +507,58 @@ public class WorkoutTemplateService : IWorkoutTemplateService
         return ServiceResult<WorkoutTemplateDto>.Success(MapToDto(updatedTemplate));
     }
 
-    public async Task<ServiceResult<WorkoutTemplateDto>> DuplicateAsync(WorkoutTemplateId id, string newName, UserId creatorId)
+    public async Task<ServiceResult<WorkoutTemplateDto>> DuplicateAsync(WorkoutTemplateId id, string newName)
     {
         var originalResult = await GetByIdAsync(id);
         var result = originalResult.IsSuccess switch
         {
             false => originalResult,
-            true => await ProcessDuplicateAsync(id, newName, creatorId)
+            true => await ProcessDuplicateAsync(id, newName)
         };
         
         return result;
     }
     
-    private async Task<ServiceResult<WorkoutTemplateDto>> ProcessDuplicateAsync(WorkoutTemplateId id, string newName, UserId creatorId)
+    private async Task<ServiceResult<WorkoutTemplateDto>> ProcessDuplicateAsync(WorkoutTemplateId id, string newName)
     {
-        var validationResult = ValidateDuplicateParameters(newName, creatorId);
+        var validationResult = ValidateDuplicateParameters(newName);
         var result = validationResult.IsSuccess switch
         {
             false => validationResult,
-            true => await CheckNameAndDuplicateAsync(id, newName, creatorId)
+            true => await CheckNameAndDuplicateAsync(id, newName)
         };
         
         return result;
     }
     
-    private ServiceResult<WorkoutTemplateDto> ValidateDuplicateParameters(string newName, UserId creatorId)
+    private ServiceResult<WorkoutTemplateDto> ValidateDuplicateParameters(string newName)
     {
-        var result = (string.IsNullOrWhiteSpace(newName), creatorId.IsEmpty) switch
+        var result = string.IsNullOrWhiteSpace(newName) switch
         {
-            (true, _) => ServiceResult<WorkoutTemplateDto>.Failure(
+            true => ServiceResult<WorkoutTemplateDto>.Failure(
                 CreateEmptyDto(),
                 ServiceError.ValidationFailed("Template name is required")),
-            (false, true) => ServiceResult<WorkoutTemplateDto>.Failure(
-                CreateEmptyDto(),
-                ServiceError.ValidationFailed("Creator ID is required")),
-            _ => ServiceResult<WorkoutTemplateDto>.Success(CreateEmptyDto()) // Dummy success to continue
+            false => ServiceResult<WorkoutTemplateDto>.Success(CreateEmptyDto()) // Dummy success to continue
         };
         
         return result;
     }
     
-    private async Task<ServiceResult<WorkoutTemplateDto>> CheckNameAndDuplicateAsync(WorkoutTemplateId id, string newName, UserId creatorId)
+    private async Task<ServiceResult<WorkoutTemplateDto>> CheckNameAndDuplicateAsync(WorkoutTemplateId id, string newName)
     {
-        var nameExistsResult = await ExistsByNameAsync(newName, creatorId);
+        var nameExistsResult = await ExistsByNameAsync(newName);
         var result = nameExistsResult switch
         {
             true => ServiceResult<WorkoutTemplateDto>.Failure(
                 CreateEmptyDto(),
                 ServiceError.AlreadyExists("WorkoutTemplate", newName)),
-            false => await PerformDuplicateAsync(id, newName, creatorId)
+            false => await PerformDuplicateAsync(id, newName)
         };
         
         return result;
     }
     
-    private async Task<ServiceResult<WorkoutTemplateDto>> PerformDuplicateAsync(WorkoutTemplateId id, string newName, UserId creatorId)
+    private async Task<ServiceResult<WorkoutTemplateDto>> PerformDuplicateAsync(WorkoutTemplateId id, string newName)
     {
         using var unitOfWork = _unitOfWorkProvider.CreateWritable();
         var repository = unitOfWork.GetRepository<IWorkoutTemplateRepository>();
@@ -594,7 +569,7 @@ public class WorkoutTemplateService : IWorkoutTemplateService
             true => ServiceResult<WorkoutTemplateDto>.Failure(
                 CreateEmptyDto(),
                 ServiceError.NotFound("Original workout template not found")),
-            false => await CreateDuplicateAsync(repository, originalTemplate, newName, creatorId, unitOfWork, id)
+            false => await CreateDuplicateAsync(repository, originalTemplate, newName, unitOfWork, id)
         };
         
         return result;
@@ -604,17 +579,16 @@ public class WorkoutTemplateService : IWorkoutTemplateService
         IWorkoutTemplateRepository repository,
         WorkoutTemplate originalTemplate,
         string newName,
-        UserId creatorId,
         IWritableUnitOfWork<FitnessDbContext> unitOfWork,
         WorkoutTemplateId originalId)
     {
-        var entityResult = WorkoutTemplate.Handler.Duplicate(originalTemplate, newName, creatorId);
+        var entityResult = WorkoutTemplate.Handler.Duplicate(originalTemplate, newName);
         var result = entityResult.IsSuccess switch
         {
             false => ServiceResult<WorkoutTemplateDto>.Failure(
                 CreateEmptyDto(),
                 ServiceError.ValidationFailed(string.Join(", ", entityResult.Errors))),
-            true => await SaveDuplicateAsync(repository, entityResult.Value, unitOfWork, originalId, creatorId)
+            true => await SaveDuplicateAsync(repository, entityResult.Value, unitOfWork, originalId)
         };
         
         return result;
@@ -624,14 +598,13 @@ public class WorkoutTemplateService : IWorkoutTemplateService
         IWorkoutTemplateRepository repository,
         WorkoutTemplate duplicateTemplate,
         IWritableUnitOfWork<FitnessDbContext> unitOfWork,
-        WorkoutTemplateId originalId,
-        UserId creatorId)
+        WorkoutTemplateId originalId)
     {
         var duplicatedTemplate = await repository.AddAsync(duplicateTemplate);
         await unitOfWork.CommitAsync();
 
-        _logger.LogInformation("Duplicated workout template {OriginalId} as {NewId} for creator {CreatorId}", 
-            originalId, duplicatedTemplate.Id, creatorId);
+        _logger.LogInformation("Duplicated workout template {OriginalId} as {NewId}", 
+            originalId, duplicatedTemplate.Id);
 
         return ServiceResult<WorkoutTemplateDto>.Success(MapToDto(duplicatedTemplate));
     }
@@ -726,23 +699,23 @@ public class WorkoutTemplateService : IWorkoutTemplateService
         return await ExistsAsync(workoutTemplateId);
     }
 
-    public async Task<bool> ExistsByNameAsync(string name, UserId creatorId)
+    public async Task<bool> ExistsByNameAsync(string name)
     {
-        var result = (string.IsNullOrWhiteSpace(name), creatorId.IsEmpty) switch
+        var result = string.IsNullOrWhiteSpace(name) switch
         {
-            (true, _) or (_, true) => false,
-            _ => await CheckExistsByNameInRepositoryAsync(name, creatorId)
+            true => false,
+            false => await CheckExistsByNameInRepositoryAsync(name)
         };
         
         return result;
     }
     
-    private async Task<bool> CheckExistsByNameInRepositoryAsync(string name, UserId creatorId)
+    private async Task<bool> CheckExistsByNameInRepositoryAsync(string name)
     {
         using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
         var repository = unitOfWork.GetRepository<IWorkoutTemplateRepository>();
         
-        return await repository.ExistsByNameAsync(name, creatorId);
+        return await repository.ExistsByNameAsync(name);
     }
 
     public async Task<ServiceResult<IEnumerable<ExerciseDto>>> GetSuggestedExercisesAsync(
@@ -902,7 +875,6 @@ public class WorkoutTemplateService : IWorkoutTemplateService
             EstimatedDurationMinutes = workoutTemplate.EstimatedDurationMinutes,
             Tags = workoutTemplate.Tags.ToList(),
             IsPublic = workoutTemplate.IsPublic,
-            CreatedBy = workoutTemplate.CreatedBy.ToString(),
             WorkoutState = MapToReferenceDataDto(workoutTemplate.WorkoutState),
             Objectives = workoutTemplate.Objectives?.Select(o => MapToReferenceDataDto(o.WorkoutObjective)).ToList() ?? new(),
             Exercises = workoutTemplate.Exercises?.Select(MapToWorkoutTemplateExerciseDto).ToList() ?? new(),
@@ -1000,9 +972,6 @@ public class WorkoutTemplateService : IWorkoutTemplateService
 
         if (command.Tags != null && command.Tags.Count > 10)
             errors.Add("Maximum 10 tags allowed");
-
-        if (command.CreatedBy.IsEmpty)
-            errors.Add("Creator is required");
 
         // TODO: Validate that CategoryId, DifficultyId, and ObjectiveIds exist in the database
 

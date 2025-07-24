@@ -42,9 +42,8 @@ public interface IWorkoutTemplateExerciseService
     /// Removes an exercise from a workout template
     /// </summary>
     /// <param name="workoutTemplateExerciseId">The exercise to remove</param>
-    /// <param name="userId">The user performing the action</param>
     /// <returns>Success or error result</returns>
-    Task<ServiceResult<bool>> RemoveExerciseAsync(WorkoutTemplateExerciseId workoutTemplateExerciseId, UserId userId);
+    Task<ServiceResult<bool>> RemoveExerciseAsync(WorkoutTemplateExerciseId workoutTemplateExerciseId);
 
     /// <summary>
     /// Reorders exercises within a zone

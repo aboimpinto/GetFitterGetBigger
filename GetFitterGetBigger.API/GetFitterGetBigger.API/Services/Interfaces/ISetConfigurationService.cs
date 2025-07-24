@@ -72,17 +72,15 @@ public interface ISetConfigurationService
     /// Deletes a set configuration
     /// </summary>
     /// <param name="id">The set configuration ID</param>
-    /// <param name="userId">The user performing the delete</param>
     /// <returns>ServiceResult with success or failure</returns>
-    Task<ServiceResult<bool>> DeleteAsync(SetConfigurationId id, UserId userId);
+    Task<ServiceResult<bool>> DeleteAsync(SetConfigurationId id);
     
     /// <summary>
     /// Deletes all set configurations for a workout template exercise
     /// </summary>
     /// <param name="workoutTemplateExerciseId">The workout template exercise ID</param>
-    /// <param name="userId">The user performing the delete</param>
     /// <returns>ServiceResult with count of deleted configurations</returns>
-    Task<ServiceResult<int>> DeleteByWorkoutTemplateExerciseAsync(WorkoutTemplateExerciseId workoutTemplateExerciseId, UserId userId);
+    Task<ServiceResult<int>> DeleteByWorkoutTemplateExerciseAsync(WorkoutTemplateExerciseId workoutTemplateExerciseId);
     
     /// <summary>
     /// Checks if a set configuration exists

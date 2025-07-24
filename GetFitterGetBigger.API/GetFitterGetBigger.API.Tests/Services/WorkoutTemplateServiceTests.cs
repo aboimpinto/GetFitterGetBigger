@@ -84,7 +84,6 @@ public class WorkoutTemplateServiceTests
             .WithId(_testTemplateId)
             .WithName("Test Workout Template")
             .WithDescription("Test Description")
-            .WithCreatedBy(_testUserId)
             .Build();
             
         // Setup WorkoutState mock to return Draft state
@@ -165,45 +164,6 @@ public class WorkoutTemplateServiceTests
     
     #endregion
     
-    #region GetPagedByCreator Tests
-    
-    [Fact]
-    public async Task GetPagedByCreatorAsync_WithValidCreatorId_ReturnsPagedResponse()
-    {
-        // Arrange
-        var templates = new List<WorkoutTemplate> { _testTemplate };
-        _mockRepository
-            .Setup(x => x.GetPagedByCreatorAsync(_testUserId, 1, 20, false))
-            .ReturnsAsync((templates, 1));
-            
-        // Act
-        var result = await _service.GetPagedByCreatorAsync(_testUserId, 1, 20);
-        
-        // Assert
-        Assert.NotNull(result);
-        Assert.Single(result.Items);
-        Assert.Equal(1, result.TotalCount);
-        Assert.Equal(1, result.CurrentPage);
-        Assert.Equal(20, result.PageSize);
-    }
-    
-    [Fact]
-    public async Task GetPagedByCreatorAsync_WithEmptyCreatorId_ReturnsEmptyResponse()
-    {
-        // Arrange
-        var emptyUserId = UserId.Empty;
-        
-        // Act
-        var result = await _service.GetPagedByCreatorAsync(emptyUserId, 1, 20);
-        
-        // Assert
-        Assert.NotNull(result);
-        Assert.Empty(result.Items);
-        Assert.Equal(0, result.TotalCount);
-        _mockRepository.Verify(x => x.GetPagedByCreatorAsync(It.IsAny<UserId>(), It.IsAny<int>(), It.IsAny<int>(), It.IsAny<bool>()), Times.Never);
-    }
-    
-    #endregion
     
     #region Create Tests
     
@@ -219,12 +179,11 @@ public class WorkoutTemplateServiceTests
             DifficultyId = DifficultyLevelId.ParseOrEmpty(TestIds.DifficultyLevelIds.Beginner),
             EstimatedDurationMinutes = 60,
             Tags = new List<string> { "test", "workout" },
-            IsPublic = true,
-            CreatedBy = _testUserId
+            IsPublic = true
         };
         
         _mockRepository
-            .Setup(x => x.ExistsByNameAsync(command.Name, command.CreatedBy, WorkoutTemplateId.Empty))
+            .Setup(x => x.ExistsByNameAsync(command.Name, WorkoutTemplateId.Empty))
             .ReturnsAsync(false);
             
         _mockRepository
@@ -267,12 +226,11 @@ public class WorkoutTemplateServiceTests
             DifficultyId = DifficultyLevelId.ParseOrEmpty(TestIds.DifficultyLevelIds.Beginner),
             EstimatedDurationMinutes = 60,
             Tags = new List<string>(),
-            IsPublic = true,
-            CreatedBy = _testUserId
+            IsPublic = true
         };
         
         _mockRepository
-            .Setup(x => x.ExistsByNameAsync(command.Name, command.CreatedBy, WorkoutTemplateId.Empty))
+            .Setup(x => x.ExistsByNameAsync(command.Name, WorkoutTemplateId.Empty))
             .ReturnsAsync(true);
             
         // Act
@@ -296,8 +254,7 @@ public class WorkoutTemplateServiceTests
             DifficultyId = DifficultyLevelId.ParseOrEmpty(TestIds.DifficultyLevelIds.Beginner),
             EstimatedDurationMinutes = 60,
             Tags = new List<string>(),
-            IsPublic = true,
-            CreatedBy = _testUserId
+            IsPublic = true
         };
         
         // Act
@@ -323,7 +280,6 @@ public class WorkoutTemplateServiceTests
             Description = "Updated Description",
             CategoryId = WorkoutCategoryId.ParseOrEmpty(TestIds.WorkoutCategoryIds.Strength),
             DifficultyId = DifficultyLevelId.ParseOrEmpty(TestIds.DifficultyLevelIds.Intermediate),
-            UpdatedBy = UserId.ParseOrEmpty(TestIds.UserIds.PersonalTrainer),
             EstimatedDurationMinutes = 45,
             Tags = new List<string> { "updated" },
             IsPublic = false
@@ -360,7 +316,6 @@ public class WorkoutTemplateServiceTests
             Description = "Updated Description",
             CategoryId = WorkoutCategoryId.ParseOrEmpty(TestIds.WorkoutCategoryIds.Strength),
             DifficultyId = DifficultyLevelId.ParseOrEmpty(TestIds.DifficultyLevelIds.Intermediate),
-            UpdatedBy = UserId.ParseOrEmpty(TestIds.UserIds.PersonalTrainer),
             EstimatedDurationMinutes = 45,
             Tags = new List<string>(),
             IsPublic = false
@@ -482,7 +437,7 @@ public class WorkoutTemplateServiceTests
         var templates = new List<WorkoutTemplate> { _testTemplate };
         
         _mockRepository
-            .Setup(x => x.GetByNamePatternAsync(pattern, UserId.Empty, false))
+            .Setup(x => x.GetByNamePatternAsync(pattern, false))
             .ReturnsAsync(templates);
             
         // Act
@@ -502,7 +457,7 @@ public class WorkoutTemplateServiceTests
         // Assert
         Assert.True(result.IsSuccess);
         Assert.Empty(result.Data);
-        _mockRepository.Verify(x => x.GetByNamePatternAsync(It.IsAny<string>(), It.IsAny<UserId>(), It.IsAny<bool>()), Times.Never);
+        _mockRepository.Verify(x => x.GetByNamePatternAsync(It.IsAny<string>(), It.IsAny<bool>()), Times.Never);
     }
     
     [Fact]
@@ -513,7 +468,7 @@ public class WorkoutTemplateServiceTests
         var templates = new List<WorkoutTemplate> { _testTemplate };
         
         _mockRepository
-            .Setup(x => x.GetByCategoryAsync(categoryId, UserId.Empty, false))
+            .Setup(x => x.GetByCategoryAsync(categoryId, false))
             .ReturnsAsync(templates);
             
         // Act
@@ -543,7 +498,7 @@ public class WorkoutTemplateServiceTests
         var templates = new List<WorkoutTemplate> { _testTemplate };
         
         _mockRepository
-            .Setup(x => x.GetByObjectiveAsync(objectiveId, UserId.Empty, false))
+            .Setup(x => x.GetByObjectiveAsync(objectiveId, false))
             .ReturnsAsync(templates);
             
         // Act
@@ -562,7 +517,7 @@ public class WorkoutTemplateServiceTests
         var templates = new List<WorkoutTemplate> { _testTemplate };
         
         _mockRepository
-            .Setup(x => x.GetByDifficultyAsync(difficultyId, UserId.Empty, false))
+            .Setup(x => x.GetByDifficultyAsync(difficultyId, false))
             .ReturnsAsync(templates);
             
         // Act
@@ -581,7 +536,7 @@ public class WorkoutTemplateServiceTests
         var templates = new List<WorkoutTemplate> { _testTemplate };
         
         _mockRepository
-            .Setup(x => x.GetByExerciseAsync(exerciseId, UserId.Empty, false))
+            .Setup(x => x.GetByExerciseAsync(exerciseId, false))
             .ReturnsAsync(templates);
             
         // Act
@@ -608,7 +563,7 @@ public class WorkoutTemplateServiceTests
             .ReturnsAsync(_testTemplate);
             
         _mockRepository
-            .Setup(x => x.ExistsByNameAsync(newName, newCreatorId, WorkoutTemplateId.Empty))
+            .Setup(x => x.ExistsByNameAsync(newName, WorkoutTemplateId.Empty))
             .ReturnsAsync(false);
             
         _mockRepository
@@ -616,7 +571,7 @@ public class WorkoutTemplateServiceTests
             .ReturnsAsync(_testTemplate);
             
         // Act
-        var result = await _service.DuplicateAsync(_testTemplateId, newName, newCreatorId);
+        var result = await _service.DuplicateAsync(_testTemplateId, newName);
         
         // Assert
         Assert.True(result.IsSuccess);
@@ -632,28 +587,13 @@ public class WorkoutTemplateServiceTests
             .ReturnsAsync(_testTemplate);
             
         // Act
-        var result = await _service.DuplicateAsync(_testTemplateId, "", _testUserId);
+        var result = await _service.DuplicateAsync(_testTemplateId, "");
         
         // Assert
         Assert.False(result.IsSuccess);
         Assert.Contains("Template name is required", result.Errors);
     }
     
-    [Fact]
-    public async Task DuplicateAsync_WithEmptyCreatorId_ReturnsFailure()
-    {
-        // Arrange
-        _mockRepository
-            .Setup(x => x.GetByIdWithDetailsAsync(_testTemplateId))
-            .ReturnsAsync(_testTemplate);
-            
-        // Act
-        var result = await _service.DuplicateAsync(_testTemplateId, "New Name", UserId.Empty);
-        
-        // Assert
-        Assert.False(result.IsSuccess);
-        Assert.Contains("Creator ID is required", result.Errors);
-    }
     
     #endregion
     
@@ -708,11 +648,11 @@ public class WorkoutTemplateServiceTests
         // Arrange
         var name = "Existing Workout";
         _mockRepository
-            .Setup(x => x.ExistsByNameAsync(name, _testUserId, WorkoutTemplateId.Empty))
+            .Setup(x => x.ExistsByNameAsync(name, WorkoutTemplateId.Empty))
             .ReturnsAsync(true);
             
         // Act
-        var result = await _service.ExistsByNameAsync(name, _testUserId);
+        var result = await _service.ExistsByNameAsync(name);
         
         // Assert
         Assert.True(result);
@@ -722,11 +662,11 @@ public class WorkoutTemplateServiceTests
     public async Task ExistsByNameAsync_WithEmptyName_ReturnsFalse()
     {
         // Act
-        var result = await _service.ExistsByNameAsync("", _testUserId);
+        var result = await _service.ExistsByNameAsync("");
         
         // Assert
         Assert.False(result);
-        _mockRepository.Verify(x => x.ExistsByNameAsync(It.IsAny<string>(), It.IsAny<UserId>(), It.IsAny<WorkoutTemplateId>()), Times.Never);
+        _mockRepository.Verify(x => x.ExistsByNameAsync(It.IsAny<string>(), It.IsAny<WorkoutTemplateId>()), Times.Never);
     }
     
     #endregion

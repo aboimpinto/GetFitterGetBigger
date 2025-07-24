@@ -102,14 +102,20 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.WorkoutTemplate
                         "Name",
                         "Description"});
             table15.AddRow(new string[] {
-                        "Upper Body",
-                        "Upper body focused workouts"});
+                        "Upper Body - Push",
+                        "Push exercises targeting chest, shoulders, triceps"});
+            table15.AddRow(new string[] {
+                        "Upper Body - Pull",
+                        "Pull exercises targeting back and biceps"});
             table15.AddRow(new string[] {
                         "Lower Body",
-                        "Lower body focused workouts"});
+                        "Lower body exercises for legs and glutes"});
+            table15.AddRow(new string[] {
+                        "Core",
+                        "Core stability and strength exercises"});
             table15.AddRow(new string[] {
                         "Full Body",
-                        "Full body workouts"});
+                        "Compound exercises engaging multiple muscle groups"});
             await testRunner.AndAsync("the following workout categories exist:", ((string)(null)), table15, "And ");
             TechTalk.SpecFlow.Table table16 = new TechTalk.SpecFlow.Table(new string[] {
                         "Name",
@@ -135,10 +141,10 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.WorkoutTemplate
                         "Muscular Strength",
                         "Build strength"});
             table17.AddRow(new string[] {
-                        "Hypertrophy",
+                        "Muscular Hypertrophy",
                         "Build muscle mass"});
             table17.AddRow(new string[] {
-                        "Endurance",
+                        "Muscular Endurance",
                         "Improve endurance"});
             await testRunner.AndAsync("the following workout objectives exist:", ((string)(null)), table17, "And ");
         }
@@ -176,13 +182,13 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.WorkoutTemplate
                             "Value"});
                 table18.AddRow(new string[] {
                             "Name",
-                            "Upper Body Strength Day"});
+                            "Full Body Strength Day"});
                 table18.AddRow(new string[] {
                             "Description",
                             "Focus on compound movements"});
                 table18.AddRow(new string[] {
                             "CategoryId",
-                            "Upper Body"});
+                            "Full Body"});
                 table18.AddRow(new string[] {
                             "DifficultyId",
                             "Intermediate"});
@@ -195,13 +201,12 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.WorkoutTemplate
                 await testRunner.WhenAsync("I create a new workout template with:", ((string)(null)), table18, "When ");
                 await testRunner.ThenAsync("the workout template should be created successfully", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
                 await testRunner.AndAsync("the template state should be \"DRAFT\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
-                await testRunner.AndAsync("I should be set as the creator", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
                 TechTalk.SpecFlow.Table table19 = new TechTalk.SpecFlow.Table(new string[] {
                             "Field",
                             "Value"});
                 table19.AddRow(new string[] {
                             "Name",
-                            "Upper Body Strength Day"});
+                            "Full Body Strength Day"});
                 table19.AddRow(new string[] {
                             "WorkoutState",
                             "DRAFT"});
@@ -339,35 +344,6 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.WorkoutTemplate
             await this.ScenarioCleanupAsync();
         }
         
-        [Xunit.SkippableFactAttribute(DisplayName="Block invalid state transition with execution logs")]
-        [Xunit.TraitAttribute("FeatureTitle", "Workout Template Management")]
-        [Xunit.TraitAttribute("Description", "Block invalid state transition with execution logs")]
-        public async System.Threading.Tasks.Task BlockInvalidStateTransitionWithExecutionLogs()
-        {
-            string[] tagsOfScenario = ((string[])(null));
-            System.Collections.Specialized.OrderedDictionary argumentsOfScenario = new System.Collections.Specialized.OrderedDictionary();
-            TechTalk.SpecFlow.ScenarioInfo scenarioInfo = new TechTalk.SpecFlow.ScenarioInfo("Block invalid state transition with execution logs", null, tagsOfScenario, argumentsOfScenario, featureTags);
-            this.ScenarioInitialize(scenarioInfo);
-            if ((TagHelper.ContainsIgnoreTag(tagsOfScenario) || TagHelper.ContainsIgnoreTag(featureTags)))
-            {
-                testRunner.SkipScenario();
-            }
-            else
-            {
-                await this.ScenarioStartAsync();
-                await this.FeatureBackgroundAsync();
-                await testRunner.GivenAsync("I am a Personal Trainer with ID \"user-01000001-0000-0000-0000-000000000001\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Given ");
-                await testRunner.AndAsync("I have a workout template in PRODUCTION state", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
-                await testRunner.AndAsync("execution logs exist for this template", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
-                await testRunner.WhenAsync("I attempt to change the state to \"DRAFT\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
-                await testRunner.ThenAsync("the operation should fail with status \"Conflict\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
-                await testRunner.AndAsync("the error message should contain \"Cannot change state due to existing execution l" +
-                        "ogs\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
-                await testRunner.AndAsync("the template should remain in \"PRODUCTION\" state", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
-            }
-            await this.ScenarioCleanupAsync();
-        }
-        
         [Xunit.SkippableFactAttribute(DisplayName="Archive a workout template")]
         [Xunit.TraitAttribute("FeatureTitle", "Workout Template Management")]
         [Xunit.TraitAttribute("Description", "Archive a workout template")]
@@ -394,14 +370,14 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.WorkoutTemplate
             await this.ScenarioCleanupAsync();
         }
         
-        [Xunit.SkippableFactAttribute(DisplayName="Get paged workout templates by creator")]
+        [Xunit.SkippableFactAttribute(DisplayName="Get paged workout templates")]
         [Xunit.TraitAttribute("FeatureTitle", "Workout Template Management")]
-        [Xunit.TraitAttribute("Description", "Get paged workout templates by creator")]
-        public async System.Threading.Tasks.Task GetPagedWorkoutTemplatesByCreator()
+        [Xunit.TraitAttribute("Description", "Get paged workout templates")]
+        public async System.Threading.Tasks.Task GetPagedWorkoutTemplates()
         {
             string[] tagsOfScenario = ((string[])(null));
             System.Collections.Specialized.OrderedDictionary argumentsOfScenario = new System.Collections.Specialized.OrderedDictionary();
-            TechTalk.SpecFlow.ScenarioInfo scenarioInfo = new TechTalk.SpecFlow.ScenarioInfo("Get paged workout templates by creator", null, tagsOfScenario, argumentsOfScenario, featureTags);
+            TechTalk.SpecFlow.ScenarioInfo scenarioInfo = new TechTalk.SpecFlow.ScenarioInfo("Get paged workout templates", null, tagsOfScenario, argumentsOfScenario, featureTags);
             this.ScenarioInitialize(scenarioInfo);
             if ((TagHelper.ContainsIgnoreTag(tagsOfScenario) || TagHelper.ContainsIgnoreTag(featureTags)))
             {
@@ -416,7 +392,6 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.WorkoutTemplate
                 await testRunner.WhenAsync("I request my templates with page size 10", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
                 await testRunner.ThenAsync("I should receive 10 templates in the first page", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
                 await testRunner.AndAsync("the total count should be 15", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
-                await testRunner.AndAsync("all templates should belong to me", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
             }
             await this.ScenarioCleanupAsync();
         }
@@ -439,17 +414,13 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.WorkoutTemplate
                 await this.ScenarioStartAsync();
                 await this.FeatureBackgroundAsync();
                 TechTalk.SpecFlow.Table table22 = new TechTalk.SpecFlow.Table(new string[] {
-                            "Name",
-                            "CreatedBy"});
+                            "Name"});
                 table22.AddRow(new string[] {
-                            "Upper Body Power",
-                            "user-01000001-0000-0000-0000-000000000001"});
+                            "Upper Body Power"});
                 table22.AddRow(new string[] {
-                            "Lower Body Strength",
-                            "user-01000001-0000-0000-0000-000000000001"});
+                            "Lower Body Strength"});
                 table22.AddRow(new string[] {
-                            "Upper Body Endurance",
-                            "user-01000001-0000-0000-0000-000000000001"});
+                            "Upper Body Endurance"});
                 await testRunner.GivenAsync("the following workout templates exist:", ((string)(null)), table22, "Given ");
                 await testRunner.WhenAsync("I search for templates with name containing \"Upper\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
                 await testRunner.ThenAsync("I should receive 2 templates", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
@@ -476,8 +447,8 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.WorkoutTemplate
                 await this.ScenarioStartAsync();
                 await this.FeatureBackgroundAsync();
                 await testRunner.GivenAsync("workout templates exist in different categories", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Given ");
-                await testRunner.WhenAsync("I filter templates by category \"Upper Body\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
-                await testRunner.ThenAsync("all returned templates should have category \"Upper Body\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
+                await testRunner.WhenAsync("I filter templates by category \"Full Body\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
+                await testRunner.ThenAsync("all returned templates should have category \"Full Body\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
             }
             await this.ScenarioCleanupAsync();
         }
@@ -502,30 +473,6 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.WorkoutTemplate
                 await testRunner.GivenAsync("workout templates exist with different difficulty levels", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Given ");
                 await testRunner.WhenAsync("I filter templates by difficulty \"Intermediate\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
                 await testRunner.ThenAsync("all returned templates should have difficulty \"Intermediate\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
-            }
-            await this.ScenarioCleanupAsync();
-        }
-        
-        [Xunit.SkippableFactAttribute(DisplayName="Filter templates by objective")]
-        [Xunit.TraitAttribute("FeatureTitle", "Workout Template Management")]
-        [Xunit.TraitAttribute("Description", "Filter templates by objective")]
-        public async System.Threading.Tasks.Task FilterTemplatesByObjective()
-        {
-            string[] tagsOfScenario = ((string[])(null));
-            System.Collections.Specialized.OrderedDictionary argumentsOfScenario = new System.Collections.Specialized.OrderedDictionary();
-            TechTalk.SpecFlow.ScenarioInfo scenarioInfo = new TechTalk.SpecFlow.ScenarioInfo("Filter templates by objective", null, tagsOfScenario, argumentsOfScenario, featureTags);
-            this.ScenarioInitialize(scenarioInfo);
-            if ((TagHelper.ContainsIgnoreTag(tagsOfScenario) || TagHelper.ContainsIgnoreTag(featureTags)))
-            {
-                testRunner.SkipScenario();
-            }
-            else
-            {
-                await this.ScenarioStartAsync();
-                await this.FeatureBackgroundAsync();
-                await testRunner.GivenAsync("workout templates exist with different objectives", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Given ");
-                await testRunner.WhenAsync("I filter templates by objective \"Hypertrophy\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
-                await testRunner.ThenAsync("all returned templates should have objective \"Hypertrophy\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
             }
             await this.ScenarioCleanupAsync();
         }
@@ -590,14 +537,14 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.WorkoutTemplate
             await this.ScenarioCleanupAsync();
         }
         
-        [Xunit.SkippableFactAttribute(DisplayName="Prevent duplicate template names for same creator")]
+        [Xunit.SkippableFactAttribute(DisplayName="Prevent duplicate template names globally")]
         [Xunit.TraitAttribute("FeatureTitle", "Workout Template Management")]
-        [Xunit.TraitAttribute("Description", "Prevent duplicate template names for same creator")]
-        public async System.Threading.Tasks.Task PreventDuplicateTemplateNamesForSameCreator()
+        [Xunit.TraitAttribute("Description", "Prevent duplicate template names globally")]
+        public async System.Threading.Tasks.Task PreventDuplicateTemplateNamesGlobally()
         {
             string[] tagsOfScenario = ((string[])(null));
             System.Collections.Specialized.OrderedDictionary argumentsOfScenario = new System.Collections.Specialized.OrderedDictionary();
-            TechTalk.SpecFlow.ScenarioInfo scenarioInfo = new TechTalk.SpecFlow.ScenarioInfo("Prevent duplicate template names for same creator", null, tagsOfScenario, argumentsOfScenario, featureTags);
+            TechTalk.SpecFlow.ScenarioInfo scenarioInfo = new TechTalk.SpecFlow.ScenarioInfo("Prevent duplicate template names globally", null, tagsOfScenario, argumentsOfScenario, featureTags);
             this.ScenarioInitialize(scenarioInfo);
             if ((TagHelper.ContainsIgnoreTag(tagsOfScenario) || TagHelper.ContainsIgnoreTag(featureTags)))
             {
@@ -610,7 +557,7 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.WorkoutTemplate
                 await testRunner.GivenAsync("I am a Personal Trainer with ID \"user-01000001-0000-0000-0000-000000000001\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Given ");
                 await testRunner.AndAsync("I have created a template named \"My Workout\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
                 await testRunner.WhenAsync("I try to create another template named \"My Workout\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
-                await testRunner.ThenAsync("the operation should fail with status \"BadRequest\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
+                await testRunner.ThenAsync("the operation should fail with status \"Conflict\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
                 await testRunner.AndAsync("the error message should contain \"already exists\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
             }
             await this.ScenarioCleanupAsync();
@@ -634,11 +581,10 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.WorkoutTemplate
                 await this.ScenarioStartAsync();
                 await this.FeatureBackgroundAsync();
                 await testRunner.GivenAsync("I am a Personal Trainer with ID \"user-01000001-0000-0000-0000-000000000001\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Given ");
-                await testRunner.AndAsync("I have an existing workout template \"Original Upper Body\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
-                await testRunner.WhenAsync("I duplicate the template with name \"Modified Upper Body\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
+                await testRunner.AndAsync("I have an existing workout template \"Original Full Body Workout\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
+                await testRunner.WhenAsync("I duplicate the template with name \"Duplicated Full Body Workout\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
                 await testRunner.ThenAsync("a new template should be created in DRAFT state", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
                 await testRunner.AndAsync("all exercises and configurations should be copied", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
-                await testRunner.AndAsync("I should be set as the creator of the new template", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
                 await testRunner.AndAsync("the original template should remain unchanged", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
             }
             await this.ScenarioCleanupAsync();

@@ -1196,9 +1196,6 @@ namespace GetFitterGetBigger.API.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<Guid>("CreatedBy")
-                        .HasColumnType("uuid");
-
                     b.Property<string>("Description")
                         .HasMaxLength(500)
                         .HasColumnType("character varying(500)");
@@ -1231,15 +1228,15 @@ namespace GetFitterGetBigger.API.Migrations
 
                     b.HasIndex("CategoryId");
 
+                    b.HasIndex("CreatedAt")
+                        .HasDatabaseName("IX_WorkoutTemplate_CreatedAt");
+
                     b.HasIndex("DifficultyId");
 
                     b.HasIndex("Name")
                         .HasDatabaseName("IX_WorkoutTemplate_Name");
 
                     b.HasIndex("WorkoutStateId");
-
-                    b.HasIndex("CreatedBy", "CreatedAt")
-                        .HasDatabaseName("IX_WorkoutTemplate_CreatedBy_CreatedAt");
 
                     b.ToTable("WorkoutTemplates");
                 });

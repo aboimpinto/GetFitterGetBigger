@@ -479,7 +479,7 @@ public class SetConfigurationServiceTests
     public async Task DeleteAsync_WithEmptyId_ShouldReturnValidationFailure()
     {
         // Act
-        var result = await _service.DeleteAsync(SetConfigurationId.Empty, _validUserId);
+        var result = await _service.DeleteAsync(SetConfigurationId.Empty);
 
         // Assert
         Assert.False(result.IsSuccess);
@@ -487,17 +487,6 @@ public class SetConfigurationServiceTests
         Assert.False(result.Data);
     }
 
-    [Fact]
-    public async Task DeleteAsync_WithEmptyUserId_ShouldReturnValidationFailure()
-    {
-        // Act
-        var result = await _service.DeleteAsync(_validSetConfigurationId, UserId.Empty);
-
-        // Assert
-        Assert.False(result.IsSuccess);
-        Assert.NotEmpty(result.Errors);
-        Assert.False(result.Data);
-    }
 
     [Fact]
     public async Task DeleteAsync_WithNotFoundId_ShouldReturnNotFoundFailure()
@@ -507,7 +496,7 @@ public class SetConfigurationServiceTests
             .ReturnsAsync(SetConfiguration.Empty);
 
         // Act
-        var result = await _service.DeleteAsync(_validSetConfigurationId, _validUserId);
+        var result = await _service.DeleteAsync(_validSetConfigurationId);
 
         // Assert
         Assert.False(result.IsSuccess);
@@ -526,7 +515,7 @@ public class SetConfigurationServiceTests
             .ReturnsAsync(true);
 
         // Act
-        var result = await _service.DeleteAsync(_validSetConfigurationId, _validUserId);
+        var result = await _service.DeleteAsync(_validSetConfigurationId);
 
         // Assert
         Assert.True(result.IsSuccess);
@@ -542,7 +531,7 @@ public class SetConfigurationServiceTests
     public async Task DeleteByWorkoutTemplateExerciseAsync_WithEmptyId_ShouldReturnValidationFailure()
     {
         // Act
-        var result = await _service.DeleteByWorkoutTemplateExerciseAsync(WorkoutTemplateExerciseId.Empty, _validUserId);
+        var result = await _service.DeleteByWorkoutTemplateExerciseAsync(WorkoutTemplateExerciseId.Empty);
 
         // Assert
         Assert.False(result.IsSuccess);
@@ -558,7 +547,7 @@ public class SetConfigurationServiceTests
             .ReturnsAsync(3);
 
         // Act
-        var result = await _service.DeleteByWorkoutTemplateExerciseAsync(_validWorkoutTemplateExerciseId, _validUserId);
+        var result = await _service.DeleteByWorkoutTemplateExerciseAsync(_validWorkoutTemplateExerciseId);
 
         // Assert
         Assert.True(result.IsSuccess);

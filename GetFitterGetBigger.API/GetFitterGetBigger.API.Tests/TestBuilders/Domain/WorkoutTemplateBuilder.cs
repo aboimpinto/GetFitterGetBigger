@@ -15,7 +15,6 @@ public class WorkoutTemplateBuilder
     private int _estimatedDurationMinutes = 60;
     private List<string> _tags = new List<string> { "test", "workout" };
     private bool _isPublic = true;
-    private UserId _createdBy = UserId.New();
     private WorkoutStateId _workoutStateId = WorkoutStateId.New();
     private DateTime _createdAt = DateTime.UtcNow;
     private DateTime _updatedAt = DateTime.UtcNow;
@@ -37,7 +36,6 @@ public class WorkoutTemplateBuilder
         .WithCategoryId(WorkoutCategoryId.ParseOrEmpty(TestIds.WorkoutCategoryIds.UpperBodyPush))
         .WithDifficultyId(DifficultyLevelId.ParseOrEmpty(TestIds.DifficultyLevelIds.Intermediate))
         .WithEstimatedDuration(45)
-        .WithCreatedBy(UserId.ParseOrEmpty(TestIds.UserIds.PersonalTrainer))
         .AsPublic();
     
     public static WorkoutTemplateBuilder AProductionWorkoutTemplate() => new WorkoutTemplateBuilder()
@@ -47,7 +45,6 @@ public class WorkoutTemplateBuilder
         .WithCategoryId(WorkoutCategoryId.ParseOrEmpty(TestIds.WorkoutCategoryIds.LowerBody))
         .WithDifficultyId(DifficultyLevelId.ParseOrEmpty(TestIds.DifficultyLevelIds.Advanced))
         .WithEstimatedDuration(60)
-        .WithCreatedBy(UserId.ParseOrEmpty(TestIds.UserIds.PersonalTrainer))
         .AsPublic();
     
     public static WorkoutTemplateBuilder AnArchivedWorkoutTemplate() => new WorkoutTemplateBuilder()
@@ -57,7 +54,6 @@ public class WorkoutTemplateBuilder
         .WithCategoryId(WorkoutCategoryId.ParseOrEmpty(TestIds.WorkoutCategoryIds.Core))
         .WithDifficultyId(DifficultyLevelId.ParseOrEmpty(TestIds.DifficultyLevelIds.Beginner))
         .WithEstimatedDuration(30)
-        .WithCreatedBy(UserId.ParseOrEmpty(TestIds.UserIds.PersonalTrainer))
         .AsPrivate();
     
     public static WorkoutTemplateBuilder APrivateWorkoutTemplate() => new WorkoutTemplateBuilder()
@@ -178,17 +174,6 @@ public class WorkoutTemplateBuilder
         return this;
     }
     
-    public WorkoutTemplateBuilder WithCreatedBy(UserId userId)
-    {
-        _createdBy = userId;
-        return this;
-    }
-    
-    public WorkoutTemplateBuilder WithCreatedBy(string userId)
-    {
-        _createdBy = UserId.ParseOrEmpty(userId);
-        return this;
-    }
     
     public WorkoutTemplateBuilder WithWorkoutStateId(WorkoutStateId workoutStateId)
     {
@@ -270,7 +255,6 @@ public class WorkoutTemplateBuilder
             _estimatedDurationMinutes,
             _tags,
             _isPublic,
-            _createdBy,
             _workoutStateId);
         
         return result switch

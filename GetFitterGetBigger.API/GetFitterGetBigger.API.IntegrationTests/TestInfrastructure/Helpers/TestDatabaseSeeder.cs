@@ -212,7 +212,6 @@ public class TestDatabaseSeeder
             60,
             new List<string> { "test" },
             true,
-            UserId.ParseOrEmpty("user-01000001-0000-0000-0000-000000000001"),
             stateId,
             now,
             now);

@@ -134,33 +134,27 @@ public class SetConfigurationService : ISetConfigurationService
         return result;
     }
 
-    public async Task<ServiceResult<bool>> DeleteAsync(SetConfigurationId id, UserId userId)
+    public async Task<ServiceResult<bool>> DeleteAsync(SetConfigurationId id)
     {
-        var result = (id.IsEmpty, userId.IsEmpty) switch
+        var result = id.IsEmpty switch
         {
-            (true, _) => ServiceResult<bool>.Failure(
+            true => ServiceResult<bool>.Failure(
                 false,
                 ServiceError.InvalidFormat("SetConfigurationId", "GUID format")),
-            (_, true) => ServiceResult<bool>.Failure(
-                false,
-                ServiceError.InvalidFormat("UserId", "GUID format")),
-            _ => await ValidateAndProcessDeleteAsync(id, userId)
+            false => await ValidateAndProcessDeleteAsync(id)
         };
 
         return result;
     }
 
-    public async Task<ServiceResult<int>> DeleteByWorkoutTemplateExerciseAsync(WorkoutTemplateExerciseId workoutTemplateExerciseId, UserId userId)
+    public async Task<ServiceResult<int>> DeleteByWorkoutTemplateExerciseAsync(WorkoutTemplateExerciseId workoutTemplateExerciseId)
     {
-        var result = (workoutTemplateExerciseId.IsEmpty, userId.IsEmpty) switch
+        var result = workoutTemplateExerciseId.IsEmpty switch
         {
-            (true, _) => ServiceResult<int>.Failure(
+            true => ServiceResult<int>.Failure(
                 0,
                 ServiceError.InvalidFormat("WorkoutTemplateExerciseId", "GUID format")),
-            (_, true) => ServiceResult<int>.Failure(
-                0,
-                ServiceError.InvalidFormat("UserId", "GUID format")),
-            _ => await ValidateAndProcessBulkDeleteAsync(workoutTemplateExerciseId, userId)
+            false => await ValidateAndProcessBulkDeleteAsync(workoutTemplateExerciseId)
         };
 
         return result;
@@ -490,7 +484,7 @@ public class SetConfigurationService : ISetConfigurationService
         return ServiceResult<bool>.Success(true);
     }
 
-    private async Task<ServiceResult<bool>> ValidateAndProcessDeleteAsync(SetConfigurationId id, UserId userId)
+    private async Task<ServiceResult<bool>> ValidateAndProcessDeleteAsync(SetConfigurationId id)
     {
         using var unitOfWork = _unitOfWorkProvider.CreateWritable();
         var repository = unitOfWork.GetRepository<ISetConfigurationRepository>();
@@ -519,7 +513,7 @@ public class SetConfigurationService : ISetConfigurationService
         return ServiceResult<bool>.Success(success);
     }
 
-    private async Task<ServiceResult<int>> ValidateAndProcessBulkDeleteAsync(WorkoutTemplateExerciseId workoutTemplateExerciseId, UserId userId)
+    private async Task<ServiceResult<int>> ValidateAndProcessBulkDeleteAsync(WorkoutTemplateExerciseId workoutTemplateExerciseId)
     {
         using var unitOfWork = _unitOfWorkProvider.CreateWritable();
         var repository = unitOfWork.GetRepository<ISetConfigurationRepository>();

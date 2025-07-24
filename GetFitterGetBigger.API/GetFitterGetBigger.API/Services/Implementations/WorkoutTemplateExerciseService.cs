@@ -182,16 +182,10 @@ public class WorkoutTemplateExerciseService : IWorkoutTemplateExerciseService
             true => ServiceResult<WorkoutTemplateExerciseDto>.Failure(
                 new WorkoutTemplateExerciseDto(),
                 ServiceError.NotFound("Workout template not found")),
-            false => (template.CreatedBy != userId, template.WorkoutState.Value != "DRAFT") switch
-            {
-                (true, _) => ServiceResult<WorkoutTemplateExerciseDto>.Failure(
-                    new WorkoutTemplateExerciseDto(),
-                    ServiceError.Unauthorized("User is not authorized to modify this template")),
-                (false, true) => ServiceResult<WorkoutTemplateExerciseDto>.Failure(
-                    new WorkoutTemplateExerciseDto(),
-                    ServiceError.ValidationFailed("Can only add exercises to templates in DRAFT state")),
-                _ => ServiceResult<WorkoutTemplateExerciseDto>.Success(new WorkoutTemplateExerciseDto()) // Dummy success
-            }
+            false when template.WorkoutState.Value != "DRAFT" => ServiceResult<WorkoutTemplateExerciseDto>.Failure(
+                new WorkoutTemplateExerciseDto(),
+                ServiceError.ValidationFailed("Can only add exercises to templates in DRAFT state")),
+            false => ServiceResult<WorkoutTemplateExerciseDto>.Success(new WorkoutTemplateExerciseDto()) // Dummy success
         };
         
         return result;
@@ -307,16 +301,11 @@ public class WorkoutTemplateExerciseService : IWorkoutTemplateExerciseService
         var templateRepo = unitOfWork.GetRepository<IWorkoutTemplateRepository>();
         var template = await templateRepo.GetByIdAsync(exerciseTemplate.WorkoutTemplateId);
         
-        var result = (template.CreatedBy != command.UserId, template.WorkoutState.Value != "DRAFT") switch
-        {
-            (true, _) => ServiceResult<WorkoutTemplateExerciseDto>.Failure(
+        var result = template.WorkoutState.Value != "DRAFT"
+            ? ServiceResult<WorkoutTemplateExerciseDto>.Failure(
                 new WorkoutTemplateExerciseDto(),
-                ServiceError.Unauthorized("User is not authorized to modify this template")),
-            (false, true) => ServiceResult<WorkoutTemplateExerciseDto>.Failure(
-                new WorkoutTemplateExerciseDto(),
-                ServiceError.ValidationFailed("Can only update exercises in templates in DRAFT state")),
-            _ => await PerformUpdateAsync(exerciseTemplate, command, exerciseTemplateRepo, unitOfWork)
-        };
+                ServiceError.ValidationFailed("Can only update exercises in templates in DRAFT state"))
+            : await PerformUpdateAsync(exerciseTemplate, command, exerciseTemplateRepo, unitOfWork);
         
         return result;
     }
@@ -353,20 +342,20 @@ public class WorkoutTemplateExerciseService : IWorkoutTemplateExerciseService
     }
 
     /// <inheritdoc />
-    public async Task<ServiceResult<bool>> RemoveExerciseAsync(WorkoutTemplateExerciseId workoutTemplateExerciseId, UserId userId)
+    public async Task<ServiceResult<bool>> RemoveExerciseAsync(WorkoutTemplateExerciseId workoutTemplateExerciseId)
     {
-        var result = (workoutTemplateExerciseId.IsEmpty, userId.IsEmpty) switch
+        var result = workoutTemplateExerciseId.IsEmpty switch
         {
-            (true, _) or (_, true) => ServiceResult<bool>.Failure(
+            true => ServiceResult<bool>.Failure(
                 false,
-                ServiceError.ValidationFailed("Invalid exercise ID or user ID")),
-            _ => await ProcessRemoveExerciseAsync(workoutTemplateExerciseId, userId)
+                ServiceError.ValidationFailed("Invalid exercise ID")),
+            false => await ProcessRemoveExerciseAsync(workoutTemplateExerciseId)
         };
         
         return result;
     }
     
-    private async Task<ServiceResult<bool>> ProcessRemoveExerciseAsync(WorkoutTemplateExerciseId workoutTemplateExerciseId, UserId userId)
+    private async Task<ServiceResult<bool>> ProcessRemoveExerciseAsync(WorkoutTemplateExerciseId workoutTemplateExerciseId)
     {
         using var unitOfWork = _unitOfWorkProvider.CreateWritable();
         var exerciseTemplateRepo = unitOfWork.GetRepository<IWorkoutTemplateExerciseRepository>();
@@ -377,7 +366,7 @@ public class WorkoutTemplateExerciseService : IWorkoutTemplateExerciseService
             true => ServiceResult<bool>.Failure(
                 false,
                 ServiceError.NotFound("Template exercise not found")),
-            false => await ValidateAndRemoveExerciseAsync(unitOfWork, exerciseTemplate, userId, exerciseTemplateRepo, workoutTemplateExerciseId)
+            false => await ValidateAndRemoveExerciseAsync(unitOfWork, exerciseTemplate, exerciseTemplateRepo, workoutTemplateExerciseId)
         };
         
         return result;
@@ -386,23 +375,17 @@ public class WorkoutTemplateExerciseService : IWorkoutTemplateExerciseService
     private async Task<ServiceResult<bool>> ValidateAndRemoveExerciseAsync(
         IWritableUnitOfWork<FitnessDbContext> unitOfWork,
         WorkoutTemplateExercise exerciseTemplate,
-        UserId userId,
         IWorkoutTemplateExerciseRepository exerciseTemplateRepo,
         WorkoutTemplateExerciseId workoutTemplateExerciseId)
     {
         var templateRepo = unitOfWork.GetRepository<IWorkoutTemplateRepository>();
         var template = await templateRepo.GetByIdAsync(exerciseTemplate.WorkoutTemplateId);
         
-        var result = (template.CreatedBy != userId, template.WorkoutState.Value != "DRAFT") switch
-        {
-            (true, _) => ServiceResult<bool>.Failure(
+        var result = template.WorkoutState.Value != "DRAFT"
+            ? ServiceResult<bool>.Failure(
                 false,
-                ServiceError.Unauthorized("User is not authorized to modify this template")),
-            (false, true) => ServiceResult<bool>.Failure(
-                false,
-                ServiceError.ValidationFailed("Can only remove exercises from templates in DRAFT state")),
-            _ => await PerformRemoveExerciseAsync(exerciseTemplateRepo, workoutTemplateExerciseId, unitOfWork)
-        };
+                ServiceError.ValidationFailed("Can only remove exercises from templates in DRAFT state"))
+            : await PerformRemoveExerciseAsync(exerciseTemplateRepo, workoutTemplateExerciseId, unitOfWork);
         
         return result;
     }
@@ -492,16 +475,10 @@ public class WorkoutTemplateExerciseService : IWorkoutTemplateExerciseService
             true => ServiceResult<bool>.Failure(
                 false,
                 ServiceError.NotFound("Workout template not found")),
-            false => (template.CreatedBy != userId, template.WorkoutState.Value != "DRAFT") switch
-            {
-                (true, _) => ServiceResult<bool>.Failure(
-                    false,
-                    ServiceError.Unauthorized("User is not authorized to modify this template")),
-                (false, true) => ServiceResult<bool>.Failure(
-                    false,
-                    ServiceError.ValidationFailed("Can only reorder exercises in templates in DRAFT state")),
-                _ => ServiceResult<bool>.Success(true) // Dummy success
-            }
+            false when template.WorkoutState.Value != "DRAFT" => ServiceResult<bool>.Failure(
+                false,
+                ServiceError.ValidationFailed("Can only reorder exercises in templates in DRAFT state")),
+            false => ServiceResult<bool>.Success(true) // Dummy success
         };
         
         return result;
@@ -595,16 +572,11 @@ public class WorkoutTemplateExerciseService : IWorkoutTemplateExerciseService
         var templateRepo = unitOfWork.GetRepository<IWorkoutTemplateRepository>();
         var template = await templateRepo.GetByIdAsync(exerciseTemplate.WorkoutTemplateId);
         
-        var result = (template.CreatedBy != command.UserId, template.WorkoutState.Value != "DRAFT") switch
-        {
-            (true, _) => ServiceResult<WorkoutTemplateExerciseDto>.Failure(
+        var result = template.WorkoutState.Value != "DRAFT"
+            ? ServiceResult<WorkoutTemplateExerciseDto>.Failure(
                 new WorkoutTemplateExerciseDto(),
-                ServiceError.Unauthorized("User is not authorized to modify this template")),
-            (false, true) => ServiceResult<WorkoutTemplateExerciseDto>.Failure(
-                new WorkoutTemplateExerciseDto(),
-                ServiceError.ValidationFailed("Can only change zones in templates in DRAFT state")),
-            _ => await PerformZoneChangeAsync(exerciseTemplate, command, exerciseTemplateRepo, unitOfWork)
-        };
+                ServiceError.ValidationFailed("Can only change zones in templates in DRAFT state"))
+            : await PerformZoneChangeAsync(exerciseTemplate, command, exerciseTemplateRepo, unitOfWork);
         
         return result;
     }
@@ -713,16 +685,10 @@ public class WorkoutTemplateExerciseService : IWorkoutTemplateExerciseService
             true => ServiceResult<int>.Failure(
                 0,
                 ServiceError.NotFound("Target template not found")),
-            false => (targetTemplate.CreatedBy != command.UserId, targetTemplate.WorkoutState.Value != "DRAFT") switch
-            {
-                (true, _) => ServiceResult<int>.Failure(
-                    0,
-                    ServiceError.Unauthorized("User is not authorized to modify target template")),
-                (false, true) => ServiceResult<int>.Failure(
-                    0,
-                    ServiceError.ValidationFailed("Can only duplicate exercises to templates in DRAFT state")),
-                _ => ServiceResult<int>.Success(0) // Dummy success to continue
-            }
+            false when targetTemplate.WorkoutState.Value != "DRAFT" => ServiceResult<int>.Failure(
+                0,
+                ServiceError.ValidationFailed("Can only duplicate exercises to templates in DRAFT state")),
+            false => ServiceResult<int>.Success(0) // Dummy success to continue
         };
         
         return result;

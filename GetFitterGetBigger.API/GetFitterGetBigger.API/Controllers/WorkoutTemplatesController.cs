@@ -41,22 +41,6 @@ public class WorkoutTemplatesController : ControllerBase
         _logger = logger;
     }
 
-    /// <summary>
-    /// Gets the current user ID for the request
-    /// </summary>
-    /// <returns>The current user ID</returns>
-    private UserId GetCurrentUserId()
-    {
-        // TODO: Get from authentication context once auth is implemented
-        // For now, check if we're in integration test mode
-        if (Request.Headers.TryGetValue("X-Test-UserId", out var testUserId) && !string.IsNullOrEmpty(testUserId))
-        {
-            return UserId.ParseOrEmpty(testUserId!);
-        }
-
-        // Default hardcoded user ID until auth is implemented
-        return GetCurrentUserId();
-    }
 
     /// <summary>
     /// Gets a paginated list of workout templates with optional filtering
@@ -68,7 +52,6 @@ public class WorkoutTemplatesController : ControllerBase
     /// <param name="objectiveId">Filter by workout objective</param>
     /// <param name="difficultyId">Filter by difficulty</param>
     /// <param name="isPublic">Filter by public status</param>
-    /// <param name="creatorId">Filter by creator</param>
     /// <param name="stateId">Filter by workout state</param>
     /// <param name="sortBy">Sort field (name|createdAt|lastModified|duration)</param>
     /// <param name="sortOrder">Sort order (asc|desc)</param>
@@ -86,7 +69,6 @@ public class WorkoutTemplatesController : ControllerBase
         [FromQuery] string? objectiveId = null,
         [FromQuery] string? difficultyId = null,
         [FromQuery] bool? isPublic = null,
-        [FromQuery] string? creatorId = null,
         [FromQuery] string? stateId = null,
         [FromQuery] string sortBy = "name",
         [FromQuery] string sortOrder = "asc")
@@ -99,17 +81,129 @@ public class WorkoutTemplatesController : ControllerBase
         _logger.LogInformation("Getting workout templates with filters - Page: {Page}, PageSize: {PageSize}, Search: {Search}", 
             page, pageSize, search);
 
-        var currentUserId = GetCurrentUserId();
-
-        // Use GetPagedByCreatorAsync method which exists in the interface
-        var result = await _workoutTemplateService.GetPagedByCreatorAsync(
-            currentUserId, 
+        // Use GetPagedAsync method which exists in the interface
+        var result = await _workoutTemplateService.GetPagedAsync(
             page, 
             pageSize,
             categoryId != null ? WorkoutCategoryId.ParseOrEmpty(categoryId) : null,
             difficultyId != null ? DifficultyLevelId.ParseOrEmpty(difficultyId) : null);
 
         return Ok(result);
+    }
+
+    /// <summary>
+    /// Searches workout templates by name pattern
+    /// </summary>
+    /// <param name="namePattern">The pattern to search for in template names</param>
+    /// <returns>A list of matching workout templates</returns>
+    /// <response code="200">Returns the list of matching workout templates</response>
+    /// <response code="400">If the name pattern is invalid</response>
+    [HttpGet("search")]
+    [ProducesResponseType(typeof(IEnumerable<WorkoutTemplateDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> SearchWorkoutTemplates([FromQuery] string namePattern)
+    {
+        if (string.IsNullOrWhiteSpace(namePattern))
+        {
+            return BadRequest("Name pattern cannot be empty");
+        }
+
+        _logger.LogInformation("Searching workout templates with pattern: {Pattern}", namePattern);
+
+        var result = await _workoutTemplateService.GetByNamePatternAsync(namePattern);
+
+        return result switch
+        {
+            { IsSuccess: true } => Ok(result.Data),
+            { Errors: var errors } => BadRequest(new { errors })
+        };
+    }
+
+    /// <summary>
+    /// Gets workout templates by category
+    /// </summary>
+    /// <param name="categoryId">The category ID to filter by</param>
+    /// <returns>A list of workout templates in the specified category</returns>
+    /// <response code="200">Returns the list of workout templates</response>
+    /// <response code="400">If the category ID is invalid</response>
+    [HttpGet("by-category/{categoryId}")]
+    [ProducesResponseType(typeof(IEnumerable<WorkoutTemplateDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> GetWorkoutTemplatesByCategory(string categoryId)
+    {
+        _logger.LogInformation("Getting workout templates by category: {CategoryId}", categoryId);
+
+        var parsedCategoryId = WorkoutCategoryId.ParseOrEmpty(categoryId);
+        if (parsedCategoryId.IsEmpty)
+        {
+            return BadRequest("Invalid category ID");
+        }
+
+        var result = await _workoutTemplateService.GetByCategoryAsync(parsedCategoryId);
+
+        return result switch
+        {
+            { IsSuccess: true } => Ok(result.Data),
+            { Errors: var errors } => BadRequest(new { errors })
+        };
+    }
+
+    /// <summary>
+    /// Gets workout templates by difficulty
+    /// </summary>
+    /// <param name="difficultyId">The difficulty ID to filter by</param>
+    /// <returns>A list of workout templates with the specified difficulty</returns>
+    /// <response code="200">Returns the list of workout templates</response>
+    /// <response code="400">If the difficulty ID is invalid</response>
+    [HttpGet("by-difficulty/{difficultyId}")]
+    [ProducesResponseType(typeof(IEnumerable<WorkoutTemplateDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> GetWorkoutTemplatesByDifficulty(string difficultyId)
+    {
+        _logger.LogInformation("Getting workout templates by difficulty: {DifficultyId}", difficultyId);
+
+        var parsedDifficultyId = DifficultyLevelId.ParseOrEmpty(difficultyId);
+        if (parsedDifficultyId.IsEmpty)
+        {
+            return BadRequest("Invalid difficulty ID");
+        }
+
+        var result = await _workoutTemplateService.GetByDifficultyAsync(parsedDifficultyId);
+
+        return result switch
+        {
+            { IsSuccess: true } => Ok(result.Data),
+            { Errors: var errors } => BadRequest(new { errors })
+        };
+    }
+
+    /// <summary>
+    /// Gets workout templates by objective
+    /// </summary>
+    /// <param name="objectiveId">The objective ID to filter by</param>
+    /// <returns>A list of workout templates with the specified objective</returns>
+    /// <response code="200">Returns the list of workout templates</response>
+    /// <response code="400">If the objective ID is invalid</response>
+    [HttpGet("by-objective/{objectiveId}")]
+    [ProducesResponseType(typeof(IEnumerable<WorkoutTemplateDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> GetWorkoutTemplatesByObjective(string objectiveId)
+    {
+        _logger.LogInformation("Getting workout templates by objective: {ObjectiveId}", objectiveId);
+
+        var parsedObjectiveId = WorkoutObjectiveId.ParseOrEmpty(objectiveId);
+        if (parsedObjectiveId.IsEmpty)
+        {
+            return BadRequest("Invalid objective ID");
+        }
+
+        var result = await _workoutTemplateService.GetByObjectiveAsync(parsedObjectiveId);
+
+        return result switch
+        {
+            { IsSuccess: true } => Ok(result.Data),
+            { Errors: var errors } => BadRequest(new { errors })
+        };
     }
 
     /// <summary>
@@ -184,8 +278,7 @@ public class WorkoutTemplatesController : ControllerBase
             EstimatedDurationMinutes = request.EstimatedDurationMinutes,
             Tags = request.Tags,
             IsPublic = request.IsPublic,
-            ObjectiveIds = request.ObjectiveIds.Select(WorkoutObjectiveId.ParseOrEmpty).ToList(),
-            CreatedBy = GetCurrentUserId()
+            ObjectiveIds = request.ObjectiveIds.Select(WorkoutObjectiveId.ParseOrEmpty).ToList()
         };
 
         var result = await _workoutTemplateService.CreateAsync(command);
@@ -247,8 +340,7 @@ public class WorkoutTemplatesController : ControllerBase
             EstimatedDurationMinutes = request.EstimatedDurationMinutes,
             Tags = request.Tags,
             IsPublic = request.IsPublic,
-            ObjectiveIds = request.ObjectiveIds?.Select(WorkoutObjectiveId.ParseOrEmpty).ToList(),
-            UpdatedBy = GetCurrentUserId()
+            ObjectiveIds = request.ObjectiveIds?.Select(WorkoutObjectiveId.ParseOrEmpty).ToList()
         };
 
         var result = await _workoutTemplateService.UpdateAsync(command.Id, command);
@@ -384,8 +476,7 @@ public class WorkoutTemplatesController : ControllerBase
 
         var result = await _workoutTemplateService.DuplicateAsync(
             WorkoutTemplateId.ParseOrEmpty(id),
-            request.NewName,
-            GetCurrentUserId());
+            request.NewName);
 
         return result switch
         {
@@ -498,8 +589,7 @@ public class WorkoutTemplatesController : ControllerBase
             ExerciseId = ExerciseId.ParseOrEmpty(request.ExerciseId),
             Zone = request.Zone,
             Notes = request.Notes,
-            SequenceOrder = request.SequenceOrder,
-            UserId = GetCurrentUserId() // TODO: Get from auth context
+            SequenceOrder = request.SequenceOrder
         };
 
         var result = await _workoutTemplateExerciseService.AddExerciseAsync(command);
@@ -548,8 +638,7 @@ public class WorkoutTemplatesController : ControllerBase
         var command = new UpdateTemplateExerciseCommand
         {
             WorkoutTemplateExerciseId = WorkoutTemplateExerciseId.ParseOrEmpty(exerciseId),
-            Notes = request.Notes,
-            UserId = GetCurrentUserId() // TODO: Get from auth context
+            Notes = request.Notes
         };
 
         var result = await _workoutTemplateExerciseService.UpdateExerciseAsync(command);
@@ -580,8 +669,7 @@ public class WorkoutTemplatesController : ControllerBase
         _logger.LogInformation("Removing exercise {ExerciseId} from workout template {TemplateId}", exerciseId, id);
 
         var result = await _workoutTemplateExerciseService.RemoveExerciseAsync(
-            WorkoutTemplateExerciseId.ParseOrEmpty(exerciseId),
-            GetCurrentUserId()); // TODO: Get from auth context
+            WorkoutTemplateExerciseId.ParseOrEmpty(exerciseId));
 
         return result switch
         {
@@ -629,8 +717,7 @@ public class WorkoutTemplatesController : ControllerBase
         {
             WorkoutTemplateExerciseId = WorkoutTemplateExerciseId.ParseOrEmpty(exerciseId),
             NewZone = request.Zone,
-            NewSequenceOrder = request.SequenceOrder,
-            UserId = GetCurrentUserId() // TODO: Get from auth context
+            NewSequenceOrder = request.SequenceOrder
         };
 
         var result = await _workoutTemplateExerciseService.ChangeExerciseZoneAsync(command);
@@ -691,8 +778,7 @@ public class WorkoutTemplatesController : ControllerBase
             ExerciseIds = request.ExerciseOrders
                 .OrderBy(o => o.SequenceOrder)
                 .Select(o => WorkoutTemplateExerciseId.ParseOrEmpty(o.ExerciseId))
-                .ToList(),
-            UserId = GetCurrentUserId() // TODO: Get from auth context
+                .ToList()
         };
 
         var result = await _workoutTemplateExerciseService.ReorderExercisesAsync(command);
@@ -813,8 +899,7 @@ public class WorkoutTemplatesController : ControllerBase
             TargetReps = request.TargetReps,
             TargetWeight = request.TargetWeight,
             TargetTimeSeconds = request.TargetTimeSeconds,
-            RestSeconds = request.RestSeconds,
-            UserId = GetCurrentUserId() // TODO: Get from auth context
+            RestSeconds = request.RestSeconds
         };
 
         var result = await _setConfigurationService.CreateAsync(command);
@@ -884,8 +969,7 @@ public class WorkoutTemplatesController : ControllerBase
                 TargetWeight = s.TargetWeight,
                 TargetTimeSeconds = s.TargetTimeSeconds,
                 RestSeconds = s.RestSeconds
-            }).ToList(),
-            UserId = GetCurrentUserId() // TODO: Get from auth context
+            }).ToList()
         };
 
         var result = await _setConfigurationService.CreateBulkAsync(command);
@@ -940,8 +1024,7 @@ public class WorkoutTemplatesController : ControllerBase
             TargetReps = request.TargetReps,
             TargetWeight = request.TargetWeight,
             TargetTimeSeconds = request.TargetTimeSeconds,
-            RestSeconds = request.RestSeconds ?? 90,
-            UserId = GetCurrentUserId() // TODO: Get from auth context
+            RestSeconds = request.RestSeconds ?? 90
         };
 
         var result = await _setConfigurationService.UpdateAsync(command);
@@ -974,8 +1057,7 @@ public class WorkoutTemplatesController : ControllerBase
             setId, exerciseId, id);
 
         var result = await _setConfigurationService.DeleteAsync(
-            SetConfigurationId.ParseOrEmpty(setId),
-            GetCurrentUserId()); // TODO: Get from auth context
+            SetConfigurationId.ParseOrEmpty(setId));
 
         return result switch
         {
@@ -1032,8 +1114,7 @@ public class WorkoutTemplatesController : ControllerBase
             WorkoutTemplateExerciseId = WorkoutTemplateExerciseId.ParseOrEmpty(exerciseId),
             SetReorders = request.SetOrders.ToDictionary(
                 o => SetConfigurationId.ParseOrEmpty(o.SetId),
-                o => o.SetNumber),
-            UserId = GetCurrentUserId() // TODO: Get from auth context
+                o => o.SetNumber)
         };
 
         var result = await _setConfigurationService.ReorderSetsAsync(command);
