@@ -1,10 +1,10 @@
 # FEAT-021: Workout Template UI
 
 ## Overview
-The Workout Template UI feature provides the user interface for Personal Trainers to create, manage, and organize workout templates in the GetFitterGetBigger Admin application. This feature builds upon the API implementation (FEAT-021-workout-template-core) to deliver a comprehensive workout template management experience.
+The Workout Template UI feature provides the user interface for Personal Trainers to create and manage workout templates in the GetFitterGetBigger Admin application. This feature focuses on template lifecycle management (creation, editing, state transitions, and archival) and builds upon the API implementation (FEAT-021-workout-template-core). Exercise management within templates will be handled in a separate feature.
 
 ## Business Context
-Personal Trainers need an intuitive interface to leverage the workout template system, allowing them to create reusable workout blueprints, organize exercises efficiently, and manage the lifecycle of their training programs. This UI feature enables trainers to encapsulate their programming expertise into structured formats that can be assigned to multiple clients.
+Personal Trainers need an intuitive interface to leverage the workout template system, allowing them to create reusable workout blueprints and manage the lifecycle of their training programs. This UI feature enables trainers to create and organize template metadata that can be assigned to multiple clients.
 
 ## Target Users
 - **Primary**: Personal Trainers who create and manage workout templates
@@ -24,39 +24,14 @@ Personal Trainers need an intuitive interface to leverage the workout template s
 2. **Template Creation/Edit View**
    - Multi-step wizard or single form approach
    - Template metadata section (name, description, category, objective, etc.)
-   - Exercise management section with zone organization
-   - Real-time equipment requirement aggregation
    - Validation feedback
    - Save as draft functionality
    - Preview before publishing
 
 3. **Template Detail View**
    - Read-only view of template structure
-   - Exercise flow visualization (Warmup → Main → Cooldown)
-   - Equipment requirements summary
    - Quick duplicate action
    - State transition controls
-
-### Exercise Management Features
-1. **Exercise Selection Interface**
-   - Searchable exercise library
-   - Filter by muscle groups, equipment, exercise type
-   - Exercise details preview
-   - Drag-and-drop or add button functionality
-   - Exercise suggestion panel based on template configuration
-
-2. **Zone Organization**
-   - Visual separation of Warmup, Main, and Cooldown zones
-   - Drag-and-drop reordering within zones
-   - Sequence number auto-adjustment
-   - Zone-specific exercise count indicators
-
-3. **Set Configuration**
-   - Inline editing of sets, reps, and duration
-   - Support for rep ranges (e.g., "8-12")
-   - Time-based vs rep-based toggle
-   - Rest period configuration
-   - Copy configuration to multiple exercises
 
 ### State Management UI
 1. **State Transition Controls**
@@ -80,7 +55,6 @@ Personal Trainers need an intuitive interface to leverage the workout template s
 2. **Template Duplication**
    - Quick duplicate with name modification
    - Option to copy as draft or maintain state
-   - Bulk exercise copying between templates
 
 3. **Responsive Design**
    - Mobile-friendly for on-the-go editing
@@ -97,13 +71,9 @@ Personal Trainers need an intuitive interface to leverage the workout template s
 
 2. **Presentation Components**
    - WorkoutTemplateCard
-   - ExerciseZoneManager
-   - SetConfigurationEditor
    - StateTransitionButton
-   - ExerciseSuggestionPanel
 
 3. **Shared Components**
-   - ExerciseSelector (reusable across features)
    - ValidationSummary
    - ConfirmationDialog
 
@@ -111,7 +81,6 @@ Personal Trainers need an intuitive interface to leverage the workout template s
 - Use existing state management pattern (Context/Redux)
 - Template list state with pagination
 - Form state with validation
-- Exercise selection state
 - UI state (loading, errors, success messages)
 
 ### API Integration
@@ -135,21 +104,13 @@ Personal Trainers need an intuitive interface to leverage the workout template s
 4. Delete functionality
 5. Basic validation
 
-### Phase 2: Exercise Management
-1. Exercise selection interface
-2. Zone organization
-3. Set configuration editing
-4. Exercise reordering
-5. Equipment aggregation display
-
-### Phase 3: Advanced Features
+### Phase 2: Advanced Features
 1. State management UI
 2. Template duplication
-3. Exercise suggestions
-4. Auto-save functionality
-5. Advanced filtering and search
+3. Auto-save functionality
+4. Advanced filtering and search
 
-### Phase 4: Polish and Enhancement
+### Phase 3: Polish and Enhancement
 1. Responsive design improvements
 2. Keyboard navigation
 3. Accessibility features
@@ -184,7 +145,6 @@ Personal Trainers need an intuitive interface to leverage the workout template s
 ## Integration Considerations
 
 ### With Existing Features
-- Reuse Exercise selection components from Exercise Management
 - Integrate with existing Reference Table selectors
 - Maintain consistent styling with other CRUD interfaces
 - Use shared validation components
@@ -209,9 +169,7 @@ Personal Trainers need an intuitive interface to leverage the workout template s
 ## UI/UX Guidelines
 
 ### Visual Design
-- Clear zone separation with visual boundaries
 - State indicators using color and icons
-- Drag-and-drop visual feedback
 - Progress indicators for multi-step processes
 
 ### Interaction Patterns
@@ -242,7 +200,6 @@ Personal Trainers need an intuitive interface to leverage the workout template s
 
 ### E2E Tests
 - Complete template creation flow
-- Exercise management scenarios
 - State transition workflows
 - Search and filter functionality
 
@@ -251,3 +208,4 @@ Personal Trainers need an intuitive interface to leverage the workout template s
 - Should follow established patterns from other Admin features
 - Consider progressive enhancement for complex interactions
 - Prepare UI for future API enhancements without blocking current functionality
+- Exercise management functionality will be implemented in a separate future feature
