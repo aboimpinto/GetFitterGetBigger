@@ -9,7 +9,6 @@ using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.AspNetCore.Components.Routing;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.JSInterop;
 using Moq;
 using System.ComponentModel.DataAnnotations;
 using ValidationResult = System.ComponentModel.DataAnnotations.ValidationResult;
@@ -21,6 +20,7 @@ public class WorkoutTemplateFormTests : TestContext
 {
     private readonly Mock<IWorkoutTemplateService> _mockWorkoutTemplateService;
     private readonly Mock<IWorkoutTemplateStateService> _mockStateService;
+    private readonly Mock<ILocalStorageService> _mockLocalStorageService;
     private readonly List<ReferenceDataDto> _mockCategories;
     private readonly List<ReferenceDataDto> _mockDifficulties;
     private readonly List<ReferenceDataDto> _mockObjectives;
@@ -29,6 +29,7 @@ public class WorkoutTemplateFormTests : TestContext
     {
         _mockWorkoutTemplateService = new Mock<IWorkoutTemplateService>();
         _mockStateService = new Mock<IWorkoutTemplateStateService>();
+        _mockLocalStorageService = new Mock<ILocalStorageService>();
         
         _mockCategories = new List<ReferenceDataDto>
         {
@@ -52,6 +53,15 @@ public class WorkoutTemplateFormTests : TestContext
         SetupMockServices();
         Services.AddSingleton(_mockWorkoutTemplateService.Object);
         Services.AddSingleton(_mockStateService.Object);
+        Services.AddSingleton(_mockLocalStorageService.Object);
+        
+        // Setup default localStorage behavior
+        _mockLocalStorageService.Setup(x => x.GetItemAsync(It.IsAny<string>()))
+            .ReturnsAsync((string?)null);
+        _mockLocalStorageService.Setup(x => x.SetItemAsync(It.IsAny<string>(), It.IsAny<string>()))
+            .Returns(Task.CompletedTask);
+        _mockLocalStorageService.Setup(x => x.RemoveItemAsync(It.IsAny<string>()))
+            .Returns(Task.CompletedTask);
     }
     
     private void SetupMockServices()
@@ -1237,12 +1247,11 @@ public class WorkoutTemplateFormTests : TestContext
     public async Task Should_ShowRecoveryDialog_WhenRecoveryDataExists()
     {
         // Arrange
-        var jsRuntime = new Mock<IJSRuntime>();
-        jsRuntime.Setup(x => x.InvokeAsync<string?>("localStorage.getItem", 
-            It.Is<object[]>(args => args[0].ToString() == "workoutTemplateFormData")))
+        var localStorageService = new Mock<ILocalStorageService>();
+        localStorageService.Setup(x => x.GetItemAsync("workoutTemplateFormData"))
             .ReturnsAsync("{\"Name\":\"Recovered Template\",\"CategoryId\":\"cat1\"}");
         
-        Services.AddSingleton(jsRuntime.Object);
+        Services.AddSingleton(localStorageService.Object);
         
         // Act
         var cut = RenderComponent<WorkoutTemplateForm>();
@@ -1257,13 +1266,14 @@ public class WorkoutTemplateFormTests : TestContext
     public async Task Should_RecoverFormData_WhenRecoverClicked()
     {
         // Arrange
-        var jsRuntime = new Mock<IJSRuntime>();
+        var localStorageService = new Mock<ILocalStorageService>();
         var recoveredData = "{\"Name\":\"Recovered Template\",\"CategoryId\":\"cat1\",\"DifficultyId\":\"diff1\",\"EstimatedDurationMinutes\":45}";
-        jsRuntime.Setup(x => x.InvokeAsync<string?>("localStorage.getItem", 
-            It.Is<object[]>(args => args[0].ToString() == "workoutTemplateFormData")))
+        localStorageService.Setup(x => x.GetItemAsync("workoutTemplateFormData"))
             .ReturnsAsync(recoveredData);
+        localStorageService.Setup(x => x.RemoveItemAsync("workoutTemplateFormData"))
+            .Returns(Task.CompletedTask);
         
-        Services.AddSingleton(jsRuntime.Object);
+        Services.AddSingleton(localStorageService.Object);
         
         var cut = RenderComponent<WorkoutTemplateForm>();
         cut.Instance.ShowRecoveryDialog = true;
@@ -1281,20 +1291,20 @@ public class WorkoutTemplateFormTests : TestContext
         cut.Instance.isDirty.Should().BeTrue();
         
         // Verify recovery data was cleared
-        jsRuntime.Verify(x => x.InvokeVoidAsync("localStorage.removeItem", 
-            It.Is<object[]>(args => args[0].ToString() == "workoutTemplateFormData")), Times.Once);
+        localStorageService.Verify(x => x.RemoveItemAsync("workoutTemplateFormData"), Times.Once);
     }
     
     [Fact]
     public async Task Should_DiscardRecoveryData_WhenDiscardClicked()
     {
         // Arrange
-        var jsRuntime = new Mock<IJSRuntime>();
-        jsRuntime.Setup(x => x.InvokeAsync<string?>("localStorage.getItem", 
-            It.Is<object[]>(args => args[0].ToString() == "workoutTemplateFormData")))
+        var localStorageService = new Mock<ILocalStorageService>();
+        localStorageService.Setup(x => x.GetItemAsync("workoutTemplateFormData"))
             .ReturnsAsync("{\"Name\":\"Recovered Template\"}");
+        localStorageService.Setup(x => x.RemoveItemAsync("workoutTemplateFormData"))
+            .Returns(Task.CompletedTask);
         
-        Services.AddSingleton(jsRuntime.Object);
+        Services.AddSingleton(localStorageService.Object);
         
         var cut = RenderComponent<WorkoutTemplateForm>();
         cut.Instance.ShowRecoveryDialog = true;
@@ -1308,8 +1318,7 @@ public class WorkoutTemplateFormTests : TestContext
         cut.Instance.Model.Name.Should().Be(""); // Not recovered
         
         // Verify recovery data was cleared
-        jsRuntime.Verify(x => x.InvokeVoidAsync("localStorage.removeItem", 
-            It.Is<object[]>(args => args[0].ToString() == "workoutTemplateFormData")), Times.Once);
+        localStorageService.Verify(x => x.RemoveItemAsync("workoutTemplateFormData"), Times.Once);
     }
     
     [Fact]
@@ -1350,10 +1359,12 @@ public class WorkoutTemplateFormTests : TestContext
     public async Task Should_NavigateAway_WhenDiscardChangesClicked()
     {
         // Arrange
-        var navigationManager = Services.GetRequiredService<NavigationManager>();
-        var jsRuntime = new Mock<IJSRuntime>();
-        Services.AddSingleton(jsRuntime.Object);
+        var localStorageService = new Mock<ILocalStorageService>();
+        localStorageService.Setup(x => x.RemoveItemAsync("workoutTemplateFormData"))
+            .Returns(Task.CompletedTask);
+        Services.AddSingleton(localStorageService.Object);
         
+        var navigationManager = Services.GetRequiredService<NavigationManager>();
         var cut = RenderComponent<WorkoutTemplateForm>();
         cut.Instance.ShowUnsavedChangesDialog = true;
         cut.Instance.pendingNavigationUrl = "/other-page";
@@ -1368,18 +1379,21 @@ public class WorkoutTemplateFormTests : TestContext
         navigationManager.Uri.Should().EndWith("/other-page");
         
         // Verify recovery data was cleared
-        jsRuntime.Verify(x => x.InvokeVoidAsync("localStorage.removeItem", 
-            It.Is<object[]>(args => args[0].ToString() == "workoutTemplateFormData")), Times.Once);
+        localStorageService.Verify(x => x.RemoveItemAsync("workoutTemplateFormData"), Times.Once);
     }
     
     [Fact]
     public async Task Should_StayOnPage_WhenCancelNavigationClicked()
     {
         // Arrange
+        var localStorageService = new Mock<ILocalStorageService>();
+        Services.AddSingleton(localStorageService.Object);
+        
         var navigationManager = Services.GetRequiredService<NavigationManager>();
         var originalUri = navigationManager.Uri;
         
         var cut = RenderComponent<WorkoutTemplateForm>();
+        cut.Instance.MarkAsDirty(); // Form should be dirty when dialog shows
         cut.Instance.ShowUnsavedChangesDialog = true;
         cut.Instance.pendingNavigationUrl = "/other-page";
         cut.Render();
@@ -1397,10 +1411,12 @@ public class WorkoutTemplateFormTests : TestContext
     public async Task Should_SaveAndNavigate_WhenSaveAndContinueClicked()
     {
         // Arrange
-        var navigationManager = Services.GetRequiredService<NavigationManager>();
-        var jsRuntime = new Mock<IJSRuntime>();
-        Services.AddSingleton(jsRuntime.Object);
+        var localStorageService = new Mock<ILocalStorageService>();
+        localStorageService.Setup(x => x.RemoveItemAsync("workoutTemplateFormData"))
+            .Returns(Task.CompletedTask);
+        Services.AddSingleton(localStorageService.Object);
         
+        var navigationManager = Services.GetRequiredService<NavigationManager>();
         var submitInvoked = false;
         var cut = RenderComponent<WorkoutTemplateForm>(parameters => parameters
             .Add(p => p.OnValidSubmit, EventCallback.Factory.Create<WorkoutTemplateFormModel>(this, (model) => 
@@ -1427,8 +1443,7 @@ public class WorkoutTemplateFormTests : TestContext
         navigationManager.Uri.Should().EndWith("/other-page");
         
         // Verify recovery data was cleared
-        jsRuntime.Verify(x => x.InvokeVoidAsync("localStorage.removeItem", 
-            It.Is<object[]>(args => args[0].ToString() == "workoutTemplateFormData")), Times.Once);
+        localStorageService.Verify(x => x.RemoveItemAsync("workoutTemplateFormData"), Times.Once);
     }
     
     [Fact]
@@ -1451,8 +1466,10 @@ public class WorkoutTemplateFormTests : TestContext
     public async Task Should_SaveFormDataToLocalStorage_OnNavigation()
     {
         // Arrange
-        var jsRuntime = new Mock<IJSRuntime>();
-        Services.AddSingleton(jsRuntime.Object);
+        var localStorageService = new Mock<ILocalStorageService>();
+        localStorageService.Setup(x => x.SetItemAsync(It.IsAny<string>(), It.IsAny<string>()))
+            .Returns(Task.CompletedTask);
+        Services.AddSingleton(localStorageService.Object);
         
         var cut = RenderComponent<WorkoutTemplateForm>();
         cut.Instance.Model.Name = "Test Template";
@@ -1463,18 +1480,18 @@ public class WorkoutTemplateFormTests : TestContext
         await cut.Instance.SaveFormDataToLocalStorage();
         
         // Assert
-        jsRuntime.Verify(x => x.InvokeVoidAsync("localStorage.setItem", 
-            It.Is<object[]>(args => 
-                args[0].ToString() == "workoutTemplateFormData" && 
-                args[1].ToString()!.Contains("Test Template"))), Times.Once);
+        localStorageService.Verify(x => x.SetItemAsync("workoutTemplateFormData", 
+            It.Is<string>(data => data.Contains("Test Template"))), Times.Once);
     }
     
     [Fact]
     public async Task Should_ClearDirtyFlag_OnSuccessfulSave()
     {
         // Arrange
-        var jsRuntime = new Mock<IJSRuntime>();
-        Services.AddSingleton(jsRuntime.Object);
+        var localStorageService = new Mock<ILocalStorageService>();
+        localStorageService.Setup(x => x.RemoveItemAsync("workoutTemplateFormData"))
+            .Returns(Task.CompletedTask);
+        Services.AddSingleton(localStorageService.Object);
         
         var cut = RenderComponent<WorkoutTemplateForm>(parameters => parameters
             .Add(p => p.OnValidSubmit, EventCallback.Factory.Create<WorkoutTemplateFormModel>(this, (model) => { })));
@@ -1495,8 +1512,7 @@ public class WorkoutTemplateFormTests : TestContext
         cut.Instance.isDirty.Should().BeFalse();
         
         // Verify recovery data was cleared
-        jsRuntime.Verify(x => x.InvokeVoidAsync("localStorage.removeItem", 
-            It.Is<object[]>(args => args[0].ToString() == "workoutTemplateFormData")), Times.Once);
+        localStorageService.Verify(x => x.RemoveItemAsync("workoutTemplateFormData"), Times.Once);
     }
     
     [Fact]

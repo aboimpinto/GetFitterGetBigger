@@ -335,7 +335,8 @@ Notes:
   - Git commit: `cbc99af8` - Included in Task 6.7 commit
 - **Task 6.9:** Implement name uniqueness check with async validation [Completed: Included in Task 6.1] (Est: 45m, Actual: 0m - Included in Task 6.1)
 - **Task 6.10:** Create unit tests for async validation (debouncing, error states) [Completed: Started: 2025-07-24 22:55, Finished: 2025-07-24 23:05] (Est: 30m, Actual: 10m)
-- **Task 6.11:** Create integration test for complete form workflow (create and edit) [ReadyToDevelop] (Est: 45m)
+- **Task 6.11:** Create integration test for complete form workflow (create and edit) [Completed: Started: 2025-07-24 23:12, Finished: 2025-07-24 23:36] (Est: 45m, Actual: 24m)
+  - Git commit: `0bb87b42` - test(Admin): add integration tests for WorkoutTemplateFormPage complete workflow
 - **Task 6.12:** Implement floating Save/Cancel buttons matching Exercise page pattern [Completed: Started: 2025-07-24 22:10, Finished: 2025-07-24 22:15] (Est: 30m, Actual: 5m)
 
 ### Questions for Clarification

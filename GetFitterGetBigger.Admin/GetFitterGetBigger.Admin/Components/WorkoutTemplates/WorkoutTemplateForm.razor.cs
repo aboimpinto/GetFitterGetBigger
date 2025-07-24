@@ -2,7 +2,6 @@ using GetFitterGetBigger.Admin.Models.Dtos;
 using GetFitterGetBigger.Admin.Services;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Routing;
-using Microsoft.JSInterop;
 using System.ComponentModel.DataAnnotations;
 
 namespace GetFitterGetBigger.Admin.Components.WorkoutTemplates;
@@ -22,7 +21,7 @@ public partial class WorkoutTemplateForm : ComponentBase, IDisposable
     [Inject] private IWorkoutTemplateService WorkoutTemplateService { get; set; } = default!;
     [Inject] private IWorkoutTemplateStateService WorkoutTemplateStateService { get; set; } = default!;
     [Inject] private NavigationManager NavigationManager { get; set; } = default!;
-    [Inject] private IJSRuntime JSRuntime { get; set; } = default!;
+    [Inject] private ILocalStorageService LocalStorageService { get; set; } = default!;
     
     // Reference data
     internal List<ReferenceDataDto> Categories = new();
@@ -261,7 +260,7 @@ public partial class WorkoutTemplateForm : ComponentBase, IDisposable
             ShowNameExistsWarning = exists;
             lastValidatedName = name;
             
-            StateHasChanged();
+            await InvokeAsync(StateHasChanged);
         }
         catch (TaskCanceledException)
         {
@@ -357,11 +356,11 @@ public partial class WorkoutTemplateForm : ComponentBase, IDisposable
     {
         try
         {
-            var savedData = await JSRuntime.InvokeAsync<string?>("localStorage.getItem", LocalStorageKey);
+            var savedData = await LocalStorageService.GetItemAsync(LocalStorageKey);
             if (!string.IsNullOrEmpty(savedData))
             {
                 ShowRecoveryDialog = true;
-                StateHasChanged();
+                await InvokeAsync(StateHasChanged);
             }
         }
         catch (Exception ex)
@@ -375,7 +374,7 @@ public partial class WorkoutTemplateForm : ComponentBase, IDisposable
         try
         {
             var formData = System.Text.Json.JsonSerializer.Serialize(Model);
-            await JSRuntime.InvokeVoidAsync("localStorage.setItem", LocalStorageKey, formData);
+            await LocalStorageService.SetItemAsync(LocalStorageKey, formData);
         }
         catch (Exception ex)
         {
@@ -387,7 +386,7 @@ public partial class WorkoutTemplateForm : ComponentBase, IDisposable
     {
         try
         {
-            var savedData = await JSRuntime.InvokeAsync<string?>("localStorage.getItem", LocalStorageKey);
+            var savedData = await LocalStorageService.GetItemAsync(LocalStorageKey);
             if (!string.IsNullOrEmpty(savedData))
             {
                 var recoveredModel = System.Text.Json.JsonSerializer.Deserialize<WorkoutTemplateFormModel>(savedData);
@@ -409,7 +408,7 @@ public partial class WorkoutTemplateForm : ComponentBase, IDisposable
         finally
         {
             ShowRecoveryDialog = false;
-            StateHasChanged();
+            await InvokeAsync(StateHasChanged);
         }
     }
     
@@ -417,14 +416,14 @@ public partial class WorkoutTemplateForm : ComponentBase, IDisposable
     {
         await ClearRecoveryData();
         ShowRecoveryDialog = false;
-        StateHasChanged();
+        await InvokeAsync(StateHasChanged);
     }
     
     private async Task ClearRecoveryData()
     {
         try
         {
-            await JSRuntime.InvokeVoidAsync("localStorage.removeItem", LocalStorageKey);
+            await LocalStorageService.RemoveItemAsync(LocalStorageKey);
         }
         catch (Exception ex)
         {
@@ -446,11 +445,11 @@ public partial class WorkoutTemplateForm : ComponentBase, IDisposable
         }
     }
     
-    internal void CancelNavigation()
+    internal async Task CancelNavigation()
     {
         ShowUnsavedChangesDialog = false;
         pendingNavigationUrl = null;
-        StateHasChanged();
+        await InvokeAsync(StateHasChanged);
     }
     
     internal async Task SaveAndNavigate()
@@ -460,10 +459,7 @@ public partial class WorkoutTemplateForm : ComponentBase, IDisposable
         // Try to save the form
         await HandleValidSubmit();
         
-        // Clear recovery data
-        await ClearRecoveryData();
-        
-        // Navigate after save
+        // Navigate after save (HandleValidSubmit already clears recovery data)
         if (!string.IsNullOrEmpty(pendingNavigationUrl))
         {
             NavigationManager.NavigateTo(pendingNavigationUrl);

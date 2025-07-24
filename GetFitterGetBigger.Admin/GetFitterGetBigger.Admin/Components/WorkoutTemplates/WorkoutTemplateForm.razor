@@ -241,7 +241,7 @@
                     <p>You have unsaved changes. What would you like to do?</p>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" @onclick="CancelNavigation" data-testid="stay-button">
+                    <button type="button" class="btn btn-secondary" @onclick="async () => await CancelNavigation()" data-testid="stay-button">
                         Stay on Page
                     </button>
                     <button type="button" class="btn btn-warning" @onclick="ConfirmNavigation" data-testid="discard-button">
