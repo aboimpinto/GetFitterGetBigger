@@ -515,7 +515,7 @@ public class WorkoutTemplateFormTests : TestContext
     [Theory]
     [InlineData("", false)] // Empty category
     [InlineData("cat1", true)] // Valid category
-    public async Task Should_ValidateCategoryIsRequired(string categoryId, bool shouldBeValid)
+    public void Should_ValidateCategoryIsRequired(string categoryId, bool shouldBeValid)
     {
         // Arrange
         var model = new WorkoutTemplateFormModel 
@@ -536,7 +536,7 @@ public class WorkoutTemplateFormTests : TestContext
     [Theory]
     [InlineData("", false)] // Empty difficulty
     [InlineData("diff1", true)] // Valid difficulty
-    public async Task Should_ValidateDifficultyIsRequired(string difficultyId, bool shouldBeValid)
+    public void Should_ValidateDifficultyIsRequired(string difficultyId, bool shouldBeValid)
     {
         // Arrange
         var model = new WorkoutTemplateFormModel 
@@ -559,7 +559,7 @@ public class WorkoutTemplateFormTests : TestContext
     [InlineData(5, true)] // Minimum valid
     [InlineData(300, true)] // Maximum valid
     [InlineData(301, false)] // Above maximum
-    public async Task Should_ValidateDurationRange_Comprehensive(int duration, bool shouldBeValid)
+    public void Should_ValidateDurationRange_Comprehensive(int duration, bool shouldBeValid)
     {
         // Arrange
         var model = new WorkoutTemplateFormModel 
@@ -604,7 +604,7 @@ public class WorkoutTemplateFormTests : TestContext
     }
     
     [Fact]
-    public async Task Should_DisableSaveButton_WhenFormIsInvalid()
+    public void Should_DisableSaveButton_WhenFormIsInvalid()
     {
         // Arrange - Create form with invalid data
         var model = new WorkoutTemplateFormModel 
@@ -677,7 +677,7 @@ public class WorkoutTemplateFormTests : TestContext
     [InlineData("Template 123", true)] // Numbers allowed
     [InlineData("Тренировка", true)] // Unicode allowed
     [InlineData("A", true)] // Single character allowed
-    public async Task Should_ValidateNameFormat(string name, bool shouldBeValid)
+    public void Should_ValidateNameFormat(string name, bool shouldBeValid)
     {
         // Arrange
         var model = new WorkoutTemplateFormModel 
@@ -697,7 +697,7 @@ public class WorkoutTemplateFormTests : TestContext
     
     // Task 6.6: Create unit tests for auto-save (timer, dirty state detection)
     [Fact]
-    public async Task Should_StartAutoSaveTimer_WhenEnabledInEditMode()
+    public void Should_StartAutoSaveTimer_WhenEnabledInEditMode()
     {
         // Arrange & Act
         var cut = RenderComponent<WorkoutTemplateForm>(parameters => parameters
@@ -709,7 +709,7 @@ public class WorkoutTemplateFormTests : TestContext
     }
     
     [Fact]
-    public async Task Should_NotStartAutoSaveTimer_WhenNotInEditMode()
+    public void Should_NotStartAutoSaveTimer_WhenNotInEditMode()
     {
         // Arrange & Act
         var cut = RenderComponent<WorkoutTemplateForm>(parameters => parameters
@@ -721,7 +721,7 @@ public class WorkoutTemplateFormTests : TestContext
     }
     
     [Fact]
-    public async Task Should_NotStartAutoSaveTimer_WhenDisabled()
+    public void Should_NotStartAutoSaveTimer_WhenDisabled()
     {
         // Arrange & Act
         var cut = RenderComponent<WorkoutTemplateForm>(parameters => parameters
@@ -911,7 +911,7 @@ public class WorkoutTemplateFormTests : TestContext
     }
     
     [Fact]
-    public async Task Should_ShowAutoSaveIndicator_WhenSaving()
+    public void Should_ShowAutoSaveIndicator_WhenSaving()
     {
         // Arrange
         var model = new WorkoutTemplateFormModel

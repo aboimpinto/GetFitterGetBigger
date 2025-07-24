@@ -454,7 +454,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.WorkoutTemplates
             _mockService.Setup(x => x.GetDifficultyLevelsAsync())
                 .ReturnsAsync(_difficulties);
 
-            var tcs = new TaskCompletionSource<WorkoutTemplateDto?>();
+            var tcs = new TaskCompletionSource<WorkoutTemplateDto>();
             _mockService.Setup(x => x.UpdateWorkoutTemplateAsync(It.IsAny<string>(), It.IsAny<UpdateWorkoutTemplateDto>()))
                 .Returns(tcs.Task);
 

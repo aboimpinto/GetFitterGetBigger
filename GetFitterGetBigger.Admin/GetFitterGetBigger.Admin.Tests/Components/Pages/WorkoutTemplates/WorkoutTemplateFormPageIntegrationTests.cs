@@ -221,6 +221,12 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.WorkoutTemplates
                 _templateToReturn = template;
                 _shouldThrowOnCreate = false;
             }
+            
+            public void SetupCreateFailure(string errorMessage)
+            {
+                _shouldThrowOnCreate = true;
+                _errorMessage = errorMessage;
+            }
 
             public void SetupUpdateSuccess(WorkoutTemplateDto template)
             {

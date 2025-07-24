@@ -145,7 +145,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.WorkoutTemplates
         }
 
         [Fact]
-        public async Task Component_ExpandAllByDefault_ShowsAllExerciseDetails()
+        public void Component_ExpandAllByDefault_ShowsAllExerciseDetails()
         {
             // Act
             var component = RenderComponent<WorkoutTemplateExerciseView>(parameters => parameters
