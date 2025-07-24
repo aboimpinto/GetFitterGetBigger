@@ -140,6 +140,9 @@ builder.Services.AddScoped<GetFitterGetBigger.Admin.Services.IWorkoutTemplateSta
 // Add LocalStorageService
 builder.Services.AddScoped<GetFitterGetBigger.Admin.Services.ILocalStorageService, GetFitterGetBigger.Admin.Services.LocalStorageService>();
 
+// Add ToastService
+builder.Services.AddScoped<GetFitterGetBigger.Admin.Services.IToastService, GetFitterGetBigger.Admin.Services.ToastService>();
+
 var app = builder.Build();
 
 // Clear all caches on startup to avoid cache collision issues

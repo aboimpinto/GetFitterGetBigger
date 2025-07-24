@@ -1,0 +1,97 @@
+@using GetFitterGetBigger.Admin.Services
+@inject IToastService ToastService
+@implements IDisposable
+
+<div class="toast-container" data-testid="toast-container">
+    @foreach (var toast in toasts)
+    {
+        <ToastNotification @ref="toast.Component"
+                          @key="toast.Id"
+                          Title="@toast.Message.Title"
+                          Message="@toast.Message.Message"
+                          Type="@MapToastType(toast.Message.Type)"
+                          Position="ToastNotification.ToastPosition.TopRight"
+                          Duration="5000"
+                          OnDismissed="@(() => RemoveToast(toast.Id))" />
+    }
+</div>
+
+@code {
+    private List<ToastInstance> toasts = new();
+    private int nextId = 1;
+    
+    private class ToastInstance
+    {
+        public int Id { get; set; }
+        public ToastMessage Message { get; set; } = null!;
+        public ToastNotification? Component { get; set; }
+    }
+    
+    protected override void OnInitialized()
+    {
+        ToastService.OnShow += ShowToast;
+        ToastService.OnHide += HideAllToasts;
+    }
+    
+    private async void ShowToast(ToastMessage message)
+    {
+        await InvokeAsync(async () =>
+        {
+            var toast = new ToastInstance
+            {
+                Id = nextId++,
+                Message = message
+            };
+            
+            toasts.Add(toast);
+            StateHasChanged();
+            
+            // Wait for the component to be rendered
+            await Task.Delay(10);
+            
+            if (toast.Component != null)
+            {
+                toast.Component.Show();
+            }
+        });
+    }
+    
+    private void HideAllToasts()
+    {
+        InvokeAsync(() =>
+        {
+            foreach (var toast in toasts.ToList())
+            {
+                toast.Component?.Dismiss();
+            }
+        });
+    }
+    
+    private void RemoveToast(int id)
+    {
+        var toast = toasts.FirstOrDefault(t => t.Id == id);
+        if (toast != null)
+        {
+            toasts.Remove(toast);
+            StateHasChanged();
+        }
+    }
+    
+    private ToastNotification.ToastType MapToastType(ToastType type)
+    {
+        return type switch
+        {
+            ToastType.Success => ToastNotification.ToastType.Success,
+            ToastType.Error => ToastNotification.ToastType.Error,
+            ToastType.Warning => ToastNotification.ToastType.Warning,
+            ToastType.Info => ToastNotification.ToastType.Info,
+            _ => ToastNotification.ToastType.Info
+        };
+    }
+    
+    public void Dispose()
+    {
+        ToastService.OnShow -= ShowToast;
+        ToastService.OnHide -= HideAllToasts;
+    }
+}

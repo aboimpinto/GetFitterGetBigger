@@ -928,7 +928,8 @@ public class WorkoutTemplateFormTests : TestContext
             .Add(p => p.Model, model));
         
         // Act - Set auto-saving state
-        cut.Instance.IsAutoSaving = true;
+        var component = cut.Instance;
+        component.IsAutoSaving = true;
         cut.Render();
         
         // Assert

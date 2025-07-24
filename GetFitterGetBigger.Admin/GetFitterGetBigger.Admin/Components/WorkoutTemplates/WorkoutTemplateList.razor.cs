@@ -13,6 +13,7 @@ namespace GetFitterGetBigger.Admin.Components.WorkoutTemplates
 
         private string sortBy = "updated";
         private bool isAscending = false;
+        private bool isRetrying = false;
 
         protected override void OnInitialized()
         {
@@ -67,8 +68,24 @@ namespace GetFitterGetBigger.Admin.Components.WorkoutTemplates
 
         internal async Task HandleRetry()
         {
-            StateService.ClearError();
-            await StateService.RefreshCurrentPageAsync();
+            try
+            {
+                isRetrying = true;
+                StateHasChanged();
+                
+                StateService.ClearError();
+                await StateService.RefreshCurrentPageAsync();
+                
+                if (string.IsNullOrWhiteSpace(StateService.ErrorMessage))
+                {
+                    ToastService.ShowSuccess("Workout templates loaded successfully");
+                }
+            }
+            finally
+            {
+                isRetrying = false;
+                StateHasChanged();
+            }
         }
 
         internal async Task HandleCreateNew()

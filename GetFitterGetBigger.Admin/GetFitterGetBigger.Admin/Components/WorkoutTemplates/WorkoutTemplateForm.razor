@@ -1,5 +1,6 @@
 @using GetFitterGetBigger.Admin.Models.Dtos
 @using GetFitterGetBigger.Admin.Services
+@using GetFitterGetBigger.Admin.Components.Shared
 @using System.ComponentModel.DataAnnotations
 
 <EditForm Model="@Model" OnValidSubmit="@HandleValidSubmit">
@@ -7,8 +8,12 @@
     
     @if (!string.IsNullOrEmpty(ErrorMessage))
     {
-        <div class="alert alert-danger" role="alert" data-testid="error-message">
-            @ErrorMessage
+        <div class="mb-4" data-testid="error-message">
+            <ErrorDisplay ErrorMessage="@ErrorMessage"
+                         Title="Error saving workout template"
+                         ShowRetry="false"
+                         ShowDismiss="true"
+                         OnDismiss="@(() => { ErrorMessage = string.Empty; StateHasChanged(); })" />
         </div>
     }
     

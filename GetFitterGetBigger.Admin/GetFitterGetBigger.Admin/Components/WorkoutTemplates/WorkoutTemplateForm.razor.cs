@@ -194,9 +194,25 @@ public partial class WorkoutTemplateForm : ComponentBase, IDisposable
             isDirty = false;
             await ClearRecoveryData();
         }
+        catch (HttpRequestException ex)
+        {
+            ErrorMessage = ex.StatusCode switch
+            {
+                System.Net.HttpStatusCode.Conflict => "A workout template with this name already exists. Please choose a different name.",
+                System.Net.HttpStatusCode.BadRequest => "Invalid data provided. Please check your input and try again.",
+                System.Net.HttpStatusCode.Unauthorized => "You are not authorized to perform this action. Please log in again.",
+                System.Net.HttpStatusCode.ServiceUnavailable => "The service is temporarily unavailable. Please try again later.",
+                _ => "Unable to save the workout template. Please check your connection and try again."
+            };
+            Console.Error.WriteLine($"HTTP error in form submit: {ex.Message}");
+        }
+        catch (TaskCanceledException)
+        {
+            ErrorMessage = "The operation timed out. Please check your connection and try again.";
+        }
         catch (Exception ex)
         {
-            ErrorMessage = "An error occurred while saving. Please try again.";
+            ErrorMessage = "An unexpected error occurred while saving. Please try again.";
             Console.Error.WriteLine($"Error in form submit: {ex.Message}");
         }
         finally

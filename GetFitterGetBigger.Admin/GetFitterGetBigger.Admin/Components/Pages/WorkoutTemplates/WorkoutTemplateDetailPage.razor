@@ -4,6 +4,7 @@
 @using GetFitterGetBigger.Admin.Components.WorkoutTemplates
 @using GetFitterGetBigger.Admin.Components.Shared
 @inject IWorkoutTemplateService WorkoutTemplateService
+@inject IToastService ToastService
 @inject NavigationManager Navigation
 
 <PageTitle>Workout Template Details</PageTitle>
@@ -18,10 +19,11 @@
     }
     else if (_errorMessage != null)
     {
-        <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded relative" role="alert" data-testid="error-message">
-            <strong class="font-bold">Error:</strong>
-            <span class="block sm:inline">@_errorMessage</span>
-        </div>
+        <ErrorDisplay ErrorMessage="@_errorMessage"
+                     Title="Error loading workout template"
+                     ShowRetry="true"
+                     OnRetry="LoadTemplate"
+                     IsRetrying="_isLoading" />
     }
     else
     {
@@ -68,7 +70,7 @@
         }
         catch (Exception ex)
         {
-            _errorMessage = ex.Message;
+            _errorMessage = GetUserFriendlyErrorMessage(ex);
         }
         finally
         {
@@ -91,7 +93,8 @@
         }
         catch (Exception ex)
         {
-            _errorMessage = $"Failed to duplicate template: {ex.Message}";
+            _errorMessage = GetUserFriendlyErrorMessage(ex, "Failed to duplicate template");
+            ToastService.ShowError(_errorMessage);
         }
     }
 
@@ -101,11 +104,13 @@
         {
             // In a real app, we'd show a confirmation dialog here
             await WorkoutTemplateService.DeleteWorkoutTemplateAsync(template.Id);
+            ToastService.ShowSuccess($"Workout template '{template.Name}' has been deleted successfully.");
             Navigation.NavigateTo("/workout-templates");
         }
         catch (Exception ex)
         {
-            _errorMessage = $"Failed to delete template: {ex.Message}";
+            _errorMessage = GetUserFriendlyErrorMessage(ex, "Failed to delete template");
+            ToastService.ShowError(_errorMessage);
         }
     }
 
@@ -115,10 +120,32 @@
         {
             var changeStateDto = new ChangeWorkoutStateDto { NewStateId = newState.Id };
             _template = await WorkoutTemplateService.ChangeWorkoutTemplateStateAsync(_template!.Id, changeStateDto);
+            ToastService.ShowSuccess($"Template state changed to '{newState.Value}' successfully.");
         }
         catch (Exception ex)
         {
-            _errorMessage = $"Failed to update template state: {ex.Message}";
+            _errorMessage = GetUserFriendlyErrorMessage(ex, "Failed to update template state");
+            ToastService.ShowError(_errorMessage);
         }
+    }
+    
+    private string GetUserFriendlyErrorMessage(Exception ex, string? context = null)
+    {
+        var prefix = string.IsNullOrEmpty(context) ? "" : $"{context}: ";
+        
+        return ex switch
+        {
+            HttpRequestException httpEx => httpEx.StatusCode switch
+            {
+                System.Net.HttpStatusCode.NotFound => $"{prefix}The workout template was not found.",
+                System.Net.HttpStatusCode.Unauthorized => $"{prefix}You are not authorized to perform this action.",
+                System.Net.HttpStatusCode.Forbidden => $"{prefix}You do not have permission to perform this action.",
+                System.Net.HttpStatusCode.Conflict => $"{prefix}The operation conflicts with the current state.",
+                System.Net.HttpStatusCode.ServiceUnavailable => $"{prefix}The service is temporarily unavailable. Please try again later.",
+                _ => $"{prefix}A network error occurred. Please check your connection and try again."
+            },
+            TaskCanceledException => $"{prefix}The operation timed out. Please try again.",
+            _ => $"{prefix}An unexpected error occurred. Please try again."
+        };
     }
 }
