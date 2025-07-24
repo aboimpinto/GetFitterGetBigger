@@ -1,0 +1,53 @@
+@using GetFitterGetBigger.Admin.Models.Dtos
+
+@if (WorkoutState != null)
+{
+    var (bgColor, textColor, borderColor, icon) = GetStateStyles(WorkoutState.Value);
+    var sizeClasses = GetSizeClasses(Size);
+    
+    <span class="inline-flex items-center @sizeClasses.Container rounded-full @bgColor @textColor @borderColor border"
+          data-testid="workout-state-indicator"
+          title="@(ShowTooltip ? WorkoutState.Description : null)"
+          aria-label="@($"Workout state: {WorkoutState.Value}")">
+        @if (ShowIcon)
+        {
+            <span class="@sizeClasses.Icon" aria-hidden="true">@icon</span>
+        }
+        <span class="@sizeClasses.Text @(ShowIcon ? "ml-1" : "")">@WorkoutState.Value</span>
+    </span>
+}
+
+@code {
+    [Parameter] public ReferenceDataDto? WorkoutState { get; set; }
+    [Parameter] public IndicatorSize Size { get; set; } = IndicatorSize.Medium;
+    [Parameter] public bool ShowIcon { get; set; } = true;
+    [Parameter] public bool ShowTooltip { get; set; } = true;
+
+    public enum IndicatorSize
+    {
+        Small,
+        Medium,
+        Large
+    }
+
+    internal (string bgColor, string textColor, string borderColor, string icon) GetStateStyles(string state)
+    {
+        return state.ToUpperInvariant() switch
+        {
+            "DRAFT" => ("bg-yellow-100", "text-yellow-800", "border-yellow-200", "📝"),
+            "PRODUCTION" => ("bg-green-100", "text-green-800", "border-green-200", "✅"),
+            "ARCHIVED" => ("bg-gray-100", "text-gray-800", "border-gray-200", "📦"),
+            _ => ("bg-gray-100", "text-gray-800", "border-gray-200", "❓")
+        };
+    }
+
+    internal (string Container, string Text, string Icon) GetSizeClasses(IndicatorSize size)
+    {
+        return size switch
+        {
+            IndicatorSize.Small => ("px-2 py-0.5", "text-xs font-medium", "text-xs"),
+            IndicatorSize.Large => ("px-4 py-2", "text-base font-semibold", "text-base"),
+            _ => ("px-3 py-1", "text-sm font-medium", "text-sm")
+        };
+    }
+}
