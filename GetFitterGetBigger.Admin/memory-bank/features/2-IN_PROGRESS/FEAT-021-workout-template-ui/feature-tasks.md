@@ -328,6 +328,7 @@ Notes:
 - **Task 6.9:** Implement name uniqueness check with async validation [Completed: Included in Task 6.1] (Est: 45m, Actual: 0m - Included in Task 6.1)
 - **Task 6.10:** Create unit tests for async validation (debouncing, error states) [ReadyToDevelop] (Est: 30m)
 - **Task 6.11:** Create integration test for complete form workflow (create and edit) [ReadyToDevelop] (Est: 45m)
+- **Task 6.12:** Implement floating Save/Cancel buttons matching Exercise page pattern [Completed: Started: 2025-07-24 22:10, Finished: 2025-07-24 22:15] (Est: 30m, Actual: 5m)
 
 ### Questions for Clarification
 - **Task 6.12:** Clarify UI approach for postponed exercise suggestions feature [BLOCKED] (Est: 15m)

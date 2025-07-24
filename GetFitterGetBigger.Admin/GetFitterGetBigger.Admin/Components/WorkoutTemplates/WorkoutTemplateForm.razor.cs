@@ -185,6 +185,17 @@ public partial class WorkoutTemplateForm : ComponentBase, IDisposable
         }
     }
     
+    internal async Task HandleSubmitFromFloating()
+    {
+        // Validate form before submitting
+        if (!IsFormValid())
+        {
+            return;
+        }
+        
+        await HandleValidSubmit();
+    }
+    
     private async Task HandleCancel()
     {
         StopAutoSaveTimer();

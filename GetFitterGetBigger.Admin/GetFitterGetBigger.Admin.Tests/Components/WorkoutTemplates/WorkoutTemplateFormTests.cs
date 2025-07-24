@@ -78,8 +78,9 @@ public class WorkoutTemplateFormTests : TestContext
         cut.Find("[data-testid='duration-input']").Should().NotBeNull();
         cut.Find("[data-testid='public-checkbox']").Should().NotBeNull();
         cut.Find("[data-testid='tags-input']").Should().NotBeNull();
-        cut.Find("[data-testid='submit-button']").Should().NotBeNull();
-        cut.Find("[data-testid='cancel-button']").Should().NotBeNull();
+        // Floating buttons should exist
+        cut.Find("[data-testid='floating-save-button']").Should().NotBeNull();
+        cut.Find("[data-testid='floating-cancel-button']").Should().NotBeNull();
     }
     
     [Fact]
@@ -133,8 +134,8 @@ public class WorkoutTemplateFormTests : TestContext
         var validationMessages = cut.FindAll(".validation-message");
         validationMessages.Should().NotBeEmpty();
         
-        // Submit button should be disabled
-        var submitButton = cut.Find("[data-testid='submit-button']");
+        // Submit button should be disabled when form is invalid
+        var submitButton = cut.Find("[data-testid='floating-save-button']");
         submitButton.GetAttribute("disabled").Should().NotBeNull();
     }
     
@@ -164,9 +165,9 @@ public class WorkoutTemplateFormTests : TestContext
             Value = "45" 
         });
         
-        // Submit form
-        var form = cut.Find("form");
-        await form.SubmitAsync();
+        // Click floating save button
+        var saveButton = cut.Find("[data-testid='floating-save-button']");
+        await saveButton.ClickAsync(new Microsoft.AspNetCore.Components.Web.MouseEventArgs());
         
         // Assert
         submittedModel.Should().NotBeNull();
@@ -185,7 +186,7 @@ public class WorkoutTemplateFormTests : TestContext
             .Add(p => p.OnCancel, EventCallback.Factory.Create(this, () => cancelCalled = true)));
         
         // Act
-        var cancelButton = cut.Find("[data-testid='cancel-button']");
+        var cancelButton = cut.Find("[data-testid='floating-cancel-button']");
         await cancelButton.ClickAsync(new Microsoft.AspNetCore.Components.Web.MouseEventArgs());
         
         // Assert
@@ -321,7 +322,7 @@ public class WorkoutTemplateFormTests : TestContext
             .Add(p => p.SubmitButtonText, "Create Template"));
         
         // Assert
-        var submitButton = cut.Find("[data-testid='submit-button']");
+        var submitButton = cut.Find("[data-testid='floating-save-button']");
         submitButton.TextContent.Should().Contain("Create Template");
     }
     
@@ -413,6 +414,25 @@ public class WorkoutTemplateFormTests : TestContext
         // Assert
         isValid.Should().BeFalse();
         results.Should().Contain(r => r.ErrorMessage!.Contains("100 characters"));
+    }
+    
+    [Fact]
+    public void Should_HideFloatingButtons_WhenLoading()
+    {
+        // Arrange
+        _mockWorkoutTemplateService.Setup(x => x.GetWorkoutCategoriesAsync())
+            .Returns(async () =>
+            {
+                await Task.Delay(100); // Simulate loading
+                return _mockCategories;
+            });
+            
+        // Act
+        var cut = RenderComponent<WorkoutTemplateForm>();
+        
+        // Assert - buttons should not be visible during loading
+        cut.FindAll("[data-testid='floating-save-button']").Should().BeEmpty();
+        cut.FindAll("[data-testid='floating-cancel-button']").Should().BeEmpty();
     }
     
     [Fact]
