@@ -1,0 +1,193 @@
+@using GetFitterGetBigger.Admin.Models.Dtos
+@using GetFitterGetBigger.Admin.Services
+@using System.ComponentModel.DataAnnotations
+
+<EditForm Model="@Model" OnValidSubmit="@HandleValidSubmit">
+    <DataAnnotationsValidator />
+    
+    @if (!string.IsNullOrEmpty(ErrorMessage))
+    {
+        <div class="alert alert-danger" role="alert" data-testid="error-message">
+            @ErrorMessage
+        </div>
+    }
+    
+    <div class="mb-3">
+        <label for="name" class="form-label">Name *</label>
+        <InputText id="name" 
+                  class="form-control" 
+                  @bind-Value="Model.Name"
+                  @bind-Value:after="@(async () => { await ValidateNameAsync(Model.Name); MarkAsDirty(); })"
+                  data-testid="name-input"
+                  placeholder="Enter template name"
+                  disabled="@IsFieldDisabled(nameof(Model.Name))" />
+        <ValidationMessage For="@(() => Model.Name)" />
+        @if (ShowNameExistsWarning)
+        {
+            <div class="invalid-feedback d-block" data-testid="name-exists-warning">
+                A template with this name already exists
+            </div>
+        }
+    </div>
+    
+    <div class="mb-3">
+        <label for="description" class="form-label">Description</label>
+        <InputTextArea id="description" 
+                      class="form-control" 
+                      @bind-Value="Model.Description"
+                      @bind-Value:after="@MarkAsDirty" 
+                      data-testid="description-input"
+                      placeholder="Enter template description"
+                      rows="3"
+                      disabled="@IsFieldDisabled(nameof(Model.Description))" />
+        <ValidationMessage For="@(() => Model.Description)" />
+    </div>
+    
+    <div class="mb-3">
+        <label for="category" class="form-label">Category *</label>
+        <InputSelect id="category" 
+                    class="form-select" 
+                    @bind-Value="Model.CategoryId"
+                    @bind-Value:after="@MarkAsDirty"
+                    data-testid="category-select"
+                    disabled="@(IsLoading || IsFieldDisabled(nameof(Model.CategoryId)))">
+            <option value="">Select a category</option>
+            @foreach (var category in Categories)
+            {
+                <option value="@category.Id">@category.Value</option>
+            }
+        </InputSelect>
+        <ValidationMessage For="@(() => Model.CategoryId)" />
+    </div>
+    
+    <div class="mb-3">
+        <label for="difficulty" class="form-label">Difficulty *</label>
+        <InputSelect id="difficulty" 
+                    class="form-select" 
+                    @bind-Value="Model.DifficultyId"
+                    @bind-Value:after="@MarkAsDirty"
+                    data-testid="difficulty-select"
+                    disabled="@(IsLoading || IsFieldDisabled(nameof(Model.DifficultyId)))">
+            <option value="">Select a difficulty</option>
+            @foreach (var difficulty in Difficulties)
+            {
+                <option value="@difficulty.Id">@difficulty.Value</option>
+            }
+        </InputSelect>
+        <ValidationMessage For="@(() => Model.DifficultyId)" />
+    </div>
+    
+    <div class="mb-3">
+        <label for="objective" class="form-label">Objective</label>
+        <InputSelect id="objective" 
+                    class="form-select" 
+                    @bind-Value="Model.ObjectiveId"
+                    @bind-Value:after="@MarkAsDirty"
+                    data-testid="objective-select"
+                    disabled="@(IsLoading || IsFieldDisabled(nameof(Model.ObjectiveId)))">
+            <option value="">Select an objective (optional)</option>
+            @foreach (var objective in Objectives)
+            {
+                <option value="@objective.Id">@objective.Value</option>
+            }
+        </InputSelect>
+        <ValidationMessage For="@(() => Model.ObjectiveId)" />
+    </div>
+    
+    <div class="mb-3">
+        <label for="duration" class="form-label">Estimated Duration (minutes) *</label>
+        <InputNumber id="duration" 
+                    class="form-control" 
+                    @bind-Value="Model.EstimatedDurationMinutes"
+                    @bind-Value:after="@MarkAsDirty"
+                    data-testid="duration-input"
+                    placeholder="5-300"
+                    disabled="@IsFieldDisabled(nameof(Model.EstimatedDurationMinutes))" />
+        <ValidationMessage For="@(() => Model.EstimatedDurationMinutes)" />
+    </div>
+    
+    <div class="mb-3">
+        <div class="form-check">
+            <InputCheckbox id="isPublic" 
+                          class="form-check-input" 
+                          @bind-Value="Model.IsPublic"
+                          @bind-Value:after="@MarkAsDirty"
+                          data-testid="public-checkbox"
+                          disabled="@IsFieldDisabled(nameof(Model.IsPublic))" />
+            <label class="form-check-label" for="isPublic">
+                Make this template public
+            </label>
+        </div>
+    </div>
+    
+    <div class="mb-3">
+        <label for="tags" class="form-label">Tags</label>
+        <InputText id="tags" 
+                  class="form-control" 
+                  @bind-Value="TagsInput"
+                  @bind-Value:after="@ProcessTags"
+                  data-testid="tags-input"
+                  placeholder="Enter tags separated by commas"
+                  disabled="@IsFieldDisabled(nameof(Model.Tags))" />
+        <small class="form-text text-muted">Separate tags with commas</small>
+        @if (Model.Tags.Any())
+        {
+            <div class="mt-2" data-testid="tags-display">
+                @foreach (var tag in Model.Tags)
+                {
+                    <span class="badge bg-secondary me-1">@tag</span>
+                }
+            </div>
+        }
+    </div>
+    
+    @if (!string.IsNullOrEmpty(WorkoutStateInfo))
+    {
+        <div class="mb-3">
+            <p class="text-info" data-testid="state-info">
+                <i class="bi bi-info-circle"></i>
+                @WorkoutStateInfo
+            </p>
+        </div>
+    }
+    
+    @if (ShowAutoSaveIndicator)
+    {
+        <div class="mb-3">
+            <div class="d-flex align-items-center text-muted" data-testid="autosave-indicator">
+                @if (IsAutoSaving)
+                {
+                    <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                    <span>Saving...</span>
+                }
+                else if (LastAutoSaved.HasValue)
+                {
+                    <i class="bi bi-check-circle text-success me-2"></i>
+                    <span>Last saved: @GetLastSavedTimeAgo()</span>
+                }
+            </div>
+        </div>
+    }
+    
+    <div class="d-flex justify-content-end gap-2">
+        <button type="button" 
+                class="btn btn-secondary" 
+                @onclick="HandleCancel"
+                data-testid="cancel-button"
+                disabled="@IsSubmitting">
+            Cancel
+        </button>
+        <button type="submit" 
+                class="btn btn-primary" 
+                data-testid="submit-button"
+                disabled="@(IsSubmitting || !IsFormValid())">
+            @if (IsSubmitting)
+            {
+                <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+            }
+            @SubmitButtonText
+        </button>
+    </div>
+</EditForm>
+
+
