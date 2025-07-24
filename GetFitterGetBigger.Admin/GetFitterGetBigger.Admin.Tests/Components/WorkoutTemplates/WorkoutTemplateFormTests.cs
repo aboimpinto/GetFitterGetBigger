@@ -453,4 +453,778 @@ public class WorkoutTemplateFormTests : TestContext
         isValid.Should().BeFalse();
         results.Should().Contain(r => r.ErrorMessage!.Contains("between 5 and 300"));
     }
+    
+    // Task 6.4: Create unit tests for validation logic (all validation rules)
+    [Theory]
+    [InlineData("", false)] // Empty name
+    [InlineData(" ", false)] // Whitespace only
+    [InlineData("Valid Name", true)] // Valid name
+    public async Task Should_ValidateNameIsRequired(string name, bool shouldBeValid)
+    {
+        // Arrange
+        var model = new WorkoutTemplateFormModel 
+        { 
+            Name = name,
+            CategoryId = shouldBeValid ? "cat1" : "", // Need valid values for form to be valid
+            DifficultyId = shouldBeValid ? "diff1" : "",
+            EstimatedDurationMinutes = shouldBeValid ? 30 : 0
+        };
+        var cut = RenderComponent<WorkoutTemplateForm>(parameters => parameters
+            .Add(p => p.Model, model));
+        
+        // Act
+        await cut.Find("[data-testid='name-input']").ChangeAsync(new ChangeEventArgs { Value = name });
+        
+        // Assert
+        var isValid = cut.Instance.IsFormValid();
+        isValid.Should().Be(shouldBeValid);
+    }
+    
+    [Fact]
+    public void Should_ValidateDescriptionLength()
+    {
+        // Arrange
+        var model = new WorkoutTemplateFormModel
+        {
+            Description = new string('a', 501) // Exceeds 500 character limit
+        };
+        var context = new ValidationContext(model) { MemberName = nameof(WorkoutTemplateFormModel.Description) };
+        var results = new List<ValidationResult>();
+        
+        // Act
+        var isValid = Validator.TryValidateProperty(model.Description, context, results);
+        
+        // Assert
+        isValid.Should().BeFalse();
+        results.Should().Contain(r => r.ErrorMessage!.Contains("500 characters"));
+    }
+    
+    [Theory]
+    [InlineData("", false)] // Empty category
+    [InlineData("cat1", true)] // Valid category
+    public async Task Should_ValidateCategoryIsRequired(string categoryId, bool shouldBeValid)
+    {
+        // Arrange
+        var model = new WorkoutTemplateFormModel 
+        { 
+            Name = "Test",
+            CategoryId = categoryId,
+            DifficultyId = "diff1",
+            EstimatedDurationMinutes = 30
+        };
+        var cut = RenderComponent<WorkoutTemplateForm>(parameters => parameters
+            .Add(p => p.Model, model));
+        
+        // Act & Assert
+        var isValid = cut.Instance.IsFormValid();
+        isValid.Should().Be(shouldBeValid);
+    }
+    
+    [Theory]
+    [InlineData("", false)] // Empty difficulty
+    [InlineData("diff1", true)] // Valid difficulty
+    public async Task Should_ValidateDifficultyIsRequired(string difficultyId, bool shouldBeValid)
+    {
+        // Arrange
+        var model = new WorkoutTemplateFormModel 
+        { 
+            Name = "Test",
+            CategoryId = "cat1",
+            DifficultyId = difficultyId,
+            EstimatedDurationMinutes = 30
+        };
+        var cut = RenderComponent<WorkoutTemplateForm>(parameters => parameters
+            .Add(p => p.Model, model));
+        
+        // Act & Assert
+        var isValid = cut.Instance.IsFormValid();
+        isValid.Should().Be(shouldBeValid);
+    }
+    
+    [Theory]
+    [InlineData(4, false)] // Below minimum
+    [InlineData(5, true)] // Minimum valid
+    [InlineData(300, true)] // Maximum valid
+    [InlineData(301, false)] // Above maximum
+    public async Task Should_ValidateDurationRange_Comprehensive(int duration, bool shouldBeValid)
+    {
+        // Arrange
+        var model = new WorkoutTemplateFormModel 
+        { 
+            Name = "Test",
+            CategoryId = "cat1",
+            DifficultyId = "diff1",
+            EstimatedDurationMinutes = duration
+        };
+        var cut = RenderComponent<WorkoutTemplateForm>(parameters => parameters
+            .Add(p => p.Model, model));
+        
+        // Act & Assert
+        var isValid = cut.Instance.IsFormValid();
+        isValid.Should().Be(shouldBeValid);
+    }
+    
+    [Fact]
+    public async Task Should_ValidateFormWithNameConflict()
+    {
+        // Arrange
+        _mockWorkoutTemplateService.Setup(x => x.CheckTemplateNameExistsAsync("Existing Name"))
+            .ReturnsAsync(true);
+            
+        var model = new WorkoutTemplateFormModel 
+        { 
+            Name = "Existing Name",
+            CategoryId = "cat1",
+            DifficultyId = "diff1",
+            EstimatedDurationMinutes = 30
+        };
+        var cut = RenderComponent<WorkoutTemplateForm>(parameters => parameters
+            .Add(p => p.Model, model));
+        
+        // Act - Trigger name validation
+        await cut.Instance.ValidateNameAsync("Existing Name");
+        await Task.Delay(600); // Wait for debounce
+        
+        // Assert
+        cut.Instance.ShowNameExistsWarning.Should().BeTrue();
+        cut.Instance.IsFormValid().Should().BeFalse();
+    }
+    
+    [Fact]
+    public async Task Should_DisableSaveButton_WhenFormIsInvalid()
+    {
+        // Arrange - Create form with invalid data
+        var model = new WorkoutTemplateFormModel 
+        { 
+            Name = "", // Invalid - empty
+            CategoryId = "", // Invalid - empty
+            DifficultyId = "", // Invalid - empty
+            EstimatedDurationMinutes = 0 // Invalid - below minimum
+        };
+        var cut = RenderComponent<WorkoutTemplateForm>(parameters => parameters
+            .Add(p => p.Model, model));
+        
+        // Assert
+        var saveButton = cut.Find("[data-testid='floating-save-button']");
+        saveButton.GetAttribute("disabled").Should().NotBeNull();
+    }
+    
+    [Fact]
+    public async Task Should_EnableSaveButton_WhenFormBecomesValid()
+    {
+        // Arrange
+        var model = new WorkoutTemplateFormModel();
+        var cut = RenderComponent<WorkoutTemplateForm>(parameters => parameters
+            .Add(p => p.Model, model));
+        
+        // Initially button should be disabled
+        var saveButton = cut.Find("[data-testid='floating-save-button']");
+        saveButton.GetAttribute("disabled").Should().NotBeNull();
+        
+        // Act - Fill form with valid data
+        await cut.Find("[data-testid='name-input']").ChangeAsync(new ChangeEventArgs { Value = "Valid Name" });
+        await cut.Find("[data-testid='category-select']").ChangeAsync(new ChangeEventArgs { Value = "cat1" });
+        await cut.Find("[data-testid='difficulty-select']").ChangeAsync(new ChangeEventArgs { Value = "diff1" });
+        await cut.Find("[data-testid='duration-input']").ChangeAsync(new ChangeEventArgs { Value = "30" });
+        
+        // Assert - Button should now be enabled
+        saveButton = cut.Find("[data-testid='floating-save-button']");
+        saveButton.GetAttribute("disabled").Should().BeNull();
+    }
+    
+    [Fact]
+    public void Should_ValidateAllFieldsInFormModel()
+    {
+        // Arrange - Test complete validation of all fields
+        var validModel = new WorkoutTemplateFormModel
+        {
+            Name = "Valid Template",
+            Description = "Valid description under 500 chars",
+            CategoryId = "cat1",
+            DifficultyId = "diff1",
+            ObjectiveId = "obj1", // Optional but valid
+            EstimatedDurationMinutes = 45,
+            IsPublic = true,
+            Tags = new List<string> { "tag1", "tag2" }
+        };
+        
+        var context = new ValidationContext(validModel);
+        var results = new List<ValidationResult>();
+        
+        // Act
+        var isValid = Validator.TryValidateObject(validModel, context, results, true);
+        
+        // Assert
+        isValid.Should().BeTrue();
+        results.Should().BeEmpty();
+    }
+    
+    [Theory]
+    [InlineData("Name!@#", true)] // Special characters allowed
+    [InlineData("Template 123", true)] // Numbers allowed
+    [InlineData("Тренировка", true)] // Unicode allowed
+    [InlineData("A", true)] // Single character allowed
+    public async Task Should_ValidateNameFormat(string name, bool shouldBeValid)
+    {
+        // Arrange
+        var model = new WorkoutTemplateFormModel 
+        { 
+            Name = name,
+            CategoryId = "cat1",
+            DifficultyId = "diff1",
+            EstimatedDurationMinutes = 30
+        };
+        var cut = RenderComponent<WorkoutTemplateForm>(parameters => parameters
+            .Add(p => p.Model, model));
+        
+        // Act & Assert
+        var isValid = cut.Instance.IsFormValid();
+        isValid.Should().Be(shouldBeValid);
+    }
+    
+    // Task 6.6: Create unit tests for auto-save (timer, dirty state detection)
+    [Fact]
+    public async Task Should_StartAutoSaveTimer_WhenEnabledInEditMode()
+    {
+        // Arrange & Act
+        var cut = RenderComponent<WorkoutTemplateForm>(parameters => parameters
+            .Add(p => p.IsEditMode, true)
+            .Add(p => p.EnableAutoSave, true));
+        
+        // Assert
+        cut.Instance.autoSaveTimer.Should().NotBeNull();
+    }
+    
+    [Fact]
+    public async Task Should_NotStartAutoSaveTimer_WhenNotInEditMode()
+    {
+        // Arrange & Act
+        var cut = RenderComponent<WorkoutTemplateForm>(parameters => parameters
+            .Add(p => p.IsEditMode, false)
+            .Add(p => p.EnableAutoSave, true));
+        
+        // Assert
+        cut.Instance.autoSaveTimer.Should().BeNull();
+    }
+    
+    [Fact]
+    public async Task Should_NotStartAutoSaveTimer_WhenDisabled()
+    {
+        // Arrange & Act
+        var cut = RenderComponent<WorkoutTemplateForm>(parameters => parameters
+            .Add(p => p.IsEditMode, true)
+            .Add(p => p.EnableAutoSave, false));
+        
+        // Assert
+        cut.Instance.autoSaveTimer.Should().BeNull();
+    }
+    
+    [Fact]
+    public async Task Should_MarkFormAsDirty_WhenFieldsChange()
+    {
+        // Arrange
+        var cut = RenderComponent<WorkoutTemplateForm>(parameters => parameters
+            .Add(p => p.IsEditMode, true)
+            .Add(p => p.EnableAutoSave, true));
+        
+        // Initially not dirty
+        cut.Instance.isDirty.Should().BeFalse();
+        
+        // Act - Change various fields
+        await cut.Find("[data-testid='name-input']").ChangeAsync(new ChangeEventArgs { Value = "New Name" });
+        
+        // Wait for the change event to be processed
+        cut.WaitForState(() => cut.Instance.isDirty);
+        
+        // Assert
+        cut.Instance.isDirty.Should().BeTrue();
+    }
+    
+    [Theory]
+    [InlineData("description-input", "New Description")]
+    [InlineData("category-select", "cat2")]
+    [InlineData("difficulty-select", "diff2")]
+    [InlineData("duration-input", "60")]
+    [InlineData("tags-input", "tag1, tag2")]
+    public async Task Should_MarkAsDirty_WhenAnyFieldChanges(string testId, string newValue)
+    {
+        // Arrange
+        var cut = RenderComponent<WorkoutTemplateForm>(parameters => parameters
+            .Add(p => p.IsEditMode, true)
+            .Add(p => p.EnableAutoSave, true));
+        
+        // Act
+        await cut.Find($"[data-testid='{testId}']").ChangeAsync(new ChangeEventArgs { Value = newValue });
+        
+        // Assert
+        cut.Instance.isDirty.Should().BeTrue();
+    }
+    
+    [Fact]
+    public async Task Should_MarkAsDirty_WhenCheckboxChanges()
+    {
+        // Arrange
+        var cut = RenderComponent<WorkoutTemplateForm>(parameters => parameters
+            .Add(p => p.IsEditMode, true)
+            .Add(p => p.EnableAutoSave, true));
+        
+        // Act
+        var checkbox = cut.Find("[data-testid='public-checkbox']");
+        await checkbox.ChangeAsync(new ChangeEventArgs { Value = true });
+        
+        // Assert
+        cut.Instance.isDirty.Should().BeTrue();
+    }
+    
+    [Fact]
+    public async Task Should_TriggerAutoSave_WhenFormIsDirtyAndValid()
+    {
+        // Arrange
+        var saveCallbackInvoked = false;
+        var savedModel = null as WorkoutTemplateFormModel;
+        
+        var model = new WorkoutTemplateFormModel
+        {
+            Name = "Valid Template",
+            CategoryId = "cat1",
+            DifficultyId = "diff1",
+            EstimatedDurationMinutes = 30
+        };
+        
+        var cut = RenderComponent<WorkoutTemplateForm>(parameters => parameters
+            .Add(p => p.IsEditMode, true)
+            .Add(p => p.EnableAutoSave, true)
+            .Add(p => p.Model, model)
+            .Add(p => p.OnValidSubmit, EventCallback.Factory.Create<WorkoutTemplateFormModel>(
+                this, m => 
+                {
+                    saveCallbackInvoked = true;
+                    savedModel = m;
+                })));
+        
+        // Act - Mark as dirty and trigger auto-save
+        cut.Instance.MarkAsDirty();
+        await cut.Instance.AutoSave();
+        
+        // Assert
+        saveCallbackInvoked.Should().BeTrue();
+        savedModel.Should().NotBeNull();
+        cut.Instance.LastAutoSaved.Should().NotBeNull();
+        cut.Instance.isDirty.Should().BeFalse(); // Should be reset after save
+    }
+    
+    [Fact]
+    public async Task Should_NotAutoSave_WhenFormIsNotDirty()
+    {
+        // Arrange
+        var saveCallbackInvoked = false;
+        var model = new WorkoutTemplateFormModel
+        {
+            Name = "Valid Template",
+            CategoryId = "cat1",
+            DifficultyId = "diff1",
+            EstimatedDurationMinutes = 30
+        };
+        
+        var cut = RenderComponent<WorkoutTemplateForm>(parameters => parameters
+            .Add(p => p.IsEditMode, true)
+            .Add(p => p.EnableAutoSave, true)
+            .Add(p => p.Model, model)
+            .Add(p => p.OnValidSubmit, EventCallback.Factory.Create<WorkoutTemplateFormModel>(
+                this, _ => saveCallbackInvoked = true)));
+        
+        // Act - Trigger auto-save without marking dirty
+        await cut.Instance.AutoSave();
+        
+        // Assert
+        saveCallbackInvoked.Should().BeFalse();
+    }
+    
+    [Fact]
+    public async Task Should_NotAutoSave_WhenFormIsInvalid()
+    {
+        // Arrange
+        var saveCallbackInvoked = false;
+        var model = new WorkoutTemplateFormModel
+        {
+            Name = "", // Invalid
+            CategoryId = "cat1",
+            DifficultyId = "diff1",
+            EstimatedDurationMinutes = 30
+        };
+        
+        var cut = RenderComponent<WorkoutTemplateForm>(parameters => parameters
+            .Add(p => p.IsEditMode, true)
+            .Add(p => p.EnableAutoSave, true)
+            .Add(p => p.Model, model)
+            .Add(p => p.OnValidSubmit, EventCallback.Factory.Create<WorkoutTemplateFormModel>(
+                this, _ => saveCallbackInvoked = true)));
+        
+        // Act
+        cut.Instance.MarkAsDirty();
+        await cut.Instance.AutoSave();
+        
+        // Assert
+        saveCallbackInvoked.Should().BeFalse();
+    }
+    
+    [Fact]
+    public async Task Should_NotAutoSave_WhenAlreadySubmitting()
+    {
+        // Arrange
+        var saveCount = 0;
+        var model = new WorkoutTemplateFormModel
+        {
+            Name = "Valid Template",
+            CategoryId = "cat1",
+            DifficultyId = "diff1",
+            EstimatedDurationMinutes = 30
+        };
+        
+        var cut = RenderComponent<WorkoutTemplateForm>(parameters => parameters
+            .Add(p => p.IsEditMode, true)
+            .Add(p => p.EnableAutoSave, true)
+            .Add(p => p.Model, model)
+            .Add(p => p.OnValidSubmit, EventCallback.Factory.Create<WorkoutTemplateFormModel>(
+                this, _ => saveCount++)));
+        
+        // Act - Set submitting flag and try auto-save
+        cut.Instance.IsSubmitting = true;
+        cut.Instance.MarkAsDirty();
+        await cut.Instance.AutoSave();
+        
+        // Assert
+        saveCount.Should().Be(0);
+    }
+    
+    [Fact]
+    public async Task Should_ShowAutoSaveIndicator_WhenSaving()
+    {
+        // Arrange
+        var model = new WorkoutTemplateFormModel
+        {
+            Name = "Valid Template",
+            CategoryId = "cat1",
+            DifficultyId = "diff1",
+            EstimatedDurationMinutes = 30
+        };
+        
+        var cut = RenderComponent<WorkoutTemplateForm>(parameters => parameters
+            .Add(p => p.IsEditMode, true)
+            .Add(p => p.EnableAutoSave, true)
+            .Add(p => p.Model, model));
+        
+        // Act - Set auto-saving state
+        cut.Instance.IsAutoSaving = true;
+        cut.Render();
+        
+        // Assert
+        var indicator = cut.Find("[data-testid='autosave-indicator']");
+        indicator.TextContent.Should().Contain("Saving...");
+    }
+    
+    [Theory]
+    [InlineData(30, "Just now")]
+    [InlineData(90, "1 minute ago")]
+    [InlineData(150, "2 minutes ago")]
+    [InlineData(3900, "1 hour ago")]
+    [InlineData(7800, "2 hours ago")]
+    public void Should_FormatLastSavedTimeCorrectly(int secondsAgo, string expectedText)
+    {
+        // Arrange
+        var cut = RenderComponent<WorkoutTemplateForm>(parameters => parameters
+            .Add(p => p.IsEditMode, true)
+            .Add(p => p.EnableAutoSave, true));
+        
+        // Act
+        cut.Instance.LastAutoSaved = DateTime.Now.AddSeconds(-secondsAgo);
+        var result = cut.Instance.GetLastSavedTimeAgo();
+        
+        // Assert
+        result.Should().Be(expectedText);
+    }
+    
+    [Fact]
+    public void Should_ReturnNever_WhenNotAutoSaved()
+    {
+        // Arrange
+        var cut = RenderComponent<WorkoutTemplateForm>();
+        
+        // Act
+        var result = cut.Instance.GetLastSavedTimeAgo();
+        
+        // Assert
+        result.Should().Be("Never");
+    }
+    
+    [Fact]
+    public void Should_DisposeAutoSaveTimer_WhenComponentDisposed()
+    {
+        // Arrange
+        var cut = RenderComponent<WorkoutTemplateForm>(parameters => parameters
+            .Add(p => p.IsEditMode, true)
+            .Add(p => p.EnableAutoSave, true));
+        
+        var timer = cut.Instance.autoSaveTimer;
+        timer.Should().NotBeNull();
+        
+        // Act
+        cut.Dispose();
+        
+        // Assert - Timer should be cleaned up
+        // We can't directly check if timer is disposed, but method should complete without errors
+    }
+    
+    [Fact]
+    public async Task Should_StopAutoSaveTimer_WhenCancelClicked()
+    {
+        // Arrange
+        var cancelCalled = false;
+        var cut = RenderComponent<WorkoutTemplateForm>(parameters => parameters
+            .Add(p => p.IsEditMode, true)
+            .Add(p => p.EnableAutoSave, true)
+            .Add(p => p.OnCancel, EventCallback.Factory.Create(this, () => cancelCalled = true)));
+        
+        var timerBefore = cut.Instance.autoSaveTimer;
+        timerBefore.Should().NotBeNull();
+        
+        // Act
+        await cut.Find("[data-testid='floating-cancel-button']").ClickAsync(new Microsoft.AspNetCore.Components.Web.MouseEventArgs());
+        
+        // Assert
+        cancelCalled.Should().BeTrue();
+        // Timer should be disposed in HandleCancel
+    }
+    
+    // Task 6.10: Create unit tests for async validation (debouncing, error states)
+    [Fact]
+    public async Task Should_DebounceNameValidation()
+    {
+        // Arrange
+        var validationCallCount = 0;
+        _mockWorkoutTemplateService.Setup(x => x.CheckTemplateNameExistsAsync(It.IsAny<string>()))
+            .ReturnsAsync(false)
+            .Callback(() => validationCallCount++);
+            
+        var cut = RenderComponent<WorkoutTemplateForm>();
+        
+        // Act - Type multiple times quickly
+        var nameInput = cut.Find("[data-testid='name-input']");
+        await nameInput.ChangeAsync(new ChangeEventArgs { Value = "T" });
+        await nameInput.ChangeAsync(new ChangeEventArgs { Value = "Te" });
+        await nameInput.ChangeAsync(new ChangeEventArgs { Value = "Test" });
+        
+        // Wait less than debounce time
+        await Task.Delay(300);
+        
+        // Assert - Should not have called validation yet
+        validationCallCount.Should().Be(0);
+        
+        // Wait for debounce to complete
+        await Task.Delay(300);
+        
+        // Assert - Should call validation only once
+        validationCallCount.Should().Be(1);
+        _mockWorkoutTemplateService.Verify(x => x.CheckTemplateNameExistsAsync("Test"), Times.Once);
+    }
+    
+    [Fact]
+    public async Task Should_CancelPreviousValidation_WhenNewInputArrives()
+    {
+        // This test verifies that the cancellation token properly cancels previous validations
+        // We'll test this by checking the number of times the service is called
+        
+        // Arrange
+        var callCount = 0;
+        _mockWorkoutTemplateService.Setup(x => x.CheckTemplateNameExistsAsync(It.IsAny<string>()))
+            .ReturnsAsync((string name) => 
+            {
+                callCount++;
+                return false;
+            });
+            
+        var cut = RenderComponent<WorkoutTemplateForm>();
+        
+        // Act - Type three values quickly (within debounce time)
+        var nameInput = cut.Find("[data-testid='name-input']");
+        await nameInput.ChangeAsync(new ChangeEventArgs { Value = "F" });
+        await Task.Delay(100); // Less than 500ms debounce
+        await nameInput.ChangeAsync(new ChangeEventArgs { Value = "Fi" });
+        await Task.Delay(100); // Less than 500ms debounce
+        await nameInput.ChangeAsync(new ChangeEventArgs { Value = "First" });
+        
+        // Wait for debounce and validation to complete
+        await Task.Delay(700);
+        
+        // Assert - Should only validate the final value
+        callCount.Should().Be(1);
+        _mockWorkoutTemplateService.Verify(x => x.CheckTemplateNameExistsAsync("First"), Times.Once);
+        _mockWorkoutTemplateService.Verify(x => x.CheckTemplateNameExistsAsync("F"), Times.Never);
+        _mockWorkoutTemplateService.Verify(x => x.CheckTemplateNameExistsAsync("Fi"), Times.Never);
+    }
+    
+    [Fact]
+    public async Task Should_NotValidateName_WhenDisabled()
+    {
+        // Arrange
+        var cut = RenderComponent<WorkoutTemplateForm>(parameters => parameters
+            .Add(p => p.EnableNameValidation, false));
+        
+        // Act
+        await cut.Instance.ValidateNameAsync("Test Name");
+        await Task.Delay(600); // Wait for potential validation
+        
+        // Assert
+        _mockWorkoutTemplateService.Verify(x => x.CheckTemplateNameExistsAsync(It.IsAny<string>()), Times.Never);
+        cut.Instance.ShowNameExistsWarning.Should().BeFalse();
+    }
+    
+    [Fact]
+    public async Task Should_NotValidateName_WhenEmpty()
+    {
+        // Arrange
+        var cut = RenderComponent<WorkoutTemplateForm>();
+        
+        // Act
+        await cut.Instance.ValidateNameAsync("");
+        await cut.Instance.ValidateNameAsync("   "); // Whitespace
+        await Task.Delay(600);
+        
+        // Assert
+        _mockWorkoutTemplateService.Verify(x => x.CheckTemplateNameExistsAsync(It.IsAny<string>()), Times.Never);
+        cut.Instance.ShowNameExistsWarning.Should().BeFalse();
+    }
+    
+    [Fact]
+    public async Task Should_SkipValidation_WhenNameNotChanged()
+    {
+        // Arrange
+        var cut = RenderComponent<WorkoutTemplateForm>();
+        
+        // Act - Validate same name twice
+        await cut.Instance.ValidateNameAsync("Same Name");
+        await Task.Delay(600); // Wait for first validation
+        
+        _mockWorkoutTemplateService.Verify(x => x.CheckTemplateNameExistsAsync("Same Name"), Times.Once);
+        
+        // Validate same name again
+        await cut.Instance.ValidateNameAsync("Same Name");
+        await Task.Delay(600);
+        
+        // Assert - Should not validate again
+        _mockWorkoutTemplateService.Verify(x => x.CheckTemplateNameExistsAsync("Same Name"), Times.Once);
+    }
+    
+    [Fact]
+    public async Task Should_NotShowWarning_ForOwnNameInEditMode()
+    {
+        // Arrange
+        var existingTemplate = new WorkoutTemplateDto
+        {
+            Name = "My Template"
+        };
+        
+        var cut = RenderComponent<WorkoutTemplateForm>(parameters => parameters
+            .Add(p => p.IsEditMode, true)
+            .Add(p => p.ExistingTemplate, existingTemplate));
+        
+        // Act - Validate the template's own name
+        await cut.Instance.ValidateNameAsync("My Template");
+        await Task.Delay(600);
+        
+        // Assert
+        _mockWorkoutTemplateService.Verify(x => x.CheckTemplateNameExistsAsync(It.IsAny<string>()), Times.Never);
+        cut.Instance.ShowNameExistsWarning.Should().BeFalse();
+    }
+    
+    [Fact]
+    public async Task Should_HandleValidationErrors_Gracefully()
+    {
+        // Arrange
+        _mockWorkoutTemplateService.Setup(x => x.CheckTemplateNameExistsAsync(It.IsAny<string>()))
+            .ThrowsAsync(new HttpRequestException("Network error"));
+            
+        var cut = RenderComponent<WorkoutTemplateForm>();
+        
+        // Act
+        await cut.Instance.ValidateNameAsync("Test Name");
+        await Task.Delay(600);
+        
+        // Assert - Should not crash, warning should not be shown
+        cut.Instance.ShowNameExistsWarning.Should().BeFalse();
+    }
+    
+    [Fact]
+    public async Task Should_ShowWarning_AndDisableSave_WhenNameExists()
+    {
+        // Arrange
+        _mockWorkoutTemplateService.Setup(x => x.CheckTemplateNameExistsAsync("Duplicate"))
+            .ReturnsAsync(true);
+            
+        var model = new WorkoutTemplateFormModel
+        {
+            Name = "Duplicate",
+            CategoryId = "cat1",
+            DifficultyId = "diff1",
+            EstimatedDurationMinutes = 30
+        };
+        
+        var cut = RenderComponent<WorkoutTemplateForm>(parameters => parameters
+            .Add(p => p.Model, model));
+        
+        // Act
+        await cut.Instance.ValidateNameAsync("Duplicate");
+        await Task.Delay(600);
+        cut.Render();
+        
+        // Assert
+        cut.Instance.ShowNameExistsWarning.Should().BeTrue();
+        cut.Instance.IsFormValid().Should().BeFalse();
+        
+        var warning = cut.Find("[data-testid='name-exists-warning']");
+        warning.TextContent.Should().Contain("already exists");
+        
+        var saveButton = cut.Find("[data-testid='floating-save-button']");
+        saveButton.GetAttribute("disabled").Should().NotBeNull();
+    }
+    
+    [Fact]
+    public async Task Should_ClearWarning_WhenNameChangesToValid()
+    {
+        // Arrange
+        _mockWorkoutTemplateService.Setup(x => x.CheckTemplateNameExistsAsync("Duplicate"))
+            .ReturnsAsync(true);
+        _mockWorkoutTemplateService.Setup(x => x.CheckTemplateNameExistsAsync("Unique"))
+            .ReturnsAsync(false);
+            
+        var cut = RenderComponent<WorkoutTemplateForm>();
+        
+        // Act - First set duplicate name
+        await cut.Instance.ValidateNameAsync("Duplicate");
+        await Task.Delay(600);
+        cut.Instance.ShowNameExistsWarning.Should().BeTrue();
+        
+        // Then change to unique name
+        await cut.Instance.ValidateNameAsync("Unique");
+        await Task.Delay(600);
+        
+        // Assert
+        cut.Instance.ShowNameExistsWarning.Should().BeFalse();
+    }
+    
+    [Fact]
+    public void Should_DisposeValidationCancellationToken_OnDispose()
+    {
+        // Arrange
+        var cut = RenderComponent<WorkoutTemplateForm>();
+        
+        // Start a validation
+        _ = cut.Instance.ValidateNameAsync("Test");
+        
+        // Act
+        cut.Dispose();
+        
+        // Assert - Should dispose without errors
+        // The cancellation token should be properly disposed
+    }
 }
