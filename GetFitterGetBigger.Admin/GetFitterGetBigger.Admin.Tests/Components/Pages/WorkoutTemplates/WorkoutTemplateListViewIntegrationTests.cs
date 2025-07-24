@@ -32,7 +32,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.WorkoutTemplates
             Services.AddAuthorizationCore();
             
             _navManager = Services.GetRequiredService<FakeNavigationManager>();
-            _navManager.NavigateTo("http://localhost/workout-templates-demo");
+            _navManager.NavigateTo("http://localhost/workout-templates");
         }
 
         [Fact]
@@ -40,7 +40,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.WorkoutTemplates
         {
             // Arrange - Setup initial data
             _mockStateService.SetupInitialData();
-            var component = RenderComponent<WorkoutTemplateListDemo>();
+            var component = RenderComponent<GetFitterGetBigger.Admin.Components.Pages.WorkoutTemplates.WorkoutTemplates>();
             
             // Wait for initial load
             component.WaitForElement("[data-testid='template-grid']", TimeSpan.FromSeconds(2));
@@ -89,7 +89,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.WorkoutTemplates
         {
             // Arrange
             _mockStateService.SetupInitialData();
-            var component = RenderComponent<WorkoutTemplateListDemo>();
+            var component = RenderComponent<GetFitterGetBigger.Admin.Components.Pages.WorkoutTemplates.WorkoutTemplates>();
             component.WaitForElement("[data-testid='template-grid']");
             
             // Act - Apply multiple filters
@@ -122,7 +122,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.WorkoutTemplates
         {
             // Arrange
             _mockStateService.SetupInitialData();
-            var component = RenderComponent<WorkoutTemplateListDemo>();
+            var component = RenderComponent<GetFitterGetBigger.Admin.Components.Pages.WorkoutTemplates.WorkoutTemplates>();
             component.WaitForElement("[data-testid='template-grid']");
             
             // Get initial order
@@ -162,7 +162,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.WorkoutTemplates
         {
             // Arrange - Setup data with multiple pages
             _mockStateService.SetupPaginatedData(totalItems: 25, pageSize: 10);
-            var component = RenderComponent<WorkoutTemplateListDemo>();
+            var component = RenderComponent<GetFitterGetBigger.Admin.Components.Pages.WorkoutTemplates.WorkoutTemplates>();
             component.WaitForElement("[data-testid='pagination']");
             
             // Assert - Initial page 1
@@ -205,7 +205,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.WorkoutTemplates
         {
             // Arrange
             _mockStateService.SetupInitialData();
-            var component = RenderComponent<WorkoutTemplateListDemo>();
+            var component = RenderComponent<GetFitterGetBigger.Admin.Components.Pages.WorkoutTemplates.WorkoutTemplates>();
             component.WaitForElement("[data-testid='template-grid']");
             
             // Act - Edit template (find first card's edit button)
@@ -217,7 +217,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.WorkoutTemplates
             _navManager.Uri.Should().Match("http://localhost/workout-templates/*/edit");
             
             // Reset navigation
-            _navManager.NavigateTo("http://localhost/workout-templates-demo");
+            _navManager.NavigateTo("http://localhost/workout-templates");
             
             // Act - Duplicate template
             var duplicateButton = firstCard.QuerySelector("[data-testid='duplicate-button']");
@@ -258,7 +258,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.WorkoutTemplates
             _mockStateService.IsLoading = true;
             _mockStateService.CurrentPage = null; // No data yet
             
-            var component = RenderComponent<WorkoutTemplateListDemo>();
+            var component = RenderComponent<GetFitterGetBigger.Admin.Components.Pages.WorkoutTemplates.WorkoutTemplates>();
             
             // Assert - Loading skeletons displayed
             var loadingState = component.Find("[data-testid='loading-state']");
@@ -289,7 +289,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.WorkoutTemplates
         {
             // Arrange - Set error state
             _mockStateService.ErrorMessage = "Failed to load workout templates";
-            var component = RenderComponent<WorkoutTemplateListDemo>();
+            var component = RenderComponent<GetFitterGetBigger.Admin.Components.Pages.WorkoutTemplates.WorkoutTemplates>();
             
             // Assert - Error displayed
             var errorState = component.Find("[data-testid='error-state']");
@@ -311,7 +311,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.WorkoutTemplates
         {
             // Arrange - No templates
             _mockStateService.SetupEmptyData();
-            var component = RenderComponent<WorkoutTemplateListDemo>();
+            var component = RenderComponent<GetFitterGetBigger.Admin.Components.Pages.WorkoutTemplates.WorkoutTemplates>();
             
             component.WaitForElement("[data-testid='empty-state']");
             
@@ -333,7 +333,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.WorkoutTemplates
         {
             // Arrange - Apply filters that return no results
             _mockStateService.SetupInitialData();
-            var component = RenderComponent<WorkoutTemplateListDemo>();
+            var component = RenderComponent<GetFitterGetBigger.Admin.Components.Pages.WorkoutTemplates.WorkoutTemplates>();
             component.WaitForElement("[data-testid='template-grid']");
             
             // Act - Apply filter that returns no results
@@ -361,7 +361,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.WorkoutTemplates
         {
             // Arrange
             _mockStateService.SetupInitialData();
-            var component = RenderComponent<WorkoutTemplateListDemo>();
+            var component = RenderComponent<GetFitterGetBigger.Admin.Components.Pages.WorkoutTemplates.WorkoutTemplates>();
             component.WaitForElement("[data-testid='template-grid']");
             
             // Act - Click create button in header

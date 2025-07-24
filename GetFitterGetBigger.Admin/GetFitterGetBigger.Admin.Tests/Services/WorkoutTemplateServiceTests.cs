@@ -6,6 +6,7 @@ using GetFitterGetBigger.Admin.Services;
 using GetFitterGetBigger.Admin.Builders;
 using GetFitterGetBigger.Admin.Tests.Helpers;
 using Microsoft.Extensions.Caching.Memory;
+using Moq;
 
 namespace GetFitterGetBigger.Admin.Tests.Services
 {
@@ -14,6 +15,8 @@ namespace GetFitterGetBigger.Admin.Tests.Services
         private readonly MockHttpMessageHandler _httpMessageHandler;
         private readonly HttpClient _httpClient;
         private readonly IMemoryCache _memoryCache;
+        private readonly Mock<IReferenceDataService> _referenceDataServiceMock;
+        private readonly Mock<IWorkoutReferenceDataService> _workoutReferenceDataServiceMock;
         private readonly WorkoutTemplateService _workoutTemplateService;
 
         public WorkoutTemplateServiceTests()
@@ -24,10 +27,14 @@ namespace GetFitterGetBigger.Admin.Tests.Services
                 BaseAddress = new Uri("http://localhost:5214")
             };
             _memoryCache = new MemoryCache(new MemoryCacheOptions());
+            _referenceDataServiceMock = new Mock<IReferenceDataService>();
+            _workoutReferenceDataServiceMock = new Mock<IWorkoutReferenceDataService>();
 
             _workoutTemplateService = new WorkoutTemplateService(
                 _httpClient,
-                _memoryCache);
+                _memoryCache,
+                _referenceDataServiceMock.Object,
+                _workoutReferenceDataServiceMock.Object);
         }
 
         [Fact]
@@ -275,16 +282,37 @@ namespace GetFitterGetBigger.Admin.Tests.Services
         }
 
         [Fact]
-        public async Task GetWorkoutCategoriesAsync_WhenNotCached_FetchesFromApiAndCaches()
+        public async Task GetWorkoutCategoriesAsync_WhenNotCached_FetchesFromServiceAndReturnsData()
         {
             // Arrange
-            var expectedCategories = new List<ReferenceDataDto>
+            var expectedCategories = new List<WorkoutCategoryDto>
             {
-                new ReferenceDataDto { Id = "cat-1", Value = "Upper Body", Description = "Upper body workouts" },
-                new ReferenceDataDto { Id = "cat-2", Value = "Lower Body", Description = "Lower body workouts" }
+                new WorkoutCategoryDto 
+                { 
+                    WorkoutCategoryId = "cat-1", 
+                    Value = "Upper Body", 
+                    Description = "Upper body workouts",
+                    Icon = null,
+                    Color = null,
+                    PrimaryMuscleGroups = null,
+                    DisplayOrder = 1,
+                    IsActive = true
+                },
+                new WorkoutCategoryDto 
+                { 
+                    WorkoutCategoryId = "cat-2", 
+                    Value = "Lower Body", 
+                    Description = "Lower body workouts",
+                    Icon = null,
+                    Color = null,
+                    PrimaryMuscleGroups = null,
+                    DisplayOrder = 2,
+                    IsActive = true
+                }
             };
 
-            _httpMessageHandler.SetupResponse(HttpStatusCode.OK, expectedCategories);
+            _workoutReferenceDataServiceMock.Setup(x => x.GetWorkoutCategoriesAsync())
+                .ReturnsAsync(expectedCategories);
 
             // Act
             var result = await _workoutTemplateService.GetWorkoutCategoriesAsync();
@@ -292,10 +320,116 @@ namespace GetFitterGetBigger.Admin.Tests.Services
             // Assert
             result.Should().HaveCount(2);
             result.First().Value.Should().Be("Upper Body");
+            result.First().Id.Should().Be("cat-1");
+            result.First().Description.Should().Be("Upper body workouts");
+            
+            // Verify service was called
+            _workoutReferenceDataServiceMock.Verify(x => x.GetWorkoutCategoriesAsync(), Times.Once);
+        }
+
+        [Fact]
+        public async Task GetDifficultyLevelsAsync_FetchesFromReferenceDataService()
+        {
+            // Arrange
+            var expectedDifficulties = new List<ReferenceDataDto>
+            {
+                new ReferenceDataDto { Id = "diff-1", Value = "Beginner", Description = "For beginners" },
+                new ReferenceDataDto { Id = "diff-2", Value = "Intermediate", Description = "For intermediate users" },
+                new ReferenceDataDto { Id = "diff-3", Value = "Advanced", Description = "For advanced users" }
+            };
+
+            _referenceDataServiceMock.Setup(x => x.GetDifficultyLevelsAsync())
+                .ReturnsAsync(expectedDifficulties);
+
+            // Act
+            var result = await _workoutTemplateService.GetDifficultyLevelsAsync();
+
+            // Assert
+            result.Should().HaveCount(3);
+            result.First().Value.Should().Be("Beginner");
+            result.Should().BeEquivalentTo(expectedDifficulties);
+            
+            // Verify service was called
+            _referenceDataServiceMock.Verify(x => x.GetDifficultyLevelsAsync(), Times.Once);
+        }
+
+        [Fact]
+        public async Task GetWorkoutObjectivesAsync_FetchesFromWorkoutReferenceDataService()
+        {
+            // Arrange
+            var expectedObjectives = new List<ReferenceDataDto>
+            {
+                new ReferenceDataDto { Id = "obj-1", Value = "Muscle Gain", Description = "Build muscle mass" },
+                new ReferenceDataDto { Id = "obj-2", Value = "Fat Loss", Description = "Lose body fat" },
+                new ReferenceDataDto { Id = "obj-3", Value = "Strength", Description = "Increase strength" },
+                new ReferenceDataDto { Id = "obj-4", Value = "Endurance", Description = "Improve endurance" }
+            };
+
+            _workoutReferenceDataServiceMock.Setup(x => x.GetWorkoutObjectivesAsync())
+                .ReturnsAsync(expectedObjectives);
+
+            // Act
+            var result = await _workoutTemplateService.GetWorkoutObjectivesAsync();
+
+            // Assert
+            result.Should().HaveCount(4);
+            result.First().Value.Should().Be("Muscle Gain");
+            result.Should().BeEquivalentTo(expectedObjectives);
+            
+            // Verify service was called
+            _workoutReferenceDataServiceMock.Verify(x => x.GetWorkoutObjectivesAsync(), Times.Once);
+        }
+
+        [Fact]
+        public async Task GetWorkoutStatesAsync_WhenNotCached_FetchesFromApiAndCaches()
+        {
+            // Arrange
+            var expectedStates = new List<ReferenceDataDto>
+            {
+                new ReferenceDataDto { Id = "state-1", Value = "DRAFT", Description = "Draft state" },
+                new ReferenceDataDto { Id = "state-2", Value = "PRODUCTION", Description = "Production state" },
+                new ReferenceDataDto { Id = "state-3", Value = "ARCHIVED", Description = "Archived state" }
+            };
+
+            _httpMessageHandler.SetupResponse(HttpStatusCode.OK, expectedStates);
+
+            // Act
+            var result = await _workoutTemplateService.GetWorkoutStatesAsync();
+
+            // Assert
+            result.Should().HaveCount(3);
+            result.First().Value.Should().Be("DRAFT");
+            
+            // Verify API was called
+            _httpMessageHandler.VerifyRequest(request =>
+                request.RequestUri!.PathAndQuery == "/api/workout-states");
 
             // Verify it's cached
-            _memoryCache.TryGetValue("workout_categories", out List<ReferenceDataDto>? cached).Should().BeTrue();
-            cached.Should().HaveCount(2);
+            _memoryCache.TryGetValue("workout_states", out List<ReferenceDataDto>? cached).Should().BeTrue();
+            cached.Should().HaveCount(3);
+        }
+
+        [Fact]
+        public async Task GetWorkoutStatesAsync_WhenCached_ReturnsCachedValue()
+        {
+            // Arrange
+            var cachedStates = new List<ReferenceDataDto>
+            {
+                new ReferenceDataDto { Id = "state-1", Value = "CACHED_DRAFT", Description = "Cached draft" },
+                new ReferenceDataDto { Id = "state-2", Value = "CACHED_PRODUCTION", Description = "Cached production" }
+            };
+
+            _memoryCache.Set("workout_states", cachedStates);
+
+            // Act
+            var result = await _workoutTemplateService.GetWorkoutStatesAsync();
+
+            // Assert
+            result.Should().HaveCount(2);
+            result.First().Value.Should().Be("CACHED_DRAFT");
+            
+            // Verify no API call was made
+            _httpMessageHandler.VerifyNoRequests();
         }
 
         [Fact]

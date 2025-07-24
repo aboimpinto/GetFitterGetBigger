@@ -37,8 +37,10 @@ namespace GetFitterGetBigger.Admin.Services
 
         public async Task InitializeAsync()
         {
+            Console.WriteLine("[WorkoutTemplateStateService] InitializeAsync called");
             await LoadReferenceDataAsync();
             await LoadWorkoutTemplatesAsync();
+            Console.WriteLine("[WorkoutTemplateStateService] InitializeAsync completed");
         }
 
         public async Task LoadWorkoutTemplatesAsync(WorkoutTemplateFilterDto? filter = null)
@@ -242,6 +244,7 @@ namespace GetFitterGetBigger.Admin.Services
         {
             try
             {
+                Console.WriteLine("[WorkoutTemplateStateService] Starting LoadReferenceDataAsync");
                 IsLoadingReferenceData = true;
                 NotifyStateChanged();
 
@@ -262,9 +265,12 @@ namespace GetFitterGetBigger.Admin.Services
                 DifficultyLevels = await difficultyTask;
                 WorkoutStates = await statesTask;
                 WorkoutObjectives = await objectivesTask;
+                
+                Console.WriteLine($"[WorkoutTemplateStateService] Reference data loaded: Categories={WorkoutCategories.Count()}, Difficulties={DifficultyLevels.Count()}, States={WorkoutStates.Count()}, Objectives={WorkoutObjectives.Count()}");
             }
             catch (Exception ex)
             {
+                Console.WriteLine($"[WorkoutTemplateStateService] Error loading reference data: {ex.Message}");
                 ErrorMessage = $"Failed to load reference data: {ex.Message}";
             }
             finally
