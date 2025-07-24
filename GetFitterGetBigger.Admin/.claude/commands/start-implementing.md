@@ -77,8 +77,17 @@ Start implementing a feature by intelligently analyzing the context and providin
 2. **Implement the feature** following loaded guidelines
 3. **Write tests immediately** (if applicable to task)
 4. **Verify build and tests** pass
-5. **Commit with hash** and update task
-6. **Stop at checkpoints** for review
+5. **Commit changes** and record commit hash
+6. **Update task completion**:
+   - Change status to [Completed: Started: YYYY-MM-DD HH:MM, Finished: YYYY-MM-DD HH:MM]
+   - Add actual time vs estimated time
+   - Add git commit hash reference
+7. **Update checkpoint** when phase complete:
+   - Add all commit hashes and messages
+   - Run `dotnet clean && dotnet build && dotnet test`
+   - Update build/test results
+   - Change checkpoint status only after verification
+8. **Stop at checkpoints** for review using `/review-implemented-feature`
 
 ## Key Principles
 
@@ -149,3 +158,27 @@ Start implementing a feature by intelligently analyzing the context and providin
 - Document new pattern for future use
 
 Always reference @.claude/commands/implementation-guidelines-map.md for detailed task-type mappings.
+
+## Task Tracking Format
+
+### Task Status Format:
+```markdown
+# Before starting:
+- **Task X.Y:** Description [ReadyToDevelop] (Est: 2h)
+
+# When starting:
+- **Task X.Y:** Description [InProgress: Started: 2025-07-24 10:30] (Est: 2h)
+
+# When completed:
+- **Task X.Y:** Description [Completed: Started: 2025-07-24 10:30, Finished: 2025-07-24 11:45] (Est: 2h, Actual: 1h 15m)
+  - Git commit: `abc123f` - feat: implement feature X
+```
+
+### Checkpoint Update Format:
+After completing all tasks in a phase, update checkpoint with:
+- Build status (must run `dotnet clean && dotnet build`)
+- Test status (must run `dotnet test`)
+- List all git commits for the phase
+- Time tracking summary
+- Set status to PENDING until reviewed
+- Run `/review-implemented-feature` to verify and approve
