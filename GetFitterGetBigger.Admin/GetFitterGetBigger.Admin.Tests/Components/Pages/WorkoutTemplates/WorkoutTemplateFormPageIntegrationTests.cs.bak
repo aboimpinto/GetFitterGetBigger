@@ -73,30 +73,32 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.WorkoutTemplates
             // Wait for form to be rendered
             var form = cut.WaitForElement("form", TimeSpan.FromSeconds(2));
 
-            // Get a reference to the form component
-            var formComponent = cut.FindComponent<WorkoutTemplateForm>();
-
-            // Fill the model directly
-            await cut.InvokeAsync(() =>
-            {
-                formComponent.Instance.Model.Name = "Test Template";
-                formComponent.Instance.Model.Description = "Test Description";
-                formComponent.Instance.Model.CategoryId = "category-1";
-                formComponent.Instance.Model.DifficultyId = "difficulty-2";
-                formComponent.Instance.Model.EstimatedDurationMinutes = 45;
-                formComponent.Instance.Model.IsPublic = false;
-                
-                // Mark as dirty to enable save
-                formComponent.Instance.MarkAsDirty();
-            });
-
-            // Render to update the UI
-            cut.Render();
-
-            // Submit the form
+            // Fill in the form fields
             await cut.InvokeAsync(async () =>
             {
-                await formComponent.Instance.HandleValidSubmit();
+                // Set name
+                var nameInput = cut.Find("input[data-testid='name-input']");
+                await nameInput.ChangeAsync(new ChangeEventArgs { Value = "Test Template" });
+
+                // Set description
+                var descriptionInput = cut.Find("textarea[data-testid='description-input']");
+                await descriptionInput.ChangeAsync(new ChangeEventArgs { Value = "Test Description" });
+
+                // Set category
+                var categorySelect = cut.Find("select[data-testid='category-select']");
+                await categorySelect.ChangeAsync(new ChangeEventArgs { Value = "category-1" });
+
+                // Set difficulty
+                var difficultySelect = cut.Find("select[data-testid='difficulty-select']");
+                await difficultySelect.ChangeAsync(new ChangeEventArgs { Value = "difficulty-2" });
+
+                // Set duration - use InputAsync for InputNumber components
+                var durationInput = cut.Find("input[data-testid='duration-input']");
+                await durationInput.InputAsync("45");
+
+                // Submit the form
+                var submitButton = cut.Find("button[data-testid='floating-save-button']");
+                await submitButton.ClickAsync(new MouseEventArgs());
             });
 
             // Assert
@@ -138,27 +140,27 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.WorkoutTemplates
             // Wait for form to be rendered with data
             cut.WaitForElement("form", TimeSpan.FromSeconds(2));
 
-            // Get a reference to the form component
-            var formComponent = cut.FindComponent<WorkoutTemplateForm>();
+            // Verify form is pre-populated (indirectly through the form's data)
+            // Note: Direct value checking might need adjustments based on actual implementation
 
-            // Update the model directly
-            await cut.InvokeAsync(() =>
-            {
-                formComponent.Instance.Model.Name = "Updated Name";
-                formComponent.Instance.Model.Description = "Updated Description";
-                formComponent.Instance.Model.DifficultyId = "difficulty-3";
-                
-                // Mark as dirty to enable save
-                formComponent.Instance.MarkAsDirty();
-            });
-
-            // Render to update the UI
-            cut.Render();
-
-            // Submit the form
+            // Update the form fields
             await cut.InvokeAsync(async () =>
             {
-                await formComponent.Instance.HandleValidSubmit();
+                // Update name
+                var nameInput = cut.Find("input[data-testid='name-input']");
+                await nameInput.ChangeAsync(new ChangeEventArgs { Value = "Updated Name" });
+
+                // Update description
+                var descriptionInput = cut.Find("textarea[data-testid='description-input']");
+                await descriptionInput.ChangeAsync(new ChangeEventArgs { Value = "Updated Description" });
+
+                // Update difficulty
+                var difficultySelect = cut.Find("select[data-testid='difficulty-select']");
+                await difficultySelect.ChangeAsync(new ChangeEventArgs { Value = "difficulty-3" });
+
+                // Submit the form
+                var submitButton = cut.Find("button[data-testid='floating-save-button']");
+                await submitButton.ClickAsync(new MouseEventArgs());
             });
 
             // Assert
@@ -174,7 +176,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.WorkoutTemplates
         }
 
         [Fact]
-        public void CreateWorkoutTemplate_ValidationErrors_ShowsErrors()
+        public async Task CreateWorkoutTemplate_ValidationErrors_ShowsErrors()
         {
             // Arrange
             _navigationManager.NavigateTo("http://localhost/workout-templates/new");
@@ -183,18 +185,24 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.WorkoutTemplates
             var cut = RenderComponent<WorkoutTemplateFormPage>();
             cut.WaitForElement("form", TimeSpan.FromSeconds(2));
 
-            // Get a reference to the form component
-            var formComponent = cut.FindComponent<WorkoutTemplateForm>();
+            // Fill in partial data - missing required category
+            await cut.InvokeAsync(async () =>
+            {
+                var nameInput = cut.Find("input[data-testid='name-input']");
+                await nameInput.ChangeAsync(new ChangeEventArgs { Value = "Test Template" });
+            });
 
-            // Check that the form is invalid when required fields are missing
-            var isValid = formComponent.Instance.IsFormValid();
-            isValid.Should().BeFalse("form should be invalid when required fields are empty");
-
-            // Find the save button - it should be disabled
+            // Wait for re-render
+            cut.Render();
+            
+            // Assert - Button should be disabled due to missing required fields
             var saveButton = cut.Find("button[data-testid='floating-save-button']");
+            saveButton.Should().NotBeNull();
+            
+            // Check if button is disabled - it should be because form is invalid
             var isDisabled = saveButton.GetAttribute("disabled");
-            isDisabled.Should().NotBeNull("button should be disabled when form is invalid");
-
+            isDisabled.Should().NotBeNull("button should be disabled when required fields are missing");
+            
             // Should not have called the service
             _mockTemplateService.CreateCallCount.Should().Be(0);
             
@@ -202,7 +210,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.WorkoutTemplates
             _navigationManager.Uri.Should().Contain("/workout-templates/new");
         }
 
-        // Mock implementations (same as original)
+        // Mock implementations
         private class MockWorkoutTemplateService : IWorkoutTemplateService
         {
             private readonly List<WorkoutTemplateDto> _templates = new();
