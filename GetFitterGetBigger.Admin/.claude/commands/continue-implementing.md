@@ -2,19 +2,29 @@ Continue implementing the current feature with intelligent context awareness and
 
 ## Intelligent Continuation Process
 
-1. **Context Discovery**:
+1. **Health Check** (MANDATORY FIRST STEP):
+   - Run `dotnet clean && dotnet build`
+   - Run `dotnet test`
+   - **If all passes**: Continue silently without reporting
+   - **If issues found**:
+     - List all errors/warnings clearly
+     - Ask user: "Health check failed. Do you want to fix these issues before continuing? (yes/no)"
+     - **If YES**: Create a Boy Scout task at the beginning of current phase to fix issues
+     - **If NO**: Document in feature-tasks.md that user was prompted and chose to continue
+
+2. **Context Discovery**:
    - Identify current feature in `/memory-bank/features/2-IN_PROGRESS/`
    - Read feature-tasks.md to find current position
    - Check git status for uncommitted changes
    - Review previous checkpoint feedback if any
 
-2. **Task Analysis**:
+3. **Task Analysis**:
    - Find next uncompleted task (status: [ReadyToDevelop])
    - Detect task type using patterns from implementation-guidelines-map.md
    - Load relevant guidelines for the specific task type
    - Check if approaching a checkpoint
 
-3. **Context-Specific Setup**:
+4. **Context-Specific Setup**:
    - For each task type, automatically reference relevant documentation
    - Provide examples from well-tested existing code
    - Highlight specific requirements for that task type
@@ -73,11 +83,14 @@ The command will analyze the current task and provide:
 
 ## Execution Flow
 
-1. **Pre-Task Checks**:
+1. **Initial Health Check** (MANDATORY):
    ```bash
-   dotnet build  # Must pass
-   dotnet test   # Must be green
+   dotnet clean && dotnet build  # Check for errors/warnings
+   dotnet test                   # All tests must pass
    ```
+   - If passes: Continue without reporting
+   - If fails: Prompt user for fix decision
+   - Document decision in feature-tasks.md if user chooses to continue
 
 2. **Task Implementation**:
    - Update status to [InProgress: Started: YYYY-MM-DD HH:MM]
@@ -138,3 +151,52 @@ Always check:
 - @memory-bank/CODE_QUALITY_STANDARDS.md for universal standards
 
 Stop at every checkpoint for mandatory review before proceeding to next phase.
+
+## Health Check Documentation Format
+
+When health check fails and user chooses to continue, add to feature-tasks.md:
+
+```markdown
+### Health Check Warning - [Date/Time]
+**Build/Test Status**: Failed
+**Issues Found**:
+- [List all errors/warnings]
+
+**User Decision**: Chose to continue without fixing
+**Reason**: [If provided by user]
+```
+
+## Boy Scout Task Format
+
+When user chooses to fix issues first, add before current phase tasks:
+
+```markdown
+- **Boy Scout Task:** Fix health check issues [ReadyToDevelop] (Est: 30m)
+  - Fix build errors: [list]
+  - Fix build warnings: [list]  
+  - Fix failing tests: [list]
+```
+
+## Task Tracking Format
+
+### Task Status Format:
+```markdown
+# Before starting:
+- **Task X.Y:** Description [ReadyToDevelop] (Est: 2h)
+
+# When starting:
+- **Task X.Y:** Description [InProgress: Started: 2025-07-24 10:30] (Est: 2h)
+
+# When completed:
+- **Task X.Y:** Description [Completed: Started: 2025-07-24 10:30, Finished: 2025-07-24 11:45] (Est: 2h, Actual: 1h 15m)
+  - Git commit: `abc123f` - feat: implement feature X
+```
+
+### Checkpoint Update Format:
+After completing all tasks in a phase, update checkpoint with:
+- Build status (must run `dotnet clean && dotnet build`)
+- Test status (must run `dotnet test`)
+- List all git commits for the phase
+- Time tracking summary
+- Set status to PENDING until reviewed
+- Run `/review-implemented-feature` to verify and approve
