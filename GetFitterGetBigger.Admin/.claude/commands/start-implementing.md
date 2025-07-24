@@ -8,18 +8,30 @@ Start implementing a feature by intelligently analyzing the context and providin
    - Move selected feature to `2-IN_PROGRESS` folder
    - Update feature-status.md
 
-2. **Initial Setup**:
-   - Read feature-description.md and feature-tasks.md
-   - Create feature branch as specified in tasks file
-   - Run baseline health check and document results
-   - Only proceed if build is green and tests pass
+2. **Baseline Health Check Verification** (MANDATORY):
+   - Read feature-tasks.md and check for "Baseline Health Check Report" section
+   - If NO baseline health check exists:
+     - **STOP IMMEDIATELY** and inform user
+     - Run baseline health check using format below
+     - Add results to top of feature-tasks.md
+     - Cannot proceed without APPROVED health check
+   - If baseline health check exists but shows failures:
+     - **STOP IMMEDIATELY** and inform user
+     - Fix all issues before proceeding
+     - Re-run health check and update report
+   - Only proceed if "Approval to Proceed: ✅" is present
 
-3. **Task Analysis**:
+3. **Initial Setup** (After Approved Health Check):
+   - Create feature branch as specified in tasks file
+   - Verify branch creation and clean working directory
+   - Load implementation tracking document if exists
+
+4. **Task Analysis**:
    - Identify the first uncompleted task in feature-tasks.md
    - Detect task type based on patterns
    - Load relevant guidelines from implementation-guidelines-map.md
 
-4. **Context-Aware Guidance**:
+5. **Context-Aware Guidance**:
    Based on detected task type, provide:
    - Specific documentation references
    - Code examples from high-coverage components
@@ -60,6 +72,7 @@ Start implementing a feature by intelligently analyzing the context and providin
 
 ## Implementation Steps
 
+0. **VERIFY BASELINE HEALTH CHECK** - Must have "Approval to Proceed: ✅"
 1. **Update task status** to [InProgress: Started: YYYY-MM-DD HH:MM]
 2. **Implement the feature** following loaded guidelines
 3. **Write tests immediately** (if applicable to task)
@@ -75,12 +88,60 @@ Start implementing a feature by intelligently analyzing the context and providin
 - Follow existing patterns
 - Ask for clarification on ambiguous requirements
 
+## Baseline Health Check Format
+
+### Required Format for feature-tasks.md:
+```markdown
+## Baseline Health Check Report
+**Date/Time**: YYYY-MM-DD HH:MM:SS
+**Branch**: feature/[branch-name]
+
+### Build Status
+- **Build Result**: [Succeeded/Failed]
+- **Warning Count**: [number]
+- **Warning Details**: [list warnings or "None"]
+
+### Test Status
+- **Total Tests**: [number]
+- **Passed**: [number]
+- **Failed**: [number]
+- **Skipped/Ignored**: [number]
+- **Test Execution Time**: [time]
+
+### Code Analysis Status
+- **Errors**: [number]
+- **Warnings**: [number]
+
+### Decision to Proceed
+- [ ] All tests passing
+- [ ] Build successful
+- [ ] No code analysis errors
+- [ ] Warnings documented and approved
+
+**Approval to Proceed**: ✅ Ready to proceed with implementation
+```
+
+### Health Check Commands:
+1. **Run build**: `dotnet build`
+2. **Run tests**: `dotnet test`
+3. **Check for warnings**: Review build output
+4. **Update report**: Add results to feature-tasks.md
+
 ## Special Handling
 
-### When Starting Fresh:
-- Run baseline health check first
-- Fix any existing issues before proceeding
-- Document baseline state in feature-tasks.md
+### When NO Baseline Health Check Exists:
+- **STOP** - Do not proceed with any implementation
+- Inform user: "⚠️ BASELINE HEALTH CHECK REQUIRED"
+- Run health check commands
+- Add report to TOP of feature-tasks.md
+- Get approval before proceeding
+
+### When Health Check Shows Failures:
+- **STOP** - Do not proceed with implementation
+- List all failures clearly
+- Suggest fixes based on error types
+- Re-run health check after fixes
+- Update report with new results
 
 ### When Guidelines Not Found:
 - Note: "⚠️ No existing pattern found for [concept]"
