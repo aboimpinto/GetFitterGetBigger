@@ -69,13 +69,35 @@ public class WorkoutTemplateService : IWorkoutTemplateService
         return result;
     }
 
+    public async Task<ServiceResult<PagedResponse<WorkoutTemplateDto>>> SearchAsync(
+        int page,
+        int pageSize,
+        string namePattern,
+        WorkoutCategoryId categoryId,
+        WorkoutObjectiveId objectiveId,
+        DifficultyLevelId difficultyId,
+        WorkoutStateId stateId,
+        string sortBy,
+        string sortOrder)
+    {
+        // TODO: Implement the search logic with all filters
+        // For now, use the existing GetPagedAsync logic
+        var result = await LoadPagedWorkoutTemplatesAsync(
+            page, 
+            pageSize, 
+            categoryId.IsEmpty ? null : categoryId,
+            difficultyId.IsEmpty ? null : difficultyId);
+        
+        return ServiceResult<PagedResponse<WorkoutTemplateDto>>.Success(result);
+    }
+
     public async Task<PagedResponse<WorkoutTemplateDto>> GetPagedAsync(
         int pageNumber = 1, 
         int pageSize = 20,
         WorkoutCategoryId? categoryFilter = null,
         DifficultyLevelId? difficultyFilter = null)
     {
-        var result = await LoadPagedWorkoutTemplatesAsync(pageNumber, pageSize);
+        var result = await LoadPagedWorkoutTemplatesAsync(pageNumber, pageSize, categoryFilter, difficultyFilter);
         
         return result;
     }
@@ -91,11 +113,59 @@ public class WorkoutTemplateService : IWorkoutTemplateService
     
     private async Task<PagedResponse<WorkoutTemplateDto>> LoadPagedWorkoutTemplatesAsync(
         int pageNumber, 
-        int pageSize)
+        int pageSize,
+        WorkoutCategoryId? categoryFilter = null,
+        DifficultyLevelId? difficultyFilter = null)
     {
         using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
         var repository = unitOfWork.GetRepository<IWorkoutTemplateRepository>();
         
+        // If filters are provided, use specific repository methods
+        if (categoryFilter != null || difficultyFilter != null)
+        {
+            IEnumerable<WorkoutTemplate> filteredTemplates;
+            
+            if (categoryFilter != null && !categoryFilter.Value.IsEmpty && difficultyFilter != null && !difficultyFilter.Value.IsEmpty)
+            {
+                // Both filters - need to get by one filter and then filter in memory
+                var categoryTemplates = await repository.GetByCategoryAsync(categoryFilter.Value);
+                filteredTemplates = categoryTemplates.Where(t => t.DifficultyId == difficultyFilter.Value);
+            }
+            else if (categoryFilter != null && !categoryFilter.Value.IsEmpty)
+            {
+                // Category filter only
+                filteredTemplates = await repository.GetByCategoryAsync(categoryFilter.Value);
+            }
+            else if (difficultyFilter != null && !difficultyFilter.Value.IsEmpty)
+            {
+                // Difficulty filter only
+                filteredTemplates = await repository.GetByDifficultyAsync(difficultyFilter.Value);
+            }
+            else
+            {
+                // Both filters are empty, shouldn't happen but handle gracefully
+                filteredTemplates = await repository.GetAllActiveAsync();
+            }
+            
+            var templateList = filteredTemplates.ToList();
+            var filteredTotalCount = templateList.Count;
+            
+            // Apply pagination
+            var pagedTemplates = templateList
+                .Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize)
+                .ToList();
+            
+            return new PagedResponse<WorkoutTemplateDto>
+            {
+                Items = pagedTemplates.Select(MapToDto).ToList(),
+                TotalCount = filteredTotalCount,
+                CurrentPage = pageNumber,
+                PageSize = pageSize
+            };
+        }
+        
+        // No filters, use the standard paged query
         var (workoutTemplates, totalCount) = await repository.GetPagedAsync(
             pageNumber, pageSize);
 

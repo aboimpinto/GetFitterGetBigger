@@ -18,6 +18,30 @@ public interface IWorkoutTemplateService
     Task<ServiceResult<WorkoutTemplateDto>> GetByIdAsync(WorkoutTemplateId id);
 
     /// <summary>
+    /// Searches workout templates with multiple filter criteria
+    /// </summary>
+    /// <param name="page">Page number (1-based)</param>
+    /// <param name="pageSize">Number of items per page</param>
+    /// <param name="namePattern">Name pattern to search (empty string for no filter)</param>
+    /// <param name="categoryId">Category filter (Empty for no filter)</param>
+    /// <param name="objectiveId">Objective filter (Empty for no filter)</param>
+    /// <param name="difficultyId">Difficulty filter (Empty for no filter)</param>
+    /// <param name="stateId">State filter (Empty for no filter)</param>
+    /// <param name="sortBy">Sort field</param>
+    /// <param name="sortOrder">Sort order (asc/desc)</param>
+    /// <returns>Service result containing paginated workout templates</returns>
+    Task<ServiceResult<PagedResponse<WorkoutTemplateDto>>> SearchAsync(
+        int page,
+        int pageSize,
+        string namePattern,
+        WorkoutCategoryId categoryId,
+        WorkoutObjectiveId objectiveId,
+        DifficultyLevelId difficultyId,
+        WorkoutStateId stateId,
+        string sortBy,
+        string sortOrder);
+
+    /// <summary>
     /// Gets a paginated list of workout templates
     /// </summary>
     /// <param name="pageNumber">Page number (1-based)</param>

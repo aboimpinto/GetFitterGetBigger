@@ -146,12 +146,13 @@ public class WorkoutTemplateFilteringSteps
     public async Task WhenISearchForTemplatesWithNameContaining(string searchPattern)
     {
         var client = _fixture.CreateClient();
-        _lastResponse = await client.GetAsync($"/api/workout-templates/search?namePattern={searchPattern}");
+        _lastResponse = await client.GetAsync($"/api/workout-templates?namePattern={searchPattern}");
         _scenarioContext.SetLastResponse(_lastResponse);
 
         if (_lastResponse.IsSuccessStatusCode)
         {
-            _filteredTemplates = await _lastResponse.Content.ReadFromJsonAsync<List<WorkoutTemplateDto>>() ?? new();
+            var pagedResponse = await _lastResponse.Content.ReadFromJsonAsync<PagedResponse<WorkoutTemplateDto>>();
+            _filteredTemplates = pagedResponse?.Items?.ToList() ?? new();
         }
     }
 
@@ -204,12 +205,13 @@ public class WorkoutTemplateFilteringSteps
         var categoryId = await GetWorkoutCategoryId(categoryName);
         var client = _fixture.CreateClient();
         
-        _lastResponse = await client.GetAsync($"/api/workout-templates/by-category/{categoryId}");
+        _lastResponse = await client.GetAsync($"/api/workout-templates?categoryId={categoryId}");
         _scenarioContext.SetLastResponse(_lastResponse);
 
         if (_lastResponse.IsSuccessStatusCode)
         {
-            _filteredTemplates = await _lastResponse.Content.ReadFromJsonAsync<List<WorkoutTemplateDto>>() ?? new();
+            var pagedResponse = await _lastResponse.Content.ReadFromJsonAsync<PagedResponse<WorkoutTemplateDto>>();
+            _filteredTemplates = pagedResponse?.Items?.ToList() ?? new();
         }
     }
 
@@ -256,12 +258,13 @@ public class WorkoutTemplateFilteringSteps
         var difficultyId = await GetDifficultyLevelId(difficultyName);
         var client = _fixture.CreateClient();
         
-        _lastResponse = await client.GetAsync($"/api/workout-templates/by-difficulty/{difficultyId}");
+        _lastResponse = await client.GetAsync($"/api/workout-templates?difficultyId={difficultyId}");
         _scenarioContext.SetLastResponse(_lastResponse);
 
         if (_lastResponse.IsSuccessStatusCode)
         {
-            _filteredTemplates = await _lastResponse.Content.ReadFromJsonAsync<List<WorkoutTemplateDto>>() ?? new();
+            var pagedResponse = await _lastResponse.Content.ReadFromJsonAsync<PagedResponse<WorkoutTemplateDto>>();
+            _filteredTemplates = pagedResponse?.Items?.ToList() ?? new();
         }
     }
 
@@ -309,12 +312,13 @@ public class WorkoutTemplateFilteringSteps
         var objectiveId = await GetWorkoutObjectiveId(objectiveName);
         var client = _fixture.CreateClient();
         
-        _lastResponse = await client.GetAsync($"/api/workout-templates/by-objective/{objectiveId}");
+        _lastResponse = await client.GetAsync($"/api/workout-templates?objectiveId={objectiveId}");
         _scenarioContext.SetLastResponse(_lastResponse);
 
         if (_lastResponse.IsSuccessStatusCode)
         {
-            _filteredTemplates = await _lastResponse.Content.ReadFromJsonAsync<List<WorkoutTemplateDto>>() ?? new();
+            var pagedResponse = await _lastResponse.Content.ReadFromJsonAsync<PagedResponse<WorkoutTemplateDto>>();
+            _filteredTemplates = pagedResponse?.Items?.ToList() ?? new();
         }
     }
 

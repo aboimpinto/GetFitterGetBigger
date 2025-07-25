@@ -34,8 +34,10 @@ namespace GetFitterGetBigger.Admin.Services
             {
                 var queryParams = BuildQueryString(filter);
                 var requestUrl = $"api/workout-templates{queryParams}";
+                var fullUrl = $"{_httpClient.BaseAddress}{requestUrl}";
 
                 Console.WriteLine($"[WorkoutTemplateService] GetWorkoutTemplatesAsync - Request URL: {requestUrl}");
+                Console.WriteLine($"[WorkoutTemplateService] GetWorkoutTemplatesAsync - Full URL: {fullUrl}");
 
                 var response = await _httpClient.GetAsync(requestUrl);
 
@@ -429,6 +431,16 @@ namespace GetFitterGetBigger.Admin.Services
         {
             var queryParams = new List<string>();
 
+            // Log all filter values
+            Console.WriteLine($"[WorkoutTemplateService] BuildQueryString - Filter values:");
+            Console.WriteLine($"  - Page: {filter.Page}");
+            Console.WriteLine($"  - PageSize: {filter.PageSize}");
+            Console.WriteLine($"  - NamePattern: '{filter.NamePattern ?? "null"}'");
+            Console.WriteLine($"  - CategoryId: '{filter.CategoryId ?? "null"}'");
+            Console.WriteLine($"  - DifficultyId: '{filter.DifficultyId ?? "null"}'");
+            Console.WriteLine($"  - StateId: '{filter.StateId ?? "null"}'");
+            Console.WriteLine($"  - IsPublic: {(filter.IsPublic.HasValue ? filter.IsPublic.Value.ToString() : "null")}");
+
             queryParams.Add($"page={filter.Page}");
             queryParams.Add($"pageSize={filter.PageSize}");
 
@@ -457,7 +469,10 @@ namespace GetFitterGetBigger.Admin.Services
                 queryParams.Add($"isPublic={filter.IsPublic.Value.ToString().ToLower()}");
             }
 
-            return queryParams.Count > 0 ? $"?{string.Join("&", queryParams)}" : string.Empty;
+            var queryString = queryParams.Count > 0 ? $"?{string.Join("&", queryParams)}" : string.Empty;
+            Console.WriteLine($"[WorkoutTemplateService] BuildQueryString - Final query string: {queryString}");
+            
+            return queryString;
         }
     }
 }

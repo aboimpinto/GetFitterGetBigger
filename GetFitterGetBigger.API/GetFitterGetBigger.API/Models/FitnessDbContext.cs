@@ -868,6 +868,15 @@ public class FitnessDbContext : DbContext
             .HasIndex(wt => wt.CreatedAt)
             .HasDatabaseName("IX_WorkoutTemplate_CreatedAt");
             
+        // TODO: Remove IsPublic field from WorkoutTemplate - Paulo Aboim Pinto (2025-07-25)
+        // All workout templates are inherently public. Access control is determined by state:
+        // - DRAFT/ARCHIVED states require specific claims to view/edit
+        // - PRODUCTION state templates are accessible to all
+        // The IsPublic field is redundant and should be removed from the domain model
+        modelBuilder.Entity<WorkoutTemplate>()
+            .Property(wt => wt.IsPublic)
+            .HasDefaultValue(false);
+            
         // Configure WorkoutTemplateExercise constraints
         modelBuilder.Entity<WorkoutTemplateExercise>()
             .Property(wte => wte.Notes)

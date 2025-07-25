@@ -132,6 +132,12 @@
 
     private async Task ApplyFilter()
     {
+        Console.WriteLine($"[WorkoutTemplates Page] ApplyFilter called:");
+        Console.WriteLine($"  - Name: '{filterName}'");
+        Console.WriteLine($"  - Category: '{filterCategory}'");
+        Console.WriteLine($"  - Difficulty: '{filterDifficulty}'");
+        Console.WriteLine($"  - State: '{filterState}'");
+
         var filter = new WorkoutTemplateFilterDtoBuilder()
             .WithNamePattern(string.IsNullOrWhiteSpace(filterName) ? null : filterName)
             .WithCategoryId(string.IsNullOrWhiteSpace(filterCategory) ? null : filterCategory)
@@ -141,6 +147,7 @@
             .WithPageSize(StateService.CurrentFilter.PageSize)
             .Build();
 
+        Console.WriteLine($"[WorkoutTemplates Page] Filter built - calling StateService.LoadWorkoutTemplatesAsync");
         await StateService.LoadWorkoutTemplatesAsync(filter);
     }
 

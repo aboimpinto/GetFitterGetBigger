@@ -47,11 +47,10 @@ public class WorkoutTemplatesController : ControllerBase
     /// </summary>
     /// <param name="page">Page number (default: 1)</param>
     /// <param name="pageSize">Items per page (default: 20, max: 100)</param>
-    /// <param name="search">Search in name and description</param>
+    /// <param name="namePattern">Search pattern for template names</param>
     /// <param name="categoryId">Filter by workout category</param>
     /// <param name="objectiveId">Filter by workout objective</param>
     /// <param name="difficultyId">Filter by difficulty</param>
-    /// <param name="isPublic">Filter by public status</param>
     /// <param name="stateId">Filter by workout state</param>
     /// <param name="sortBy">Sort field (name|createdAt|lastModified|duration)</param>
     /// <param name="sortOrder">Sort order (asc|desc)</param>
@@ -64,147 +63,53 @@ public class WorkoutTemplatesController : ControllerBase
     public async Task<IActionResult> GetWorkoutTemplates(
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 20,
-        [FromQuery] string? search = null,
+        [FromQuery] string? namePattern = null,
         [FromQuery] string? categoryId = null,
         [FromQuery] string? objectiveId = null,
         [FromQuery] string? difficultyId = null,
-        [FromQuery] bool? isPublic = null,
         [FromQuery] string? stateId = null,
         [FromQuery] string sortBy = "name",
         [FromQuery] string sortOrder = "asc")
     {
-        if (pageSize > 100)
-        {
-            return BadRequest("Page size cannot exceed 100 items");
-        }
+        // Always log all parameters
+        _logger.LogInformation(
+            "GetWorkoutTemplates called - Page: {Page}, PageSize: {PageSize}, NamePattern: {NamePattern}, " +
+            "CategoryId: {CategoryId}, ObjectiveId: {ObjectiveId}, DifficultyId: {DifficultyId}, " +
+            "StateId: {StateId}, SortBy: {SortBy}, SortOrder: {SortOrder}",
+            page, pageSize, namePattern, categoryId, objectiveId, difficultyId, 
+            stateId, sortBy, sortOrder);
 
-        _logger.LogInformation("Getting workout templates with filters - Page: {Page}, PageSize: {PageSize}, Search: {Search}", 
-            page, pageSize, search);
-
-        // Use GetPagedAsync method which exists in the interface
-        var result = await _workoutTemplateService.GetPagedAsync(
-            page, 
-            pageSize,
-            categoryId != null ? WorkoutCategoryId.ParseOrEmpty(categoryId) : null,
-            difficultyId != null ? DifficultyLevelId.ParseOrEmpty(difficultyId) : null);
-
-        return Ok(result);
-    }
-
-    /// <summary>
-    /// Searches workout templates by name pattern
-    /// </summary>
-    /// <param name="namePattern">The pattern to search for in template names</param>
-    /// <returns>A list of matching workout templates</returns>
-    /// <response code="200">Returns the list of matching workout templates</response>
-    /// <response code="400">If the name pattern is invalid</response>
-    [HttpGet("search")]
-    [ProducesResponseType(typeof(IEnumerable<WorkoutTemplateDto>), StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public async Task<IActionResult> SearchWorkoutTemplates([FromQuery] string namePattern)
-    {
-        if (string.IsNullOrWhiteSpace(namePattern))
-        {
-            return BadRequest("Name pattern cannot be empty");
-        }
-
-        _logger.LogInformation("Searching workout templates with pattern: {Pattern}", namePattern);
-
-        var result = await _workoutTemplateService.GetByNamePatternAsync(namePattern);
-
-        return result switch
-        {
-            { IsSuccess: true } => Ok(result.Data),
-            { Errors: var errors } => BadRequest(new { errors })
-        };
-    }
-
-    /// <summary>
-    /// Gets workout templates by category
-    /// </summary>
-    /// <param name="categoryId">The category ID to filter by</param>
-    /// <returns>A list of workout templates in the specified category</returns>
-    /// <response code="200">Returns the list of workout templates</response>
-    /// <response code="400">If the category ID is invalid</response>
-    [HttpGet("by-category/{categoryId}")]
-    [ProducesResponseType(typeof(IEnumerable<WorkoutTemplateDto>), StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public async Task<IActionResult> GetWorkoutTemplatesByCategory(string categoryId)
-    {
-        _logger.LogInformation("Getting workout templates by category: {CategoryId}", categoryId);
-
+        // Parse specialized IDs - ParseOrEmpty handles null/invalid values
         var parsedCategoryId = WorkoutCategoryId.ParseOrEmpty(categoryId);
-        if (parsedCategoryId.IsEmpty)
-        {
-            return BadRequest("Invalid category ID");
-        }
-
-        var result = await _workoutTemplateService.GetByCategoryAsync(parsedCategoryId);
-
-        return result switch
-        {
-            { IsSuccess: true } => Ok(result.Data),
-            { Errors: var errors } => BadRequest(new { errors })
-        };
-    }
-
-    /// <summary>
-    /// Gets workout templates by difficulty
-    /// </summary>
-    /// <param name="difficultyId">The difficulty ID to filter by</param>
-    /// <returns>A list of workout templates with the specified difficulty</returns>
-    /// <response code="200">Returns the list of workout templates</response>
-    /// <response code="400">If the difficulty ID is invalid</response>
-    [HttpGet("by-difficulty/{difficultyId}")]
-    [ProducesResponseType(typeof(IEnumerable<WorkoutTemplateDto>), StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public async Task<IActionResult> GetWorkoutTemplatesByDifficulty(string difficultyId)
-    {
-        _logger.LogInformation("Getting workout templates by difficulty: {DifficultyId}", difficultyId);
-
-        var parsedDifficultyId = DifficultyLevelId.ParseOrEmpty(difficultyId);
-        if (parsedDifficultyId.IsEmpty)
-        {
-            return BadRequest("Invalid difficulty ID");
-        }
-
-        var result = await _workoutTemplateService.GetByDifficultyAsync(parsedDifficultyId);
-
-        return result switch
-        {
-            { IsSuccess: true } => Ok(result.Data),
-            { Errors: var errors } => BadRequest(new { errors })
-        };
-    }
-
-    /// <summary>
-    /// Gets workout templates by objective
-    /// </summary>
-    /// <param name="objectiveId">The objective ID to filter by</param>
-    /// <returns>A list of workout templates with the specified objective</returns>
-    /// <response code="200">Returns the list of workout templates</response>
-    /// <response code="400">If the objective ID is invalid</response>
-    [HttpGet("by-objective/{objectiveId}")]
-    [ProducesResponseType(typeof(IEnumerable<WorkoutTemplateDto>), StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public async Task<IActionResult> GetWorkoutTemplatesByObjective(string objectiveId)
-    {
-        _logger.LogInformation("Getting workout templates by objective: {ObjectiveId}", objectiveId);
-
         var parsedObjectiveId = WorkoutObjectiveId.ParseOrEmpty(objectiveId);
-        if (parsedObjectiveId.IsEmpty)
-        {
-            return BadRequest("Invalid objective ID");
-        }
+        var parsedDifficultyId = DifficultyLevelId.ParseOrEmpty(difficultyId);
+        var parsedStateId = WorkoutStateId.ParseOrEmpty(stateId);
 
-        var result = await _workoutTemplateService.GetByObjectiveAsync(parsedObjectiveId);
+        // Transform nullable parameters to meaningful values
+        var searchNamePattern = namePattern ?? string.Empty;
+        var searchSortBy = sortBy ?? "name";
+        var searchSortOrder = sortOrder ?? "asc";
 
+        // Call the unified search method in the service
+        var result = await _workoutTemplateService.SearchAsync(
+            page,
+            pageSize,
+            searchNamePattern,
+            parsedCategoryId,
+            parsedObjectiveId,
+            parsedDifficultyId,
+            parsedStateId,
+            searchSortBy,
+            searchSortOrder);
+
+        // Single exit point - no business logic, just pass through the result
         return result switch
         {
             { IsSuccess: true } => Ok(result.Data),
             { Errors: var errors } => BadRequest(new { errors })
         };
     }
+
 
     /// <summary>
     /// Gets a workout template by ID with full details
