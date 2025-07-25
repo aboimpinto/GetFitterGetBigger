@@ -10,6 +10,12 @@ namespace GetFitterGetBigger.API.Repositories.Interfaces;
 public interface IWorkoutTemplateRepository : IRepository
 {
     /// <summary>
+    /// Gets an IQueryable of workout templates with necessary includes for querying and filtering
+    /// </summary>
+    /// <returns>IQueryable of workout templates with includes applied</returns>
+    IQueryable<WorkoutTemplate> GetWorkoutTemplatesQueryable();
+
+    /// <summary>
     /// Gets a workout template by ID
     /// </summary>
     /// <param name="id">The workout template ID</param>
@@ -23,73 +29,6 @@ public interface IWorkoutTemplateRepository : IRepository
     /// <returns>The workout template with all navigation properties loaded, or WorkoutTemplate.Empty if not found</returns>
     Task<WorkoutTemplate> GetByIdWithDetailsAsync(WorkoutTemplateId id);
 
-    /// <summary>
-    /// Gets a paginated list of workout templates
-    /// </summary>
-    /// <param name="pageNumber">Page number (1-based)</param>
-    /// <param name="pageSize">Number of items per page</param>
-    /// <param name="includeInactive">Whether to include inactive templates</param>
-    /// <returns>Tuple containing the templates and total count</returns>
-    Task<(IEnumerable<WorkoutTemplate> templates, int totalCount)> GetPagedAsync(
-        int pageNumber, 
-        int pageSize, 
-        bool includeInactive = false);
-
-    /// <summary>
-    /// Gets all active workout templates
-    /// </summary>
-    /// <returns>Collection of active workout templates</returns>
-    Task<IEnumerable<WorkoutTemplate>> GetAllActiveAsync();
-
-    /// <summary>
-    /// Gets workout templates by name pattern
-    /// </summary>
-    /// <param name="namePattern">The name pattern to search for</param>
-    /// <param name="includeInactive">Whether to include inactive templates</param>
-    /// <returns>Collection of matching workout templates</returns>
-    Task<IEnumerable<WorkoutTemplate>> GetByNamePatternAsync(
-        string namePattern, 
-        bool includeInactive = false);
-
-    /// <summary>
-    /// Gets workout templates by category
-    /// </summary>
-    /// <param name="categoryId">The workout category ID</param>
-    /// <param name="includeInactive">Whether to include inactive templates</param>
-    /// <returns>Collection of workout templates in the specified category</returns>
-    Task<IEnumerable<WorkoutTemplate>> GetByCategoryAsync(
-        WorkoutCategoryId categoryId, 
-        bool includeInactive = false);
-
-    /// <summary>
-    /// Gets workout templates by objective
-    /// </summary>
-    /// <param name="objectiveId">The workout objective ID</param>
-    /// <param name="includeInactive">Whether to include inactive templates</param>
-    /// <returns>Collection of workout templates with the specified objective</returns>
-    Task<IEnumerable<WorkoutTemplate>> GetByObjectiveAsync(
-        WorkoutObjectiveId objectiveId, 
-        bool includeInactive = false);
-
-    /// <summary>
-    /// Gets workout templates by difficulty level
-    /// </summary>
-    /// <param name="difficultyLevelId">The difficulty level ID</param>
-    /// <param name="includeInactive">Whether to include inactive templates</param>
-    /// <returns>Collection of workout templates with the specified difficulty</returns>
-    Task<IEnumerable<WorkoutTemplate>> GetByDifficultyAsync(
-        DifficultyLevelId difficultyLevelId, 
-        bool includeInactive = false);
-
-    /// <summary>
-    /// Gets workout templates that contain a specific exercise
-    /// </summary>
-    /// <param name="exerciseId">The exercise ID</param>
-    /// <param name="includeInactive">Whether to include inactive templates</param>
-    /// <returns>Collection of workout templates containing the exercise</returns>
-    Task<IEnumerable<WorkoutTemplate>> GetByExerciseAsync(
-        ExerciseId exerciseId, 
-        bool includeInactive = false);
 
     /// <summary>
     /// Checks if a workout template exists by ID

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using GetFitterGetBigger.API.DTOs;
+using GetFitterGetBigger.API.Extensions;
 using GetFitterGetBigger.API.Models;
 using GetFitterGetBigger.API.Models.Entities;
 using GetFitterGetBigger.API.Models.SpecializedIds;
@@ -13,6 +14,7 @@ using GetFitterGetBigger.API.Services.Interfaces;
 using GetFitterGetBigger.API.Services.Results;
 using GetFitterGetBigger.API.Tests.TestBuilders;
 using GetFitterGetBigger.API.Tests.TestBuilders.Domain;
+using GetFitterGetBigger.API.Tests.TestHelpers;
 using Microsoft.Extensions.Logging;
 using Moq;
 using Xunit;
@@ -80,10 +82,18 @@ public class WorkoutTemplateServiceTests
         // Setup test data
         _testTemplateId = WorkoutTemplateId.ParseOrEmpty(TestIds.WorkoutTemplateIds.BasicTemplate);
         _testUserId = UserId.ParseOrEmpty(TestIds.UserIds.JohnDoe);
+        
+        // Create a workout state for testing
+        var productionState = WorkoutStateTestBuilder.Production().Build();
+            
         _testTemplate = new WorkoutTemplateBuilder()
             .WithId(_testTemplateId)
             .WithName("Test Workout Template")
             .WithDescription("Test Description")
+            .WithCategoryId(TestIds.WorkoutCategoryIds.Strength)
+            .WithDifficultyId(TestIds.DifficultyLevelIds.Beginner)
+            .WithWorkoutStateId(TestIds.WorkoutStateIds.Production)
+            .WithWorkoutState(productionState)
             .Build();
             
         // Setup WorkoutState mock to return Draft state
@@ -429,122 +439,378 @@ public class WorkoutTemplateServiceTests
     
     #region Filtering Tests
     
-    [Fact]
-    public async Task GetByNamePatternAsync_WithValidPattern_ReturnsSuccess()
+    [Fact(Skip = "ILike function not supported in MockQueryable - covered by integration tests")]
+    public async Task SearchAsync_WithNamePattern_ReturnsFilteredResults()
     {
         // Arrange
-        var pattern = "test";
-        var templates = new List<WorkoutTemplate> { _testTemplate };
+        var namePattern = "Test";
+        var templates = new List<WorkoutTemplate> { _testTemplate }.BuildAsyncQueryable();
         
         _mockRepository
-            .Setup(x => x.GetByNamePatternAsync(pattern, false))
-            .ReturnsAsync(templates);
+            .Setup(x => x.GetWorkoutTemplatesQueryable())
+            .Returns(templates);
             
         // Act
-        var result = await _service.GetByNamePatternAsync(pattern);
+        var result = await _service.SearchAsync(
+            namePattern: namePattern,
+            categoryId: WorkoutCategoryId.Empty,
+            objectiveId: WorkoutObjectiveId.Empty,
+            difficultyId: DifficultyLevelId.Empty,
+            stateId: WorkoutStateId.Empty,
+            page: 1,
+            pageSize: 20,
+            sortBy: "name",
+            sortOrder: "asc");
         
         // Assert
         Assert.True(result.IsSuccess);
-        Assert.Single(result.Data);
+        Assert.Single(result.Data.Items);
+        Assert.Equal(1, result.Data.TotalCount);
     }
     
     [Fact]
-    public async Task GetByNamePatternAsync_WithEmptyPattern_ReturnsEmptyList()
+    public async Task SearchAsync_WithEmptyParameters_ReturnsAllResults()
     {
+        // Arrange
+        var templates = new List<WorkoutTemplate> { _testTemplate }.BuildAsyncQueryable();
+        
+        _mockRepository
+            .Setup(x => x.GetWorkoutTemplatesQueryable())
+            .Returns(templates);
+            
         // Act
-        var result = await _service.GetByNamePatternAsync("");
+        var result = await _service.SearchAsync(
+            namePattern: string.Empty,
+            categoryId: WorkoutCategoryId.Empty,
+            objectiveId: WorkoutObjectiveId.Empty,
+            difficultyId: DifficultyLevelId.Empty,
+            stateId: WorkoutStateId.Empty,
+            page: 1,
+            pageSize: 20,
+            sortBy: "name",
+            sortOrder: "asc");
         
         // Assert
         Assert.True(result.IsSuccess);
-        Assert.Empty(result.Data);
-        _mockRepository.Verify(x => x.GetByNamePatternAsync(It.IsAny<string>(), It.IsAny<bool>()), Times.Never);
+        Assert.Single(result.Data.Items);
+        _mockRepository.Verify(x => x.GetWorkoutTemplatesQueryable(), Times.Once);
     }
     
     [Fact]
-    public async Task GetByCategoryAsync_WithValidCategoryId_ReturnsSuccess()
+    public async Task SearchAsync_WithCategoryFilter_ReturnsFilteredResults()
     {
         // Arrange
         var categoryId = WorkoutCategoryId.ParseOrEmpty(TestIds.WorkoutCategoryIds.Strength);
-        var templates = new List<WorkoutTemplate> { _testTemplate };
+        var templates = new List<WorkoutTemplate> { _testTemplate }.BuildAsyncQueryable();
         
         _mockRepository
-            .Setup(x => x.GetByCategoryAsync(categoryId, false))
-            .ReturnsAsync(templates);
+            .Setup(x => x.GetWorkoutTemplatesQueryable())
+            .Returns(templates);
             
         // Act
-        var result = await _service.GetByCategoryAsync(categoryId);
+        var result = await _service.SearchAsync(
+            namePattern: string.Empty,
+            categoryId: categoryId,
+            objectiveId: WorkoutObjectiveId.Empty,
+            difficultyId: DifficultyLevelId.Empty,
+            stateId: WorkoutStateId.Empty,
+            page: 1,
+            pageSize: 20,
+            sortBy: "name",
+            sortOrder: "asc");
         
         // Assert
         Assert.True(result.IsSuccess);
-        Assert.Single(result.Data);
+        Assert.Single(result.Data.Items);
     }
     
     [Fact]
-    public async Task GetByCategoryAsync_WithEmptyCategoryId_ReturnsFailure()
+    public async Task SearchAsync_WithPagination_ReturnsCorrectPage()
     {
+        // Arrange
+        var productionState = WorkoutStateTestBuilder.Default()
+            .WithValue("PRODUCTION")
+            .WithDescription("Production state")
+            .Build();
+            
+        var templates = Enumerable.Range(1, 30)
+            .Select(i => new WorkoutTemplateBuilder()
+                .WithId(WorkoutTemplateId.New())
+                .WithName($"Template {i}")
+                .WithWorkoutState(productionState)
+                .Build())
+            .ToList()
+            .BuildAsyncQueryable();
+            
+        _mockRepository
+            .Setup(x => x.GetWorkoutTemplatesQueryable())
+            .Returns(templates);
+            
         // Act
-        var result = await _service.GetByCategoryAsync(WorkoutCategoryId.Empty);
+        var result = await _service.SearchAsync(
+            namePattern: string.Empty,
+            categoryId: WorkoutCategoryId.Empty,
+            objectiveId: WorkoutObjectiveId.Empty,
+            difficultyId: DifficultyLevelId.Empty,
+            stateId: WorkoutStateId.Empty,
+            page: 2,
+            pageSize: 10,
+            sortBy: "name",
+            sortOrder: "asc");
         
         // Assert
-        Assert.False(result.IsSuccess);
-        Assert.Contains("GUID format", result.Errors.First());
+        Assert.True(result.IsSuccess);
+        Assert.Equal(10, result.Data.Items.Count());
+        Assert.Equal(30, result.Data.TotalCount);
+        Assert.Equal(2, result.Data.CurrentPage);
+        Assert.Equal(3, result.Data.TotalPages);
     }
     
     [Fact]
-    public async Task GetByObjectiveAsync_WithValidObjectiveId_ReturnsSuccess()
+    public async Task SearchAsync_WithObjectiveFilter_ReturnsFilteredResults()
     {
         // Arrange
         var objectiveId = WorkoutObjectiveId.ParseOrEmpty(TestIds.WorkoutObjectiveIds.BuildMuscle);
-        var templates = new List<WorkoutTemplate> { _testTemplate };
+        
+        // Create a template with the objective we're searching for
+        var productionState = WorkoutStateTestBuilder.Default()
+            .WithValue("PRODUCTION")
+            .WithDescription("Production state")
+            .Build();
+            
+        var objective = WorkoutTemplateObjective.Handler.Create(_testTemplateId, objectiveId).Value!;
+        var templateWithObjective = new WorkoutTemplateBuilder()
+            .WithId(_testTemplateId)
+            .WithName("Test Workout Template")
+            .WithDescription("Test Description")
+            .WithCategoryId(TestIds.WorkoutCategoryIds.Strength)
+            .WithDifficultyId(TestIds.DifficultyLevelIds.Beginner)
+            .WithWorkoutStateId(TestIds.WorkoutStateIds.Production)
+            .WithWorkoutState(productionState)
+            .WithObjective(objective)
+            .Build();
+            
+        var templates = new List<WorkoutTemplate> { templateWithObjective }.BuildAsyncQueryable();
         
         _mockRepository
-            .Setup(x => x.GetByObjectiveAsync(objectiveId, false))
-            .ReturnsAsync(templates);
+            .Setup(x => x.GetWorkoutTemplatesQueryable())
+            .Returns(templates);
             
         // Act
-        var result = await _service.GetByObjectiveAsync(objectiveId);
+        var result = await _service.SearchAsync(
+            namePattern: string.Empty,
+            categoryId: WorkoutCategoryId.Empty,
+            objectiveId: objectiveId,
+            difficultyId: DifficultyLevelId.Empty,
+            stateId: WorkoutStateId.Empty,
+            page: 1,
+            pageSize: 20,
+            sortBy: "name",
+            sortOrder: "asc");
         
         // Assert
         Assert.True(result.IsSuccess);
-        Assert.Single(result.Data);
+        Assert.Single(result.Data.Items);
     }
     
     [Fact]
-    public async Task GetByDifficultyAsync_WithValidDifficultyId_ReturnsSuccess()
+    public async Task SearchAsync_WithDifficultyFilter_ReturnsFilteredResults()
     {
         // Arrange
         var difficultyId = DifficultyLevelId.ParseOrEmpty(TestIds.DifficultyLevelIds.Beginner);
-        var templates = new List<WorkoutTemplate> { _testTemplate };
+        var templates = new List<WorkoutTemplate> { _testTemplate }.BuildAsyncQueryable();
         
         _mockRepository
-            .Setup(x => x.GetByDifficultyAsync(difficultyId, false))
-            .ReturnsAsync(templates);
+            .Setup(x => x.GetWorkoutTemplatesQueryable())
+            .Returns(templates);
             
         // Act
-        var result = await _service.GetByDifficultyAsync(difficultyId);
+        var result = await _service.SearchAsync(
+            namePattern: string.Empty,
+            categoryId: WorkoutCategoryId.Empty,
+            objectiveId: WorkoutObjectiveId.Empty,
+            difficultyId: difficultyId,
+            stateId: WorkoutStateId.Empty,
+            page: 1,
+            pageSize: 20,
+            sortBy: "name",
+            sortOrder: "asc");
         
         // Assert
         Assert.True(result.IsSuccess);
-        Assert.Single(result.Data);
+        Assert.Single(result.Data.Items);
     }
     
     [Fact]
-    public async Task GetByExerciseAsync_WithValidExerciseId_ReturnsSuccess()
+    public async Task SearchAsync_WithMultipleFilters_ExcludingNamePattern_ReturnsFilteredResults()
     {
+        // Note: Testing multiple filters WITHOUT name pattern because MockQueryable 
+        // doesn't support EF.Functions.ILike. Name pattern testing is covered in integration tests.
+        
         // Arrange
-        var exerciseId = ExerciseId.ParseOrEmpty(TestIds.ExerciseIds.BenchPress);
-        var templates = new List<WorkoutTemplate> { _testTemplate };
+        var categoryId = WorkoutCategoryId.ParseOrEmpty(TestIds.WorkoutCategoryIds.Strength);
+        var difficultyId = DifficultyLevelId.ParseOrEmpty(TestIds.DifficultyLevelIds.Beginner);
+        var stateId = WorkoutStateId.ParseOrEmpty(TestIds.WorkoutStateIds.Production);
+        var templates = new List<WorkoutTemplate> { _testTemplate }.BuildAsyncQueryable();
         
         _mockRepository
-            .Setup(x => x.GetByExerciseAsync(exerciseId, false))
-            .ReturnsAsync(templates);
+            .Setup(x => x.GetWorkoutTemplatesQueryable())
+            .Returns(templates);
             
-        // Act
-        var result = await _service.GetByExerciseAsync(exerciseId);
+        // Act - test without name pattern
+        var result = await _service.SearchAsync(
+            namePattern: string.Empty,  // No name pattern to avoid ILike
+            categoryId: categoryId,
+            objectiveId: WorkoutObjectiveId.Empty,
+            difficultyId: difficultyId,
+            stateId: stateId,
+            page: 1,
+            pageSize: 20,
+            sortBy: "name",
+            sortOrder: "desc");
         
         // Assert
         Assert.True(result.IsSuccess);
-        Assert.Single(result.Data);
+        Assert.Single(result.Data.Items);
+        Assert.Equal(_testTemplate.Name, result.Data.Items.First().Name);
+    }
+    
+    [Fact(Skip = "ILike function not supported in MockQueryable - covered by integration tests")]
+    public async Task SearchAsync_WithNamePattern_CaseInsensitive_ReturnsFilteredResults()
+    {
+        // Note: This test verifies the service logic but won't test actual case-insensitive behavior
+        // since MockQueryable doesn't support EF.Functions.ILike. Integration tests are needed for that.
+        // Arrange
+        var productionState = WorkoutStateTestBuilder.Production().Build();
+        
+        var template1 = new WorkoutTemplateBuilder()
+            .WithId(WorkoutTemplateId.New())
+            .WithName("Leg Burner I")
+            .WithWorkoutState(productionState)
+            .Build();
+            
+        var template2 = new WorkoutTemplateBuilder()
+            .WithId(WorkoutTemplateId.New())
+            .WithName("Leg Burner II")
+            .WithWorkoutState(productionState)
+            .Build();
+            
+        var template3 = new WorkoutTemplateBuilder()
+            .WithId(WorkoutTemplateId.New())
+            .WithName("Upper Body Blast")
+            .WithWorkoutState(productionState)
+            .Build();
+            
+        var templates = new List<WorkoutTemplate> { template1, template2, template3 }.BuildAsyncQueryable();
+        
+        _mockRepository
+            .Setup(x => x.GetWorkoutTemplatesQueryable())
+            .Returns(templates);
+            
+        // Act - search with lowercase
+        var result = await _service.SearchAsync(
+            namePattern: "leg",
+            categoryId: WorkoutCategoryId.Empty,
+            objectiveId: WorkoutObjectiveId.Empty,
+            difficultyId: DifficultyLevelId.Empty,
+            stateId: WorkoutStateId.Empty,
+            page: 1,
+            pageSize: 20,
+            sortBy: "name",
+            sortOrder: "asc");
+        
+        // Assert
+        Assert.True(result.IsSuccess);
+        Assert.Equal(2, result.Data.Items.Count());
+        Assert.All(result.Data.Items, item => Assert.Contains("Leg", item.Name));
+    }
+    
+    [Fact(Skip = "ILike function not supported in MockQueryable - covered by integration tests")]
+    public async Task SearchAsync_WithNamePattern_MixedCase_ReturnsFilteredResults()
+    {
+        // Arrange
+        var productionState = WorkoutStateTestBuilder.Production().Build();
+        
+        var template1 = new WorkoutTemplateBuilder()
+            .WithId(WorkoutTemplateId.New())
+            .WithName("LEG CRUSHER")
+            .WithWorkoutState(productionState)
+            .Build();
+            
+        var template2 = new WorkoutTemplateBuilder()
+            .WithId(WorkoutTemplateId.New())
+            .WithName("leg destroyer")
+            .WithWorkoutState(productionState)
+            .Build();
+            
+        var template3 = new WorkoutTemplateBuilder()
+            .WithId(WorkoutTemplateId.New())
+            .WithName("Leg Workout")
+            .WithWorkoutState(productionState)
+            .Build();
+            
+        var templates = new List<WorkoutTemplate> { template1, template2, template3 }.BuildAsyncQueryable();
+        
+        _mockRepository
+            .Setup(x => x.GetWorkoutTemplatesQueryable())
+            .Returns(templates);
+            
+        // Act - search with mixed case
+        var result = await _service.SearchAsync(
+            namePattern: "LeG",
+            categoryId: WorkoutCategoryId.Empty,
+            objectiveId: WorkoutObjectiveId.Empty,
+            difficultyId: DifficultyLevelId.Empty,
+            stateId: WorkoutStateId.Empty,
+            page: 1,
+            pageSize: 20,
+            sortBy: "name",
+            sortOrder: "asc");
+        
+        // Assert
+        Assert.True(result.IsSuccess);
+        Assert.Equal(3, result.Data.Items.Count());
+    }
+    
+    [Fact(Skip = "ILike function not supported in MockQueryable - covered by integration tests")]
+    public async Task SearchAsync_WithNamePattern_UpperCase_ReturnsFilteredResults()
+    {
+        // Arrange
+        var productionState = WorkoutStateTestBuilder.Production().Build();
+        
+        var template1 = new WorkoutTemplateBuilder()
+            .WithId(WorkoutTemplateId.New())
+            .WithName("Leg Burner I")
+            .WithWorkoutState(productionState)
+            .Build();
+            
+        var template2 = new WorkoutTemplateBuilder()
+            .WithId(WorkoutTemplateId.New())
+            .WithName("leg burner ii")
+            .WithWorkoutState(productionState)
+            .Build();
+            
+        var templates = new List<WorkoutTemplate> { template1, template2 }.BuildAsyncQueryable();
+        
+        _mockRepository
+            .Setup(x => x.GetWorkoutTemplatesQueryable())
+            .Returns(templates);
+            
+        // Act - search with uppercase
+        var result = await _service.SearchAsync(
+            namePattern: "BURNER",
+            categoryId: WorkoutCategoryId.Empty,
+            objectiveId: WorkoutObjectiveId.Empty,
+            difficultyId: DifficultyLevelId.Empty,
+            stateId: WorkoutStateId.Empty,
+            page: 1,
+            pageSize: 20,
+            sortBy: "name",
+            sortOrder: "asc");
+        
+        // Assert
+        Assert.True(result.IsSuccess);
+        Assert.Equal(2, result.Data.Items.Count());
     }
     
     #endregion

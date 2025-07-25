@@ -325,10 +325,17 @@ public class WorkoutTemplatesController : ControllerBase
     {
         if (!ModelState.IsValid)
         {
+            _logger.LogWarning("Invalid ModelState for ChangeWorkoutTemplateState: {@ModelState}", ModelState);
             return BadRequest(ModelState);
         }
 
         _logger.LogInformation("Changing state of workout template {Id} to {StateId}", id, request.WorkoutStateId);
+        
+        // Log parsed IDs for debugging
+        var parsedTemplateId = WorkoutTemplateId.ParseOrEmpty(id);
+        var parsedStateId = WorkoutStateId.ParseOrEmpty(request.WorkoutStateId);
+        _logger.LogDebug("Parsed IDs - Template: {TemplateId} (IsEmpty: {TemplateEmpty}), State: {StateId} (IsEmpty: {StateEmpty})", 
+            parsedTemplateId, parsedTemplateId.IsEmpty, parsedStateId, parsedStateId.IsEmpty);
 
         var result = await _workoutTemplateService.ChangeStateAsync(
             WorkoutTemplateId.ParseOrEmpty(id),

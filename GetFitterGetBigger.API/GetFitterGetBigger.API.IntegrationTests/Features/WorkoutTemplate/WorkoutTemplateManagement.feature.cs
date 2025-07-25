@@ -81,72 +81,72 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.WorkoutTemplate
         public virtual async System.Threading.Tasks.Task FeatureBackgroundAsync()
         {
             await testRunner.GivenAsync("the database is initialized with test data", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Given ");
-            TechTalk.SpecFlow.Table table14 = new TechTalk.SpecFlow.Table(new string[] {
+            TechTalk.SpecFlow.Table table20 = new TechTalk.SpecFlow.Table(new string[] {
                         "Value",
                         "Description",
                         "DisplayOrder"});
-            table14.AddRow(new string[] {
+            table20.AddRow(new string[] {
                         "DRAFT",
                         "Template under construction",
                         "1"});
-            table14.AddRow(new string[] {
+            table20.AddRow(new string[] {
                         "PRODUCTION",
                         "Active template for use",
                         "2"});
-            table14.AddRow(new string[] {
+            table20.AddRow(new string[] {
                         "ARCHIVED",
                         "Retired template",
                         "3"});
-            await testRunner.AndAsync("the following workout states exist:", ((string)(null)), table14, "And ");
-            TechTalk.SpecFlow.Table table15 = new TechTalk.SpecFlow.Table(new string[] {
+            await testRunner.AndAsync("the following workout states exist:", ((string)(null)), table20, "And ");
+            TechTalk.SpecFlow.Table table21 = new TechTalk.SpecFlow.Table(new string[] {
                         "Name",
                         "Description"});
-            table15.AddRow(new string[] {
+            table21.AddRow(new string[] {
                         "Upper Body - Push",
                         "Push exercises targeting chest, shoulders, triceps"});
-            table15.AddRow(new string[] {
+            table21.AddRow(new string[] {
                         "Upper Body - Pull",
                         "Pull exercises targeting back and biceps"});
-            table15.AddRow(new string[] {
+            table21.AddRow(new string[] {
                         "Lower Body",
                         "Lower body exercises for legs and glutes"});
-            table15.AddRow(new string[] {
+            table21.AddRow(new string[] {
                         "Core",
                         "Core stability and strength exercises"});
-            table15.AddRow(new string[] {
+            table21.AddRow(new string[] {
                         "Full Body",
                         "Compound exercises engaging multiple muscle groups"});
-            await testRunner.AndAsync("the following workout categories exist:", ((string)(null)), table15, "And ");
-            TechTalk.SpecFlow.Table table16 = new TechTalk.SpecFlow.Table(new string[] {
+            await testRunner.AndAsync("the following workout categories exist:", ((string)(null)), table21, "And ");
+            TechTalk.SpecFlow.Table table22 = new TechTalk.SpecFlow.Table(new string[] {
                         "Name",
                         "Description",
                         "DisplayOrder"});
-            table16.AddRow(new string[] {
+            table22.AddRow(new string[] {
                         "Beginner",
                         "For beginners",
                         "1"});
-            table16.AddRow(new string[] {
+            table22.AddRow(new string[] {
                         "Intermediate",
                         "For intermediate",
                         "2"});
-            table16.AddRow(new string[] {
+            table22.AddRow(new string[] {
                         "Advanced",
                         "For advanced",
                         "3"});
-            await testRunner.AndAsync("the following difficulty levels exist:", ((string)(null)), table16, "And ");
-            TechTalk.SpecFlow.Table table17 = new TechTalk.SpecFlow.Table(new string[] {
+            await testRunner.AndAsync("the following difficulty levels exist:", ((string)(null)), table22, "And ");
+            TechTalk.SpecFlow.Table table23 = new TechTalk.SpecFlow.Table(new string[] {
                         "Name",
                         "Description"});
-            table17.AddRow(new string[] {
+            table23.AddRow(new string[] {
                         "Muscular Strength",
                         "Build strength"});
-            table17.AddRow(new string[] {
+            table23.AddRow(new string[] {
                         "Muscular Hypertrophy",
                         "Build muscle mass"});
-            table17.AddRow(new string[] {
+            table23.AddRow(new string[] {
                         "Muscular Endurance",
                         "Improve endurance"});
-            await testRunner.AndAsync("the following workout objectives exist:", ((string)(null)), table17, "And ");
+            await testRunner.AndAsync("the following workout objectives exist:", ((string)(null)), table23, "And ");
         }
         
         async System.Threading.Tasks.Task Xunit.IAsyncLifetime.InitializeAsync()
@@ -177,43 +177,43 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.WorkoutTemplate
                 await this.ScenarioStartAsync();
                 await this.FeatureBackgroundAsync();
                 await testRunner.GivenAsync("I am a Personal Trainer with ID \"user-01000001-0000-0000-0000-000000000001\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Given ");
-                TechTalk.SpecFlow.Table table18 = new TechTalk.SpecFlow.Table(new string[] {
+                TechTalk.SpecFlow.Table table24 = new TechTalk.SpecFlow.Table(new string[] {
                             "Field",
                             "Value"});
-                table18.AddRow(new string[] {
+                table24.AddRow(new string[] {
                             "Name",
                             "Full Body Strength Day"});
-                table18.AddRow(new string[] {
+                table24.AddRow(new string[] {
                             "Description",
                             "Focus on compound movements"});
-                table18.AddRow(new string[] {
+                table24.AddRow(new string[] {
                             "CategoryId",
                             "Full Body"});
-                table18.AddRow(new string[] {
+                table24.AddRow(new string[] {
                             "DifficultyId",
                             "Intermediate"});
-                table18.AddRow(new string[] {
+                table24.AddRow(new string[] {
                             "EstimatedDurationMinutes",
                             "60"});
-                table18.AddRow(new string[] {
+                table24.AddRow(new string[] {
                             "IsPublic",
                             "true"});
-                await testRunner.WhenAsync("I create a new workout template with:", ((string)(null)), table18, "When ");
+                await testRunner.WhenAsync("I create a new workout template with:", ((string)(null)), table24, "When ");
                 await testRunner.ThenAsync("the workout template should be created successfully", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
                 await testRunner.AndAsync("the template state should be \"DRAFT\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
-                TechTalk.SpecFlow.Table table19 = new TechTalk.SpecFlow.Table(new string[] {
+                TechTalk.SpecFlow.Table table25 = new TechTalk.SpecFlow.Table(new string[] {
                             "Field",
                             "Value"});
-                table19.AddRow(new string[] {
+                table25.AddRow(new string[] {
                             "Name",
                             "Full Body Strength Day"});
-                table19.AddRow(new string[] {
+                table25.AddRow(new string[] {
                             "WorkoutState",
                             "DRAFT"});
-                table19.AddRow(new string[] {
+                table25.AddRow(new string[] {
                             "EstimatedDurationMinutes",
                             "60"});
-                await testRunner.AndAsync("the response should contain:", ((string)(null)), table19, "And ");
+                await testRunner.AndAsync("the response should contain:", ((string)(null)), table25, "And ");
             }
             await this.ScenarioCleanupAsync();
         }
@@ -240,19 +240,19 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.WorkoutTemplate
                 await testRunner.WhenAsync("I request the workout template by ID", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
                 await testRunner.ThenAsync("the response status should be OK", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
                 await testRunner.AndAsync("the response should contain the workout template details", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
-                TechTalk.SpecFlow.Table table20 = new TechTalk.SpecFlow.Table(new string[] {
+                TechTalk.SpecFlow.Table table26 = new TechTalk.SpecFlow.Table(new string[] {
                             "Property"});
-                table20.AddRow(new string[] {
+                table26.AddRow(new string[] {
                             "Category"});
-                table20.AddRow(new string[] {
+                table26.AddRow(new string[] {
                             "Difficulty"});
-                table20.AddRow(new string[] {
+                table26.AddRow(new string[] {
                             "WorkoutState"});
-                table20.AddRow(new string[] {
+                table26.AddRow(new string[] {
                             "Exercises"});
-                table20.AddRow(new string[] {
+                table26.AddRow(new string[] {
                             "Objectives"});
-                await testRunner.AndAsync("the response should include navigation properties:", ((string)(null)), table20, "And ");
+                await testRunner.AndAsync("the response should include navigation properties:", ((string)(null)), table26, "And ");
             }
             await this.ScenarioCleanupAsync();
         }
@@ -276,16 +276,16 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.WorkoutTemplate
                 await this.FeatureBackgroundAsync();
                 await testRunner.GivenAsync("I am a Personal Trainer with ID \"user-01000001-0000-0000-0000-000000000001\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Given ");
                 await testRunner.AndAsync("I have created a workout template in DRAFT state", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
-                TechTalk.SpecFlow.Table table21 = new TechTalk.SpecFlow.Table(new string[] {
+                TechTalk.SpecFlow.Table table27 = new TechTalk.SpecFlow.Table(new string[] {
                             "Field",
                             "Value"});
-                table21.AddRow(new string[] {
+                table27.AddRow(new string[] {
                             "Name",
                             "Updated Strength Day"});
-                table21.AddRow(new string[] {
+                table27.AddRow(new string[] {
                             "Description",
                             "Updated description"});
-                await testRunner.WhenAsync("I update the workout template with:", ((string)(null)), table21, "When ");
+                await testRunner.WhenAsync("I update the workout template with:", ((string)(null)), table27, "When ");
                 await testRunner.ThenAsync("the workout template should be updated successfully", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
                 await testRunner.AndAsync("the response should contain the updated values", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
             }
@@ -413,15 +413,15 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.WorkoutTemplate
             {
                 await this.ScenarioStartAsync();
                 await this.FeatureBackgroundAsync();
-                TechTalk.SpecFlow.Table table22 = new TechTalk.SpecFlow.Table(new string[] {
+                TechTalk.SpecFlow.Table table28 = new TechTalk.SpecFlow.Table(new string[] {
                             "Name"});
-                table22.AddRow(new string[] {
+                table28.AddRow(new string[] {
                             "Upper Body Power"});
-                table22.AddRow(new string[] {
+                table28.AddRow(new string[] {
                             "Lower Body Strength"});
-                table22.AddRow(new string[] {
+                table28.AddRow(new string[] {
                             "Upper Body Endurance"});
-                await testRunner.GivenAsync("the following workout templates exist:", ((string)(null)), table22, "Given ");
+                await testRunner.GivenAsync("the following workout templates exist:", ((string)(null)), table28, "Given ");
                 await testRunner.WhenAsync("I search for templates with name containing \"Upper\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
                 await testRunner.ThenAsync("I should receive 2 templates", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
                 await testRunner.AndAsync("all template names should contain \"Upper\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
