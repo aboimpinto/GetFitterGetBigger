@@ -1,10 +1,12 @@
 using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 
 namespace GetFitterGetBigger.Admin.Models.Dtos
 {
     public class ChangeWorkoutStateDto
     {
         [Required]
-        public string NewStateId { get; set; } = string.Empty;
+        [JsonPropertyName("workoutStateId")]
+        public string WorkoutStateId { get; set; } = string.Empty;
     }
 }

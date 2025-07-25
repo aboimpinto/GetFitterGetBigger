@@ -29,9 +29,6 @@ public class WorkoutReferenceDataService : IWorkoutReferenceDataService
 
     public async Task<List<ReferenceDataDto>> GetWorkoutObjectivesAsync()
     {
-        _logger.LogInformation("Getting workout objectives...");
-        _logger.LogInformation("HttpClient BaseAddress: {BaseAddress}", _httpClient.BaseAddress);
-        
         return await GetCachedDataAsync(
             WorkoutObjectivesCacheKey,
             async () =>
@@ -178,14 +175,15 @@ public class WorkoutReferenceDataService : IWorkoutReferenceDataService
     {
         if (_cache.TryGetValue(cacheKey, out T? cachedData) && cachedData != null)
         {
-            _logger.LogDebug("Cache hit for {CacheKey}", cacheKey);
+            _logger.LogInformation("Cache HIT for {CacheKey}", cacheKey);
             return cachedData;
         }
 
-        _logger.LogDebug("Cache miss for {CacheKey}, fetching from API", cacheKey);
+        _logger.LogInformation("Cache MISS for {CacheKey}, fetching from API", cacheKey);
         var data = await fetchData();
         
         _cache.Set(cacheKey, data, CacheDuration);
+        _logger.LogInformation("Cached {CacheKey} for {Duration} minutes", cacheKey, CacheDuration.TotalMinutes);
         return data;
     }
 

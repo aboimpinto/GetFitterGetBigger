@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using GetFitterGetBigger.API.Models.Entities;
 using GetFitterGetBigger.API.Models.SpecializedIds;
 
@@ -266,9 +267,41 @@ public class WorkoutTemplateBuilder
     
     private WorkoutTemplate ApplyTestOverrides(WorkoutTemplate template)
     {
-        return (_createdAt != DateTime.MinValue || _updatedAt != DateTime.MinValue)
-            ? template with { CreatedAt = _createdAt, UpdatedAt = _updatedAt }
-            : template;
+        var result = template;
+        
+        // Apply timestamps if set
+        if (_createdAt != DateTime.MinValue || _updatedAt != DateTime.MinValue)
+        {
+            result = result with { CreatedAt = _createdAt, UpdatedAt = _updatedAt };
+        }
+        
+        // Apply objectives if any were added
+        if (_objectives.Any())
+        {
+            result = result with { Objectives = _objectives };
+        }
+        
+        // Apply exercises if any were added
+        if (_exercises.Any())
+        {
+            result = result with { Exercises = _exercises };
+        }
+        
+        // Apply navigation properties if set
+        if (_workoutState != null)
+        {
+            result = result with { WorkoutState = _workoutState };
+        }
+        if (_category != null)
+        {
+            result = result with { Category = _category };
+        }
+        if (_difficulty != null)
+        {
+            result = result with { Difficulty = _difficulty };
+        }
+        
+        return result;
     }
     
     // Build with navigation properties (for when you need a fully loaded template)

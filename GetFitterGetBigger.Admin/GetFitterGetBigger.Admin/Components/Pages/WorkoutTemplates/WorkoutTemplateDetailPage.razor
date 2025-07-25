@@ -1,0 +1,165 @@
+@page "/workout-templates/{Id}"
+@using GetFitterGetBigger.Admin.Services
+@using GetFitterGetBigger.Admin.Models.Dtos
+@using GetFitterGetBigger.Admin.Components.WorkoutTemplates
+@using GetFitterGetBigger.Admin.Components.Shared
+@inject IWorkoutTemplateService WorkoutTemplateService
+@inject IToastService ToastService
+@inject NavigationManager Navigation
+
+<PageTitle>Workout Template Details</PageTitle>
+
+<div class="container mx-auto px-4 py-6">
+    <div class="mb-4">
+        <Breadcrumb Items="@breadcrumbItems" />
+    </div>
+    @if (_isLoading)
+    {
+        <WorkoutTemplateDetailSkeleton />
+    }
+    else if (_errorMessage != null)
+    {
+        <ErrorDisplay ErrorMessage="@_errorMessage"
+                     Title="Error loading workout template"
+                     ShowRetry="true"
+                     OnRetry="LoadTemplate"
+                     IsRetrying="_isLoading" />
+    }
+    else if (_template == null)
+    {
+        <div class="bg-white rounded-lg shadow-md p-8 text-center" data-testid="not-found-message">
+            <svg class="mx-auto h-12 w-12 text-gray-400 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <h2 class="text-2xl font-semibold text-gray-900 mb-2">Workout template not found</h2>
+            <p class="text-gray-600 mb-6">The workout template you're looking for doesn't exist or has been removed.</p>
+            <a href="/workout-templates" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700">
+                Back to Templates
+            </a>
+        </div>
+    }
+    else
+    {
+        <WorkoutTemplateDetail 
+            Template="@_template"
+            OnEdit="@HandleEdit"
+            OnDuplicate="@HandleDuplicate"
+            OnDelete="@HandleDelete"
+            OnStateChange="@HandleStateChange" />
+    }
+</div>
+
+@code {
+    [Parameter] public string Id { get; set; } = string.Empty;
+
+    private WorkoutTemplateDto? _template;
+    private bool _isLoading = true;
+    private string? _errorMessage;
+    private List<Breadcrumb.BreadcrumbItem> breadcrumbItems = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadTemplate();
+    }
+
+    private async Task LoadTemplate()
+    {
+        try
+        {
+            _isLoading = true;
+            _errorMessage = null;
+            _template = await WorkoutTemplateService.GetWorkoutTemplateByIdAsync(Id);
+            
+            if (_template != null)
+            {
+                // Initialize breadcrumb
+                breadcrumbItems = new List<Breadcrumb.BreadcrumbItem>
+                {
+                    new() { Text = "Home", Href = "/" },
+                    new() { Text = "Workout Templates", Href = "/workout-templates" },
+                    new() { Text = _template.Name }
+                };
+            }
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = GetUserFriendlyErrorMessage(ex);
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private void HandleEdit(WorkoutTemplateDto template)
+    {
+        Navigation.NavigateTo($"/workout-templates/{template.Id}/edit");
+    }
+
+    private async Task HandleDuplicate(WorkoutTemplateDto template)
+    {
+        try
+        {
+            var duplicateDto = new DuplicateWorkoutTemplateDto { NewName = $"{template.Name} (Copy)" };
+            var duplicatedTemplate = await WorkoutTemplateService.DuplicateWorkoutTemplateAsync(template.Id, duplicateDto);
+            ToastService.ShowSuccess($"Workout template '{template.Name}' duplicated successfully as '{duplicatedTemplate.Name}'.");
+            Navigation.NavigateTo($"/workout-templates/{duplicatedTemplate.Id}/edit");
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = GetUserFriendlyErrorMessage(ex, "Failed to duplicate template");
+            ToastService.ShowError(_errorMessage);
+        }
+    }
+
+    private async Task HandleDelete(WorkoutTemplateDto template)
+    {
+        try
+        {
+            // In a real app, we'd show a confirmation dialog here
+            await WorkoutTemplateService.DeleteWorkoutTemplateAsync(template.Id);
+            ToastService.ShowSuccess($"Workout template '{template.Name}' has been deleted successfully.");
+            Navigation.NavigateTo("/workout-templates");
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = GetUserFriendlyErrorMessage(ex, "Failed to delete template");
+            ToastService.ShowError(_errorMessage);
+        }
+    }
+
+    private async Task HandleStateChange(ReferenceDataDto newState)
+    {
+        try
+        {
+            var changeStateDto = new ChangeWorkoutStateDto { WorkoutStateId = newState.Id };
+            _template = await WorkoutTemplateService.ChangeWorkoutTemplateStateAsync(_template!.Id, changeStateDto);
+            ToastService.ShowSuccess($"Template state changed to '{newState.Value}' successfully.");
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = GetUserFriendlyErrorMessage(ex, "Failed to update template state");
+            ToastService.ShowError(_errorMessage);
+        }
+    }
+    
+    private string GetUserFriendlyErrorMessage(Exception ex, string? context = null)
+    {
+        var prefix = string.IsNullOrEmpty(context) ? "" : $"{context}: ";
+        
+        return ex switch
+        {
+            HttpRequestException httpEx => httpEx.StatusCode switch
+            {
+                System.Net.HttpStatusCode.NotFound => $"{prefix}The workout template was not found.",
+                System.Net.HttpStatusCode.Unauthorized => $"{prefix}You are not authorized to perform this action.",
+                System.Net.HttpStatusCode.Forbidden => $"{prefix}You do not have permission to perform this action.",
+                System.Net.HttpStatusCode.Conflict => $"{prefix}The operation conflicts with the current state.",
+                System.Net.HttpStatusCode.ServiceUnavailable => $"{prefix}The service is temporarily unavailable. Please try again later.",
+                _ => $"{prefix}A network error occurred. Please check your connection and try again."
+            },
+            TaskCanceledException => $"{prefix}The operation timed out. Please try again.",
+            _ => $"{prefix}An unexpected error occurred. Please try again."
+        };
+    }
+}

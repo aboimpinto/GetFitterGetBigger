@@ -4,10 +4,12 @@ This document contains project-specific instructions for Claude AI when working 
 
 ## Role in Admin Project
 
+**⚠️ CRITICAL: The Admin project is a BLAZOR/C# project, NOT React! ⚠️**
+
 When working in the Admin project folder, the AI assistant can perform **full implementation work** including:
-- Creating React components and pages
-- Implementing features
-- Writing tests
+- Creating **Blazor components** (.razor and .razor.cs files) - NEVER create .tsx or .jsx files!
+- Implementing features using C# and Blazor
+- Writing tests using bUnit for Blazor components
 - Following the FEATURE_IMPLEMENTATION_PROCESS.md
 
 Note: When in the main repository folder, only documentation work is performed.

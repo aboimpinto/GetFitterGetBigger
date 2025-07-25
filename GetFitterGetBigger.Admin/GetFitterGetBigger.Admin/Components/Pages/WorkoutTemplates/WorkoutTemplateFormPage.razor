@@ -1,0 +1,256 @@
+@page "/workout-templates/new"
+@page "/workout-templates/{Id}/edit"
+@using GetFitterGetBigger.Admin.Models.Dtos
+@using GetFitterGetBigger.Admin.Services
+@using GetFitterGetBigger.Admin.Components.WorkoutTemplates
+@using GetFitterGetBigger.Admin.Components.Shared
+@using Microsoft.AspNetCore.Authorization
+@using static GetFitterGetBigger.Admin.Components.WorkoutTemplates.WorkoutTemplateForm
+@attribute [Authorize]
+@rendermode InteractiveServer
+@inject IWorkoutTemplateService WorkoutTemplateService
+@inject IWorkoutTemplateStateService StateService
+@inject NavigationManager Navigation
+@inject IToastService ToastService
+@implements IDisposable
+
+<PageTitle>@(IsEditMode ? "Edit Workout Template" : "New Workout Template") - GetFitterGetBigger Admin</PageTitle>
+
+<div>
+    <div class="container mx-auto px-4 py-6">
+        <div class="mb-4">
+            <Breadcrumb Items="@breadcrumbItems" />
+        </div>
+    </div>
+    <div class="bg-white rounded-lg shadow-md p-6 max-w-4xl mx-auto mb-32">
+        <div class="mb-6">
+            <h2 class="text-2xl font-semibold text-gray-800">@(IsEditMode ? "Edit Workout Template" : "Create New Workout Template")</h2>
+            <p class="text-gray-600">@(IsEditMode ? "Update workout template details" : "Add a new workout template to your library")</p>
+        </div>
+
+        @if (StateService.ErrorMessage != null)
+        {
+            <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4">
+                <p>@StateService.ErrorMessage</p>
+                <button @onclick="StateService.ClearError" class="text-sm underline mt-1">Dismiss</button>
+            </div>
+        }
+
+        @if (IsLoading)
+        {
+            <WorkoutTemplateFormSkeleton />
+        }
+        else
+        {
+            <WorkoutTemplateForm 
+                Model="@FormModel"
+                OnValidSubmit="@HandleFormSubmit"
+                OnCancel="@HandleCancel"
+                SubmitButtonText="@(IsEditMode ? "Update" : "Create")"
+                IsEditMode="@IsEditMode"
+                ExistingTemplate="@ExistingTemplate"
+                EnableAutoSave="@(IsEditMode && ExistingTemplate?.WorkoutState?.Id == "DRAFT")"
+                FieldDisabledPredicate="@GetFieldDisabledPredicate()"
+                EnableNameValidation="true" />
+        }
+    </div>
+</div>
+
+<style>
+    @@media (min-width: 1280px) {
+        .cancelPostionStyle {
+            left: calc(50% - 25rem) !important;
+        }
+    }
+</style>
+
+@code {
+    [Parameter] public string? Id { get; set; }
+
+    private WorkoutTemplateFormModel FormModel = new();
+    private WorkoutTemplateDto? ExistingTemplate;
+    private bool IsEditMode => !string.IsNullOrWhiteSpace(Id);
+    private bool IsLoading = true;
+    private List<Breadcrumb.BreadcrumbItem> breadcrumbItems = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        try
+        {
+            IsLoading = true;
+
+            if (IsEditMode && !string.IsNullOrWhiteSpace(Id))
+            {
+                // Load existing template for editing
+                ExistingTemplate = await WorkoutTemplateService.GetWorkoutTemplateByIdAsync(Id);
+                
+                if (ExistingTemplate == null)
+                {
+                    // Handle template not found - navigate back to list
+                    NavigateToList();
+                    return;
+                }
+
+                // Initialize breadcrumb for edit
+                breadcrumbItems = new List<Breadcrumb.BreadcrumbItem>
+                {
+                    new() { Text = "Home", Href = "/" },
+                    new() { Text = "Workout Templates", Href = "/workout-templates" },
+                    new() { Text = ExistingTemplate.Name, Href = $"/workout-templates/{ExistingTemplate.Id}" },
+                    new() { Text = "Edit" }
+                };
+
+                // Initialize form model with existing data
+                FormModel = new WorkoutTemplateFormModel
+                {
+                    Id = ExistingTemplate.Id,
+                    Name = ExistingTemplate.Name,
+                    Description = ExistingTemplate.Description,
+                    CategoryId = ExistingTemplate.Category?.Id ?? string.Empty,
+                    DifficultyId = ExistingTemplate.Difficulty?.Id ?? string.Empty,
+                    ObjectiveId = ExistingTemplate.Objectives?.FirstOrDefault()?.Id,
+                    EstimatedDurationMinutes = ExistingTemplate.EstimatedDurationMinutes,
+                    IsPublic = ExistingTemplate.IsPublic,
+                    Tags = ExistingTemplate.Tags.ToList(),
+                    WorkoutStateId = ExistingTemplate.WorkoutState?.Id
+                };
+            }
+            else
+            {
+                // Initialize breadcrumb for new
+                breadcrumbItems = new List<Breadcrumb.BreadcrumbItem>
+                {
+                    new() { Text = "Home", Href = "/" },
+                    new() { Text = "Workout Templates", Href = "/workout-templates" },
+                    new() { Text = "New Template" }
+                };
+
+                // Initialize for new template
+                FormModel = new WorkoutTemplateFormModel
+                {
+                    EstimatedDurationMinutes = 30,
+                    IsPublic = false
+                };
+            }
+        }
+        catch (Exception ex)
+        {
+            // Error will be handled by the service
+            Console.Error.WriteLine($"Failed to load data: {ex.Message}");
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+    private async Task HandleFormSubmit(WorkoutTemplateFormModel model)
+    {
+        try
+        {
+            if (IsEditMode)
+            {
+                // Update existing template
+                var updateDto = new UpdateWorkoutTemplateDto
+                {
+                    Name = model.Name,
+                    Description = model.Description,
+                    CategoryId = model.CategoryId,
+                    DifficultyId = model.DifficultyId,
+                    // Note: ObjectiveIds not supported in current DTO
+                    EstimatedDurationMinutes = model.EstimatedDurationMinutes,
+                    IsPublic = model.IsPublic,
+                    Tags = model.Tags
+                };
+
+                await WorkoutTemplateService.UpdateWorkoutTemplateAsync(Id!, updateDto);
+                
+                // If auto-save is enabled, this might be called from auto-save
+                // Don't navigate away in that case
+                if (!IsAutoSaveRequest())
+                {
+                    ToastService.ShowSuccess($"Workout template '{model.Name}' updated successfully.");
+                    NavigateToList();
+                }
+            }
+            else
+            {
+                // Create new template
+                var createDto = new CreateWorkoutTemplateDto
+                {
+                    Name = model.Name,
+                    Description = model.Description,
+                    CategoryId = model.CategoryId,
+                    DifficultyId = model.DifficultyId,
+                    // Note: ObjectiveIds not supported in current DTO
+                    EstimatedDurationMinutes = model.EstimatedDurationMinutes,
+                    IsPublic = model.IsPublic,
+                    Tags = model.Tags
+                };
+
+                await WorkoutTemplateService.CreateWorkoutTemplateAsync(createDto);
+                ToastService.ShowSuccess($"Workout template '{model.Name}' created successfully.");
+                NavigateToList();
+            }
+        }
+        catch (Exception ex)
+        {
+            // Error will be shown through StateService.ErrorMessage
+            Console.Error.WriteLine($"Failed to save workout template: {ex.Message}");
+        }
+    }
+
+    private void HandleCancel()
+    {
+        NavigateToList();
+    }
+
+    private void NavigateToList()
+    {
+        if (StateService.HasStoredPage)
+        {
+            StateService.LoadWorkoutTemplatesWithStoredPageAsync();
+        }
+        Navigation.NavigateTo("/workout-templates");
+    }
+
+    private Func<string, bool>? GetFieldDisabledPredicate()
+    {
+        if (!IsEditMode || ExistingTemplate == null)
+        {
+            return null;
+        }
+
+        var state = ExistingTemplate.WorkoutState?.Id;
+        
+        return fieldName => state switch
+        {
+            "PRODUCTION" => fieldName switch
+            {
+                nameof(WorkoutTemplateFormModel.Name) => true,
+                nameof(WorkoutTemplateFormModel.CategoryId) => true,
+                nameof(WorkoutTemplateFormModel.DifficultyId) => true,
+                _ => false
+            },
+            "ARCHIVED" => true, // All fields disabled for archived templates
+            _ => false
+        };
+    }
+
+    private bool IsAutoSaveRequest()
+    {
+        // This is a simple check - in a real implementation, you might pass a flag
+        // or check the call stack to determine if this is an auto-save
+        return false;
+    }
+
+    public void Dispose()
+    {
+        // Clear any state when disposing
+    }
+}

@@ -1,0 +1,213 @@
+@using GetFitterGetBigger.Admin.Models.Dtos
+@using GetFitterGetBigger.Admin.Services
+
+@if (WorkoutTemplate != null && TargetState != null && CanTransition())
+{
+    <button @onclick="HandleClick"
+            data-testid="state-transition-button"
+            class="@GetButtonClasses()"
+            disabled="@IsDisabled"
+            title="@GetTooltip()"
+            aria-label="@($"Change state to {TargetState.Value}")">
+        @if (ShowIcon)
+        {
+            <span class="@GetIconClasses()" aria-hidden="true">@GetIcon()</span>
+        }
+        <span>@ButtonText</span>
+    </button>
+}
+
+@if (showConfirmDialog)
+{
+    <div class="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center p-4 z-50 animate-fade-in"
+         data-testid="confirm-dialog-backdrop"
+         @onclick="CancelTransition"
+         role="dialog"
+         aria-modal="true"
+         aria-labelledby="confirm-dialog-title">
+        <div class="bg-white rounded-lg p-6 max-w-md w-full animate-scale-in"
+             data-testid="confirm-dialog-content"
+             @onclick:stopPropagation="true">
+            <h3 id="confirm-dialog-title" data-testid="confirm-dialog-title" class="text-lg font-medium text-gray-900 mb-4">
+                Confirm State Change
+            </h3>
+            <p class="text-sm text-gray-600 mb-6" data-testid="confirm-dialog-message">
+                @GetConfirmationMessage()
+            </p>
+            <div class="flex justify-end space-x-3">
+                <button type="button"
+                        @onclick="CancelTransition"
+                        data-testid="cancel-button"
+                        class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+                        disabled="@isTransitioning">
+                    Cancel
+                </button>
+                <button type="button"
+                        @onclick="ConfirmTransition"
+                        data-testid="confirm-button"
+                        class="px-4 py-2 text-sm font-medium text-white @GetConfirmButtonColor() border border-transparent rounded-md disabled:opacity-50"
+                        disabled="@isTransitioning">
+                    @if (isTransitioning)
+                    {
+                        <span data-testid="loading-spinner" class="inline-block animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></span>
+                    }
+                    Confirm
+                </button>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public WorkoutTemplateDto? WorkoutTemplate { get; set; }
+    [Parameter] public ReferenceDataDto? TargetState { get; set; }
+    [Parameter] public string ButtonText { get; set; } = "Change State";
+    [Parameter] public ButtonSize Size { get; set; } = ButtonSize.Medium;
+    [Parameter] public ButtonVariant Variant { get; set; } = ButtonVariant.Secondary;
+    [Parameter] public bool ShowIcon { get; set; } = true;
+    [Parameter] public bool IsDisabled { get; set; }
+    [Parameter] public EventCallback<ReferenceDataDto> OnStateChanged { get; set; }
+    [Parameter] public bool RequireConfirmation { get; set; } = true;
+
+    internal bool showConfirmDialog = false;
+    internal bool isTransitioning = false;
+
+    public enum ButtonSize
+    {
+        Small,
+        Medium,
+        Large
+    }
+
+    public enum ButtonVariant
+    {
+        Primary,
+        Secondary,
+        Danger
+    }
+
+    internal bool CanTransition()
+    {
+        if (WorkoutTemplate == null || TargetState == null)
+            return false;
+
+        var currentState = WorkoutTemplate.WorkoutState?.Value?.ToUpperInvariant();
+        var target = TargetState.Value.ToUpperInvariant();
+
+        // Business rules for state transitions
+        return (currentState, target) switch
+        {
+            ("DRAFT", "PRODUCTION") => true,
+            ("DRAFT", "ARCHIVED") => true,
+            ("PRODUCTION", "ARCHIVED") => true,
+            ("ARCHIVED", "DRAFT") => true,
+            _ => false
+        };
+    }
+
+    internal string GetButtonClasses()
+    {
+        var sizeClasses = Size switch
+        {
+            ButtonSize.Small => "px-3 py-1.5 text-sm",
+            ButtonSize.Large => "px-5 py-3 text-base",
+            _ => "px-4 py-2 text-sm"
+        };
+
+        var variantClasses = Variant switch
+        {
+            ButtonVariant.Primary => "bg-blue-600 text-white hover:bg-blue-700",
+            ButtonVariant.Danger => "bg-red-600 text-white hover:bg-red-700",
+            _ => "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50"
+        };
+
+        return $"inline-flex items-center font-medium rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed {sizeClasses} {variantClasses}";
+    }
+
+    internal string GetIcon()
+    {
+        return TargetState?.Value.ToUpperInvariant() switch
+        {
+            "PRODUCTION" => "🚀",
+            "ARCHIVED" => "📦",
+            "DRAFT" => "📝",
+            _ => "→"
+        };
+    }
+
+    internal string GetIconClasses()
+    {
+        return Size switch
+        {
+            ButtonSize.Small => "text-xs mr-1",
+            ButtonSize.Large => "text-base mr-2",
+            _ => "text-sm mr-1.5"
+        };
+    }
+
+    internal string GetTooltip()
+    {
+        if (IsDisabled)
+            return "State transition not allowed";
+
+        return $"Change state to {TargetState?.Value}";
+    }
+
+    internal string GetConfirmationMessage()
+    {
+        var current = WorkoutTemplate?.WorkoutState?.Value;
+        var target = TargetState?.Value;
+
+        return target?.ToUpperInvariant() switch
+        {
+            "PRODUCTION" => $"Are you sure you want to move this template to PRODUCTION? This will make it available for use and restrict editing.",
+            "ARCHIVED" => $"Are you sure you want to archive this template? It will no longer be available for use.",
+            "DRAFT" => $"Are you sure you want to move this template back to DRAFT? This will allow editing again.",
+            _ => $"Are you sure you want to change the state from {current} to {target}?"
+        };
+    }
+
+    internal string GetConfirmButtonColor()
+    {
+        return TargetState?.Value.ToUpperInvariant() switch
+        {
+            "ARCHIVED" => "bg-red-600 hover:bg-red-700",
+            "PRODUCTION" => "bg-green-600 hover:bg-green-700",
+            _ => "bg-blue-600 hover:bg-blue-700"
+        };
+    }
+
+    internal async Task HandleClick()
+    {
+        if (RequireConfirmation)
+        {
+            showConfirmDialog = true;
+        }
+        else
+        {
+            await PerformTransition();
+        }
+    }
+
+    internal void CancelTransition()
+    {
+        showConfirmDialog = false;
+        isTransitioning = false;
+    }
+
+    internal async Task ConfirmTransition()
+    {
+        isTransitioning = true;
+        await PerformTransition();
+        showConfirmDialog = false;
+        isTransitioning = false;
+    }
+
+    private async Task PerformTransition()
+    {
+        if (TargetState != null && OnStateChanged.HasDelegate)
+        {
+            await OnStateChanged.InvokeAsync(TargetState);
+        }
+    }
+}

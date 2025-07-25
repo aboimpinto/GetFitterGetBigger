@@ -18,72 +18,29 @@ public interface IWorkoutTemplateService
     Task<ServiceResult<WorkoutTemplateDto>> GetByIdAsync(WorkoutTemplateId id);
 
     /// <summary>
-    /// Gets a paginated list of workout templates
+    /// Searches workout templates with multiple filter criteria
     /// </summary>
-    /// <param name="pageNumber">Page number (1-based)</param>
+    /// <param name="page">Page number (1-based)</param>
     /// <param name="pageSize">Number of items per page</param>
-    /// <param name="categoryFilter">Optional category filter</param>
-    /// <param name="difficultyFilter">Optional difficulty filter</param>
-    /// <returns>Paginated response containing workout templates</returns>
-    Task<PagedResponse<WorkoutTemplateDto>> GetPagedAsync(
-        int pageNumber = 1, 
-        int pageSize = 20,
-        WorkoutCategoryId? categoryFilter = null,
-        DifficultyLevelId? difficultyFilter = null);
-
-    /// <summary>
-    /// Gets all active workout templates
-    /// </summary>
-    /// <returns>Service result containing collection of workout templates</returns>
-    Task<ServiceResult<IEnumerable<WorkoutTemplateDto>>> GetAllActiveAsync();
-
-    /// <summary>
-    /// Searches workout templates by name pattern
-    /// </summary>
-    /// <param name="namePattern">The pattern to search for in template names</param>
-    /// <returns>Service result containing matching workout templates</returns>
-    Task<ServiceResult<IEnumerable<WorkoutTemplateDto>>> GetByNamePatternAsync(
-        string namePattern);
-
-    /// <summary>
-    /// Gets workout templates by workout category
-    /// </summary>
-    /// <param name="categoryId">The workout category ID</param>
-    /// <param name="includeInactive">Whether to include archived templates</param>
-    /// <returns>Service result containing workout templates in the specified category</returns>
-    Task<ServiceResult<IEnumerable<WorkoutTemplateDto>>> GetByCategoryAsync(
-        WorkoutCategoryId categoryId, 
-        bool includeInactive = false);
-
-    /// <summary>
-    /// Gets workout templates by workout objective
-    /// </summary>
-    /// <param name="objectiveId">The workout objective ID</param>
-    /// <param name="includeInactive">Whether to include archived templates</param>
-    /// <returns>Service result containing workout templates with the specified objective</returns>
-    Task<ServiceResult<IEnumerable<WorkoutTemplateDto>>> GetByObjectiveAsync(
+    /// <param name="namePattern">Name pattern to search (empty string for no filter)</param>
+    /// <param name="categoryId">Category filter (Empty for no filter)</param>
+    /// <param name="objectiveId">Objective filter (Empty for no filter)</param>
+    /// <param name="difficultyId">Difficulty filter (Empty for no filter)</param>
+    /// <param name="stateId">State filter (Empty for no filter)</param>
+    /// <param name="sortBy">Sort field</param>
+    /// <param name="sortOrder">Sort order (asc/desc)</param>
+    /// <returns>Service result containing paginated workout templates</returns>
+    Task<ServiceResult<PagedResponse<WorkoutTemplateDto>>> SearchAsync(
+        int page,
+        int pageSize,
+        string namePattern,
+        WorkoutCategoryId categoryId,
         WorkoutObjectiveId objectiveId,
-        bool includeInactive = false);
-
-    /// <summary>
-    /// Gets workout templates by difficulty level
-    /// </summary>
-    /// <param name="difficultyId">The difficulty level ID</param>
-    /// <param name="includeInactive">Whether to include archived templates</param>
-    /// <returns>Service result containing workout templates with the specified difficulty</returns>
-    Task<ServiceResult<IEnumerable<WorkoutTemplateDto>>> GetByDifficultyAsync(
         DifficultyLevelId difficultyId,
-        bool includeInactive = false);
+        WorkoutStateId stateId,
+        string sortBy,
+        string sortOrder);
 
-    /// <summary>
-    /// Gets workout templates that contain a specific exercise
-    /// </summary>
-    /// <param name="exerciseId">The exercise ID</param>
-    /// <param name="includeInactive">Whether to include archived templates</param>
-    /// <returns>Service result containing workout templates containing the specified exercise</returns>
-    Task<ServiceResult<IEnumerable<WorkoutTemplateDto>>> GetByExerciseAsync(
-        ExerciseId exerciseId,
-        bool includeInactive = false);
 
     /// <summary>
     /// Creates a new workout template

@@ -221,7 +221,7 @@ namespace GetFitterGetBigger.Admin.Tests.Services
         {
             // Arrange
             var templateId = "workouttemplate-123";
-            var changeStateDto = new ChangeWorkoutStateDto { NewStateId = "state-2" };
+            var changeStateDto = new ChangeWorkoutStateDto { WorkoutStateId = "state-2" };
 
             var updatedTemplate = new WorkoutTemplateDtoBuilder()
                 .WithId(templateId)

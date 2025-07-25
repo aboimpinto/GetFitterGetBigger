@@ -13,6 +13,20 @@ namespace GetFitterGetBigger.API.Repositories.Implementations;
 public class WorkoutTemplateRepository : RepositoryBase<FitnessDbContext>, IWorkoutTemplateRepository
 {
     /// <summary>
+    /// Gets an IQueryable of workout templates with necessary includes for querying and filtering
+    /// </summary>
+    public IQueryable<WorkoutTemplate> GetWorkoutTemplatesQueryable()
+    {
+        return Context.WorkoutTemplates
+            .Include(w => w.Category)
+            .Include(w => w.Difficulty)
+            .Include(w => w.WorkoutState)
+            .Include(w => w.Objectives)
+                .ThenInclude(o => o.WorkoutObjective)
+            .AsNoTracking();
+    }
+    
+    /// <summary>
     /// Gets a workout template by ID
     /// </summary>
     public async Task<WorkoutTemplate> GetByIdAsync(WorkoutTemplateId id)
@@ -66,158 +80,7 @@ public class WorkoutTemplateRepository : RepositoryBase<FitnessDbContext>, IWork
         return template ?? WorkoutTemplate.Empty;
     }
 
-    /// <summary>
-    /// Gets a paginated list of workout templates
-    /// </summary>
-    public async Task<(IEnumerable<WorkoutTemplate> templates, int totalCount)> GetPagedAsync(
-        int pageNumber, 
-        int pageSize, 
-        bool includeInactive = false)
-    {
-        var query = BuildBaseQuery();
 
-        // Apply active filter
-        query = includeInactive
-            ? query
-            : query.Where(w => w.WorkoutState.Value != "ARCHIVED");
-
-        // Get total count before pagination
-        var totalCount = await query.CountAsync();
-
-        // Apply pagination
-        var templates = await query
-            .OrderByDescending(w => w.UpdatedAt)
-            .ThenByDescending(w => w.CreatedAt)
-            .Skip((pageNumber - 1) * pageSize)
-            .Take(pageSize)
-            .ToListAsync();
-
-        return (templates, totalCount);
-    }
-
-    /// <summary>
-    /// Gets all active workout templates
-    /// </summary>
-    public async Task<IEnumerable<WorkoutTemplate>> GetAllActiveAsync()
-    {
-        var templates = await BuildBaseQuery()
-            .Where(w => w.WorkoutState != null && w.WorkoutState.Value != "ARCHIVED")
-            .OrderByDescending(w => w.UpdatedAt)
-            .ThenByDescending(w => w.CreatedAt)
-            .ToListAsync();
-
-        return templates;
-    }
-
-    /// <summary>
-    /// Gets workout templates by name pattern
-    /// </summary>
-    public async Task<IEnumerable<WorkoutTemplate>> GetByNamePatternAsync(
-        string namePattern, 
-        bool includeInactive = false)
-    {
-        var query = BuildBaseQuery()
-            .Where(w => w.Name.ToLower().Contains(namePattern.ToLower()));
-
-        // Apply active filter
-        query = includeInactive
-            ? query
-            : query.Where(w => w.WorkoutState.Value != "ARCHIVED");
-
-        var templates = await query
-            .OrderBy(w => w.Name)
-            .ToListAsync();
-
-        return templates;
-    }
-
-    /// <summary>
-    /// Gets workout templates by category
-    /// </summary>
-    public async Task<IEnumerable<WorkoutTemplate>> GetByCategoryAsync(
-        WorkoutCategoryId categoryId, 
-        bool includeInactive = false)
-    {
-        var query = BuildBaseQuery()
-            .Where(w => w.CategoryId == categoryId);
-
-        // Apply active filter
-        query = includeInactive
-            ? query
-            : query.Where(w => w.WorkoutState.Value != "ARCHIVED");
-
-        var templates = await query
-            .OrderByDescending(w => w.UpdatedAt)
-            .ToListAsync();
-
-        return templates;
-    }
-
-    /// <summary>
-    /// Gets workout templates by objective
-    /// </summary>
-    public async Task<IEnumerable<WorkoutTemplate>> GetByObjectiveAsync(
-        WorkoutObjectiveId objectiveId, 
-        bool includeInactive = false)
-    {
-        var query = BuildBaseQuery()
-            .Where(w => w.Objectives.Any(o => o.WorkoutObjectiveId == objectiveId));
-
-        // Apply active filter
-        query = includeInactive
-            ? query
-            : query.Where(w => w.WorkoutState.Value != "ARCHIVED");
-
-        var templates = await query
-            .OrderByDescending(w => w.UpdatedAt)
-            .ToListAsync();
-
-        return templates;
-    }
-
-    /// <summary>
-    /// Gets workout templates by difficulty level
-    /// </summary>
-    public async Task<IEnumerable<WorkoutTemplate>> GetByDifficultyAsync(
-        DifficultyLevelId difficultyLevelId, 
-        bool includeInactive = false)
-    {
-        var query = BuildBaseQuery()
-            .Where(w => w.DifficultyId == difficultyLevelId);
-
-        // Apply active filter
-        query = includeInactive
-            ? query
-            : query.Where(w => w.WorkoutState.Value != "ARCHIVED");
-
-        var templates = await query
-            .OrderByDescending(w => w.UpdatedAt)
-            .ToListAsync();
-
-        return templates;
-    }
-
-    /// <summary>
-    /// Gets workout templates that contain a specific exercise
-    /// </summary>
-    public async Task<IEnumerable<WorkoutTemplate>> GetByExerciseAsync(
-        ExerciseId exerciseId, 
-        bool includeInactive = false)
-    {
-        var query = BuildBaseQuery()
-            .Where(w => w.Exercises.Any(e => e.ExerciseId == exerciseId));
-
-        // Apply active filter
-        query = includeInactive
-            ? query
-            : query.Where(w => w.WorkoutState.Value != "ARCHIVED");
-
-        var templates = await query
-            .OrderByDescending(w => w.UpdatedAt)
-            .ToListAsync();
-
-        return templates;
-    }
 
     /// <summary>
     /// Checks if a workout template exists by ID
@@ -388,25 +251,6 @@ public class WorkoutTemplateRepository : RepositoryBase<FitnessDbContext>, IWork
         await Context.SaveChangesAsync();
 
         return true;
-    }
-
-    /// <summary>
-    /// Builds the base query with common includes
-    /// </summary>
-    private IQueryable<WorkoutTemplate> BuildBaseQuery()
-    {
-        return Context.WorkoutTemplates
-            .Include(w => w.WorkoutState)
-            .Include(w => w.Category)
-            .Include(w => w.Difficulty)
-            .Include(w => w.Exercises)
-                .ThenInclude(e => e.Exercise)
-            .Include(w => w.Exercises)
-                .ThenInclude(e => e.Configurations)
-            .Include(w => w.Objectives)
-                .ThenInclude(o => o.WorkoutObjective)
-            .AsSplitQuery()
-            .AsNoTracking();
     }
 
     /// <summary>

@@ -208,6 +208,63 @@ public async Task<IActionResult> Create([FromBody] CreateEquipmentDto dto) =>
 - Pattern matching for result handling
 - Consistent error response format
 
+### Controller Error Handling - Pure Pass-Through Pattern 🚨 CRITICAL
+
+**MANDATORY**: Controllers must NEVER interpret, translate, or modify service error messages. The service layer owns ALL error messages and business logic.
+
+```csharp
+// ❌ VIOLATION - Controller interpreting/translating errors
+[HttpGet]
+public async Task<IActionResult> GetWorkoutTemplates([FromQuery] int page = 1, ...)
+{
+    var result = await _service.SearchAsync(page, ...);
+    
+    return result switch
+    {
+        { IsSuccess: true } => Ok(result.Data),
+        { Errors: var errors } when errors.Any(e => e.Contains("Invalid page")) => 
+            BadRequest(new { errors = new[] { "Invalid page number or page size" } }), // ← VIOLATION!
+        { Errors: var errors } when errors.Any(e => e.Contains("not found")) =>
+            NotFound(new { errors = new[] { "Resource not found" } }), // ← VIOLATION!
+        { Errors: var errors } => BadRequest(new { errors })
+    };
+}
+
+// ✅ CORRECT - Pure pass-through, no interpretation
+[HttpGet]
+public async Task<IActionResult> GetWorkoutTemplates([FromQuery] int page = 1, ...)
+{
+    var result = await _service.SearchAsync(page, ...);
+    
+    // Single exit point - no business logic, just pass through the result
+    return result switch
+    {
+        { IsSuccess: true } => Ok(result.Data),
+        { Errors: var errors } => BadRequest(new { errors })
+    };
+}
+```
+
+**Why This Is Critical:**
+1. **Clear Responsibility Boundaries**: Service layer owns ALL business logic and error messages
+2. **Testability**: No error translation logic to test in controllers
+3. **Debugging**: Clear source of truth for error messages
+4. **Maintenance**: Changes to error messages happen in one place (service)
+
+**The Only Acceptable Status Code Mapping:**
+```csharp
+// ✅ ACCEPTABLE - Mapping to HTTP status codes without changing messages
+return result switch
+{
+    { IsSuccess: true } => Ok(result.Data),
+    { PrimaryErrorCode: ServiceErrorCode.NotFound } => NotFound(new { errors = result.Errors }),
+    { PrimaryErrorCode: ServiceErrorCode.Conflict } => Conflict(new { errors = result.Errors }),
+    { Errors: var errors } => BadRequest(new { errors })
+};
+```
+
+**Key Principle**: The controller can choose the HTTP status code based on error type, but MUST pass through the original error messages unchanged.
+
 ### 3. **Repository Pattern**
 Repositories handle data access only:
 

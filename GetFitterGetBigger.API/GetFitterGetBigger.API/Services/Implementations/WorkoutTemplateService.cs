@@ -10,6 +10,8 @@ using GetFitterGetBigger.API.Services.Results;
 using ValidationResult = GetFitterGetBigger.API.Services.Results.ValidationResult;
 using Microsoft.Extensions.Logging;
 using Olimpo.EntityFramework.Persistency;
+using GetFitterGetBigger.API.Extensions;
+using Microsoft.EntityFrameworkCore;
 
 namespace GetFitterGetBigger.API.Services.Implementations;
 
@@ -69,205 +71,59 @@ public class WorkoutTemplateService : IWorkoutTemplateService
         return result;
     }
 
-    public async Task<PagedResponse<WorkoutTemplateDto>> GetPagedAsync(
-        int pageNumber = 1, 
-        int pageSize = 20,
-        WorkoutCategoryId? categoryFilter = null,
-        DifficultyLevelId? difficultyFilter = null)
-    {
-        var result = await LoadPagedWorkoutTemplatesAsync(pageNumber, pageSize);
-        
-        return result;
-    }
-    
-    private PagedResponse<WorkoutTemplateDto> CreateEmptyPagedResponse(int pageNumber, int pageSize) =>
-        new()
-        {
-            Items = new List<WorkoutTemplateDto>(),
-            TotalCount = 0,
-            CurrentPage = pageNumber,
-            PageSize = pageSize
-        };
-    
-    private async Task<PagedResponse<WorkoutTemplateDto>> LoadPagedWorkoutTemplatesAsync(
-        int pageNumber, 
-        int pageSize)
-    {
-        using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
-        var repository = unitOfWork.GetRepository<IWorkoutTemplateRepository>();
-        
-        var (workoutTemplates, totalCount) = await repository.GetPagedAsync(
-            pageNumber, pageSize);
-
-        var result = new PagedResponse<WorkoutTemplateDto>
-        {
-            Items = workoutTemplates.Select(MapToDto).ToList(),
-            TotalCount = totalCount,
-            CurrentPage = pageNumber,
-            PageSize = pageSize
-        };
-        
-        return result;
-    }
-
-    public async Task<ServiceResult<IEnumerable<WorkoutTemplateDto>>> GetAllActiveAsync()
-    {
-        using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
-        var repository = unitOfWork.GetRepository<IWorkoutTemplateRepository>();
-        
-        var workoutTemplates = await repository.GetAllActiveAsync();
-        
-        var result = ServiceResult<IEnumerable<WorkoutTemplateDto>>.Success(
-            workoutTemplates.Select(MapToDto));
-            
-        return result;
-    }
-
-    public async Task<ServiceResult<IEnumerable<WorkoutTemplateDto>>> GetByNamePatternAsync(
-        string namePattern)
-    {
-        var result = string.IsNullOrWhiteSpace(namePattern) switch
-        {
-            true => ServiceResult<IEnumerable<WorkoutTemplateDto>>.Success(new List<WorkoutTemplateDto>()),
-            false => await LoadByNamePatternAsync(namePattern)
-        };
-        
-        return result;
-    }
-    
-    private async Task<ServiceResult<IEnumerable<WorkoutTemplateDto>>> LoadByNamePatternAsync(
-        string namePattern)
-    {
-        using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
-        var repository = unitOfWork.GetRepository<IWorkoutTemplateRepository>();
-        
-        var workoutTemplates = await repository.GetByNamePatternAsync(namePattern);
-        
-        var result = ServiceResult<IEnumerable<WorkoutTemplateDto>>.Success(
-            workoutTemplates.Select(MapToDto));
-            
-        return result;
-    }
-
-    public async Task<ServiceResult<IEnumerable<WorkoutTemplateDto>>> GetByCategoryAsync(
-        WorkoutCategoryId categoryId, 
-        bool includeInactive = false)
-    {
-        var result = categoryId.IsEmpty switch
-        {
-            true => ServiceResult<IEnumerable<WorkoutTemplateDto>>.Failure(
-                new List<WorkoutTemplateDto>(),
-                ServiceError.InvalidFormat("CategoryId", "GUID format")),
-            false => await LoadByCategoryAsync(categoryId, includeInactive)
-        };
-        
-        return result;
-    }
-    
-    private async Task<ServiceResult<IEnumerable<WorkoutTemplateDto>>> LoadByCategoryAsync(
+    public async Task<ServiceResult<PagedResponse<WorkoutTemplateDto>>> SearchAsync(
+        int page,
+        int pageSize,
+        string namePattern,
         WorkoutCategoryId categoryId,
-        bool includeInactive)
-    {
-        using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
-        var repository = unitOfWork.GetRepository<IWorkoutTemplateRepository>();
-        
-        var workoutTemplates = await repository.GetByCategoryAsync(categoryId, includeInactive);
-        
-        var result = ServiceResult<IEnumerable<WorkoutTemplateDto>>.Success(
-            workoutTemplates.Select(MapToDto));
-            
-        return result;
-    }
-
-    public async Task<ServiceResult<IEnumerable<WorkoutTemplateDto>>> GetByObjectiveAsync(
         WorkoutObjectiveId objectiveId,
-        bool includeInactive = false)
-    {
-        var result = objectiveId.IsEmpty switch
-        {
-            true => ServiceResult<IEnumerable<WorkoutTemplateDto>>.Failure(
-                new List<WorkoutTemplateDto>(),
-                ServiceError.InvalidFormat("ObjectiveId", "GUID format")),
-            false => await LoadByObjectiveAsync(objectiveId, includeInactive)
-        };
-        
-        return result;
-    }
-    
-    private async Task<ServiceResult<IEnumerable<WorkoutTemplateDto>>> LoadByObjectiveAsync(
-        WorkoutObjectiveId objectiveId,
-        bool includeInactive)
+        DifficultyLevelId difficultyId,
+        WorkoutStateId stateId,
+        string sortBy,
+        string sortOrder)
     {
         using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
         var repository = unitOfWork.GetRepository<IWorkoutTemplateRepository>();
         
-        var workoutTemplates = await repository.GetByObjectiveAsync(objectiveId, includeInactive);
+        // Build query with filters and sorting (but NOT paging yet)
+        var workoutTemplatesQuery = repository
+            .GetWorkoutTemplatesQueryable()
+            .ApplyNamePatternFilter(namePattern)
+            .ApplyCategoryFilter(categoryId)
+            .ApplyDifficultyFilter(difficultyId)
+            .ApplyObjectiveFilter(objectiveId);
         
-        var result = ServiceResult<IEnumerable<WorkoutTemplateDto>>.Success(
-            workoutTemplates.Select(MapToDto));
+        // Apply state filter or exclude archived by default
+        workoutTemplatesQuery = stateId.IsEmpty 
+            ? workoutTemplatesQuery.ExcludeArchived()
+            : workoutTemplatesQuery.ApplyStateFilter(stateId);
             
-        return result;
+        workoutTemplatesQuery = workoutTemplatesQuery.ApplySorting(sortBy, sortOrder);
+        
+        // Log for SQL verification (will help verify EF Core behavior)
+        _logger.LogDebug("Executing count query for workout templates search");
+        var totalCount = await workoutTemplatesQuery.CountAsync();
+        _logger.LogDebug("Count query completed. Total: {TotalCount}", totalCount);
+        
+        // Now apply paging and execute
+        _logger.LogDebug("Executing paged query for workout templates");
+        var items = await workoutTemplatesQuery
+            .ApplyPaging(page, pageSize)
+            .ToListAsync();
+        _logger.LogDebug("Paged query completed. Retrieved: {ItemCount} items", items.Count);
+        
+        var response = new PagedResponse<WorkoutTemplateDto>
+        {
+            Items = items.Select(MapToDto).ToList(),
+            TotalCount = totalCount,
+            CurrentPage = page,
+            PageSize = pageSize
+        };
+        
+        return ServiceResult<PagedResponse<WorkoutTemplateDto>>.Success(response);
     }
 
-    public async Task<ServiceResult<IEnumerable<WorkoutTemplateDto>>> GetByDifficultyAsync(
-        DifficultyLevelId difficultyId,
-        bool includeInactive = false)
-    {
-        var result = difficultyId.IsEmpty switch
-        {
-            true => ServiceResult<IEnumerable<WorkoutTemplateDto>>.Failure(
-                new List<WorkoutTemplateDto>(),
-                ServiceError.InvalidFormat("DifficultyId", "GUID format")),
-            false => await LoadByDifficultyAsync(difficultyId, includeInactive)
-        };
-        
-        return result;
-    }
-    
-    private async Task<ServiceResult<IEnumerable<WorkoutTemplateDto>>> LoadByDifficultyAsync(
-        DifficultyLevelId difficultyId,
-        bool includeInactive)
-    {
-        using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
-        var repository = unitOfWork.GetRepository<IWorkoutTemplateRepository>();
-        
-        var workoutTemplates = await repository.GetByDifficultyAsync(difficultyId, includeInactive);
-        
-        var result = ServiceResult<IEnumerable<WorkoutTemplateDto>>.Success(
-            workoutTemplates.Select(MapToDto));
-            
-        return result;
-    }
 
-    public async Task<ServiceResult<IEnumerable<WorkoutTemplateDto>>> GetByExerciseAsync(
-        ExerciseId exerciseId,
-        bool includeInactive = false)
-    {
-        var result = exerciseId.IsEmpty switch
-        {
-            true => ServiceResult<IEnumerable<WorkoutTemplateDto>>.Failure(
-                new List<WorkoutTemplateDto>(),
-                ServiceError.InvalidFormat("ExerciseId", "GUID format")),
-            false => await LoadByExerciseAsync(exerciseId, includeInactive)
-        };
-        
-        return result;
-    }
-    
-    private async Task<ServiceResult<IEnumerable<WorkoutTemplateDto>>> LoadByExerciseAsync(
-        ExerciseId exerciseId,
-        bool includeInactive)
-    {
-        using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
-        var repository = unitOfWork.GetRepository<IWorkoutTemplateRepository>();
-        
-        var workoutTemplates = await repository.GetByExerciseAsync(exerciseId, includeInactive);
-        
-        var result = ServiceResult<IEnumerable<WorkoutTemplateDto>>.Success(
-            workoutTemplates.Select(MapToDto));
-            
-        return result;
-    }
 
     public async Task<ServiceResult<WorkoutTemplateDto>> CreateAsync(CreateWorkoutTemplateCommand command)
     {
@@ -449,7 +305,7 @@ public class WorkoutTemplateService : IWorkoutTemplateService
         {
             true => ServiceResult<WorkoutTemplateDto>.Failure(
                 CreateEmptyDto(),
-                ServiceError.InvalidFormat("WorkoutStateId", "GUID format")),
+                ServiceError.InvalidFormat("WorkoutStateId", "Expected format: 'workoutstate-{guid}' (e.g., 'workoutstate-02000001-0000-0000-0000-000000000002' for Production)")),
             false => await ChangeWorkoutTemplateStateAsync(id, newStateId)
         };
         

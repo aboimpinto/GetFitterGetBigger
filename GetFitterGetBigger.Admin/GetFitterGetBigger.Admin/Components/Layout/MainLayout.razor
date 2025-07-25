@@ -1,6 +1,7 @@
 ﻿@inherits LayoutComponentBase
 @using GetFitterGetBigger.Admin.Services.Authentication
 @using GetFitterGetBigger.Admin.Services
+@using GetFitterGetBigger.Admin.Components.Shared
 @inject IAuthorizationStateService AuthorizationStateService
 @inject INavigationService NavigationService
 @inject NavigationManager Navigation
@@ -29,6 +30,8 @@
         </main>
     </div>
 </div>
+
+<ToastContainer />
 
 <div id="blazor-error-ui" data-nosnippet class="fixed bottom-0 left-0 w-full bg-yellow-100 p-4 shadow-md z-50 hidden">
     An unhandled error has occurred.

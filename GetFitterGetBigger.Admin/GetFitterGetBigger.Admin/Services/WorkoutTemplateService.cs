@@ -11,12 +11,16 @@ namespace GetFitterGetBigger.Admin.Services
     {
         private readonly HttpClient _httpClient;
         private readonly IMemoryCache _cache;
+        private readonly IReferenceDataService _referenceDataService;
+        private readonly IWorkoutReferenceDataService _workoutReferenceDataService;
         private readonly JsonSerializerOptions _jsonOptions;
 
-        public WorkoutTemplateService(HttpClient httpClient, IMemoryCache cache)
+        public WorkoutTemplateService(HttpClient httpClient, IMemoryCache cache, IReferenceDataService referenceDataService, IWorkoutReferenceDataService workoutReferenceDataService)
         {
             _httpClient = httpClient;
             _cache = cache;
+            _referenceDataService = referenceDataService;
+            _workoutReferenceDataService = workoutReferenceDataService;
             _jsonOptions = new JsonSerializerOptions
             {
                 PropertyNameCaseInsensitive = true,
@@ -30,8 +34,10 @@ namespace GetFitterGetBigger.Admin.Services
             {
                 var queryParams = BuildQueryString(filter);
                 var requestUrl = $"api/workout-templates{queryParams}";
+                var fullUrl = $"{_httpClient.BaseAddress}{requestUrl}";
 
                 Console.WriteLine($"[WorkoutTemplateService] GetWorkoutTemplatesAsync - Request URL: {requestUrl}");
+                Console.WriteLine($"[WorkoutTemplateService] GetWorkoutTemplatesAsync - Full URL: {fullUrl}");
 
                 var response = await _httpClient.GetAsync(requestUrl);
 
@@ -191,6 +197,10 @@ namespace GetFitterGetBigger.Admin.Services
             {
                 var requestUrl = $"api/workout-templates/{id}/state";
                 var json = JsonSerializer.Serialize(changeState, _jsonOptions);
+                
+                Console.WriteLine($"[WorkoutTemplateService] ChangeWorkoutTemplateStateAsync - Endpoint: PUT {requestUrl}");
+                Console.WriteLine($"[WorkoutTemplateService] ChangeWorkoutTemplateStateAsync - Request Body: {json}");
+                Console.WriteLine($"[WorkoutTemplateService] ChangeWorkoutTemplateStateAsync - Full URL: {_httpClient.BaseAddress}{requestUrl}");
 
                 var content = new StringContent(json, Encoding.UTF8, "application/json");
                 var response = await _httpClient.PutAsync(requestUrl, content);
@@ -364,56 +374,50 @@ namespace GetFitterGetBigger.Admin.Services
         // Reference data methods
         public async Task<List<ReferenceDataDto>> GetWorkoutCategoriesAsync()
         {
-            var cacheKey = "workout_categories";
-            
-            if (!_cache.TryGetValue(cacheKey, out List<ReferenceDataDto>? categories))
+            Console.WriteLine("[WorkoutTemplateService] Getting workout categories from WorkoutReferenceDataService");
+            var categories = await _workoutReferenceDataService.GetWorkoutCategoriesAsync();
+            // Convert WorkoutCategoryDto to ReferenceDataDto
+            var referenceDtos = categories?.Select(c => new ReferenceDataDto
             {
-                var response = await _httpClient.GetAsync("api/workout-templates/categories");
-                response.EnsureSuccessStatusCode();
-
-                categories = await response.Content.ReadFromJsonAsync<List<ReferenceDataDto>>(_jsonOptions);
-                if (categories != null)
-                {
-                    _cache.Set(cacheKey, categories, TimeSpan.FromMinutes(30));
-                }
-            }
-
-            return categories ?? new List<ReferenceDataDto>();
+                Id = c.WorkoutCategoryId,
+                Value = c.Value,
+                Description = c.Description
+            }).ToList();
+            Console.WriteLine($"[WorkoutTemplateService] Categories received: {referenceDtos?.Count ?? 0}");
+            return referenceDtos ?? new List<ReferenceDataDto>();
         }
 
         public async Task<List<ReferenceDataDto>> GetDifficultyLevelsAsync()
         {
-            var cacheKey = "difficulty_levels";
-            
-            if (!_cache.TryGetValue(cacheKey, out List<ReferenceDataDto>? difficulties))
-            {
-                var response = await _httpClient.GetAsync("api/workout-templates/difficulties");
-                response.EnsureSuccessStatusCode();
-
-                difficulties = await response.Content.ReadFromJsonAsync<List<ReferenceDataDto>>(_jsonOptions);
-                if (difficulties != null)
-                {
-                    _cache.Set(cacheKey, difficulties, TimeSpan.FromMinutes(30));
-                }
-            }
-
-            return difficulties ?? new List<ReferenceDataDto>();
+            Console.WriteLine("[WorkoutTemplateService] Getting difficulty levels from ReferenceDataService");
+            var difficulties = await _referenceDataService.GetDifficultyLevelsAsync();
+            Console.WriteLine($"[WorkoutTemplateService] Difficulties received: {difficulties?.Count() ?? 0}");
+            return difficulties?.ToList() ?? new List<ReferenceDataDto>();
         }
 
         public async Task<List<ReferenceDataDto>> GetWorkoutStatesAsync()
         {
+            // Workout states need to be fetched directly from API as they're not in reference services
             var cacheKey = "workout_states";
             
             if (!_cache.TryGetValue(cacheKey, out List<ReferenceDataDto>? states))
             {
-                var response = await _httpClient.GetAsync("api/workout-templates/states");
+                Console.WriteLine("[WorkoutTemplateService] Cache MISS for workout states, fetching from API");
+                var response = await _httpClient.GetAsync("api/workout-states");
+                Console.WriteLine($"[WorkoutTemplateService] States response status: {response.StatusCode}");
                 response.EnsureSuccessStatusCode();
 
                 states = await response.Content.ReadFromJsonAsync<List<ReferenceDataDto>>(_jsonOptions);
+                Console.WriteLine($"[WorkoutTemplateService] States received: {states?.Count ?? 0}");
                 if (states != null)
                 {
                     _cache.Set(cacheKey, states, TimeSpan.FromMinutes(30));
+                    Console.WriteLine($"[WorkoutTemplateService] Cached workout states for 30 minutes");
                 }
+            }
+            else
+            {
+                Console.WriteLine($"[WorkoutTemplateService] Cache HIT for workout states - returning {states?.Count ?? 0} items");
             }
 
             return states ?? new List<ReferenceDataDto>();
@@ -421,26 +425,25 @@ namespace GetFitterGetBigger.Admin.Services
 
         public async Task<List<ReferenceDataDto>> GetWorkoutObjectivesAsync()
         {
-            var cacheKey = "workout_objectives";
-            
-            if (!_cache.TryGetValue(cacheKey, out List<ReferenceDataDto>? objectives))
-            {
-                var response = await _httpClient.GetAsync("api/workout-templates/objectives");
-                response.EnsureSuccessStatusCode();
-
-                objectives = await response.Content.ReadFromJsonAsync<List<ReferenceDataDto>>(_jsonOptions);
-                if (objectives != null)
-                {
-                    _cache.Set(cacheKey, objectives, TimeSpan.FromMinutes(30));
-                }
-            }
-
+            Console.WriteLine("[WorkoutTemplateService] Getting workout objectives from WorkoutReferenceDataService");
+            var objectives = await _workoutReferenceDataService.GetWorkoutObjectivesAsync();
+            Console.WriteLine($"[WorkoutTemplateService] Objectives received: {objectives?.Count ?? 0}");
             return objectives ?? new List<ReferenceDataDto>();
         }
 
         private string BuildQueryString(WorkoutTemplateFilterDto filter)
         {
             var queryParams = new List<string>();
+
+            // Log all filter values
+            Console.WriteLine($"[WorkoutTemplateService] BuildQueryString - Filter values:");
+            Console.WriteLine($"  - Page: {filter.Page}");
+            Console.WriteLine($"  - PageSize: {filter.PageSize}");
+            Console.WriteLine($"  - NamePattern: '{filter.NamePattern ?? "null"}'");
+            Console.WriteLine($"  - CategoryId: '{filter.CategoryId ?? "null"}'");
+            Console.WriteLine($"  - DifficultyId: '{filter.DifficultyId ?? "null"}'");
+            Console.WriteLine($"  - StateId: '{filter.StateId ?? "null"}'");
+            Console.WriteLine($"  - IsPublic: {(filter.IsPublic.HasValue ? filter.IsPublic.Value.ToString() : "null")}");
 
             queryParams.Add($"page={filter.Page}");
             queryParams.Add($"pageSize={filter.PageSize}");
@@ -470,7 +473,10 @@ namespace GetFitterGetBigger.Admin.Services
                 queryParams.Add($"isPublic={filter.IsPublic.Value.ToString().ToLower()}");
             }
 
-            return queryParams.Count > 0 ? $"?{string.Join("&", queryParams)}" : string.Empty;
+            var queryString = queryParams.Count > 0 ? $"?{string.Join("&", queryParams)}" : string.Empty;
+            Console.WriteLine($"[WorkoutTemplateService] BuildQueryString - Final query string: {queryString}");
+            
+            return queryString;
         }
     }
 }

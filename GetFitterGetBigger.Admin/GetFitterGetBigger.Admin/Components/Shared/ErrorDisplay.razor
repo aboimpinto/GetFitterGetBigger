@@ -1,0 +1,203 @@
+@if (!string.IsNullOrWhiteSpace(ErrorMessage))
+{
+    <div class="@GetContainerClasses()" role="alert" data-testid="error-display">
+        <div class="flex">
+            @if (ShowIcon)
+            {
+                <div class="flex-shrink-0">
+                    <svg class="@GetIconClasses()" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                    </svg>
+                </div>
+            }
+            <div class="@(ShowIcon ? "ml-3" : "") flex-1">
+                @if (!string.IsNullOrWhiteSpace(Title))
+                {
+                    <h3 class="@GetTitleClasses()">@Title</h3>
+                }
+                <div class="@GetMessageClasses()">
+                    <p>@ErrorMessage</p>
+                </div>
+                @if (ShowRetry && OnRetry.HasDelegate)
+                {
+                    <div class="mt-4">
+                        <button @onclick="OnRetry" 
+                                data-testid="retry-button"
+                                disabled="@IsRetrying"
+                                class="@GetRetryButtonClasses()">
+                            @if (IsRetrying)
+                            {
+                                <span class="flex items-center">
+                                    <svg class="animate-spin -ml-1 mr-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                    </svg>
+                                    @RetryingText
+                                </span>
+                            }
+                            else
+                            {
+                                @RetryText
+                            }
+                        </button>
+                    </div>
+                }
+                @if (AdditionalActions != null)
+                {
+                    <div class="mt-4">
+                        @AdditionalActions
+                    </div>
+                }
+            </div>
+            @if (ShowDismiss && OnDismiss.HasDelegate)
+            {
+                <div class="ml-auto pl-3">
+                    <div class="-mx-1.5 -my-1.5">
+                        <button @onclick="OnDismiss"
+                                data-testid="dismiss-button"
+                                class="@GetDismissButtonClasses()">
+                            <span class="sr-only">Dismiss</span>
+                            <svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                <path d="M6.28 5.22a.75.75 0 00-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 101.06 1.06L10 11.06l3.72 3.72a.75.75 0 101.06-1.06L11.06 10l3.72-3.72a.75.75 0 00-1.06-1.06L10 8.94 6.28 5.22z" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public string? ErrorMessage { get; set; }
+    [Parameter] public string? Title { get; set; }
+    [Parameter] public bool ShowIcon { get; set; } = true;
+    [Parameter] public bool ShowRetry { get; set; } = true;
+    [Parameter] public bool ShowDismiss { get; set; } = false;
+    [Parameter] public EventCallback OnRetry { get; set; }
+    [Parameter] public EventCallback OnDismiss { get; set; }
+    [Parameter] public string RetryText { get; set; } = "Try again";
+    [Parameter] public string RetryingText { get; set; } = "Retrying...";
+    [Parameter] public bool IsRetrying { get; set; }
+    [Parameter] public RenderFragment? AdditionalActions { get; set; }
+    [Parameter] public ErrorSeverity Severity { get; set; } = ErrorSeverity.Error;
+    [Parameter] public ErrorSize Size { get; set; } = ErrorSize.Medium;
+    
+    public enum ErrorSeverity
+    {
+        Error,
+        Warning,
+        Info
+    }
+    
+    public enum ErrorSize
+    {
+        Small,
+        Medium,
+        Large
+    }
+    
+    private string GetContainerClasses()
+    {
+        var baseClasses = "rounded-lg p-4";
+        
+        var severityClasses = Severity switch
+        {
+            ErrorSeverity.Warning => "bg-yellow-50 border border-yellow-200",
+            ErrorSeverity.Info => "bg-blue-50 border border-blue-200",
+            _ => "bg-red-50 border border-red-200"
+        };
+        
+        return $"{baseClasses} {severityClasses}";
+    }
+    
+    private string GetIconClasses()
+    {
+        var sizeClasses = Size switch
+        {
+            ErrorSize.Small => "h-4 w-4",
+            ErrorSize.Large => "h-6 w-6",
+            _ => "h-5 w-5"
+        };
+        
+        var colorClasses = Severity switch
+        {
+            ErrorSeverity.Warning => "text-yellow-400",
+            ErrorSeverity.Info => "text-blue-400",
+            _ => "text-red-400"
+        };
+        
+        return $"{sizeClasses} {colorClasses}";
+    }
+    
+    private string GetTitleClasses()
+    {
+        var sizeClasses = Size switch
+        {
+            ErrorSize.Small => "text-xs",
+            ErrorSize.Large => "text-base",
+            _ => "text-sm"
+        };
+        
+        var colorClasses = Severity switch
+        {
+            ErrorSeverity.Warning => "text-yellow-800",
+            ErrorSeverity.Info => "text-blue-800",
+            _ => "text-red-800"
+        };
+        
+        return $"{sizeClasses} font-medium {colorClasses}";
+    }
+    
+    private string GetMessageClasses()
+    {
+        var sizeClasses = Size switch
+        {
+            ErrorSize.Small => "text-xs mt-1",
+            ErrorSize.Large => "text-base mt-3",
+            _ => "text-sm mt-2"
+        };
+        
+        var colorClasses = Severity switch
+        {
+            ErrorSeverity.Warning => "text-yellow-700",
+            ErrorSeverity.Info => "text-blue-700",
+            _ => "text-red-700"
+        };
+        
+        return $"{sizeClasses} {colorClasses}";
+    }
+    
+    private string GetRetryButtonClasses()
+    {
+        var sizeClasses = Size switch
+        {
+            ErrorSize.Small => "text-xs",
+            ErrorSize.Large => "text-base",
+            _ => "text-sm"
+        };
+        
+        var colorClasses = Severity switch
+        {
+            ErrorSeverity.Warning => "text-yellow-600 hover:text-yellow-500",
+            ErrorSeverity.Info => "text-blue-600 hover:text-blue-500",
+            _ => "text-red-600 hover:text-red-500"
+        };
+        
+        var stateClasses = IsRetrying ? "cursor-not-allowed opacity-75" : "";
+        
+        return $"{sizeClasses} font-medium {colorClasses} {stateClasses} inline-flex items-center transition-colors duration-200";
+    }
+    
+    private string GetDismissButtonClasses()
+    {
+        var colorClasses = Severity switch
+        {
+            ErrorSeverity.Warning => "bg-yellow-50 text-yellow-500 hover:bg-yellow-100 focus:ring-yellow-600",
+            ErrorSeverity.Info => "bg-blue-50 text-blue-500 hover:bg-blue-100 focus:ring-blue-600",
+            _ => "bg-red-50 text-red-500 hover:bg-red-100 focus:ring-red-600"
+        };
+        
+        return $"inline-flex rounded-md p-1.5 {colorClasses} focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-red-50 transition-colors duration-200";
+    }
+}

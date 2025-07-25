@@ -203,7 +203,7 @@ public class TestDatabaseSeeder
         var stateId = await GetOrCreateTestWorkoutStateId();
         
         var now = DateTime.UtcNow;
-        var templateResult = WorkoutTemplate.Handler.Create(
+        var templateResult = API.Models.Entities.WorkoutTemplate.Handler.Create(
             templateId,
             "Test Workout Template",
             "A test workout template for integration testing",

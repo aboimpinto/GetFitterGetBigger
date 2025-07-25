@@ -1207,7 +1207,9 @@ namespace GetFitterGetBigger.API.Migrations
                         .HasColumnType("integer");
 
                     b.Property<bool>("IsPublic")
-                        .HasColumnType("boolean");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false);
 
                     b.Property<string>("Name")
                         .IsRequired()
