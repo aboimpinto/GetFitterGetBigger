@@ -102,6 +102,7 @@
         {
             var duplicateDto = new DuplicateWorkoutTemplateDto { NewName = $"{template.Name} (Copy)" };
             var duplicatedTemplate = await WorkoutTemplateService.DuplicateWorkoutTemplateAsync(template.Id, duplicateDto);
+            ToastService.ShowSuccess($"Workout template '{template.Name}' duplicated successfully as '{duplicatedTemplate.Name}'.");
             Navigation.NavigateTo($"/workout-templates/{duplicatedTemplate.Id}/edit");
         }
         catch (Exception ex)

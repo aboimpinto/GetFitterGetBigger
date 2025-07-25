@@ -10,6 +10,7 @@
 @rendermode InteractiveServer
 @inject IWorkoutTemplateStateService StateService
 @inject NavigationManager Navigation
+@inject IToastService ToastService
 @implements IDisposable
 
 <PageTitle>Workout Templates - GetFitterGetBigger Admin</PageTitle>
@@ -185,6 +186,7 @@
         };
 
         await StateService.DuplicateWorkoutTemplateAsync(template.Id, duplicateDto);
+        ToastService.ShowSuccess($"Workout template '{template.Name}' duplicated successfully.");
     }
 
     private async Task HandleTemplateDelete(WorkoutTemplateDto template)
@@ -194,6 +196,7 @@
             template.WorkoutState?.Value?.ToUpperInvariant() == "ARCHIVED")
         {
             await StateService.DeleteWorkoutTemplateAsync(template.Id);
+            ToastService.ShowSuccess($"Workout template '{template.Name}' deleted successfully.");
         }
     }
 

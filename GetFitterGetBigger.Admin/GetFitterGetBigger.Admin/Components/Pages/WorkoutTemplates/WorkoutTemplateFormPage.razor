@@ -11,6 +11,7 @@
 @inject IWorkoutTemplateService WorkoutTemplateService
 @inject IWorkoutTemplateStateService StateService
 @inject NavigationManager Navigation
+@inject IToastService ToastService
 @implements IDisposable
 
 <PageTitle>@(IsEditMode ? "Edit Workout Template" : "New Workout Template") - GetFitterGetBigger Admin</PageTitle>
@@ -173,6 +174,7 @@
                 // Don't navigate away in that case
                 if (!IsAutoSaveRequest())
                 {
+                    ToastService.ShowSuccess($"Workout template '{model.Name}' updated successfully.");
                     NavigateToList();
                 }
             }
@@ -192,6 +194,7 @@
                 };
 
                 await WorkoutTemplateService.CreateWorkoutTemplateAsync(createDto);
+                ToastService.ShowSuccess($"Workout template '{model.Name}' created successfully.");
                 NavigateToList();
             }
         }

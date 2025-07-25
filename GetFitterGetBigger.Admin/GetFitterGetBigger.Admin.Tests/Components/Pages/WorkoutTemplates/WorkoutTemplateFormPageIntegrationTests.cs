@@ -13,6 +13,8 @@ using System.Collections.Generic;
 using System.Linq;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Authorization;
+using GetFitterGetBigger.Admin.Tests.TestHelpers;
+using Moq;
 using Microsoft.AspNetCore.Components.Web;
 using GetFitterGetBigger.Admin.Components.WorkoutTemplates;
 using AngleSharp.Dom;
@@ -27,16 +29,19 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.WorkoutTemplates
     {
         private readonly MockWorkoutTemplateService _mockTemplateService;
         private readonly MockWorkoutTemplateStateService _mockStateService;
+        private readonly Mock<IToastService> _mockToastService;
         private readonly FakeNavigationManager _navigationManager;
 
         public WorkoutTemplateFormPageIntegrationTests()
         {
             _mockTemplateService = new MockWorkoutTemplateService();
             _mockStateService = new MockWorkoutTemplateStateService();
+            _mockToastService = new Mock<IToastService>();
 
             // Setup services
             Services.AddSingleton<IWorkoutTemplateService>(_mockTemplateService);
             Services.AddSingleton<IWorkoutTemplateStateService>(_mockStateService);
+            Services.AddSingleton<IToastService>(_mockToastService.Object);
             Services.AddSingleton<ILocalStorageService>(new MockLocalStorageService());
             
             // Setup authentication

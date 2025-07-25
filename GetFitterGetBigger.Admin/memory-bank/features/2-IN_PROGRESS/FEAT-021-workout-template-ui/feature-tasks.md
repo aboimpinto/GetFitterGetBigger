@@ -529,7 +529,22 @@ Notes:
     - WorkoutTemplateEditFormTests: Validation errors, conflict errors, forbidden errors
     - WorkoutTemplateStateServiceTests: Error message persistence and clearing
   - All components have appropriate error handling test coverage
-- **Task 9.5:** Add success notifications for all CRUD operations [ReadyToDevelop] (Est: 45m)
+### Health Check Warning - 2025-07-25 03:35
+**Build/Test Status**: Tests Failed
+**Issues Found**:
+- Should_RecoverFormData_WhenRecoverClicked - Missing `[data-testid='recover-button']`
+- Should_StayOnPage_WhenCancelNavigationClicked - Missing `[data-testid='stay-button']`
+
+**User Decision**: Chose to fix issues first
+**Reason**: Maintain test integrity before implementing new features
+
+### Boy Scout Tasks (Fix Health Check Issues)
+- **Boy Scout Task 1:** Fix failing WorkoutTemplateForm tests - update data-testid attributes [Completed: Started: 2025-07-25 03:35, Finished: 2025-07-25 03:40] (Est: 15m, Actual: 5m)
+  - Fixed data-testid mismatches: recover-data-button → recover-button, cancel-navigation-button → stay-button
+  - All tests now passing: Should_RecoverFormData_WhenRecoverClicked, Should_StayOnPage_WhenCancelNavigationClicked
+  - Git commit: `7e5dc725` - fix(Admin): update WorkoutTemplateForm data-testid attributes for tests
+
+- **Task 9.5:** Add success notifications for all CRUD operations [InProgress: Started: 2025-07-25 03:40] (Est: 45m)
 - **Task 9.6:** Implement responsive design for mobile/tablet views [Postponed] (Est: 1h)
 - **Task 9.7:** Add keyboard navigation support and accessibility attributes [Postponed] (Est: 30m)
 - **Task 9.8:** Create accessibility tests (ARIA labels, keyboard nav) [Postponed] (Est: 30m)
@@ -544,7 +559,6 @@ Build Report:
 UX Polish Summary:
 - **Loading States**: ✅ Implemented - All async operations show skeleton loaders
 - **Error Handling**: ✅ Implemented - User-friendly error messages with retry actions
-- **Success Notifications**: ⏸️ Postponed - ToastService infrastructure exists but not integrated
 - **Responsive Design**: ⏸️ Postponed - Mobile/tablet views deferred
 - **Accessibility**: ⏸️ Postponed - Basic ARIA labels exist, keyboard navigation deferred
 
@@ -555,7 +569,6 @@ Tasks Completed (4 of 8):
 - Task 9.4: Error handling tests verification (27m)
 
 Tasks Postponed (4):
-- Task 9.5: Success notifications
 - Task 9.6: Responsive design
 - Task 9.7: Keyboard navigation
 - Task 9.8: Accessibility tests
