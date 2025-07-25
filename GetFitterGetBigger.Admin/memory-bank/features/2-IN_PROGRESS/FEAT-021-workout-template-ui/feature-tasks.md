@@ -529,7 +529,7 @@ Notes:
     - WorkoutTemplateEditFormTests: Validation errors, conflict errors, forbidden errors
     - WorkoutTemplateStateServiceTests: Error message persistence and clearing
   - All components have appropriate error handling test coverage
-- **Task 9.5:** Add success notifications for all CRUD operations [Postponed] (Est: 45m)
+- **Task 9.5:** Add success notifications for all CRUD operations [ReadyToDevelop] (Est: 45m)
 - **Task 9.6:** Implement responsive design for mobile/tablet views [Postponed] (Est: 1h)
 - **Task 9.7:** Add keyboard navigation support and accessibility attributes [Postponed] (Est: 30m)
 - **Task 9.8:** Create accessibility tests (ARIA labels, keyboard nav) [Postponed] (Est: 30m)

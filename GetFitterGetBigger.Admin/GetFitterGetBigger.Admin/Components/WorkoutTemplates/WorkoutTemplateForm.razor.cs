@@ -29,8 +29,11 @@ public partial class WorkoutTemplateForm : ComponentBase, IDisposable
     internal List<ReferenceDataDto> Objectives = new();
     
     // Form state
-    internal bool IsLoading = true;
+    internal bool IsLoading { get; set; } = false;
     internal bool IsSubmitting = false;
+    internal bool IsSaving => IsSubmitting;
+    internal bool ShowButtons { get; set; } = true;
+    internal bool IsValid => IsFormValid();
     internal string? ErrorMessage;
     internal string TagsInput = string.Empty;
     internal bool ShowNameExistsWarning = false;
@@ -56,6 +59,7 @@ public partial class WorkoutTemplateForm : ComponentBase, IDisposable
     
     protected override async Task OnInitializedAsync()
     {
+        IsLoading = true;
         await LoadReferenceData();
         InitializeFormState();
         
@@ -230,6 +234,11 @@ public partial class WorkoutTemplateForm : ComponentBase, IDisposable
         }
         
         await HandleValidSubmit();
+    }
+    
+    internal async Task TriggerFormSubmit()
+    {
+        await HandleSubmitFromFloating();
     }
     
     private async Task HandleCancel()
