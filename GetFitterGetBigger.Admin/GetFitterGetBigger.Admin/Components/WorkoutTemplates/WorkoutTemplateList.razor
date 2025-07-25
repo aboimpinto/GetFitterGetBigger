@@ -70,7 +70,7 @@
                     OnEdit="HandleTemplateEdit"
                     OnDuplicate="HandleTemplateDuplicate"
                     OnDelete="HandleTemplateDelete"
-                    OnStateChange="HandleTemplateStateChange" />
+                    OnStateChange="@(async (newState) => await HandleTemplateStateChange(template, newState))" />
             }
         </div>
 

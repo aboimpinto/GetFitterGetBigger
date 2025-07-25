@@ -1,5 +1,6 @@
 @using GetFitterGetBigger.Admin.Models.Dtos
 @using GetFitterGetBigger.Admin.Services
+@using GetFitterGetBigger.Admin.Constants
 
 @if (Template == null)
 {
@@ -175,7 +176,7 @@ else
                         {
                             <StateTransitionButton 
                                 WorkoutTemplate="@Template"
-                                TargetState="@(new ReferenceDataDto { Id = "state-production", Value = "PRODUCTION", Description = "Production state" })"
+                                TargetState="@(new ReferenceDataDto { Id = WorkoutStateIds.Production, Value = "PRODUCTION", Description = "Production state" })"
                                 ButtonText="Publish to Production"
                                 Size="StateTransitionButton.ButtonSize.Medium"
                                 Variant="StateTransitionButton.ButtonVariant.Primary"
@@ -185,7 +186,7 @@ else
                         {
                             <StateTransitionButton 
                                 WorkoutTemplate="@Template"
-                                TargetState="@(new ReferenceDataDto { Id = "state-archived", Value = "ARCHIVED", Description = "Archived state" })"
+                                TargetState="@(new ReferenceDataDto { Id = WorkoutStateIds.Archived, Value = "ARCHIVED", Description = "Archived state" })"
                                 ButtonText="Archive Template"
                                 Size="StateTransitionButton.ButtonSize.Medium"
                                 Variant="StateTransitionButton.ButtonVariant.Secondary"

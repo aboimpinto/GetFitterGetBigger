@@ -123,11 +123,14 @@ namespace GetFitterGetBigger.Admin.Components.WorkoutTemplates
             }
         }
 
-        internal async Task HandleTemplateStateChange(ReferenceDataDto newState)
+        internal async Task HandleTemplateStateChange(WorkoutTemplateDto template, ReferenceDataDto newState)
         {
-            // The state change is handled by the WorkoutTemplateCard's StateTransitionButton
-            // We just need to refresh the list after the state change
-            await StateService.RefreshCurrentPageAsync();
+            var changeStateDto = new ChangeWorkoutStateDto
+            {
+                WorkoutStateId = newState.Id
+            };
+
+            await StateService.ChangeWorkoutTemplateStateAsync(template.Id, changeStateDto);
         }
 
         internal async Task GoToPage(int page)

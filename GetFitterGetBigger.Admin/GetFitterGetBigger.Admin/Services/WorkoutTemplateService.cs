@@ -197,6 +197,10 @@ namespace GetFitterGetBigger.Admin.Services
             {
                 var requestUrl = $"api/workout-templates/{id}/state";
                 var json = JsonSerializer.Serialize(changeState, _jsonOptions);
+                
+                Console.WriteLine($"[WorkoutTemplateService] ChangeWorkoutTemplateStateAsync - Endpoint: PUT {requestUrl}");
+                Console.WriteLine($"[WorkoutTemplateService] ChangeWorkoutTemplateStateAsync - Request Body: {json}");
+                Console.WriteLine($"[WorkoutTemplateService] ChangeWorkoutTemplateStateAsync - Full URL: {_httpClient.BaseAddress}{requestUrl}");
 
                 var content = new StringContent(json, Encoding.UTF8, "application/json");
                 var response = await _httpClient.PutAsync(requestUrl, content);

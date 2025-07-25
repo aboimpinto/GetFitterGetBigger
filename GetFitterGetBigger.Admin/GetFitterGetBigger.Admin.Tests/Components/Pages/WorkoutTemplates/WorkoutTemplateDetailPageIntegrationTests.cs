@@ -203,7 +203,7 @@ public class WorkoutTemplateDetailPageIntegrationTests : WorkoutTemplateTestBase
 
         // Assert
         MockWorkoutTemplateService.Verify(x => x.ChangeWorkoutTemplateStateAsync("template-1", 
-            It.Is<ChangeWorkoutStateDto>(dto => dto.NewStateId == "state-production")), Times.Once);
+            It.Is<ChangeWorkoutStateDto>(dto => dto.WorkoutStateId == "state-production")), Times.Once);
     }
 
     [Fact]

@@ -132,7 +132,7 @@
     {
         try
         {
-            var changeStateDto = new ChangeWorkoutStateDto { NewStateId = newState.Id };
+            var changeStateDto = new ChangeWorkoutStateDto { WorkoutStateId = newState.Id };
             _template = await WorkoutTemplateService.ChangeWorkoutTemplateStateAsync(_template!.Id, changeStateDto);
             ToastService.ShowSuccess($"Template state changed to '{newState.Value}' successfully.");
         }

@@ -1,4 +1,5 @@
 @using GetFitterGetBigger.Admin.Models.Dtos
+@using GetFitterGetBigger.Admin.Constants
 
 <div class="@GetCardClasses()"
      data-testid="workout-template-card"
@@ -300,7 +301,7 @@
         {
             var productionState = new ReferenceDataDto 
             { 
-                Id = "state-production", 
+                Id = WorkoutStateIds.Production, 
                 Value = "PRODUCTION", 
                 Description = "Production state" 
             };
@@ -314,7 +315,7 @@
         {
             var archivedState = new ReferenceDataDto 
             { 
-                Id = "state-archived", 
+                Id = WorkoutStateIds.Archived, 
                 Value = "ARCHIVED", 
                 Description = "Archived state" 
             };
