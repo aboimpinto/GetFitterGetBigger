@@ -117,7 +117,7 @@ namespace GetFitterGetBigger.Admin.Tests.Services.Authentication
         }
 
         [Fact]
-        public async Task UserHasAdminAccess_WhenOnlyPTTierClaimExists_ReturnsFalse()
+        public async Task UserHasAdminAccess_WhenOnlyPTTierClaimExists_ReturnsTrue()
         {
             // Arrange
             var user = new AuthUserBuilder().Build();
@@ -131,7 +131,7 @@ namespace GetFitterGetBigger.Admin.Tests.Services.Authentication
             await _authorizationStateService.InitializeAsync();
 
             // Assert
-            _authorizationStateService.UserHasAdminAccess.Should().BeFalse();
+            _authorizationStateService.UserHasAdminAccess.Should().BeTrue();
         }
 
         [Fact]

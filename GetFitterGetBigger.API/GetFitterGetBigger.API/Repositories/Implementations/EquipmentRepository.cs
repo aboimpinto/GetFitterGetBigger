@@ -34,6 +34,7 @@ public class EquipmentRepository : RepositoryBase<FitnessDbContext>, IEquipmentR
         // Use AsNoTracking for read operations to avoid tracking conflicts
         var equipment = await Context.Equipment
             .AsNoTracking()
+            .Where(e => e.IsActive)
             .FirstOrDefaultAsync(e => e.EquipmentId == id);
 
         return equipment ?? Equipment.Empty;

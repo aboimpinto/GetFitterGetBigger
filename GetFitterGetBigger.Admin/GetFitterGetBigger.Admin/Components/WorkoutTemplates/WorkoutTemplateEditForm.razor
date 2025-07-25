@@ -1,0 +1,341 @@
+@using GetFitterGetBigger.Admin.Models.Dtos
+@using GetFitterGetBigger.Admin.Services
+@inject IWorkoutTemplateService WorkoutTemplateService
+@inject NavigationManager NavigationManager
+
+<div class="workout-template-edit-form" data-testid="workout-template-edit-form">
+    <h3>Edit Workout Template</h3>
+    
+    @if (IsLoading)
+    {
+        <div class="text-center p-4" data-testid="loading-indicator">
+            <div class="spinner-border" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>
+    }
+    else if (Template == null)
+    {
+        <div class="alert alert-danger" role="alert" data-testid="not-found-message">
+            Template not found or you don't have permission to edit it.
+        </div>
+    }
+    else
+    {
+        <EditForm Model="@Model" OnValidSubmit="@HandleValidSubmit">
+            <DataAnnotationsValidator />
+            
+            @if (!string.IsNullOrEmpty(ErrorMessage))
+            {
+                <div class="alert alert-danger" role="alert" data-testid="error-message">
+                    @ErrorMessage
+                </div>
+            }
+            
+            @if (Template.WorkoutState.Value != "Draft")
+            {
+                <div class="alert alert-warning" role="alert" data-testid="state-warning">
+                    <i class="bi bi-exclamation-triangle"></i>
+                    This template is in <strong>@Template.WorkoutState.Value</strong> state. Some fields may be restricted.
+                </div>
+            }
+            
+            <div class="mb-3">
+                <label for="name" class="form-label">Name *</label>
+                <InputText id="name" 
+                          class="form-control" 
+                          @bind-Value="Model.Name" 
+                          data-testid="name-input"
+                          placeholder="Enter template name"
+                          disabled="@IsFieldRestricted" />
+                <ValidationMessage For="@(() => Model.Name)" />
+            </div>
+            
+            <div class="mb-3">
+                <label for="description" class="form-label">Description</label>
+                <InputTextArea id="description" 
+                              class="form-control" 
+                              @bind-Value="Model.Description" 
+                              data-testid="description-input"
+                              placeholder="Enter template description"
+                              rows="3" />
+                <ValidationMessage For="@(() => Model.Description)" />
+            </div>
+            
+            <div class="mb-3">
+                <label for="category" class="form-label">Category *</label>
+                <InputSelect id="category" 
+                            class="form-select" 
+                            @bind-Value="Model.CategoryId"
+                            data-testid="category-select"
+                            disabled="@IsFieldRestricted">
+                    <option value="">Select a category</option>
+                    @foreach (var category in Categories)
+                    {
+                        <option value="@category.Id">@category.Value</option>
+                    }
+                </InputSelect>
+                <ValidationMessage For="@(() => Model.CategoryId)" />
+            </div>
+            
+            <div class="mb-3">
+                <label for="difficulty" class="form-label">Difficulty *</label>
+                <InputSelect id="difficulty" 
+                            class="form-select" 
+                            @bind-Value="Model.DifficultyId"
+                            data-testid="difficulty-select"
+                            disabled="@IsFieldRestricted">
+                    <option value="">Select a difficulty</option>
+                    @foreach (var difficulty in Difficulties)
+                    {
+                        <option value="@difficulty.Id">@difficulty.Value</option>
+                    }
+                </InputSelect>
+                <ValidationMessage For="@(() => Model.DifficultyId)" />
+            </div>
+            
+            <div class="mb-3">
+                <label for="duration" class="form-label">Estimated Duration (minutes) *</label>
+                <InputNumber id="duration" 
+                            class="form-control" 
+                            @bind-Value="Model.EstimatedDurationMinutes"
+                            data-testid="duration-input"
+                            placeholder="5-300" />
+                <ValidationMessage For="@(() => Model.EstimatedDurationMinutes)" />
+            </div>
+            
+            <div class="mb-3">
+                <div class="form-check">
+                    <InputCheckbox id="isPublic" 
+                                  class="form-check-input" 
+                                  @bind-Value="Model.IsPublic"
+                                  data-testid="public-checkbox" />
+                    <label class="form-check-label" for="isPublic">
+                        Make this template public
+                    </label>
+                </div>
+            </div>
+            
+            <div class="mb-3">
+                <label for="tags" class="form-label">Tags</label>
+                <InputText id="tags" 
+                          class="form-control" 
+                          @bind-Value="TagsInput"
+                          @onblur="ProcessTags"
+                          data-testid="tags-input"
+                          placeholder="Enter tags separated by commas" />
+                <small class="form-text text-muted">Separate tags with commas</small>
+                @if (Model.Tags.Any())
+                {
+                    <div class="mt-2" data-testid="tags-display">
+                        @foreach (var tag in Model.Tags)
+                        {
+                            <span class="badge bg-secondary me-1">@tag</span>
+                        }
+                    </div>
+                }
+            </div>
+            
+            <div class="mb-3 text-muted">
+                <small>
+                    <i class="bi bi-info-circle"></i>
+                    Template ID: @Template.Id<br />
+                    Created: @Template.CreatedAt.ToString("MMM dd, yyyy")<br />
+                    Last updated: @Template.UpdatedAt.ToString("MMM dd, yyyy")
+                </small>
+            </div>
+            
+            <div class="d-flex justify-content-end gap-2">
+                <button type="button" 
+                        class="btn btn-secondary" 
+                        @onclick="HandleCancel"
+                        data-testid="cancel-button"
+                        disabled="@IsSubmitting">
+                    Cancel
+                </button>
+                <button type="submit" 
+                        class="btn btn-primary" 
+                        data-testid="submit-button"
+                        disabled="@(IsSubmitting || !HasChanges())">
+                    @if (IsSubmitting)
+                    {
+                        <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                    }
+                    Save Changes
+                </button>
+            </div>
+        </EditForm>
+    }
+</div>
+
+@code {
+    [Parameter] public string TemplateId { get; set; } = string.Empty;
+    [Parameter] public EventCallback<WorkoutTemplateDto> OnTemplateUpdated { get; set; }
+    [Parameter] public EventCallback OnCancel { get; set; }
+
+    private WorkoutTemplateDto? Template;
+    private UpdateWorkoutTemplateDto Model = new();
+    private List<ReferenceDataDto> Categories = new();
+    private List<ReferenceDataDto> Difficulties = new();
+    private string TagsInput = string.Empty;
+    private string OriginalTagsInput = string.Empty;
+    internal bool IsLoading = true;
+    private bool IsSubmitting = false;
+    private string? ErrorMessage;
+
+    // Track if certain fields should be restricted based on workflow state
+    private bool IsFieldRestricted => Template?.WorkoutState?.Value == "Production" || 
+                                     Template?.WorkoutState?.Value == "Archived";
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        try
+        {
+            IsLoading = true;
+            ErrorMessage = null;
+
+            // Load template and reference data in parallel
+            var templateTask = WorkoutTemplateService.GetWorkoutTemplateByIdAsync(TemplateId);
+            var categoriesTask = WorkoutTemplateService.GetWorkoutCategoriesAsync();
+            var difficultiesTask = WorkoutTemplateService.GetDifficultyLevelsAsync();
+
+            await Task.WhenAll(templateTask, categoriesTask, difficultiesTask);
+
+            Template = await templateTask;
+            Categories = await categoriesTask;
+            Difficulties = await difficultiesTask;
+
+            if (Template != null)
+            {
+                // Populate the update model with current values
+                Model = new UpdateWorkoutTemplateDto
+                {
+                    Name = Template.Name,
+                    Description = Template.Description,
+                    CategoryId = Template.Category.Id,
+                    DifficultyId = Template.Difficulty.Id,
+                    EstimatedDurationMinutes = Template.EstimatedDurationMinutes,
+                    IsPublic = Template.IsPublic,
+                    Tags = new List<string>(Template.Tags)
+                };
+
+                // Set tags input
+                TagsInput = string.Join(", ", Template.Tags);
+                OriginalTagsInput = TagsInput;
+            }
+        }
+        catch (HttpRequestException ex)
+        {
+            ErrorMessage = "Failed to load template data. Please check your connection and try again.";
+            Console.Error.WriteLine($"HTTP error loading template: {ex.Message}");
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = "Failed to load template data. Please try again.";
+            Console.Error.WriteLine($"Error loading template: {ex.Message}");
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+    private void ProcessTags()
+    {
+        if (!string.IsNullOrWhiteSpace(TagsInput))
+        {
+            Model.Tags = TagsInput
+                .Split(',', StringSplitOptions.RemoveEmptyEntries)
+                .Select(t => t.Trim())
+                .Where(t => !string.IsNullOrWhiteSpace(t))
+                .Distinct()
+                .ToList();
+        }
+        else
+        {
+            Model.Tags.Clear();
+        }
+    }
+
+    private bool HasChanges()
+    {
+        if (Template == null) return false;
+
+        // Check if any fields have changed
+        return Model.Name != Template.Name ||
+               Model.Description != Template.Description ||
+               Model.CategoryId != Template.Category.Id ||
+               Model.DifficultyId != Template.Difficulty.Id ||
+               Model.EstimatedDurationMinutes != Template.EstimatedDurationMinutes ||
+               Model.IsPublic != Template.IsPublic ||
+               TagsInput != OriginalTagsInput;
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        try
+        {
+            IsSubmitting = true;
+            ErrorMessage = null;
+
+            // Process tags one more time to ensure they're up to date
+            ProcessTags();
+
+            var updatedTemplate = await WorkoutTemplateService.UpdateWorkoutTemplateAsync(TemplateId, Model);
+            
+            if (OnTemplateUpdated.HasDelegate)
+            {
+                await OnTemplateUpdated.InvokeAsync(updatedTemplate);
+            }
+            else
+            {
+                // Navigate to the template detail or list if no callback is provided
+                NavigationManager.NavigateTo($"/workout-templates/{TemplateId}");
+            }
+        }
+        catch (HttpRequestException ex) when (ex.StatusCode == System.Net.HttpStatusCode.Conflict)
+        {
+            ErrorMessage = "A template with this name already exists. Please choose a different name.";
+            Console.Error.WriteLine($"Conflict error updating template: {ex.Message}");
+        }
+        catch (HttpRequestException ex) when (ex.StatusCode == System.Net.HttpStatusCode.Forbidden)
+        {
+            ErrorMessage = "You don't have permission to update this template in its current state.";
+            Console.Error.WriteLine($"Permission error updating template: {ex.Message}");
+        }
+        catch (HttpRequestException ex)
+        {
+            ErrorMessage = "Network error occurred. Please check your connection and try again.";
+            Console.Error.WriteLine($"HTTP error updating template: {ex.Message}");
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = "Failed to update workout template. Please try again.";
+            Console.Error.WriteLine($"Error updating template: {ex.Message}");
+        }
+        finally
+        {
+            IsSubmitting = false;
+        }
+    }
+
+    private async Task HandleCancel()
+    {
+        if (OnCancel.HasDelegate)
+        {
+            await OnCancel.InvokeAsync();
+        }
+        else
+        {
+            NavigationManager.NavigateTo($"/workout-templates/{TemplateId}");
+        }
+    }
+
+    // Test helper method
+    internal void CallStateHasChanged() => StateHasChanged();
+}

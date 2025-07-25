@@ -66,7 +66,8 @@
   - Always clean first to catch all warnings
 
 #### Quality Checkpoints
-**📖 Check**: `UNIFIED_DEVELOPMENT_PROCESS.md` - "Baseline Health Check" section
+**📖 Check**: `UNIFIED_DEVELOPMENT_PROCESS.md` - "Baseline Health Check" section  
+**📖 Template**: `FEATURE_CHECKPOINT_TEMPLATE.md` - **MANDATORY checkpoint format and requirements**
 
 **MANDATORY Checkpoint Commands**:
 ```bash
@@ -79,6 +80,7 @@ dotnet clean && dotnet test     # Run ALL tests (not just new ones)
 - ✅ ALL tests must pass (100% pass rate)
 - ✅ **BOY SCOUT RULE: ZERO warnings** - If you start with 0 warnings, maintain 0 warnings!
 - ✅ **Code Review APPROVED** - Must have approved code review for the category
+- ✅ **Git Commit Hash** - MANDATORY: Must add commit hash to checkpoint before proceeding
 
 #### 🛑 CHECKPOINT PAUSE BEHAVIOR
 **DEFAULT BEHAVIOR**: AI Assistant MUST STOP after each successful checkpoint!
@@ -92,12 +94,16 @@ dotnet clean && dotnet test     # Run ALL tests (not just new ones)
 - This should only be used when you're confident in the implementation flow
 
 #### 📝 Code Review Process
+**📖 Template**: `FEATURE_CHECKPOINT_TEMPLATE.md` - **MANDATORY: Follow exact checkpoint format**
+
 **After completing a category's implementation**:
 1. **CREATE** code review using `CODE-REVIEW-TEMPLATE.md`
-2. **SAVE** in `/2-IN_PROGRESS/FEAT-XXX/code-reviews/Category_X/`
+2. **SAVE** in `/2-IN_PROGRESS/FEAT-XXX/code-reviews/Category_X/` (see FEATURE_CHECKPOINT_TEMPLATE.md)
 3. **NAME** as `Code-Review-Category-X-YYYY-MM-DD-HH-MM-{STATUS}.md`
-4. **REVIEW** all files created/modified in the category
-5. **UPDATE** status based on findings:
+4. **CREATE** git commit with descriptive message
+5. **ADD** git commit hash to checkpoint in feature-tasks.md ⚠️ MANDATORY
+6. **REVIEW** all files created/modified in the category
+7. **UPDATE** status based on findings:
    - **APPROVED**: Can proceed to next category
    - **APPROVED_WITH_NOTES**: Can proceed, but document issues for later
    - **REQUIRES_CHANGES**: Must fix and create new review
@@ -114,6 +120,8 @@ dotnet clean && dotnet test     # Run ALL tests (not just new ones)
 ```
 
 #### 🚨 Checkpoint Failure Protocol
+**📖 Reference**: `FEATURE_CHECKPOINT_TEMPLATE.md` - Critical requirements section
+
 **If ANY checkpoint fails**:
 1. **STOP** - Do NOT proceed to next category
 2. **CREATE** a "CHECKPOINT FIX" task in feature-tasks.md
@@ -121,6 +129,7 @@ dotnet clean && dotnet test     # Run ALL tests (not just new ones)
 4. **RE-RUN** checkpoint to verify fixes
 5. **UPDATE** checkpoint status to ✅ PASSED
 6. **CREATE** new code review if code was changed
+7. **ADD** git commit hash to updated checkpoint ⚠️ MANDATORY
 
 **Checkpoint Status Types**:
 - 🛑 **PENDING** - Not yet run
@@ -225,9 +234,26 @@ Create these four MANDATORY reports:
 - ✅ Pattern matching over if-else chains
 - ✅ Empty/Null Object Pattern (NO nulls!)
 - ✅ Short, focused methods (< 20 lines)
-- ✅ **Single exit point per method** (NEVER return in the middle or top)
+- ✅ **🚨 Single exit point per method** (NEVER return in the middle or top) - **USE PATTERN MATCHING**
 - ✅ No fake async
 - ✅ No defensive programming without justification
+
+### 🔴 CRITICAL: Single Exit Point Pattern
+**Pattern matching is your PRIMARY TOOL to avoid multiple returns:**
+
+```csharp
+// ❌ VIOLATION - Multiple exit points
+if (cache.HasValue) return cache.Value;
+var result = await LoadData();
+if (result.IsEmpty) return EmptyDto;
+return result.ToDto();
+
+// ✅ CORRECT - Single exit with pattern matching
+var result = cache.HasValue
+    ? ServiceResult.Success(cache.Value)
+    : await LoadAndProcessData();
+return result;
+```
 
 ### Service Layer Error Handling
 **📖 Source**: `SERVICE-RESULT-PATTERN.md` - **MANDATORY for all service implementations**
@@ -237,6 +263,29 @@ Create these four MANDATORY reports:
 - ✅ No exceptions for business logic flow
 - ✅ Use structured error codes (ServiceErrorCode enum)
 - ✅ Pattern matching in controllers for clean responses
+
+### 🚨 CRITICAL: Service Architecture Boundaries
+**📖 Source**: `API-CODE_QUALITY_STANDARDS.md` - **Service Repository Boundaries section**
+
+**The Single Repository Rule - MANDATORY**:
+- ✅ Each service MUST only access its own repository directly
+- ✅ Cross-domain data access MUST use service dependencies  
+- ❌ **FORBIDDEN**: Service accessing repositories outside its domain
+
+**Example Violations to Check For:**
+```csharp
+// ❌ VIOLATION - WorkoutTemplateService accessing other repositories
+var exerciseRepository = unitOfWork.GetRepository<IExerciseRepository>();
+var templateExerciseRepository = unitOfWork.GetRepository<IWorkoutTemplateExerciseRepository>();
+```
+
+**Architecture Validation Checklist:**
+- [ ] `WorkoutTemplateService` only accesses `IWorkoutTemplateRepository`
+- [ ] `ExerciseService` only accesses `IExerciseRepository`  
+- [ ] Cross-domain operations use service dependencies, not direct repository access
+- [ ] Service constructors inject other services for cross-domain operations
+
+**📖 For Details**: See `/memory-bank/API-CODE_QUALITY_STANDARDS.md` - Service Repository Boundaries section
 
 ### File Management Rules
 **📖 Source**: `UNIFIED_DEVELOPMENT_PROCESS.md` - "Mandatory File Management Rules"
@@ -262,6 +311,10 @@ Create these four MANDATORY reports:
   - If baseline has 0 warnings → maintain 0 warnings
   - If baseline has warnings → reduce them (never increase)
   - Leave the code better than you found it!
+- ✅ **Architecture Validation**: Service repository boundaries must be correct
+  - Each service only accesses its own repository
+  - Cross-domain access via service dependencies only
+  - NO direct access to repositories outside service domain
 - ✅ **Code Review**: APPROVED status for each category
   - Use CODE-REVIEW-TEMPLATE.md after each category
   - Final review before moving to COMPLETED
@@ -305,6 +358,7 @@ What am I doing?
 │   ├── Planning? → FEATURE_IMPLEMENTATION_PROCESS.md (Section 1)
 │   ├── Coding? → FEATURE_IMPLEMENTATION_PROCESS.md (Section 4)
 │   │   └── Services? → SERVICE_RESULT_PATTERN.md (Error handling)
+│   ├── Checkpoint? → FEATURE_CHECKPOINT_TEMPLATE.md ⚠️ MANDATORY
 │   └── Completing? → FEATURE_WORKFLOW_PROCESS.md (Completion)
 │
 ├── 🐛 Bug Fix
@@ -334,14 +388,30 @@ What am I doing?
 3. **UNIFIED_DEVELOPMENT_PROCESS.md** - Standards and policies for all projects
 4. **FEATURE_WORKFLOW_PROCESS.md** - Feature states and transitions
 5. **FEATURE_IMPLEMENTATION_PROCESS.md** - Step-by-step feature implementation
-6. **BUG_WORKFLOW_PROCESS.md** - Bug states and transitions
-7. **BUG_IMPLEMENTATION_PROCESS.md** - Step-by-step bug fixing
+6. **FEATURE_CHECKPOINT_TEMPLATE.md** - 🚨 MANDATORY checkpoint format and git commit requirements
+7. **BUG_WORKFLOW_PROCESS.md** - Bug states and transitions
+8. **BUG_IMPLEMENTATION_PROCESS.md** - Step-by-step bug fixing
 
 ### When to Use Multiple Documents
 - **Starting work**: Usually need 2 documents (Workflow + Implementation)
 - **During work**: Primarily Implementation document
+- **Creating checkpoints**: ALWAYS use FEATURE_CHECKPOINT_TEMPLATE.md ⚠️ MANDATORY
 - **Checking standards**: Always UNIFIED_DEVELOPMENT_PROCESS
 - **Completing work**: Workflow for templates + Implementation for steps
+
+### 🚨 Critical: FEATURE_CHECKPOINT_TEMPLATE.md Usage
+**WHEN TO USE**: Every phase completion in feature-tasks.md
+**WHY CRITICAL**: 
+- Prevents missing git commit hashes (blocks future traceability)
+- Ensures consistent code review folder structure
+- Enforces mandatory 5-step completion process
+- Links code reviews to exact implementation commits
+
+**MANDATORY USAGE SCENARIOS**:
+1. ✅ After completing any phase/category implementation
+2. ✅ Before proceeding to the next phase
+3. ✅ When creating checkpoint entries in feature-tasks.md
+4. ✅ During code review creation process
 
 ---
 

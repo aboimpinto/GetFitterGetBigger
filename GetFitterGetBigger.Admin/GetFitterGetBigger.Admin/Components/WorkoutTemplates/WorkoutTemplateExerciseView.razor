@@ -1,0 +1,250 @@
+@using GetFitterGetBigger.Admin.Models.Dtos
+
+<div class="workout-template-exercise-view" data-testid="workout-template-exercise-view">
+    @if (Exercises?.Any() == true)
+    {
+        <div class="space-y-4">
+            @foreach (var (exercise, index) in Exercises.Select((e, i) => (e, i)))
+            {
+                <div class="exercise-item border border-gray-200 rounded-lg bg-white shadow-sm"
+                     data-testid="@($"exercise-item-{index}")">
+                    
+                    @* Exercise Header - Always visible *@
+                    <div class="exercise-header px-4 py-3 cursor-pointer hover:bg-gray-50 transition-colors"
+                         @onclick="() => ToggleExercise(index)"
+                         data-testid="@($"exercise-header-{index}")">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center space-x-3">
+                                @* Order number with visual hierarchy *@
+                                <div class="flex-shrink-0">
+                                    <span class="inline-flex items-center justify-center h-8 w-8 rounded-full bg-blue-100 text-blue-600 font-semibold text-sm"
+                                          data-testid="@($"exercise-order-{index}")">
+                                        @(exercise.OrderIndex)
+                                    </span>
+                                </div>
+                                
+                                @* Exercise name *@
+                                <h3 class="text-base font-medium text-gray-900"
+                                    data-testid="@($"exercise-name-{index}")">
+                                    @exercise.ExerciseName
+                                </h3>
+                                
+                                @* Quick summary (always visible) *@
+                                <div class="flex items-center space-x-4 text-sm text-gray-600">
+                                    <span data-testid="@($"exercise-sets-summary-{index}")">
+                                        <strong>@exercise.Sets</strong> sets
+                                    </span>
+                                    <span class="text-gray-400">•</span>
+                                    <span data-testid="@($"exercise-reps-summary-{index}")">
+                                        <strong>@exercise.TargetReps</strong> reps
+                                    </span>
+                                </div>
+                            </div>
+                            
+                            @* Expand/Collapse indicator *@
+                            <button class="p-1 rounded hover:bg-gray-200 transition-colors"
+                                    aria-label="@(IsExerciseExpanded(index) ? "Collapse" : "Expand") exercise details"
+                                    data-testid="@($"exercise-toggle-{index}")">
+                                @if (IsExerciseExpanded(index))
+                                {
+                                    <svg class="w-5 h-5 text-gray-500 transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                                    </svg>
+                                }
+                                else
+                                {
+                                    <svg class="w-5 h-5 text-gray-500 transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                                    </svg>
+                                }
+                            </button>
+                        </div>
+                    </div>
+                    
+                    @* Exercise Details - Collapsible *@
+                    @if (IsExerciseExpanded(index))
+                    {
+                        <div class="exercise-details border-t border-gray-200 px-4 py-4 bg-gray-50"
+                             data-testid="@($"exercise-details-{index}")">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                @* Set Configuration *@
+                                <div class="set-configuration"
+                                     data-testid="@($"set-configuration-{index}")">
+                                    <h4 class="text-sm font-medium text-gray-700 mb-2">Set Configuration</h4>
+                                    <div class="space-y-2 text-sm">
+                                        <div class="flex items-center justify-between py-1">
+                                            <span class="text-gray-600">Number of Sets:</span>
+                                            <span class="font-medium text-gray-900"
+                                                  data-testid="@($"exercise-sets-detail-{index}")">@exercise.Sets</span>
+                                        </div>
+                                        <div class="flex items-center justify-between py-1">
+                                            <span class="text-gray-600">Target Reps:</span>
+                                            <span class="font-medium text-gray-900"
+                                                  data-testid="@($"exercise-reps-detail-{index}")">@exercise.TargetReps</span>
+                                        </div>
+                                        <div class="flex items-center justify-between py-1">
+                                            <span class="text-gray-600">Rest Period:</span>
+                                            <span class="font-medium text-gray-900"
+                                                  data-testid="@($"exercise-rest-detail-{index}")">@FormatRestTime(exercise.RestSeconds)</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                @* Exercise Info *@
+                                <div class="exercise-info"
+                                     data-testid="@($"exercise-info-{index}")">
+                                    <h4 class="text-sm font-medium text-gray-700 mb-2">Exercise Information</h4>
+                                    <div class="space-y-2 text-sm">
+                                        <div class="flex items-center justify-between py-1">
+                                            <span class="text-gray-600">Exercise ID:</span>
+                                            <span class="font-mono text-xs text-gray-500"
+                                                  data-testid="@($"exercise-id-{index}")">@exercise.ExerciseId</span>
+                                        </div>
+                                        <div class="flex items-center justify-between py-1">
+                                            <span class="text-gray-600">Position:</span>
+                                            <span class="font-medium text-gray-900">#@exercise.OrderIndex</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            @* Notes Section *@
+                            @if (!string.IsNullOrWhiteSpace(exercise.Notes))
+                            {
+                                <div class="notes-section mt-4 pt-4 border-t border-gray-200"
+                                     data-testid="@($"exercise-notes-{index}")">
+                                    <h4 class="text-sm font-medium text-gray-700 mb-2">Notes</h4>
+                                    <div class="text-sm text-gray-600 bg-white p-3 rounded border border-gray-200">
+                                        @exercise.Notes
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+        
+        @* Summary Footer *@
+        @if (ShowSummary)
+        {
+            <div class="mt-6 p-4 bg-gray-50 border border-gray-200 rounded-lg"
+                 data-testid="exercises-summary">
+                <div class="flex items-center justify-between text-sm">
+                    <div class="text-gray-600">
+                        Total Exercises: <strong class="text-gray-900">@Exercises.Count</strong>
+                    </div>
+                    <div class="text-gray-600">
+                        Estimated Duration: <strong class="text-gray-900">@CalculateEstimatedDuration()</strong>
+                    </div>
+                </div>
+            </div>
+        }
+    }
+    else
+    {
+        @* Empty state *@
+        <div class="text-center py-8 text-gray-500" data-testid="no-exercises">
+            <svg class="mx-auto h-12 w-12 text-gray-400 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+            </svg>
+            <p class="text-sm">No exercises added to this workout template yet.</p>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter, EditorRequired] public List<WorkoutTemplateExerciseDto> Exercises { get; set; } = new();
+    [Parameter] public bool ShowSummary { get; set; } = true;
+    [Parameter] public bool ExpandAllByDefault { get; set; } = false;
+    [Parameter] public EventCallback<WorkoutTemplateExerciseDto> OnExerciseClick { get; set; }
+    
+    private HashSet<int> expandedExercises = new();
+    
+    protected override void OnInitialized()
+    {
+        if (ExpandAllByDefault && Exercises?.Any() == true)
+        {
+            // Expand all exercises by default
+            for (int i = 0; i < Exercises.Count; i++)
+            {
+                expandedExercises.Add(i);
+            }
+        }
+    }
+    
+    internal void ToggleExercise(int index)
+    {
+        if (expandedExercises.Contains(index))
+        {
+            expandedExercises.Remove(index);
+        }
+        else
+        {
+            expandedExercises.Add(index);
+        }
+        StateHasChanged();
+    }
+    
+    internal bool IsExerciseExpanded(int index)
+    {
+        return expandedExercises.Contains(index);
+    }
+    
+    internal string FormatRestTime(int seconds)
+    {
+        if (seconds < 60)
+        {
+            return $"{seconds}s";
+        }
+        
+        var minutes = seconds / 60;
+        var remainingSeconds = seconds % 60;
+        
+        if (remainingSeconds == 0)
+        {
+            return $"{minutes}min";
+        }
+        
+        return $"{minutes}min {remainingSeconds}s";
+    }
+    
+    internal string CalculateEstimatedDuration()
+    {
+        if (Exercises == null || !Exercises.Any())
+            return "0min";
+        
+        // Rough estimation: (sets * 45 seconds per set) + rest time
+        // This is a simplified calculation
+        var totalSeconds = Exercises.Sum(e => 
+        {
+            var setTime = e.Sets * 45; // Assume 45 seconds per set
+            var restTime = (e.Sets - 1) * e.RestSeconds; // Rest between sets
+            return setTime + restTime;
+        });
+        
+        // Add transition time between exercises (30 seconds per transition)
+        totalSeconds += (Exercises.Count - 1) * 30;
+        
+        var minutes = totalSeconds / 60;
+        return $"{minutes}min";
+    }
+    
+    public void ExpandAll()
+    {
+        if (Exercises?.Any() == true)
+        {
+            for (int i = 0; i < Exercises.Count; i++)
+            {
+                expandedExercises.Add(i);
+            }
+            StateHasChanged();
+        }
+    }
+    
+    public void CollapseAll()
+    {
+        expandedExercises.Clear();
+        StateHasChanged();
+    }
+}

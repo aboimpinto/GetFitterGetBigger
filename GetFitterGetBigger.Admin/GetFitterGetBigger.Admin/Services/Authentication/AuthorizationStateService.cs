@@ -9,7 +9,7 @@ namespace GetFitterGetBigger.Admin.Services.Authentication
         private List<Models.Authentication.Claim> _userClaims = new();
 
         public bool IsReady { get; private set; }
-        public bool UserHasAdminAccess => _userClaims.Any(c => c.ClaimType == "Admin-Tier");
+        public bool UserHasAdminAccess => _userClaims.Any(c => c.ClaimType == "Admin-Tier" || c.ClaimType == "PT-Tier");
 
         public event Action? OnChange;
 

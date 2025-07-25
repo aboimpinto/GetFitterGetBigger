@@ -1,0 +1,366 @@
+@using GetFitterGetBigger.Admin.Models.Dtos
+@using GetFitterGetBigger.Admin.Services
+@using GetFitterGetBigger.Admin.Components.Shared
+@using System.ComponentModel.DataAnnotations
+
+<EditForm Model="@Model" OnValidSubmit="@HandleValidSubmit" id="workoutTemplateForm">
+    <DataAnnotationsValidator />
+    
+    @if (!string.IsNullOrEmpty(ErrorMessage))
+    {
+        <div class="mb-6" data-testid="error-message">
+            <ErrorDisplay ErrorMessage="@ErrorMessage"
+                         Title="Error saving workout template"
+                         ShowRetry="false"
+                         ShowDismiss="true"
+                         OnDismiss="@(() => { ErrorMessage = string.Empty; StateHasChanged(); })" />
+        </div>
+    }
+    
+    @* Basic Information Section *@
+    <div class="mb-8">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4">Basic Information</h3>
+        
+        <div class="space-y-4">
+            <div>
+                <label for="name" class="block text-sm font-medium text-gray-700 mb-1">Name <span class="text-red-500">*</span></label>
+                <InputText id="name" 
+                          class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm" 
+                          @bind-Value="Model.Name"
+                          @bind-Value:after="@(async () => { await ValidateNameAsync(Model.Name); MarkAsDirty(); })"
+                          data-testid="name-input"
+                          placeholder="Enter template name"
+                          disabled="@IsFieldDisabled(nameof(Model.Name))" />
+                <ValidationMessage For="@(() => Model.Name)" class="validation-message text-red-600 text-sm mt-1" />
+                @if (ShowNameExistsWarning)
+                {
+                    <div class="text-red-600 text-sm mt-1" data-testid="name-exists-warning">
+                        A template with this name already exists
+                    </div>
+                }
+            </div>
+            
+            <div>
+                <label for="description" class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                <InputTextArea id="description" 
+                              class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm" 
+                              @bind-Value="Model.Description"
+                              @bind-Value:after="@MarkAsDirty" 
+                              data-testid="description-input"
+                              placeholder="Enter template description"
+                              rows="4"
+                              disabled="@IsFieldDisabled(nameof(Model.Description))" />
+                <ValidationMessage For="@(() => Model.Description)" class="validation-message text-red-600 text-sm mt-1" />
+            </div>
+        </div>
+    </div>
+    
+    @* Template Configuration Section *@
+    <div class="mb-8">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4">Template Configuration</h3>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+                <label for="category" class="block text-sm font-medium text-gray-700 mb-1">Category <span class="text-red-500">*</span></label>
+                <InputSelect id="category" 
+                            class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm bg-white" 
+                            @bind-Value="Model.CategoryId"
+                            @bind-Value:after="@MarkAsDirty"
+                            data-testid="category-select"
+                            disabled="@(IsLoading || IsFieldDisabled(nameof(Model.CategoryId)))">
+                    <option value="">Select a category</option>
+                    @foreach (var category in Categories)
+                    {
+                        <option value="@category.Id">@category.Value</option>
+                    }
+                </InputSelect>
+                <ValidationMessage For="@(() => Model.CategoryId)" class="validation-message text-red-600 text-sm mt-1" />
+            </div>
+            
+            <div>
+                <label for="difficulty" class="block text-sm font-medium text-gray-700 mb-1">Difficulty <span class="text-red-500">*</span></label>
+                <InputSelect id="difficulty" 
+                            class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm bg-white" 
+                            @bind-Value="Model.DifficultyId"
+                            @bind-Value:after="@MarkAsDirty"
+                            data-testid="difficulty-select"
+                            disabled="@(IsLoading || IsFieldDisabled(nameof(Model.DifficultyId)))">
+                    <option value="">Select a difficulty</option>
+                    @foreach (var difficulty in Difficulties)
+                    {
+                        <option value="@difficulty.Id">@difficulty.Value</option>
+                    }
+                </InputSelect>
+                <ValidationMessage For="@(() => Model.DifficultyId)" class="validation-message text-red-600 text-sm mt-1" />
+            </div>
+            
+            <div>
+                <label for="objective" class="block text-sm font-medium text-gray-700 mb-1">Objective <span class="text-gray-500 text-xs">(Optional)</span></label>
+                <InputSelect id="objective" 
+                            class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm bg-white" 
+                            @bind-Value="Model.ObjectiveId"
+                            @bind-Value:after="@MarkAsDirty"
+                            data-testid="objective-select"
+                            disabled="@(IsLoading || IsFieldDisabled(nameof(Model.ObjectiveId)))">
+                    <option value="">Select an objective</option>
+                    @foreach (var objective in Objectives)
+                    {
+                        <option value="@objective.Id">@objective.Value</option>
+                    }
+                </InputSelect>
+                <ValidationMessage For="@(() => Model.ObjectiveId)" class="validation-message text-red-600 text-sm mt-1" />
+            </div>
+            
+            <div>
+                <label for="duration" class="block text-sm font-medium text-gray-700 mb-1">Estimated Duration (minutes) <span class="text-red-500">*</span></label>
+                <InputNumber id="duration" 
+                            class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm" 
+                            @bind-Value="Model.EstimatedDurationMinutes"
+                            @bind-Value:after="@MarkAsDirty"
+                            data-testid="duration-input"
+                            placeholder="5-300"
+                            disabled="@IsFieldDisabled(nameof(Model.EstimatedDurationMinutes))" />
+                <ValidationMessage For="@(() => Model.EstimatedDurationMinutes)" class="validation-message text-red-600 text-sm mt-1" />
+            </div>
+        </div>
+    </div>
+    
+    @* Additional Settings Section *@
+    <div class="mb-8">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4">Additional Settings</h3>
+        
+        <div class="space-y-4">
+            <div>
+                <div class="flex items-center">
+                    <InputCheckbox id="isPublic" 
+                                  class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded" 
+                                  @bind-Value="Model.IsPublic"
+                                  @bind-Value:after="@MarkAsDirty"
+                                  data-testid="public-checkbox"
+                                  disabled="@IsFieldDisabled(nameof(Model.IsPublic))" />
+                    <label class="ml-2 block text-sm text-gray-700" for="isPublic">
+                        Make this template public
+                    </label>
+                </div>
+            </div>
+            
+            <div>
+                <label for="tags" class="block text-sm font-medium text-gray-700 mb-1">Tags</label>
+                <InputText id="tags" 
+                          class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm" 
+                          @bind-Value="TagsInput"
+                          @bind-Value:after="@ProcessTags"
+                          data-testid="tags-input"
+                          placeholder="Enter tags separated by commas"
+                          disabled="@IsFieldDisabled(nameof(Model.Tags))" />
+                <p class="text-xs text-gray-500 mt-1">Separate tags with commas</p>
+                @if (Model.Tags.Any())
+                {
+                    <div class="mt-2 flex flex-wrap gap-1" data-testid="tags-display">
+                        @foreach (var tag in Model.Tags)
+                        {
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-medium bg-blue-100 text-blue-800">@tag</span>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+    
+    @if (!string.IsNullOrEmpty(WorkoutStateInfo))
+    {
+        <div class="bg-blue-50 border-l-4 border-blue-400 p-4 mb-6" data-testid="state-info">
+            <div class="flex">
+                <div class="flex-shrink-0">
+                    <svg class="h-5 w-5 text-blue-400" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+                    </svg>
+                </div>
+                <div class="ml-3">
+                    <p class="text-sm text-blue-700">@WorkoutStateInfo</p>
+                </div>
+            </div>
+        </div>
+    }
+    
+    @if (ShowAutoSaveIndicator)
+    {
+        <div class="mb-4">
+            <div class="flex items-center text-gray-600" data-testid="autosave-indicator">
+                @if (IsAutoSaving)
+                {
+                    <svg class="animate-spin h-4 w-4 mr-2 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    <span class="text-sm">Saving...</span>
+                }
+                else if (LastAutoSaved.HasValue)
+                {
+                    <svg class="h-4 w-4 mr-2 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                    </svg>
+                    <span class="text-sm">Last saved: @GetLastSavedTimeAgo()</span>
+                }
+            </div>
+        </div>
+    }
+    
+</EditForm>
+
+@* Floating Action Buttons *@
+@if (ShowButtons && !IsLoading)
+{
+    @* Cancel button - responsive positioning *@
+    <div class="fixed bottom-8 z-50 cancelPostionStyle">
+        <button type="button" @onclick="HandleCancel"
+                class="flex flex-col items-center group"
+                data-testid="floating-cancel-button"
+                disabled="@IsSaving">
+            <div class="w-14 h-14 bg-gray-600 hover:bg-gray-700 rounded-full flex items-center justify-center shadow-lg transition-colors">
+                <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </div>
+            <span class="text-xs text-gray-600 mt-1 font-medium">Cancel</span>
+        </button>
+    </div>
+
+    @* Save button - responsive positioning *@
+    <div class="fixed bottom-8 right-4 z-50 xl:right-[calc(50%-41rem)]">
+        <button type="button" @onclick="TriggerFormSubmit" disabled="@(IsSaving || !IsValid)"
+                class="flex flex-col items-center group"
+                data-testid="floating-save-button">
+            <div class="w-14 h-14 @(IsSaving ? "bg-blue-400" : "bg-blue-600 hover:bg-blue-700") rounded-full flex items-center justify-center shadow-lg transition-colors @(IsSaving ? "cursor-not-allowed" : "")">
+                @if (IsSaving)
+                {
+                    <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-white"></div>
+                }
+                else
+                {
+                    <svg class="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M17 3H5C3.89 3 3 3.9 3 5V19C3 20.1 3.89 21 5 21H19C20.1 21 21 20.1 21 19V7L17 3M19 19H5V5H16.17L19 7.83V19M12 12C10.34 12 9 13.34 9 15S10.34 18 12 18 15 16.66 15 15 13.66 12 12 12M6 6H15V10H6V6Z"/>
+                    </svg>
+                }
+            </div>
+            <span class="text-xs text-gray-600 mt-1 font-medium">
+                @if (IsSaving)
+                {
+                    <text>Saving...</text>
+                }
+                else
+                {
+                    <text>@SubmitButtonText</text>
+                }
+            </span>
+        </button>
+    </div>
+}
+
+@* Unsaved Changes Dialog *@
+@if (ShowUnsavedChangesDialog)
+{
+    <div class="fixed z-50 inset-0 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true" data-testid="unsaved-changes-dialog">
+        <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+            <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true"></div>
+            <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+            <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+                <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                    <div class="sm:flex sm:items-start">
+                        <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-yellow-100 sm:mx-0 sm:h-10 sm:w-10">
+                            <svg class="h-6 w-6 text-yellow-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                            </svg>
+                        </div>
+                        <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
+                            <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">
+                                Unsaved Changes
+                            </h3>
+                            <div class="mt-2">
+                                <p class="text-sm text-gray-500">
+                                    You have unsaved changes. Do you want to save before leaving?
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                    <button type="button"
+                            @onclick="SaveAndNavigate"
+                            data-testid="save-navigate-button"
+                            disabled="@(!IsFormValid())"
+                            class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed">
+                        Save & Continue
+                    </button>
+                    <button type="button"
+                            @onclick="ConfirmNavigation"
+                            data-testid="discard-button"
+                            class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
+                        Discard Changes
+                    </button>
+                    <button type="button"
+                            @onclick="CancelNavigation"
+                            data-testid="stay-button"
+                            class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:w-auto sm:text-sm">
+                        Cancel
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@* Recovery Dialog *@
+@if (ShowRecoveryDialog)
+{
+    <div class="fixed z-50 inset-0 overflow-y-auto" aria-labelledby="recovery-modal-title" role="dialog" aria-modal="true" data-testid="recovery-dialog">
+        <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+            <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true"></div>
+            <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+            <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+                <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                    <div class="sm:flex sm:items-start">
+                        <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-blue-100 sm:mx-0 sm:h-10 sm:w-10">
+                            <svg class="h-6 w-6 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                        </div>
+                        <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
+                            <h3 class="text-lg leading-6 font-medium text-gray-900" id="recovery-modal-title">
+                                Recover Previous Work?
+                            </h3>
+                            <div class="mt-2">
+                                <p class="text-sm text-gray-500">
+                                    We found unsaved work from a previous session. Would you like to recover it?
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                    <button type="button"
+                            @onclick="RecoverFormData"
+                            data-testid="recover-button"
+                            class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm">
+                        Recover
+                    </button>
+                    <button type="button"
+                            @onclick="DiscardRecoveryData"
+                            data-testid="discard-recovery-button"
+                            class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:w-auto sm:text-sm">
+                        Discard
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+<style>
+    @* Large screen positioning *@
+    @@media (min-width: 1280px) {
+        .cancelPostionStyle {
+            left: calc(50% - 25rem) !important;
+        }
+    }
+</style>

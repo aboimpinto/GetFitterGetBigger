@@ -28,7 +28,7 @@ namespace GetFitterGetBigger.Admin.Services
             {
                 if (!_cache.TryGetValue(cacheKey, out IEnumerable<ReferenceDataDto>? cachedData))
                 {
-                    Console.WriteLine($"[ReferenceDataService] Cache miss for {cacheKey}, fetching from API");
+                    Console.WriteLine($"[ReferenceDataService] Cache MISS for {cacheKey}, fetching from API");
                     Console.WriteLine($"[ReferenceDataService] HttpClient BaseAddress: {_httpClient.BaseAddress}, Endpoint: {endpoint}");
                     
                     // Use relative URL since HttpClient has BaseAddress configured
@@ -42,6 +42,10 @@ namespace GetFitterGetBigger.Admin.Services
                         _cache.Set(cacheKey, cachedData, TimeSpan.FromHours(24));
                         Console.WriteLine($"[ReferenceDataService] Cached {cachedData.Count()} items for {cacheKey}");
                     }
+                }
+                else
+                {
+                    Console.WriteLine($"[ReferenceDataService] Cache HIT for {cacheKey} - returning {cachedData?.Count() ?? 0} items");
                 }
                 return cachedData ?? Enumerable.Empty<ReferenceDataDto>();
             }

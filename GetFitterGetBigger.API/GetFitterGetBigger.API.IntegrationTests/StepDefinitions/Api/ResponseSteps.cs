@@ -296,6 +296,18 @@ public class ResponseSteps
         var jsonArray = JsonDocument.Parse(content);
         jsonArray.RootElement.ValueKind.Should().Be(JsonValueKind.Array);
     }
+    
+    [Then(@"the response should have property ""([^""]+)"" as array")]
+    public void ThenTheResponseShouldHavePropertyAsArray(string propertyName)
+    {
+        var content = _scenarioContext.GetLastResponseContent();
+        var jsonDocument = JsonDocument.Parse(content);
+        
+        var element = GetJsonElement(jsonDocument.RootElement, propertyName);
+        element.Should().NotBeNull($"Property '{propertyName}' not found");
+        element!.Value.ValueKind.Should().Be(JsonValueKind.Array, 
+            $"Property '{propertyName}' should be a JSON array");
+    }
 
     [Given(@"the response contains at least (\d+) item")]
     [Then(@"the response contains at least (\d+) item")]

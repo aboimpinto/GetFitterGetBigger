@@ -1,0 +1,61 @@
+@* Loading skeleton for WorkoutTemplateDetail *@
+
+<div class="animate-pulse">
+    <!-- Header -->
+    <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+        <div class="flex justify-between items-start mb-4">
+            <div class="space-y-2">
+                <div class="h-8 bg-gray-300 rounded w-64"></div>
+                <div class="h-4 bg-gray-200 rounded w-96"></div>
+            </div>
+            <div class="h-8 bg-gray-200 rounded-full w-24"></div>
+        </div>
+        
+        <!-- Action buttons -->
+        <div class="flex gap-4 mt-4">
+            <div class="h-10 bg-gray-200 rounded w-24"></div>
+            <div class="h-10 bg-gray-200 rounded w-24"></div>
+            <div class="h-10 bg-gray-200 rounded w-24"></div>
+        </div>
+    </div>
+    
+    <!-- Metadata Card -->
+    <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+        <div class="h-6 bg-gray-300 rounded w-48 mb-4"></div>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            @for (int i = 0; i < 6; i++)
+            {
+                <div>
+                    <div class="h-4 bg-gray-200 rounded w-24 mb-2"></div>
+                    <div class="h-6 bg-gray-100 rounded w-32"></div>
+                </div>
+            }
+        </div>
+    </div>
+    
+    <!-- Exercises Card -->
+    <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+        <div class="h-6 bg-gray-300 rounded w-48 mb-4"></div>
+        <div class="space-y-4">
+            @for (int i = 0; i < 3; i++)
+            {
+                <div class="border rounded-lg p-4">
+                    <div class="flex justify-between items-center mb-2">
+                        <div class="h-5 bg-gray-200 rounded w-48"></div>
+                        <div class="h-4 bg-gray-100 rounded w-12"></div>
+                    </div>
+                    <div class="space-y-2">
+                        <div class="h-4 bg-gray-100 rounded w-full"></div>
+                        <div class="h-4 bg-gray-100 rounded w-3/4"></div>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+    
+    <!-- Equipment Card -->
+    <div class="bg-white rounded-lg shadow-md p-6">
+        <div class="h-6 bg-gray-300 rounded w-48 mb-4"></div>
+        <div class="h-16 bg-gray-100 rounded w-full"></div>
+    </div>
+</div>

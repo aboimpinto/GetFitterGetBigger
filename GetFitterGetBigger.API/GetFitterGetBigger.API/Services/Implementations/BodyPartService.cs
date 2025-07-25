@@ -56,21 +56,26 @@ public class BodyPartService : PureReferenceService<BodyPart, BodyPartDto>, IBod
     {
         var cacheService = (IEternalCacheService)_cacheService;
         var cacheResult = await cacheService.GetAsync<BodyPartDto>(cacheKey);
-        if (cacheResult.IsHit)
-        {
-            _logger.LogDebug("Cache hit for {CacheKey}", cacheKey);
-            return ServiceResult<BodyPartDto>.Success(cacheResult.Value);
-        }
         
-        var entity = await loadFunc();
-        return entity switch
+        if (cacheResult.IsHit)
+            _logger.LogDebug("Cache hit for {CacheKey}", cacheKey);
+        
+        var result = cacheResult.IsHit
+            ? ServiceResult<BodyPartDto>.Success(cacheResult.Value)
+            : await ProcessUncachedEntity(await loadFunc(), cacheKey, identifier);
+            
+        return result;
+    }
+    
+    private async Task<ServiceResult<BodyPartDto>> ProcessUncachedEntity(
+        BodyPart entity, string cacheKey, string identifier) =>
+        entity switch
         {
             { IsEmpty: true } or { IsActive: false } => ServiceResult<BodyPartDto>.Failure(
                 CreateEmptyDto(), 
                 ServiceError.NotFound(BodyPartErrorMessages.NotFound, identifier)),
             _ => await CacheAndReturnSuccessAsync(cacheKey, MapToDto(entity))
         };
-    }
     
     private async Task<ServiceResult<BodyPartDto>> CacheAndReturnSuccessAsync(string cacheKey, BodyPartDto dto)
     {
@@ -105,12 +110,19 @@ public class BodyPartService : PureReferenceService<BodyPart, BodyPartDto>, IBod
     protected override async Task<BodyPart> LoadEntityByIdAsync(string id)
     {
         var bodyPartId = BodyPartId.ParseOrEmpty(id);
-        if (bodyPartId.IsEmpty)
-            return BodyPart.Empty;
+        
+        var result = bodyPartId.IsEmpty
+            ? BodyPart.Empty
+            : await LoadFromRepository(bodyPartId);
             
+        return result;
+    }
+    
+    private async Task<BodyPart> LoadFromRepository(BodyPartId id)
+    {
         using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
         var repository = unitOfWork.GetRepository<IBodyPartRepository>();
-        return await repository.GetByIdAsync(bodyPartId);
+        return await repository.GetByIdAsync(id);
     }
     
     protected override BodyPartDto MapToDto(BodyPart entity)

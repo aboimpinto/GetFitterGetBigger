@@ -1,0 +1,16 @@
+@* Reusable loading indicator component *@
+
+<div class="flex items-center justify-center py-@(PaddingY)" data-testid="loading-indicator">
+    <div class="animate-spin rounded-full h-@(Size) w-@(Size) border-b-2 border-@(Color)-600"></div>
+    @if (!string.IsNullOrWhiteSpace(Message))
+    {
+        <span class="ml-3 text-gray-600">@Message</span>
+    }
+</div>
+
+@code {
+    [Parameter] public string Size { get; set; } = "12";
+    [Parameter] public string Color { get; set; } = "blue";
+    [Parameter] public string PaddingY { get; set; } = "8";
+    [Parameter] public string? Message { get; set; }
+}

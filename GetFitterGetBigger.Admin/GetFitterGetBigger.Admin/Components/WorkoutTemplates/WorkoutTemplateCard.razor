@@ -1,0 +1,325 @@
+@using GetFitterGetBigger.Admin.Models.Dtos
+@using GetFitterGetBigger.Admin.Constants
+
+<div class="@GetCardClasses()"
+     data-testid="workout-template-card"
+     role="listitem"
+     aria-label="@GetCardAriaLabel()">
+    
+    <div class="p-6">
+        @* Header with Title and State *@
+        <div class="flex items-start justify-between mb-4">
+            <div class="flex-1">
+                <h3 class="text-lg font-semibold text-gray-900 hover:text-blue-600 cursor-pointer" 
+                    @onclick="HandleTitleClick"
+                    data-testid="template-title">
+                    @Template.Name
+                </h3>
+                @if (!string.IsNullOrWhiteSpace(Template.Description))
+                {
+                    <p class="mt-1 text-sm text-gray-600 line-clamp-2" data-testid="template-description">
+                        @Template.Description
+                    </p>
+                }
+            </div>
+            <div class="ml-4">
+                <WorkoutStateIndicator WorkoutState="@Template.WorkoutState" Size="WorkoutStateIndicator.IndicatorSize.Small" />
+            </div>
+        </div>
+
+        @* Metadata Grid *@
+        <div class="grid grid-cols-2 gap-4 mb-4 text-sm">
+            @* Category *@
+            <div data-testid="template-category">
+                <span class="font-medium text-gray-700">Category:</span>
+                <span class="ml-1 text-gray-900">@Template.Category?.Value</span>
+            </div>
+
+            @* Difficulty *@
+            <div data-testid="template-difficulty">
+                <span class="font-medium text-gray-700">Difficulty:</span>
+                <span class="ml-1 text-gray-900">@Template.Difficulty?.Value</span>
+            </div>
+
+            @* Duration *@
+            <div data-testid="template-duration">
+                <span class="font-medium text-gray-700">Duration:</span>
+                <span class="ml-1 text-gray-900">@FormatDuration(Template.EstimatedDurationMinutes)</span>
+            </div>
+
+            @* Exercise Count *@
+            <div data-testid="template-exercise-count">
+                <span class="font-medium text-gray-700">Exercises:</span>
+                <span class="ml-1 text-gray-900">@Template.Exercises.Count</span>
+            </div>
+        </div>
+
+        @* Tags *@
+        @if (Template.Tags?.Any() == true)
+        {
+            <div class="mb-4" data-testid="template-tags">
+                <div class="flex flex-wrap gap-2">
+                    @foreach (var tag in Template.Tags)
+                    {
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                            @tag
+                        </span>
+                    }
+                </div>
+            </div>
+        }
+
+        @* Objectives *@
+        @if (Template.Objectives?.Any() == true)
+        {
+            <div class="mb-4" data-testid="template-objectives">
+                <span class="font-medium text-gray-700 text-sm">Objectives:</span>
+                <div class="mt-1 flex flex-wrap gap-2">
+                    @foreach (var objective in Template.Objectives)
+                    {
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-medium bg-blue-100 text-blue-800">
+                            @objective.Value
+                        </span>
+                    }
+                </div>
+            </div>
+        }
+
+        @* Action Buttons *@
+        <div class="flex flex-col gap-3 pt-4 border-t border-gray-200">
+            @* Public/Private indicator *@
+            @if (ShowPublicIndicator)
+            {
+                <div class="flex items-center">
+                    <span class="inline-flex items-center text-xs" data-testid="public-indicator">
+                        @if (Template.IsPublic)
+                        {
+                            <span class="text-green-600">🌍 Public</span>
+                        }
+                        else
+                        {
+                            <span class="text-gray-500">🔒 Private</span>
+                        }
+                    </span>
+                </div>
+            }
+            
+            @* Action buttons in a responsive grid *@
+            <div class="flex flex-wrap items-center gap-2">
+                @* View button *@
+                @if (OnClick.HasDelegate)
+                {
+                    <button @onclick="HandleTitleClick"
+                            data-testid="action-view"
+                            class="inline-flex items-center px-2 py-1 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded hover:bg-gray-50 focus:outline-none focus:ring-1 focus:ring-offset-1 focus:ring-blue-500"
+                            title="View template">
+                        <span>👁️ View</span>
+                    </button>
+                }
+                
+                @if (OnEdit.HasDelegate && CanEdit())
+                {
+                    <button @onclick="HandleEdit"
+                            data-testid="edit-button"
+                            class="inline-flex items-center px-2 py-1 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded hover:bg-gray-50 focus:outline-none focus:ring-1 focus:ring-offset-1 focus:ring-blue-500"
+                            title="Edit template">
+                        <span>✏️ Edit</span>
+                    </button>
+                }
+                
+                @if (OnDuplicate.HasDelegate)
+                {
+                    <button @onclick="HandleDuplicate"
+                            data-testid="duplicate-button"
+                            class="inline-flex items-center px-2 py-1 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded hover:bg-gray-50 focus:outline-none focus:ring-1 focus:ring-offset-1 focus:ring-blue-500"
+                            title="Duplicate template">
+                        <span>📋 Duplicate</span>
+                    </button>
+                }
+                
+                @if (OnStateChange.HasDelegate && ShowStateActions)
+                {
+                    @if (Template.WorkoutState?.Value?.ToUpperInvariant() == "DRAFT")
+                    {
+                        <button @onclick="() => HandlePublish()"
+                                data-testid="publish-button"
+                                class="inline-flex items-center px-2 py-1 text-xs font-medium text-white bg-blue-600 border border-transparent rounded hover:bg-blue-700 focus:outline-none focus:ring-1 focus:ring-offset-1 focus:ring-blue-500"
+                                title="Publish template">
+                            <span>🚀 Publish</span>
+                        </button>
+                    }
+                    else if (Template.WorkoutState?.Value?.ToUpperInvariant() == "PRODUCTION")
+                    {
+                        <button @onclick="() => HandleArchive()"
+                                data-testid="archive-button"
+                                class="inline-flex items-center px-2 py-1 text-xs font-medium text-gray-700 bg-gray-200 border border-transparent rounded hover:bg-gray-300 focus:outline-none focus:ring-1 focus:ring-offset-1 focus:ring-gray-500"
+                                title="Archive template">
+                            <span>📦 Archive</span>
+                        </button>
+                    }
+                }
+                
+                @if (OnDelete.HasDelegate && CanDelete())
+                {
+                    <button @onclick="HandleDelete"
+                            data-testid="delete-button"
+                            class="inline-flex items-center px-2 py-1 text-xs font-medium text-red-700 bg-white border border-red-300 rounded hover:bg-red-50 focus:outline-none focus:ring-1 focus:ring-offset-1 focus:ring-red-500"
+                            title="Delete template">
+                        <span>🗑️ Delete</span>
+                    </button>
+                }
+            </div>
+        </div>
+
+        @* Updated info *@
+        <div class="mt-3 text-xs text-gray-500" data-testid="template-updated">
+            Updated @FormatRelativeTime(Template.UpdatedAt)
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter, EditorRequired] public WorkoutTemplateDto Template { get; set; } = null!;
+    [Parameter] public EventCallback<WorkoutTemplateDto> OnClick { get; set; }
+    [Parameter] public EventCallback<WorkoutTemplateDto> OnEdit { get; set; }
+    [Parameter] public EventCallback<WorkoutTemplateDto> OnDuplicate { get; set; }
+    [Parameter] public EventCallback<WorkoutTemplateDto> OnDelete { get; set; }
+    [Parameter] public EventCallback<ReferenceDataDto> OnStateChange { get; set; }
+    [Parameter] public bool ShowPublicIndicator { get; set; } = true;
+    [Parameter] public bool ShowStateActions { get; set; } = true;
+    [Parameter] public bool IsSelected { get; set; }
+    [Parameter] public bool IsHovered { get; set; }
+
+    internal string GetCardClasses()
+    {
+        var baseClasses = "bg-white rounded-lg shadow-sm border transition-all duration-200";
+        
+        if (IsSelected)
+            return $"{baseClasses} border-blue-500 ring-2 ring-blue-200";
+        
+        if (IsHovered)
+            return $"{baseClasses} border-gray-300 shadow-md";
+        
+        return $"{baseClasses} border-gray-200 hover:shadow-md";
+    }
+
+    internal string GetCardAriaLabel()
+    {
+        return $"Workout template: {Template.Name}, {Template.WorkoutState?.Value} state";
+    }
+
+    internal bool CanEdit()
+    {
+        // Can only edit templates in DRAFT state
+        return Template.WorkoutState?.Value?.ToUpperInvariant() == "DRAFT";
+    }
+
+    internal bool CanDelete()
+    {
+        // Can only delete templates in DRAFT or ARCHIVED state
+        var state = Template.WorkoutState?.Value?.ToUpperInvariant();
+        return state == "DRAFT" || state == "ARCHIVED";
+    }
+
+    internal string FormatDuration(int minutes)
+    {
+        if (minutes < 60)
+            return $"{minutes} min";
+        
+        var hours = minutes / 60;
+        var mins = minutes % 60;
+        
+        if (mins == 0)
+            return $"{hours}h";
+        
+        return $"{hours}h {mins}min";
+    }
+
+    internal string FormatRelativeTime(DateTime dateTime)
+    {
+        var timeSpan = DateTime.UtcNow - dateTime;
+        
+        if (timeSpan.TotalMinutes < 1)
+            return "just now";
+        if (timeSpan.TotalMinutes < 60)
+            return $"{(int)timeSpan.TotalMinutes}m ago";
+        if (timeSpan.TotalHours < 24)
+            return $"{(int)timeSpan.TotalHours}h ago";
+        if (timeSpan.TotalDays < 7)
+            return $"{(int)timeSpan.TotalDays}d ago";
+        if (timeSpan.TotalDays < 30)
+            return $"{(int)(timeSpan.TotalDays / 7)}w ago";
+        if (timeSpan.TotalDays < 365)
+            return $"{(int)(timeSpan.TotalDays / 30)}mo ago";
+        
+        return $"{(int)(timeSpan.TotalDays / 365)}y ago";
+    }
+
+    private async Task HandleTitleClick()
+    {
+        if (OnClick.HasDelegate)
+        {
+            await OnClick.InvokeAsync(Template);
+        }
+    }
+
+    private async Task HandleEdit()
+    {
+        if (OnEdit.HasDelegate)
+        {
+            await OnEdit.InvokeAsync(Template);
+        }
+    }
+
+    private async Task HandleDuplicate()
+    {
+        if (OnDuplicate.HasDelegate)
+        {
+            await OnDuplicate.InvokeAsync(Template);
+        }
+    }
+
+    private async Task HandleDelete()
+    {
+        if (OnDelete.HasDelegate)
+        {
+            await OnDelete.InvokeAsync(Template);
+        }
+    }
+
+    private async Task HandleStateChange(ReferenceDataDto newState)
+    {
+        if (OnStateChange.HasDelegate)
+        {
+            await OnStateChange.InvokeAsync(newState);
+        }
+    }
+
+    private async Task HandlePublish()
+    {
+        if (OnStateChange.HasDelegate)
+        {
+            var productionState = new ReferenceDataDto 
+            { 
+                Id = WorkoutStateIds.Production, 
+                Value = "PRODUCTION", 
+                Description = "Production state" 
+            };
+            await OnStateChange.InvokeAsync(productionState);
+        }
+    }
+
+    private async Task HandleArchive()
+    {
+        if (OnStateChange.HasDelegate)
+        {
+            var archivedState = new ReferenceDataDto 
+            { 
+                Id = WorkoutStateIds.Archived, 
+                Value = "ARCHIVED", 
+                Description = "Archived state" 
+            };
+            await OnStateChange.InvokeAsync(archivedState);
+        }
+    }
+}

@@ -18,6 +18,9 @@ public class FitnessDbContext : DbContext
     public DbSet<Claim> Claims => Set<Claim>();
     public DbSet<WorkoutLog> WorkoutLogs => Set<WorkoutLog>();
     public DbSet<WorkoutLogSet> WorkoutLogSets => Set<WorkoutLogSet>();
+    public DbSet<WorkoutTemplate> WorkoutTemplates => Set<WorkoutTemplate>();
+    public DbSet<WorkoutTemplateExercise> WorkoutTemplateExercises => Set<WorkoutTemplateExercise>();
+    public DbSet<SetConfiguration> SetConfigurations => Set<SetConfiguration>();
     
     // Reference data entities
     public DbSet<DifficultyLevel> DifficultyLevels => Set<DifficultyLevel>();
@@ -30,6 +33,7 @@ public class FitnessDbContext : DbContext
     public DbSet<WorkoutCategory> WorkoutCategories => Set<WorkoutCategory>();
     public DbSet<ExecutionProtocol> ExecutionProtocols => Set<ExecutionProtocol>();
     public DbSet<WorkoutMuscles> WorkoutMuscles => Set<WorkoutMuscles>();
+    public DbSet<WorkoutState> WorkoutStates => Set<WorkoutState>();
     
     // Linking entities
     public DbSet<ExerciseMovementPattern> ExerciseMovementPatterns => Set<ExerciseMovementPattern>();
@@ -40,6 +44,7 @@ public class FitnessDbContext : DbContext
     public DbSet<ExerciseBodyPart> ExerciseBodyParts => Set<ExerciseBodyPart>();
     public DbSet<ExerciseExerciseType> ExerciseExerciseTypes => Set<ExerciseExerciseType>();
     public DbSet<ExerciseLink> ExerciseLinks => Set<ExerciseLink>();
+    public DbSet<WorkoutTemplateObjective> WorkoutTemplateObjectives => Set<WorkoutTemplateObjective>();
     
     public FitnessDbContext(DbContextOptions<FitnessDbContext> options) 
         : base(options)
@@ -198,6 +203,19 @@ public class FitnessDbContext : DbContext
         modelBuilder.Entity<BodyPart>()
             .Ignore(bp => bp.Id);
                 
+        modelBuilder.Entity<WorkoutState>()
+            .HasKey(ws => ws.WorkoutStateId);
+            
+        modelBuilder.Entity<WorkoutState>()
+            .Property(ws => ws.WorkoutStateId)
+            .HasColumnName("Id")
+            .HasConversion(
+                id => (Guid)id,
+                guid => WorkoutStateId.From(guid));
+                
+        modelBuilder.Entity<WorkoutState>()
+            .Ignore(ws => ws.Id);
+                
         modelBuilder.Entity<MuscleRole>()
             .Property(mr => mr.MuscleRoleId)
             .HasConversion(
@@ -249,6 +267,38 @@ public class FitnessDbContext : DbContext
                 id => (Guid)id,
                 guid => MuscleGroupId.From(guid));
                 
+        modelBuilder.Entity<WorkoutState>()
+            .HasKey(ws => ws.WorkoutStateId);
+            
+        modelBuilder.Entity<WorkoutState>()
+            .Property(ws => ws.WorkoutStateId)
+            .HasColumnName("Id")
+            .HasConversion(
+                id => (Guid)id,
+                guid => WorkoutStateId.From(guid));
+                
+        modelBuilder.Entity<WorkoutState>()
+            .Ignore(ws => ws.Id);
+                
+        // WorkoutTemplate ID conversions
+        modelBuilder.Entity<WorkoutTemplate>()
+            .Property(wt => wt.Id)
+            .HasConversion(
+                id => (Guid)id,
+                guid => WorkoutTemplateId.From(guid));
+                
+        modelBuilder.Entity<WorkoutTemplateExercise>()
+            .Property(wte => wte.Id)
+            .HasConversion(
+                id => (Guid)id,
+                guid => WorkoutTemplateExerciseId.From(guid));
+                
+        modelBuilder.Entity<SetConfiguration>()
+            .Property(sc => sc.Id)
+            .HasConversion(
+                id => (Guid)id,
+                guid => SetConfigurationId.From(guid));
+                
         // Foreign key ID conversions
         modelBuilder.Entity<WorkoutLog>()
             .Property(wl => wl.UserId)
@@ -285,6 +335,55 @@ public class FitnessDbContext : DbContext
             .HasConversion(
                 id => id.HasValue ? (Guid?)id.Value : null,
                 guid => guid.HasValue ? ExerciseWeightTypeId.From(guid.Value) : null);
+                
+        // WorkoutTemplate foreign key conversions
+        modelBuilder.Entity<WorkoutTemplate>()
+            .Property(wt => wt.CategoryId)
+            .HasConversion(
+                id => (Guid)id,
+                guid => WorkoutCategoryId.From(guid));
+                
+        modelBuilder.Entity<WorkoutTemplate>()
+            .Property(wt => wt.DifficultyId)
+            .HasConversion(
+                id => (Guid)id,
+                guid => DifficultyLevelId.From(guid));
+                
+        modelBuilder.Entity<WorkoutTemplate>()
+            .Property(wt => wt.WorkoutStateId)
+            .HasConversion(
+                id => (Guid)id,
+                guid => WorkoutStateId.From(guid));
+                
+        modelBuilder.Entity<WorkoutTemplateExercise>()
+            .Property(wte => wte.WorkoutTemplateId)
+            .HasConversion(
+                id => (Guid)id,
+                guid => WorkoutTemplateId.From(guid));
+                
+        modelBuilder.Entity<WorkoutTemplateExercise>()
+            .Property(wte => wte.ExerciseId)
+            .HasConversion(
+                id => (Guid)id,
+                guid => ExerciseId.From(guid));
+                
+        modelBuilder.Entity<WorkoutTemplateObjective>()
+            .Property(wto => wto.WorkoutTemplateId)
+            .HasConversion(
+                id => (Guid)id,
+                guid => WorkoutTemplateId.From(guid));
+                
+        modelBuilder.Entity<WorkoutTemplateObjective>()
+            .Property(wto => wto.WorkoutObjectiveId)
+            .HasConversion(
+                id => (Guid)id,
+                guid => WorkoutObjectiveId.From(guid));
+                
+        modelBuilder.Entity<SetConfiguration>()
+            .Property(sc => sc.WorkoutTemplateExerciseId)
+            .HasConversion(
+                id => (Guid)id,
+                guid => WorkoutTemplateExerciseId.From(guid));
                 
         // Configure Exercise entity constraints
         modelBuilder.Entity<Exercise>()
@@ -678,6 +777,20 @@ public class FitnessDbContext : DbContext
             .HasOne(eet => eet.ExerciseType)
             .WithMany()
             .HasForeignKey(eet => eet.ExerciseTypeId);
+            
+        // WorkoutTemplate to WorkoutObjective (many-to-many)
+        modelBuilder.Entity<WorkoutTemplateObjective>()
+            .HasKey(wto => new { wto.WorkoutTemplateId, wto.WorkoutObjectiveId });
+            
+        modelBuilder.Entity<WorkoutTemplateObjective>()
+            .HasOne(wto => wto.WorkoutTemplate)
+            .WithMany(wt => wt.Objectives)
+            .HasForeignKey(wto => wto.WorkoutTemplateId);
+            
+        modelBuilder.Entity<WorkoutTemplateObjective>()
+            .HasOne(wto => wto.WorkoutObjective)
+            .WithMany()
+            .HasForeignKey(wto => wto.WorkoutObjectiveId);
     }
     
     private static void ConfigureOneToManyRelationships(ModelBuilder modelBuilder)
@@ -737,11 +850,97 @@ public class FitnessDbContext : DbContext
         modelBuilder.Entity<CoachNote>()
             .HasIndex(cn => new { cn.ExerciseId, cn.Order });
             
+        // Configure WorkoutTemplate entity constraints
+        modelBuilder.Entity<WorkoutTemplate>()
+            .Property(wt => wt.Name)
+            .HasMaxLength(100)
+            .IsRequired();
+            
+        modelBuilder.Entity<WorkoutTemplate>()
+            .Property(wt => wt.Description)
+            .HasMaxLength(500);
+            
+        modelBuilder.Entity<WorkoutTemplate>()
+            .HasIndex(wt => wt.Name)
+            .HasDatabaseName("IX_WorkoutTemplate_Name");
+            
+        modelBuilder.Entity<WorkoutTemplate>()
+            .HasIndex(wt => wt.CreatedAt)
+            .HasDatabaseName("IX_WorkoutTemplate_CreatedAt");
+            
+        // TODO: Remove IsPublic field from WorkoutTemplate - Paulo Aboim Pinto (2025-07-25)
+        // All workout templates are inherently public. Access control is determined by state:
+        // - DRAFT/ARCHIVED states require specific claims to view/edit
+        // - PRODUCTION state templates are accessible to all
+        // The IsPublic field is redundant and should be removed from the domain model
+        modelBuilder.Entity<WorkoutTemplate>()
+            .Property(wt => wt.IsPublic)
+            .HasDefaultValue(false);
+            
+        // Configure WorkoutTemplateExercise constraints
+        modelBuilder.Entity<WorkoutTemplateExercise>()
+            .Property(wte => wte.Notes)
+            .HasMaxLength(500);
+            
+        modelBuilder.Entity<WorkoutTemplateExercise>()
+            .HasIndex(wte => new { wte.WorkoutTemplateId, wte.Zone, wte.SequenceOrder })
+            .HasDatabaseName("IX_WorkoutTemplateExercise_Template_Zone_Order")
+            .IsUnique();
+            
+        // Configure SetConfiguration constraints
+        modelBuilder.Entity<SetConfiguration>()
+            .Property(sc => sc.TargetReps)
+            .HasMaxLength(20);
+            
+        modelBuilder.Entity<SetConfiguration>()
+            .Property(sc => sc.TargetWeight)
+            .HasPrecision(10, 2);
+            
+        modelBuilder.Entity<SetConfiguration>()
+            .HasIndex(sc => new { sc.WorkoutTemplateExerciseId, sc.SetNumber })
+            .HasDatabaseName("IX_SetConfiguration_Exercise_SetNumber")
+            .IsUnique();
+            
         // BodyPart to MuscleGroup (one-to-many)
         modelBuilder.Entity<MuscleGroup>()
             .HasOne(mg => mg.BodyPart)
             .WithMany()
             .HasForeignKey(mg => mg.BodyPartId);
+            
+        // WorkoutTemplate relationships
+        modelBuilder.Entity<WorkoutTemplate>()
+            .HasOne(wt => wt.Category)
+            .WithMany()
+            .HasForeignKey(wt => wt.CategoryId);
+            
+        modelBuilder.Entity<WorkoutTemplate>()
+            .HasOne(wt => wt.Difficulty)
+            .WithMany()
+            .HasForeignKey(wt => wt.DifficultyId);
+            
+        modelBuilder.Entity<WorkoutTemplate>()
+            .HasOne(wt => wt.WorkoutState)
+            .WithMany()
+            .HasForeignKey(wt => wt.WorkoutStateId);
+            
+        // WorkoutTemplate to WorkoutTemplateExercise (one-to-many)
+        modelBuilder.Entity<WorkoutTemplateExercise>()
+            .HasOne(wte => wte.WorkoutTemplate)
+            .WithMany(wt => wt.Exercises)
+            .HasForeignKey(wte => wte.WorkoutTemplateId)
+            .OnDelete(DeleteBehavior.Cascade);
+            
+        modelBuilder.Entity<WorkoutTemplateExercise>()
+            .HasOne(wte => wte.Exercise)
+            .WithMany()
+            .HasForeignKey(wte => wte.ExerciseId);
+            
+        // WorkoutTemplateExercise to SetConfiguration (one-to-many)
+        modelBuilder.Entity<SetConfiguration>()
+            .HasOne(sc => sc.WorkoutTemplateExercise)
+            .WithMany(wte => wte.Configurations)
+            .HasForeignKey(sc => sc.WorkoutTemplateExerciseId)
+            .OnDelete(DeleteBehavior.Cascade);
             
         // Configure decimal precision for WorkoutLogSet.WeightUsedKg
         modelBuilder.Entity<WorkoutLogSet>()
@@ -1040,6 +1239,28 @@ public class FitnessDbContext : DbContext
                 "Fixed rest periods",
                 "High",
                 4,
+                true).Value
+        );
+        
+        // Seed WorkoutStates
+        modelBuilder.Entity<WorkoutState>().HasData(
+            WorkoutState.Handler.Create(
+                WorkoutStateId.From(Guid.Parse("02000001-0000-0000-0000-000000000001")),
+                "DRAFT",
+                "Template under construction",
+                1,
+                true).Value,
+            WorkoutState.Handler.Create(
+                WorkoutStateId.From(Guid.Parse("02000001-0000-0000-0000-000000000002")),
+                "PRODUCTION",
+                "Active template for use",
+                2,
+                true).Value,
+            WorkoutState.Handler.Create(
+                WorkoutStateId.From(Guid.Parse("02000001-0000-0000-0000-000000000003")),
+                "ARCHIVED",
+                "Retired template",
+                3,
                 true).Value
         );
     }

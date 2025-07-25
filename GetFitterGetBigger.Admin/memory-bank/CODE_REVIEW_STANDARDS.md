@@ -28,7 +28,7 @@ The following are considered **MAJOR ISSUES** and will result in immediate rejec
 
 ### Pre-Review Checklist
 Before submitting for code review:
-1. Run `dotnet build` - Must show **0 warnings, 0 errors**
+1. Run `dotnet clean && dotnet build` - Must show **0 warnings, 0 errors**
 2. Run `dotnet test` - Must show **100% pass rate**
 3. Check for any skipped/ignored tests - Document why if present
 
