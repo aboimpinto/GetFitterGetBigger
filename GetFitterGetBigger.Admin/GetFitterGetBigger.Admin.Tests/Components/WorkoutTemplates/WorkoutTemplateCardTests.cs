@@ -266,9 +266,9 @@ namespace GetFitterGetBigger.Admin.Tests.Components.WorkoutTemplates
                 .Add(p => p.ShowStateActions, true)
                 .Add(p => p.OnStateChange, EventCallback.Factory.Create<ReferenceDataDto>(this, (_) => { })));
 
-            var publishButton = draftComponent.FindComponent<StateTransitionButton>();
-            publishButton.Instance.ButtonText.Should().Be("Publish");
-            publishButton.Instance.TargetState?.Value.Should().Be("PRODUCTION");
+            var publishButton = draftComponent.Find("[data-testid='publish-button']");
+            publishButton.Should().NotBeNull();
+            publishButton.TextContent.Should().Contain("Publish");
 
             // Test PRODUCTION -> ARCHIVED
             var productionTemplate = CreateTestTemplate();
@@ -278,9 +278,9 @@ namespace GetFitterGetBigger.Admin.Tests.Components.WorkoutTemplates
                 .Add(p => p.ShowStateActions, true)
                 .Add(p => p.OnStateChange, EventCallback.Factory.Create<ReferenceDataDto>(this, (_) => { })));
 
-            var archiveButton = productionComponent.FindComponent<StateTransitionButton>();
-            archiveButton.Instance.ButtonText.Should().Be("Archive");
-            archiveButton.Instance.TargetState?.Value.Should().Be("ARCHIVED");
+            var archiveButton = productionComponent.Find("[data-testid='archive-button']");
+            archiveButton.Should().NotBeNull();
+            archiveButton.TextContent.Should().Contain("Archive");
         }
 
         [Fact]

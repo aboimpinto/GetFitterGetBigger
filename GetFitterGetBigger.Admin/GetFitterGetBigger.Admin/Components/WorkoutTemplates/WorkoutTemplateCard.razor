@@ -85,10 +85,11 @@
         }
 
         @* Action Buttons *@
-        <div class="flex justify-between items-center pt-4 border-t border-gray-200">
-            <div class="flex items-center gap-2">
-                @if (ShowPublicIndicator)
-                {
+        <div class="flex flex-col gap-3 pt-4 border-t border-gray-200">
+            @* Public/Private indicator *@
+            @if (ShowPublicIndicator)
+            {
+                <div class="flex items-center">
                     <span class="inline-flex items-center text-xs" data-testid="public-indicator">
                         @if (Template.IsPublic)
                         {
@@ -99,18 +100,19 @@
                             <span class="text-gray-500">🔒 Private</span>
                         }
                     </span>
-                }
-            </div>
+                </div>
+            }
             
-            <div class="flex items-center gap-2">
+            @* Action buttons in a responsive grid *@
+            <div class="flex flex-wrap items-center gap-2">
                 @* View button *@
                 @if (OnClick.HasDelegate)
                 {
                     <button @onclick="HandleTitleClick"
                             data-testid="action-view"
-                            class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                            class="inline-flex items-center px-2 py-1 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded hover:bg-gray-50 focus:outline-none focus:ring-1 focus:ring-offset-1 focus:ring-blue-500"
                             title="View template">
-                        <span class="mr-1">👁️</span> View
+                        <span>👁️ View</span>
                     </button>
                 }
                 
@@ -118,9 +120,9 @@
                 {
                     <button @onclick="HandleEdit"
                             data-testid="edit-button"
-                            class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                            class="inline-flex items-center px-2 py-1 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded hover:bg-gray-50 focus:outline-none focus:ring-1 focus:ring-offset-1 focus:ring-blue-500"
                             title="Edit template">
-                        <span class="mr-1">✏️</span> Edit
+                        <span>✏️ Edit</span>
                     </button>
                 }
                 
@@ -128,9 +130,9 @@
                 {
                     <button @onclick="HandleDuplicate"
                             data-testid="duplicate-button"
-                            class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                            class="inline-flex items-center px-2 py-1 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded hover:bg-gray-50 focus:outline-none focus:ring-1 focus:ring-offset-1 focus:ring-blue-500"
                             title="Duplicate template">
-                        <span class="mr-1">📋</span> Duplicate
+                        <span>📋 Duplicate</span>
                     </button>
                 }
                 
@@ -138,23 +140,21 @@
                 {
                     @if (Template.WorkoutState?.Value?.ToUpperInvariant() == "DRAFT")
                     {
-                        <StateTransitionButton 
-                            WorkoutTemplate="@Template"
-                            TargetState="@(new ReferenceDataDto { Id = "state-production", Value = "PRODUCTION", Description = "Production state" })"
-                            ButtonText="Publish"
-                            Size="StateTransitionButton.ButtonSize.Small"
-                            Variant="StateTransitionButton.ButtonVariant.Primary"
-                            OnStateChanged="HandleStateChange" />
+                        <button @onclick="() => HandlePublish()"
+                                data-testid="publish-button"
+                                class="inline-flex items-center px-2 py-1 text-xs font-medium text-white bg-blue-600 border border-transparent rounded hover:bg-blue-700 focus:outline-none focus:ring-1 focus:ring-offset-1 focus:ring-blue-500"
+                                title="Publish template">
+                            <span>🚀 Publish</span>
+                        </button>
                     }
                     else if (Template.WorkoutState?.Value?.ToUpperInvariant() == "PRODUCTION")
                     {
-                        <StateTransitionButton 
-                            WorkoutTemplate="@Template"
-                            TargetState="@(new ReferenceDataDto { Id = "state-archived", Value = "ARCHIVED", Description = "Archived state" })"
-                            ButtonText="Archive"
-                            Size="StateTransitionButton.ButtonSize.Small"
-                            Variant="StateTransitionButton.ButtonVariant.Secondary"
-                            OnStateChanged="HandleStateChange" />
+                        <button @onclick="() => HandleArchive()"
+                                data-testid="archive-button"
+                                class="inline-flex items-center px-2 py-1 text-xs font-medium text-gray-700 bg-gray-200 border border-transparent rounded hover:bg-gray-300 focus:outline-none focus:ring-1 focus:ring-offset-1 focus:ring-gray-500"
+                                title="Archive template">
+                            <span>📦 Archive</span>
+                        </button>
                     }
                 }
                 
@@ -162,9 +162,9 @@
                 {
                     <button @onclick="HandleDelete"
                             data-testid="delete-button"
-                            class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-red-700 bg-white border border-red-300 rounded-md hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                            class="inline-flex items-center px-2 py-1 text-xs font-medium text-red-700 bg-white border border-red-300 rounded hover:bg-red-50 focus:outline-none focus:ring-1 focus:ring-offset-1 focus:ring-red-500"
                             title="Delete template">
-                        <span class="mr-1">🗑️</span> Delete
+                        <span>🗑️ Delete</span>
                     </button>
                 }
             </div>
@@ -291,6 +291,34 @@
         if (OnStateChange.HasDelegate)
         {
             await OnStateChange.InvokeAsync(newState);
+        }
+    }
+
+    private async Task HandlePublish()
+    {
+        if (OnStateChange.HasDelegate)
+        {
+            var productionState = new ReferenceDataDto 
+            { 
+                Id = "state-production", 
+                Value = "PRODUCTION", 
+                Description = "Production state" 
+            };
+            await OnStateChange.InvokeAsync(productionState);
+        }
+    }
+
+    private async Task HandleArchive()
+    {
+        if (OnStateChange.HasDelegate)
+        {
+            var archivedState = new ReferenceDataDto 
+            { 
+                Id = "state-archived", 
+                Value = "ARCHIVED", 
+                Description = "Archived state" 
+            };
+            await OnStateChange.InvokeAsync(archivedState);
         }
     }
 }
