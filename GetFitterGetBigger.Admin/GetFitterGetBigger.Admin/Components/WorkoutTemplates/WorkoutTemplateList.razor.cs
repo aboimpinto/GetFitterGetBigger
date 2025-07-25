@@ -75,11 +75,6 @@ namespace GetFitterGetBigger.Admin.Components.WorkoutTemplates
                 
                 StateService.ClearError();
                 await StateService.RefreshCurrentPageAsync();
-                
-                if (string.IsNullOrWhiteSpace(StateService.ErrorMessage))
-                {
-                    ToastService.ShowSuccess("Workout templates loaded successfully");
-                }
             }
             finally
             {

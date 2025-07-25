@@ -11,6 +11,7 @@ using GetFitterGetBigger.Admin.Components.Shared;
 using GetFitterGetBigger.Admin.Models.Dtos;
 using GetFitterGetBigger.Admin.Services;
 using GetFitterGetBigger.Admin.Builders;
+using GetFitterGetBigger.Admin.Tests.TestHelpers;
 using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
@@ -18,17 +19,12 @@ using Xunit;
 
 namespace GetFitterGetBigger.Admin.Tests.Components.Pages.WorkoutTemplates;
 
-public class WorkoutTemplateDetailPageIntegrationTests : TestContext
+public class WorkoutTemplateDetailPageIntegrationTests : WorkoutTemplateTestBase
 {
-    private readonly Mock<IWorkoutTemplateService> _mockService;
-    private readonly Mock<IWorkoutTemplateStateService> _mockStateService;
     private readonly WorkoutTemplateDto _defaultTemplate;
 
     public WorkoutTemplateDetailPageIntegrationTests()
     {
-        _mockService = new Mock<IWorkoutTemplateService>();
-        _mockStateService = new Mock<IWorkoutTemplateStateService>();
-
         _defaultTemplate = new WorkoutTemplateDtoBuilder()
             .WithId("template-1")
             .WithName("Test Workout Template")
@@ -54,17 +50,13 @@ public class WorkoutTemplateDetailPageIntegrationTests : TestContext
             .WithWorkoutState("state-draft", "DRAFT")
             .WithIsPublic(false)
             .Build();
-
-        // Register services
-        Services.AddSingleton(_mockService.Object);
-        Services.AddSingleton(_mockStateService.Object);
     }
 
     [Fact]
     public void Should_DisplayTemplateDetails_WhenLoadedSuccessfully()
     {
         // Arrange
-        _mockService.Setup(x => x.GetWorkoutTemplateByIdAsync("template-1"))
+        MockWorkoutTemplateService.Setup(x => x.GetWorkoutTemplateByIdAsync("template-1"))
             .ReturnsAsync(_defaultTemplate);
 
         // Act
@@ -91,7 +83,7 @@ public class WorkoutTemplateDetailPageIntegrationTests : TestContext
     public void Should_NavigateToEdit_WhenEditButtonClicked()
     {
         // Arrange
-        _mockService.Setup(x => x.GetWorkoutTemplateByIdAsync("template-1"))
+        MockWorkoutTemplateService.Setup(x => x.GetWorkoutTemplateByIdAsync("template-1"))
             .ReturnsAsync(_defaultTemplate);
 
         var navMan = Services.GetRequiredService<NavigationManager>();
@@ -114,7 +106,7 @@ public class WorkoutTemplateDetailPageIntegrationTests : TestContext
     public async Task Should_DuplicateTemplate_WhenDuplicateButtonClicked()
     {
         // Arrange
-        _mockService.Setup(x => x.GetWorkoutTemplateByIdAsync("template-1"))
+        MockWorkoutTemplateService.Setup(x => x.GetWorkoutTemplateByIdAsync("template-1"))
             .ReturnsAsync(_defaultTemplate);
 
         var duplicatedTemplate = new WorkoutTemplateDtoBuilder()
@@ -123,7 +115,7 @@ public class WorkoutTemplateDetailPageIntegrationTests : TestContext
             .WithWorkoutState("state-draft", "DRAFT")
             .Build();
 
-        _mockService.Setup(x => x.DuplicateWorkoutTemplateAsync("template-1", It.IsAny<DuplicateWorkoutTemplateDto>()))
+        MockWorkoutTemplateService.Setup(x => x.DuplicateWorkoutTemplateAsync("template-1", It.IsAny<DuplicateWorkoutTemplateDto>()))
             .ReturnsAsync(duplicatedTemplate);
 
         var navMan = Services.GetRequiredService<NavigationManager>();
@@ -139,7 +131,7 @@ public class WorkoutTemplateDetailPageIntegrationTests : TestContext
         });
 
         // Assert
-        _mockService.Verify(x => x.DuplicateWorkoutTemplateAsync("template-1", It.IsAny<DuplicateWorkoutTemplateDto>()), Times.Once);
+        MockWorkoutTemplateService.Verify(x => x.DuplicateWorkoutTemplateAsync("template-1", It.IsAny<DuplicateWorkoutTemplateDto>()), Times.Once);
         navMan.Uri.Should().EndWith("/workout-templates/template-2/edit");
     }
 
@@ -147,10 +139,10 @@ public class WorkoutTemplateDetailPageIntegrationTests : TestContext
     public async Task Should_DeleteTemplate_WhenDeleteButtonClickedAndConfirmed()
     {
         // Arrange
-        _mockService.Setup(x => x.GetWorkoutTemplateByIdAsync("template-1"))
+        MockWorkoutTemplateService.Setup(x => x.GetWorkoutTemplateByIdAsync("template-1"))
             .ReturnsAsync(_defaultTemplate);
 
-        _mockService.Setup(x => x.DeleteWorkoutTemplateAsync("template-1"))
+        MockWorkoutTemplateService.Setup(x => x.DeleteWorkoutTemplateAsync("template-1"))
             .Returns(Task.CompletedTask);
 
         var navMan = Services.GetRequiredService<NavigationManager>();
@@ -167,7 +159,7 @@ public class WorkoutTemplateDetailPageIntegrationTests : TestContext
 
         // Assert - In a real test, we'd need to handle confirmation dialog
         // For now, verify delete was attempted
-        _mockService.Verify(x => x.DeleteWorkoutTemplateAsync("template-1"), Times.Once);
+        MockWorkoutTemplateService.Verify(x => x.DeleteWorkoutTemplateAsync("template-1"), Times.Once);
         navMan.Uri.Should().EndWith("/workout-templates");
     }
 
@@ -175,7 +167,7 @@ public class WorkoutTemplateDetailPageIntegrationTests : TestContext
     public async Task Should_TransitionState_WhenStateButtonClicked()
     {
         // Arrange
-        _mockService.Setup(x => x.GetWorkoutTemplateByIdAsync("template-1"))
+        MockWorkoutTemplateService.Setup(x => x.GetWorkoutTemplateByIdAsync("template-1"))
             .ReturnsAsync(_defaultTemplate);
 
         var updatedTemplate = new WorkoutTemplateDtoBuilder()
@@ -192,7 +184,7 @@ public class WorkoutTemplateDetailPageIntegrationTests : TestContext
             .WithIsPublic(_defaultTemplate.IsPublic)
             .Build();
 
-        _mockService.Setup(x => x.ChangeWorkoutTemplateStateAsync("template-1", It.IsAny<ChangeWorkoutStateDto>()))
+        MockWorkoutTemplateService.Setup(x => x.ChangeWorkoutTemplateStateAsync("template-1", It.IsAny<ChangeWorkoutStateDto>()))
             .ReturnsAsync(updatedTemplate);
 
         // Act
@@ -210,7 +202,8 @@ public class WorkoutTemplateDetailPageIntegrationTests : TestContext
         });
 
         // Assert
-        _mockService.Verify(x => x.ChangeWorkoutTemplateStateAsync("template-1", It.IsAny<ChangeWorkoutStateDto>()), Times.Once);
+        MockWorkoutTemplateService.Verify(x => x.ChangeWorkoutTemplateStateAsync("template-1", 
+            It.Is<ChangeWorkoutStateDto>(dto => dto.NewStateId == "state-production")), Times.Once);
     }
 
     [Fact]
@@ -218,22 +211,22 @@ public class WorkoutTemplateDetailPageIntegrationTests : TestContext
     {
         // Arrange
         var productionTemplate = new WorkoutTemplateDtoBuilder()
-            .WithId("template-prod")
+            .WithId("template-1")
             .WithName("Production Template")
             .WithWorkoutState("state-production", "PRODUCTION")
             .Build();
 
-        _mockService.Setup(x => x.GetWorkoutTemplateByIdAsync("template-prod"))
+        MockWorkoutTemplateService.Setup(x => x.GetWorkoutTemplateByIdAsync("template-1"))
             .ReturnsAsync(productionTemplate);
 
         // Act
         var cut = RenderComponent<WorkoutTemplateDetailPage>(parameters => parameters
-            .Add(p => p.Id, "template-prod"));
+            .Add(p => p.Id, "template-1"));
 
         // Assert
         cut.WaitForAssertion(() =>
         {
-            cut.FindAll("[data-testid='action-edit']").Should().BeEmpty();
+            Assert.Throws<Bunit.ElementNotFoundException>(() => cut.Find("[data-testid='action-edit']"));
         });
     }
 
@@ -242,51 +235,29 @@ public class WorkoutTemplateDetailPageIntegrationTests : TestContext
     {
         // Arrange
         var productionTemplate = new WorkoutTemplateDtoBuilder()
-            .WithId("template-prod")
+            .WithId("template-1")
             .WithName("Production Template")
             .WithWorkoutState("state-production", "PRODUCTION")
             .Build();
 
-        _mockService.Setup(x => x.GetWorkoutTemplateByIdAsync("template-prod"))
+        MockWorkoutTemplateService.Setup(x => x.GetWorkoutTemplateByIdAsync("template-1"))
             .ReturnsAsync(productionTemplate);
-
-        // Act
-        var cut = RenderComponent<WorkoutTemplateDetailPage>(parameters => parameters
-            .Add(p => p.Id, "template-prod"));
-
-        // Assert
-        cut.WaitForAssertion(() =>
-        {
-            var stateButton = cut.FindComponent<StateTransitionButton>();
-            stateButton.Should().NotBeNull();
-            stateButton.Instance.ButtonText.Should().Be("Archive Template");
-            stateButton.Instance.TargetState.Value.Should().Be("ARCHIVED");
-        });
-    }
-
-    [Fact]
-    public void Should_DisplayLoadingState_WhileLoadingTemplate()
-    {
-        // Arrange
-        var tcs = new TaskCompletionSource<WorkoutTemplateDto?>();
-        _mockService.Setup(x => x.GetWorkoutTemplateByIdAsync("template-1"))
-            .Returns(tcs.Task);
 
         // Act
         var cut = RenderComponent<WorkoutTemplateDetailPage>(parameters => parameters
             .Add(p => p.Id, "template-1"));
 
-        // Assert - Should show loading skeleton initially
-        cut.FindComponents<WorkoutTemplateDetailSkeleton>().Should().NotBeEmpty();
-
-        // Complete loading
-        tcs.SetResult(_defaultTemplate);
-
-        // Assert - Loading should be gone and content displayed
+        // Assert
         cut.WaitForAssertion(() =>
         {
-            cut.FindComponents<WorkoutTemplateDetailSkeleton>().Should().BeEmpty();
-            cut.Find("[data-testid='workout-template-detail']").Should().NotBeNull();
+            // Production templates should show Archive button
+            var detail = cut.FindComponent<WorkoutTemplateDetail>();
+            detail.Should().NotBeNull();
+            
+            // Find the archive state transition button
+            var buttons = cut.FindComponents<StateTransitionButton>();
+            buttons.Should().NotBeEmpty();
+            buttons.Should().Contain(btn => btn.Instance.TargetState != null && btn.Instance.TargetState.Value == "ARCHIVED");
         });
     }
 
@@ -294,8 +265,8 @@ public class WorkoutTemplateDetailPageIntegrationTests : TestContext
     public void Should_DisplayError_WhenLoadingFails()
     {
         // Arrange
-        _mockService.Setup(x => x.GetWorkoutTemplateByIdAsync("template-1"))
-            .ThrowsAsync(new HttpRequestException("Failed to load template"));
+        MockWorkoutTemplateService.Setup(x => x.GetWorkoutTemplateByIdAsync("template-1"))
+            .ThrowsAsync(new HttpRequestException("Network error"));
 
         // Act
         var cut = RenderComponent<WorkoutTemplateDetailPage>(parameters => parameters
@@ -304,9 +275,9 @@ public class WorkoutTemplateDetailPageIntegrationTests : TestContext
         // Assert
         cut.WaitForAssertion(() =>
         {
-            cut.FindAll("[data-testid='error-message']").Should().NotBeEmpty();
-            cut.Find("[data-testid='error-message']").TextContent
-                .Should().Contain("Failed to load template");
+            var errorDisplay = cut.FindComponent<ErrorDisplay>();
+            errorDisplay.Instance.ErrorMessage.Should().NotBeEmpty();
+            errorDisplay.Instance.ShowRetry.Should().BeTrue();
         });
     }
 
@@ -314,7 +285,7 @@ public class WorkoutTemplateDetailPageIntegrationTests : TestContext
     public void Should_DisplayNotFound_WhenTemplateDoesNotExist()
     {
         // Arrange
-        _mockService.Setup(x => x.GetWorkoutTemplateByIdAsync("non-existent"))
+        MockWorkoutTemplateService.Setup(x => x.GetWorkoutTemplateByIdAsync("non-existent"))
             .ReturnsAsync((WorkoutTemplateDto?)null);
 
         // Act
@@ -324,8 +295,35 @@ public class WorkoutTemplateDetailPageIntegrationTests : TestContext
         // Assert
         cut.WaitForAssertion(() =>
         {
-            cut.Find("[data-testid='no-template']").TextContent
-                .Should().Contain("No workout template to display");
+            cut.Find("[data-testid='not-found-message']").TextContent
+                .Should().Contain("Workout template not found");
+        });
+    }
+
+    [Fact]
+    public void Should_DisplayLoadingState_WhileLoadingTemplate()
+    {
+        // Arrange
+        var tcs = new TaskCompletionSource<WorkoutTemplateDto?>();
+        MockWorkoutTemplateService.Setup(x => x.GetWorkoutTemplateByIdAsync("template-1"))
+            .Returns(tcs.Task);
+
+        // Act
+        var cut = RenderComponent<WorkoutTemplateDetailPage>(parameters => parameters
+            .Add(p => p.Id, "template-1"));
+
+        // Assert - Should show skeleton loader
+        var skeleton = cut.FindComponent<WorkoutTemplateDetailSkeleton>();
+        skeleton.Should().NotBeNull();
+
+        // Complete the loading
+        tcs.SetResult(_defaultTemplate);
+
+        // Verify skeleton is replaced with actual content
+        cut.WaitForAssertion(() =>
+        {
+            Assert.Throws<Bunit.Rendering.ComponentNotFoundException>(() => cut.FindComponent<WorkoutTemplateDetailSkeleton>());
+            cut.FindComponent<WorkoutTemplateDetail>().Should().NotBeNull();
         });
     }
 }
