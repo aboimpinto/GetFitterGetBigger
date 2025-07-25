@@ -185,6 +185,53 @@ When tests fail:
 6. ✓ Confirm test is using correct test data IDs
 7. ✓ Check for differences between unit and integration test setup
 
+## 6. Testing Error Messages (Magic Strings)
+
+### Problem
+Tests that check error message content break when messages are updated or localized.
+
+### Example Error
+```csharp
+// ❌ WRONG - Testing message content
+[Fact]
+public async Task ChangeStateAsync_WithEmptyStateId_ReturnsFailure()
+{
+    var result = await _service.ChangeStateAsync(id, WorkoutStateId.Empty);
+    
+    Assert.False(result.IsSuccess);
+    Assert.Contains("GUID format", result.Errors.First()); // BRITTLE!
+}
+```
+
+### Root Cause
+- Error messages are implementation details, not API contracts
+- Messages change for localization, clarity, or consistency
+- The actual contract is the ServiceErrorCode enum
+
+### Solution
+```csharp
+// ✅ CORRECT - Testing error code only
+[Fact]
+public async Task ChangeStateAsync_WithEmptyStateId_ReturnsFailure()
+{
+    var result = await _service.ChangeStateAsync(id, WorkoutStateId.Empty);
+    
+    Assert.False(result.IsSuccess);
+    Assert.Equal(ServiceErrorCode.InvalidFormat, result.PrimaryErrorCode); // STABLE!
+}
+```
+
+### How to Detect
+- Tests using `Assert.Contains()` on error messages
+- Tests checking `result.Errors.First()` content
+- Tests that break when error wording changes
+
+### Best Practices
+1. **Always test ServiceErrorCode, never message content**
+2. **Use centralized error message constants in services**
+3. **Keep error messages in one place for easy updates**
+4. **Consider future localization needs**
+
 ## Prevention Strategies
 
 1. **Create Test Constants**: Define common test IDs in a shared location
@@ -192,5 +239,6 @@ When tests fail:
 3. **Document Test Data**: Maintain documentation of what test data represents
 4. **Consistent Patterns**: Use the same patterns across all tests
 5. **Code Reviews**: Review test code as carefully as production code
+6. **No Magic Strings**: Test behavior (error codes) not implementation (messages)
 
 Remember: Test failures don't always indicate application bugs. Often, the test infrastructure itself needs adjustment.

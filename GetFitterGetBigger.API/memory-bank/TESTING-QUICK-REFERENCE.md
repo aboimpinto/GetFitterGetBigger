@@ -48,6 +48,32 @@ _repositoryMock.Setup(r => r.GetByIdAsync(It.IsAny<TId>()))
 ```csharp
 // For single navigation property
 await Context.Entry(entity).Reference(e => e.Property).LoadAsync();
+```
+
+### 🚨 CRITICAL: Error Testing Pattern (NO MAGIC STRINGS!)
+```csharp
+// ❌ NEVER test error message content
+Assert.Contains("GUID format", result.Errors.First()); // WRONG!
+
+// ✅ ALWAYS test error codes only
+Assert.Equal(ServiceErrorCode.InvalidFormat, result.PrimaryErrorCode); // CORRECT!
+```
+
+**Why**: Error messages change (localization, wording updates), but error codes are stable API contracts.
+
+**Example of proper error testing:**
+```csharp
+[Fact]
+public async Task ServiceMethod_WithInvalidInput_ReturnsFailure()
+{
+    // Act
+    var result = await _service.SomeMethod(invalidInput);
+    
+    // Assert
+    Assert.False(result.IsSuccess);
+    Assert.Equal(ServiceErrorCode.ValidationFailed, result.PrimaryErrorCode);
+    // DO NOT test result.Errors content!
+}
 
 // For collection navigation property
 await Context.Entry(entity).Collection(e => e.Collection).LoadAsync();

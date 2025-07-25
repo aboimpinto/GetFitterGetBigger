@@ -1,9 +1,4 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using GetFitterGetBigger.API.DTOs;
-using GetFitterGetBigger.API.Extensions;
 using GetFitterGetBigger.API.Models;
 using GetFitterGetBigger.API.Models.Entities;
 using GetFitterGetBigger.API.Models.SpecializedIds;
@@ -17,7 +12,6 @@ using GetFitterGetBigger.API.Tests.TestBuilders.Domain;
 using GetFitterGetBigger.API.Tests.TestHelpers;
 using Microsoft.Extensions.Logging;
 using Moq;
-using Xunit;
 using Olimpo.EntityFramework.Persistency;
 
 namespace GetFitterGetBigger.API.Tests.Services;
@@ -37,7 +31,6 @@ public class WorkoutTemplateServiceTests
     
     private readonly WorkoutTemplate _testTemplate;
     private readonly WorkoutTemplateId _testTemplateId;
-    private readonly UserId _testUserId;
     
     public WorkoutTemplateServiceTests()
     {
@@ -81,7 +74,6 @@ public class WorkoutTemplateServiceTests
         
         // Setup test data
         _testTemplateId = WorkoutTemplateId.ParseOrEmpty(TestIds.WorkoutTemplateIds.BasicTemplate);
-        _testUserId = UserId.ParseOrEmpty(TestIds.UserIds.JohnDoe);
         
         // Create a workout state for testing
         var productionState = WorkoutStateTestBuilder.Production().Build();
@@ -150,8 +142,7 @@ public class WorkoutTemplateServiceTests
         
         // Assert
         Assert.False(result.IsSuccess);
-        Assert.Single(result.Errors);
-        Assert.Contains("GUID format", result.Errors.First());
+        Assert.Equal(ServiceErrorCode.InvalidFormat, result.PrimaryErrorCode);
         _mockRepository.Verify(x => x.GetByIdWithDetailsAsync(It.IsAny<WorkoutTemplateId>()), Times.Never);
     }
     
@@ -168,8 +159,7 @@ public class WorkoutTemplateServiceTests
         
         // Assert
         Assert.False(result.IsSuccess);
-        Assert.Single(result.Errors);
-        Assert.Contains("not found", result.Errors.First());
+        Assert.Equal(ServiceErrorCode.NotFound, result.PrimaryErrorCode);
     }
     
     #endregion
@@ -221,7 +211,7 @@ public class WorkoutTemplateServiceTests
         
         // Assert
         Assert.False(result.IsSuccess);
-        Assert.Contains("Create command cannot be null", result.Errors);
+        Assert.Equal(ServiceErrorCode.ValidationFailed, result.PrimaryErrorCode);
     }
     
     [Fact]
@@ -248,7 +238,7 @@ public class WorkoutTemplateServiceTests
         
         // Assert
         Assert.False(result.IsSuccess);
-        Assert.Contains("already exists", result.Errors.First());
+        Assert.Equal(ServiceErrorCode.AlreadyExists, result.PrimaryErrorCode);
         _mockRepository.Verify(x => x.AddAsync(It.IsAny<WorkoutTemplate>()), Times.Never);
     }
     
@@ -272,7 +262,7 @@ public class WorkoutTemplateServiceTests
         
         // Assert
         Assert.False(result.IsSuccess);
-        Assert.Contains("Name must be between 3 and 100 characters", result.Errors);
+        Assert.Equal(ServiceErrorCode.ValidationFailed, result.PrimaryErrorCode);
     }
     
     #endregion
@@ -340,7 +330,7 @@ public class WorkoutTemplateServiceTests
         
         // Assert
         Assert.False(result.IsSuccess);
-        Assert.Contains("not found", result.Errors.First());
+        Assert.Equal(ServiceErrorCode.NotFound, result.PrimaryErrorCode);
     }
     
     #endregion
@@ -386,7 +376,7 @@ public class WorkoutTemplateServiceTests
         
         // Assert
         Assert.False(result.IsSuccess);
-        Assert.Contains("GUID format", result.Errors.First());
+        Assert.Equal(ServiceErrorCode.InvalidFormat, result.PrimaryErrorCode);
     }
     
     #endregion
@@ -438,35 +428,6 @@ public class WorkoutTemplateServiceTests
     #endregion
     
     #region Filtering Tests
-    
-    [Fact(Skip = "ILike function not supported in MockQueryable - covered by integration tests")]
-    public async Task SearchAsync_WithNamePattern_ReturnsFilteredResults()
-    {
-        // Arrange
-        var namePattern = "Test";
-        var templates = new List<WorkoutTemplate> { _testTemplate }.BuildAsyncQueryable();
-        
-        _mockRepository
-            .Setup(x => x.GetWorkoutTemplatesQueryable())
-            .Returns(templates);
-            
-        // Act
-        var result = await _service.SearchAsync(
-            namePattern: namePattern,
-            categoryId: WorkoutCategoryId.Empty,
-            objectiveId: WorkoutObjectiveId.Empty,
-            difficultyId: DifficultyLevelId.Empty,
-            stateId: WorkoutStateId.Empty,
-            page: 1,
-            pageSize: 20,
-            sortBy: "name",
-            sortOrder: "asc");
-        
-        // Assert
-        Assert.True(result.IsSuccess);
-        Assert.Single(result.Data.Items);
-        Assert.Equal(1, result.Data.TotalCount);
-    }
     
     [Fact]
     public async Task SearchAsync_WithEmptyParameters_ReturnsAllResults()
@@ -675,144 +636,6 @@ public class WorkoutTemplateServiceTests
         Assert.Equal(_testTemplate.Name, result.Data.Items.First().Name);
     }
     
-    [Fact(Skip = "ILike function not supported in MockQueryable - covered by integration tests")]
-    public async Task SearchAsync_WithNamePattern_CaseInsensitive_ReturnsFilteredResults()
-    {
-        // Note: This test verifies the service logic but won't test actual case-insensitive behavior
-        // since MockQueryable doesn't support EF.Functions.ILike. Integration tests are needed for that.
-        // Arrange
-        var productionState = WorkoutStateTestBuilder.Production().Build();
-        
-        var template1 = new WorkoutTemplateBuilder()
-            .WithId(WorkoutTemplateId.New())
-            .WithName("Leg Burner I")
-            .WithWorkoutState(productionState)
-            .Build();
-            
-        var template2 = new WorkoutTemplateBuilder()
-            .WithId(WorkoutTemplateId.New())
-            .WithName("Leg Burner II")
-            .WithWorkoutState(productionState)
-            .Build();
-            
-        var template3 = new WorkoutTemplateBuilder()
-            .WithId(WorkoutTemplateId.New())
-            .WithName("Upper Body Blast")
-            .WithWorkoutState(productionState)
-            .Build();
-            
-        var templates = new List<WorkoutTemplate> { template1, template2, template3 }.BuildAsyncQueryable();
-        
-        _mockRepository
-            .Setup(x => x.GetWorkoutTemplatesQueryable())
-            .Returns(templates);
-            
-        // Act - search with lowercase
-        var result = await _service.SearchAsync(
-            namePattern: "leg",
-            categoryId: WorkoutCategoryId.Empty,
-            objectiveId: WorkoutObjectiveId.Empty,
-            difficultyId: DifficultyLevelId.Empty,
-            stateId: WorkoutStateId.Empty,
-            page: 1,
-            pageSize: 20,
-            sortBy: "name",
-            sortOrder: "asc");
-        
-        // Assert
-        Assert.True(result.IsSuccess);
-        Assert.Equal(2, result.Data.Items.Count());
-        Assert.All(result.Data.Items, item => Assert.Contains("Leg", item.Name));
-    }
-    
-    [Fact(Skip = "ILike function not supported in MockQueryable - covered by integration tests")]
-    public async Task SearchAsync_WithNamePattern_MixedCase_ReturnsFilteredResults()
-    {
-        // Arrange
-        var productionState = WorkoutStateTestBuilder.Production().Build();
-        
-        var template1 = new WorkoutTemplateBuilder()
-            .WithId(WorkoutTemplateId.New())
-            .WithName("LEG CRUSHER")
-            .WithWorkoutState(productionState)
-            .Build();
-            
-        var template2 = new WorkoutTemplateBuilder()
-            .WithId(WorkoutTemplateId.New())
-            .WithName("leg destroyer")
-            .WithWorkoutState(productionState)
-            .Build();
-            
-        var template3 = new WorkoutTemplateBuilder()
-            .WithId(WorkoutTemplateId.New())
-            .WithName("Leg Workout")
-            .WithWorkoutState(productionState)
-            .Build();
-            
-        var templates = new List<WorkoutTemplate> { template1, template2, template3 }.BuildAsyncQueryable();
-        
-        _mockRepository
-            .Setup(x => x.GetWorkoutTemplatesQueryable())
-            .Returns(templates);
-            
-        // Act - search with mixed case
-        var result = await _service.SearchAsync(
-            namePattern: "LeG",
-            categoryId: WorkoutCategoryId.Empty,
-            objectiveId: WorkoutObjectiveId.Empty,
-            difficultyId: DifficultyLevelId.Empty,
-            stateId: WorkoutStateId.Empty,
-            page: 1,
-            pageSize: 20,
-            sortBy: "name",
-            sortOrder: "asc");
-        
-        // Assert
-        Assert.True(result.IsSuccess);
-        Assert.Equal(3, result.Data.Items.Count());
-    }
-    
-    [Fact(Skip = "ILike function not supported in MockQueryable - covered by integration tests")]
-    public async Task SearchAsync_WithNamePattern_UpperCase_ReturnsFilteredResults()
-    {
-        // Arrange
-        var productionState = WorkoutStateTestBuilder.Production().Build();
-        
-        var template1 = new WorkoutTemplateBuilder()
-            .WithId(WorkoutTemplateId.New())
-            .WithName("Leg Burner I")
-            .WithWorkoutState(productionState)
-            .Build();
-            
-        var template2 = new WorkoutTemplateBuilder()
-            .WithId(WorkoutTemplateId.New())
-            .WithName("leg burner ii")
-            .WithWorkoutState(productionState)
-            .Build();
-            
-        var templates = new List<WorkoutTemplate> { template1, template2 }.BuildAsyncQueryable();
-        
-        _mockRepository
-            .Setup(x => x.GetWorkoutTemplatesQueryable())
-            .Returns(templates);
-            
-        // Act - search with uppercase
-        var result = await _service.SearchAsync(
-            namePattern: "BURNER",
-            categoryId: WorkoutCategoryId.Empty,
-            objectiveId: WorkoutObjectiveId.Empty,
-            difficultyId: DifficultyLevelId.Empty,
-            stateId: WorkoutStateId.Empty,
-            page: 1,
-            pageSize: 20,
-            sortBy: "name",
-            sortOrder: "asc");
-        
-        // Assert
-        Assert.True(result.IsSuccess);
-        Assert.Equal(2, result.Data.Items.Count());
-    }
-    
     #endregion
     
     #region Duplicate Tests
@@ -857,7 +680,7 @@ public class WorkoutTemplateServiceTests
         
         // Assert
         Assert.False(result.IsSuccess);
-        Assert.Contains("Template name is required", result.Errors);
+        Assert.Equal(ServiceErrorCode.ValidationFailed, result.PrimaryErrorCode);
     }
     
     

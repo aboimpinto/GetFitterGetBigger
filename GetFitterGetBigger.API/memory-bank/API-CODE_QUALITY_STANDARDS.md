@@ -737,6 +737,63 @@ var exercises = await context.Exercises
 - Use TestIds for consistent test data
 - One assert per test preferred
 
+### 🚨 CRITICAL: No Magic Strings in Tests
+**NEVER test error message content - only test ServiceErrorCode:**
+
+```csharp
+// ❌ VIOLATION - Testing error message content (brittle, localization-hostile)
+[Fact]
+public async Task ChangeStateAsync_WithEmptyStateId_ReturnsFailure()
+{
+    // Act
+    var result = await _service.ChangeStateAsync(_testTemplateId, WorkoutStateId.Empty);
+    
+    // Assert
+    Assert.False(result.IsSuccess);
+    Assert.Contains("GUID format", result.Errors.First()); // ← VIOLATION!
+}
+
+// ✅ CORRECT - Testing error code only (stable, localization-ready)
+[Fact]
+public async Task ChangeStateAsync_WithEmptyStateId_ReturnsFailure()
+{
+    // Act
+    var result = await _service.ChangeStateAsync(_testTemplateId, WorkoutStateId.Empty);
+    
+    // Assert
+    Assert.False(result.IsSuccess);
+    Assert.Equal(ServiceErrorCode.InvalidFormat, result.PrimaryErrorCode); // ← CORRECT!
+}
+```
+
+**Why This Is Critical:**
+1. **Localization**: Error messages will change for different languages
+2. **Maintenance**: Changing error text shouldn't break tests
+3. **API Contract**: The error code IS the contract, not the message
+4. **Test Stability**: Tests remain stable across message updates
+
+**Error Message Organization:**
+```csharp
+// ✅ CORRECT - Centralized error messages in constants
+public static class WorkoutTemplateErrorMessages
+{
+    public static string InvalidIdFormat => "Invalid WorkoutTemplateId format...";
+    public static string NotFound => "Workout template not found";
+    // ... other messages
+}
+
+// Service uses constants, not inline strings
+ServiceError.NotFound(WorkoutTemplateErrorMessages.NotFound)
+```
+
+**Testing Rules:**
+- ✅ Test `ServiceErrorCode` values
+- ✅ Test `result.IsSuccess` boolean
+- ✅ Test returned data structure
+- ❌ NEVER test error message content
+- ❌ NEVER use `Assert.Contains()` on error messages
+- ❌ NEVER depend on specific error text
+
 ### Integration Tests
 - Use BDD approach with SpecFlow
 - Test full API stack
