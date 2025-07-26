@@ -479,6 +479,28 @@ At feature completion, calculate:
 - Use proper exception handling for API calls
 - Implement proper loading and error states
 
+### Reference Tables Integration
+When your feature needs dropdown data or configuration values:
+- **Use the Reference Table Pattern** (see `REFERENCE_TABLES_GUIDE.md`)
+- **DO NOT** create individual services for each dropdown
+- **DO NOT** manually cache reference data
+- Steps:
+  1. Check if reference table already exists in `ReferenceTableTypes.cs`
+  2. If not, add new type and create strategy
+  3. Use `IGenericReferenceDataService.GetReferenceDataAsync<T>()`
+  4. Data is automatically cached for 24 hours
+- Example:
+  ```csharp
+  @inject IGenericReferenceDataService ReferenceDataService
+  
+  private IEnumerable<ReferenceDataDto> bodyParts;
+  
+  protected override async Task OnInitializedAsync()
+  {
+      bodyParts = await ReferenceDataService.GetReferenceDataAsync<BodyParts>();
+  }
+  ```
+
 ### Testing with bUnit
 - Write component tests using bUnit framework
 - Test component rendering, parameters, and event callbacks

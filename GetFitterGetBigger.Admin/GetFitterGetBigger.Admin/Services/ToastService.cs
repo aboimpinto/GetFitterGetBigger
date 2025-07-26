@@ -16,7 +16,9 @@ namespace GetFitterGetBigger.Admin.Services
     public class ToastService : IToastService
     {
         public event Action<ToastMessage>? OnShow;
+        #pragma warning disable CS0067 // The event 'OnHide' is never used - but it is used via subscription in ToastContainer.razor
         public event Action? OnHide;
+        #pragma warning restore CS0067
         
         public void ShowSuccess(string message, string? title = null)
         {

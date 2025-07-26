@@ -342,7 +342,8 @@ public class WorkoutTemplateDetailTests : TestContext
         var stateButton = cut.FindComponent<StateTransitionButton>();
         stateButton.Should().NotBeNull();
         stateButton.Instance.ButtonText.Should().Be("Publish to Production");
-        stateButton.Instance.TargetState.Value.Should().Be("PRODUCTION");
+        stateButton.Instance.TargetState.Should().NotBeNull();
+        stateButton.Instance.TargetState!.Value.Should().Be("PRODUCTION");
     }
 
     [Fact]
@@ -363,7 +364,8 @@ public class WorkoutTemplateDetailTests : TestContext
         var stateButton = cut.FindComponent<StateTransitionButton>();
         stateButton.Should().NotBeNull();
         stateButton.Instance.ButtonText.Should().Be("Archive Template");
-        stateButton.Instance.TargetState.Value.Should().Be("ARCHIVED");
+        stateButton.Instance.TargetState.Should().NotBeNull();
+        stateButton.Instance.TargetState!.Value.Should().Be("ARCHIVED");
     }
 
     [Fact]

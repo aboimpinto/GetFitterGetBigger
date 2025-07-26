@@ -1,17 +1,17 @@
-# Code Quality Standards - GetFitterGetBigger Ecosystem
+# Code Quality Standards - GetFitterGetBigger C# Projects
 
-**🎯 PURPOSE**: Universal code quality standards that MUST be followed across ALL GetFitterGetBigger projects (API, Admin, Clients). These are the non-negotiable quality standards for maintainable, readable, and robust code.
+**🎯 PURPOSE**: Code quality standards for C# projects in the GetFitterGetBigger ecosystem (API and Admin). These are the non-negotiable quality standards for maintainable, readable, and robust C# code.
 
 ## 🚨 MANDATORY: Read This Before Starting ANY Implementation
 
-This document defines the core quality principles that apply regardless of technology stack or project type. Project-specific standards extend these universal principles.
+This document defines the core quality principles for C# development in GetFitterGetBigger. All code examples use C# to maintain consistency.
 
 ---
 
-## 📋 Universal Core Principles
+## 📋 Core C# Development Principles
 
 ### 1. **Pattern Matching Over If-Else**
-Modern languages support pattern matching - use it for cleaner, more readable code:
+C# supports pattern matching - use it for cleaner, more readable code:
 
 ```csharp
 // ❌ BAD - Traditional if-else chains
@@ -32,23 +32,25 @@ return result switch
 ```
 
 ### 2. **Null Safety First**
-Minimize null usage through language features and patterns:
-- Use nullable reference types where available
-- Prefer Option/Maybe types or Empty Object Pattern
+Minimize null usage through C# features and patterns:
+- Enable nullable reference types in project settings
+- Use null-conditional operators (?. and ??)
 - Validate at boundaries, not throughout the code
 - Document when null is intentionally allowed
 
-```typescript
+```csharp
 // ❌ BAD - Null checks everywhere
-function processUser(user: User | null) {
-    if (user === null) return;
-    if (user.profile === null) return;
-    if (user.profile.settings === null) return;
+public void ProcessUser(User? user)
+{
+    if (user == null) return;
+    if (user.Profile == null) return;
+    if (user.Profile.Settings == null) return;
     // actual logic
 }
 
 // ✅ GOOD - Validate at boundary
-function processUser(user: User) {
+public void ProcessUser(User user)
+{
     // User is guaranteed to be valid with all required properties
     // Validation happened at API boundary
 }
@@ -63,31 +65,36 @@ function processUser(user: User) {
 ### 4. **Single Exit Point Principle**
 **CRITICAL**: Every method should have ONE exit point at the end:
 
-```javascript
+```csharp
 // ❌ BAD - Multiple returns scattered throughout
-function calculateDiscount(customer, amount) {
-    if (!customer.isActive) return 0;
+public decimal CalculateDiscount(Customer customer, decimal amount)
+{
+    if (!customer.IsActive) return 0;
     
-    if (customer.tier === 'gold') {
-        if (amount > 100) return amount * 0.2;
-        return amount * 0.1;
+    if (customer.Tier == "gold")
+    {
+        if (amount > 100) return amount * 0.2m;
+        return amount * 0.1m;
     }
     
-    if (customer.tier === 'silver') return amount * 0.05;
+    if (customer.Tier == "silver") return amount * 0.05m;
     
     return 0;
 }
 
 // ✅ GOOD - Single exit point
-function calculateDiscount(customer, amount) {
-    let discount = 0;
+public decimal CalculateDiscount(Customer customer, decimal amount)
+{
+    decimal discount = 0;
     
-    if (customer.isActive) {
-        discount = customer.tier === 'gold' 
-            ? (amount > 100 ? amount * 0.2 : amount * 0.1)
-            : customer.tier === 'silver' 
-                ? amount * 0.05 
-                : 0;
+    if (customer.IsActive)
+    {
+        discount = customer.Tier switch
+        {
+            "gold" => amount > 100 ? amount * 0.2m : amount * 0.1m,
+            "silver" => amount * 0.05m,
+            _ => 0
+        };
     }
     
     return discount;
@@ -102,21 +109,23 @@ function calculateDiscount(customer, amount) {
 
 ---
 
-## 🛠️ Universal Implementation Standards
+## 🛠️ C# Implementation Standards
 
 ### 1. **Async/Await Best Practices**
 
 #### Avoid Fake Async
 Don't create async methods that don't actually perform async operations:
 
-```typescript
+```csharp
 // ❌ BAD - Fake async
-async function getName(): Promise<string> {
+public async Task<string> GetNameAsync()
+{
     return "John"; // No actual async operation
 }
 
 // ✅ GOOD - Synchronous when appropriate
-function getName(): string {
+public string GetName()
+{
     return "John";
 }
 ```
@@ -124,67 +133,80 @@ function getName(): string {
 #### Document Sync-in-Async
 When interface requires async but implementation is sync:
 
-```typescript
-/**
- * Returns user preference from in-memory cache.
- * @remarks Method is synchronous but returns Promise for interface compatibility.
- * Will become truly async if we switch to distributed cache.
- */
-async getPreference(key: string): Promise<string> {
-    return Promise.resolve(this.cache.get(key));
+```csharp
+/// <summary>
+/// Returns user preference from in-memory cache.
+/// </summary>
+/// <remarks>
+/// Method is synchronous but returns Task for interface compatibility.
+/// Will become truly async if we switch to distributed cache.
+/// </remarks>
+public async Task<string> GetPreferenceAsync(string key)
+{
+    return await Task.FromResult(_cache.Get(key));
 }
 ```
 
 ### 2. **Error Handling Philosophy**
 
 #### Only Catch What You Can Handle
-```javascript
+```csharp
 // ❌ BAD - Catching and hiding errors
-try {
-    const data = await fetchUserData(userId);
-    return processData(data);
-} catch (error) {
-    console.error('Error:', error);
+try
+{
+    var data = await FetchUserDataAsync(userId);
+    return ProcessData(data);
+}
+catch (Exception ex)
+{
+    _logger.LogError(ex, "Error fetching user data");
     return null; // Hiding the actual problem
 }
 
 // ✅ GOOD - Let unhandleable errors propagate
-const data = await fetchUserData(userId); // Let network errors bubble up
-return processData(data);
+var data = await FetchUserDataAsync(userId); // Let network errors bubble up
+return ProcessData(data);
 ```
 
 #### Validate Preconditions
 Check conditions before operations rather than catching failures:
 
-```python
-# ❌ BAD - Waiting for exception
-try:
-    user = users[user_id]
-    user.update(data)
-except KeyError:
-    return Error("User not found")
+```csharp
+// ❌ BAD - Waiting for exception
+try
+{
+    var user = users[userId];
+    user.Update(data);
+}
+catch (KeyNotFoundException)
+{
+    return new Error("User not found");
+}
 
-# ✅ GOOD - Check precondition
-if user_id not in users:
-    return Error("User not found")
+// ✅ GOOD - Check precondition
+if (!users.ContainsKey(userId))
+{
+    return new Error("User not found");
+}
 
-user = users[user_id]
-user.update(data)
+var user = users[userId];
+user.Update(data);
 ```
 
-### 3. **Naming Conventions**
+### 3. **C# Naming Conventions**
 
-#### Universal Rules
+#### Standard C# Naming Rules
 - **Classes/Types**: PascalCase (`UserAccount`, `OrderService`)
-- **Methods/Functions**: camelCase (`getUserById`, `calculateTotal`)
-- **Constants**: UPPER_SNAKE_CASE (`MAX_RETRY_COUNT`, `DEFAULT_TIMEOUT`)
-- **Private members**: Leading underscore (`_internalCache`, `_processQueue`)
+- **Methods/Properties**: PascalCase (`GetUserById`, `CalculateTotal`)
+- **Parameters/Variables**: camelCase (`userId`, `totalAmount`)
+- **Private fields**: Leading underscore + camelCase (`_internalCache`, `_processQueue`)
+- **Constants**: PascalCase (`MaxRetryCount`, `DefaultTimeout`)
 
 #### Descriptive Names
 - Name should convey intent, not implementation
 - Avoid abbreviations except well-known ones
 - Boolean names should be questions (`isActive`, `hasPermission`)
-- Async methods should indicate async nature (`getUserAsync`, `loadData`)
+- Async methods should end with Async suffix (`GetUserAsync`, `LoadDataAsync`)
 
 ---
 
@@ -208,11 +230,42 @@ user.update(data)
 - **Low Coupling**: Minimize dependencies between components
 - **File Length**: Prefer multiple small files over large ones
 
+### 4. **Extensibility Through Patterns**
+Use design patterns to create extensible systems without modifying core code:
+
+```csharp
+// ✅ GOOD - Strategy Pattern for Reference Tables
+// Adding new reference tables requires NO changes to service code
+public class ReferenceDataService
+{
+    public async Task<IEnumerable<ReferenceDataDto>> GetReferenceDataAsync<T>() 
+        where T : IReferenceTableEntity
+    {
+        // Single generic method handles ALL reference tables
+        // New tables added via new strategy classes only
+    }
+}
+
+// ❌ BAD - Method per table (not scalable)
+public class OldReferenceDataService
+{
+    public async Task<IEnumerable<ReferenceDataDto>> GetBodyParts() { }
+    public async Task<IEnumerable<ReferenceDataDto>> GetEquipment() { }
+    // Would need 100+ methods for 100+ tables!
+}
+```
+
+**Pattern Benefits**:
+- Open/Closed Principle: Open for extension, closed for modification
+- Single exit points maintained in all methods
+- Type safety through marker interfaces
+- Automatic registration via assembly scanning
+
 ---
 
 ## 📊 Code Review Checklist
 
-### ✅ Universal Checks
+### ✅ C# Code Review Checks
 
 #### Code Quality
 - [ ] Methods are focused and < 20 lines
@@ -236,26 +289,29 @@ user.update(data)
 - [ ] Proper abstraction levels
 
 #### Testing
-- [ ] New code has tests
-- [ ] Tests are readable and maintainable
+- [ ] New code has xUnit/bUnit tests
+- [ ] Tests use proper async/await patterns
+- [ ] Mocks created with Moq follow conventions
 - [ ] Edge cases covered
-- [ ] No magic values in tests
-- [ ] Tests follow project conventions
+- [ ] No magic values - use constants or builders
+- [ ] Tests follow AAA pattern (Arrange, Act, Assert)
 
 #### Performance
-- [ ] No obvious performance issues
+- [ ] No obvious performance issues (avoid LINQ in hot paths)
 - [ ] Appropriate algorithm complexity
-- [ ] Resources properly disposed
-- [ ] No memory leaks
-- [ ] Async used appropriately
+- [ ] IDisposable resources properly disposed (using statements)
+- [ ] No memory leaks (weak references where appropriate)
+- [ ] Async/await used properly (ConfigureAwait where needed)
+- [ ] String operations use StringBuilder for concatenation in loops
 
 ---
 
-## 📚 Language-Agnostic Best Practices
+## 📚 C# Best Practices
 
 ### 1. **Immutability Where Possible**
-- Prefer immutable data structures
-- Use const/final/readonly appropriately
+- Use `readonly` fields and properties
+- Prefer immutable collections (ImmutableList, ImmutableDictionary)
+- Use `init` accessors for properties (C# 9+)
 - Return new objects rather than modifying
 - Document when mutation is intentional
 
@@ -263,7 +319,7 @@ user.update(data)
 - Favor composition for code reuse
 - Use inheritance for true "is-a" relationships
 - Keep inheritance hierarchies shallow
-- Consider interfaces/protocols over base classes
+- Prefer interfaces over abstract base classes
 
 ### 3. **Fail Fast**
 - Validate inputs early
@@ -272,10 +328,65 @@ user.update(data)
 - Make illegal states unrepresentable
 
 ### 4. **Configuration Management**
-- Externalize configuration
-- Use environment-appropriate settings
-- Validate configuration at startup
+- Use `IConfiguration` and Options pattern
+- Strongly-typed configuration classes
+- Validate configuration at startup with `IValidateOptions<T>`
+- Use `appsettings.{Environment}.json` for environment-specific settings
 - Document all configuration options
+
+### 5. **C#-Specific Patterns**
+
+#### Use Records for DTOs
+```csharp
+// ✅ GOOD - Using records for immutable DTOs
+public record UserDto(string Id, string Name, string Email);
+
+// ❌ BAD - Mutable class for DTO
+public class UserDto
+{
+    public string Id { get; set; }
+    public string Name { get; set; }
+    public string Email { get; set; }
+}
+```
+
+#### Leverage using Statements
+```csharp
+// ✅ GOOD - Using declaration (C# 8+)
+using var connection = new SqlConnection(connectionString);
+var result = await connection.QueryAsync<User>(query);
+
+// ❌ BAD - Manual disposal
+SqlConnection connection = null;
+try
+{
+    connection = new SqlConnection(connectionString);
+    var result = await connection.QueryAsync<User>(query);
+}
+finally
+{
+    connection?.Dispose();
+}
+```
+
+#### Null-Forgiving Operator Usage
+```csharp
+// ✅ GOOD - Only when you're certain value is not null
+public void ProcessVerifiedUser(string? userId)
+{
+    // After validation, we know it's not null
+    if (string.IsNullOrEmpty(userId))
+        throw new ArgumentException("User ID is required");
+    
+    var user = GetUser(userId!); // Safe to use ! here
+}
+
+// ❌ BAD - Using ! to silence warnings without validation
+public void ProcessUser(string? userId)
+{
+    var user = GetUser(userId!); // Dangerous - could be null!
+}
+```
 
 ---
 
@@ -285,8 +396,7 @@ user.update(data)
 - `UNIFIED_DEVELOPMENT_PROCESS.md` - Overall development workflow
 - Project-specific standards:
   - `API-CODE_QUALITY_STANDARDS.md` - API-specific standards
-  - `ADMIN-CODE_QUALITY_STANDARDS.md` - Admin-specific standards
-  - `CLIENTS-CODE_QUALITY_STANDARDS.md` - Clients-specific standards
+  - `ADMIN-CODE_QUALITY_STANDARDS.md` - Admin Blazor-specific standards
 
 ---
 

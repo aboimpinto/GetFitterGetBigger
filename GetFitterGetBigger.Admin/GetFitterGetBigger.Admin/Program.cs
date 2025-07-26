@@ -59,11 +59,21 @@ builder.Services.AddScoped<IUserProfileDisplayService, UserProfileDisplayService
 // Add MemoryCache for caching reference data
 builder.Services.AddMemoryCache();
 
-// Add HttpClient for ReferenceDataService
-builder.Services.AddHttpClient<GetFitterGetBigger.Admin.Services.IReferenceDataService, GetFitterGetBigger.Admin.Services.ReferenceDataService>(client =>
+// Register all reference table strategies
+builder.Services.Scan(scan => scan
+    .FromAssemblyOf<GetFitterGetBigger.Admin.Services.Strategies.ReferenceTableStrategies.BodyPartsStrategy>()
+    .AddClasses(classes => classes.AssignableTo<GetFitterGetBigger.Admin.Services.Strategies.IReferenceTableStrategy>())
+    .AsImplementedInterfaces()
+    .WithScopedLifetime());
+
+// Register the reference data service with just ONE method!
+builder.Services.AddHttpClient<GetFitterGetBigger.Admin.Services.IGenericReferenceDataService, GetFitterGetBigger.Admin.Services.ReferenceDataService>(client =>
 {
     client.BaseAddress = new Uri(builder.Configuration["ApiBaseUrl"] ?? "http://localhost:5214");
 });
+
+// Bridge for backward compatibility with old interface
+builder.Services.AddScoped<GetFitterGetBigger.Admin.Services.IReferenceDataService, GetFitterGetBigger.Admin.Services.ReferenceDataServiceBridge>();
 
 // Add HttpClient for ExerciseService
 builder.Services.AddHttpClient<GetFitterGetBigger.Admin.Services.IExerciseService, GetFitterGetBigger.Admin.Services.ExerciseService>(client =>

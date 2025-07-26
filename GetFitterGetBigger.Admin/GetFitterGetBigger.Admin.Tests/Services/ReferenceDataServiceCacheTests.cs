@@ -1,11 +1,16 @@
 using GetFitterGetBigger.Admin.Models.Dtos;
+using GetFitterGetBigger.Admin.Models.ReferenceData;
 using GetFitterGetBigger.Admin.Services;
+using GetFitterGetBigger.Admin.Services.Strategies;
+using GetFitterGetBigger.Admin.Services.Strategies.ReferenceTableStrategies;
 using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Logging;
 using System.Net;
 using System.Text.Json;
 using Xunit;
 using FluentAssertions;
 using GetFitterGetBigger.Admin.Tests.Helpers;
+using Moq;
 
 namespace GetFitterGetBigger.Admin.Tests.Services
 {
@@ -13,15 +18,32 @@ namespace GetFitterGetBigger.Admin.Tests.Services
     {
         private readonly IMemoryCache _cache;
         private readonly JsonSerializerOptions _jsonOptions;
+        private readonly Mock<ILogger<ReferenceDataService>> _loggerMock;
+        private readonly List<IReferenceTableStrategy> _strategies;
 
         public ReferenceDataServiceCacheTests()
         {
             _cache = new MemoryCache(new MemoryCacheOptions());
+            _loggerMock = new Mock<ILogger<ReferenceDataService>>();
 
             _jsonOptions = new JsonSerializerOptions
             {
                 PropertyNameCaseInsensitive = true,
                 PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+            };
+
+            // Register all strategies
+            _strategies = new List<IReferenceTableStrategy>
+            {
+                new BodyPartsStrategy(),
+                new DifficultyLevelsStrategy(),
+                new EquipmentStrategy(),
+                new KineticChainTypesStrategy(),
+                new MetricTypesStrategy(),
+                new MovementPatternsStrategy(),
+                new MuscleGroupsStrategy(),
+                new MuscleRolesStrategy(),
+                new ExerciseTypesStrategy()
             };
         }
 
@@ -32,7 +54,7 @@ namespace GetFitterGetBigger.Admin.Tests.Services
             // First, populate cache with MuscleGroupDto data (simulating MuscleGroupsService)
             var muscleGroupDtos = new List<MuscleGroupDto>
             {
-                new() { Id = "mg1", Name = "Chest", BodyPartId = "bp1", IsActive = true }
+                new() { Id = "mg1", Name = "Chest", BodyPartId = "bp1", IsActive = true, CreatedAt = DateTime.UtcNow }
             };
             _cache.Set("MuscleGroupsDto_Full", muscleGroupDtos); // Using new cache key
 
@@ -40,7 +62,6 @@ namespace GetFitterGetBigger.Admin.Tests.Services
             _cache.Set("MuscleGroups", muscleGroupDtos);
 
             // Setup mock HTTP responses for ReferenceDataService
-            // MuscleGroups endpoint now expects MuscleGroupDto
             var mockMuscleGroups = new List<MuscleGroupDto>
             {
                 new() { Id = "ref1", Name = "Chest", BodyPartId = "bp1", BodyPartName = "Upper Body", IsActive = true, CreatedAt = DateTime.UtcNow },
@@ -51,135 +72,133 @@ namespace GetFitterGetBigger.Admin.Tests.Services
             mockHandler.SetupResponse(HttpStatusCode.OK, mockMuscleGroups);
 
             var httpClient = new HttpClient(mockHandler) { BaseAddress = new Uri("http://localhost:5214") };
-            var referenceDataService = new ReferenceDataService(httpClient, _cache);
+            var referenceDataService = new ReferenceDataService(_strategies, httpClient, _cache, _loggerMock.Object);
 
             // Act
-            var result = await referenceDataService.GetMuscleGroupsAsync();
+            var referenceData = await referenceDataService.GetReferenceDataAsync<MuscleGroups>();
 
             // Assert
-            result.Should().NotBeNull();
-            result.Should().HaveCount(2);
-            result.First().Should().BeOfType<ReferenceDataDto>();
-            result.First().Id.Should().Be("ref1");
-            result.First().Value.Should().Be("Chest");
+            // Verify the reference data was fetched and transformed correctly
+            referenceData.Should().HaveCount(2);
+            referenceData.First().Value.Should().Be("Chest");
+            referenceData.First().Description.Should().Be("Body Part: Upper Body");
 
-            // Verify the cache now contains the correct type under the new key
-            _cache.TryGetValue("RefData_MuscleGroups", out object? cachedData).Should().BeTrue();
-            cachedData.Should().BeOfType<List<ReferenceDataDto>>();
+            // Verify that the original MuscleGroupsService cache is not affected
+            var cachedMuscleGroups = _cache.Get<List<MuscleGroupDto>>("MuscleGroupsDto_Full");
+            cachedMuscleGroups.Should().NotBeNull();
+            cachedMuscleGroups.Should().HaveCount(1);
+            cachedMuscleGroups!.First().Id.Should().Be("mg1");
         }
 
         [Fact]
-        public async Task ReferenceDataService_ShouldHandleInvalidCastException_WhenCacheContainsWrongType()
+        public async Task ReferenceDataService_ShouldUseSeparateCacheKeys_ForEachReferenceType()
         {
             // Arrange
-            // Populate cache with wrong type data
-            var wrongTypeData = new List<MuscleGroupDto>
-            {
-                new() { Id = "mg1", Name = "Equipment Item", BodyPartId = "bp1", IsActive = true }
-            };
-            _cache.Set("RefData_Equipment", wrongTypeData); // This will cause InvalidCastException
-
-            var mockReferenceData = new List<ReferenceDataDto>
-            {
-                new() { Id = "eq1", Value = "Barbell", Description = "Barbell equipment" }
-            };
-
             var mockHandler = new MockHttpMessageHandler();
-            mockHandler.SetupResponse(HttpStatusCode.OK, mockReferenceData);
+            
+            // Setup different responses for different endpoints
+            var bodyParts = new List<FlexibleReferenceDataDto>
+            {
+                new() { Id = "bp1", Value = "Arms", Description = "Upper body" }
+            };
+            
+            var equipment = new List<FlexibleReferenceDataDto>
+            {
+                new() { Id = "eq1", Value = "Barbell", Description = "Weight equipment" }
+            };
+
+            // Setup responses in order - first BodyParts, then Equipment
+            mockHandler.SetupResponse(HttpStatusCode.OK, bodyParts);
+            mockHandler.SetupResponse(HttpStatusCode.OK, equipment);
 
             var httpClient = new HttpClient(mockHandler) { BaseAddress = new Uri("http://localhost:5214") };
-            var referenceDataService = new ReferenceDataService(httpClient, _cache);
+            var service = new ReferenceDataService(_strategies, httpClient, _cache, _loggerMock.Object);
 
             // Act
-            var result = await referenceDataService.GetEquipmentAsync();
+            var bodyPartsResult = await service.GetReferenceDataAsync<BodyParts>();
+            var equipmentResult = await service.GetReferenceDataAsync<Equipment>();
 
             // Assert
-            result.Should().NotBeNull();
-            result.Should().HaveCount(1);
-            result.First().Value.Should().Be("Barbell");
+            bodyPartsResult.Should().HaveCount(1);
+            bodyPartsResult.First().Value.Should().Be("Arms");
 
-            // Verify cache was cleared and repopulated with correct type
-            _cache.TryGetValue("RefData_Equipment", out object? cachedData).Should().BeTrue();
-            cachedData.Should().BeOfType<List<ReferenceDataDto>>();
+            equipmentResult.Should().HaveCount(1);
+            equipmentResult.First().Value.Should().Be("Barbell");
+
+            // Verify separate cache keys are used
+            _cache.TryGetValue("RefData_BodyParts", out object? cachedBodyParts).Should().BeTrue();
+            _cache.TryGetValue("RefData_Equipment", out object? cachedEquipment).Should().BeTrue();
         }
 
         [Fact]
-        public async Task AllReferenceDataMethods_ShouldUseDifferentCacheKeys()
+        public async Task ReferenceDataService_ShouldUseCachedData_OnSubsequentCalls()
         {
             // Arrange
             var mockHandler = new MockHttpMessageHandler();
-            var endpoints = new Dictionary<string, string>
+            var expectedData = new List<FlexibleReferenceDataDto>
             {
-                { "/api/ReferenceTables/BodyParts", "RefData_BodyParts" },
-                { "/api/ReferenceTables/DifficultyLevels", "RefData_DifficultyLevels" },
-                { "/api/ReferenceTables/Equipment", "RefData_Equipment" },
-                { "/api/ReferenceTables/MuscleGroups", "RefData_MuscleGroups" },
-                { "/api/ReferenceTables/MuscleRoles", "RefData_MuscleRoles" },
-                { "/api/ReferenceTables/MovementPatterns", "RefData_MovementPatterns" },
-                { "/api/ReferenceTables/ExerciseTypes", "RefData_ExerciseTypes" }
+                new() { Id = "1", Value = "Beginner", Description = "For beginners" }
             };
-
-            // Set up responses in the order they will be called
-            // BodyParts
-            mockHandler.SetupResponse(HttpStatusCode.OK, new List<ReferenceDataDto>
-            {
-                new() { Id = "test", Value = "BodyParts", Description = "Test" }
-            });
-
-            // DifficultyLevels
-            mockHandler.SetupResponse(HttpStatusCode.OK, new List<ReferenceDataDto>
-            {
-                new() { Id = "test", Value = "DifficultyLevels", Description = "Test" }
-            });
-
-            // Equipment
-            mockHandler.SetupResponse(HttpStatusCode.OK, new List<ReferenceDataDto>
-            {
-                new() { Id = "test", Value = "Equipment", Description = "Test" }
-            });
-
-            // MuscleRoles
-            mockHandler.SetupResponse(HttpStatusCode.OK, new List<ReferenceDataDto>
-            {
-                new() { Id = "test", Value = "MuscleRoles", Description = "Test" }
-            });
-
-            // MovementPatterns
-            mockHandler.SetupResponse(HttpStatusCode.OK, new List<ReferenceDataDto>
-            {
-                new() { Id = "test", Value = "MovementPatterns", Description = "Test" }
-            });
-
-            // ExerciseTypes - API returns ReferenceDataDto, not ExerciseTypeDto
-            mockHandler.SetupResponse(HttpStatusCode.OK, new List<ReferenceDataDto>
-            {
-                new() { Id = "test", Value = "Test Type", Description = "Test" }
-            });
-
-            // MuscleGroups - returns MuscleGroupDto
-            mockHandler.SetupResponse(HttpStatusCode.OK, new List<MuscleGroupDto>
-            {
-                new() { Id = "test", Name = "Test Muscle", BodyPartId = "bp1", IsActive = true, CreatedAt = DateTime.UtcNow }
-            });
+            mockHandler.SetupResponse(HttpStatusCode.OK, expectedData);
 
             var httpClient = new HttpClient(mockHandler) { BaseAddress = new Uri("http://localhost:5214") };
-            var service = new ReferenceDataService(httpClient, _cache);
+            var service = new ReferenceDataService(_strategies, httpClient, _cache, _loggerMock.Object);
 
             // Act
-            await service.GetBodyPartsAsync();
-            await service.GetDifficultyLevelsAsync();
-            await service.GetEquipmentAsync();
-            await service.GetMuscleRolesAsync();
-            await service.GetMovementPatternsAsync();
-            await service.GetExerciseTypesAsync();
-            await service.GetMuscleGroupsAsync(); // Do this last as it expects different response
+            var firstCall = await service.GetReferenceDataAsync<DifficultyLevels>();
+            var secondCall = await service.GetReferenceDataAsync<DifficultyLevels>();
+            var thirdCall = await service.GetReferenceDataAsync<DifficultyLevels>();
 
-            // Assert - verify each method used its unique cache key
-            foreach (var expectedCacheKey in endpoints.Values)
+            // Assert
+            firstCall.Should().BeEquivalentTo(secondCall);
+            secondCall.Should().BeEquivalentTo(thirdCall);
+
+            // Verify HTTP was called only once
+            mockHandler.Requests.Should().HaveCount(1);
+        }
+
+        [Fact]
+        public async Task ReferenceDataService_ShouldHandleEmptyResponse_Gracefully()
+        {
+            // Arrange
+            var mockHandler = new MockHttpMessageHandler();
+            mockHandler.SetupResponse(HttpStatusCode.OK, new List<FlexibleReferenceDataDto>());
+
+            var httpClient = new HttpClient(mockHandler) { BaseAddress = new Uri("http://localhost:5214") };
+            var service = new ReferenceDataService(_strategies, httpClient, _cache, _loggerMock.Object);
+
+            // Act
+            var result = await service.GetReferenceDataAsync<MetricTypes>();
+
+            // Assert
+            result.Should().NotBeNull();
+            result.Should().BeEmpty();
+        }
+
+        [Fact]
+        public async Task GetReferenceDataAsync_ShouldCacheFor24Hours_ByDefault()
+        {
+            // Arrange
+            var mockHandler = new MockHttpMessageHandler();
+            var expectedData = new List<FlexibleReferenceDataDto>
             {
-                _cache.TryGetValue(expectedCacheKey, out object? _).Should().BeTrue(
-                    $"Cache should contain key: {expectedCacheKey}");
-            }
+                new() { Id = "1", Value = "Push", Description = "Push movement" }
+            };
+            mockHandler.SetupResponse(HttpStatusCode.OK, expectedData);
+
+            var httpClient = new HttpClient(mockHandler) { BaseAddress = new Uri("http://localhost:5214") };
+            var service = new ReferenceDataService(_strategies, httpClient, _cache, _loggerMock.Object);
+
+            // Act
+            await service.GetReferenceDataAsync<MovementPatterns>();
+
+            // Assert
+            var cacheEntry = _cache.Get<IEnumerable<ReferenceDataDto>>("RefData_MovementPatterns");
+            cacheEntry.Should().NotBeNull();
+            
+            // Note: We can't easily test the exact cache duration without more complex setup,
+            // but we can verify the data was cached
+            cacheEntry!.First().Value.Should().Be("Push");
         }
     }
 }

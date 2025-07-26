@@ -139,6 +139,25 @@ Create these four MANDATORY reports:
 - ✅ Test scripts if needed
 - ✅ API specs if relevant
 
+### Reference Tables Pattern
+**📖 Source**: `REFERENCE_TABLES_GUIDE.md` - Complete guide for reference tables
+
+**When to use Reference Tables**:
+- ✅ Dropdown options (Body Parts, Equipment, etc.)
+- ✅ Configuration values that rarely change
+- ✅ Categorization data used across features
+
+**When NOT to use Reference Tables**:
+- ❌ User-specific data
+- ❌ Frequently changing business data
+- ❌ Data requiring complex queries
+
+**Quick Add Process**:
+1. Add type marker to `ReferenceTableTypes.cs`
+2. Create strategy in `/Services/Strategies/ReferenceTableStrategies/`
+3. Use `GetReferenceDataAsync<YourType>()` in components
+4. Implement API endpoint
+
 ### Quality Gates
 **📖 Source**: `UNIFIED_DEVELOPMENT_PROCESS.md` - "Baseline Health Check"
 

@@ -102,13 +102,15 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Shared
             container.GetAttribute("class")?.Should().Contain("py-12");
             
             var spinner = container.QuerySelector(".animate-spin");
-            var spinnerClasses = spinner.GetAttribute("class") ?? "";
+            spinner.Should().NotBeNull();
+            var spinnerClasses = spinner!.GetAttribute("class") ?? "";
             spinnerClasses.Should().Contain("h-16");
             spinnerClasses.Should().Contain("w-16");
             spinnerClasses.Should().Contain("border-green-600");
             
             var message = container.QuerySelector("span.ml-3.text-gray-600");
-            message.TextContent.Should().Be("Please wait...");
+            message.Should().NotBeNull();
+            message!.TextContent.Should().Be("Please wait...");
         }
 
         [Fact]
