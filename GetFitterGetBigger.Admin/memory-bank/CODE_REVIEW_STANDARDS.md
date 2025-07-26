@@ -32,6 +32,7 @@ Before submitting for code review:
 2. Run `dotnet test` - Must show **100% pass rate**
 3. Check for any skipped/ignored tests - Document why if present
 4. For Blazor list pages - Verify compliance with `UI_LIST_PAGE_DESIGN_STANDARDS.md`
+5. Verify using statements are used instead of fully qualified type names per `CODE_QUALITY_STANDARDS.md`
 
 ### Review Outcomes
 
@@ -84,6 +85,18 @@ public async Task TestMethod()
 ### CS8602 - Possible Null Reference
 **Problem**: Potential null reference exception
 **Fix**: Add null checks or use null-conditional operators
+
+### Fully Qualified Type Names
+**Problem**: Using fully qualified type names instead of using statements
+**Fix**: Add using statements and simplify type references
+```csharp
+// ❌ Bad
+builder.Services.AddScoped<MyApp.Services.IMyService, MyApp.Services.MyService>();
+
+// ✅ Good
+using MyApp.Services;
+builder.Services.AddScoped<IMyService, MyService>();
+```
 
 ## 🎨 UI/UX Standards
 

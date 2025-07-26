@@ -1,0 +1,192 @@
+@using GetFitterGetBigger.Admin.Models.Dtos
+@using GetFitterGetBigger.Admin.Services
+@using GetFitterGetBigger.Admin.Components.Shared
+@inject IWorkoutReferenceDataStateService WorkoutReferenceDataStateService
+@implements IDisposable
+
+<div class="bg-white rounded-lg shadow-md p-6">
+    <div class="flex justify-between items-center mb-6">
+        <div>
+            <h1 class="text-2xl font-semibold text-gray-800">Execution Protocols</h1>
+            <p class="text-gray-600">View exercise execution protocols and timing patterns</p>
+        </div>
+    </div>
+
+    <div class="mb-4">
+        <ReferenceDataSearchBar
+            Label="Search protocols"
+            Placeholder="Search by name or code..."
+            @bind-Value="@WorkoutReferenceDataStateService.ProtocolsSearchTerm"
+            ShowResultCount="true"
+            ResultCount="@WorkoutReferenceDataStateService.FilteredExecutionProtocols.Count()" />
+    </div>
+
+    @if (WorkoutReferenceDataStateService.ProtocolsError != null)
+    {
+        <ErrorAlert 
+            ErrorMessage="@WorkoutReferenceDataStateService.ProtocolsError"
+            OnRetry="async () => await WorkoutReferenceDataStateService.LoadExecutionProtocolsAsync()"
+            RetryTestId="protocols-retry-button" />
+    }
+
+    @if (WorkoutReferenceDataStateService.IsLoadingProtocols)
+    {
+        <ExecutionProtocolsSkeleton />
+    }
+    else if (WorkoutReferenceDataStateService.FilteredExecutionProtocols.Any())
+    {
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4" data-testid="protocols-grid">
+            @foreach (var protocol in WorkoutReferenceDataStateService.FilteredExecutionProtocols)
+            {
+                <div class="bg-gray-50 p-5 rounded-lg border border-gray-200 hover:shadow-lg transition-shadow duration-200 ease-out transform hover:-translate-y-1"
+                     data-testid="protocol-card"
+                     style="contain: layout style paint;"
+                     tabindex="0"
+                     role="article"
+                     aria-label="@($"Execution protocol: {protocol.Value}. Code: {protocol.Code}. Intensity: {protocol.IntensityLevel ?? "Not specified"}")">
+                    <div class="flex items-center justify-between mb-3">
+                        <h3 class="text-base font-semibold text-gray-800 truncate flex-1" title="@protocol.Value">@protocol.Value</h3>
+                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 ml-2 flex-shrink-0" aria-label="Protocol code">
+                            @protocol.Code
+                        </span>
+                    </div>
+                    
+                    @if (!string.IsNullOrEmpty(protocol.Description))
+                    {
+                        <p class="text-sm text-gray-600 mb-4 line-clamp-2">@protocol.Description</p>
+                    }
+                    
+                    <div class="bg-white p-3 rounded border mb-3">
+                        <div class="grid grid-cols-2 gap-2 text-xs">
+                            <div>
+                                <span class="font-medium text-gray-700">Time-Based:</span>
+                                <span class="text-gray-900">@(protocol.TimeBase ? "Yes" : "No")</span>
+                            </div>
+                            <div>
+                                <span class="font-medium text-gray-700">Rep-Based:</span>
+                                <span class="text-gray-900">@(protocol.RepBase ? "Yes" : "No")</span>
+                            </div>
+                        </div>
+                        @if (!string.IsNullOrEmpty(protocol.IntensityLevel))
+                        {
+                            <div class="mt-2">
+                                <span class="font-medium text-gray-700 text-xs">Intensity:</span>
+                                @{
+                                    var intensityColor = GetIntensityBadgeColor(protocol.IntensityLevel);
+                                }
+                                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium @intensityColor ml-1">
+                                    @protocol.IntensityLevel
+                                </span>
+                            </div>
+                        }
+                    </div>
+                    
+                    <button @onclick="() => ShowProtocolDetails(protocol)"
+                            class="text-blue-600 hover:text-blue-800 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 rounded px-2 py-1 -ml-2 inline-flex items-center gap-1"
+                            data-testid="protocol-view-details-button"
+                            aria-label="@($"View details for {protocol.Value} protocol")">
+                        View Details
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                        </svg>
+                    </button>
+                </div>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="text-center py-8">
+            <p class="text-gray-500">No execution protocols found.</p>
+        </div>
+    }
+</div>
+
+@if (selectedProtocol != null)
+{
+    <ReferenceDataDetailModal 
+        Title="Execution Protocol Details"
+        Item="@selectedProtocol"
+        OnClose="() => selectedProtocol = null"
+        CloseOnBackdropClick="true"
+        CloseOnEscape="true">
+        <ContentTemplate Context="protocol">
+            <div class="space-y-4" data-testid="protocol-detail-modal-content">
+                <div>
+                    <h4 class="font-semibold text-gray-700">Name</h4>
+                    <p class="text-gray-900">@protocol.Value</p>
+                </div>
+                <div>
+                    <h4 class="font-semibold text-gray-700">Code</h4>
+                    <p class="text-gray-900 font-mono">@protocol.Code</p>
+                </div>
+                @if (!string.IsNullOrEmpty(protocol.Description))
+                {
+                    <div>
+                        <h4 class="font-semibold text-gray-700">Description</h4>
+                        <p class="text-gray-900 whitespace-pre-wrap">@protocol.Description</p>
+                    </div>
+                }
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <h4 class="font-semibold text-gray-700">Time-Based</h4>
+                        <p class="text-gray-900">@(protocol.TimeBase ? "Yes" : "No")</p>
+                    </div>
+                    <div>
+                        <h4 class="font-semibold text-gray-700">Rep-Based</h4>
+                        <p class="text-gray-900">@(protocol.RepBase ? "Yes" : "No")</p>
+                    </div>
+                </div>
+                @if (!string.IsNullOrEmpty(protocol.IntensityLevel))
+                {
+                    <div>
+                        <h4 class="font-semibold text-gray-700">Intensity Level</h4>
+                        <p class="text-gray-900">@protocol.IntensityLevel</p>
+                    </div>
+                }
+                @if (!string.IsNullOrEmpty(protocol.RestPattern))
+                {
+                    <div>
+                        <h4 class="font-semibold text-gray-700">Rest Pattern</h4>
+                        <p class="text-gray-900">@protocol.RestPattern</p>
+                    </div>
+                }
+                <div>
+                    <h4 class="font-semibold text-gray-700">ID</h4>
+                    <p class="text-gray-500 font-mono text-sm">@protocol.ExecutionProtocolId</p>
+                </div>
+            </div>
+        </ContentTemplate>
+    </ReferenceDataDetailModal>
+}
+
+@code {
+    private ExecutionProtocolDto? selectedProtocol;
+
+    protected override async Task OnInitializedAsync()
+    {
+        WorkoutReferenceDataStateService.OnChange += StateHasChanged;
+        await WorkoutReferenceDataStateService.InitializeAsync();
+    }
+
+    private string GetIntensityBadgeColor(string? intensityLevel)
+    {
+        return intensityLevel?.ToLower() switch
+        {
+            "low" => "bg-green-100 text-green-800",
+            "medium" => "bg-yellow-100 text-yellow-800",
+            "high" => "bg-red-100 text-red-800",
+            _ => "bg-gray-100 text-gray-800"
+        };
+    }
+
+    private void ShowProtocolDetails(ExecutionProtocolDto protocol)
+    {
+        selectedProtocol = protocol;
+    }
+
+    public void Dispose()
+    {
+        WorkoutReferenceDataStateService.OnChange -= StateHasChanged;
+    }
+}

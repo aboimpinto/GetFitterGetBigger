@@ -3,8 +3,10 @@ using FluentAssertions;
 using GetFitterGetBigger.Admin.Components.Pages;
 using GetFitterGetBigger.Admin.Models.Dtos;
 using GetFitterGetBigger.Admin.Services;
+using GetFitterGetBigger.Admin.Tests.TestHelpers;
 using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Moq;
 using Bunit.TestDoubles;
 using AngleSharp.Dom;
@@ -18,7 +20,6 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages
         private readonly Mock<IMuscleGroupsStateService> _muscleGroupsStateServiceMock;
         private readonly Mock<IExerciseWeightTypeStateService> _exerciseWeightTypeStateServiceMock;
         private readonly Mock<IWorkoutReferenceDataStateService> _workoutReferenceDataStateServiceMock;
-        private readonly Mock<NavigationManager> _navigationManagerMock;
 
         public ExerciseWeightTypeReferenceTests()
         {
@@ -27,14 +28,24 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages
             _muscleGroupsStateServiceMock = new Mock<IMuscleGroupsStateService>();
             _exerciseWeightTypeStateServiceMock = new Mock<IExerciseWeightTypeStateService>();
             _workoutReferenceDataStateServiceMock = new Mock<IWorkoutReferenceDataStateService>();
-            _navigationManagerMock = new Mock<NavigationManager>();
 
             Services.AddSingleton(_referenceDataServiceMock.Object);
             Services.AddSingleton(_equipmentStateServiceMock.Object);
             Services.AddSingleton(_muscleGroupsStateServiceMock.Object);
             Services.AddSingleton(_exerciseWeightTypeStateServiceMock.Object);
             Services.AddSingleton(_workoutReferenceDataStateServiceMock.Object);
-            Services.AddSingleton(_navigationManagerMock.Object);
+            
+            // Add NavigationManager using bUnit's fake navigation
+            Services.AddSingleton<NavigationManager>(new FakeNavigationManager(this));
+            
+            // Add TableComponentRegistry with required logger and strategies
+            var loggerMock = new Mock<ILogger<TableComponentRegistry>>();
+            Services.AddSingleton(loggerMock.Object);
+            
+            // Register table component strategies for tests
+            TableComponentStrategyTestHelper.RegisterTableComponentStrategies(Services);
+            
+            Services.AddScoped<ITableComponentRegistry, TableComponentRegistry>();
             
             this.AddTestAuthorization().SetAuthorized("test-user");
         }
@@ -56,7 +67,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages
                 .Add(p => p.TableName, "ExerciseWeightTypes"));
 
             // Assert
-            component.Find("h2").TextContent.Should().Be("Exercise Weight Types");
+            component.Find("h1").TextContent.Should().Be("Exercise Weight Types");
             component.Find("p").TextContent.Should().Be("View exercise weight type classifications and validation rules");
         }
 

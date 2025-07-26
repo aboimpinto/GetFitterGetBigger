@@ -3,8 +3,11 @@ using Bunit.TestDoubles;
 using GetFitterGetBigger.Admin.Components.Pages;
 using GetFitterGetBigger.Admin.Models.Dtos;
 using GetFitterGetBigger.Admin.Services;
+using GetFitterGetBigger.Admin.Services.TableComponentStrategies;
+using GetFitterGetBigger.Admin.Tests.TestHelpers;
 using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Moq;
 using Xunit;
 
@@ -35,11 +38,23 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages
             Services.AddSingleton(_muscleGroupsStateServiceMock.Object);
             Services.AddSingleton(_exerciseWeightTypeStateServiceMock.Object);
             Services.AddSingleton(_workoutReferenceDataStateServiceMock.Object);
-            Services.AddSingleton(_navigationManagerMock.Object);
+            
+            // Add NavigationManager using bUnit's fake navigation
+            Services.AddSingleton<NavigationManager>(new FakeNavigationManager(this));
+            
+            // Add TableComponentRegistry with required logger and strategies
+            var loggerMock = new Mock<ILogger<TableComponentRegistry>>();
+            Services.AddSingleton(loggerMock.Object);
+            
+            // Register table component strategies for tests
+            TableComponentStrategyTestHelper.RegisterTableComponentStrategies(Services);
+            
+            Services.AddScoped<ITableComponentRegistry, TableComponentRegistry>();
             
             // Add authorization
             this.AddTestAuthorization().SetAuthorized("test-user");
         }
+
 
         #region Navigation Tests
 

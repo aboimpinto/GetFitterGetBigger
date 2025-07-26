@@ -62,7 +62,7 @@ public void ProcessUser(User user)
 - Extract complex logic into well-named helper methods
 - One level of abstraction per method
 
-### 4. **Single Exit Point Principle**
+### 5. **Single Exit Point Principle**
 **CRITICAL**: Every method should have ONE exit point at the end:
 
 ```csharp
@@ -101,7 +101,7 @@ public decimal CalculateDiscount(Customer customer, decimal amount)
 }
 ```
 
-### 5. **Defensive Programming Balance**
+### 6. **Defensive Programming Balance**
 - Validate at system boundaries (API inputs, user inputs)
 - Trust internal components and frameworks
 - Don't duplicate validation at every layer
@@ -208,6 +208,38 @@ user.Update(data);
 - Boolean names should be questions (`isActive`, `hasPermission`)
 - Async methods should end with Async suffix (`GetUserAsync`, `LoadDataAsync`)
 
+### 4. **Namespace Usage and DI Registration**
+
+#### Use Using Statements Over Fully Qualified Names
+Always prefer using statements at the top of files rather than fully qualified type names:
+
+```csharp
+// ❌ BAD - Fully qualified names make code verbose and hard to read
+builder.Services.AddScoped<GetFitterGetBigger.Admin.Services.ITableComponentRegistry, 
+    GetFitterGetBigger.Admin.Services.TableComponentRegistry>();
+builder.Services.AddScoped<GetFitterGetBigger.Admin.Services.TableComponentStrategies.ITableComponentStrategy, 
+    GetFitterGetBigger.Admin.Services.TableComponentStrategies.EquipmentTableStrategy>();
+
+// ✅ GOOD - Clean and readable with using statements
+using GetFitterGetBigger.Admin.Services;
+using GetFitterGetBigger.Admin.Services.TableComponentStrategies;
+
+builder.Services.AddScoped<ITableComponentRegistry, TableComponentRegistry>();
+builder.Services.AddScoped<ITableComponentStrategy, EquipmentTableStrategy>();
+```
+
+**Benefits**:
+- **Improved readability** - Focus on what's being registered, not namespaces
+- **Easier maintenance** - Namespace changes only require updating using statements
+- **Consistency** - All registrations follow the same clean pattern
+- **Reduced verbosity** - Less horizontal scrolling and visual noise
+
+**Apply this to**:
+- Dependency injection registrations
+- Type declarations in code
+- Generic type parameters
+- Any place where types are referenced
+
 ---
 
 ## 🏗️ Architecture Standards
@@ -230,7 +262,7 @@ user.Update(data);
 - **Low Coupling**: Minimize dependencies between components
 - **File Length**: Prefer multiple small files over large ones
 
-### 4. **Extensibility Through Patterns**
+### 5. **Extensibility Through Patterns**
 Use design patterns to create extensible systems without modifying core code:
 
 ```csharp
@@ -260,6 +292,56 @@ public class OldReferenceDataService
 - Single exit points maintained in all methods
 - Type safety through marker interfaces
 - Automatic registration via assembly scanning
+
+### 6. **Avoid God Classes**
+God Classes violate Single Responsibility and become maintenance nightmares:
+
+```csharp
+// ❌ BAD - God Class with hard-coded mappings
+public class TableComponentRegistry
+{
+    private readonly Dictionary<string, Type> _componentMappings = new()
+    {
+        ["Equipment"] = typeof(EquipmentTable),
+        ["MuscleGroups"] = typeof(MuscleGroupsTable),
+        ["BodyParts"] = typeof(GenericTable),
+        // ... 100+ hard-coded entries
+    };
+    
+    private readonly Dictionary<string, string> _displayNames = new()
+    {
+        ["Equipment"] = "Equipment",
+        ["MuscleGroups"] = "Muscle Groups",
+        // ... 100+ more entries
+    };
+}
+
+// ✅ GOOD - Strategy Pattern with extensibility
+public class TableComponentRegistry
+{
+    private readonly Dictionary<string, ITableComponentStrategy> _strategies;
+    
+    public TableComponentRegistry(IEnumerable<ITableComponentStrategy> strategies)
+    {
+        _strategies = strategies.ToDictionary(s => s.TableName);
+        // New tables added via new strategy classes, no modification needed
+    }
+}
+```
+
+**God Class Warning Signs**:
+- Class grows with each new feature
+- Multiple responsibilities in one class
+- Hard-coded mappings or configurations
+- Switch statements or if-else chains that grow
+- Violates Open/Closed Principle
+
+**Refactoring Approach**:
+1. Identify the varying behavior (what changes with each new entry)
+2. Extract interface for that behavior
+3. Create strategy/handler classes for each variation
+4. Use dependency injection to provide all strategies
+5. Registry/coordinator class just orchestrates, doesn't contain logic
 
 ---
 

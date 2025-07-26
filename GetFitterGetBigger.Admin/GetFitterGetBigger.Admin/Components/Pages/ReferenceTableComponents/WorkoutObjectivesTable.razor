@@ -1,0 +1,126 @@
+@using GetFitterGetBigger.Admin.Models.Dtos
+@using GetFitterGetBigger.Admin.Services
+@using GetFitterGetBigger.Admin.Components.Shared
+@inject IWorkoutReferenceDataStateService WorkoutReferenceDataStateService
+@implements IDisposable
+
+<div class="bg-white rounded-lg shadow-md p-6">
+    <div class="flex justify-between items-center mb-6">
+        <div>
+            <h1 class="text-2xl font-semibold text-gray-800">Workout Objectives</h1>
+            <p class="text-gray-600">View workout objectives for training programs</p>
+        </div>
+    </div>
+
+    <div class="mb-4">
+        <ReferenceDataSearchBar
+            Label="Search objectives"
+            Placeholder="Search by name or description..."
+            @bind-Value="@WorkoutReferenceDataStateService.ObjectivesSearchTerm"
+            ShowResultCount="true"
+            ResultCount="@WorkoutReferenceDataStateService.FilteredWorkoutObjectives.Count()" />
+    </div>
+
+    @if (WorkoutReferenceDataStateService.ObjectivesError != null)
+    {
+        <ErrorAlert 
+            ErrorMessage="@WorkoutReferenceDataStateService.ObjectivesError"
+            OnRetry="async () => await WorkoutReferenceDataStateService.LoadWorkoutObjectivesAsync()"
+            RetryTestId="objectives-retry-button" />
+    }
+
+    @if (WorkoutReferenceDataStateService.IsLoadingObjectives)
+    {
+        <WorkoutObjectivesSkeleton />
+    }
+    else if (WorkoutReferenceDataStateService.FilteredWorkoutObjectives.Any())
+    {
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4" data-testid="objectives-grid">
+            @foreach (var objective in WorkoutReferenceDataStateService.FilteredWorkoutObjectives)
+            {
+                <div class="bg-gray-50 p-5 rounded-lg border border-gray-200 hover:shadow-lg transition-shadow duration-200 ease-out cursor-pointer transform hover:-translate-y-1"
+                     @onclick="() => ShowObjectiveDetails(objective)"
+                     @onkeydown="@(e => HandleCardKeyDown(e, () => ShowObjectiveDetails(objective)))"
+                     data-testid="objective-card"
+                     style="contain: layout style paint;"
+                     tabindex="0"
+                     role="article"
+                     aria-label="@($"Workout objective: {objective.Value}")">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-2 truncate" title="@objective.Value">@objective.Value</h3>
+                    <p class="text-sm text-gray-600 line-clamp-3 mb-3">@(objective.Description ?? "No description available")</p>
+                    <button class="text-blue-600 hover:text-blue-800 text-sm font-medium inline-flex items-center gap-1 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 rounded px-2 py-1 -ml-2"
+                            data-testid="objective-view-details-button"
+                            @onclick:stopPropagation="true"
+                            @onclick="() => ShowObjectiveDetails(objective)"
+                            aria-label="@($"View details for {objective.Value}")">
+                        View Details
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                        </svg>
+                    </button>
+                </div>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="text-center py-8">
+            <p class="text-gray-500">No workout objectives found.</p>
+        </div>
+    }
+</div>
+
+@if (selectedObjective != null)
+{
+    <ReferenceDataDetailModal 
+        Title="Workout Objective Details"
+        Item="@selectedObjective"
+        OnClose="() => selectedObjective = null"
+        CloseOnBackdropClick="true"
+        CloseOnEscape="true">
+        <ContentTemplate Context="objective">
+            <div class="space-y-4" data-testid="objective-detail-modal-content">
+                <div>
+                    <h4 class="font-semibold text-gray-700">Name</h4>
+                    <p class="text-gray-900">@objective.Value</p>
+                </div>
+                <div>
+                    <h4 class="font-semibold text-gray-700">Description</h4>
+                    <p class="text-gray-900 whitespace-pre-wrap">@(objective.Description ?? "No description available")</p>
+                </div>
+                <div>
+                    <h4 class="font-semibold text-gray-700">ID</h4>
+                    <p class="text-gray-500 font-mono text-sm">@objective.Id</p>
+                </div>
+            </div>
+        </ContentTemplate>
+    </ReferenceDataDetailModal>
+}
+
+@code {
+    private ReferenceDataDto? selectedObjective;
+
+    protected override async Task OnInitializedAsync()
+    {
+        WorkoutReferenceDataStateService.OnChange += StateHasChanged;
+        await WorkoutReferenceDataStateService.InitializeAsync();
+    }
+
+    private void HandleCardKeyDown(KeyboardEventArgs e, Action clickAction)
+    {
+        if (e.Key == "Enter" || e.Key == " ")
+        {
+            clickAction.Invoke();
+        }
+    }
+
+    private void ShowObjectiveDetails(ReferenceDataDto objective)
+    {
+        selectedObjective = objective;
+    }
+
+    public void Dispose()
+    {
+        WorkoutReferenceDataStateService.OnChange -= StateHasChanged;
+    }
+}

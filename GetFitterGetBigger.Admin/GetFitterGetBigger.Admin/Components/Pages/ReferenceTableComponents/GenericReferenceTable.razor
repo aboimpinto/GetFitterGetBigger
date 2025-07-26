@@ -1,0 +1,93 @@
+@using GetFitterGetBigger.Admin.Models.Dtos
+@using RefData = GetFitterGetBigger.Admin.Models.ReferenceData
+@using GetFitterGetBigger.Admin.Services
+@using GetFitterGetBigger.Admin.Components.Shared
+@inject IGenericReferenceDataService ReferenceDataService
+@inject ITableComponentRegistry TableRegistry
+
+<div class="bg-white rounded-lg shadow-md p-6">
+    <div class="flex justify-between items-center mb-4">
+        <div>
+            <h1 class="text-2xl font-semibold text-gray-800">@DisplayName</h1>
+            <p class="text-gray-600">View and manage @DisplayName.ToLower() reference data</p>
+        </div>
+        <button class="bg-gray-300 text-gray-500 font-bold py-2 px-4 rounded cursor-not-allowed" disabled>
+            Add New
+        </button>
+    </div>
+
+    @if (items == null)
+    {
+        <ReferenceTableSkeleton />
+    }
+    else if (items.Any())
+    {
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Value</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    @foreach (var item in items)
+                    {
+                        <tr class="hover:bg-gray-50">
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">@item.Value</td>
+                            <td class="px-6 py-4 text-sm text-gray-500">@item.Description</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+    else
+    {
+        <div class="text-center py-12">
+            <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+            </svg>
+            <h3 class="mt-2 text-sm font-medium text-gray-900">No data</h3>
+            <p class="mt-1 text-sm text-gray-500">No reference data available for @DisplayName.</p>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public string TableName { get; set; } = string.Empty;
+
+    private IEnumerable<ReferenceDataDto>? items;
+    private string DisplayName => TableRegistry.GetDisplayName(TableName);
+
+    // Dictionary mapping table names to their data fetching methods
+    private readonly Dictionary<string, Func<Task<IEnumerable<ReferenceDataDto>>>> _dataFetchers = new();
+
+    protected override void OnInitialized()
+    {
+        // Initialize data fetchers for simple reference tables
+        _dataFetchers["BodyParts"] = () => ReferenceDataService.GetReferenceDataAsync<RefData.BodyParts>();
+        _dataFetchers["DifficultyLevels"] = () => ReferenceDataService.GetReferenceDataAsync<RefData.DifficultyLevels>();
+        _dataFetchers["KineticChainTypes"] = () => ReferenceDataService.GetReferenceDataAsync<RefData.KineticChainTypes>();
+        _dataFetchers["MetricTypes"] = () => ReferenceDataService.GetReferenceDataAsync<RefData.MetricTypes>();
+        _dataFetchers["MovementPatterns"] = () => ReferenceDataService.GetReferenceDataAsync<RefData.MovementPatterns>();
+        _dataFetchers["MuscleRoles"] = () => ReferenceDataService.GetReferenceDataAsync<RefData.MuscleRoles>();
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await LoadDataAsync();
+    }
+
+    private async Task LoadDataAsync()
+    {
+        if (_dataFetchers.TryGetValue(TableName, out var fetcher))
+        {
+            items = await fetcher();
+        }
+        else
+        {
+            items = new List<ReferenceDataDto>();
+        }
+    }
+}

@@ -1,0 +1,162 @@
+@using GetFitterGetBigger.Admin.Models.Dtos
+@using GetFitterGetBigger.Admin.Services
+@using GetFitterGetBigger.Admin.Components.Shared
+@inject IWorkoutReferenceDataStateService WorkoutReferenceDataStateService
+@implements IDisposable
+
+<div class="bg-white rounded-lg shadow-md p-6">
+    <div class="flex justify-between items-center mb-6">
+        <div>
+            <h1 class="text-2xl font-semibold text-gray-800">Workout Categories</h1>
+            <p class="text-gray-600">View workout categories and their muscle group associations</p>
+        </div>
+    </div>
+
+    <div class="mb-4">
+        <ReferenceDataSearchBar
+            Label="Search categories"
+            Placeholder="Search by name or muscle groups..."
+            @bind-Value="@WorkoutReferenceDataStateService.CategoriesSearchTerm"
+            ShowResultCount="true"
+            ResultCount="@WorkoutReferenceDataStateService.FilteredWorkoutCategories.Count()" />
+    </div>
+
+    @if (WorkoutReferenceDataStateService.CategoriesError != null)
+    {
+        <ErrorAlert 
+            ErrorMessage="@WorkoutReferenceDataStateService.CategoriesError"
+            OnRetry="async () => await WorkoutReferenceDataStateService.LoadWorkoutCategoriesAsync()"
+            RetryTestId="categories-retry-button" />
+    }
+
+    @if (WorkoutReferenceDataStateService.IsLoadingCategories)
+    {
+        <WorkoutCategoriesSkeleton />
+    }
+    else if (WorkoutReferenceDataStateService.FilteredWorkoutCategories.Any())
+    {
+        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3" data-testid="categories-grid">
+            @foreach (var category in WorkoutReferenceDataStateService.FilteredWorkoutCategories)
+            {
+                <div class="bg-gray-50 p-4 rounded-lg border-2 hover:shadow-lg transition-shadow duration-200 ease-out cursor-pointer text-center transform hover:-translate-y-1"
+                     style="border-color: @(category.Color ?? "#E5E7EB")30; contain: layout style paint;"
+                     @onclick="() => ShowCategoryDetails(category)"
+                     @onkeydown="@(e => HandleCardKeyDown(e, () => ShowCategoryDetails(category)))"
+                     data-testid="category-card"
+                     tabindex="0"
+                     role="article"
+                     aria-label="@($"Workout category: {category.Value}. Primary muscles: {category.PrimaryMuscleGroups ?? "None specified"}")">
+                    <div class="w-14 h-14 mx-auto mb-2 flex items-center justify-center rounded-lg"
+                         style="background-color: @(category.Color ?? "#E5E7EB")20"
+                         aria-hidden="true">
+                        @if (!string.IsNullOrEmpty(category.Icon))
+                        {
+                            <div class="w-10 h-10" data-testid="category-icon">
+                                @((MarkupString)category.Icon)
+                            </div>
+                        }
+                        else
+                        {
+                            <span class="text-xl font-bold" style="color: @(category.Color ?? "#6B7280")">
+                                @(category.Value?.FirstOrDefault())
+                            </span>
+                        }
+                    </div>
+                    <h3 class="font-semibold text-gray-800 mb-1 text-sm truncate" title="@category.Value">@category.Value</h3>
+                    @if (!string.IsNullOrEmpty(category.PrimaryMuscleGroups))
+                    {
+                        <p class="text-xs text-gray-600 line-clamp-2" data-testid="muscle-groups" title="@category.PrimaryMuscleGroups">@category.PrimaryMuscleGroups</p>
+                    }
+                    <button class="mt-2 text-blue-600 hover:text-blue-800 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 rounded px-2 py-1"
+                            data-testid="category-view-details-button"
+                            @onclick:stopPropagation="true"
+                            @onclick="() => ShowCategoryDetails(category)"
+                            aria-label="@($"View details for {category.Value} category")">
+                        View Details
+                    </button>
+                </div>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="text-center py-8">
+            <p class="text-gray-500">No workout categories found.</p>
+        </div>
+    }
+</div>
+
+@if (selectedCategory != null)
+{
+    <ReferenceDataDetailModal 
+        Title="Workout Category Details"
+        Item="@selectedCategory"
+        OnClose="() => selectedCategory = null"
+        CloseOnBackdropClick="true"
+        CloseOnEscape="true">
+        <ContentTemplate Context="category">
+            <div class="space-y-4" data-testid="category-detail-modal-content">
+                <div>
+                    <h4 class="font-semibold text-gray-700">Name</h4>
+                    <p class="text-gray-900">@category.Value</p>
+                </div>
+                @if (!string.IsNullOrEmpty(category.Description))
+                {
+                    <div>
+                        <h4 class="font-semibold text-gray-700">Description</h4>
+                        <p class="text-gray-900 whitespace-pre-wrap">@category.Description</p>
+                    </div>
+                }
+                @if (!string.IsNullOrEmpty(category.PrimaryMuscleGroups))
+                {
+                    <div>
+                        <h4 class="font-semibold text-gray-700">Primary Muscle Groups</h4>
+                        <p class="text-gray-900">@category.PrimaryMuscleGroups</p>
+                    </div>
+                }
+                @if (!string.IsNullOrEmpty(category.Color))
+                {
+                    <div>
+                        <h4 class="font-semibold text-gray-700">Color</h4>
+                        <div class="flex items-center gap-2">
+                            <div class="w-6 h-6 rounded" style="background-color: @category.Color"></div>
+                            <p class="text-gray-900 font-mono">@category.Color</p>
+                        </div>
+                    </div>
+                }
+                <div>
+                    <h4 class="font-semibold text-gray-700">ID</h4>
+                    <p class="text-gray-500 font-mono text-sm">@category.WorkoutCategoryId</p>
+                </div>
+            </div>
+        </ContentTemplate>
+    </ReferenceDataDetailModal>
+}
+
+@code {
+    private WorkoutCategoryDto? selectedCategory;
+
+    protected override async Task OnInitializedAsync()
+    {
+        WorkoutReferenceDataStateService.OnChange += StateHasChanged;
+        await WorkoutReferenceDataStateService.InitializeAsync();
+    }
+
+    private void HandleCardKeyDown(KeyboardEventArgs e, Action clickAction)
+    {
+        if (e.Key == "Enter" || e.Key == " ")
+        {
+            clickAction.Invoke();
+        }
+    }
+
+    private void ShowCategoryDetails(WorkoutCategoryDto category)
+    {
+        selectedCategory = category;
+    }
+
+    public void Dispose()
+    {
+        WorkoutReferenceDataStateService.OnChange -= StateHasChanged;
+    }
+}
