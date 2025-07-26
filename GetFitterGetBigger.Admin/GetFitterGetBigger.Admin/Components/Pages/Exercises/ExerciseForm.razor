@@ -20,7 +20,7 @@
 @if (!isLoading)
 {
     @* Cancel button - responsive positioning *@
-    <div class="fixed bottom-8 z-50 cancelPostionStyle">
+    <div class="fixed bottom-8 z-50 left-4 cancelPostionStyle">
         <button type="button" @onclick="Cancel"
                 class="flex flex-col items-center group"
                 data-testid="floating-cancel-button">
@@ -65,9 +65,14 @@
 }
 
 <div>
-    <div class="bg-white rounded-lg shadow-md p-6 max-w-4xl mx-auto">
+    <div class="container mx-auto px-4 py-6">
+        <div class="mb-4">
+            <Breadcrumb Items="@breadcrumbItems" />
+        </div>
+    </div>
+    <div class="bg-white rounded-lg shadow-md p-6 max-w-4xl mx-auto mb-32">
         <div class="mb-6">
-            <h2 class="text-2xl font-semibold text-gray-800">@(IsEditMode ? "Edit Exercise" : "Create New Exercise")</h2>
+            <h1 class="text-2xl font-semibold text-gray-800">@(IsEditMode ? "Edit Exercise" : "Create New Exercise")</h1>
             <p class="text-gray-600">@(IsEditMode ? "Update exercise details and configuration" : "Add a new exercise to the library")</p>
         </div>
 
@@ -334,6 +339,7 @@
     private bool IsEditMode => !string.IsNullOrEmpty(Id);
     private bool isLoading = true;
     private bool isSubmitting = false;
+    private List<Breadcrumb.BreadcrumbItem> breadcrumbItems = new();
     
     private string _difficultyIdString
     {
@@ -421,6 +427,14 @@
         {
             // Don't add any muscle group assignments - let the user add them as needed
             muscleGroupAssignments.Clear();
+            
+            // Initialize breadcrumb for new exercise
+            breadcrumbItems = new List<Breadcrumb.BreadcrumbItem>
+            {
+                new() { Text = "Home", Href = "/" },
+                new() { Text = "Exercises", Href = "/exercises" },
+                new() { Text = "New Exercise" }
+            };
         }
 
         isLoading = false;
@@ -489,6 +503,15 @@
                 // Map movement patterns
                 selectedMovementPatternIds = exercise.MovementPatterns.Select(mp => mp.Id).ToHashSet();
             }
+            
+            // Initialize breadcrumb for edit
+            breadcrumbItems = new List<Breadcrumb.BreadcrumbItem>
+            {
+                new() { Text = "Home", Href = "/" },
+                new() { Text = "Exercises", Href = "/exercises" },
+                new() { Text = exercise.Name, Href = $"/exercises/{exercise.Id}" },
+                new() { Text = "Edit" }
+            };
         }
     }
 
@@ -780,7 +803,6 @@
 }
 
 <style>
-    @* Large screen positioning *@
     @@media (min-width: 1280px) {
         .cancelPostionStyle {
             left: calc(50% - 25rem) !important;

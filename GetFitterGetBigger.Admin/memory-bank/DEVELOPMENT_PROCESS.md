@@ -158,6 +158,16 @@ Create these four MANDATORY reports:
 3. Use `GetReferenceDataAsync<YourType>()` in components
 4. Implement API endpoint
 
+### UI Design Standards
+**📖 Source**: `UI_LIST_PAGE_DESIGN_STANDARDS.md` - Complete guide for Blazor list pages
+
+**When creating Blazor list pages**:
+- ✅ Follow container layout with proper spacing
+- ✅ Include breadcrumb navigation
+- ✅ Use consistent card styling and shadows
+- ✅ Implement proper empty states with icons
+- ✅ Apply consistent button and filter designs
+
 ### Quality Gates
 **📖 Source**: `UNIFIED_DEVELOPMENT_PROCESS.md` - "Baseline Health Check"
 
@@ -228,6 +238,10 @@ What am I doing?
 4. **BUG_WORKFLOW_PROCESS.md** - Bug states and transitions
 5. **BUG_IMPLEMENTATION_PROCESS.md** - Step-by-step bug fixing
 6. **CODE_REVIEW_PROCESS.md** - Code review standards and templates
+
+### Design Standards Documents
+7. **UI_LIST_PAGE_DESIGN_STANDARDS.md** - UI patterns for Blazor list pages
+8. **CODE_QUALITY_STANDARDS.md** - C# coding standards and best practices
 
 ### When to Use Multiple Documents
 - **Starting work**: Usually need 2 documents (Workflow + Implementation)

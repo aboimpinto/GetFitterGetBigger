@@ -31,6 +31,7 @@ Before submitting for code review:
 1. Run `dotnet clean && dotnet build` - Must show **0 warnings, 0 errors**
 2. Run `dotnet test` - Must show **100% pass rate**
 3. Check for any skipped/ignored tests - Document why if present
+4. For Blazor list pages - Verify compliance with `UI_LIST_PAGE_DESIGN_STANDARDS.md`
 
 ### Review Outcomes
 
@@ -84,6 +85,22 @@ public async Task TestMethod()
 **Problem**: Potential null reference exception
 **Fix**: Add null checks or use null-conditional operators
 
+## 🎨 UI/UX Standards
+
+### Blazor Component Reviews
+When reviewing Blazor components, especially list pages:
+1. **Layout Consistency**: Verify container spacing and structure per `UI_LIST_PAGE_DESIGN_STANDARDS.md`
+2. **Navigation**: Ensure breadcrumb implementation
+3. **Visual Design**: Check card styling, shadows, and hover effects
+4. **Empty States**: Verify proper empty state design with icons and CTAs
+5. **Responsive Design**: Test breakpoints and mobile layouts
+
+### Common UI Issues
+- Missing breadcrumb navigation = NEEDS_CHANGES
+- Inconsistent spacing or container layout = NEEDS_CHANGES
+- Poor empty state design = NEEDS_CHANGES
+- Missing hover states on interactive elements = NEEDS_CHANGES
+
 ## 📊 Quality Metrics Tracking
 
 Each code review must document:
@@ -91,6 +108,7 @@ Each code review must document:
 - Test results (total/passed/failed)
 - Code coverage impact
 - Performance considerations
+- UI consistency compliance (for Blazor components)
 
 ## 🚀 Enforcement
 

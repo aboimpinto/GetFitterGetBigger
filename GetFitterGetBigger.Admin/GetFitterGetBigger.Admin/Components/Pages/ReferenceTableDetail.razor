@@ -17,21 +17,17 @@
 
 <PageTitle>@DisplayName - GetFitterGetBigger Admin</PageTitle>
 
-<div class="mb-4">
-    <a href="/referencetables" class="inline-flex items-center text-blue-600 hover:text-blue-800">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-        </svg>
-        Back to Reference Tables
-    </a>
-</div>
+<div>
+    <div class="mb-4">
+        <Breadcrumb Items="@breadcrumbItems" />
+    </div>
 
 @if (TableName == "Equipment")
 {
     <div class="bg-white rounded-lg shadow-md p-6">
         <div class="flex justify-between items-center mb-6">
             <div>
-                <h2 class="text-2xl font-semibold text-gray-800">Equipment</h2>
+                <h1 class="text-2xl font-semibold text-gray-800">Equipment</h1>
                 <p class="text-gray-600">Manage equipment available for exercises</p>
             </div>
             <button @onclick="ShowCreateForm" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors">
@@ -166,7 +162,7 @@ else if (TableName == "ExerciseWeightTypes")
     <div class="bg-white rounded-lg shadow-md p-6">
         <div class="flex justify-between items-center mb-6">
             <div>
-                <h2 class="text-2xl font-semibold text-gray-800">Exercise Weight Types</h2>
+                <h1 class="text-2xl font-semibold text-gray-800">Exercise Weight Types</h1>
                 <p class="text-gray-600">View exercise weight type classifications and validation rules</p>
             </div>
         </div>
@@ -230,7 +226,7 @@ else if (TableName == "MuscleGroups")
     <div class="bg-white rounded-lg shadow-md p-6">
         <div class="flex justify-between items-center mb-6">
             <div>
-                <h2 class="text-2xl font-semibold text-gray-800">Muscle Groups</h2>
+                <h1 class="text-2xl font-semibold text-gray-800">Muscle Groups</h1>
                 <p class="text-gray-600">Manage muscle groups associated with body parts</p>
             </div>
             <button @onclick="ShowCreateMuscleGroupForm" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors">
@@ -393,7 +389,7 @@ else if (TableName == "WorkoutObjectives")
     <div class="bg-white rounded-lg shadow-md p-6">
         <div class="flex justify-between items-center mb-6">
             <div>
-                <h2 class="text-2xl font-semibold text-gray-800">Workout Objectives</h2>
+                <h1 class="text-2xl font-semibold text-gray-800">Workout Objectives</h1>
                 <p class="text-gray-600">View workout objectives for training programs</p>
             </div>
         </div>
@@ -488,7 +484,7 @@ else if (TableName == "WorkoutCategories")
     <div class="bg-white rounded-lg shadow-md p-6">
         <div class="flex justify-between items-center mb-6">
             <div>
-                <h2 class="text-2xl font-semibold text-gray-800">Workout Categories</h2>
+                <h1 class="text-2xl font-semibold text-gray-800">Workout Categories</h1>
                 <p class="text-gray-600">View workout categories and their muscle group associations</p>
             </div>
         </div>
@@ -619,7 +615,7 @@ else if (TableName == "ExecutionProtocols")
     <div class="bg-white rounded-lg shadow-md p-6">
         <div class="flex justify-between items-center mb-6">
             <div>
-                <h2 class="text-2xl font-semibold text-gray-800">Execution Protocols</h2>
+                <h1 class="text-2xl font-semibold text-gray-800">Execution Protocols</h1>
                 <p class="text-gray-600">View exercise execution protocols and timing patterns</p>
             </div>
         </div>
@@ -782,7 +778,10 @@ else
 {
     <div class="bg-white rounded-lg shadow-md p-6">
         <div class="flex justify-between items-center mb-4">
-            <h2 class="text-2xl font-semibold text-gray-800">@DisplayName</h2>
+            <div>
+                <h1 class="text-2xl font-semibold text-gray-800">@DisplayName</h1>
+                <p class="text-gray-600">View and manage @DisplayName.ToLower() reference data</p>
+            </div>
             <button class="bg-gray-300 text-gray-500 font-bold py-2 px-4 rounded cursor-not-allowed" disabled>
                 Add New
             </button>
@@ -792,30 +791,41 @@ else
         {
             <ReferenceTableSkeleton />
         }
-        else
+        else if (items.Any())
         {
             <div class="overflow-x-auto">
-                <table class="min-w-full bg-white">
-                    <thead class="bg-gray-100">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
                         <tr>
-                            <th class="py-3 px-6 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Value</th>
-                            <th class="py-3 px-6 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Value</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
                         </tr>
                     </thead>
-                    <tbody class="text-gray-700">
+                    <tbody class="bg-white divide-y divide-gray-200">
                         @foreach (var item in items)
                         {
-                            <tr class="border-b border-gray-200 hover:bg-gray-50">
-                                <td class="py-4 px-6">@item.Value</td>
-                                <td class="py-4 px-6">@item.Description</td>
+                            <tr class="hover:bg-gray-50">
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">@item.Value</td>
+                                <td class="px-6 py-4 text-sm text-gray-500">@item.Description</td>
                             </tr>
                         }
                     </tbody>
                 </table>
             </div>
         }
+        else
+        {
+            <div class="text-center py-12">
+                <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                </svg>
+                <h3 class="mt-2 text-sm font-medium text-gray-900">No data</h3>
+                <p class="mt-1 text-sm text-gray-500">No reference data available for @DisplayName.</p>
+            </div>
+        }
     </div>
 }
+</div>
 
 @code {
     [Parameter]
@@ -823,6 +833,7 @@ else
 
     private IEnumerable<ReferenceDataDto> items = Enumerable.Empty<ReferenceDataDto>();
     private string DisplayName { get; set; } = string.Empty;
+    private List<Breadcrumb.BreadcrumbItem> breadcrumbItems = new();
 
     // Dictionary mapping table names to their data fetching methods
     private readonly Dictionary<string, Func<Task<IEnumerable<ReferenceDataDto>>>> _dataFetchers = new();
@@ -886,6 +897,14 @@ else
     protected override async Task OnInitializedAsync()
     {
         SetDisplayName();
+        
+        // Initialize breadcrumb after DisplayName is set
+        breadcrumbItems = new List<Breadcrumb.BreadcrumbItem>
+        {
+            new() { Text = "Home", Href = "/" },
+            new() { Text = "Reference Tables", Href = "/referencetables" },
+            new() { Text = DisplayName }
+        };
         
         if (TableName == "Equipment")
         {

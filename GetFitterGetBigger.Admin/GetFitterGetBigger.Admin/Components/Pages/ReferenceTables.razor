@@ -1,28 +1,44 @@
 @page "/referencetables"
 @using GetFitterGetBigger.Admin.Models
+@using GetFitterGetBigger.Admin.Components.Shared
 @using Microsoft.AspNetCore.Authorization
 @attribute [Authorize]
 
 <PageTitle>Reference Tables - GetFitterGetBigger Admin</PageTitle>
 
-<div class="bg-white rounded-lg shadow-md p-6">
-    <h2 class="text-2xl font-semibold text-gray-800 mb-4">Reference Tables</h2>
-    <p class="text-gray-600 mb-6">
-        Manage the core reference data used throughout the application.
-    </p>
+<div>
+    <div class="mb-4">
+        <Breadcrumb Items="@breadcrumbItems" />
+    </div>
+    <div class="bg-white rounded-lg shadow-md p-6">
+        <div class="mb-6">
+            <h1 class="text-2xl font-semibold text-gray-800">Reference Tables</h1>
+            <p class="text-gray-600">
+                Manage the core reference data used throughout the application.
+            </p>
+        </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         @foreach (var table in ReferenceTablesList)
         {
-            <div class="bg-gray-50 p-4 rounded-lg border border-gray-200 hover:shadow-lg transition-shadow">
-                <h3 class="text-lg font-medium text-gray-800 mb-2">@table.DisplayName</h3>
-                <a href="/referencetables/@table.Name" class="text-blue-600 hover:text-blue-800 font-medium">View Items →</a>
-            </div>
-        }
+                <div class="bg-gray-50 p-6 rounded-lg border border-gray-200 hover:shadow-lg transition-all duration-200 transform hover:-translate-y-1">
+                    <h3 class="text-lg font-medium text-gray-800 mb-3">@table.DisplayName</h3>
+                    <p class="text-sm text-gray-600 mb-4">View and manage @table.DisplayName.ToLower() data</p>
+                    <a href="/referencetables/@table.Name" class="inline-flex items-center text-blue-600 hover:text-blue-800 font-medium">
+                        View Items
+                        <svg class="ml-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                        </svg>
+                    </a>
+                </div>
+            }
+        </div>
     </div>
 </div>
 
 @code {
+    private List<Breadcrumb.BreadcrumbItem> breadcrumbItems = new();
+    
     private List<ReferenceTableModel> ReferenceTablesList = new List<ReferenceTableModel>
     {
         new ReferenceTableModel { Name = "BodyParts", DisplayName = "Body Parts", EndPoint = "/api/ReferenceTables/BodyParts" },
@@ -38,4 +54,14 @@
         new ReferenceTableModel { Name = "WorkoutCategories", DisplayName = "Workout Categories", EndPoint = "/api/ReferenceTables/WorkoutCategories" },
         new ReferenceTableModel { Name = "ExecutionProtocols", DisplayName = "Execution Protocols", EndPoint = "/api/ReferenceTables/ExecutionProtocols" }
     };
+    
+    protected override void OnInitialized()
+    {
+        // Initialize breadcrumb
+        breadcrumbItems = new List<Breadcrumb.BreadcrumbItem>
+        {
+            new() { Text = "Home", Href = "/" },
+            new() { Text = "Reference Tables" }
+        };
+    }
 }

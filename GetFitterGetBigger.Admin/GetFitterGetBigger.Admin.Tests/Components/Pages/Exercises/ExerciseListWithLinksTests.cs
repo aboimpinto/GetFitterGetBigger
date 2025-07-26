@@ -220,7 +220,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
 
             await filterSelect!.ChangeAsync(new ChangeEventArgs { Value = "true" });
 
-            var applyButton = component.FindAll("button").First(b => b.TextContent.Contains("Apply Filter"));
+            var applyButton = component.FindAll("button").First(b => b.TextContent.Contains("Apply") && !b.TextContent.Contains("Clear"));
             await applyButton.ClickAsync(new Microsoft.AspNetCore.Components.Web.MouseEventArgs());
 
             // Assert
