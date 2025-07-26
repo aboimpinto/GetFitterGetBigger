@@ -1,4 +1,5 @@
 using GetFitterGetBigger.Admin.Models.Dtos;
+using GetFitterGetBigger.Admin.Models.ReferenceData;
 using Microsoft.Extensions.Caching.Memory;
 using System.Net.Http.Json;
 using System.Text;
@@ -11,11 +12,11 @@ namespace GetFitterGetBigger.Admin.Services
     {
         private readonly HttpClient _httpClient;
         private readonly IMemoryCache _cache;
-        private readonly IReferenceDataService _referenceDataService;
+        private readonly IGenericReferenceDataService _referenceDataService;
         private readonly IWorkoutReferenceDataService _workoutReferenceDataService;
         private readonly JsonSerializerOptions _jsonOptions;
 
-        public WorkoutTemplateService(HttpClient httpClient, IMemoryCache cache, IReferenceDataService referenceDataService, IWorkoutReferenceDataService workoutReferenceDataService)
+        public WorkoutTemplateService(HttpClient httpClient, IMemoryCache cache, IGenericReferenceDataService referenceDataService, IWorkoutReferenceDataService workoutReferenceDataService)
         {
             _httpClient = httpClient;
             _cache = cache;
@@ -390,7 +391,7 @@ namespace GetFitterGetBigger.Admin.Services
         public async Task<List<ReferenceDataDto>> GetDifficultyLevelsAsync()
         {
             Console.WriteLine("[WorkoutTemplateService] Getting difficulty levels from ReferenceDataService");
-            var difficulties = await _referenceDataService.GetDifficultyLevelsAsync();
+            var difficulties = await _referenceDataService.GetReferenceDataAsync<DifficultyLevels>();
             Console.WriteLine($"[WorkoutTemplateService] Difficulties received: {difficulties?.Count() ?? 0}");
             return difficulties?.ToList() ?? new List<ReferenceDataDto>();
         }

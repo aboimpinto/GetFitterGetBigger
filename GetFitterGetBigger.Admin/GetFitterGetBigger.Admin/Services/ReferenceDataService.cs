@@ -61,6 +61,27 @@ namespace GetFitterGetBigger.Admin.Services
             return result; // Single exit point
         }
         
+        /// <summary>
+        /// Clears the cache for the specified reference table type.
+        /// Uses the strategy pattern to determine the correct cache key.
+        /// </summary>
+        public void ClearCache<T>() where T : IReferenceTableEntity
+        {
+            var entityType = typeof(T);
+            
+            if (_strategies.TryGetValue(entityType, out var strategy))
+            {
+                _cache.Remove(strategy.CacheKey);
+                _logger.LogInformation("Cleared cache for {TypeName} with key {CacheKey}", 
+                    entityType.Name, strategy.CacheKey);
+            }
+            else
+            {
+                _logger.LogWarning("No strategy found for type {TypeName} when attempting to clear cache", 
+                    entityType.Name);
+            }
+        }
+        
         private async Task<IEnumerable<ReferenceDataDto>> FetchFromApiAsync(IReferenceTableStrategy strategy)
         {
             IEnumerable<ReferenceDataDto> result = Enumerable.Empty<ReferenceDataDto>();

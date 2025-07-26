@@ -4,6 +4,7 @@ using Moq;
 using Xunit;
 using GetFitterGetBigger.Admin.Components.WorkoutTemplates;
 using GetFitterGetBigger.Admin.Models.Dtos;
+using GetFitterGetBigger.Admin.Models.ReferenceData;
 using GetFitterGetBigger.Admin.Services;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;

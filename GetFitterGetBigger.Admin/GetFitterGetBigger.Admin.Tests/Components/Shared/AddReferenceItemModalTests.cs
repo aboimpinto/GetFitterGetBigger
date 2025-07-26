@@ -4,6 +4,7 @@ using GetFitterGetBigger.Admin.Components.Shared;
 using GetFitterGetBigger.Admin.Models;
 using GetFitterGetBigger.Admin.Models.Dtos;
 using GetFitterGetBigger.Admin.Services;
+using GetFitterGetBigger.Admin.Models.ReferenceData;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.Extensions.DependencyInjection;
@@ -20,17 +21,17 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Shared
     {
         private readonly Mock<IEquipmentService> _mockEquipmentService;
         private readonly Mock<IMuscleGroupsService> _mockMuscleGroupsService;
-        private readonly Mock<IReferenceDataService> _mockReferenceDataService;
+        private readonly Mock<IGenericReferenceDataService> _mockReferenceDataService;
 
         public AddReferenceItemModalTests()
         {
             _mockEquipmentService = new Mock<IEquipmentService>();
             _mockMuscleGroupsService = new Mock<IMuscleGroupsService>();
-            _mockReferenceDataService = new Mock<IReferenceDataService>();
+            _mockReferenceDataService = new Mock<IGenericReferenceDataService>();
 
             Services.AddSingleton<IEquipmentService>(_mockEquipmentService.Object);
             Services.AddSingleton<IMuscleGroupsService>(_mockMuscleGroupsService.Object);
-            Services.AddSingleton<IReferenceDataService>(_mockReferenceDataService.Object);
+            Services.AddSingleton<IGenericReferenceDataService>(_mockReferenceDataService.Object);
         }
 
         #region UI Interaction Tests
@@ -57,7 +58,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Shared
         public void AddReferenceItemModal_UI_RendersMuscleGroupFormCorrectly()
         {
             // Arrange
-            _mockReferenceDataService.Setup(x => x.GetBodyPartsAsync())
+            _mockReferenceDataService.Setup(x => x.GetReferenceDataAsync<BodyParts>())
                 .ReturnsAsync(new List<ReferenceDataDto>
                 {
                     new() { Id = "1", Value = "Arms" },
@@ -111,7 +112,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Shared
         public async Task AddReferenceItemModal_UI_CreatesMuscleGroupThroughFormSubmission()
         {
             // Arrange
-            _mockReferenceDataService.Setup(x => x.GetBodyPartsAsync())
+            _mockReferenceDataService.Setup(x => x.GetReferenceDataAsync<BodyParts>())
                 .ReturnsAsync(new List<ReferenceDataDto>
                 {
                     new() { Id = "1", Value = "Arms" }
@@ -374,7 +375,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Shared
                 new() { Id = "1", Value = "Arms" },
                 new() { Id = "2", Value = "Chest" }
             };
-            _mockReferenceDataService.Setup(x => x.GetBodyPartsAsync())
+            _mockReferenceDataService.Setup(x => x.GetReferenceDataAsync<BodyParts>())
                 .ReturnsAsync(bodyParts);
 
             // Act
@@ -434,7 +435,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Shared
         public async Task AddReferenceItemModal_Integration_CompleteMuscleGroupCreationWorkflow()
         {
             // Arrange
-            _mockReferenceDataService.Setup(x => x.GetBodyPartsAsync())
+            _mockReferenceDataService.Setup(x => x.GetReferenceDataAsync<BodyParts>())
                 .ReturnsAsync(new List<ReferenceDataDto>
                 {
                     new() { Id = "1", Value = "Arms" },
@@ -756,7 +757,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Shared
         public async Task AddReferenceItemModal_BoundaryValue_MuscleGroupMaxLengthTest()
         {
             // Arrange - Test muscle group with max length name
-            _mockReferenceDataService.Setup(x => x.GetBodyPartsAsync())
+            _mockReferenceDataService.Setup(x => x.GetReferenceDataAsync<BodyParts>())
                 .ReturnsAsync(new List<ReferenceDataDto>
                 {
                     new() { Id = "1", Value = "Arms" }

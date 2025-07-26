@@ -2,6 +2,7 @@ using System.Net;
 using System.Text.Json;
 using FluentAssertions;
 using GetFitterGetBigger.Admin.Models.Dtos;
+using GetFitterGetBigger.Admin.Models.ReferenceData;
 using GetFitterGetBigger.Admin.Services;
 using GetFitterGetBigger.Admin.Builders;
 using GetFitterGetBigger.Admin.Tests.Helpers;
@@ -15,7 +16,7 @@ namespace GetFitterGetBigger.Admin.Tests.Services
         private readonly MockHttpMessageHandler _httpMessageHandler;
         private readonly HttpClient _httpClient;
         private readonly IMemoryCache _memoryCache;
-        private readonly Mock<IReferenceDataService> _referenceDataServiceMock;
+        private readonly Mock<IGenericReferenceDataService> _referenceDataServiceMock;
         private readonly Mock<IWorkoutReferenceDataService> _workoutReferenceDataServiceMock;
         private readonly WorkoutTemplateService _workoutTemplateService;
 
@@ -27,7 +28,7 @@ namespace GetFitterGetBigger.Admin.Tests.Services
                 BaseAddress = new Uri("http://localhost:5214")
             };
             _memoryCache = new MemoryCache(new MemoryCacheOptions());
-            _referenceDataServiceMock = new Mock<IReferenceDataService>();
+            _referenceDataServiceMock = new Mock<IGenericReferenceDataService>();
             _workoutReferenceDataServiceMock = new Mock<IWorkoutReferenceDataService>();
 
             _workoutTemplateService = new WorkoutTemplateService(
@@ -338,7 +339,7 @@ namespace GetFitterGetBigger.Admin.Tests.Services
                 new ReferenceDataDto { Id = "diff-3", Value = "Advanced", Description = "For advanced users" }
             };
 
-            _referenceDataServiceMock.Setup(x => x.GetDifficultyLevelsAsync())
+            _referenceDataServiceMock.Setup(x => x.GetReferenceDataAsync<DifficultyLevels>())
                 .ReturnsAsync(expectedDifficulties);
 
             // Act
@@ -349,8 +350,8 @@ namespace GetFitterGetBigger.Admin.Tests.Services
             result.First().Value.Should().Be("Beginner");
             result.Should().BeEquivalentTo(expectedDifficulties);
             
-            // Verify service was called
-            _referenceDataServiceMock.Verify(x => x.GetDifficultyLevelsAsync(), Times.Once);
+            // Verify service was called with the correct generic type
+            _referenceDataServiceMock.Verify(x => x.GetReferenceDataAsync<DifficultyLevels>(), Times.Once);
         }
 
         [Fact]

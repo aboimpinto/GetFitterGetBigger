@@ -72,8 +72,7 @@ builder.Services.AddHttpClient<GetFitterGetBigger.Admin.Services.IGenericReferen
     client.BaseAddress = new Uri(builder.Configuration["ApiBaseUrl"] ?? "http://localhost:5214");
 });
 
-// Bridge for backward compatibility with old interface
-builder.Services.AddScoped<GetFitterGetBigger.Admin.Services.IReferenceDataService, GetFitterGetBigger.Admin.Services.ReferenceDataServiceBridge>();
+// Bridge removed - all components now use IGenericReferenceDataService directly
 
 // Add HttpClient for ExerciseService
 builder.Services.AddHttpClient<GetFitterGetBigger.Admin.Services.IExerciseService, GetFitterGetBigger.Admin.Services.ExerciseService>(client =>

@@ -16,5 +16,11 @@ namespace GetFitterGetBigger.Admin.Services
         /// <returns>Collection of reference data items</returns>
         Task<IEnumerable<ReferenceDataDto>> GetReferenceDataAsync<T>() 
             where T : IReferenceTableEntity;
+            
+        /// <summary>
+        /// Clears the cache for the specified reference table type.
+        /// </summary>
+        /// <typeparam name="T">The reference table type to clear cache for</typeparam>
+        void ClearCache<T>() where T : IReferenceTableEntity;
     }
 }

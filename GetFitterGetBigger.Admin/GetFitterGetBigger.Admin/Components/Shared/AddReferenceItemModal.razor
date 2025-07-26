@@ -1,5 +1,6 @@
 @using GetFitterGetBigger.Admin.Models
 @using GetFitterGetBigger.Admin.Models.Dtos
+@using GetFitterGetBigger.Admin.Models.ReferenceData
 @using GetFitterGetBigger.Admin.Services
 @using System.ComponentModel.DataAnnotations
 
@@ -126,7 +127,7 @@
     
     [Inject] private IEquipmentService? EquipmentService { get; set; }
     [Inject] private IMuscleGroupsService? MuscleGroupsService { get; set; }
-    [Inject] private IReferenceDataService? ReferenceDataService { get; set; }
+    [Inject] private IGenericReferenceDataService? ReferenceDataService { get; set; }
 
     internal object model = new();
     internal bool isSubmitting = false;
@@ -151,7 +152,7 @@
             isLoadingBodyParts = true;
             try
             {
-                bodyParts = await ReferenceDataService.GetBodyPartsAsync();
+                bodyParts = await ReferenceDataService.GetReferenceDataAsync<BodyParts>();
             }
             catch (Exception ex)
             {

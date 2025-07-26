@@ -1,5 +1,6 @@
 using FluentAssertions;
 using GetFitterGetBigger.Admin.Models.Dtos;
+using GetFitterGetBigger.Admin.Models.ReferenceData;
 using GetFitterGetBigger.Admin.Services;
 using GetFitterGetBigger.Admin.Builders;
 using GetFitterGetBigger.Admin.Tests.Builders;

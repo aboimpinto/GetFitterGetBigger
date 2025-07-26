@@ -1,4 +1,5 @@
 using GetFitterGetBigger.Admin.Models.Dtos;
+using GetFitterGetBigger.Admin.Models.ReferenceData;
 using GetFitterGetBigger.Admin.Builders;
 
 namespace GetFitterGetBigger.Admin.Services
@@ -6,7 +7,7 @@ namespace GetFitterGetBigger.Admin.Services
     public class ExerciseStateService : IExerciseStateService
     {
         private readonly IExerciseService _exerciseService;
-        private readonly IReferenceDataService _referenceDataService;
+        private readonly IGenericReferenceDataService _referenceDataService;
 
         public event Action? OnChange;
 
@@ -35,7 +36,7 @@ namespace GetFitterGetBigger.Admin.Services
         private ExerciseFilterDto? _storedFilter;
         public bool HasStoredPage => _storedFilter != null;
 
-        public ExerciseStateService(IExerciseService exerciseService, IReferenceDataService referenceDataService)
+        public ExerciseStateService(IExerciseService exerciseService, IGenericReferenceDataService referenceDataService)
         {
             _exerciseService = exerciseService;
             _referenceDataService = referenceDataService;
@@ -199,14 +200,14 @@ namespace GetFitterGetBigger.Admin.Services
                 NotifyStateChanged();
 
                 // Load all reference data in parallel
-                var difficultyTask = _referenceDataService.GetDifficultyLevelsAsync();
-                var muscleGroupsTask = _referenceDataService.GetMuscleGroupsAsync();
-                var muscleRolesTask = _referenceDataService.GetMuscleRolesAsync();
-                var equipmentTask = _referenceDataService.GetEquipmentAsync();
-                var bodyPartsTask = _referenceDataService.GetBodyPartsAsync();
-                var movementPatternsTask = _referenceDataService.GetMovementPatternsAsync();
-                var exerciseTypesTask = _referenceDataService.GetExerciseTypesAsync();
-                var kineticChainTypesTask = _referenceDataService.GetKineticChainTypesAsync();
+                var difficultyTask = _referenceDataService.GetReferenceDataAsync<DifficultyLevels>();
+                var muscleGroupsTask = _referenceDataService.GetReferenceDataAsync<MuscleGroups>();
+                var muscleRolesTask = _referenceDataService.GetReferenceDataAsync<MuscleRoles>();
+                var equipmentTask = _referenceDataService.GetReferenceDataAsync<Equipment>();
+                var bodyPartsTask = _referenceDataService.GetReferenceDataAsync<BodyParts>();
+                var movementPatternsTask = _referenceDataService.GetReferenceDataAsync<MovementPatterns>();
+                var exerciseTypesTask = _referenceDataService.GetReferenceDataAsync<ExerciseTypes>();
+                var kineticChainTypesTask = _referenceDataService.GetReferenceDataAsync<KineticChainTypes>();
 
                 await Task.WhenAll(
                     difficultyTask,
@@ -225,7 +226,16 @@ namespace GetFitterGetBigger.Admin.Services
                 Equipment = await equipmentTask;
                 BodyParts = await bodyPartsTask;
                 MovementPatterns = await movementPatternsTask;
-                ExerciseTypes = await exerciseTypesTask;
+                
+                // Convert ReferenceDataDto to ExerciseTypeDto
+                var exerciseTypesData = await exerciseTypesTask;
+                ExerciseTypes = exerciseTypesData.Select(rd => new ExerciseTypeDto
+                {
+                    Id = rd.Id,
+                    Value = rd.Value,
+                    Description = rd.Description ?? string.Empty
+                });
+                
                 KineticChainTypes = await kineticChainTypesTask;
             }
             catch (Exception ex)

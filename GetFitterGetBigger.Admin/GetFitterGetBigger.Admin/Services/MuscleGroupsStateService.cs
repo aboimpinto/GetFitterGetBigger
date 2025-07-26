@@ -1,11 +1,12 @@
 using GetFitterGetBigger.Admin.Models.Dtos;
+using GetFitterGetBigger.Admin.Models.ReferenceData;
 
 namespace GetFitterGetBigger.Admin.Services
 {
     public class MuscleGroupsStateService : IMuscleGroupsStateService
     {
         private readonly IMuscleGroupsService _muscleGroupsService;
-        private readonly IReferenceDataService _referenceDataService;
+        private readonly IGenericReferenceDataService _referenceDataService;
         private List<MuscleGroupDto> _muscleGroups = new();
         private List<ReferenceDataDto> _bodyParts = new();
         private MuscleGroupDto? _selectedMuscleGroup;
@@ -22,7 +23,7 @@ namespace GetFitterGetBigger.Admin.Services
 
         public MuscleGroupsStateService(
             IMuscleGroupsService muscleGroupsService,
-            IReferenceDataService referenceDataService)
+            IGenericReferenceDataService referenceDataService)
         {
             _muscleGroupsService = muscleGroupsService;
             _referenceDataService = referenceDataService;
@@ -142,7 +143,7 @@ namespace GetFitterGetBigger.Admin.Services
                 _isLoadingBodyParts = true;
                 NotifyStateChanged();
 
-                var bodyParts = await _referenceDataService.GetBodyPartsAsync();
+                var bodyParts = await _referenceDataService.GetReferenceDataAsync<BodyParts>();
                 _bodyParts = bodyParts.OrderBy(bp => bp.Value).ToList();
 
                 // If muscle groups are already loaded, enhance them with body part names

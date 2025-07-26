@@ -3,6 +3,7 @@ using FluentAssertions;
 using GetFitterGetBigger.Admin.Components.Pages.Exercises;
 using GetFitterGetBigger.Admin.Components.Shared;
 using GetFitterGetBigger.Admin.Models.Dtos;
+using GetFitterGetBigger.Admin.Models.ReferenceData;
 using GetFitterGetBigger.Admin.Services;
 using GetFitterGetBigger.Admin.Builders;
 using Microsoft.AspNetCore.Components;
@@ -40,7 +41,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
             _mockWeightTypeStateService.Setup(x => x.LoadWeightTypesAsync()).Returns(Task.CompletedTask);
 
             Services.AddSingleton<IExerciseStateService>(_mockStateService);
-            Services.AddSingleton<IReferenceDataService>(_mockReferenceDataService);
+            Services.AddSingleton<IGenericReferenceDataService>(_mockReferenceDataService);
             Services.AddSingleton<IEquipmentService>(_mockEquipmentService);
             Services.AddSingleton<IMuscleGroupsService>(_mockMuscleGroupsService);
             Services.AddSingleton(_mockWeightTypeStateService.Object);
@@ -66,7 +67,11 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
             };
 
             var cacheCleared = false;
-            _mockReferenceDataService.OnClearEquipmentCache = () => cacheCleared = true;
+            _mockReferenceDataService.OnCacheCleared = (type) => 
+            {
+                if (type == typeof(Equipment))
+                    cacheCleared = true;
+            };
 
             var stateRefreshed = false;
             _mockStateService.OnInitialize = async () =>
@@ -142,7 +147,11 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
             };
 
             var cacheCleared = false;
-            _mockReferenceDataService.OnClearMuscleGroupsCache = () => cacheCleared = true;
+            _mockReferenceDataService.OnCacheCleared = (type) => 
+            {
+                if (type == typeof(MuscleGroups))
+                    cacheCleared = true;
+            };
 
             var stateRefreshed = false;
             _mockStateService.OnInitialize = async () =>
@@ -367,40 +376,43 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
             public Task LoadExercisesWithStoredPageAsync() => Task.CompletedTask;
         }
 
-        private class MockReferenceDataService : IReferenceDataService
+        private class MockReferenceDataService : IGenericReferenceDataService
         {
-            public Action? OnClearEquipmentCache { get; set; }
-            public Action? OnClearMuscleGroupsCache { get; set; }
+            public Action<Type>? OnCacheCleared { get; set; }
+            private readonly Dictionary<Type, IEnumerable<ReferenceDataDto>> _data = new();
+            
+            public MockReferenceDataService()
+            {
+                // Initialize with empty data
+                _data[typeof(DifficultyLevels)] = new List<ReferenceDataDto>();
+                _data[typeof(MuscleGroups)] = new List<ReferenceDataDto>();
+                _data[typeof(MuscleRoles)] = new List<ReferenceDataDto>();
+                _data[typeof(Equipment)] = new List<ReferenceDataDto>();
+                _data[typeof(BodyParts)] = new List<ReferenceDataDto>();
+                _data[typeof(MovementPatterns)] = new List<ReferenceDataDto>();
+                _data[typeof(ExerciseTypes)] = new List<ReferenceDataDto>();
+                _data[typeof(KineticChainTypes)] = new List<ReferenceDataDto>();
+                _data[typeof(MetricTypes)] = new List<ReferenceDataDto>();
+            }
 
-            public Task<IEnumerable<ReferenceDataDto>> GetDifficultyLevelsAsync() =>
-                Task.FromResult<IEnumerable<ReferenceDataDto>>(new List<ReferenceDataDto>());
-
-            public Task<IEnumerable<ReferenceDataDto>> GetMuscleGroupsAsync() =>
-                Task.FromResult<IEnumerable<ReferenceDataDto>>(new List<ReferenceDataDto>());
-
-            public Task<IEnumerable<ReferenceDataDto>> GetMuscleRolesAsync() =>
-                Task.FromResult<IEnumerable<ReferenceDataDto>>(new List<ReferenceDataDto>());
-
-            public Task<IEnumerable<ReferenceDataDto>> GetEquipmentAsync() =>
-                Task.FromResult<IEnumerable<ReferenceDataDto>>(new List<ReferenceDataDto>());
-
-            public Task<IEnumerable<ReferenceDataDto>> GetBodyPartsAsync() =>
-                Task.FromResult<IEnumerable<ReferenceDataDto>>(new List<ReferenceDataDto>());
-
-            public Task<IEnumerable<ReferenceDataDto>> GetMovementPatternsAsync() =>
-                Task.FromResult<IEnumerable<ReferenceDataDto>>(new List<ReferenceDataDto>());
-
-            public Task<IEnumerable<ExerciseTypeDto>> GetExerciseTypesAsync() =>
-                Task.FromResult<IEnumerable<ExerciseTypeDto>>(new List<ExerciseTypeDto>());
-
-            public Task<IEnumerable<ReferenceDataDto>> GetKineticChainTypesAsync() =>
-                Task.FromResult<IEnumerable<ReferenceDataDto>>(new List<ReferenceDataDto>());
-
-            public Task<IEnumerable<ReferenceDataDto>> GetMetricTypesAsync() =>
-                Task.FromResult<IEnumerable<ReferenceDataDto>>(new List<ReferenceDataDto>());
-
-            public void ClearEquipmentCache() => OnClearEquipmentCache?.Invoke();
-            public void ClearMuscleGroupsCache() => OnClearMuscleGroupsCache?.Invoke();
+            public Task<IEnumerable<ReferenceDataDto>> GetReferenceDataAsync<T>() 
+                where T : IReferenceTableEntity
+            {
+                var type = typeof(T);
+                IEnumerable<ReferenceDataDto> result = new List<ReferenceDataDto>();
+                
+                if (_data.TryGetValue(type, out var data))
+                {
+                    result = data;
+                }
+                
+                return Task.FromResult(result);
+            }
+            
+            public void ClearCache<T>() where T : IReferenceTableEntity
+            {
+                OnCacheCleared?.Invoke(typeof(T));
+            }
         }
 
         private class MockEquipmentService : IEquipmentService

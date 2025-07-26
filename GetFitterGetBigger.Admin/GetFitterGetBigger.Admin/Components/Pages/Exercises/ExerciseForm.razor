@@ -2,6 +2,7 @@
 @page "/exercises/{Id}/edit"
 @using GetFitterGetBigger.Admin.Models
 @using GetFitterGetBigger.Admin.Models.Dtos
+@using GetFitterGetBigger.Admin.Models.ReferenceData
 @using GetFitterGetBigger.Admin.Services
 @using GetFitterGetBigger.Admin.Builders
 @using GetFitterGetBigger.Admin.Components.Shared
@@ -10,7 +11,7 @@
 @rendermode InteractiveServer
 @inject IExerciseStateService StateService
 @inject IExerciseWeightTypeStateService WeightTypeStateService
-@inject IReferenceDataService ReferenceDataService
+@inject IGenericReferenceDataService ReferenceDataService
 @inject NavigationManager Navigation
 @implements IDisposable
 
@@ -550,7 +551,7 @@
     private async Task RefreshEquipment()
     {
         // Explicitly clear the equipment cache first
-        ReferenceDataService.ClearEquipmentCache();
+        ReferenceDataService.ClearCache<Equipment>();
         
         // InitializeAsync reloads all reference data from the server
         await StateService.InitializeAsync();
@@ -562,7 +563,7 @@
     private async Task RefreshMuscleGroups()
     {
         // Explicitly clear the muscle groups cache first
-        ReferenceDataService.ClearMuscleGroupsCache();
+        ReferenceDataService.ClearCache<MuscleGroups>();
         
         // InitializeAsync reloads all reference data from the server
         await StateService.InitializeAsync();

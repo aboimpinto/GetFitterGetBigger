@@ -1,8 +1,10 @@
 using FluentAssertions;
 using GetFitterGetBigger.Admin.Models.Dtos;
+using GetFitterGetBigger.Admin.Models.ReferenceData;
 using GetFitterGetBigger.Admin.Services;
 using GetFitterGetBigger.Admin.Builders;
 using GetFitterGetBigger.Admin.Tests.Builders;
+using GetFitterGetBigger.Admin.Tests.TestHelpers;
 using Moq;
 
 namespace GetFitterGetBigger.Admin.Tests.Services
@@ -10,13 +12,13 @@ namespace GetFitterGetBigger.Admin.Tests.Services
     public class ExerciseStateServiceTests
     {
         private readonly Mock<IExerciseService> _exerciseServiceMock;
-        private readonly Mock<IReferenceDataService> _referenceDataServiceMock;
+        private readonly Mock<IGenericReferenceDataService> _referenceDataServiceMock;
         private readonly ExerciseStateService _stateService;
 
         public ExerciseStateServiceTests()
         {
             _exerciseServiceMock = new Mock<IExerciseService>();
-            _referenceDataServiceMock = new Mock<IReferenceDataService>();
+            _referenceDataServiceMock = new Mock<IGenericReferenceDataService>();
             _stateService = new ExerciseStateService(_exerciseServiceMock.Object, _referenceDataServiceMock.Object);
         }
 
@@ -28,13 +30,13 @@ namespace GetFitterGetBigger.Admin.Tests.Services
             var muscleGroups = ReferenceDataDtoBuilder.BuildList(5);
             var exercises = new ExercisePagedResultDto { Items = new List<ExerciseListDto>() };
 
-            _referenceDataServiceMock.Setup(x => x.GetDifficultyLevelsAsync()).ReturnsAsync(difficultyLevels);
-            _referenceDataServiceMock.Setup(x => x.GetMuscleGroupsAsync()).ReturnsAsync(muscleGroups);
-            _referenceDataServiceMock.Setup(x => x.GetMuscleRolesAsync()).ReturnsAsync(ReferenceDataDtoBuilder.BuildList(3));
-            _referenceDataServiceMock.Setup(x => x.GetEquipmentAsync()).ReturnsAsync(ReferenceDataDtoBuilder.BuildList(4));
-            _referenceDataServiceMock.Setup(x => x.GetBodyPartsAsync()).ReturnsAsync(ReferenceDataDtoBuilder.BuildList(2));
-            _referenceDataServiceMock.Setup(x => x.GetMovementPatternsAsync()).ReturnsAsync(ReferenceDataDtoBuilder.BuildList(6));
-            _referenceDataServiceMock.Setup(x => x.GetExerciseTypesAsync()).ReturnsAsync(new List<ExerciseTypeDto>
+            _referenceDataServiceMock.Setup(x => x.GetReferenceDataAsync<DifficultyLevels>()).ReturnsAsync(difficultyLevels);
+            _referenceDataServiceMock.Setup(x => x.GetReferenceDataAsync<MuscleGroups>()).ReturnsAsync(muscleGroups);
+            _referenceDataServiceMock.Setup(x => x.GetReferenceDataAsync<MuscleRoles>()).ReturnsAsync(ReferenceDataDtoBuilder.BuildList(3));
+            _referenceDataServiceMock.Setup(x => x.GetReferenceDataAsync<Equipment>()).ReturnsAsync(ReferenceDataDtoBuilder.BuildList(4));
+            _referenceDataServiceMock.Setup(x => x.GetReferenceDataAsync<BodyParts>()).ReturnsAsync(ReferenceDataDtoBuilder.BuildList(2));
+            _referenceDataServiceMock.Setup(x => x.GetReferenceDataAsync<MovementPatterns>()).ReturnsAsync(ReferenceDataDtoBuilder.BuildList(6));
+            _referenceDataServiceMock.Setup(x => x.GetReferenceDataAsync<ExerciseTypes>()).ReturnsAsync(new List<ReferenceDataDto>
             {
                 new() { Id = "1", Value = "Warmup", Description = "Warmup exercises" },
                 new() { Id = "2", Value = "Workout", Description = "Main workout exercises" },
@@ -76,7 +78,7 @@ namespace GetFitterGetBigger.Admin.Tests.Services
                 Items = new List<ExerciseListDto> { exerciseWithCoachNotes }
             };
 
-            var exerciseTypes = new List<ExerciseTypeDto>
+            var exerciseTypes = new List<ReferenceDataDto>
             {
                 new() { Id = "1", Value = "Warmup", Description = "Warmup exercises" },
                 new() { Id = "2", Value = "Workout", Description = "Main workout exercises" },
@@ -84,13 +86,13 @@ namespace GetFitterGetBigger.Admin.Tests.Services
                 new() { Id = "4", Value = "Rest", Description = "Rest periods" }
             };
 
-            _referenceDataServiceMock.Setup(x => x.GetDifficultyLevelsAsync()).ReturnsAsync(ReferenceDataDtoBuilder.BuildList(3));
-            _referenceDataServiceMock.Setup(x => x.GetMuscleGroupsAsync()).ReturnsAsync(ReferenceDataDtoBuilder.BuildList(5));
-            _referenceDataServiceMock.Setup(x => x.GetMuscleRolesAsync()).ReturnsAsync(ReferenceDataDtoBuilder.BuildList(3));
-            _referenceDataServiceMock.Setup(x => x.GetEquipmentAsync()).ReturnsAsync(ReferenceDataDtoBuilder.BuildList(4));
-            _referenceDataServiceMock.Setup(x => x.GetBodyPartsAsync()).ReturnsAsync(ReferenceDataDtoBuilder.BuildList(2));
-            _referenceDataServiceMock.Setup(x => x.GetMovementPatternsAsync()).ReturnsAsync(ReferenceDataDtoBuilder.BuildList(6));
-            _referenceDataServiceMock.Setup(x => x.GetExerciseTypesAsync()).ReturnsAsync(exerciseTypes);
+            _referenceDataServiceMock.SetupDifficultyLevels(ReferenceDataDtoBuilder.BuildList(3));
+            _referenceDataServiceMock.SetupMuscleGroups(ReferenceDataDtoBuilder.BuildList(5));
+            _referenceDataServiceMock.SetupMuscleRoles(ReferenceDataDtoBuilder.BuildList(3));
+            _referenceDataServiceMock.SetupEquipment(ReferenceDataDtoBuilder.BuildList(4));
+            _referenceDataServiceMock.SetupBodyParts(ReferenceDataDtoBuilder.BuildList(2));
+            _referenceDataServiceMock.SetupMovementPatterns(ReferenceDataDtoBuilder.BuildList(6));
+            _referenceDataServiceMock.SetupExerciseTypes(exerciseTypes);
             _exerciseServiceMock.Setup(x => x.GetExercisesAsync(It.IsAny<ExerciseFilterDto>())).ReturnsAsync(exercises);
 
             // Act
@@ -364,18 +366,13 @@ namespace GetFitterGetBigger.Admin.Tests.Services
         public async Task InitializeAsync_WhenReferenceDataFails_StillLoadsExercises()
         {
             // Arrange
-            _referenceDataServiceMock.Setup(x => x.GetDifficultyLevelsAsync())
+            _referenceDataServiceMock.Setup(x => x.GetReferenceDataAsync<DifficultyLevels>())
                 .ThrowsAsync(new Exception("Reference data error"));
-            _referenceDataServiceMock.Setup(x => x.GetMuscleGroupsAsync())
-                .ReturnsAsync(ReferenceDataDtoBuilder.BuildList(1));
-            _referenceDataServiceMock.Setup(x => x.GetMuscleRolesAsync())
-                .ReturnsAsync(ReferenceDataDtoBuilder.BuildList(1));
-            _referenceDataServiceMock.Setup(x => x.GetEquipmentAsync())
-                .ReturnsAsync(ReferenceDataDtoBuilder.BuildList(1));
-            _referenceDataServiceMock.Setup(x => x.GetBodyPartsAsync())
-                .ReturnsAsync(ReferenceDataDtoBuilder.BuildList(1));
-            _referenceDataServiceMock.Setup(x => x.GetMovementPatternsAsync())
-                .ReturnsAsync(ReferenceDataDtoBuilder.BuildList(1));
+            _referenceDataServiceMock.SetupMuscleGroups(ReferenceDataDtoBuilder.BuildList(1));
+            _referenceDataServiceMock.SetupMuscleRoles(ReferenceDataDtoBuilder.BuildList(1));
+            _referenceDataServiceMock.SetupEquipment(ReferenceDataDtoBuilder.BuildList(1));
+            _referenceDataServiceMock.SetupBodyParts(ReferenceDataDtoBuilder.BuildList(1));
+            _referenceDataServiceMock.SetupMovementPatterns(ReferenceDataDtoBuilder.BuildList(1));
 
             var exercises = new ExercisePagedResultDto { Items = new List<ExerciseListDto>() };
             _exerciseServiceMock.Setup(x => x.GetExercisesAsync(It.IsAny<ExerciseFilterDto>()))

@@ -3,6 +3,7 @@ using FluentAssertions;
 using GetFitterGetBigger.Admin.Components.Pages.Exercises;
 using GetFitterGetBigger.Admin.Models.Dtos;
 using GetFitterGetBigger.Admin.Services;
+using GetFitterGetBigger.Admin.Models.ReferenceData;
 using GetFitterGetBigger.Admin.Builders;
 using Microsoft.Extensions.DependencyInjection;
 using Bunit.TestDoubles;
@@ -49,7 +50,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
             _mockWeightTypeStateService.Setup(x => x.LoadWeightTypesAsync()).Returns(Task.CompletedTask);
 
             Services.AddSingleton<IExerciseStateService>(_mockStateService);
-            Services.AddSingleton<IReferenceDataService>(_mockReferenceDataService);
+            Services.AddSingleton<IGenericReferenceDataService>(_mockReferenceDataService);
             Services.AddSingleton(_mockWeightTypeStateService.Object);
 
             var navMan = Services.GetRequiredService<FakeNavigationManager>();
@@ -558,37 +559,14 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
             public Task LoadExercisesWithStoredPageAsync() => Task.CompletedTask;
         }
 
-        private class MockReferenceDataService : IReferenceDataService
+        private class MockReferenceDataService : IGenericReferenceDataService
         {
-            public Task<IEnumerable<ReferenceDataDto>> GetDifficultyLevelsAsync() =>
-                Task.FromResult<IEnumerable<ReferenceDataDto>>(new List<ReferenceDataDto>());
+            public Task<IEnumerable<ReferenceDataDto>> GetReferenceDataAsync<T>() where T : IReferenceTableEntity
+            {
+                return Task.FromResult<IEnumerable<ReferenceDataDto>>(new List<ReferenceDataDto>());
+            }
 
-            public Task<IEnumerable<ReferenceDataDto>> GetMuscleGroupsAsync() =>
-                Task.FromResult<IEnumerable<ReferenceDataDto>>(new List<ReferenceDataDto>());
-
-            public Task<IEnumerable<ReferenceDataDto>> GetMuscleRolesAsync() =>
-                Task.FromResult<IEnumerable<ReferenceDataDto>>(new List<ReferenceDataDto>());
-
-            public Task<IEnumerable<ReferenceDataDto>> GetEquipmentAsync() =>
-                Task.FromResult<IEnumerable<ReferenceDataDto>>(new List<ReferenceDataDto>());
-
-            public Task<IEnumerable<ReferenceDataDto>> GetBodyPartsAsync() =>
-                Task.FromResult<IEnumerable<ReferenceDataDto>>(new List<ReferenceDataDto>());
-
-            public Task<IEnumerable<ReferenceDataDto>> GetMovementPatternsAsync() =>
-                Task.FromResult<IEnumerable<ReferenceDataDto>>(new List<ReferenceDataDto>());
-
-            public Task<IEnumerable<ExerciseTypeDto>> GetExerciseTypesAsync() =>
-                Task.FromResult<IEnumerable<ExerciseTypeDto>>(new List<ExerciseTypeDto>());
-
-            public Task<IEnumerable<ReferenceDataDto>> GetKineticChainTypesAsync() =>
-                Task.FromResult<IEnumerable<ReferenceDataDto>>(new List<ReferenceDataDto>());
-
-            public Task<IEnumerable<ReferenceDataDto>> GetMetricTypesAsync() =>
-                Task.FromResult<IEnumerable<ReferenceDataDto>>(new List<ReferenceDataDto>());
-
-            public void ClearEquipmentCache() { }
-            public void ClearMuscleGroupsCache() { }
+            public void ClearCache<T>() where T : IReferenceTableEntity { }
         }
     }
 }

@@ -18,17 +18,17 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Shared
     {
         private readonly Mock<IEquipmentService> _mockEquipmentService;
         private readonly Mock<IMuscleGroupsService> _mockMuscleGroupsService;
-        private readonly Mock<IReferenceDataService> _mockReferenceDataService;
+        private readonly Mock<IGenericReferenceDataService> _mockReferenceDataService;
 
         public TagBasedMultiSelectTests()
         {
             _mockEquipmentService = new Mock<IEquipmentService>();
             _mockMuscleGroupsService = new Mock<IMuscleGroupsService>();
-            _mockReferenceDataService = new Mock<IReferenceDataService>();
+            _mockReferenceDataService = new Mock<IGenericReferenceDataService>();
 
             Services.AddSingleton<IEquipmentService>(_mockEquipmentService.Object);
             Services.AddSingleton<IMuscleGroupsService>(_mockMuscleGroupsService.Object);
-            Services.AddSingleton<IReferenceDataService>(_mockReferenceDataService.Object);
+            Services.AddSingleton<IGenericReferenceDataService>(_mockReferenceDataService.Object);
         }
         private readonly List<ReferenceDataDto> _testItems = new()
         {

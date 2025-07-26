@@ -13,7 +13,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages
 {
     public class ExerciseWeightTypeReferenceTests : TestContext
     {
-        private readonly Mock<IReferenceDataService> _referenceDataServiceMock;
+        private readonly Mock<IGenericReferenceDataService> _referenceDataServiceMock;
         private readonly Mock<IEquipmentStateService> _equipmentStateServiceMock;
         private readonly Mock<IMuscleGroupsStateService> _muscleGroupsStateServiceMock;
         private readonly Mock<IExerciseWeightTypeStateService> _exerciseWeightTypeStateServiceMock;
@@ -22,7 +22,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages
 
         public ExerciseWeightTypeReferenceTests()
         {
-            _referenceDataServiceMock = new Mock<IReferenceDataService>();
+            _referenceDataServiceMock = new Mock<IGenericReferenceDataService>();
             _equipmentStateServiceMock = new Mock<IEquipmentStateService>();
             _muscleGroupsStateServiceMock = new Mock<IMuscleGroupsStateService>();
             _exerciseWeightTypeStateServiceMock = new Mock<IExerciseWeightTypeStateService>();

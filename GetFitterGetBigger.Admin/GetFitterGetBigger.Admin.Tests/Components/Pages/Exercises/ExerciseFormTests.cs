@@ -4,6 +4,7 @@ using GetFitterGetBigger.Admin.Components.Pages.Exercises;
 using GetFitterGetBigger.Admin.Models.Dtos;
 using GetFitterGetBigger.Admin.Services;
 using GetFitterGetBigger.Admin.Builders;
+using GetFitterGetBigger.Admin.Tests.TestHelpers;
 using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.DependencyInjection;
 using AngleSharp.Dom;
@@ -19,13 +20,13 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
     public class ExerciseFormTests : TestContext
     {
         private readonly MockExerciseStateService _mockStateService;
-        private readonly MockReferenceDataService _mockReferenceDataService;
+        private readonly MockGenericReferenceDataService _mockReferenceDataService;
         private readonly Mock<IExerciseWeightTypeStateService> _mockWeightTypeStateService;
 
         public ExerciseFormTests()
         {
             _mockStateService = new MockExerciseStateService();
-            _mockReferenceDataService = new MockReferenceDataService();
+            _mockReferenceDataService = new MockGenericReferenceDataService();
             _mockWeightTypeStateService = new Mock<IExerciseWeightTypeStateService>();
 
             // Setup basic weight type state service mock
@@ -34,7 +35,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
             _mockWeightTypeStateService.Setup(x => x.LoadWeightTypesAsync()).Returns(Task.CompletedTask);
 
             Services.AddSingleton<IExerciseStateService>(_mockStateService);
-            Services.AddSingleton<IReferenceDataService>(_mockReferenceDataService);
+            Services.AddSingleton<IGenericReferenceDataService>(_mockReferenceDataService);
             Services.AddSingleton(_mockWeightTypeStateService.Object);
             var navMan = Services.GetRequiredService<FakeNavigationManager>();
             navMan.NavigateTo("http://localhost/exercises/new");
@@ -317,38 +318,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
             public Task LoadExercisesWithStoredPageAsync() => Task.CompletedTask;
         }
 
-        private class MockReferenceDataService : IReferenceDataService
-        {
-            public Task<IEnumerable<ReferenceDataDto>> GetDifficultyLevelsAsync() =>
-                Task.FromResult<IEnumerable<ReferenceDataDto>>(new List<ReferenceDataDto>());
-
-            public Task<IEnumerable<ReferenceDataDto>> GetMuscleGroupsAsync() =>
-                Task.FromResult<IEnumerable<ReferenceDataDto>>(new List<ReferenceDataDto>());
-
-            public Task<IEnumerable<ReferenceDataDto>> GetMuscleRolesAsync() =>
-                Task.FromResult<IEnumerable<ReferenceDataDto>>(new List<ReferenceDataDto>());
-
-            public Task<IEnumerable<ReferenceDataDto>> GetEquipmentAsync() =>
-                Task.FromResult<IEnumerable<ReferenceDataDto>>(new List<ReferenceDataDto>());
-
-            public Task<IEnumerable<ReferenceDataDto>> GetBodyPartsAsync() =>
-                Task.FromResult<IEnumerable<ReferenceDataDto>>(new List<ReferenceDataDto>());
-
-            public Task<IEnumerable<ReferenceDataDto>> GetMovementPatternsAsync() =>
-                Task.FromResult<IEnumerable<ReferenceDataDto>>(new List<ReferenceDataDto>());
-
-            public Task<IEnumerable<ExerciseTypeDto>> GetExerciseTypesAsync() =>
-                Task.FromResult<IEnumerable<ExerciseTypeDto>>(new List<ExerciseTypeDto>());
-
-            public Task<IEnumerable<ReferenceDataDto>> GetKineticChainTypesAsync() =>
-                Task.FromResult<IEnumerable<ReferenceDataDto>>(new List<ReferenceDataDto>());
-
-            public Task<IEnumerable<ReferenceDataDto>> GetMetricTypesAsync() =>
-                Task.FromResult<IEnumerable<ReferenceDataDto>>(new List<ReferenceDataDto>());
-
-            public void ClearEquipmentCache() { }
-            public void ClearMuscleGroupsCache() { }
-        }
+        // Mock class removed - using shared MockGenericReferenceDataService from TestHelpers
 
     }
 }

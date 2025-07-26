@@ -1,5 +1,6 @@
 using FluentAssertions;
 using GetFitterGetBigger.Admin.Models.Dtos;
+using GetFitterGetBigger.Admin.Models.ReferenceData;
 using GetFitterGetBigger.Admin.Services;
 using Moq;
 using Xunit;
@@ -9,13 +10,13 @@ namespace GetFitterGetBigger.Admin.Tests.Services
     public class MuscleGroupsStateServiceTests
     {
         private readonly Mock<IMuscleGroupsService> _muscleGroupsServiceMock;
-        private readonly Mock<IReferenceDataService> _referenceDataServiceMock;
+        private readonly Mock<IGenericReferenceDataService> _referenceDataServiceMock;
         private readonly MuscleGroupsStateService _stateService;
 
         public MuscleGroupsStateServiceTests()
         {
             _muscleGroupsServiceMock = new Mock<IMuscleGroupsService>();
-            _referenceDataServiceMock = new Mock<IReferenceDataService>();
+            _referenceDataServiceMock = new Mock<IGenericReferenceDataService>();
             _stateService = new MuscleGroupsStateService(
                 _muscleGroupsServiceMock.Object,
                 _referenceDataServiceMock.Object);
@@ -75,7 +76,7 @@ namespace GetFitterGetBigger.Admin.Tests.Services
                 new() { Id = "mg-2", Name = "Quadriceps", BodyPartId = "bp-2", IsActive = true, CreatedAt = DateTime.UtcNow }
             };
 
-            _referenceDataServiceMock.Setup(x => x.GetBodyPartsAsync())
+            _referenceDataServiceMock.Setup(x => x.GetReferenceDataAsync<BodyParts>())
                 .ReturnsAsync(bodyParts);
             _muscleGroupsServiceMock.Setup(x => x.GetMuscleGroupsAsync())
                 .ReturnsAsync(muscleGroups);
@@ -102,7 +103,7 @@ namespace GetFitterGetBigger.Admin.Tests.Services
                 new() { Id = "bp-1", Value = "Arms" },
                 new() { Id = "bp-2", Value = "Legs" }
             };
-            _referenceDataServiceMock.Setup(x => x.GetBodyPartsAsync())
+            _referenceDataServiceMock.Setup(x => x.GetReferenceDataAsync<BodyParts>())
                 .ReturnsAsync(bodyParts);
 
             // Act
@@ -428,7 +429,7 @@ namespace GetFitterGetBigger.Admin.Tests.Services
                 new() { Id = "mg-1", Name = "Biceps", BodyPartId = "bp-1", IsActive = true, CreatedAt = DateTime.UtcNow }
             };
 
-            _referenceDataServiceMock.Setup(x => x.GetBodyPartsAsync())
+            _referenceDataServiceMock.Setup(x => x.GetReferenceDataAsync<BodyParts>())
                 .ReturnsAsync(bodyParts);
             _muscleGroupsServiceMock.Setup(x => x.GetMuscleGroupsAsync())
                 .ReturnsAsync(muscleGroups);

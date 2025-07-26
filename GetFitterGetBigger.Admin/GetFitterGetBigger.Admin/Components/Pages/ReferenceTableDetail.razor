@@ -1,11 +1,12 @@
 @page "/referencetables/{TableName}"
 @using GetFitterGetBigger.Admin.Models.Dtos
+@using RefData = GetFitterGetBigger.Admin.Models.ReferenceData
 @using GetFitterGetBigger.Admin.Services
 @using GetFitterGetBigger.Admin.Components.Pages.Equipment
 @using GetFitterGetBigger.Admin.Components.Pages.MuscleGroups
 @using GetFitterGetBigger.Admin.Components.Shared
 @using Microsoft.AspNetCore.Authorization
-@inject IReferenceDataService ReferenceDataService
+@inject IGenericReferenceDataService ReferenceDataService
 @inject IEquipmentStateService EquipmentStateService
 @inject IMuscleGroupsStateService MuscleGroupsStateService
 @inject IExerciseWeightTypeStateService ExerciseWeightTypeStateService
@@ -858,14 +859,14 @@ else
     protected override void OnInitialized()
     {
         // Initialize data fetchers dictionary
-        _dataFetchers["BodyParts"] = ReferenceDataService.GetBodyPartsAsync;
-        _dataFetchers["DifficultyLevels"] = ReferenceDataService.GetDifficultyLevelsAsync;
-        _dataFetchers["Equipment"] = ReferenceDataService.GetEquipmentAsync;
-        _dataFetchers["KineticChainTypes"] = ReferenceDataService.GetKineticChainTypesAsync;
-        _dataFetchers["MetricTypes"] = ReferenceDataService.GetMetricTypesAsync;
-        _dataFetchers["MovementPatterns"] = ReferenceDataService.GetMovementPatternsAsync;
-        _dataFetchers["MuscleGroups"] = ReferenceDataService.GetMuscleGroupsAsync;
-        _dataFetchers["MuscleRoles"] = ReferenceDataService.GetMuscleRolesAsync;
+        _dataFetchers["BodyParts"] = () => ReferenceDataService.GetReferenceDataAsync<RefData.BodyParts>();
+        _dataFetchers["DifficultyLevels"] = () => ReferenceDataService.GetReferenceDataAsync<RefData.DifficultyLevels>();
+        _dataFetchers["Equipment"] = () => ReferenceDataService.GetReferenceDataAsync<RefData.Equipment>();
+        _dataFetchers["KineticChainTypes"] = () => ReferenceDataService.GetReferenceDataAsync<RefData.KineticChainTypes>();
+        _dataFetchers["MetricTypes"] = () => ReferenceDataService.GetReferenceDataAsync<RefData.MetricTypes>();
+        _dataFetchers["MovementPatterns"] = () => ReferenceDataService.GetReferenceDataAsync<RefData.MovementPatterns>();
+        _dataFetchers["MuscleGroups"] = () => ReferenceDataService.GetReferenceDataAsync<RefData.MuscleGroups>();
+        _dataFetchers["MuscleRoles"] = () => ReferenceDataService.GetReferenceDataAsync<RefData.MuscleRoles>();
     }
 
     // Equipment management fields
