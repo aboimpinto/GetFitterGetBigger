@@ -2,6 +2,7 @@
 @page "/workout-templates/{Id}/edit"
 @using GetFitterGetBigger.Admin.Models.Dtos
 @using GetFitterGetBigger.Admin.Services
+@using GetFitterGetBigger.Admin.Services.Stores
 @using GetFitterGetBigger.Admin.Components.WorkoutTemplates
 @using GetFitterGetBigger.Admin.Components.Shared
 @using Microsoft.AspNetCore.Authorization
@@ -9,7 +10,7 @@
 @attribute [Authorize]
 @rendermode InteractiveServer
 @inject IWorkoutTemplateService WorkoutTemplateService
-@inject IWorkoutTemplateStateService StateService
+@inject IWorkoutTemplateFormStore FormStore
 @inject NavigationManager Navigation
 @inject IToastService ToastService
 @implements IDisposable
@@ -28,11 +29,11 @@
             <p class="text-gray-600">@(IsEditMode ? "Update workout template details" : "Add a new workout template to your library")</p>
         </div>
 
-        @if (StateService.ErrorMessage != null)
+        @if (!string.IsNullOrEmpty(errorMessage))
         {
             <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4">
-                <p>@StateService.ErrorMessage</p>
-                <button @onclick="StateService.ClearError" class="text-sm underline mt-1">Dismiss</button>
+                <p>@errorMessage</p>
+                <button @onclick="() => errorMessage = null" class="text-sm underline mt-1">Dismiss</button>
             </div>
         }
 
@@ -72,6 +73,7 @@
     private bool IsEditMode => !string.IsNullOrWhiteSpace(Id);
     private bool IsLoading = true;
     private List<Breadcrumb.BreadcrumbItem> breadcrumbItems = new();
+    private string? errorMessage;
 
     protected override async Task OnInitializedAsync()
     {
@@ -87,7 +89,8 @@
             if (IsEditMode && !string.IsNullOrWhiteSpace(Id))
             {
                 // Load existing template for editing
-                ExistingTemplate = await WorkoutTemplateService.GetWorkoutTemplateByIdAsync(Id);
+                await FormStore.LoadTemplateAsync(Id);
+                ExistingTemplate = FormStore.CurrentTemplate;
                 
                 if (ExistingTemplate == null)
                 {
@@ -168,7 +171,7 @@
                     Tags = model.Tags
                 };
 
-                await WorkoutTemplateService.UpdateWorkoutTemplateAsync(Id!, updateDto);
+                await FormStore.UpdateTemplateAsync(Id!, updateDto);
                 
                 // If auto-save is enabled, this might be called from auto-save
                 // Don't navigate away in that case
@@ -193,14 +196,14 @@
                     Tags = model.Tags
                 };
 
-                await WorkoutTemplateService.CreateWorkoutTemplateAsync(createDto);
+                await FormStore.CreateTemplateAsync(createDto);
                 ToastService.ShowSuccess($"Workout template '{model.Name}' created successfully.");
                 NavigateToList();
             }
         }
         catch (Exception ex)
         {
-            // Error will be shown through StateService.ErrorMessage
+            errorMessage = "Failed to save workout template. Please try again.";
             Console.Error.WriteLine($"Failed to save workout template: {ex.Message}");
         }
     }
@@ -212,10 +215,6 @@
 
     private void NavigateToList()
     {
-        if (StateService.HasStoredPage)
-        {
-            StateService.LoadWorkoutTemplatesWithStoredPageAsync();
-        }
         Navigation.NavigateTo("/workout-templates");
     }
 

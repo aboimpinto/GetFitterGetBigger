@@ -1,3 +1,4 @@
+using System.Linq.Expressions;
 using GetFitterGetBigger.Admin.Models.Errors;
 using GetFitterGetBigger.Admin.Models.Results;
 
@@ -99,6 +100,54 @@ public class ValidationBuilder<T>
                 _errors.Add(ServiceError.ValidationOutOfRange(fieldName, $"maximum {maxCount.Value} items"));
         }
         
+        return this;
+    }
+
+    public ValidationBuilder<T> EnsureCappedRange(
+        Expression<Func<T, int>> propertyExpression,
+        int min,
+        int max,
+        ILogger? logger = null)
+    {
+        // Get the property
+        var memberExpression = propertyExpression.Body as MemberExpression;
+        if (memberExpression == null)
+        {
+            throw new ArgumentException("Expression must be a property expression");
+        }
+        
+        var property = memberExpression.Member as System.Reflection.PropertyInfo;
+        if (property == null || !property.CanWrite)
+        {
+            throw new ArgumentException("Expression must refer to a writable property");
+        }
+        
+        // Extract property name for logging
+        var propertyName = property.Name;
+        
+        // Get current value
+        var originalValue = propertyExpression.Compile()(_value);
+        var newValue = originalValue;
+        
+        // Cap the value if needed
+        if (originalValue < min)
+        {
+            newValue = min;
+            property.SetValue(_value, newValue);
+            logger?.LogWarning(
+                "{PropertyName} value {OriginalValue} exceeds limits, capped to {CappedValue}", 
+                propertyName, originalValue, newValue);
+        }
+        else if (originalValue > max)
+        {
+            newValue = max;
+            property.SetValue(_value, newValue);
+            logger?.LogWarning(
+                "{PropertyName} value {OriginalValue} exceeds limits, capped to {CappedValue}", 
+                propertyName, originalValue, newValue);
+        }
+        
+        // No errors since we're capping instead of failing
         return this;
     }
 

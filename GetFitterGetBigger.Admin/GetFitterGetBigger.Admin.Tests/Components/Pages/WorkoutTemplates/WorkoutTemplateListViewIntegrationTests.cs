@@ -70,10 +70,13 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.WorkoutTemplates
         public async Task CompleteWorkflow_LoadsTemplates_AppliesFilters_NavigatesToTemplate()
         {
             // Arrange - Setup initial data
-            MockWorkoutTemplateStateService.Setup(x => x.IsLoading).Returns(false);
-            MockWorkoutTemplateStateService.Setup(x => x.CurrentPage).Returns(_testPageData);
-            MockWorkoutTemplateStateService.Setup(x => x.CurrentFilter).Returns(new WorkoutTemplateFilterDto());
-            MockWorkoutTemplateStateService.Setup(x => x.ErrorMessage).Returns((string?)null);
+            MockWorkoutTemplateListStore.Setup(x => x.IsLoading).Returns(false);
+            MockWorkoutTemplateListStore.Setup(x => x.CurrentPage).Returns(_testPageData);
+            MockWorkoutTemplateListStore.Setup(x => x.CurrentFilter).Returns(new WorkoutTemplateFilterDto());
+            MockWorkoutTemplateListStore.Setup(x => x.ErrorMessage).Returns((string?)null);
+            MockWorkoutReferenceDataStore.Setup(x => x.WorkoutCategories).Returns(new List<ReferenceDataDto>());
+            MockWorkoutReferenceDataStore.Setup(x => x.DifficultyLevels).Returns(new List<ReferenceDataDto>());
+            MockWorkoutReferenceDataStore.Setup(x => x.WorkoutStates).Returns(new List<ReferenceDataDto>());
 
             var component = RenderComponent<GetFitterGetBigger.Admin.Components.Pages.WorkoutTemplates.WorkoutTemplates>();
             
@@ -95,7 +98,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.WorkoutTemplates
                 TotalCount = 1,
                 TotalPages = 1
             };
-            MockWorkoutTemplateStateService.Setup(x => x.CurrentPage).Returns(filteredData);
+            MockWorkoutTemplateListStore.Setup(x => x.CurrentPage).Returns(filteredData);
             
             var applyButton = component.Find("[data-testid='apply-filter-button']");
             await component.InvokeAsync(() => applyButton.Click());
@@ -111,7 +114,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.WorkoutTemplates
             
             // Act - Clear filters
             var clearButton = component.Find("[data-testid='clear-filter-button']");
-            MockWorkoutTemplateStateService.Setup(x => x.CurrentPage).Returns(_testPageData); // Reset data after filter
+            MockWorkoutTemplateListStore.Setup(x => x.CurrentPage).Returns(_testPageData); // Reset data after filter
             await component.InvokeAsync(() => clearButton.Click());
             
             // Assert - All templates shown again
@@ -132,10 +135,13 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.WorkoutTemplates
         public async Task FilteringWorkflow_CombinesMultipleFilters()
         {
             // Arrange
-            MockWorkoutTemplateStateService.Setup(x => x.IsLoading).Returns(false);
-            MockWorkoutTemplateStateService.Setup(x => x.CurrentPage).Returns(_testPageData);
-            MockWorkoutTemplateStateService.Setup(x => x.CurrentFilter).Returns(new WorkoutTemplateFilterDto());
-            MockWorkoutTemplateStateService.Setup(x => x.ErrorMessage).Returns((string?)null);
+            MockWorkoutTemplateListStore.Setup(x => x.IsLoading).Returns(false);
+            MockWorkoutTemplateListStore.Setup(x => x.CurrentPage).Returns(_testPageData);
+            MockWorkoutTemplateListStore.Setup(x => x.CurrentFilter).Returns(new WorkoutTemplateFilterDto());
+            MockWorkoutTemplateListStore.Setup(x => x.ErrorMessage).Returns((string?)null);
+            MockWorkoutReferenceDataStore.Setup(x => x.WorkoutCategories).Returns(new List<ReferenceDataDto>());
+            MockWorkoutReferenceDataStore.Setup(x => x.DifficultyLevels).Returns(new List<ReferenceDataDto>());
+            MockWorkoutReferenceDataStore.Setup(x => x.WorkoutStates).Returns(new List<ReferenceDataDto>());
 
             var component = RenderComponent<GetFitterGetBigger.Admin.Components.Pages.WorkoutTemplates.WorkoutTemplates>();
             component.WaitForElement("[data-testid='template-grid']");
@@ -148,9 +154,10 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.WorkoutTemplates
             var applyButton = component.Find("[data-testid='apply-filter-button']");
             await component.InvokeAsync(() => applyButton.Click());
             
-            // Assert - Filters combined correctly in state service
-            MockWorkoutTemplateStateService.Verify(x => x.LoadWorkoutTemplatesAsync(
+            // Assert - Filters combined correctly in store
+            MockWorkoutTemplateListStore.Verify(x => x.LoadTemplatesAsync(
                 It.Is<WorkoutTemplateFilterDto>(f => 
+                    f != null &&
                     f.CategoryId == "strength" && 
                     f.DifficultyId == "intermediate" && 
                     f.StateId == "published")), Times.Once);
@@ -160,10 +167,13 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.WorkoutTemplates
         public async Task SortingWorkflow_ChangesSortOrder()
         {
             // Arrange
-            MockWorkoutTemplateStateService.Setup(x => x.IsLoading).Returns(false);
-            MockWorkoutTemplateStateService.Setup(x => x.CurrentPage).Returns(_testPageData);
-            MockWorkoutTemplateStateService.Setup(x => x.CurrentFilter).Returns(new WorkoutTemplateFilterDto());
-            MockWorkoutTemplateStateService.Setup(x => x.ErrorMessage).Returns((string?)null);
+            MockWorkoutTemplateListStore.Setup(x => x.IsLoading).Returns(false);
+            MockWorkoutTemplateListStore.Setup(x => x.CurrentPage).Returns(_testPageData);
+            MockWorkoutTemplateListStore.Setup(x => x.CurrentFilter).Returns(new WorkoutTemplateFilterDto());
+            MockWorkoutTemplateListStore.Setup(x => x.ErrorMessage).Returns((string?)null);
+            MockWorkoutReferenceDataStore.Setup(x => x.WorkoutCategories).Returns(new List<ReferenceDataDto>());
+            MockWorkoutReferenceDataStore.Setup(x => x.DifficultyLevels).Returns(new List<ReferenceDataDto>());
+            MockWorkoutReferenceDataStore.Setup(x => x.WorkoutStates).Returns(new List<ReferenceDataDto>());
 
             var component = RenderComponent<GetFitterGetBigger.Admin.Components.Pages.WorkoutTemplates.WorkoutTemplates>();
             component.WaitForElement("[data-testid='template-grid']");
@@ -198,10 +208,13 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.WorkoutTemplates
                 TotalPages = 3
             };
             
-            MockWorkoutTemplateStateService.Setup(x => x.IsLoading).Returns(false);
-            MockWorkoutTemplateStateService.Setup(x => x.CurrentPage).Returns(paginatedData);
-            MockWorkoutTemplateStateService.Setup(x => x.CurrentFilter).Returns(new WorkoutTemplateFilterDto { Page = 1 });
-            MockWorkoutTemplateStateService.Setup(x => x.ErrorMessage).Returns((string?)null);
+            MockWorkoutTemplateListStore.Setup(x => x.IsLoading).Returns(false);
+            MockWorkoutTemplateListStore.Setup(x => x.CurrentPage).Returns(paginatedData);
+            MockWorkoutTemplateListStore.Setup(x => x.CurrentFilter).Returns(new WorkoutTemplateFilterDto { Page = 1 });
+            MockWorkoutTemplateListStore.Setup(x => x.ErrorMessage).Returns((string?)null);
+            MockWorkoutReferenceDataStore.Setup(x => x.WorkoutCategories).Returns(new List<ReferenceDataDto>());
+            MockWorkoutReferenceDataStore.Setup(x => x.DifficultyLevels).Returns(new List<ReferenceDataDto>());
+            MockWorkoutReferenceDataStore.Setup(x => x.WorkoutStates).Returns(new List<ReferenceDataDto>());
 
             var component = RenderComponent<GetFitterGetBigger.Admin.Components.Pages.WorkoutTemplates.WorkoutTemplates>();
             component.WaitForElement("[data-testid='template-grid']");
@@ -214,18 +227,21 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.WorkoutTemplates
             await component.InvokeAsync(() => nextButton.Click());
             
             // Assert - Page 2 loaded
-            MockWorkoutTemplateStateService.Verify(x => x.LoadWorkoutTemplatesAsync(
-                It.Is<WorkoutTemplateFilterDto>(f => f.Page == 2)), Times.Once);
+            MockWorkoutTemplateListStore.Verify(x => x.LoadTemplatesAsync(
+                It.Is<WorkoutTemplateFilterDto>(f => f != null && f.Page == 2)), Times.Once);
         }
 
         [Fact]
         public void LoadingState_DisplaysSkeletonLoaders()
         {
             // Arrange
-            MockWorkoutTemplateStateService.Setup(x => x.IsLoading).Returns(true);
-            MockWorkoutTemplateStateService.Setup(x => x.CurrentPage).Returns((WorkoutTemplatePagedResultDto?)null);
-            MockWorkoutTemplateStateService.Setup(x => x.CurrentFilter).Returns(new WorkoutTemplateFilterDto());
-            MockWorkoutTemplateStateService.Setup(x => x.ErrorMessage).Returns((string?)null);
+            MockWorkoutTemplateListStore.Setup(x => x.IsLoading).Returns(true);
+            MockWorkoutTemplateListStore.Setup(x => x.CurrentPage).Returns((WorkoutTemplatePagedResultDto?)null);
+            MockWorkoutTemplateListStore.Setup(x => x.CurrentFilter).Returns(new WorkoutTemplateFilterDto());
+            MockWorkoutTemplateListStore.Setup(x => x.ErrorMessage).Returns((string?)null);
+            MockWorkoutReferenceDataStore.Setup(x => x.WorkoutCategories).Returns(new List<ReferenceDataDto>());
+            MockWorkoutReferenceDataStore.Setup(x => x.DifficultyLevels).Returns(new List<ReferenceDataDto>());
+            MockWorkoutReferenceDataStore.Setup(x => x.WorkoutStates).Returns(new List<ReferenceDataDto>());
             
             // Act
             var component = RenderComponent<GetFitterGetBigger.Admin.Components.Pages.WorkoutTemplates.WorkoutTemplates>();
@@ -245,10 +261,13 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.WorkoutTemplates
                 TotalPages = 0
             };
             
-            MockWorkoutTemplateStateService.Setup(x => x.IsLoading).Returns(false);
-            MockWorkoutTemplateStateService.Setup(x => x.CurrentPage).Returns(emptyData);
-            MockWorkoutTemplateStateService.Setup(x => x.CurrentFilter).Returns(new WorkoutTemplateFilterDto());
-            MockWorkoutTemplateStateService.Setup(x => x.ErrorMessage).Returns((string?)null);
+            MockWorkoutTemplateListStore.Setup(x => x.IsLoading).Returns(false);
+            MockWorkoutTemplateListStore.Setup(x => x.CurrentPage).Returns(emptyData);
+            MockWorkoutTemplateListStore.Setup(x => x.CurrentFilter).Returns(new WorkoutTemplateFilterDto());
+            MockWorkoutTemplateListStore.Setup(x => x.ErrorMessage).Returns((string?)null);
+            MockWorkoutReferenceDataStore.Setup(x => x.WorkoutCategories).Returns(new List<ReferenceDataDto>());
+            MockWorkoutReferenceDataStore.Setup(x => x.DifficultyLevels).Returns(new List<ReferenceDataDto>());
+            MockWorkoutReferenceDataStore.Setup(x => x.WorkoutStates).Returns(new List<ReferenceDataDto>());
             
             // Act
             var component = RenderComponent<GetFitterGetBigger.Admin.Components.Pages.WorkoutTemplates.WorkoutTemplates>();
@@ -272,10 +291,13 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.WorkoutTemplates
                 TotalPages = 0
             };
             
-            MockWorkoutTemplateStateService.Setup(x => x.IsLoading).Returns(false);
-            MockWorkoutTemplateStateService.Setup(x => x.CurrentPage).Returns(emptyData);
-            MockWorkoutTemplateStateService.Setup(x => x.CurrentFilter).Returns(new WorkoutTemplateFilterDto { NamePattern = "NonExistent" });
-            MockWorkoutTemplateStateService.Setup(x => x.ErrorMessage).Returns((string?)null);
+            MockWorkoutTemplateListStore.Setup(x => x.IsLoading).Returns(false);
+            MockWorkoutTemplateListStore.Setup(x => x.CurrentPage).Returns(emptyData);
+            MockWorkoutTemplateListStore.Setup(x => x.CurrentFilter).Returns(new WorkoutTemplateFilterDto { NamePattern = "NonExistent" });
+            MockWorkoutTemplateListStore.Setup(x => x.ErrorMessage).Returns((string?)null);
+            MockWorkoutReferenceDataStore.Setup(x => x.WorkoutCategories).Returns(new List<ReferenceDataDto>());
+            MockWorkoutReferenceDataStore.Setup(x => x.DifficultyLevels).Returns(new List<ReferenceDataDto>());
+            MockWorkoutReferenceDataStore.Setup(x => x.WorkoutStates).Returns(new List<ReferenceDataDto>());
 
             var component = RenderComponent<GetFitterGetBigger.Admin.Components.Pages.WorkoutTemplates.WorkoutTemplates>();
             
@@ -296,10 +318,13 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.WorkoutTemplates
         public async Task ErrorState_DisplaysErrorAndAllowsRetry()
         {
             // Arrange
-            MockWorkoutTemplateStateService.Setup(x => x.IsLoading).Returns(false);
-            MockWorkoutTemplateStateService.Setup(x => x.CurrentPage).Returns((WorkoutTemplatePagedResultDto?)null);
-            MockWorkoutTemplateStateService.Setup(x => x.CurrentFilter).Returns(new WorkoutTemplateFilterDto());
-            MockWorkoutTemplateStateService.Setup(x => x.ErrorMessage).Returns("Failed to load templates");
+            MockWorkoutTemplateListStore.Setup(x => x.IsLoading).Returns(false);
+            MockWorkoutTemplateListStore.Setup(x => x.CurrentPage).Returns((WorkoutTemplatePagedResultDto?)null);
+            MockWorkoutTemplateListStore.Setup(x => x.CurrentFilter).Returns(new WorkoutTemplateFilterDto());
+            MockWorkoutTemplateListStore.Setup(x => x.ErrorMessage).Returns("Failed to load templates");
+            MockWorkoutReferenceDataStore.Setup(x => x.WorkoutCategories).Returns(new List<ReferenceDataDto>());
+            MockWorkoutReferenceDataStore.Setup(x => x.DifficultyLevels).Returns(new List<ReferenceDataDto>());
+            MockWorkoutReferenceDataStore.Setup(x => x.WorkoutStates).Returns(new List<ReferenceDataDto>());
             
             // Act
             var component = RenderComponent<GetFitterGetBigger.Admin.Components.Pages.WorkoutTemplates.WorkoutTemplates>();
@@ -312,25 +337,28 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.WorkoutTemplates
             });
             
             // Act - Click retry
-            MockWorkoutTemplateStateService.Setup(x => x.ErrorMessage).Returns((string?)null);
-            MockWorkoutTemplateStateService.Setup(x => x.CurrentPage).Returns(_testPageData); // Reset to success
+            MockWorkoutTemplateListStore.Setup(x => x.ErrorMessage).Returns((string?)null);
+            MockWorkoutTemplateListStore.Setup(x => x.CurrentPage).Returns(_testPageData); // Reset to success
             
             var retryButton = component.Find("[data-testid='retry-button']");
             await component.InvokeAsync(() => retryButton.Click());
             
             // Assert - Data loaded after retry
-            MockWorkoutTemplateStateService.Verify(x => x.ClearError(), Times.Once);
-            MockWorkoutTemplateStateService.Verify(x => x.RefreshCurrentPageAsync(), Times.Once);
+            MockWorkoutTemplateListStore.Verify(x => x.ClearError(), Times.Once);
+            MockWorkoutTemplateListStore.Verify(x => x.RefreshAsync(), Times.Once);
         }
 
         [Fact]
         public async Task CreateNewButton_NavigatesToCreatePage()
         {
             // Arrange
-            MockWorkoutTemplateStateService.Setup(x => x.IsLoading).Returns(false);
-            MockWorkoutTemplateStateService.Setup(x => x.CurrentPage).Returns(_testPageData);
-            MockWorkoutTemplateStateService.Setup(x => x.CurrentFilter).Returns(new WorkoutTemplateFilterDto());
-            MockWorkoutTemplateStateService.Setup(x => x.ErrorMessage).Returns((string?)null);
+            MockWorkoutTemplateListStore.Setup(x => x.IsLoading).Returns(false);
+            MockWorkoutTemplateListStore.Setup(x => x.CurrentPage).Returns(_testPageData);
+            MockWorkoutTemplateListStore.Setup(x => x.CurrentFilter).Returns(new WorkoutTemplateFilterDto());
+            MockWorkoutTemplateListStore.Setup(x => x.ErrorMessage).Returns((string?)null);
+            MockWorkoutReferenceDataStore.Setup(x => x.WorkoutCategories).Returns(new List<ReferenceDataDto>());
+            MockWorkoutReferenceDataStore.Setup(x => x.DifficultyLevels).Returns(new List<ReferenceDataDto>());
+            MockWorkoutReferenceDataStore.Setup(x => x.WorkoutStates).Returns(new List<ReferenceDataDto>());
 
             var component = RenderComponent<GetFitterGetBigger.Admin.Components.Pages.WorkoutTemplates.WorkoutTemplates>();
             component.WaitForElement("[data-testid='template-grid']");
@@ -347,24 +375,24 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.WorkoutTemplates
         public async Task TemplateCardActions_TriggersCorrectHandlers()
         {
             // Arrange
-            MockWorkoutTemplateStateService.Setup(x => x.IsLoading).Returns(false);
-            MockWorkoutTemplateStateService.Setup(x => x.CurrentPage).Returns(_testPageData);
-            MockWorkoutTemplateStateService.Setup(x => x.CurrentFilter).Returns(new WorkoutTemplateFilterDto());
-            MockWorkoutTemplateStateService.Setup(x => x.ErrorMessage).Returns((string?)null);
+            MockWorkoutTemplateListStore.Setup(x => x.IsLoading).Returns(false);
+            MockWorkoutTemplateListStore.Setup(x => x.CurrentPage).Returns(_testPageData);
+            MockWorkoutTemplateListStore.Setup(x => x.CurrentFilter).Returns(new WorkoutTemplateFilterDto());
+            MockWorkoutTemplateListStore.Setup(x => x.ErrorMessage).Returns((string?)null);
             
             // Setup reference data
-            MockWorkoutTemplateStateService.Setup(x => x.WorkoutCategories).Returns(new List<ReferenceDataDto>
+            MockWorkoutReferenceDataStore.Setup(x => x.WorkoutCategories).Returns(new List<ReferenceDataDto>
             {
                 new() { Id = "strength", Value = "Strength" },
                 new() { Id = "cardio", Value = "Cardio" }
             });
-            MockWorkoutTemplateStateService.Setup(x => x.DifficultyLevels).Returns(new List<ReferenceDataDto>
+            MockWorkoutReferenceDataStore.Setup(x => x.DifficultyLevels).Returns(new List<ReferenceDataDto>
             {
                 new() { Id = "beginner", Value = "Beginner" },
                 new() { Id = "intermediate", Value = "Intermediate" },
                 new() { Id = "advanced", Value = "Advanced" }
             });
-            MockWorkoutTemplateStateService.Setup(x => x.WorkoutStates).Returns(new List<ReferenceDataDto>
+            MockWorkoutReferenceDataStore.Setup(x => x.WorkoutStates).Returns(new List<ReferenceDataDto>
             {
                 new() { Id = "draft", Value = "DRAFT" },
                 new() { Id = "published", Value = "PUBLISHED" }

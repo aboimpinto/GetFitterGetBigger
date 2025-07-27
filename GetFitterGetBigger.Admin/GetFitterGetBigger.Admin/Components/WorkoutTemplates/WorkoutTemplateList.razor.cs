@@ -1,4 +1,5 @@
 using GetFitterGetBigger.Admin.Models.Dtos;
+using GetFitterGetBigger.Admin.Services.Stores;
 using Microsoft.AspNetCore.Components;
 
 namespace GetFitterGetBigger.Admin.Components.WorkoutTemplates
@@ -17,15 +18,15 @@ namespace GetFitterGetBigger.Admin.Components.WorkoutTemplates
 
         protected override void OnInitialized()
         {
-            StateService.OnChange += StateHasChanged;
+            ListStore.OnChange += StateHasChanged;
         }
 
         internal IEnumerable<WorkoutTemplateDto> GetSortedTemplates()
         {
-            if (StateService.CurrentPage?.Items == null)
+            if (ListStore.CurrentPage?.Items == null)
                 return Enumerable.Empty<WorkoutTemplateDto>();
 
-            var templates = StateService.CurrentPage.Items.AsEnumerable();
+            var templates = ListStore.CurrentPage.Items.AsEnumerable();
 
             templates = sortBy switch
             {
@@ -58,7 +59,7 @@ namespace GetFitterGetBigger.Admin.Components.WorkoutTemplates
 
         internal bool HasActiveFilters()
         {
-            var filter = StateService.CurrentFilter;
+            var filter = ListStore.CurrentFilter;
             return !string.IsNullOrWhiteSpace(filter.NamePattern) ||
                    !string.IsNullOrWhiteSpace(filter.CategoryId) ||
                    !string.IsNullOrWhiteSpace(filter.DifficultyId) ||
@@ -73,8 +74,8 @@ namespace GetFitterGetBigger.Admin.Components.WorkoutTemplates
                 isRetrying = true;
                 StateHasChanged();
                 
-                StateService.ClearError();
-                await StateService.RefreshCurrentPageAsync();
+                ListStore.ClearError();
+                await ListStore.RefreshAsync();
             }
             finally
             {
@@ -130,35 +131,35 @@ namespace GetFitterGetBigger.Admin.Components.WorkoutTemplates
                 WorkoutStateId = newState.Id
             };
 
-            await StateService.ChangeWorkoutTemplateStateAsync(template.Id, changeStateDto);
+            await ListStore.ChangeTemplateStateAsync(template.Id, changeStateDto);
         }
 
         internal async Task GoToPage(int page)
         {
-            var filter = StateService.CurrentFilter;
+            var filter = ListStore.CurrentFilter;
             filter.Page = page;
-            await StateService.LoadWorkoutTemplatesAsync(filter);
+            await ListStore.LoadTemplatesAsync(filter);
         }
 
         internal async Task GoToPreviousPage()
         {
-            if (StateService.CurrentFilter.Page > 1)
+            if (ListStore.CurrentFilter.Page > 1)
             {
-                await GoToPage(StateService.CurrentFilter.Page - 1);
+                await GoToPage(ListStore.CurrentFilter.Page - 1);
             }
         }
 
         internal async Task GoToNextPage()
         {
-            if (StateService.CurrentPage != null && StateService.CurrentFilter.Page < StateService.CurrentPage.TotalPages)
+            if (ListStore.CurrentPage != null && ListStore.CurrentFilter.Page < ListStore.CurrentPage.TotalPages)
             {
-                await GoToPage(StateService.CurrentFilter.Page + 1);
+                await GoToPage(ListStore.CurrentFilter.Page + 1);
             }
         }
 
         public void Dispose()
         {
-            StateService.OnChange -= StateHasChanged;
+            ListStore.OnChange -= StateHasChanged;
         }
     }
 }

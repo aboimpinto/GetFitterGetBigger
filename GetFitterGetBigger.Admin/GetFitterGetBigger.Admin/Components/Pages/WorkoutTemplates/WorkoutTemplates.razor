@@ -2,13 +2,15 @@
 @page "/workout-templates"
 @using GetFitterGetBigger.Admin.Models.Dtos
 @using GetFitterGetBigger.Admin.Services
+@using GetFitterGetBigger.Admin.Services.Stores
 @using GetFitterGetBigger.Admin.Builders
 @using GetFitterGetBigger.Admin.Components.WorkoutTemplates
 @using GetFitterGetBigger.Admin.Components.Shared
 @using Microsoft.AspNetCore.Authorization
 @attribute [Authorize]
 @rendermode InteractiveServer
-@inject IWorkoutTemplateStateService StateService
+@inject IWorkoutTemplateListStore ListStore
+@inject IWorkoutReferenceDataStore ReferenceStore
 @inject NavigationManager Navigation
 @inject IToastService ToastService
 @implements IDisposable
@@ -51,7 +53,7 @@
                         data-testid="category-select"
                         class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
                     <option value="">All Categories</option>
-                    @foreach (var category in StateService.WorkoutCategories)
+                    @foreach (var category in ReferenceStore.WorkoutCategories)
                     {
                         <option value="@category.Id">@category.Value</option>
                     }
@@ -63,7 +65,7 @@
                         data-testid="difficulty-select"
                         class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
                     <option value="">All Levels</option>
-                    @foreach (var difficulty in StateService.DifficultyLevels)
+                    @foreach (var difficulty in ReferenceStore.DifficultyLevels)
                     {
                         <option value="@difficulty.Id">@difficulty.Value</option>
                     }
@@ -75,7 +77,7 @@
                         data-testid="state-select"
                         class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
                     <option value="">All States</option>
-                    @foreach (var state in StateService.WorkoutStates)
+                    @foreach (var state in ReferenceStore.WorkoutStates)
                     {
                         <option value="@state.Id">@state.Value</option>
                     }
@@ -114,7 +116,8 @@
 
     protected override async Task OnInitializedAsync()
     {
-        StateService.OnChange += StateHasChanged;
+        ListStore.OnChange += StateHasChanged;
+        ReferenceStore.OnChange += StateHasChanged;
 
         // Initialize breadcrumb
         breadcrumbItems = new List<Breadcrumb.BreadcrumbItem>
@@ -123,11 +126,14 @@
             new() { Text = "Workout Templates" }
         };
 
-        // Initialize the state service if needed
-        if (StateService.CurrentPage == null)
+        // Initialize stores if needed
+        if (!ReferenceStore.IsLoaded)
         {
-            await StateService.InitializeAsync();
+            await ReferenceStore.LoadReferenceDataAsync();
         }
+        
+        // Always load templates on initialization to ensure fresh data
+        await ListStore.LoadTemplatesAsync();
     }
 
     private async Task ApplyFilter()
@@ -144,11 +150,11 @@
             .WithDifficultyId(string.IsNullOrWhiteSpace(filterDifficulty) ? null : filterDifficulty)
             .WithStateId(string.IsNullOrWhiteSpace(filterState) ? null : filterState)
             .WithPage(1)
-            .WithPageSize(StateService.CurrentFilter.PageSize)
+            .WithPageSize(ListStore.CurrentFilter.PageSize)
             .Build();
 
-        Console.WriteLine($"[WorkoutTemplates Page] Filter built - calling StateService.LoadWorkoutTemplatesAsync");
-        await StateService.LoadWorkoutTemplatesAsync(filter);
+        Console.WriteLine($"[WorkoutTemplates Page] Filter built - calling ListStore.LoadTemplatesAsync");
+        await ListStore.LoadTemplatesAsync(filter);
     }
 
     private async Task ClearFilter()
@@ -160,27 +166,27 @@
 
         var filter = new WorkoutTemplateFilterDtoBuilder()
             .WithPage(1)
-            .WithPageSize(StateService.CurrentFilter.PageSize)
+            .WithPageSize(ListStore.CurrentFilter.PageSize)
             .Build();
             
-        await StateService.LoadWorkoutTemplatesAsync(filter);
+        await ListStore.LoadTemplatesAsync(filter);
     }
 
     private void NavigateToCreate()
     {
-        StateService.StoreReturnPage();
+        ListStore.StoreReturnPage();
         Navigation.NavigateTo("/workout-templates/new");
     }
 
     private void HandleTemplateSelected(WorkoutTemplateDto template)
     {
-        StateService.StoreReturnPage();
+        ListStore.StoreReturnPage();
         Navigation.NavigateTo($"/workout-templates/{template.Id}");
     }
 
     private void HandleTemplateEdit(WorkoutTemplateDto template)
     {
-        StateService.StoreReturnPage();
+        ListStore.StoreReturnPage();
         Navigation.NavigateTo($"/workout-templates/{template.Id}/edit");
     }
 
@@ -192,7 +198,7 @@
             NewName = $"{template.Name} (Copy)"
         };
 
-        await StateService.DuplicateWorkoutTemplateAsync(template.Id, duplicateDto);
+        await ListStore.DuplicateTemplateAsync(template.Id, duplicateDto);
         ToastService.ShowSuccess($"Workout template '{template.Name}' duplicated successfully.");
     }
 
@@ -202,13 +208,14 @@
         if (template.WorkoutState?.Value?.ToUpperInvariant() == "DRAFT" || 
             template.WorkoutState?.Value?.ToUpperInvariant() == "ARCHIVED")
         {
-            await StateService.DeleteWorkoutTemplateAsync(template.Id);
+            await ListStore.DeleteTemplateAsync(template.Id);
             ToastService.ShowSuccess($"Workout template '{template.Name}' deleted successfully.");
         }
     }
 
     public void Dispose()
     {
-        StateService.OnChange -= StateHasChanged;
+        ListStore.OnChange -= StateHasChanged;
+        ReferenceStore.OnChange -= StateHasChanged;
     }
 }

@@ -2,7 +2,9 @@ using Bunit;
 using FluentAssertions;
 using GetFitterGetBigger.Admin.Components.Pages.WorkoutTemplates;
 using GetFitterGetBigger.Admin.Models.Dtos;
+using GetFitterGetBigger.Admin.Models.Results;
 using GetFitterGetBigger.Admin.Services;
+using GetFitterGetBigger.Admin.Services.Stores;
 using GetFitterGetBigger.Admin.Builders;
 using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.DependencyInjection;
@@ -28,19 +30,47 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.WorkoutTemplates
     public class WorkoutTemplateFormPageIntegrationTests : TestContext
     {
         private readonly MockWorkoutTemplateService _mockTemplateService;
-        private readonly MockWorkoutTemplateStateService _mockStateService;
+        private readonly Mock<IWorkoutTemplateFormStore> _mockFormStore;
+        private readonly Mock<IWorkoutReferenceDataStore> _mockReferenceDataStore;
         private readonly Mock<IToastService> _mockToastService;
         private readonly FakeNavigationManager _navigationManager;
 
         public WorkoutTemplateFormPageIntegrationTests()
         {
             _mockTemplateService = new MockWorkoutTemplateService();
-            _mockStateService = new MockWorkoutTemplateStateService();
+            _mockFormStore = new Mock<IWorkoutTemplateFormStore>();
+            _mockReferenceDataStore = new Mock<IWorkoutReferenceDataStore>();
             _mockToastService = new Mock<IToastService>();
+
+            // Setup reference data
+            var categories = new List<ReferenceDataDto>
+            {
+                new() { Id = "category-1", Value = "Strength", Description = "Strength training" },
+                new() { Id = "category-2", Value = "Cardio", Description = "Cardiovascular training" }
+            };
+
+            var difficulties = new List<ReferenceDataDto>
+            {
+                new() { Id = "difficulty-1", Value = "Beginner", Description = "For beginners" },
+                new() { Id = "difficulty-2", Value = "Intermediate", Description = "For intermediate users" },
+                new() { Id = "difficulty-3", Value = "Advanced", Description = "For advanced users" }
+            };
+
+            var objectives = new List<ReferenceDataDto>
+            {
+                new() { Id = "objective-1", Value = "Build Muscle", Description = "Muscle building" },
+                new() { Id = "objective-2", Value = "Lose Fat", Description = "Fat loss" }
+            };
+
+            _mockReferenceDataStore.Setup(x => x.WorkoutCategories).Returns(categories);
+            _mockReferenceDataStore.Setup(x => x.DifficultyLevels).Returns(difficulties);
+            _mockReferenceDataStore.Setup(x => x.WorkoutObjectives).Returns(objectives);
+            _mockReferenceDataStore.Setup(x => x.LoadReferenceDataAsync()).Returns(Task.CompletedTask);
 
             // Setup services
             Services.AddSingleton<IWorkoutTemplateService>(_mockTemplateService);
-            Services.AddSingleton<IWorkoutTemplateStateService>(_mockStateService);
+            Services.AddSingleton(_mockFormStore.Object);
+            Services.AddSingleton(_mockReferenceDataStore.Object);
             Services.AddSingleton<IToastService>(_mockToastService.Object);
             Services.AddSingleton<ILocalStorageService>(new MockLocalStorageService());
             
@@ -54,9 +84,6 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.WorkoutTemplates
 
             _navigationManager = Services.GetRequiredService<FakeNavigationManager>();
             _navigationManager.NavigateTo("http://localhost/workout-templates/new");
-
-            // Setup reference data
-            _mockStateService.SetupReferenceData();
         }
 
         [Fact]
@@ -70,6 +97,11 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.WorkoutTemplates
                 .Build();
 
             _mockTemplateService.SetupCreateSuccess(expectedTemplate);
+            
+            // Setup form store to call the service
+            _mockFormStore.Setup(x => x.CreateTemplateAsync(It.IsAny<CreateWorkoutTemplateDto>()))
+                .Returns((CreateWorkoutTemplateDto dto) => _mockTemplateService.CreateWorkoutTemplateAsync(dto));
+            
             _navigationManager.NavigateTo("http://localhost/workout-templates/new");
 
             // Act - Render the page
@@ -131,8 +163,22 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.WorkoutTemplates
                 .WithWorkoutState("DRAFT", "Draft")
                 .Build();
 
+            var updatedTemplate = new WorkoutTemplateDtoBuilder()
+                .WithId("template-123")
+                .WithName("Updated Name")
+                .WithDescription("Updated Description")
+                .WithCategory("category-1", "Strength")
+                .WithDifficulty("difficulty-3", "Advanced")
+                .WithEstimatedDuration(45)
+                .WithWorkoutState("DRAFT", "Draft")
+                .Build();
+
             _mockTemplateService.SetupGetByIdSuccess(existingTemplate);
-            _mockTemplateService.SetupUpdateSuccess(existingTemplate);
+            _mockTemplateService.SetupUpdateSuccess(updatedTemplate);
+            
+            // Setup form store to call the service
+            _mockFormStore.Setup(x => x.UpdateTemplateAsync(It.IsAny<string>(), It.IsAny<UpdateWorkoutTemplateDto>()))
+                .Returns((string id, UpdateWorkoutTemplateDto dto) => _mockTemplateService.UpdateWorkoutTemplateAsync(id, dto));
 
             _navigationManager.NavigateTo("http://localhost/workout-templates/template-123/edit");
 
@@ -277,9 +323,9 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.WorkoutTemplates
                 return Task.FromResult(template);
             }
 
-            public Task<WorkoutTemplatePagedResultDto> GetWorkoutTemplatesAsync(WorkoutTemplateFilterDto filter)
+            public Task<ServiceResult<WorkoutTemplatePagedResultDto>> GetWorkoutTemplatesAsync(WorkoutTemplateFilterDto filter)
             {
-                return Task.FromResult(new WorkoutTemplatePagedResultDto
+                var result = new WorkoutTemplatePagedResultDto
                 {
                     Items = _templates,
                     TotalCount = _templates.Count,
@@ -288,7 +334,8 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.WorkoutTemplates
                     TotalPages = _templates.Count > 0 ? (int)Math.Ceiling(_templates.Count / (double)filter.PageSize) : 0,
                     HasPreviousPage = filter.Page > 1,
                     HasNextPage = filter.Page < (int)Math.Ceiling(_templates.Count / (double)filter.PageSize)
-                });
+                };
+                return Task.FromResult(ServiceResult<WorkoutTemplatePagedResultDto>.Success(result));
             }
 
             public Task DeleteWorkoutTemplateAsync(string id)
@@ -379,68 +426,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.WorkoutTemplates
             }
         }
 
-        private class MockWorkoutTemplateStateService : IWorkoutTemplateStateService
-        {
-            public event Action? OnChange { add { } remove { } }
-
-            public WorkoutTemplatePagedResultDto? CurrentPage { get; private set; }
-            public WorkoutTemplateFilterDto CurrentFilter { get; } = new();
-            public bool IsLoading { get; private set; }
-            public string? ErrorMessage { get; private set; }
-            public bool HasStoredPage { get; } = false;
-            public WorkoutTemplateDto? SelectedTemplate { get; private set; }
-            public bool IsLoadingTemplate { get; private set; }
-            public IEnumerable<ReferenceDataDto> WorkoutCategories { get; private set; } = new List<ReferenceDataDto>();
-            public IEnumerable<ReferenceDataDto> DifficultyLevels { get; private set; } = new List<ReferenceDataDto>();
-            public IEnumerable<ReferenceDataDto> WorkoutStates { get; private set; } = new List<ReferenceDataDto>();
-            public IEnumerable<ReferenceDataDto> WorkoutObjectives { get; private set; } = new List<ReferenceDataDto>();
-            public bool IsLoadingReferenceData { get; private set; }
-
-            public void SetupReferenceData()
-            {
-                WorkoutCategories = new List<ReferenceDataDto>
-                {
-                    new() { Id = "category-1", Value = "Strength", Description = "Strength training" },
-                    new() { Id = "category-2", Value = "Cardio", Description = "Cardiovascular training" }
-                };
-
-                DifficultyLevels = new List<ReferenceDataDto>
-                {
-                    new() { Id = "difficulty-1", Value = "Beginner", Description = "For beginners" },
-                    new() { Id = "difficulty-2", Value = "Intermediate", Description = "For intermediate users" },
-                    new() { Id = "difficulty-3", Value = "Advanced", Description = "For advanced users" }
-                };
-
-                WorkoutStates = new List<ReferenceDataDto>
-                {
-                    new() { Id = "DRAFT", Value = "Draft", Description = "Draft state" },
-                    new() { Id = "PRODUCTION", Value = "Production", Description = "Production state" },
-                    new() { Id = "ARCHIVED", Value = "Archived", Description = "Archived state" }
-                };
-
-                WorkoutObjectives = new List<ReferenceDataDto>
-                {
-                    new() { Id = "objective-1", Value = "Build Muscle", Description = "Muscle building" },
-                    new() { Id = "objective-2", Value = "Lose Fat", Description = "Fat loss" }
-                };
-            }
-
-            public Task InitializeAsync() => Task.CompletedTask;
-            public Task LoadWorkoutTemplatesAsync(WorkoutTemplateFilterDto? filter = null) => Task.CompletedTask;
-            public Task LoadWorkoutTemplatesWithStoredPageAsync() => Task.CompletedTask;
-            public Task LoadWorkoutTemplateByIdAsync(string id) => Task.CompletedTask;
-            public Task CreateWorkoutTemplateAsync(CreateWorkoutTemplateDto template) => Task.CompletedTask;
-            public Task UpdateWorkoutTemplateAsync(string id, UpdateWorkoutTemplateDto template) => Task.CompletedTask;
-            public Task DeleteWorkoutTemplateAsync(string id) => Task.CompletedTask;
-            public Task ChangeWorkoutTemplateStateAsync(string id, ChangeWorkoutStateDto changeState) => Task.CompletedTask;
-            public Task DuplicateWorkoutTemplateAsync(string id, DuplicateWorkoutTemplateDto duplicate) => Task.CompletedTask;
-            public Task RefreshCurrentPageAsync() => Task.CompletedTask;
-            public void ClearSelectedTemplate() => SelectedTemplate = null;
-            public void ClearError() => ErrorMessage = null;
-            public void SetError(string message) => ErrorMessage = message;
-            public void StoreReturnPage() { }
-            public void ClearStoredPage() { }
-        }
+        // Removed MockWorkoutTemplateStateService class as it's no longer needed
 
         private class MockLocalStorageService : ILocalStorageService
         {

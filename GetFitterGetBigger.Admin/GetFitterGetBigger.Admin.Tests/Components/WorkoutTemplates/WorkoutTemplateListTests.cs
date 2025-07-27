@@ -44,10 +44,10 @@ namespace GetFitterGetBigger.Admin.Tests.Components.WorkoutTemplates
         public void Should_render_loading_state_when_loading()
         {
             // Arrange
-            MockWorkoutTemplateStateService.Setup(x => x.IsLoading).Returns(true);
-            MockWorkoutTemplateStateService.Setup(x => x.CurrentPage).Returns((WorkoutTemplatePagedResultDto?)null);
-            MockWorkoutTemplateStateService.Setup(x => x.CurrentFilter).Returns(new WorkoutTemplateFilterDto());
-            MockWorkoutTemplateStateService.Setup(x => x.ErrorMessage).Returns((string?)null);
+            MockWorkoutTemplateListStore.Setup(x => x.IsLoading).Returns(true);
+            MockWorkoutTemplateListStore.Setup(x => x.CurrentPage).Returns((WorkoutTemplatePagedResultDto?)null);
+            MockWorkoutTemplateListStore.Setup(x => x.CurrentFilter).Returns(new WorkoutTemplateFilterDto());
+            MockWorkoutTemplateListStore.Setup(x => x.ErrorMessage).Returns((string?)null);
 
             // Act
             var cut = RenderComponent<WorkoutTemplateList>();
@@ -63,15 +63,15 @@ namespace GetFitterGetBigger.Admin.Tests.Components.WorkoutTemplates
         public void Should_render_empty_state_when_no_templates()
         {
             // Arrange
-            MockWorkoutTemplateStateService.Setup(x => x.IsLoading).Returns(false);
-            MockWorkoutTemplateStateService.Setup(x => x.CurrentPage).Returns(new WorkoutTemplatePagedResultDto
+            MockWorkoutTemplateListStore.Setup(x => x.IsLoading).Returns(false);
+            MockWorkoutTemplateListStore.Setup(x => x.CurrentPage).Returns(new WorkoutTemplatePagedResultDto
             {
                 Items = new List<WorkoutTemplateDto>(),
                 TotalCount = 0,
                 TotalPages = 0
             });
-            MockWorkoutTemplateStateService.Setup(x => x.CurrentFilter).Returns(new WorkoutTemplateFilterDto());
-            MockWorkoutTemplateStateService.Setup(x => x.ErrorMessage).Returns((string?)null);
+            MockWorkoutTemplateListStore.Setup(x => x.CurrentFilter).Returns(new WorkoutTemplateFilterDto());
+            MockWorkoutTemplateListStore.Setup(x => x.ErrorMessage).Returns((string?)null);
 
             // Act
             var cut = RenderComponent<WorkoutTemplateList>();
@@ -87,10 +87,10 @@ namespace GetFitterGetBigger.Admin.Tests.Components.WorkoutTemplates
         {
             // Arrange
             var errorMessage = "Failed to load workout templates";
-            MockWorkoutTemplateStateService.Setup(x => x.IsLoading).Returns(false);
-            MockWorkoutTemplateStateService.Setup(x => x.CurrentPage).Returns((WorkoutTemplatePagedResultDto?)null);
-            MockWorkoutTemplateStateService.Setup(x => x.CurrentFilter).Returns(new WorkoutTemplateFilterDto());
-            MockWorkoutTemplateStateService.Setup(x => x.ErrorMessage).Returns(errorMessage);
+            MockWorkoutTemplateListStore.Setup(x => x.IsLoading).Returns(false);
+            MockWorkoutTemplateListStore.Setup(x => x.CurrentPage).Returns((WorkoutTemplatePagedResultDto?)null);
+            MockWorkoutTemplateListStore.Setup(x => x.CurrentFilter).Returns(new WorkoutTemplateFilterDto());
+            MockWorkoutTemplateListStore.Setup(x => x.ErrorMessage).Returns(errorMessage);
 
             // Act
             var cut = RenderComponent<WorkoutTemplateList>();
@@ -112,15 +112,15 @@ namespace GetFitterGetBigger.Admin.Tests.Components.WorkoutTemplates
                 CreateTestTemplate("2", "Template 2")
             };
 
-            MockWorkoutTemplateStateService.Setup(x => x.IsLoading).Returns(false);
-            MockWorkoutTemplateStateService.Setup(x => x.CurrentPage).Returns(new WorkoutTemplatePagedResultDto
+            MockWorkoutTemplateListStore.Setup(x => x.IsLoading).Returns(false);
+            MockWorkoutTemplateListStore.Setup(x => x.CurrentPage).Returns(new WorkoutTemplatePagedResultDto
             {
                 Items = templates,
                 TotalCount = 2,
                 TotalPages = 1
             });
-            MockWorkoutTemplateStateService.Setup(x => x.CurrentFilter).Returns(new WorkoutTemplateFilterDto { Page = 1, PageSize = 10 });
-            MockWorkoutTemplateStateService.Setup(x => x.ErrorMessage).Returns((string?)null);
+            MockWorkoutTemplateListStore.Setup(x => x.CurrentFilter).Returns(new WorkoutTemplateFilterDto { Page = 1, PageSize = 10 });
+            MockWorkoutTemplateListStore.Setup(x => x.ErrorMessage).Returns((string?)null);
 
             // Act
             var cut = RenderComponent<WorkoutTemplateList>();
@@ -140,15 +140,15 @@ namespace GetFitterGetBigger.Admin.Tests.Components.WorkoutTemplates
                 CreateTestTemplate("1", "Template 1")
             };
 
-            MockWorkoutTemplateStateService.Setup(x => x.IsLoading).Returns(false);
-            MockWorkoutTemplateStateService.Setup(x => x.CurrentPage).Returns(new WorkoutTemplatePagedResultDto
+            MockWorkoutTemplateListStore.Setup(x => x.IsLoading).Returns(false);
+            MockWorkoutTemplateListStore.Setup(x => x.CurrentPage).Returns(new WorkoutTemplatePagedResultDto
             {
                 Items = templates,
                 TotalCount = 1,
                 TotalPages = 1
             });
-            MockWorkoutTemplateStateService.Setup(x => x.CurrentFilter).Returns(new WorkoutTemplateFilterDto());
-            MockWorkoutTemplateStateService.Setup(x => x.ErrorMessage).Returns((string?)null);
+            MockWorkoutTemplateListStore.Setup(x => x.CurrentFilter).Returns(new WorkoutTemplateFilterDto());
+            MockWorkoutTemplateListStore.Setup(x => x.ErrorMessage).Returns((string?)null);
 
             // Act
             var cut = RenderComponent<WorkoutTemplateList>();
@@ -168,15 +168,15 @@ namespace GetFitterGetBigger.Admin.Tests.Components.WorkoutTemplates
                 CreateTestTemplate("1", "Template 1")
             };
 
-            MockWorkoutTemplateStateService.Setup(x => x.IsLoading).Returns(false);
-            MockWorkoutTemplateStateService.Setup(x => x.CurrentPage).Returns(new WorkoutTemplatePagedResultDto
+            MockWorkoutTemplateListStore.Setup(x => x.IsLoading).Returns(false);
+            MockWorkoutTemplateListStore.Setup(x => x.CurrentPage).Returns(new WorkoutTemplatePagedResultDto
             {
                 Items = templates,
                 TotalCount = 25,
                 TotalPages = 3
             });
-            MockWorkoutTemplateStateService.Setup(x => x.CurrentFilter).Returns(new WorkoutTemplateFilterDto { Page = 2, PageSize = 10 });
-            MockWorkoutTemplateStateService.Setup(x => x.ErrorMessage).Returns((string?)null);
+            MockWorkoutTemplateListStore.Setup(x => x.CurrentFilter).Returns(new WorkoutTemplateFilterDto { Page = 2, PageSize = 10 });
+            MockWorkoutTemplateListStore.Setup(x => x.ErrorMessage).Returns((string?)null);
 
             // Act
             var cut = RenderComponent<WorkoutTemplateList>();
@@ -192,9 +192,9 @@ namespace GetFitterGetBigger.Admin.Tests.Components.WorkoutTemplates
         public void Should_call_retry_when_retry_button_clicked()
         {
             // Arrange
-            MockWorkoutTemplateStateService.Setup(x => x.IsLoading).Returns(false);
-            MockWorkoutTemplateStateService.Setup(x => x.ErrorMessage).Returns("Error");
-            MockWorkoutTemplateStateService.Setup(x => x.CurrentFilter).Returns(new WorkoutTemplateFilterDto());
+            MockWorkoutTemplateListStore.Setup(x => x.IsLoading).Returns(false);
+            MockWorkoutTemplateListStore.Setup(x => x.ErrorMessage).Returns("Error");
+            MockWorkoutTemplateListStore.Setup(x => x.CurrentFilter).Returns(new WorkoutTemplateFilterDto());
 
             // Act
             var cut = RenderComponent<WorkoutTemplateList>();
@@ -202,8 +202,8 @@ namespace GetFitterGetBigger.Admin.Tests.Components.WorkoutTemplates
             retryButton.Click();
 
             // Assert
-            MockWorkoutTemplateStateService.Verify(x => x.ClearError(), Times.Once);
-            MockWorkoutTemplateStateService.Verify(x => x.RefreshCurrentPageAsync(), Times.Once);
+            MockWorkoutTemplateListStore.Verify(x => x.ClearError(), Times.Once);
+            MockWorkoutTemplateListStore.Verify(x => x.RefreshAsync(), Times.Once);
         }
 
         [Fact]
@@ -211,14 +211,14 @@ namespace GetFitterGetBigger.Admin.Tests.Components.WorkoutTemplates
         {
             // Arrange
             var createClicked = false;
-            MockWorkoutTemplateStateService.Setup(x => x.IsLoading).Returns(false);
-            MockWorkoutTemplateStateService.Setup(x => x.CurrentPage).Returns(new WorkoutTemplatePagedResultDto
+            MockWorkoutTemplateListStore.Setup(x => x.IsLoading).Returns(false);
+            MockWorkoutTemplateListStore.Setup(x => x.CurrentPage).Returns(new WorkoutTemplatePagedResultDto
             {
                 Items = new List<WorkoutTemplateDto>(),
                 TotalCount = 0,
                 TotalPages = 0
             });
-            MockWorkoutTemplateStateService.Setup(x => x.CurrentFilter).Returns(new WorkoutTemplateFilterDto());
+            MockWorkoutTemplateListStore.Setup(x => x.CurrentFilter).Returns(new WorkoutTemplateFilterDto());
 
             // Act
             var cut = RenderComponent<WorkoutTemplateList>(parameters => parameters
@@ -242,14 +242,14 @@ namespace GetFitterGetBigger.Admin.Tests.Components.WorkoutTemplates
                 CreateTestTemplate("3", "Beta")
             };
 
-            MockWorkoutTemplateStateService.Setup(x => x.IsLoading).Returns(false);
-            MockWorkoutTemplateStateService.Setup(x => x.CurrentPage).Returns(new WorkoutTemplatePagedResultDto
+            MockWorkoutTemplateListStore.Setup(x => x.IsLoading).Returns(false);
+            MockWorkoutTemplateListStore.Setup(x => x.CurrentPage).Returns(new WorkoutTemplatePagedResultDto
             {
                 Items = templates,
                 TotalCount = 3,
                 TotalPages = 1
             });
-            MockWorkoutTemplateStateService.Setup(x => x.CurrentFilter).Returns(new WorkoutTemplateFilterDto());
+            MockWorkoutTemplateListStore.Setup(x => x.CurrentFilter).Returns(new WorkoutTemplateFilterDto());
 
             // Act
             var cut = RenderComponent<WorkoutTemplateList>();
@@ -277,14 +277,14 @@ namespace GetFitterGetBigger.Admin.Tests.Components.WorkoutTemplates
                 CreateTestTemplate("1", "Template 1")
             };
 
-            MockWorkoutTemplateStateService.Setup(x => x.IsLoading).Returns(false);
-            MockWorkoutTemplateStateService.Setup(x => x.CurrentPage).Returns(new WorkoutTemplatePagedResultDto
+            MockWorkoutTemplateListStore.Setup(x => x.IsLoading).Returns(false);
+            MockWorkoutTemplateListStore.Setup(x => x.CurrentPage).Returns(new WorkoutTemplatePagedResultDto
             {
                 Items = templates,
                 TotalCount = 25,
                 TotalPages = 3
             });
-            MockWorkoutTemplateStateService.Setup(x => x.CurrentFilter).Returns(new WorkoutTemplateFilterDto { Page = 1, PageSize = 10 });
+            MockWorkoutTemplateListStore.Setup(x => x.CurrentFilter).Returns(new WorkoutTemplateFilterDto { Page = 1, PageSize = 10 });
 
             // Act
             var cut = RenderComponent<WorkoutTemplateList>();
@@ -292,21 +292,21 @@ namespace GetFitterGetBigger.Admin.Tests.Components.WorkoutTemplates
             nextButton.Click();
 
             // Assert
-            MockWorkoutTemplateStateService.Verify(x => x.LoadWorkoutTemplatesAsync(It.Is<WorkoutTemplateFilterDto>(f => f.Page == 2)), Times.Once);
+            MockWorkoutTemplateListStore.Verify(x => x.LoadTemplatesAsync(It.Is<WorkoutTemplateFilterDto>(f => f.Page == 2)), Times.Once);
         }
 
         [Fact]
         public void Should_unsubscribe_from_state_changes_on_dispose()
         {
             // Arrange
-            MockWorkoutTemplateStateService.Setup(x => x.IsLoading).Returns(false);
-            MockWorkoutTemplateStateService.Setup(x => x.CurrentPage).Returns(new WorkoutTemplatePagedResultDto
+            MockWorkoutTemplateListStore.Setup(x => x.IsLoading).Returns(false);
+            MockWorkoutTemplateListStore.Setup(x => x.CurrentPage).Returns(new WorkoutTemplatePagedResultDto
             {
                 Items = new List<WorkoutTemplateDto>(),
                 TotalCount = 0,
                 TotalPages = 0
             });
-            MockWorkoutTemplateStateService.Setup(x => x.CurrentFilter).Returns(new WorkoutTemplateFilterDto());
+            MockWorkoutTemplateListStore.Setup(x => x.CurrentFilter).Returns(new WorkoutTemplateFilterDto());
 
             var cut = RenderComponent<WorkoutTemplateList>();
 

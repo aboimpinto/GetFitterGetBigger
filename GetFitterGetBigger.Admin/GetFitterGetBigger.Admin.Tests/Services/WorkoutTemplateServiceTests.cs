@@ -64,9 +64,11 @@ namespace GetFitterGetBigger.Admin.Tests.Services
 
             // Assert
             result.Should().NotBeNull();
-            result.Items.Should().HaveCount(2);
-            result.TotalCount.Should().Be(2);
-            result.Items[0].Name.Should().Be("Upper Body Strength");
+            result.IsSuccess.Should().BeTrue();
+            result.Data.Should().NotBeNull();
+            result.Data!.Items.Should().HaveCount(2);
+            result.Data.TotalCount.Should().Be(2);
+            result.Data.Items[0].Name.Should().Be("Upper Body Strength");
             
             _dataProviderMock.Verify(x => x.GetWorkoutTemplatesAsync(It.Is<WorkoutTemplateFilterDto>(f => 
                 f.NamePattern == "strength" && f.PageSize == 10)), Times.Once);
@@ -86,7 +88,11 @@ namespace GetFitterGetBigger.Admin.Tests.Services
                 .ReturnsAsync(DataServiceResult<WorkoutTemplatePagedResultDto>.Success(expectedData));
 
             // Act
-            await _workoutTemplateService.GetWorkoutTemplatesAsync(filter);
+            var result = await _workoutTemplateService.GetWorkoutTemplatesAsync(filter);
+            
+            // Assert success
+            result.Should().NotBeNull();
+            result.IsSuccess.Should().BeTrue();
 
             // Assert
             _dataProviderMock.Verify(x => x.GetWorkoutTemplatesAsync(It.Is<WorkoutTemplateFilterDto>(f => 
@@ -95,14 +101,14 @@ namespace GetFitterGetBigger.Admin.Tests.Services
             _loggerMock.Verify(x => x.Log(
                 LogLevel.Warning,
                 It.IsAny<EventId>(),
-                It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains("exceeds maximum")),
+                It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains("exceeds limits")),
                 It.IsAny<Exception>(),
                 It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
                 Times.Once);
         }
 
         [Fact]
-        public async Task GetWorkoutTemplatesAsync_WhenDataProviderFails_ReturnsEmptyResult()
+        public async Task GetWorkoutTemplatesAsync_WhenDataProviderFails_ReturnsFailureResult()
         {
             // Arrange
             var filter = new WorkoutTemplateFilterDtoBuilder().Build();
@@ -114,16 +120,9 @@ namespace GetFitterGetBigger.Admin.Tests.Services
 
             // Assert
             result.Should().NotBeNull();
-            result.Items.Should().BeEmpty();
-            result.TotalCount.Should().Be(0);
-            
-            _loggerMock.Verify(x => x.Log(
-                LogLevel.Error,
-                It.IsAny<EventId>(),
-                It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains("Failed to retrieve workout templates")),
-                It.IsAny<Exception>(),
-                It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
-                Times.Once);
+            result.IsSuccess.Should().BeFalse();
+            result.Errors.Should().NotBeEmpty();
+            result.Errors.First().Message.Should().Contain("Connection failed");
         }
 
         [Fact]

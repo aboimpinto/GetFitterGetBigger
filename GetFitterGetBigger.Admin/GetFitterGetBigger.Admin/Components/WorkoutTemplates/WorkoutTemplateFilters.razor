@@ -1,6 +1,7 @@
 @using GetFitterGetBigger.Admin.Models.Dtos
 @using GetFitterGetBigger.Admin.Services
-@inject IWorkoutTemplateStateService StateService
+@using GetFitterGetBigger.Admin.Services.Stores
+@inject IWorkoutReferenceDataStore ReferenceDataStore
 
 <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-200" data-testid="workout-template-filters">
     <div class="space-y-4">
@@ -27,7 +28,7 @@
                         data-testid="category-select"
                         class="block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
                     <option value="">All Categories</option>
-                    @foreach (var category in StateService.WorkoutCategories)
+                    @foreach (var category in ReferenceDataStore.WorkoutCategories)
                     {
                         <option value="@category.Id">@category.Value</option>
                     }
@@ -43,7 +44,7 @@
                         data-testid="difficulty-select"
                         class="block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
                     <option value="">All Difficulties</option>
-                    @foreach (var difficulty in StateService.DifficultyLevels)
+                    @foreach (var difficulty in ReferenceDataStore.DifficultyLevels)
                     {
                         <option value="@difficulty.Id">@difficulty.Value</option>
                     }
@@ -59,7 +60,7 @@
                         data-testid="state-select"
                         class="block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
                     <option value="">All States</option>
-                    @foreach (var state in StateService.WorkoutStates)
+                    @foreach (var state in ReferenceDataStore.WorkoutStates)
                     {
                         <option value="@state.Id">@state.Value</option>
                     }
@@ -131,7 +132,7 @@
                 }
                 @if (!string.IsNullOrEmpty(selectedCategory))
                 {
-                    var category = StateService.WorkoutCategories.FirstOrDefault(c => c.Id == selectedCategory);
+                    var category = ReferenceDataStore.WorkoutCategories.FirstOrDefault(c => c.Id == selectedCategory);
                     if (category != null)
                     {
                         <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
@@ -151,7 +152,7 @@
                 }
                 @if (!string.IsNullOrEmpty(selectedDifficulty))
                 {
-                    var difficulty = StateService.DifficultyLevels.FirstOrDefault(d => d.Id == selectedDifficulty);
+                    var difficulty = ReferenceDataStore.DifficultyLevels.FirstOrDefault(d => d.Id == selectedDifficulty);
                     if (difficulty != null)
                     {
                         <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
@@ -171,7 +172,7 @@
                 }
                 @if (!string.IsNullOrEmpty(selectedState))
                 {
-                    var state = StateService.WorkoutStates.FirstOrDefault(s => s.Id == selectedState);
+                    var state = ReferenceDataStore.WorkoutStates.FirstOrDefault(s => s.Id == selectedState);
                     if (state != null)
                     {
                         <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800"

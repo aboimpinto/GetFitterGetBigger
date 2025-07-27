@@ -4,6 +4,7 @@ using GetFitterGetBigger.Admin.Models.ReferenceData;
 using GetFitterGetBigger.Admin.Models.Results;
 using GetFitterGetBigger.Admin.Services.DataProviders;
 using GetFitterGetBigger.Admin.Services.Validation;
+using GetFitterGetBigger.Admin.Extensions;
 
 namespace GetFitterGetBigger.Admin.Services
 {
@@ -26,25 +27,16 @@ namespace GetFitterGetBigger.Admin.Services
             _logger = logger;
         }
 
-        public async Task<WorkoutTemplatePagedResultDto> GetWorkoutTemplatesAsync(WorkoutTemplateFilterDto filter)
+        public async Task<ServiceResult<WorkoutTemplatePagedResultDto>> GetWorkoutTemplatesAsync(WorkoutTemplateFilterDto filter)
         {
-            // Business logic - validate filter
-            if (filter.PageSize > 100)
-            {
-                _logger.LogWarning("Page size {PageSize} exceeds maximum, capping at 100", filter.PageSize);
-                filter.PageSize = 100;
-            }
-
-            var result = await _dataProvider.GetWorkoutTemplatesAsync(filter);
-            
-            if (!result.IsSuccess)
-            {
-                var error = result.Errors.FirstOrDefault();
-                _logger.LogError("Failed to retrieve workout templates: {Error}", error?.Message ?? "Unknown error");
-                return new WorkoutTemplatePagedResultDto(); // Return empty result per business rules
-            }
-            
-            return result.Data ?? new WorkoutTemplatePagedResultDto();
+            // Validate and process using Result pattern
+            return await Validate.For(filter)
+                .EnsureCappedRange(f => f.PageSize, 1, 100, _logger)
+                .OnSuccessAsync(async validFilter =>
+                {
+                    var dataResult = await _dataProvider.GetWorkoutTemplatesAsync(validFilter);
+                    return dataResult.ToServiceResult();
+                });
         }
 
         public async Task<WorkoutTemplateDto?> GetWorkoutTemplateByIdAsync(string id)

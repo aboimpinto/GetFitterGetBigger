@@ -169,8 +169,14 @@ builder.Services.AddHttpClient<IWorkoutTemplateDataProvider, HttpWorkoutTemplate
 // Add WorkoutTemplateService with data provider
 builder.Services.AddScoped<IWorkoutTemplateService, WorkoutTemplateService>();
 
-// Add WorkoutTemplateStateService
-builder.Services.AddScoped<IWorkoutTemplateStateService, WorkoutTemplateStateService>();
+// Add Store Event Aggregator
+builder.Services.AddSingleton<GetFitterGetBigger.Admin.Services.Stores.IStoreEventAggregator, GetFitterGetBigger.Admin.Services.Stores.StoreEventAggregator>();
+
+// Add Workout Template Stores
+builder.Services.AddScoped<GetFitterGetBigger.Admin.Services.Stores.IWorkoutTemplateListStore, GetFitterGetBigger.Admin.Services.Stores.WorkoutTemplateListStore>();
+builder.Services.AddScoped<GetFitterGetBigger.Admin.Services.Stores.IWorkoutTemplateFormStore, GetFitterGetBigger.Admin.Services.Stores.WorkoutTemplateFormStore>();
+builder.Services.AddScoped<GetFitterGetBigger.Admin.Services.Stores.IWorkoutReferenceDataStore, GetFitterGetBigger.Admin.Services.Stores.WorkoutReferenceDataStore>();
+
 
 // Add LocalStorageService
 builder.Services.AddScoped<ILocalStorageService, LocalStorageService>();

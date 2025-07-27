@@ -5,6 +5,7 @@ using GetFitterGetBigger.Admin.Components.WorkoutTemplates;
 using GetFitterGetBigger.Admin.Models.Dtos;
 using GetFitterGetBigger.Admin.Models.ReferenceData;
 using GetFitterGetBigger.Admin.Services;
+using GetFitterGetBigger.Admin.Services.Stores;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.AspNetCore.Components.Routing;
@@ -20,7 +21,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.WorkoutTemplates;
 public class WorkoutTemplateFormTests : TestContext
 {
     private readonly Mock<IWorkoutTemplateService> _mockWorkoutTemplateService;
-    private readonly Mock<IWorkoutTemplateStateService> _mockStateService;
+    private readonly Mock<IWorkoutReferenceDataStore> _mockReferenceDataStore;
     private readonly Mock<ILocalStorageService> _mockLocalStorageService;
     private readonly List<ReferenceDataDto> _mockCategories;
     private readonly List<ReferenceDataDto> _mockDifficulties;
@@ -29,7 +30,7 @@ public class WorkoutTemplateFormTests : TestContext
     public WorkoutTemplateFormTests()
     {
         _mockWorkoutTemplateService = new Mock<IWorkoutTemplateService>();
-        _mockStateService = new Mock<IWorkoutTemplateStateService>();
+        _mockReferenceDataStore = new Mock<IWorkoutReferenceDataStore>();
         _mockLocalStorageService = new Mock<ILocalStorageService>();
         
         _mockCategories = new List<ReferenceDataDto>
@@ -53,7 +54,7 @@ public class WorkoutTemplateFormTests : TestContext
         
         SetupMockServices();
         Services.AddSingleton(_mockWorkoutTemplateService.Object);
-        Services.AddSingleton(_mockStateService.Object);
+        Services.AddSingleton(_mockReferenceDataStore.Object);
         Services.AddSingleton(_mockLocalStorageService.Object);
         
         // Setup default localStorage behavior
@@ -67,12 +68,14 @@ public class WorkoutTemplateFormTests : TestContext
     
     private void SetupMockServices()
     {
-        _mockWorkoutTemplateService.Setup(x => x.GetWorkoutCategoriesAsync())
-            .ReturnsAsync(_mockCategories);
-        _mockWorkoutTemplateService.Setup(x => x.GetDifficultyLevelsAsync())
-            .ReturnsAsync(_mockDifficulties);
-        _mockWorkoutTemplateService.Setup(x => x.GetWorkoutObjectivesAsync())
-            .ReturnsAsync(_mockObjectives);
+        _mockReferenceDataStore.Setup(x => x.WorkoutCategories)
+            .Returns(_mockCategories);
+        _mockReferenceDataStore.Setup(x => x.DifficultyLevels)
+            .Returns(_mockDifficulties);
+        _mockReferenceDataStore.Setup(x => x.WorkoutObjectives)
+            .Returns(_mockObjectives);
+        _mockReferenceDataStore.Setup(x => x.LoadReferenceDataAsync())
+            .Returns(Task.CompletedTask);
         _mockWorkoutTemplateService.Setup(x => x.CheckTemplateNameExistsAsync(It.IsAny<string>()))
             .ReturnsAsync(false);
     }
@@ -104,9 +107,7 @@ public class WorkoutTemplateFormTests : TestContext
         var cut = RenderComponent<WorkoutTemplateForm>();
         
         // Assert
-        _mockWorkoutTemplateService.Verify(x => x.GetWorkoutCategoriesAsync(), Times.Once);
-        _mockWorkoutTemplateService.Verify(x => x.GetDifficultyLevelsAsync(), Times.Once);
-        _mockWorkoutTemplateService.Verify(x => x.GetWorkoutObjectivesAsync(), Times.Once);
+        _mockReferenceDataStore.Verify(x => x.LoadReferenceDataAsync(), Times.Once);
         
         // Verify dropdowns are populated
         var categoryOptions = cut.FindAll("#category option");
@@ -123,7 +124,7 @@ public class WorkoutTemplateFormTests : TestContext
     public void Should_ShowErrorMessage_WhenReferenceDataLoadFails()
     {
         // Arrange
-        _mockWorkoutTemplateService.Setup(x => x.GetWorkoutCategoriesAsync())
+        _mockReferenceDataStore.Setup(x => x.LoadReferenceDataAsync())
             .ThrowsAsync(new HttpRequestException("Network error"));
             
         // Act
@@ -434,11 +435,10 @@ public class WorkoutTemplateFormTests : TestContext
     public void Should_HideFloatingButtons_WhenLoading()
     {
         // Arrange
-        _mockWorkoutTemplateService.Setup(x => x.GetWorkoutCategoriesAsync())
+        _mockReferenceDataStore.Setup(x => x.LoadReferenceDataAsync())
             .Returns(async () =>
             {
                 await Task.Delay(100); // Simulate loading
-                return _mockCategories;
             });
             
         // Act

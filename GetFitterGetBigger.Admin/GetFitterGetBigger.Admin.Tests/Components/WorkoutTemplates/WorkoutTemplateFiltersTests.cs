@@ -4,6 +4,7 @@ using GetFitterGetBigger.Admin.Components.WorkoutTemplates;
 using GetFitterGetBigger.Admin.Components.Shared;
 using GetFitterGetBigger.Admin.Models.Dtos;
 using GetFitterGetBigger.Admin.Services;
+using GetFitterGetBigger.Admin.Services.Stores;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.AspNetCore.Components;
 using Moq;
@@ -16,14 +17,14 @@ namespace GetFitterGetBigger.Admin.Tests.Components.WorkoutTemplates
 {
     public class WorkoutTemplateFiltersTests : TestContext
     {
-        private readonly Mock<IWorkoutTemplateStateService> _stateServiceMock;
+        private readonly Mock<IWorkoutReferenceDataStore> _referenceDataStoreMock;
         private readonly List<ReferenceDataDto> _testCategories;
         private readonly List<ReferenceDataDto> _testDifficulties;
         private readonly List<ReferenceDataDto> _testStates;
 
         public WorkoutTemplateFiltersTests()
         {
-            _stateServiceMock = new Mock<IWorkoutTemplateStateService>();
+            _referenceDataStoreMock = new Mock<IWorkoutReferenceDataStore>();
             
             _testCategories = new List<ReferenceDataDto>
             {
@@ -46,10 +47,10 @@ namespace GetFitterGetBigger.Admin.Tests.Components.WorkoutTemplates
                 new() { Id = "state-3", Value = "ARCHIVED", Description = null }
             };
 
-            Services.AddSingleton(_stateServiceMock.Object);
-            _stateServiceMock.Setup(x => x.WorkoutCategories).Returns(_testCategories);
-            _stateServiceMock.Setup(x => x.DifficultyLevels).Returns(_testDifficulties);
-            _stateServiceMock.Setup(x => x.WorkoutStates).Returns(_testStates);
+            Services.AddSingleton(_referenceDataStoreMock.Object);
+            _referenceDataStoreMock.Setup(x => x.WorkoutCategories).Returns(_testCategories);
+            _referenceDataStoreMock.Setup(x => x.DifficultyLevels).Returns(_testDifficulties);
+            _referenceDataStoreMock.Setup(x => x.WorkoutStates).Returns(_testStates);
 
             // Register the ReferenceDataSearchBar component
             JSInterop.Mode = JSRuntimeMode.Loose;

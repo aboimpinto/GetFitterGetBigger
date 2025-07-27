@@ -1,5 +1,6 @@
 using GetFitterGetBigger.Admin.Models.Dtos;
 using GetFitterGetBigger.Admin.Services;
+using GetFitterGetBigger.Admin.Services.Stores;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Routing;
 using System.ComponentModel.DataAnnotations;
@@ -19,7 +20,7 @@ public partial class WorkoutTemplateForm : ComponentBase, IDisposable
     [Parameter] public bool EnableNameValidation { get; set; } = true;
     
     [Inject] private IWorkoutTemplateService WorkoutTemplateService { get; set; } = default!;
-    [Inject] private IWorkoutTemplateStateService WorkoutTemplateStateService { get; set; } = default!;
+    [Inject] private IWorkoutReferenceDataStore ReferenceDataStore { get; set; } = default!;
     [Inject] private NavigationManager NavigationManager { get; set; } = default!;
     [Inject] private ILocalStorageService LocalStorageService { get; set; } = default!;
     
@@ -97,15 +98,12 @@ public partial class WorkoutTemplateForm : ComponentBase, IDisposable
             IsLoading = true;
             ErrorMessage = null;
             
-            var categoriesTask = WorkoutTemplateService.GetWorkoutCategoriesAsync();
-            var difficultiesTask = WorkoutTemplateService.GetDifficultyLevelsAsync();
-            var objectivesTask = WorkoutTemplateService.GetWorkoutObjectivesAsync();
+            // Load reference data from the store
+            await ReferenceDataStore.LoadReferenceDataAsync();
             
-            await Task.WhenAll(categoriesTask, difficultiesTask, objectivesTask);
-            
-            Categories = await categoriesTask ?? new List<ReferenceDataDto>();
-            Difficulties = await difficultiesTask ?? new List<ReferenceDataDto>();
-            Objectives = await objectivesTask ?? new List<ReferenceDataDto>();
+            Categories = ReferenceDataStore.WorkoutCategories.ToList();
+            Difficulties = ReferenceDataStore.DifficultyLevels.ToList();
+            Objectives = ReferenceDataStore.WorkoutObjectives.ToList();
         }
         catch (Exception ex)
         {
