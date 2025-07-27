@@ -91,3 +91,138 @@ Tailwind CSS was chosen as the styling framework:
    - Plan templates and customization
    - Client assignment and tracking
    - Progress visualization
+
+## Layered Architecture Pattern
+
+The Admin application implements a strict layered architecture that ensures proper separation of concerns and maintainability:
+
+### Architecture Layers
+
+```
+┌─────────────────────────────────────┐
+│      UI Layer (Blazor Components)   │
+├─────────────────────────────────────┤
+│    Business Layer (Services)        │
+├─────────────────────────────────────┤
+│    Data Layer (Data Providers)      │
+├─────────────────────────────────────┤
+│  Data Transport (HTTP Base Classes) │
+└─────────────────────────────────────┘
+```
+
+#### 1. **UI Layer** (Presentation)
+- **Location**: `/Components/`, `/Pages/`
+- **Responsibilities**: 
+  - User interface rendering
+  - User interaction handling
+  - Input validation (UI-level only)
+  - State management for UI concerns
+- **Example**: `WorkoutTemplateList.razor`, `ExerciseForm.razor`
+- **Dependencies**: Only depends on Business Layer interfaces
+
+#### 2. **Business Layer** (Domain Logic)
+- **Location**: `/Services/`
+- **Responsibilities**:
+  - Business rule enforcement
+  - Orchestration of data operations
+  - Business validation
+  - Result transformation
+- **Example**: `WorkoutTemplateService`, `ExerciseService`
+- **Dependencies**: Depends on Data Layer interfaces
+
+#### 3. **Data Layer** (Data Access)
+- **Location**: `/Services/DataProviders/`
+- **Responsibilities**:
+  - Data retrieval and persistence
+  - Data source abstraction
+  - Caching strategies
+  - Data mapping to/from DTOs
+- **Example**: `HttpWorkoutTemplateDataProvider`
+- **Dependencies**: Depends on Data Transport layer
+
+#### 4. **Data Transport Layer** (Infrastructure)
+- **Location**: `/Services/DataProviders/HttpDataProviderBase.cs`
+- **Responsibilities**:
+  - HTTP communication mechanics
+  - Error handling and mapping
+  - Response deserialization
+  - Logging and monitoring
+- **Example**: `HttpDataProviderBase`
+- **Dependencies**: None (uses framework libraries only)
+
+### Key Principles
+
+#### Dependency Direction
+- Dependencies flow **downward only** (UI → Business → Data → Transport)
+- Lower layers never know about higher layers
+- Use interfaces to define contracts between layers
+
+#### Layer Isolation
+Each layer is isolated and can be tested independently:
+```csharp
+// UI Layer - Depends on IWorkoutTemplateService
+@inject IWorkoutTemplateService WorkoutService
+
+// Business Layer - Depends on IWorkoutTemplateDataProvider
+public WorkoutTemplateService(IWorkoutTemplateDataProvider dataProvider)
+
+// Data Layer - Depends on HttpDataProviderBase
+public class HttpWorkoutTemplateDataProvider : HttpDataProviderBase
+
+// Transport Layer - No business dependencies
+public abstract class HttpDataProviderBase
+```
+
+#### Benefits of This Architecture
+
+1. **Testability**: Each layer can be mocked and tested in isolation
+2. **Maintainability**: Changes in one layer don't cascade to others
+3. **Flexibility**: Easy to swap implementations (e.g., HTTP to gRPC)
+4. **Clarity**: Clear responsibility boundaries
+5. **Reusability**: Transport layer can be used by any data provider
+
+### Implementation Example
+
+```csharp
+// Transport Layer - Generic, knows nothing about business entities
+protected async Task<DataServiceResult<T>> ExecuteHttpGetRequestAsync<T>(
+    string endpoint,
+    [CallerMemberName] string callerMemberName = "")
+
+// Data Layer - Knows about DTOs and endpoints
+public async Task<DataServiceResult<WorkoutTemplateDto>> GetWorkoutTemplateByIdAsync(string id)
+{
+    return await ExecuteHttpGetRequestAsync<WorkoutTemplateDto>($"api/workout-templates/{id}");
+}
+
+// Business Layer - Knows about business rules and orchestration
+public async Task<ServiceResult<WorkoutTemplateDto>> GetWorkoutTemplateAsync(string id)
+{
+    var result = await _dataProvider.GetWorkoutTemplateByIdAsync(id);
+    // Apply business rules, transformations, etc.
+    return result.ToServiceResult();
+}
+
+// UI Layer - Knows about user interaction
+private async Task LoadWorkoutTemplate()
+{
+    var result = await WorkoutService.GetWorkoutTemplateAsync(TemplateId);
+    // Update UI state
+}
+```
+
+### Anti-Patterns to Avoid
+
+❌ **Layer Jumping**: UI directly calling data providers
+❌ **Upward Dependencies**: Data layer referencing business logic
+❌ **Business Logic in UI**: Validation rules in Blazor components
+❌ **Infrastructure in Business**: HTTP concerns in services
+❌ **God Classes**: Classes that span multiple layers
+
+### When to Apply This Pattern
+
+This layered architecture should be applied to all major features in the Admin application:
+- ✅ CRUD operations (Exercises, Workouts, etc.)
+- ✅ Complex workflows (Workout building, Plan creation)
+- ✅ Integration features (API communication)
+- ✅ Reference data management

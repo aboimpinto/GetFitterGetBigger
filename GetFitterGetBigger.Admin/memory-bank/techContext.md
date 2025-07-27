@@ -2,6 +2,54 @@
 
 > For a comprehensive overview of the technology stack across the entire ecosystem, please refer to the [Shared Memory Bank](/Shared/memory-bank/techContext.md).
 
+## Architecture Patterns
+
+> For detailed architectural patterns including the Layered Architecture Pattern, see [System Patterns](systemPatterns.md).
+
+## HTTP Data Provider Pattern
+
+The Admin project implements a clean HTTP data provider pattern that eliminates boilerplate code and magic strings:
+
+### Base Class: HttpDataProviderBase
+
+Located in `Services/DataProviders/HttpDataProviderBase.cs`, this abstract class provides:
+
+1. **HTTP Verb-Specific Methods**:
+   - `ExecuteHttpGetRequestAsync<T>` - GET requests with automatic deserialization
+   - `ExecuteHttpPostRequestAsync<T>` - POST requests with JSON serialization and deserialization
+   - `ExecuteHttpPutRequestAsync<T>` - PUT requests with JSON serialization and deserialization
+   - `ExecuteHttpDeleteRequestAsync` - DELETE requests returning success/failure
+
+2. **Automatic Features**:
+   - Generic deserialization using `System.Text.Json`
+   - Automatic caller method name capture using `[CallerMemberName]`
+   - Comprehensive error handling with proper HTTP status code mapping
+   - Consistent logging across all HTTP operations
+
+### Usage Example
+
+**Before** (verbose with magic strings):
+```csharp
+return await ExecuteHttpRequestAsync(
+    async () => await _httpClient.PostAsync("api/workout-templates", content),
+    async response => await response.Content.ReadFromJsonAsync<WorkoutTemplateDto>(_jsonOptions),
+    "CreateWorkoutTemplateAsync");  // Magic string!
+```
+
+**After** (clean and concise):
+```csharp
+return await ExecuteHttpPostRequestAsync<WorkoutTemplateDto>("api/workout-templates", template);
+// Method name is automatically captured!
+```
+
+### Benefits
+
+1. **No Magic Strings**: The `[CallerMemberName]` attribute automatically captures the calling method name
+2. **Less Boilerplate**: No need to manually serialize/deserialize or create HttpContent
+3. **Type Safety**: Generic methods ensure compile-time type checking
+4. **Consistent Error Handling**: All HTTP errors are mapped to appropriate DataError types
+5. **Better Testability**: Cleaner method signatures are easier to mock and test
+
 ## Admin-Specific Technology Stack
 
 The GetFitterGetBigger Admin Application is built using the following technologies:

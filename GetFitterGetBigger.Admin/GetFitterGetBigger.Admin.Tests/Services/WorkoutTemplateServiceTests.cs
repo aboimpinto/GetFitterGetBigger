@@ -6,7 +6,6 @@ using GetFitterGetBigger.Admin.Models.ReferenceData;
 using GetFitterGetBigger.Admin.Services;
 using GetFitterGetBigger.Admin.Services.DataProviders;
 using GetFitterGetBigger.Admin.Builders;
-using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using Moq;
 
@@ -15,7 +14,6 @@ namespace GetFitterGetBigger.Admin.Tests.Services
     public class WorkoutTemplateServiceTests
     {
         private readonly Mock<IWorkoutTemplateDataProvider> _dataProviderMock;
-        private readonly IMemoryCache _memoryCache;
         private readonly Mock<IGenericReferenceDataService> _referenceDataServiceMock;
         private readonly Mock<IWorkoutReferenceDataService> _workoutReferenceDataServiceMock;
         private readonly Mock<ILogger<WorkoutTemplateService>> _loggerMock;
@@ -24,14 +22,12 @@ namespace GetFitterGetBigger.Admin.Tests.Services
         public WorkoutTemplateServiceTests()
         {
             _dataProviderMock = new Mock<IWorkoutTemplateDataProvider>();
-            _memoryCache = new MemoryCache(new MemoryCacheOptions());
             _referenceDataServiceMock = new Mock<IGenericReferenceDataService>();
             _workoutReferenceDataServiceMock = new Mock<IWorkoutReferenceDataService>();
             _loggerMock = new Mock<ILogger<WorkoutTemplateService>>();
 
             _workoutTemplateService = new WorkoutTemplateService(
                 _dataProviderMock.Object,
-                _memoryCache,
                 _referenceDataServiceMock.Object,
                 _workoutReferenceDataServiceMock.Object,
                 _loggerMock.Object);
@@ -150,44 +146,10 @@ namespace GetFitterGetBigger.Admin.Tests.Services
             result.Should().NotBeNull();
             result!.Id.Should().Be(templateId);
             result.Name.Should().Be("Test Template");
-            
-            // Verify it was cached
-            _memoryCache.TryGetValue($"workout_template_{templateId}", out WorkoutTemplateDto? cachedTemplate);
-            cachedTemplate.Should().NotBeNull();
-            cachedTemplate!.Id.Should().Be(templateId);
         }
 
-        [Fact]
-        public async Task GetWorkoutTemplateByIdAsync_WhenInCache_ReturnsCachedValue()
-        {
-            // Arrange
-            var templateId = "template-123";
-            var cachedTemplate = new WorkoutTemplateDtoBuilder()
-                .WithId(templateId)
-                .WithName("Cached Template")
-                .Build();
-            
-            var cacheKey = $"workout_template_{templateId}";
-            _memoryCache.Set(cacheKey, cachedTemplate);
-
-            // Act
-            var result = await _workoutTemplateService.GetWorkoutTemplateByIdAsync(templateId);
-
-            // Assert
-            result.Should().NotBeNull();
-            result!.Name.Should().Be("Cached Template");
-            
-            // Verify data provider was not called
-            _dataProviderMock.Verify(x => x.GetWorkoutTemplateByIdAsync(It.IsAny<string>()), Times.Never);
-            
-            _loggerMock.Verify(x => x.Log(
-                LogLevel.Debug,
-                It.IsAny<EventId>(),
-                It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains("Cache HIT")),
-                It.IsAny<Exception>(),
-                It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
-                Times.Once);
-        }
+        // Test removed: GetWorkoutTemplateByIdAsync_WhenInCache_ReturnsCachedValue
+        // Caching is now handled in the data layer, not the business layer
 
         [Fact]
         public async Task GetWorkoutTemplateByIdAsync_WhenNotFound_ReturnsNull()
@@ -295,10 +257,6 @@ namespace GetFitterGetBigger.Admin.Tests.Services
                 .WithName("Updated Template")
                 .Build();
             
-            // Put something in cache first
-            var cacheKey = $"workout_template_{templateId}";
-            _memoryCache.Set(cacheKey, new WorkoutTemplateDtoBuilder().Build());
-            
             _dataProviderMock.Setup(x => x.UpdateWorkoutTemplateAsync(templateId, It.IsAny<UpdateWorkoutTemplateDto>()))
                 .ReturnsAsync(DataServiceResult<WorkoutTemplateDto>.Success(updatedTemplate));
 
@@ -308,9 +266,6 @@ namespace GetFitterGetBigger.Admin.Tests.Services
             // Assert
             result.Should().NotBeNull();
             result.Name.Should().Be("Updated Template");
-            
-            // Verify cache was cleared
-            _memoryCache.TryGetValue(cacheKey, out WorkoutTemplateDto? _).Should().BeFalse();
         }
 
         [Fact]
@@ -318,9 +273,6 @@ namespace GetFitterGetBigger.Admin.Tests.Services
         {
             // Arrange
             var templateId = "template-123";
-            var cacheKey = $"workout_template_{templateId}";
-            _memoryCache.Set(cacheKey, new WorkoutTemplateDtoBuilder().Build());
-            
             _dataProviderMock.Setup(x => x.DeleteWorkoutTemplateAsync(templateId))
                 .ReturnsAsync(DataServiceResult<bool>.Success(true));
 
@@ -328,7 +280,6 @@ namespace GetFitterGetBigger.Admin.Tests.Services
             await _workoutTemplateService.DeleteWorkoutTemplateAsync(templateId);
 
             // Assert
-            _memoryCache.TryGetValue(cacheKey, out WorkoutTemplateDto? _).Should().BeFalse();
             
             _loggerMock.Verify(x => x.Log(
                 LogLevel.Information,

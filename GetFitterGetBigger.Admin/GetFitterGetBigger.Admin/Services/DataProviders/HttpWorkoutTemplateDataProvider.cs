@@ -14,26 +14,17 @@ namespace GetFitterGetBigger.Admin.Services.DataProviders
     /// HTTP implementation of the workout template data provider.
     /// Handles all HTTP-specific concerns for workout template data access.
     /// </summary>
-    public class HttpWorkoutTemplateDataProvider : IWorkoutTemplateDataProvider
+    public class HttpWorkoutTemplateDataProvider : HttpDataProviderBase, IWorkoutTemplateDataProvider
     {
-        private readonly HttpClient _httpClient;
         private readonly IMemoryCache _cache;
-        private readonly ILogger<HttpWorkoutTemplateDataProvider> _logger;
-        private readonly JsonSerializerOptions _jsonOptions;
 
         public HttpWorkoutTemplateDataProvider(
             HttpClient httpClient,
             IMemoryCache cache,
             ILogger<HttpWorkoutTemplateDataProvider> logger)
+            : base(httpClient, logger)
         {
-            _httpClient = httpClient;
             _cache = cache;
-            _logger = logger;
-            _jsonOptions = new JsonSerializerOptions
-            {
-                PropertyNameCaseInsensitive = true,
-                PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-            };
         }
 
         public async Task<DataServiceResult<WorkoutTemplatePagedResultDto>> GetWorkoutTemplatesAsync(WorkoutTemplateFilterDto filter)
@@ -41,92 +32,99 @@ namespace GetFitterGetBigger.Admin.Services.DataProviders
             var queryParams = BuildQueryString(filter);
             var requestUrl = $"api/workout-templates{queryParams}";
             
-            _logger.LogDebug("HTTP GET {BaseAddress}{RequestUrl}", _httpClient.BaseAddress, requestUrl);
-            
-            return await ExecuteHttpRequestAsync(
-                async () => await _httpClient.GetAsync(requestUrl),
-                async response => await response.Content.ReadFromJsonAsync<WorkoutTemplatePagedResultDto>(_jsonOptions),
-                "GetWorkoutTemplatesAsync");
+            return await ExecuteHttpGetRequestAsync<WorkoutTemplatePagedResultDto>(requestUrl);
         }
 
         public async Task<DataServiceResult<WorkoutTemplateDto>> GetWorkoutTemplateByIdAsync(string id)
         {
-            return await ExecuteHttpRequestAsync(
-                async () => await _httpClient.GetAsync($"api/workout-templates/{id}"),
-                async response => await response.Content.ReadFromJsonAsync<WorkoutTemplateDto>(_jsonOptions),
-                "GetWorkoutTemplateByIdAsync");
+            var cacheKey = $"workout_template_{id}";
+            
+            // Check cache first
+            if (_cache.TryGetValue(cacheKey, out WorkoutTemplateDto? cached) && cached != null)
+            {
+                Logger.LogDebug("Cache HIT for workout template {Id}", id);
+                return DataServiceResult<WorkoutTemplateDto>.Success(cached);
+            }
+            
+            Logger.LogDebug("Cache MISS for workout template {Id}, fetching from API", id);
+            var result = await ExecuteHttpGetRequestAsync<WorkoutTemplateDto>($"api/workout-templates/{id}");
+            
+            // Cache successful results
+            if (result.IsSuccess && result.Data != null)
+            {
+                _cache.Set(cacheKey, result.Data, TimeSpan.FromMinutes(5));
+                Logger.LogDebug("Cached workout template {Id} for 5 minutes", id);
+            }
+            
+            return result;
         }
 
         public async Task<DataServiceResult<WorkoutTemplateDto>> CreateWorkoutTemplateAsync(CreateWorkoutTemplateDto template)
         {
-            var json = JsonSerializer.Serialize(template, _jsonOptions);
-            _logger.LogTrace("Request body: {Json}", json);
-            var content = new StringContent(json, Encoding.UTF8, "application/json");
-            
-            return await ExecuteHttpRequestAsync(
-                async () => await _httpClient.PostAsync("api/workout-templates", content),
-                async response => await response.Content.ReadFromJsonAsync<WorkoutTemplateDto>(_jsonOptions),
-                "CreateWorkoutTemplateAsync");
+            return await ExecuteHttpPostRequestAsync<WorkoutTemplateDto>("api/workout-templates", template);
         }
 
         public async Task<DataServiceResult<WorkoutTemplateDto>> UpdateWorkoutTemplateAsync(string id, UpdateWorkoutTemplateDto template)
         {
-            var json = JsonSerializer.Serialize(template, _jsonOptions);
-            var content = new StringContent(json, Encoding.UTF8, "application/json");
+            var result = await ExecuteHttpPutRequestAsync<WorkoutTemplateDto>($"api/workout-templates/{id}", template);
             
-            return await ExecuteHttpRequestAsync(
-                async () => await _httpClient.PutAsync($"api/workout-templates/{id}", content),
-                async response => await response.Content.ReadFromJsonAsync<WorkoutTemplateDto>(_jsonOptions),
-                "UpdateWorkoutTemplateAsync");
+            // Clear cache on successful update
+            if (result.IsSuccess)
+            {
+                var cacheKey = $"workout_template_{id}";
+                _cache.Remove(cacheKey);
+                Logger.LogDebug("Cleared cache for updated workout template {Id}", id);
+            }
+            
+            return result;
         }
 
         public async Task<DataServiceResult<bool>> DeleteWorkoutTemplateAsync(string id)
         {
-            return await ExecuteHttpRequestAsync(
-                async () => await _httpClient.DeleteAsync($"api/workout-templates/{id}"),
-                async response => await Task.FromResult(true),
-                "DeleteWorkoutTemplateAsync");
+            var result = await ExecuteHttpDeleteRequestAsync($"api/workout-templates/{id}");
+            
+            // Clear cache on successful delete
+            if (result.IsSuccess)
+            {
+                var cacheKey = $"workout_template_{id}";
+                _cache.Remove(cacheKey);
+                Logger.LogDebug("Cleared cache for deleted workout template {Id}", id);
+            }
+            
+            return result;
         }
 
         public async Task<DataServiceResult<WorkoutTemplateDto>> ChangeWorkoutTemplateStateAsync(string id, ChangeWorkoutStateDto changeState)
         {
-            var json = JsonSerializer.Serialize(changeState, _jsonOptions);
-            var content = new StringContent(json, Encoding.UTF8, "application/json");
+            var result = await ExecuteHttpPutRequestAsync<WorkoutTemplateDto>($"api/workout-templates/{id}/state", changeState);
             
-            return await ExecuteHttpRequestAsync(
-                async () => await _httpClient.PutAsync($"api/workout-templates/{id}/state", content),
-                async response => await response.Content.ReadFromJsonAsync<WorkoutTemplateDto>(_jsonOptions),
-                "ChangeWorkoutTemplateStateAsync");
+            // Clear cache on successful state change
+            if (result.IsSuccess)
+            {
+                var cacheKey = $"workout_template_{id}";
+                _cache.Remove(cacheKey);
+                Logger.LogDebug("Cleared cache for workout template {Id} after state change", id);
+            }
+            
+            return result;
         }
 
         public async Task<DataServiceResult<WorkoutTemplateDto>> DuplicateWorkoutTemplateAsync(string id, DuplicateWorkoutTemplateDto duplicate)
         {
-            var json = JsonSerializer.Serialize(duplicate, _jsonOptions);
-            var content = new StringContent(json, Encoding.UTF8, "application/json");
-            
-            return await ExecuteHttpRequestAsync(
-                async () => await _httpClient.PostAsync($"api/workout-templates/{id}/duplicate", content),
-                async response => await response.Content.ReadFromJsonAsync<WorkoutTemplateDto>(_jsonOptions),
-                "DuplicateWorkoutTemplateAsync");
+            return await ExecuteHttpPostRequestAsync<WorkoutTemplateDto>($"api/workout-templates/{id}/duplicate", duplicate);
         }
 
 
         public async Task<DataServiceResult<List<WorkoutTemplateExerciseDto>>> GetTemplateExercisesAsync(string templateId)
         {
-            return await ExecuteHttpRequestAsync(
-                async () => await _httpClient.GetAsync($"api/workout-templates/{templateId}/exercises"),
-                async response => await response.Content.ReadFromJsonAsync<List<WorkoutTemplateExerciseDto>>(_jsonOptions) ?? new List<WorkoutTemplateExerciseDto>(),
-                "GetTemplateExercisesAsync");
+            return await ExecuteHttpGetRequestAsync<List<WorkoutTemplateExerciseDto>>($"api/workout-templates/{templateId}/exercises");
         }
 
         public async Task<DataServiceResult<bool>> CheckTemplateNameExistsAsync(string name)
         {
             var encodedName = HttpUtility.UrlEncode(name);
             
-            return await ExecuteHttpRequestAsync(
-                async () => await _httpClient.GetAsync($"api/workout-templates/exists/name?name={encodedName}"),
-                async response => await response.Content.ReadFromJsonAsync<bool>(_jsonOptions),
-                "CheckTemplateNameExistsAsync");
+            return await ExecuteHttpGetRequestAsync<bool>($"api/workout-templates/exists/name?name={encodedName}");
         }
 
         public async Task<DataServiceResult<List<ReferenceDataDto>>> GetWorkoutStatesAsync()
@@ -136,93 +134,21 @@ namespace GetFitterGetBigger.Admin.Services.DataProviders
             // Check cache first
             if (_cache.TryGetValue(cacheKey, out List<ReferenceDataDto>? cachedStates) && cachedStates != null)
             {
-                _logger.LogDebug("Cache HIT for workout states - returning {Count} items", cachedStates.Count);
+                Logger.LogDebug("Cache HIT for workout states - returning {Count} items", cachedStates.Count);
                 return DataServiceResult<List<ReferenceDataDto>>.Success(cachedStates);
             }
 
-            _logger.LogDebug("Cache MISS for workout states, fetching from API");
+            Logger.LogDebug("Cache MISS for workout states, fetching from API");
             
-            var result = await ExecuteHttpRequestAsync(
-                async () => await _httpClient.GetAsync("api/workout-states"),
-                async response => 
-                {
-                    var states = await response.Content.ReadFromJsonAsync<List<ReferenceDataDto>>(_jsonOptions);
-                    if (states != null)
-                    {
-                        _cache.Set(cacheKey, states, TimeSpan.FromMinutes(30));
-                        _logger.LogDebug("Cached {Count} workout states for 30 minutes", states.Count);
-                    }
-                    return states ?? new List<ReferenceDataDto>();
-                },
-                "GetWorkoutStatesAsync");
+            var result = await ExecuteHttpGetRequestAsync<List<ReferenceDataDto>>("api/workout-states");
+            
+            if (result.IsSuccess && result.Data != null)
+            {
+                _cache.Set(cacheKey, result.Data, TimeSpan.FromMinutes(30));
+                Logger.LogDebug("Cached {Count} workout states for 30 minutes", result.Data.Count);
+            }
                 
             return result;
-        }
-
-
-
-        private async Task<DataServiceResult<T>> CreateFailureResult<T>(HttpResponseMessage response)
-        {
-            var errorContent = await response.Content.ReadAsStringAsync();
-
-            _logger.LogError("HTTP {StatusCode} error. Response: {ErrorContent}",
-                response.StatusCode, errorContent);
-
-            var details = new Dictionary<string, object>
-            {
-                ["statusCode"] = (int)response.StatusCode,
-                ["response"] = errorContent
-            };
-
-            var error = response.StatusCode switch
-            {
-                HttpStatusCode.NotFound => DataError.NotFound("Resource"),
-                HttpStatusCode.BadRequest => DataError.BadRequest("Invalid request"),
-                HttpStatusCode.Unauthorized => DataError.Unauthorized(),
-                HttpStatusCode.Forbidden => DataError.Forbidden(),
-                HttpStatusCode.Conflict => DataError.Conflict("Resource conflict"),
-                HttpStatusCode.UnprocessableEntity => DataError.BadRequest("Validation failed"),
-                _ => DataError.ServerError($"HTTP error {response.StatusCode}")
-            };
-
-            // Add details to the error
-            var errorWithDetails = new DataError(error.Code, error.Message, details);
-
-            return DataServiceResult<T>.Failure(errorWithDetails);
-        }
-
-        private async Task<DataServiceResult<T>> ExecuteHttpRequestAsync<T>(
-            Func<Task<HttpResponseMessage>> httpRequest,
-            Func<HttpResponseMessage, Task<T?>> deserializeResponse,
-            string methodName)
-        {
-            try
-            {
-                var response = await httpRequest();
-
-                if (response.IsSuccessStatusCode)
-                {
-                    var data = await deserializeResponse(response);
-                    return data != null
-                        ? DataServiceResult<T>.Success(data)
-                        : DataServiceResult<T>.Failure(
-                            DataError.DeserializationError("Failed to deserialize response"));
-                }
-                else
-                {
-                    return await CreateFailureResult<T>(response);
-                }
-            }
-            catch (HttpRequestException ex)
-            {
-                _logger.LogError(ex, "HTTP request failed for {MethodName}", methodName);
-                return DataServiceResult<T>.Failure(DataError.NetworkError(ex.Message));
-            }
-            catch (TaskCanceledException ex)
-            {
-                _logger.LogError(ex, "Request timeout for {MethodName}", methodName);
-                return DataServiceResult<T>.Failure(DataError.Timeout());
-            }
         }
 
         private string BuildQueryString(WorkoutTemplateFilterDto filter)
@@ -234,7 +160,7 @@ namespace GetFitterGetBigger.Admin.Services.DataProviders
 
             var queryString = queryParams.Count > 0 ? $"?{string.Join("&", queryParams)}" : string.Empty;
 
-            _logger.LogTrace("Built query string: {QueryString}", queryString);
+            Logger.LogTrace("Built query string: {QueryString}", queryString);
 
             return queryString;
         }

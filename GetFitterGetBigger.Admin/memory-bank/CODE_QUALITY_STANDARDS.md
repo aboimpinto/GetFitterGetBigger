@@ -244,19 +244,25 @@ builder.Services.AddScoped<ITableComponentStrategy, EquipmentTableStrategy>();
 
 ## 🏗️ Architecture Standards
 
-### 1. **Separation of Concerns**
+### 1. **Layered Architecture Pattern**
+- **See**: `systemPatterns.md` - "Layered Architecture Pattern" section for complete details
+- **Summary**: Strict 4-layer architecture (UI → Business → Data → Transport)
+- **Key Rule**: Dependencies flow downward only, never upward
+- **Implementation**: All features must follow this pattern
+
+### 2. **Separation of Concerns**
 - **Presentation**: UI logic only, no business rules
 - **Business Logic**: Core domain logic, framework-agnostic
 - **Data Access**: Database/API interactions isolated
 - **Cross-Cutting**: Logging, caching, security in separate modules
 
-### 2. **Dependency Direction**
+### 3. **Dependency Direction**
 - Dependencies flow inward (outer layers depend on inner)
 - Business logic never depends on UI or infrastructure
 - Use interfaces/abstractions at boundaries
 - Inject dependencies, don't create them
 
-### 3. **Component Size**
+### 4. **Component Size**
 - **Single Responsibility**: Each class/module has one reason to change
 - **High Cohesion**: Related functionality stays together
 - **Low Coupling**: Minimize dependencies between components
