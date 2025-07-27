@@ -2,6 +2,7 @@ using GetFitterGetBigger.Admin.Components;
 using GetFitterGetBigger.Admin.Services;
 using GetFitterGetBigger.Admin.Services.Authentication;
 using GetFitterGetBigger.Admin.Services.Configuration;
+using GetFitterGetBigger.Admin.Services.DataProviders;
 using GetFitterGetBigger.Admin.Services.Strategies;
 using GetFitterGetBigger.Admin.Services.TableComponentStrategies;
 using GetFitterGetBigger.Admin.Services.UI;
@@ -159,11 +160,14 @@ builder.Services.AddHttpClient<IWorkoutReferenceDataService, WorkoutReferenceDat
 // Add WorkoutReferenceDataStateService
 builder.Services.AddScoped<IWorkoutReferenceDataStateService, WorkoutReferenceDataStateService>();
 
-// Add HttpClient for WorkoutTemplateService
-builder.Services.AddHttpClient<IWorkoutTemplateService, WorkoutTemplateService>(client =>
+// Add HttpClient for WorkoutTemplateDataProvider
+builder.Services.AddHttpClient<IWorkoutTemplateDataProvider, HttpWorkoutTemplateDataProvider>(client =>
 {
     client.BaseAddress = new Uri(builder.Configuration["ApiBaseUrl"] ?? "http://localhost:5214");
 });
+
+// Add WorkoutTemplateService with data provider
+builder.Services.AddScoped<IWorkoutTemplateService, WorkoutTemplateService>();
 
 // Add WorkoutTemplateStateService
 builder.Services.AddScoped<IWorkoutTemplateStateService, WorkoutTemplateStateService>();

@@ -11,10 +11,6 @@ namespace GetFitterGetBigger.Admin.Services
         Task DeleteWorkoutTemplateAsync(string id);
         Task<WorkoutTemplateDto> ChangeWorkoutTemplateStateAsync(string id, ChangeWorkoutStateDto changeState);
         Task<WorkoutTemplateDto> DuplicateWorkoutTemplateAsync(string id, DuplicateWorkoutTemplateDto duplicate);
-        Task<List<WorkoutTemplateDto>> SearchTemplatesByNameAsync(string namePattern);
-        Task<List<WorkoutTemplateDto>> GetTemplatesByCategoryAsync(string categoryId);
-        Task<List<WorkoutTemplateDto>> GetTemplatesByDifficultyAsync(string difficultyId);
-        Task<List<WorkoutTemplateDto>> GetTemplatesByStateAsync(string stateId);
         Task<List<WorkoutTemplateExerciseDto>> GetTemplateExercisesAsync(string templateId);
         Task<bool> CheckTemplateNameExistsAsync(string name);
         

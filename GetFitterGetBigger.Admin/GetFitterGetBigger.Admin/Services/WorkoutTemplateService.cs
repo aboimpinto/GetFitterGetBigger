@@ -1,94 +1,98 @@
 using GetFitterGetBigger.Admin.Models.Dtos;
+using GetFitterGetBigger.Admin.Models.Errors;
 using GetFitterGetBigger.Admin.Models.ReferenceData;
+using GetFitterGetBigger.Admin.Models.Results;
+using GetFitterGetBigger.Admin.Services.DataProviders;
+using GetFitterGetBigger.Admin.Services.Validation;
 using Microsoft.Extensions.Caching.Memory;
-using System.Net.Http.Json;
-using System.Text;
-using System.Text.Json;
-using System.Web;
 
 namespace GetFitterGetBigger.Admin.Services
 {
     public class WorkoutTemplateService : IWorkoutTemplateService
     {
-        private readonly HttpClient _httpClient;
+        private readonly IWorkoutTemplateDataProvider _dataProvider;
         private readonly IMemoryCache _cache;
         private readonly IGenericReferenceDataService _referenceDataService;
         private readonly IWorkoutReferenceDataService _workoutReferenceDataService;
-        private readonly JsonSerializerOptions _jsonOptions;
+        private readonly ILogger<WorkoutTemplateService> _logger;
 
-        public WorkoutTemplateService(HttpClient httpClient, IMemoryCache cache, IGenericReferenceDataService referenceDataService, IWorkoutReferenceDataService workoutReferenceDataService)
+        public WorkoutTemplateService(
+            IWorkoutTemplateDataProvider dataProvider,
+            IMemoryCache cache,
+            IGenericReferenceDataService referenceDataService,
+            IWorkoutReferenceDataService workoutReferenceDataService,
+            ILogger<WorkoutTemplateService> logger)
         {
-            _httpClient = httpClient;
+            _dataProvider = dataProvider;
             _cache = cache;
             _referenceDataService = referenceDataService;
             _workoutReferenceDataService = workoutReferenceDataService;
-            _jsonOptions = new JsonSerializerOptions
-            {
-                PropertyNameCaseInsensitive = true,
-                PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-            };
+            _logger = logger;
         }
 
         public async Task<WorkoutTemplatePagedResultDto> GetWorkoutTemplatesAsync(WorkoutTemplateFilterDto filter)
         {
-            try
+            WorkoutTemplatePagedResultDto result;
+
+            // Business logic - validate filter
+            if (filter.PageSize > 100)
             {
-                var queryParams = BuildQueryString(filter);
-                var requestUrl = $"api/workout-templates{queryParams}";
-                var fullUrl = $"{_httpClient.BaseAddress}{requestUrl}";
-
-                Console.WriteLine($"[WorkoutTemplateService] GetWorkoutTemplatesAsync - Request URL: {requestUrl}");
-                Console.WriteLine($"[WorkoutTemplateService] GetWorkoutTemplatesAsync - Full URL: {fullUrl}");
-
-                var response = await _httpClient.GetAsync(requestUrl);
-
-                Console.WriteLine($"[WorkoutTemplateService] GetWorkoutTemplatesAsync - Response Status: {response.StatusCode}");
-
-                if (!response.IsSuccessStatusCode)
-                {
-                    var errorContent = await response.Content.ReadAsStringAsync();
-                    Console.WriteLine($"[WorkoutTemplateService] GetWorkoutTemplatesAsync - Error Response Body:");
-                    Console.WriteLine(errorContent);
-                }
-
-                response.EnsureSuccessStatusCode();
-
-                var json = await response.Content.ReadAsStringAsync();
-                var result = JsonSerializer.Deserialize<WorkoutTemplatePagedResultDto>(json, _jsonOptions);
-
-                Console.WriteLine($"[WorkoutTemplateService] GetWorkoutTemplatesAsync - Response Items Count: {result?.Items?.Count ?? 0}");
-
-                return result ?? new WorkoutTemplatePagedResultDto();
+                _logger.LogWarning("Page size {PageSize} exceeds maximum, capping at 100", filter.PageSize);
+                filter.PageSize = 100;
             }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"[WorkoutTemplateService] Exception in GetWorkoutTemplatesAsync: {ex.GetType().Name}: {ex.Message}");
-                if (ex.InnerException != null)
+
+            // Delegate data retrieval to provider
+            var dataResult = await _dataProvider.GetWorkoutTemplatesAsync(filter);
+
+            // Handle result with business logic
+            result = dataResult.Match(
+                onSuccess: data =>
                 {
-                    Console.WriteLine($"[WorkoutTemplateService] Inner Exception: {ex.InnerException.Message}");
+                    _logger.LogDebug("Retrieved {Count} workout templates", data.Items?.Count ?? 0);
+                    return data;
+                },
+                onFailure: errors =>
+                {
+                    var error = errors.FirstOrDefault();
+                    _logger.LogError("Failed to retrieve workout templates: {Code} - {Message}", 
+                        error?.Code.ToString() ?? "UNKNOWN", error?.Message ?? "Unknown error");
+                    return new WorkoutTemplatePagedResultDto(); // Return empty result per business rules
                 }
-                throw;
-            }
+            );
+
+            return result;
         }
 
         public async Task<WorkoutTemplateDto?> GetWorkoutTemplateByIdAsync(string id)
         {
+            WorkoutTemplateDto? template = null;
             var cacheKey = $"workout_template_{id}";
 
-            if (!_cache.TryGetValue(cacheKey, out WorkoutTemplateDto? template))
+            // Check cache first (business logic)
+            if (!_cache.TryGetValue(cacheKey, out template))
             {
-                var requestUrl = $"api/workout-templates/{id}";
-                var response = await _httpClient.GetAsync(requestUrl);
+                var dataResult = await _dataProvider.GetWorkoutTemplateByIdAsync(id);
 
-                if (response.IsSuccessStatusCode)
-                {
-                    template = await response.Content.ReadFromJsonAsync<WorkoutTemplateDto>(_jsonOptions);
-                    if (template != null)
+                template = dataResult.Match(
+                    onSuccess: data =>
                     {
-                        Console.WriteLine($"[WorkoutTemplateService] Loaded template '{template.Name}' with ID: {template.Id}");
-                        _cache.Set(cacheKey, template, TimeSpan.FromMinutes(5));
+                        // Business logic: cache successful results
+                        _cache.Set(cacheKey, data, TimeSpan.FromMinutes(5));
+                        _logger.LogDebug("Cached workout template {Id} - {Name}", data.Id, data.Name);
+                        return data;
+                    },
+                    onFailure: errors =>
+                    {
+                        var error = errors.FirstOrDefault();
+                        _logger.LogWarning("Template {Id} not found: {Code} - {Message}", id, 
+                            error?.Code.ToString() ?? "UNKNOWN", error?.Message ?? "Unknown error");
+                        return null!;
                     }
-                }
+                );
+            }
+            else
+            {
+                _logger.LogDebug("Cache HIT for workout template {Id}", id);
             }
 
             return template;
@@ -96,388 +100,338 @@ namespace GetFitterGetBigger.Admin.Services
 
         public async Task<WorkoutTemplateDto> CreateWorkoutTemplateAsync(CreateWorkoutTemplateDto template)
         {
-            try
+            WorkoutTemplateDto result;
+
+            // Business validation
+            if (string.IsNullOrWhiteSpace(template.Name))
             {
-                var requestUrl = "api/workout-templates";
-                var json = JsonSerializer.Serialize(template, _jsonOptions);
+                throw new ArgumentException("Workout template name is required", nameof(template));
+            }
 
-                Console.WriteLine($"[WorkoutTemplateService] Creating template at URL: {requestUrl}");
-                Console.WriteLine($"[WorkoutTemplateService] Request JSON:");
-                Console.WriteLine(json);
+            if (template.Name.Length > 100)
+            {
+                throw new ArgumentException("Workout template name cannot exceed 100 characters", nameof(template));
+            }
 
-                var content = new StringContent(json, Encoding.UTF8, "application/json");
-                var response = await _httpClient.PostAsync(requestUrl, content);
+            var dataResult = await _dataProvider.CreateWorkoutTemplateAsync(template);
 
-                Console.WriteLine($"[WorkoutTemplateService] Response Status: {response.StatusCode}");
-
-                if (!response.IsSuccessStatusCode)
+            result = dataResult.Match(
+                onSuccess: data =>
                 {
-                    var errorContent = await response.Content.ReadAsStringAsync();
-                    Console.WriteLine($"[WorkoutTemplateService] Error Response Body:");
-                    Console.WriteLine(errorContent);
+                    _logger.LogInformation("Created workout template {Id} - {Name}", data.Id, data.Name);
+                    return data;
+                },
+                onFailure: errors =>
+                {
+                    var error = errors.FirstOrDefault();
+                    if (error?.Code == DataErrorCode.Conflict)
+                    {
+                        throw new InvalidOperationException($"A workout template with the name '{template.Name}' already exists");
+                    }
+
+                    var exception = new InvalidOperationException($"Failed to create workout template: {error?.Message ?? "Unknown error"}");
+                    _logger.LogError(exception, "Creation failed with code {Code}", error?.Code.ToString() ?? "UNKNOWN");
+                    throw exception;
                 }
+            );
 
-                response.EnsureSuccessStatusCode();
-
-                var created = await response.Content.ReadFromJsonAsync<WorkoutTemplateDto>(_jsonOptions);
-                return created ?? throw new InvalidOperationException("Failed to create workout template");
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"[WorkoutTemplateService] Exception in CreateWorkoutTemplateAsync: {ex.GetType().Name}: {ex.Message}");
-                throw;
-            }
+            return result;
         }
 
         public async Task<WorkoutTemplateDto> UpdateWorkoutTemplateAsync(string id, UpdateWorkoutTemplateDto template)
         {
-            try
+            WorkoutTemplateDto result;
+
+            // Business validation
+            if (string.IsNullOrWhiteSpace(template.Name))
             {
-                var requestUrl = $"api/workout-templates/{id}";
-                var json = JsonSerializer.Serialize(template, _jsonOptions);
+                throw new ArgumentException("Workout template name is required", nameof(template));
+            }
 
-                Console.WriteLine($"[WorkoutTemplateService] Updating template at URL: {requestUrl}");
+            var dataResult = await _dataProvider.UpdateWorkoutTemplateAsync(id, template);
 
-                var content = new StringContent(json, Encoding.UTF8, "application/json");
-                var response = await _httpClient.PutAsync(requestUrl, content);
-
-                Console.WriteLine($"[WorkoutTemplateService] Response Status: {response.StatusCode}");
-
-                if (!response.IsSuccessStatusCode)
+            result = dataResult.Match(
+                onSuccess: data =>
                 {
-                    var errorContent = await response.Content.ReadAsStringAsync();
-                    Console.WriteLine($"[WorkoutTemplateService] Error Response Body:");
-                    Console.WriteLine(errorContent);
+                    // Clear cache for this template
+                    var cacheKey = $"workout_template_{id}";
+                    _cache.Remove(cacheKey);
+                    
+                    _logger.LogInformation("Updated workout template {Id} - {Name}", data.Id, data.Name);
+                    return data;
+                },
+                onFailure: errors =>
+                {
+                    var error = errors.FirstOrDefault();
+                    if (error?.Code == DataErrorCode.NotFound)
+                    {
+                        throw new InvalidOperationException($"Workout template with ID '{id}' not found");
+                    }
+
+                    var exception = new InvalidOperationException($"Failed to update workout template: {error?.Message ?? "Unknown error"}");
+                    _logger.LogError(exception, "Update failed with code {Code}", error?.Code.ToString() ?? "UNKNOWN");
+                    throw exception;
                 }
+            );
 
-                response.EnsureSuccessStatusCode();
-
-                // Clear cache for this template
-                var cacheKey = $"workout_template_{id}";
-                _cache.Remove(cacheKey);
-
-                var updated = await response.Content.ReadFromJsonAsync<WorkoutTemplateDto>(_jsonOptions);
-                return updated ?? throw new InvalidOperationException("Failed to update workout template");
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"[WorkoutTemplateService] Exception in UpdateWorkoutTemplateAsync: {ex.GetType().Name}: {ex.Message}");
-                throw;
-            }
+            return result;
         }
 
         public async Task DeleteWorkoutTemplateAsync(string id)
         {
-            try
-            {
-                var requestUrl = $"api/workout-templates/{id}";
-                var response = await _httpClient.DeleteAsync(requestUrl);
+            var dataResult = await _dataProvider.DeleteWorkoutTemplateAsync(id);
 
-                if (!response.IsSuccessStatusCode)
+            dataResult.Match(
+                onSuccess: _ =>
                 {
-                    var errorContent = await response.Content.ReadAsStringAsync();
-                    Console.WriteLine($"[WorkoutTemplateService] Error deleting template: {errorContent}");
+                    // Clear cache for this template
+                    var cacheKey = $"workout_template_{id}";
+                    _cache.Remove(cacheKey);
+                    
+                    _logger.LogInformation("Deleted workout template {Id}", id);
+                    return true;
+                },
+                onFailure: errors =>
+                {
+                    var error = errors.FirstOrDefault();
+                    if (error?.Code == DataErrorCode.NotFound)
+                    {
+                        throw new InvalidOperationException($"Workout template with ID '{id}' not found");
+                    }
+
+                    var exception = new InvalidOperationException($"Failed to delete workout template: {error?.Message ?? "Unknown error"}");
+                    _logger.LogError(exception, "Delete failed with code {Code}", error?.Code.ToString() ?? "UNKNOWN");
+                    throw exception;
                 }
-
-                response.EnsureSuccessStatusCode();
-
-                // Clear cache for this template
-                var cacheKey = $"workout_template_{id}";
-                _cache.Remove(cacheKey);
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"[WorkoutTemplateService] Exception in DeleteWorkoutTemplateAsync: {ex.GetType().Name}: {ex.Message}");
-                throw;
-            }
+            );
         }
 
         public async Task<WorkoutTemplateDto> ChangeWorkoutTemplateStateAsync(string id, ChangeWorkoutStateDto changeState)
         {
-            try
+            WorkoutTemplateDto result;
+
+            // Business validation
+            if (string.IsNullOrWhiteSpace(changeState.WorkoutStateId))
             {
-                var requestUrl = $"api/workout-templates/{id}/state";
-                var json = JsonSerializer.Serialize(changeState, _jsonOptions);
-                
-                Console.WriteLine($"[WorkoutTemplateService] ChangeWorkoutTemplateStateAsync - Endpoint: PUT {requestUrl}");
-                Console.WriteLine($"[WorkoutTemplateService] ChangeWorkoutTemplateStateAsync - Request Body: {json}");
-                Console.WriteLine($"[WorkoutTemplateService] ChangeWorkoutTemplateStateAsync - Full URL: {_httpClient.BaseAddress}{requestUrl}");
+                throw new ArgumentException("Workout State ID is required", nameof(changeState));
+            }
 
-                var content = new StringContent(json, Encoding.UTF8, "application/json");
-                var response = await _httpClient.PutAsync(requestUrl, content);
+            var dataResult = await _dataProvider.ChangeWorkoutTemplateStateAsync(id, changeState);
 
-                Console.WriteLine($"[WorkoutTemplateService] Change state response: {response.StatusCode}");
-
-                if (!response.IsSuccessStatusCode)
+            result = dataResult.Match(
+                onSuccess: data =>
                 {
-                    var errorContent = await response.Content.ReadAsStringAsync();
-                    Console.WriteLine($"[WorkoutTemplateService] Error changing state: {errorContent}");
+                    // Clear cache for this template
+                    var cacheKey = $"workout_template_{id}";
+                    _cache.Remove(cacheKey);
+                    
+                    _logger.LogInformation("Changed workout template {Id} state to {WorkoutStateId}", id, changeState.WorkoutStateId);
+                    return data;
+                },
+                onFailure: errors =>
+                {
+                    var error = errors.FirstOrDefault();
+                    if (error?.Code == DataErrorCode.NotFound)
+                    {
+                        throw new InvalidOperationException($"Workout template with ID '{id}' not found");
+                    }
+
+                    var exception = new InvalidOperationException($"Failed to change workout template state: {error?.Message ?? "Unknown error"}");
+                    _logger.LogError(exception, "State change failed with code {Code}", error?.Code.ToString() ?? "UNKNOWN");
+                    throw exception;
                 }
+            );
 
-                response.EnsureSuccessStatusCode();
-
-                // Clear cache for this template
-                var cacheKey = $"workout_template_{id}";
-                _cache.Remove(cacheKey);
-
-                var updated = await response.Content.ReadFromJsonAsync<WorkoutTemplateDto>(_jsonOptions);
-                return updated ?? throw new InvalidOperationException("Failed to change workout template state");
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"[WorkoutTemplateService] Exception in ChangeWorkoutTemplateStateAsync: {ex.GetType().Name}: {ex.Message}");
-                throw;
-            }
+            return result;
         }
 
         public async Task<WorkoutTemplateDto> DuplicateWorkoutTemplateAsync(string id, DuplicateWorkoutTemplateDto duplicate)
         {
-            try
+            WorkoutTemplateDto result;
+
+            // Business validation
+            if (string.IsNullOrWhiteSpace(duplicate.NewName))
             {
-                var requestUrl = $"api/workout-templates/{id}/duplicate";
-                var json = JsonSerializer.Serialize(duplicate, _jsonOptions);
+                throw new ArgumentException("New template name is required", nameof(duplicate));
+            }
 
-                var content = new StringContent(json, Encoding.UTF8, "application/json");
-                var response = await _httpClient.PostAsync(requestUrl, content);
+            var dataResult = await _dataProvider.DuplicateWorkoutTemplateAsync(id, duplicate);
 
-                Console.WriteLine($"[WorkoutTemplateService] Duplicate response: {response.StatusCode}");
-
-                if (!response.IsSuccessStatusCode)
+            result = dataResult.Match(
+                onSuccess: data =>
                 {
-                    var errorContent = await response.Content.ReadAsStringAsync();
-                    Console.WriteLine($"[WorkoutTemplateService] Error duplicating template: {errorContent}");
+                    _logger.LogInformation("Duplicated workout template {OriginalId} to new template {NewId} - {NewName}", 
+                        id, data.Id, data.Name);
+                    return data;
+                },
+                onFailure: errors =>
+                {
+                    var error = errors.FirstOrDefault();
+                    if (error?.Code == DataErrorCode.NotFound)
+                    {
+                        throw new InvalidOperationException($"Original workout template with ID '{id}' not found");
+                    }
+                    
+                    if (error?.Code == DataErrorCode.Conflict)
+                    {
+                        throw new InvalidOperationException($"A workout template with the name '{duplicate.NewName}' already exists");
+                    }
+
+                    var exception = new InvalidOperationException($"Failed to duplicate workout template: {error?.Message ?? "Unknown error"}");
+                    _logger.LogError(exception, "Duplication failed with code {Code}", error?.Code.ToString() ?? "UNKNOWN");
+                    throw exception;
                 }
+            );
 
-                response.EnsureSuccessStatusCode();
-
-                var created = await response.Content.ReadFromJsonAsync<WorkoutTemplateDto>(_jsonOptions);
-                return created ?? throw new InvalidOperationException("Failed to duplicate workout template");
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"[WorkoutTemplateService] Exception in DuplicateWorkoutTemplateAsync: {ex.GetType().Name}: {ex.Message}");
-                throw;
-            }
+            return result;
         }
 
-        public async Task<List<WorkoutTemplateDto>> SearchTemplatesByNameAsync(string namePattern)
-        {
-            try
-            {
-                var encodedPattern = HttpUtility.UrlEncode(namePattern);
-                var requestUrl = $"api/workout-templates/search?namePattern={encodedPattern}";
-
-                var response = await _httpClient.GetAsync(requestUrl);
-                response.EnsureSuccessStatusCode();
-
-                var templates = await response.Content.ReadFromJsonAsync<List<WorkoutTemplateDto>>(_jsonOptions);
-                return templates ?? new List<WorkoutTemplateDto>();
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"[WorkoutTemplateService] Exception in SearchTemplatesByNameAsync: {ex.GetType().Name}: {ex.Message}");
-                throw;
-            }
-        }
-
-        public async Task<List<WorkoutTemplateDto>> GetTemplatesByCategoryAsync(string categoryId)
-        {
-            try
-            {
-                var requestUrl = $"api/workout-templates/filter/category/{categoryId}";
-                var response = await _httpClient.GetAsync(requestUrl);
-                response.EnsureSuccessStatusCode();
-
-                var templates = await response.Content.ReadFromJsonAsync<List<WorkoutTemplateDto>>(_jsonOptions);
-                return templates ?? new List<WorkoutTemplateDto>();
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"[WorkoutTemplateService] Exception in GetTemplatesByCategoryAsync: {ex.GetType().Name}: {ex.Message}");
-                throw;
-            }
-        }
-
-        public async Task<List<WorkoutTemplateDto>> GetTemplatesByDifficultyAsync(string difficultyId)
-        {
-            try
-            {
-                var requestUrl = $"api/workout-templates/filter/difficulty/{difficultyId}";
-                var response = await _httpClient.GetAsync(requestUrl);
-                response.EnsureSuccessStatusCode();
-
-                var templates = await response.Content.ReadFromJsonAsync<List<WorkoutTemplateDto>>(_jsonOptions);
-                return templates ?? new List<WorkoutTemplateDto>();
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"[WorkoutTemplateService] Exception in GetTemplatesByDifficultyAsync: {ex.GetType().Name}: {ex.Message}");
-                throw;
-            }
-        }
-
-        public async Task<List<WorkoutTemplateDto>> GetTemplatesByStateAsync(string stateId)
-        {
-            try
-            {
-                var requestUrl = $"api/workout-templates/by-state/{stateId}";
-                var response = await _httpClient.GetAsync(requestUrl);
-                response.EnsureSuccessStatusCode();
-
-                var templates = await response.Content.ReadFromJsonAsync<List<WorkoutTemplateDto>>(_jsonOptions);
-                return templates ?? new List<WorkoutTemplateDto>();
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"[WorkoutTemplateService] Exception in GetTemplatesByStateAsync: {ex.GetType().Name}: {ex.Message}");
-                throw;
-            }
-        }
 
         public async Task<List<WorkoutTemplateExerciseDto>> GetTemplateExercisesAsync(string templateId)
         {
-            try
-            {
-                var requestUrl = $"api/workout-templates/{templateId}/exercises";
-                var response = await _httpClient.GetAsync(requestUrl);
-                response.EnsureSuccessStatusCode();
+            List<WorkoutTemplateExerciseDto> result;
 
-                var exercises = await response.Content.ReadFromJsonAsync<List<WorkoutTemplateExerciseDto>>(_jsonOptions);
-                return exercises ?? new List<WorkoutTemplateExerciseDto>();
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"[WorkoutTemplateService] Exception in GetTemplateExercisesAsync: {ex.GetType().Name}: {ex.Message}");
-                throw;
-            }
+            var dataResult = await _dataProvider.GetTemplateExercisesAsync(templateId);
+
+            result = dataResult.Match(
+                onSuccess: data =>
+                {
+                    _logger.LogDebug("Retrieved {Count} exercises for template {TemplateId}", data.Count, templateId);
+                    return data;
+                },
+                onFailure: errors =>
+                {
+                    var error = errors.FirstOrDefault();
+                    _logger.LogError("Failed to get template exercises: {Code} - {Message}", error?.Code.ToString() ?? "UNKNOWN", error?.Message ?? "Unknown error");
+                    return new List<WorkoutTemplateExerciseDto>();
+                }
+            );
+
+            return result;
         }
 
         public async Task<bool> CheckTemplateNameExistsAsync(string name)
         {
-            try
-            {
-                var encodedName = HttpUtility.UrlEncode(name);
-                var requestUrl = $"api/workout-templates/exists/name?name={encodedName}";
+            bool result;
 
-                var response = await _httpClient.GetAsync(requestUrl);
-                response.EnsureSuccessStatusCode();
-
-                var exists = await response.Content.ReadFromJsonAsync<bool>(_jsonOptions);
-                return exists;
-            }
-            catch (Exception ex)
+            if (string.IsNullOrWhiteSpace(name))
             {
-                Console.WriteLine($"[WorkoutTemplateService] Exception in CheckTemplateNameExistsAsync: {ex.GetType().Name}: {ex.Message}");
-                throw;
+                return false;
             }
+
+            var dataResult = await _dataProvider.CheckTemplateNameExistsAsync(name);
+
+            result = dataResult.Match(
+                onSuccess: exists =>
+                {
+                    _logger.LogDebug("Template name '{Name}' exists: {Exists}", name, exists);
+                    return exists;
+                },
+                onFailure: errors =>
+                {
+                    var error = errors.FirstOrDefault();
+                    _logger.LogError("Failed to check template name existence: {Code} - {Message}", error?.Code.ToString() ?? "UNKNOWN", error?.Message ?? "Unknown error");
+                    return false; // Assume doesn't exist on error
+                }
+            );
+
+            return result;
         }
 
         // Reference data methods
         public async Task<List<ReferenceDataDto>> GetWorkoutCategoriesAsync()
         {
-            Console.WriteLine("[WorkoutTemplateService] Getting workout categories from WorkoutReferenceDataService");
+            List<ReferenceDataDto> result;
+            
+            _logger.LogDebug("Getting workout categories from WorkoutReferenceDataService");
             var categories = await _workoutReferenceDataService.GetWorkoutCategoriesAsync();
-            // Convert WorkoutCategoryDto to ReferenceDataDto
-            var referenceDtos = categories?.Select(c => new ReferenceDataDto
+            
+            if (categories == null)
             {
-                Id = c.WorkoutCategoryId,
-                Value = c.Value,
-                Description = c.Description
-            }).ToList();
-            Console.WriteLine($"[WorkoutTemplateService] Categories received: {referenceDtos?.Count ?? 0}");
-            return referenceDtos ?? new List<ReferenceDataDto>();
+                _logger.LogWarning("GetWorkoutCategoriesAsync returned null");
+                result = new List<ReferenceDataDto>();
+            }
+            else
+            {
+                // Convert WorkoutCategoryDto to ReferenceDataDto
+                result = categories.Select(c => new ReferenceDataDto
+                {
+                    Id = c.WorkoutCategoryId,
+                    Value = c.Value,
+                    Description = c.Description
+                }).ToList();
+                
+                _logger.LogDebug("Categories received: {Count}", result.Count);
+            }
+            
+            return result;
         }
 
         public async Task<List<ReferenceDataDto>> GetDifficultyLevelsAsync()
         {
-            Console.WriteLine("[WorkoutTemplateService] Getting difficulty levels from ReferenceDataService");
+            List<ReferenceDataDto> result;
+            
+            _logger.LogDebug("Getting difficulty levels from ReferenceDataService");
             var difficulties = await _referenceDataService.GetReferenceDataAsync<DifficultyLevels>();
-            Console.WriteLine($"[WorkoutTemplateService] Difficulties received: {difficulties?.Count() ?? 0}");
-            return difficulties?.ToList() ?? new List<ReferenceDataDto>();
+            
+            if (difficulties == null)
+            {
+                _logger.LogWarning("GetReferenceDataAsync<DifficultyLevels> returned null");
+                result = new List<ReferenceDataDto>();
+            }
+            else
+            {
+                result = difficulties.ToList();
+                _logger.LogDebug("Difficulties received: {Count}", result.Count);
+            }
+            
+            return result;
         }
 
         public async Task<List<ReferenceDataDto>> GetWorkoutStatesAsync()
         {
-            // Workout states need to be fetched directly from API as they're not in reference services
-            var cacheKey = "workout_states";
+            List<ReferenceDataDto> result;
             
-            if (!_cache.TryGetValue(cacheKey, out List<ReferenceDataDto>? states))
-            {
-                Console.WriteLine("[WorkoutTemplateService] Cache MISS for workout states, fetching from API");
-                var response = await _httpClient.GetAsync("api/workout-states");
-                Console.WriteLine($"[WorkoutTemplateService] States response status: {response.StatusCode}");
-                response.EnsureSuccessStatusCode();
-
-                states = await response.Content.ReadFromJsonAsync<List<ReferenceDataDto>>(_jsonOptions);
-                Console.WriteLine($"[WorkoutTemplateService] States received: {states?.Count ?? 0}");
-                if (states != null)
+            // Delegate to data provider which handles caching
+            var dataResult = await _dataProvider.GetWorkoutStatesAsync();
+            
+            result = dataResult.Match(
+                onSuccess: data =>
                 {
-                    _cache.Set(cacheKey, states, TimeSpan.FromMinutes(30));
-                    Console.WriteLine($"[WorkoutTemplateService] Cached workout states for 30 minutes");
+                    _logger.LogDebug("Retrieved {Count} workout states", data.Count);
+                    return data;
+                },
+                onFailure: errors =>
+                {
+                    var error = errors.FirstOrDefault();
+                    _logger.LogError("Failed to get workout states: {Code} - {Message}", error?.Code.ToString() ?? "UNKNOWN", error?.Message ?? "Unknown error");
+                    return new List<ReferenceDataDto>();
                 }
-            }
-            else
-            {
-                Console.WriteLine($"[WorkoutTemplateService] Cache HIT for workout states - returning {states?.Count ?? 0} items");
-            }
-
-            return states ?? new List<ReferenceDataDto>();
+            );
+            
+            return result;
         }
 
         public async Task<List<ReferenceDataDto>> GetWorkoutObjectivesAsync()
         {
-            Console.WriteLine("[WorkoutTemplateService] Getting workout objectives from WorkoutReferenceDataService");
-            var objectives = await _workoutReferenceDataService.GetWorkoutObjectivesAsync();
-            Console.WriteLine($"[WorkoutTemplateService] Objectives received: {objectives?.Count ?? 0}");
-            return objectives ?? new List<ReferenceDataDto>();
-        }
-
-        private string BuildQueryString(WorkoutTemplateFilterDto filter)
-        {
-            var queryParams = new List<string>();
-
-            // Log all filter values
-            Console.WriteLine($"[WorkoutTemplateService] BuildQueryString - Filter values:");
-            Console.WriteLine($"  - Page: {filter.Page}");
-            Console.WriteLine($"  - PageSize: {filter.PageSize}");
-            Console.WriteLine($"  - NamePattern: '{filter.NamePattern ?? "null"}'");
-            Console.WriteLine($"  - CategoryId: '{filter.CategoryId ?? "null"}'");
-            Console.WriteLine($"  - DifficultyId: '{filter.DifficultyId ?? "null"}'");
-            Console.WriteLine($"  - StateId: '{filter.StateId ?? "null"}'");
-            Console.WriteLine($"  - IsPublic: {(filter.IsPublic.HasValue ? filter.IsPublic.Value.ToString() : "null")}");
-
-            queryParams.Add($"page={filter.Page}");
-            queryParams.Add($"pageSize={filter.PageSize}");
-
-            if (!string.IsNullOrWhiteSpace(filter.NamePattern))
-            {
-                queryParams.Add($"namePattern={HttpUtility.UrlEncode(filter.NamePattern)}");
-            }
-
-            if (!string.IsNullOrWhiteSpace(filter.CategoryId))
-            {
-                queryParams.Add($"categoryId={filter.CategoryId}");
-            }
-
-            if (!string.IsNullOrWhiteSpace(filter.DifficultyId))
-            {
-                queryParams.Add($"difficultyId={filter.DifficultyId}");
-            }
-
-            if (!string.IsNullOrWhiteSpace(filter.StateId))
-            {
-                queryParams.Add($"stateId={filter.StateId}");
-            }
-
-            if (filter.IsPublic.HasValue)
-            {
-                queryParams.Add($"isPublic={filter.IsPublic.Value.ToString().ToLower()}");
-            }
-
-            var queryString = queryParams.Count > 0 ? $"?{string.Join("&", queryParams)}" : string.Empty;
-            Console.WriteLine($"[WorkoutTemplateService] BuildQueryString - Final query string: {queryString}");
+            List<ReferenceDataDto> result;
             
-            return queryString;
+            _logger.LogDebug("Getting workout objectives from WorkoutReferenceDataService");
+            var objectives = await _workoutReferenceDataService.GetWorkoutObjectivesAsync();
+            
+            if (objectives == null)
+            {
+                _logger.LogWarning("GetWorkoutObjectivesAsync returned null");
+                result = new List<ReferenceDataDto>();
+            }
+            else
+            {
+                result = objectives;
+                _logger.LogDebug("Objectives received: {Count}", result.Count);
+            }
+            
+            return result;
         }
+
     }
 }
