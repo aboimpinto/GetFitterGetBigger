@@ -4,6 +4,7 @@ using FluentAssertions;
 using GetFitterGetBigger.Admin.Components.WorkoutTemplates;
 using GetFitterGetBigger.Admin.Models.Dtos;
 using GetFitterGetBigger.Admin.Models.ReferenceData;
+using GetFitterGetBigger.Admin.Models.Results;
 using GetFitterGetBigger.Admin.Services;
 using GetFitterGetBigger.Admin.Services.Stores;
 using Microsoft.AspNetCore.Components;
@@ -77,7 +78,7 @@ public class WorkoutTemplateFormTests : TestContext
         _mockReferenceDataStore.Setup(x => x.LoadReferenceDataAsync())
             .Returns(Task.CompletedTask);
         _mockWorkoutTemplateService.Setup(x => x.CheckTemplateNameExistsAsync(It.IsAny<string>()))
-            .ReturnsAsync(false);
+            .ReturnsAsync(ServiceResult<bool>.Success(false));
     }
     
     [Fact]
@@ -346,7 +347,7 @@ public class WorkoutTemplateFormTests : TestContext
     {
         // Arrange
         _mockWorkoutTemplateService.Setup(x => x.CheckTemplateNameExistsAsync("Existing Template"))
-            .ReturnsAsync(true);
+            .ReturnsAsync(ServiceResult<bool>.Success(true));
             
         var cut = RenderComponent<WorkoutTemplateForm>();
         
@@ -583,7 +584,7 @@ public class WorkoutTemplateFormTests : TestContext
     {
         // Arrange
         _mockWorkoutTemplateService.Setup(x => x.CheckTemplateNameExistsAsync("Existing Name"))
-            .ReturnsAsync(true);
+            .ReturnsAsync(ServiceResult<bool>.Success(true));
             
         var model = new WorkoutTemplateFormModel 
         { 
@@ -1018,7 +1019,7 @@ public class WorkoutTemplateFormTests : TestContext
         // Arrange
         var validationCallCount = 0;
         _mockWorkoutTemplateService.Setup(x => x.CheckTemplateNameExistsAsync(It.IsAny<string>()))
-            .ReturnsAsync(false)
+            .ReturnsAsync(ServiceResult<bool>.Success(false))
             .Callback(() => validationCallCount++);
             
         var cut = RenderComponent<WorkoutTemplateForm>();
@@ -1055,7 +1056,7 @@ public class WorkoutTemplateFormTests : TestContext
             .ReturnsAsync((string name) => 
             {
                 callCount++;
-                return false;
+                return ServiceResult<bool>.Success(false);
             });
             
         var cut = RenderComponent<WorkoutTemplateForm>();
@@ -1174,7 +1175,7 @@ public class WorkoutTemplateFormTests : TestContext
     {
         // Arrange
         _mockWorkoutTemplateService.Setup(x => x.CheckTemplateNameExistsAsync("Duplicate"))
-            .ReturnsAsync(true);
+            .ReturnsAsync(ServiceResult<bool>.Success(true));
             
         var model = new WorkoutTemplateFormModel
         {
@@ -1208,9 +1209,9 @@ public class WorkoutTemplateFormTests : TestContext
     {
         // Arrange
         _mockWorkoutTemplateService.Setup(x => x.CheckTemplateNameExistsAsync("Duplicate"))
-            .ReturnsAsync(true);
+            .ReturnsAsync(ServiceResult<bool>.Success(true));
         _mockWorkoutTemplateService.Setup(x => x.CheckTemplateNameExistsAsync("Unique"))
-            .ReturnsAsync(false);
+            .ReturnsAsync(ServiceResult<bool>.Success(false));
             
         var cut = RenderComponent<WorkoutTemplateForm>();
         

@@ -169,6 +169,41 @@ Every code review results in one of three outcomes:
 **Recommendation**: [Ready for deployment/Needs fixes/etc.]
 ```
 
+## 🏕️ Boy Scout Rule Implementation
+
+### Leave Code Better Than You Found It
+When reviewing modified files (status `M` in git), reviewers must:
+
+1. **Review ALL code in the file**, not just changed lines
+2. **Document pre-existing issues** found in unchanged code
+3. **Categorize findings** by severity and effort required
+4. **Help teams decide** what to fix now vs. defer
+
+### Boy Scout Rule Section Template
+```markdown
+## 🏕️ Boy Scout Rule - Additional Issues Found
+
+### [FileName.cs]
+Since this file was modified, here are additional issues found:
+
+1. **[Method Name]** - [Issue type]
+   - ❌ Current: [Description of current implementation]
+   - ✅ Should be: [Description of correct implementation]
+   - **Impact**: [Low/Medium/High] - [Why this matters]
+   - **Effort**: [Time estimate, e.g., ~30 minutes]
+   - **Recommendation**: [Fix now/Create tech debt ticket/Document only]
+
+**Team Decision**:
+- [ ] Fix in this PR (recommended for consistency)
+- [ ] Create separate tech debt ticket
+- [ ] Document for future cleanup
+```
+
+### Decision Guidelines
+- **Fix Now**: Small fixes (<1 hour) that improve consistency
+- **Tech Debt Ticket**: Larger refactoring or risky changes
+- **Document Only**: Low-impact style issues
+
 ## 🎯 Review Focus Areas
 
 ### Universal (All Projects)
@@ -177,6 +212,7 @@ Every code review results in one of three outcomes:
    - Proper naming conventions
    - Method size and complexity
    - DRY principle adherence
+   - **Boy Scout Rule**: Check all methods in modified files
 
 2. **Architecture Compliance**
    - Follows project architecture patterns

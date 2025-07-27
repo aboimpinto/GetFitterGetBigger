@@ -53,6 +53,7 @@ After the agent completes:
 - **Cross-Cutting Concerns**: Check architecture, performance, security
 - **Documentation**: Ensure proper XML comments and README updates
 - **Testing Coverage**: Verify adequate test coverage with proper patterns
+- **Boy Scout Rule**: Review ALL code in modified files, document pre-existing issues
 
 ### Critical Review Checklist
 1. **Build Health**
@@ -78,12 +79,22 @@ After the agent completes:
    - Proper async/await usage (no .Wait() or .Result)
    - Test naming conventions followed
 
+### 4. Boy Scout Rule Implementation
+- **Review Scope**: When files are modified (status `M`), review ALL methods in those files
+- **Documentation**: Create a "Boy Scout Rule" section documenting:
+  - Issues found in unchanged code within modified files
+  - Impact assessment (Low/Medium/High)
+  - Effort estimation for fixes
+  - Recommendations (Fix now/Create tech debt ticket/Document only)
+- **Decision Making**: Help teams decide which issues to address immediately
+
 ### Review Report Format
 Always provide a structured review report including:
 - Build status with exact warning/error counts
 - Test execution results (X passed, Y failed)
 - Clear status: APPROVED/APPROVED_WITH_NOTES/NEEDS_CHANGES
 - Specific issues that must be fixed
+- Boy Scout Rule findings for modified files
 - Recommendations for improvement
 
 Remember: Quality over speed. Maintain the highest standards for code excellence.

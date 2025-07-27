@@ -1,7 +1,9 @@
+using GetFitterGetBigger.Admin.Extensions;
 using GetFitterGetBigger.Admin.Models.Dtos;
 using GetFitterGetBigger.Admin.Services;
 using GetFitterGetBigger.Admin.Services.Stores;
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.AspNetCore.Components.Routing;
 using System.ComponentModel.DataAnnotations;
 
@@ -39,6 +41,27 @@ public partial class WorkoutTemplateForm : ComponentBase, IDisposable
     internal string TagsInput = string.Empty;
     internal bool ShowNameExistsWarning = false;
     internal string? WorkoutStateInfo;
+    
+    // Form validation
+    private EditContext? editContext;
+    private ValidationMessageStore? messageStore;
+    private bool hasSubmittedOnce = false;
+    
+    // Field state tracking for dynamic asterisks
+    internal bool HasName => !string.IsNullOrWhiteSpace(Model?.Name);
+    internal bool HasCategory => !string.IsNullOrWhiteSpace(Model?.CategoryId);
+    internal bool HasDifficulty => !string.IsNullOrWhiteSpace(Model?.DifficultyId);
+    internal bool HasDuration => Model?.EstimatedDurationMinutes > 0;
+    
+    // Field validation error tracking
+    internal bool HasNameError => hasSubmittedOnce && editContext != null && 
+        editContext.GetValidationMessages(() => Model.Name).Any();
+    internal bool HasCategoryError => hasSubmittedOnce && editContext != null && 
+        editContext.GetValidationMessages(() => Model.CategoryId).Any();
+    internal bool HasDifficultyError => hasSubmittedOnce && editContext != null && 
+        editContext.GetValidationMessages(() => Model.DifficultyId).Any();
+    internal bool HasDurationError => hasSubmittedOnce && editContext != null && 
+        editContext.GetValidationMessages(() => Model.EstimatedDurationMinutes).Any();
     
     // Auto-save state
     internal bool ShowAutoSaveIndicator => EnableAutoSave && IsEditMode;
@@ -121,6 +144,13 @@ public partial class WorkoutTemplateForm : ComponentBase, IDisposable
         // Initialize tags input from model
         TagsInput = string.Join(", ", Model.Tags);
         
+        // Initialize EditContext for validation
+        editContext = new EditContext(Model);
+        messageStore = new ValidationMessageStore(editContext);
+        
+        // Listen for validation state changes
+        editContext.OnFieldChanged += HandleFieldChanged;
+        
         // Set workout state info
         if (!IsEditMode)
         {
@@ -154,6 +184,22 @@ public partial class WorkoutTemplateForm : ComponentBase, IDisposable
         }
         
         MarkAsDirty();
+    }
+    
+    private void HandleFieldChanged(object? sender, FieldChangedEventArgs e)
+    {
+        // Clear field-specific validation errors when the field value changes
+        if (hasSubmittedOnce && editContext != null)
+        {
+            var fieldIdentifier = e.FieldIdentifier;
+            messageStore?.Clear(fieldIdentifier);
+            
+            // Re-validate the specific field
+            editContext.Validate();
+            
+            // Update UI
+            InvokeAsync(StateHasChanged);
+        }
     }
     
     internal bool IsFieldDisabled(string fieldName)
@@ -225,7 +271,23 @@ public partial class WorkoutTemplateForm : ComponentBase, IDisposable
     
     internal async Task HandleSubmitFromFloating()
     {
-        // Validate form before submitting
+        // Mark that we've submitted once so validation messages appear
+        hasSubmittedOnce = true;
+        
+        // Validate the form using EditContext
+        if (editContext != null)
+        {
+            var isValid = editContext.Validate();
+            
+            if (!isValid)
+            {
+                // Force UI update to show validation messages
+                await InvokeAsync(StateHasChanged);
+                return;
+            }
+        }
+        
+        // Additional custom validation
         if (!IsFormValid())
         {
             return;
@@ -279,8 +341,8 @@ public partial class WorkoutTemplateForm : ComponentBase, IDisposable
                 return;
             }
             
-            var exists = await WorkoutTemplateService.CheckTemplateNameExistsAsync(name);
-            ShowNameExistsWarning = exists;
+            var result = await WorkoutTemplateService.CheckTemplateNameExistsAsync(name);
+            ShowNameExistsWarning = result.IsSuccess && result.Data;
             lastValidatedName = name;
             
             await InvokeAsync(StateHasChanged);
@@ -479,6 +541,23 @@ public partial class WorkoutTemplateForm : ComponentBase, IDisposable
     {
         ShowUnsavedChangesDialog = false;
         
+        // Mark that we've submitted once so validation messages appear
+        hasSubmittedOnce = true;
+        
+        // Validate the form using EditContext
+        if (editContext != null && !editContext.Validate())
+        {
+            // Force UI update to show validation messages
+            await InvokeAsync(StateHasChanged);
+            return;
+        }
+        
+        // Additional custom validation
+        if (!IsFormValid())
+        {
+            return;
+        }
+        
         // Try to save the form
         await HandleValidSubmit();
         
@@ -495,6 +574,12 @@ public partial class WorkoutTemplateForm : ComponentBase, IDisposable
         nameValidationCts?.Cancel();
         nameValidationCts?.Dispose();
         navigationRegistration?.Dispose();
+        
+        // Clean up EditContext event handler
+        if (editContext != null)
+        {
+            editContext.OnFieldChanged -= HandleFieldChanged;
+        }
     }
     
     // Form Model for data binding

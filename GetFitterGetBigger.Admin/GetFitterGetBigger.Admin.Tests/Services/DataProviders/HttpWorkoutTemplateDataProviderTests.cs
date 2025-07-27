@@ -196,59 +196,6 @@ namespace GetFitterGetBigger.Admin.Tests.Services.DataProviders
             result.Data.Should().BeTrue();
         }
 
-        [Fact]
-        public async Task GetWorkoutStatesAsync_WithCachedData_ReturnsCachedValue()
-        {
-            // Arrange
-            var cachedStates = new List<ReferenceDataDto>
-            {
-                new() { Id = "state-1", Value = "Cached State" }
-            };
-            _memoryCache.Set("workout_states", cachedStates);
-
-            // Act
-            var result = await _dataProvider.GetWorkoutStatesAsync();
-
-            // Assert
-            result.IsSuccess.Should().BeTrue();
-            result.Data.Should().HaveCount(1);
-            result.Data![0].Value.Should().Be("Cached State");
-            
-            // Verify HTTP was not called
-            _httpMessageHandler.VerifyNoRequests();
-            
-            _loggerMock.Verify(x => x.Log(
-                LogLevel.Debug,
-                It.IsAny<EventId>(),
-                It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains("Cache HIT")),
-                It.IsAny<Exception>(),
-                It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
-                Times.Once);
-        }
-
-        [Fact]
-        public async Task GetWorkoutStatesAsync_WithoutCache_FetchesAndCachesData()
-        {
-            // Arrange
-            var states = new List<ReferenceDataDto>
-            {
-                new() { Id = "state-1", Value = "Draft" },
-                new() { Id = "state-2", Value = "Published" }
-            };
-            _httpMessageHandler.SetupResponse(HttpStatusCode.OK, states);
-
-            // Act
-            var result = await _dataProvider.GetWorkoutStatesAsync();
-
-            // Assert
-            result.IsSuccess.Should().BeTrue();
-            result.Data.Should().HaveCount(2);
-            
-            // Verify it was cached
-            _memoryCache.TryGetValue("workout_states", out List<ReferenceDataDto>? cachedStates);
-            cachedStates.Should().NotBeNull();
-            cachedStates!.Should().HaveCount(2);
-        }
 
         [Fact]
         public async Task BuildQueryString_WithAllFilters_BuildsCorrectQuery()

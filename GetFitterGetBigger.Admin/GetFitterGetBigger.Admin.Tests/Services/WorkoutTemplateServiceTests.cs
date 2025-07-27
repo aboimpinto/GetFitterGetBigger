@@ -14,22 +14,16 @@ namespace GetFitterGetBigger.Admin.Tests.Services
     public class WorkoutTemplateServiceTests
     {
         private readonly Mock<IWorkoutTemplateDataProvider> _dataProviderMock;
-        private readonly Mock<IGenericReferenceDataService> _referenceDataServiceMock;
-        private readonly Mock<IWorkoutReferenceDataService> _workoutReferenceDataServiceMock;
         private readonly Mock<ILogger<WorkoutTemplateService>> _loggerMock;
         private readonly WorkoutTemplateService _workoutTemplateService;
 
         public WorkoutTemplateServiceTests()
         {
             _dataProviderMock = new Mock<IWorkoutTemplateDataProvider>();
-            _referenceDataServiceMock = new Mock<IGenericReferenceDataService>();
-            _workoutReferenceDataServiceMock = new Mock<IWorkoutReferenceDataService>();
             _loggerMock = new Mock<ILogger<WorkoutTemplateService>>();
 
             _workoutTemplateService = new WorkoutTemplateService(
                 _dataProviderMock.Object,
-                _referenceDataServiceMock.Object,
-                _workoutReferenceDataServiceMock.Object,
                 _loggerMock.Object);
         }
 
@@ -143,15 +137,37 @@ namespace GetFitterGetBigger.Admin.Tests.Services
 
             // Assert
             result.Should().NotBeNull();
-            result!.Id.Should().Be(templateId);
-            result.Name.Should().Be("Test Template");
+            result.IsSuccess.Should().BeTrue();
+            result.Data.Should().NotBeNull();
+            result.Data.Id.Should().Be(templateId);
+            result.Data.Name.Should().Be("Test Template");
+            result.Data.IsEmpty.Should().BeFalse();
         }
 
         // Test removed: GetWorkoutTemplateByIdAsync_WhenInCache_ReturnsCachedValue
         // Caching is now handled in the data layer, not the business layer
 
         [Fact]
-        public async Task GetWorkoutTemplateByIdAsync_WhenNotFound_ReturnsNull()
+        public async Task GetWorkoutTemplateByIdAsync_WithEmptyId_ReturnsValidationError()
+        {
+            // Arrange
+            var templateId = "";
+
+            // Act
+            var result = await _workoutTemplateService.GetWorkoutTemplateByIdAsync(templateId);
+
+            // Assert
+            result.Should().NotBeNull();
+            result.IsSuccess.Should().BeFalse();
+            result.Errors.Should().HaveCount(1);
+            result.Errors.First().Code.Should().Be(ServiceErrorCode.ValidationRequired);
+            result.Errors.First().Message.Should().Contain("Value is required");
+            
+            _dataProviderMock.Verify(x => x.GetWorkoutTemplateByIdAsync(It.IsAny<string>()), Times.Never);
+        }
+
+        [Fact]
+        public async Task GetWorkoutTemplateByIdAsync_WhenNotFound_ReturnsEmptyTemplate()
         {
             // Arrange
             var templateId = "nonexistent-id";
@@ -162,19 +178,19 @@ namespace GetFitterGetBigger.Admin.Tests.Services
             var result = await _workoutTemplateService.GetWorkoutTemplateByIdAsync(templateId);
 
             // Assert
-            result.Should().BeNull();
+            result.Should().NotBeNull();
+            result.IsSuccess.Should().BeTrue();
+            result.Data.Should().NotBeNull();
+            result.Data.IsEmpty.Should().BeTrue();
+            result.Data.Id.Should().Be(string.Empty);
+            result.Data.Name.Should().Be(string.Empty);
             
-            _loggerMock.Verify(x => x.Log(
-                LogLevel.Warning,
-                It.IsAny<EventId>(),
-                It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains("not found")),
-                It.IsAny<Exception>(),
-                It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
-                Times.Once);
+            // No longer logging at the service level since HttpDataProviderBase already logs HTTP operations
+            _dataProviderMock.Verify(x => x.GetWorkoutTemplateByIdAsync(templateId), Times.Once);
         }
 
         [Fact]
-        public async Task CreateWorkoutTemplateAsync_WithValidTemplate_ReturnsCreatedTemplate()
+        public async Task CreateWorkoutTemplateAsync_WithValidTemplate_ReturnsSuccessResult()
         {
             // Arrange
             var createDto = new CreateWorkoutTemplateDtoBuilder()
@@ -194,38 +210,53 @@ namespace GetFitterGetBigger.Admin.Tests.Services
 
             // Assert
             result.Should().NotBeNull();
-            result.Id.Should().Be("new-id");
-            result.Name.Should().Be("New Template");
+            result.IsSuccess.Should().BeTrue();
+            result.Data.Should().NotBeNull();
+            result.Data!.Id.Should().Be("new-id");
+            result.Data.Name.Should().Be("New Template");
         }
 
         [Fact]
-        public async Task CreateWorkoutTemplateAsync_WithEmptyName_ThrowsArgumentException()
+        public async Task CreateWorkoutTemplateAsync_WithEmptyName_ReturnsValidationError()
         {
             // Arrange
             var createDto = new CreateWorkoutTemplateDtoBuilder()
                 .WithName("")
                 .Build();
 
-            // Act & Assert
-            await Assert.ThrowsAsync<ArgumentException>(async () =>
-                await _workoutTemplateService.CreateWorkoutTemplateAsync(createDto));
+            // Act
+            var result = await _workoutTemplateService.CreateWorkoutTemplateAsync(createDto);
+
+            // Assert
+            result.Should().NotBeNull();
+            result.IsSuccess.Should().BeFalse();
+            result.Errors.Should().HaveCount(1);
+            result.Errors.First().Code.Should().Be(ServiceErrorCode.ValidationRequired);
+            result.Errors.First().Message.Should().Contain("required");
         }
 
         [Fact]
-        public async Task CreateWorkoutTemplateAsync_WithLongName_ThrowsArgumentException()
+        public async Task CreateWorkoutTemplateAsync_WithLongName_ReturnsValidationError()
         {
             // Arrange
             var createDto = new CreateWorkoutTemplateDtoBuilder()
                 .WithName(new string('a', 101))
                 .Build();
 
-            // Act & Assert
-            await Assert.ThrowsAsync<ArgumentException>(async () =>
-                await _workoutTemplateService.CreateWorkoutTemplateAsync(createDto));
+            // Act
+            var result = await _workoutTemplateService.CreateWorkoutTemplateAsync(createDto);
+
+            // Assert
+            result.Should().NotBeNull();
+            result.IsSuccess.Should().BeFalse();
+            result.Errors.Should().HaveCount(1);
+            result.Errors.First().Code.Should().Be(ServiceErrorCode.ValidationOutOfRange);
+            result.Errors.First().Message.Should().Contain("Template name");
+            result.Errors.First().Message.Should().Contain("100 characters");
         }
 
         [Fact]
-        public async Task CreateWorkoutTemplateAsync_WhenConflict_ThrowsInvalidOperationException()
+        public async Task CreateWorkoutTemplateAsync_WhenConflict_ReturnsDuplicateNameError()
         {
             // Arrange
             var createDto = new CreateWorkoutTemplateDtoBuilder()
@@ -235,15 +266,20 @@ namespace GetFitterGetBigger.Admin.Tests.Services
             _dataProviderMock.Setup(x => x.CreateWorkoutTemplateAsync(It.IsAny<CreateWorkoutTemplateDto>()))
                 .ReturnsAsync(DataServiceResult<WorkoutTemplateDto>.Failure(new DataError(DataErrorCode.Conflict, "Template already exists")));
 
-            // Act & Assert
-            var exception = await Assert.ThrowsAsync<InvalidOperationException>(async () =>
-                await _workoutTemplateService.CreateWorkoutTemplateAsync(createDto));
+            // Act
+            var result = await _workoutTemplateService.CreateWorkoutTemplateAsync(createDto);
             
-            exception.Message.Should().Contain("already exists");
+            // Assert
+            result.Should().NotBeNull();
+            result.IsSuccess.Should().BeFalse();
+            result.Errors.Should().HaveCount(1);
+            result.Errors.First().Code.Should().Be(ServiceErrorCode.DuplicateName);
+            result.Errors.First().Message.Should().Contain("Existing Template");
+            result.Errors.First().Message.Should().Contain("already exists");
         }
 
         [Fact]
-        public async Task UpdateWorkoutTemplateAsync_ClearsCacheAfterUpdate()
+        public async Task UpdateWorkoutTemplateAsync_WithValidTemplate_ReturnsSuccessResult()
         {
             // Arrange
             var templateId = "template-123";
@@ -264,11 +300,55 @@ namespace GetFitterGetBigger.Admin.Tests.Services
 
             // Assert
             result.Should().NotBeNull();
-            result.Name.Should().Be("Updated Template");
+            result.IsSuccess.Should().BeTrue();
+            result.Data.Should().NotBeNull();
+            result.Data!.Name.Should().Be("Updated Template");
         }
 
         [Fact]
-        public async Task DeleteWorkoutTemplateAsync_WhenSuccessful_ClearsCacheAndDoesNotThrow()
+        public async Task UpdateWorkoutTemplateAsync_WithEmptyName_ReturnsValidationError()
+        {
+            // Arrange
+            var templateId = "template-123";
+            var updateDto = new UpdateWorkoutTemplateDtoBuilder()
+                .WithName("")
+                .Build();
+
+            // Act
+            var result = await _workoutTemplateService.UpdateWorkoutTemplateAsync(templateId, updateDto);
+
+            // Assert
+            result.Should().NotBeNull();
+            result.IsSuccess.Should().BeFalse();
+            result.Errors.Should().NotBeEmpty();
+            result.Errors.First().Code.Should().Be(ServiceErrorCode.ValidationRequired);
+        }
+
+        [Fact]
+        public async Task UpdateWorkoutTemplateAsync_WhenNotFound_ReturnsTemplateNotFoundError()
+        {
+            // Arrange
+            var templateId = "non-existent";
+            var updateDto = new UpdateWorkoutTemplateDtoBuilder()
+                .WithName("Updated Template")
+                .Build();
+            
+            _dataProviderMock.Setup(x => x.UpdateWorkoutTemplateAsync(templateId, It.IsAny<UpdateWorkoutTemplateDto>()))
+                .ReturnsAsync(DataServiceResult<WorkoutTemplateDto>.Failure(
+                    new DataError(DataErrorCode.NotFound, "Template not found")));
+
+            // Act
+            var result = await _workoutTemplateService.UpdateWorkoutTemplateAsync(templateId, updateDto);
+
+            // Assert
+            result.Should().NotBeNull();
+            result.IsSuccess.Should().BeFalse();
+            result.Errors.Should().NotBeEmpty();
+            result.Errors.First().Code.Should().Be(ServiceErrorCode.TemplateNotFound);
+        }
+
+        [Fact]
+        public async Task DeleteWorkoutTemplateAsync_WhenSuccessful_ReturnsSuccessResult()
         {
             // Arrange
             var templateId = "template-123";
@@ -276,9 +356,12 @@ namespace GetFitterGetBigger.Admin.Tests.Services
                 .ReturnsAsync(DataServiceResult<bool>.Success(true));
 
             // Act
-            await _workoutTemplateService.DeleteWorkoutTemplateAsync(templateId);
+            var result = await _workoutTemplateService.DeleteWorkoutTemplateAsync(templateId);
 
             // Assert
+            result.Should().NotBeNull();
+            result.IsSuccess.Should().BeTrue();
+            result.Data.Should().BeTrue();
             
             _loggerMock.Verify(x => x.Log(
                 LogLevel.Information,
@@ -289,51 +372,204 @@ namespace GetFitterGetBigger.Admin.Tests.Services
                 Times.Once);
         }
 
-        // Note: SearchTemplatesByNameAsync method is not implemented in WorkoutTemplateService
-        // This test should be removed or the method should be implemented
-
         [Fact]
-        public async Task GetWorkoutStatesAsync_DelegatesToDataProvider()
+        public async Task DeleteWorkoutTemplateAsync_WithEmptyId_ReturnsValidationError()
         {
             // Arrange
-            var expectedStates = new List<ReferenceDataDto>
-            {
-                new() { Id = "state-1", Value = "Draft" },
-                new() { Id = "state-2", Value = "Published" }
-            };
-            
-            _dataProviderMock.Setup(x => x.GetWorkoutStatesAsync())
-                .ReturnsAsync(DataServiceResult<List<ReferenceDataDto>>.Success(expectedStates));
+            var templateId = "";
 
             // Act
-            var result = await _workoutTemplateService.GetWorkoutStatesAsync();
+            var result = await _workoutTemplateService.DeleteWorkoutTemplateAsync(templateId);
 
             // Assert
-            result.Should().HaveCount(2);
-            result[0].Value.Should().Be("Draft");
-            result[1].Value.Should().Be("Published");
+            result.Should().NotBeNull();
+            result.IsSuccess.Should().BeFalse();
+            result.Errors.Should().NotBeEmpty();
+            result.Errors.First().Code.Should().Be(ServiceErrorCode.ValidationRequired);
         }
 
         [Fact]
-        public async Task GetWorkoutCategoriesAsync_ConvertsFromWorkoutCategoryDto()
+        public async Task DeleteWorkoutTemplateAsync_WhenNotFound_ReturnsTemplateNotFoundError()
         {
             // Arrange
-            var categories = new List<WorkoutCategoryDto>
-            {
-                new() { WorkoutCategoryId = "cat-1", Value = "Strength", Description = "Strength training" }
-            };
-            
-            _workoutReferenceDataServiceMock.Setup(x => x.GetWorkoutCategoriesAsync())
-                .ReturnsAsync(categories);
+            var templateId = "non-existent";
+            _dataProviderMock.Setup(x => x.DeleteWorkoutTemplateAsync(templateId))
+                .ReturnsAsync(DataServiceResult<bool>.Failure(
+                    new DataError(DataErrorCode.NotFound, "Template not found")));
 
             // Act
-            var result = await _workoutTemplateService.GetWorkoutCategoriesAsync();
+            var result = await _workoutTemplateService.DeleteWorkoutTemplateAsync(templateId);
 
             // Assert
-            result.Should().HaveCount(1);
-            result[0].Id.Should().Be("cat-1");
-            result[0].Value.Should().Be("Strength");
-            result[0].Description.Should().Be("Strength training");
+            result.Should().NotBeNull();
+            result.IsSuccess.Should().BeFalse();
+            result.Errors.Should().NotBeEmpty();
+            result.Errors.First().Code.Should().Be(ServiceErrorCode.TemplateNotFound);
         }
+
+        [Fact]
+        public async Task ChangeWorkoutTemplateStateAsync_WithValidData_ReturnsSuccessResult()
+        {
+            // Arrange
+            var templateId = "template-123";
+            var changeStateDto = new ChangeWorkoutStateDto { WorkoutStateId = "state-active" };
+            
+            var updatedTemplate = new WorkoutTemplateDtoBuilder()
+                .WithId(templateId)
+                .WithWorkoutState("state-active", "Active")
+                .Build();
+            
+            _dataProviderMock.Setup(x => x.ChangeWorkoutTemplateStateAsync(templateId, It.IsAny<ChangeWorkoutStateDto>()))
+                .ReturnsAsync(DataServiceResult<WorkoutTemplateDto>.Success(updatedTemplate));
+
+            // Act
+            var result = await _workoutTemplateService.ChangeWorkoutTemplateStateAsync(templateId, changeStateDto);
+
+            // Assert
+            result.Should().NotBeNull();
+            result.IsSuccess.Should().BeTrue();
+            result.Data.Should().NotBeNull();
+            result.Data!.WorkoutState.Id.Should().Be("state-active");
+        }
+
+        [Fact]
+        public async Task ChangeWorkoutTemplateStateAsync_WithEmptyStateId_ReturnsValidationError()
+        {
+            // Arrange
+            var templateId = "template-123";
+            var changeStateDto = new ChangeWorkoutStateDto { WorkoutStateId = "" };
+
+            // Act
+            var result = await _workoutTemplateService.ChangeWorkoutTemplateStateAsync(templateId, changeStateDto);
+
+            // Assert
+            result.Should().NotBeNull();
+            result.IsSuccess.Should().BeFalse();
+            result.Errors.Should().NotBeEmpty();
+            result.Errors.First().Code.Should().Be(ServiceErrorCode.ValidationRequired);
+        }
+
+        [Fact]
+        public async Task ChangeWorkoutTemplateStateAsync_WhenNotFound_ReturnsTemplateNotFoundError()
+        {
+            // Arrange
+            var templateId = "non-existent";
+            var changeStateDto = new ChangeWorkoutStateDto { WorkoutStateId = "state-active" };
+            
+            _dataProviderMock.Setup(x => x.ChangeWorkoutTemplateStateAsync(templateId, It.IsAny<ChangeWorkoutStateDto>()))
+                .ReturnsAsync(DataServiceResult<WorkoutTemplateDto>.Failure(
+                    new DataError(DataErrorCode.NotFound, "Template not found")));
+
+            // Act
+            var result = await _workoutTemplateService.ChangeWorkoutTemplateStateAsync(templateId, changeStateDto);
+
+            // Assert
+            result.Should().NotBeNull();
+            result.IsSuccess.Should().BeFalse();
+            result.Errors.Should().NotBeEmpty();
+            result.Errors.First().Code.Should().Be(ServiceErrorCode.TemplateNotFound);
+        }
+
+        [Fact]
+        public async Task DuplicateWorkoutTemplateAsync_WithValidData_ReturnsSuccessResult()
+        {
+            // Arrange
+            var templateId = "template-123";
+            var duplicateDto = new DuplicateWorkoutTemplateDto { NewName = "Duplicated Template" };
+            
+            var duplicatedTemplate = new WorkoutTemplateDtoBuilder()
+                .WithId("template-456")
+                .WithName("Duplicated Template")
+                .Build();
+            
+            _dataProviderMock.Setup(x => x.DuplicateWorkoutTemplateAsync(templateId, It.IsAny<DuplicateWorkoutTemplateDto>()))
+                .ReturnsAsync(DataServiceResult<WorkoutTemplateDto>.Success(duplicatedTemplate));
+
+            // Act
+            var result = await _workoutTemplateService.DuplicateWorkoutTemplateAsync(templateId, duplicateDto);
+
+            // Assert
+            result.Should().NotBeNull();
+            result.IsSuccess.Should().BeTrue();
+            result.Data.Should().NotBeNull();
+            result.Data!.Name.Should().Be("Duplicated Template");
+        }
+
+        [Fact]
+        public async Task DuplicateWorkoutTemplateAsync_WithEmptyName_ReturnsValidationError()
+        {
+            // Arrange
+            var templateId = "template-123";
+            var duplicateDto = new DuplicateWorkoutTemplateDto { NewName = "" };
+
+            // Act
+            var result = await _workoutTemplateService.DuplicateWorkoutTemplateAsync(templateId, duplicateDto);
+
+            // Assert
+            result.Should().NotBeNull();
+            result.IsSuccess.Should().BeFalse();
+            result.Errors.Should().NotBeEmpty();
+            result.Errors.First().Code.Should().Be(ServiceErrorCode.ValidationRequired);
+        }
+
+        [Fact]
+        public async Task DuplicateWorkoutTemplateAsync_WithLongName_ReturnsValidationError()
+        {
+            // Arrange
+            var templateId = "template-123";
+            var duplicateDto = new DuplicateWorkoutTemplateDto { NewName = new string('A', 101) };
+
+            // Act
+            var result = await _workoutTemplateService.DuplicateWorkoutTemplateAsync(templateId, duplicateDto);
+
+            // Assert
+            result.Should().NotBeNull();
+            result.IsSuccess.Should().BeFalse();
+            result.Errors.Should().NotBeEmpty();
+            result.Errors.First().Code.Should().Be(ServiceErrorCode.ValidationOutOfRange);
+        }
+
+        [Fact]
+        public async Task DuplicateWorkoutTemplateAsync_WhenOriginalNotFound_ReturnsTemplateNotFoundError()
+        {
+            // Arrange
+            var templateId = "non-existent";
+            var duplicateDto = new DuplicateWorkoutTemplateDto { NewName = "Duplicated Template" };
+            
+            _dataProviderMock.Setup(x => x.DuplicateWorkoutTemplateAsync(templateId, It.IsAny<DuplicateWorkoutTemplateDto>()))
+                .ReturnsAsync(DataServiceResult<WorkoutTemplateDto>.Failure(
+                    new DataError(DataErrorCode.NotFound, "Original template not found")));
+
+            // Act
+            var result = await _workoutTemplateService.DuplicateWorkoutTemplateAsync(templateId, duplicateDto);
+
+            // Assert
+            result.Should().NotBeNull();
+            result.IsSuccess.Should().BeFalse();
+            result.Errors.Should().NotBeEmpty();
+            result.Errors.First().Code.Should().Be(ServiceErrorCode.TemplateNotFound);
+        }
+
+        [Fact]
+        public async Task DuplicateWorkoutTemplateAsync_WhenNameConflict_ReturnsDuplicateNameError()
+        {
+            // Arrange
+            var templateId = "template-123";
+            var duplicateDto = new DuplicateWorkoutTemplateDto { NewName = "Existing Template" };
+            
+            _dataProviderMock.Setup(x => x.DuplicateWorkoutTemplateAsync(templateId, It.IsAny<DuplicateWorkoutTemplateDto>()))
+                .ReturnsAsync(DataServiceResult<WorkoutTemplateDto>.Failure(
+                    new DataError(DataErrorCode.Conflict, "Name already exists")));
+
+            // Act
+            var result = await _workoutTemplateService.DuplicateWorkoutTemplateAsync(templateId, duplicateDto);
+
+            // Assert
+            result.Should().NotBeNull();
+            result.IsSuccess.Should().BeFalse();
+            result.Errors.Should().NotBeEmpty();
+            result.Errors.First().Code.Should().Be(ServiceErrorCode.DuplicateName);
+        }
+
     }
 }

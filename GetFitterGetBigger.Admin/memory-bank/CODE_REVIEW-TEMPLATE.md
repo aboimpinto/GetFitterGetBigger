@@ -123,6 +123,37 @@ Review against CODE_QUALITY_STANDARDS.md:
 
 **Security Assessment**: [PASS/FAIL with findings]
 
+## 🏕️ Boy Scout Rule - Additional Issues Found
+
+### Files Reviewed
+List all modified files and issues found in unchanged code:
+
+#### [Service/Component Name] - [FileName.cs]
+Status: `M` (modified) | Files reviewed: ALL methods
+
+**Issues in Unchanged Code**:
+1. **[Method Name]** - [Issue Description]
+   - ❌ Current: [Current implementation issue]
+   - ✅ Should be: [Correct implementation]
+   - **Impact**: [Low/Medium/High] - [Impact description]
+   - **Effort**: [Time estimate, e.g., ~30 minutes]
+   - **Recommendation**: [Fix now/Tech debt ticket/Document only]
+
+2. **[Another Method]** - [Issue Description]
+   - ❌ Current: [Current implementation issue]
+   - ✅ Should be: [Correct implementation]
+   - **Impact**: [Low/Medium/High] - [Impact description]
+   - **Effort**: [Time estimate]
+   - **Recommendation**: [Fix now/Tech debt ticket/Document only]
+
+### Boy Scout Decision Summary
+Total issues found: X
+- Fixed in this PR: X
+- Tech debt tickets created: X
+- Documented for future: X
+
+**Justification for unfixed issues**: [Explain why some issues weren't fixed if applicable]
+
 ## Pattern Consistency Analysis
 
 ### Empty Pattern Implementation

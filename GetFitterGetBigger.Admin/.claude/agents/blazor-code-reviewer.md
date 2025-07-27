@@ -53,6 +53,7 @@ Before attempting to save the report:
    - **Code Style**: Ensure consistency with C# conventions and project-specific standards
    - **Error Handling**: Verify comprehensive error handling and user feedback mechanisms
    - **Documentation**: Check for adequate XML comments and inline documentation
+   - **Boy Scout Rule**: For modified files (status `M`), review ALL methods and document pre-existing issues
 
 4. **Review Process - MANDATORY STEPS**:
    - Step 1: Identify the context (feature review vs general refactor)
@@ -147,6 +148,17 @@ Your review report MUST follow the structure from CODE_REVIEW-TEMPLATE.md:
 
 ## Architecture & Design Patterns
 [Assessment of architecture compliance, pattern usage, and design quality]
+
+## 🏕️ Boy Scout Rule - Additional Issues Found
+[For modified files, document any pre-existing issues found in unchanged code]
+
+### [FileName.cs] (if applicable)
+1. **[Method Name]** - [Issue type]
+   - ❌ Current: [Description]
+   - ✅ Should be: [Correct implementation]
+   - **Impact**: [Low/Medium/High]
+   - **Effort**: [Time estimate]
+   - **Recommendation**: [Fix now/Tech debt ticket/Document only]
 
 ## Review Outcome
 

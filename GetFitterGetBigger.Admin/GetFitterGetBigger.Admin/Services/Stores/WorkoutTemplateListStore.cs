@@ -138,10 +138,20 @@ namespace GetFitterGetBigger.Admin.Services.Stores
                 ErrorMessage = null;
                 NotifyStateChanged();
 
-                var duplicated = await _workoutTemplateService.DuplicateWorkoutTemplateAsync(id, duplicate);
+                var result = await _workoutTemplateService.DuplicateWorkoutTemplateAsync(id, duplicate);
                 
-                // Publish event for other stores
-                _eventAggregator.Publish(new WorkoutTemplateDuplicatedEvent(id, duplicated.Id, duplicated.Name));
+                if (result.IsSuccess)
+                {
+                    // Publish event for other stores
+                    _eventAggregator.Publish(new WorkoutTemplateDuplicatedEvent(id, result.Data!.Id, result.Data.Name));
+                }
+                else
+                {
+                    ErrorMessage = result.Errors.FirstOrDefault()?.Message ?? "Failed to duplicate workout template";
+                    IsLoading = false;
+                    NotifyStateChanged();
+                    return;
+                }
                 
                 // Refresh the current page
                 await RefreshAsync();

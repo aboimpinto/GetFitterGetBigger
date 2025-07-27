@@ -9,6 +9,7 @@ using GetFitterGetBigger.Admin.Components.Pages.WorkoutTemplates;
 using GetFitterGetBigger.Admin.Components.WorkoutTemplates;
 using GetFitterGetBigger.Admin.Components.Shared;
 using GetFitterGetBigger.Admin.Models.Dtos;
+using GetFitterGetBigger.Admin.Models.Results;
 using GetFitterGetBigger.Admin.Services;
 using GetFitterGetBigger.Admin.Builders;
 using GetFitterGetBigger.Admin.Tests.TestHelpers;
@@ -57,7 +58,7 @@ public class WorkoutTemplateDetailPageIntegrationTests : WorkoutTemplateTestBase
     {
         // Arrange
         MockWorkoutTemplateService.Setup(x => x.GetWorkoutTemplateByIdAsync("template-1"))
-            .ReturnsAsync(_defaultTemplate);
+            .ReturnsAsync(ServiceResult<WorkoutTemplateDto>.Success(_defaultTemplate));
 
         // Act
         var cut = RenderComponent<WorkoutTemplateDetailPage>(parameters => parameters
@@ -84,7 +85,7 @@ public class WorkoutTemplateDetailPageIntegrationTests : WorkoutTemplateTestBase
     {
         // Arrange
         MockWorkoutTemplateService.Setup(x => x.GetWorkoutTemplateByIdAsync("template-1"))
-            .ReturnsAsync(_defaultTemplate);
+            .ReturnsAsync(ServiceResult<WorkoutTemplateDto>.Success(_defaultTemplate));
 
         var navMan = Services.GetRequiredService<NavigationManager>();
 
@@ -107,7 +108,7 @@ public class WorkoutTemplateDetailPageIntegrationTests : WorkoutTemplateTestBase
     {
         // Arrange
         MockWorkoutTemplateService.Setup(x => x.GetWorkoutTemplateByIdAsync("template-1"))
-            .ReturnsAsync(_defaultTemplate);
+            .ReturnsAsync(ServiceResult<WorkoutTemplateDto>.Success(_defaultTemplate));
 
         var duplicatedTemplate = new WorkoutTemplateDtoBuilder()
             .WithId("template-2")
@@ -116,7 +117,7 @@ public class WorkoutTemplateDetailPageIntegrationTests : WorkoutTemplateTestBase
             .Build();
 
         MockWorkoutTemplateService.Setup(x => x.DuplicateWorkoutTemplateAsync("template-1", It.IsAny<DuplicateWorkoutTemplateDto>()))
-            .ReturnsAsync(duplicatedTemplate);
+            .ReturnsAsync(ServiceResult<WorkoutTemplateDto>.Success(duplicatedTemplate));
 
         var navMan = Services.GetRequiredService<NavigationManager>();
 
@@ -132,7 +133,7 @@ public class WorkoutTemplateDetailPageIntegrationTests : WorkoutTemplateTestBase
 
         // Assert
         MockWorkoutTemplateService.Verify(x => x.DuplicateWorkoutTemplateAsync("template-1", It.IsAny<DuplicateWorkoutTemplateDto>()), Times.Once);
-        navMan.Uri.Should().EndWith("/workout-templates/template-2/edit");
+        navMan.Uri.Should().EndWith("/workout-templates/template-2");
     }
 
     [Fact]
@@ -140,10 +141,10 @@ public class WorkoutTemplateDetailPageIntegrationTests : WorkoutTemplateTestBase
     {
         // Arrange
         MockWorkoutTemplateService.Setup(x => x.GetWorkoutTemplateByIdAsync("template-1"))
-            .ReturnsAsync(_defaultTemplate);
+            .ReturnsAsync(ServiceResult<WorkoutTemplateDto>.Success(_defaultTemplate));
 
         MockWorkoutTemplateService.Setup(x => x.DeleteWorkoutTemplateAsync("template-1"))
-            .Returns(Task.CompletedTask);
+            .ReturnsAsync(ServiceResult<bool>.Success(true));
 
         var navMan = Services.GetRequiredService<NavigationManager>();
 
@@ -168,7 +169,7 @@ public class WorkoutTemplateDetailPageIntegrationTests : WorkoutTemplateTestBase
     {
         // Arrange
         MockWorkoutTemplateService.Setup(x => x.GetWorkoutTemplateByIdAsync("template-1"))
-            .ReturnsAsync(_defaultTemplate);
+            .ReturnsAsync(ServiceResult<WorkoutTemplateDto>.Success(_defaultTemplate));
 
         var updatedTemplate = new WorkoutTemplateDtoBuilder()
             .WithId(_defaultTemplate.Id)
@@ -185,7 +186,7 @@ public class WorkoutTemplateDetailPageIntegrationTests : WorkoutTemplateTestBase
             .Build();
 
         MockWorkoutTemplateService.Setup(x => x.ChangeWorkoutTemplateStateAsync("template-1", It.IsAny<ChangeWorkoutStateDto>()))
-            .ReturnsAsync(updatedTemplate);
+            .ReturnsAsync(ServiceResult<WorkoutTemplateDto>.Success(updatedTemplate));
 
         // Act
         var cut = RenderComponent<WorkoutTemplateDetailPage>(parameters => parameters
@@ -217,7 +218,7 @@ public class WorkoutTemplateDetailPageIntegrationTests : WorkoutTemplateTestBase
             .Build();
 
         MockWorkoutTemplateService.Setup(x => x.GetWorkoutTemplateByIdAsync("template-1"))
-            .ReturnsAsync(productionTemplate);
+            .ReturnsAsync(ServiceResult<WorkoutTemplateDto>.Success(productionTemplate));
 
         // Act
         var cut = RenderComponent<WorkoutTemplateDetailPage>(parameters => parameters
@@ -241,7 +242,7 @@ public class WorkoutTemplateDetailPageIntegrationTests : WorkoutTemplateTestBase
             .Build();
 
         MockWorkoutTemplateService.Setup(x => x.GetWorkoutTemplateByIdAsync("template-1"))
-            .ReturnsAsync(productionTemplate);
+            .ReturnsAsync(ServiceResult<WorkoutTemplateDto>.Success(productionTemplate));
 
         // Act
         var cut = RenderComponent<WorkoutTemplateDetailPage>(parameters => parameters
@@ -286,7 +287,7 @@ public class WorkoutTemplateDetailPageIntegrationTests : WorkoutTemplateTestBase
     {
         // Arrange
         MockWorkoutTemplateService.Setup(x => x.GetWorkoutTemplateByIdAsync("non-existent"))
-            .ReturnsAsync((WorkoutTemplateDto?)null);
+            .ReturnsAsync(ServiceResult<WorkoutTemplateDto>.Success(WorkoutTemplateDto.Empty));
 
         // Act
         var cut = RenderComponent<WorkoutTemplateDetailPage>(parameters => parameters
@@ -304,7 +305,7 @@ public class WorkoutTemplateDetailPageIntegrationTests : WorkoutTemplateTestBase
     public void Should_DisplayLoadingState_WhileLoadingTemplate()
     {
         // Arrange
-        var tcs = new TaskCompletionSource<WorkoutTemplateDto?>();
+        var tcs = new TaskCompletionSource<ServiceResult<WorkoutTemplateDto>>();
         MockWorkoutTemplateService.Setup(x => x.GetWorkoutTemplateByIdAsync("template-1"))
             .Returns(tcs.Task);
 
@@ -317,7 +318,7 @@ public class WorkoutTemplateDetailPageIntegrationTests : WorkoutTemplateTestBase
         skeleton.Should().NotBeNull();
 
         // Complete the loading
-        tcs.SetResult(_defaultTemplate);
+        tcs.SetResult(ServiceResult<WorkoutTemplateDto>.Success(_defaultTemplate));
 
         // Verify skeleton is replaced with actual content
         cut.WaitForAssertion(() =>

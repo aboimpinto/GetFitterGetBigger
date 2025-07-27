@@ -32,6 +32,35 @@ public class ValidationBuilder<T>
         return this;
     }
 
+    public ValidationBuilder<T> EnsureNotEmpty(
+        Expression<Func<T, string?>> propertyExpression)
+    {
+        // Handle special case where we're validating the value directly (x => x)
+        if (propertyExpression.Body == propertyExpression.Parameters[0] && typeof(T) == typeof(string))
+        {
+            var stringValue = _value as string;
+            if (string.IsNullOrWhiteSpace(stringValue))
+                _errors.Add(ServiceError.ValidationRequired("Value"));
+            return this;
+        }
+        
+        // Extract property name from expression
+        var memberExpression = propertyExpression.Body as MemberExpression;
+        if (memberExpression == null)
+        {
+            throw new ArgumentException("Expression must be a property expression");
+        }
+        
+        var propertyName = memberExpression.Member.Name;
+        
+        // Get value and validate
+        var propertyValue = propertyExpression.Compile()(_value);
+        if (string.IsNullOrWhiteSpace(propertyValue))
+            _errors.Add(ServiceError.ValidationRequired(propertyName));
+        
+        return this;
+    }
+
     public ValidationBuilder<T> EnsureRange<TValue>(
         Func<T, TValue> selector,
         TValue min,
@@ -184,4 +213,19 @@ public class ValidationBuilder<T>
 
     public bool HasErrors => _errors.Any();
     public IReadOnlyList<ServiceError> Errors => _errors.AsReadOnly();
+}
+
+public static class ValidationBuilderStringExtensions
+{
+    /// <summary>
+    /// Ensures a string value is not null or whitespace.
+    /// This extension method is specifically for ValidationBuilder<string> to provide a clean API.
+    /// </summary>
+    public static ValidationBuilder<string> EnsureNotEmpty(this ValidationBuilder<string> builder, string fieldName = "Value")
+    {
+        return builder.Ensure(
+            value => !string.IsNullOrWhiteSpace(value),
+            ServiceErrorCode.ValidationRequired,
+            $"{fieldName} is required");
+    }
 }

@@ -44,19 +44,10 @@ namespace GetFitterGetBigger.Admin.Services.DataProviders
         /// </summary>
         Task<DataServiceResult<WorkoutTemplateDto>> DuplicateWorkoutTemplateAsync(string id, DuplicateWorkoutTemplateDto duplicate);
 
-        /// <summary>
-        /// Retrieves the exercises associated with a workout template.
-        /// </summary>
-        Task<DataServiceResult<List<WorkoutTemplateExerciseDto>>> GetTemplateExercisesAsync(string templateId);
 
         /// <summary>
         /// Checks if a workout template with the specified name already exists.
         /// </summary>
         Task<DataServiceResult<bool>> CheckTemplateNameExistsAsync(string name);
-
-        /// <summary>
-        /// Retrieves workout states reference data.
-        /// </summary>
-        Task<DataServiceResult<List<ReferenceDataDto>>> GetWorkoutStatesAsync();
     }
 }

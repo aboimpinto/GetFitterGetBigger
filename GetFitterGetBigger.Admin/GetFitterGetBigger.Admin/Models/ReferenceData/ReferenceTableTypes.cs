@@ -10,4 +10,5 @@ namespace GetFitterGetBigger.Admin.Models.ReferenceData
     public class MovementPatterns : IReferenceTableEntity { }
     public class MuscleGroups : IReferenceTableEntity { }
     public class MuscleRoles : IReferenceTableEntity { }
+    public class WorkoutStates : IReferenceTableEntity { }
 }

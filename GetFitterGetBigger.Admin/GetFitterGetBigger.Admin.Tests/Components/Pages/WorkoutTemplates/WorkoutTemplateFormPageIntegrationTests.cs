@@ -3,10 +3,12 @@ using FluentAssertions;
 using GetFitterGetBigger.Admin.Components.Pages.WorkoutTemplates;
 using GetFitterGetBigger.Admin.Models.Dtos;
 using GetFitterGetBigger.Admin.Models.Results;
+using GetFitterGetBigger.Admin.Models.Errors;
 using GetFitterGetBigger.Admin.Services;
 using GetFitterGetBigger.Admin.Services.Stores;
 using GetFitterGetBigger.Admin.Builders;
 using Microsoft.AspNetCore.Components;
+using System.Linq;
 using Microsoft.Extensions.DependencyInjection;
 using Bunit.TestDoubles;
 using System;
@@ -100,7 +102,13 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.WorkoutTemplates
             
             // Setup form store to call the service
             _mockFormStore.Setup(x => x.CreateTemplateAsync(It.IsAny<CreateWorkoutTemplateDto>()))
-                .Returns((CreateWorkoutTemplateDto dto) => _mockTemplateService.CreateWorkoutTemplateAsync(dto));
+                .Returns(async (CreateWorkoutTemplateDto dto) => 
+                {
+                    var result = await _mockTemplateService.CreateWorkoutTemplateAsync(dto);
+                    if (result.IsSuccess && result.Data != null)
+                        return result.Data;
+                    throw new Exception(result.Errors.FirstOrDefault()?.Message ?? "Create failed");
+                });
             
             _navigationManager.NavigateTo("http://localhost/workout-templates/new");
 
@@ -178,7 +186,11 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.WorkoutTemplates
             
             // Setup form store to call the service
             _mockFormStore.Setup(x => x.UpdateTemplateAsync(It.IsAny<string>(), It.IsAny<UpdateWorkoutTemplateDto>()))
-                .Returns((string id, UpdateWorkoutTemplateDto dto) => _mockTemplateService.UpdateWorkoutTemplateAsync(id, dto));
+                .Returns(async (string id, UpdateWorkoutTemplateDto dto) => 
+                {
+                    var result = await _mockTemplateService.UpdateWorkoutTemplateAsync(id, dto);
+                    return result.Data!;
+                });
 
             _navigationManager.NavigateTo("http://localhost/workout-templates/template-123/edit");
 
@@ -290,37 +302,54 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.WorkoutTemplates
                 _templates.Add(template);
             }
 
-            public Task<WorkoutTemplateDto> CreateWorkoutTemplateAsync(CreateWorkoutTemplateDto createDto)
+            public Task<ServiceResult<WorkoutTemplateDto>> CreateWorkoutTemplateAsync(CreateWorkoutTemplateDto createDto)
             {
                 CreateCallCount++;
                 LastCreateDto = createDto;
 
                 if (_shouldThrowOnCreate)
                 {
-                    throw new InvalidOperationException(_errorMessage ?? "Create failed");
+                    return Task.FromResult(ServiceResult<WorkoutTemplateDto>.Failure(
+                        new ServiceError(ServiceErrorCode.DependencyFailure, _errorMessage ?? "Create failed")));
                 }
 
-                return Task.FromResult(_templateToReturn ?? new WorkoutTemplateDtoBuilder()
+                var template = _templateToReturn ?? new WorkoutTemplateDtoBuilder()
                     .WithName(createDto.Name)
-                    .Build());
+                    .Build();
+                    
+                return Task.FromResult(ServiceResult<WorkoutTemplateDto>.Success(template));
             }
 
-            public Task<WorkoutTemplateDto> UpdateWorkoutTemplateAsync(string id, UpdateWorkoutTemplateDto updateDto)
+            public Task<ServiceResult<WorkoutTemplateDto>> UpdateWorkoutTemplateAsync(string id, UpdateWorkoutTemplateDto updateDto)
             {
                 UpdateCallCount++;
                 LastUpdateId = id;
                 LastUpdateDto = updateDto;
 
-                return Task.FromResult(_templateToReturn ?? new WorkoutTemplateDtoBuilder()
+                var template = _templateToReturn ?? new WorkoutTemplateDtoBuilder()
                     .WithId(id)
                     .WithName(updateDto.Name)
-                    .Build());
+                    .Build();
+                    
+                return Task.FromResult(ServiceResult<WorkoutTemplateDto>.Success(template));
             }
 
-            public Task<WorkoutTemplateDto?> GetWorkoutTemplateByIdAsync(string id)
+            public Task<ServiceResult<WorkoutTemplateDto>> GetWorkoutTemplateByIdAsync(string id)
             {
+                if (string.IsNullOrWhiteSpace(id))
+                {
+                    return Task.FromResult(ServiceResult<WorkoutTemplateDto>.Failure(
+                        ServiceError.ValidationRequired("Template ID")));
+                }
+
                 var template = _templates.FirstOrDefault(t => t.Id == id);
-                return Task.FromResult(template);
+                
+                if (template == null)
+                {
+                    return Task.FromResult(ServiceResult<WorkoutTemplateDto>.Success(WorkoutTemplateDto.Empty));
+                }
+
+                return Task.FromResult(ServiceResult<WorkoutTemplateDto>.Success(template));
             }
 
             public Task<ServiceResult<WorkoutTemplatePagedResultDto>> GetWorkoutTemplatesAsync(WorkoutTemplateFilterDto filter)
@@ -338,28 +367,30 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.WorkoutTemplates
                 return Task.FromResult(ServiceResult<WorkoutTemplatePagedResultDto>.Success(result));
             }
 
-            public Task DeleteWorkoutTemplateAsync(string id)
+            public Task<ServiceResult<bool>> DeleteWorkoutTemplateAsync(string id)
             {
                 _templates.RemoveAll(t => t.Id == id);
-                return Task.CompletedTask;
+                return Task.FromResult(ServiceResult<bool>.Success(true));
             }
 
-            public Task<WorkoutTemplateDto> ChangeWorkoutTemplateStateAsync(string id, ChangeWorkoutStateDto changeState)
+            public Task<ServiceResult<WorkoutTemplateDto>> ChangeWorkoutTemplateStateAsync(string id, ChangeWorkoutStateDto changeState)
             {
                 var template = _templates.FirstOrDefault(t => t.Id == id);
                 if (template == null)
                 {
-                    throw new InvalidOperationException("Template not found");
+                    return Task.FromResult(ServiceResult<WorkoutTemplateDto>.Failure(
+                        ServiceError.TemplateNotFound(id)));
                 }
-                return Task.FromResult(template);
+                return Task.FromResult(ServiceResult<WorkoutTemplateDto>.Success(template));
             }
 
-            public Task<WorkoutTemplateDto> DuplicateWorkoutTemplateAsync(string id, DuplicateWorkoutTemplateDto duplicate)
+            public Task<ServiceResult<WorkoutTemplateDto>> DuplicateWorkoutTemplateAsync(string id, DuplicateWorkoutTemplateDto duplicate)
             {
                 var template = _templates.FirstOrDefault(t => t.Id == id);
                 if (template == null)
                 {
-                    throw new InvalidOperationException("Template not found");
+                    return Task.FromResult(ServiceResult<WorkoutTemplateDto>.Failure(
+                        ServiceError.TemplateNotFound(id)));
                 }
 
                 var duplicatedTemplate = new WorkoutTemplateDtoBuilder()
@@ -367,7 +398,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.WorkoutTemplates
                     .Build();
 
                 _templates.Add(duplicatedTemplate);
-                return Task.FromResult(duplicatedTemplate);
+                return Task.FromResult(ServiceResult<WorkoutTemplateDto>.Success(duplicatedTemplate));
             }
 
             public Task<List<WorkoutTemplateDto>> SearchTemplatesByNameAsync(string namePattern)
@@ -394,15 +425,11 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.WorkoutTemplates
                 return Task.FromResult(results);
             }
 
-            public Task<List<WorkoutTemplateExerciseDto>> GetTemplateExercisesAsync(string templateId)
-            {
-                return Task.FromResult(new List<WorkoutTemplateExerciseDto>());
-            }
 
-            public Task<bool> CheckTemplateNameExistsAsync(string name)
+            public Task<ServiceResult<bool>> CheckTemplateNameExistsAsync(string name)
             {
                 var exists = _templates.Any(t => t.Name == name);
-                return Task.FromResult(exists);
+                return Task.FromResult(ServiceResult<bool>.Success(exists));
             }
 
             public Task<List<ReferenceDataDto>> GetWorkoutCategoriesAsync()

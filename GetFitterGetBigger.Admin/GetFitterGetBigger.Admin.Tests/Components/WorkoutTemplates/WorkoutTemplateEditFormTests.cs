@@ -11,7 +11,9 @@ using GetFitterGetBigger.Admin.Builders;
 using GetFitterGetBigger.Admin.Components.WorkoutTemplates;
 using GetFitterGetBigger.Admin.Models.Dtos;
 using GetFitterGetBigger.Admin.Models.ReferenceData;
+using GetFitterGetBigger.Admin.Models.Results;
 using GetFitterGetBigger.Admin.Services;
+using GetFitterGetBigger.Admin.Services.Stores;
 using GetFitterGetBigger.Admin.Tests.Builders;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
@@ -27,6 +29,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.WorkoutTemplates
     public class WorkoutTemplateEditFormTests : TestContext
     {
         private readonly Mock<IWorkoutTemplateService> _mockService;
+        private readonly Mock<IWorkoutReferenceDataStore> _mockReferenceDataStore;
         private readonly WorkoutTemplateDto _existingTemplate;
         private readonly List<ReferenceDataDto> _categories;
         private readonly List<ReferenceDataDto> _difficulties;
@@ -34,6 +37,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.WorkoutTemplates
         public WorkoutTemplateEditFormTests()
         {
             _mockService = new Mock<IWorkoutTemplateService>();
+            _mockReferenceDataStore = new Mock<IWorkoutReferenceDataStore>();
             
             _categories = new List<ReferenceDataDto>
             {
@@ -60,6 +64,13 @@ namespace GetFitterGetBigger.Admin.Tests.Components.WorkoutTemplates
                 .Build();
 
             Services.AddSingleton(_mockService.Object);
+            Services.AddSingleton(_mockReferenceDataStore.Object);
+            
+            // Setup reference data store
+            _mockReferenceDataStore.Setup(x => x.WorkoutCategories).Returns(_categories);
+            _mockReferenceDataStore.Setup(x => x.DifficultyLevels).Returns(_difficulties);
+            _mockReferenceDataStore.Setup(x => x.IsLoaded).Returns(true);
+            _mockReferenceDataStore.Setup(x => x.IsLoading).Returns(false);
         }
 
         [Fact]
@@ -67,11 +78,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.WorkoutTemplates
         {
             // Arrange
             _mockService.Setup(x => x.GetWorkoutTemplateByIdAsync("template123"))
-                .ReturnsAsync(_existingTemplate);
-            _mockService.Setup(x => x.GetWorkoutCategoriesAsync())
-                .ReturnsAsync(_categories);
-            _mockService.Setup(x => x.GetDifficultyLevelsAsync())
-                .ReturnsAsync(_difficulties);
+                .ReturnsAsync(ServiceResult<WorkoutTemplateDto>.Success(_existingTemplate));
 
             // Act
             var component = RenderComponent<WorkoutTemplateEditForm>(parameters => parameters
@@ -109,13 +116,9 @@ namespace GetFitterGetBigger.Admin.Tests.Components.WorkoutTemplates
         public async Task Should_ShowLoadingStateWhileFetchingData()
         {
             // Arrange
-            var tcs = new TaskCompletionSource<WorkoutTemplateDto?>();
+            var tcs = new TaskCompletionSource<ServiceResult<WorkoutTemplateDto>>();
             _mockService.Setup(x => x.GetWorkoutTemplateByIdAsync(It.IsAny<string>()))
                 .Returns(tcs.Task);
-            _mockService.Setup(x => x.GetWorkoutCategoriesAsync())
-                .ReturnsAsync(_categories);
-            _mockService.Setup(x => x.GetDifficultyLevelsAsync())
-                .ReturnsAsync(_difficulties);
 
             // Act
             var component = RenderComponent<WorkoutTemplateEditForm>(parameters => parameters
@@ -126,7 +129,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.WorkoutTemplates
             component.Markup.Should().NotContain("<form");
 
             // Complete loading
-            tcs.SetResult(_existingTemplate);
+            tcs.SetResult(ServiceResult<WorkoutTemplateDto>.Success(_existingTemplate));
             await Task.Delay(50);
         }
 
@@ -135,11 +138,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.WorkoutTemplates
         {
             // Arrange
             _mockService.Setup(x => x.GetWorkoutTemplateByIdAsync("nonexistent"))
-                .ReturnsAsync((WorkoutTemplateDto?)null);
-            _mockService.Setup(x => x.GetWorkoutCategoriesAsync())
-                .ReturnsAsync(_categories);
-            _mockService.Setup(x => x.GetDifficultyLevelsAsync())
-                .ReturnsAsync(_difficulties);
+                .ReturnsAsync(ServiceResult<WorkoutTemplateDto>.Success(WorkoutTemplateDto.Empty));
 
             // Act
             var component = RenderComponent<WorkoutTemplateEditForm>(parameters => parameters
@@ -163,11 +162,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.WorkoutTemplates
                 .Build();
 
             _mockService.Setup(x => x.GetWorkoutTemplateByIdAsync("template123"))
-                .ReturnsAsync(productionTemplate);
-            _mockService.Setup(x => x.GetWorkoutCategoriesAsync())
-                .ReturnsAsync(_categories);
-            _mockService.Setup(x => x.GetDifficultyLevelsAsync())
-                .ReturnsAsync(_difficulties);
+                .ReturnsAsync(ServiceResult<WorkoutTemplateDto>.Success(productionTemplate));
 
             // Act
             var component = RenderComponent<WorkoutTemplateEditForm>(parameters => parameters
@@ -188,11 +183,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.WorkoutTemplates
         {
             // Arrange
             _mockService.Setup(x => x.GetWorkoutTemplateByIdAsync("template123"))
-                .ReturnsAsync(_existingTemplate);
-            _mockService.Setup(x => x.GetWorkoutCategoriesAsync())
-                .ReturnsAsync(_categories);
-            _mockService.Setup(x => x.GetDifficultyLevelsAsync())
-                .ReturnsAsync(_difficulties);
+                .ReturnsAsync(ServiceResult<WorkoutTemplateDto>.Success(_existingTemplate));
 
             var updatedTemplate = new WorkoutTemplateDtoBuilder()
                 .WithId("template123")
@@ -202,7 +193,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.WorkoutTemplates
             _mockService.Setup(x => x.UpdateWorkoutTemplateAsync(
                     "template123",
                     It.IsAny<UpdateWorkoutTemplateDto>()))
-                .ReturnsAsync(updatedTemplate);
+                .ReturnsAsync(ServiceResult<WorkoutTemplateDto>.Success(updatedTemplate));
 
             var onUpdatedCalled = false;
             WorkoutTemplateDto? updatedResult = null;
@@ -246,11 +237,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.WorkoutTemplates
         {
             // Arrange
             _mockService.Setup(x => x.GetWorkoutTemplateByIdAsync("template123"))
-                .ReturnsAsync(_existingTemplate);
-            _mockService.Setup(x => x.GetWorkoutCategoriesAsync())
-                .ReturnsAsync(_categories);
-            _mockService.Setup(x => x.GetDifficultyLevelsAsync())
-                .ReturnsAsync(_difficulties);
+                .ReturnsAsync(ServiceResult<WorkoutTemplateDto>.Success(_existingTemplate));
 
             // Act
             var component = RenderComponent<WorkoutTemplateEditForm>(parameters => parameters
@@ -276,11 +263,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.WorkoutTemplates
         {
             // Arrange
             _mockService.Setup(x => x.GetWorkoutTemplateByIdAsync("template123"))
-                .ReturnsAsync(_existingTemplate);
-            _mockService.Setup(x => x.GetWorkoutCategoriesAsync())
-                .ReturnsAsync(_categories);
-            _mockService.Setup(x => x.GetDifficultyLevelsAsync())
-                .ReturnsAsync(_difficulties);
+                .ReturnsAsync(ServiceResult<WorkoutTemplateDto>.Success(_existingTemplate));
 
             // Act
             var component = RenderComponent<WorkoutTemplateEditForm>(parameters => parameters
@@ -302,11 +285,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.WorkoutTemplates
         {
             // Arrange
             _mockService.Setup(x => x.GetWorkoutTemplateByIdAsync("template123"))
-                .ReturnsAsync(_existingTemplate);
-            _mockService.Setup(x => x.GetWorkoutCategoriesAsync())
-                .ReturnsAsync(_categories);
-            _mockService.Setup(x => x.GetDifficultyLevelsAsync())
-                .ReturnsAsync(_difficulties);
+                .ReturnsAsync(ServiceResult<WorkoutTemplateDto>.Success(_existingTemplate));
 
             var conflictException = new HttpRequestException("Conflict", null, HttpStatusCode.Conflict);
             _mockService.Setup(x => x.UpdateWorkoutTemplateAsync(It.IsAny<string>(), It.IsAny<UpdateWorkoutTemplateDto>()))
@@ -331,11 +310,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.WorkoutTemplates
         {
             // Arrange
             _mockService.Setup(x => x.GetWorkoutTemplateByIdAsync("template123"))
-                .ReturnsAsync(_existingTemplate);
-            _mockService.Setup(x => x.GetWorkoutCategoriesAsync())
-                .ReturnsAsync(_categories);
-            _mockService.Setup(x => x.GetDifficultyLevelsAsync())
-                .ReturnsAsync(_difficulties);
+                .ReturnsAsync(ServiceResult<WorkoutTemplateDto>.Success(_existingTemplate));
 
             var forbiddenException = new HttpRequestException("Forbidden", null, HttpStatusCode.Forbidden);
             _mockService.Setup(x => x.UpdateWorkoutTemplateAsync(It.IsAny<string>(), It.IsAny<UpdateWorkoutTemplateDto>()))
@@ -360,18 +335,14 @@ namespace GetFitterGetBigger.Admin.Tests.Components.WorkoutTemplates
         {
             // Arrange
             _mockService.Setup(x => x.GetWorkoutTemplateByIdAsync("template123"))
-                .ReturnsAsync(_existingTemplate);
-            _mockService.Setup(x => x.GetWorkoutCategoriesAsync())
-                .ReturnsAsync(_categories);
-            _mockService.Setup(x => x.GetDifficultyLevelsAsync())
-                .ReturnsAsync(_difficulties);
+                .ReturnsAsync(ServiceResult<WorkoutTemplateDto>.Success(_existingTemplate));
 
             List<string>? capturedTags = null;
             _mockService.Setup(x => x.UpdateWorkoutTemplateAsync(
                     It.IsAny<string>(),
                     It.IsAny<UpdateWorkoutTemplateDto>()))
                 .Callback<string, UpdateWorkoutTemplateDto>((id, dto) => capturedTags = dto.Tags)
-                .ReturnsAsync(_existingTemplate);
+                .ReturnsAsync(ServiceResult<WorkoutTemplateDto>.Success(_existingTemplate));
 
             // Act
             var component = RenderComponent<WorkoutTemplateEditForm>(parameters => parameters
@@ -397,11 +368,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.WorkoutTemplates
         {
             // Arrange
             _mockService.Setup(x => x.GetWorkoutTemplateByIdAsync("template123"))
-                .ReturnsAsync(_existingTemplate);
-            _mockService.Setup(x => x.GetWorkoutCategoriesAsync())
-                .ReturnsAsync(_categories);
-            _mockService.Setup(x => x.GetDifficultyLevelsAsync())
-                .ReturnsAsync(_difficulties);
+                .ReturnsAsync(ServiceResult<WorkoutTemplateDto>.Success(_existingTemplate));
 
             // Act
             var component = RenderComponent<WorkoutTemplateEditForm>(parameters => parameters
@@ -422,11 +389,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.WorkoutTemplates
         {
             // Arrange
             _mockService.Setup(x => x.GetWorkoutTemplateByIdAsync("template123"))
-                .ReturnsAsync(_existingTemplate);
-            _mockService.Setup(x => x.GetWorkoutCategoriesAsync())
-                .ReturnsAsync(_categories);
-            _mockService.Setup(x => x.GetDifficultyLevelsAsync())
-                .ReturnsAsync(_difficulties);
+                .ReturnsAsync(ServiceResult<WorkoutTemplateDto>.Success(_existingTemplate));
 
             var cancelCalled = false;
 
@@ -449,13 +412,9 @@ namespace GetFitterGetBigger.Admin.Tests.Components.WorkoutTemplates
         {
             // Arrange
             _mockService.Setup(x => x.GetWorkoutTemplateByIdAsync("template123"))
-                .ReturnsAsync(_existingTemplate);
-            _mockService.Setup(x => x.GetWorkoutCategoriesAsync())
-                .ReturnsAsync(_categories);
-            _mockService.Setup(x => x.GetDifficultyLevelsAsync())
-                .ReturnsAsync(_difficulties);
+                .ReturnsAsync(ServiceResult<WorkoutTemplateDto>.Success(_existingTemplate));
 
-            var tcs = new TaskCompletionSource<WorkoutTemplateDto>();
+            var tcs = new TaskCompletionSource<ServiceResult<WorkoutTemplateDto>>();
             _mockService.Setup(x => x.UpdateWorkoutTemplateAsync(It.IsAny<string>(), It.IsAny<UpdateWorkoutTemplateDto>()))
                 .Returns(tcs.Task);
 
@@ -476,7 +435,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.WorkoutTemplates
             component.Find("[data-testid='cancel-button']").HasAttribute("disabled").Should().BeTrue();
 
             // Complete the update
-            tcs.SetResult(_existingTemplate);
+            tcs.SetResult(ServiceResult<WorkoutTemplateDto>.Success(_existingTemplate));
             await submitTask;
         }
 
@@ -491,11 +450,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.WorkoutTemplates
                 .Build();
 
             _mockService.Setup(x => x.GetWorkoutTemplateByIdAsync("template123"))
-                .ReturnsAsync(template);
-            _mockService.Setup(x => x.GetWorkoutCategoriesAsync())
-                .ReturnsAsync(_categories);
-            _mockService.Setup(x => x.GetDifficultyLevelsAsync())
-                .ReturnsAsync(_difficulties);
+                .ReturnsAsync(ServiceResult<WorkoutTemplateDto>.Success(template));
 
             // Act
             var component = RenderComponent<WorkoutTemplateEditForm>(parameters => parameters

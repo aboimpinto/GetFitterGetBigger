@@ -1,6 +1,8 @@
 @using GetFitterGetBigger.Admin.Models.Dtos
 @using GetFitterGetBigger.Admin.Services
+@using GetFitterGetBigger.Admin.Services.Stores
 @inject IWorkoutTemplateService WorkoutTemplateService
+@inject IWorkoutReferenceDataStore ReferenceDataStore
 @inject NavigationManager NavigationManager
 
 <div class="workout-template-edit-form" data-testid="workout-template-edit-form">
@@ -70,7 +72,7 @@
                             data-testid="category-select"
                             disabled="@IsFieldRestricted">
                     <option value="">Select a category</option>
-                    @foreach (var category in Categories)
+                    @foreach (var category in ReferenceDataStore.WorkoutCategories)
                     {
                         <option value="@category.Id">@category.Value</option>
                     }
@@ -86,7 +88,7 @@
                             data-testid="difficulty-select"
                             disabled="@IsFieldRestricted">
                     <option value="">Select a difficulty</option>
-                    @foreach (var difficulty in Difficulties)
+                    @foreach (var difficulty in ReferenceDataStore.DifficultyLevels)
                     {
                         <option value="@difficulty.Id">@difficulty.Value</option>
                     }
@@ -175,8 +177,6 @@
 
     private WorkoutTemplateDto? Template;
     private UpdateWorkoutTemplateDto Model = new();
-    private List<ReferenceDataDto> Categories = new();
-    private List<ReferenceDataDto> Difficulties = new();
     private string TagsInput = string.Empty;
     private string OriginalTagsInput = string.Empty;
     internal bool IsLoading = true;
@@ -199,19 +199,19 @@
             IsLoading = true;
             ErrorMessage = null;
 
-            // Load template and reference data in parallel
-            var templateTask = WorkoutTemplateService.GetWorkoutTemplateByIdAsync(TemplateId);
-            var categoriesTask = WorkoutTemplateService.GetWorkoutCategoriesAsync();
-            var difficultiesTask = WorkoutTemplateService.GetDifficultyLevelsAsync();
-
-            await Task.WhenAll(templateTask, categoriesTask, difficultiesTask);
-
-            Template = await templateTask;
-            Categories = await categoriesTask;
-            Difficulties = await difficultiesTask;
-
-            if (Template != null)
+            // Ensure reference data is loaded
+            if (!ReferenceDataStore.IsLoaded)
             {
+                await ReferenceDataStore.LoadReferenceDataAsync();
+            }
+
+            // Load template
+            var templateResult = await WorkoutTemplateService.GetWorkoutTemplateByIdAsync(TemplateId);
+
+            if (templateResult.IsSuccess && templateResult.Data != null && !templateResult.Data.IsEmpty)
+            {
+                Template = templateResult.Data;
+                
                 // Populate the update model with current values
                 Model = new UpdateWorkoutTemplateDto
                 {
@@ -227,6 +227,14 @@
                 // Set tags input
                 TagsInput = string.Join(", ", Template.Tags);
                 OriginalTagsInput = TagsInput;
+            }
+            else if (!templateResult.IsSuccess)
+            {
+                ErrorMessage = templateResult.Errors.FirstOrDefault()?.Message ?? "Failed to load template";
+            }
+            else
+            {
+                ErrorMessage = "Template not found";
             }
         }
         catch (HttpRequestException ex)
@@ -286,16 +294,23 @@
             // Process tags one more time to ensure they're up to date
             ProcessTags();
 
-            var updatedTemplate = await WorkoutTemplateService.UpdateWorkoutTemplateAsync(TemplateId, Model);
+            var result = await WorkoutTemplateService.UpdateWorkoutTemplateAsync(TemplateId, Model);
             
-            if (OnTemplateUpdated.HasDelegate)
+            if (result.IsSuccess)
             {
-                await OnTemplateUpdated.InvokeAsync(updatedTemplate);
+                if (OnTemplateUpdated.HasDelegate)
+                {
+                    await OnTemplateUpdated.InvokeAsync(result.Data!);
+                }
+                else
+                {
+                    // Navigate to the template detail or list if no callback is provided
+                    NavigationManager.NavigateTo($"/workout-templates/{TemplateId}");
+                }
             }
             else
             {
-                // Navigate to the template detail or list if no callback is provided
-                NavigationManager.NavigateTo($"/workout-templates/{TemplateId}");
+                ErrorMessage = result.Errors.FirstOrDefault()?.Message ?? "Failed to update template";
             }
         }
         catch (HttpRequestException ex) when (ex.StatusCode == System.Net.HttpStatusCode.Conflict)

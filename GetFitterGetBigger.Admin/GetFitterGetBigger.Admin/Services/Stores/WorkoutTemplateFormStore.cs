@@ -29,15 +29,17 @@ namespace GetFitterGetBigger.Admin.Services.Stores
 
         public async Task LoadTemplateAsync(string id)
         {
-            try
+            IsLoading = true;
+            ErrorMessage = null;
+            NotifyStateChanged();
+
+            var result = await _workoutTemplateService.GetWorkoutTemplateByIdAsync(id);
+
+            if (result.IsSuccess)
             {
-                IsLoading = true;
-                ErrorMessage = null;
-                NotifyStateChanged();
-
-                CurrentTemplate = await _workoutTemplateService.GetWorkoutTemplateByIdAsync(id);
-
-                if (CurrentTemplate == null)
+                CurrentTemplate = result.Data;
+                
+                if (CurrentTemplate == null || CurrentTemplate.IsEmpty)
                 {
                     ErrorMessage = "Workout template not found";
                     _logger.LogWarning("Template not found: {TemplateId}", id);
@@ -47,17 +49,17 @@ namespace GetFitterGetBigger.Admin.Services.Stores
                     _logger.LogDebug("Loaded template: {TemplateId} - {TemplateName}", id, CurrentTemplate.Name);
                 }
             }
-            catch (Exception ex)
+            else
             {
-                ErrorMessage = $"Failed to load workout template: {ex.Message}";
-                _logger.LogError(ex, "Exception loading template {TemplateId}", id);
+                CurrentTemplate = null;
+                ErrorMessage = result.Errors.FirstOrDefault()?.Message ?? "Failed to load workout template";
+                _logger.LogError("Failed to load template {TemplateId}: {Errors}", id, 
+                    string.Join(", ", result.Errors.Select(e => e.Message)));
             }
-            finally
-            {
-                IsLoading = false;
-                IsDirty = false;
-                NotifyStateChanged();
-            }
+
+            IsLoading = false;
+            IsDirty = false;
+            NotifyStateChanged();
         }
 
         public async Task<WorkoutTemplateDto> CreateTemplateAsync(CreateWorkoutTemplateDto template)
@@ -68,7 +70,17 @@ namespace GetFitterGetBigger.Admin.Services.Stores
                 ErrorMessage = null;
                 NotifyStateChanged();
 
-                var created = await _workoutTemplateService.CreateWorkoutTemplateAsync(template);
+                var result = await _workoutTemplateService.CreateWorkoutTemplateAsync(template);
+                
+                if (!result.IsSuccess)
+                {
+                    ErrorMessage = result.Errors.FirstOrDefault()?.Message ?? "Failed to create workout template";
+                    _logger.LogError("Failed to create template: {Errors}", 
+                        string.Join(", ", result.Errors.Select(e => e.Message)));
+                    throw new InvalidOperationException(ErrorMessage);
+                }
+                
+                var created = result.Data!;
                 CurrentTemplate = created;
                 
                 _logger.LogInformation("Created template: {TemplateId} - {TemplateName}", created.Id, created.Name);
@@ -78,7 +90,7 @@ namespace GetFitterGetBigger.Admin.Services.Stores
                 
                 return created;
             }
-            catch (Exception ex)
+            catch (Exception ex) when (ex is not InvalidOperationException)
             {
                 ErrorMessage = $"Failed to create workout template: {ex.Message}";
                 _logger.LogError(ex, "Exception creating template");
@@ -100,15 +112,24 @@ namespace GetFitterGetBigger.Admin.Services.Stores
                 ErrorMessage = null;
                 NotifyStateChanged();
 
-                var updated = await _workoutTemplateService.UpdateWorkoutTemplateAsync(id, template);
-                CurrentTemplate = updated;
+                var result = await _workoutTemplateService.UpdateWorkoutTemplateAsync(id, template);
                 
-                _logger.LogInformation("Updated template: {TemplateId} - {TemplateName}", updated.Id, updated.Name);
-                
-                // Publish event for other stores
-                _eventAggregator.Publish(new WorkoutTemplateUpdatedEvent(updated.Id, updated.Name));
-                
-                return updated;
+                if (result.IsSuccess && result.Data != null)
+                {
+                    CurrentTemplate = result.Data;
+                    
+                    _logger.LogInformation("Updated template: {TemplateId} - {TemplateName}", result.Data.Id, result.Data.Name);
+                    
+                    // Publish event for other stores
+                    _eventAggregator.Publish(new WorkoutTemplateUpdatedEvent(result.Data.Id, result.Data.Name));
+                    
+                    return result.Data;
+                }
+                else
+                {
+                    ErrorMessage = result.Errors.FirstOrDefault()?.Message ?? "Failed to update workout template";
+                    throw new InvalidOperationException(ErrorMessage);
+                }
             }
             catch (Exception ex)
             {

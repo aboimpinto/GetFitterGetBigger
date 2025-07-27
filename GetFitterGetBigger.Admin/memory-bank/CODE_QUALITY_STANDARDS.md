@@ -31,6 +31,46 @@ return result switch
 };
 ```
 
+#### Result Pattern with Extension Methods
+When handling service results with specific error conditions, combine pattern matching with extension methods:
+
+```csharp
+// ❌ BAD - Multiple returns with if-else chains
+var dataResult = await _dataProvider.CreateWorkoutTemplateAsync(validTemplate);
+
+if (!dataResult.IsSuccess)
+{
+    var error = dataResult.Errors.FirstOrDefault();
+    if (error?.Code == DataErrorCode.Conflict)
+    {
+        return ServiceResult<WorkoutTemplateDto>.Failure(
+            ServiceError.DuplicateName(validTemplate.Name));
+    }
+    
+    return dataResult.ToServiceResult();
+}
+
+return ServiceResult<WorkoutTemplateDto>.Success(dataResult.Data!);
+
+// ✅ GOOD - Pattern matching with extension methods and single exit point
+var dataResult = await _dataProvider.CreateWorkoutTemplateAsync(validTemplate);
+
+return dataResult switch
+{
+    { IsSuccess: true } => ServiceResult<WorkoutTemplateDto>.Success(dataResult.Data!),
+    { IsSuccess: false } when dataResult.HasError(DataErrorCode.Conflict) 
+        => ServiceResult<WorkoutTemplateDto>.Failure(ServiceError.DuplicateName(validTemplate.Name)),
+    _ => dataResult.ToServiceResult()
+};
+```
+
+**Benefits**:
+- Single exit point principle maintained
+- Clear, declarative intent
+- Extension methods (`HasError`) make conditions readable
+- All possible outcomes visible in one place
+- No scattered returns throughout the method
+
 ### 2. **Null Safety First**
 Minimize null usage through C# features and patterns:
 - Enable nullable reference types in project settings
@@ -358,6 +398,8 @@ public class TableComponentRegistry
 #### Code Quality
 - [ ] Methods are focused and < 20 lines
 - [ ] Single exit point per method (with rare justified exceptions)
+- [ ] Pattern matching used instead of if-else chains
+- [ ] Extension methods used for repeated patterns
 - [ ] No code duplication (DRY principle)
 - [ ] Clear, descriptive naming
 - [ ] Appropriate comments for complex logic
@@ -423,6 +465,41 @@ public class TableComponentRegistry
 - Document all configuration options
 
 ### 5. **C#-Specific Patterns**
+
+#### Use Extension Methods for Cleaner Code
+Create extension methods to make complex conditions more readable:
+
+```csharp
+// ❌ BAD - Complex lambda expressions in pattern matching
+return dataResult switch
+{
+    { IsSuccess: false } when dataResult.Errors.Any(e => e.Code == DataErrorCode.Conflict) 
+        => ServiceResult<T>.Failure(ServiceError.DuplicateName(name)),
+    _ => dataResult.ToServiceResult()
+};
+
+// ✅ GOOD - Extension method for cleaner syntax
+// Extension method definition:
+public static bool HasError<T>(this DataServiceResult<T> result, DataErrorCode errorCode)
+{
+    return result.Errors.Any(e => e.Code.Equals(errorCode));
+}
+
+// Usage:
+return dataResult switch
+{
+    { IsSuccess: false } when dataResult.HasError(DataErrorCode.Conflict) 
+        => ServiceResult<T>.Failure(ServiceError.DuplicateName(name)),
+    _ => dataResult.ToServiceResult()
+};
+```
+
+**Guidelines for Extension Methods**:
+- Create them for commonly repeated patterns
+- Name them to express intent clearly (`HasError`, `IsEmpty`, `ContainsAny`)
+- Keep them focused on a single responsibility
+- Place them in a logical namespace (e.g., `Extensions` folder)
+- Document their purpose with XML comments
 
 #### Use Records for DTOs
 ```csharp

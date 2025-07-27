@@ -58,6 +58,7 @@
 - All tests must pass
 - Warnings < 10
 - **NEW**: Code review APPROVED after each category
+- **NEW**: Apply Boy Scout Rule - document/fix issues in modified files
 
 ### When Completing a Feature
 

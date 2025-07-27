@@ -1,6 +1,8 @@
 @using GetFitterGetBigger.Admin.Models.Dtos
 @using GetFitterGetBigger.Admin.Services
+@using GetFitterGetBigger.Admin.Services.Stores
 @inject IWorkoutTemplateService WorkoutTemplateService
+@inject IWorkoutReferenceDataStore ReferenceDataStore
 @inject NavigationManager NavigationManager
 
 <div class="workout-template-create-form" data-testid="workout-template-create-form">
@@ -54,7 +56,7 @@
                             @bind-Value="Model.CategoryId"
                             data-testid="category-select">
                     <option value="">Select a category</option>
-                    @foreach (var category in Categories)
+                    @foreach (var category in ReferenceDataStore.WorkoutCategories)
                     {
                         <option value="@category.Id">@category.Value</option>
                     }
@@ -69,7 +71,7 @@
                             @bind-Value="Model.DifficultyId"
                             data-testid="difficulty-select">
                     <option value="">Select a difficulty</option>
-                    @foreach (var difficulty in Difficulties)
+                    @foreach (var difficulty in ReferenceDataStore.DifficultyLevels)
                     {
                         <option value="@difficulty.Id">@difficulty.Value</option>
                     }
@@ -154,8 +156,6 @@
     [Parameter] public EventCallback OnCancel { get; set; }
 
     private CreateWorkoutTemplateDto Model = new();
-    private List<ReferenceDataDto> Categories = new();
-    private List<ReferenceDataDto> Difficulties = new();
     private string TagsInput = string.Empty;
     private bool IsLoading = true;
     private bool IsSubmitting = false;
@@ -173,13 +173,11 @@
             IsLoading = true;
             ErrorMessage = null;
 
-            var categoriesTask = WorkoutTemplateService.GetWorkoutCategoriesAsync();
-            var difficultiesTask = WorkoutTemplateService.GetDifficultyLevelsAsync();
-
-            await Task.WhenAll(categoriesTask, difficultiesTask);
-
-            Categories = await categoriesTask;
-            Difficulties = await difficultiesTask;
+            // Ensure reference data is loaded
+            if (!ReferenceDataStore.IsLoaded)
+            {
+                await ReferenceDataStore.LoadReferenceDataAsync();
+            }
         }
         catch (Exception ex)
         {
@@ -219,7 +217,16 @@
             // Process tags one more time to ensure they're up to date
             ProcessTags();
 
-            var createdTemplate = await WorkoutTemplateService.CreateWorkoutTemplateAsync(Model);
+            var result = await WorkoutTemplateService.CreateWorkoutTemplateAsync(Model);
+            
+            if (!result.IsSuccess)
+            {
+                // Handle validation errors
+                ErrorMessage = result.Errors.FirstOrDefault()?.Message ?? "Failed to create workout template";
+                return;
+            }
+            
+            var createdTemplate = result.Data!;
             
             if (OnTemplateCreated.HasDelegate)
             {

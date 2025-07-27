@@ -1,11 +1,13 @@
 @page "/workout-templates/{Id}"
 @using GetFitterGetBigger.Admin.Services
 @using GetFitterGetBigger.Admin.Models.Dtos
+@using GetFitterGetBigger.Admin.Models.ReferenceData
 @using GetFitterGetBigger.Admin.Components.WorkoutTemplates
 @using GetFitterGetBigger.Admin.Components.Shared
 @inject IWorkoutTemplateService WorkoutTemplateService
 @inject IToastService ToastService
 @inject NavigationManager Navigation
+@rendermode InteractiveServer
 
 <PageTitle>Workout Template Details</PageTitle>
 
@@ -68,17 +70,32 @@
         {
             _isLoading = true;
             _errorMessage = null;
-            _template = await WorkoutTemplateService.GetWorkoutTemplateByIdAsync(Id);
             
-            if (_template != null)
+            var templateResult = await WorkoutTemplateService.GetWorkoutTemplateByIdAsync(Id);
+            
+            if (templateResult.IsSuccess)
             {
-                // Initialize breadcrumb
-                breadcrumbItems = new List<Breadcrumb.BreadcrumbItem>
+                if (templateResult.Data != null && !templateResult.Data.IsEmpty)
                 {
-                    new() { Text = "Home", Href = "/" },
-                    new() { Text = "Workout Templates", Href = "/workout-templates" },
-                    new() { Text = _template.Name }
-                };
+                    _template = templateResult.Data;
+                    
+                    // Initialize breadcrumb
+                    breadcrumbItems = new List<Breadcrumb.BreadcrumbItem>
+                    {
+                        new() { Text = "Home", Href = "/" },
+                        new() { Text = "Workout Templates", Href = "/workout-templates" },
+                        new() { Text = _template.Name }
+                    };
+                }
+                else
+                {
+                    // Template not found - set _template to null so the not-found UI shows
+                    _template = null;
+                }
+            }
+            else
+            {
+                _errorMessage = templateResult.Errors.FirstOrDefault()?.Message ?? "Failed to load template";
             }
         }
         catch (Exception ex)
@@ -93,22 +110,40 @@
 
     private void HandleEdit(WorkoutTemplateDto template)
     {
-        Navigation.NavigateTo($"/workout-templates/{template.Id}/edit");
+        Navigation.NavigateTo($"/workout-templates/{template.Id}/edit", forceLoad: true);
     }
 
     private async Task HandleDuplicate(WorkoutTemplateDto template)
     {
         try
         {
+            _isLoading = true;
+            _errorMessage = null;
+            StateHasChanged();
+            
             var duplicateDto = new DuplicateWorkoutTemplateDto { NewName = $"{template.Name} (Copy)" };
-            var duplicatedTemplate = await WorkoutTemplateService.DuplicateWorkoutTemplateAsync(template.Id, duplicateDto);
-            ToastService.ShowSuccess($"Workout template '{template.Name}' duplicated successfully as '{duplicatedTemplate.Name}'.");
-            Navigation.NavigateTo($"/workout-templates/{duplicatedTemplate.Id}/edit");
+            var result = await WorkoutTemplateService.DuplicateWorkoutTemplateAsync(template.Id, duplicateDto);
+            
+            if (result.IsSuccess)
+            {
+                ToastService.ShowSuccess($"Workout template '{template.Name}' duplicated successfully as '{result.Data!.Name}'.");
+                // Navigate to the duplicated template detail page instead of edit
+                Navigation.NavigateTo($"/workout-templates/{result.Data.Id}", forceLoad: true);
+            }
+            else
+            {
+                _errorMessage = result.Errors.FirstOrDefault()?.Message ?? "Failed to duplicate template";
+                ToastService.ShowError(_errorMessage);
+                _isLoading = false;
+                StateHasChanged();
+            }
         }
         catch (Exception ex)
         {
             _errorMessage = GetUserFriendlyErrorMessage(ex, "Failed to duplicate template");
             ToastService.ShowError(_errorMessage);
+            _isLoading = false;
+            StateHasChanged();
         }
     }
 
@@ -116,15 +151,32 @@
     {
         try
         {
+            _isLoading = true;
+            _errorMessage = null;
+            StateHasChanged();
+            
             // In a real app, we'd show a confirmation dialog here
-            await WorkoutTemplateService.DeleteWorkoutTemplateAsync(template.Id);
-            ToastService.ShowSuccess($"Workout template '{template.Name}' has been deleted successfully.");
-            Navigation.NavigateTo("/workout-templates");
+            var result = await WorkoutTemplateService.DeleteWorkoutTemplateAsync(template.Id);
+            
+            if (result.IsSuccess)
+            {
+                ToastService.ShowSuccess($"Workout template '{template.Name}' has been deleted successfully.");
+                Navigation.NavigateTo("/workout-templates", forceLoad: true);
+            }
+            else
+            {
+                _errorMessage = result.Errors.FirstOrDefault()?.Message ?? "Failed to delete template";
+                ToastService.ShowError(_errorMessage);
+                _isLoading = false;
+                StateHasChanged();
+            }
         }
         catch (Exception ex)
         {
             _errorMessage = GetUserFriendlyErrorMessage(ex, "Failed to delete template");
             ToastService.ShowError(_errorMessage);
+            _isLoading = false;
+            StateHasChanged();
         }
     }
 
@@ -132,14 +184,40 @@
     {
         try
         {
+            _isLoading = true;
+            _errorMessage = null;
+            
             var changeStateDto = new ChangeWorkoutStateDto { WorkoutStateId = newState.Id };
-            _template = await WorkoutTemplateService.ChangeWorkoutTemplateStateAsync(_template!.Id, changeStateDto);
-            ToastService.ShowSuccess($"Template state changed to '{newState.Value}' successfully.");
+            var result = await WorkoutTemplateService.ChangeWorkoutTemplateStateAsync(_template!.Id, changeStateDto);
+            
+            if (result.IsSuccess)
+            {
+                _template = result.Data!;
+                ToastService.ShowSuccess($"Template state changed to '{newState.Value}' successfully.");
+                
+                // Update breadcrumb with new template data
+                breadcrumbItems = new List<Breadcrumb.BreadcrumbItem>
+                {
+                    new() { Text = "Home", Href = "/" },
+                    new() { Text = "Workout Templates", Href = "/workout-templates" },
+                    new() { Text = _template.Name }
+                };
+            }
+            else
+            {
+                _errorMessage = result.Errors.FirstOrDefault()?.Message ?? "Failed to update template state";
+                ToastService.ShowError(_errorMessage);
+            }
         }
         catch (Exception ex)
         {
             _errorMessage = GetUserFriendlyErrorMessage(ex, "Failed to update template state");
             ToastService.ShowError(_errorMessage);
+        }
+        finally
+        {
+            _isLoading = false;
+            StateHasChanged();
         }
     }
     

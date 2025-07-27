@@ -8,6 +8,22 @@ namespace GetFitterGetBigger.Admin.Extensions;
 public static class ResultExtensions
 {
     /// <summary>
+    /// Checks if the error collection contains a specific error code.
+    /// </summary>
+    public static bool HasError<TError>(this IEnumerable<TError> errors, DataErrorCode errorCode) 
+        where TError : IErrorDetail
+    {
+        return errors.Any(e => e.Code.Equals(errorCode));
+    }
+    
+    /// <summary>
+    /// Checks if the result has a specific error code in its error collection.
+    /// </summary>
+    public static bool HasError<T>(this DataServiceResult<T> result, DataErrorCode errorCode)
+    {
+        return result.Errors.HasError(errorCode);
+    }
+    /// <summary>
     /// Converts a DataServiceResult to ServiceResult by mapping errors.
     /// </summary>
     public static ServiceResult<T> ToServiceResult<T>(

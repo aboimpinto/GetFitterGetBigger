@@ -5,7 +5,9 @@ using Xunit;
 using GetFitterGetBigger.Admin.Components.WorkoutTemplates;
 using GetFitterGetBigger.Admin.Models.Dtos;
 using GetFitterGetBigger.Admin.Models.ReferenceData;
+using GetFitterGetBigger.Admin.Models.Results;
 using GetFitterGetBigger.Admin.Services;
+using GetFitterGetBigger.Admin.Services.Stores;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
 using System.Net.Http;
@@ -16,12 +18,14 @@ namespace GetFitterGetBigger.Admin.Tests.Components.WorkoutTemplates
     public class WorkoutTemplateCreateFormTests : TestContext
     {
         private readonly Mock<IWorkoutTemplateService> _mockWorkoutTemplateService;
+        private readonly Mock<IWorkoutReferenceDataStore> _mockReferenceDataStore;
         private readonly List<ReferenceDataDto> _categories;
         private readonly List<ReferenceDataDto> _difficulties;
 
         public WorkoutTemplateCreateFormTests()
         {
             _mockWorkoutTemplateService = new Mock<IWorkoutTemplateService>();
+            _mockReferenceDataStore = new Mock<IWorkoutReferenceDataStore>();
             
             _categories = new List<ReferenceDataDto>
             {
@@ -36,38 +40,42 @@ namespace GetFitterGetBigger.Admin.Tests.Components.WorkoutTemplates
             };
 
             Services.AddSingleton(_mockWorkoutTemplateService.Object);
+            Services.AddSingleton(_mockReferenceDataStore.Object);
+            
+            // Setup reference data store
+            _mockReferenceDataStore.Setup(x => x.WorkoutCategories).Returns(_categories);
+            _mockReferenceDataStore.Setup(x => x.DifficultyLevels).Returns(_difficulties);
+            _mockReferenceDataStore.Setup(x => x.IsLoaded).Returns(true);
+            _mockReferenceDataStore.Setup(x => x.IsLoading).Returns(false);
         }
 
         [Fact]
-        public void Should_RenderLoadingState_WhenInitializing()
+        public async Task Should_RenderLoadingState_WhenInitializing()
         {
             // Arrange
-            var loadingTcs = new TaskCompletionSource<List<ReferenceDataDto>>();
-            _mockWorkoutTemplateService
-                .Setup(x => x.GetWorkoutCategoriesAsync())
-                .Returns(loadingTcs.Task);
-            _mockWorkoutTemplateService
-                .Setup(x => x.GetDifficultyLevelsAsync())
-                .Returns(Task.FromResult(new List<ReferenceDataDto>()));
+            var loadingTcs = new TaskCompletionSource();
+            
+            // Setup initial state - not loaded yet
+            _mockReferenceDataStore.Setup(x => x.IsLoaded).Returns(false);
+            _mockReferenceDataStore.Setup(x => x.LoadReferenceDataAsync())
+                .Returns(loadingTcs.Task); // This will keep it in loading state
 
             // Act
             var cut = RenderComponent<WorkoutTemplateCreateForm>();
 
-            // Assert
+            // Assert - should show loading indicator while LoadReferenceDataAsync is pending
             Assert.NotNull(cut.Find("[data-testid='loading-indicator']"));
             Assert.Throws<Bunit.ElementNotFoundException>(() => cut.Find("form"));
+            
+            // Complete the task to avoid warnings
+            loadingTcs.SetResult();
+            await Task.Delay(50);
         }
 
         [Fact]
         public async Task Should_LoadReferenceData_OnInitialization()
         {
             // Arrange
-            _mockWorkoutTemplateService
-                .Setup(x => x.GetWorkoutCategoriesAsync())
-                .ReturnsAsync(_categories);
-            _mockWorkoutTemplateService
-                .Setup(x => x.GetDifficultyLevelsAsync())
-                .ReturnsAsync(_difficulties);
 
             // Act
             var cut = RenderComponent<WorkoutTemplateCreateForm>();
@@ -87,12 +95,10 @@ namespace GetFitterGetBigger.Admin.Tests.Components.WorkoutTemplates
         public async Task Should_ShowErrorMessage_WhenLoadingReferenceDataFails()
         {
             // Arrange
-            _mockWorkoutTemplateService
-                .Setup(x => x.GetWorkoutCategoriesAsync())
+            // Setup to throw exception when loading reference data
+            _mockReferenceDataStore.Setup(x => x.IsLoaded).Returns(false);
+            _mockReferenceDataStore.Setup(x => x.LoadReferenceDataAsync())
                 .ThrowsAsync(new Exception("Service error"));
-            _mockWorkoutTemplateService
-                .Setup(x => x.GetDifficultyLevelsAsync())
-                .ReturnsAsync(_difficulties);
 
             // Act
             var cut = RenderComponent<WorkoutTemplateCreateForm>();
@@ -154,7 +160,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.WorkoutTemplates
             };
             _mockWorkoutTemplateService
                 .Setup(x => x.CreateWorkoutTemplateAsync(It.IsAny<CreateWorkoutTemplateDto>()))
-                .ReturnsAsync(createdTemplate);
+                .ReturnsAsync(ServiceResult<WorkoutTemplateDto>.Success(createdTemplate));
 
             var templateCreatedCalled = false;
             var cut = RenderComponent<WorkoutTemplateCreateForm>(parameters => parameters
@@ -179,7 +185,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.WorkoutTemplates
         {
             // Arrange
             SetupSuccessfulReferenceDataLoad();
-            var submissionTcs = new TaskCompletionSource<WorkoutTemplateDto>();
+            var submissionTcs = new TaskCompletionSource<ServiceResult<WorkoutTemplateDto>>();
             _mockWorkoutTemplateService
                 .Setup(x => x.CreateWorkoutTemplateAsync(It.IsAny<CreateWorkoutTemplateDto>()))
                 .Returns(submissionTcs.Task);
@@ -203,7 +209,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.WorkoutTemplates
             SetupSuccessfulReferenceDataLoad();
             _mockWorkoutTemplateService
                 .Setup(x => x.CreateWorkoutTemplateAsync(It.IsAny<CreateWorkoutTemplateDto>()))
-                .ThrowsAsync(new Exception("Create failed"));
+                .ReturnsAsync(ServiceResult<WorkoutTemplateDto>.Failure(new GetFitterGetBigger.Admin.Models.Errors.ServiceError(GetFitterGetBigger.Admin.Models.Errors.ServiceErrorCode.DependencyFailure, "Create failed")));
 
             var cut = RenderComponent<WorkoutTemplateCreateForm>();
             await Task.Delay(50);
@@ -213,7 +219,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.WorkoutTemplates
 
             // Assert
             var errorMessage = cut.Find("[data-testid='error-message']");
-            Assert.Contains("Failed to create workout template", errorMessage.TextContent);
+            Assert.Contains("Create failed", errorMessage.TextContent);
         }
 
         [Fact]
@@ -311,12 +317,6 @@ namespace GetFitterGetBigger.Admin.Tests.Components.WorkoutTemplates
 
         private void SetupSuccessfulReferenceDataLoad()
         {
-            _mockWorkoutTemplateService
-                .Setup(x => x.GetWorkoutCategoriesAsync())
-                .ReturnsAsync(_categories);
-            _mockWorkoutTemplateService
-                .Setup(x => x.GetDifficultyLevelsAsync())
-                .ReturnsAsync(_difficulties);
         }
 
         private async Task FillAndSubmitForm(IRenderedComponent<WorkoutTemplateCreateForm> cut)

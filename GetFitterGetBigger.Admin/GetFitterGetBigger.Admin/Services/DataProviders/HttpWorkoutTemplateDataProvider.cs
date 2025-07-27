@@ -37,26 +37,7 @@ namespace GetFitterGetBigger.Admin.Services.DataProviders
 
         public async Task<DataServiceResult<WorkoutTemplateDto>> GetWorkoutTemplateByIdAsync(string id)
         {
-            var cacheKey = $"workout_template_{id}";
-            
-            // Check cache first
-            if (_cache.TryGetValue(cacheKey, out WorkoutTemplateDto? cached) && cached != null)
-            {
-                Logger.LogDebug("Cache HIT for workout template {Id}", id);
-                return DataServiceResult<WorkoutTemplateDto>.Success(cached);
-            }
-            
-            Logger.LogDebug("Cache MISS for workout template {Id}, fetching from API", id);
-            var result = await ExecuteHttpGetRequestAsync<WorkoutTemplateDto>($"api/workout-templates/{id}");
-            
-            // Cache successful results
-            if (result.IsSuccess && result.Data != null)
-            {
-                _cache.Set(cacheKey, result.Data, TimeSpan.FromMinutes(5));
-                Logger.LogDebug("Cached workout template {Id} for 5 minutes", id);
-            }
-            
-            return result;
+            return await ExecuteHttpGetRequestAsync<WorkoutTemplateDto>($"api/workout-templates/{id}");
         }
 
         public async Task<DataServiceResult<WorkoutTemplateDto>> CreateWorkoutTemplateAsync(CreateWorkoutTemplateDto template)
@@ -66,47 +47,17 @@ namespace GetFitterGetBigger.Admin.Services.DataProviders
 
         public async Task<DataServiceResult<WorkoutTemplateDto>> UpdateWorkoutTemplateAsync(string id, UpdateWorkoutTemplateDto template)
         {
-            var result = await ExecuteHttpPutRequestAsync<WorkoutTemplateDto>($"api/workout-templates/{id}", template);
-            
-            // Clear cache on successful update
-            if (result.IsSuccess)
-            {
-                var cacheKey = $"workout_template_{id}";
-                _cache.Remove(cacheKey);
-                Logger.LogDebug("Cleared cache for updated workout template {Id}", id);
-            }
-            
-            return result;
+            return await ExecuteHttpPutRequestAsync<WorkoutTemplateDto>($"api/workout-templates/{id}", template);
         }
 
         public async Task<DataServiceResult<bool>> DeleteWorkoutTemplateAsync(string id)
         {
-            var result = await ExecuteHttpDeleteRequestAsync($"api/workout-templates/{id}");
-            
-            // Clear cache on successful delete
-            if (result.IsSuccess)
-            {
-                var cacheKey = $"workout_template_{id}";
-                _cache.Remove(cacheKey);
-                Logger.LogDebug("Cleared cache for deleted workout template {Id}", id);
-            }
-            
-            return result;
+            return await ExecuteHttpDeleteRequestAsync($"api/workout-templates/{id}");
         }
 
         public async Task<DataServiceResult<WorkoutTemplateDto>> ChangeWorkoutTemplateStateAsync(string id, ChangeWorkoutStateDto changeState)
         {
-            var result = await ExecuteHttpPutRequestAsync<WorkoutTemplateDto>($"api/workout-templates/{id}/state", changeState);
-            
-            // Clear cache on successful state change
-            if (result.IsSuccess)
-            {
-                var cacheKey = $"workout_template_{id}";
-                _cache.Remove(cacheKey);
-                Logger.LogDebug("Cleared cache for workout template {Id} after state change", id);
-            }
-            
-            return result;
+            return await ExecuteHttpPutRequestAsync<WorkoutTemplateDto>($"api/workout-templates/{id}/state", changeState);
         }
 
         public async Task<DataServiceResult<WorkoutTemplateDto>> DuplicateWorkoutTemplateAsync(string id, DuplicateWorkoutTemplateDto duplicate)
@@ -115,40 +66,11 @@ namespace GetFitterGetBigger.Admin.Services.DataProviders
         }
 
 
-        public async Task<DataServiceResult<List<WorkoutTemplateExerciseDto>>> GetTemplateExercisesAsync(string templateId)
-        {
-            return await ExecuteHttpGetRequestAsync<List<WorkoutTemplateExerciseDto>>($"api/workout-templates/{templateId}/exercises");
-        }
-
         public async Task<DataServiceResult<bool>> CheckTemplateNameExistsAsync(string name)
         {
             var encodedName = HttpUtility.UrlEncode(name);
             
             return await ExecuteHttpGetRequestAsync<bool>($"api/workout-templates/exists/name?name={encodedName}");
-        }
-
-        public async Task<DataServiceResult<List<ReferenceDataDto>>> GetWorkoutStatesAsync()
-        {
-            var cacheKey = "workout_states";
-
-            // Check cache first
-            if (_cache.TryGetValue(cacheKey, out List<ReferenceDataDto>? cachedStates) && cachedStates != null)
-            {
-                Logger.LogDebug("Cache HIT for workout states - returning {Count} items", cachedStates.Count);
-                return DataServiceResult<List<ReferenceDataDto>>.Success(cachedStates);
-            }
-
-            Logger.LogDebug("Cache MISS for workout states, fetching from API");
-            
-            var result = await ExecuteHttpGetRequestAsync<List<ReferenceDataDto>>("api/workout-states");
-            
-            if (result.IsSuccess && result.Data != null)
-            {
-                _cache.Set(cacheKey, result.Data, TimeSpan.FromMinutes(30));
-                Logger.LogDebug("Cached {Count} workout states for 30 minutes", result.Data.Count);
-            }
-                
-            return result;
         }
 
         private string BuildQueryString(WorkoutTemplateFilterDto filter)

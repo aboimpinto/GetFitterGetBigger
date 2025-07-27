@@ -1,10 +1,12 @@
 using GetFitterGetBigger.Admin.Models.Dtos;
+using GetFitterGetBigger.Admin.Models.ReferenceData;
 
 namespace GetFitterGetBigger.Admin.Services.Stores
 {
     public class WorkoutReferenceDataStore : IWorkoutReferenceDataStore
     {
-        private readonly IWorkoutTemplateService _workoutTemplateService;
+        private readonly IGenericReferenceDataService _genericReferenceDataService;
+        private readonly IWorkoutReferenceDataService _workoutReferenceDataService;
         private readonly ILogger<WorkoutReferenceDataStore> _logger;
 
         public event Action? OnChange;
@@ -21,10 +23,12 @@ namespace GetFitterGetBigger.Admin.Services.Stores
         public string? ErrorMessage { get; private set; }
 
         public WorkoutReferenceDataStore(
-            IWorkoutTemplateService workoutTemplateService,
+            IGenericReferenceDataService genericReferenceDataService,
+            IWorkoutReferenceDataService workoutReferenceDataService,
             ILogger<WorkoutReferenceDataStore> logger)
         {
-            _workoutTemplateService = workoutTemplateService;
+            _genericReferenceDataService = genericReferenceDataService;
+            _workoutReferenceDataService = workoutReferenceDataService;
             _logger = logger;
         }
 
@@ -45,10 +49,10 @@ namespace GetFitterGetBigger.Admin.Services.Stores
                 NotifyStateChanged();
 
                 // Load all reference data in parallel
-                var categoriesTask = _workoutTemplateService.GetWorkoutCategoriesAsync();
-                var difficultyTask = _workoutTemplateService.GetDifficultyLevelsAsync();
-                var statesTask = _workoutTemplateService.GetWorkoutStatesAsync();
-                var objectivesTask = _workoutTemplateService.GetWorkoutObjectivesAsync();
+                var categoriesTask = GetWorkoutCategoriesAsync();
+                var difficultyTask = _genericReferenceDataService.GetReferenceDataAsync<DifficultyLevels>();
+                var statesTask = _genericReferenceDataService.GetReferenceDataAsync<WorkoutStates>();
+                var objectivesTask = _workoutReferenceDataService.GetWorkoutObjectivesAsync();
 
                 await Task.WhenAll(
                     categoriesTask,
@@ -58,8 +62,8 @@ namespace GetFitterGetBigger.Admin.Services.Stores
                 );
 
                 WorkoutCategories = await categoriesTask;
-                DifficultyLevels = await difficultyTask;
-                WorkoutStates = await statesTask;
+                DifficultyLevels = (await difficultyTask).ToList();
+                WorkoutStates = (await statesTask).ToList();
                 WorkoutObjectives = await objectivesTask;
                 
                 IsLoaded = true;
@@ -88,6 +92,25 @@ namespace GetFitterGetBigger.Admin.Services.Stores
         {
             IsLoaded = false;
             await LoadReferenceDataAsync();
+        }
+
+        private async Task<List<ReferenceDataDto>> GetWorkoutCategoriesAsync()
+        {
+            var categories = await _workoutReferenceDataService.GetWorkoutCategoriesAsync();
+            
+            if (categories == null)
+            {
+                _logger.LogWarning("GetWorkoutCategoriesAsync returned null");
+                return new List<ReferenceDataDto>();
+            }
+            
+            // Convert WorkoutCategoryDto to ReferenceDataDto
+            return categories.Select(c => new ReferenceDataDto
+            {
+                Id = c.WorkoutCategoryId,
+                Value = c.Value,
+                Description = c.Description
+            }).ToList();
         }
 
         private void NotifyStateChanged() => OnChange?.Invoke();

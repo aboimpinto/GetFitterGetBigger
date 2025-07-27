@@ -114,6 +114,51 @@ When reviewing Blazor components, especially list pages:
 - Poor empty state design = NEEDS_CHANGES
 - Missing hover states on interactive elements = NEEDS_CHANGES
 
+## 🏕️ Boy Scout Rule - Leave Code Better Than You Found It
+
+### When Reviewing Modified Files
+**Standard**: Review ALL code in modified files, not just the changed lines
+**Rationale**: Ensures consistency and identifies technical debt
+**Process**: 
+1. Review all methods in files with status `M` (modified) or `A` (added)
+2. Document any pre-existing issues found
+3. Classify issues by severity and effort
+4. Make informed decisions about fixes
+
+### Boy Scout Rule Documentation
+When issues are found in unchanged code within modified files:
+```markdown
+## 🏕️ Boy Scout Rule - Additional Issues Found
+
+### [FileName.cs]
+1. **[Method/Issue Name]** - Brief description
+   - ❌ Current issue (e.g., Multiple exit points, inconsistent patterns)
+   - **Impact**: How this affects code quality/consistency
+   - **Effort**: Estimated time to fix (e.g., ~30 minutes)
+   - **Recommendation**: Fix now | Create tech debt ticket | Document only
+
+**Team Decision**: 
+- [ ] Fix in this PR (recommended for small fixes)
+- [ ] Create separate tech debt ticket
+- [ ] Leave as-is (must document why)
+```
+
+### Boy Scout Categories
+1. **Critical Issues** - MUST fix if found:
+   - Security vulnerabilities
+   - Data corruption risks
+   - Breaking changes to public APIs
+
+2. **Consistency Issues** - SHOULD fix:
+   - Methods not following established patterns
+   - Inconsistent return types within same service
+   - Missing null checks in similar methods
+
+3. **Style Issues** - NICE to fix:
+   - Naming conventions
+   - Code formatting
+   - Missing documentation
+
 ## 📊 Quality Metrics Tracking
 
 Each code review must document:
@@ -122,6 +167,7 @@ Each code review must document:
 - Code coverage impact
 - Performance considerations
 - UI consistency compliance (for Blazor components)
+- Boy Scout Rule findings (if any)
 
 ## 🚀 Enforcement
 
