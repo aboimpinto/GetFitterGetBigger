@@ -35,9 +35,9 @@ Scenario: Create link with mismatched target type should fail
 
 @exercise @links @integration @validation
 Scenario: Create link with rest exercise should fail
-    Given I have a workout exercise named "Source Workout"
+    Given I have a workout exercise named "Rest Link Source"
     And I have a rest exercise named "Rest Period"
-    When I create an exercise link from "Source Workout" to "Rest Period" with link type "Warmup" and display order 1
+    When I create an exercise link from "Rest Link Source" to "Rest Period" with link type "Warmup" and display order 1
     Then the request should fail with bad request
     And the response should contain "Target exercise must be of type 'Warmup'"
 

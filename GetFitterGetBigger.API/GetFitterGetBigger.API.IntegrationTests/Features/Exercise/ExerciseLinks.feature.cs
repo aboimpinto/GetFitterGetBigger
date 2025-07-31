@@ -222,10 +222,10 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.Exercise
             {
                 await this.ScenarioStartAsync();
                 await this.FeatureBackgroundAsync();
-                await testRunner.GivenAsync("I have a workout exercise named \"Source Workout\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Given ");
+                await testRunner.GivenAsync("I have a workout exercise named \"Rest Link Source\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Given ");
                 await testRunner.AndAsync("I have a rest exercise named \"Rest Period\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
-                await testRunner.WhenAsync("I create an exercise link from \"Source Workout\" to \"Rest Period\" with link type \"" +
-                        "Warmup\" and display order 1", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
+                await testRunner.WhenAsync("I create an exercise link from \"Rest Link Source\" to \"Rest Period\" with link type" +
+                        " \"Warmup\" and display order 1", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
                 await testRunner.ThenAsync("the request should fail with bad request", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
                 await testRunner.AndAsync("the response should contain \"Target exercise must be of type \'Warmup\'\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
             }

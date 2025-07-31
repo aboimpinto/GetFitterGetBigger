@@ -13,6 +13,9 @@ There is a version mismatch warning between Entity Framework Core Design package
 ## Error Message
 [To be captured next time the warning appears during migration commands]
 
+## Warning Message
+The Entity Framework tools version '8.0.10' is older than that of the runtime '9.0.6'. Update the tools for the latest features and bug fixes. See https://aka.ms/AAc1fbw for more information.
+
 ## Reproduction Steps
 1. Run `dotnet ef migrations add <MigrationName>`
 2. Or run `dotnet ef database update`

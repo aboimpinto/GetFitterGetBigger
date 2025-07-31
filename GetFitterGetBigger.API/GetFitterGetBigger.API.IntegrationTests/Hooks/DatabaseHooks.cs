@@ -16,18 +16,16 @@ public class DatabaseHooks
     [BeforeScenario(Order = 1)]
     public async Task BeforeScenario()
     {
-        // Ensure database is initialized with reference data
-        await _fixture.InitializeDatabaseAsync();
+        // Clean test data before each scenario (reference data remains)
+        // This is safer than cleaning after scenario as it ensures clean state
+        await _fixture.CleanDatabaseAsync();
     }
     
     [AfterScenario]
     public async Task AfterScenario()
     {
-        // Clean up test data after each scenario to ensure isolation
-        await _fixture.CleanDatabaseAsync();
-        
-        // Re-seed reference data for next scenario
-        await _fixture.InitializeDatabaseAsync();
+        // Optional: could clean up here too if needed
+        // But cleaning before scenario is usually sufficient
     }
     
     [BeforeFeature]

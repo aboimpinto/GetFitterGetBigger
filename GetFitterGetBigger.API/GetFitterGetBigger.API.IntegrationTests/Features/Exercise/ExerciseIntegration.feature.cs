@@ -201,7 +201,7 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.Exercise
   ""name"": ""Integration Test Compound Exercise"",
   ""description"": ""Test exercise with multiple types"",
   ""coachNotes"": [],
-  ""exerciseTypeIds"": [""exercisetype-22334455-6677-8899-aabb-ccddeeff0011"", ""exercisetype-33445566-7788-99aa-bbcc-ddeeff001122""],
+  ""exerciseTypeIds"": [""exercisetype-b2c3d4e5-6f7a-8b9c-0d1e-2f3a4b5c6d7e"", ""exercisetype-c3d4e5f6-7a8b-9c0d-1e2f-3a4b5c6d7e8f""],
   ""isUnilateral"": false,
   ""difficultyId"": ""difficultylevel-8a8adb1d-24d2-4979-a5a6-0d760e6da24b"",
   ""kineticChainId"": ""kineticchaintype-f5d5a2de-9c4e-4b87-b8c3-5d1e17d0b1f4"",

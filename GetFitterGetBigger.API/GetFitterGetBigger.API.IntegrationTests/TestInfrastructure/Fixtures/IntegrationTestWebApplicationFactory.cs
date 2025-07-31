@@ -15,51 +15,30 @@ namespace GetFitterGetBigger.API.IntegrationTests.TestInfrastructure.Fixtures;
 
 public class IntegrationTestWebApplicationFactory : WebApplicationFactory<Program>, IAsyncLifetime
 {
-    private readonly PostgreSqlContainer _postgresContainer;
+    private string? _connectionString;
     
     public IntegrationTestWebApplicationFactory()
     {
-        _postgresContainer = new PostgreSqlBuilder()
-            .WithImage("postgres:15-alpine")
-            .WithDatabase("bddtestdb")
-            .WithUsername("bddtestuser")
-            .WithPassword("bddtestpass")
-            .Build();
+    }
+    
+    public IntegrationTestWebApplicationFactory(string connectionString)
+    {
+        _connectionString = connectionString;
     }
     
     public async Task InitializeAsync()
     {
-        await _postgresContainer.StartAsync();
-        
-        // Add retry logic for container startup
-        var retryCount = 0;
-        const int maxRetries = 10;
-        
-        while (retryCount < maxRetries)
-        {
-            try
-            {
-                // Test the connection
-                using var connection = new Npgsql.NpgsqlConnection(_postgresContainer.GetConnectionString());
-                await connection.OpenAsync();
-                await connection.CloseAsync();
-                break;
-            }
-            catch (Exception)
-            {
-                retryCount++;
-                if (retryCount >= maxRetries)
-                {
-                    throw new InvalidOperationException("Failed to connect to PostgreSQL container after multiple retries");
-                }
-                await Task.Delay(1000 * retryCount); // Exponential backoff
-            }
-        }
+        // No longer managing container here - it's managed by PostgreSqlTestFixture
+        await Task.CompletedTask;
+    }
+    
+    public void SetConnectionString(string connectionString)
+    {
+        _connectionString = connectionString;
     }
     
     public new async Task DisposeAsync()
     {
-        await _postgresContainer.DisposeAsync();
         await base.DisposeAsync();
     }
 
@@ -95,7 +74,11 @@ public class IntegrationTestWebApplicationFactory : WebApplicationFactory<Progra
             // Add DbContext using PostgreSQL from the container
             services.AddDbContext<FitnessDbContext>(options =>
             {
-                options.UseNpgsql(_postgresContainer.GetConnectionString());
+                if (string.IsNullOrEmpty(_connectionString))
+                {
+                    throw new InvalidOperationException("Connection string not set. Call SetConnectionString or use constructor with connection string.");
+                }
+                options.UseNpgsql(_connectionString);
                 options.EnableSensitiveDataLogging(); // For debugging
                 options.LogTo(Console.WriteLine, LogLevel.Information); // Log SQL queries
             });
@@ -104,19 +87,25 @@ public class IntegrationTestWebApplicationFactory : WebApplicationFactory<Progra
         var host = base.CreateHost(builder);
 
         // Run migrations and seed the database after the host is created
-        using (var scope = host.Services.CreateScope())
+        try
         {
-            var services = scope.ServiceProvider;
-            var db = services.GetRequiredService<FitnessDbContext>();
-            
-            // Run migrations instead of EnsureCreated for PostgreSQL
-            db.Database.Migrate();
-            
-            // Seed the database with reference data
-            SeedReferenceData(db);
-            
-            // Ensure the transaction is committed
-            db.SaveChanges();
+            using (var scope = host.Services.CreateScope())
+            {
+                var services = scope.ServiceProvider;
+                var db = services.GetRequiredService<FitnessDbContext>();
+                
+                // Run migrations instead of EnsureCreated for PostgreSQL
+                db.Database.Migrate();
+                
+                // Note: Reference data is already seeded by migrations through HasData in OnModelCreating
+                // We only need to seed additional test-specific data if needed
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error during database initialization: {ex.Message}");
+            Console.WriteLine($"Stack trace: {ex.StackTrace}");
+            throw;
         }
 
         return host;
@@ -150,13 +139,52 @@ public class IntegrationTestWebApplicationFactory : WebApplicationFactory<Progra
         using var scope = Services.CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<FitnessDbContext>();
         
-        // Delete only test-specific data, keep reference data
-        // This prevents duplicate key violations on reference data
-        context.ExerciseLinks.RemoveRange(context.ExerciseLinks);
-        context.Exercises.RemoveRange(context.Exercises);
-        // Add other entity cleanups here as needed
-        
-        await context.SaveChangesAsync();
+        try
+        {
+            // Delete only test-specific data, keep reference data
+            // This prevents duplicate key violations on reference data
+            
+            // Check if ExerciseLinks table exists before trying to clean it
+            var tableExists = await TableExistsAsync(context, "ExerciseLinks");
+            if (tableExists)
+            {
+                context.ExerciseLinks.RemoveRange(context.ExerciseLinks);
+            }
+            
+            // Exercises table should exist after migrations
+            context.Exercises.RemoveRange(context.Exercises);
+            // Add other entity cleanups here as needed
+            
+            await context.SaveChangesAsync();
+        }
+        catch (Exception ex)
+        {
+            // Log the error but don't fail the test cleanup
+            Console.WriteLine($"Error during test data cleanup: {ex.Message}");
+        }
+    }
+    
+    private async Task<bool> TableExistsAsync(FitnessDbContext context, string tableName)
+    {
+        try
+        {
+            var sql = @"
+                SELECT EXISTS (
+                    SELECT FROM information_schema.tables 
+                    WHERE table_schema = 'public' 
+                    AND table_name = @tableName
+                )";
+            
+            var result = await context.Database
+                .SqlQueryRaw<bool>(sql, new Npgsql.NpgsqlParameter("@tableName", tableName))
+                .FirstOrDefaultAsync();
+            
+            return result;
+        }
+        catch
+        {
+            return false;
+        }
     }
     
     /// <summary>

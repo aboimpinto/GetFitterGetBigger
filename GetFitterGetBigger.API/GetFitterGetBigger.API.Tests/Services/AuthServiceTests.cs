@@ -20,7 +20,9 @@ namespace GetFitterGetBigger.API.Tests.Services
         private readonly Mock<IJwtService> _mockJwtService;
         private readonly Mock<IUnitOfWorkProvider<FitnessDbContext>> _mockUnitOfWorkProvider;
         private readonly Mock<IWritableUnitOfWork<FitnessDbContext>> _mockUnitOfWork;
+        private readonly Mock<IReadOnlyUnitOfWork<FitnessDbContext>> _mockReadOnlyUnitOfWork;
         private readonly Mock<IUserRepository> _mockUserRepository;
+        private readonly Mock<IUserRepository> _mockReadOnlyUserRepository;
         private readonly Mock<IClaimService> _mockClaimService;
         private readonly AuthService _authService;
 
@@ -29,16 +31,26 @@ namespace GetFitterGetBigger.API.Tests.Services
             _mockJwtService = new Mock<IJwtService>();
             _mockUnitOfWorkProvider = new Mock<IUnitOfWorkProvider<FitnessDbContext>>();
             _mockUnitOfWork = new Mock<IWritableUnitOfWork<FitnessDbContext>>();
+            _mockReadOnlyUnitOfWork = new Mock<IReadOnlyUnitOfWork<FitnessDbContext>>();
             _mockUserRepository = new Mock<IUserRepository>();
+            _mockReadOnlyUserRepository = new Mock<IUserRepository>();
             _mockClaimService = new Mock<IClaimService>();
 
             _mockUnitOfWorkProvider
                 .Setup(x => x.CreateWritable())
                 .Returns(_mockUnitOfWork.Object);
 
+            _mockUnitOfWorkProvider
+                .Setup(x => x.CreateReadOnly())
+                .Returns(_mockReadOnlyUnitOfWork.Object);
+
             _mockUnitOfWork
                 .Setup(x => x.GetRepository<IUserRepository>())
                 .Returns(_mockUserRepository.Object);
+
+            _mockReadOnlyUnitOfWork
+                .Setup(x => x.GetRepository<IUserRepository>())
+                .Returns(_mockReadOnlyUserRepository.Object);
 
             _authService = new AuthService(_mockJwtService.Object, _mockUnitOfWorkProvider.Object, _mockClaimService.Object);
         }
@@ -145,7 +157,7 @@ namespace GetFitterGetBigger.API.Tests.Services
                 Claims = claims
             };
 
-            _mockUserRepository
+            _mockReadOnlyUserRepository
                 .Setup(x => x.GetUserByEmailAsync(email))
                 .ReturnsAsync(existingUser);
 
@@ -164,7 +176,8 @@ namespace GetFitterGetBigger.API.Tests.Services
 
             _mockUserRepository.Verify(x => x.AddUserAsync(It.IsAny<User>()), Times.Never);
             _mockClaimService.Verify(x => x.CreateUserClaimAsync(It.IsAny<UserId>(), It.IsAny<string>(), It.IsAny<IWritableUnitOfWork<FitnessDbContext>>()), Times.Never);
-            _mockUnitOfWork.Verify(x => x.CommitAsync(), Times.Once);
+            _mockUnitOfWork.Verify(x => x.CommitAsync(), Times.Never);
+            _mockReadOnlyUserRepository.Verify(x => x.GetUserByEmailAsync(email), Times.Once);
         }
 
         [Fact]

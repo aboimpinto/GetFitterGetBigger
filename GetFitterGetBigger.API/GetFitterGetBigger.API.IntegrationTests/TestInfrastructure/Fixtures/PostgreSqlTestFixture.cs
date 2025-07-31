@@ -36,8 +36,8 @@ public class PostgreSqlTestFixture : IAsyncLifetime, IDisposable
         // Wait for the container to be ready
         await WaitForContainerReadyAsync();
         
-        // Create the factory after container is ready
-        _factory = new IntegrationTestWebApplicationFactory();
+        // Create the factory after container is ready and pass the connection string
+        _factory = new IntegrationTestWebApplicationFactory(GetConnectionString());
         await _factory.InitializeAsync();
     }
     
@@ -68,12 +68,18 @@ public class PostgreSqlTestFixture : IAsyncLifetime, IDisposable
     {
         await Factory.ExecuteDbContextAsync(async context =>
         {
-            await context.Database.MigrateAsync();
+            // Migrations are already run by IntegrationTestWebApplicationFactory.CreateHost
+            // We need to seed reference data that's not included in migrations
             
-            // Seed reference data if needed
-            // Check Equipment instead of BodyParts since BodyParts are seeded by DbContext migrations
-            // but Equipment is only seeded by SeedDataBuilder
-            if (!context.Equipment.Any())
+            // Check if we need to seed reference data by checking critical tables
+            if (!context.MovementPatterns.Any() || 
+                !context.MetricTypes.Any() || 
+                !context.MuscleGroups.Any() || 
+                !context.MuscleRoles.Any() ||
+                !context.ExerciseTypes.Any() ||
+                !context.DifficultyLevels.Any() ||
+                !context.KineticChainTypes.Any() ||
+                !context.ExerciseWeightTypes.Any())
             {
                 var seeder = new TestDatabaseSeeder(context);
                 await seeder.SeedReferenceDataAsync();

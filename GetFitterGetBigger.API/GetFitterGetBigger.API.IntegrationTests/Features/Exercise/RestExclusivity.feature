@@ -4,6 +4,7 @@ Feature: Exercise Rest Type Exclusivity
   So that exercise categorization remains consistent
 
   Background:
+    Given the database has reference data
     Given I am authenticated as a user
 
   @exercise @rest-exclusivity
@@ -23,7 +24,7 @@ Feature: Exercise Rest Type Exclusivity
             "order": 2
           }
         ],
-        "exerciseTypeIds": ["exercisetype-44556677-8899-aabb-ccdd-eeff00112233"],
+        "exerciseTypeIds": ["exercisetype-d4e5f6a7-8b9c-0d1e-2f3a-4b5c6d7e8f9a"],
         "isUnilateral": false,
         "difficultyId": "difficultylevel-8a8adb1d-24d2-4979-a5a6-0d760e6da24b",
         "kineticChainId": null,
@@ -48,8 +49,8 @@ Feature: Exercise Rest Type Exclusivity
         "description": "Trying to combine Rest with Warmup",
         "coachNotes": [],
         "exerciseTypeIds": [
-          "exercisetype-44556677-8899-aabb-ccdd-eeff00112233",
-          "exercisetype-11223344-5566-7788-99aa-bbccddeeff00"
+          "exercisetype-d4e5f6a7-8b9c-0d1e-2f3a-4b5c6d7e8f9a",
+          "exercisetype-a1b2c3d4-5e6f-7a8b-9c0d-1e2f3a4b5c6d"
         ],
         "isUnilateral": false,
         "difficultyId": "difficultylevel-8a8adb1d-24d2-4979-a5a6-0d760e6da24b",
@@ -74,8 +75,8 @@ Feature: Exercise Rest Type Exclusivity
         "description": "Trying to combine Rest with Workout",
         "coachNotes": [],
         "exerciseTypeIds": [
-          "exercisetype-22334455-6677-8899-aabb-ccddeeff0011",
-          "exercisetype-44556677-8899-aabb-ccdd-eeff00112233"
+          "exercisetype-b2c3d4e5-6f7a-8b9c-0d1e-2f3a4b5c6d7e",
+          "exercisetype-d4e5f6a7-8b9c-0d1e-2f3a-4b5c6d7e8f9a"
         ],
         "isUnilateral": false,
         "difficultyId": "difficultylevel-8a8adb1d-24d2-4979-a5a6-0d760e6da24b",
@@ -99,10 +100,10 @@ Feature: Exercise Rest Type Exclusivity
         "description": "Trying to combine Rest with all other types",
         "coachNotes": [],
         "exerciseTypeIds": [
-          "exercisetype-11223344-5566-7788-99aa-bbccddeeff00",
-          "exercisetype-22334455-6677-8899-aabb-ccddeeff0011",
-          "exercisetype-33445566-7788-99aa-bbcc-ddeeff001122",
-          "exercisetype-44556677-8899-aabb-ccdd-eeff00112233"
+          "exercisetype-a1b2c3d4-5e6f-7a8b-9c0d-1e2f3a4b5c6d",
+          "exercisetype-b2c3d4e5-6f7a-8b9c-0d1e-2f3a4b5c6d7e",
+          "exercisetype-c3d4e5f6-7a8b-9c0d-1e2f-3a4b5c6d7e8f",
+          "exercisetype-d4e5f6a7-8b9c-0d1e-2f3a-4b5c6d7e8f9a"
         ],
         "isUnilateral": false,
         "difficultyId": "difficultylevel-8a8adb1d-24d2-4979-a5a6-0d760e6da24b",
@@ -126,9 +127,9 @@ Feature: Exercise Rest Type Exclusivity
         "description": "Exercise with multiple non-Rest types",
         "coachNotes": [],
         "exerciseTypeIds": [
-          "exercisetype-11223344-5566-7788-99aa-bbccddeeff00",
-          "exercisetype-22334455-6677-8899-aabb-ccddeeff0011",
-          "exercisetype-33445566-7788-99aa-bbcc-ddeeff001122"
+          "exercisetype-a1b2c3d4-5e6f-7a8b-9c0d-1e2f3a4b5c6d",
+          "exercisetype-b2c3d4e5-6f7a-8b9c-0d1e-2f3a4b5c6d7e",
+          "exercisetype-c3d4e5f6-7a8b-9c0d-1e2f-3a4b5c6d7e8f"
         ],
         "isUnilateral": false,
         "difficultyId": "difficultylevel-8a8adb1d-24d2-4979-a5a6-0d760e6da24b",

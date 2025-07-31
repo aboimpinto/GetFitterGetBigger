@@ -140,14 +140,6 @@ public class CommonSteps
         });
     }
 
-    [BeforeScenario(Order = 1)]
-    public void BeforeScenario()
-    {
-        // Initialize HttpClient and store in ScenarioContext
-        var httpClient = _fixture.CreateClient();
-        _scenarioContext.SetHttpClient(httpClient);
-    }
-    
     [AfterScenario]
     public async Task AfterScenario()
     {
@@ -163,8 +155,5 @@ public class CommonSteps
                 Console.WriteLine($"Stack Trace: {_scenarioContext.TestError.StackTrace}");
             }
         }
-        
-        // Clean the database after each scenario
-        await _fixture.CleanDatabaseAsync();
     }
 }

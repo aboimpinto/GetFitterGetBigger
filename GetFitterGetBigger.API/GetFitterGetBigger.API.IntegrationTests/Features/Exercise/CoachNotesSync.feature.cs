@@ -134,7 +134,7 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.Exercise
       ""order"": 2
     }
   ],
-  ""exerciseTypeIds"": [""exercisetype-22334455-6677-8899-aabb-ccddeeff0011""],
+  ""exerciseTypeIds"": [""exercisetype-b2c3d4e5-6f7a-8b9c-0d1e-2f3a4b5c6d7e""],
   ""isUnilateral"": false,
   ""difficultyId"": ""difficultylevel-8a8adb1d-24d2-4979-a5a6-0d760e6da24b"",
   ""kineticChainId"": ""kineticchaintype-f5d5a2de-9c4e-4b87-b8c3-5d1e17d0b1f4"",
@@ -199,7 +199,7 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.Exercise
       ""order"": 2
     }
   ],
-  ""exerciseTypeIds"": [""exercisetype-22334455-6677-8899-aabb-ccddeeff0011""],
+  ""exerciseTypeIds"": [""exercisetype-b2c3d4e5-6f7a-8b9c-0d1e-2f3a4b5c6d7e""],
   ""isUnilateral"": false,
   ""difficultyId"": ""difficultylevel-8a8adb1d-24d2-4979-a5a6-0d760e6da24b"",
   ""kineticChainId"": ""kineticchaintype-f5d5a2de-9c4e-4b87-b8c3-5d1e17d0b1f4"",
@@ -258,7 +258,7 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.Exercise
       ""order"": 50
     }
   ],
-  ""exerciseTypeIds"": [""exercisetype-22334455-6677-8899-aabb-ccddeeff0011""],
+  ""exerciseTypeIds"": [""exercisetype-b2c3d4e5-6f7a-8b9c-0d1e-2f3a4b5c6d7e""],
   ""isUnilateral"": false,
   ""difficultyId"": ""difficultylevel-8a8adb1d-24d2-4979-a5a6-0d760e6da24b"",
   ""kineticChainId"": ""kineticchaintype-f5d5a2de-9c4e-4b87-b8c3-5d1e17d0b1f4"",
@@ -319,7 +319,7 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.Exercise
       ""order"": 2
     }
   ],
-  ""exerciseTypeIds"": [""exercisetype-22334455-6677-8899-aabb-ccddeeff0011""],
+  ""exerciseTypeIds"": [""exercisetype-b2c3d4e5-6f7a-8b9c-0d1e-2f3a4b5c6d7e""],
   ""isUnilateral"": false,
   ""difficultyId"": ""difficultylevel-8a8adb1d-24d2-4979-a5a6-0d760e6da24b"",
   ""kineticChainId"": ""kineticchaintype-f5d5a2de-9c4e-4b87-b8c3-5d1e17d0b1f4"",
@@ -344,7 +344,7 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.Exercise
       ""order"": 1
     }
   ],
-  ""exerciseTypeIds"": [""exercisetype-22334455-6677-8899-aabb-ccddeeff0011""],
+  ""exerciseTypeIds"": [""exercisetype-b2c3d4e5-6f7a-8b9c-0d1e-2f3a4b5c6d7e""],
   ""isUnilateral"": false,
   ""difficultyId"": ""difficultylevel-8a8adb1d-24d2-4979-a5a6-0d760e6da24b"",
   ""kineticChainId"": ""kineticchaintype-f5d5a2de-9c4e-4b87-b8c3-5d1e17d0b1f4"",

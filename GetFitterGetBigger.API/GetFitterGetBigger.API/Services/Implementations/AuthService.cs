@@ -28,11 +28,31 @@ namespace GetFitterGetBigger.API.Services.Implementations
 
         public async Task<AuthenticationResponse> AuthenticateAsync(AuthenticationRequest request)
         {
+            // First, try to get existing user with read-only context
+            using (var readOnlyUow = _unitOfWorkProvider.CreateReadOnly())
+            {
+                var readOnlyUserRepo = readOnlyUow.GetRepository<IUserRepository>();
+                var existingUser = await readOnlyUserRepo.GetUserByEmailAsync(request.Email);
+                
+                if (existingUser != null)
+                {
+                    // User exists, generate token and return
+                    var token = _jwtService.GenerateToken(existingUser);
+                    var claims = existingUser.Claims
+                        .Where(c => c.ExpirationDate == null || c.ExpirationDate > DateTime.UtcNow)
+                        .Select(c => new ClaimInfo(c.Id.ToString(), c.ClaimType, c.ExpirationDate, c.Resource))
+                        .ToList();
+                    
+                    return new AuthenticationResponse(token, claims);
+                }
+            }
+
+            // User doesn't exist, create new user
             using var unitOfWork = _unitOfWorkProvider.CreateWritable();
             var userRepository = unitOfWork.GetRepository<IUserRepository>();
 
+            // Double-check in case of race condition
             var user = await userRepository.GetUserByEmailAsync(request.Email);
-
             if (user == null)
             {
                 user = new User { Id = UserId.New(), Email = request.Email };
@@ -40,17 +60,17 @@ namespace GetFitterGetBigger.API.Services.Implementations
 
                 // Use ClaimService with the same UnitOfWork for transactional consistency
                 await _claimService.CreateUserClaimAsync(user.Id, "Free-Tier", unitOfWork);
+                
+                await unitOfWork.CommitAsync();
             }
 
-            var token = _jwtService.GenerateToken(user);
-            var claims = user.Claims
+            var finalToken = _jwtService.GenerateToken(user);
+            var finalClaims = user.Claims
                 .Where(c => c.ExpirationDate == null || c.ExpirationDate > DateTime.UtcNow)
                 .Select(c => new ClaimInfo(c.Id.ToString(), c.ClaimType, c.ExpirationDate, c.Resource))
                 .ToList();
 
-            await unitOfWork.CommitAsync();
-
-            return new AuthenticationResponse(token, claims);
+            return new AuthenticationResponse(finalToken, finalClaims);
         }
     }
 }

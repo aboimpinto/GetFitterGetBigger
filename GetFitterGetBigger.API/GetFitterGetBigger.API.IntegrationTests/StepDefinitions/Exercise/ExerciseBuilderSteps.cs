@@ -495,6 +495,14 @@ public class ExerciseBuilderSteps
         
         // Store the exercise ID with the name as key
         var response = _scenarioContext.GetLastResponse();
+        
+        // If the response is not successful, let's see what the error is
+        if (!response.IsSuccessStatusCode)
+        {
+            var errorContent = await response.Content.ReadAsStringAsync();
+            throw new Exception($"Failed to create {exerciseTypes} exercise '{exerciseName}': {response.StatusCode} - {errorContent}");
+        }
+        
         response.IsSuccessStatusCode.Should().BeTrue();
         
         var content = await response.Content.ReadAsStringAsync();
