@@ -28,13 +28,13 @@ public class WorkoutStateService : PureReferenceService<WorkoutState, WorkoutSta
     /// <inheritdoc/>
     public async Task<ServiceResult<WorkoutStateDto>> GetByIdAsync(WorkoutStateId id) => 
         id.IsEmpty 
-            ? ServiceResult<WorkoutStateDto>.Failure(CreateEmptyDto(), ServiceError.ValidationFailed(WorkoutStateErrorMessages.InvalidIdFormat))
+            ? ServiceResult<WorkoutStateDto>.Failure(WorkoutStateDto.Empty, ServiceError.ValidationFailed(WorkoutStateErrorMessages.InvalidIdFormat))
             : await GetByIdAsync(id.ToString());
     
     /// <inheritdoc/>
     public async Task<ServiceResult<WorkoutStateDto>> GetByValueAsync(string value) => 
         string.IsNullOrWhiteSpace(value)
-            ? ServiceResult<WorkoutStateDto>.Failure(CreateEmptyDto(), ServiceError.ValidationFailed(WorkoutStateErrorMessages.ValueCannotBeEmpty))
+            ? ServiceResult<WorkoutStateDto>.Failure(WorkoutStateDto.Empty, ServiceError.ValidationFailed(WorkoutStateErrorMessages.ValueCannotBeEmpty))
             : await GetFromCacheOrLoadAsync(
                 GetValueCacheKey(value),
                 () => LoadByValueAsync(value),
@@ -65,7 +65,7 @@ public class WorkoutStateService : PureReferenceService<WorkoutState, WorkoutSta
         entity switch
         {
             { IsEmpty: true } or { IsActive: false } => ServiceResult<WorkoutStateDto>.Failure(
-                CreateEmptyDto(), 
+                WorkoutStateDto.Empty, 
                 ServiceError.NotFound(WorkoutStateErrorMessages.NotFound, identifier)),
             _ => await CacheAndReturnSuccessAsync(cacheKey, MapToDto(entity))
         };
@@ -126,11 +126,6 @@ public class WorkoutStateService : PureReferenceService<WorkoutState, WorkoutSta
             Value = entity.Value,
             Description = entity.Description
         };
-    }
-    
-    protected override WorkoutStateDto CreateEmptyDto()
-    {
-        return new WorkoutStateDto();
     }
     
     protected override ValidationResult ValidateAndParseId(string id)

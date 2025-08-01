@@ -37,13 +37,13 @@ public class MetricTypeService : PureReferenceService<MetricType, ReferenceDataD
     /// <inheritdoc/>
     public async Task<ServiceResult<ReferenceDataDto>> GetByIdAsync(MetricTypeId id) => 
         id.IsEmpty 
-            ? ServiceResult<ReferenceDataDto>.Failure(CreateEmptyDto(), ServiceError.ValidationFailed(MetricTypeErrorMessages.InvalidIdFormat))
+            ? ServiceResult<ReferenceDataDto>.Failure(ReferenceDataDto.Empty, ServiceError.ValidationFailed(MetricTypeErrorMessages.InvalidIdFormat))
             : await GetByIdAsync(id.ToString());
     
     /// <inheritdoc/>
     public async Task<ServiceResult<ReferenceDataDto>> GetByValueAsync(string value) => 
         string.IsNullOrWhiteSpace(value)
-            ? ServiceResult<ReferenceDataDto>.Failure(CreateEmptyDto(), ServiceError.ValidationFailed(MetricTypeErrorMessages.ValueCannotBeEmpty))
+            ? ServiceResult<ReferenceDataDto>.Failure(ReferenceDataDto.Empty, ServiceError.ValidationFailed(MetricTypeErrorMessages.ValueCannotBeEmpty))
             : await GetFromCacheOrLoadAsync(
                 GetValueCacheKey(value),
                 () => LoadByValueAsync(value),
@@ -68,7 +68,7 @@ public class MetricTypeService : PureReferenceService<MetricType, ReferenceDataD
         return entity switch
         {
             { IsEmpty: true } or { IsActive: false } => ServiceResult<ReferenceDataDto>.Failure(
-                CreateEmptyDto(), 
+                ReferenceDataDto.Empty, 
                 ServiceError.NotFound(MetricTypeErrorMessages.NotFound, identifier)),
             _ => await CacheAndReturnSuccessAsync(cacheKey, MapToDto(entity))
         };
@@ -125,10 +125,6 @@ public class MetricTypeService : PureReferenceService<MetricType, ReferenceDataD
         };
     }
     
-    protected override ReferenceDataDto CreateEmptyDto()
-    {
-        return new ReferenceDataDto();
-    }
     
     protected override ValidationResult ValidateAndParseId(string id)
     {

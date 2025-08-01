@@ -1,9 +1,11 @@
+using GetFitterGetBigger.API.DTOs.Interfaces;
+
 namespace GetFitterGetBigger.API.DTOs;
 
 /// <summary>
 /// Data transfer object representing a workout template with all related data
 /// </summary>
-public record WorkoutTemplateDto
+public record WorkoutTemplateDto : IEmptyDto<WorkoutTemplateDto>
 {
     /// <summary>
     /// The unique identifier for the workout template

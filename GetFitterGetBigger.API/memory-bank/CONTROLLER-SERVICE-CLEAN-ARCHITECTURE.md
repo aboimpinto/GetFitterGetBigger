@@ -443,10 +443,13 @@ This clean architecture pattern works seamlessly with the Three-Tier Entity Arch
 
 3. **Domain Entities (e.g., Exercise)**
    ```csharp
-   public class ExerciseService : DomainEntityService<Exercise, ExerciseDto, CreateExerciseCommand, UpdateExerciseCommand>, IExerciseService
+   // Note: Domain entities implement their interfaces directly without a base class
+   // due to their unique and complex business logic requirements
+   public class ExerciseService : IExerciseService
    {
        // Complex business logic with minimal caching
        // Full ServiceResult pattern implementation
+       // Direct implementation - no generic base class inheritance
    }
    ```
 

@@ -1,11 +1,12 @@
 using System;
+using GetFitterGetBigger.API.DTOs.Interfaces;
 
 namespace GetFitterGetBigger.API.DTOs;
 
 /// <summary>
 /// Data transfer object for muscle group with full details
 /// </summary>
-public class MuscleGroupDto
+public class MuscleGroupDto : IEmptyDto<MuscleGroupDto>
 {
     /// <summary>
     /// The ID of the muscle group in the format "musclegroup-{guid}"
@@ -41,4 +42,23 @@ public class MuscleGroupDto
     /// The date and time when the muscle group was last updated
     /// </summary>
     public DateTime? UpdatedAt { get; set; }
+    
+    /// <summary>
+    /// Indicates whether this DTO represents an empty instance
+    /// </summary>
+    public bool IsEmpty => string.IsNullOrEmpty(Id) || Id == "musclegroup-00000000-0000-0000-0000-000000000000";
+    
+    /// <summary>
+    /// Returns an empty instance of MuscleGroupDto
+    /// </summary>
+    public static MuscleGroupDto Empty => new()
+    {
+        Id = string.Empty,
+        Name = string.Empty,
+        BodyPartId = string.Empty,
+        BodyPartName = null,
+        IsActive = false,
+        CreatedAt = DateTime.MinValue,
+        UpdatedAt = null
+    };
 }

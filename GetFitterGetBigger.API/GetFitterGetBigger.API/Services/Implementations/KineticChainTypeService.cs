@@ -36,13 +36,13 @@ public class KineticChainTypeService : PureReferenceService<KineticChainType, Re
     /// <inheritdoc/>
     public async Task<ServiceResult<ReferenceDataDto>> GetByIdAsync(KineticChainTypeId id) => 
         id.IsEmpty 
-            ? ServiceResult<ReferenceDataDto>.Failure(CreateEmptyDto(), ServiceError.ValidationFailed(KineticChainTypeErrorMessages.InvalidIdFormat))
+            ? ServiceResult<ReferenceDataDto>.Failure(ReferenceDataDto.Empty, ServiceError.ValidationFailed(KineticChainTypeErrorMessages.InvalidIdFormat))
             : await GetByIdAsync(id.ToString());
     
     /// <inheritdoc/>
     public async Task<ServiceResult<ReferenceDataDto>> GetByValueAsync(string value) => 
         string.IsNullOrWhiteSpace(value)
-            ? ServiceResult<ReferenceDataDto>.Failure(CreateEmptyDto(), ServiceError.ValidationFailed(KineticChainTypeErrorMessages.ValueCannotBeEmptyEntity))
+            ? ServiceResult<ReferenceDataDto>.Failure(ReferenceDataDto.Empty, ServiceError.ValidationFailed(KineticChainTypeErrorMessages.ValueCannotBeEmptyEntity))
             : await GetFromCacheOrLoadAsync(
                 GetValueCacheKey(value),
                 () => LoadByValueAsync(value),
@@ -67,7 +67,7 @@ public class KineticChainTypeService : PureReferenceService<KineticChainType, Re
         return entity switch
         {
             { IsEmpty: true } or { IsActive: false } => ServiceResult<ReferenceDataDto>.Failure(
-                CreateEmptyDto(), 
+                ReferenceDataDto.Empty, 
                 ServiceError.NotFound(KineticChainTypeErrorMessages.NotFound, identifier)),
             _ => await CacheAndReturnSuccessAsync(cacheKey, MapToDto(entity))
         };
@@ -110,15 +110,6 @@ public class KineticChainTypeService : PureReferenceService<KineticChainType, Re
         var repository = unitOfWork.GetRepository<IKineticChainTypeRepository>();
         return await repository.GetAllActiveAsync();
     }
-
-    /// <inheritdoc/>
-    protected override ReferenceDataDto CreateEmptyDto() =>
-        new()
-        {
-            Id = string.Empty,
-            Value = string.Empty,
-            Description = null
-        };
 
     /// <inheritdoc/>
     protected override ValidationResult ValidateAndParseId(string id)

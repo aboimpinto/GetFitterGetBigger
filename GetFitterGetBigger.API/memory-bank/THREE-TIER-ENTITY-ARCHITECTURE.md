@@ -126,10 +126,17 @@ Each tier has a corresponding service base class:
    - Cache invalidation on modifications
    - Admin authorization checks
 
-3. **DomainEntityService<TEntity, TDto, TCreateCommand, TUpdateCommand>**
-   - Full CRUD with complex business logic
-   - Minimal or no caching
-   - Complex validation rules
+3. **DomainEntityService<TEntity, TDto, TCreateCommand, TUpdateCommand>** (Reference Implementation)
+   - EXISTS but NOT USED in practice
+   - Domain entities have too much unique business logic for generic abstraction
+   - Each service (ExerciseService, WorkoutTemplateService) implements its interface directly
+   - The base class serves as documentation and a template pattern
+   - Key characteristics of domain services:
+     - Full CRUD with complex business logic
+     - Minimal or no caching
+     - Complex validation rules
+     - Cross-domain operations
+     - Unique workflows per entity
 
 ### Repository Interfaces
 

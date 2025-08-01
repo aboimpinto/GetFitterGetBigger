@@ -35,13 +35,13 @@ public class BodyPartService : PureReferenceService<BodyPart, BodyPartDto>, IBod
     /// <inheritdoc/>
     public async Task<ServiceResult<BodyPartDto>> GetByIdAsync(BodyPartId id) => 
         id.IsEmpty 
-            ? ServiceResult<BodyPartDto>.Failure(CreateEmptyDto(), ServiceError.ValidationFailed(BodyPartErrorMessages.InvalidIdFormat))
+            ? ServiceResult<BodyPartDto>.Failure(BodyPartDto.Empty, ServiceError.ValidationFailed(BodyPartErrorMessages.InvalidIdFormat))
             : await GetByIdAsync(id.ToString());
     
     /// <inheritdoc/>
     public async Task<ServiceResult<BodyPartDto>> GetByValueAsync(string value) => 
         string.IsNullOrWhiteSpace(value)
-            ? ServiceResult<BodyPartDto>.Failure(CreateEmptyDto(), ServiceError.ValidationFailed(BodyPartErrorMessages.ValueCannotBeEmpty))
+            ? ServiceResult<BodyPartDto>.Failure(BodyPartDto.Empty, ServiceError.ValidationFailed(BodyPartErrorMessages.ValueCannotBeEmpty))
             : await GetFromCacheOrLoadAsync(
                 GetValueCacheKey(value),
                 () => LoadByValueAsync(value),
@@ -72,7 +72,7 @@ public class BodyPartService : PureReferenceService<BodyPart, BodyPartDto>, IBod
         entity switch
         {
             { IsEmpty: true } or { IsActive: false } => ServiceResult<BodyPartDto>.Failure(
-                CreateEmptyDto(), 
+                BodyPartDto.Empty, 
                 ServiceError.NotFound(BodyPartErrorMessages.NotFound, identifier)),
             _ => await CacheAndReturnSuccessAsync(cacheKey, MapToDto(entity))
         };
@@ -135,10 +135,6 @@ public class BodyPartService : PureReferenceService<BodyPart, BodyPartDto>, IBod
         };
     }
     
-    protected override BodyPartDto CreateEmptyDto()
-    {
-        return new BodyPartDto();
-    }
     
     protected override ValidationResult ValidateAndParseId(string id)
     {

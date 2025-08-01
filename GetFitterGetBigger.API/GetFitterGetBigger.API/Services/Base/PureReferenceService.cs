@@ -1,5 +1,6 @@
 using System.Linq;
 using System.Reflection;
+using GetFitterGetBigger.API.DTOs.Interfaces;
 using GetFitterGetBigger.API.Models;
 using GetFitterGetBigger.API.Services.Interfaces;
 using GetFitterGetBigger.API.Services.Results;
@@ -17,7 +18,7 @@ namespace GetFitterGetBigger.API.Services.Base;
 /// <typeparam name="TDto">The DTO type returned by the service</typeparam>
 public abstract class PureReferenceService<TEntity, TDto> : EntityServiceBase<TEntity>
     where TEntity : class, IPureReference
-    where TDto : class
+    where TDto : class, IEmptyDto<TDto>, new()
 {
     protected readonly IUnitOfWorkProvider<FitnessDbContext> _unitOfWorkProvider;
     
@@ -92,7 +93,7 @@ public abstract class PureReferenceService<TEntity, TDto> : EntityServiceBase<TE
         if (!parseResult.IsValid)
         {
             var errors = parseResult.Errors.Select(e => ServiceError.ValidationFailed(e)).ToArray();
-            return ServiceResult<TDto>.Failure(CreateEmptyDto(), errors);
+            return ServiceResult<TDto>.Failure(TDto.Empty, errors);
         }
         
         var cacheKey = GetCacheKey(id);
@@ -122,7 +123,7 @@ public abstract class PureReferenceService<TEntity, TDto> : EntityServiceBase<TE
             if (isEmptyProperty != null && isEmptyProperty.GetValue(entity) is bool isEmpty && isEmpty)
             {
                 return ServiceResult<TDto>.Failure(
-                    CreateEmptyDto(),
+                    TDto.Empty,
                     ServiceError.NotFound(typeof(TEntity).Name));
             }
             
@@ -130,7 +131,7 @@ public abstract class PureReferenceService<TEntity, TDto> : EntityServiceBase<TE
             if (!entity.IsActive)
             {
                 return ServiceResult<TDto>.Failure(
-                    CreateEmptyDto(),
+                    TDto.Empty,
                     ServiceError.NotFound(typeof(TEntity).Name));
             }
             
@@ -145,7 +146,7 @@ public abstract class PureReferenceService<TEntity, TDto> : EntityServiceBase<TE
         {
             _logger.LogError(ex, "Error loading {EntityType} with ID: {Id} from database", typeof(TEntity).Name, id);
             return ServiceResult<TDto>.Failure(
-                CreateEmptyDto(),
+                TDto.Empty,
                 ServiceError.InternalError($"Failed to load {typeof(TEntity).Name}"));
         }
     }
@@ -184,12 +185,6 @@ public abstract class PureReferenceService<TEntity, TDto> : EntityServiceBase<TE
     /// <returns>The mapped DTO</returns>
     protected abstract TDto MapToDto(TEntity entity);
     
-    /// <summary>
-    /// Creates an empty DTO instance for failure cases
-    /// Must be implemented by derived classes
-    /// </summary>
-    /// <returns>An empty DTO instance</returns>
-    protected abstract TDto CreateEmptyDto();
     
     /// <summary>
     /// Validates and parses the entity ID

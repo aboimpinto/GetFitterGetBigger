@@ -1,11 +1,12 @@
 using System;
+using GetFitterGetBigger.API.DTOs.Interfaces;
 
 namespace GetFitterGetBigger.API.DTOs;
 
 /// <summary>
 /// Data transfer object for workout category
 /// </summary>
-public record WorkoutCategoryDto
+public record WorkoutCategoryDto : IEmptyDto<WorkoutCategoryDto>
 {
     /// <summary>
     /// The ID of the workout category in the format "workoutcategory-{guid}"
@@ -54,4 +55,24 @@ public record WorkoutCategoryDto
     /// </summary>
     /// <example>true</example>
     public bool IsActive { get; init; }
+    
+    /// <summary>
+    /// Indicates whether this DTO represents an empty/default state
+    /// </summary>
+    public bool IsEmpty => string.IsNullOrEmpty(WorkoutCategoryId) || WorkoutCategoryId == "workoutcategory-00000000-0000-0000-0000-000000000000";
+    
+    /// <summary>
+    /// Gets an empty WorkoutCategoryDto instance for the Empty Object Pattern
+    /// </summary>
+    public static WorkoutCategoryDto Empty => new()
+    {
+        WorkoutCategoryId = string.Empty,
+        Value = string.Empty,
+        Description = null,
+        Icon = string.Empty,
+        Color = string.Empty,
+        PrimaryMuscleGroups = null,
+        DisplayOrder = 0,
+        IsActive = false
+    };
 }

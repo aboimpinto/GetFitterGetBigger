@@ -6,7 +6,9 @@ using GetFitterGetBigger.API.Models.Interfaces;
 using GetFitterGetBigger.API.Models.SpecializedIds;
 using GetFitterGetBigger.API.Repositories.Interfaces;
 using GetFitterGetBigger.API.Services.Base;
+using GetFitterGetBigger.API.Services.Cache;
 using GetFitterGetBigger.API.Services.Commands.MuscleGroup;
+using GetFitterGetBigger.API.Services.Extensions;
 using GetFitterGetBigger.API.Services.Interfaces;
 using GetFitterGetBigger.API.Services.Results;
 using GetFitterGetBigger.API.Services.Validation;
@@ -91,7 +93,7 @@ public class MuscleGroupService : EnhancedReferenceService<MuscleGroup, MuscleGr
     {
         var result = string.IsNullOrWhiteSpace(name) switch
         {
-            true => ServiceResult<MuscleGroupDto>.Failure(CreateEmptyDto(), "Muscle group name cannot be empty"),
+            true => ServiceResult<MuscleGroupDto>.Failure(MuscleGroupDto.Empty, "Muscle group name cannot be empty"),
             false => await ProcessGetByNameAsync(name)
         };
         
@@ -103,13 +105,13 @@ public class MuscleGroupService : EnhancedReferenceService<MuscleGroup, MuscleGr
         var cacheKey = GetCacheKey($"name:{name.ToLowerInvariant()}");
         // Note: The cast is required because base class stores cache service as object to support multiple cache types
         var cacheService = (ICacheService)_cacheService;
-        var cached = await cacheService.GetAsync<MuscleGroupDto>(cacheKey);
         
-        return cached switch
-        {
-            not null => ServiceResult<MuscleGroupDto>.Success(cached),
-            null => await LoadMuscleGroupByNameAsync(name)
-        };
+        return await CacheLoad.For<MuscleGroupDto>(cacheService, cacheKey)
+            .WithLogging(_logger, "MuscleGroup by name")
+            .MatchAsync(
+                onHit: cached => ServiceResult<MuscleGroupDto>.Success(cached),
+                onMiss: async () => await LoadMuscleGroupByNameAsync(name)
+            );
     }
     
     private async Task<ServiceResult<MuscleGroupDto>> LoadMuscleGroupByNameAsync(string name)
@@ -120,7 +122,7 @@ public class MuscleGroupService : EnhancedReferenceService<MuscleGroup, MuscleGr
         
         return entity switch
         {
-            { IsEmpty: true } or { IsActive: false } => ServiceResult<MuscleGroupDto>.Failure(CreateEmptyDto(), ServiceError.NotFound("MuscleGroup")),
+            { IsEmpty: true } or { IsActive: false } => ServiceResult<MuscleGroupDto>.Failure(MuscleGroupDto.Empty, ServiceError.NotFound("MuscleGroup")),
             _ => await MapAndCacheByNameAsync(entity, name)
         };
     }
@@ -236,22 +238,6 @@ public class MuscleGroupService : EnhancedReferenceService<MuscleGroup, MuscleGr
         };
     }
     
-    /// <summary>
-    /// Creates an empty muscle group DTO
-    /// </summary>
-    protected override MuscleGroupDto CreateEmptyDto()
-    {
-        return new MuscleGroupDto
-        {
-            Id = MuscleGroupId.Empty.ToString(),
-            Name = string.Empty,
-            BodyPartId = BodyPartId.Empty.ToString(),
-            BodyPartName = string.Empty,
-            IsActive = false,
-            CreatedAt = DateTime.MinValue,
-            UpdatedAt = null
-        };
-    }
     
     /// <summary>
     /// Validates a create muscle group command

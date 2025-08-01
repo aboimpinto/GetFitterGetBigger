@@ -1,11 +1,12 @@
 using System;
+using GetFitterGetBigger.API.DTOs.Interfaces;
 
 namespace GetFitterGetBigger.API.DTOs;
 
 /// <summary>
 /// Data transfer object for reference data entities
 /// </summary>
-public record ReferenceDataDto
+public record ReferenceDataDto : IEmptyDto<ReferenceDataDto>
 {
     /// <summary>
     /// The ID of the reference data entity in the format "{referencetable}-{guid}"

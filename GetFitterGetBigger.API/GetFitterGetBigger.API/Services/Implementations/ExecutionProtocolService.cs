@@ -34,13 +34,13 @@ public class ExecutionProtocolService : PureReferenceService<ExecutionProtocol, 
     /// <inheritdoc/>
     public async Task<ServiceResult<ExecutionProtocolDto>> GetByIdAsync(ExecutionProtocolId id) => 
         id.IsEmpty 
-            ? ServiceResult<ExecutionProtocolDto>.Failure(CreateEmptyDto(), ServiceError.ValidationFailed(ExecutionProtocolErrorMessages.InvalidIdFormat))
+            ? ServiceResult<ExecutionProtocolDto>.Failure(ExecutionProtocolDto.Empty, ServiceError.ValidationFailed(ExecutionProtocolErrorMessages.InvalidIdFormat))
             : await GetByIdAsync(id.ToString());
     
     /// <inheritdoc/>
     public async Task<ServiceResult<ExecutionProtocolDto>> GetByValueAsync(string value) => 
         string.IsNullOrWhiteSpace(value)
-            ? ServiceResult<ExecutionProtocolDto>.Failure(CreateEmptyDto(), ServiceError.ValidationFailed(ExecutionProtocolErrorMessages.ValueCannotBeEmpty))
+            ? ServiceResult<ExecutionProtocolDto>.Failure(ExecutionProtocolDto.Empty, ServiceError.ValidationFailed(ExecutionProtocolErrorMessages.ValueCannotBeEmpty))
             : await GetFromCacheOrLoadAsync(
                 GetValueCacheKey(value),
                 () => LoadByValueAsync(value),
@@ -49,7 +49,7 @@ public class ExecutionProtocolService : PureReferenceService<ExecutionProtocol, 
     /// <inheritdoc/>
     public async Task<ServiceResult<ExecutionProtocolDto>> GetByCodeAsync(string code) => 
         string.IsNullOrWhiteSpace(code)
-            ? ServiceResult<ExecutionProtocolDto>.Failure(CreateEmptyDto(), ServiceError.ValidationFailed(ExecutionProtocolErrorMessages.CodeCannotBeEmpty))
+            ? ServiceResult<ExecutionProtocolDto>.Failure(ExecutionProtocolDto.Empty, ServiceError.ValidationFailed(ExecutionProtocolErrorMessages.CodeCannotBeEmpty))
             : await GetFromCacheOrLoadAsync(
                 GetCodeCacheKey(code),
                 () => LoadByCodeAsync(code),
@@ -75,7 +75,7 @@ public class ExecutionProtocolService : PureReferenceService<ExecutionProtocol, 
         return entity switch
         {
             { IsEmpty: true } or { IsActive: false } => ServiceResult<ExecutionProtocolDto>.Failure(
-                CreateEmptyDto(), 
+                ExecutionProtocolDto.Empty, 
                 ServiceError.NotFound(ExecutionProtocolErrorMessages.NotFound, identifier)),
             _ => await CacheAndReturnSuccessAsync(cacheKey, MapToDto(entity))
         };
@@ -145,22 +145,6 @@ public class ExecutionProtocolService : PureReferenceService<ExecutionProtocol, 
         };
     }
     
-    protected override ExecutionProtocolDto CreateEmptyDto()
-    {
-        return new ExecutionProtocolDto
-        {
-            ExecutionProtocolId = string.Empty,
-            Value = string.Empty,
-            Description = null,
-            Code = string.Empty,
-            TimeBase = false,
-            RepBase = false,
-            RestPattern = null,
-            IntensityLevel = null,
-            DisplayOrder = 0,
-            IsActive = false
-        };
-    }
     
     protected override ValidationResult ValidateAndParseId(string id)
     {

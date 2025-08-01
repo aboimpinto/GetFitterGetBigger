@@ -1,11 +1,12 @@
 using System;
+using GetFitterGetBigger.API.DTOs.Interfaces;
 
 namespace GetFitterGetBigger.API.DTOs;
 
 /// <summary>
 /// Data transfer object for execution protocol
 /// </summary>
-public record ExecutionProtocolDto
+public record ExecutionProtocolDto : IEmptyDto<ExecutionProtocolDto>
 {
     /// <summary>
     /// The ID of the execution protocol in the format "executionprotocol-{guid}"
@@ -66,4 +67,26 @@ public record ExecutionProtocolDto
     /// </summary>
     /// <example>true</example>
     public bool IsActive { get; init; }
+    
+    /// <summary>
+    /// Indicates whether this DTO represents an empty/default state
+    /// </summary>
+    public bool IsEmpty => string.IsNullOrEmpty(ExecutionProtocolId) || ExecutionProtocolId == "executionprotocol-00000000-0000-0000-0000-000000000000";
+    
+    /// <summary>
+    /// Gets an empty ExecutionProtocolDto instance for the Empty Object Pattern
+    /// </summary>
+    public static ExecutionProtocolDto Empty => new()
+    {
+        ExecutionProtocolId = string.Empty,
+        Value = string.Empty,
+        Description = null,
+        Code = string.Empty,
+        TimeBase = false,
+        RepBase = false,
+        RestPattern = null,
+        IntensityLevel = null,
+        DisplayOrder = 0,
+        IsActive = false
+    };
 }

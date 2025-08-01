@@ -1,3 +1,4 @@
+using GetFitterGetBigger.API.DTOs.Interfaces;
 using GetFitterGetBigger.API.Models;
 using GetFitterGetBigger.API.Services.Interfaces;
 using GetFitterGetBigger.API.Services.Results;
@@ -7,8 +8,20 @@ using Olimpo.EntityFramework.Persistency;
 namespace GetFitterGetBigger.API.Services.Base;
 
 /// <summary>
-/// Base service for domain entities with complex business logic
-/// Provides full CRUD operations with minimal or no caching
+/// ARCHITECTURAL NOTE: This class represents the third tier of our three-tier entity architecture.
+/// 
+/// While PureReferenceService and EnhancedReferenceService work well as generic base classes,
+/// domain entities have such unique and complex business logic that they cannot be effectively
+/// abstracted into a generic pattern. Each domain entity (Exercise, WorkoutTemplate, etc.) 
+/// requires its own custom implementation.
+/// 
+/// This class exists as:
+/// 1. A reference implementation showing the pattern for domain entity services
+/// 2. Documentation of the third tier in our architecture
+/// 3. A template that could be copied (not inherited) when creating new domain services
+/// 
+/// In practice, domain entity services like ExerciseService implement their service
+/// interfaces directly without inheriting from this base class.
 /// </summary>
 /// <typeparam name="TEntity">The domain entity type</typeparam>
 /// <typeparam name="TDto">The DTO type returned by the service</typeparam>
@@ -16,7 +29,7 @@ namespace GetFitterGetBigger.API.Services.Base;
 /// <typeparam name="TUpdateCommand">The command type for updating entities</typeparam>
 public abstract class DomainEntityService<TEntity, TDto, TCreateCommand, TUpdateCommand> : EntityServiceBase<TEntity>
     where TEntity : class, IDomainEntity
-    where TDto : class
+    where TDto : class, IEmptyDto<TDto>, new()
 {
     protected readonly IUnitOfWorkProvider<FitnessDbContext> _unitOfWorkProvider;
     
@@ -77,7 +90,7 @@ public abstract class DomainEntityService<TEntity, TDto, TCreateCommand, TUpdate
             if (!parseResult.IsValid)
             {
                 return ServiceResult<TDto>.Failure(
-                    CreateEmptyDto(),
+                    TDto.Empty,
                     parseResult.Errors);
             }
             
@@ -106,7 +119,7 @@ public abstract class DomainEntityService<TEntity, TDto, TCreateCommand, TUpdate
             if (entity == null || !entity.IsActive)
             {
                 return ServiceResult<TDto>.Failure(
-                    CreateEmptyDto(),
+                    TDto.Empty,
                     $"{typeof(TEntity).Name} not found");
             }
             
@@ -126,7 +139,7 @@ public abstract class DomainEntityService<TEntity, TDto, TCreateCommand, TUpdate
         {
             _logger.LogError(ex, "Error loading {EntityType} with ID: {Id}", typeof(TEntity).Name, id);
             return ServiceResult<TDto>.Failure(
-                CreateEmptyDto(),
+                TDto.Empty,
                 $"Failed to load {typeof(TEntity).Name}");
         }
     }
@@ -150,7 +163,7 @@ public abstract class DomainEntityService<TEntity, TDto, TCreateCommand, TUpdate
             if (!validationResult.IsValid)
             {
                 return ServiceResult<TDto>.Failure(
-                    CreateEmptyDto(),
+                    TDto.Empty,
                     validationResult.Errors);
             }
             
@@ -173,7 +186,7 @@ public abstract class DomainEntityService<TEntity, TDto, TCreateCommand, TUpdate
         {
             _logger.LogError(ex, "Error creating {EntityType}", typeof(TEntity).Name);
             return ServiceResult<TDto>.Failure(
-                CreateEmptyDto(),
+                TDto.Empty,
                 $"Failed to create {typeof(TEntity).Name}");
         }
     }
@@ -193,7 +206,7 @@ public abstract class DomainEntityService<TEntity, TDto, TCreateCommand, TUpdate
             if (!parseResult.IsValid)
             {
                 return ServiceResult<TDto>.Failure(
-                    CreateEmptyDto(),
+                    TDto.Empty,
                     parseResult.Errors);
             }
             
@@ -207,7 +220,7 @@ public abstract class DomainEntityService<TEntity, TDto, TCreateCommand, TUpdate
             if (!validationResult.IsValid)
             {
                 return ServiceResult<TDto>.Failure(
-                    CreateEmptyDto(),
+                    TDto.Empty,
                     validationResult.Errors);
             }
             
@@ -218,7 +231,7 @@ public abstract class DomainEntityService<TEntity, TDto, TCreateCommand, TUpdate
             if (existingEntity == null)
             {
                 return ServiceResult<TDto>.Failure(
-                    CreateEmptyDto(),
+                    TDto.Empty,
                     $"{typeof(TEntity).Name} not found");
             }
             
@@ -238,7 +251,7 @@ public abstract class DomainEntityService<TEntity, TDto, TCreateCommand, TUpdate
         {
             _logger.LogError(ex, "Error updating {EntityType} with ID: {Id}", typeof(TEntity).Name, id);
             return ServiceResult<TDto>.Failure(
-                CreateEmptyDto(),
+                TDto.Empty,
                 $"Failed to update {typeof(TEntity).Name}");
         }
     }
@@ -341,7 +354,6 @@ public abstract class DomainEntityService<TEntity, TDto, TCreateCommand, TUpdate
     protected abstract Task<TEntity?> LoadEntityByIdAsync(IReadOnlyUnitOfWork<FitnessDbContext> unitOfWork, string id);
     protected abstract Task<TEntity?> LoadEntityByIdAsync(IWritableUnitOfWork<FitnessDbContext> unitOfWork, string id);
     protected abstract TDto MapToDto(TEntity entity);
-    protected abstract TDto CreateEmptyDto();
     protected abstract ValidationResult ValidateAndParseId(string id);
     protected abstract Task<ValidationResult> ValidateCreateCommand(TCreateCommand command, IReadOnlyUnitOfWork<FitnessDbContext> unitOfWork);
     protected abstract Task<ValidationResult> ValidateUpdateCommand(string id, TUpdateCommand command, IReadOnlyUnitOfWork<FitnessDbContext> unitOfWork);

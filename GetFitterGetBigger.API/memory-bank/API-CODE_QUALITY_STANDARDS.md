@@ -8,6 +8,17 @@ This document extends the universal `CODE_QUALITY_STANDARDS.md`. Read that first
 
 ---
 
+## 🆕 Latest Pattern Updates (2025)
+
+### **New Fluent APIs for Better Code Quality**
+1. **ServiceValidate** - Fluent validation API replacing manual validation logic
+2. **CacheLoad** - Fluent cache handling API enforcing single exit points
+3. **IEmptyDto<T>** - Mandatory interface for all DTOs to support Empty pattern
+
+These patterns are now **MANDATORY** for all new code and should be adopted when refactoring existing code.
+
+---
+
 ## 🚨 GOLDEN RULES FOR API - NON-NEGOTIABLE
 
 ```
@@ -64,19 +75,115 @@ public async Task<EquipmentDto> CreateAsync(CreateEquipmentCommand command)
     return entity.ToDto();
 }
 
-// ✅ GOOD - ServiceResult pattern
+// ✅ GOOD - ServiceResult pattern with fluent validation
 public async Task<ServiceResult<EquipmentDto>> CreateAsync(CreateEquipmentCommand command)
 {
-    var validationResult = ValidateCommand(command);
-    if (!validationResult.IsValid)
+    var validation = await ServiceValidate.Build()
+        .EnsureNotNull(command, EquipmentErrorMessages.Validation.RequestCannotBeNull)
+        .EnsureNotWhiteSpace(command?.Name, EquipmentErrorMessages.Validation.NameCannotBeEmpty)
+        .EnsureAsync(
+            async () => command == null || !await CheckDuplicateNameAsync(command.Name),
+            ServiceError.AlreadyExists("Equipment", command?.Name ?? string.Empty))
+        .ToValidationResultAsync();
+    
+    if (!validation.IsValid)
         return ServiceResult<EquipmentDto>.Failure(
             EquipmentDto.Empty, 
-            ServiceError.ValidationFailed(validationResult.Errors));
+            validation.ServiceError ?? ServiceError.ValidationFailed(validation.Errors));
     
     var entity = await _repository.CreateAsync(command.ToEntity());
     return ServiceResult<EquipmentDto>.Success(entity.ToDto());
 }
 ```
+
+### 2.1 **Fluent Validation API (ServiceValidate)** 🚨 NEW
+Use the fluent `ServiceValidate` API for all validation logic:
+
+```csharp
+// ❌ BAD - Manual validation with multiple returns
+protected override async Task<ValidationResult> ValidateCreateCommand(CreateEquipmentCommand command)
+{
+    var errors = new List<string>();
+    
+    if (command == null)
+        errors.Add("Command cannot be null");
+    
+    if (string.IsNullOrWhiteSpace(command?.Name))
+        errors.Add("Name cannot be empty");
+        
+    if (command?.Name?.Length > 100)
+        errors.Add("Name too long");
+    
+    if (await CheckDuplicateNameAsync(command.Name))
+        errors.Add("Name already exists");
+    
+    return new ValidationResult(errors);
+}
+
+// ✅ GOOD - Fluent validation with chaining
+protected override async Task<ValidationResult> ValidateCreateCommand(CreateEquipmentCommand command)
+{
+    return await ServiceValidate.Build()
+        .EnsureNotNull(command, EquipmentErrorMessages.Validation.RequestCannotBeNull)
+        .EnsureNotWhiteSpace(command?.Name, EquipmentErrorMessages.Validation.NameCannotBeEmpty)
+        .Ensure(() => command?.Name?.Length <= 100, EquipmentErrorMessages.Validation.NameTooLong)
+        .EnsureAsync(
+            async () => command == null || !await CheckDuplicateNameAsync(command.Name),
+            ServiceError.AlreadyExists("Equipment", command?.Name ?? string.Empty))
+        .ToValidationResultAsync();
+}
+```
+
+**Key Features:**
+- Chainable validation methods
+- Support for both sync and async validations
+- Direct integration with ServiceResult pattern
+- Built-in ServiceError support
+- Match pattern for conditional logic
+
+### 2.2 **Empty Object Pattern with IEmptyDto<T>** 🚨 NEW
+All DTOs must implement `IEmptyDto<T>` interface:
+
+```csharp
+// ❌ BAD - DTO without Empty pattern
+public class EquipmentDto
+{
+    public string Id { get; set; }
+    public string Name { get; set; }
+    // ... other properties
+}
+
+// Service returning null
+return ServiceResult<EquipmentDto>.Failure(null, "Not found");
+
+// ✅ GOOD - DTO implementing IEmptyDto<T>
+public class EquipmentDto : IEmptyDto<EquipmentDto>
+{
+    public string Id { get; set; }
+    public string Name { get; set; }
+    // ... other properties
+    
+    public bool IsEmpty => string.IsNullOrEmpty(Id) || Id == "equipment-00000000-0000-0000-0000-000000000000";
+    
+    public static EquipmentDto Empty => new()
+    {
+        Id = string.Empty,
+        Name = string.Empty,
+        IsActive = false,
+        CreatedAt = DateTime.MinValue,
+        UpdatedAt = null
+    };
+}
+
+// Service using Empty pattern
+return ServiceResult<EquipmentDto>.Failure(EquipmentDto.Empty, ServiceError.NotFound("Equipment"));
+```
+
+**Benefits:**
+- Type-safe empty values
+- No null reference exceptions
+- Consistent empty state across DTOs
+- Better testability
 
 ### 3. **EntityResult Pattern for Entity Creation** 🚨 NEW
 ALL entity creation methods must return `EntityResult<T>` - NEVER throw exceptions:
@@ -669,6 +776,64 @@ Standard cache durations:
 - User-specific data: 5 minutes
 - Transactional data: No caching
 
+### 1.1 **CacheLoad Pattern for Consistent Cache Handling** 🚨 NEW
+Use the fluent `CacheLoad` API for all cache operations:
+
+```csharp
+// ❌ BAD - Manual cache handling with multiple exit points
+public async Task<ServiceResult<EquipmentDto>> GetByNameAsync(string name)
+{
+    var cacheKey = GetCacheKey($"name:{name.ToLowerInvariant()}");
+    var cached = await _cacheService.GetAsync<EquipmentDto>(cacheKey);
+    
+    if (cached != null)
+    {
+        _logger.LogDebug("Cache hit for Equipment by name");
+        return ServiceResult<EquipmentDto>.Success(cached);
+    }
+    
+    var entity = await _repository.GetByNameAsync(name);
+    if (entity.IsEmpty || !entity.IsActive)
+        return ServiceResult<EquipmentDto>.Failure(EquipmentDto.Empty, ServiceError.NotFound("Equipment"));
+    
+    var dto = MapToDto(entity);
+    await _cacheService.SetAsync(cacheKey, dto);
+    
+    return ServiceResult<EquipmentDto>.Success(dto);
+}
+
+// ✅ GOOD - CacheLoad pattern with fluent API
+public async Task<ServiceResult<EquipmentDto>> GetByNameAsync(string name)
+{
+    var cacheKey = GetCacheKey($"name:{name.ToLowerInvariant()}");
+    
+    return await CacheLoad.For<EquipmentDto>(_cacheService, cacheKey)
+        .WithLogging(_logger, "Equipment by name")
+        .MatchAsync(
+            onHit: cached => ServiceResult<EquipmentDto>.Success(cached),
+            onMiss: async () => await LoadEquipmentByNameAsync(name, cacheKey)
+        );
+}
+
+private async Task<ServiceResult<EquipmentDto>> LoadEquipmentByNameAsync(string name, string cacheKey)
+{
+    var entity = await _repository.GetByNameAsync(name);
+    
+    return entity switch
+    {
+        { IsEmpty: true } or { IsActive: false } => ServiceResult<EquipmentDto>.Failure(EquipmentDto.Empty, ServiceError.NotFound("Equipment")),
+        _ => await CreateSuccessResultWithCachingAsync(entity, cacheKey)
+    };
+}
+```
+
+**Benefits:**
+- Single exit point enforcement
+- Consistent cache hit/miss logging
+- Cleaner separation of concerns
+- Better testability
+- Reduced code duplication
+
 ### 2. **Entity Framework Core**
 - Disable lazy loading globally
 - Use `AsNoTracking()` for queries
@@ -712,6 +877,10 @@ var exercises = await context.Exercises
 - [ ] Business logic in services, not controllers/repositories
 - [ ] Proper error codes and messages
 - [ ] Cache invalidation after modifications
+- [ ] 🆕 Use ServiceValidate fluent API for all validation logic
+- [ ] 🆕 Use CacheLoad pattern for all cache operations
+- [ ] 🆕 All DTOs implement IEmptyDto<T> interface
+- [ ] 🆕 Service base classes use TDto.Empty instead of CreateEmptyDto()
 
 ### ✅ Database Access
 - [ ] No N+1 queries

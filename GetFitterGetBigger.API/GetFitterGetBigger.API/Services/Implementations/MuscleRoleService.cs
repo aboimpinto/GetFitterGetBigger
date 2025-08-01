@@ -35,13 +35,13 @@ public class MuscleRoleService : PureReferenceService<MuscleRole, ReferenceDataD
     /// <inheritdoc/>
     public async Task<ServiceResult<ReferenceDataDto>> GetByIdAsync(MuscleRoleId id) => 
         id.IsEmpty 
-            ? ServiceResult<ReferenceDataDto>.Failure(CreateEmptyDto(), ServiceError.ValidationFailed(MuscleRoleErrorMessages.InvalidIdFormat))
+            ? ServiceResult<ReferenceDataDto>.Failure(ReferenceDataDto.Empty, ServiceError.ValidationFailed(MuscleRoleErrorMessages.InvalidIdFormat))
             : await GetByIdAsync(id.ToString());
     
     /// <inheritdoc/>
     public async Task<ServiceResult<ReferenceDataDto>> GetByValueAsync(string value) => 
         string.IsNullOrWhiteSpace(value)
-            ? ServiceResult<ReferenceDataDto>.Failure(CreateEmptyDto(), ServiceError.ValidationFailed(MuscleRoleErrorMessages.ValueCannotBeEmpty))
+            ? ServiceResult<ReferenceDataDto>.Failure(ReferenceDataDto.Empty, ServiceError.ValidationFailed(MuscleRoleErrorMessages.ValueCannotBeEmpty))
             : await GetFromCacheOrLoadAsync(
                 GetValueCacheKey(value),
                 () => LoadByValueAsync(value),
@@ -66,7 +66,7 @@ public class MuscleRoleService : PureReferenceService<MuscleRole, ReferenceDataD
         return entity switch
         {
             { IsEmpty: true } or { IsActive: false } => ServiceResult<ReferenceDataDto>.Failure(
-                CreateEmptyDto(), 
+                ReferenceDataDto.Empty, 
                 ServiceError.NotFound(MuscleRoleErrorMessages.NotFound, identifier)),
             _ => await CacheAndReturnSuccessAsync(cacheKey, MapToDto(entity))
         };
@@ -126,15 +126,6 @@ public class MuscleRoleService : PureReferenceService<MuscleRole, ReferenceDataD
             Id = entity.Id,
             Value = entity.Value,
             Description = entity.Description
-        };
-
-    /// <inheritdoc/>
-    protected override ReferenceDataDto CreateEmptyDto() =>
-        new()
-        {
-            Id = string.Empty,
-            Value = string.Empty,
-            Description = null
         };
 
     protected override string GetCacheKeyPrefix() => "musclerole:";

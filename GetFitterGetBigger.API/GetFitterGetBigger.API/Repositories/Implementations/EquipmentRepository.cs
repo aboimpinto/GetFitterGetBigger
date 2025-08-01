@@ -23,7 +23,7 @@ public class EquipmentRepository : RepositoryBase<FitnessDbContext>, IEquipmentR
             .Where(e => e.IsActive)
             .OrderBy(e => e.Name)
             .ToListAsync();
-    
+
     /// <summary>
     /// Gets equipment by its ID
     /// </summary>
@@ -39,7 +39,7 @@ public class EquipmentRepository : RepositoryBase<FitnessDbContext>, IEquipmentR
 
         return equipment ?? Equipment.Empty;
     }
-    
+
     /// <summary>
     /// Gets equipment by its name (case-insensitive)
     /// </summary>
@@ -51,10 +51,10 @@ public class EquipmentRepository : RepositoryBase<FitnessDbContext>, IEquipmentR
             .AsNoTracking()
             .Where(e => e.IsActive)
             .FirstOrDefaultAsync(e => e.Name.ToLower() == name.ToLower());
-            
+
         return equipment ?? Equipment.Empty;
     }
-    
+
     /// <summary>
     /// Creates new equipment
     /// </summary>
@@ -64,10 +64,10 @@ public class EquipmentRepository : RepositoryBase<FitnessDbContext>, IEquipmentR
     {
         Context.Equipment.Add(entity);
         await Context.SaveChangesAsync();
-        
+
         return entity;
     }
-    
+
     /// <summary>
     /// Updates existing equipment
     /// </summary>
@@ -76,15 +76,15 @@ public class EquipmentRepository : RepositoryBase<FitnessDbContext>, IEquipmentR
     public async Task<Equipment> UpdateAsync(Equipment entity)
     {
         DetachTrackedEntity(entity.EquipmentId);
-        
+
         Context.Equipment.Attach(entity);
         Context.Entry(entity).State = EntityState.Modified;
-        
+
         await Context.SaveChangesAsync();
-        
+
         return entity;
     }
-    
+
     /// <summary>
     /// Deactivates equipment by its ID
     /// </summary>
@@ -94,39 +94,47 @@ public class EquipmentRepository : RepositoryBase<FitnessDbContext>, IEquipmentR
     {
         var equipment = await Context.Equipment
             .FirstOrDefaultAsync(e => e.EquipmentId == id);
-        
+
         if (equipment == null || equipment.IsEmpty)
             return false;
-        
+
         var deactivated = Equipment.Handler.Deactivate(equipment);
-        
+
         // Update the tracked entity with the new values
         Context.Entry(equipment).CurrentValues.SetValues(deactivated);
-        
+
         await Context.SaveChangesAsync();
-        
+
         return true;
     }
-    
+
     /// <summary>
     /// Checks if equipment with the given name exists
     /// </summary>
     /// <param name="name">The name to check</param>
-    /// <param name="excludeId">Optional ID to exclude from the check (for updates)</param>
     /// <returns>True if equipment with the name exists, false otherwise</returns>
-    public async Task<bool> ExistsAsync(string name, EquipmentId? excludeId = null)
+    public async Task<bool> ExistsAsync(string name) =>
+        await ExistsAsync(name, EquipmentId.Empty);
+
+    /// <summary>
+    /// Checks if equipment with the given name exists, excluding a specific equipment ID
+    /// </summary>
+    /// <param name="name">The name to check</param>
+    /// <param name="excludeId">ID to exclude from the check (for updates)</param>
+    /// <returns>True if equipment with the name exists, false otherwise</returns>
+    public async Task<bool> ExistsAsync(string name, EquipmentId excludeId)
     {
         var query = Context.Equipment
             .Where(e => e.IsActive && e.Name.ToLower() == name.ToLower());
-        
-        if (excludeId != null)
+
+        if (!excludeId.IsEmpty)
         {
             query = query.Where(e => e.EquipmentId != excludeId);
         }
-        
+
         return await query.AnyAsync();
     }
-    
+
     /// <summary>
     /// Checks if equipment is in use by any exercises
     /// </summary>
@@ -138,10 +146,10 @@ public class EquipmentRepository : RepositoryBase<FitnessDbContext>, IEquipmentR
         var hasExercises = await Context.ExerciseEquipment
             .Where(ee => ee.EquipmentId == id)
             .AnyAsync();
-        
+
         return hasExercises;
     }
-    
+
     /// <summary>
     /// Detaches any tracked entity with the same ID to prevent tracking conflicts
     /// </summary>
@@ -150,7 +158,7 @@ public class EquipmentRepository : RepositoryBase<FitnessDbContext>, IEquipmentR
     {
         var tracked = Context.ChangeTracker.Entries<Equipment>()
             .FirstOrDefault(e => e.Entity.EquipmentId == equipmentId);
-        
+
         if (tracked != null)
         {
             tracked.State = EntityState.Detached;

@@ -1,12 +1,13 @@
 using System;
 using System.Collections.Generic;
+using GetFitterGetBigger.API.DTOs.Interfaces;
 
 namespace GetFitterGetBigger.API.DTOs;
 
 /// <summary>
 /// Data transfer object for Exercise entity responses
 /// </summary>
-public record ExerciseDto
+public record ExerciseDto : IEmptyDto<ExerciseDto>
 {
     /// <summary>
     /// The ID of the exercise in the format "exercise-{guid}"
@@ -99,7 +100,7 @@ public record ExerciseDto
     public static ExerciseDto Empty => new() 
     { 
         Id = string.Empty,
-        Difficulty = new ReferenceDataDto() // Avoid null reference for required property
+        Difficulty = ReferenceDataDto.Empty // Use the Empty pattern for ReferenceDataDto
     };
 }
 

@@ -34,13 +34,13 @@ public class MovementPatternService : PureReferenceService<MovementPattern, Refe
     /// <inheritdoc/>
     public async Task<ServiceResult<ReferenceDataDto>> GetByIdAsync(MovementPatternId id) => 
         id.IsEmpty 
-            ? ServiceResult<ReferenceDataDto>.Failure(CreateEmptyDto(), ServiceError.ValidationFailed(MovementPatternErrorMessages.InvalidIdFormat))
+            ? ServiceResult<ReferenceDataDto>.Failure(ReferenceDataDto.Empty, ServiceError.ValidationFailed(MovementPatternErrorMessages.InvalidIdFormat))
             : await GetByIdAsync(id.ToString());
     
     /// <inheritdoc/>
     public async Task<ServiceResult<ReferenceDataDto>> GetByValueAsync(string value) => 
         string.IsNullOrWhiteSpace(value)
-            ? ServiceResult<ReferenceDataDto>.Failure(CreateEmptyDto(), ServiceError.ValidationFailed(MovementPatternErrorMessages.ValueCannotBeEmpty))
+            ? ServiceResult<ReferenceDataDto>.Failure(ReferenceDataDto.Empty, ServiceError.ValidationFailed(MovementPatternErrorMessages.ValueCannotBeEmpty))
             : await GetFromCacheOrLoadAsync(
                 GetValueCacheKey(value),
                 () => LoadByValueAsync(value),
@@ -65,7 +65,7 @@ public class MovementPatternService : PureReferenceService<MovementPattern, Refe
         return entity switch
         {
             { IsEmpty: true } or { IsActive: false } => ServiceResult<ReferenceDataDto>.Failure(
-                CreateEmptyDto(), 
+                ReferenceDataDto.Empty, 
                 ServiceError.NotFound(MovementPatternErrorMessages.NotFound, identifier)),
             _ => await CacheAndReturnSuccessAsync(cacheKey, MapToDto(entity))
         };
@@ -122,10 +122,6 @@ public class MovementPatternService : PureReferenceService<MovementPattern, Refe
         };
     }
     
-    protected override ReferenceDataDto CreateEmptyDto()
-    {
-        return new ReferenceDataDto();
-    }
     
     protected override ValidationResult ValidateAndParseId(string id)
     {

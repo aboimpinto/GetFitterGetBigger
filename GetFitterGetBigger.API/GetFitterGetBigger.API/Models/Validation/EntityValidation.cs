@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using GetFitterGetBigger.API.Models.Entities;
 using GetFitterGetBigger.API.Models.Results;
+using GetFitterGetBigger.API.Validation.Base;
 
 namespace GetFitterGetBigger.API.Models.Validation;
 
@@ -11,20 +12,17 @@ namespace GetFitterGetBigger.API.Models.Validation;
 /// Accumulates validation errors and returns either a success with the created entity or a failure with all errors.
 /// </summary>
 /// <typeparam name="T">The type of entity being validated (must implement IEmptyEntity)</typeparam>
-public class EntityValidation<T> where T : class, IEmptyEntity<T>
+public class EntityValidation<T> : ValidationBase<EntityResult<T>> where T : class, IEmptyEntity<T>
 {
-    private readonly List<string> _errors = new();
-
     /// <summary>
     /// Adds a validation rule with a custom predicate.
     /// </summary>
     /// <param name="predicate">The condition that must be true for validation to pass</param>
     /// <param name="errorMessage">The error message if validation fails</param>
     /// <returns>The current validation instance for chaining</returns>
-    public EntityValidation<T> Ensure(Func<bool> predicate, string errorMessage)
+    public new EntityValidation<T> Ensure(Func<bool> predicate, string errorMessage)
     {
-        if (!predicate())
-            _errors.Add(errorMessage);
+        base.Ensure(predicate, errorMessage);
         return this;
     }
 
@@ -34,9 +32,10 @@ public class EntityValidation<T> where T : class, IEmptyEntity<T>
     /// <param name="value">The string value to validate</param>
     /// <param name="errorMessage">The error message if validation fails</param>
     /// <returns>The current validation instance for chaining</returns>
-    public EntityValidation<T> EnsureNotEmpty(string value, string errorMessage)
+    public new EntityValidation<T> EnsureNotEmpty(string? value, string errorMessage)
     {
-        return Ensure(() => !string.IsNullOrEmpty(value), errorMessage);
+        base.EnsureNotEmpty(value, errorMessage);
+        return this;
     }
 
     /// <summary>
@@ -45,9 +44,10 @@ public class EntityValidation<T> where T : class, IEmptyEntity<T>
     /// <param name="value">The string value to validate</param>
     /// <param name="errorMessage">The error message if validation fails</param>
     /// <returns>The current validation instance for chaining</returns>
-    public EntityValidation<T> EnsureNotWhiteSpace(string value, string errorMessage)
+    public new EntityValidation<T> EnsureNotWhiteSpace(string? value, string errorMessage)
     {
-        return Ensure(() => !string.IsNullOrWhiteSpace(value), errorMessage);
+        base.EnsureNotWhiteSpace(value, errorMessage);
+        return this;
     }
 
     /// <summary>
@@ -57,9 +57,10 @@ public class EntityValidation<T> where T : class, IEmptyEntity<T>
     /// <param name="min">The minimum allowed value (inclusive)</param>
     /// <param name="errorMessage">The error message if validation fails</param>
     /// <returns>The current validation instance for chaining</returns>
-    public EntityValidation<T> EnsureMinValue(int value, int min, string errorMessage)
+    public new EntityValidation<T> EnsureMinValue(int value, int min, string errorMessage)
     {
-        return Ensure(() => value >= min, errorMessage);
+        base.EnsureMinValue(value, min, errorMessage);
+        return this;
     }
 
     /// <summary>
@@ -69,9 +70,10 @@ public class EntityValidation<T> where T : class, IEmptyEntity<T>
     /// <param name="max">The maximum allowed value (inclusive)</param>
     /// <param name="errorMessage">The error message if validation fails</param>
     /// <returns>The current validation instance for chaining</returns>
-    public EntityValidation<T> EnsureMaxValue(int value, int max, string errorMessage)
+    public new EntityValidation<T> EnsureMaxValue(int value, int max, string errorMessage)
     {
-        return Ensure(() => value <= max, errorMessage);
+        base.EnsureMaxValue(value, max, errorMessage);
+        return this;
     }
 
     /// <summary>
@@ -82,9 +84,10 @@ public class EntityValidation<T> where T : class, IEmptyEntity<T>
     /// <param name="max">The maximum allowed value (inclusive)</param>
     /// <param name="errorMessage">The error message if validation fails</param>
     /// <returns>The current validation instance for chaining</returns>
-    public EntityValidation<T> EnsureRange(int value, int min, int max, string errorMessage)
+    public new EntityValidation<T> EnsureRange(int value, int min, int max, string errorMessage)
     {
-        return Ensure(() => value >= min && value <= max, errorMessage);
+        base.EnsureRange(value, min, max, errorMessage);
+        return this;
     }
 
     /// <summary>
@@ -94,9 +97,10 @@ public class EntityValidation<T> where T : class, IEmptyEntity<T>
     /// <param name="maxLength">The maximum allowed length</param>
     /// <param name="errorMessage">The error message if validation fails</param>
     /// <returns>The current validation instance for chaining</returns>
-    public EntityValidation<T> EnsureMaxLength(string value, int maxLength, string errorMessage)
+    public new EntityValidation<T> EnsureMaxLength(string? value, int maxLength, string errorMessage)
     {
-        return Ensure(() => value?.Length <= maxLength, errorMessage);
+        base.EnsureMaxLength(value, maxLength, errorMessage);
+        return this;
     }
 
     /// <summary>
@@ -106,9 +110,24 @@ public class EntityValidation<T> where T : class, IEmptyEntity<T>
     /// <param name="minLength">The minimum required length</param>
     /// <param name="errorMessage">The error message if validation fails</param>
     /// <returns>The current validation instance for chaining</returns>
-    public EntityValidation<T> EnsureMinLength(string value, int minLength, string errorMessage)
+    public new EntityValidation<T> EnsureMinLength(string? value, int minLength, string errorMessage)
     {
-        return Ensure(() => value?.Length >= minLength, errorMessage);
+        base.EnsureMinLength(value, minLength, errorMessage);
+        return this;
+    }
+
+    /// <summary>
+    /// Validates that a string value has a specific length.
+    /// </summary>
+    /// <param name="value">The string value to validate</param>
+    /// <param name="minLength">The minimum allowed length (inclusive)</param>
+    /// <param name="maxLength">The maximum allowed length (inclusive)</param>
+    /// <param name="errorMessage">The error message if validation fails</param>
+    /// <returns>The current validation instance for chaining</returns>
+    public new EntityValidation<T> EnsureLength(string? value, int minLength, int maxLength, string errorMessage)
+    {
+        base.EnsureLength(value, minLength, maxLength, errorMessage);
+        return this;
     }
 
     /// <summary>
@@ -120,8 +139,43 @@ public class EntityValidation<T> where T : class, IEmptyEntity<T>
     /// <returns>An EntityResult containing either the created entity or validation errors</returns>
     public EntityResult<T> OnSuccess(Func<T> factory)
     {
-        return _errors.Any() 
-            ? EntityResult<T>.Failure(_errors.ToArray())
-            : EntityResult<T>.Success(factory());
+        return HasErrors 
+            ? CreateFailureResult(ValidationErrors)
+            : CreateSuccessResult(factory);
+    }
+
+    /// <summary>
+    /// Returns a failure result without executing any factory function.
+    /// Useful when you want to fail fast after validation.
+    /// </summary>
+    /// <returns>An EntityResult containing the validation errors</returns>
+    public EntityResult<T> OnFailure()
+    {
+        return CreateFailureResult(ValidationErrors);
+    }
+
+    /// <summary>
+    /// Creates a successful result with the entity created by the factory.
+    /// </summary>
+    protected override EntityResult<T> CreateSuccessResult()
+    {
+        throw new NotSupportedException("Use OnSuccess(factory) method instead.");
+    }
+
+    /// <summary>
+    /// Creates a successful result with the entity created by the factory.
+    /// </summary>
+    private EntityResult<T> CreateSuccessResult(Func<T> factory)
+    {
+        return EntityResult<T>.Success(factory());
+    }
+
+    /// <summary>
+    /// Creates a failure result with the accumulated validation errors.
+    /// </summary>
+    /// <param name="errors">The validation errors</param>
+    protected override EntityResult<T> CreateFailureResult(IReadOnlyList<string> errors)
+    {
+        return EntityResult<T>.Failure(errors.ToArray());
     }
 }

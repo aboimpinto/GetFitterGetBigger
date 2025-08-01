@@ -28,13 +28,13 @@ public class WorkoutCategoryService : PureReferenceService<WorkoutCategory, Work
     /// <inheritdoc/>
     public async Task<ServiceResult<WorkoutCategoryDto>> GetByIdAsync(WorkoutCategoryId id) => 
         id.IsEmpty 
-            ? ServiceResult<WorkoutCategoryDto>.Failure(CreateEmptyDto(), ServiceError.ValidationFailed(WorkoutCategoryErrorMessages.InvalidIdFormat))
+            ? ServiceResult<WorkoutCategoryDto>.Failure(WorkoutCategoryDto.Empty, ServiceError.ValidationFailed(WorkoutCategoryErrorMessages.InvalidIdFormat))
             : await GetByIdAsync(id.ToString());
     
     /// <inheritdoc/>
     public async Task<ServiceResult<WorkoutCategoryDto>> GetByValueAsync(string value) => 
         string.IsNullOrWhiteSpace(value)
-            ? ServiceResult<WorkoutCategoryDto>.Failure(CreateEmptyDto(), ServiceError.ValidationFailed(WorkoutCategoryErrorMessages.ValueCannotBeEmpty))
+            ? ServiceResult<WorkoutCategoryDto>.Failure(WorkoutCategoryDto.Empty, ServiceError.ValidationFailed(WorkoutCategoryErrorMessages.ValueCannotBeEmpty))
             : await GetFromCacheOrLoadAsync(
                 GetValueCacheKey(value),
                 () => LoadByValueAsync(value),
@@ -59,7 +59,7 @@ public class WorkoutCategoryService : PureReferenceService<WorkoutCategory, Work
         return entity switch
         {
             { IsEmpty: true } or { IsActive: false } => ServiceResult<WorkoutCategoryDto>.Failure(
-                CreateEmptyDto(), 
+                WorkoutCategoryDto.Empty, 
                 ServiceError.NotFound(WorkoutCategoryErrorMessages.NotFound, identifier)),
             _ => await CacheAndReturnSuccessAsync(cacheKey, MapToDto(entity))
         };
@@ -119,21 +119,6 @@ public class WorkoutCategoryService : PureReferenceService<WorkoutCategory, Work
             PrimaryMuscleGroups = entity.PrimaryMuscleGroups,
             DisplayOrder = entity.DisplayOrder,
             IsActive = entity.IsActive
-        };
-    }
-    
-    protected override WorkoutCategoryDto CreateEmptyDto()
-    {
-        return new WorkoutCategoryDto
-        {
-            WorkoutCategoryId = string.Empty,
-            Value = string.Empty,
-            Description = null,
-            Icon = string.Empty,
-            Color = "#000000",
-            PrimaryMuscleGroups = null,
-            DisplayOrder = 0,
-            IsActive = false
         };
     }
     

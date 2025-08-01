@@ -1,6 +1,9 @@
 using System.Reflection;
+using GetFitterGetBigger.API.DTOs.Interfaces;
 using GetFitterGetBigger.API.Models;
 using GetFitterGetBigger.API.Models.Interfaces;
+using GetFitterGetBigger.API.Services.Cache;
+using GetFitterGetBigger.API.Services.Extensions;
 using GetFitterGetBigger.API.Services.Interfaces;
 using GetFitterGetBigger.API.Services.Results;
 using Microsoft.Extensions.Logging;
@@ -18,7 +21,7 @@ namespace GetFitterGetBigger.API.Services.Base;
 /// <typeparam name="TUpdateCommand">The command type for updating entities</typeparam>
 public abstract class EnhancedReferenceService<TEntity, TDto, TCreateCommand, TUpdateCommand> : EntityServiceBase<TEntity>
     where TEntity : class, IEnhancedReference
-    where TDto : class
+    where TDto : class, IEmptyDto<TDto>, new()
 {
     protected readonly IUnitOfWorkProvider<FitnessDbContext> _unitOfWorkProvider;
     
@@ -45,14 +48,17 @@ public abstract class EnhancedReferenceService<TEntity, TDto, TCreateCommand, TU
     {
         var cacheKey = GetAllCacheKey();
         var cacheService = (ICacheService)_cacheService;
-        var cached = await cacheService.GetAsync<IEnumerable<TDto>>(cacheKey);
         
-        if (cached != null)
-        {
-            _logger.LogDebug("Cache hit for {EntityType}:all", typeof(TEntity).Name);
-            return ServiceResult<IEnumerable<TDto>>.Success(cached);
-        }
-        
+        return await CacheLoad.For<IEnumerable<TDto>>(cacheService, cacheKey)
+            .WithLogging(_logger, $"{typeof(TEntity).Name}:all")
+            .MatchAsync(
+                onHit: cached => ServiceResult<IEnumerable<TDto>>.Success(cached),
+                onMiss: async () => await LoadAllFromDatabaseAsync(cacheKey)
+            );
+    }
+    
+    private async Task<ServiceResult<IEnumerable<TDto>>> LoadAllFromDatabaseAsync(string cacheKey)
+    {
         // Load from database
         var entities = await LoadAllEntitiesAsync();
         
@@ -60,6 +66,7 @@ public abstract class EnhancedReferenceService<TEntity, TDto, TCreateCommand, TU
         var dtos = entities.Select(MapToDto).ToList();
         
         // Cache with automatic 24-hour expiration for enhanced reference data
+        var cacheService = (ICacheService)_cacheService;
         await cacheService.SetAsync(cacheKey, dtos);
         
         _logger.LogInformation("Loaded and cached {Count} {EntityType} entities", dtos.Count, typeof(TEntity).Name);
@@ -75,7 +82,7 @@ public abstract class EnhancedReferenceService<TEntity, TDto, TCreateCommand, TU
     {
         return id.IsEmpty switch
         {
-            true => ServiceResult<TDto>.Failure(CreateEmptyDto(), ServiceError.ValidationFailed("Invalid ID provided")),
+            true => ServiceResult<TDto>.Failure(TDto.Empty, ServiceError.ValidationFailed("Invalid ID provided")),
             false => await LoadEntityAsync(id)
         };
     }
@@ -85,34 +92,15 @@ public abstract class EnhancedReferenceService<TEntity, TDto, TCreateCommand, TU
     /// </summary>
     protected virtual async Task<ServiceResult<TDto>> LoadEntityAsync(ISpecializedIdBase id)
     {
-        var cacheResult = await TryLoadFromCacheAsync(id);
-        return cacheResult.IsHit switch
-        {
-            true => ServiceResult<TDto>.Success(cacheResult.Value),
-            false => await LoadEntityFromDatabaseAsync(id)
-        };
-    }
-    
-    /// <summary>
-    /// Attempts to load entity from cache
-    /// </summary>
-    private async Task<CacheResult<TDto>> TryLoadFromCacheAsync(ISpecializedIdBase id)
-    {
         var cacheKey = GetCacheKey(id.ToString());
         var cacheService = (ICacheService)_cacheService;
-        var cachedDto = await cacheService.GetAsync<TDto>(cacheKey);
         
-        return cachedDto switch
-        {
-            not null => LogCacheHitAndReturn(cachedDto, id),
-            null => CacheResult<TDto>.Miss()
-        };
-    }
-    
-    private CacheResult<TDto> LogCacheHitAndReturn(TDto cachedDto, ISpecializedIdBase id)
-    {
-        _logger.LogDebug("Cache hit for {EntityType}:{Id}", typeof(TEntity).Name, id.ToString());
-        return CacheResult<TDto>.Hit(cachedDto);
+        return await CacheLoad.For<TDto>(cacheService, cacheKey)
+            .WithLogging(_logger, typeof(TEntity).Name)
+            .MatchAsync(
+                onHit: cached => ServiceResult<TDto>.Success(cached),
+                onMiss: async () => await LoadEntityFromDatabaseAsync(id)
+            );
     }
     
     /// <summary>
@@ -124,7 +112,7 @@ public abstract class EnhancedReferenceService<TEntity, TDto, TCreateCommand, TU
         
         return IsEntityValidForReturn(entity) switch
         {
-            false => ServiceResult<TDto>.Failure(CreateEmptyDto(), ServiceError.NotFound(typeof(TEntity).Name)),
+            false => ServiceResult<TDto>.Failure(TDto.Empty, ServiceError.NotFound(typeof(TEntity).Name)),
             true => await MapAndCacheEntityAsync(entity, id)
         };
     }
@@ -170,9 +158,9 @@ public abstract class EnhancedReferenceService<TEntity, TDto, TCreateCommand, TU
         return validationResult switch
         {
             { IsValid: false, ServiceError: not null } => 
-                ServiceResult<TDto>.Failure(CreateEmptyDto(), validationResult.ServiceError),
+                ServiceResult<TDto>.Failure(TDto.Empty, validationResult.ServiceError),
             { IsValid: false } => 
-                ServiceResult<TDto>.Failure(CreateEmptyDto(), validationResult.Errors),
+                ServiceResult<TDto>.Failure(TDto.Empty, validationResult.Errors),
             { IsValid: true } => 
                 await CreateEntityAndReturnDtoAsync(command)
         };
@@ -224,9 +212,9 @@ public abstract class EnhancedReferenceService<TEntity, TDto, TCreateCommand, TU
         var result = validationResult switch
         {
             { IsValid: false, ServiceError: not null } => 
-                ServiceResult<TDto>.Failure(CreateEmptyDto(), validationResult.ServiceError),
+                ServiceResult<TDto>.Failure(TDto.Empty, validationResult.ServiceError),
             { IsValid: false } => 
-                ServiceResult<TDto>.Failure(CreateEmptyDto(), validationResult.Errors),
+                ServiceResult<TDto>.Failure(TDto.Empty, validationResult.Errors),
             { IsValid: true } => 
                 await UpdateEntityAndReturnDtoAsync(id, command)
         };
@@ -330,10 +318,6 @@ public abstract class EnhancedReferenceService<TEntity, TDto, TCreateCommand, TU
     /// </summary>
     protected abstract TDto MapToDto(TEntity entity);
     
-    /// <summary>
-    /// Creates an empty DTO instance
-    /// </summary>
-    protected abstract TDto CreateEmptyDto();
     
     /// <summary>
     /// Validates the create command
