@@ -19,6 +19,18 @@ public static class CacheLoad
     {
         return new CacheLoadBuilder<T>(cacheService, cacheKey);
     }
+
+    /// <summary>
+    /// Starts a cache load operation for the specified cache key using eternal cache service
+    /// </summary>
+    /// <typeparam name="T">The type of data to load from cache</typeparam>
+    /// <param name="cacheService">The eternal cache service to use</param>
+    /// <param name="cacheKey">The cache key to load</param>
+    /// <returns>A cache load builder for chaining operations</returns>
+    public static EternalCacheLoadBuilder<T> For<T>(IEternalCacheService cacheService, string cacheKey) where T : class
+    {
+        return new EternalCacheLoadBuilder<T>(cacheService, cacheKey);
+    }
 }
 
 /// <summary>
@@ -107,6 +119,148 @@ public class CacheLoadBuilderWithLogging<T> where T : class
     private readonly Task<CacheResult<T>> _cacheResultTask;
 
     internal CacheLoadBuilderWithLogging(
+        Task<CacheResult<T>> cacheResultTask,
+        string cacheKey, 
+        Microsoft.Extensions.Logging.ILogger logger, 
+        string entityType)
+    {
+        _cacheResultTask = cacheResultTask;
+        _cacheKey = cacheKey;
+        _logger = logger;
+        _entityType = entityType;
+    }
+
+    /// <summary>
+    /// Executes different logic based on cache hit or miss with automatic logging
+    /// </summary>
+    /// <typeparam name="TResult">The type of result to return</typeparam>
+    /// <param name="onHit">Function to execute when cache hit occurs</param>
+    /// <param name="onMiss">Function to execute when cache miss occurs</param>
+    /// <returns>The result from either the hit or miss handler</returns>
+    public async Task<TResult> MatchAsync<TResult>(
+        Func<T, TResult> onHit,
+        Func<Task<TResult>> onMiss)
+    {
+        var cacheResult = await _cacheResultTask;
+        
+        if (cacheResult.IsHit)
+        {
+            _logger.LogDebug("Cache hit for {EntityType}: {CacheKey}", _entityType, _cacheKey);
+            return onHit(cacheResult.Value);
+        }
+        else
+        {
+            _logger.LogDebug("Cache miss for {EntityType}: {CacheKey}", _entityType, _cacheKey);
+            return await onMiss();
+        }
+    }
+
+    /// <summary>
+    /// Executes different async logic based on cache hit or miss with automatic logging
+    /// </summary>
+    /// <typeparam name="TResult">The type of result to return</typeparam>
+    /// <param name="onHit">Async function to execute when cache hit occurs</param>
+    /// <param name="onMiss">Async function to execute when cache miss occurs</param>
+    /// <returns>The result from either the hit or miss handler</returns>
+    public async Task<TResult> MatchAsync<TResult>(
+        Func<T, Task<TResult>> onHit,
+        Func<Task<TResult>> onMiss)
+    {
+        var cacheResult = await _cacheResultTask;
+        
+        if (cacheResult.IsHit)
+        {
+            _logger.LogDebug("Cache hit for {EntityType}: {CacheKey}", _entityType, _cacheKey);
+            return await onHit(cacheResult.Value);
+        }
+        else
+        {
+            _logger.LogDebug("Cache miss for {EntityType}: {CacheKey}", _entityType, _cacheKey);
+            return await onMiss();
+        }
+    }
+}
+
+/// <summary>
+/// Builder for fluent cache load operations with IEternalCacheService
+/// </summary>
+/// <typeparam name="T">The type of data being loaded from cache</typeparam>
+public class EternalCacheLoadBuilder<T> where T : class
+{
+    private readonly IEternalCacheService _cacheService;
+    private readonly string _cacheKey;
+    private readonly Task<CacheResult<T>> _cacheResultTask;
+
+    internal EternalCacheLoadBuilder(IEternalCacheService cacheService, string cacheKey)
+    {
+        _cacheService = cacheService;
+        _cacheKey = cacheKey;
+        _cacheResultTask = _cacheService.GetAsync<T>(cacheKey);
+    }
+
+    /// <summary>
+    /// Executes different logic based on cache hit or miss
+    /// </summary>
+    /// <typeparam name="TResult">The type of result to return</typeparam>
+    /// <param name="onHit">Function to execute when cache hit occurs</param>
+    /// <param name="onMiss">Function to execute when cache miss occurs</param>
+    /// <returns>The result from either the hit or miss handler</returns>
+    public async Task<TResult> MatchAsync<TResult>(
+        Func<T, TResult> onHit,
+        Func<Task<TResult>> onMiss)
+    {
+        var cacheResult = await _cacheResultTask;
+        return cacheResult.IsHit 
+            ? onHit(cacheResult.Value) 
+            : await onMiss();
+    }
+
+    /// <summary>
+    /// Executes different async logic based on cache hit or miss
+    /// </summary>
+    /// <typeparam name="TResult">The type of result to return</typeparam>
+    /// <param name="onHit">Async function to execute when cache hit occurs</param>
+    /// <param name="onMiss">Async function to execute when cache miss occurs</param>
+    /// <returns>The result from either the hit or miss handler</returns>
+    public async Task<TResult> MatchAsync<TResult>(
+        Func<T, Task<TResult>> onHit,
+        Func<Task<TResult>> onMiss)
+    {
+        var cacheResult = await _cacheResultTask;
+        return cacheResult.IsHit 
+            ? await onHit(cacheResult.Value) 
+            : await onMiss();
+    }
+
+    /// <summary>
+    /// Provides access to the cache key for operations that need it
+    /// </summary>
+    public string CacheKey => _cacheKey;
+    
+    /// <summary>
+    /// Provides a builder with logging support
+    /// </summary>
+    /// <param name="logger">The logger to use for cache hit/miss logging</param>
+    /// <param name="entityType">The type name for logging purposes</param>
+    /// <returns>A cache load builder with logging</returns>
+    public EternalCacheLoadBuilderWithLogging<T> WithLogging(Microsoft.Extensions.Logging.ILogger logger, string entityType)
+    {
+        return new EternalCacheLoadBuilderWithLogging<T>(_cacheResultTask, _cacheKey, logger, entityType);
+    }
+}
+
+/// <summary>
+/// Builder for fluent cache load operations with automatic logging for IEternalCacheService
+/// </summary>
+/// <typeparam name="T">The type of data being loaded from cache</typeparam>
+public class EternalCacheLoadBuilderWithLogging<T> where T : class
+{
+    private readonly string _cacheKey;
+    private readonly Microsoft.Extensions.Logging.ILogger _logger;
+    private readonly string _entityType;
+    private readonly Task<CacheResult<T>> _cacheResultTask;
+
+    internal EternalCacheLoadBuilderWithLogging(
         Task<CacheResult<T>> cacheResultTask,
         string cacheKey, 
         Microsoft.Extensions.Logging.ILogger logger, 

@@ -5,6 +5,7 @@ using GetFitterGetBigger.API.Models.Entities;
 using GetFitterGetBigger.API.Models.SpecializedIds;
 using GetFitterGetBigger.API.Repositories.Interfaces;
 using GetFitterGetBigger.API.Services.Base;
+using GetFitterGetBigger.API.Services.Cache;
 using GetFitterGetBigger.API.Services.Interfaces;
 using GetFitterGetBigger.API.Services.Results;
 using Microsoft.Extensions.Logging;
@@ -64,14 +65,22 @@ public class ExecutionProtocolService : PureReferenceService<ExecutionProtocol, 
         string identifier)
     {
         var cacheService = (IEternalCacheService)_cacheService;
-        var cacheResult = await cacheService.GetAsync<ExecutionProtocolDto>(cacheKey);
-        if (cacheResult.IsHit)
-        {
-            _logger.LogDebug("Cache hit for {CacheKey}", cacheKey);
-            return ServiceResult<ExecutionProtocolDto>.Success(cacheResult.Value);
-        }
         
+        return await CacheLoad.For<ExecutionProtocolDto>(cacheService, cacheKey)
+            .WithLogging(_logger, "ExecutionProtocol")
+            .MatchAsync(
+                onHit: cached => ServiceResult<ExecutionProtocolDto>.Success(cached),
+                onMiss: async () => await LoadAndProcessEntity(loadFunc, cacheKey, identifier)
+            );
+    }
+    
+    private async Task<ServiceResult<ExecutionProtocolDto>> LoadAndProcessEntity(
+        Func<Task<ExecutionProtocol>> loadFunc,
+        string cacheKey,
+        string identifier)
+    {
         var entity = await loadFunc();
+        
         return entity switch
         {
             { IsEmpty: true } or { IsActive: false } => ServiceResult<ExecutionProtocolDto>.Failure(

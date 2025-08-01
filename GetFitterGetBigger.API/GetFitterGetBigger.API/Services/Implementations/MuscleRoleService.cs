@@ -6,6 +6,7 @@ using GetFitterGetBigger.API.Models.SpecializedIds;
 using GetFitterGetBigger.API.Models.Validation;
 using GetFitterGetBigger.API.Repositories.Interfaces;
 using GetFitterGetBigger.API.Services.Base;
+using GetFitterGetBigger.API.Services.Cache;
 using GetFitterGetBigger.API.Services.Interfaces;
 using GetFitterGetBigger.API.Services.Results;
 using Microsoft.Extensions.Logging;
@@ -55,14 +56,22 @@ public class MuscleRoleService : PureReferenceService<MuscleRole, ReferenceDataD
         string identifier)
     {
         var cacheService = (IEternalCacheService)_cacheService;
-        var cacheResult = await cacheService.GetAsync<ReferenceDataDto>(cacheKey);
-        if (cacheResult.IsHit)
-        {
-            _logger.LogDebug("Cache hit for {CacheKey}", cacheKey);
-            return ServiceResult<ReferenceDataDto>.Success(cacheResult.Value);
-        }
         
+        return await CacheLoad.For<ReferenceDataDto>(cacheService, cacheKey)
+            .WithLogging(_logger, "MuscleRole")
+            .MatchAsync(
+                onHit: cached => ServiceResult<ReferenceDataDto>.Success(cached),
+                onMiss: async () => await LoadAndProcessEntity(loadFunc, cacheKey, identifier)
+            );
+    }
+    
+    private async Task<ServiceResult<ReferenceDataDto>> LoadAndProcessEntity(
+        Func<Task<MuscleRole>> loadFunc,
+        string cacheKey,
+        string identifier)
+    {
         var entity = await loadFunc();
+        
         return entity switch
         {
             { IsEmpty: true } or { IsActive: false } => ServiceResult<ReferenceDataDto>.Failure(

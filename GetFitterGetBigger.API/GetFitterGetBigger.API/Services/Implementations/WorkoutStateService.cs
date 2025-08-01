@@ -5,6 +5,7 @@ using GetFitterGetBigger.API.Models.Entities;
 using GetFitterGetBigger.API.Models.SpecializedIds;
 using GetFitterGetBigger.API.Repositories.Interfaces;
 using GetFitterGetBigger.API.Services.Base;
+using GetFitterGetBigger.API.Services.Cache;
 using GetFitterGetBigger.API.Services.Interfaces;
 using GetFitterGetBigger.API.Services.Results;
 using Microsoft.Extensions.Logging;
@@ -48,27 +49,30 @@ public class WorkoutStateService : PureReferenceService<WorkoutState, WorkoutSta
         string identifier)
     {
         var cacheService = (IEternalCacheService)_cacheService;
-        var cacheResult = await cacheService.GetAsync<WorkoutStateDto>(cacheKey);
         
-        if (cacheResult.IsHit)
-            _logger.LogDebug("Cache hit for {CacheKey}", cacheKey);
-        
-        var result = cacheResult.IsHit
-            ? ServiceResult<WorkoutStateDto>.Success(cacheResult.Value)
-            : await ProcessUncachedEntity(await loadFunc(), cacheKey, identifier);
-            
-        return result;
+        return await CacheLoad.For<WorkoutStateDto>(cacheService, cacheKey)
+            .WithLogging(_logger, "WorkoutState")
+            .MatchAsync(
+                onHit: cached => ServiceResult<WorkoutStateDto>.Success(cached),
+                onMiss: async () => await LoadAndProcessEntity(loadFunc, cacheKey, identifier)
+            );
     }
     
-    private async Task<ServiceResult<WorkoutStateDto>> ProcessUncachedEntity(
-        WorkoutState entity, string cacheKey, string identifier) =>
-        entity switch
+    private async Task<ServiceResult<WorkoutStateDto>> LoadAndProcessEntity(
+        Func<Task<WorkoutState>> loadFunc,
+        string cacheKey,
+        string identifier)
+    {
+        var entity = await loadFunc();
+        
+        return entity switch
         {
             { IsEmpty: true } or { IsActive: false } => ServiceResult<WorkoutStateDto>.Failure(
                 WorkoutStateDto.Empty, 
                 ServiceError.NotFound(WorkoutStateErrorMessages.NotFound, identifier)),
             _ => await CacheAndReturnSuccessAsync(cacheKey, MapToDto(entity))
         };
+    }
     
     private async Task<ServiceResult<WorkoutStateDto>> CacheAndReturnSuccessAsync(string cacheKey, WorkoutStateDto dto)
     {

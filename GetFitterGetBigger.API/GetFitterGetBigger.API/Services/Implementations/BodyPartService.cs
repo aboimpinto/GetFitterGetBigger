@@ -5,6 +5,7 @@ using GetFitterGetBigger.API.Models.Entities;
 using GetFitterGetBigger.API.Models.SpecializedIds;
 using GetFitterGetBigger.API.Repositories.Interfaces;
 using GetFitterGetBigger.API.Services.Base;
+using GetFitterGetBigger.API.Services.Cache;
 using GetFitterGetBigger.API.Services.Interfaces;
 using GetFitterGetBigger.API.Services.Results;
 using Microsoft.Extensions.Logging;
@@ -55,27 +56,30 @@ public class BodyPartService : PureReferenceService<BodyPart, BodyPartDto>, IBod
         string identifier)
     {
         var cacheService = (IEternalCacheService)_cacheService;
-        var cacheResult = await cacheService.GetAsync<BodyPartDto>(cacheKey);
         
-        if (cacheResult.IsHit)
-            _logger.LogDebug("Cache hit for {CacheKey}", cacheKey);
-        
-        var result = cacheResult.IsHit
-            ? ServiceResult<BodyPartDto>.Success(cacheResult.Value)
-            : await ProcessUncachedEntity(await loadFunc(), cacheKey, identifier);
-            
-        return result;
+        return await CacheLoad.For<BodyPartDto>(cacheService, cacheKey)
+            .WithLogging(_logger, "BodyPart")
+            .MatchAsync(
+                onHit: cached => ServiceResult<BodyPartDto>.Success(cached),
+                onMiss: async () => await LoadAndProcessEntity(loadFunc, cacheKey, identifier)
+            );
     }
     
-    private async Task<ServiceResult<BodyPartDto>> ProcessUncachedEntity(
-        BodyPart entity, string cacheKey, string identifier) =>
-        entity switch
+    private async Task<ServiceResult<BodyPartDto>> LoadAndProcessEntity(
+        Func<Task<BodyPart>> loadFunc,
+        string cacheKey,
+        string identifier)
+    {
+        var entity = await loadFunc();
+        
+        return entity switch
         {
             { IsEmpty: true } or { IsActive: false } => ServiceResult<BodyPartDto>.Failure(
                 BodyPartDto.Empty, 
                 ServiceError.NotFound(BodyPartErrorMessages.NotFound, identifier)),
             _ => await CacheAndReturnSuccessAsync(cacheKey, MapToDto(entity))
         };
+    }
     
     private async Task<ServiceResult<BodyPartDto>> CacheAndReturnSuccessAsync(string cacheKey, BodyPartDto dto)
     {

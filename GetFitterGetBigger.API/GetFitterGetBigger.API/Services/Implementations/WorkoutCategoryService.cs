@@ -5,6 +5,7 @@ using GetFitterGetBigger.API.Models.Entities;
 using GetFitterGetBigger.API.Models.SpecializedIds;
 using GetFitterGetBigger.API.Repositories.Interfaces;
 using GetFitterGetBigger.API.Services.Base;
+using GetFitterGetBigger.API.Services.Cache;
 using GetFitterGetBigger.API.Services.Interfaces;
 using GetFitterGetBigger.API.Services.Results;
 using Microsoft.Extensions.Logging;
@@ -48,14 +49,22 @@ public class WorkoutCategoryService : PureReferenceService<WorkoutCategory, Work
         string identifier)
     {
         var cacheService = (IEternalCacheService)_cacheService;
-        var cacheResult = await cacheService.GetAsync<WorkoutCategoryDto>(cacheKey);
-        if (cacheResult.IsHit)
-        {
-            _logger.LogDebug("Cache hit for {CacheKey}", cacheKey);
-            return ServiceResult<WorkoutCategoryDto>.Success(cacheResult.Value);
-        }
         
+        return await CacheLoad.For<WorkoutCategoryDto>(cacheService, cacheKey)
+            .WithLogging(_logger, "WorkoutCategory")
+            .MatchAsync(
+                onHit: cached => ServiceResult<WorkoutCategoryDto>.Success(cached),
+                onMiss: async () => await LoadAndProcessEntity(loadFunc, cacheKey, identifier)
+            );
+    }
+    
+    private async Task<ServiceResult<WorkoutCategoryDto>> LoadAndProcessEntity(
+        Func<Task<WorkoutCategory>> loadFunc,
+        string cacheKey,
+        string identifier)
+    {
         var entity = await loadFunc();
+        
         return entity switch
         {
             { IsEmpty: true } or { IsActive: false } => ServiceResult<WorkoutCategoryDto>.Failure(
