@@ -1,3 +1,4 @@
+using GetFitterGetBigger.API.Models.Interfaces;
 using GetFitterGetBigger.API.Services.Results;
 
 namespace GetFitterGetBigger.API.Services.Validation;
@@ -21,6 +22,11 @@ public class ServiceValidationBuilder<T>
     {
         _validation = validation;
     }
+
+    /// <summary>
+    /// Gets the underlying validation instance.
+    /// </summary>
+    internal ServiceValidation<T> Validation => _validation;
 
     /// <summary>
     /// Adds a synchronous validation rule.
@@ -55,6 +61,42 @@ public class ServiceValidationBuilder<T>
     public ServiceValidationBuilder<T> EnsureNotWhiteSpace(string? value, string errorMessage)
     {
         _validation.EnsureNotWhiteSpace(value, errorMessage);
+        return this;
+    }
+
+    /// <summary>
+    /// Validates that a string value is not null or whitespace with a ServiceError.
+    /// </summary>
+    /// <param name="value">The string value to validate</param>
+    /// <param name="serviceError">The service error if validation fails</param>
+    /// <returns>The builder instance for chaining</returns>
+    public ServiceValidationBuilder<T> EnsureNotWhiteSpace(string? value, ServiceError serviceError)
+    {
+        _validation.EnsureNotWhiteSpace(value, serviceError);
+        return this;
+    }
+
+    /// <summary>
+    /// Validates that a specialized ID is not empty.
+    /// </summary>
+    /// <param name="id">The specialized ID to validate</param>
+    /// <param name="errorMessage">The error message if validation fails</param>
+    /// <returns>The builder instance for chaining</returns>
+    public ServiceValidationBuilder<T> EnsureNotEmpty(ISpecializedIdBase id, string errorMessage)
+    {
+        _validation.EnsureNotEmpty(id, errorMessage);
+        return this;
+    }
+
+    /// <summary>
+    /// Validates that a specialized ID is not empty with a ServiceError.
+    /// </summary>
+    /// <param name="id">The specialized ID to validate</param>
+    /// <param name="serviceError">The service error if validation fails</param>
+    /// <returns>The builder instance for chaining</returns>
+    public ServiceValidationBuilder<T> EnsureNotEmpty(ISpecializedIdBase id, ServiceError serviceError)
+    {
+        _validation.EnsureNotEmpty(id, serviceError);
         return this;
     }
 

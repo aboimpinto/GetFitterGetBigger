@@ -23,10 +23,15 @@ public static class ServiceValidationExtensions
         Func<Task<ServiceResult<T>>> whenValid)
         where T : class, IEmptyDto<T>
     {
-        return await validation.Match(
-            whenValid: whenValid,
-            whenInvalid: errors => ServiceResult<T>.Failure(T.Empty, errors.ToArray())
-        );
+        // Check if validation has errors
+        if (validation.HasErrors)
+        {
+            // Use the internal method that properly handles ServiceError
+            return validation.CreateFailureWithEmpty(T.Empty);
+        }
+        
+        // If no errors, execute the valid function
+        return await whenValid();
     }
 
     /// <summary>
@@ -42,9 +47,14 @@ public static class ServiceValidationExtensions
         Func<ServiceResult<T>> whenValid)
         where T : class, IEmptyDto<T>
     {
-        return validation.Match(
-            whenValid: whenValid,
-            whenInvalid: errors => ServiceResult<T>.Failure(T.Empty, errors.ToArray())
-        );
+        // Check if validation has errors
+        if (validation.HasErrors)
+        {
+            // Use the internal method that properly handles ServiceError
+            return validation.CreateFailureWithEmpty(T.Empty);
+        }
+        
+        // If no errors, execute the valid function
+        return whenValid();
     }
 }

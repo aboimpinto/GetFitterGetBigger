@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using GetFitterGetBigger.API.Models.Interfaces;
 using GetFitterGetBigger.API.Services.Results;
 
 namespace GetFitterGetBigger.API.Services.Validation;
@@ -115,6 +116,28 @@ public class ServiceValidation
     public ServiceValidation EnsureNotWhiteSpace(string? value, ServiceError serviceError)
     {
         return Ensure(() => !string.IsNullOrWhiteSpace(value), serviceError);
+    }
+
+    /// <summary>
+    /// Validates that a specialized ID is not empty.
+    /// </summary>
+    /// <param name="id">The specialized ID to validate</param>
+    /// <param name="errorMessage">The error message if validation fails</param>
+    /// <returns>The current validation instance for chaining</returns>
+    public ServiceValidation EnsureNotEmpty(ISpecializedIdBase id, string errorMessage)
+    {
+        return Ensure(() => !id.IsEmpty, errorMessage);
+    }
+
+    /// <summary>
+    /// Validates that a specialized ID is not empty with a ServiceError.
+    /// </summary>
+    /// <param name="id">The specialized ID to validate</param>
+    /// <param name="serviceError">The service error if validation fails</param>
+    /// <returns>The current validation instance for chaining</returns>
+    public ServiceValidation EnsureNotEmpty(ISpecializedIdBase id, ServiceError serviceError)
+    {
+        return Ensure(() => !id.IsEmpty, serviceError);
     }
 
     /// <summary>

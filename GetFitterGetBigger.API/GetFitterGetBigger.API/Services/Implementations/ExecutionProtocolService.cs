@@ -8,6 +8,7 @@ using GetFitterGetBigger.API.Services.Base;
 using GetFitterGetBigger.API.Services.Cache;
 using GetFitterGetBigger.API.Services.Interfaces;
 using GetFitterGetBigger.API.Services.Results;
+using GetFitterGetBigger.API.Services.Validation;
 using Microsoft.Extensions.Logging;
 using Olimpo.EntityFramework.Persistency;
 
@@ -33,19 +34,27 @@ public class ExecutionProtocolService : PureReferenceService<ExecutionProtocol, 
     }
 
     /// <inheritdoc/>
-    public async Task<ServiceResult<ExecutionProtocolDto>> GetByIdAsync(ExecutionProtocolId id) => 
-        id.IsEmpty 
-            ? ServiceResult<ExecutionProtocolDto>.Failure(ExecutionProtocolDto.Empty, ServiceError.ValidationFailed(ExecutionProtocolErrorMessages.InvalidIdFormat))
-            : await GetByIdAsync(id.ToString());
+    public async Task<ServiceResult<ExecutionProtocolDto>> GetByIdAsync(ExecutionProtocolId id)
+    {
+        return await ServiceValidate.For<ExecutionProtocolDto>()
+            .EnsureNotEmpty(id, ServiceError.ValidationFailed(ExecutionProtocolErrorMessages.InvalidIdFormat))
+            .MatchAsync(
+                whenValid: async () => await GetByIdAsync(id.ToString())
+            );
+    }
     
     /// <inheritdoc/>
-    public async Task<ServiceResult<ExecutionProtocolDto>> GetByValueAsync(string value) => 
-        string.IsNullOrWhiteSpace(value)
-            ? ServiceResult<ExecutionProtocolDto>.Failure(ExecutionProtocolDto.Empty, ServiceError.ValidationFailed(ExecutionProtocolErrorMessages.ValueCannotBeEmpty))
-            : await GetFromCacheOrLoadAsync(
-                GetValueCacheKey(value),
-                () => LoadByValueAsync(value),
-                value);
+    public async Task<ServiceResult<ExecutionProtocolDto>> GetByValueAsync(string value)
+    {
+        return await ServiceValidate.For<ExecutionProtocolDto>()
+            .EnsureNotWhiteSpace(value, ServiceError.ValidationFailed(ExecutionProtocolErrorMessages.ValueCannotBeEmpty))
+            .MatchAsync(
+                whenValid: async () => await GetFromCacheOrLoadAsync(
+                    GetValueCacheKey(value),
+                    () => LoadByValueAsync(value),
+                    value)
+            );
+    }
 
     /// <inheritdoc/>
     public async Task<ServiceResult<ExecutionProtocolDto>> GetByCodeAsync(string code) => 
@@ -126,15 +135,34 @@ public class ExecutionProtocolService : PureReferenceService<ExecutionProtocol, 
         return await repository.GetAllActiveAsync();
     }
     
-    protected override async Task<ExecutionProtocol> LoadEntityByIdAsync(string id)
+    /// <inheritdoc/>
+    protected override async Task<ServiceResult<ExecutionProtocol>> LoadEntityByIdAsync(string id)
     {
         var executionProtocolId = ExecutionProtocolId.ParseOrEmpty(id);
-        if (executionProtocolId.IsEmpty)
-            return ExecutionProtocol.Empty;
-            
+        
+        return await ServiceValidate.For<ExecutionProtocol>()
+            .EnsureNotEmpty(executionProtocolId, ServiceError.InvalidFormat("ExecutionProtocolId", ExecutionProtocolErrorMessages.InvalidIdFormat))
+            .Match(
+                whenValid: async () => await LoadEntityFromRepository(executionProtocolId),
+                whenInvalid: errors => ServiceResult<ExecutionProtocol>.Failure(
+                    ExecutionProtocol.Empty,
+                    ServiceError.ValidationFailed(errors.FirstOrDefault() ?? "Invalid ID format"))
+            );
+    }
+    
+    private async Task<ServiceResult<ExecutionProtocol>> LoadEntityFromRepository(ExecutionProtocolId id)
+    {
         using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
         var repository = unitOfWork.GetRepository<IExecutionProtocolRepository>();
-        return await repository.GetByIdAsync(executionProtocolId);
+        var entity = await repository.GetByIdAsync(id);
+        
+        return entity switch
+        {
+            { IsEmpty: true } => ServiceResult<ExecutionProtocol>.Failure(
+                ExecutionProtocol.Empty, 
+                ServiceError.NotFound("ExecutionProtocol")),
+            _ => ServiceResult<ExecutionProtocol>.Success(entity)
+        };
     }
     
     protected override ExecutionProtocolDto MapToDto(ExecutionProtocol entity)
@@ -157,15 +185,8 @@ public class ExecutionProtocolService : PureReferenceService<ExecutionProtocol, 
     
     protected override ValidationResult ValidateAndParseId(string id)
     {
-        // This is called by the base class when using the string overload
-        // Since we always use the typed overload from the controller,
-        // this should validate the string format
-        if (string.IsNullOrWhiteSpace(id))
-        {
-            return ValidationResult.Failure(ExecutionProtocolErrorMessages.IdCannotBeEmpty);
-        }
-        
-        // No additional validation - let the controller handle format validation
-        return ValidationResult.Success();
+        return ServiceValidate.For()
+            .EnsureNotWhiteSpace(id, ExecutionProtocolErrorMessages.IdCannotBeEmpty)
+            .ToResult();
     }
 }

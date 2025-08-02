@@ -21,10 +21,14 @@ public static class ServiceValidationBuilderExtensions
         Func<Task<ServiceResult<T>>> whenValid)
         where T : class, IEmptyDto<T>
     {
-        return await builder.MatchAsync(
-            whenValid: whenValid,
-            whenInvalid: (IReadOnlyList<string> errors) => ServiceResult<T>.Failure(T.Empty, errors.ToArray())
-        );
+        // First check if validation has already failed
+        if (builder.Validation.HasErrors)
+        {
+            return builder.Validation.CreateFailureWithEmpty(T.Empty);
+        }
+
+        // If no errors, execute the valid function
+        return await whenValid();
     }
 
     /// <summary>

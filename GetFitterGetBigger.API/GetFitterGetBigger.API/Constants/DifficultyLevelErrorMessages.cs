@@ -7,6 +7,7 @@ namespace GetFitterGetBigger.API.Constants
     {
         // Validation errors
         public static string InvalidIdFormat => "Invalid difficulty level ID format";
+        public static string IdCannotBeEmpty => "Difficulty level ID cannot be empty";
         public static string ValueCannotBeEmpty => "Difficulty level value cannot be empty";
         
         // Not found errors

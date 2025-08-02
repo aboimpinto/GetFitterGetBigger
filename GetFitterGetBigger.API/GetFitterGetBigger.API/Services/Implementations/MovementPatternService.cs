@@ -8,6 +8,7 @@ using GetFitterGetBigger.API.Services.Base;
 using GetFitterGetBigger.API.Services.Cache;
 using GetFitterGetBigger.API.Services.Interfaces;
 using GetFitterGetBigger.API.Services.Results;
+using GetFitterGetBigger.API.Services.Validation;
 using Microsoft.Extensions.Logging;
 using Olimpo.EntityFramework.Persistency;
 
@@ -34,19 +35,27 @@ public class MovementPatternService : PureReferenceService<MovementPattern, Refe
     }
 
     /// <inheritdoc/>
-    public async Task<ServiceResult<ReferenceDataDto>> GetByIdAsync(MovementPatternId id) => 
-        id.IsEmpty 
-            ? ServiceResult<ReferenceDataDto>.Failure(ReferenceDataDto.Empty, ServiceError.ValidationFailed(MovementPatternErrorMessages.InvalidIdFormat))
-            : await GetByIdAsync(id.ToString());
+    public async Task<ServiceResult<ReferenceDataDto>> GetByIdAsync(MovementPatternId id)
+    {
+        return await ServiceValidate.For<ReferenceDataDto>()
+            .EnsureNotEmpty(id, ServiceError.ValidationFailed(MovementPatternErrorMessages.InvalidIdFormat))
+            .MatchAsync(
+                whenValid: async () => await GetByIdAsync(id.ToString())
+            );
+    }
     
     /// <inheritdoc/>
-    public async Task<ServiceResult<ReferenceDataDto>> GetByValueAsync(string value) => 
-        string.IsNullOrWhiteSpace(value)
-            ? ServiceResult<ReferenceDataDto>.Failure(ReferenceDataDto.Empty, ServiceError.ValidationFailed(MovementPatternErrorMessages.ValueCannotBeEmpty))
-            : await GetFromCacheOrLoadAsync(
-                GetValueCacheKey(value),
-                () => LoadByValueAsync(value),
-                value);
+    public async Task<ServiceResult<ReferenceDataDto>> GetByValueAsync(string value)
+    {
+        return await ServiceValidate.For<ReferenceDataDto>()
+            .EnsureNotWhiteSpace(value, ServiceError.ValidationFailed(MovementPatternErrorMessages.ValueCannotBeEmpty))
+            .MatchAsync(
+                whenValid: async () => await GetFromCacheOrLoadAsync(
+                    GetValueCacheKey(value),
+                    () => LoadByValueAsync(value),
+                    value)
+            );
+    }
 
     private string GetValueCacheKey(string value) => $"{GetCacheKeyPrefix()}value:{value}";
     
@@ -110,16 +119,34 @@ public class MovementPatternService : PureReferenceService<MovementPattern, Refe
         return await repository.GetAllActiveAsync();
     }
     
-    // Returns MovementPattern.Empty instead of null (Null Object Pattern)
-    protected override async Task<MovementPattern> LoadEntityByIdAsync(string id)
+    /// <inheritdoc/>
+    protected override async Task<ServiceResult<MovementPattern>> LoadEntityByIdAsync(string id)
     {
         var movementPatternId = MovementPatternId.ParseOrEmpty(id);
-        if (movementPatternId.IsEmpty)
-            return MovementPattern.Empty;
-            
+        
+        return await ServiceValidate.For<MovementPattern>()
+            .EnsureNotEmpty(movementPatternId, ServiceError.InvalidFormat("MovementPatternId", MovementPatternErrorMessages.InvalidIdFormat))
+            .Match(
+                whenValid: async () => await LoadEntityFromRepository(movementPatternId),
+                whenInvalid: errors => ServiceResult<MovementPattern>.Failure(
+                    MovementPattern.Empty,
+                    ServiceError.ValidationFailed(errors.FirstOrDefault() ?? "Invalid ID format"))
+            );
+    }
+    
+    private async Task<ServiceResult<MovementPattern>> LoadEntityFromRepository(MovementPatternId id)
+    {
         using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
         var repository = unitOfWork.GetRepository<IMovementPatternRepository>();
-        return await repository.GetByIdAsync(movementPatternId);
+        var entity = await repository.GetByIdAsync(id);
+        
+        return entity switch
+        {
+            { IsEmpty: true } => ServiceResult<MovementPattern>.Failure(
+                MovementPattern.Empty, 
+                ServiceError.NotFound("MovementPattern")),
+            _ => ServiceResult<MovementPattern>.Success(entity)
+        };
     }
     
     protected override ReferenceDataDto MapToDto(MovementPattern entity)
@@ -135,18 +162,8 @@ public class MovementPatternService : PureReferenceService<MovementPattern, Refe
     
     protected override ValidationResult ValidateAndParseId(string id)
     {
-        // This is called by the base class when using the string overload
-        // Since we always use the typed overload from the controller,
-        // this should validate the string format
-        if (string.IsNullOrWhiteSpace(id))
-        {
-            return ValidationResult.Failure("ID cannot be empty");
-        }
-        
-        // No additional validation - let the controller handle format validation
-        // This allows empty GUIDs to pass through and be treated as NotFound
-        
-        // Valid format (including empty GUID) - let the database determine if it exists
-        return ValidationResult.Success();
+        return ServiceValidate.For()
+            .EnsureNotWhiteSpace(id, MovementPatternErrorMessages.IdCannotBeEmpty)
+            .ToResult();
     }
 }

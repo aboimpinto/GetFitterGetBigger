@@ -8,6 +8,7 @@ using GetFitterGetBigger.API.Services.Base;
 using GetFitterGetBigger.API.Services.Cache;
 using GetFitterGetBigger.API.Services.Interfaces;
 using GetFitterGetBigger.API.Services.Results;
+using GetFitterGetBigger.API.Services.Validation;
 using Microsoft.Extensions.Logging;
 using Olimpo.EntityFramework.Persistency;
 
@@ -34,19 +35,27 @@ public class ExerciseTypeService : PureReferenceService<ExerciseType, ReferenceD
     }
 
     /// <inheritdoc/>
-    public async Task<ServiceResult<ReferenceDataDto>> GetByIdAsync(ExerciseTypeId id) => 
-        id.IsEmpty 
-            ? ServiceResult<ReferenceDataDto>.Failure(ReferenceDataDto.Empty, ServiceError.ValidationFailed(ExerciseTypeErrorMessages.InvalidIdFormat))
-            : await GetByIdAsync(id.ToString());
+    public async Task<ServiceResult<ReferenceDataDto>> GetByIdAsync(ExerciseTypeId id)
+    {
+        return await ServiceValidate.For<ReferenceDataDto>()
+            .EnsureNotEmpty(id, ServiceError.ValidationFailed(ExerciseTypeErrorMessages.InvalidIdFormat))
+            .MatchAsync(
+                whenValid: async () => await GetByIdAsync(id.ToString())
+            );
+    }
     
     /// <inheritdoc/>
-    public async Task<ServiceResult<ReferenceDataDto>> GetByValueAsync(string value) => 
-        string.IsNullOrWhiteSpace(value)
-            ? ServiceResult<ReferenceDataDto>.Failure(ReferenceDataDto.Empty, ServiceError.ValidationFailed(ExerciseTypeErrorMessages.ValueCannotBeEmpty))
-            : await GetFromCacheOrLoadAsync(
-                GetValueCacheKey(value),
-                () => LoadByValueAsync(value),
-                value);
+    public async Task<ServiceResult<ReferenceDataDto>> GetByValueAsync(string value)
+    {
+        return await ServiceValidate.For<ReferenceDataDto>()
+            .EnsureNotWhiteSpace(value, ServiceError.ValidationFailed(ExerciseTypeErrorMessages.ValueCannotBeEmpty))
+            .MatchAsync(
+                whenValid: async () => await GetFromCacheOrLoadAsync(
+                    GetValueCacheKey(value),
+                    () => LoadByValueAsync(value),
+                    value)
+            );
+    }
 
     /// <inheritdoc/>
     public async Task<bool> ExistsAsync(ExerciseTypeId id) => 
@@ -144,16 +153,34 @@ public class ExerciseTypeService : PureReferenceService<ExerciseType, ReferenceD
         return await repository.GetAllActiveAsync();
     }
     
-    // Returns ExerciseType.Empty instead of null (Null Object Pattern)
-    protected override async Task<ExerciseType> LoadEntityByIdAsync(string id)
+    /// <inheritdoc/>
+    protected override async Task<ServiceResult<ExerciseType>> LoadEntityByIdAsync(string id)
     {
         var exerciseTypeId = ExerciseTypeId.ParseOrEmpty(id);
-        if (exerciseTypeId.IsEmpty)
-            return ExerciseType.Empty;
-            
+        
+        return await ServiceValidate.For<ExerciseType>()
+            .EnsureNotEmpty(exerciseTypeId, ServiceError.InvalidFormat("ExerciseTypeId", ExerciseTypeErrorMessages.InvalidIdFormat))
+            .Match(
+                whenValid: async () => await LoadEntityFromRepository(exerciseTypeId),
+                whenInvalid: errors => ServiceResult<ExerciseType>.Failure(
+                    ExerciseType.Empty,
+                    ServiceError.ValidationFailed(errors.FirstOrDefault() ?? "Invalid ID format"))
+            );
+    }
+    
+    private async Task<ServiceResult<ExerciseType>> LoadEntityFromRepository(ExerciseTypeId id)
+    {
         using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
         var repository = unitOfWork.GetRepository<IExerciseTypeRepository>();
-        return await repository.GetByIdAsync(exerciseTypeId);
+        var entity = await repository.GetByIdAsync(id);
+        
+        return entity switch
+        {
+            { IsEmpty: true } => ServiceResult<ExerciseType>.Failure(
+                ExerciseType.Empty, 
+                ServiceError.NotFound("ExerciseType")),
+            _ => ServiceResult<ExerciseType>.Success(entity)
+        };
     }
     
     protected override ReferenceDataDto MapToDto(ExerciseType entity)
@@ -169,18 +196,8 @@ public class ExerciseTypeService : PureReferenceService<ExerciseType, ReferenceD
     
     protected override ValidationResult ValidateAndParseId(string id)
     {
-        // This is called by the base class when using the string overload
-        // Since we always use the typed overload from the controller,
-        // this should validate the string format
-        if (string.IsNullOrWhiteSpace(id))
-        {
-            return ValidationResult.Failure(ExerciseTypeErrorMessages.IdCannotBeEmpty);
-        }
-        
-        // No additional validation - let the controller handle format validation
-        // This allows empty GUIDs to pass through and be treated as NotFound
-        
-        // Valid format (including empty GUID) - let the database determine if it exists
-        return ValidationResult.Success();
+        return ServiceValidate.For()
+            .EnsureNotWhiteSpace(id, ExerciseTypeErrorMessages.IdCannotBeEmpty)
+            .ToResult();
     }
 }

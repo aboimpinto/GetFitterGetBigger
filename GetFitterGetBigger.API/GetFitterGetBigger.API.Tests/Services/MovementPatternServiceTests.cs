@@ -187,7 +187,7 @@ namespace GetFitterGetBigger.API.Tests.Services
             Assert.False(result.IsSuccess);
             Assert.NotNull(result.Data);
             Assert.Equal(ServiceErrorCode.ValidationFailed, result.PrimaryErrorCode);
-            Assert.Contains("ID cannot be empty", result.Errors);
+            Assert.Contains("Movement pattern ID cannot be empty", result.Errors);
             _mockMovementPatternRepository.Verify(x => x.GetByIdAsync(It.IsAny<MovementPatternId>()), Times.Never);
         }
 
@@ -204,7 +204,7 @@ namespace GetFitterGetBigger.API.Tests.Services
             Assert.False(result.IsSuccess);
             Assert.NotNull(result.Data);
             Assert.Equal(ServiceErrorCode.ValidationFailed, result.PrimaryErrorCode);
-            Assert.Contains("ID cannot be empty", result.Errors);
+            Assert.Contains("Movement pattern ID cannot be empty", result.Errors);
             _mockMovementPatternRepository.Verify(x => x.GetByIdAsync(It.IsAny<MovementPatternId>()), Times.Never);
         }
 

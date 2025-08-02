@@ -1,4 +1,5 @@
 using GetFitterGetBigger.API.DTOs.Interfaces;
+using GetFitterGetBigger.API.Models.Interfaces;
 using GetFitterGetBigger.API.Services.Results;
 using GetFitterGetBigger.API.Validation.Base;
 
@@ -12,6 +13,23 @@ namespace GetFitterGetBigger.API.Services.Validation;
 public class ServiceValidation<T> : ValidationBase<ServiceResult<T>>
 {
     private ServiceError? _serviceError = null;
+
+    /// <summary>
+    /// Gets whether the validation has a ServiceError set.
+    /// </summary>
+    internal bool HasServiceError => _serviceError != null;
+
+    /// <summary>
+    /// Creates a failure result with the appropriate error (ServiceError if set, otherwise string errors).
+    /// </summary>
+    /// <param name="emptyValue">The empty value to return</param>
+    /// <returns>A failure ServiceResult with the appropriate errors</returns>
+    internal ServiceResult<T> CreateFailureWithEmpty(T emptyValue)
+    {
+        return _serviceError != null
+            ? ServiceResult<T>.Failure(emptyValue, _serviceError)
+            : ServiceResult<T>.Failure(emptyValue, ValidationErrors.ToArray());
+    }
 
     /// <summary>
     /// Adds a validation rule with a custom predicate.
@@ -113,6 +131,28 @@ public class ServiceValidation<T> : ValidationBase<ServiceResult<T>>
     public ServiceValidation<T> EnsureNotWhiteSpace(string? value, ServiceError serviceError)
     {
         return Ensure(() => !string.IsNullOrWhiteSpace(value), serviceError);
+    }
+
+    /// <summary>
+    /// Validates that a specialized ID is not empty.
+    /// </summary>
+    /// <param name="id">The specialized ID to validate</param>
+    /// <param name="errorMessage">The error message if validation fails</param>
+    /// <returns>The current validation instance for chaining</returns>
+    public ServiceValidation<T> EnsureNotEmpty(ISpecializedIdBase id, string errorMessage)
+    {
+        return Ensure(() => !id.IsEmpty, errorMessage);
+    }
+
+    /// <summary>
+    /// Validates that a specialized ID is not empty with a ServiceError.
+    /// </summary>
+    /// <param name="id">The specialized ID to validate</param>
+    /// <param name="serviceError">The service error if validation fails</param>
+    /// <returns>The current validation instance for chaining</returns>
+    public ServiceValidation<T> EnsureNotEmpty(ISpecializedIdBase id, ServiceError serviceError)
+    {
+        return Ensure(() => !id.IsEmpty, serviceError);
     }
 
     /// <summary>

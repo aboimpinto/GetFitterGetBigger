@@ -8,6 +8,7 @@ using GetFitterGetBigger.API.Services.Base;
 using GetFitterGetBigger.API.Services.Cache;
 using GetFitterGetBigger.API.Services.Interfaces;
 using GetFitterGetBigger.API.Services.Results;
+using GetFitterGetBigger.API.Services.Validation;
 using Microsoft.Extensions.Logging;
 using Olimpo.EntityFramework.Persistency;
 
@@ -36,19 +37,27 @@ public class MetricTypeService : PureReferenceService<MetricType, ReferenceDataD
     }
 
     /// <inheritdoc/>
-    public async Task<ServiceResult<ReferenceDataDto>> GetByIdAsync(MetricTypeId id) => 
-        id.IsEmpty 
-            ? ServiceResult<ReferenceDataDto>.Failure(ReferenceDataDto.Empty, ServiceError.ValidationFailed(MetricTypeErrorMessages.InvalidIdFormat))
-            : await GetByIdAsync(id.ToString());
+    public async Task<ServiceResult<ReferenceDataDto>> GetByIdAsync(MetricTypeId id)
+    {
+        return await ServiceValidate.For<ReferenceDataDto>()
+            .EnsureNotEmpty(id, ServiceError.ValidationFailed(MetricTypeErrorMessages.InvalidIdFormat))
+            .MatchAsync(
+                whenValid: async () => await GetByIdAsync(id.ToString())
+            );
+    }
     
     /// <inheritdoc/>
-    public async Task<ServiceResult<ReferenceDataDto>> GetByValueAsync(string value) => 
-        string.IsNullOrWhiteSpace(value)
-            ? ServiceResult<ReferenceDataDto>.Failure(ReferenceDataDto.Empty, ServiceError.ValidationFailed(MetricTypeErrorMessages.ValueCannotBeEmpty))
-            : await GetFromCacheOrLoadAsync(
-                GetValueCacheKey(value),
-                () => LoadByValueAsync(value),
-                value);
+    public async Task<ServiceResult<ReferenceDataDto>> GetByValueAsync(string value)
+    {
+        return await ServiceValidate.For<ReferenceDataDto>()
+            .EnsureNotWhiteSpace(value, ServiceError.ValidationFailed(MetricTypeErrorMessages.ValueCannotBeEmpty))
+            .MatchAsync(
+                whenValid: async () => await GetFromCacheOrLoadAsync(
+                    GetValueCacheKey(value),
+                    () => LoadByValueAsync(value),
+                    value)
+            );
+    }
 
     private string GetValueCacheKey(string value) => $"{GetCacheKeyPrefix()}{ValueCacheKeySuffix}{value}";
     
@@ -112,16 +121,34 @@ public class MetricTypeService : PureReferenceService<MetricType, ReferenceDataD
         return await repository.GetAllActiveAsync();
     }
     
-    // Returns MetricType.Empty instead of null (Null Object Pattern)
-    protected override async Task<MetricType> LoadEntityByIdAsync(string id)
+    /// <inheritdoc/>
+    protected override async Task<ServiceResult<MetricType>> LoadEntityByIdAsync(string id)
     {
         var metricTypeId = MetricTypeId.ParseOrEmpty(id);
-        if (metricTypeId.IsEmpty)
-            return MetricType.Empty;
-            
+        
+        return await ServiceValidate.For<MetricType>()
+            .EnsureNotEmpty(metricTypeId, ServiceError.InvalidFormat("MetricTypeId", MetricTypeErrorMessages.InvalidIdFormat))
+            .Match(
+                whenValid: async () => await LoadEntityFromRepository(metricTypeId),
+                whenInvalid: errors => ServiceResult<MetricType>.Failure(
+                    MetricType.Empty,
+                    ServiceError.ValidationFailed(errors.FirstOrDefault() ?? "Invalid ID format"))
+            );
+    }
+    
+    private async Task<ServiceResult<MetricType>> LoadEntityFromRepository(MetricTypeId id)
+    {
         using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
         var repository = unitOfWork.GetRepository<IMetricTypeRepository>();
-        return await repository.GetByIdAsync(metricTypeId);
+        var entity = await repository.GetByIdAsync(id);
+        
+        return entity switch
+        {
+            { IsEmpty: true } => ServiceResult<MetricType>.Failure(
+                MetricType.Empty, 
+                ServiceError.NotFound("MetricType")),
+            _ => ServiceResult<MetricType>.Success(entity)
+        };
     }
     
     protected override ReferenceDataDto MapToDto(MetricType entity)
@@ -137,18 +164,8 @@ public class MetricTypeService : PureReferenceService<MetricType, ReferenceDataD
     
     protected override ValidationResult ValidateAndParseId(string id)
     {
-        // This is called by the base class when using the string overload
-        // Since we always use the typed overload from the controller,
-        // this should validate the string format
-        if (string.IsNullOrWhiteSpace(id))
-        {
-            return ValidationResult.Failure(MetricTypeErrorMessages.IdCannotBeEmpty);
-        }
-        
-        // No additional validation - let the controller handle format validation
-        // This allows empty GUIDs to pass through and be treated as NotFound
-        
-        // Valid format (including empty GUID) - let the database determine if it exists
-        return ValidationResult.Success();
+        return ServiceValidate.For()
+            .EnsureNotWhiteSpace(id, MetricTypeErrorMessages.IdCannotBeEmpty)
+            .ToResult();
     }
 }

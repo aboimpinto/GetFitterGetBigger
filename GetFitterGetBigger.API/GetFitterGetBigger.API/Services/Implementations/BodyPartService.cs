@@ -8,6 +8,7 @@ using GetFitterGetBigger.API.Services.Base;
 using GetFitterGetBigger.API.Services.Cache;
 using GetFitterGetBigger.API.Services.Interfaces;
 using GetFitterGetBigger.API.Services.Results;
+using GetFitterGetBigger.API.Services.Validation;
 using Microsoft.Extensions.Logging;
 using Olimpo.EntityFramework.Persistency;
 
@@ -34,19 +35,27 @@ public class BodyPartService : PureReferenceService<BodyPart, BodyPartDto>, IBod
     }
 
     /// <inheritdoc/>
-    public async Task<ServiceResult<BodyPartDto>> GetByIdAsync(BodyPartId id) => 
-        id.IsEmpty 
-            ? ServiceResult<BodyPartDto>.Failure(BodyPartDto.Empty, ServiceError.ValidationFailed(BodyPartErrorMessages.InvalidIdFormat))
-            : await GetByIdAsync(id.ToString());
+    public async Task<ServiceResult<BodyPartDto>> GetByIdAsync(BodyPartId id)
+    {
+        return await ServiceValidate.For<BodyPartDto>()
+            .EnsureNotEmpty(id, ServiceError.ValidationFailed(BodyPartErrorMessages.InvalidIdFormat))
+            .MatchAsync(
+                whenValid: async () => await GetByIdAsync(id.ToString())
+            );
+    }
     
     /// <inheritdoc/>
-    public async Task<ServiceResult<BodyPartDto>> GetByValueAsync(string value) => 
-        string.IsNullOrWhiteSpace(value)
-            ? ServiceResult<BodyPartDto>.Failure(BodyPartDto.Empty, ServiceError.ValidationFailed(BodyPartErrorMessages.ValueCannotBeEmpty))
-            : await GetFromCacheOrLoadAsync(
-                GetValueCacheKey(value),
-                () => LoadByValueAsync(value),
-                value);
+    public async Task<ServiceResult<BodyPartDto>> GetByValueAsync(string value)
+    {
+        return await ServiceValidate.For<BodyPartDto>()
+            .EnsureNotWhiteSpace(value, ServiceError.ValidationFailed(BodyPartErrorMessages.ValueCannotBeEmpty))
+            .MatchAsync(
+                whenValid: async () => await GetFromCacheOrLoadAsync(
+                    GetValueCacheKey(value),
+                    () => LoadByValueAsync(value),
+                    value)
+            );
+    }
 
     private string GetValueCacheKey(string value) => $"{GetCacheKeyPrefix()}value:{value}";
     
@@ -110,23 +119,34 @@ public class BodyPartService : PureReferenceService<BodyPart, BodyPartDto>, IBod
         return await repository.GetAllActiveAsync();
     }
     
-    // Returns BodyPart.Empty instead of null (Null Object Pattern)
-    protected override async Task<BodyPart> LoadEntityByIdAsync(string id)
+    /// <inheritdoc/>
+    protected override async Task<ServiceResult<BodyPart>> LoadEntityByIdAsync(string id)
     {
         var bodyPartId = BodyPartId.ParseOrEmpty(id);
         
-        var result = bodyPartId.IsEmpty
-            ? BodyPart.Empty
-            : await LoadFromRepository(bodyPartId);
-            
-        return result;
+        return await ServiceValidate.For<BodyPart>()
+            .EnsureNotEmpty(bodyPartId, ServiceError.InvalidFormat("BodyPartId", BodyPartErrorMessages.InvalidIdFormat))
+            .Match(
+                whenValid: async () => await LoadEntityFromRepository(bodyPartId),
+                whenInvalid: errors => ServiceResult<BodyPart>.Failure(
+                    BodyPart.Empty, 
+                    ServiceError.ValidationFailed(errors.FirstOrDefault() ?? "Invalid ID format"))
+            );
     }
     
-    private async Task<BodyPart> LoadFromRepository(BodyPartId id)
+    private async Task<ServiceResult<BodyPart>> LoadEntityFromRepository(BodyPartId id)
     {
         using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
         var repository = unitOfWork.GetRepository<IBodyPartRepository>();
-        return await repository.GetByIdAsync(id);
+        var entity = await repository.GetByIdAsync(id);
+        
+        return entity switch
+        {
+            { IsEmpty: true } => ServiceResult<BodyPart>.Failure(
+                BodyPart.Empty, 
+                ServiceError.NotFound("BodyPart")),
+            _ => ServiceResult<BodyPart>.Success(entity)
+        };
     }
     
     protected override BodyPartDto MapToDto(BodyPart entity)
@@ -142,18 +162,8 @@ public class BodyPartService : PureReferenceService<BodyPart, BodyPartDto>, IBod
     
     protected override ValidationResult ValidateAndParseId(string id)
     {
-        // This is called by the base class when using the string overload
-        // Since we always use the typed overload from the controller,
-        // this should validate the string format
-        if (string.IsNullOrWhiteSpace(id))
-        {
-            return ValidationResult.Failure(BodyPartErrorMessages.IdCannotBeEmpty);
-        }
-        
-        // No additional validation - let the controller handle format validation
-        // This allows empty GUIDs to pass through and be treated as NotFound
-        
-        // Valid format (including empty GUID) - let the database determine if it exists
-        return ValidationResult.Success();
+        return ServiceValidate.For()
+            .EnsureNotWhiteSpace(id, BodyPartErrorMessages.IdCannotBeEmpty)
+            .ToResult();
     }
 }

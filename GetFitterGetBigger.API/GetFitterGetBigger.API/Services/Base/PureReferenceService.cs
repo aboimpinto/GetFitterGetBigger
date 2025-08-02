@@ -113,34 +113,18 @@ public abstract class PureReferenceService<TEntity, TDto> : EntityServiceBase<TE
     {
         try
         {
-            var entity = await LoadEntityByIdAsync(id);
+            var entityResult = await LoadEntityByIdAsync(id);
             
-            // Check if entity is null or inactive
-            // Check if entity is an empty instance (for entities implementing IEmptyEntity)
-            // This is a safe check that doesn't require TEntity to implement IEmptyEntity
-            var entityType = entity.GetType();
-            var isEmptyProperty = entityType.GetProperty("IsEmpty");
-            if (isEmptyProperty != null && isEmptyProperty.GetValue(entity) is bool isEmpty && isEmpty)
+            return entityResult switch
             {
-                return ServiceResult<TDto>.Failure(
+                { IsSuccess: false } => ServiceResult<TDto>.Failure(
+                    TDto.Empty, 
+                    entityResult.StructuredErrors.FirstOrDefault() ?? ServiceError.NotFound(typeof(TEntity).Name)),
+                { Data: var entity } when !entity.IsActive => ServiceResult<TDto>.Failure(
                     TDto.Empty,
-                    ServiceError.NotFound(typeof(TEntity).Name));
-            }
-            
-            // Check if entity is inactive
-            if (!entity.IsActive)
-            {
-                return ServiceResult<TDto>.Failure(
-                    TDto.Empty,
-                    ServiceError.NotFound(typeof(TEntity).Name));
-            }
-            
-            // Map to DTO and cache
-            var dto = MapToDto(entity);
-            var cacheService = (IEternalCacheService)_cacheService;
-            await cacheService.SetAsync(cacheKey, dto);
-            
-            return ServiceResult<TDto>.Success(dto);
+                    ServiceError.NotFound(typeof(TEntity).Name)),
+                { Data: var entity } => await CacheAndReturnSuccessAsync(cacheKey, MapToDto(entity))
+            };
         }
         catch (Exception ex)
         {
@@ -149,6 +133,13 @@ public abstract class PureReferenceService<TEntity, TDto> : EntityServiceBase<TE
                 TDto.Empty,
                 ServiceError.InternalError($"Failed to load {typeof(TEntity).Name}"));
         }
+    }
+    
+    private async Task<ServiceResult<TDto>> CacheAndReturnSuccessAsync(string cacheKey, TDto dto)
+    {
+        var cacheService = (IEternalCacheService)_cacheService;
+        await cacheService.SetAsync(cacheKey, dto);
+        return ServiceResult<TDto>.Success(dto);
     }
     
     /// <summary>
@@ -174,8 +165,8 @@ public abstract class PureReferenceService<TEntity, TDto> : EntityServiceBase<TE
     /// Must be implemented by derived classes
     /// </summary>
     /// <param name="id">The entity ID</param>
-    /// <returns>The entity or Empty if not found</returns>
-    protected abstract Task<TEntity> LoadEntityByIdAsync(string id);
+    /// <returns>A ServiceResult containing the entity or an error</returns>
+    protected abstract Task<ServiceResult<TEntity>> LoadEntityByIdAsync(string id);
     
     /// <summary>
     /// Maps an entity to its DTO representation

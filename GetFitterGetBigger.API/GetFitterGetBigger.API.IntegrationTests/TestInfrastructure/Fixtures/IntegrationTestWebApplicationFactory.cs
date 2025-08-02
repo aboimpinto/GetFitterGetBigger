@@ -168,18 +168,24 @@ public class IntegrationTestWebApplicationFactory : WebApplicationFactory<Progra
     {
         try
         {
-            var sql = @"
+            var connection = context.Database.GetDbConnection();
+            await connection.OpenAsync();
+            
+            using var command = connection.CreateCommand();
+            command.CommandText = @"
                 SELECT EXISTS (
                     SELECT FROM information_schema.tables 
                     WHERE table_schema = 'public' 
                     AND table_name = @tableName
                 )";
             
-            var result = await context.Database
-                .SqlQueryRaw<bool>(sql, new Npgsql.NpgsqlParameter("@tableName", tableName))
-                .FirstOrDefaultAsync();
+            var parameter = command.CreateParameter();
+            parameter.ParameterName = "@tableName";
+            parameter.Value = tableName;
+            command.Parameters.Add(parameter);
             
-            return result;
+            var result = await command.ExecuteScalarAsync();
+            return result != null && (bool)result;
         }
         catch
         {

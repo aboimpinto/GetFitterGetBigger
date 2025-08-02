@@ -7,6 +7,7 @@ public static class MovementPatternErrorMessages
 {
     // Validation errors
     public const string InvalidIdFormat = "Invalid movement pattern ID format";
+    public const string IdCannotBeEmpty = "Movement pattern ID cannot be empty";
     public const string ValueCannotBeEmpty = "Movement pattern value cannot be empty";
     public const string ValueCannotBeEmptyEntity = "Movement pattern value cannot be empty";
     public const string DisplayOrderMustBeNonNegative = "Display order must be non-negative";

@@ -9,6 +9,7 @@ using GetFitterGetBigger.API.Services.Base;
 using GetFitterGetBigger.API.Services.Cache;
 using GetFitterGetBigger.API.Services.Interfaces;
 using GetFitterGetBigger.API.Services.Results;
+using GetFitterGetBigger.API.Services.Validation;
 using Microsoft.Extensions.Logging;
 using Olimpo.EntityFramework.Persistency;
 
@@ -34,19 +35,27 @@ public class MuscleRoleService : PureReferenceService<MuscleRole, ReferenceDataD
     }
 
     /// <inheritdoc/>
-    public async Task<ServiceResult<ReferenceDataDto>> GetByIdAsync(MuscleRoleId id) => 
-        id.IsEmpty 
-            ? ServiceResult<ReferenceDataDto>.Failure(ReferenceDataDto.Empty, ServiceError.ValidationFailed(MuscleRoleErrorMessages.InvalidIdFormat))
-            : await GetByIdAsync(id.ToString());
+    public async Task<ServiceResult<ReferenceDataDto>> GetByIdAsync(MuscleRoleId id)
+    {
+        return await ServiceValidate.For<ReferenceDataDto>()
+            .EnsureNotEmpty(id, ServiceError.ValidationFailed(MuscleRoleErrorMessages.InvalidIdFormat))
+            .MatchAsync(
+                whenValid: async () => await GetByIdAsync(id.ToString())
+            );
+    }
     
     /// <inheritdoc/>
-    public async Task<ServiceResult<ReferenceDataDto>> GetByValueAsync(string value) => 
-        string.IsNullOrWhiteSpace(value)
-            ? ServiceResult<ReferenceDataDto>.Failure(ReferenceDataDto.Empty, ServiceError.ValidationFailed(MuscleRoleErrorMessages.ValueCannotBeEmpty))
-            : await GetFromCacheOrLoadAsync(
-                GetValueCacheKey(value),
-                () => LoadByValueAsync(value),
-                value);
+    public async Task<ServiceResult<ReferenceDataDto>> GetByValueAsync(string value)
+    {
+        return await ServiceValidate.For<ReferenceDataDto>()
+            .EnsureNotWhiteSpace(value, ServiceError.ValidationFailed(MuscleRoleErrorMessages.ValueCannotBeEmpty))
+            .MatchAsync(
+                whenValid: async () => await GetFromCacheOrLoadAsync(
+                    GetValueCacheKey(value),
+                    () => LoadByValueAsync(value),
+                    value)
+            );
+    }
 
     private string GetValueCacheKey(string value) => $"{GetCacheKeyPrefix()}value:{value}";
     
@@ -100,15 +109,33 @@ public class MuscleRoleService : PureReferenceService<MuscleRole, ReferenceDataD
         await ExistsAsync(id.ToString());
 
     /// <inheritdoc/>
-    protected override async Task<MuscleRole> LoadEntityByIdAsync(string id)
+    protected override async Task<ServiceResult<MuscleRole>> LoadEntityByIdAsync(string id)
     {
         var muscleRoleId = MuscleRoleId.ParseOrEmpty(id);
-        if (muscleRoleId.IsEmpty)
-            return MuscleRole.Empty;
-            
+        
+        return await ServiceValidate.For<MuscleRole>()
+            .EnsureNotEmpty(muscleRoleId, ServiceError.InvalidFormat("MuscleRoleId", MuscleRoleErrorMessages.InvalidIdFormat))
+            .Match(
+                whenValid: async () => await LoadEntityFromRepository(muscleRoleId),
+                whenInvalid: errors => ServiceResult<MuscleRole>.Failure(
+                    MuscleRole.Empty,
+                    ServiceError.ValidationFailed(errors.FirstOrDefault() ?? "Invalid ID format"))
+            );
+    }
+    
+    private async Task<ServiceResult<MuscleRole>> LoadEntityFromRepository(MuscleRoleId id)
+    {
         using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
         var repository = unitOfWork.GetRepository<IMuscleRoleRepository>();
-        return await repository.GetByIdAsync(muscleRoleId);
+        var entity = await repository.GetByIdAsync(id);
+        
+        return entity switch
+        {
+            { IsEmpty: true } => ServiceResult<MuscleRole>.Failure(
+                MuscleRole.Empty, 
+                ServiceError.NotFound("MuscleRole")),
+            _ => ServiceResult<MuscleRole>.Success(entity)
+        };
     }
 
     /// <inheritdoc/>
@@ -123,9 +150,9 @@ public class MuscleRoleService : PureReferenceService<MuscleRole, ReferenceDataD
     protected override ValidationResult ValidateAndParseId(string id)
     {
         var parsedId = MuscleRoleId.ParseOrEmpty(id);
-        return parsedId.IsEmpty 
-            ? ValidationResult.Failure(MuscleRoleErrorMessages.InvalidIdFormat) 
-            : ValidationResult.Success();
+        return ServiceValidate.For()
+            .EnsureNotEmpty(parsedId, MuscleRoleErrorMessages.InvalidIdFormat)
+            .ToResult();
     }
 
     /// <inheritdoc/>

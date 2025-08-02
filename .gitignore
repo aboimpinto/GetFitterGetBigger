@@ -246,3 +246,6 @@ Migrations/
 
 .qodo/
 .qodo
+
+# Temporary memory-bank files
+**/memory-bank/temp/

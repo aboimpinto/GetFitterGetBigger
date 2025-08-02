@@ -3,13 +3,12 @@ using GetFitterGetBigger.API.DTOs;
 using GetFitterGetBigger.API.Models;
 using GetFitterGetBigger.API.Models.Entities;
 using GetFitterGetBigger.API.Models.SpecializedIds;
-using GetFitterGetBigger.API.Models.Validation;
 using GetFitterGetBigger.API.Repositories.Interfaces;
 using GetFitterGetBigger.API.Services.Base;
 using GetFitterGetBigger.API.Services.Cache;
 using GetFitterGetBigger.API.Services.Interfaces;
 using GetFitterGetBigger.API.Services.Results;
-using Microsoft.Extensions.Logging;
+using GetFitterGetBigger.API.Services.Validation;
 using Olimpo.EntityFramework.Persistency;
 
 namespace GetFitterGetBigger.API.Services.Implementations;
@@ -35,19 +34,27 @@ public class KineticChainTypeService : PureReferenceService<KineticChainType, Re
     }
 
     /// <inheritdoc/>
-    public async Task<ServiceResult<ReferenceDataDto>> GetByIdAsync(KineticChainTypeId id) => 
-        id.IsEmpty 
-            ? ServiceResult<ReferenceDataDto>.Failure(ReferenceDataDto.Empty, ServiceError.ValidationFailed(KineticChainTypeErrorMessages.InvalidIdFormat))
-            : await GetByIdAsync(id.ToString());
+    public async Task<ServiceResult<ReferenceDataDto>> GetByIdAsync(KineticChainTypeId id)
+    {
+        return await ServiceValidate.For<ReferenceDataDto>()
+            .EnsureNotEmpty(id, ServiceError.ValidationFailed(KineticChainTypeErrorMessages.InvalidIdFormat))
+            .MatchAsync(
+                whenValid: async () => await GetByIdAsync(id.ToString())
+            );
+    }
     
     /// <inheritdoc/>
-    public async Task<ServiceResult<ReferenceDataDto>> GetByValueAsync(string value) => 
-        string.IsNullOrWhiteSpace(value)
-            ? ServiceResult<ReferenceDataDto>.Failure(ReferenceDataDto.Empty, ServiceError.ValidationFailed(KineticChainTypeErrorMessages.ValueCannotBeEmptyEntity))
-            : await GetFromCacheOrLoadAsync(
-                GetValueCacheKey(value),
-                () => LoadByValueAsync(value),
-                value);
+    public async Task<ServiceResult<ReferenceDataDto>> GetByValueAsync(string value)
+    {
+        return await ServiceValidate.For<ReferenceDataDto>()
+            .EnsureNotWhiteSpace(value, ServiceError.ValidationFailed(KineticChainTypeErrorMessages.ValueCannotBeEmptyEntity))
+            .MatchAsync(
+                whenValid: async () => await GetFromCacheOrLoadAsync(
+                    GetValueCacheKey(value),
+                    () => LoadByValueAsync(value),
+                    value)
+            );
+    }
 
     private string GetValueCacheKey(string value) => $"{GetCacheKeyPrefix()}value:{value}";
     
@@ -101,15 +108,33 @@ public class KineticChainTypeService : PureReferenceService<KineticChainType, Re
     }
 
     /// <inheritdoc/>
-    protected override async Task<KineticChainType> LoadEntityByIdAsync(string id)
+    protected override async Task<ServiceResult<KineticChainType>> LoadEntityByIdAsync(string id)
     {
         var kineticChainTypeId = KineticChainTypeId.ParseOrEmpty(id);
-        if (kineticChainTypeId.IsEmpty)
-            return KineticChainType.Empty;
-            
+        
+        return await ServiceValidate.For<KineticChainType>()
+            .EnsureNotEmpty(kineticChainTypeId, ServiceError.InvalidFormat("KineticChainTypeId", KineticChainTypeErrorMessages.InvalidIdFormat))
+            .Match(
+                whenValid: async () => await LoadEntityFromRepository(kineticChainTypeId),
+                whenInvalid: errors => ServiceResult<KineticChainType>.Failure(
+                    KineticChainType.Empty,
+                    ServiceError.ValidationFailed(errors.FirstOrDefault() ?? "Invalid ID format"))
+            );
+    }
+    
+    private async Task<ServiceResult<KineticChainType>> LoadEntityFromRepository(KineticChainTypeId id)
+    {
         using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
         var repository = unitOfWork.GetRepository<IKineticChainTypeRepository>();
-        return await repository.GetByIdAsync(kineticChainTypeId);
+        var entity = await repository.GetByIdAsync(id);
+        
+        return entity switch
+        {
+            { IsEmpty: true } => ServiceResult<KineticChainType>.Failure(
+                KineticChainType.Empty, 
+                ServiceError.NotFound("KineticChainType")),
+            _ => ServiceResult<KineticChainType>.Success(entity)
+        };
     }
 
     /// <inheritdoc/>
@@ -124,9 +149,9 @@ public class KineticChainTypeService : PureReferenceService<KineticChainType, Re
     protected override ValidationResult ValidateAndParseId(string id)
     {
         var parsedId = KineticChainTypeId.ParseOrEmpty(id);
-        return parsedId.IsEmpty 
-            ? ValidationResult.Failure(KineticChainTypeErrorMessages.InvalidIdFormat) 
-            : ValidationResult.Success();
+        return ServiceValidate.For()
+            .EnsureNotEmpty(parsedId, KineticChainTypeErrorMessages.InvalidIdFormat)
+            .ToResult();
     }
 
     /// <inheritdoc/>

@@ -8,6 +8,7 @@ using GetFitterGetBigger.API.Services.Base;
 using GetFitterGetBigger.API.Services.Cache;
 using GetFitterGetBigger.API.Services.Interfaces;
 using GetFitterGetBigger.API.Services.Results;
+using GetFitterGetBigger.API.Services.Validation;
 using Microsoft.Extensions.Logging;
 using Olimpo.EntityFramework.Persistency;
 
@@ -33,19 +34,27 @@ public class WorkoutObjectiveService : PureReferenceService<WorkoutObjective, Re
     }
 
     /// <inheritdoc/>
-    public async Task<ServiceResult<ReferenceDataDto>> GetByIdAsync(WorkoutObjectiveId id) => 
-        id.IsEmpty 
-            ? ServiceResult<ReferenceDataDto>.Failure(ReferenceDataDto.Empty, ServiceError.ValidationFailed("Invalid workout objective ID format"))
-            : await GetByIdAsync(id.ToString());
+    public async Task<ServiceResult<ReferenceDataDto>> GetByIdAsync(WorkoutObjectiveId id)
+    {
+        return await ServiceValidate.For<ReferenceDataDto>()
+            .EnsureNotEmpty(id, ServiceError.ValidationFailed(WorkoutObjectiveErrorMessages.InvalidIdFormat))
+            .MatchAsync(
+                whenValid: async () => await GetByIdAsync(id.ToString())
+            );
+    }
     
     /// <inheritdoc/>
-    public async Task<ServiceResult<ReferenceDataDto>> GetByValueAsync(string value) => 
-        string.IsNullOrWhiteSpace(value)
-            ? ServiceResult<ReferenceDataDto>.Failure(ReferenceDataDto.Empty, ServiceError.ValidationFailed(WorkoutObjectiveErrorMessages.ValueCannotBeEmpty))
-            : await GetFromCacheOrLoadAsync(
-                GetValueCacheKey(value),
-                () => LoadByValueAsync(value),
-                value);
+    public async Task<ServiceResult<ReferenceDataDto>> GetByValueAsync(string value)
+    {
+        return await ServiceValidate.For<ReferenceDataDto>()
+            .EnsureNotWhiteSpace(value, ServiceError.ValidationFailed(WorkoutObjectiveErrorMessages.ValueCannotBeEmpty))
+            .MatchAsync(
+                whenValid: async () => await GetFromCacheOrLoadAsync(
+                    GetValueCacheKey(value),
+                    () => LoadByValueAsync(value),
+                    value)
+            );
+    }
 
     private string GetValueCacheKey(string value) => $"{GetCacheKeyPrefix()}value:{value}";
     
@@ -109,16 +118,34 @@ public class WorkoutObjectiveService : PureReferenceService<WorkoutObjective, Re
         return await repository.GetAllActiveAsync();
     }
     
-    // Returns WorkoutObjective.Empty instead of null (Null Object Pattern)
-    protected override async Task<WorkoutObjective> LoadEntityByIdAsync(string id)
+    /// <inheritdoc/>
+    protected override async Task<ServiceResult<WorkoutObjective>> LoadEntityByIdAsync(string id)
     {
         var workoutObjectiveId = WorkoutObjectiveId.ParseOrEmpty(id);
-        if (workoutObjectiveId.IsEmpty)
-            return WorkoutObjective.Empty;
-            
+        
+        return await ServiceValidate.For<WorkoutObjective>()
+            .EnsureNotEmpty(workoutObjectiveId, ServiceError.InvalidFormat("WorkoutObjectiveId", WorkoutObjectiveErrorMessages.InvalidIdFormat))
+            .Match(
+                whenValid: async () => await LoadEntityFromRepository(workoutObjectiveId),
+                whenInvalid: errors => ServiceResult<WorkoutObjective>.Failure(
+                    WorkoutObjective.Empty,
+                    ServiceError.ValidationFailed(errors.FirstOrDefault() ?? "Invalid ID format"))
+            );
+    }
+    
+    private async Task<ServiceResult<WorkoutObjective>> LoadEntityFromRepository(WorkoutObjectiveId id)
+    {
         using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
         var repository = unitOfWork.GetRepository<IWorkoutObjectiveRepository>();
-        return await repository.GetByIdAsync(workoutObjectiveId);
+        var entity = await repository.GetByIdAsync(id);
+        
+        return entity switch
+        {
+            { IsEmpty: true } => ServiceResult<WorkoutObjective>.Failure(
+                WorkoutObjective.Empty, 
+                ServiceError.NotFound("WorkoutObjective")),
+            _ => ServiceResult<WorkoutObjective>.Success(entity)
+        };
     }
     
     protected override ReferenceDataDto MapToDto(WorkoutObjective entity)
@@ -133,18 +160,8 @@ public class WorkoutObjectiveService : PureReferenceService<WorkoutObjective, Re
     
     protected override ValidationResult ValidateAndParseId(string id)
     {
-        // This is called by the base class when using the string overload
-        // Since we always use the typed overload from the controller,
-        // this should validate the string format
-        if (string.IsNullOrWhiteSpace(id))
-        {
-            return ValidationResult.Failure(WorkoutObjectiveErrorMessages.IdCannotBeEmpty);
-        }
-        
-        // No additional validation - let the controller handle format validation
-        // This allows empty GUIDs to pass through and be treated as NotFound
-        
-        // Valid format (including empty GUID) - let the database determine if it exists
-        return ValidationResult.Success();
+        return ServiceValidate.For()
+            .EnsureNotWhiteSpace(id, WorkoutObjectiveErrorMessages.IdCannotBeEmpty)
+            .ToResult();
     }
 }
