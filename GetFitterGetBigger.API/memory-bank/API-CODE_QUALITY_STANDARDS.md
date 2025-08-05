@@ -97,9 +97,20 @@ public async Task<ServiceResult<EquipmentDto>> CreateAsync(CreateEquipmentComman
 ```
 
 ### 2.1 **Fluent Validation API (ServiceValidate)** 🚨 NEW
-Use the fluent `ServiceValidate` API for all validation logic:
+Use the fluent `ServiceValidate` API for ALL validation logic - **NO EXCEPTIONS**:
 
 ```csharp
+// ❌ BAD - Using string.IsNullOrWhiteSpace with switch expressions
+public async Task<ServiceResult<MuscleGroupDto>> GetByNameAsync(string name)
+{
+    var result = string.IsNullOrWhiteSpace(name) switch
+    {
+        true => ServiceResult<MuscleGroupDto>.Failure(MuscleGroupDto.Empty, "Name cannot be empty"),
+        false => await ProcessGetByNameAsync(name)
+    };
+    return result;
+}
+
 // ❌ BAD - Manual validation with multiple returns
 protected override async Task<ValidationResult> ValidateCreateCommand(CreateEquipmentCommand command)
 {
@@ -118,6 +129,19 @@ protected override async Task<ValidationResult> ValidateCreateCommand(CreateEqui
         errors.Add("Name already exists");
     
     return new ValidationResult(errors);
+}
+
+// ✅ GOOD - Using ServiceValidate for parameter validation
+public async Task<ServiceResult<BodyPartDto>> GetByValueAsync(string value)
+{
+    return await ServiceValidate.For<BodyPartDto>()
+        .EnsureNotWhiteSpace(value, ServiceError.ValidationFailed(BodyPartErrorMessages.ValueCannotBeEmpty))
+        .MatchAsync(
+            whenValid: async () => await GetFromCacheOrLoadAsync(
+                GetValueCacheKey(value),
+                () => LoadByValueAsync(value),
+                value)
+        );
 }
 
 // ✅ GOOD - Fluent validation with chaining
@@ -140,6 +164,12 @@ protected override async Task<ValidationResult> ValidateCreateCommand(CreateEqui
 - Direct integration with ServiceResult pattern
 - Built-in ServiceError support
 - Match pattern for conditional logic
+
+**MANDATORY RULE**: 
+- **NEVER** use `string.IsNullOrWhiteSpace()` or `string.IsNullOrEmpty()` directly with switch expressions or if statements for single values
+- **ALWAYS** use `ServiceValidate.For<T>().EnsureNotWhiteSpace()` or similar methods when T implements IEmptyDto
+- This ensures consistent validation behavior and error messaging across the entire API
+- **EXCEPTION**: For collections (IEnumerable<T>) that don't implement IEmptyDto, use switch expressions with ServiceError.ValidationFailed() for consistency
 
 ### 2.2 **Empty Object Pattern with IEmptyDto<T>** 🚨 NEW
 All DTOs must implement `IEmptyDto<T>` interface:

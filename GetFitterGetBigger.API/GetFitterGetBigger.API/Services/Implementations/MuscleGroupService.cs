@@ -8,11 +8,9 @@ using GetFitterGetBigger.API.Repositories.Interfaces;
 using GetFitterGetBigger.API.Services.Base;
 using GetFitterGetBigger.API.Services.Cache;
 using GetFitterGetBigger.API.Services.Commands.MuscleGroup;
-using GetFitterGetBigger.API.Services.Extensions;
 using GetFitterGetBigger.API.Services.Interfaces;
 using GetFitterGetBigger.API.Services.Results;
 using GetFitterGetBigger.API.Services.Validation;
-using Microsoft.Extensions.Logging;
 using Olimpo.EntityFramework.Persistency;
 
 namespace GetFitterGetBigger.API.Services.Implementations;
@@ -23,6 +21,7 @@ namespace GetFitterGetBigger.API.Services.Implementations;
 public class MuscleGroupService : EnhancedReferenceService<MuscleGroup, MuscleGroupDto, CreateMuscleGroupCommand, UpdateMuscleGroupCommand>, IMuscleGroupService
 {
     private readonly IBodyPartService _bodyPartService;
+    private readonly ICacheService _typedCacheService;
     
     public MuscleGroupService(
         IUnitOfWorkProvider<FitnessDbContext> unitOfWorkProvider,
@@ -32,6 +31,7 @@ public class MuscleGroupService : EnhancedReferenceService<MuscleGroup, MuscleGr
         : base(unitOfWorkProvider, cacheService, logger)
     {
         _bodyPartService = bodyPartService;
+        _typedCacheService = cacheService;
     }
     
     /// <summary>
@@ -51,33 +51,11 @@ public class MuscleGroupService : EnhancedReferenceService<MuscleGroup, MuscleGr
     /// </summary>
     public async Task<ServiceResult<bool>> DeleteAsync(MuscleGroupId id)
     {
-        var existingResult = await ExistsAsync(id);
-        var result = existingResult.IsSuccess switch
-        {
-            false => ConvertToDeleteResult(existingResult),
-            true => await ProcessMuscleGroupDeleteAsync(id)
-        };
-        
-        return result;
-    }
-    
-    private ServiceResult<bool> ConvertToDeleteResult(ServiceResult<MuscleGroupDto> existingResult)
-    {
-        return existingResult.StructuredErrors.Any() switch
-        {
-            true => ServiceResult<bool>.Failure(false, existingResult.StructuredErrors.ToArray()),
-            false => ServiceResult<bool>.Failure(false, existingResult.Errors)
-        };
-    }
-    
-    private async Task<ServiceResult<bool>> ProcessMuscleGroupDeleteAsync(MuscleGroupId id)
-    {
-        var inUseResult = await CheckIfInUseAsync(id);
-        return inUseResult.IsSuccess switch
-        {
-            false => inUseResult,
-            true => await base.DeleteAsync(id)
-        };
+        return await Validate<bool>()
+            .EnsureValidMuscleGroupId(id, MuscleGroupErrorMessages.Validation.InvalidMuscleGroupId)
+            .EnsureMuscleGroupExists(id, MuscleGroupErrorMessages.Operations.NotFound)
+            .EnsureCanDeactivate(id, MuscleGroupErrorMessages.BusinessRules.CannotDeleteInUse)
+            .DeleteMuscleGroup(id);
     }
     
     /// <summary>
@@ -91,51 +69,38 @@ public class MuscleGroupService : EnhancedReferenceService<MuscleGroup, MuscleGr
     /// </summary>
     public async Task<ServiceResult<MuscleGroupDto>> GetByNameAsync(string name)
     {
-        var result = string.IsNullOrWhiteSpace(name) switch
-        {
-            true => ServiceResult<MuscleGroupDto>.Failure(MuscleGroupDto.Empty, "Muscle group name cannot be empty"),
-            false => await ProcessGetByNameAsync(name)
-        };
-        
-        return result;
+        return await Validate<MuscleGroupDto>()
+            .EnsureValidName(name, MuscleGroupErrorMessages.Validation.NameCannotBeEmptyForSearch)
+            .ExecuteAsync(async () => 
+            {
+                var cacheKey = CacheKeyGenerator.Generate<MuscleGroupDto>("byName", name);
+                
+                return await CacheLoad.For<MuscleGroupDto>(_typedCacheService, cacheKey)
+                    .WithAutoCache(_typedCacheService, cacheKey, async () => 
+                    {
+                        var entity = await GetEntityByNameFromDatabaseAsync(name);
+                        
+                        // Return empty DTO for empty/inactive entities (won't be cached)
+                        if (entity.IsEmpty || !entity.IsActive)
+                        {
+                            _logger.LogDebug("MuscleGroup not found or inactive for name: {Name}", name);
+                            return MuscleGroupDto.Empty;
+                        }
+                        
+                        _logger.LogDebug("MuscleGroup found for name: {Name}", name);
+                        return MapToDto(entity);
+                    });
+            });
     }
     
-    private async Task<ServiceResult<MuscleGroupDto>> ProcessGetByNameAsync(string name)
-    {
-        var cacheKey = GetCacheKey($"name:{name.ToLowerInvariant()}");
-        // Note: The cast is required because base class stores cache service as object to support multiple cache types
-        var cacheService = (ICacheService)_cacheService;
-        
-        return await CacheLoad.For<MuscleGroupDto>(cacheService, cacheKey)
-            .WithLogging(_logger, "MuscleGroup by name")
-            .MatchAsync(
-                onHit: cached => ServiceResult<MuscleGroupDto>.Success(cached),
-                onMiss: async () => await LoadMuscleGroupByNameAsync(name)
-            );
-    }
-    
-    private async Task<ServiceResult<MuscleGroupDto>> LoadMuscleGroupByNameAsync(string name)
+    /// <summary>
+    /// Gets muscle group entity by name from database (pure DB access)
+    /// </summary>
+    private async Task<MuscleGroup> GetEntityByNameFromDatabaseAsync(string name)
     {
         using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
         var repository = unitOfWork.GetRepository<IMuscleGroupRepository>();
-        var entity = await repository.GetByNameAsync(name);
-        
-        return entity switch
-        {
-            { IsEmpty: true } or { IsActive: false } => ServiceResult<MuscleGroupDto>.Failure(MuscleGroupDto.Empty, ServiceError.NotFound("MuscleGroup")),
-            _ => await MapAndCacheByNameAsync(entity, name)
-        };
-    }
-    
-    private async Task<ServiceResult<MuscleGroupDto>> MapAndCacheByNameAsync(MuscleGroup entity, string name)
-    {
-        var dto = MapToDto(entity);
-        var cacheKey = GetCacheKey($"name:{name.ToLowerInvariant()}");
-        // Note: The cast is required because base class stores cache service as object to support multiple cache types
-        var cacheService = (ICacheService)_cacheService;
-        await cacheService.SetAsync(cacheKey, dto);
-        
-        return ServiceResult<MuscleGroupDto>.Success(dto);
+        return await repository.GetByNameAsync(name);
     }
     
     /// <summary>
@@ -143,60 +108,38 @@ public class MuscleGroupService : EnhancedReferenceService<MuscleGroup, MuscleGr
     /// </summary>
     public async Task<ServiceResult<IEnumerable<MuscleGroupDto>>> GetByBodyPartAsync(BodyPartId bodyPartId)
     {
-        var result = bodyPartId.IsEmpty switch
-        {
-            true => ServiceResult<IEnumerable<MuscleGroupDto>>.Failure(new List<MuscleGroupDto>(), "Body part ID cannot be empty"),
-            false => await ProcessGetByBodyPartAsync(bodyPartId)
-        };
-        
-        return result;
-    }
-    
-    private async Task<ServiceResult<IEnumerable<MuscleGroupDto>>> ProcessGetByBodyPartAsync(BodyPartId bodyPartId)
-    {
-        var cacheKey = GetCacheKey($"byBodyPart:{bodyPartId}");
-        // Note: The cast is required because base class stores cache service as object to support multiple cache types
-        var cacheService = (ICacheService)_cacheService;
-        var cached = await cacheService.GetAsync<IEnumerable<MuscleGroupDto>>(cacheKey);
-        
-        return cached switch
-        {
-            not null => ServiceResult<IEnumerable<MuscleGroupDto>>.Success(cached),
-            null => await LoadMuscleGroupsByBodyPartAsync(bodyPartId)
-        };
-    }
-    
-    private async Task<ServiceResult<IEnumerable<MuscleGroupDto>>> LoadMuscleGroupsByBodyPartAsync(BodyPartId bodyPartId)
-    {
-        using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
-        var repository = unitOfWork.GetRepository<IMuscleGroupRepository>();
-        var entities = await repository.GetByBodyPartAsync(bodyPartId);
-        
-        var dtos = entities.Select(MapToDto).ToList();
-        
-        var cacheKey = GetCacheKey($"byBodyPart:{bodyPartId}");
-        // Note: The cast is required because base class stores cache service as object to support multiple cache types
-        var cacheService = (ICacheService)_cacheService;
-        await cacheService.SetAsync(cacheKey, dtos);
-        
-        return ServiceResult<IEnumerable<MuscleGroupDto>>.Success(dtos);
+        return await Validate<IEnumerable<MuscleGroupDto>>()
+            .EnsureValidBodyPartId(bodyPartId, MuscleGroupErrorMessages.Validation.BodyPartIdCannotBeEmptyForSearch)
+            .ExecuteAsync(async () => 
+            {
+                var cacheKey = CacheKeyGenerator.Generate<MuscleGroupDto>("byBodyPart", bodyPartId);
+                
+                var result = await CacheLoad.For<List<MuscleGroupDto>>(_typedCacheService, cacheKey)
+                    .WithAutoCache(_typedCacheService, cacheKey, async () => 
+                    {
+                        var entities = await GetEntitiesByBodyPartFromDatabaseAsync(bodyPartId);
+                        
+                        // Map entities to DTOs - returns empty list if no entities
+                        var mappedResult = entities.Select(MapToDto).ToList();
+                        _logger.LogDebug("Found {Count} MuscleGroups for BodyPart: {BodyPartId}", mappedResult.Count, bodyPartId);
+                        return mappedResult;
+                    });
+                
+                // Convert List<T> result to IEnumerable<T> for interface compatibility
+                return result.IsSuccess 
+                    ? ServiceResult<IEnumerable<MuscleGroupDto>>.Success(result.Data)
+                    : ServiceResult<IEnumerable<MuscleGroupDto>>.Failure([], result.Errors.ToArray());
+            });
     }
     
     /// <summary>
-    /// Checks if muscle group is being used by any active exercises
+    /// Gets muscle group entities by body part from database (pure DB access)
     /// </summary>
-    private async Task<ServiceResult<bool>> CheckIfInUseAsync(MuscleGroupId id)
+    private async Task<IEnumerable<MuscleGroup>> GetEntitiesByBodyPartFromDatabaseAsync(BodyPartId bodyPartId)
     {
         using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
         var repository = unitOfWork.GetRepository<IMuscleGroupRepository>();
-        
-        var canDeactivate = await repository.CanDeactivateAsync(id);
-        
-        return canDeactivate switch
-        {
-            true => ServiceResult<bool>.Success(true),
-            false => ServiceResult<bool>.Failure(false, ServiceError.DependencyExists("MuscleGroup", "exercises"))
-        };
+        return await repository.GetByBodyPartAsync(bodyPartId);
     }
     
     // Abstract method implementations
@@ -370,4 +313,92 @@ public class MuscleGroupService : EnhancedReferenceService<MuscleGroup, MuscleGr
     // Note: Cache invalidation is handled by the base class using pattern-based invalidation.
     // The pattern MuscleGroup:* will invalidate all caches including name-based caches.
     // Body part-specific caches will expire naturally based on cache duration.
+    
+    /// <summary>
+    /// Creates a validation builder for muscle group operations
+    /// </summary>
+    private MuscleGroupValidationBuilder<T> Validate<T>()
+    {
+        return new MuscleGroupValidationBuilder<T>(this);
+    }
+    
+    /// <summary>
+    /// Performs the actual delete operation after validation
+    /// </summary>
+    private async Task<ServiceResult<bool>> PerformDeleteAsync(MuscleGroupId id)
+    {
+        using var unitOfWork = _unitOfWorkProvider.CreateWritable();
+        var repository = unitOfWork.GetRepository<IMuscleGroupRepository>();
+        var deleted = await repository.DeactivateAsync(id);
+        await unitOfWork.CommitAsync();
+        
+        await InvalidateCacheAsync();
+        _logger.LogInformation("Deleted MuscleGroup with ID: {Id}", id.ToString());
+        
+        return ServiceResult<bool>.Success(true);
+    }
+    
+    /// <summary>
+    /// Private nested validation builder for muscle group-specific validations
+    /// </summary>
+    private class MuscleGroupValidationBuilder<T>
+    {
+        private readonly MuscleGroupService _service;
+        private readonly ServiceValidationBuilder<T> _innerBuilder;
+        
+        public MuscleGroupValidationBuilder(MuscleGroupService service)
+        {
+            _service = service;
+            _innerBuilder = ServiceValidate.Build<T>();
+        }
+        
+        public MuscleGroupValidationBuilder<T> EnsureValidMuscleGroupId(MuscleGroupId id, string errorMessage)
+        {
+            _innerBuilder.EnsureNotEmpty(id, ServiceError.ValidationFailed(errorMessage));
+            return this;
+        }
+        
+        public MuscleGroupValidationBuilder<T> EnsureMuscleGroupExists(MuscleGroupId id, string errorMessage)
+        {
+            _innerBuilder.EnsureAsync(
+                async () => (await _service.ExistsAsync(id)).IsSuccess,
+                ServiceError.NotFound("MuscleGroup"));
+            return this;
+        }
+        
+        public MuscleGroupValidationBuilder<T> EnsureCanDeactivate(MuscleGroupId id, string errorMessage)
+        {
+            _innerBuilder.EnsureAsync(
+                async () =>
+                {
+                    using var unitOfWork = _service._unitOfWorkProvider.CreateReadOnly();
+                    var repository = unitOfWork.GetRepository<IMuscleGroupRepository>();
+                    return await repository.CanDeactivateAsync(id);
+                },
+                ServiceError.DependencyExists("MuscleGroup", errorMessage));
+            return this;
+        }
+        
+        public MuscleGroupValidationBuilder<T> EnsureValidName(string name, string errorMessage)
+        {
+            _innerBuilder.EnsureNotWhiteSpace(name, ServiceError.ValidationFailed(errorMessage));
+            return this;
+        }
+        
+        public MuscleGroupValidationBuilder<T> EnsureValidBodyPartId(BodyPartId id, string errorMessage)
+        {
+            _innerBuilder.Ensure(() => !id.IsEmpty, ServiceError.ValidationFailed(errorMessage));
+            return this;
+        }
+        
+        public async Task<ServiceResult<bool>> DeleteMuscleGroup(MuscleGroupId id)
+        {
+            return await _innerBuilder.ExecuteAsync(() => _service.PerformDeleteAsync(id));
+        }
+        
+        public async Task<ServiceResult<T>> ExecuteAsync(Func<Task<ServiceResult<T>>> operation)
+        {
+            return await _innerBuilder.ExecuteAsync(operation);
+        }
+    }
 }

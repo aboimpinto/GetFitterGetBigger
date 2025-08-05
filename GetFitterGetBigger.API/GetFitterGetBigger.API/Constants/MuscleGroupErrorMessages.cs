@@ -13,10 +13,12 @@ public static class MuscleGroupErrorMessages
         public static string IdCannotBeEmpty => "ID cannot be empty";
         public static string InvalidIdFormat => "Invalid ID format. Expected format: 'musclegroup-{guid}', got: '{0}'";
         public static string NameCannotBeEmpty => "Name cannot be empty";
+        public static string NameCannotBeEmptyForSearch => "Muscle group name cannot be empty";
         public static string NameTooLong => "Name must not exceed 100 characters";
         public static string RequestCannotBeNull => "Request cannot be null";
         public static string InvalidMuscleGroupId => "Invalid muscle group ID";
         public static string BodyPartIdRequired => "Body part ID is required";
+        public static string BodyPartIdCannotBeEmptyForSearch => "Body part ID cannot be empty";
         public static string InvalidBodyPartId => "Body part does not exist";
     }
     

@@ -149,6 +149,18 @@ public class ServiceValidationBuilder<T>
     }
 
     /// <summary>
+    /// Adds an async validation with custom logic that returns a ServiceError.
+    /// </summary>
+    /// <param name="validationFunc">Function that returns (IsValid, ServiceError)</param>
+    /// <returns>The builder instance for chaining</returns>
+    public ServiceValidationBuilder<T> EnsureAsync(
+        Func<Task<(bool IsValid, ServiceError? Error)>> validationFunc)
+    {
+        _asyncServiceErrorValidations.Add(validationFunc);
+        return this;
+    }
+
+    /// <summary>
     /// Adds an async validation that checks a condition.
     /// </summary>
     /// <param name="predicate">The async condition that must be true for validation to pass</param>
@@ -289,6 +301,8 @@ public class ServiceValidationBuilder<T>
 
         // Then run async validations
         var errors = new List<string>();
+        ServiceError? firstServiceError = null;
+        
         foreach (var asyncValidation in _asyncValidations)
         {
             var (isValid, error) = await asyncValidation();
@@ -305,9 +319,26 @@ public class ServiceValidationBuilder<T>
             if (!isValid && error != null)
             {
                 errors.Add(error.Message);
+                // Capture the first ServiceError to preserve the error code
+                firstServiceError ??= error;
             }
         }
 
-        return new ValidationResult { Errors = errors };
+        // If we have errors, return a failure with the first ServiceError (if any)
+        if (errors.Any())
+        {
+            // If we have a ServiceError, create a new one with all error messages
+            if (firstServiceError != null)
+            {
+                var combinedMessage = errors.Count == 1 
+                    ? firstServiceError.Message 
+                    : string.Join("; ", errors);
+                var combinedError = new ServiceError(firstServiceError.Code, combinedMessage);
+                return ValidationResult.Failure(combinedError);
+            }
+            return ValidationResult.Failure(errors.ToArray());
+        }
+
+        return ValidationResult.Success();
     }
 }

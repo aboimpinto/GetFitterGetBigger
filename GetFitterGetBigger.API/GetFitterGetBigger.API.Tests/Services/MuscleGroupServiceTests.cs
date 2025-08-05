@@ -357,8 +357,8 @@ public class MuscleGroupServiceTests
         var cachedDtos = muscleGroups.Select(MapToDto).ToList();
         
         _mockCacheService
-            .Setup(x => x.GetAsync<IEnumerable<MuscleGroupDto>>(It.IsAny<string>()))
-            .ReturnsAsync(cachedDtos);
+            .Setup(x => x.GetAsync<List<MuscleGroupDto>>(It.IsAny<string>()))
+            .ReturnsAsync(cachedDtos.ToList());
             
         // Act
         var result = await _service.GetByBodyPartAsync(bodyPartId);
@@ -377,8 +377,8 @@ public class MuscleGroupServiceTests
         var muscleGroups = _testData.Where(mg => mg.BodyPartId == bodyPartId).ToList();
         
         _mockCacheService
-            .Setup(x => x.GetAsync<IEnumerable<MuscleGroupDto>>(It.IsAny<string>()))
-            .ReturnsAsync((IEnumerable<MuscleGroupDto>?)null);
+            .Setup(x => x.GetAsync<List<MuscleGroupDto>>(It.IsAny<string>()))
+            .ReturnsAsync((List<MuscleGroupDto>?)null);
             
         _mockRepository
             .Setup(x => x.GetByBodyPartAsync(bodyPartId))
@@ -415,8 +415,8 @@ public class MuscleGroupServiceTests
         var bodyPartId = BodyPartId.ParseOrEmpty(BodyPartIds.Back);
         
         _mockCacheService
-            .Setup(x => x.GetAsync<IEnumerable<MuscleGroupDto>>(It.IsAny<string>()))
-            .ReturnsAsync((IEnumerable<MuscleGroupDto>?)null);
+            .Setup(x => x.GetAsync<List<MuscleGroupDto>>(It.IsAny<string>()))
+            .ReturnsAsync((List<MuscleGroupDto>?)null);
             
         _mockRepository
             .Setup(x => x.GetByBodyPartAsync(bodyPartId))
@@ -905,7 +905,8 @@ public class MuscleGroupServiceTests
         
         // Assert
         Assert.NotNull(expectedCacheKey);
-        Assert.Contains("name:chest", expectedCacheKey); // Should be lowercased
+        // The cache key format is now "EntityName:operation:parameters"
+        Assert.Contains("musclegroup:byname:chest", expectedCacheKey.ToLowerInvariant()); // Should be lowercased
     }
     
     #endregion
