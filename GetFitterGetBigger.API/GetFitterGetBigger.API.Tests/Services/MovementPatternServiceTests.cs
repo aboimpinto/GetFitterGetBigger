@@ -279,26 +279,21 @@ namespace GetFitterGetBigger.API.Tests.Services
         {
             // Arrange
             var movementPatternId = MovementPatternId.New();
-            var movementPattern = MovementPattern.Handler.Create(
-                movementPatternId,
-                MovementPatternTestConstants.HorizontalPushName,
-                MovementPatternTestConstants.PushingForwardDescription,
-                MovementPatternTestConstants.TestDisplayOrder,
-                true).Value;
 
             _mockCacheService
                 .Setup(x => x.GetAsync<ReferenceDataDto>(It.IsAny<string>()))
                 .ReturnsAsync(CacheResult<ReferenceDataDto>.Miss());
 
             _mockMovementPatternRepository
-                .Setup(x => x.GetByIdAsync(movementPatternId))
-                .ReturnsAsync(movementPattern);
+                .Setup(x => x.ExistsAsync(It.IsAny<MovementPatternId>()))
+                .ReturnsAsync(true);
 
             // Act
             var result = await _movementPatternService.ExistsAsync(movementPatternId);
 
             // Assert
-            Assert.True(result);
+            Assert.True(result.IsSuccess);
+            Assert.True(result.Data);
         }
 
         [Fact]
@@ -312,14 +307,15 @@ namespace GetFitterGetBigger.API.Tests.Services
                 .ReturnsAsync(CacheResult<ReferenceDataDto>.Miss());
 
             _mockMovementPatternRepository
-                .Setup(x => x.GetByIdAsync(movementPatternId))
-                .ReturnsAsync(MovementPattern.Empty);
+                .Setup(x => x.ExistsAsync(It.IsAny<MovementPatternId>()))
+                .ReturnsAsync(false);
 
             // Act
             var result = await _movementPatternService.ExistsAsync(movementPatternId);
 
             // Assert
-            Assert.False(result);
+            Assert.True(result.IsSuccess);
+            Assert.False(result.Data);
         }
 
         [Fact]
@@ -328,26 +324,21 @@ namespace GetFitterGetBigger.API.Tests.Services
             // Arrange
             var movementPatternId = MovementPatternId.New();
             var stringId = movementPatternId.ToString();
-            var movementPattern = MovementPattern.Handler.Create(
-                movementPatternId,
-                MovementPatternTestConstants.HorizontalPushName,
-                MovementPatternTestConstants.PushingForwardDescription,
-                MovementPatternTestConstants.TestDisplayOrder,
-                true).Value;
 
             _mockCacheService
                 .Setup(x => x.GetAsync<ReferenceDataDto>(It.IsAny<string>()))
                 .ReturnsAsync(CacheResult<ReferenceDataDto>.Miss());
 
             _mockMovementPatternRepository
-                .Setup(x => x.GetByIdAsync(movementPatternId))
-                .ReturnsAsync(movementPattern);
+                .Setup(x => x.ExistsAsync(It.IsAny<MovementPatternId>()))
+                .ReturnsAsync(true);
 
             // Act
-            var result = await _movementPatternService.ExistsAsync(stringId);
+            var result = await _movementPatternService.ExistsAsync(MovementPatternId.ParseOrEmpty(stringId));
 
             // Assert
-            Assert.True(result);
+            Assert.True(result.IsSuccess);
+            Assert.True(result.Data);
         }
 
         [Fact]
@@ -360,10 +351,11 @@ namespace GetFitterGetBigger.API.Tests.Services
             // causing ExistsAsync to return false.
 
             // Act
-            var result = await _movementPatternService.ExistsAsync(invalidFormatId);
+            var result = await _movementPatternService.ExistsAsync(MovementPatternId.ParseOrEmpty(invalidFormatId));
 
             // Assert
-            Assert.False(result);
+            Assert.True(result.IsSuccess);
+            Assert.False(result.Data);
         }
     }
 }

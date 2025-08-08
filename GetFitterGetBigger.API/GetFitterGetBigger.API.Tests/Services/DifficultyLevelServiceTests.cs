@@ -54,28 +54,19 @@ namespace GetFitterGetBigger.API.Tests.Services
         {
             // Arrange
             var difficultyLevelId = DifficultyLevelId.New();
-            var difficultyLevel = DifficultyLevel.Handler.Create(
-                difficultyLevelId,
-                "Beginner",
-                "Suitable for beginners",
-                1,
-                true).Value;
-
-            _mockCacheService
-                .Setup(x => x.GetAsync<ReferenceDataDto>(It.IsAny<string>()))
-                .ReturnsAsync(CacheResult<ReferenceDataDto>.Miss());
 
             _mockDifficultyLevelRepository
-                .Setup(x => x.GetByIdAsync(difficultyLevelId))
-                .ReturnsAsync(difficultyLevel);
+                .Setup(x => x.ExistsAsync(It.IsAny<DifficultyLevelId>()))
+                .ReturnsAsync(true);
 
             // Act
             var result = await _difficultyLevelService.ExistsAsync(difficultyLevelId);
 
             // Assert
-            Assert.True(result);
+            Assert.True(result.IsSuccess);
+            Assert.True(result.Data);
             _mockUnitOfWorkProvider.Verify(x => x.CreateReadOnly(), Times.Once);
-            _mockDifficultyLevelRepository.Verify(x => x.GetByIdAsync(difficultyLevelId), Times.Once);
+            _mockDifficultyLevelRepository.Verify(x => x.ExistsAsync(It.IsAny<DifficultyLevelId>()), Times.Once);
         }
 
         [Fact]
@@ -84,21 +75,18 @@ namespace GetFitterGetBigger.API.Tests.Services
             // Arrange
             var difficultyLevelId = DifficultyLevelId.New();
 
-            _mockCacheService
-                .Setup(x => x.GetAsync<ReferenceDataDto>(It.IsAny<string>()))
-                .ReturnsAsync(CacheResult<ReferenceDataDto>.Miss());
-
             _mockDifficultyLevelRepository
-                .Setup(x => x.GetByIdAsync(difficultyLevelId))
-                .ReturnsAsync(DifficultyLevel.Empty);
+                .Setup(x => x.ExistsAsync(It.IsAny<DifficultyLevelId>()))
+                .ReturnsAsync(false);
 
             // Act
             var result = await _difficultyLevelService.ExistsAsync(difficultyLevelId);
 
             // Assert
-            Assert.False(result);
+            Assert.True(result.IsSuccess);
+            Assert.False(result.Data);
             _mockUnitOfWorkProvider.Verify(x => x.CreateReadOnly(), Times.Once);
-            _mockDifficultyLevelRepository.Verify(x => x.GetByIdAsync(difficultyLevelId), Times.Once);
+            _mockDifficultyLevelRepository.Verify(x => x.ExistsAsync(It.IsAny<DifficultyLevelId>()), Times.Once);
         }
 
         [Fact]
@@ -111,7 +99,8 @@ namespace GetFitterGetBigger.API.Tests.Services
             var result = await _difficultyLevelService.ExistsAsync(emptyId);
 
             // Assert
-            Assert.False(result);
+            Assert.False(result.IsSuccess);
+            Assert.Equal(ServiceErrorCode.InvalidFormat, result.PrimaryErrorCode);
             _mockUnitOfWorkProvider.Verify(x => x.CreateReadOnly(), Times.Never);
             _mockDifficultyLevelRepository.Verify(x => x.GetByIdAsync(It.IsAny<DifficultyLevelId>()), Times.Never);
         }

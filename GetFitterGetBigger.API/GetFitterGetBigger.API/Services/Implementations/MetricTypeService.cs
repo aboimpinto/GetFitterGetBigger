@@ -40,7 +40,7 @@ public class MetricTypeService : PureReferenceService<MetricType, ReferenceDataD
     public async Task<ServiceResult<ReferenceDataDto>> GetByIdAsync(MetricTypeId id)
     {
         return await ServiceValidate.For<ReferenceDataDto>()
-            .EnsureNotEmpty(id, ServiceError.ValidationFailed(MetricTypeErrorMessages.InvalidIdFormat))
+            .EnsureNotEmpty(id, MetricTypeErrorMessages.InvalidIdFormat)
             .MatchAsync(
                 whenValid: async () => await GetByIdAsync(id.ToString())
             );
@@ -50,7 +50,7 @@ public class MetricTypeService : PureReferenceService<MetricType, ReferenceDataD
     public async Task<ServiceResult<ReferenceDataDto>> GetByValueAsync(string value)
     {
         return await ServiceValidate.For<ReferenceDataDto>()
-            .EnsureNotWhiteSpace(value, ServiceError.ValidationFailed(MetricTypeErrorMessages.ValueCannotBeEmpty))
+            .EnsureNotWhiteSpace(value, MetricTypeErrorMessages.ValueCannotBeEmpty)
             .MatchAsync(
                 whenValid: async () => await GetFromCacheOrLoadAsync(
                     GetValueCacheKey(value),
@@ -107,12 +107,18 @@ public class MetricTypeService : PureReferenceService<MetricType, ReferenceDataD
     }
 
     /// <inheritdoc/>
-    public async Task<bool> ExistsAsync(MetricTypeId id) => 
-        !id.IsEmpty && (await GetByIdAsync(id)).IsSuccess;
-    
-    /// <inheritdoc/>
-    public override async Task<bool> ExistsAsync(string id) => 
-        await ExistsAsync(MetricTypeId.ParseOrEmpty(id));
+    public async Task<ServiceResult<bool>> ExistsAsync(MetricTypeId id)
+    {
+        return await ServiceValidate.Build<bool>()
+            .EnsureNotEmpty(id, MetricTypeErrorMessages.InvalidIdFormat)
+            .WhenValidAsync(async () =>
+            {
+                using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
+                var repository = unitOfWork.GetRepository<IMetricTypeRepository>();
+                var exists = await repository.ExistsAsync(id);
+                return ServiceResult<bool>.Success(exists);
+            });
+    }
     
     protected override async Task<IEnumerable<MetricType>> LoadAllEntitiesAsync()
     {
@@ -127,7 +133,7 @@ public class MetricTypeService : PureReferenceService<MetricType, ReferenceDataD
         var metricTypeId = MetricTypeId.ParseOrEmpty(id);
         
         return await ServiceValidate.For<MetricType>()
-            .EnsureNotEmpty(metricTypeId, ServiceError.InvalidFormat("MetricTypeId", MetricTypeErrorMessages.InvalidIdFormat))
+            .EnsureNotEmpty(metricTypeId, MetricTypeErrorMessages.InvalidIdFormat)
             .Match(
                 whenValid: async () => await LoadEntityFromRepository(metricTypeId),
                 whenInvalid: errors => ServiceResult<MetricType>.Failure(

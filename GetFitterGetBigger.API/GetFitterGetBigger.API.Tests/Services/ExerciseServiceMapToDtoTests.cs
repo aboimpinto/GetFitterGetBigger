@@ -9,6 +9,7 @@ using GetFitterGetBigger.API.Models.SpecializedIds;
 using GetFitterGetBigger.API.Repositories.Interfaces;
 using GetFitterGetBigger.API.Services.Implementations;
 using GetFitterGetBigger.API.Services.Interfaces;
+using GetFitterGetBigger.API.Services.Results;
 using GetFitterGetBigger.API.Services.Commands;
 using Moq;
 using Olimpo.EntityFramework.Persistency;
@@ -51,7 +52,7 @@ public class ExerciseServiceMapToDtoTests
         // Default behavior: all exercise types exist
         _mockExerciseTypeService
             .Setup(s => s.ExistsAsync(It.IsAny<ExerciseTypeId>()))
-            .ReturnsAsync(true);
+            .ReturnsAsync(ServiceResult<bool>.Success(true));
         
         _exerciseService = new ExerciseService(_unitOfWorkProviderMock.Object, _mockExerciseTypeService.Object);
     }

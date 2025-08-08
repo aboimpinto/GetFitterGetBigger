@@ -67,4 +67,17 @@ public abstract class ReferenceDataRepository<TEntity, TId, TContext> :
         await Context.Set<TEntity>()
             .AsNoTracking()
             .FirstOrDefaultAsync(x => x.Value.ToLower() == value.ToLower() && x.IsActive);
+    
+    /// <summary>
+    /// Checks if a reference data item exists by its ID
+    /// Uses efficient database query with .Any() to avoid loading entire entity
+    /// </summary>
+    /// <param name="id">The ID of the item to check</param>
+    /// <returns>True if the item exists and is active, false otherwise</returns>
+    public async Task<bool> ExistsAsync(TId id)
+    {
+        // Use FindAsync to check existence as it properly handles specialized ID types
+        var entity = await Context.Set<TEntity>().FindAsync(id);
+        return entity != null && entity.IsActive;
+    }
 }

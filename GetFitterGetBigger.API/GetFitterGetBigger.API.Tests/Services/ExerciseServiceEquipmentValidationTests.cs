@@ -60,7 +60,7 @@ public class ExerciseServiceEquipmentValidationTests
         // Default behavior: all exercise types exist
         _mockExerciseTypeService
             .Setup(s => s.ExistsAsync(It.IsAny<ExerciseTypeId>()))
-            .ReturnsAsync(true);
+            .ReturnsAsync(ServiceResult<bool>.Success(true));
         
         _exerciseService = new ExerciseService(_unitOfWorkProviderMock.Object, _mockExerciseTypeService.Object);
     }

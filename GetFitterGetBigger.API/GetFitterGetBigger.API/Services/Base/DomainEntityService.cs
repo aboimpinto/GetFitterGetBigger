@@ -310,16 +310,6 @@ public abstract class DomainEntityService<TEntity, TDto, TCreateCommand, TUpdate
         }
     }
     
-    /// <summary>
-    /// Checks if an entity exists with the given ID
-    /// </summary>
-    /// <param name="id">The entity ID</param>
-    /// <returns>True if the entity exists and is active, false otherwise</returns>
-    public virtual async Task<bool> ExistsAsync(string id)
-    {
-        var result = await GetByIdAsync(id);
-        return result.IsSuccess;
-    }
     
     /// <summary>
     /// Invalidates caches related to the given entity

@@ -38,7 +38,7 @@ public class DifficultyLevelService : PureReferenceService<DifficultyLevel, Refe
     public async Task<ServiceResult<ReferenceDataDto>> GetByIdAsync(DifficultyLevelId id)
     {
         return await ServiceValidate.For<ReferenceDataDto>()
-            .EnsureNotEmpty(id, ServiceError.ValidationFailed(DifficultyLevelErrorMessages.InvalidIdFormat))
+            .EnsureNotEmpty(id, DifficultyLevelErrorMessages.InvalidIdFormat)
             .MatchAsync(
                 whenValid: async () => await GetByIdAsync(id.ToString())
             );
@@ -48,7 +48,7 @@ public class DifficultyLevelService : PureReferenceService<DifficultyLevel, Refe
     public async Task<ServiceResult<ReferenceDataDto>> GetByValueAsync(string value)
     {
         return await ServiceValidate.For<ReferenceDataDto>()
-            .EnsureNotWhiteSpace(value, ServiceError.ValidationFailed(DifficultyLevelErrorMessages.ValueCannotBeEmpty))
+            .EnsureNotWhiteSpace(value, DifficultyLevelErrorMessages.ValueCannotBeEmpty)
             .MatchAsync(
                 whenValid: async () => await GetFromCacheOrLoadAsync(
                     GetValueCacheKey(value),
@@ -105,12 +105,18 @@ public class DifficultyLevelService : PureReferenceService<DifficultyLevel, Refe
     }
 
     /// <inheritdoc/>
-    public async Task<bool> ExistsAsync(DifficultyLevelId id) => 
-        !id.IsEmpty && (await GetByIdAsync(id)).IsSuccess;
-    
-    /// <inheritdoc/>
-    public override async Task<bool> ExistsAsync(string id) => 
-        await ExistsAsync(DifficultyLevelId.ParseOrEmpty(id));
+    public async Task<ServiceResult<bool>> ExistsAsync(DifficultyLevelId id)
+    {
+        return await ServiceValidate.Build<bool>()
+            .EnsureNotEmpty(id, DifficultyLevelErrorMessages.InvalidIdFormat)
+            .WhenValidAsync(async () =>
+            {
+                using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
+                var repository = unitOfWork.GetRepository<IDifficultyLevelRepository>();
+                var exists = await repository.ExistsAsync(id);
+                return ServiceResult<bool>.Success(exists);
+            });
+    }
     
     protected override async Task<IEnumerable<DifficultyLevel>> LoadAllEntitiesAsync()
     {
@@ -125,7 +131,7 @@ public class DifficultyLevelService : PureReferenceService<DifficultyLevel, Refe
         var difficultyLevelId = DifficultyLevelId.ParseOrEmpty(id);
         
         return await ServiceValidate.For<DifficultyLevel>()
-            .EnsureNotEmpty(difficultyLevelId, ServiceError.InvalidFormat("DifficultyLevelId", DifficultyLevelErrorMessages.InvalidIdFormat))
+            .EnsureNotEmpty(difficultyLevelId, DifficultyLevelErrorMessages.InvalidIdFormat)
             .Match(
                 whenValid: async () => await LoadEntityFromRepository(difficultyLevelId),
                 whenInvalid: errors => ServiceResult<DifficultyLevel>.Failure(

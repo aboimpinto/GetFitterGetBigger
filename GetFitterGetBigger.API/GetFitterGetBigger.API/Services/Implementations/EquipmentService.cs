@@ -46,7 +46,7 @@ public class EquipmentService : EnhancedReferenceService<Equipment, EquipmentDto
     public async Task<ServiceResult<bool>> DeleteAsync(EquipmentId id)
     {
         return await ServiceValidate.Build<bool>()
-            .Ensure(() => !id.IsEmpty, ServiceError.ValidationFailed(EquipmentErrorMessages.Validation.InvalidEquipmentId))
+            .Ensure(() => !id.IsEmpty, EquipmentErrorMessages.Validation.InvalidEquipmentId)
             .EnsureExistsAsync(
                 async () => (await ExistsAsync(id)).IsSuccess,
                 ServiceError.NotFound("Equipment"))
@@ -241,5 +241,30 @@ public class EquipmentService : EnhancedReferenceService<Equipment, EquipmentDto
 
         var repository = unitOfWork.GetRepository<IEquipmentRepository>();
         return await repository.DeactivateAsync(equipmentId);
+    }
+
+    /// <summary>
+    /// Checks if an equipment entity exists and is active
+    /// </summary>
+    protected override async Task<bool> CheckEntityExistsAsync(ISpecializedIdBase id)
+    {
+        var equipmentId = (EquipmentId)id;
+        if (equipmentId.IsEmpty)
+            return false;
+
+        using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
+        var repository = unitOfWork.GetRepository<IEquipmentRepository>();
+        return await repository.ExistsAsync(equipmentId);
+    }
+
+    /// <summary>
+    /// Validates if the equipment ID is properly formed and not empty
+    /// </summary>
+    protected override bool IsValidId(ISpecializedIdBase id)
+    {
+        if (id is not EquipmentId equipmentId)
+            return false;
+
+        return !equipmentId.IsEmpty;
     }
 }

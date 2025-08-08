@@ -51,6 +51,14 @@ public interface IEquipmentRepository : IRepository
     Task<bool> DeactivateAsync(EquipmentId id);
 
     /// <summary>
+    /// Checks if equipment exists by its ID
+    /// Uses efficient database query with .Any() to avoid loading entire entity
+    /// </summary>
+    /// <param name="id">The ID of the equipment to check</param>
+    /// <returns>True if the equipment exists and is active, false otherwise</returns>
+    Task<bool> ExistsAsync(EquipmentId id);
+    
+    /// <summary>
     /// Checks if equipment with the given name exists
     /// </summary>
     /// <param name="name">The name to check</param>

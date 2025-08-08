@@ -33,13 +33,6 @@ public interface IBodyPartService
     /// Checks if a body part exists
     /// </summary>
     /// <param name="id">The body part ID to check</param>
-    /// <returns>True if the body part exists, false otherwise</returns>
-    Task<bool> ExistsAsync(BodyPartId id);
-    
-    /// <summary>
-    /// Checks if a body part exists with the given string ID
-    /// </summary>
-    /// <param name="id">The body part ID in string format</param>
-    /// <returns>True if the body part exists and is active, false otherwise</returns>
-    Task<bool> ExistsAsync(string id);
+    /// <returns>A service result containing true if the body part exists, false otherwise</returns>
+    Task<ServiceResult<bool>> ExistsAsync(BodyPartId id);
 }

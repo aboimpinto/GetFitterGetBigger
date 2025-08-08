@@ -59,10 +59,20 @@ public class MuscleGroupService : EnhancedReferenceService<MuscleGroup, MuscleGr
     }
     
     /// <summary>
-    /// Checks if muscle group exists using strongly-typed ID
+    /// Checks if muscle group exists using strongly-typed ID - returns boolean result
     /// </summary>
-    public async Task<ServiceResult<MuscleGroupDto>> ExistsAsync(MuscleGroupId id) =>
-        await base.ExistsAsync(id);
+    public async Task<ServiceResult<bool>> CheckExistsAsync(MuscleGroupId id)
+    {
+        return await ServiceValidate.Build<bool>()
+            .EnsureNotEmpty(id, MuscleGroupErrorMessages.Validation.InvalidMuscleGroupId)
+            .WhenValidAsync(async () =>
+            {
+                using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
+                var repository = unitOfWork.GetRepository<IMuscleGroupRepository>();
+                var exists = await repository.ExistsAsync(id);
+                return ServiceResult<bool>.Success(exists);
+            });
+    }
     
     /// <summary>
     /// Gets muscle group by name (case-insensitive)
@@ -187,44 +197,23 @@ public class MuscleGroupService : EnhancedReferenceService<MuscleGroup, MuscleGr
     /// </summary>
     protected override async Task<ValidationResult> ValidateCreateCommand(CreateMuscleGroupCommand command)
     {
-        var basicValidation = ServiceValidate.For()
-            .EnsureNotNull(command, ServiceError.ValidationFailed(MuscleGroupErrorMessages.Validation.RequestCannotBeNull))
-            .EnsureNotWhiteSpace(command?.Name, ServiceError.ValidationFailed(MuscleGroupErrorMessages.Validation.NameCannotBeEmpty));
+        return await ServiceValidate.Build()
+            // Basic validations
+            .EnsureNotNull(command, MuscleGroupErrorMessages.Validation.RequestCannotBeNull)
+            .EnsureNotWhiteSpace(command?.Name, MuscleGroupErrorMessages.Validation.NameCannotBeEmpty)
+            .Ensure(() => command?.Name?.Length <= 100, MuscleGroupErrorMessages.Validation.NameTooLong)
+            .Ensure(() => command != null && !command.BodyPartId.IsEmpty, MuscleGroupErrorMessages.Validation.BodyPartIdRequired)
             
-        var result = command switch
-        {
-            null => basicValidation.ToResult(),
-            _ => await ValidateCreateWithChecksAsync(basicValidation, command)
-        };
-        
-        return result;
-    }
-    
-    private async Task<ValidationResult> ValidateCreateWithChecksAsync(
-        ServiceValidation validation,
-        CreateMuscleGroupCommand command)
-    {
-        var enhancedValidation = validation
-            .Ensure(() => command.Name?.Length <= 100, ServiceError.ValidationFailed(MuscleGroupErrorMessages.Validation.NameTooLong))
-            .Ensure(() => !command.BodyPartId.IsEmpty, ServiceError.ValidationFailed(MuscleGroupErrorMessages.Validation.BodyPartIdRequired));
-            
-        // Check if body part exists (only if body part ID is not empty)
-        if (!command.BodyPartId.IsEmpty)
-        {
-            enhancedValidation = await enhancedValidation.EnsureAsync(
-                async () => await _bodyPartService.ExistsAsync(command.BodyPartId),
-                ServiceError.ValidationFailed(MuscleGroupErrorMessages.Validation.InvalidBodyPartId));
-        }
-            
-        // Check for duplicate name (only if name is not empty)
-        if (!string.IsNullOrWhiteSpace(command.Name))
-        {
-            enhancedValidation = await enhancedValidation.EnsureAsync(
-                async () => !await CheckDuplicateNameAsync(command.Name),
-                ServiceError.AlreadyExists("MuscleGroup", command.Name));
-        }
-            
-        return enhancedValidation.ToResult();
+            // Async validations - these only run if command is not null and has required fields
+            .EnsureAsync(
+                async () => command == null || command.BodyPartId.IsEmpty || 
+                           (await _bodyPartService.ExistsAsync(command.BodyPartId)).Data,
+                MuscleGroupErrorMessages.Validation.InvalidBodyPartId)
+            .EnsureAsync(
+                async () => command == null || string.IsNullOrWhiteSpace(command.Name) || 
+                           !await CheckDuplicateNameAsync(command.Name),
+                ServiceError.AlreadyExists("MuscleGroup", command?.Name ?? string.Empty))
+            .ToValidationResultAsync();
     }
     
     private async Task<bool> CheckDuplicateNameAsync(string name, MuscleGroupId? excludeId = null)
@@ -239,46 +228,26 @@ public class MuscleGroupService : EnhancedReferenceService<MuscleGroup, MuscleGr
     /// </summary>
     protected override async Task<ValidationResult> ValidateUpdateCommand(ISpecializedIdBase id, UpdateMuscleGroupCommand command)
     {
-        var basicValidation = ServiceValidate.For()
-            .EnsureNotNull(command, ServiceError.ValidationFailed(MuscleGroupErrorMessages.Validation.RequestCannotBeNull))
-            .EnsureNotWhiteSpace(command?.Name, ServiceError.ValidationFailed(MuscleGroupErrorMessages.Validation.NameCannotBeEmpty))
-            .Ensure(() => !((MuscleGroupId)id).IsEmpty, ServiceError.ValidationFailed(MuscleGroupErrorMessages.Validation.InvalidMuscleGroupId));
-            
-        var result = command switch
-        {
-            null => basicValidation.ToResult(),
-            _ => await ValidateUpdateWithChecksAsync(basicValidation, (MuscleGroupId)id, command)
-        };
+        var muscleGroupId = (MuscleGroupId)id;
         
-        return result;
-    }
-    
-    private async Task<ValidationResult> ValidateUpdateWithChecksAsync(
-        ServiceValidation validation,
-        MuscleGroupId muscleGroupId,
-        UpdateMuscleGroupCommand command)
-    {
-        var enhancedValidation = validation
-            .Ensure(() => command.Name?.Length <= 100, ServiceError.ValidationFailed(MuscleGroupErrorMessages.Validation.NameTooLong))
-            .Ensure(() => !command.BodyPartId.IsEmpty, ServiceError.ValidationFailed(MuscleGroupErrorMessages.Validation.BodyPartIdRequired));
+        return await ServiceValidate.Build()
+            // Basic validations
+            .EnsureNotNull(command, MuscleGroupErrorMessages.Validation.RequestCannotBeNull)
+            .EnsureNotWhiteSpace(command?.Name, MuscleGroupErrorMessages.Validation.NameCannotBeEmpty)
+            .Ensure(() => !muscleGroupId.IsEmpty, MuscleGroupErrorMessages.Validation.InvalidMuscleGroupId)
+            .Ensure(() => command?.Name?.Length <= 100, MuscleGroupErrorMessages.Validation.NameTooLong)
+            .Ensure(() => command != null && !command.BodyPartId.IsEmpty, MuscleGroupErrorMessages.Validation.BodyPartIdRequired)
             
-        // Check if body part exists (only if body part ID is not empty)
-        if (!command.BodyPartId.IsEmpty)
-        {
-            enhancedValidation = await enhancedValidation.EnsureAsync(
-                async () => await _bodyPartService.ExistsAsync(command.BodyPartId),
-                ServiceError.ValidationFailed(MuscleGroupErrorMessages.Validation.InvalidBodyPartId));
-        }
-            
-        // Check for duplicate name (excluding current muscle group) - only if name is not empty
-        if (!string.IsNullOrWhiteSpace(command.Name))
-        {
-            enhancedValidation = await enhancedValidation.EnsureAsync(
-                async () => !await CheckDuplicateNameAsync(command.Name, muscleGroupId),
-                ServiceError.AlreadyExists("MuscleGroup", command.Name));
-        }
-            
-        return enhancedValidation.ToResult();
+            // Async validations - these only run if command is not null and has required fields
+            .EnsureAsync(
+                async () => command == null || command.BodyPartId.IsEmpty || 
+                           (await _bodyPartService.ExistsAsync(command.BodyPartId)).Data,
+                MuscleGroupErrorMessages.Validation.InvalidBodyPartId)
+            .EnsureAsync(
+                async () => command == null || string.IsNullOrWhiteSpace(command.Name) || 
+                           !await CheckDuplicateNameAsync(command.Name, muscleGroupId),
+                ServiceError.AlreadyExists("MuscleGroup", command?.Name ?? string.Empty))
+            .ToValidationResultAsync();
     }
     
     /// <summary>
@@ -308,6 +277,31 @@ public class MuscleGroupService : EnhancedReferenceService<MuscleGroup, MuscleGr
     {
         var repository = unitOfWork.GetRepository<IMuscleGroupRepository>();
         return await repository.DeactivateAsync((MuscleGroupId)id);
+    }
+
+    /// <summary>
+    /// Checks if a muscle group entity exists and is active
+    /// </summary>
+    protected override async Task<bool> CheckEntityExistsAsync(ISpecializedIdBase id)
+    {
+        var muscleGroupId = (MuscleGroupId)id;
+        if (muscleGroupId.IsEmpty)
+            return false;
+
+        using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
+        var repository = unitOfWork.GetRepository<IMuscleGroupRepository>();
+        return await repository.ExistsAsync(muscleGroupId);
+    }
+
+    /// <summary>
+    /// Validates if the muscle group ID is properly formed and not empty
+    /// </summary>
+    protected override bool IsValidId(ISpecializedIdBase id)
+    {
+        if (id is not MuscleGroupId muscleGroupId)
+            return false;
+
+        return !muscleGroupId.IsEmpty;
     }
     
     // Note: Cache invalidation is handled by the base class using pattern-based invalidation.
@@ -354,14 +348,14 @@ public class MuscleGroupService : EnhancedReferenceService<MuscleGroup, MuscleGr
         
         public MuscleGroupValidationBuilder<T> EnsureValidMuscleGroupId(MuscleGroupId id, string errorMessage)
         {
-            _innerBuilder.EnsureNotEmpty(id, ServiceError.ValidationFailed(errorMessage));
+            _innerBuilder.EnsureNotEmpty(id, errorMessage);
             return this;
         }
         
         public MuscleGroupValidationBuilder<T> EnsureMuscleGroupExists(MuscleGroupId id, string errorMessage)
         {
             _innerBuilder.EnsureAsync(
-                async () => (await _service.ExistsAsync(id)).IsSuccess,
+                async () => (await _service.CheckExistsAsync(id)).Data,
                 ServiceError.NotFound("MuscleGroup"));
             return this;
         }
@@ -381,13 +375,13 @@ public class MuscleGroupService : EnhancedReferenceService<MuscleGroup, MuscleGr
         
         public MuscleGroupValidationBuilder<T> EnsureValidName(string name, string errorMessage)
         {
-            _innerBuilder.EnsureNotWhiteSpace(name, ServiceError.ValidationFailed(errorMessage));
+            _innerBuilder.EnsureNotWhiteSpace(name, errorMessage);
             return this;
         }
         
         public MuscleGroupValidationBuilder<T> EnsureValidBodyPartId(BodyPartId id, string errorMessage)
         {
-            _innerBuilder.Ensure(() => !id.IsEmpty, ServiceError.ValidationFailed(errorMessage));
+            _innerBuilder.Ensure(() => !id.IsEmpty, errorMessage);
             return this;
         }
         

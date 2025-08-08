@@ -429,7 +429,8 @@ namespace GetFitterGetBigger.API.Tests.Services
             var result = await _service.ExistsAsync(emptyId);
             
             // Assert
-            Assert.False(result);
+            Assert.False(result.IsSuccess);
+            Assert.Equal(ServiceErrorCode.InvalidFormat, result.PrimaryErrorCode);
             _mockUnitOfWorkProvider.Verify(x => x.CreateReadOnly(), Times.Never);
         }
         
@@ -438,22 +439,17 @@ namespace GetFitterGetBigger.API.Tests.Services
         {
             // Arrange
             var id = ExerciseWeightTypeTestConstants.BodyweightOnlyId;
-            var dto = new ReferenceDataDto
-            {
-                Id = id.ToString(),
-                Value = ExerciseWeightTypeTestConstants.BodyweightOnlyValue,
-                Description = ExerciseWeightTypeTestConstants.BodyweightOnlyDescription
-            };
             
-            _mockCacheService
-                .Setup(x => x.GetAsync<ReferenceDataDto>(It.IsAny<string>()))
-                .ReturnsAsync(CacheResult<ReferenceDataDto>.Hit(dto));
+            _mockRepository
+                .Setup(x => x.ExistsAsync(It.IsAny<ExerciseWeightTypeId>()))
+                .ReturnsAsync(true);
             
             // Act
             var result = await _service.ExistsAsync(id);
             
             // Assert
-            Assert.True(result);
+            Assert.True(result.IsSuccess);
+            Assert.True(result.Data);
         }
         
         [Fact]
@@ -467,14 +463,15 @@ namespace GetFitterGetBigger.API.Tests.Services
                 .ReturnsAsync(CacheResult<ReferenceDataDto>.Miss());
                 
             _mockRepository
-                .Setup(x => x.GetByIdAsync(id))
-                .ReturnsAsync(ExerciseWeightType.Empty);
+                .Setup(x => x.ExistsAsync(It.IsAny<ExerciseWeightTypeId>()))
+                .ReturnsAsync(false);
             
             // Act
             var result = await _service.ExistsAsync(id);
             
             // Assert
-            Assert.False(result);
+            Assert.True(result.IsSuccess);
+            Assert.False(result.Data);
         }
         
         #endregion

@@ -38,7 +38,7 @@ public class ExerciseTypeService : PureReferenceService<ExerciseType, ReferenceD
     public async Task<ServiceResult<ReferenceDataDto>> GetByIdAsync(ExerciseTypeId id)
     {
         return await ServiceValidate.For<ReferenceDataDto>()
-            .EnsureNotEmpty(id, ServiceError.ValidationFailed(ExerciseTypeErrorMessages.InvalidIdFormat))
+            .EnsureNotEmpty(id, ExerciseTypeErrorMessages.InvalidIdFormat)
             .MatchAsync(
                 whenValid: async () => await GetByIdAsync(id.ToString())
             );
@@ -48,7 +48,7 @@ public class ExerciseTypeService : PureReferenceService<ExerciseType, ReferenceD
     public async Task<ServiceResult<ReferenceDataDto>> GetByValueAsync(string value)
     {
         return await ServiceValidate.For<ReferenceDataDto>()
-            .EnsureNotWhiteSpace(value, ServiceError.ValidationFailed(ExerciseTypeErrorMessages.ValueCannotBeEmpty))
+            .EnsureNotWhiteSpace(value, ExerciseTypeErrorMessages.ValueCannotBeEmpty)
             .MatchAsync(
                 whenValid: async () => await GetFromCacheOrLoadAsync(
                     GetValueCacheKey(value),
@@ -58,12 +58,18 @@ public class ExerciseTypeService : PureReferenceService<ExerciseType, ReferenceD
     }
 
     /// <inheritdoc/>
-    public async Task<bool> ExistsAsync(ExerciseTypeId id) => 
-        !id.IsEmpty && (await GetByIdAsync(id)).IsSuccess;
-    
-    /// <inheritdoc/>
-    public override async Task<bool> ExistsAsync(string id) => 
-        await ExistsAsync(ExerciseTypeId.ParseOrEmpty(id));
+    public async Task<ServiceResult<bool>> ExistsAsync(ExerciseTypeId id)
+    {
+        return await ServiceValidate.Build<bool>()
+            .EnsureNotEmpty(id, ExerciseTypeErrorMessages.InvalidIdFormat)
+            .WhenValidAsync(async () =>
+            {
+                using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
+                var repository = unitOfWork.GetRepository<IExerciseTypeRepository>();
+                var exists = await repository.ExistsAsync(id);
+                return ServiceResult<bool>.Success(exists);
+            });
+    }
 
     /// <inheritdoc/>
     public async Task<bool> AllExistAsync(IEnumerable<string> ids)
@@ -71,7 +77,7 @@ public class ExerciseTypeService : PureReferenceService<ExerciseType, ReferenceD
         foreach (var idString in ids)
         {
             var id = ExerciseTypeId.ParseOrEmpty(idString);
-            if (id.IsEmpty || !(await ExistsAsync(id)))
+            if (id.IsEmpty || !(await ExistsAsync(id)).Data)
             {
                 return false;
             }
@@ -159,7 +165,7 @@ public class ExerciseTypeService : PureReferenceService<ExerciseType, ReferenceD
         var exerciseTypeId = ExerciseTypeId.ParseOrEmpty(id);
         
         return await ServiceValidate.For<ExerciseType>()
-            .EnsureNotEmpty(exerciseTypeId, ServiceError.InvalidFormat("ExerciseTypeId", ExerciseTypeErrorMessages.InvalidIdFormat))
+            .EnsureNotEmpty(exerciseTypeId, ExerciseTypeErrorMessages.InvalidIdFormat)
             .Match(
                 whenValid: async () => await LoadEntityFromRepository(exerciseTypeId),
                 whenInvalid: errors => ServiceResult<ExerciseType>.Failure(

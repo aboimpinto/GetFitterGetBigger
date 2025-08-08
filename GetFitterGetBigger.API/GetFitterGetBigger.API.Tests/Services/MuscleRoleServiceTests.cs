@@ -221,25 +221,17 @@ public class MuscleRoleServiceTests
     {
         // Arrange
         var id = MuscleRoleId.New();
-        var entity = MuscleRoleTestBuilder.Create(TestIds.MuscleRoleIds.Primary, MuscleRoleTestConstants.Values.Primary, MuscleRoleTestConstants.Descriptions.Primary);
-
-        _cacheServiceMock
-            .Setup(c => c.GetAsync<ReferenceDataDto>(It.IsAny<string>()))
-            .ReturnsAsync(CacheResult<ReferenceDataDto>.Miss());
 
         _repositoryMock
-            .Setup(r => r.GetByIdAsync(id))
-            .ReturnsAsync(entity);
-
-        _cacheServiceMock
-            .Setup(c => c.SetAsync(It.IsAny<string>(), It.IsAny<ReferenceDataDto>()))
-            .Returns(Task.CompletedTask);
+            .Setup(r => r.ExistsAsync(It.IsAny<MuscleRoleId>()))
+            .ReturnsAsync(true);
 
         // Act
         var result = await _service.ExistsAsync(id);
 
         // Assert
-        Assert.True(result);
+        Assert.True(result.IsSuccess);
+            Assert.True(result.Data);
     }
 
     [Fact]
@@ -248,19 +240,16 @@ public class MuscleRoleServiceTests
         // Arrange
         var id = MuscleRoleId.New();
 
-        _cacheServiceMock
-            .Setup(c => c.GetAsync<ReferenceDataDto>(It.IsAny<string>()))
-            .ReturnsAsync(CacheResult<ReferenceDataDto>.Miss());
-
         _repositoryMock
-            .Setup(r => r.GetByIdAsync(id))
-            .ReturnsAsync(MuscleRole.Empty);
+            .Setup(r => r.ExistsAsync(It.IsAny<MuscleRoleId>()))
+            .ReturnsAsync(false);
 
         // Act
         var result = await _service.ExistsAsync(id);
 
         // Assert
-        Assert.False(result);
+        Assert.True(result.IsSuccess);
+            Assert.False(result.Data);
     }
 
     [Fact]

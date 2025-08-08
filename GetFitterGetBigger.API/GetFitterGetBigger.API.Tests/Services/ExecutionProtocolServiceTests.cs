@@ -508,33 +508,23 @@ public class ExecutionProtocolServiceTests
     {
         // Arrange
         var executionProtocolId = ExecutionProtocolId.New();
-        var executionProtocol = ExecutionProtocol.Handler.Create(
-            executionProtocolId,
-            ExecutionProtocolTestConstants.StandardValue,
-            ExecutionProtocolTestConstants.StandardDescription,
-            ExecutionProtocolTestConstants.StandardCode,
-            true,
-            true,
-            ExecutionProtocolTestConstants.StandardRestPattern,
-            ExecutionProtocolTestConstants.ModerateIntensity,
-            ExecutionProtocolTestConstants.StandardDisplayOrder,
-            true).Value;
 
         _mockCacheService
             .Setup(x => x.GetAsync<ExecutionProtocolDto>(It.IsAny<string>()))
             .ReturnsAsync(CacheResult<ExecutionProtocolDto>.Miss());
 
         _mockRepository
-            .Setup(x => x.GetByIdAsync(executionProtocolId))
-            .ReturnsAsync(executionProtocol);
+            .Setup(x => x.ExistsAsync(It.IsAny<ExecutionProtocolId>()))
+            .ReturnsAsync(true);
 
         // Act
         var result = await _service.ExistsAsync(executionProtocolId);
 
         // Assert
-        Assert.True(result);
+        Assert.True(result.IsSuccess);
+            Assert.True(result.Data);
         _mockUnitOfWorkProvider.Verify(x => x.CreateReadOnly(), Times.Once);
-        _mockRepository.Verify(x => x.GetByIdAsync(executionProtocolId), Times.Once);
+        _mockRepository.Verify(x => x.ExistsAsync(It.IsAny<ExecutionProtocolId>()), Times.Once);
     }
 
     [Fact]
@@ -548,16 +538,17 @@ public class ExecutionProtocolServiceTests
             .ReturnsAsync(CacheResult<ExecutionProtocolDto>.Miss());
 
         _mockRepository
-            .Setup(x => x.GetByIdAsync(executionProtocolId))
-            .ReturnsAsync(ExecutionProtocol.Empty);
+            .Setup(x => x.ExistsAsync(It.IsAny<ExecutionProtocolId>()))
+            .ReturnsAsync(false);
 
         // Act
         var result = await _service.ExistsAsync(executionProtocolId);
 
         // Assert
-        Assert.False(result);
+        Assert.True(result.IsSuccess);
+            Assert.False(result.Data);
         _mockUnitOfWorkProvider.Verify(x => x.CreateReadOnly(), Times.Once);
-        _mockRepository.Verify(x => x.GetByIdAsync(executionProtocolId), Times.Once);
+        _mockRepository.Verify(x => x.ExistsAsync(It.IsAny<ExecutionProtocolId>()), Times.Once);
     }
 
     [Fact]
@@ -580,16 +571,17 @@ public class ExecutionProtocolServiceTests
             IsActive = true
         };
 
-        _mockCacheService
-            .Setup(x => x.GetAsync<ExecutionProtocolDto>(It.IsAny<string>()))
-            .ReturnsAsync(CacheResult<ExecutionProtocolDto>.Hit(executionProtocolDto));
+        _mockRepository
+            .Setup(x => x.ExistsAsync(It.IsAny<ExecutionProtocolId>()))
+            .ReturnsAsync(true);
 
         // Act
-        var result = await _service.ExistsAsync(executionProtocolIdString);
+        var result = await _service.ExistsAsync(ExecutionProtocolId.ParseOrEmpty(executionProtocolIdString));
 
         // Assert
-        Assert.True(result);
-        _mockCacheService.Verify(x => x.GetAsync<ExecutionProtocolDto>(It.IsAny<string>()), Times.Once);
-        _mockUnitOfWorkProvider.Verify(x => x.CreateReadOnly(), Times.Never);
+        Assert.True(result.IsSuccess);
+            Assert.True(result.Data);
+        _mockUnitOfWorkProvider.Verify(x => x.CreateReadOnly(), Times.Once);
+        _mockRepository.Verify(x => x.ExistsAsync(It.IsAny<ExecutionProtocolId>()), Times.Once);
     }
 }

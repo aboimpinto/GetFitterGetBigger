@@ -31,7 +31,7 @@ public class WorkoutStateService : PureReferenceService<WorkoutState, WorkoutSta
     public async Task<ServiceResult<WorkoutStateDto>> GetByIdAsync(WorkoutStateId id)
     {
         return await ServiceValidate.For<WorkoutStateDto>()
-            .EnsureNotEmpty(id, ServiceError.ValidationFailed(WorkoutStateErrorMessages.InvalidIdFormat))
+            .EnsureNotEmpty(id, WorkoutStateErrorMessages.InvalidIdFormat)
             .MatchAsync(
                 whenValid: async () => await GetByIdAsync(id.ToString())
             );
@@ -41,7 +41,7 @@ public class WorkoutStateService : PureReferenceService<WorkoutState, WorkoutSta
     public async Task<ServiceResult<WorkoutStateDto>> GetByValueAsync(string value)
     {
         return await ServiceValidate.For<WorkoutStateDto>()
-            .EnsureNotWhiteSpace(value, ServiceError.ValidationFailed(WorkoutStateErrorMessages.ValueCannotBeEmpty))
+            .EnsureNotWhiteSpace(value, WorkoutStateErrorMessages.ValueCannotBeEmpty)
             .MatchAsync(
                 whenValid: async () => await GetFromCacheOrLoadAsync(
                     GetValueCacheKey(value),
@@ -98,12 +98,18 @@ public class WorkoutStateService : PureReferenceService<WorkoutState, WorkoutSta
     }
 
     /// <inheritdoc/>
-    public async Task<bool> ExistsAsync(WorkoutStateId id) => 
-        !id.IsEmpty && (await GetByIdAsync(id)).IsSuccess;
-    
-    /// <inheritdoc/>
-    public override async Task<bool> ExistsAsync(string id) => 
-        await ExistsAsync(WorkoutStateId.ParseOrEmpty(id));
+    public async Task<ServiceResult<bool>> ExistsAsync(WorkoutStateId id)
+    {
+        return await ServiceValidate.Build<bool>()
+            .EnsureNotEmpty(id, WorkoutStateErrorMessages.InvalidIdFormat)
+            .WhenValidAsync(async () =>
+            {
+                using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
+                var repository = unitOfWork.GetRepository<IWorkoutStateRepository>();
+                var exists = await repository.ExistsAsync(id);
+                return ServiceResult<bool>.Success(exists);
+            });
+    }
     
     protected override async Task<IEnumerable<WorkoutState>> LoadAllEntitiesAsync()
     {
@@ -118,7 +124,7 @@ public class WorkoutStateService : PureReferenceService<WorkoutState, WorkoutSta
         var workoutStateId = WorkoutStateId.ParseOrEmpty(id);
         
         return await ServiceValidate.For<WorkoutState>()
-            .EnsureNotEmpty(workoutStateId, ServiceError.InvalidFormat("WorkoutStateId", WorkoutStateErrorMessages.InvalidIdFormat))
+            .EnsureNotEmpty(workoutStateId, WorkoutStateErrorMessages.InvalidIdFormat)
             .Match(
                 whenValid: async () => await LoadEntityFromRepository(workoutStateId),
                 whenInvalid: errors => ServiceResult<WorkoutState>.Failure(

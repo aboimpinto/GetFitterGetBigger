@@ -66,7 +66,7 @@ public class ExerciseServiceWeightTypeTests
         
         _mockExerciseTypeService
             .Setup(s => s.ExistsAsync(It.IsAny<ExerciseTypeId>()))
-            .ReturnsAsync(true);
+            .ReturnsAsync(ServiceResult<bool>.Success(true));
         
         _service = new ExerciseService(_mockUnitOfWorkProvider.Object, _mockExerciseTypeService.Object);
     }

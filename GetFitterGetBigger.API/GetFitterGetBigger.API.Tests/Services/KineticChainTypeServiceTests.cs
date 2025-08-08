@@ -236,22 +236,18 @@ public class KineticChainTypeServiceTests
     public async Task ExistsAsync_WithValidId_ReturnsTrue()
     {
         // Arrange
-        var kineticChainType = KineticChainTypeTestBuilder.Compound().Build();
         var id = KineticChainTypeId.ParseOrEmpty(TestIds.KineticChainTypeIds.Compound);
 
-        _cacheServiceMock
-            .Setup(c => c.GetAsync<ReferenceDataDto>(It.IsAny<string>()))
-            .ReturnsAsync(CacheResult<ReferenceDataDto>.Miss());
-
         _repositoryMock
-            .Setup(r => r.GetByIdAsync(It.IsAny<KineticChainTypeId>()))
-            .ReturnsAsync(kineticChainType);
+            .Setup(r => r.ExistsAsync(It.IsAny<KineticChainTypeId>()))
+            .ReturnsAsync(true);
 
         // Act
         var result = await _service.ExistsAsync(id);
 
         // Assert
-        Assert.True(result);
+        Assert.True(result.IsSuccess);
+        Assert.True(result.Data);
     }
 
     [Fact]
@@ -264,31 +260,25 @@ public class KineticChainTypeServiceTests
         var result = await _service.ExistsAsync(emptyId);
 
         // Assert
-        Assert.False(result);
+        Assert.False(result.IsSuccess);
+        Assert.Equal(ServiceErrorCode.InvalidFormat, result.PrimaryErrorCode);
     }
 
     [Fact]
     public async Task ExistsAsync_WithInactiveKineticChainType_ReturnsFalse()
     {
         // Arrange
-        var inactiveKineticChainType = KineticChainTypeTestBuilder.Compound()
-            .IsActive(false)
-            .Build();
-
         var id = KineticChainTypeId.ParseOrEmpty(TestIds.KineticChainTypeIds.Compound);
 
-        _cacheServiceMock
-            .Setup(c => c.GetAsync<ReferenceDataDto>(It.IsAny<string>()))
-            .ReturnsAsync(CacheResult<ReferenceDataDto>.Miss());
-
         _repositoryMock
-            .Setup(r => r.GetByIdAsync(It.IsAny<KineticChainTypeId>()))
-            .ReturnsAsync(inactiveKineticChainType);
+            .Setup(r => r.ExistsAsync(It.IsAny<KineticChainTypeId>()))
+            .ReturnsAsync(false);
 
         // Act
         var result = await _service.ExistsAsync(id);
 
         // Assert
-        Assert.False(result);
+        Assert.True(result.IsSuccess);
+        Assert.False(result.Data);
     }
 }

@@ -46,7 +46,7 @@ public interface IMuscleGroupService
     Task<ServiceResult<bool>> DeleteAsync(MuscleGroupId id);
     
     /// <summary>
-    /// Checks if muscle group exists with the given ID
+    /// Checks if muscle group exists with the given ID - returns boolean result
     /// </summary>
-    Task<ServiceResult<MuscleGroupDto>> ExistsAsync(MuscleGroupId id);
+    Task<ServiceResult<bool>> CheckExistsAsync(MuscleGroupId id);
 }

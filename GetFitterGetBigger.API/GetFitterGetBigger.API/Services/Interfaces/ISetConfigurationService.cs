@@ -86,14 +86,14 @@ public interface ISetConfigurationService
     /// Checks if a set configuration exists
     /// </summary>
     /// <param name="id">The set configuration ID</param>
-    /// <returns>True if the set configuration exists</returns>
-    Task<bool> ExistsAsync(SetConfigurationId id);
+    /// <returns>A service result containing true if the set configuration exists</returns>
+    Task<ServiceResult<bool>> ExistsAsync(SetConfigurationId id);
     
     /// <summary>
     /// Checks if a set configuration exists for a specific exercise and set number
     /// </summary>
     /// <param name="workoutTemplateExerciseId">The workout template exercise ID</param>
     /// <param name="setNumber">The set number</param>
-    /// <returns>True if the set configuration exists</returns>
-    Task<bool> ExistsAsync(WorkoutTemplateExerciseId workoutTemplateExerciseId, int setNumber);
+    /// <returns>A service result containing true if the set configuration exists</returns>
+    Task<ServiceResult<bool>> ExistsAsync(WorkoutTemplateExerciseId workoutTemplateExerciseId, int setNumber);
 }

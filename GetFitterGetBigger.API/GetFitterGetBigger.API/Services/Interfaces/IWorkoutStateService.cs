@@ -33,13 +33,7 @@ public interface IWorkoutStateService
     /// Checks if a workout state exists
     /// </summary>
     /// <param name="id">The workout state ID to check</param>
-    /// <returns>True if the workout state exists, false otherwise</returns>
-    Task<bool> ExistsAsync(WorkoutStateId id);
+    /// <returns>A service result containing true if the workout state exists, false otherwise</returns>
+    Task<ServiceResult<bool>> ExistsAsync(WorkoutStateId id);
     
-    /// <summary>
-    /// Checks if a workout state exists with the given string ID
-    /// </summary>
-    /// <param name="id">The workout state ID in string format</param>
-    /// <returns>True if the workout state exists and is active, false otherwise</returns>
-    Task<bool> ExistsAsync(string id);
 }

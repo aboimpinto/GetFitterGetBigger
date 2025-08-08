@@ -38,7 +38,7 @@ public class MuscleRoleService : PureReferenceService<MuscleRole, ReferenceDataD
     public async Task<ServiceResult<ReferenceDataDto>> GetByIdAsync(MuscleRoleId id)
     {
         return await ServiceValidate.For<ReferenceDataDto>()
-            .EnsureNotEmpty(id, ServiceError.ValidationFailed(MuscleRoleErrorMessages.InvalidIdFormat))
+            .EnsureNotEmpty(id, MuscleRoleErrorMessages.InvalidIdFormat)
             .MatchAsync(
                 whenValid: async () => await GetByIdAsync(id.ToString())
             );
@@ -48,7 +48,7 @@ public class MuscleRoleService : PureReferenceService<MuscleRole, ReferenceDataD
     public async Task<ServiceResult<ReferenceDataDto>> GetByValueAsync(string value)
     {
         return await ServiceValidate.For<ReferenceDataDto>()
-            .EnsureNotWhiteSpace(value, ServiceError.ValidationFailed(MuscleRoleErrorMessages.ValueCannotBeEmpty))
+            .EnsureNotWhiteSpace(value, MuscleRoleErrorMessages.ValueCannotBeEmpty)
             .MatchAsync(
                 whenValid: async () => await GetFromCacheOrLoadAsync(
                     GetValueCacheKey(value),
@@ -105,8 +105,18 @@ public class MuscleRoleService : PureReferenceService<MuscleRole, ReferenceDataD
     }
     
     /// <inheritdoc/>
-    public async Task<bool> ExistsAsync(MuscleRoleId id) => 
-        await ExistsAsync(id.ToString());
+    public async Task<ServiceResult<bool>> ExistsAsync(MuscleRoleId id)
+    {
+        return await ServiceValidate.Build<bool>()
+            .EnsureNotEmpty(id, MuscleRoleErrorMessages.InvalidIdFormat)
+            .WhenValidAsync(async () =>
+            {
+                using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
+                var repository = unitOfWork.GetRepository<IMuscleRoleRepository>();
+                var exists = await repository.ExistsAsync(id);
+                return ServiceResult<bool>.Success(exists);
+            });
+    }
 
     /// <inheritdoc/>
     protected override async Task<ServiceResult<MuscleRole>> LoadEntityByIdAsync(string id)
@@ -114,7 +124,7 @@ public class MuscleRoleService : PureReferenceService<MuscleRole, ReferenceDataD
         var muscleRoleId = MuscleRoleId.ParseOrEmpty(id);
         
         return await ServiceValidate.For<MuscleRole>()
-            .EnsureNotEmpty(muscleRoleId, ServiceError.InvalidFormat("MuscleRoleId", MuscleRoleErrorMessages.InvalidIdFormat))
+            .EnsureNotEmpty(muscleRoleId, MuscleRoleErrorMessages.InvalidIdFormat)
             .Match(
                 whenValid: async () => await LoadEntityFromRepository(muscleRoleId),
                 whenInvalid: errors => ServiceResult<MuscleRole>.Failure(

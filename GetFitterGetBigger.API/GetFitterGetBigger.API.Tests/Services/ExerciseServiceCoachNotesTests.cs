@@ -9,6 +9,7 @@ using GetFitterGetBigger.API.Models.SpecializedIds;
 using GetFitterGetBigger.API.Repositories.Interfaces;
 using GetFitterGetBigger.API.Services.Implementations;
 using GetFitterGetBigger.API.Services.Interfaces;
+using GetFitterGetBigger.API.Services.Results;
 using GetFitterGetBigger.API.Tests.TestBuilders;
 using GetFitterGetBigger.API.Mappers;
 using Moq;
@@ -60,7 +61,7 @@ public class ExerciseServiceCoachNotesTests
         // Default behavior: all exercise types exist
         _mockExerciseTypeService
             .Setup(s => s.ExistsAsync(It.IsAny<ExerciseTypeId>()))
-            .ReturnsAsync(true);
+            .ReturnsAsync(ServiceResult<bool>.Success(true));
         
         _exerciseService = new ExerciseService(_unitOfWorkProviderMock.Object, _mockExerciseTypeService.Object);
     }
@@ -208,7 +209,7 @@ public class ExerciseServiceCoachNotesTests
         // Mock ExistsAsync to return true only for the valid ID
         _mockExerciseTypeService
             .Setup(s => s.ExistsAsync(validId))
-            .ReturnsAsync(true);
+            .ReturnsAsync(ServiceResult<bool>.Success(true));
         
         Exercise? capturedExercise = null;
         _exerciseRepositoryMock.Setup(r => r.AddAsync(It.IsAny<Exercise>()))

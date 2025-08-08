@@ -33,13 +33,7 @@ public interface IWorkoutCategoryService
     /// Check if workout category exists
     /// </summary>
     /// <param name="id">The workout category ID</param>
-    /// <returns>True if exists, false otherwise</returns>
-    Task<bool> ExistsAsync(WorkoutCategoryId id);
+    /// <returns>A service result containing true if exists, false otherwise</returns>
+    Task<ServiceResult<bool>> ExistsAsync(WorkoutCategoryId id);
     
-    /// <summary>
-    /// Check if workout category exists by string ID
-    /// </summary>
-    /// <param name="id">The workout category ID as string</param>
-    /// <returns>True if exists, false otherwise</returns>
-    Task<bool> ExistsAsync(string id);
 }

@@ -8,6 +8,7 @@ using GetFitterGetBigger.API.Services.Commands;
 using GetFitterGetBigger.API.Services.Commands.WorkoutTemplate;
 using GetFitterGetBigger.API.Services.Interfaces;
 using GetFitterGetBigger.API.Services.Results;
+using GetFitterGetBigger.API.Services.Validation;
 using ValidationResult = GetFitterGetBigger.API.Services.Results.ValidationResult;
 using Microsoft.Extensions.Logging;
 using Olimpo.EntityFramework.Persistency;
@@ -531,30 +532,19 @@ public class WorkoutTemplateService : IWorkoutTemplateService
         return ServiceResult<bool>.Success(true);
     }
 
-    public async Task<bool> ExistsAsync(WorkoutTemplateId id)
+    public async Task<ServiceResult<bool>> ExistsAsync(WorkoutTemplateId id)
     {
-        var result = id.IsEmpty switch
-        {
-            true => false,
-            false => await CheckExistsInRepositoryAsync(id)
-        };
-        
-        return result;
-    }
-    
-    private async Task<bool> CheckExistsInRepositoryAsync(WorkoutTemplateId id)
-    {
-        using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
-        var repository = unitOfWork.GetRepository<IWorkoutTemplateRepository>();
-        
-        return await repository.ExistsAsync(id);
+        return await ServiceValidate.Build<bool>()
+            .EnsureNotEmpty(id, WorkoutTemplateErrorMessages.InvalidIdFormat)
+            .WhenValidAsync(async () =>
+            {
+                using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
+                var repository = unitOfWork.GetRepository<IWorkoutTemplateRepository>();
+                var exists = await repository.ExistsAsync(id);
+                return ServiceResult<bool>.Success(exists);
+            });
     }
 
-    public async Task<bool> ExistsAsync(string id)
-    {
-        var workoutTemplateId = WorkoutTemplateId.ParseOrEmpty(id);
-        return await ExistsAsync(workoutTemplateId);
-    }
 
     public async Task<bool> ExistsByNameAsync(string name)
     {

@@ -295,7 +295,20 @@ public abstract class EnhancedReferenceService<TEntity, TDto, TCreateCommand, TU
     /// <returns>Success with the entity DTO if it exists, Failure with error details if not</returns>
     public virtual async Task<ServiceResult<TDto>> ExistsAsync(ISpecializedIdBase id)
     {
-        return await GetByIdAsync(id);
+        // First check if ID is valid
+        if (!IsValidId(id))
+        {
+            return ServiceResult<TDto>.Failure(TDto.Empty, ServiceError.InvalidFormat("ID", "Invalid ID format"));
+        }
+        
+        // Use efficient repository exists check
+        var exists = await CheckEntityExistsAsync(id);
+        
+        return exists switch
+        {
+            true => ServiceResult<TDto>.Success(TDto.Empty), // Return empty DTO on success for efficiency
+            false => ServiceResult<TDto>.Failure(TDto.Empty, ServiceError.NotFound(typeof(TEntity).Name))
+        };
     }
     
     // Abstract methods that must be implemented by derived classes
@@ -305,6 +318,20 @@ public abstract class EnhancedReferenceService<TEntity, TDto, TCreateCommand, TU
     /// </summary>
     /// <returns>Collection of entities (never null, use Empty pattern)</returns>
     protected abstract Task<IEnumerable<TEntity>> LoadAllEntitiesAsync();
+    
+    /// <summary>
+    /// Checks if an entity exists by ID using efficient repository query
+    /// </summary>
+    /// <param name="id">The entity ID</param>
+    /// <returns>True if entity exists and is active, false otherwise</returns>
+    protected abstract Task<bool> CheckEntityExistsAsync(ISpecializedIdBase id);
+    
+    /// <summary>
+    /// Validates if the provided ID is valid
+    /// </summary>
+    /// <param name="id">The entity ID</param>
+    /// <returns>True if ID is valid, false otherwise</returns>
+    protected abstract bool IsValidId(ISpecializedIdBase id);
     
     /// <summary>
     /// Loads an entity by ID using ReadOnlyUnitOfWork internally

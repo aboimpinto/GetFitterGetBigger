@@ -9,7 +9,6 @@ using GetFitterGetBigger.API.Services.Cache;
 using GetFitterGetBigger.API.Services.Interfaces;
 using GetFitterGetBigger.API.Services.Results;
 using GetFitterGetBigger.API.Services.Validation;
-using Microsoft.Extensions.Logging;
 using Olimpo.EntityFramework.Persistency;
 
 namespace GetFitterGetBigger.API.Services.Implementations;
@@ -38,7 +37,7 @@ public class BodyPartService : PureReferenceService<BodyPart, BodyPartDto>, IBod
     public async Task<ServiceResult<BodyPartDto>> GetByIdAsync(BodyPartId id)
     {
         return await ServiceValidate.For<BodyPartDto>()
-            .EnsureNotEmpty(id, ServiceError.ValidationFailed(BodyPartErrorMessages.InvalidIdFormat))
+            .EnsureNotEmpty(id, BodyPartErrorMessages.InvalidIdFormat)
             .MatchAsync(
                 whenValid: async () => await GetByIdAsync(id.ToString())
             );
@@ -48,7 +47,7 @@ public class BodyPartService : PureReferenceService<BodyPart, BodyPartDto>, IBod
     public async Task<ServiceResult<BodyPartDto>> GetByValueAsync(string value)
     {
         return await ServiceValidate.For<BodyPartDto>()
-            .EnsureNotWhiteSpace(value, ServiceError.ValidationFailed(BodyPartErrorMessages.ValueCannotBeEmpty))
+            .EnsureNotWhiteSpace(value, BodyPartErrorMessages.ValueCannotBeEmpty)
             .MatchAsync(
                 whenValid: async () => await GetFromCacheOrLoadAsync(
                     GetValueCacheKey(value),
@@ -105,12 +104,18 @@ public class BodyPartService : PureReferenceService<BodyPart, BodyPartDto>, IBod
     }
 
     /// <inheritdoc/>
-    public async Task<bool> ExistsAsync(BodyPartId id) => 
-        !id.IsEmpty && (await GetByIdAsync(id)).IsSuccess;
-    
-    /// <inheritdoc/>
-    public override async Task<bool> ExistsAsync(string id) => 
-        await ExistsAsync(BodyPartId.ParseOrEmpty(id));
+    public async Task<ServiceResult<bool>> ExistsAsync(BodyPartId id)
+    {
+        return await ServiceValidate.Build<bool>()
+            .EnsureNotEmpty(id, BodyPartErrorMessages.InvalidIdFormat)
+            .WhenValidAsync(async () =>
+            {
+                using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
+                var repository = unitOfWork.GetRepository<IBodyPartRepository>();
+                var exists = await repository.ExistsAsync(id);
+                return ServiceResult<bool>.Success(exists);
+            });
+    }
     
     protected override async Task<IEnumerable<BodyPart>> LoadAllEntitiesAsync()
     {
@@ -125,7 +130,7 @@ public class BodyPartService : PureReferenceService<BodyPart, BodyPartDto>, IBod
         var bodyPartId = BodyPartId.ParseOrEmpty(id);
         
         return await ServiceValidate.For<BodyPart>()
-            .EnsureNotEmpty(bodyPartId, ServiceError.InvalidFormat("BodyPartId", BodyPartErrorMessages.InvalidIdFormat))
+            .EnsureNotEmpty(bodyPartId, BodyPartErrorMessages.InvalidIdFormat)
             .Match(
                 whenValid: async () => await LoadEntityFromRepository(bodyPartId),
                 whenInvalid: errors => ServiceResult<BodyPart>.Failure(

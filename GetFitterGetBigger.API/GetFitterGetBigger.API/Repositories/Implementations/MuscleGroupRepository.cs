@@ -153,6 +153,17 @@ public class MuscleGroupRepository : RepositoryBase<FitnessDbContext>, IMuscleGr
     }
     
     /// <summary>
+    /// Checks if a muscle group exists by its ID
+    /// Uses efficient database query with .Any() to avoid loading entire entity
+    /// </summary>
+    /// <param name="id">The ID of the muscle group to check</param>
+    /// <returns>True if the muscle group exists and is active, false otherwise</returns>
+    public async Task<bool> ExistsAsync(MuscleGroupId id) =>
+        await Context.MuscleGroups
+            .AsNoTracking()
+            .AnyAsync(mg => mg.Id == id && mg.IsActive);
+    
+    /// <summary>
     /// Checks if a muscle group with the given name exists
     /// </summary>
     /// <param name="name">The name to check</param>

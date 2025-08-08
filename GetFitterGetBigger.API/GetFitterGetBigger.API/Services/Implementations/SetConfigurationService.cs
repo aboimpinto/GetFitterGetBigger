@@ -9,6 +9,7 @@ using GetFitterGetBigger.API.Repositories.Interfaces;
 using GetFitterGetBigger.API.Services.Commands.SetConfigurations;
 using GetFitterGetBigger.API.Services.Interfaces;
 using GetFitterGetBigger.API.Services.Results;
+using GetFitterGetBigger.API.Services.Validation;
 using Microsoft.Extensions.Logging;
 using Olimpo.EntityFramework.Persistency;
 
@@ -160,27 +161,37 @@ public class SetConfigurationService : ISetConfigurationService
         return result;
     }
 
-    public async Task<bool> ExistsAsync(SetConfigurationId id)
+    public async Task<ServiceResult<bool>> ExistsAsync(SetConfigurationId id)
     {
-        var result = id.IsEmpty switch
-        {
-            true => false,
-            false => await CheckSetConfigurationExistsAsync(id)
-        };
-
-        return result;
+        if (id.IsEmpty)
+            return ServiceResult<bool>.Success(false);
+            
+        return await ServiceValidate.Build<bool>()
+            .WhenValidAsync(async () =>
+            {
+                using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
+                var repository = unitOfWork.GetRepository<ISetConfigurationRepository>();
+                var setConfiguration = await repository.GetByIdAsync(id);
+                return ServiceResult<bool>.Success(!setConfiguration.IsEmpty);
+            });
     }
 
-    public async Task<bool> ExistsAsync(WorkoutTemplateExerciseId workoutTemplateExerciseId, int setNumber)
+    public async Task<ServiceResult<bool>> ExistsAsync(WorkoutTemplateExerciseId workoutTemplateExerciseId, int setNumber)
     {
-        var result = (workoutTemplateExerciseId.IsEmpty, setNumber <= 0) switch
-        {
-            (true, _) => false,
-            (_, true) => false,
-            _ => await CheckSetConfigurationExistsAsync(workoutTemplateExerciseId, setNumber)
-        };
-
-        return result;
+        if (workoutTemplateExerciseId.IsEmpty)
+            return ServiceResult<bool>.Success(false);
+            
+        if (setNumber <= 0)
+            return ServiceResult<bool>.Success(false);
+            
+        return await ServiceValidate.Build<bool>()
+            .WhenValidAsync(async () =>
+            {
+                using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
+                var repository = unitOfWork.GetRepository<ISetConfigurationRepository>();
+                var exists = await repository.ExistsAsync(workoutTemplateExerciseId, setNumber);
+                return ServiceResult<bool>.Success(exists);
+            });
     }
 
     // Private helper methods

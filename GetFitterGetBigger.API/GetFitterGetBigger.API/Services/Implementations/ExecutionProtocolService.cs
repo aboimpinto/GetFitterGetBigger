@@ -37,7 +37,7 @@ public class ExecutionProtocolService : PureReferenceService<ExecutionProtocol, 
     public async Task<ServiceResult<ExecutionProtocolDto>> GetByIdAsync(ExecutionProtocolId id)
     {
         return await ServiceValidate.For<ExecutionProtocolDto>()
-            .EnsureNotEmpty(id, ServiceError.ValidationFailed(ExecutionProtocolErrorMessages.InvalidIdFormat))
+            .EnsureNotEmpty(id, ExecutionProtocolErrorMessages.InvalidIdFormat)
             .MatchAsync(
                 whenValid: async () => await GetByIdAsync(id.ToString())
             );
@@ -47,7 +47,7 @@ public class ExecutionProtocolService : PureReferenceService<ExecutionProtocol, 
     public async Task<ServiceResult<ExecutionProtocolDto>> GetByValueAsync(string value)
     {
         return await ServiceValidate.For<ExecutionProtocolDto>()
-            .EnsureNotWhiteSpace(value, ServiceError.ValidationFailed(ExecutionProtocolErrorMessages.ValueCannotBeEmpty))
+            .EnsureNotWhiteSpace(value, ExecutionProtocolErrorMessages.ValueCannotBeEmpty)
             .MatchAsync(
                 whenValid: async () => await GetFromCacheOrLoadAsync(
                     GetValueCacheKey(value),
@@ -121,12 +121,18 @@ public class ExecutionProtocolService : PureReferenceService<ExecutionProtocol, 
     }
 
     /// <inheritdoc/>
-    public async Task<bool> ExistsAsync(ExecutionProtocolId id) => 
-        !id.IsEmpty && (await GetByIdAsync(id)).IsSuccess;
-    
-    /// <inheritdoc/>
-    public override async Task<bool> ExistsAsync(string id) => 
-        await ExistsAsync(ExecutionProtocolId.ParseOrEmpty(id));
+    public async Task<ServiceResult<bool>> ExistsAsync(ExecutionProtocolId id)
+    {
+        return await ServiceValidate.Build<bool>()
+            .EnsureNotEmpty(id, ExecutionProtocolErrorMessages.InvalidIdFormat)
+            .WhenValidAsync(async () =>
+            {
+                using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
+                var repository = unitOfWork.GetRepository<IExecutionProtocolRepository>();
+                var exists = await repository.ExistsAsync(id);
+                return ServiceResult<bool>.Success(exists);
+            });
+    }
     
     protected override async Task<IEnumerable<ExecutionProtocol>> LoadAllEntitiesAsync()
     {
@@ -141,7 +147,7 @@ public class ExecutionProtocolService : PureReferenceService<ExecutionProtocol, 
         var executionProtocolId = ExecutionProtocolId.ParseOrEmpty(id);
         
         return await ServiceValidate.For<ExecutionProtocol>()
-            .EnsureNotEmpty(executionProtocolId, ServiceError.InvalidFormat("ExecutionProtocolId", ExecutionProtocolErrorMessages.InvalidIdFormat))
+            .EnsureNotEmpty(executionProtocolId, ExecutionProtocolErrorMessages.InvalidIdFormat)
             .Match(
                 whenValid: async () => await LoadEntityFromRepository(executionProtocolId),
                 whenInvalid: errors => ServiceResult<ExecutionProtocol>.Failure(

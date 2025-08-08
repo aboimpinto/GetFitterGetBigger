@@ -35,15 +35,9 @@ public interface IExerciseTypeService
     /// Checks if an exercise type exists
     /// </summary>
     /// <param name="id">The exercise type ID to check</param>
-    /// <returns>True if the exercise type exists, false otherwise</returns>
-    Task<bool> ExistsAsync(ExerciseTypeId id);
+    /// <returns>A service result containing true if the exercise type exists, false otherwise</returns>
+    Task<ServiceResult<bool>> ExistsAsync(ExerciseTypeId id);
     
-    /// <summary>
-    /// Checks if an exercise type exists by string ID
-    /// </summary>
-    /// <param name="id">The exercise type ID string to check</param>
-    /// <returns>True if the exercise type exists, false otherwise</returns>
-    Task<bool> ExistsAsync(string id);
 
     /// <summary>
     /// Checks if all exercise types in a collection exist

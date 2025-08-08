@@ -37,7 +37,7 @@ public class KineticChainTypeService : PureReferenceService<KineticChainType, Re
     public async Task<ServiceResult<ReferenceDataDto>> GetByIdAsync(KineticChainTypeId id)
     {
         return await ServiceValidate.For<ReferenceDataDto>()
-            .EnsureNotEmpty(id, ServiceError.ValidationFailed(KineticChainTypeErrorMessages.InvalidIdFormat))
+            .EnsureNotEmpty(id, KineticChainTypeErrorMessages.InvalidIdFormat)
             .MatchAsync(
                 whenValid: async () => await GetByIdAsync(id.ToString())
             );
@@ -47,7 +47,7 @@ public class KineticChainTypeService : PureReferenceService<KineticChainType, Re
     public async Task<ServiceResult<ReferenceDataDto>> GetByValueAsync(string value)
     {
         return await ServiceValidate.For<ReferenceDataDto>()
-            .EnsureNotWhiteSpace(value, ServiceError.ValidationFailed(KineticChainTypeErrorMessages.ValueCannotBeEmptyEntity))
+            .EnsureNotWhiteSpace(value, KineticChainTypeErrorMessages.ValueCannotBeEmptyEntity)
             .MatchAsync(
                 whenValid: async () => await GetFromCacheOrLoadAsync(
                     GetValueCacheKey(value),
@@ -97,8 +97,18 @@ public class KineticChainTypeService : PureReferenceService<KineticChainType, Re
     }
     
     /// <inheritdoc/>
-    public async Task<bool> ExistsAsync(KineticChainTypeId id) => 
-        await ExistsAsync(id.ToString());
+    public async Task<ServiceResult<bool>> ExistsAsync(KineticChainTypeId id)
+    {
+        return await ServiceValidate.Build<bool>()
+            .EnsureNotEmpty(id, KineticChainTypeErrorMessages.InvalidIdFormat)
+            .WhenValidAsync(async () =>
+            {
+                using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
+                var repository = unitOfWork.GetRepository<IKineticChainTypeRepository>();
+                var exists = await repository.ExistsAsync(id);
+                return ServiceResult<bool>.Success(exists);
+            });
+    }
 
     private async Task<KineticChainType> LoadByValueAsync(string value)
     {
@@ -113,7 +123,7 @@ public class KineticChainTypeService : PureReferenceService<KineticChainType, Re
         var kineticChainTypeId = KineticChainTypeId.ParseOrEmpty(id);
         
         return await ServiceValidate.For<KineticChainType>()
-            .EnsureNotEmpty(kineticChainTypeId, ServiceError.InvalidFormat("KineticChainTypeId", KineticChainTypeErrorMessages.InvalidIdFormat))
+            .EnsureNotEmpty(kineticChainTypeId, KineticChainTypeErrorMessages.InvalidIdFormat)
             .Match(
                 whenValid: async () => await LoadEntityFromRepository(kineticChainTypeId),
                 whenInvalid: errors => ServiceResult<KineticChainType>.Failure(

@@ -38,7 +38,7 @@ public class MovementPatternService : PureReferenceService<MovementPattern, Refe
     public async Task<ServiceResult<ReferenceDataDto>> GetByIdAsync(MovementPatternId id)
     {
         return await ServiceValidate.For<ReferenceDataDto>()
-            .EnsureNotEmpty(id, ServiceError.ValidationFailed(MovementPatternErrorMessages.InvalidIdFormat))
+            .EnsureNotEmpty(id, MovementPatternErrorMessages.InvalidIdFormat)
             .MatchAsync(
                 whenValid: async () => await GetByIdAsync(id.ToString())
             );
@@ -48,7 +48,7 @@ public class MovementPatternService : PureReferenceService<MovementPattern, Refe
     public async Task<ServiceResult<ReferenceDataDto>> GetByValueAsync(string value)
     {
         return await ServiceValidate.For<ReferenceDataDto>()
-            .EnsureNotWhiteSpace(value, ServiceError.ValidationFailed(MovementPatternErrorMessages.ValueCannotBeEmpty))
+            .EnsureNotWhiteSpace(value, MovementPatternErrorMessages.ValueCannotBeEmpty)
             .MatchAsync(
                 whenValid: async () => await GetFromCacheOrLoadAsync(
                     GetValueCacheKey(value),
@@ -105,12 +105,20 @@ public class MovementPatternService : PureReferenceService<MovementPattern, Refe
     }
 
     /// <inheritdoc/>
-    public async Task<bool> ExistsAsync(MovementPatternId id) => 
-        !id.IsEmpty && (await GetByIdAsync(id)).IsSuccess;
-    
-    /// <inheritdoc/>
-    public override async Task<bool> ExistsAsync(string id) => 
-        await ExistsAsync(MovementPatternId.ParseOrEmpty(id));
+    public async Task<ServiceResult<bool>> ExistsAsync(MovementPatternId id)
+    {
+        if (id.IsEmpty)
+            return ServiceResult<bool>.Success(false);
+            
+        return await ServiceValidate.Build<bool>()
+            .WhenValidAsync(async () =>
+            {
+                using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
+                var repository = unitOfWork.GetRepository<IMovementPatternRepository>();
+                var exists = await repository.ExistsAsync(id);
+                return ServiceResult<bool>.Success(exists);
+            });
+    }
     
     protected override async Task<IEnumerable<MovementPattern>> LoadAllEntitiesAsync()
     {
@@ -125,7 +133,7 @@ public class MovementPatternService : PureReferenceService<MovementPattern, Refe
         var movementPatternId = MovementPatternId.ParseOrEmpty(id);
         
         return await ServiceValidate.For<MovementPattern>()
-            .EnsureNotEmpty(movementPatternId, ServiceError.InvalidFormat("MovementPatternId", MovementPatternErrorMessages.InvalidIdFormat))
+            .EnsureNotEmpty(movementPatternId, MovementPatternErrorMessages.InvalidIdFormat)
             .Match(
                 whenValid: async () => await LoadEntityFromRepository(movementPatternId),
                 whenInvalid: errors => ServiceResult<MovementPattern>.Failure(

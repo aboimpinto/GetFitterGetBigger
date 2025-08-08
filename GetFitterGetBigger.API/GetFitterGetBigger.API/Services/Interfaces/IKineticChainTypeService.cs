@@ -33,13 +33,7 @@ public interface IKineticChainTypeService
     /// Checks if a kinetic chain type exists
     /// </summary>
     /// <param name="id">The kinetic chain type ID to check</param>
-    /// <returns>True if the kinetic chain type exists, false otherwise</returns>
-    Task<bool> ExistsAsync(KineticChainTypeId id);
+    /// <returns>A service result containing true if the kinetic chain type exists, false otherwise</returns>
+    Task<ServiceResult<bool>> ExistsAsync(KineticChainTypeId id);
     
-    /// <summary>
-    /// Checks if a kinetic chain type exists with the given string ID
-    /// </summary>
-    /// <param name="id">The kinetic chain type ID in string format</param>
-    /// <returns>True if the kinetic chain type exists and is active, false otherwise</returns>
-    Task<bool> ExistsAsync(string id);
 }

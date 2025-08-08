@@ -330,16 +330,16 @@ public class WorkoutCategoryServiceTests
     {
         // Arrange
         var category = _testData.First();
-        var dto = MapToDto(category);
-        _mockCacheService
-            .Setup(x => x.GetAsync<WorkoutCategoryDto>(It.IsAny<string>()))
-            .ReturnsAsync(CacheResult<WorkoutCategoryDto>.Hit(dto));
+        _mockRepository
+            .Setup(x => x.ExistsAsync(It.IsAny<WorkoutCategoryId>()))
+            .ReturnsAsync(true);
             
         // Act
         var result = await _service.ExistsAsync(category.WorkoutCategoryId);
         
         // Assert
-        Assert.True(result);
+        Assert.True(result.IsSuccess);
+        Assert.True(result.Data);
     }
     
     [Fact]
@@ -351,14 +351,15 @@ public class WorkoutCategoryServiceTests
             .ReturnsAsync(CacheResult<WorkoutCategoryDto>.Miss());
             
         _mockRepository
-            .Setup(x => x.GetByIdAsync(It.IsAny<WorkoutCategoryId>()))
-            .ReturnsAsync(WorkoutCategory.Empty);
+            .Setup(x => x.ExistsAsync(It.IsAny<WorkoutCategoryId>()))
+            .ReturnsAsync(false);
             
         // Act
         var result = await _service.ExistsAsync(WorkoutCategoryId.New());
         
         // Assert
-        Assert.False(result);
+        Assert.True(result.IsSuccess);
+        Assert.False(result.Data);
     }
     
     [Fact]
@@ -368,7 +369,8 @@ public class WorkoutCategoryServiceTests
         var result = await _service.ExistsAsync(WorkoutCategoryId.Empty);
         
         // Assert
-        Assert.False(result);
+        Assert.False(result.IsSuccess);
+        Assert.Equal(ServiceErrorCode.InvalidFormat, result.PrimaryErrorCode);
         _mockCacheService.Verify(x => x.GetAsync<WorkoutCategoryDto>(It.IsAny<string>()), Times.Never);
     }
     

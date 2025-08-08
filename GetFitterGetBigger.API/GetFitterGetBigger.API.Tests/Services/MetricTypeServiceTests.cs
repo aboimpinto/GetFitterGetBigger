@@ -54,28 +54,19 @@ namespace GetFitterGetBigger.API.Tests.Services
         {
             // Arrange
             var metricTypeId = MetricTypeId.New();
-            var metricType = MetricType.Handler.Create(
-                metricTypeId,
-                "Weight",
-                "Weight measurement in kg or lbs",
-                1,
-                true).Value;
-
-            _mockCacheService
-                .Setup(x => x.GetAsync<ReferenceDataDto>(It.IsAny<string>()))
-                .ReturnsAsync(CacheResult<ReferenceDataDto>.Miss());
 
             _mockMetricTypeRepository
-                .Setup(x => x.GetByIdAsync(metricTypeId))
-                .ReturnsAsync(metricType);
+                .Setup(x => x.ExistsAsync(It.IsAny<MetricTypeId>()))
+                .ReturnsAsync(true);
 
             // Act
             var result = await _metricTypeService.ExistsAsync(metricTypeId);
 
             // Assert
-            Assert.True(result);
+            Assert.True(result.IsSuccess);
+            Assert.True(result.Data);
             _mockUnitOfWorkProvider.Verify(x => x.CreateReadOnly(), Times.Once);
-            _mockMetricTypeRepository.Verify(x => x.GetByIdAsync(metricTypeId), Times.Once);
+            _mockMetricTypeRepository.Verify(x => x.ExistsAsync(It.IsAny<MetricTypeId>()), Times.Once);
         }
 
         [Fact]
@@ -84,21 +75,18 @@ namespace GetFitterGetBigger.API.Tests.Services
             // Arrange
             var metricTypeId = MetricTypeId.New();
 
-            _mockCacheService
-                .Setup(x => x.GetAsync<ReferenceDataDto>(It.IsAny<string>()))
-                .ReturnsAsync(CacheResult<ReferenceDataDto>.Miss());
-
             _mockMetricTypeRepository
-                .Setup(x => x.GetByIdAsync(metricTypeId))
-                .ReturnsAsync(MetricType.Empty);
+                .Setup(x => x.ExistsAsync(It.IsAny<MetricTypeId>()))
+                .ReturnsAsync(false);
 
             // Act
             var result = await _metricTypeService.ExistsAsync(metricTypeId);
 
             // Assert
-            Assert.False(result);
+            Assert.True(result.IsSuccess);
+            Assert.False(result.Data);
             _mockUnitOfWorkProvider.Verify(x => x.CreateReadOnly(), Times.Once);
-            _mockMetricTypeRepository.Verify(x => x.GetByIdAsync(metricTypeId), Times.Once);
+            _mockMetricTypeRepository.Verify(x => x.ExistsAsync(It.IsAny<MetricTypeId>()), Times.Once);
         }
 
         [Fact]
@@ -111,7 +99,8 @@ namespace GetFitterGetBigger.API.Tests.Services
             var result = await _metricTypeService.ExistsAsync(emptyId);
 
             // Assert
-            Assert.False(result);
+            Assert.False(result.IsSuccess);
+            Assert.Equal(ServiceErrorCode.InvalidFormat, result.PrimaryErrorCode);
             _mockUnitOfWorkProvider.Verify(x => x.CreateReadOnly(), Times.Never);
             _mockMetricTypeRepository.Verify(x => x.GetByIdAsync(It.IsAny<MetricTypeId>()), Times.Never);
         }

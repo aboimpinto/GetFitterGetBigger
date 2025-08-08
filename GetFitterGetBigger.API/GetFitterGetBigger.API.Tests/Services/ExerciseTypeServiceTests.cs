@@ -161,26 +161,17 @@ namespace GetFitterGetBigger.API.Tests.Services
         {
             // Arrange
             var exerciseTypeId = ExerciseTypeId.New();
-            var exerciseType = ExerciseType.Handler.Create(
-                exerciseTypeId,
-                "Strength",
-                "Strength training exercises",
-                1,
-                true).Value;
 
             _mockExerciseTypeRepository
-                .Setup(x => x.GetByIdAsync(exerciseTypeId))
-                .ReturnsAsync(exerciseType);
-
-            _mockCacheService
-                .Setup(x => x.GetAsync<ReferenceDataDto>(It.IsAny<string>()))
-                .ReturnsAsync(CacheResult<ReferenceDataDto>.Miss());
+                .Setup(x => x.ExistsAsync(It.IsAny<ExerciseTypeId>()))
+                .ReturnsAsync(true);
 
             // Act
             var result = await _exerciseTypeService.ExistsAsync(exerciseTypeId);
 
             // Assert
-            Assert.True(result);
+            Assert.True(result.IsSuccess);
+            Assert.True(result.Data);
         }
 
         [Fact]
@@ -190,18 +181,15 @@ namespace GetFitterGetBigger.API.Tests.Services
             var exerciseTypeId = ExerciseTypeId.New();
 
             _mockExerciseTypeRepository
-                .Setup(x => x.GetByIdAsync(exerciseTypeId))
-                .ReturnsAsync(ExerciseType.Empty);
-
-            _mockCacheService
-                .Setup(x => x.GetAsync<ReferenceDataDto>(It.IsAny<string>()))
-                .ReturnsAsync(CacheResult<ReferenceDataDto>.Miss());
+                .Setup(x => x.ExistsAsync(It.IsAny<ExerciseTypeId>()))
+                .ReturnsAsync(false);
 
             // Act
             var result = await _exerciseTypeService.ExistsAsync(exerciseTypeId);
 
             // Assert
-            Assert.False(result);
+            Assert.True(result.IsSuccess);
+            Assert.False(result.Data);
         }
 
         [Fact]
@@ -214,7 +202,8 @@ namespace GetFitterGetBigger.API.Tests.Services
             var result = await _exerciseTypeService.ExistsAsync(emptyId);
 
             // Assert
-            Assert.False(result);
+            Assert.False(result.IsSuccess);
+            Assert.Equal(ServiceErrorCode.InvalidFormat, result.PrimaryErrorCode);
         }
 
         [Fact]
@@ -232,16 +221,9 @@ namespace GetFitterGetBigger.API.Tests.Services
 
             foreach (var id in typeIds)
             {
-                var exerciseType = ExerciseType.Handler.Create(
-                    id,
-                    $"Type{id}",
-                    $"Description{id}",
-                    1,
-                    true).Value;
-
                 _mockExerciseTypeRepository
-                    .Setup(x => x.GetByIdAsync(id))
-                    .ReturnsAsync(exerciseType);
+                    .Setup(x => x.ExistsAsync(It.IsAny<ExerciseTypeId>()))
+                    .ReturnsAsync(true);
             }
 
             _mockCacheService

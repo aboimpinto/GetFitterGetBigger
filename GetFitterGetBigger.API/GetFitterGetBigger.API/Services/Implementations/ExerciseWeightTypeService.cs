@@ -37,7 +37,7 @@ public class ExerciseWeightTypeService : PureReferenceService<ExerciseWeightType
     public async Task<ServiceResult<ReferenceDataDto>> GetByIdAsync(ExerciseWeightTypeId id)
     {
         return await ServiceValidate.For<ReferenceDataDto>()
-            .EnsureNotEmpty(id, ServiceError.ValidationFailed(ExerciseWeightTypeErrorMessages.InvalidIdFormat))
+            .EnsureNotEmpty(id, ExerciseWeightTypeErrorMessages.InvalidIdFormat)
             .MatchAsync(
                 whenValid: async () => await GetByIdAsync(id.ToString())
             );
@@ -47,7 +47,7 @@ public class ExerciseWeightTypeService : PureReferenceService<ExerciseWeightType
     public async Task<ServiceResult<ReferenceDataDto>> GetByValueAsync(string value)
     {
         return await ServiceValidate.For<ReferenceDataDto>()
-            .EnsureNotWhiteSpace(value, ServiceError.ValidationFailed(ExerciseWeightTypeErrorMessages.ValueCannotBeEmpty))
+            .EnsureNotWhiteSpace(value, ExerciseWeightTypeErrorMessages.ValueCannotBeEmpty)
             .MatchAsync(
                 whenValid: async () => await GetFromCacheOrLoadAsync(
                     GetValueCacheKey(value),
@@ -66,12 +66,18 @@ public class ExerciseWeightTypeService : PureReferenceService<ExerciseWeightType
                 code);
 
     /// <inheritdoc/>
-    public async Task<bool> ExistsAsync(ExerciseWeightTypeId id) => 
-        !id.IsEmpty && (await GetByIdAsync(id)).IsSuccess;
-    
-    /// <inheritdoc/>
-    public override async Task<bool> ExistsAsync(string id) => 
-        await ExistsAsync(ExerciseWeightTypeId.ParseOrEmpty(id));
+    public async Task<ServiceResult<bool>> ExistsAsync(ExerciseWeightTypeId id)
+    {
+        return await ServiceValidate.Build<bool>()
+            .EnsureNotEmpty(id, ExerciseWeightTypeErrorMessages.InvalidIdFormat)
+            .WhenValidAsync(async () =>
+            {
+                using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
+                var repository = unitOfWork.GetRepository<IExerciseWeightTypeRepository>();
+                var exists = await repository.ExistsAsync(id);
+                return ServiceResult<bool>.Success(exists);
+            });
+    }
     
     /// <inheritdoc/>
     public async Task<bool> IsValidWeightForTypeAsync(ExerciseWeightTypeId weightTypeId, decimal? weight)
@@ -171,7 +177,7 @@ public class ExerciseWeightTypeService : PureReferenceService<ExerciseWeightType
         var exerciseWeightTypeId = ExerciseWeightTypeId.ParseOrEmpty(id);
         
         return await ServiceValidate.For<ExerciseWeightType>()
-            .EnsureNotEmpty(exerciseWeightTypeId, ServiceError.InvalidFormat("ExerciseWeightTypeId", ExerciseWeightTypeErrorMessages.InvalidIdFormat))
+            .EnsureNotEmpty(exerciseWeightTypeId, ExerciseWeightTypeErrorMessages.InvalidIdFormat)
             .Match(
                 whenValid: async () => await LoadEntityFromRepository(exerciseWeightTypeId),
                 whenInvalid: errors => ServiceResult<ExerciseWeightType>.Failure(

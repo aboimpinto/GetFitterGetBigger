@@ -39,4 +39,12 @@ public interface IEmptyEnabledReferenceDataRepository<TEntity, TId> : IRepositor
     /// <param name="value">The value of the item to retrieve</param>
     /// <returns>The reference data item if found, Empty otherwise</returns>
     Task<TEntity> GetByValueAsync(string value);
+    
+    /// <summary>
+    /// Checks if a reference data item exists by its ID
+    /// Uses efficient database query with .Any() to avoid loading entire entity
+    /// </summary>
+    /// <param name="id">The ID of the item to check</param>
+    /// <returns>True if the item exists and is active, false otherwise</returns>
+    Task<bool> ExistsAsync(TId id);
 }

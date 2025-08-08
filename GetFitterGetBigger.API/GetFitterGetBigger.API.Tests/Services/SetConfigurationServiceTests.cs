@@ -566,7 +566,8 @@ public class SetConfigurationServiceTests
         var result = await _service.ExistsAsync(SetConfigurationId.Empty);
 
         // Assert
-        Assert.False(result);
+        Assert.True(result.IsSuccess);
+            Assert.False(result.Data);
     }
 
     [Fact]
@@ -581,7 +582,8 @@ public class SetConfigurationServiceTests
         var result = await _service.ExistsAsync(_validSetConfigurationId);
 
         // Assert
-        Assert.True(result);
+        Assert.True(result.IsSuccess);
+            Assert.True(result.Data);
     }
 
     [Fact]
@@ -595,7 +597,8 @@ public class SetConfigurationServiceTests
         var result = await _service.ExistsAsync(_validSetConfigurationId);
 
         // Assert
-        Assert.False(result);
+        Assert.True(result.IsSuccess);
+            Assert.False(result.Data);
     }
 
     [Fact]
@@ -605,7 +608,8 @@ public class SetConfigurationServiceTests
         var result = await _service.ExistsAsync(WorkoutTemplateExerciseId.Empty, 1);
 
         // Assert
-        Assert.False(result);
+        Assert.True(result.IsSuccess);
+            Assert.False(result.Data);
     }
 
     [Fact]
@@ -615,7 +619,8 @@ public class SetConfigurationServiceTests
         var result = await _service.ExistsAsync(_validWorkoutTemplateExerciseId, 0);
 
         // Assert
-        Assert.False(result);
+        Assert.True(result.IsSuccess);
+            Assert.False(result.Data);
     }
 
     [Fact]
@@ -629,7 +634,8 @@ public class SetConfigurationServiceTests
         var result = await _service.ExistsAsync(_validWorkoutTemplateExerciseId, 1);
 
         // Assert
-        Assert.True(result);
+        Assert.True(result.IsSuccess);
+            Assert.True(result.Data);
     }
 
     #endregion

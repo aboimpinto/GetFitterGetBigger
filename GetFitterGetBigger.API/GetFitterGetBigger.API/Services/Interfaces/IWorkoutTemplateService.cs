@@ -91,15 +91,9 @@ public interface IWorkoutTemplateService
     /// Checks if a workout template exists by ID
     /// </summary>
     /// <param name="id">The workout template ID</param>
-    /// <returns>True if the template exists, false otherwise</returns>
-    Task<bool> ExistsAsync(WorkoutTemplateId id);
+    /// <returns>A service result containing true if the template exists, false otherwise</returns>
+    Task<ServiceResult<bool>> ExistsAsync(WorkoutTemplateId id);
 
-    /// <summary>
-    /// Checks if a workout template exists by ID (string overload)
-    /// </summary>
-    /// <param name="id">The workout template ID as string</param>
-    /// <returns>True if the template exists, false otherwise</returns>
-    Task<bool> ExistsAsync(string id);
 
     /// <summary>
     /// Checks if a workout template with the given name exists

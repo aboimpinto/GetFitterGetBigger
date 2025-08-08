@@ -69,4 +69,34 @@ public static class ServiceValidationBuilderExtensions
     {
         return builder.EnsureAsync(operationCheck, errorMessage);
     }
+    
+    /// <summary>
+    /// Executes the provided function when validation passes.
+    /// Automatically returns validation failure if validation fails.
+    /// For async operations that return Task of ServiceResult.
+    /// </summary>
+    /// <typeparam name="T">The result type</typeparam>
+    /// <param name="builder">The validation builder instance</param>
+    /// <param name="whenValid">Async function to execute when validation passes</param>
+    /// <returns>The result from either validation failure or the valid function</returns>
+    public static async Task<ServiceResult<T>> WhenValidAsync<T>(
+        this ServiceValidationBuilder<T> builder,
+        Func<Task<ServiceResult<T>>> whenValid)
+    {
+        // Check if validation has already failed
+        if (builder.Validation.HasErrors)
+        {
+            // If it has a ServiceError, use it; otherwise create ValidationFailed
+            var error = builder.Validation.HasServiceError 
+                ? builder.Validation.CreateFailureWithEmpty(default(T)!)
+                : ServiceResult<T>.Failure(
+                    default(T)!, 
+                    ServiceError.ValidationFailed(builder.Validation.ValidationErrors.FirstOrDefault() ?? "Validation failed"));
+            
+            return error;
+        }
+
+        // If no errors, execute the valid function
+        return await whenValid();
+    }
 }

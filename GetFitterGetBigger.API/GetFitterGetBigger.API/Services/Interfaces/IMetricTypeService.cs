@@ -33,6 +33,6 @@ public interface IMetricTypeService
     /// Checks if a metric type exists by ID
     /// </summary>
     /// <param name="id">The ID to check</param>
-    /// <returns>True if the metric type exists, false otherwise</returns>
-    Task<bool> ExistsAsync(MetricTypeId id);
+    /// <returns>A service result containing true if the metric type exists, false otherwise</returns>
+    Task<ServiceResult<bool>> ExistsAsync(MetricTypeId id);
 }

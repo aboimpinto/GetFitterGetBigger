@@ -700,7 +700,8 @@ public class WorkoutTemplateServiceTests
         var result = await _service.ExistsAsync(_testTemplateId);
         
         // Assert
-        Assert.True(result);
+        Assert.True(result.IsSuccess);
+        Assert.True(result.Data);
     }
     
     [Fact]
@@ -710,7 +711,8 @@ public class WorkoutTemplateServiceTests
         var result = await _service.ExistsAsync(WorkoutTemplateId.Empty);
         
         // Assert
-        Assert.False(result);
+        Assert.False(result.IsSuccess);
+        Assert.Equal(ServiceErrorCode.InvalidFormat, result.PrimaryErrorCode);
         _mockRepository.Verify(x => x.ExistsAsync(It.IsAny<WorkoutTemplateId>()), Times.Never);
     }
     
@@ -724,10 +726,11 @@ public class WorkoutTemplateServiceTests
             .ReturnsAsync(true);
             
         // Act
-        var result = await _service.ExistsAsync(stringId);
+        var result = await _service.ExistsAsync(WorkoutTemplateId.ParseOrEmpty(stringId));
         
         // Assert
-        Assert.True(result);
+        Assert.True(result.IsSuccess);
+        Assert.True(result.Data);
         _mockRepository.Verify(x => x.ExistsAsync(_testTemplateId), Times.Once);
     }
     

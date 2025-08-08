@@ -18,6 +18,7 @@ public class ServiceValidation
 
     /// <summary>
     /// Adds a validation rule with a custom predicate.
+    /// Creates a ServiceError with ValidationFailed code using the provided error message.
     /// </summary>
     /// <param name="predicate">The condition that must be true for validation to pass</param>
     /// <param name="errorMessage">The error message if validation fails</param>
@@ -25,7 +26,10 @@ public class ServiceValidation
     public ServiceValidation Ensure(Func<bool> predicate, string errorMessage)
     {
         if (!predicate())
+        {
+            _serviceError = ServiceError.ValidationFailed(errorMessage);
             _errors.Add(errorMessage);
+        }
         return this;
     }
 
@@ -47,6 +51,7 @@ public class ServiceValidation
 
     /// <summary>
     /// Adds an async validation rule with a custom predicate.
+    /// Creates a ServiceError with ValidationFailed code using the provided error message.
     /// </summary>
     /// <param name="predicate">The async condition that must be true for validation to pass</param>
     /// <param name="errorMessage">The error message if validation fails</param>
@@ -54,7 +59,10 @@ public class ServiceValidation
     public async Task<ServiceValidation> EnsureAsync(Func<Task<bool>> predicate, string errorMessage)
     {
         if (!await predicate())
+        {
+            _serviceError = ServiceError.ValidationFailed(errorMessage);
             _errors.Add(errorMessage);
+        }
         return this;
     }
 
@@ -76,13 +84,14 @@ public class ServiceValidation
 
     /// <summary>
     /// Validates that an object is not null.
+    /// Creates a ServiceError with ValidationFailed code using the provided error message.
     /// </summary>
     /// <param name="value">The object to validate</param>
     /// <param name="errorMessage">The error message if validation fails</param>
     /// <returns>The current validation instance for chaining</returns>
     public ServiceValidation EnsureNotNull(object? value, string errorMessage)
     {
-        return Ensure(() => value != null, errorMessage);
+        return Ensure(() => value != null, ServiceError.ValidationFailed(errorMessage));
     }
 
     /// <summary>
@@ -98,13 +107,14 @@ public class ServiceValidation
 
     /// <summary>
     /// Validates that a string value is not null or whitespace.
+    /// Creates a ServiceError with ValidationFailed code using the provided error message.
     /// </summary>
     /// <param name="value">The string value to validate</param>
     /// <param name="errorMessage">The error message if validation fails</param>
     /// <returns>The current validation instance for chaining</returns>
     public ServiceValidation EnsureNotWhiteSpace(string? value, string errorMessage)
     {
-        return Ensure(() => !string.IsNullOrWhiteSpace(value), errorMessage);
+        return Ensure(() => !string.IsNullOrWhiteSpace(value), ServiceError.ValidationFailed(errorMessage));
     }
 
     /// <summary>
@@ -120,13 +130,14 @@ public class ServiceValidation
 
     /// <summary>
     /// Validates that a specialized ID is not empty.
+    /// Creates a ServiceError with ValidationFailed code using the provided error message.
     /// </summary>
     /// <param name="id">The specialized ID to validate</param>
     /// <param name="errorMessage">The error message if validation fails</param>
     /// <returns>The current validation instance for chaining</returns>
     public ServiceValidation EnsureNotEmpty(ISpecializedIdBase id, string errorMessage)
     {
-        return Ensure(() => !id.IsEmpty, errorMessage);
+        return Ensure(() => !id.IsEmpty, ServiceError.ValidationFailed(errorMessage));
     }
 
     /// <summary>

@@ -33,13 +33,7 @@ public interface IMuscleRoleService
     /// Checks if a muscle role exists
     /// </summary>
     /// <param name="id">The muscle role ID to check</param>
-    /// <returns>True if the muscle role exists, false otherwise</returns>
-    Task<bool> ExistsAsync(MuscleRoleId id);
+    /// <returns>A service result containing true if the muscle role exists, false otherwise</returns>
+    Task<ServiceResult<bool>> ExistsAsync(MuscleRoleId id);
     
-    /// <summary>
-    /// Checks if a muscle role exists with the given string ID
-    /// </summary>
-    /// <param name="id">The muscle role ID in string format</param>
-    /// <returns>True if the muscle role exists and is active, false otherwise</returns>
-    Task<bool> ExistsAsync(string id);
 }

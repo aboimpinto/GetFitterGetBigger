@@ -142,16 +142,6 @@ public abstract class PureReferenceService<TEntity, TDto> : EntityServiceBase<TE
         return ServiceResult<TDto>.Success(dto);
     }
     
-    /// <summary>
-    /// Checks if an entity exists with the given ID
-    /// </summary>
-    /// <param name="id">The entity ID</param>
-    /// <returns>True if the entity exists and is active, false otherwise</returns>
-    public virtual async Task<bool> ExistsAsync(string id)
-    {
-        var result = await GetByIdAsync(id);
-        return result.IsSuccess;
-    }
     
     /// <summary>
     /// Loads all entities from the database

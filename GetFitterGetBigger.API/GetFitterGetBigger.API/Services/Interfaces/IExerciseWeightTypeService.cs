@@ -40,15 +40,9 @@ public interface IExerciseWeightTypeService
     /// Checks if an exercise weight type exists
     /// </summary>
     /// <param name="id">The exercise weight type ID to check</param>
-    /// <returns>True if the weight type exists and is active, false otherwise</returns>
-    Task<bool> ExistsAsync(ExerciseWeightTypeId id);
+    /// <returns>A service result containing true if the weight type exists and is active, false otherwise</returns>
+    Task<ServiceResult<bool>> ExistsAsync(ExerciseWeightTypeId id);
     
-    /// <summary>
-    /// Checks if an exercise weight type exists by string ID
-    /// </summary>
-    /// <param name="id">The exercise weight type ID string to check</param>
-    /// <returns>True if the weight type exists and is active, false otherwise</returns>
-    Task<bool> ExistsAsync(string id);
     
     /// <summary>
     /// Validates if a weight value is appropriate for the given weight type

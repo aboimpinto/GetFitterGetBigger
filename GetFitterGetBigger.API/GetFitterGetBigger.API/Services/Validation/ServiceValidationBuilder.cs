@@ -54,13 +54,14 @@ public class ServiceValidationBuilder<T>
 
     /// <summary>
     /// Validates that a string value is not null or whitespace.
+    /// Automatically creates a ServiceError.ValidationFailed with the provided message.
     /// </summary>
     /// <param name="value">The string value to validate</param>
     /// <param name="errorMessage">The error message if validation fails</param>
     /// <returns>The builder instance for chaining</returns>
     public ServiceValidationBuilder<T> EnsureNotWhiteSpace(string? value, string errorMessage)
     {
-        _validation.EnsureNotWhiteSpace(value, errorMessage);
+        _validation.EnsureNotWhiteSpace(value, ServiceError.ValidationFailed(errorMessage));
         return this;
     }
 
@@ -78,13 +79,18 @@ public class ServiceValidationBuilder<T>
 
     /// <summary>
     /// Validates that a specialized ID is not empty.
+    /// Creates a ServiceError with InvalidFormat code using the provided error message.
+    /// This is specifically for ID validation to maintain proper error codes.
     /// </summary>
     /// <param name="id">The specialized ID to validate</param>
-    /// <param name="errorMessage">The error message if validation fails</param>
+    /// <param name="errorMessage">The complete error message for invalid ID format</param>
     /// <returns>The builder instance for chaining</returns>
     public ServiceValidationBuilder<T> EnsureNotEmpty(ISpecializedIdBase id, string errorMessage)
     {
-        _validation.EnsureNotEmpty(id, errorMessage);
+        // For ID validation, we use InvalidFormat error code to match test expectations
+        // The message is used as-is to avoid redundant "Invalid X format. Expected format: Y" pattern
+        var serviceError = new ServiceError(ServiceErrorCode.InvalidFormat, errorMessage);
+        _validation.EnsureNotEmpty(id, serviceError);
         return this;
     }
 

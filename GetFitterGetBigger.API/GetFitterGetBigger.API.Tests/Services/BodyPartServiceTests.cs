@@ -54,28 +54,23 @@ namespace GetFitterGetBigger.API.Tests.Services
         {
             // Arrange
             var bodyPartId = BodyPartId.New();
-            var bodyPart = BodyPart.Handler.Create(
-                bodyPartId,
-                "Chest",
-                "Chest muscles",
-                1,
-                true).Value;
 
             _mockCacheService
                 .Setup(x => x.GetAsync<BodyPartDto>(It.IsAny<string>()))
                 .ReturnsAsync(CacheResult<BodyPartDto>.Miss());
 
             _mockBodyPartRepository
-                .Setup(x => x.GetByIdAsync(bodyPartId))
-                .ReturnsAsync(bodyPart);
+                .Setup(x => x.ExistsAsync(It.IsAny<BodyPartId>()))
+                .ReturnsAsync(true);
 
             // Act
             var result = await _bodyPartService.ExistsAsync(bodyPartId);
 
             // Assert
-            Assert.True(result);
+            Assert.True(result.IsSuccess);
+            Assert.True(result.Data);
             _mockUnitOfWorkProvider.Verify(x => x.CreateReadOnly(), Times.Once);
-            _mockBodyPartRepository.Verify(x => x.GetByIdAsync(bodyPartId), Times.Once);
+            _mockBodyPartRepository.Verify(x => x.ExistsAsync(It.IsAny<BodyPartId>()), Times.Once);
         }
 
         [Fact]
@@ -89,16 +84,17 @@ namespace GetFitterGetBigger.API.Tests.Services
                 .ReturnsAsync(CacheResult<BodyPartDto>.Miss());
 
             _mockBodyPartRepository
-                .Setup(x => x.GetByIdAsync(bodyPartId))
-                .ReturnsAsync(BodyPart.Empty);
+                .Setup(x => x.ExistsAsync(It.IsAny<BodyPartId>()))
+                .ReturnsAsync(false);
 
             // Act
             var result = await _bodyPartService.ExistsAsync(bodyPartId);
 
             // Assert
-            Assert.False(result);
+            Assert.True(result.IsSuccess);
+            Assert.False(result.Data);
             _mockUnitOfWorkProvider.Verify(x => x.CreateReadOnly(), Times.Once);
-            _mockBodyPartRepository.Verify(x => x.GetByIdAsync(bodyPartId), Times.Once);
+            _mockBodyPartRepository.Verify(x => x.ExistsAsync(It.IsAny<BodyPartId>()), Times.Once);
         }
 
         [Fact]
@@ -107,24 +103,19 @@ namespace GetFitterGetBigger.API.Tests.Services
             // Arrange
             var bodyPartId = BodyPartId.New();
             var bodyPartIdString = bodyPartId.ToString();
-            var bodyPartDto = new BodyPartDto
-            {
-                Id = bodyPartIdString,
-                Value = "Chest",
-                Description = "Chest muscles"
-            };
 
-            _mockCacheService
-                .Setup(x => x.GetAsync<BodyPartDto>(It.IsAny<string>()))
-                .ReturnsAsync(CacheResult<BodyPartDto>.Hit(bodyPartDto));
+            _mockBodyPartRepository
+                .Setup(x => x.ExistsAsync(It.IsAny<BodyPartId>()))
+                .ReturnsAsync(true);
 
             // Act
-            var result = await _bodyPartService.ExistsAsync(bodyPartIdString);
+            var result = await _bodyPartService.ExistsAsync(BodyPartId.ParseOrEmpty(bodyPartIdString));
 
             // Assert
-            Assert.True(result);
-            _mockCacheService.Verify(x => x.GetAsync<BodyPartDto>(It.IsAny<string>()), Times.Once);
-            _mockUnitOfWorkProvider.Verify(x => x.CreateReadOnly(), Times.Never);
+            Assert.True(result.IsSuccess);
+            Assert.True(result.Data);
+            _mockUnitOfWorkProvider.Verify(x => x.CreateReadOnly(), Times.Once);
+            _mockBodyPartRepository.Verify(x => x.ExistsAsync(It.IsAny<BodyPartId>()), Times.Once);
         }
 
         [Fact]
