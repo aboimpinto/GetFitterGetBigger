@@ -13,7 +13,7 @@ public class ExerciseDtoKineticChainTests
     {
         // Arrange
         var dto = new ExerciseDto
-        {
+            {
             Id = "exercise-123",
             Name = "Squat",
             Description = "Lower body exercise",
@@ -39,7 +39,7 @@ public class ExerciseDtoKineticChainTests
     {
         // Arrange
         var dto = new ExerciseDto
-        {
+            {
             Id = "exercise-123",
             Name = "Rest",
             Description = "Rest period",
@@ -63,7 +63,7 @@ public class ExerciseDtoKineticChainTests
     {
         // Arrange
         var request = new CreateExerciseRequest
-        {
+            {
             Name = "Deadlift",
             Description = "Full body exercise",
             DifficultyId = "difficulty-intermediate",
@@ -85,7 +85,7 @@ public class ExerciseDtoKineticChainTests
     {
         // Arrange
         var request = new CreateExerciseRequest
-        {
+            {
             Name = "Rest",
             Description = "Rest period",
             DifficultyId = "difficulty-beginner",
@@ -107,7 +107,7 @@ public class ExerciseDtoKineticChainTests
     {
         // Arrange
         var request = new UpdateExerciseRequest
-        {
+            {
             Name = "Bench Press",
             Description = "Upper body exercise",
             DifficultyId = "difficulty-intermediate",

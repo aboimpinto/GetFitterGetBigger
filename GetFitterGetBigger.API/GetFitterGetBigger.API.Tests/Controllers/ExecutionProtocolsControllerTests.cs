@@ -62,7 +62,7 @@ public class ExecutionProtocolsControllerTests
         // Arrange
         var id = ExecutionProtocolTestConstants.ValidExecutionProtocolId;
         var executionProtocol = new ExecutionProtocolDto
-        {
+            {
             ExecutionProtocolId = id,
             Value = ExecutionProtocolTestConstants.StandardValue,
             Description = ExecutionProtocolTestConstants.StandardDescription,
@@ -141,7 +141,7 @@ public class ExecutionProtocolsControllerTests
         // Arrange
         var code = ExecutionProtocolTestConstants.StandardCode;
         var executionProtocol = new ExecutionProtocolDto
-        {
+            {
             ExecutionProtocolId = ExecutionProtocolTestConstants.TestExecutionProtocolId,
             Value = "Standard",
             Description = "Standard protocol",

@@ -56,7 +56,6 @@ public class SetConfigurationServiceTests
         // Act
         var result = await _service.GetByIdAsync(SetConfigurationId.Empty);
 
-        // Assert
         Assert.False(result.IsSuccess);
         Assert.NotEmpty(result.Errors);
         Assert.NotNull(result.Data);
@@ -67,12 +66,11 @@ public class SetConfigurationServiceTests
     {
         // Arrange
         _repository.Setup(x => x.GetByIdAsync(_validSetConfigurationId))
-            .ReturnsAsync(SetConfiguration.Empty);
+            .ReturnsAsync((SetConfiguration?)null);
 
         // Act
         var result = await _service.GetByIdAsync(_validSetConfigurationId);
 
-        // Assert
         Assert.False(result.IsSuccess);
         Assert.NotEmpty(result.Errors);
         Assert.NotNull(result.Data);
@@ -89,7 +87,6 @@ public class SetConfigurationServiceTests
         // Act
         var result = await _service.GetByIdAsync(_validSetConfigurationId);
 
-        // Assert
         Assert.True(result.IsSuccess);
         Assert.NotNull(result.Data);
         Assert.Equal(_validSetConfigurationId.ToString(), result.Data.Id);
@@ -109,7 +106,6 @@ public class SetConfigurationServiceTests
         // Act
         var result = await _service.GetByWorkoutTemplateExerciseAsync(WorkoutTemplateExerciseId.Empty);
 
-        // Assert
         Assert.False(result.IsSuccess);
         Assert.NotEmpty(result.Errors);
         Assert.NotNull(result.Data);
@@ -131,7 +127,6 @@ public class SetConfigurationServiceTests
         // Act
         var result = await _service.GetByWorkoutTemplateExerciseAsync(_validWorkoutTemplateExerciseId);
 
-        // Assert
         Assert.True(result.IsSuccess);
         Assert.NotNull(result.Data);
         Assert.Equal(3, result.Data.Count());
@@ -149,7 +144,6 @@ public class SetConfigurationServiceTests
         // Act
         var result = await _service.GetByWorkoutTemplateAsync(WorkoutTemplateId.Empty);
 
-        // Assert
         Assert.False(result.IsSuccess);
         Assert.NotEmpty(result.Errors);
         Assert.NotNull(result.Data);
@@ -170,7 +164,6 @@ public class SetConfigurationServiceTests
         // Act
         var result = await _service.GetByWorkoutTemplateAsync(_validWorkoutTemplateId);
 
-        // Assert
         Assert.True(result.IsSuccess);
         Assert.NotNull(result.Data);
         Assert.Equal(2, result.Data.Count());
@@ -186,7 +179,6 @@ public class SetConfigurationServiceTests
         // Act
         var result = await _service.CreateAsync(null!);
 
-        // Assert
         Assert.False(result.IsSuccess);
         Assert.NotEmpty(result.Errors);
         Assert.NotNull(result.Data);
@@ -206,7 +198,6 @@ public class SetConfigurationServiceTests
         // Act
         var result = await _service.CreateAsync(command);
 
-        // Assert
         Assert.False(result.IsSuccess);
         Assert.NotEmpty(result.Errors);
         Assert.NotNull(result.Data);
@@ -234,7 +225,6 @@ public class SetConfigurationServiceTests
         // Act
         var result = await _service.CreateAsync(command);
 
-        // Assert
         Assert.True(result.IsSuccess);
         Assert.NotNull(result.Data);
         Assert.Equal("10-12", result.Data.TargetReps);
@@ -253,7 +243,6 @@ public class SetConfigurationServiceTests
         // Act
         var result = await _service.CreateBulkAsync(null!);
 
-        // Assert
         Assert.False(result.IsSuccess);
         Assert.NotEmpty(result.Errors);
         Assert.NotNull(result.Data);
@@ -264,7 +253,7 @@ public class SetConfigurationServiceTests
     {
         // Arrange
         var command = new CreateBulkSetConfigurationsCommand
-        {
+            {
             WorkoutTemplateExerciseId = _validWorkoutTemplateExerciseId,
             UserId = _validUserId,
             SetConfigurations = new[]
@@ -297,7 +286,6 @@ public class SetConfigurationServiceTests
         // Act
         var result = await _service.CreateBulkAsync(command);
 
-        // Assert
         Assert.True(result.IsSuccess);
         Assert.NotNull(result.Data);
         Assert.Equal(2, result.Data.Count());
@@ -314,7 +302,6 @@ public class SetConfigurationServiceTests
         // Act
         var result = await _service.UpdateAsync(null!);
 
-        // Assert
         Assert.False(result.IsSuccess);
         Assert.NotEmpty(result.Errors);
         Assert.NotNull(result.Data);
@@ -333,12 +320,11 @@ public class SetConfigurationServiceTests
         };
 
         _repository.Setup(x => x.GetByIdAsync(_validSetConfigurationId))
-            .ReturnsAsync(SetConfiguration.Empty);
+            .ReturnsAsync((SetConfiguration?)null);
 
         // Act
         var result = await _service.UpdateAsync(command);
 
-        // Assert
         Assert.False(result.IsSuccess);
         Assert.NotEmpty(result.Errors);
         Assert.NotNull(result.Data);
@@ -371,7 +357,6 @@ public class SetConfigurationServiceTests
         // Act
         var result = await _service.UpdateAsync(command);
 
-        // Assert
         Assert.True(result.IsSuccess);
         Assert.NotNull(result.Data);
         Assert.Equal("12-15", result.Data.TargetReps);
@@ -389,7 +374,6 @@ public class SetConfigurationServiceTests
         // Act
         var result = await _service.UpdateBulkAsync(null!);
 
-        // Assert
         Assert.False(result.IsSuccess);
         Assert.NotEmpty(result.Errors);
         Assert.Equal(0, result.Data);
@@ -423,7 +407,6 @@ public class SetConfigurationServiceTests
         // Act
         var result = await _service.UpdateBulkAsync(command);
 
-        // Assert
         Assert.True(result.IsSuccess);
         Assert.Equal(1, result.Data);
         _writableUnitOfWork.Verify(x => x.CommitAsync(), Times.Once);
@@ -439,7 +422,6 @@ public class SetConfigurationServiceTests
         // Act
         var result = await _service.ReorderSetsAsync(null!);
 
-        // Assert
         Assert.False(result.IsSuccess);
         Assert.NotEmpty(result.Errors);
         Assert.False(result.Data);
@@ -465,7 +447,6 @@ public class SetConfigurationServiceTests
         // Act
         var result = await _service.ReorderSetsAsync(command);
 
-        // Assert
         Assert.True(result.IsSuccess);
         Assert.True(result.Data);
         _writableUnitOfWork.Verify(x => x.CommitAsync(), Times.Once);
@@ -481,7 +462,6 @@ public class SetConfigurationServiceTests
         // Act
         var result = await _service.DeleteAsync(SetConfigurationId.Empty);
 
-        // Assert
         Assert.False(result.IsSuccess);
         Assert.NotEmpty(result.Errors);
         Assert.False(result.Data);
@@ -493,12 +473,11 @@ public class SetConfigurationServiceTests
     {
         // Arrange
         _repository.Setup(x => x.GetByIdAsync(_validSetConfigurationId))
-            .ReturnsAsync(SetConfiguration.Empty);
+            .ReturnsAsync((SetConfiguration?)null);
 
         // Act
         var result = await _service.DeleteAsync(_validSetConfigurationId);
 
-        // Assert
         Assert.False(result.IsSuccess);
         Assert.NotEmpty(result.Errors);
         Assert.False(result.Data);
@@ -517,7 +496,6 @@ public class SetConfigurationServiceTests
         // Act
         var result = await _service.DeleteAsync(_validSetConfigurationId);
 
-        // Assert
         Assert.True(result.IsSuccess);
         Assert.True(result.Data);
         _writableUnitOfWork.Verify(x => x.CommitAsync(), Times.Once);
@@ -533,7 +511,6 @@ public class SetConfigurationServiceTests
         // Act
         var result = await _service.DeleteByWorkoutTemplateExerciseAsync(WorkoutTemplateExerciseId.Empty);
 
-        // Assert
         Assert.False(result.IsSuccess);
         Assert.NotEmpty(result.Errors);
         Assert.Equal(0, result.Data);
@@ -549,7 +526,6 @@ public class SetConfigurationServiceTests
         // Act
         var result = await _service.DeleteByWorkoutTemplateExerciseAsync(_validWorkoutTemplateExerciseId);
 
-        // Assert
         Assert.True(result.IsSuccess);
         Assert.Equal(3, result.Data);
         _writableUnitOfWork.Verify(x => x.CommitAsync(), Times.Once);
@@ -565,7 +541,6 @@ public class SetConfigurationServiceTests
         // Act
         var result = await _service.ExistsAsync(SetConfigurationId.Empty);
 
-        // Assert
         Assert.True(result.IsSuccess);
             Assert.False(result.Data);
     }
@@ -581,7 +556,6 @@ public class SetConfigurationServiceTests
         // Act
         var result = await _service.ExistsAsync(_validSetConfigurationId);
 
-        // Assert
         Assert.True(result.IsSuccess);
             Assert.True(result.Data);
     }
@@ -591,12 +565,11 @@ public class SetConfigurationServiceTests
     {
         // Arrange
         _repository.Setup(x => x.GetByIdAsync(_validSetConfigurationId))
-            .ReturnsAsync(SetConfiguration.Empty);
+            .ReturnsAsync((SetConfiguration?)null);
 
         // Act
         var result = await _service.ExistsAsync(_validSetConfigurationId);
 
-        // Assert
         Assert.True(result.IsSuccess);
             Assert.False(result.Data);
     }
@@ -607,7 +580,6 @@ public class SetConfigurationServiceTests
         // Act
         var result = await _service.ExistsAsync(WorkoutTemplateExerciseId.Empty, 1);
 
-        // Assert
         Assert.True(result.IsSuccess);
             Assert.False(result.Data);
     }
@@ -618,7 +590,6 @@ public class SetConfigurationServiceTests
         // Act
         var result = await _service.ExistsAsync(_validWorkoutTemplateExerciseId, 0);
 
-        // Assert
         Assert.True(result.IsSuccess);
             Assert.False(result.Data);
     }
@@ -633,7 +604,6 @@ public class SetConfigurationServiceTests
         // Act
         var result = await _service.ExistsAsync(_validWorkoutTemplateExerciseId, 1);
 
-        // Assert
         Assert.True(result.IsSuccess);
             Assert.True(result.Data);
     }

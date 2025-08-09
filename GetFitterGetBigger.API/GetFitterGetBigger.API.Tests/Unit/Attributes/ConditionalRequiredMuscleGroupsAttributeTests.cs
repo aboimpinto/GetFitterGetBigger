@@ -46,7 +46,7 @@ public class ConditionalRequiredMuscleGroupsAttributeTests
     {
         // Arrange
         var createRequest = new CreateExerciseRequest
-        {
+            {
             Name = "Push Up",
             Description = "Upper body exercise",
             DifficultyId = "difficulty-123",
@@ -72,7 +72,7 @@ public class ConditionalRequiredMuscleGroupsAttributeTests
     {
         // Arrange
         var createRequest = new CreateExerciseRequest
-        {
+            {
             Name = "Push Up",
             Description = "Upper body exercise",
             DifficultyId = "difficulty-123",
@@ -100,7 +100,7 @@ public class ConditionalRequiredMuscleGroupsAttributeTests
     {
         // Arrange
         var updateRequest = new UpdateExerciseRequest
-        {
+            {
             Name = "Rest Exercise",
             Description = "A rest period",
             DifficultyId = "difficulty-123",
@@ -180,7 +180,7 @@ public class ConditionalRequiredMuscleGroupsAttributeTests
     {
         // Arrange
         var createRequest = new CreateExerciseRequest
-        {
+            {
             Name = "Rest Exercise",
             Description = "A rest period",
             DifficultyId = "difficulty-123",
@@ -209,7 +209,7 @@ public class ConditionalRequiredMuscleGroupsAttributeTests
     {
         // Arrange
         var createRequest = new CreateExerciseRequest
-        {
+            {
             Name = "Exercise",
             Description = "Some exercise",
             DifficultyId = "difficulty-123",
@@ -235,7 +235,7 @@ public class ConditionalRequiredMuscleGroupsAttributeTests
     {
         // Arrange
         var createRequest = new CreateExerciseRequest
-        {
+            {
             Name = "Exercise",
             Description = "Some exercise",
             DifficultyId = "difficulty-123",
@@ -261,7 +261,7 @@ public class ConditionalRequiredMuscleGroupsAttributeTests
     {
         // Arrange
         var createRequest = new CreateExerciseRequest
-        {
+            {
             Name = "Exercise",
             Description = "Some exercise",
             DifficultyId = "difficulty-123",

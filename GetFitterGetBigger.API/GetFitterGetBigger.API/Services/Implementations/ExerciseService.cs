@@ -1,5 +1,4 @@
 using GetFitterGetBigger.API.DTOs;
-using GetFitterGetBigger.API.Mappers;
 using GetFitterGetBigger.API.Models;
 using GetFitterGetBigger.API.Models.Entities;
 using GetFitterGetBigger.API.Models.SpecializedIds;
@@ -10,7 +9,6 @@ using GetFitterGetBigger.API.Services.Results;
 using GetFitterGetBigger.API.Builders;
 using GetFitterGetBigger.API.Constants;
 using Olimpo.EntityFramework.Persistency;
-using System.Linq;
 
 namespace GetFitterGetBigger.API.Services.Implementations;
 

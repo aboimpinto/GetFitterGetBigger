@@ -4,33 +4,36 @@ using GetFitterGetBigger.API.Models;
 using GetFitterGetBigger.API.Models.Entities;
 using GetFitterGetBigger.API.Models.SpecializedIds;
 using GetFitterGetBigger.API.Repositories.Interfaces;
-using GetFitterGetBigger.API.Services.Base;
-using GetFitterGetBigger.API.Services.Cache;
 using GetFitterGetBigger.API.Services.Interfaces;
 using GetFitterGetBigger.API.Services.Results;
 using GetFitterGetBigger.API.Services.Validation;
-using Microsoft.Extensions.Logging;
 using Olimpo.EntityFramework.Persistency;
 
 namespace GetFitterGetBigger.API.Services.Implementations;
 
 /// <summary>
-/// Service implementation for execution protocol operations
+/// Service implementation for execution_protocol operations
+/// This service focuses solely on business logic and data access
+/// Caching is handled by the wrapping ExecutionProtocolReferenceService layer
 /// </summary>
-public class ExecutionProtocolService : PureReferenceService<ExecutionProtocol, ExecutionProtocolDto>, IExecutionProtocolService
+public class ExecutionProtocolService(
+    IUnitOfWorkProvider<FitnessDbContext> unitOfWorkProvider,
+    ILogger<ExecutionProtocolService> logger) : IExecutionProtocolService
 {
-    public ExecutionProtocolService(
-        IUnitOfWorkProvider<FitnessDbContext> unitOfWorkProvider,
-        IEternalCacheService cacheService,
-        ILogger<ExecutionProtocolService> logger)
-        : base(unitOfWorkProvider, cacheService, logger)
-    {
-    }
+    private readonly IUnitOfWorkProvider<FitnessDbContext> _unitOfWorkProvider = unitOfWorkProvider;
+    private readonly ILogger<ExecutionProtocolService> _logger = logger;
 
     /// <inheritdoc/>
     public async Task<ServiceResult<IEnumerable<ExecutionProtocolDto>>> GetAllActiveAsync()
     {
-        return await GetAllAsync();
+        using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
+        var repository = unitOfWork.GetRepository<IExecutionProtocolRepository>();
+        var entities = await repository.GetAllActiveAsync();
+        
+        var dtos = entities.Select(MapToDto).ToList();
+        
+        _logger.LogInformation("Loaded {Count} active execution_protocols", dtos.Count);
+        return ServiceResult<IEnumerable<ExecutionProtocolDto>>.Success(dtos);
     }
 
     /// <inheritdoc/>
@@ -39,8 +42,39 @@ public class ExecutionProtocolService : PureReferenceService<ExecutionProtocol, 
         return await ServiceValidate.For<ExecutionProtocolDto>()
             .EnsureNotEmpty(id, ExecutionProtocolErrorMessages.InvalidIdFormat)
             .MatchAsync(
-                whenValid: async () => await GetByIdAsync(id.ToString())
+                whenValid: async () => await LoadByIdFromDatabaseAsync(id)
             );
+    }
+    
+    /// <summary>
+    /// Gets a execution_protocol by its ID string
+    /// </summary>
+    /// <param name="id">The execution_protocol ID as a string</param>
+    /// <returns>A service result containing the execution_protocol if found</returns>
+    public async Task<ServiceResult<ExecutionProtocolDto>> GetByIdAsync(string id)
+    {
+        var execution_protocolId = ExecutionProtocolId.ParseOrEmpty(id);
+        
+        return await ServiceValidate.For<ExecutionProtocolDto>()
+            .EnsureNotEmpty(execution_protocolId, ExecutionProtocolErrorMessages.InvalidIdFormat)
+            .MatchAsync(
+                whenValid: async () => await LoadByIdFromDatabaseAsync(execution_protocolId)
+            );
+    }
+    
+    private async Task<ServiceResult<ExecutionProtocolDto>> LoadByIdFromDatabaseAsync(ExecutionProtocolId id)
+    {
+        using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
+        var repository = unitOfWork.GetRepository<IExecutionProtocolRepository>();
+        var entity = await repository.GetByIdAsync(id);
+        
+        return (entity.IsEmpty || !entity.IsActive) switch
+        {
+            true => ServiceResult<ExecutionProtocolDto>.Failure(
+                ExecutionProtocolDto.Empty,
+                ServiceError.NotFound("ExecutionProtocol", id.ToString())),
+            false => ServiceResult<ExecutionProtocolDto>.Success(MapToDto(entity))
+        };
     }
     
     /// <inheritdoc/>
@@ -49,75 +83,23 @@ public class ExecutionProtocolService : PureReferenceService<ExecutionProtocol, 
         return await ServiceValidate.For<ExecutionProtocolDto>()
             .EnsureNotWhiteSpace(value, ExecutionProtocolErrorMessages.ValueCannotBeEmpty)
             .MatchAsync(
-                whenValid: async () => await GetFromCacheOrLoadAsync(
-                    GetValueCacheKey(value),
-                    () => LoadByValueAsync(value),
-                    value)
-            );
-    }
-
-    /// <inheritdoc/>
-    public async Task<ServiceResult<ExecutionProtocolDto>> GetByCodeAsync(string code) => 
-        string.IsNullOrWhiteSpace(code)
-            ? ServiceResult<ExecutionProtocolDto>.Failure(ExecutionProtocolDto.Empty, ServiceError.ValidationFailed(ExecutionProtocolErrorMessages.CodeCannotBeEmpty))
-            : await GetFromCacheOrLoadAsync(
-                GetCodeCacheKey(code),
-                () => LoadByCodeAsync(code),
-                code);
-
-    private string GetValueCacheKey(string value) => $"{GetCacheKeyPrefix()}value:{value}";
-    private string GetCodeCacheKey(string code) => $"{GetCacheKeyPrefix()}code:{code.ToLowerInvariant()}";
-    
-    private async Task<ServiceResult<ExecutionProtocolDto>> GetFromCacheOrLoadAsync(
-        string cacheKey, 
-        Func<Task<ExecutionProtocol>> loadFunc,
-        string identifier)
-    {
-        var cacheService = (IEternalCacheService)_cacheService;
-        
-        return await CacheLoad.For<ExecutionProtocolDto>(cacheService, cacheKey)
-            .WithLogging(_logger, "ExecutionProtocol")
-            .MatchAsync(
-                onHit: cached => ServiceResult<ExecutionProtocolDto>.Success(cached),
-                onMiss: async () => await LoadAndProcessEntity(loadFunc, cacheKey, identifier)
+                whenValid: async () => await LoadByValueFromDatabaseAsync(value)
             );
     }
     
-    private async Task<ServiceResult<ExecutionProtocolDto>> LoadAndProcessEntity(
-        Func<Task<ExecutionProtocol>> loadFunc,
-        string cacheKey,
-        string identifier)
+    private async Task<ServiceResult<ExecutionProtocolDto>> LoadByValueFromDatabaseAsync(string value)
     {
-        var entity = await loadFunc();
+        using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
+        var repository = unitOfWork.GetRepository<IExecutionProtocolRepository>();
+        var entity = await repository.GetByValueAsync(value);
         
-        return entity switch
+        return (entity.IsEmpty || !entity.IsActive) switch
         {
-            { IsEmpty: true } or { IsActive: false } => ServiceResult<ExecutionProtocolDto>.Failure(
-                ExecutionProtocolDto.Empty, 
-                ServiceError.NotFound(ExecutionProtocolErrorMessages.NotFound, identifier)),
-            _ => await CacheAndReturnSuccessAsync(cacheKey, MapToDto(entity))
+            true => ServiceResult<ExecutionProtocolDto>.Failure(
+                ExecutionProtocolDto.Empty,
+                ServiceError.NotFound("ExecutionProtocol", value)),
+            false => ServiceResult<ExecutionProtocolDto>.Success(MapToDto(entity))
         };
-    }
-    
-    private async Task<ServiceResult<ExecutionProtocolDto>> CacheAndReturnSuccessAsync(string cacheKey, ExecutionProtocolDto dto)
-    {
-        var cacheService = (IEternalCacheService)_cacheService;
-        await cacheService.SetAsync(cacheKey, dto);
-        return ServiceResult<ExecutionProtocolDto>.Success(dto);
-    }
-    
-    private async Task<ExecutionProtocol> LoadByValueAsync(string value)
-    {
-        using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
-        var repository = unitOfWork.GetRepository<IExecutionProtocolRepository>();
-        return await repository.GetByValueAsync(value);
-    }
-    
-    private async Task<ExecutionProtocol> LoadByCodeAsync(string code)
-    {
-        using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
-        var repository = unitOfWork.GetRepository<IExecutionProtocolRepository>();
-        return await repository.GetByCodeAsync(code);
     }
 
     /// <inheritdoc/>
@@ -134,44 +116,36 @@ public class ExecutionProtocolService : PureReferenceService<ExecutionProtocol, 
             });
     }
     
-    protected override async Task<IEnumerable<ExecutionProtocol>> LoadAllEntitiesAsync()
-    {
-        using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
-        var repository = unitOfWork.GetRepository<IExecutionProtocolRepository>();
-        return await repository.GetAllActiveAsync();
-    }
-    
     /// <inheritdoc/>
-    protected override async Task<ServiceResult<ExecutionProtocol>> LoadEntityByIdAsync(string id)
+    public async Task<ServiceResult<ExecutionProtocolDto>> GetByCodeAsync(string code)
     {
-        var executionProtocolId = ExecutionProtocolId.ParseOrEmpty(id);
-        
-        return await ServiceValidate.For<ExecutionProtocol>()
-            .EnsureNotEmpty(executionProtocolId, ExecutionProtocolErrorMessages.InvalidIdFormat)
-            .Match(
-                whenValid: async () => await LoadEntityFromRepository(executionProtocolId),
-                whenInvalid: errors => ServiceResult<ExecutionProtocol>.Failure(
-                    ExecutionProtocol.Empty,
-                    ServiceError.ValidationFailed(errors.FirstOrDefault() ?? "Invalid ID format"))
+        return await ServiceValidate.For<ExecutionProtocolDto>()
+            .EnsureNotWhiteSpace(code, ExecutionProtocolErrorMessages.ValueCannotBeEmpty)
+            .MatchAsync(
+                whenValid: async () => await LoadByCodeFromDatabaseAsync(code)
             );
     }
     
-    private async Task<ServiceResult<ExecutionProtocol>> LoadEntityFromRepository(ExecutionProtocolId id)
+    private async Task<ServiceResult<ExecutionProtocolDto>> LoadByCodeFromDatabaseAsync(string code)
     {
         using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
         var repository = unitOfWork.GetRepository<IExecutionProtocolRepository>();
-        var entity = await repository.GetByIdAsync(id);
+        var entity = await repository.GetByCodeAsync(code);
         
-        return entity switch
+        return (entity.IsEmpty || !entity.IsActive) switch
         {
-            { IsEmpty: true } => ServiceResult<ExecutionProtocol>.Failure(
-                ExecutionProtocol.Empty, 
-                ServiceError.NotFound("ExecutionProtocol")),
-            _ => ServiceResult<ExecutionProtocol>.Success(entity)
+            true => ServiceResult<ExecutionProtocolDto>.Failure(
+                ExecutionProtocolDto.Empty,
+                ServiceError.NotFound("ExecutionProtocol", code)),
+            false => ServiceResult<ExecutionProtocolDto>.Success(MapToDto(entity))
         };
     }
     
-    protected override ExecutionProtocolDto MapToDto(ExecutionProtocol entity)
+    /// <summary>
+    /// Maps a ExecutionProtocol entity to its DTO representation
+    /// Entity stays within the service layer - only DTO is exposed
+    /// </summary>
+    private ExecutionProtocolDto MapToDto(ExecutionProtocol entity)
     {
         return new ExecutionProtocolDto
         {
@@ -186,13 +160,5 @@ public class ExecutionProtocolService : PureReferenceService<ExecutionProtocol, 
             DisplayOrder = entity.DisplayOrder,
             IsActive = entity.IsActive
         };
-    }
-    
-    
-    protected override ValidationResult ValidateAndParseId(string id)
-    {
-        return ServiceValidate.For()
-            .EnsureNotWhiteSpace(id, ExecutionProtocolErrorMessages.IdCannotBeEmpty)
-            .ToResult();
     }
 }

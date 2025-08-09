@@ -27,7 +27,7 @@ public class WorkoutCategoryDtoTests
     {
         // Arrange & Act
         var dto = new WorkoutCategoryDto
-        {
+            {
             WorkoutCategoryId = "workoutcategory-123e4567-e89b-12d3-a456-426614174000",
             Value = "Strength Training",
             Description = "Workouts focused on building muscle strength and power",
@@ -54,7 +54,7 @@ public class WorkoutCategoryDtoTests
     {
         // Arrange & Act
         var dto = new WorkoutCategoryDto
-        {
+            {
             WorkoutCategoryId = "workoutcategory-123e4567-e89b-12d3-a456-426614174000",
             Value = "Cardio",
             Icon = "🏃",
@@ -85,7 +85,7 @@ public class WorkoutCategoryDtoTests
         // Arrange
         var response = new WorkoutCategoriesResponseDto();
         var category1 = new WorkoutCategoryDto
-        {
+            {
             WorkoutCategoryId = "workoutcategory-123e4567-e89b-12d3-a456-426614174000",
             Value = "Upper Body",
             Icon = "💪",
@@ -94,7 +94,7 @@ public class WorkoutCategoryDtoTests
             IsActive = true
         };
         var category2 = new WorkoutCategoryDto
-        {
+            {
             WorkoutCategoryId = "workoutcategory-223e4567-e89b-12d3-a456-426614174000",
             Value = "Lower Body",
             Icon = "🦵",

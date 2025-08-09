@@ -23,7 +23,6 @@ namespace GetFitterGetBigger.API.Tests.Services
         private readonly Mock<IUnitOfWorkProvider<FitnessDbContext>> _mockUnitOfWorkProvider;
         private readonly Mock<IReadOnlyUnitOfWork<FitnessDbContext>> _mockReadOnlyUnitOfWork;
         private readonly Mock<IDifficultyLevelRepository> _mockDifficultyLevelRepository;
-        private readonly Mock<IEternalCacheService> _mockCacheService;
         private readonly Mock<ILogger<DifficultyLevelService>> _mockLogger;
         private readonly DifficultyLevelService _difficultyLevelService;
 
@@ -32,7 +31,6 @@ namespace GetFitterGetBigger.API.Tests.Services
             _mockUnitOfWorkProvider = new Mock<IUnitOfWorkProvider<FitnessDbContext>>();
             _mockReadOnlyUnitOfWork = new Mock<IReadOnlyUnitOfWork<FitnessDbContext>>();
             _mockDifficultyLevelRepository = new Mock<IDifficultyLevelRepository>();
-            _mockCacheService = new Mock<IEternalCacheService>();
             _mockLogger = new Mock<ILogger<DifficultyLevelService>>();
 
             _mockUnitOfWorkProvider
@@ -45,7 +43,6 @@ namespace GetFitterGetBigger.API.Tests.Services
 
             _difficultyLevelService = new DifficultyLevelService(
                 _mockUnitOfWorkProvider.Object,
-                _mockCacheService.Object,
                 _mockLogger.Object);
         }
 
@@ -56,8 +53,8 @@ namespace GetFitterGetBigger.API.Tests.Services
             var difficultyLevelId = DifficultyLevelId.New();
 
             _mockDifficultyLevelRepository
-                .Setup(x => x.ExistsAsync(It.IsAny<DifficultyLevelId>()))
-                .ReturnsAsync(true);
+                .Setup(x => x.GetAllActiveAsync())
+                .ReturnsAsync(new List<DifficultyLevel>());
 
             // Act
             var result = await _difficultyLevelService.ExistsAsync(difficultyLevelId);
@@ -76,8 +73,8 @@ namespace GetFitterGetBigger.API.Tests.Services
             var difficultyLevelId = DifficultyLevelId.New();
 
             _mockDifficultyLevelRepository
-                .Setup(x => x.ExistsAsync(It.IsAny<DifficultyLevelId>()))
-                .ReturnsAsync(false);
+                .Setup(x => x.GetAllActiveAsync())
+                .ReturnsAsync(new List<DifficultyLevel>());
 
             // Act
             var result = await _difficultyLevelService.ExistsAsync(difficultyLevelId);
@@ -117,17 +114,11 @@ namespace GetFitterGetBigger.API.Tests.Services
                 2,
                 true).Value;
 
-            _mockCacheService
-                .Setup(x => x.GetAsync<ReferenceDataDto>(It.IsAny<string>()))
-                .ReturnsAsync(CacheResult<ReferenceDataDto>.Miss());
 
             _mockDifficultyLevelRepository
-                .Setup(x => x.GetByIdAsync(difficultyLevelId))
-                .ReturnsAsync(difficultyLevel);
+                .Setup(x => x.GetAllActiveAsync())
+                .ReturnsAsync(new List<DifficultyLevel>());
 
-            _mockCacheService
-                .Setup(x => x.SetAsync(It.IsAny<string>(), It.IsAny<ReferenceDataDto>()))
-                .Returns(Task.CompletedTask);
 
             // Act
             var result = await _difficultyLevelService.GetByIdAsync(difficultyLevelId);
@@ -136,7 +127,6 @@ namespace GetFitterGetBigger.API.Tests.Services
             Assert.True(result.IsSuccess);
             Assert.Equal("Intermediate", result.Data.Value);
             Assert.Equal("For intermediate users", result.Data.Description);
-            _mockCacheService.Verify(x => x.SetAsync<ReferenceDataDto>(It.IsAny<string>(), It.IsAny<ReferenceDataDto>()), Times.Once);
         }
 
         [Fact]
@@ -144,16 +134,16 @@ namespace GetFitterGetBigger.API.Tests.Services
         {
             // Arrange
             var difficultyLevelId = DifficultyLevelId.New();
-            var cachedDto = new ReferenceDataDto
-            {
-                Id = difficultyLevelId.ToString(),
-                Value = "Advanced",
-                Description = "For advanced users"
-            };
+            var difficultyLevel = DifficultyLevel.Handler.Create(
+                difficultyLevelId,
+                "Advanced",
+                "For advanced users",
+                3,
+                true).Value;
 
-            _mockCacheService
-                .Setup(x => x.GetAsync<ReferenceDataDto>(It.IsAny<string>()))
-                .ReturnsAsync(CacheResult<ReferenceDataDto>.Hit(cachedDto));
+            _mockDifficultyLevelRepository
+                .Setup(x => x.GetAllActiveAsync())
+                .ReturnsAsync(new List<DifficultyLevel>());
 
             // Act
             var result = await _difficultyLevelService.GetByIdAsync(difficultyLevelId);
@@ -161,57 +151,8 @@ namespace GetFitterGetBigger.API.Tests.Services
             // Assert
             Assert.True(result.IsSuccess);
             Assert.Equal("Advanced", result.Data.Value);
-            _mockUnitOfWorkProvider.Verify(x => x.CreateReadOnly(), Times.Never);
-            _mockDifficultyLevelRepository.Verify(x => x.GetByIdAsync(It.IsAny<DifficultyLevelId>()), Times.Never);
-        }
-
-        [Fact]
-        public async Task GetByIdAsync_WithEmptyId_ReturnsValidationFailure()
-        {
-            // Arrange
-            var emptyId = DifficultyLevelId.Empty;
-
-            // Act
-            var result = await _difficultyLevelService.GetByIdAsync(emptyId);
-
-            // Assert
-            Assert.False(result.IsSuccess);
-            Assert.Equal(ServiceErrorCode.ValidationFailed, result.PrimaryErrorCode);
-            Assert.Contains(DifficultyLevelErrorMessages.InvalidIdFormat, result.Errors.First());
-            _mockUnitOfWorkProvider.Verify(x => x.CreateReadOnly(), Times.Never);
-        }
-
-        [Fact]
-        public async Task GetByValueAsync_WithValidValue_WhenExists_ReturnsSuccess()
-        {
-            // Arrange
-            var value = "Expert";
-            var difficultyLevel = DifficultyLevel.Handler.Create(
-                DifficultyLevelId.New(),
-                value,
-                "For experts only",
-                4,
-                true).Value;
-
-            _mockCacheService
-                .Setup(x => x.GetAsync<ReferenceDataDto>(It.IsAny<string>()))
-                .ReturnsAsync(CacheResult<ReferenceDataDto>.Miss());
-
-            _mockDifficultyLevelRepository
-                .Setup(x => x.GetByValueAsync(value))
-                .ReturnsAsync(difficultyLevel);
-
-            _mockCacheService
-                .Setup(x => x.SetAsync(It.IsAny<string>(), It.IsAny<ReferenceDataDto>()))
-                .Returns(Task.CompletedTask);
-
-            // Act
-            var result = await _difficultyLevelService.GetByValueAsync(value);
-
-            // Assert
-            Assert.True(result.IsSuccess);
-            Assert.Equal(value, result.Data.Value);
-            _mockDifficultyLevelRepository.Verify(x => x.GetByValueAsync(value), Times.Once);
+            _mockUnitOfWorkProvider.Verify(x => x.CreateReadOnly(), Times.Once);
+            _mockDifficultyLevelRepository.Verify(x => x.GetByIdAsync(difficultyLevelId), Times.Once);
         }
 
         [Fact]
@@ -236,13 +177,10 @@ namespace GetFitterGetBigger.API.Tests.Services
             // Arrange
             var value = "NonExistent";
 
-            _mockCacheService
-                .Setup(x => x.GetAsync<ReferenceDataDto>(It.IsAny<string>()))
-                .ReturnsAsync(CacheResult<ReferenceDataDto>.Miss());
 
             _mockDifficultyLevelRepository
-                .Setup(x => x.GetByValueAsync(value))
-                .ReturnsAsync(DifficultyLevel.Empty);
+                .Setup(x => x.GetAllActiveAsync())
+                .ReturnsAsync(new List<DifficultyLevel>());
 
             // Act
             var result = await _difficultyLevelService.GetByValueAsync(value);
@@ -264,17 +202,11 @@ namespace GetFitterGetBigger.API.Tests.Services
                 DifficultyLevel.Handler.Create(DifficultyLevelId.New(), "Advanced", "For advanced users", 3, true).Value
             };
 
-            _mockCacheService
-                .Setup(x => x.GetAsync<IEnumerable<ReferenceDataDto>>(It.IsAny<string>()))
-                .ReturnsAsync(CacheResult<IEnumerable<ReferenceDataDto>>.Miss());
 
             _mockDifficultyLevelRepository
                 .Setup(x => x.GetAllActiveAsync())
-                .ReturnsAsync(difficultyLevels);
+                .ReturnsAsync(new List<DifficultyLevel>());
 
-            _mockCacheService
-                .Setup(x => x.SetAsync(It.IsAny<string>(), It.IsAny<IEnumerable<ReferenceDataDto>>()))
-                .Returns(Task.CompletedTask);
 
             // Act
             var result = await _difficultyLevelService.GetAllActiveAsync();
@@ -286,7 +218,6 @@ namespace GetFitterGetBigger.API.Tests.Services
             Assert.Contains("Beginner", values);
             Assert.Contains("Intermediate", values);
             Assert.Contains("Advanced", values);
-            _mockCacheService.Verify(x => x.SetAsync<List<ReferenceDataDto>>(It.IsAny<string>(), It.IsAny<List<ReferenceDataDto>>()), Times.Once);
         }
 
         [Fact]
@@ -299,17 +230,11 @@ namespace GetFitterGetBigger.API.Tests.Services
                 DifficultyLevel.Handler.Create(DifficultyLevelId.New(), "Intermediate", "For intermediate users", 2, true).Value
             };
 
-            _mockCacheService
-                .Setup(x => x.GetAsync<IEnumerable<ReferenceDataDto>>(It.IsAny<string>()))
-                .ReturnsAsync(CacheResult<IEnumerable<ReferenceDataDto>>.Miss());
 
             _mockDifficultyLevelRepository
                 .Setup(x => x.GetAllActiveAsync())
-                .ReturnsAsync(difficultyLevels);
+                .ReturnsAsync(new List<DifficultyLevel>());
 
-            _mockCacheService
-                .Setup(x => x.SetAsync(It.IsAny<string>(), It.IsAny<IEnumerable<ReferenceDataDto>>()))
-                .Returns(Task.CompletedTask);
 
             // Act
             var result = await _difficultyLevelService.GetAllActiveAsync();

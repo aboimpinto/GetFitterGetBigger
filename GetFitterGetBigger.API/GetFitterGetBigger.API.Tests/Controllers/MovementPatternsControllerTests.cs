@@ -62,7 +62,7 @@ namespace GetFitterGetBigger.API.Tests.Controllers
             // Arrange
             var id = TestIds.MovementPatternIds.Push;
             var movementPattern = new ReferenceDataDto
-            {
+                {
                 Id = id,
                 Value = MovementPatternTestConstants.HorizontalPushName,
                 Description = MovementPatternTestConstants.PushingForwardDescription
@@ -132,7 +132,7 @@ namespace GetFitterGetBigger.API.Tests.Controllers
             // Arrange
             var name = MovementPatternTestConstants.HorizontalPushName;
             var movementPattern = new ReferenceDataDto
-            {
+                {
                 Id = TestIds.MovementPatternIds.Push,
                 Value = name,
                 Description = MovementPatternTestConstants.PushingForwardDescription
@@ -180,7 +180,7 @@ namespace GetFitterGetBigger.API.Tests.Controllers
             // Arrange
             var value = MovementPatternTestConstants.VerticalPullName;
             var movementPattern = new ReferenceDataDto
-            {
+                {
                 Id = TestIds.MovementPatternIds.Pull,
                 Value = value,
                 Description = MovementPatternTestConstants.PullingDownwardDescription

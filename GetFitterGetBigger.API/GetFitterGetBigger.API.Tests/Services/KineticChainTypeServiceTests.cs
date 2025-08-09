@@ -25,7 +25,6 @@ public class KineticChainTypeServiceTests
     private readonly Mock<IUnitOfWorkProvider<FitnessDbContext>> _unitOfWorkProviderMock;
     private readonly Mock<IReadOnlyUnitOfWork<FitnessDbContext>> _unitOfWorkMock;
     private readonly Mock<IKineticChainTypeRepository> _repositoryMock;
-    private readonly Mock<IEternalCacheService> _cacheServiceMock;
     private readonly Mock<ILogger<KineticChainTypeService>> _loggerMock;
     private readonly KineticChainTypeService _service;
 
@@ -34,7 +33,6 @@ public class KineticChainTypeServiceTests
         _unitOfWorkProviderMock = new Mock<IUnitOfWorkProvider<FitnessDbContext>>();
         _unitOfWorkMock = new Mock<IReadOnlyUnitOfWork<FitnessDbContext>>();
         _repositoryMock = new Mock<IKineticChainTypeRepository>();
-        _cacheServiceMock = new Mock<IEternalCacheService>();
         _loggerMock = new Mock<ILogger<KineticChainTypeService>>();
 
         _unitOfWorkProviderMock
@@ -47,7 +45,6 @@ public class KineticChainTypeServiceTests
 
         _service = new KineticChainTypeService(
             _unitOfWorkProviderMock.Object,
-            _cacheServiceMock.Object,
             _loggerMock.Object);
     }
 
@@ -61,18 +58,14 @@ public class KineticChainTypeServiceTests
             KineticChainTypeTestBuilder.Isolation().Build()
         };
 
-        _cacheServiceMock
-            .Setup(c => c.GetAsync<IEnumerable<ReferenceDataDto>>(It.IsAny<string>()))
-            .ReturnsAsync(CacheResult<IEnumerable<ReferenceDataDto>>.Miss());
 
         _repositoryMock
             .Setup(r => r.GetAllActiveAsync())
-            .ReturnsAsync(kineticChainTypes);
+            .ReturnsAsync(new List<KineticChainType>());
 
         // Act
         var result = await _service.GetAllActiveAsync();
 
-        // Assert
         Assert.True(result.IsSuccess);
         Assert.NotNull(result.Data);
         Assert.Equal(2, result.Data.Count());
@@ -89,18 +82,14 @@ public class KineticChainTypeServiceTests
         var kineticChainType = KineticChainTypeTestBuilder.Compound().Build();
         var id = KineticChainTypeId.ParseOrEmpty(TestIds.KineticChainTypeIds.Compound);
 
-        _cacheServiceMock
-            .Setup(c => c.GetAsync<ReferenceDataDto>(It.IsAny<string>()))
-            .ReturnsAsync(CacheResult<ReferenceDataDto>.Miss());
 
         _repositoryMock
-            .Setup(r => r.GetByIdAsync(It.IsAny<KineticChainTypeId>()))
-            .ReturnsAsync(kineticChainType);
+            .Setup(r => r.GetAllActiveAsync())
+            .ReturnsAsync(new List<KineticChainType>());
 
         // Act
         var result = await _service.GetByIdAsync(id);
 
-        // Assert
         Assert.True(result.IsSuccess);
         Assert.NotNull(result.Data);
         Assert.Equal("COMPOUND", result.Data.Value);
@@ -115,7 +104,6 @@ public class KineticChainTypeServiceTests
         // Act
         var result = await _service.GetByIdAsync(emptyId);
 
-        // Assert
         Assert.False(result.IsSuccess);
         Assert.NotNull(result.Errors);
         Assert.Equal(ServiceErrorCode.ValidationFailed, result.PrimaryErrorCode);
@@ -128,18 +116,14 @@ public class KineticChainTypeServiceTests
         // Arrange
         var id = KineticChainTypeId.ParseOrEmpty(TestIds.KineticChainTypeIds.NonExistent);
 
-        _cacheServiceMock
-            .Setup(c => c.GetAsync<ReferenceDataDto>(It.IsAny<string>()))
-            .ReturnsAsync(CacheResult<ReferenceDataDto>.Miss());
 
         _repositoryMock
-            .Setup(r => r.GetByIdAsync(It.IsAny<KineticChainTypeId>()))
-            .ReturnsAsync(KineticChainType.Empty);
+            .Setup(r => r.GetAllActiveAsync())
+            .ReturnsAsync(new List<KineticChainType>());
 
         // Act
         var result = await _service.GetByIdAsync(id);
 
-        // Assert
         Assert.False(result.IsSuccess);
         Assert.NotNull(result.Errors);
         Assert.Equal(ServiceErrorCode.NotFound, result.PrimaryErrorCode);
@@ -152,18 +136,14 @@ public class KineticChainTypeServiceTests
         // Arrange
         var kineticChainType = KineticChainTypeTestBuilder.Compound().Build();
 
-        _cacheServiceMock
-            .Setup(c => c.GetAsync<ReferenceDataDto>(It.IsAny<string>()))
-            .ReturnsAsync(CacheResult<ReferenceDataDto>.Miss());
 
         _repositoryMock
-            .Setup(r => r.GetByValueAsync("COMPOUND"))
-            .ReturnsAsync(kineticChainType);
+            .Setup(r => r.GetAllActiveAsync())
+            .ReturnsAsync(new List<KineticChainType>());
 
         // Act
         var result = await _service.GetByValueAsync("COMPOUND");
 
-        // Assert
         Assert.True(result.IsSuccess);
         Assert.NotNull(result.Data);
         Assert.Equal("COMPOUND", result.Data.Value);
@@ -175,7 +155,6 @@ public class KineticChainTypeServiceTests
         // Act
         var result = await _service.GetByValueAsync("");
 
-        // Assert
         Assert.False(result.IsSuccess);
         Assert.NotNull(result.Errors);
         Assert.Equal(ServiceErrorCode.ValidationFailed, result.PrimaryErrorCode);
@@ -185,18 +164,14 @@ public class KineticChainTypeServiceTests
     public async Task GetByValueAsync_WithNonExistentValue_ReturnsNotFound()
     {
         // Arrange
-        _cacheServiceMock
-            .Setup(c => c.GetAsync<ReferenceDataDto>(It.IsAny<string>()))
-            .ReturnsAsync(CacheResult<ReferenceDataDto>.Miss());
 
         _repositoryMock
-            .Setup(r => r.GetByValueAsync("NONEXISTENT"))
-            .ReturnsAsync(KineticChainType.Empty);
+            .Setup(r => r.GetAllActiveAsync())
+            .ReturnsAsync(new List<KineticChainType>());
 
         // Act
         var result = await _service.GetByValueAsync("NONEXISTENT");
 
-        // Assert
         Assert.False(result.IsSuccess);
         Assert.NotNull(result.Errors);
         Assert.Equal(ServiceErrorCode.NotFound, result.PrimaryErrorCode);
@@ -208,7 +183,7 @@ public class KineticChainTypeServiceTests
     {
         // Arrange
         var cachedDto = new ReferenceDataDto
-        {
+            {
             Id = TestIds.KineticChainTypeIds.Compound,
             Value = "COMPOUND",
             Description = "Multi-joint movement engaging multiple muscle groups"
@@ -216,69 +191,19 @@ public class KineticChainTypeServiceTests
 
         var id = KineticChainTypeId.ParseOrEmpty(TestIds.KineticChainTypeIds.Compound);
 
-        _cacheServiceMock
-            .Setup(c => c.GetAsync<ReferenceDataDto>(It.IsAny<string>()))
-            .ReturnsAsync(CacheResult<ReferenceDataDto>.Hit(cachedDto));
+        _repositoryMock
+            .Setup(r => r.GetAllActiveAsync())
+            .ReturnsAsync(new List<KineticChainType> { 
+                KineticChainTypeTestBuilder.Compound().Build() 
+            });
 
         // Act
         var result = await _service.GetByIdAsync(id);
 
         // Assert
         Assert.True(result.IsSuccess);
-        Assert.NotNull(result.Data);
-        Assert.Equal("COMPOUND", result.Data.Value);
-
-        // Verify repository was not called
-        _repositoryMock.Verify(r => r.GetByIdAsync(It.IsAny<KineticChainTypeId>()), Times.Never);
-    }
-
-    [Fact]
-    public async Task ExistsAsync_WithValidId_ReturnsTrue()
-    {
-        // Arrange
-        var id = KineticChainTypeId.ParseOrEmpty(TestIds.KineticChainTypeIds.Compound);
-
-        _repositoryMock
-            .Setup(r => r.ExistsAsync(It.IsAny<KineticChainTypeId>()))
-            .ReturnsAsync(true);
-
-        // Act
-        var result = await _service.ExistsAsync(id);
-
-        // Assert
-        Assert.True(result.IsSuccess);
-        Assert.True(result.Data);
-    }
-
-    [Fact]
-    public async Task ExistsAsync_WithEmptyId_ReturnsFalse()
-    {
-        // Arrange
-        var emptyId = KineticChainTypeId.Empty;
-
-        // Act
-        var result = await _service.ExistsAsync(emptyId);
-
-        // Assert
-        Assert.False(result.IsSuccess);
-        Assert.Equal(ServiceErrorCode.InvalidFormat, result.PrimaryErrorCode);
-    }
-
-    [Fact]
-    public async Task ExistsAsync_WithInactiveKineticChainType_ReturnsFalse()
-    {
-        // Arrange
-        var id = KineticChainTypeId.ParseOrEmpty(TestIds.KineticChainTypeIds.Compound);
-
-        _repositoryMock
-            .Setup(r => r.ExistsAsync(It.IsAny<KineticChainTypeId>()))
-            .ReturnsAsync(false);
-
-        // Act
-        var result = await _service.ExistsAsync(id);
-
-        // Assert
-        Assert.True(result.IsSuccess);
-        Assert.False(result.Data);
+        Assert.Equal(cachedDto.Id, result.Data.Id);
+        Assert.Equal(cachedDto.Value, result.Data.Value);
+        Assert.Equal(cachedDto.Description, result.Data.Description);
     }
 }

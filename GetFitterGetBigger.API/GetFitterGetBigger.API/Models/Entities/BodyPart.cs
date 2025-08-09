@@ -1,5 +1,3 @@
-using System;
-using System.Collections.Generic;
 using GetFitterGetBigger.API.Constants;
 using GetFitterGetBigger.API.Models.SpecializedIds;
 using GetFitterGetBigger.API.Models.Results;

@@ -1,19 +1,16 @@
 
 using Microsoft.EntityFrameworkCore;
 using GetFitterGetBigger.API.Models;
-using GetFitterGetBigger.API;
 using Olimpo.EntityFramework.Persistency;
 using GetFitterGetBigger.API.Repositories.Interfaces;
 using GetFitterGetBigger.API.Repositories.Implementations;
 using GetFitterGetBigger.API.Services.Interfaces;
 using GetFitterGetBigger.API.Services.Implementations;
+using GetFitterGetBigger.API.Services.ReferenceTables;
 using Microsoft.OpenApi.Models;
-using Swashbuckle.AspNetCore.SwaggerGen;
 using System.Reflection;
-using GetFitterGetBigger.API.Swagger;
 using GetFitterGetBigger.API.Configuration;
 using GetFitterGetBigger.API.Validators;
-using System.IO;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -91,15 +88,47 @@ builder.Services.AddTransient<IWorkoutTemplateExerciseService, WorkoutTemplateEx
 builder.Services.AddTransient<ISetConfigurationService, SetConfigurationService>();
 
 // Register reference table validation services
+// All reference tables now use the new separated architecture pattern:
+// - Business logic service (handles data access only)
+// - Reference service wrapper (handles caching via PureReferenceService)
+
 builder.Services.AddTransient<IBodyPartService, BodyPartService>();
-builder.Services.AddTransient<IMovementPatternService, MovementPatternService>();
-builder.Services.AddTransient<IExerciseTypeService, ExerciseTypeService>();
-builder.Services.AddTransient<IExerciseWeightTypeService, ExerciseWeightTypeService>();
-builder.Services.AddTransient<IClaimService, ClaimService>();
+builder.Services.AddTransient<BodyPartReferenceService>();
+
 builder.Services.AddTransient<IDifficultyLevelService, DifficultyLevelService>();
+builder.Services.AddTransient<DifficultyLevelReferenceService>();
+
+builder.Services.AddTransient<IExecutionProtocolService, ExecutionProtocolService>();
+builder.Services.AddTransient<ExecutionProtocolReferenceService>();
+
+builder.Services.AddTransient<IExerciseTypeService, ExerciseTypeService>();
+builder.Services.AddTransient<ExerciseTypeReferenceService>();
+
+builder.Services.AddTransient<IExerciseWeightTypeService, ExerciseWeightTypeService>();
+builder.Services.AddTransient<ExerciseWeightTypeReferenceService>();
+
 builder.Services.AddTransient<IKineticChainTypeService, KineticChainTypeService>();
-builder.Services.AddTransient<IMuscleRoleService, MuscleRoleService>();
+builder.Services.AddTransient<KineticChainTypeReferenceService>();
+
 builder.Services.AddTransient<IMetricTypeService, MetricTypeService>();
+builder.Services.AddTransient<MetricTypeReferenceService>();
+
+builder.Services.AddTransient<IMovementPatternService, MovementPatternService>();
+builder.Services.AddTransient<MovementPatternReferenceService>();
+
+builder.Services.AddTransient<IMuscleRoleService, MuscleRoleService>();
+builder.Services.AddTransient<MuscleRoleReferenceService>();
+
+builder.Services.AddTransient<IWorkoutCategoryService, WorkoutCategoryService>();
+builder.Services.AddTransient<WorkoutCategoryReferenceService>();
+
+builder.Services.AddTransient<IWorkoutObjectiveService, WorkoutObjectiveService>();
+builder.Services.AddTransient<WorkoutObjectiveReferenceService>();
+
+builder.Services.AddTransient<IWorkoutStateService, WorkoutStateService>();
+builder.Services.AddTransient<WorkoutStateReferenceService>();
+
+builder.Services.AddTransient<IClaimService, ClaimService>();
 
 // Register authentication services
 builder.Services.AddTransient<IJwtService, JwtService>();

@@ -208,7 +208,7 @@ public class MuscleGroupService : EnhancedReferenceService<MuscleGroup, MuscleGr
             .EnsureAsync(
                 async () => command == null || command.BodyPartId.IsEmpty || 
                            (await _bodyPartService.ExistsAsync(command.BodyPartId)).Data,
-                MuscleGroupErrorMessages.Validation.InvalidBodyPartId)
+                ServiceError.ValidationFailed(MuscleGroupErrorMessages.Validation.InvalidBodyPartId))
             .EnsureAsync(
                 async () => command == null || string.IsNullOrWhiteSpace(command.Name) || 
                            !await CheckDuplicateNameAsync(command.Name),
@@ -242,7 +242,7 @@ public class MuscleGroupService : EnhancedReferenceService<MuscleGroup, MuscleGr
             .EnsureAsync(
                 async () => command == null || command.BodyPartId.IsEmpty || 
                            (await _bodyPartService.ExistsAsync(command.BodyPartId)).Data,
-                MuscleGroupErrorMessages.Validation.InvalidBodyPartId)
+                ServiceError.ValidationFailed(MuscleGroupErrorMessages.Validation.InvalidBodyPartId))
             .EnsureAsync(
                 async () => command == null || string.IsNullOrWhiteSpace(command.Name) || 
                            !await CheckDuplicateNameAsync(command.Name, muscleGroupId),

@@ -231,11 +231,42 @@ public class EternalCacheLoadBuilder<T> where T : class
             ? await onHit(cacheResult.Value) 
             : await onMiss();
     }
+    
+    /// <summary>
+    /// Executes different logic based on cache hit or miss with automatic caching on miss
+    /// </summary>
+    /// <param name="loader">Function that loads and returns a ServiceResult when cache miss occurs</param>
+    /// <returns>ServiceResult with the cached or loaded data</returns>
+    public async Task<ServiceResult<T>> WithAutoCacheAsync(Func<Task<ServiceResult<T>>> loader)
+    {
+        var cacheResult = await _cacheResultTask;
+        
+        if (cacheResult.IsHit)
+        {
+            return ServiceResult<T>.Success(cacheResult.Value);
+        }
+        
+        // Load data on cache miss
+        var loadResult = await loader();
+        
+        // Only cache if the load was successful and we got valid data
+        if (loadResult.IsSuccess && loadResult.Data != null)
+        {
+            await _cacheService.SetAsync(_cacheKey, loadResult.Data);
+        }
+        
+        return loadResult;
+    }
 
     /// <summary>
     /// Provides access to the cache key for operations that need it
     /// </summary>
     public string CacheKey => _cacheKey;
+    
+    /// <summary>
+    /// Provides access to the cache service for advanced operations
+    /// </summary>
+    internal IEternalCacheService CacheService => _cacheService;
     
     /// <summary>
     /// Provides a builder with logging support
@@ -245,7 +276,7 @@ public class EternalCacheLoadBuilder<T> where T : class
     /// <returns>A cache load builder with logging</returns>
     public EternalCacheLoadBuilderWithLogging<T> WithLogging(Microsoft.Extensions.Logging.ILogger logger, string entityType)
     {
-        return new EternalCacheLoadBuilderWithLogging<T>(_cacheResultTask, _cacheKey, logger, entityType);
+        return new EternalCacheLoadBuilderWithLogging<T>(_cacheResultTask, _cacheKey, _cacheService, logger, entityType);
     }
 }
 
@@ -256,18 +287,21 @@ public class EternalCacheLoadBuilder<T> where T : class
 public class EternalCacheLoadBuilderWithLogging<T> where T : class
 {
     private readonly string _cacheKey;
+    private readonly IEternalCacheService _cacheService;
     private readonly Microsoft.Extensions.Logging.ILogger _logger;
     private readonly string _entityType;
     private readonly Task<CacheResult<T>> _cacheResultTask;
 
     internal EternalCacheLoadBuilderWithLogging(
         Task<CacheResult<T>> cacheResultTask,
-        string cacheKey, 
+        string cacheKey,
+        IEternalCacheService cacheService,
         Microsoft.Extensions.Logging.ILogger logger, 
         string entityType)
     {
         _cacheResultTask = cacheResultTask;
         _cacheKey = cacheKey;
+        _cacheService = cacheService;
         _logger = logger;
         _entityType = entityType;
     }
@@ -320,5 +354,35 @@ public class EternalCacheLoadBuilderWithLogging<T> where T : class
             _logger.LogDebug("Cache miss for {EntityType}: {CacheKey}", _entityType, _cacheKey);
             return await onMiss();
         }
+    }
+    
+    /// <summary>
+    /// Executes different logic based on cache hit or miss with automatic caching and logging on miss
+    /// </summary>
+    /// <param name="loader">Function that loads and returns a ServiceResult when cache miss occurs</param>
+    /// <returns>ServiceResult with the cached or loaded data</returns>
+    public async Task<ServiceResult<T>> WithAutoCacheAsync(Func<Task<ServiceResult<T>>> loader)
+    {
+        var cacheResult = await _cacheResultTask;
+        
+        if (cacheResult.IsHit)
+        {
+            _logger.LogDebug("Cache hit for {EntityType}: {CacheKey}", _entityType, _cacheKey);
+            return ServiceResult<T>.Success(cacheResult.Value);
+        }
+        
+        _logger.LogDebug("Cache miss for {EntityType}: {CacheKey}", _entityType, _cacheKey);
+        
+        // Load data on cache miss
+        var loadResult = await loader();
+        
+        // Only cache if the load was successful and we got valid data
+        if (loadResult.IsSuccess && loadResult.Data != null)
+        {
+            await _cacheService.SetAsync(_cacheKey, loadResult.Data);
+            _logger.LogInformation("Cached {EntityType} data with key: {CacheKey}", _entityType, _cacheKey);
+        }
+        
+        return loadResult;
     }
 }

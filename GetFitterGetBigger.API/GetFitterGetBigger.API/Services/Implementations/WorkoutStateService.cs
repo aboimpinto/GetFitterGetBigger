@@ -4,27 +4,42 @@ using GetFitterGetBigger.API.Models;
 using GetFitterGetBigger.API.Models.Entities;
 using GetFitterGetBigger.API.Models.SpecializedIds;
 using GetFitterGetBigger.API.Repositories.Interfaces;
-using GetFitterGetBigger.API.Services.Base;
-using GetFitterGetBigger.API.Services.Cache;
 using GetFitterGetBigger.API.Services.Interfaces;
 using GetFitterGetBigger.API.Services.Results;
 using GetFitterGetBigger.API.Services.Validation;
-using Microsoft.Extensions.Logging;
 using Olimpo.EntityFramework.Persistency;
 
 namespace GetFitterGetBigger.API.Services.Implementations;
 
 /// <summary>
-/// Service implementation for workout state operations
+/// Service implementation for workout_state operations
+/// This service focuses solely on business logic and data access
+/// Caching is handled by the wrapping WorkoutStateReferenceService layer
 /// </summary>
-public class WorkoutStateService : PureReferenceService<WorkoutState, WorkoutStateDto>, IWorkoutStateService
+public class WorkoutStateService(
+    IUnitOfWorkProvider<FitnessDbContext> unitOfWorkProvider,
+    ILogger<WorkoutStateService> logger) : IWorkoutStateService
 {
-    public WorkoutStateService(
-        IUnitOfWorkProvider<FitnessDbContext> unitOfWorkProvider,
-        IEternalCacheService cacheService,
-        ILogger<WorkoutStateService> logger)
-        : base(unitOfWorkProvider, cacheService, logger)
+    private readonly IUnitOfWorkProvider<FitnessDbContext> _unitOfWorkProvider = unitOfWorkProvider;
+    private readonly ILogger<WorkoutStateService> _logger = logger;
+
+    /// <inheritdoc/>
+    public async Task<ServiceResult<IEnumerable<WorkoutStateDto>>> GetAllAsync()
     {
+        return await GetAllActiveAsync();
+    }
+    
+    /// <inheritdoc/>
+    public async Task<ServiceResult<IEnumerable<WorkoutStateDto>>> GetAllActiveAsync()
+    {
+        using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
+        var repository = unitOfWork.GetRepository<IWorkoutStateRepository>();
+        var entities = await repository.GetAllActiveAsync();
+        
+        var dtos = entities.Select(MapToDto).ToList();
+        
+        _logger.LogInformation("Loaded {Count} active workout_states", dtos.Count);
+        return ServiceResult<IEnumerable<WorkoutStateDto>>.Success(dtos);
     }
 
     /// <inheritdoc/>
@@ -33,8 +48,39 @@ public class WorkoutStateService : PureReferenceService<WorkoutState, WorkoutSta
         return await ServiceValidate.For<WorkoutStateDto>()
             .EnsureNotEmpty(id, WorkoutStateErrorMessages.InvalidIdFormat)
             .MatchAsync(
-                whenValid: async () => await GetByIdAsync(id.ToString())
+                whenValid: async () => await LoadByIdFromDatabaseAsync(id)
             );
+    }
+    
+    /// <summary>
+    /// Gets a workout_state by its ID string
+    /// </summary>
+    /// <param name="id">The workout_state ID as a string</param>
+    /// <returns>A service result containing the workout_state if found</returns>
+    public async Task<ServiceResult<WorkoutStateDto>> GetByIdAsync(string id)
+    {
+        var workout_stateId = WorkoutStateId.ParseOrEmpty(id);
+        
+        return await ServiceValidate.For<WorkoutStateDto>()
+            .EnsureNotEmpty(workout_stateId, WorkoutStateErrorMessages.InvalidIdFormat)
+            .MatchAsync(
+                whenValid: async () => await LoadByIdFromDatabaseAsync(workout_stateId)
+            );
+    }
+    
+    private async Task<ServiceResult<WorkoutStateDto>> LoadByIdFromDatabaseAsync(WorkoutStateId id)
+    {
+        using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
+        var repository = unitOfWork.GetRepository<IWorkoutStateRepository>();
+        var entity = await repository.GetByIdAsync(id);
+        
+        return (entity.IsEmpty || !entity.IsActive) switch
+        {
+            true => ServiceResult<WorkoutStateDto>.Failure(
+                WorkoutStateDto.Empty,
+                ServiceError.NotFound("WorkoutState", id.ToString())),
+            false => ServiceResult<WorkoutStateDto>.Success(MapToDto(entity))
+        };
     }
     
     /// <inheritdoc/>
@@ -43,58 +89,23 @@ public class WorkoutStateService : PureReferenceService<WorkoutState, WorkoutSta
         return await ServiceValidate.For<WorkoutStateDto>()
             .EnsureNotWhiteSpace(value, WorkoutStateErrorMessages.ValueCannotBeEmpty)
             .MatchAsync(
-                whenValid: async () => await GetFromCacheOrLoadAsync(
-                    GetValueCacheKey(value),
-                    () => LoadByValueAsync(value),
-                    value)
-            );
-    }
-
-    private string GetValueCacheKey(string value) => $"{GetCacheKeyPrefix()}value:{value}";
-    
-    private async Task<ServiceResult<WorkoutStateDto>> GetFromCacheOrLoadAsync(
-        string cacheKey, 
-        Func<Task<WorkoutState>> loadFunc,
-        string identifier)
-    {
-        var cacheService = (IEternalCacheService)_cacheService;
-        
-        return await CacheLoad.For<WorkoutStateDto>(cacheService, cacheKey)
-            .WithLogging(_logger, "WorkoutState")
-            .MatchAsync(
-                onHit: cached => ServiceResult<WorkoutStateDto>.Success(cached),
-                onMiss: async () => await LoadAndProcessEntity(loadFunc, cacheKey, identifier)
+                whenValid: async () => await LoadByValueFromDatabaseAsync(value)
             );
     }
     
-    private async Task<ServiceResult<WorkoutStateDto>> LoadAndProcessEntity(
-        Func<Task<WorkoutState>> loadFunc,
-        string cacheKey,
-        string identifier)
-    {
-        var entity = await loadFunc();
-        
-        return entity switch
-        {
-            { IsEmpty: true } or { IsActive: false } => ServiceResult<WorkoutStateDto>.Failure(
-                WorkoutStateDto.Empty, 
-                ServiceError.NotFound(WorkoutStateErrorMessages.NotFound, identifier)),
-            _ => await CacheAndReturnSuccessAsync(cacheKey, MapToDto(entity))
-        };
-    }
-    
-    private async Task<ServiceResult<WorkoutStateDto>> CacheAndReturnSuccessAsync(string cacheKey, WorkoutStateDto dto)
-    {
-        var cacheService = (IEternalCacheService)_cacheService;
-        await cacheService.SetAsync(cacheKey, dto);
-        return ServiceResult<WorkoutStateDto>.Success(dto);
-    }
-    
-    private async Task<WorkoutState> LoadByValueAsync(string value)
+    private async Task<ServiceResult<WorkoutStateDto>> LoadByValueFromDatabaseAsync(string value)
     {
         using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
         var repository = unitOfWork.GetRepository<IWorkoutStateRepository>();
-        return await repository.GetByValueAsync(value);
+        var entity = await repository.GetByValueAsync(value);
+        
+        return (entity.IsEmpty || !entity.IsActive) switch
+        {
+            true => ServiceResult<WorkoutStateDto>.Failure(
+                WorkoutStateDto.Empty,
+                ServiceError.NotFound("WorkoutState", value)),
+            false => ServiceResult<WorkoutStateDto>.Success(MapToDto(entity))
+        };
     }
 
     /// <inheritdoc/>
@@ -111,57 +122,17 @@ public class WorkoutStateService : PureReferenceService<WorkoutState, WorkoutSta
             });
     }
     
-    protected override async Task<IEnumerable<WorkoutState>> LoadAllEntitiesAsync()
-    {
-        using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
-        var repository = unitOfWork.GetRepository<IWorkoutStateRepository>();
-        return await repository.GetAllActiveAsync();
-    }
-    
-    /// <inheritdoc/>
-    protected override async Task<ServiceResult<WorkoutState>> LoadEntityByIdAsync(string id)
-    {
-        var workoutStateId = WorkoutStateId.ParseOrEmpty(id);
-        
-        return await ServiceValidate.For<WorkoutState>()
-            .EnsureNotEmpty(workoutStateId, WorkoutStateErrorMessages.InvalidIdFormat)
-            .Match(
-                whenValid: async () => await LoadEntityFromRepository(workoutStateId),
-                whenInvalid: errors => ServiceResult<WorkoutState>.Failure(
-                    WorkoutState.Empty,
-                    ServiceError.ValidationFailed(errors.FirstOrDefault() ?? "Invalid ID format"))
-            );
-    }
-    
-    private async Task<ServiceResult<WorkoutState>> LoadEntityFromRepository(WorkoutStateId id)
-    {
-        using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
-        var repository = unitOfWork.GetRepository<IWorkoutStateRepository>();
-        var entity = await repository.GetByIdAsync(id);
-        
-        return entity switch
-        {
-            { IsEmpty: true } => ServiceResult<WorkoutState>.Failure(
-                WorkoutState.Empty, 
-                ServiceError.NotFound("WorkoutState")),
-            _ => ServiceResult<WorkoutState>.Success(entity)
-        };
-    }
-    
-    protected override WorkoutStateDto MapToDto(WorkoutState entity)
+    /// <summary>
+    /// Maps a WorkoutState entity to its DTO representation
+    /// Entity stays within the service layer - only DTO is exposed
+    /// </summary>
+    private WorkoutStateDto MapToDto(WorkoutState entity)
     {
         return new WorkoutStateDto
         {
-            Id = entity.Id,
+            Id = entity.WorkoutStateId.ToString(),
             Value = entity.Value,
             Description = entity.Description
         };
-    }
-    
-    protected override ValidationResult ValidateAndParseId(string id)
-    {
-        return ServiceValidate.For()
-            .EnsureNotWhiteSpace(id, WorkoutStateErrorMessages.IdCannotBeEmpty)
-            .ToResult();
     }
 }

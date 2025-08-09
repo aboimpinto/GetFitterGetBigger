@@ -4,8 +4,6 @@ using GetFitterGetBigger.API.Models;
 using GetFitterGetBigger.API.Models.Entities;
 using GetFitterGetBigger.API.Models.SpecializedIds;
 using GetFitterGetBigger.API.Repositories.Interfaces;
-using GetFitterGetBigger.API.Services.Base;
-using GetFitterGetBigger.API.Services.Cache;
 using GetFitterGetBigger.API.Services.Interfaces;
 using GetFitterGetBigger.API.Services.Results;
 using GetFitterGetBigger.API.Services.Validation;
@@ -15,22 +13,27 @@ namespace GetFitterGetBigger.API.Services.Implementations;
 
 /// <summary>
 /// Service implementation for body part operations
-/// TEMPORARY: Extends EmptyEnabledPureReferenceService until all entities are migrated
+/// This service focuses solely on business logic and data access
+/// Caching is handled by the wrapping PureReferenceService layer
 /// </summary>
-public class BodyPartService : PureReferenceService<BodyPart, BodyPartDto>, IBodyPartService
+public class BodyPartService(
+    IUnitOfWorkProvider<FitnessDbContext> unitOfWorkProvider,
+    ILogger<BodyPartService> logger) : IBodyPartService
 {
-    public BodyPartService(
-        IUnitOfWorkProvider<FitnessDbContext> unitOfWorkProvider,
-        IEternalCacheService cacheService,
-        ILogger<BodyPartService> logger)
-        : base(unitOfWorkProvider, cacheService, logger)
-    {
-    }
+    private readonly IUnitOfWorkProvider<FitnessDbContext> _unitOfWorkProvider = unitOfWorkProvider;
+    private readonly ILogger<BodyPartService> _logger = logger;
 
     /// <inheritdoc/>
     public async Task<ServiceResult<IEnumerable<BodyPartDto>>> GetAllActiveAsync()
     {
-        return await GetAllAsync();
+        using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
+        var repository = unitOfWork.GetRepository<IBodyPartRepository>();
+        var entities = await repository.GetAllActiveAsync();
+        
+        var dtos = entities.Select(MapToDto).ToList();
+        
+        _logger.LogInformation("Loaded {Count} active body parts", dtos.Count);
+        return ServiceResult<IEnumerable<BodyPartDto>>.Success(dtos);
     }
 
     /// <inheritdoc/>
@@ -39,8 +42,39 @@ public class BodyPartService : PureReferenceService<BodyPart, BodyPartDto>, IBod
         return await ServiceValidate.For<BodyPartDto>()
             .EnsureNotEmpty(id, BodyPartErrorMessages.InvalidIdFormat)
             .MatchAsync(
-                whenValid: async () => await GetByIdAsync(id.ToString())
+                whenValid: async () => await LoadByIdFromDatabaseAsync(id)
             );
+    }
+    
+    /// <summary>
+    /// Gets a body part by its ID string
+    /// </summary>
+    /// <param name="id">The body part ID as a string</param>
+    /// <returns>A service result containing the body part if found</returns>
+    public async Task<ServiceResult<BodyPartDto>> GetByIdAsync(string id)
+    {
+        var bodyPartId = BodyPartId.ParseOrEmpty(id);
+        
+        return await ServiceValidate.For<BodyPartDto>()
+            .EnsureNotEmpty(bodyPartId, BodyPartErrorMessages.InvalidIdFormat)
+            .MatchAsync(
+                whenValid: async () => await LoadByIdFromDatabaseAsync(bodyPartId)
+            );
+    }
+    
+    private async Task<ServiceResult<BodyPartDto>> LoadByIdFromDatabaseAsync(BodyPartId id)
+    {
+        using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
+        var repository = unitOfWork.GetRepository<IBodyPartRepository>();
+        var entity = await repository.GetByIdAsync(id);
+        
+        return (entity.IsEmpty || !entity.IsActive) switch
+        {
+            true => ServiceResult<BodyPartDto>.Failure(
+                BodyPartDto.Empty,
+                ServiceError.NotFound("BodyPart", id.ToString())),
+            false => ServiceResult<BodyPartDto>.Success(MapToDto(entity))
+        };
     }
     
     /// <inheritdoc/>
@@ -49,58 +83,23 @@ public class BodyPartService : PureReferenceService<BodyPart, BodyPartDto>, IBod
         return await ServiceValidate.For<BodyPartDto>()
             .EnsureNotWhiteSpace(value, BodyPartErrorMessages.ValueCannotBeEmpty)
             .MatchAsync(
-                whenValid: async () => await GetFromCacheOrLoadAsync(
-                    GetValueCacheKey(value),
-                    () => LoadByValueAsync(value),
-                    value)
-            );
-    }
-
-    private string GetValueCacheKey(string value) => $"{GetCacheKeyPrefix()}value:{value}";
-    
-    private async Task<ServiceResult<BodyPartDto>> GetFromCacheOrLoadAsync(
-        string cacheKey, 
-        Func<Task<BodyPart>> loadFunc,
-        string identifier)
-    {
-        var cacheService = (IEternalCacheService)_cacheService;
-        
-        return await CacheLoad.For<BodyPartDto>(cacheService, cacheKey)
-            .WithLogging(_logger, "BodyPart")
-            .MatchAsync(
-                onHit: cached => ServiceResult<BodyPartDto>.Success(cached),
-                onMiss: async () => await LoadAndProcessEntity(loadFunc, cacheKey, identifier)
+                whenValid: async () => await LoadByValueFromDatabaseAsync(value)
             );
     }
     
-    private async Task<ServiceResult<BodyPartDto>> LoadAndProcessEntity(
-        Func<Task<BodyPart>> loadFunc,
-        string cacheKey,
-        string identifier)
-    {
-        var entity = await loadFunc();
-        
-        return entity switch
-        {
-            { IsEmpty: true } or { IsActive: false } => ServiceResult<BodyPartDto>.Failure(
-                BodyPartDto.Empty, 
-                ServiceError.NotFound(BodyPartErrorMessages.NotFound, identifier)),
-            _ => await CacheAndReturnSuccessAsync(cacheKey, MapToDto(entity))
-        };
-    }
-    
-    private async Task<ServiceResult<BodyPartDto>> CacheAndReturnSuccessAsync(string cacheKey, BodyPartDto dto)
-    {
-        var cacheService = (IEternalCacheService)_cacheService;
-        await cacheService.SetAsync(cacheKey, dto);
-        return ServiceResult<BodyPartDto>.Success(dto);
-    }
-    
-    private async Task<BodyPart> LoadByValueAsync(string value)
+    private async Task<ServiceResult<BodyPartDto>> LoadByValueFromDatabaseAsync(string value)
     {
         using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
         var repository = unitOfWork.GetRepository<IBodyPartRepository>();
-        return await repository.GetByValueAsync(value);
+        var entity = await repository.GetByValueAsync(value);
+        
+        return (entity.IsEmpty || !entity.IsActive) switch
+        {
+            true => ServiceResult<BodyPartDto>.Failure(
+                BodyPartDto.Empty,
+                ServiceError.NotFound("BodyPart", value)),
+            false => ServiceResult<BodyPartDto>.Success(MapToDto(entity))
+        };
     }
 
     /// <inheritdoc/>
@@ -117,44 +116,11 @@ public class BodyPartService : PureReferenceService<BodyPart, BodyPartDto>, IBod
             });
     }
     
-    protected override async Task<IEnumerable<BodyPart>> LoadAllEntitiesAsync()
-    {
-        using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
-        var repository = unitOfWork.GetRepository<IBodyPartRepository>();
-        return await repository.GetAllActiveAsync();
-    }
-    
-    /// <inheritdoc/>
-    protected override async Task<ServiceResult<BodyPart>> LoadEntityByIdAsync(string id)
-    {
-        var bodyPartId = BodyPartId.ParseOrEmpty(id);
-        
-        return await ServiceValidate.For<BodyPart>()
-            .EnsureNotEmpty(bodyPartId, BodyPartErrorMessages.InvalidIdFormat)
-            .Match(
-                whenValid: async () => await LoadEntityFromRepository(bodyPartId),
-                whenInvalid: errors => ServiceResult<BodyPart>.Failure(
-                    BodyPart.Empty, 
-                    ServiceError.ValidationFailed(errors.FirstOrDefault() ?? "Invalid ID format"))
-            );
-    }
-    
-    private async Task<ServiceResult<BodyPart>> LoadEntityFromRepository(BodyPartId id)
-    {
-        using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
-        var repository = unitOfWork.GetRepository<IBodyPartRepository>();
-        var entity = await repository.GetByIdAsync(id);
-        
-        return entity switch
-        {
-            { IsEmpty: true } => ServiceResult<BodyPart>.Failure(
-                BodyPart.Empty, 
-                ServiceError.NotFound("BodyPart")),
-            _ => ServiceResult<BodyPart>.Success(entity)
-        };
-    }
-    
-    protected override BodyPartDto MapToDto(BodyPart entity)
+    /// <summary>
+    /// Maps a BodyPart entity to its DTO representation
+    /// Entity stays within the service layer - only DTO is exposed
+    /// </summary>
+    private BodyPartDto MapToDto(BodyPart entity)
     {
         return new BodyPartDto
         {
@@ -162,13 +128,5 @@ public class BodyPartService : PureReferenceService<BodyPart, BodyPartDto>, IBod
             Value = entity.Value,
             Description = entity.Description
         };
-    }
-    
-    
-    protected override ValidationResult ValidateAndParseId(string id)
-    {
-        return ServiceValidate.For()
-            .EnsureNotWhiteSpace(id, BodyPartErrorMessages.IdCannotBeEmpty)
-            .ToResult();
     }
 }

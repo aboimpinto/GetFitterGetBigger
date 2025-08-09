@@ -27,7 +27,6 @@ public class MuscleRoleServiceTests
     private readonly Mock<IUnitOfWorkProvider<FitnessDbContext>> _unitOfWorkProviderMock;
     private readonly Mock<IReadOnlyUnitOfWork<FitnessDbContext>> _readOnlyUnitOfWorkMock;
     private readonly Mock<IMuscleRoleRepository> _repositoryMock;
-    private readonly Mock<IEternalCacheService> _cacheServiceMock;
     private readonly Mock<ILogger<MuscleRoleService>> _loggerMock;
     private readonly MuscleRoleService _service;
 
@@ -36,7 +35,6 @@ public class MuscleRoleServiceTests
         _unitOfWorkProviderMock = new Mock<IUnitOfWorkProvider<FitnessDbContext>>();
         _readOnlyUnitOfWorkMock = new Mock<IReadOnlyUnitOfWork<FitnessDbContext>>();
         _repositoryMock = new Mock<IMuscleRoleRepository>();
-        _cacheServiceMock = new Mock<IEternalCacheService>();
         _loggerMock = new Mock<ILogger<MuscleRoleService>>();
 
         _unitOfWorkProviderMock
@@ -44,12 +42,11 @@ public class MuscleRoleServiceTests
             .Returns(_readOnlyUnitOfWorkMock.Object);
 
         _readOnlyUnitOfWorkMock
-            .Setup(uow => uow.GetRepository<IMuscleRoleRepository>())
+            .Setup(x => x.GetRepository<IMuscleRoleRepository>())
             .Returns(_repositoryMock.Object);
 
         _service = new MuscleRoleService(
             _unitOfWorkProviderMock.Object,
-            _cacheServiceMock.Object,
             _loggerMock.Object);
     }
 
@@ -63,22 +60,15 @@ public class MuscleRoleServiceTests
             MuscleRoleTestBuilder.Create(TestIds.MuscleRoleIds.Secondary, MuscleRoleTestConstants.Values.Secondary, MuscleRoleTestConstants.Descriptions.Secondary)
         };
 
-        _cacheServiceMock
-            .Setup(c => c.GetAsync<IEnumerable<ReferenceDataDto>>(It.IsAny<string>()))
-            .ReturnsAsync(CacheResult<IEnumerable<ReferenceDataDto>>.Miss());
 
         _repositoryMock
             .Setup(r => r.GetAllActiveAsync())
-            .ReturnsAsync(muscleRoles);
+            .ReturnsAsync(new List<MuscleRole>());
 
-        _cacheServiceMock
-            .Setup(c => c.SetAsync(It.IsAny<string>(), It.IsAny<IEnumerable<ReferenceDataDto>>()))
-            .Returns(Task.CompletedTask);
 
         // Act
         var result = await _service.GetAllActiveAsync();
 
-        // Assert
         Assert.True(result.IsSuccess);
         Assert.Equal(2, result.Data.Count());
         Assert.Empty(result.Errors);
@@ -92,22 +82,15 @@ public class MuscleRoleServiceTests
         var id = MuscleRoleId.From(Guid.Parse(TestIds.MuscleRoleIds.Primary.Replace("musclerole-", "")));
         var entity = MuscleRoleTestBuilder.Create(TestIds.MuscleRoleIds.Primary, MuscleRoleTestConstants.Values.Primary, MuscleRoleTestConstants.Descriptions.Primary);
 
-        _cacheServiceMock
-            .Setup(c => c.GetAsync<ReferenceDataDto>(It.IsAny<string>()))
-            .ReturnsAsync(CacheResult<ReferenceDataDto>.Miss());
 
         _repositoryMock
-            .Setup(r => r.GetByIdAsync(id))
-            .ReturnsAsync(entity);
+            .Setup(r => r.GetAllActiveAsync())
+            .ReturnsAsync(new List<MuscleRole>());
 
-        _cacheServiceMock
-            .Setup(c => c.SetAsync(It.IsAny<string>(), It.IsAny<ReferenceDataDto>()))
-            .Returns(Task.CompletedTask);
 
         // Act
         var result = await _service.GetByIdAsync(id);
 
-        // Assert
         Assert.True(result.IsSuccess);
         var dto = result.Data;
         Assert.Equal(entity.Id, dto.Id);
@@ -122,7 +105,6 @@ public class MuscleRoleServiceTests
         // Arrange & Act
         var result = await _service.GetByIdAsync(MuscleRoleId.Empty);
 
-        // Assert
         Assert.False(result.IsSuccess);
         Assert.Equal(ServiceErrorCode.ValidationFailed, result.PrimaryErrorCode);
         Assert.Contains(MuscleRoleErrorMessages.InvalidIdFormat, result.Errors.First());
@@ -134,18 +116,14 @@ public class MuscleRoleServiceTests
         // Arrange
         var id = MuscleRoleId.New();
 
-        _cacheServiceMock
-            .Setup(c => c.GetAsync<ReferenceDataDto>(It.IsAny<string>()))
-            .ReturnsAsync(CacheResult<ReferenceDataDto>.Miss());
 
         _repositoryMock
-            .Setup(r => r.GetByIdAsync(It.IsAny<MuscleRoleId>()))
-            .ReturnsAsync(MuscleRole.Empty);
+            .Setup(r => r.GetAllActiveAsync())
+            .ReturnsAsync(new List<MuscleRole>());
 
         // Act
         var result = await _service.GetByIdAsync(id);
 
-        // Assert
         Assert.False(result.IsSuccess);
         Assert.Equal(ServiceErrorCode.NotFound, result.PrimaryErrorCode);
     }
@@ -157,22 +135,15 @@ public class MuscleRoleServiceTests
         var value = MuscleRoleTestConstants.Values.Primary;
         var entity = MuscleRoleTestBuilder.Create(TestIds.MuscleRoleIds.Primary, value, "Primary muscle");
 
-        _cacheServiceMock
-            .Setup(c => c.GetAsync<ReferenceDataDto>(It.IsAny<string>()))
-            .ReturnsAsync(CacheResult<ReferenceDataDto>.Miss());
 
         _repositoryMock
-            .Setup(r => r.GetByValueAsync(value))
-            .ReturnsAsync(entity);
+            .Setup(r => r.GetAllActiveAsync())
+            .ReturnsAsync(new List<MuscleRole>());
 
-        _cacheServiceMock
-            .Setup(c => c.SetAsync(It.IsAny<string>(), It.IsAny<ReferenceDataDto>()))
-            .Returns(Task.CompletedTask);
 
         // Act
         var result = await _service.GetByValueAsync(value);
 
-        // Assert
         Assert.True(result.IsSuccess);
         var dto = result.Data;
         Assert.Equal(entity.Id, dto.Id);
@@ -187,18 +158,14 @@ public class MuscleRoleServiceTests
         // Arrange
         var value = MuscleRoleTestConstants.Values.NonExistent;
 
-        _cacheServiceMock
-            .Setup(c => c.GetAsync<ReferenceDataDto>(It.IsAny<string>()))
-            .ReturnsAsync(CacheResult<ReferenceDataDto>.Miss());
 
         _repositoryMock
-            .Setup(r => r.GetByValueAsync(value))
-            .ReturnsAsync(MuscleRole.Empty);
+            .Setup(r => r.GetAllActiveAsync())
+            .ReturnsAsync(new List<MuscleRole>());
 
         // Act
         var result = await _service.GetByValueAsync(value);
 
-        // Assert
         Assert.False(result.IsSuccess);
         Assert.Equal(ServiceErrorCode.NotFound, result.PrimaryErrorCode);
         Assert.Contains("not found", result.Errors.First(), StringComparison.OrdinalIgnoreCase);
@@ -210,7 +177,6 @@ public class MuscleRoleServiceTests
         // Arrange & Act
         var result = await _service.GetByValueAsync("");
 
-        // Assert
         Assert.False(result.IsSuccess);
         Assert.Equal(ServiceErrorCode.ValidationFailed, result.PrimaryErrorCode);
         Assert.Contains(MuscleRoleErrorMessages.ValueCannotBeEmpty, result.Errors.First());
@@ -223,13 +189,12 @@ public class MuscleRoleServiceTests
         var id = MuscleRoleId.New();
 
         _repositoryMock
-            .Setup(r => r.ExistsAsync(It.IsAny<MuscleRoleId>()))
-            .ReturnsAsync(true);
+            .Setup(r => r.GetAllActiveAsync())
+            .ReturnsAsync(new List<MuscleRole>());
 
         // Act
         var result = await _service.ExistsAsync(id);
 
-        // Assert
         Assert.True(result.IsSuccess);
             Assert.True(result.Data);
     }
@@ -241,13 +206,12 @@ public class MuscleRoleServiceTests
         var id = MuscleRoleId.New();
 
         _repositoryMock
-            .Setup(r => r.ExistsAsync(It.IsAny<MuscleRoleId>()))
-            .ReturnsAsync(false);
+            .Setup(r => r.GetAllActiveAsync())
+            .ReturnsAsync(new List<MuscleRole>());
 
         // Act
         var result = await _service.ExistsAsync(id);
 
-        // Assert
         Assert.True(result.IsSuccess);
             Assert.False(result.Data);
     }
@@ -262,14 +226,10 @@ public class MuscleRoleServiceTests
             new() { Id = TestIds.MuscleRoleIds.Secondary.ToString(), Value = MuscleRoleTestConstants.Values.Secondary, Description = MuscleRoleTestConstants.Descriptions.Secondary }
         };
 
-        _cacheServiceMock
-            .Setup(c => c.GetAsync<IEnumerable<ReferenceDataDto>>(It.IsAny<string>()))
-            .ReturnsAsync(CacheResult<IEnumerable<ReferenceDataDto>>.Hit(cachedData));
 
         // Act
         var result = await _service.GetAllActiveAsync();
 
-        // Assert
         Assert.True(result.IsSuccess);
         Assert.Equal(2, result.Data.Count());
         _repositoryMock.Verify(r => r.GetAllActiveAsync(), Times.Never);

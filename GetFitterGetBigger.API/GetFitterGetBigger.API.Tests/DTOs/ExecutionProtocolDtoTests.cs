@@ -29,7 +29,7 @@ public class ExecutionProtocolDtoTests
     {
         // Arrange & Act
         var dto = new ExecutionProtocolDto
-        {
+            {
             ExecutionProtocolId = "executionprotocol-123e4567-e89b-12d3-a456-426614174000",
             Value = "Standard",
             Description = "Standard protocol with balanced rep and time components",
@@ -60,7 +60,7 @@ public class ExecutionProtocolDtoTests
     {
         // Arrange & Act
         var dto = new ExecutionProtocolDto
-        {
+            {
             ExecutionProtocolId = "executionprotocol-123e4567-e89b-12d3-a456-426614174000",
             Value = "High Intensity",
             Code = "HIIT",
@@ -109,7 +109,7 @@ public class ExecutionProtocolDtoTests
         // Arrange
         var response = new ExecutionProtocolsResponseDto();
         var protocol1 = new ExecutionProtocolDto
-        {
+            {
             ExecutionProtocolId = "executionprotocol-123e4567-e89b-12d3-a456-426614174000",
             Value = "Standard",
             Code = "STANDARD",
@@ -117,7 +117,7 @@ public class ExecutionProtocolDtoTests
             IsActive = true
         };
         var protocol2 = new ExecutionProtocolDto
-        {
+            {
             ExecutionProtocolId = "executionprotocol-223e4567-e89b-12d3-a456-426614174000",
             Value = "Superset",
             Code = "SUPERSET",

@@ -59,8 +59,8 @@ public class WorkoutTemplateExerciseServiceTests
             .Returns(_mockReadOnlyUnitOfWork.Object);
             
         _mockUnitOfWorkProvider
-            .Setup(x => x.CreateWritable())
-            .Returns(_mockWritableUnitOfWork.Object);
+            .Setup(x => x.CreateReadOnly())
+            .Returns(_mockReadOnlyUnitOfWork.Object);
             
         _mockReadOnlyUnitOfWork
             .Setup(x => x.GetRepository<IWorkoutTemplateExerciseRepository>())
@@ -77,14 +77,6 @@ public class WorkoutTemplateExerciseServiceTests
         _mockWritableUnitOfWork
             .Setup(x => x.GetRepository<IWorkoutTemplateExerciseRepository>())
             .Returns(_mockExerciseTemplateRepo.Object);
-            
-        _mockWritableUnitOfWork
-            .Setup(x => x.GetRepository<IWorkoutTemplateRepository>())
-            .Returns(_mockTemplateRepo.Object);
-            
-        _mockWritableUnitOfWork
-            .Setup(x => x.GetRepository<IExerciseRepository>())
-            .Returns(_mockExerciseRepo.Object);
             
         _mockWritableUnitOfWork
             .Setup(x => x.GetRepository<ISetConfigurationRepository>())
@@ -162,14 +154,12 @@ public class WorkoutTemplateExerciseServiceTests
                 .Build()
         };
         
-        _mockExerciseTemplateRepo
-            .Setup(x => x.GetByWorkoutTemplateAsync(_testTemplateId))
+        _mockExerciseTemplateRepo.Setup(x => x.GetByWorkoutTemplateAsync(_testTemplateId))
             .ReturnsAsync(exercises);
         
         // Act
         var result = await _service.GetByWorkoutTemplateAsync(_testTemplateId);
         
-        // Assert
         Assert.True(result.IsSuccess);
         Assert.NotNull(result.Data);
         Assert.Equal(_testTemplateId.ToString(), result.Data.WorkoutTemplateId);
@@ -184,7 +174,6 @@ public class WorkoutTemplateExerciseServiceTests
         // Act
         var result = await _service.GetByWorkoutTemplateAsync(WorkoutTemplateId.Empty);
         
-        // Assert
         Assert.False(result.IsSuccess);
         Assert.Single(result.Errors);
         Assert.Contains("WorkoutTemplateId", result.Errors.First());
@@ -214,14 +203,12 @@ public class WorkoutTemplateExerciseServiceTests
                 .Build()
         };
         
-        _mockExerciseTemplateRepo
-            .Setup(x => x.GetByWorkoutTemplateAsync(_testTemplateId))
+        _mockExerciseTemplateRepo.Setup(x => x.GetByWorkoutTemplateAsync(_testTemplateId))
             .ReturnsAsync(exercises);
         
         // Act
         var result = await _service.GetByWorkoutTemplateAsync(_testTemplateId);
         
-        // Assert
         Assert.True(result.IsSuccess);
         Assert.Equal(3, result.Data.MainExercises.Count);
         Assert.Equal(1, result.Data.MainExercises[0].SequenceOrder);
@@ -237,14 +224,12 @@ public class WorkoutTemplateExerciseServiceTests
     public async Task GetByIdAsync_WithValidId_ReturnsExercise()
     {
         // Arrange
-        _mockExerciseTemplateRepo
-            .Setup(x => x.GetByIdWithDetailsAsync(_testExerciseId))
+        _mockExerciseTemplateRepo.Setup(x => x.GetByIdWithDetailsAsync(_testExerciseId))
             .ReturnsAsync(_testTemplateExercise);
         
         // Act
         var result = await _service.GetByIdAsync(_testExerciseId);
         
-        // Assert
         Assert.True(result.IsSuccess);
         Assert.NotNull(result.Data);
         Assert.Equal(_testExerciseId.ToString(), result.Data.Id);
@@ -257,7 +242,6 @@ public class WorkoutTemplateExerciseServiceTests
         // Act
         var result = await _service.GetByIdAsync(WorkoutTemplateExerciseId.Empty);
         
-        // Assert
         Assert.False(result.IsSuccess);
         Assert.Single(result.Errors);
         Assert.Contains("WorkoutTemplateExerciseId", result.Errors.First());
@@ -268,14 +252,12 @@ public class WorkoutTemplateExerciseServiceTests
     public async Task GetByIdAsync_WhenNotFound_ReturnsNotFoundError()
     {
         // Arrange
-        _mockExerciseTemplateRepo
-            .Setup(x => x.GetByIdWithDetailsAsync(It.IsAny<WorkoutTemplateExerciseId>()))
-            .ReturnsAsync(WorkoutTemplateExercise.Empty);
+        _mockExerciseTemplateRepo.Setup(x => x.GetByIdWithDetailsAsync(_testExerciseId))
+            .ReturnsAsync((WorkoutTemplateExercise?)null);
         
         // Act
         var result = await _service.GetByIdAsync(_testExerciseId);
         
-        // Assert
         Assert.False(result.IsSuccess);
         Assert.Single(result.Errors);
         Assert.Contains("not found", result.Errors.First());
@@ -291,7 +273,6 @@ public class WorkoutTemplateExerciseServiceTests
         // Act
         var result = await _service.GetExerciseSuggestionsAsync(_testTemplateId, "Main");
         
-        // Assert
         Assert.True(result.IsSuccess);
         Assert.NotNull(result.Data);
         Assert.Empty(result.Data);
@@ -303,7 +284,6 @@ public class WorkoutTemplateExerciseServiceTests
         // Act
         var result = await _service.GetExerciseSuggestionsAsync(WorkoutTemplateId.Empty, "Main");
         
-        // Assert
         Assert.False(result.IsSuccess);
         Assert.Single(result.Errors);
         Assert.Single(result.Errors);
@@ -320,17 +300,16 @@ public class WorkoutTemplateExerciseServiceTests
         var exerciseIds = new List<ExerciseId> { _testExerciseEntityId };
         
         _mockTemplateRepo
-            .Setup(x => x.GetByIdAsync(_testTemplateId))
+            .Setup(x => x.GetByIdWithDetailsAsync(_testTemplateId))
             .ReturnsAsync(_testTemplate);
             
         _mockExerciseRepo
             .Setup(x => x.GetByIdAsync(_testExerciseEntityId))
-            .ReturnsAsync(_testExercise);
+            .ReturnsAsync(ExerciseBuilder.AWorkoutExercise().Build());
         
         // Act
         var result = await _service.ValidateExercisesAsync(_testTemplateId, exerciseIds);
         
-        // Assert
         Assert.True(result.IsSuccess);
         Assert.True(result.Data);
     }
@@ -342,13 +321,12 @@ public class WorkoutTemplateExerciseServiceTests
         var exerciseIds = new List<ExerciseId> { _testExerciseEntityId };
         
         _mockTemplateRepo
-            .Setup(x => x.GetByIdAsync(_testTemplateId))
-            .ReturnsAsync(WorkoutTemplate.Empty);
+            .Setup(x => x.GetByIdWithDetailsAsync(_testTemplateId))
+            .ReturnsAsync((WorkoutTemplate?)null);
         
         // Act
         var result = await _service.ValidateExercisesAsync(_testTemplateId, exerciseIds);
         
-        // Assert
         Assert.False(result.IsSuccess);
         Assert.Single(result.Errors);
         Assert.Contains("not found", result.Errors.First());
@@ -362,7 +340,7 @@ public class WorkoutTemplateExerciseServiceTests
         var exerciseIds = new List<ExerciseId> { _testExerciseEntityId };
         
         _mockTemplateRepo
-            .Setup(x => x.GetByIdAsync(_testTemplateId))
+            .Setup(x => x.GetByIdWithDetailsAsync(_testTemplateId))
             .ReturnsAsync(_testTemplate);
             
         _mockExerciseRepo
@@ -372,7 +350,6 @@ public class WorkoutTemplateExerciseServiceTests
         // Act
         var result = await _service.ValidateExercisesAsync(_testTemplateId, exerciseIds);
         
-        // Assert
         Assert.False(result.IsSuccess);
         Assert.Single(result.Errors);
         Assert.Contains("not found", result.Errors.First());
@@ -385,7 +362,6 @@ public class WorkoutTemplateExerciseServiceTests
         // Act
         var result = await _service.ValidateExercisesAsync(_testTemplateId, new List<ExerciseId>());
         
-        // Assert
         Assert.False(result.IsSuccess);
         Assert.Single(result.Errors);
         Assert.Single(result.Errors);

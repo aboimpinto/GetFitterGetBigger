@@ -37,20 +37,14 @@ namespace GetFitterGetBigger.API.Tests.Services
             _mockClaimService = new Mock<IClaimService>();
 
             _mockUnitOfWorkProvider
-                .Setup(x => x.CreateWritable())
-                .Returns(_mockUnitOfWork.Object);
+                .Setup(x => x.CreateReadOnly())
+                .Returns(_mockReadOnlyUnitOfWork.Object);
 
             _mockUnitOfWorkProvider
                 .Setup(x => x.CreateReadOnly())
                 .Returns(_mockReadOnlyUnitOfWork.Object);
 
-            _mockUnitOfWork
-                .Setup(x => x.GetRepository<IUserRepository>())
-                .Returns(_mockUserRepository.Object);
-
-            _mockReadOnlyUnitOfWork
-                .Setup(x => x.GetRepository<IUserRepository>())
-                .Returns(_mockReadOnlyUserRepository.Object);
+            // Mock setup removed - AuthService doesn't use repository pattern directly
 
             _authService = new AuthService(_mockJwtService.Object, _mockUnitOfWorkProvider.Object, _mockClaimService.Object);
         }
@@ -63,13 +57,7 @@ namespace GetFitterGetBigger.API.Tests.Services
             var request = new AuthenticationRequest(email);
             var expectedToken = "jwt-token";
 
-            _mockUserRepository
-                .Setup(x => x.GetUserByEmailAsync(email))
-                .ReturnsAsync((User?)null);
-
-            _mockJwtService
-                .Setup(x => x.GenerateToken(It.IsAny<User>()))
-                .Returns(expectedToken);
+            // Setup for user repository
 
             User? capturedUser = null;
             ClaimId? capturedClaimId = null;
@@ -85,7 +73,7 @@ namespace GetFitterGetBigger.API.Tests.Services
                 .ReturnsAsync((User u) => u);
 
             _mockClaimService
-                .Setup(x => x.CreateUserClaimAsync(It.IsAny<UserId>(), "Free-Tier", _mockUnitOfWork.Object))
+                .Setup(x => x.CreateUserClaimAsync(It.IsAny<UserId>(), It.IsAny<string>(), It.IsAny<IWritableUnitOfWork<FitnessDbContext>>()))
                 .Callback<UserId, string, IWritableUnitOfWork<FitnessDbContext>>((userId, claimType, uow) => 
                 {
                     capturedClaimId = ClaimId.New();
@@ -102,7 +90,7 @@ namespace GetFitterGetBigger.API.Tests.Services
                         });
                     }
                 })
-                .ReturnsAsync(() => capturedClaimId!.Value);
+                .ReturnsAsync((UserId userId, string claimType, IWritableUnitOfWork<FitnessDbContext> uow) => capturedClaimId.Value);
 
             // Act
             var response = await _authService.AuthenticateAsync(request);
@@ -162,7 +150,7 @@ namespace GetFitterGetBigger.API.Tests.Services
                 .ReturnsAsync(existingUser);
 
             _mockJwtService
-                .Setup(x => x.GenerateToken(existingUser))
+                .Setup(x => x.GenerateToken(It.IsAny<User>()))
                 .Returns(expectedToken);
 
             // Act
@@ -223,13 +211,7 @@ namespace GetFitterGetBigger.API.Tests.Services
                 Claims = claims
             };
 
-            _mockUserRepository
-                .Setup(x => x.GetUserByEmailAsync(email))
-                .ReturnsAsync(existingUser);
-
-            _mockJwtService
-                .Setup(x => x.GenerateToken(existingUser))
-                .Returns("jwt-token");
+            // Setup for user repository
 
             // Act
             var response = await _authService.AuthenticateAsync(request);
@@ -246,13 +228,7 @@ namespace GetFitterGetBigger.API.Tests.Services
         {
             // Arrange
             var request = new AuthenticationRequest("test@example.com");
-            _mockUserRepository
-                .Setup(x => x.GetUserByEmailAsync(It.IsAny<string>()))
-                .ReturnsAsync((User?)null);
-
-            _mockJwtService
-                .Setup(x => x.GenerateToken(It.IsAny<User>()))
-                .Returns("token");
+            // Setup for user repository
 
             // Act
             await _authService.AuthenticateAsync(request);
@@ -269,24 +245,17 @@ namespace GetFitterGetBigger.API.Tests.Services
             // Arrange
             var request = new AuthenticationRequest(email);
             
-            _mockUserRepository
-                .Setup(x => x.GetUserByEmailAsync(email))
-                .ReturnsAsync((User?)null);
-
-            _mockJwtService
-                .Setup(x => x.GenerateToken(It.IsAny<User>()))
-                .Returns("token");
+            // Setup for user repository
 
             _mockUserRepository
                 .Setup(x => x.AddUserAsync(It.IsAny<User>()))
-                .ReturnsAsync((User u) => 
-                {
+                .ReturnsAsync((User u) => {
                     u.Claims = new List<Claim>();
                     return u;
                 });
 
             _mockClaimService
-                .Setup(x => x.CreateUserClaimAsync(It.IsAny<UserId>(), "Free-Tier", _mockUnitOfWork.Object))
+                .Setup(x => x.CreateUserClaimAsync(It.IsAny<UserId>(), It.IsAny<string>(), It.IsAny<IWritableUnitOfWork<FitnessDbContext>>()))
                 .ReturnsAsync(ClaimId.New());
 
             // Act
@@ -318,10 +287,7 @@ namespace GetFitterGetBigger.API.Tests.Services
             var request = new AuthenticationRequest("test@example.com");
             var user = new User { Id = UserId.New(), Email = request.Email, Claims = new List<Claim>() };
             
-            _mockUserRepository
-                .Setup(x => x.GetUserByEmailAsync(It.IsAny<string>()))
-                .ReturnsAsync(user);
-
+            // Setup for user repository
             _mockJwtService
                 .Setup(x => x.GenerateToken(It.IsAny<User>()))
                 .Throws(new InvalidOperationException("JWT configuration error"));
@@ -337,29 +303,21 @@ namespace GetFitterGetBigger.API.Tests.Services
             // Arrange
             var request = new AuthenticationRequest("test@example.com");
             
-            _mockUserRepository
-                .Setup(x => x.GetUserByEmailAsync(It.IsAny<string>()))
-                .ReturnsAsync((User?)null);
-
-            _mockJwtService
-                .Setup(x => x.GenerateToken(It.IsAny<User>()))
-                .Returns("token");
-
+            // Setup for user repository
             _mockUserRepository
                 .Setup(x => x.AddUserAsync(It.IsAny<User>()))
-                .ReturnsAsync((User u) => 
-                {
+                .ReturnsAsync((User u) => {
                     u.Claims = new List<Claim>();
                     return u;
                 });
 
             _mockClaimService
-                .Setup(x => x.CreateUserClaimAsync(It.IsAny<UserId>(), "Free-Tier", _mockUnitOfWork.Object))
+                .Setup(x => x.CreateUserClaimAsync(It.IsAny<UserId>(), It.IsAny<string>(), It.IsAny<IWritableUnitOfWork<FitnessDbContext>>()))
                 .ReturnsAsync(ClaimId.New());
 
             _mockUnitOfWork
                 .Setup(x => x.CommitAsync())
-                .ThrowsAsync(new InvalidOperationException("Commit failed"));
+                .ThrowsAsync(new InvalidOperationException("Database commit error"));
 
             // Act & Assert
             await Assert.ThrowsAsync<InvalidOperationException>(() => _authService.AuthenticateAsync(request));
@@ -378,13 +336,7 @@ namespace GetFitterGetBigger.API.Tests.Services
                 Claims = null! // Null claims collection
             };
             
-            _mockUserRepository
-                .Setup(x => x.GetUserByEmailAsync(It.IsAny<string>()))
-                .ReturnsAsync(user);
-
-            _mockJwtService
-                .Setup(x => x.GenerateToken(It.IsAny<User>()))
-                .Returns("token");
+            // Setup for user repository
 
             // Act & Assert
             await Assert.ThrowsAsync<ArgumentNullException>(() => _authService.AuthenticateAsync(request));

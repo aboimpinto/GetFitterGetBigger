@@ -60,7 +60,7 @@ namespace GetFitterGetBigger.API.Tests.Controllers
             // Arrange
             var id = "difficultylevel-12345678-1234-1234-1234-123456789012";
             var difficultyLevel = new ReferenceDataDto
-            {
+                {
                 Id = id,
                 Value = "Advanced",
                 Description = "For advanced users"
@@ -155,7 +155,7 @@ namespace GetFitterGetBigger.API.Tests.Controllers
             // Arrange
             var value = "Expert";
             var difficultyLevel = new ReferenceDataDto
-            {
+                {
                 Id = "difficultylevel-789",
                 Value = value,
                 Description = "For experts only"

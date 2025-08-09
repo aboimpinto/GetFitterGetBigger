@@ -282,19 +282,19 @@ public class ExerciseServiceMapToDtoTests
         var exercises = new List<Exercise> { exercise1, exercise2 };
         
         _exerciseRepositoryMock.Setup(r => r.GetPagedAsync(
-            It.IsAny<int>(),
-            It.IsAny<int>(),
-            It.IsAny<string>(),
-            It.IsAny<DifficultyLevelId>(),
-            It.IsAny<IEnumerable<MuscleGroupId>>(),
-            It.IsAny<IEnumerable<EquipmentId>>(),
-            It.IsAny<IEnumerable<MovementPatternId>>(),
-            It.IsAny<IEnumerable<BodyPartId>>(),
-            It.IsAny<bool>()))
+             It.IsAny<int>(),
+             It.IsAny<int>(),
+             It.IsAny<string>(),
+             It.IsAny<DifficultyLevelId>(),
+             It.IsAny<IEnumerable<MuscleGroupId>>(),
+             It.IsAny<IEnumerable<EquipmentId>>(),
+             It.IsAny<IEnumerable<MovementPatternId>>(),
+             It.IsAny<IEnumerable<BodyPartId>>(),
+             It.IsAny<bool>()))
             .ReturnsAsync((exercises, 2));
         
         var filterParams = new ExerciseFilterParams
-        {
+            {
             Page = 1,
             PageSize = 10
         };

@@ -73,7 +73,7 @@ public class MuscleRolesControllerTests
     {
         // Arrange
         var muscleRole = new ReferenceDataDto
-        {
+            {
             Id = TestIds.MuscleRoleIds.Primary,
             Value = MuscleRoleTestConstants.Values.Primary,
             Description = MuscleRoleTestConstants.Descriptions.Primary
@@ -130,7 +130,7 @@ public class MuscleRolesControllerTests
     {
         // Arrange
         var muscleRole = new ReferenceDataDto
-        {
+            {
             Id = TestIds.MuscleRoleIds.Primary,
             Value = MuscleRoleTestConstants.Values.Primary,
             Description = MuscleRoleTestConstants.Descriptions.Primary

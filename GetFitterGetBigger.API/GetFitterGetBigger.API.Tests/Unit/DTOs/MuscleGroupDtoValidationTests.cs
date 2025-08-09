@@ -12,7 +12,7 @@ public class MuscleGroupDtoValidationTests
     {
         // Arrange
         var dto = new CreateMuscleGroupDto
-        {
+            {
             Name = "Biceps",
             BodyPartId = "bodypart-12345678-1234-1234-1234-123456789012"
         };
@@ -32,7 +32,7 @@ public class MuscleGroupDtoValidationTests
     {
         // Arrange
         var dto = new CreateMuscleGroupDto
-        {
+            {
             Name = "",
             BodyPartId = "bodypart-12345678-1234-1234-1234-123456789012"
         };
@@ -55,7 +55,7 @@ public class MuscleGroupDtoValidationTests
     {
         // Arrange
         var dto = new CreateMuscleGroupDto
-        {
+            {
             Name = name,
             BodyPartId = "bodypart-12345678-1234-1234-1234-123456789012"
         };
@@ -82,7 +82,7 @@ public class MuscleGroupDtoValidationTests
     {
         // Arrange
         var dto = new CreateMuscleGroupDto
-        {
+            {
             Name = "Biceps",
             BodyPartId = ""
         };
@@ -108,7 +108,7 @@ public class MuscleGroupDtoValidationTests
     {
         // Arrange
         var dto = new CreateMuscleGroupDto
-        {
+            {
             Name = "Biceps",
             BodyPartId = bodyPartId
         };
@@ -129,7 +129,7 @@ public class MuscleGroupDtoValidationTests
     {
         // Arrange
         var dto = new UpdateMuscleGroupDto
-        {
+            {
             Name = "Triceps",
             BodyPartId = "bodypart-12345678-1234-1234-1234-123456789012"
         };
@@ -149,7 +149,7 @@ public class MuscleGroupDtoValidationTests
     {
         // Arrange
         var dto = new UpdateMuscleGroupDto
-        {
+            {
             Name = "",
             BodyPartId = "bodypart-12345678-1234-1234-1234-123456789012"
         };
@@ -170,7 +170,7 @@ public class MuscleGroupDtoValidationTests
     {
         // Arrange
         var dto = new UpdateMuscleGroupDto
-        {
+            {
             Name = "Triceps",
             BodyPartId = "invalid-format"
         };

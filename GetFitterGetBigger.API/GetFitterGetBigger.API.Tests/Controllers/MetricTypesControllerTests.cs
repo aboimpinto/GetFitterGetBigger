@@ -60,7 +60,7 @@ namespace GetFitterGetBigger.API.Tests.Controllers
             // Arrange
             var id = "metrictype-12345678-1234-1234-1234-123456789012";
             var metricType = new ReferenceDataDto
-            {
+                {
                 Id = id,
                 Value = "Weight",
                 Description = "Weight measurement"
@@ -132,7 +132,7 @@ namespace GetFitterGetBigger.API.Tests.Controllers
             // Arrange
             var value = "Weight";
             var metricType = new ReferenceDataDto
-            {
+                {
                 Id = "metrictype-123",
                 Value = value,
                 Description = "Weight measurement"

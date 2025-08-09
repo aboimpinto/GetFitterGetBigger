@@ -131,7 +131,7 @@ namespace GetFitterGetBigger.API.Tests.Controllers
             // Arrange
             var value = "Chest";
             var bodyPart = new BodyPartDto
-            {
+                {
                 Id = "bodypart-123",
                 Value = value,
                 Description = "Chest muscles"

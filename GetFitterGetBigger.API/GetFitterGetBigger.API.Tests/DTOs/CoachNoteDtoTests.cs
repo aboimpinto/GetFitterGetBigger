@@ -22,7 +22,7 @@ public class CoachNoteDtoTests
     {
         // Arrange & Act
         var dto = new CoachNoteDto
-        {
+            {
             Id = "coachnote-123e4567-e89b-12d3-a456-426614174000",
             Text = "Keep your back straight during the movement",
             Order = 1
@@ -68,7 +68,7 @@ public class CoachNoteDtoTests
     {
         // Arrange
         var request = new CoachNoteRequest
-        {
+            {
             Text = "Focus on controlled movement",
             Order = 0
         };

@@ -111,3 +111,31 @@ The `/memory-bank/` directory contains all project knowledge and processes:
 - **`activeContext.md`** - Current work context
 
 **💡 Pro Tip**: When debugging, start with TESTING-QUICK-REFERENCE.md, then check relevant process docs!
+
+## ⚠️ CRITICAL: No Bulk Scripts Policy
+
+**NEVER use scripts for bulk file modifications!** This lesson was learned the hard way when a script-based refactoring caused 6394 build errors.
+
+### What NOT to do:
+- ❌ Python scripts for bulk file modifications
+- ❌ Bash scripts with sed/awk for multi-file changes
+- ❌ Any automated find-and-replace across multiple files
+- ❌ Scripts that attempt to "understand" code patterns
+
+### What to do instead:
+1. ✅ List all files that need to be changed
+2. ✅ Change files **one-by-one manually** using Read/Edit tools
+3. ✅ Verify each file builds correctly before moving to the next
+4. ✅ Track progress using TodoWrite tool
+5. ✅ Accept that it takes longer - this is the correct trade-off
+
+### Why manual is better:
+- **Context Awareness**: Each file might have subtle differences that scripts miss
+- **Immediate Validation**: Can check each change is correct before proceeding
+- **Safety**: Prevents cascading errors across the entire codebase
+- **Learning**: Manual changes help understand the codebase better
+
+### Remember:
+> "It's better to spend 2 hours changing 20 files manually than to spend 6 hours fixing 6000+ errors from a script gone wrong."
+
+When propagating refactoring patterns (like from BodyPartService to other reference services), ALWAYS do it file-by-file manually. The time "saved" by scripts is an illusion when dealing with code modifications.

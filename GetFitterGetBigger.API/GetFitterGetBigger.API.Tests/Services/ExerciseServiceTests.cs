@@ -39,26 +39,22 @@ namespace GetFitterGetBigger.API.Tests.Services
             _mockExerciseTypeService = new Mock<IExerciseTypeService>();
 
             _mockReadOnlyUnitOfWork
-                .Setup(uow => uow.GetRepository<IExerciseRepository>())
+                .Setup(x => x.GetRepository<IExerciseRepository>())
                 .Returns(_mockExerciseRepository.Object);
 
             _mockWritableUnitOfWork
-                .Setup(uow => uow.GetRepository<IExerciseRepository>())
+                .Setup(x => x.GetRepository<IExerciseRepository>())
                 .Returns(_mockExerciseRepository.Object);
 
             _mockUnitOfWorkProvider
-                .Setup(p => p.CreateReadOnly())
+                .Setup(x => x.CreateReadOnly())
                 .Returns(_mockReadOnlyUnitOfWork.Object);
 
             _mockUnitOfWorkProvider
-                .Setup(p => p.CreateWritable())
+                .Setup(x => x.CreateWritable())
                 .Returns(_mockWritableUnitOfWork.Object);
 
             // Setup default mock behaviors for ExerciseTypeService
-            _mockExerciseTypeService
-                .Setup(s => s.AllExistAsync(It.IsAny<IEnumerable<string>>()))
-                .ReturnsAsync(true);
-                
             _mockExerciseTypeService
                 .Setup(s => s.AnyIsRestTypeAsync(It.IsAny<IEnumerable<string>>()))
                 .ReturnsAsync((IEnumerable<string> ids) => 
@@ -67,8 +63,8 @@ namespace GetFitterGetBigger.API.Tests.Services
 
             // Default behavior: all exercise types exist
             _mockExerciseTypeService
-                .Setup(s => s.ExistsAsync(It.IsAny<ExerciseTypeId>()))
-                .ReturnsAsync(ServiceResult<bool>.Success(true));
+                .Setup(s => s.AllExistAsync(It.IsAny<IEnumerable<string>>()))
+                .ReturnsAsync(true);
 
             _service = new ExerciseService(_mockUnitOfWorkProvider.Object, _mockExerciseTypeService.Object);
         }
@@ -78,7 +74,7 @@ namespace GetFitterGetBigger.API.Tests.Services
         {
             // Arrange
             var filterParams = new ExerciseFilterParams
-            {
+                {
                 Page = 1,
                 PageSize = 10,
                 Name = "Press"
@@ -101,16 +97,16 @@ namespace GetFitterGetBigger.API.Tests.Services
 
             _mockExerciseRepository
                 .Setup(r => r.GetPagedAsync(
-                    It.IsAny<int>(), 
-                    It.IsAny<int>(), 
-                    It.IsAny<string>(),
-                    It.IsAny<DifficultyLevelId>(),
-                    It.IsAny<IEnumerable<MuscleGroupId>>(),
-                    It.IsAny<IEnumerable<EquipmentId>>(),
-                    It.IsAny<IEnumerable<MovementPatternId>>(),
-                    It.IsAny<IEnumerable<BodyPartId>>(),
-                    It.IsAny<bool>()))
-                .ReturnsAsync((exercises, 2));
+                     It.IsAny<int>(),
+                     It.IsAny<int>(),
+                     It.IsAny<string>(),
+                     It.IsAny<DifficultyLevelId>(),
+                     It.IsAny<IEnumerable<MuscleGroupId>>(),
+                     It.IsAny<IEnumerable<EquipmentId>>(),
+                     It.IsAny<IEnumerable<MovementPatternId>>(),
+                     It.IsAny<IEnumerable<BodyPartId>>(),
+                     It.IsAny<bool>()))
+                .ReturnsAsync((exercises, exercises.Count));
 
             // Act
             var result = await _service.GetPagedAsync(filterParams.ToCommand());
@@ -174,12 +170,12 @@ namespace GetFitterGetBigger.API.Tests.Services
             var createdExercise = CreateTestExercise("New Exercise", difficultyId, difficulty);
 
             _mockExerciseRepository
-                .Setup(r => r.ExistsAsync(It.IsAny<string>(), It.IsAny<ExerciseId?>()))
-                .ReturnsAsync(false);
-
-            _mockExerciseRepository
                 .Setup(r => r.AddAsync(It.IsAny<Exercise>()))
                 .ReturnsAsync(createdExercise);
+
+            _mockExerciseRepository
+                .Setup(r => r.ExistsAsync(It.IsAny<string>(), It.IsAny<ExerciseId?>()))
+                .ReturnsAsync(false);
 
             // Mock exercise type service to validate all types exist
             _mockExerciseTypeService
@@ -208,7 +204,7 @@ namespace GetFitterGetBigger.API.Tests.Services
                 .Build();
 
             _mockExerciseRepository
-                .Setup(r => r.ExistsAsync(It.IsAny<string>(), It.IsAny<ExerciseId?>()))
+                .Setup(r => r.ExistsAsync("Duplicate Exercise", It.IsAny<ExerciseId?>()))
                 .ReturnsAsync(true);
 
             // Act
@@ -262,20 +258,19 @@ namespace GetFitterGetBigger.API.Tests.Services
             // First call returns existing, second call (after update) returns updated
             var getByIdCallCount = 0;
             _mockExerciseRepository
-                .Setup(r => r.GetByIdAsync(exerciseId))
-                .ReturnsAsync(() => 
-                {
+                .Setup(r => r.GetByIdAsync(It.IsAny<ExerciseId>()))
+                .ReturnsAsync(() => {
                     getByIdCallCount++;
                     return getByIdCallCount == 1 ? existingExerciseWithDifficulty : updatedExerciseWithDifficulty;
                 });
 
             _mockExerciseRepository
-                .Setup(r => r.ExistsAsync(It.IsAny<string>(), It.IsAny<ExerciseId?>()))
-                .ReturnsAsync(false);
+                .Setup(r => r.UpdateAsync(It.IsAny<Exercise>()))
+                .ReturnsAsync((Exercise e) => e);
 
             _mockExerciseRepository
-                .Setup(r => r.UpdateAsync(It.IsAny<Exercise>()))
-                .ReturnsAsync(updatedExerciseWithDifficulty);
+                .Setup(r => r.ExistsAsync(It.IsAny<string>(), It.IsAny<ExerciseId?>()))
+                .ReturnsAsync(false);
 
             // Mock exercise type service to validate all types exist
             _mockExerciseTypeService
@@ -416,12 +411,12 @@ namespace GetFitterGetBigger.API.Tests.Services
             var createdExercise = CreateTestExercise("Workout Exercise", difficultyId, difficulty);
 
             _mockExerciseRepository
-                .Setup(r => r.ExistsAsync(It.IsAny<string>(), It.IsAny<ExerciseId?>()))
-                .ReturnsAsync(false);
+                .Setup(r => r.AddAsync(It.IsAny<Exercise>()))
+                .ReturnsAsync((Exercise e) => e);
 
             _mockExerciseRepository
-                .Setup(r => r.AddAsync(It.IsAny<Exercise>()))
-                .ReturnsAsync(createdExercise);
+                .Setup(r => r.ExistsAsync(It.IsAny<string>(), It.IsAny<ExerciseId?>()))
+                .ReturnsAsync(false);
 
             // Mock non-REST type detection
             _mockExerciseTypeService
@@ -456,12 +451,12 @@ namespace GetFitterGetBigger.API.Tests.Services
             var existingExercise = CreateTestExercise("Rest Exercise", difficultyId, difficulty);
 
             _mockExerciseRepository
-                .Setup(r => r.GetByIdAsync(exerciseId))
+                .Setup(r => r.GetByIdAsync(It.IsAny<ExerciseId>()))
                 .ReturnsAsync(existingExercise);
 
             _mockExerciseRepository
-                .Setup(r => r.ExistsAsync(It.IsAny<string>(), It.IsAny<ExerciseId?>()))
-                .ReturnsAsync(false);
+                .Setup(r => r.UpdateAsync(It.IsAny<Exercise>()))
+                .ReturnsAsync((Exercise e) => e);
 
             // Mock REST type detection
             _mockExerciseTypeService
@@ -498,12 +493,12 @@ namespace GetFitterGetBigger.API.Tests.Services
             var existingExercise = CreateTestExercise("Workout Exercise", difficultyId, difficulty);
 
             _mockExerciseRepository
-                .Setup(r => r.GetByIdAsync(exerciseId))
+                .Setup(r => r.GetByIdAsync(It.IsAny<ExerciseId>()))
                 .ReturnsAsync(existingExercise);
 
             _mockExerciseRepository
-                .Setup(r => r.ExistsAsync(It.IsAny<string>(), It.IsAny<ExerciseId?>()))
-                .ReturnsAsync(false);
+                .Setup(r => r.UpdateAsync(It.IsAny<Exercise>()))
+                .ReturnsAsync((Exercise e) => e);
 
             // Mock non-REST type detection
             _mockExerciseTypeService

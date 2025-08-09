@@ -274,7 +274,9 @@ public class ReferenceTableServiceBaseTests
         protected override Task ValidateCreateAsync(IWritableUnitOfWork<FitnessDbContext> unitOfWork, object createDto)
         {
             if (!_validateCreatePasses)
+            {
                 throw new InvalidOperationException("Validation failed");
+            }
             return Task.CompletedTask;
         }
     }

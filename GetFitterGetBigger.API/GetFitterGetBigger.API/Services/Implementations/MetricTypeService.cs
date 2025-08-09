@@ -4,36 +4,36 @@ using GetFitterGetBigger.API.Models;
 using GetFitterGetBigger.API.Models.Entities;
 using GetFitterGetBigger.API.Models.SpecializedIds;
 using GetFitterGetBigger.API.Repositories.Interfaces;
-using GetFitterGetBigger.API.Services.Base;
-using GetFitterGetBigger.API.Services.Cache;
 using GetFitterGetBigger.API.Services.Interfaces;
 using GetFitterGetBigger.API.Services.Results;
 using GetFitterGetBigger.API.Services.Validation;
-using Microsoft.Extensions.Logging;
 using Olimpo.EntityFramework.Persistency;
 
 namespace GetFitterGetBigger.API.Services.Implementations;
 
 /// <summary>
-/// Service implementation for metric type operations
-/// TEMPORARY: Extends EmptyEnabledPureReferenceService until all entities are migrated
+/// Service implementation for metric_type operations
+/// This service focuses solely on business logic and data access
+/// Caching is handled by the wrapping MetricTypeReferenceService layer
 /// </summary>
-public class MetricTypeService : PureReferenceService<MetricType, ReferenceDataDto>, IMetricTypeService
+public class MetricTypeService(
+    IUnitOfWorkProvider<FitnessDbContext> unitOfWorkProvider,
+    ILogger<MetricTypeService> logger) : IMetricTypeService
 {
-    private const string ValueCacheKeySuffix = "value:";
-    
-    public MetricTypeService(
-        IUnitOfWorkProvider<FitnessDbContext> unitOfWorkProvider,
-        IEternalCacheService cacheService,
-        ILogger<MetricTypeService> logger)
-        : base(unitOfWorkProvider, cacheService, logger)
-    {
-    }
+    private readonly IUnitOfWorkProvider<FitnessDbContext> _unitOfWorkProvider = unitOfWorkProvider;
+    private readonly ILogger<MetricTypeService> _logger = logger;
 
     /// <inheritdoc/>
     public async Task<ServiceResult<IEnumerable<ReferenceDataDto>>> GetAllActiveAsync()
     {
-        return await GetAllAsync();
+        using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
+        var repository = unitOfWork.GetRepository<IMetricTypeRepository>();
+        var entities = await repository.GetAllActiveAsync();
+        
+        var dtos = entities.Select(MapToDto).ToList();
+        
+        _logger.LogInformation("Loaded {Count} active metric_types", dtos.Count);
+        return ServiceResult<IEnumerable<ReferenceDataDto>>.Success(dtos);
     }
 
     /// <inheritdoc/>
@@ -42,8 +42,39 @@ public class MetricTypeService : PureReferenceService<MetricType, ReferenceDataD
         return await ServiceValidate.For<ReferenceDataDto>()
             .EnsureNotEmpty(id, MetricTypeErrorMessages.InvalidIdFormat)
             .MatchAsync(
-                whenValid: async () => await GetByIdAsync(id.ToString())
+                whenValid: async () => await LoadByIdFromDatabaseAsync(id)
             );
+    }
+    
+    /// <summary>
+    /// Gets a metric_type by its ID string
+    /// </summary>
+    /// <param name="id">The metric_type ID as a string</param>
+    /// <returns>A service result containing the metric_type if found</returns>
+    public async Task<ServiceResult<ReferenceDataDto>> GetByIdAsync(string id)
+    {
+        var metric_typeId = MetricTypeId.ParseOrEmpty(id);
+        
+        return await ServiceValidate.For<ReferenceDataDto>()
+            .EnsureNotEmpty(metric_typeId, MetricTypeErrorMessages.InvalidIdFormat)
+            .MatchAsync(
+                whenValid: async () => await LoadByIdFromDatabaseAsync(metric_typeId)
+            );
+    }
+    
+    private async Task<ServiceResult<ReferenceDataDto>> LoadByIdFromDatabaseAsync(MetricTypeId id)
+    {
+        using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
+        var repository = unitOfWork.GetRepository<IMetricTypeRepository>();
+        var entity = await repository.GetByIdAsync(id);
+        
+        return (entity.IsEmpty || !entity.IsActive) switch
+        {
+            true => ServiceResult<ReferenceDataDto>.Failure(
+                ReferenceDataDto.Empty,
+                ServiceError.NotFound("MetricType", id.ToString())),
+            false => ServiceResult<ReferenceDataDto>.Success(MapToDto(entity))
+        };
     }
     
     /// <inheritdoc/>
@@ -52,58 +83,23 @@ public class MetricTypeService : PureReferenceService<MetricType, ReferenceDataD
         return await ServiceValidate.For<ReferenceDataDto>()
             .EnsureNotWhiteSpace(value, MetricTypeErrorMessages.ValueCannotBeEmpty)
             .MatchAsync(
-                whenValid: async () => await GetFromCacheOrLoadAsync(
-                    GetValueCacheKey(value),
-                    () => LoadByValueAsync(value),
-                    value)
-            );
-    }
-
-    private string GetValueCacheKey(string value) => $"{GetCacheKeyPrefix()}{ValueCacheKeySuffix}{value}";
-    
-    private async Task<ServiceResult<ReferenceDataDto>> GetFromCacheOrLoadAsync(
-        string cacheKey, 
-        Func<Task<MetricType>> loadFunc,
-        string identifier)
-    {
-        var cacheService = (IEternalCacheService)_cacheService;
-        
-        return await CacheLoad.For<ReferenceDataDto>(cacheService, cacheKey)
-            .WithLogging(_logger, "MetricType")
-            .MatchAsync(
-                onHit: cached => ServiceResult<ReferenceDataDto>.Success(cached),
-                onMiss: async () => await LoadAndProcessEntity(loadFunc, cacheKey, identifier)
+                whenValid: async () => await LoadByValueFromDatabaseAsync(value)
             );
     }
     
-    private async Task<ServiceResult<ReferenceDataDto>> LoadAndProcessEntity(
-        Func<Task<MetricType>> loadFunc,
-        string cacheKey,
-        string identifier)
-    {
-        var entity = await loadFunc();
-        
-        return entity switch
-        {
-            { IsEmpty: true } or { IsActive: false } => ServiceResult<ReferenceDataDto>.Failure(
-                ReferenceDataDto.Empty, 
-                ServiceError.NotFound(MetricTypeErrorMessages.NotFound, identifier)),
-            _ => await CacheAndReturnSuccessAsync(cacheKey, MapToDto(entity))
-        };
-    }
-    
-    private async Task<ServiceResult<ReferenceDataDto>> CacheAndReturnSuccessAsync(string cacheKey, ReferenceDataDto dto)
-    {
-        var cacheService = (IEternalCacheService)_cacheService;
-        await cacheService.SetAsync(cacheKey, dto);
-        return ServiceResult<ReferenceDataDto>.Success(dto);
-    }
-    
-    private async Task<MetricType> LoadByValueAsync(string value)
+    private async Task<ServiceResult<ReferenceDataDto>> LoadByValueFromDatabaseAsync(string value)
     {
         using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
         var repository = unitOfWork.GetRepository<IMetricTypeRepository>();
-        return await repository.GetByValueAsync(value);
+        var entity = await repository.GetByValueAsync(value);
+        
+        return (entity.IsEmpty || !entity.IsActive) switch
+        {
+            true => ServiceResult<ReferenceDataDto>.Failure(
+                ReferenceDataDto.Empty,
+                ServiceError.NotFound("MetricType", value)),
+            false => ServiceResult<ReferenceDataDto>.Success(MapToDto(entity))
+        };
     }
 
     /// <inheritdoc/>
@@ -120,58 +116,17 @@ public class MetricTypeService : PureReferenceService<MetricType, ReferenceDataD
             });
     }
     
-    protected override async Task<IEnumerable<MetricType>> LoadAllEntitiesAsync()
-    {
-        using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
-        var repository = unitOfWork.GetRepository<IMetricTypeRepository>();
-        return await repository.GetAllActiveAsync();
-    }
-    
-    /// <inheritdoc/>
-    protected override async Task<ServiceResult<MetricType>> LoadEntityByIdAsync(string id)
-    {
-        var metricTypeId = MetricTypeId.ParseOrEmpty(id);
-        
-        return await ServiceValidate.For<MetricType>()
-            .EnsureNotEmpty(metricTypeId, MetricTypeErrorMessages.InvalidIdFormat)
-            .Match(
-                whenValid: async () => await LoadEntityFromRepository(metricTypeId),
-                whenInvalid: errors => ServiceResult<MetricType>.Failure(
-                    MetricType.Empty,
-                    ServiceError.ValidationFailed(errors.FirstOrDefault() ?? "Invalid ID format"))
-            );
-    }
-    
-    private async Task<ServiceResult<MetricType>> LoadEntityFromRepository(MetricTypeId id)
-    {
-        using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
-        var repository = unitOfWork.GetRepository<IMetricTypeRepository>();
-        var entity = await repository.GetByIdAsync(id);
-        
-        return entity switch
-        {
-            { IsEmpty: true } => ServiceResult<MetricType>.Failure(
-                MetricType.Empty, 
-                ServiceError.NotFound("MetricType")),
-            _ => ServiceResult<MetricType>.Success(entity)
-        };
-    }
-    
-    protected override ReferenceDataDto MapToDto(MetricType entity)
+    /// <summary>
+    /// Maps a MetricType entity to its DTO representation
+    /// Entity stays within the service layer - only DTO is exposed
+    /// </summary>
+    private ReferenceDataDto MapToDto(MetricType entity)
     {
         return new ReferenceDataDto
         {
-            Id = entity.Id,
+            Id = entity.MetricTypeId.ToString(),
             Value = entity.Value,
             Description = entity.Description
         };
-    }
-    
-    
-    protected override ValidationResult ValidateAndParseId(string id)
-    {
-        return ServiceValidate.For()
-            .EnsureNotWhiteSpace(id, MetricTypeErrorMessages.IdCannotBeEmpty)
-            .ToResult();
     }
 }

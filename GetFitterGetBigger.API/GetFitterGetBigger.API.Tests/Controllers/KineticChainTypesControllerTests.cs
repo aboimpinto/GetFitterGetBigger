@@ -72,7 +72,7 @@ public class KineticChainTypesControllerTests
     {
         // Arrange
         var kineticChainType = new ReferenceDataDto
-        {
+            {
             Id = TestIds.KineticChainTypeIds.Compound,
             Value = "COMPOUND",
             Description = "Multi-joint movement engaging multiple muscle groups"
@@ -129,7 +129,7 @@ public class KineticChainTypesControllerTests
     {
         // Arrange
         var kineticChainType = new ReferenceDataDto
-        {
+            {
             Id = TestIds.KineticChainTypeIds.Compound,
             Value = "COMPOUND",
             Description = "Multi-joint movement engaging multiple muscle groups"

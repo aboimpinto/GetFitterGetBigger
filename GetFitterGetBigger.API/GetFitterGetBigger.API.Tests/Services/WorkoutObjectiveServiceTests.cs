@@ -20,7 +20,6 @@ namespace GetFitterGetBigger.API.Tests.Services;
 public class WorkoutObjectiveServiceTests
 {
     private readonly Mock<IUnitOfWorkProvider<FitnessDbContext>> _unitOfWorkProviderMock;
-    private readonly Mock<IEternalCacheService> _cacheServiceMock;
     private readonly Mock<ILogger<WorkoutObjectiveService>> _loggerMock;
     private readonly Mock<IReadOnlyUnitOfWork<FitnessDbContext>> _unitOfWorkMock;
     private readonly Mock<IWorkoutObjectiveRepository> _repositoryMock;
@@ -29,7 +28,6 @@ public class WorkoutObjectiveServiceTests
     public WorkoutObjectiveServiceTests()
     {
         _unitOfWorkProviderMock = new Mock<IUnitOfWorkProvider<FitnessDbContext>>();
-        _cacheServiceMock = new Mock<IEternalCacheService>();
         _loggerMock = new Mock<ILogger<WorkoutObjectiveService>>();
         _unitOfWorkMock = new Mock<IReadOnlyUnitOfWork<FitnessDbContext>>();
         _repositoryMock = new Mock<IWorkoutObjectiveRepository>();
@@ -42,7 +40,6 @@ public class WorkoutObjectiveServiceTests
 
         _service = new WorkoutObjectiveService(
             _unitOfWorkProviderMock.Object,
-            _cacheServiceMock.Object,
             _loggerMock.Object);
     }
 
@@ -64,7 +61,6 @@ public class WorkoutObjectiveServiceTests
         // Act
         var result = await _service.GetByIdAsync(workoutObjectiveId);
 
-        // Assert
         Assert.True(result.IsSuccess);
         Assert.NotNull(result.Data);
         Assert.Equal(workoutObjectiveId.ToString(), result.Data.Id);
@@ -80,7 +76,6 @@ public class WorkoutObjectiveServiceTests
         // Act
         var result = await _service.GetByIdAsync(emptyId);
 
-        // Assert
         Assert.False(result.IsSuccess);
         Assert.Equal(ServiceErrorCode.ValidationFailed, result.PrimaryErrorCode);
     }
@@ -111,7 +106,6 @@ public class WorkoutObjectiveServiceTests
         // Act
         var result = await _service.GetAllActiveAsync();
 
-        // Assert
         Assert.True(result.IsSuccess);
         Assert.Equal(2, result.Data.Count());
         Assert.All(result.Data, x => Assert.False(string.IsNullOrEmpty(x.Value)));

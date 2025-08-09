@@ -24,7 +24,7 @@ public class WorkoutObjectiveDtoTests
     {
         // Arrange & Act
         var dto = new WorkoutObjectiveDto
-        {
+            {
             WorkoutObjectiveId = "workoutobjective-123e4567-e89b-12d3-a456-426614174000",
             Value = "Muscular Strength",
             Description = "Focus on building maximum strength and power",
@@ -45,7 +45,7 @@ public class WorkoutObjectiveDtoTests
     {
         // Arrange & Act
         var dto = new WorkoutObjectiveDto
-        {
+            {
             WorkoutObjectiveId = "workoutobjective-123e4567-e89b-12d3-a456-426614174000",
             Value = "Endurance",
             DisplayOrder = 2,
@@ -73,14 +73,14 @@ public class WorkoutObjectiveDtoTests
         // Arrange
         var response = new WorkoutObjectivesResponseDto();
         var objective1 = new WorkoutObjectiveDto
-        {
+            {
             WorkoutObjectiveId = "workoutobjective-123e4567-e89b-12d3-a456-426614174000",
             Value = "Strength",
             DisplayOrder = 1,
             IsActive = true
         };
         var objective2 = new WorkoutObjectiveDto
-        {
+            {
             WorkoutObjectiveId = "workoutobjective-223e4567-e89b-12d3-a456-426614174000",
             Value = "Hypertrophy",
             DisplayOrder = 2,

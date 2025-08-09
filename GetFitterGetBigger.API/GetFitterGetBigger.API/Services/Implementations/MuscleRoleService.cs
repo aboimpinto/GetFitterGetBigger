@@ -3,35 +3,37 @@ using GetFitterGetBigger.API.DTOs;
 using GetFitterGetBigger.API.Models;
 using GetFitterGetBigger.API.Models.Entities;
 using GetFitterGetBigger.API.Models.SpecializedIds;
-using GetFitterGetBigger.API.Models.Validation;
 using GetFitterGetBigger.API.Repositories.Interfaces;
-using GetFitterGetBigger.API.Services.Base;
-using GetFitterGetBigger.API.Services.Cache;
 using GetFitterGetBigger.API.Services.Interfaces;
 using GetFitterGetBigger.API.Services.Results;
 using GetFitterGetBigger.API.Services.Validation;
-using Microsoft.Extensions.Logging;
 using Olimpo.EntityFramework.Persistency;
 
 namespace GetFitterGetBigger.API.Services.Implementations;
 
 /// <summary>
-/// Service implementation for muscle role operations
+/// Service implementation for muscle_role operations
+/// This service focuses solely on business logic and data access
+/// Caching is handled by the wrapping MuscleRoleReferenceService layer
 /// </summary>
-public class MuscleRoleService : PureReferenceService<MuscleRole, ReferenceDataDto>, IMuscleRoleService
+public class MuscleRoleService(
+    IUnitOfWorkProvider<FitnessDbContext> unitOfWorkProvider,
+    ILogger<MuscleRoleService> logger) : IMuscleRoleService
 {
-    public MuscleRoleService(
-        IUnitOfWorkProvider<FitnessDbContext> unitOfWorkProvider,
-        IEternalCacheService cacheService,
-        ILogger<MuscleRoleService> logger)
-        : base(unitOfWorkProvider, cacheService, logger)
-    {
-    }
+    private readonly IUnitOfWorkProvider<FitnessDbContext> _unitOfWorkProvider = unitOfWorkProvider;
+    private readonly ILogger<MuscleRoleService> _logger = logger;
 
     /// <inheritdoc/>
     public async Task<ServiceResult<IEnumerable<ReferenceDataDto>>> GetAllActiveAsync()
     {
-        return await GetAllAsync();
+        using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
+        var repository = unitOfWork.GetRepository<IMuscleRoleRepository>();
+        var entities = await repository.GetAllActiveAsync();
+        
+        var dtos = entities.Select(MapToDto).ToList();
+        
+        _logger.LogInformation("Loaded {Count} active muscle_roles", dtos.Count);
+        return ServiceResult<IEnumerable<ReferenceDataDto>>.Success(dtos);
     }
 
     /// <inheritdoc/>
@@ -40,8 +42,39 @@ public class MuscleRoleService : PureReferenceService<MuscleRole, ReferenceDataD
         return await ServiceValidate.For<ReferenceDataDto>()
             .EnsureNotEmpty(id, MuscleRoleErrorMessages.InvalidIdFormat)
             .MatchAsync(
-                whenValid: async () => await GetByIdAsync(id.ToString())
+                whenValid: async () => await LoadByIdFromDatabaseAsync(id)
             );
+    }
+    
+    /// <summary>
+    /// Gets a muscle_role by its ID string
+    /// </summary>
+    /// <param name="id">The muscle_role ID as a string</param>
+    /// <returns>A service result containing the muscle_role if found</returns>
+    public async Task<ServiceResult<ReferenceDataDto>> GetByIdAsync(string id)
+    {
+        var muscle_roleId = MuscleRoleId.ParseOrEmpty(id);
+        
+        return await ServiceValidate.For<ReferenceDataDto>()
+            .EnsureNotEmpty(muscle_roleId, MuscleRoleErrorMessages.InvalidIdFormat)
+            .MatchAsync(
+                whenValid: async () => await LoadByIdFromDatabaseAsync(muscle_roleId)
+            );
+    }
+    
+    private async Task<ServiceResult<ReferenceDataDto>> LoadByIdFromDatabaseAsync(MuscleRoleId id)
+    {
+        using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
+        var repository = unitOfWork.GetRepository<IMuscleRoleRepository>();
+        var entity = await repository.GetByIdAsync(id);
+        
+        return (entity.IsEmpty || !entity.IsActive) switch
+        {
+            true => ServiceResult<ReferenceDataDto>.Failure(
+                ReferenceDataDto.Empty,
+                ServiceError.NotFound("MuscleRole", id.ToString())),
+            false => ServiceResult<ReferenceDataDto>.Success(MapToDto(entity))
+        };
     }
     
     /// <inheritdoc/>
@@ -50,60 +83,25 @@ public class MuscleRoleService : PureReferenceService<MuscleRole, ReferenceDataD
         return await ServiceValidate.For<ReferenceDataDto>()
             .EnsureNotWhiteSpace(value, MuscleRoleErrorMessages.ValueCannotBeEmpty)
             .MatchAsync(
-                whenValid: async () => await GetFromCacheOrLoadAsync(
-                    GetValueCacheKey(value),
-                    () => LoadByValueAsync(value),
-                    value)
-            );
-    }
-
-    private string GetValueCacheKey(string value) => $"{GetCacheKeyPrefix()}value:{value}";
-    
-    private async Task<ServiceResult<ReferenceDataDto>> GetFromCacheOrLoadAsync(
-        string cacheKey, 
-        Func<Task<MuscleRole>> loadFunc,
-        string identifier)
-    {
-        var cacheService = (IEternalCacheService)_cacheService;
-        
-        return await CacheLoad.For<ReferenceDataDto>(cacheService, cacheKey)
-            .WithLogging(_logger, "MuscleRole")
-            .MatchAsync(
-                onHit: cached => ServiceResult<ReferenceDataDto>.Success(cached),
-                onMiss: async () => await LoadAndProcessEntity(loadFunc, cacheKey, identifier)
+                whenValid: async () => await LoadByValueFromDatabaseAsync(value)
             );
     }
     
-    private async Task<ServiceResult<ReferenceDataDto>> LoadAndProcessEntity(
-        Func<Task<MuscleRole>> loadFunc,
-        string cacheKey,
-        string identifier)
-    {
-        var entity = await loadFunc();
-        
-        return entity switch
-        {
-            { IsEmpty: true } or { IsActive: false } => ServiceResult<ReferenceDataDto>.Failure(
-                ReferenceDataDto.Empty, 
-                ServiceError.NotFound(MuscleRoleErrorMessages.NotFound, identifier)),
-            _ => await CacheAndReturnSuccessAsync(cacheKey, MapToDto(entity))
-        };
-    }
-    
-    private async Task<ServiceResult<ReferenceDataDto>> CacheAndReturnSuccessAsync(string cacheKey, ReferenceDataDto dto)
-    {
-        var cacheService = (IEternalCacheService)_cacheService;
-        await cacheService.SetAsync(cacheKey, dto);
-        return ServiceResult<ReferenceDataDto>.Success(dto);
-    }
-
-    private async Task<MuscleRole> LoadByValueAsync(string value)
+    private async Task<ServiceResult<ReferenceDataDto>> LoadByValueFromDatabaseAsync(string value)
     {
         using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
         var repository = unitOfWork.GetRepository<IMuscleRoleRepository>();
-        return await repository.GetByValueAsync(value);
+        var entity = await repository.GetByValueAsync(value);
+        
+        return (entity.IsEmpty || !entity.IsActive) switch
+        {
+            true => ServiceResult<ReferenceDataDto>.Failure(
+                ReferenceDataDto.Empty,
+                ServiceError.NotFound("MuscleRole", value)),
+            false => ServiceResult<ReferenceDataDto>.Success(MapToDto(entity))
+        };
     }
-    
+
     /// <inheritdoc/>
     public async Task<ServiceResult<bool>> ExistsAsync(MuscleRoleId id)
     {
@@ -117,62 +115,18 @@ public class MuscleRoleService : PureReferenceService<MuscleRole, ReferenceDataD
                 return ServiceResult<bool>.Success(exists);
             });
     }
-
-    /// <inheritdoc/>
-    protected override async Task<ServiceResult<MuscleRole>> LoadEntityByIdAsync(string id)
-    {
-        var muscleRoleId = MuscleRoleId.ParseOrEmpty(id);
-        
-        return await ServiceValidate.For<MuscleRole>()
-            .EnsureNotEmpty(muscleRoleId, MuscleRoleErrorMessages.InvalidIdFormat)
-            .Match(
-                whenValid: async () => await LoadEntityFromRepository(muscleRoleId),
-                whenInvalid: errors => ServiceResult<MuscleRole>.Failure(
-                    MuscleRole.Empty,
-                    ServiceError.ValidationFailed(errors.FirstOrDefault() ?? "Invalid ID format"))
-            );
-    }
     
-    private async Task<ServiceResult<MuscleRole>> LoadEntityFromRepository(MuscleRoleId id)
+    /// <summary>
+    /// Maps a MuscleRole entity to its DTO representation
+    /// Entity stays within the service layer - only DTO is exposed
+    /// </summary>
+    private ReferenceDataDto MapToDto(MuscleRole entity)
     {
-        using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
-        var repository = unitOfWork.GetRepository<IMuscleRoleRepository>();
-        var entity = await repository.GetByIdAsync(id);
-        
-        return entity switch
+        return new ReferenceDataDto
         {
-            { IsEmpty: true } => ServiceResult<MuscleRole>.Failure(
-                MuscleRole.Empty, 
-                ServiceError.NotFound("MuscleRole")),
-            _ => ServiceResult<MuscleRole>.Success(entity)
-        };
-    }
-
-    /// <inheritdoc/>
-    protected override async Task<IEnumerable<MuscleRole>> LoadAllEntitiesAsync()
-    {
-        using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
-        var repository = unitOfWork.GetRepository<IMuscleRoleRepository>();
-        return await repository.GetAllActiveAsync();
-    }
-
-    /// <inheritdoc/>
-    protected override ValidationResult ValidateAndParseId(string id)
-    {
-        var parsedId = MuscleRoleId.ParseOrEmpty(id);
-        return ServiceValidate.For()
-            .EnsureNotEmpty(parsedId, MuscleRoleErrorMessages.InvalidIdFormat)
-            .ToResult();
-    }
-
-    /// <inheritdoc/>
-    protected override ReferenceDataDto MapToDto(MuscleRole entity) =>
-        new()
-        {
-            Id = entity.Id,
+            Id = entity.MuscleRoleId.ToString(),
             Value = entity.Value,
             Description = entity.Description
         };
-
-    protected override string GetCacheKeyPrefix() => "musclerole:";
+    }
 }

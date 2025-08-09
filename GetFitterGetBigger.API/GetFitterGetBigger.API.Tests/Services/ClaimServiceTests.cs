@@ -39,8 +39,7 @@ namespace GetFitterGetBigger.API.Tests.Services
 
             _mockClaimRepository
                 .Setup(x => x.AddClaimAsync(It.IsAny<Claim>()))
-                .Callback<Claim>(c => capturedClaim = c)
-                .ReturnsAsync((Claim c) => c);
+                .Callback<Claim>(c => capturedClaim = c);
 
             // Act
             var claimId = await _claimService.CreateUserClaimAsync(userId, claimType, _mockUnitOfWork.Object);
@@ -70,8 +69,7 @@ namespace GetFitterGetBigger.API.Tests.Services
 
                 _mockClaimRepository
                     .Setup(x => x.AddClaimAsync(It.IsAny<Claim>()))
-                    .Callback<Claim>(c => capturedClaim = c)
-                    .ReturnsAsync((Claim c) => c);
+                    .Callback<Claim>(c => capturedClaim = c);
 
                 // Act
                 var claimId = await _claimService.CreateUserClaimAsync(userId, claimType, _mockUnitOfWork.Object);
@@ -93,8 +91,7 @@ namespace GetFitterGetBigger.API.Tests.Services
 
             _mockClaimRepository
                 .Setup(x => x.AddClaimAsync(It.IsAny<Claim>()))
-                .Callback<Claim>(c => capturedClaims.Add(c))
-                .ReturnsAsync((Claim c) => c);
+                .Callback<Claim>(c => capturedClaims.Add(c));
 
             // Act
             var claimId1 = await _claimService.CreateUserClaimAsync(userId, claimType, _mockUnitOfWork.Object);

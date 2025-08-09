@@ -23,7 +23,6 @@ namespace GetFitterGetBigger.API.Tests.Services
         private readonly Mock<IUnitOfWorkProvider<FitnessDbContext>> _mockUnitOfWorkProvider;
         private readonly Mock<IReadOnlyUnitOfWork<FitnessDbContext>> _mockReadOnlyUnitOfWork;
         private readonly Mock<IBodyPartRepository> _mockBodyPartRepository;
-        private readonly Mock<IEternalCacheService> _mockCacheService;
         private readonly Mock<ILogger<BodyPartService>> _mockLogger;
         private readonly BodyPartService _bodyPartService;
 
@@ -32,7 +31,6 @@ namespace GetFitterGetBigger.API.Tests.Services
             _mockUnitOfWorkProvider = new Mock<IUnitOfWorkProvider<FitnessDbContext>>();
             _mockReadOnlyUnitOfWork = new Mock<IReadOnlyUnitOfWork<FitnessDbContext>>();
             _mockBodyPartRepository = new Mock<IBodyPartRepository>();
-            _mockCacheService = new Mock<IEternalCacheService>();
             _mockLogger = new Mock<ILogger<BodyPartService>>();
 
             _mockUnitOfWorkProvider
@@ -45,7 +43,6 @@ namespace GetFitterGetBigger.API.Tests.Services
 
             _bodyPartService = new BodyPartService(
                 _mockUnitOfWorkProvider.Object,
-                _mockCacheService.Object,
                 _mockLogger.Object);
         }
 
@@ -55,13 +52,10 @@ namespace GetFitterGetBigger.API.Tests.Services
             // Arrange
             var bodyPartId = BodyPartId.New();
 
-            _mockCacheService
-                .Setup(x => x.GetAsync<BodyPartDto>(It.IsAny<string>()))
-                .ReturnsAsync(CacheResult<BodyPartDto>.Miss());
 
             _mockBodyPartRepository
-                .Setup(x => x.ExistsAsync(It.IsAny<BodyPartId>()))
-                .ReturnsAsync(true);
+                .Setup(x => x.GetAllActiveAsync())
+                .ReturnsAsync(new List<BodyPart>());
 
             // Act
             var result = await _bodyPartService.ExistsAsync(bodyPartId);
@@ -79,13 +73,10 @@ namespace GetFitterGetBigger.API.Tests.Services
             // Arrange
             var bodyPartId = BodyPartId.New();
 
-            _mockCacheService
-                .Setup(x => x.GetAsync<BodyPartDto>(It.IsAny<string>()))
-                .ReturnsAsync(CacheResult<BodyPartDto>.Miss());
 
             _mockBodyPartRepository
-                .Setup(x => x.ExistsAsync(It.IsAny<BodyPartId>()))
-                .ReturnsAsync(false);
+                .Setup(x => x.GetAllActiveAsync())
+                .ReturnsAsync(new List<BodyPart>());
 
             // Act
             var result = await _bodyPartService.ExistsAsync(bodyPartId);
@@ -105,8 +96,8 @@ namespace GetFitterGetBigger.API.Tests.Services
             var bodyPartIdString = bodyPartId.ToString();
 
             _mockBodyPartRepository
-                .Setup(x => x.ExistsAsync(It.IsAny<BodyPartId>()))
-                .ReturnsAsync(true);
+                .Setup(x => x.GetAllActiveAsync())
+                .ReturnsAsync(new List<BodyPart>());
 
             // Act
             var result = await _bodyPartService.ExistsAsync(BodyPartId.ParseOrEmpty(bodyPartIdString));
@@ -128,17 +119,11 @@ namespace GetFitterGetBigger.API.Tests.Services
                 BodyPart.Handler.Create(BodyPartId.New(), "Back", "Back muscles", 2, true).Value
             };
 
-            _mockCacheService
-                .Setup(x => x.GetAsync<IEnumerable<BodyPartDto>>(It.IsAny<string>()))
-                .ReturnsAsync(CacheResult<IEnumerable<BodyPartDto>>.Miss());
 
             _mockBodyPartRepository
                 .Setup(x => x.GetAllActiveAsync())
-                .ReturnsAsync(bodyParts);
+                .ReturnsAsync(new List<BodyPart>());
 
-            _mockCacheService
-                .Setup(x => x.SetAsync(It.IsAny<string>(), It.IsAny<IEnumerable<BodyPartDto>>()))
-                .Returns(Task.CompletedTask);
 
             // Act
             var result = await _bodyPartService.GetAllActiveAsync();
@@ -164,17 +149,11 @@ namespace GetFitterGetBigger.API.Tests.Services
                 1,
                 true).Value;
 
-            _mockCacheService
-                .Setup(x => x.GetAsync<BodyPartDto>(It.IsAny<string>()))
-                .ReturnsAsync(CacheResult<BodyPartDto>.Miss());
 
             _mockBodyPartRepository
-                .Setup(x => x.GetByIdAsync(bodyPartId))
-                .ReturnsAsync(bodyPart);
+                .Setup(x => x.GetAllActiveAsync())
+                .ReturnsAsync(new List<BodyPart>());
 
-            _mockCacheService
-                .Setup(x => x.SetAsync(It.IsAny<string>(), It.IsAny<BodyPartDto>()))
-                .Returns(Task.CompletedTask);
 
             // Act
             var result = await _bodyPartService.GetByIdAsync(bodyPartIdString);
@@ -199,17 +178,11 @@ namespace GetFitterGetBigger.API.Tests.Services
                 2,
                 true).Value;
 
-            _mockCacheService
-                .Setup(x => x.GetAsync<BodyPartDto>(It.IsAny<string>()))
-                .ReturnsAsync(CacheResult<BodyPartDto>.Miss());
 
             _mockBodyPartRepository
-                .Setup(x => x.GetByIdAsync(bodyPartId))
-                .ReturnsAsync(bodyPart);
+                .Setup(x => x.GetAllActiveAsync())
+                .ReturnsAsync(new List<BodyPart>());
 
-            _mockCacheService
-                .Setup(x => x.SetAsync(It.IsAny<string>(), It.IsAny<BodyPartDto>()))
-                .Returns(Task.CompletedTask);
 
             // Act
             var result = await _bodyPartService.GetByIdAsync(bodyPartId);
@@ -289,13 +262,10 @@ namespace GetFitterGetBigger.API.Tests.Services
                 1,
                 false).Value; // IsActive = false
 
-            _mockCacheService
-                .Setup(x => x.GetAsync<BodyPartDto>(It.IsAny<string>()))
-                .ReturnsAsync(CacheResult<BodyPartDto>.Miss());
 
             _mockBodyPartRepository
-                .Setup(x => x.GetByIdAsync(bodyPartId))
-                .ReturnsAsync(inactiveBodyPart);
+                .Setup(x => x.GetAllActiveAsync())
+                .ReturnsAsync(new List<BodyPart>());
 
             // Act
             var result = await _bodyPartService.GetByIdAsync(bodyPartId.ToString());
@@ -321,17 +291,11 @@ namespace GetFitterGetBigger.API.Tests.Services
                 1,
                 true).Value;
 
-            _mockCacheService
-                .Setup(x => x.GetAsync<BodyPartDto>(It.IsAny<string>()))
-                .ReturnsAsync(CacheResult<BodyPartDto>.Miss());
 
             _mockBodyPartRepository
-                .Setup(x => x.GetByValueAsync(value))
-                .ReturnsAsync(bodyPart);
+                .Setup(x => x.GetAllActiveAsync())
+                .ReturnsAsync(new List<BodyPart>());
 
-            _mockCacheService
-                .Setup(x => x.SetAsync(It.IsAny<string>(), It.IsAny<BodyPartDto>()))
-                .Returns(Task.CompletedTask);
 
             // Act
             var result = await _bodyPartService.GetByValueAsync(value);
@@ -349,13 +313,10 @@ namespace GetFitterGetBigger.API.Tests.Services
             // Arrange
             var value = "NonExistent";
 
-            _mockCacheService
-                .Setup(x => x.GetAsync<BodyPartDto>(It.IsAny<string>()))
-                .ReturnsAsync(CacheResult<BodyPartDto>.Miss());
 
             _mockBodyPartRepository
-                .Setup(x => x.GetByValueAsync(value))
-                .ReturnsAsync(BodyPart.Empty);
+                .Setup(x => x.GetAllActiveAsync())
+                .ReturnsAsync(new List<BodyPart>());
 
             // Act
             var result = await _bodyPartService.GetByValueAsync(value);
@@ -379,13 +340,10 @@ namespace GetFitterGetBigger.API.Tests.Services
                 1,
                 false).Value; // IsActive = false
 
-            _mockCacheService
-                .Setup(x => x.GetAsync<BodyPartDto>(It.IsAny<string>()))
-                .ReturnsAsync(CacheResult<BodyPartDto>.Miss());
 
             _mockBodyPartRepository
-                .Setup(x => x.GetByValueAsync(value))
-                .ReturnsAsync(inactiveBodyPart);
+                .Setup(x => x.GetAllActiveAsync())
+                .ReturnsAsync(new List<BodyPart>());
 
             // Act
             var result = await _bodyPartService.GetByValueAsync(value);

@@ -13,7 +13,7 @@ public class UpdateExerciseRequestValidationTests
     {
         // Arrange
         var request = new UpdateExerciseRequest
-        {
+            {
             Name = "Rest Period",
             Description = "Recovery time",
             DifficultyId = "difficulty-beginner-123",
@@ -33,7 +33,7 @@ public class UpdateExerciseRequestValidationTests
     {
         // Arrange - DTO validation no longer checks muscle groups (moved to service layer)
         var request = new UpdateExerciseRequest
-        {
+            {
             Name = "Push Up",
             Description = "Upper body exercise",
             DifficultyId = "difficulty-beginner-123",
@@ -53,7 +53,7 @@ public class UpdateExerciseRequestValidationTests
     {
         // Arrange
         var request = new UpdateExerciseRequest
-        {
+            {
             Name = "Push Up",
             Description = "Upper body exercise",
             DifficultyId = "difficulty-beginner-123",
@@ -100,7 +100,7 @@ public class UpdateExerciseRequestValidationTests
     {
         // Arrange - DTO validation no longer checks muscle groups (moved to service layer)
         var request = new UpdateExerciseRequest
-        {
+            {
             Name = "Some Exercise",
             Description = "Some exercise description",
             DifficultyId = "difficulty-beginner-123",

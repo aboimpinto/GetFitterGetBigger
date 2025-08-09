@@ -57,4 +57,40 @@ public static class ServiceValidationExtensions
         // If no errors, execute the valid function
         return whenValid();
     }
+    
+    /// <summary>
+    /// Validates using a method that returns ValidationResult.
+    /// This allows delegating validation logic to specialized methods that already return
+    /// ValidationResult with appropriate error messages.
+    /// </summary>
+    /// <typeparam name="T">The DTO type that implements IEmptyDto</typeparam>
+    /// <param name="validation">The validation instance</param>
+    /// <param name="validationFunc">Function that performs validation and returns ValidationResult</param>
+    /// <returns>The validation instance for chaining</returns>
+    public static ServiceValidation<T> ValidateWith<T>(
+        this ServiceValidation<T> validation,
+        Func<ValidationResult> validationFunc)
+        where T : class, IEmptyDto<T>
+    {
+        var result = validationFunc();
+        
+        if (!result.IsValid)
+        {
+            // If there's a ServiceError, use it
+            if (result.ServiceError != null)
+            {
+                validation.Ensure(() => false, result.ServiceError);
+            }
+            // Otherwise use the error messages
+            else if (result.Errors.Any())
+            {
+                foreach (var error in result.Errors)
+                {
+                    validation.Ensure(() => false, error);
+                }
+            }
+        }
+        
+        return validation;
+    }
 }

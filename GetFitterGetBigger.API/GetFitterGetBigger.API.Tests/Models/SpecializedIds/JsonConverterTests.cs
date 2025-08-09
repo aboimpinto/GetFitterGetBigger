@@ -160,7 +160,7 @@ public class JsonConverterTests
     {
         // Arrange
         var testObject = new TestObjectWithIds
-        {
+            {
             ClaimId = ClaimId.New(),
             UserId = UserId.New(),
             Name = "Test Object"
@@ -186,7 +186,7 @@ public class JsonConverterTests
     {
         // Arrange
         var testObject = new TestObjectWithNullableIds
-        {
+            {
             ClaimId = null,
             UserId = UserId.New(),
             Name = "Test"

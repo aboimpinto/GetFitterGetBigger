@@ -109,7 +109,7 @@ namespace GetFitterGetBigger.API.Tests.Repositories
             var claimId = ClaimId.New();
             var userId = UserId.New();
             var claim = new Claim
-            {
+                {
                 Id = claimId,
                 UserId = userId,
                 ClaimType = "Free-Tier",
@@ -136,7 +136,7 @@ namespace GetFitterGetBigger.API.Tests.Repositories
         {
             // Arrange
             var claim = new Claim
-            {
+                {
                 Id = ClaimId.New(),
                 UserId = UserId.New(),
                 ClaimType = "Test-Tier"
@@ -164,7 +164,7 @@ namespace GetFitterGetBigger.API.Tests.Repositories
             var expirationDate = DateTime.UtcNow.AddDays(90);
             
             var claim = new Claim
-            {
+                {
                 Id = ClaimId.New(),
                 UserId = userId,
                 ClaimType = "Special-Access",

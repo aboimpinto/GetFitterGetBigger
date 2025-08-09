@@ -458,6 +458,114 @@ private async Task<ServiceResult<WorkoutStateDto>> ProcessUncachedEntity(Workout
 - Lowers cyclomatic complexity
 - More readable and maintainable
 
+### 5. **Primary Constructors and Dependency Injection** 🚨 NEW
+**Use C# 12 primary constructors for cleaner service and repository implementations:**
+
+```csharp
+// ❌ OLD STYLE - Traditional constructor with null validation
+public class BodyPartService : IBodyPartService
+{
+    private readonly IUnitOfWorkProvider<FitnessDbContext> _unitOfWorkProvider;
+    private readonly ILogger<BodyPartService> _logger;
+    
+    public BodyPartService(
+        IUnitOfWorkProvider<FitnessDbContext> unitOfWorkProvider,
+        ILogger<BodyPartService> logger)
+    {
+        // UNNECESSARY with DI - framework ensures non-null
+        ArgumentNullException.ThrowIfNull(unitOfWorkProvider);
+        ArgumentNullException.ThrowIfNull(logger);
+        
+        _unitOfWorkProvider = unitOfWorkProvider;
+        _logger = logger;
+    }
+}
+
+// ✅ MODERN - Primary constructor (C# 12+)
+public class BodyPartService(
+    IUnitOfWorkProvider<FitnessDbContext> unitOfWorkProvider,
+    ILogger<BodyPartService> logger) : IBodyPartService
+{
+    private readonly IUnitOfWorkProvider<FitnessDbContext> _unitOfWorkProvider = unitOfWorkProvider;
+    private readonly ILogger<BodyPartService> _logger = logger;
+    
+    // Clean, concise, no null checks needed
+}
+
+// ✅ EVEN BETTER - Direct usage without field assignment when possible
+public class BodyPartReferenceService(
+    IUnitOfWorkProvider<FitnessDbContext> unitOfWorkProvider,
+    IEternalCacheService cacheService,
+    IBodyPartService bodyPartService,
+    ILogger<BodyPartReferenceService> logger) :
+    PureReferenceService<BodyPart, BodyPartDto>(unitOfWorkProvider, cacheService, logger)
+{
+    private readonly IBodyPartService _bodyPartService = bodyPartService;
+    // Base class parameters passed directly, only store what we need
+}
+```
+
+**Key Rules for Primary Constructors:**
+1. **NO NULL VALIDATION** - Dependency Injection guarantees non-null parameters
+2. **Field Assignment** - Only create fields for parameters you actually use in the class
+3. **Base Class Parameters** - Pass directly to base constructor when inherited
+4. **Naming Convention** - Use camelCase for parameters, _camelCase for fields
+
+**When to Use Primary Constructors:**
+- ✅ **ALWAYS** for services with dependency injection
+- ✅ **ALWAYS** for repositories with dependency injection  
+- ✅ **ALWAYS** for controllers with dependency injection
+- ❌ **NEVER** for entities or DTOs (use traditional constructors/properties)
+- ❌ **NEVER** when you need constructor validation logic beyond DI
+
+**Benefits:**
+- Reduces boilerplate code by 5-10 lines per class
+- Eliminates unnecessary null checks (DI handles this)
+- More readable and maintainable
+- Consistent with modern C# patterns
+- Compiler-optimized
+
+**Migration Example:**
+```csharp
+// Step 1: Remove traditional constructor
+// Step 2: Add primary constructor parameters
+// Step 3: Remove null validation
+// Step 4: Assign only needed fields
+
+// BEFORE: 15 lines
+public class MyService : IMyService
+{
+    private readonly IUnitOfWorkProvider<FitnessDbContext> _unitOfWorkProvider;
+    private readonly ICacheService _cacheService;
+    private readonly ILogger<MyService> _logger;
+    
+    public MyService(
+        IUnitOfWorkProvider<FitnessDbContext> unitOfWorkProvider,
+        ICacheService cacheService,
+        ILogger<MyService> logger)
+    {
+        ArgumentNullException.ThrowIfNull(unitOfWorkProvider);
+        ArgumentNullException.ThrowIfNull(cacheService);
+        ArgumentNullException.ThrowIfNull(logger);
+        
+        _unitOfWorkProvider = unitOfWorkProvider;
+        _cacheService = cacheService;
+        _logger = logger;
+    }
+}
+
+// AFTER: 5 lines
+public class MyService(
+    IUnitOfWorkProvider<FitnessDbContext> unitOfWorkProvider,
+    ICacheService cacheService,
+    ILogger<MyService> logger) : IMyService
+{
+    private readonly IUnitOfWorkProvider<FitnessDbContext> _unitOfWorkProvider = unitOfWorkProvider;
+    private readonly ICacheService _cacheService = cacheService;
+    private readonly ILogger<MyService> _logger = logger;
+}
+```
+
 ---
 
 ## 🚨 CRITICAL: Service Repository Boundaries

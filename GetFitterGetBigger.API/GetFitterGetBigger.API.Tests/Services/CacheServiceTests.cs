@@ -31,7 +31,6 @@ public class CacheServiceTests
         // Act
         var result = await _cacheService.GetAsync<TestObject>(key);
 
-        // Assert
         Assert.NotNull(result);
         Assert.Equal(value.Id, result.Id);
         Assert.Equal(value.Name, result.Name);
@@ -46,7 +45,6 @@ public class CacheServiceTests
         // Act
         var result = await _cacheService.GetAsync<TestObject>(key);
 
-        // Assert
         Assert.Null(result);
     }
 
@@ -61,7 +59,6 @@ public class CacheServiceTests
         await _cacheService.SetAsync(key, value);
         var result = await _cacheService.GetAsync<TestObject>(key);
 
-        // Assert
         Assert.NotNull(result);
         Assert.Equal(value.Id, result.Id);
     }
@@ -78,7 +75,6 @@ public class CacheServiceTests
         await _cacheService.RemoveAsync(key);
         var result = await _cacheService.GetAsync<TestObject>(key);
 
-        // Assert
         Assert.Null(result);
     }
 
@@ -98,7 +94,6 @@ public class CacheServiceTests
         // Act
         await _cacheService.RemoveByPatternAsync(pattern + "*");
 
-        // Assert
         Assert.Null(await _cacheService.GetAsync<TestObject>(key1));
         Assert.Null(await _cacheService.GetAsync<TestObject>(key2));
         Assert.NotNull(await _cacheService.GetAsync<TestObject>(key3));
@@ -123,7 +118,6 @@ public class CacheServiceTests
         // Act
         var result = await _cacheService.GetOrCreateAsync(key, factory);
 
-        // Assert
         Assert.NotNull(result);
         Assert.Equal(cachedValue.Id, result.Id);
         Assert.Equal(cachedValue.Name, result.Name);
@@ -148,7 +142,6 @@ public class CacheServiceTests
         // Act
         var result = await _cacheService.GetOrCreateAsync(key, factory);
 
-        // Assert
         Assert.NotNull(result);
         Assert.Equal(newValue.Id, result.Id);
         Assert.Equal(newValue.Name, result.Name);

@@ -23,7 +23,6 @@ namespace GetFitterGetBigger.API.Tests.Services
         private readonly Mock<IUnitOfWorkProvider<FitnessDbContext>> _mockUnitOfWorkProvider;
         private readonly Mock<IReadOnlyUnitOfWork<FitnessDbContext>> _mockReadOnlyUnitOfWork;
         private readonly Mock<IMetricTypeRepository> _mockMetricTypeRepository;
-        private readonly Mock<IEternalCacheService> _mockCacheService;
         private readonly Mock<ILogger<MetricTypeService>> _mockLogger;
         private readonly MetricTypeService _metricTypeService;
 
@@ -32,7 +31,6 @@ namespace GetFitterGetBigger.API.Tests.Services
             _mockUnitOfWorkProvider = new Mock<IUnitOfWorkProvider<FitnessDbContext>>();
             _mockReadOnlyUnitOfWork = new Mock<IReadOnlyUnitOfWork<FitnessDbContext>>();
             _mockMetricTypeRepository = new Mock<IMetricTypeRepository>();
-            _mockCacheService = new Mock<IEternalCacheService>();
             _mockLogger = new Mock<ILogger<MetricTypeService>>();
 
             _mockUnitOfWorkProvider
@@ -45,7 +43,6 @@ namespace GetFitterGetBigger.API.Tests.Services
 
             _metricTypeService = new MetricTypeService(
                 _mockUnitOfWorkProvider.Object,
-                _mockCacheService.Object,
                 _mockLogger.Object);
         }
 
@@ -77,7 +74,7 @@ namespace GetFitterGetBigger.API.Tests.Services
 
             _mockMetricTypeRepository
                 .Setup(x => x.ExistsAsync(It.IsAny<MetricTypeId>()))
-                .ReturnsAsync(false);
+                .ReturnsAsync(true);
 
             // Act
             var result = await _metricTypeService.ExistsAsync(metricTypeId);
@@ -117,17 +114,10 @@ namespace GetFitterGetBigger.API.Tests.Services
                 1,
                 true).Value;
 
-            _mockCacheService
-                .Setup(x => x.GetAsync<ReferenceDataDto>(It.IsAny<string>()))
-                .ReturnsAsync(CacheResult<ReferenceDataDto>.Miss());
 
             _mockMetricTypeRepository
-                .Setup(x => x.GetByIdAsync(metricTypeId))
+                .Setup(x => x.GetByIdAsync(It.IsAny<MetricTypeId>()))
                 .ReturnsAsync(metricType);
-
-            _mockCacheService
-                .Setup(x => x.SetAsync(It.IsAny<string>(), It.IsAny<ReferenceDataDto>()))
-                .Returns(Task.CompletedTask);
 
             // Act
             var result = await _metricTypeService.GetByIdAsync(metricTypeId);
@@ -166,17 +156,10 @@ namespace GetFitterGetBigger.API.Tests.Services
                 1,
                 true).Value;
 
-            _mockCacheService
-                .Setup(x => x.GetAsync<ReferenceDataDto>(It.IsAny<string>()))
-                .ReturnsAsync(CacheResult<ReferenceDataDto>.Miss());
 
             _mockMetricTypeRepository
-                .Setup(x => x.GetByValueAsync(value))
-                .ReturnsAsync(metricType);
-
-            _mockCacheService
-                .Setup(x => x.SetAsync(It.IsAny<string>(), It.IsAny<ReferenceDataDto>()))
-                .Returns(Task.CompletedTask);
+                .Setup(x => x.GetAllActiveAsync())
+                .ReturnsAsync(new List<MetricType> { metricType });
 
             // Act
             var result = await _metricTypeService.GetByValueAsync(value);
@@ -214,17 +197,10 @@ namespace GetFitterGetBigger.API.Tests.Services
                 MetricType.Handler.Create(MetricTypeId.New(), "Time", "Duration in seconds", 3, true).Value
             };
 
-            _mockCacheService
-                .Setup(x => x.GetAsync<IEnumerable<ReferenceDataDto>>(It.IsAny<string>()))
-                .ReturnsAsync(CacheResult<IEnumerable<ReferenceDataDto>>.Miss());
 
             _mockMetricTypeRepository
                 .Setup(x => x.GetAllActiveAsync())
                 .ReturnsAsync(metricTypes);
-
-            _mockCacheService
-                .Setup(x => x.SetAsync(It.IsAny<string>(), It.IsAny<IEnumerable<ReferenceDataDto>>()))
-                .Returns(Task.CompletedTask);
 
             // Act
             var result = await _metricTypeService.GetAllActiveAsync();
@@ -241,15 +217,12 @@ namespace GetFitterGetBigger.API.Tests.Services
             // Arrange
             var metricTypeId = MetricTypeId.New();
             var cachedDto = new ReferenceDataDto
-            {
+                {
                 Id = metricTypeId.ToString(),
                 Value = "Weight",
                 Description = "Weight measurement in kg or lbs"
             };
 
-            _mockCacheService
-                .Setup(x => x.GetAsync<ReferenceDataDto>(It.IsAny<string>()))
-                .ReturnsAsync(CacheResult<ReferenceDataDto>.Hit(cachedDto));
 
             // Act
             var result = await _metricTypeService.GetByIdAsync(metricTypeId);

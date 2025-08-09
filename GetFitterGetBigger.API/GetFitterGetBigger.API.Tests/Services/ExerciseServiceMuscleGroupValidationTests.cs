@@ -204,7 +204,7 @@ public class ExerciseServiceMuscleGroupValidationTests
             DifficultyLevelId.New());
         
         var request = new UpdateExerciseRequest
-        {
+            {
             Name = "Rest Period Updated",
             Description = "Updated recovery time",
             DifficultyId = DifficultyLevelId.New().ToString(),
@@ -262,7 +262,7 @@ public class ExerciseServiceMuscleGroupValidationTests
             DifficultyLevelId.New());
         
         var request = new UpdateExerciseRequest
-        {
+            {
             Name = "Push Up Updated",
             Description = "Updated upper body exercise",
             DifficultyId = DifficultyLevelId.New().ToString(),

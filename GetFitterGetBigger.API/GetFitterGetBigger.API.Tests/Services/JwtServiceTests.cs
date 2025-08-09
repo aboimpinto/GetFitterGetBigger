@@ -27,7 +27,7 @@ namespace GetFitterGetBigger.API.Tests.Services
             _mockConfiguration
                 .Setup(x => x["Jwt:Key"])
                 .Returns(TestKey);
-            
+                
             _mockConfiguration
                 .Setup(x => x["Jwt:Issuer"])
                 .Returns(TestIssuer);
@@ -45,7 +45,7 @@ namespace GetFitterGetBigger.API.Tests.Services
             // Arrange
             var userId = UserId.New();
             var user = new User
-            {
+                {
                 Id = userId,
                 Email = "test@example.com"
             };
@@ -69,7 +69,7 @@ namespace GetFitterGetBigger.API.Tests.Services
             var userId = UserId.New();
             var email = "test@example.com";
             var user = new User
-            {
+                {
                 Id = userId,
                 Email = email
             };
@@ -95,7 +95,7 @@ namespace GetFitterGetBigger.API.Tests.Services
         {
             // Arrange
             var user = new User
-            {
+                {
                 Id = UserId.New(),
                 Email = "test@example.com"
             };
@@ -116,7 +116,7 @@ namespace GetFitterGetBigger.API.Tests.Services
         {
             // Arrange
             var user = new User
-            {
+                {
                 Id = UserId.New(),
                 Email = "test@example.com"
             };
@@ -143,11 +143,11 @@ namespace GetFitterGetBigger.API.Tests.Services
             var mockConfig = new Mock<IConfiguration>();
             mockConfig
                 .Setup(x => x["Jwt:Key"])
-                .Returns((string?)null);
+                .Returns((string)null!);
 
             var service = new JwtService(mockConfig.Object);
             var user = new User
-            {
+                {
                 Id = UserId.New(),
                 Email = "test@example.com"
             };
@@ -162,7 +162,7 @@ namespace GetFitterGetBigger.API.Tests.Services
         {
             // Arrange
             var user = new User
-            {
+                {
                 Id = UserId.New(),
                 Email = "test@example.com"
             };
@@ -188,7 +188,7 @@ namespace GetFitterGetBigger.API.Tests.Services
 
             var service = new JwtService(mockConfig.Object);
             var user = new User
-            {
+                {
                 Id = UserId.New(),
                 Email = "test@example.com"
             };
@@ -214,7 +214,7 @@ namespace GetFitterGetBigger.API.Tests.Services
 
             var service = new JwtService(mockConfig.Object);
             var user = new User
-            {
+                {
                 Id = UserId.New(),
                 Email = "test@example.com"
             };
@@ -240,7 +240,7 @@ namespace GetFitterGetBigger.API.Tests.Services
 
             var service = new JwtService(mockConfig.Object);
             var user = new User
-            {
+                {
                 Id = UserId.New(),
                 Email = "test@example.com"
             };
@@ -265,7 +265,7 @@ namespace GetFitterGetBigger.API.Tests.Services
         {
             // Arrange
             var user = new User
-            {
+                {
                 Id = UserId.New(),
                 Email = ""
             };
@@ -288,7 +288,7 @@ namespace GetFitterGetBigger.API.Tests.Services
         {
             // Arrange
             var user = new User
-            {
+                {
                 Id = UserId.New(),
                 Email = null!
             };
