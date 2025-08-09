@@ -204,14 +204,12 @@ public class MuscleGroupService : EnhancedReferenceService<MuscleGroup, MuscleGr
             .Ensure(() => command?.Name?.Length <= 100, MuscleGroupErrorMessages.Validation.NameTooLong)
             .Ensure(() => command != null && !command.BodyPartId.IsEmpty, MuscleGroupErrorMessages.Validation.BodyPartIdRequired)
             
-            // Async validations - these only run if command is not null and has required fields
+            // Async validations - atomic, one validation per aspect
             .EnsureAsync(
-                async () => command == null || command.BodyPartId.IsEmpty || 
-                           (await _bodyPartService.ExistsAsync(command.BodyPartId)).Data,
+                async () => (await _bodyPartService.ExistsAsync(command.BodyPartId)).Data?.Value ?? false,
                 ServiceError.ValidationFailed(MuscleGroupErrorMessages.Validation.InvalidBodyPartId))
             .EnsureAsync(
-                async () => command == null || string.IsNullOrWhiteSpace(command.Name) || 
-                           !await CheckDuplicateNameAsync(command.Name),
+                async () => !await CheckDuplicateNameAsync(command.Name),
                 ServiceError.AlreadyExists("MuscleGroup", command?.Name ?? string.Empty))
             .ToValidationResultAsync();
     }
@@ -238,14 +236,12 @@ public class MuscleGroupService : EnhancedReferenceService<MuscleGroup, MuscleGr
             .Ensure(() => command?.Name?.Length <= 100, MuscleGroupErrorMessages.Validation.NameTooLong)
             .Ensure(() => command != null && !command.BodyPartId.IsEmpty, MuscleGroupErrorMessages.Validation.BodyPartIdRequired)
             
-            // Async validations - these only run if command is not null and has required fields
+            // Async validations - atomic, one validation per aspect
             .EnsureAsync(
-                async () => command == null || command.BodyPartId.IsEmpty || 
-                           (await _bodyPartService.ExistsAsync(command.BodyPartId)).Data,
+                async () => (await _bodyPartService.ExistsAsync(command.BodyPartId)).Data?.Value ?? false,
                 ServiceError.ValidationFailed(MuscleGroupErrorMessages.Validation.InvalidBodyPartId))
             .EnsureAsync(
-                async () => command == null || string.IsNullOrWhiteSpace(command.Name) || 
-                           !await CheckDuplicateNameAsync(command.Name, muscleGroupId),
+                async () => !await CheckDuplicateNameAsync(command.Name, muscleGroupId),
                 ServiceError.AlreadyExists("MuscleGroup", command?.Name ?? string.Empty))
             .ToValidationResultAsync();
     }

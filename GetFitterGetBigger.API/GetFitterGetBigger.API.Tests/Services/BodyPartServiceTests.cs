@@ -62,7 +62,7 @@ namespace GetFitterGetBigger.API.Tests.Services
 
             // Assert
             Assert.True(result.IsSuccess);
-            Assert.True(result.Data);
+            Assert.True(result.Data.Value);
             _mockUnitOfWorkProvider.Verify(x => x.CreateReadOnly(), Times.Once);
             _mockBodyPartRepository.Verify(x => x.ExistsAsync(It.IsAny<BodyPartId>()), Times.Once);
         }
@@ -83,7 +83,7 @@ namespace GetFitterGetBigger.API.Tests.Services
 
             // Assert
             Assert.True(result.IsSuccess);
-            Assert.False(result.Data);
+            Assert.False(result.Data.Value);
             _mockUnitOfWorkProvider.Verify(x => x.CreateReadOnly(), Times.Once);
             _mockBodyPartRepository.Verify(x => x.ExistsAsync(It.IsAny<BodyPartId>()), Times.Once);
         }
@@ -104,7 +104,7 @@ namespace GetFitterGetBigger.API.Tests.Services
 
             // Assert
             Assert.True(result.IsSuccess);
-            Assert.True(result.Data);
+            Assert.True(result.Data.Value);
             _mockUnitOfWorkProvider.Verify(x => x.CreateReadOnly(), Times.Once);
             _mockBodyPartRepository.Verify(x => x.ExistsAsync(It.IsAny<BodyPartId>()), Times.Once);
         }

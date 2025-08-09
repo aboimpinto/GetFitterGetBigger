@@ -112,6 +112,55 @@ The `/memory-bank/` directory contains all project knowledge and processes:
 
 **💡 Pro Tip**: When debugging, start with TESTING-QUICK-REFERENCE.md, then check relevant process docs!
 
+## ⚠️ CRITICAL: No Try-Catch Anti-Pattern
+
+**NEVER use blanket try-catch blocks around entire methods!** This is an anti-pattern that shows lack of control over the code.
+
+### Why Try-Catch is an Anti-Pattern:
+- **Hides Real Issues**: Blanket try-catch masks where failures actually occur
+- **Poor Readability**: Makes code flow unpredictable and hard to follow
+- **Lack of Control**: Shows we don't understand when/where our code can fail
+- **Test Coverage**: Makes it harder to test specific failure scenarios
+
+### The Right Approach:
+- **Know Your Failure Points**: Understand exactly where and why code can fail
+- **Surgical Try-Catch**: Use try-catch ONLY when you know specific operations can fail
+- **Let Framework Handle**: ServiceValidate and other patterns handle errors properly
+- **Test Coverage**: Write tests for known failure scenarios
+
+### Example:
+```csharp
+// ❌ BAD - Blanket try-catch anti-pattern
+private async Task<ServiceResult<UserDto>> LoadUserByEmailAsync(string email)
+{
+    try
+    {
+        using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
+        var repository = unitOfWork.GetRepository<IUserRepository>();
+        var entity = await repository.GetByEmailAsync(email);
+        var dto = entity?.ToDto() ?? UserDto.Empty;
+        return ServiceResult<UserDto>.Success(dto);
+    }
+    catch (Exception ex)
+    {
+        _logger.LogError(ex, "Error loading user");
+        return ServiceResult<UserDto>.Failure(UserDto.Empty, ServiceError.InternalError());
+    }
+}
+
+// ✅ GOOD - No try-catch, let validation patterns handle it
+private async Task<ServiceResult<UserDto>> LoadUserByEmailAsync(string email)
+{
+    using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
+    var repository = unitOfWork.GetRepository<IUserRepository>();
+    var entity = await repository.GetByEmailAsync(email);
+    
+    // Handle null/empty states explicitly
+    var dto = entity?.ToDto() ?? UserDto.Empty;
+    return ServiceResult<UserDto>.Success(dto);
+}
+```
+
 ## ⚠️ CRITICAL: No Bulk Scripts Policy
 
 **NEVER use scripts for bulk file modifications!** This lesson was learned the hard way when a script-based refactoring caused 6394 build errors.

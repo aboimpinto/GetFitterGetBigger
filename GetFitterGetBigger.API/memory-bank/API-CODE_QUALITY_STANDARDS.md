@@ -17,6 +17,60 @@ This document extends the universal `CODE_QUALITY_STANDARDS.md`. Read that first
 
 These patterns are now **MANDATORY** for all new code and should be adopted when refactoring existing code.
 
+### **No Try-Catch Anti-Pattern** 🚨 CRITICAL
+**NEVER use blanket try-catch blocks!** This is a fundamental anti-pattern that violates our code quality standards.
+
+```csharp
+// ❌ ANTI-PATTERN - Blanket try-catch shows lack of control
+private async Task<ServiceResult<UserDto>> LoadUserByEmailAsync(string email)
+{
+    try  // ← VIOLATION: We don't know what can fail!
+    {
+        using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
+        var repository = unitOfWork.GetRepository<IUserRepository>();
+        var entity = await repository.GetByEmailAsync(email);
+        var dto = entity?.ToDto() ?? UserDto.Empty;
+        return ServiceResult<UserDto>.Success(dto);
+    }
+    catch (Exception ex)  // ← VIOLATION: Catching everything masks real issues!
+    {
+        _logger.LogError(ex, "Error loading user");
+        return ServiceResult<UserDto>.Failure(UserDto.Empty, ServiceError.InternalError());
+    }
+}
+
+// ✅ CORRECT - No try-catch, explicit handling
+private async Task<ServiceResult<UserDto>> LoadUserByEmailAsync(string email)
+{
+    using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
+    var repository = unitOfWork.GetRepository<IUserRepository>();
+    var entity = await repository.GetByEmailAsync(email);
+    
+    // Handle Empty pattern explicitly - no exceptions
+    if (entity.IsEmpty || !entity.IsActive)
+    {
+        return ServiceResult<UserDto>.Success(UserDto.Empty);
+    }
+    
+    var dto = MapToDto(entity);
+    return ServiceResult<UserDto>.Success(dto);
+}
+```
+
+**Why This Is Critical:**
+- **Code Control**: We must know exactly where and why code can fail
+- **Readability**: Try-catch disrupts normal flow and makes code harder to understand
+- **Testability**: Blanket try-catch makes it impossible to test specific failure scenarios
+- **Performance**: Exception handling is expensive - avoid it for normal control flow
+- **Debugging**: Masks the real location and cause of failures
+
+**The Right Approach:**
+- Use ServiceValidate pattern for input validation
+- Use Empty pattern for null/missing data
+- Use ServiceResult for operation outcomes
+- Only use try-catch for KNOWN external failures (e.g., network calls, file I/O)
+- Write tests to verify failure scenarios
+
 ---
 
 ## 🚨 GOLDEN RULES FOR API - NON-NEGOTIABLE
@@ -270,11 +324,223 @@ public async Task<ServiceResult<WorkoutSummaryDto>> GetWorkoutWithDetailsAsync(W
 - **`ThenMatchAsync`** - When validation is complete and you need to execute the main logic
 - **`WithServiceResultAsync` + `ThenMatchDataAsync`** - When you need to load data and branch based on whether it's Empty
 - **`AsAsync`** - When transitioning from synchronous to asynchronous validation chains
+- **`MatchAsync`** ✅ PREFERRED - For executing logic after validation when T implements IEmptyDto (uses T.Empty on failure)
+- **`WhenValidAsync`** ⚠️ DEPRECATED - Legacy method that uses default(T) instead of Empty pattern
+
+##### **MatchAsync vs WhenValidAsync - Important Distinction**
+
+```csharp
+// ⚠️ DEPRECATED - WhenValidAsync uses default(T) which violates Empty pattern
+public async Task<ServiceResult<bool>> ExistsAsync(BodyPartId id)
+{
+    return await ServiceValidate.Build<bool>()
+        .EnsureNotEmpty(id, BodyPartErrorMessages.InvalidIdFormat)
+        .WhenValidAsync(async () =>  // Uses default(bool) = false on failure
+        {
+            using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
+            var repository = unitOfWork.GetRepository<IBodyPartRepository>();
+            var exists = await repository.ExistsAsync(id);
+            return ServiceResult<bool>.Success(exists);
+        });
+}
+
+// ✅ PREFERRED - Use MatchAsync for consistency with Empty pattern
+public async Task<ServiceResult<BooleanResultDto>> ExistsAsync(BodyPartId id)
+{
+    return await ServiceValidate.For<BooleanResultDto>()  // Note: For<T> not Build<T>
+        .EnsureNotEmpty(id, BodyPartErrorMessages.InvalidIdFormat)
+        .MatchAsync(  // Uses BooleanResultDto.Empty on failure
+            whenValid: async () =>
+            {
+                using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
+                var repository = unitOfWork.GetRepository<IBodyPartRepository>();
+                var exists = await repository.ExistsAsync(id);
+                return ServiceResult<BooleanResultDto>.Success(new BooleanResultDto { Value = exists });
+            });
+}
+```
+
+**Migration Strategy:**
+1. Replace `ServiceValidate.Build<T>()` with `ServiceValidate.For<T>()` where T implements IEmptyDto
+2. Replace `.WhenValidAsync()` with `.MatchAsync()`
+3. For primitive types (bool, int, etc.), wrap in appropriate DTOs that implement IEmptyDto
+4. This ensures consistent Empty pattern usage throughout the codebase
+
+**Special Cases:**
+- For collections (`IEnumerable<T>`) that don't implement IEmptyDto, use `ServiceValidate.Build<IEnumerable<T>>().WhenValidAsync()`
+- This is acceptable because collections have a natural empty state (empty list) that doesn't require the Empty pattern
+
+---
+
+#### **🔄 ServiceValidate Flow Patterns - Complete Architecture**
+
+The ServiceValidate pattern enables a fluent, composable validation and execution pipeline that maintains consistency across all service methods. Every public service method should follow this pattern.
+
+##### **Core Flow Scenarios**
+
+```csharp
+// Scenario 1: No Pre-validation → Execution → No Post-validation
+public async Task<ServiceResult<IEnumerable<BodyPartDto>>> GetAllActiveAsync()
+{
+    return await ServiceValidate.Build<IEnumerable<BodyPartDto>>()
+        .WhenValidAsync(async () => await LoadAllActiveFromDatabaseAsync());
+}
+
+// Scenario 2: With Pre-validation → Execution → No Post-validation
+public async Task<ServiceResult<BodyPartDto>> GetByIdAsync(BodyPartId id)
+{
+    return await ServiceValidate.For<BodyPartDto>()
+        .EnsureNotEmpty(id, BodyPartErrorMessages.InvalidIdFormat)  // Pre-validation
+        .MatchAsync(
+            whenValid: async () => await LoadByIdFromDatabaseAsync(id)  // Execution
+        );
+}
+
+// Scenario 3: With Pre-validation → Execution → With Post-validation
+public async Task<ServiceResult<WorkoutTemplateDto>> CreateTemplateAsync(CreateTemplateCommand command)
+{
+    return await ServiceValidate.For<WorkoutTemplateDto>()
+        .EnsureNotNull(command, "Command cannot be null")  // Pre-validation
+        .EnsureNotWhiteSpace(command?.Name, "Name is required")
+        .AsAsync()
+        .EnsureServiceResultAsync(() => ValidateCategoryAsync(command.CategoryId))
+        .WithServiceResultAsync(() => CreateTemplateInDatabaseAsync(command))  // Execution
+        .ThenMatchDataAsync<WorkoutTemplateDto, WorkoutTemplateDto>(
+            whenEmpty: () => Task.FromResult(
+                ServiceResult<WorkoutTemplateDto>.Failure(
+                    WorkoutTemplateDto.Empty, 
+                    ServiceError.InternalError("Template creation failed"))),
+            whenNotEmpty: async template => await ValidateTemplateStateAsync(template)  // Post-validation
+        );
+}
+
+// Scenario 4: No Pre-validation → Execution → With Post-validation
+public async Task<ServiceResult<SystemHealthDto>> CheckSystemHealthAsync()
+{
+    return await ServiceValidate.For<SystemHealthDto>()
+        .WithServiceResultAsync(() => LoadSystemMetricsAsync())  // Execution
+        .ThenMatchDataAsync<SystemHealthDto, SystemHealthDto>(
+            whenEmpty: () => Task.FromResult(
+                ServiceResult<SystemHealthDto>.Failure(
+                    SystemHealthDto.Empty, 
+                    ServiceError.ServiceUnavailable())),
+            whenNotEmpty: async metrics => await ValidateHealthThresholdsAsync(metrics)  // Post-validation
+        );
+}
+```
+
+##### **🚀 Advanced Flow Pattern - Multiple Chained Executions (Future Implementation)**
+
+**Vision**: Enable multiple execution stages where each stage receives the results of previous stages, maintaining the ServiceResult chain throughout.
+
+```csharp
+// FUTURE PATTERN - Not yet implemented
+// Scenario: No Pre-validation → Execution 1 → Execution 2 → Execution 3 → With Post-validation
+public async Task<ServiceResult<WorkoutSessionDto>> StartWorkoutSessionAsync(StartSessionCommand command)
+{
+    return await ServiceValidate.For<WorkoutSessionDto>()
+        // Execution 1: Create session
+        .ExecuteAsync(async () => await CreateSessionInDatabaseAsync(command))
+        // Execution 2: Receives result from Execution 1
+        .ThenExecuteAsync<SessionDto>(async (session) => 
+            await LoadExercisesForSessionAsync(session.TemplateId))
+        // Execution 3: Receives results from Execution 1 & 2
+        .ThenExecuteAsync<SessionDto, ExerciseListDto>(async (session, exercises) => 
+            await InitializeTrackingAsync(session.Id, exercises))
+        // Post-validation: Receives all previous results
+        .ThenValidateAsync<SessionDto, ExerciseListDto, TrackingDto>(
+            async (session, exercises, tracking) => 
+                await ValidateSessionReadyAsync(session, exercises, tracking))
+        // Final transformation
+        .ThenMapAsync<SessionDto, ExerciseListDto, TrackingDto, WorkoutSessionDto>(
+            (session, exercises, tracking) => new WorkoutSessionDto
+            {
+                Session = session,
+                Exercises = exercises,
+                Tracking = tracking
+            });
+}
+```
+
+**Key Concepts for Future Implementation:**
+1. **Result Accumulation**: Each execution stage adds its result to a tuple that gets passed forward
+2. **Success Chain**: The chain continues only if all previous ServiceResults are successful
+3. **Type Safety**: Full compile-time type checking for all accumulated results
+4. **Error Aggregation**: Errors from any stage are collected and returned in the final ServiceResult
+5. **Short-Circuit**: First failure stops the chain and returns immediately
+
+**Benefits of This Pattern:**
+- **Composability**: Complex operations built from simple, testable stages
+- **Transparency**: Each stage's purpose is clear and isolated
+- **Reusability**: Individual stages can be extracted and reused
+- **Testability**: Each stage can be unit tested independently
+- **Debugging**: Clear execution flow with defined checkpoints
+
+##### **🎯 Implementation Guidelines**
+
+**Current Capabilities:**
+- ✅ Pre-validation with sync/async mixing
+- ✅ Single execution stage
+- ✅ Post-validation via ThenMatchDataAsync
+- ✅ ServiceResult integration throughout
+- ✅ Empty pattern support
+
+**Future Capabilities (To Be Implemented When Needed):**
+- ⏳ Multiple chained execution stages
+- ⏳ Result accumulation across stages
+- ⏳ Complex post-validation with multiple inputs
+- ⏳ Parallel execution branches with merge
+- ⏳ Conditional execution paths based on intermediate results
+
+**When to Implement Advanced Features:**
+Implement these advanced patterns when you encounter:
+1. Complex workflows requiring multiple dependent operations
+2. Need to accumulate results from multiple service calls
+3. Post-processing that requires results from multiple stages
+4. Conditional logic based on intermediate results
+
+**Implementation Strategy:**
+1. Start with current patterns (they cover 95% of use cases)
+2. When you need multiple executions, first try composition of service methods
+3. Only implement advanced chaining when composition becomes unwieldy
+4. Document the pattern usage in the specific service for future reference
 
 **CRITICAL VALIDATION PATTERN** 🚨:
 - Use error message strings directly: `.EnsureNotNull(command, ErrorMessages.RequestCannotBeNull)`
 - **NEVER** wrap in ServiceError.ValidationFailed(): ❌ `.EnsureNotNull(command, ServiceError.ValidationFailed(...))`
 - ServiceValidate methods handle ServiceError creation internally
+- **MANDATORY**: Each validation should validate ONE aspect only - no complex conditionals
+
+##### **Atomic Validation Rule - One Validation Per Aspect**
+
+```csharp
+// ❌ BAD - Complex conditional mixing multiple validations
+.EnsureAsync(
+    async () => command == null || command.BodyPartId.IsEmpty ||
+               (await _bodyPartService.ExistsAsync(command.BodyPartId)).Data,
+    ServiceError.ValidationFailed(MuscleGroupErrorMessages.Validation.InvalidBodyPartId))
+
+// ✅ GOOD - Each validation validates one specific aspect
+.EnsureNotNull(command, MuscleGroupErrorMessages.Validation.InvalidCommand)
+.EnsureNotEmpty(command.BodyPartId, MuscleGroupErrorMessages.Validation.InvalidBodyPartId)  
+.EnsureAsync(
+    async () => (await _bodyPartService.ExistsAsync(command.BodyPartId)).Data,
+    MuscleGroupErrorMessages.Validation.BodyPartDoesNotExist)
+```
+
+**Benefits of Atomic Validations:**
+- **Clarity**: Each line has a single, clear purpose
+- **Specific Errors**: Users get precise error messages about what failed
+- **Maintainability**: Easy to add, remove, or modify individual validations
+- **Testability**: Each validation can be tested independently
+- **Readability**: No mental parsing of complex boolean logic
+
+**Rules:**
+- ✅ Each `.Ensure*()` call validates ONE thing
+- ✅ Each validation has its own specific error message
+- ❌ NO `||` or `&&` operators in validation predicates
+- ❌ NO complex conditionals in a single validation
+- If you need multiple checks, use multiple `.Ensure*()` calls
 
 **MANDATORY RULE**: 
 - **NEVER** use `string.IsNullOrWhiteSpace()` or `string.IsNullOrEmpty()` directly with switch expressions or if statements for single values

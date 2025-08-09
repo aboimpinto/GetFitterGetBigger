@@ -434,7 +434,7 @@ public class MuscleGroupServiceTests
             
         _mockBodyPartService
             .Setup(x => x.ExistsAsync(command.BodyPartId))
-            .ReturnsAsync(ServiceResult<bool>.Success(true));
+            .ReturnsAsync(ServiceResult<BooleanResultDto>.Success(BooleanResultDto.Create(true)));
             
         _mockRepository
             .Setup(x => x.ExistsByNameAsync(command.Name.Trim(), null))
@@ -534,7 +534,7 @@ public class MuscleGroupServiceTests
         
         _mockBodyPartService
             .Setup(x => x.ExistsAsync(command.BodyPartId))
-            .ReturnsAsync(ServiceResult<bool>.Success(false));
+            .ReturnsAsync(ServiceResult<BooleanResultDto>.Success(BooleanResultDto.Create(false)));
             
         // Act
         var result = await _service.CreateAsync(command);
@@ -556,7 +556,7 @@ public class MuscleGroupServiceTests
         
         _mockBodyPartService
             .Setup(x => x.ExistsAsync(command.BodyPartId))
-            .ReturnsAsync(ServiceResult<bool>.Success(true));
+            .ReturnsAsync(ServiceResult<BooleanResultDto>.Success(BooleanResultDto.Create(true)));
             
         _mockRepository
             .Setup(x => x.ExistsByNameAsync(command.Name.Trim(), null))
@@ -598,7 +598,7 @@ public class MuscleGroupServiceTests
             
         _mockBodyPartService
             .Setup(x => x.ExistsAsync(command.BodyPartId))
-            .ReturnsAsync(ServiceResult<bool>.Success(true));
+            .ReturnsAsync(ServiceResult<BooleanResultDto>.Success(BooleanResultDto.Create(true)));
             
         _mockRepository
             .Setup(x => x.ExistsByNameAsync(command.Name.Trim(), existingMuscleGroup.Id))
@@ -679,7 +679,7 @@ public class MuscleGroupServiceTests
             
         _mockBodyPartService
             .Setup(x => x.ExistsAsync(command.BodyPartId))
-            .ReturnsAsync(ServiceResult<bool>.Success(true));
+            .ReturnsAsync(ServiceResult<BooleanResultDto>.Success(BooleanResultDto.Create(true)));
             
         _mockRepository
             .Setup(x => x.ExistsByNameAsync(command.Name.Trim(), existingMuscleGroup.Id))
