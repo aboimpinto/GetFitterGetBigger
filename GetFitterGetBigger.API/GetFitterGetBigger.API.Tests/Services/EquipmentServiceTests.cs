@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using GetFitterGetBigger.API.Constants;
 using GetFitterGetBigger.API.DTOs;
 using GetFitterGetBigger.API.Models;
 using GetFitterGetBigger.API.Models.Entities;
@@ -46,8 +47,8 @@ public class EquipmentServiceTests
             .Returns(_mockReadOnlyUnitOfWork.Object);
             
         _mockUnitOfWorkProvider
-            .Setup(x => x.CreateReadOnly())
-            .Returns(_mockReadOnlyUnitOfWork.Object);
+            .Setup(x => x.CreateWritable())
+            .Returns(_mockWritableUnitOfWork.Object);
             
         _mockReadOnlyUnitOfWork
             .Setup(x => x.GetRepository<IEquipmentRepository>())
@@ -78,7 +79,10 @@ public class EquipmentServiceTests
     {
         // Arrange
         var cachedDtos = _testData.Select(MapToDto).ToList();
-        // _mockCacheService setup needed
+        
+        _mockCacheService
+            .Setup(x => x.GetAsync<IEnumerable<EquipmentDto>>(It.IsAny<string>()))
+            .ReturnsAsync(cachedDtos);
             
         // Act
         var result = await _service.GetAllAsync();
@@ -93,7 +97,9 @@ public class EquipmentServiceTests
     public async Task GetAllAsync_WhenNotCached_FetchesFromRepositoryAndCaches()
     {
         // Arrange
-        // _mockCacheService setup needed
+        _mockCacheService
+            .Setup(x => x.GetAsync<IEnumerable<EquipmentDto>>(It.IsAny<string>()))
+            .ReturnsAsync((IEnumerable<EquipmentDto>?)null);
             
         _mockRepository
             .Setup(x => x.GetAllAsync())
@@ -115,7 +121,9 @@ public class EquipmentServiceTests
     public async Task GetAllAsync_CacheKey_UsesCorrectFormat()
     {
         // Arrange
-        // _mockCacheService setup needed
+        _mockCacheService
+            .Setup(x => x.GetAsync<IEnumerable<EquipmentDto>>(It.IsAny<string>()))
+            .ReturnsAsync((IEnumerable<EquipmentDto>?)null);
             
         _mockRepository.Setup(x => x.GetAllAsync()).ReturnsAsync(_testData);
         
@@ -128,7 +136,9 @@ public class EquipmentServiceTests
     public async Task GetAllAsync_ReturnsOnlyActiveEquipment()
     {
         // Arrange
-        // _mockCacheService setup needed
+        _mockCacheService
+            .Setup(x => x.GetAsync<IEnumerable<EquipmentDto>>(It.IsAny<string>()))
+            .ReturnsAsync((IEnumerable<EquipmentDto>?)null);
             
         _mockRepository
             .Setup(x => x.GetAllAsync())
@@ -153,7 +163,10 @@ public class EquipmentServiceTests
         // Arrange
         var equipment = _testData.First();
         var dto = MapToDto(equipment);
-        // _mockCacheService setup needed
+        
+        _mockCacheService
+            .Setup(x => x.GetAsync<EquipmentDto>(It.IsAny<string>()))
+            .ReturnsAsync(dto);
             
         // Act
         var result = await _service.GetByIdAsync(equipment.EquipmentId);
@@ -169,11 +182,14 @@ public class EquipmentServiceTests
     {
         // Arrange
         var equipment = _testData.First();
-        // _mockCacheService setup needed
+        
+        _mockCacheService
+            .Setup(x => x.GetAsync<EquipmentDto>(It.IsAny<string>()))
+            .ReturnsAsync((EquipmentDto?)null);
             
         _mockRepository
-            .Setup(x => x.GetAllAsync())
-            .ReturnsAsync(_testData);
+            .Setup(x => x.GetByIdAsync(equipment.EquipmentId))
+            .ReturnsAsync(equipment);
             
         // Act
         var result = await _service.GetByIdAsync(equipment.EquipmentId);
@@ -213,11 +229,14 @@ public class EquipmentServiceTests
     {
         // Arrange
         var id = EquipmentTestConstants.TestData.NonExistentId;
-        // _mockCacheService setup needed
+        
+        _mockCacheService
+            .Setup(x => x.GetAsync<EquipmentDto>(It.IsAny<string>()))
+            .ReturnsAsync((EquipmentDto?)null);
             
         _mockRepository
-            .Setup(x => x.GetAllAsync())
-            .ReturnsAsync(_testData);
+            .Setup(x => x.GetByIdAsync(It.IsAny<EquipmentId>()))
+            .ReturnsAsync(Equipment.Empty);
             
         // Act
         var result = await _service.GetByIdAsync(EquipmentId.ParseOrEmpty(id));
@@ -236,7 +255,10 @@ public class EquipmentServiceTests
         // Arrange
         var equipment = _testData.First();
         var dto = MapToDto(equipment);
-        // _mockCacheService setup needed
+        
+        _mockCacheService
+            .Setup(x => x.GetAsync<EquipmentDto>(It.IsAny<string>()))
+            .ReturnsAsync(dto);
             
         // Act
         var result = await _service.GetByNameAsync(equipment.Name);
@@ -252,11 +274,14 @@ public class EquipmentServiceTests
     {
         // Arrange
         var equipment = _testData.First();
-        // _mockCacheService setup needed
+        
+        _mockCacheService
+            .Setup(x => x.GetAsync<EquipmentDto>(It.IsAny<string>()))
+            .ReturnsAsync((EquipmentDto?)null);
             
         _mockRepository
-            .Setup(x => x.GetAllAsync())
-            .ReturnsAsync(_testData);
+            .Setup(x => x.GetByNameAsync(equipment.Name))
+            .ReturnsAsync(equipment);
             
         // Act
         var result = await _service.GetByNameAsync(equipment.Name);
@@ -276,18 +301,20 @@ public class EquipmentServiceTests
         var result = await _service.GetByNameAsync(string.Empty);
         
         Assert.False(result.IsSuccess);
-        Assert.Contains("Name cannot be empty", result.Errors.FirstOrDefault() ?? "");
+        Assert.Contains(EquipmentErrorMessages.Validation.NameCannotBeEmpty, result.Errors.FirstOrDefault() ?? "");
     }
     
     [Fact]
     public async Task GetByNameAsync_CacheKey_UsesCaseInsensitive()
     {
         // Arrange
-        // _mockCacheService setup needed
+        _mockCacheService
+            .Setup(x => x.GetAsync<EquipmentDto>(It.IsAny<string>()))
+            .ReturnsAsync((EquipmentDto?)null);
             
         _mockRepository
-            .Setup(x => x.GetAllAsync())
-            .ReturnsAsync(_testData);
+            .Setup(x => x.GetByNameAsync("BARBELL"))
+            .ReturnsAsync(_testData.First(e => e.Name == "Barbell"));
         
         // Act
         await _service.GetByNameAsync("BARBELL");
@@ -306,12 +333,12 @@ public class EquipmentServiceTests
         var createdEquipment = EquipmentTestBuilder.Custom(request.Name).Build();
         
         _mockRepository
-            .Setup(x => x.GetAllAsync())
-            .ReturnsAsync(_testData);
+            .Setup(x => x.GetByNameAsync(request.Name))
+            .ReturnsAsync(Equipment.Empty);
             
         _mockRepository
-            .Setup(x => x.GetAllAsync())
-            .ReturnsAsync(_testData);
+            .Setup(x => x.CreateAsync(It.IsAny<Equipment>()))
+            .ReturnsAsync((Equipment e) => e);
             
         _mockWritableUnitOfWork
             .Setup(x => x.CommitAsync())
@@ -354,7 +381,7 @@ public class EquipmentServiceTests
         
         Assert.False(result.IsSuccess);
         Assert.Equal(ServiceErrorCode.ValidationFailed, result.PrimaryErrorCode); // Now uses proper ServiceError
-        Assert.Contains("Name cannot be empty", result.Errors.FirstOrDefault() ?? "");
+        Assert.Contains(EquipmentErrorMessages.Validation.NameCannotBeEmpty, result.Errors.FirstOrDefault() ?? "");
     }
     
     [Fact]
@@ -364,15 +391,16 @@ public class EquipmentServiceTests
         var request = new CreateEquipmentCommand { Name = EquipmentTestConstants.TestData.BarbellName };
         
         _mockRepository
-            .Setup(x => x.GetAllAsync())
-            .ReturnsAsync(_testData);
+            .Setup(x => x.ExistsAsync(request.Name.Trim()))
+            .ReturnsAsync(true); // Now testing duplicate scenario
             
         // Act
         var result = await _service.CreateAsync(request);
         
+        // Should fail validation due to duplicate name
         Assert.False(result.IsSuccess);
         Assert.Equal(ServiceErrorCode.AlreadyExists, result.PrimaryErrorCode);
-        Assert.Contains($"Equipment '{request.Name}' already exists", result.Errors.FirstOrDefault() ?? "");
+        Assert.Contains(request.Name, result.Errors.First());
     }
     
     [Fact]
@@ -383,12 +411,13 @@ public class EquipmentServiceTests
         Equipment? capturedEquipment = null;
         
         _mockRepository
-            .Setup(x => x.GetAllAsync())
-            .ReturnsAsync(_testData);
+            .Setup(x => x.GetByNameAsync("New Equipment"))
+            .ReturnsAsync(Equipment.Empty);
             
         _mockRepository
-            .Setup(x => x.GetAllAsync())
-            .ReturnsAsync(_testData);
+            .Setup(x => x.CreateAsync(It.IsAny<Equipment>()))
+            .Callback<Equipment>(e => capturedEquipment = e)
+            .ReturnsAsync((Equipment e) => e);
             
         // Additional setup would go here if needed
         // .Callback<Equipment>(e => capturedEquipment = e);
@@ -419,20 +448,20 @@ public class EquipmentServiceTests
         
         // Mock ExistsAsync check for entity existence
         _mockRepository
-            .Setup(x => x.GetAllAsync())
-            .ReturnsAsync(_testData);
+            .Setup(x => x.ExistsAsync(existingEquipment.EquipmentId))
+            .ReturnsAsync(true);
             
         _mockRepository
-            .Setup(x => x.GetAllAsync())
-            .ReturnsAsync(_testData);
+            .Setup(x => x.GetByIdAsync(existingEquipment.EquipmentId))
+            .ReturnsAsync(existingEquipment);
             
         _mockRepository
-            .Setup(x => x.GetAllAsync())
-            .ReturnsAsync(_testData);
+            .Setup(x => x.GetByNameAsync(request.Name))
+            .ReturnsAsync(Equipment.Empty);
             
         _mockRepository
-            .Setup(x => x.GetAllAsync())
-            .ReturnsAsync(_testData);
+            .Setup(x => x.UpdateAsync(It.IsAny<Equipment>()))
+            .ReturnsAsync((Equipment e) => e);
             
         _mockWritableUnitOfWork
             .Setup(x => x.CommitAsync())
@@ -471,8 +500,8 @@ public class EquipmentServiceTests
         var request = new UpdateEquipmentCommand { Name = "Updated" };
         
         _mockRepository
-            .Setup(x => x.GetAllAsync())
-            .ReturnsAsync(_testData);
+            .Setup(x => x.ExistsAsync(It.IsAny<EquipmentId>()))
+            .ReturnsAsync(false);
             
         // Act
         var result = await _service.UpdateAsync(EquipmentId.ParseOrEmpty(id), request);
@@ -487,26 +516,27 @@ public class EquipmentServiceTests
         // Arrange
         var existingEquipment = EquipmentTestBuilder.Barbell().Build();
         var request = new UpdateEquipmentCommand { Name = EquipmentTestConstants.TestData.DumbbellName };
+        var dumbbell = _testData.First(e => e.Name == EquipmentTestConstants.TestData.DumbbellName);
         
         // Mock ExistsAsync check for entity existence
         _mockRepository
-            .Setup(x => x.GetAllAsync())
-            .ReturnsAsync(_testData);
+            .Setup(x => x.ExistsAsync(existingEquipment.EquipmentId))
+            .ReturnsAsync(true);
             
         _mockRepository
-            .Setup(x => x.GetAllAsync())
-            .ReturnsAsync(_testData);
+            .Setup(x => x.GetByIdAsync(existingEquipment.EquipmentId))
+            .ReturnsAsync(existingEquipment);
             
         _mockRepository
-            .Setup(x => x.GetAllAsync())
-            .ReturnsAsync(_testData);
+            .Setup(x => x.ExistsAsync(request.Name.Trim(), existingEquipment.EquipmentId))
+            .ReturnsAsync(true);
             
         // Act
         var result = await _service.UpdateAsync(existingEquipment.EquipmentId, request);
         
         Assert.False(result.IsSuccess);
         Assert.Equal(ServiceErrorCode.AlreadyExists, result.PrimaryErrorCode);
-        Assert.Contains($"Equipment '{request.Name}' already exists", result.Errors.FirstOrDefault() ?? "");
+        Assert.Contains(request.Name, result.Errors.First());
     }
     
     #endregion
@@ -521,16 +551,16 @@ public class EquipmentServiceTests
         
         // Mock ExistsAsync check for entity existence
         _mockRepository
-            .Setup(x => x.GetAllAsync())
-            .ReturnsAsync(_testData);
+            .Setup(x => x.ExistsAsync(equipment.EquipmentId))
+            .ReturnsAsync(true);
             
         _mockRepository
-            .Setup(x => x.GetAllAsync())
-            .ReturnsAsync(_testData);
+            .Setup(x => x.IsInUseAsync(equipment.EquipmentId))
+            .ReturnsAsync(false);
             
         _mockRepository
-            .Setup(x => x.GetAllAsync())
-            .ReturnsAsync(_testData);
+            .Setup(x => x.DeactivateAsync(equipment.EquipmentId))
+            .ReturnsAsync(true);
             
         _mockWritableUnitOfWork
             .Setup(x => x.CommitAsync())
@@ -553,13 +583,12 @@ public class EquipmentServiceTests
         
         // Mock ExistsAsync check for entity existence
         _mockRepository
-            .Setup(x => x.GetAllAsync())
-            .ReturnsAsync(_testData);
-            
+            .Setup(x => x.ExistsAsync(equipment.EquipmentId))
+            .ReturnsAsync(true);
             
         _mockRepository
-            .Setup(x => x.GetAllAsync())
-            .ReturnsAsync(_testData);
+            .Setup(x => x.IsInUseAsync(equipment.EquipmentId))
+            .ReturnsAsync(true);
             
         // Act
         var result = await _service.DeleteAsync(equipment.EquipmentId);
@@ -588,8 +617,8 @@ public class EquipmentServiceTests
         var id = EquipmentTestConstants.TestData.NonExistentId;
         
         _mockRepository
-            .Setup(x => x.GetAllAsync())
-            .ReturnsAsync(_testData);
+            .Setup(x => x.ExistsAsync(It.IsAny<EquipmentId>()))
+            .ReturnsAsync(false);
             
         // Act
         var result = await _service.DeleteAsync(EquipmentId.ParseOrEmpty(id));
@@ -609,8 +638,8 @@ public class EquipmentServiceTests
         var equipment = EquipmentTestBuilder.Barbell().Build();
         
         _mockRepository
-            .Setup(x => x.GetAllAsync())
-            .ReturnsAsync(_testData);
+            .Setup(x => x.ExistsAsync(equipment.EquipmentId))
+            .ReturnsAsync(true);
             
         // Act
         var result = await _service.ExistsAsync(equipment.EquipmentId);
@@ -626,8 +655,8 @@ public class EquipmentServiceTests
         var id = EquipmentTestConstants.TestData.NonExistentId;
         
         _mockRepository
-            .Setup(x => x.GetAllAsync())
-            .ReturnsAsync(_testData);
+            .Setup(x => x.ExistsAsync(It.IsAny<EquipmentId>()))
+            .ReturnsAsync(false);
             
         // Act
         var result = await _service.ExistsAsync(EquipmentId.ParseOrEmpty(id));

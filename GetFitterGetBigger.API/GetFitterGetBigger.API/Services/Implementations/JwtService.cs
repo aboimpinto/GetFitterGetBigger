@@ -1,10 +1,8 @@
-using System;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using GetFitterGetBigger.API.Models.Entities;
 using GetFitterGetBigger.API.Services.Interfaces;
-using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 
 namespace GetFitterGetBigger.API.Services.Implementations

@@ -53,6 +53,13 @@ public class MovementPatternService(
     /// <returns>A service result containing the movement_pattern if found</returns>
     public async Task<ServiceResult<ReferenceDataDto>> GetByIdAsync(string id)
     {
+        if (string.IsNullOrWhiteSpace(id))
+        {
+            return ServiceResult<ReferenceDataDto>.Failure(
+                ReferenceDataDto.Empty,
+                ServiceError.ValidationFailed(MovementPatternErrorMessages.IdCannotBeEmpty));
+        }
+        
         var movement_patternId = MovementPatternId.ParseOrEmpty(id);
         
         return await ServiceValidate.For<ReferenceDataDto>()
@@ -68,7 +75,7 @@ public class MovementPatternService(
         var repository = unitOfWork.GetRepository<IMovementPatternRepository>();
         var entity = await repository.GetByIdAsync(id);
         
-        return (entity.IsEmpty || !entity.IsActive) switch
+        return (entity == null || entity.IsEmpty || !entity.IsActive) switch
         {
             true => ServiceResult<ReferenceDataDto>.Failure(
                 ReferenceDataDto.Empty,
@@ -93,7 +100,7 @@ public class MovementPatternService(
         var repository = unitOfWork.GetRepository<IMovementPatternRepository>();
         var entity = await repository.GetByValueAsync(value);
         
-        return (entity.IsEmpty || !entity.IsActive) switch
+        return (entity == null || entity.IsEmpty || !entity.IsActive) switch
         {
             true => ServiceResult<ReferenceDataDto>.Failure(
                 ReferenceDataDto.Empty,

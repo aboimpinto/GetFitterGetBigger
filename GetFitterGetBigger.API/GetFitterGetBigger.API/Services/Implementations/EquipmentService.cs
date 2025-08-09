@@ -154,11 +154,15 @@ public class EquipmentService : EnhancedReferenceService<Equipment, EquipmentDto
         using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
         var repository = unitOfWork.GetRepository<IEquipmentRepository>();
         var entity = await repository.GetByIdAsync(equipmentId);
-        return entity.IsEmpty ? Equipment.Empty : entity;
+        return (entity == null || entity.IsEmpty) ? Equipment.Empty : entity;
     }
 
-    protected override EquipmentDto MapToDto(Equipment entity) =>
-        new()
+    protected override EquipmentDto MapToDto(Equipment entity)
+    {
+        if (entity == null)
+            return EquipmentDto.Empty;
+            
+        return new()
         {
             Id = entity.EquipmentId.ToString(),
             Name = entity.Name,
@@ -166,6 +170,7 @@ public class EquipmentService : EnhancedReferenceService<Equipment, EquipmentDto
             CreatedAt = entity.CreatedAt,
             UpdatedAt = entity.UpdatedAt
         };
+    }
 
 
 

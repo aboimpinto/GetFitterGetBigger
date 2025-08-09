@@ -129,8 +129,8 @@ public class ExecutionProtocolServiceTests
 
 
         _mockRepository
-            .Setup(x => x.GetAllActiveAsync())
-            .ReturnsAsync(_testData);
+            .Setup(x => x.GetByIdAsync(executionProtocolId))
+            .ReturnsAsync(executionProtocol);
 
 
         // Act
@@ -162,8 +162,8 @@ public class ExecutionProtocolServiceTests
 
 
         _mockRepository
-            .Setup(x => x.GetAllActiveAsync())
-            .ReturnsAsync(_testData);
+            .Setup(x => x.GetByIdAsync(executionProtocolId))
+            .ReturnsAsync(executionProtocol);
 
 
         // Act
@@ -229,8 +229,8 @@ public class ExecutionProtocolServiceTests
 
 
         _mockRepository
-            .Setup(x => x.GetAllActiveAsync())
-            .ReturnsAsync(_testData);
+            .Setup(x => x.GetByIdAsync(executionProtocolId))
+            .ReturnsAsync(inactiveExecutionProtocol);
 
         // Act
         var result = await _service.GetByIdAsync(executionProtocolId.ToString());
@@ -250,7 +250,7 @@ public class ExecutionProtocolServiceTests
         var executionProtocolId = ExecutionProtocolId.New();
         var executionProtocol = ExecutionProtocol.Handler.Create(
             executionProtocolId,
-            "Standard",
+            ExecutionProtocolTestConstants.StandardValue,
             "Standard protocol",
             code,
             true,
@@ -262,8 +262,8 @@ public class ExecutionProtocolServiceTests
 
 
         _mockRepository
-            .Setup(x => x.GetAllActiveAsync())
-            .ReturnsAsync(_testData);
+            .Setup(x => x.GetByCodeAsync(code))
+            .ReturnsAsync(executionProtocol);
 
 
         // Act
@@ -284,8 +284,8 @@ public class ExecutionProtocolServiceTests
 
 
         _mockRepository
-            .Setup(x => x.GetAllActiveAsync())
-            .ReturnsAsync(_testData);
+            .Setup(x => x.GetByCodeAsync(code))
+            .ReturnsAsync(ExecutionProtocol.Empty);
 
         // Act
         var result = await _service.GetByCodeAsync(code);
@@ -306,7 +306,7 @@ public class ExecutionProtocolServiceTests
             executionProtocolId,
             value,
             "Standard protocol",
-            "STANDARD",
+            ExecutionProtocolTestConstants.StandardCode,
             true,
             true,
             ExecutionProtocolTestConstants.StandardRestPattern,
@@ -316,8 +316,8 @@ public class ExecutionProtocolServiceTests
 
 
         _mockRepository
-            .Setup(x => x.GetAllActiveAsync())
-            .ReturnsAsync(_testData);
+            .Setup(x => x.GetByValueAsync(value))
+            .ReturnsAsync(executionProtocol);
 
 
         // Act
@@ -337,8 +337,8 @@ public class ExecutionProtocolServiceTests
 
 
         _mockRepository
-            .Setup(x => x.GetAllActiveAsync())
-            .ReturnsAsync(_testData);
+            .Setup(x => x.GetByValueAsync(value))
+            .ReturnsAsync(ExecutionProtocol.Empty);
 
         // Act
         var result = await _service.GetByValueAsync(value);
@@ -368,8 +368,8 @@ public class ExecutionProtocolServiceTests
 
 
         _mockRepository
-            .Setup(x => x.GetAllActiveAsync())
-            .ReturnsAsync(_testData);
+            .Setup(x => x.GetByCodeAsync(code))
+            .ReturnsAsync(inactiveExecutionProtocol);
 
         // Act
         var result = await _service.GetByCodeAsync(code);
@@ -399,8 +399,8 @@ public class ExecutionProtocolServiceTests
 
 
         _mockRepository
-            .Setup(x => x.GetAllActiveAsync())
-            .ReturnsAsync(_testData);
+            .Setup(x => x.GetByValueAsync(value))
+            .ReturnsAsync(inactiveExecutionProtocol);
 
         // Act
         var result = await _service.GetByValueAsync(value);
@@ -419,8 +419,8 @@ public class ExecutionProtocolServiceTests
 
 
         _mockRepository
-            .Setup(x => x.GetAllActiveAsync())
-            .ReturnsAsync(_testData);
+            .Setup(x => x.ExistsAsync(executionProtocolId))
+            .ReturnsAsync(true);
 
         // Act
         var result = await _service.ExistsAsync(executionProtocolId);
@@ -439,8 +439,8 @@ public class ExecutionProtocolServiceTests
 
 
         _mockRepository
-            .Setup(x => x.GetAllActiveAsync())
-            .ReturnsAsync(_testData);
+            .Setup(x => x.ExistsAsync(executionProtocolId))
+            .ReturnsAsync(false);
 
         // Act
         var result = await _service.ExistsAsync(executionProtocolId);
@@ -472,8 +472,8 @@ public class ExecutionProtocolServiceTests
         };
 
         _mockRepository
-            .Setup(x => x.GetAllActiveAsync())
-            .ReturnsAsync(_testData);
+            .Setup(x => x.ExistsAsync(It.IsAny<ExecutionProtocolId>()))
+            .ReturnsAsync(true);
 
         // Act
         var result = await _service.ExistsAsync(ExecutionProtocolId.ParseOrEmpty(executionProtocolIdString));

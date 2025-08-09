@@ -90,8 +90,8 @@ public class MuscleGroupService : EnhancedReferenceService<MuscleGroup, MuscleGr
                     {
                         var entity = await GetEntityByNameFromDatabaseAsync(name);
                         
-                        // Return empty DTO for empty/inactive entities (won't be cached)
-                        if (entity.IsEmpty || !entity.IsActive)
+                        // Return empty DTO for null/empty/inactive entities (won't be cached)
+                        if (entity == null || entity.IsEmpty || !entity.IsActive)
                         {
                             _logger.LogDebug("MuscleGroup not found or inactive for name: {Name}", name);
                             return MuscleGroupDto.Empty;

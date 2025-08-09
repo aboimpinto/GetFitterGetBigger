@@ -144,20 +144,26 @@ public class ExerciseWeightTypeService(
     /// <inheritdoc/>
     public async Task<bool> IsValidWeightForTypeAsync(ExerciseWeightTypeId weightTypeId, decimal? weight)
     {
+        // Early return for invalid ID
+        if (weightTypeId == null || weightTypeId.IsEmpty)
+            return false;
+            
         // Get the weight type to check its rules
         using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
         var repository = unitOfWork.GetRepository<IExerciseWeightTypeRepository>();
         var weightType = await repository.GetByIdAsync(weightTypeId);
         
-        if (weightType.IsEmpty)
+        if (weightType == null || weightType.IsEmpty)
             return false;
             
         // Check weight based on type code
         return weightType.Code switch
         {
-            "NONE" => weight == null || weight == 0,
-            "FIXED" => weight > 0,
-            "VARIABLE" => weight >= 0,
+            ExerciseWeightTypeCodes.BodyweightOnly => weight == null || weight == 0,
+            ExerciseWeightTypeCodes.BodyweightOptional => true, // Any weight is valid
+            ExerciseWeightTypeCodes.WeightRequired => weight > 0,
+            ExerciseWeightTypeCodes.MachineWeight => weight > 0,
+            ExerciseWeightTypeCodes.NoWeight => weight == null || weight == 0,
             _ => false
         };
     }

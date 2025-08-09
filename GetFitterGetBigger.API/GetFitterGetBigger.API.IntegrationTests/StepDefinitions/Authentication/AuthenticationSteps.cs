@@ -1,5 +1,6 @@
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
+using System.Text.Json;
 using GetFitterGetBigger.API.DTOs;
 using GetFitterGetBigger.API.IntegrationTests.TestInfrastructure.Helpers;
 using GetFitterGetBigger.API.Services.Interfaces;
@@ -10,6 +11,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using TechTalk.SpecFlow;
+using Xunit;
 
 namespace GetFitterGetBigger.API.IntegrationTests.StepDefinitions.Authentication;
 
@@ -97,7 +99,7 @@ public class AuthenticationSteps
         var httpClient = _scenarioContext.GetHttpClient();
         var request = new AuthenticationRequest(email);
         
-        var response = await httpClient.PostAsJsonAsync("/api/auth/authenticate", request);
+        var response = await httpClient.PostAsJsonAsync("/api/auth/login", request);
         
         _scenarioContext.SetLastResponse(response);
         
@@ -123,22 +125,56 @@ public class AuthenticationSteps
         var response = _scenarioContext.GetLastResponse();
         response.EnsureSuccessStatusCode();
         
-        var authResponse = await response.Content.ReadFromJsonAsync<AuthenticationResponse>();
+        // Get the content that was already read in the When step
+        var contentString = _scenarioContext.GetLastResponseContent();
+        Assert.NotEmpty(contentString);
+        
+        // Debug: output the response content
+        Console.WriteLine($"Response content: {contentString}");
+        
+        var authResponse = System.Text.Json.JsonSerializer.Deserialize<AuthenticationResponse>(contentString, new JsonSerializerOptions 
+        { 
+            PropertyNameCaseInsensitive = true 
+        });
         Assert.NotNull(authResponse);
         Assert.NotEmpty(authResponse.Token);
-        Assert.NotEmpty(authResponse.Claims);
+        Assert.NotNull(authResponse.Claims);
+        Assert.True(authResponse.Claims.Count > 0, $"Claims collection is empty. Claims count: {authResponse.Claims?.Count ?? -1}");
     }
     
     [Then(@"the token should contain claim ""(.*)"" with value ""(.*)""")]
     public async Task ThenTheTokenShouldContainClaimWithValue(string claimType, string claimValue)
     {
-        var response = _scenarioContext.GetLastResponse();
-        var authResponse = await response.Content.ReadFromJsonAsync<AuthenticationResponse>();
+        // Get the content that was already read in the When step
+        var contentString = _scenarioContext.GetLastResponseContent();
+        Assert.NotEmpty(contentString);
         
+        var authResponse = System.Text.Json.JsonSerializer.Deserialize<AuthenticationResponse>(contentString, new JsonSerializerOptions 
+        { 
+            PropertyNameCaseInsensitive = true 
+        });
         Assert.NotNull(authResponse);
-        var claim = authResponse.Claims.FirstOrDefault(c => c.ClaimType == claimType);
-        Assert.NotNull(claim);
-        Assert.Equal(claimValue, claim.Id);
+        Assert.NotNull(authResponse.Claims);
+        
+        // For email claims, the JWT token itself contains the email in its claims
+        // But our Claims collection contains user claims (like Free-Tier)
+        // We need to decode the JWT token to check for email
+        if (claimType == "email")
+        {
+            // Decode the JWT token to check its claims
+            var handler = new JwtSecurityTokenHandler();
+            var jsonToken = handler.ReadJwtToken(authResponse.Token);
+            var emailClaim = jsonToken.Claims.FirstOrDefault(c => c.Type == "email" || c.Type == ClaimTypes.Email);
+            Assert.NotNull(emailClaim);
+            Assert.Equal(claimValue, emailClaim.Value);
+        }
+        else
+        {
+            // Check in the Claims collection for other claim types
+            var claim = authResponse.Claims.FirstOrDefault(c => c.ClaimType == claimType);
+            Assert.NotNull(claim);
+            Assert.Equal(claimValue, claim.Resource ?? claim.ClaimType);
+        }
     }
     
     /// <summary>
@@ -199,5 +235,62 @@ public class AuthenticationSteps
         );
         
         return new JwtSecurityTokenHandler().WriteToken(token);
+    }
+    
+    // New step definitions for duplicate email testing
+    
+    [Given(@"the system is properly configured for authentication")]
+    public void GivenTheSystemIsProperlyConfiguredForAuthentication()
+    {
+        // This step is mainly for documentation purposes
+        // The test infrastructure should already be properly set up
+        // Just verify that HttpClient is available
+        var httpClient = _scenarioContext.GetHttpClient();
+        Assert.NotNull(httpClient);
+    }
+    
+    [Given(@"a user with email ""(.*)"" has already been created")]
+    public async Task GivenAUserWithEmailHasAlreadyBeenCreated(string email)
+    {
+        // Create the user by authenticating once, then clear the auth state
+        await WhenIAuthenticateWithEmail(email);
+        
+        // Verify the first authentication was successful
+        var response = _scenarioContext.GetLastResponse();
+        response.EnsureSuccessStatusCode();
+        
+        // Clear authentication state to simulate a fresh session
+        GivenIAmNotAuthenticated();
+    }
+    
+    [When(@"I authenticate with email ""(.*)"" again")]
+    public async Task WhenIAuthenticateWithEmailAgain(string email)
+    {
+        // This is the same as the regular authentication step
+        await WhenIAuthenticateWithEmail(email);
+    }
+    
+    [When(@"I authenticate with email ""(.*)"" a third time")]
+    public async Task WhenIAuthenticateWithEmailAThirdTime(string email)
+    {
+        // This is the same as the regular authentication step
+        await WhenIAuthenticateWithEmail(email);
+    }
+    
+    [Then(@"the authentication should not cause any database constraint violations")]
+    public void ThenTheAuthenticationShouldNotCauseAnyDatabaseConstraintViolations()
+    {
+        // Verify that the last response was successful (no 500 errors)
+        var response = _scenarioContext.GetLastResponse();
+        Assert.True(response.IsSuccessStatusCode, 
+            $"Expected successful response but got {response.StatusCode}. " +
+            "This could indicate a database constraint violation.");
+    }
+    
+    [Then(@"no database errors should occur during the process")]
+    public void ThenNoDatabaseErrorsShouldOccurDuringTheProcess()
+    {
+        // Same as above - verify no 500 errors occurred
+        ThenTheAuthenticationShouldNotCauseAnyDatabaseConstraintViolations();
     }
 }

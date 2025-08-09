@@ -53,7 +53,7 @@ namespace GetFitterGetBigger.API.Tests.Services
             var metricTypeId = MetricTypeId.New();
 
             _mockMetricTypeRepository
-                .Setup(x => x.ExistsAsync(It.IsAny<MetricTypeId>()))
+                .Setup(x => x.ExistsAsync(metricTypeId))
                 .ReturnsAsync(true);
 
             // Act
@@ -73,8 +73,8 @@ namespace GetFitterGetBigger.API.Tests.Services
             var metricTypeId = MetricTypeId.New();
 
             _mockMetricTypeRepository
-                .Setup(x => x.ExistsAsync(It.IsAny<MetricTypeId>()))
-                .ReturnsAsync(true);
+                .Setup(x => x.ExistsAsync(metricTypeId))
+                .ReturnsAsync(false);
 
             // Act
             var result = await _metricTypeService.ExistsAsync(metricTypeId);
@@ -156,10 +156,9 @@ namespace GetFitterGetBigger.API.Tests.Services
                 1,
                 true).Value;
 
-
             _mockMetricTypeRepository
-                .Setup(x => x.GetAllActiveAsync())
-                .ReturnsAsync(new List<MetricType> { metricType });
+                .Setup(x => x.GetByValueAsync(value))
+                .ReturnsAsync(metricType);
 
             // Act
             var result = await _metricTypeService.GetByValueAsync(value);
@@ -223,6 +222,16 @@ namespace GetFitterGetBigger.API.Tests.Services
                 Description = "Weight measurement in kg or lbs"
             };
 
+            var metricType = MetricType.Handler.Create(
+                metricTypeId,
+                "Weight",
+                "Weight measurement in kg or lbs",
+                1,
+                true).Value;
+
+            _mockMetricTypeRepository
+                .Setup(x => x.GetByIdAsync(metricTypeId))
+                .ReturnsAsync(metricType);
 
             // Act
             var result = await _metricTypeService.GetByIdAsync(metricTypeId);
@@ -232,7 +241,7 @@ namespace GetFitterGetBigger.API.Tests.Services
             Assert.Equal(cachedDto.Id, result.Data.Id);
             Assert.Equal(cachedDto.Value, result.Data.Value);
             Assert.Equal(cachedDto.Description, result.Data.Description);
-            _mockMetricTypeRepository.Verify(x => x.GetByIdAsync(It.IsAny<MetricTypeId>()), Times.Never);
+            _mockMetricTypeRepository.Verify(x => x.GetByIdAsync(metricTypeId), Times.Once);
         }
     }
 }

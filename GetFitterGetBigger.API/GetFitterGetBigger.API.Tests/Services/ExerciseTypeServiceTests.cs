@@ -54,8 +54,7 @@ namespace GetFitterGetBigger.API.Tests.Services
 
             _mockExerciseTypeRepository
                 .Setup(x => x.GetAllActiveAsync())
-                .ReturnsAsync(new List<ExerciseType>());
-
+                .ReturnsAsync(exerciseTypes);
 
             // Act
             var result = await _exerciseTypeService.GetAllActiveAsync();
@@ -78,9 +77,8 @@ namespace GetFitterGetBigger.API.Tests.Services
                 true).Value;
 
             _mockExerciseTypeRepository
-                .Setup(x => x.GetAllActiveAsync())
-                .ReturnsAsync(new List<ExerciseType>());
-
+                .Setup(x => x.GetByIdAsync(exerciseTypeId))
+                .ReturnsAsync(exerciseType);
 
             // Act
             var result = await _exerciseTypeService.GetByIdAsync(exerciseTypeId);
@@ -118,9 +116,8 @@ namespace GetFitterGetBigger.API.Tests.Services
                 true).Value;
 
             _mockExerciseTypeRepository
-                .Setup(x => x.GetAllActiveAsync())
-                .ReturnsAsync(new List<ExerciseType>());
-
+                .Setup(x => x.GetByValueAsync(value))
+                .ReturnsAsync(exerciseType);
 
             // Act
             var result = await _exerciseTypeService.GetByValueAsync(value);
@@ -151,8 +148,8 @@ namespace GetFitterGetBigger.API.Tests.Services
             var exerciseTypeId = ExerciseTypeId.New();
 
             _mockExerciseTypeRepository
-                .Setup(x => x.GetAllActiveAsync())
-                .ReturnsAsync(new List<ExerciseType>());
+                .Setup(x => x.ExistsAsync(exerciseTypeId))
+                .ReturnsAsync(true);
 
             // Act
             var result = await _exerciseTypeService.ExistsAsync(exerciseTypeId);
@@ -169,8 +166,8 @@ namespace GetFitterGetBigger.API.Tests.Services
             var exerciseTypeId = ExerciseTypeId.New();
 
             _mockExerciseTypeRepository
-                .Setup(x => x.GetAllActiveAsync())
-                .ReturnsAsync(new List<ExerciseType>());
+                .Setup(x => x.ExistsAsync(exerciseTypeId))
+                .ReturnsAsync(false);
 
             // Act
             var result = await _exerciseTypeService.ExistsAsync(exerciseTypeId);
@@ -210,8 +207,8 @@ namespace GetFitterGetBigger.API.Tests.Services
             foreach (var id in typeIds)
             {
                 _mockExerciseTypeRepository
-                    .Setup(x => x.GetByIdAsync(id))
-                    .ReturnsAsync(ExerciseType.Handler.Create(id, $"Type{id}", $"Description{id}", 1, true).Value);
+                    .Setup(x => x.ExistsAsync(id))
+                    .ReturnsAsync(true);
             }
 
 
@@ -219,7 +216,7 @@ namespace GetFitterGetBigger.API.Tests.Services
             var result = await _exerciseTypeService.AllExistAsync(idStrings);
 
             // Assert
-            Assert.True(result);
+            Assert.True(result, $"Expected true but got false. IDs: {string.Join(", ", idStrings)}");
         }
 
         [Fact]
@@ -237,16 +234,16 @@ namespace GetFitterGetBigger.API.Tests.Services
 
             // First two exist, third does not
             _mockExerciseTypeRepository
-                .Setup(x => x.GetAllActiveAsync())
-                .ReturnsAsync(new List<ExerciseType>());
+                .Setup(x => x.ExistsAsync(typeIds[0]))
+                .ReturnsAsync(true);
 
             _mockExerciseTypeRepository
-                .Setup(x => x.GetAllActiveAsync())
-                .ReturnsAsync(new List<ExerciseType>());
+                .Setup(x => x.ExistsAsync(typeIds[1]))
+                .ReturnsAsync(true);
 
             _mockExerciseTypeRepository
-                .Setup(x => x.GetAllActiveAsync())
-                .ReturnsAsync(new List<ExerciseType>());
+                .Setup(x => x.ExistsAsync(typeIds[2]))
+                .ReturnsAsync(false);
 
 
             // Act

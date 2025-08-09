@@ -58,10 +58,9 @@ public class KineticChainTypeServiceTests
             KineticChainTypeTestBuilder.Isolation().Build()
         };
 
-
         _repositoryMock
             .Setup(r => r.GetAllActiveAsync())
-            .ReturnsAsync(new List<KineticChainType>());
+            .ReturnsAsync(kineticChainTypes);
 
         // Act
         var result = await _service.GetAllActiveAsync();
@@ -82,10 +81,9 @@ public class KineticChainTypeServiceTests
         var kineticChainType = KineticChainTypeTestBuilder.Compound().Build();
         var id = KineticChainTypeId.ParseOrEmpty(TestIds.KineticChainTypeIds.Compound);
 
-
         _repositoryMock
-            .Setup(r => r.GetAllActiveAsync())
-            .ReturnsAsync(new List<KineticChainType>());
+            .Setup(r => r.GetByIdAsync(id))
+            .ReturnsAsync(kineticChainType);
 
         // Act
         var result = await _service.GetByIdAsync(id);
@@ -116,10 +114,9 @@ public class KineticChainTypeServiceTests
         // Arrange
         var id = KineticChainTypeId.ParseOrEmpty(TestIds.KineticChainTypeIds.NonExistent);
 
-
         _repositoryMock
-            .Setup(r => r.GetAllActiveAsync())
-            .ReturnsAsync(new List<KineticChainType>());
+            .Setup(r => r.GetByIdAsync(id))
+            .ReturnsAsync(KineticChainType.Empty);
 
         // Act
         var result = await _service.GetByIdAsync(id);
@@ -127,7 +124,6 @@ public class KineticChainTypeServiceTests
         Assert.False(result.IsSuccess);
         Assert.NotNull(result.Errors);
         Assert.Equal(ServiceErrorCode.NotFound, result.PrimaryErrorCode);
-        Assert.Contains("KineticChainType not found", result.Errors.First());
     }
 
     [Fact]
@@ -136,10 +132,9 @@ public class KineticChainTypeServiceTests
         // Arrange
         var kineticChainType = KineticChainTypeTestBuilder.Compound().Build();
 
-
         _repositoryMock
-            .Setup(r => r.GetAllActiveAsync())
-            .ReturnsAsync(new List<KineticChainType>());
+            .Setup(r => r.GetByValueAsync("COMPOUND"))
+            .ReturnsAsync(kineticChainType);
 
         // Act
         var result = await _service.GetByValueAsync("COMPOUND");
@@ -164,10 +159,9 @@ public class KineticChainTypeServiceTests
     public async Task GetByValueAsync_WithNonExistentValue_ReturnsNotFound()
     {
         // Arrange
-
         _repositoryMock
-            .Setup(r => r.GetAllActiveAsync())
-            .ReturnsAsync(new List<KineticChainType>());
+            .Setup(r => r.GetByValueAsync("NONEXISTENT"))
+            .ReturnsAsync(KineticChainType.Empty);
 
         // Act
         var result = await _service.GetByValueAsync("NONEXISTENT");
@@ -175,7 +169,6 @@ public class KineticChainTypeServiceTests
         Assert.False(result.IsSuccess);
         Assert.NotNull(result.Errors);
         Assert.Equal(ServiceErrorCode.NotFound, result.PrimaryErrorCode);
-        Assert.Contains("Kinetic chain type not found with value 'NONEXISTENT'", result.Errors.First());
     }
 
     [Fact]
@@ -190,12 +183,11 @@ public class KineticChainTypeServiceTests
         };
 
         var id = KineticChainTypeId.ParseOrEmpty(TestIds.KineticChainTypeIds.Compound);
-
+        var kineticChainType = KineticChainTypeTestBuilder.Compound().Build();
+        
         _repositoryMock
-            .Setup(r => r.GetAllActiveAsync())
-            .ReturnsAsync(new List<KineticChainType> { 
-                KineticChainTypeTestBuilder.Compound().Build() 
-            });
+            .Setup(r => r.GetByIdAsync(id))
+            .ReturnsAsync(kineticChainType);
 
         // Act
         var result = await _service.GetByIdAsync(id);

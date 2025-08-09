@@ -53,8 +53,8 @@ namespace GetFitterGetBigger.API.Tests.Services
             var difficultyLevelId = DifficultyLevelId.New();
 
             _mockDifficultyLevelRepository
-                .Setup(x => x.GetAllActiveAsync())
-                .ReturnsAsync(new List<DifficultyLevel>());
+                .Setup(x => x.ExistsAsync(It.IsAny<DifficultyLevelId>()))
+                .ReturnsAsync(true);
 
             // Act
             var result = await _difficultyLevelService.ExistsAsync(difficultyLevelId);
@@ -73,8 +73,8 @@ namespace GetFitterGetBigger.API.Tests.Services
             var difficultyLevelId = DifficultyLevelId.New();
 
             _mockDifficultyLevelRepository
-                .Setup(x => x.GetAllActiveAsync())
-                .ReturnsAsync(new List<DifficultyLevel>());
+                .Setup(x => x.ExistsAsync(It.IsAny<DifficultyLevelId>()))
+                .ReturnsAsync(false);
 
             // Act
             var result = await _difficultyLevelService.ExistsAsync(difficultyLevelId);
@@ -107,17 +107,19 @@ namespace GetFitterGetBigger.API.Tests.Services
         {
             // Arrange
             var difficultyLevelId = DifficultyLevelId.New();
-            var difficultyLevel = DifficultyLevel.Handler.Create(
+            var createResult = DifficultyLevel.Handler.Create(
                 difficultyLevelId,
                 "Intermediate",
                 "For intermediate users",
                 2,
-                true).Value;
+                true);
+            Assert.True(createResult.IsSuccess, "DifficultyLevel creation should succeed");
+            var difficultyLevel = createResult.Value;
 
 
             _mockDifficultyLevelRepository
-                .Setup(x => x.GetAllActiveAsync())
-                .ReturnsAsync(new List<DifficultyLevel>());
+                .Setup(x => x.GetByIdAsync(It.IsAny<DifficultyLevelId>()))
+                .ReturnsAsync(difficultyLevel);
 
 
             // Act
@@ -134,16 +136,18 @@ namespace GetFitterGetBigger.API.Tests.Services
         {
             // Arrange
             var difficultyLevelId = DifficultyLevelId.New();
-            var difficultyLevel = DifficultyLevel.Handler.Create(
+            var createResult = DifficultyLevel.Handler.Create(
                 difficultyLevelId,
                 "Advanced",
                 "For advanced users",
                 3,
-                true).Value;
+                true);
+            Assert.True(createResult.IsSuccess, "DifficultyLevel creation should succeed");
+            var difficultyLevel = createResult.Value;
 
             _mockDifficultyLevelRepository
-                .Setup(x => x.GetAllActiveAsync())
-                .ReturnsAsync(new List<DifficultyLevel>());
+                .Setup(x => x.GetByIdAsync(It.IsAny<DifficultyLevelId>()))
+                .ReturnsAsync(difficultyLevel);
 
             // Act
             var result = await _difficultyLevelService.GetByIdAsync(difficultyLevelId);
@@ -179,8 +183,8 @@ namespace GetFitterGetBigger.API.Tests.Services
 
 
             _mockDifficultyLevelRepository
-                .Setup(x => x.GetAllActiveAsync())
-                .ReturnsAsync(new List<DifficultyLevel>());
+                .Setup(x => x.GetByValueAsync(value))
+                .ReturnsAsync(DifficultyLevel.Empty);
 
             // Act
             var result = await _difficultyLevelService.GetByValueAsync(value);
@@ -205,7 +209,7 @@ namespace GetFitterGetBigger.API.Tests.Services
 
             _mockDifficultyLevelRepository
                 .Setup(x => x.GetAllActiveAsync())
-                .ReturnsAsync(new List<DifficultyLevel>());
+                .ReturnsAsync(difficultyLevels);
 
 
             // Act
@@ -213,8 +217,10 @@ namespace GetFitterGetBigger.API.Tests.Services
 
             // Assert
             Assert.True(result.IsSuccess);
-            Assert.Equal(3, result.Data.Count());
-            var values = result.Data.Select(d => d.Value).ToList();
+            Assert.NotNull(result.Data);
+            var items = result.Data.ToList();
+            Assert.Equal(3, items.Count);
+            var values = items.Select(d => d.Value).ToList();
             Assert.Contains("Beginner", values);
             Assert.Contains("Intermediate", values);
             Assert.Contains("Advanced", values);
@@ -233,7 +239,7 @@ namespace GetFitterGetBigger.API.Tests.Services
 
             _mockDifficultyLevelRepository
                 .Setup(x => x.GetAllActiveAsync())
-                .ReturnsAsync(new List<DifficultyLevel>());
+                .ReturnsAsync(difficultyLevels);
 
 
             // Act
@@ -241,7 +247,9 @@ namespace GetFitterGetBigger.API.Tests.Services
 
             // Assert
             Assert.True(result.IsSuccess);
-            Assert.Equal(2, result.Data.Count());
+            Assert.NotNull(result.Data);
+            var count = result.Data.Count();
+            Assert.Equal(2, count);
             _mockDifficultyLevelRepository.Verify(x => x.GetAllActiveAsync(), Times.Once);
         }
     }

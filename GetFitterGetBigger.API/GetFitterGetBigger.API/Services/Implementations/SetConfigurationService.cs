@@ -172,7 +172,7 @@ public class SetConfigurationService : ISetConfigurationService
                 using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
                 var repository = unitOfWork.GetRepository<ISetConfigurationRepository>();
                 var setConfiguration = await repository.GetByIdAsync(id);
-                return ServiceResult<bool>.Success(!setConfiguration.IsEmpty);
+                return ServiceResult<bool>.Success(setConfiguration != null && !setConfiguration.IsEmpty);
             });
     }
 
@@ -202,7 +202,7 @@ public class SetConfigurationService : ISetConfigurationService
         var repository = unitOfWork.GetRepository<ISetConfigurationRepository>();
         var setConfiguration = await repository.GetByIdAsync(id);
 
-        var result = setConfiguration.IsEmpty switch
+        var result = (setConfiguration == null || setConfiguration.IsEmpty) switch
         {
             true => ServiceResult<SetConfigurationDto>.Failure(
                 new SetConfigurationDto(),
@@ -354,7 +354,7 @@ public class SetConfigurationService : ISetConfigurationService
 
         var existing = await repository.GetByIdAsync(command.SetConfigurationId);
         
-        var result = existing.IsEmpty switch
+        var result = (existing == null || existing.IsEmpty) switch
         {
             true => ServiceResult<SetConfigurationDto>.Failure(
                 new SetConfigurationDto(),
@@ -426,7 +426,7 @@ public class SetConfigurationService : ISetConfigurationService
         {
             var existing = await repository.GetByIdAsync(updateData.SetConfigurationId);
             
-            if (existing.IsEmpty)
+            if (existing == null || existing.IsEmpty)
             {
                 return ServiceResult<int>.Failure(
                     0,
@@ -502,7 +502,7 @@ public class SetConfigurationService : ISetConfigurationService
 
         var existing = await repository.GetByIdAsync(id);
         
-        var result = existing.IsEmpty switch
+        var result = (existing == null || existing.IsEmpty) switch
         {
             true => ServiceResult<bool>.Failure(
                 false,
@@ -541,7 +541,7 @@ public class SetConfigurationService : ISetConfigurationService
         var repository = unitOfWork.GetRepository<ISetConfigurationRepository>();
         var setConfiguration = await repository.GetByIdAsync(id);
 
-        return !setConfiguration.IsEmpty;
+        return setConfiguration != null && !setConfiguration.IsEmpty;
     }
 
     private async Task<bool> CheckSetConfigurationExistsAsync(WorkoutTemplateExerciseId workoutTemplateExerciseId, int setNumber)

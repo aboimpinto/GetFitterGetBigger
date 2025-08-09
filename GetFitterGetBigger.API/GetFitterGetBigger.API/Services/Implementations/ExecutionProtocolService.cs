@@ -53,6 +53,13 @@ public class ExecutionProtocolService(
     /// <returns>A service result containing the execution_protocol if found</returns>
     public async Task<ServiceResult<ExecutionProtocolDto>> GetByIdAsync(string id)
     {
+        if (string.IsNullOrWhiteSpace(id))
+        {
+            return ServiceResult<ExecutionProtocolDto>.Failure(
+                ExecutionProtocolDto.Empty,
+                ServiceError.ValidationFailed(ExecutionProtocolErrorMessages.IdCannotBeEmpty));
+        }
+        
         var execution_protocolId = ExecutionProtocolId.ParseOrEmpty(id);
         
         return await ServiceValidate.For<ExecutionProtocolDto>()
@@ -68,7 +75,7 @@ public class ExecutionProtocolService(
         var repository = unitOfWork.GetRepository<IExecutionProtocolRepository>();
         var entity = await repository.GetByIdAsync(id);
         
-        return (entity.IsEmpty || !entity.IsActive) switch
+        return (entity == null || entity.IsEmpty || !entity.IsActive) switch
         {
             true => ServiceResult<ExecutionProtocolDto>.Failure(
                 ExecutionProtocolDto.Empty,
@@ -93,7 +100,7 @@ public class ExecutionProtocolService(
         var repository = unitOfWork.GetRepository<IExecutionProtocolRepository>();
         var entity = await repository.GetByValueAsync(value);
         
-        return (entity.IsEmpty || !entity.IsActive) switch
+        return (entity == null || entity.IsEmpty || !entity.IsActive) switch
         {
             true => ServiceResult<ExecutionProtocolDto>.Failure(
                 ExecutionProtocolDto.Empty,
@@ -132,7 +139,7 @@ public class ExecutionProtocolService(
         var repository = unitOfWork.GetRepository<IExecutionProtocolRepository>();
         var entity = await repository.GetByCodeAsync(code);
         
-        return (entity.IsEmpty || !entity.IsActive) switch
+        return (entity == null || entity.IsEmpty || !entity.IsActive) switch
         {
             true => ServiceResult<ExecutionProtocolDto>.Failure(
                 ExecutionProtocolDto.Empty,

@@ -54,8 +54,8 @@ namespace GetFitterGetBigger.API.Tests.Services
 
 
             _mockBodyPartRepository
-                .Setup(x => x.GetAllActiveAsync())
-                .ReturnsAsync(new List<BodyPart>());
+                .Setup(x => x.ExistsAsync(It.IsAny<BodyPartId>()))
+                .ReturnsAsync(true);
 
             // Act
             var result = await _bodyPartService.ExistsAsync(bodyPartId);
@@ -75,8 +75,8 @@ namespace GetFitterGetBigger.API.Tests.Services
 
 
             _mockBodyPartRepository
-                .Setup(x => x.GetAllActiveAsync())
-                .ReturnsAsync(new List<BodyPart>());
+                .Setup(x => x.ExistsAsync(It.IsAny<BodyPartId>()))
+                .ReturnsAsync(false);
 
             // Act
             var result = await _bodyPartService.ExistsAsync(bodyPartId);
@@ -96,8 +96,8 @@ namespace GetFitterGetBigger.API.Tests.Services
             var bodyPartIdString = bodyPartId.ToString();
 
             _mockBodyPartRepository
-                .Setup(x => x.GetAllActiveAsync())
-                .ReturnsAsync(new List<BodyPart>());
+                .Setup(x => x.ExistsAsync(It.IsAny<BodyPartId>()))
+                .ReturnsAsync(true);
 
             // Act
             var result = await _bodyPartService.ExistsAsync(BodyPartId.ParseOrEmpty(bodyPartIdString));
@@ -113,16 +113,22 @@ namespace GetFitterGetBigger.API.Tests.Services
         public async Task GetAllActiveAsync_ReturnsSuccessWithBodyParts()
         {
             // Arrange
+            var chestResult = BodyPart.Handler.Create(BodyPartId.New(), "Chest", "Chest muscles", 1, true);
+            var backResult = BodyPart.Handler.Create(BodyPartId.New(), "Back", "Back muscles", 2, true);
+            
+            Assert.True(chestResult.IsSuccess, "Chest BodyPart creation should succeed");
+            Assert.True(backResult.IsSuccess, "Back BodyPart creation should succeed");
+            
             var bodyParts = new List<BodyPart>
             {
-                BodyPart.Handler.Create(BodyPartId.New(), "Chest", "Chest muscles", 1, true).Value,
-                BodyPart.Handler.Create(BodyPartId.New(), "Back", "Back muscles", 2, true).Value
+                chestResult.Value,
+                backResult.Value
             };
 
 
             _mockBodyPartRepository
                 .Setup(x => x.GetAllActiveAsync())
-                .ReturnsAsync(new List<BodyPart>());
+                .ReturnsAsync(bodyParts);
 
 
             // Act
@@ -142,17 +148,19 @@ namespace GetFitterGetBigger.API.Tests.Services
             // Arrange
             var bodyPartId = BodyPartId.New();
             var bodyPartIdString = bodyPartId.ToString();
-            var bodyPart = BodyPart.Handler.Create(
+            var createResult = BodyPart.Handler.Create(
                 bodyPartId,
                 "Chest",
                 "Chest muscles",
                 1,
-                true).Value;
+                true);
+            Assert.True(createResult.IsSuccess, "BodyPart creation should succeed");
+            var bodyPart = createResult.Value;
 
 
             _mockBodyPartRepository
-                .Setup(x => x.GetAllActiveAsync())
-                .ReturnsAsync(new List<BodyPart>());
+                .Setup(x => x.GetByIdAsync(It.IsAny<BodyPartId>()))
+                .ReturnsAsync(bodyPart);
 
 
             // Act
@@ -171,17 +179,22 @@ namespace GetFitterGetBigger.API.Tests.Services
         {
             // Arrange
             var bodyPartId = BodyPartId.New();
-            var bodyPart = BodyPart.Handler.Create(
+            var createResult = BodyPart.Handler.Create(
                 bodyPartId,
                 "Back",
                 "Back muscles",
                 2,
-                true).Value;
+                true);
+            
+            // Ensure creation succeeded
+            Assert.True(createResult.IsSuccess, "BodyPart creation should succeed");
+            var bodyPart = createResult.Value;
+            Assert.NotNull(bodyPart);
 
 
             _mockBodyPartRepository
-                .Setup(x => x.GetAllActiveAsync())
-                .ReturnsAsync(new List<BodyPart>());
+                .Setup(x => x.GetByIdAsync(It.IsAny<BodyPartId>()))
+                .ReturnsAsync(bodyPart);
 
 
             // Act
@@ -193,6 +206,9 @@ namespace GetFitterGetBigger.API.Tests.Services
             Assert.Equal(bodyPartId.ToString(), result.Data.Id);
             Assert.Equal("Back", result.Data.Value);
             Assert.Empty(result.Errors);
+            
+            // Verify the repository was called
+            _mockBodyPartRepository.Verify(x => x.GetByIdAsync(It.IsAny<BodyPartId>()), Times.Once);
         }
 
         [Fact]
@@ -229,7 +245,7 @@ namespace GetFitterGetBigger.API.Tests.Services
             Assert.False(result.IsSuccess);
             Assert.NotNull(result.Data);
             Assert.Equal(ServiceErrorCode.ValidationFailed, result.PrimaryErrorCode);
-            Assert.Contains(BodyPartErrorMessages.IdCannotBeEmpty, result.Errors);
+            Assert.Contains(BodyPartErrorMessages.InvalidIdFormat, result.Errors);
             _mockBodyPartRepository.Verify(x => x.GetByIdAsync(It.IsAny<BodyPartId>()), Times.Never);
         }
 
@@ -246,7 +262,7 @@ namespace GetFitterGetBigger.API.Tests.Services
             Assert.False(result.IsSuccess);
             Assert.NotNull(result.Data);
             Assert.Equal(ServiceErrorCode.ValidationFailed, result.PrimaryErrorCode);
-            Assert.Contains(BodyPartErrorMessages.IdCannotBeEmpty, result.Errors);
+            Assert.Contains(BodyPartErrorMessages.InvalidIdFormat, result.Errors);
             _mockBodyPartRepository.Verify(x => x.GetByIdAsync(It.IsAny<BodyPartId>()), Times.Never);
         }
 
@@ -255,17 +271,19 @@ namespace GetFitterGetBigger.API.Tests.Services
         {
             // Arrange
             var bodyPartId = BodyPartId.New();
-            var inactiveBodyPart = BodyPart.Handler.Create(
+            var createResult = BodyPart.Handler.Create(
                 bodyPartId,
                 "Chest",
                 "Chest muscles",
                 1,
-                false).Value; // IsActive = false
+                false); // IsActive = false
+            Assert.True(createResult.IsSuccess, "Inactive BodyPart creation should succeed");
+            var inactiveBodyPart = createResult.Value;
 
 
             _mockBodyPartRepository
-                .Setup(x => x.GetAllActiveAsync())
-                .ReturnsAsync(new List<BodyPart>());
+                .Setup(x => x.GetByIdAsync(It.IsAny<BodyPartId>()))
+                .ReturnsAsync(inactiveBodyPart);
 
             // Act
             var result = await _bodyPartService.GetByIdAsync(bodyPartId.ToString());
@@ -284,17 +302,19 @@ namespace GetFitterGetBigger.API.Tests.Services
             // Arrange
             var value = "Chest";
             var bodyPartId = BodyPartId.New();
-            var bodyPart = BodyPart.Handler.Create(
+            var createResult = BodyPart.Handler.Create(
                 bodyPartId,
                 value,
                 "Chest muscles",
                 1,
-                true).Value;
+                true);
+            Assert.True(createResult.IsSuccess, "BodyPart creation should succeed");
+            var bodyPart = createResult.Value;
 
 
             _mockBodyPartRepository
-                .Setup(x => x.GetAllActiveAsync())
-                .ReturnsAsync(new List<BodyPart>());
+                .Setup(x => x.GetByValueAsync(value))
+                .ReturnsAsync(bodyPart);
 
 
             // Act
@@ -315,8 +335,8 @@ namespace GetFitterGetBigger.API.Tests.Services
 
 
             _mockBodyPartRepository
-                .Setup(x => x.GetAllActiveAsync())
-                .ReturnsAsync(new List<BodyPart>());
+                .Setup(x => x.GetByValueAsync(value))
+                .ReturnsAsync(BodyPart.Empty);
 
             // Act
             var result = await _bodyPartService.GetByValueAsync(value);
@@ -333,17 +353,19 @@ namespace GetFitterGetBigger.API.Tests.Services
         {
             // Arrange
             var value = "InactiveBodyPart";
-            var inactiveBodyPart = BodyPart.Handler.Create(
+            var createResult = BodyPart.Handler.Create(
                 BodyPartId.New(),
                 value,
                 "Inactive body part",
                 1,
-                false).Value; // IsActive = false
+                false); // IsActive = false
+            Assert.True(createResult.IsSuccess, "Inactive BodyPart creation should succeed");
+            var inactiveBodyPart = createResult.Value;
 
 
             _mockBodyPartRepository
-                .Setup(x => x.GetAllActiveAsync())
-                .ReturnsAsync(new List<BodyPart>());
+                .Setup(x => x.GetByValueAsync(value))
+                .ReturnsAsync(inactiveBodyPart);
 
             // Act
             var result = await _bodyPartService.GetByValueAsync(value);

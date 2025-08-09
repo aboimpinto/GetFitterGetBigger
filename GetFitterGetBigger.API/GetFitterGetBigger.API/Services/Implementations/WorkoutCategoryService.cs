@@ -59,6 +59,13 @@ public class WorkoutCategoryService(
     /// <returns>A service result containing the workout_category if found</returns>
     public async Task<ServiceResult<WorkoutCategoryDto>> GetByIdAsync(string id)
     {
+        if (string.IsNullOrWhiteSpace(id))
+        {
+            return ServiceResult<WorkoutCategoryDto>.Failure(
+                WorkoutCategoryDto.Empty,
+                ServiceError.ValidationFailed(WorkoutCategoryErrorMessages.IdCannotBeEmpty));
+        }
+        
         var workout_categoryId = WorkoutCategoryId.ParseOrEmpty(id);
         
         return await ServiceValidate.For<WorkoutCategoryDto>()
@@ -74,7 +81,7 @@ public class WorkoutCategoryService(
         var repository = unitOfWork.GetRepository<IWorkoutCategoryRepository>();
         var entity = await repository.GetByIdAsync(id);
         
-        return (entity.IsEmpty || !entity.IsActive) switch
+        return (entity == null || entity.IsEmpty || !entity.IsActive) switch
         {
             true => ServiceResult<WorkoutCategoryDto>.Failure(
                 WorkoutCategoryDto.Empty,
@@ -99,7 +106,7 @@ public class WorkoutCategoryService(
         var repository = unitOfWork.GetRepository<IWorkoutCategoryRepository>();
         var entity = await repository.GetByValueAsync(value);
         
-        return (entity.IsEmpty || !entity.IsActive) switch
+        return (entity == null || entity.IsEmpty || !entity.IsActive) switch
         {
             true => ServiceResult<WorkoutCategoryDto>.Failure(
                 WorkoutCategoryDto.Empty,

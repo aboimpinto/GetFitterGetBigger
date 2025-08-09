@@ -61,6 +61,14 @@ public class WorkoutTemplateServiceTests
             .Setup(x => x.CreateWritable())
             .Returns(_mockWritableUnitOfWork.Object);
             
+        _mockWritableUnitOfWork
+            .Setup(x => x.GetRepository<IWorkoutTemplateRepository>())
+            .Returns(_mockRepository.Object);
+            
+        _mockWritableUnitOfWork
+            .Setup(x => x.CommitAsync())
+            .Returns(Task.CompletedTask);
+            
         _mockWorkoutStateService = new Mock<IWorkoutStateService>();
         _mockExerciseService = new Mock<IExerciseService>();
         _mockWorkoutTemplateExerciseService = new Mock<IWorkoutTemplateExerciseService>();
@@ -114,8 +122,8 @@ public class WorkoutTemplateServiceTests
     {
         // Arrange
         _mockRepository
-            .Setup(x => x.ExistsByNameAsync(It.IsAny<string>(), It.IsAny<WorkoutTemplateId>()))
-            .ReturnsAsync(true);
+            .Setup(x => x.GetByIdWithDetailsAsync(It.IsAny<WorkoutTemplateId>()))
+            .ReturnsAsync(_testTemplate);
             
         // Act
         var result = await _service.GetByIdAsync(_testTemplateId);
@@ -145,8 +153,8 @@ public class WorkoutTemplateServiceTests
     {
         // Arrange
         _mockRepository
-            .Setup(x => x.ExistsByNameAsync(It.IsAny<string>(), It.IsAny<WorkoutTemplateId>()))
-            .ReturnsAsync(true);
+            .Setup(x => x.GetByIdWithDetailsAsync(It.IsAny<WorkoutTemplateId>()))
+            .ReturnsAsync((WorkoutTemplate)null!);
             
         // Act
         var result = await _service.GetByIdAsync(_testTemplateId);
@@ -177,11 +185,23 @@ public class WorkoutTemplateServiceTests
         
         _mockRepository
             .Setup(x => x.ExistsByNameAsync(It.IsAny<string>(), It.IsAny<WorkoutTemplateId>()))
-            .ReturnsAsync(true);
+            .ReturnsAsync(false);
             
         _mockRepository
-            .Setup(x => x.ExistsByNameAsync(It.IsAny<string>(), It.IsAny<WorkoutTemplateId>()))
-            .ReturnsAsync(true);
+            .Setup(x => x.AddAsync(It.IsAny<WorkoutTemplate>()))
+            .ReturnsAsync(_testTemplate);
+            
+        // Setup WorkoutStateService mock for Draft state
+        var draftWorkoutStateDto = new WorkoutStateDto
+        {
+            Id = TestIds.WorkoutStateIds.Draft,
+            Value = "Draft",
+            Description = "Draft state for new workout templates"
+        };
+        
+        _mockWorkoutStateService
+            .Setup(x => x.GetByValueAsync(It.IsAny<string>()))
+            .ReturnsAsync(ServiceResult<WorkoutStateDto>.Success(draftWorkoutStateDto));
             
         // Act
         var result = await _service.CreateAsync(command);
@@ -274,17 +294,25 @@ public class WorkoutTemplateServiceTests
             IsPublic = false
         };
         
+        // Mock GetByIdWithDetailsAsync for the existence check in UpdateAsync
         _mockRepository
-            .Setup(x => x.ExistsByNameAsync(It.IsAny<string>(), It.IsAny<WorkoutTemplateId>()))
-            .ReturnsAsync(true);
+            .Setup(x => x.GetByIdWithDetailsAsync(_testTemplateId))
+            .ReturnsAsync(_testTemplate);
             
+        // Mock GetByIdAsync for loading the existing template during update
         _mockRepository
-            .Setup(x => x.ExistsByNameAsync(It.IsAny<string>(), It.IsAny<WorkoutTemplateId>()))
-            .ReturnsAsync(true);
+            .Setup(x => x.GetByIdAsync(It.IsAny<WorkoutTemplateId>()))
+            .ReturnsAsync(_testTemplate);
             
+        // Mock ExistsByNameAsync to allow name update (return false = name doesn't exist yet)
         _mockRepository
             .Setup(x => x.ExistsByNameAsync(It.IsAny<string>(), It.IsAny<WorkoutTemplateId>()))
-            .ReturnsAsync(true);
+            .ReturnsAsync(false);
+            
+        // Mock UpdateAsync to return updated template
+        _mockRepository
+            .Setup(x => x.UpdateAsync(It.IsAny<WorkoutTemplate>()))
+            .ReturnsAsync(_testTemplate);
             
         // Act
         var result = await _service.UpdateAsync(_testTemplateId, command);
@@ -331,16 +359,16 @@ public class WorkoutTemplateServiceTests
         var newStateId = WorkoutStateId.ParseOrEmpty(TestIds.WorkoutStateIds.Production);
         
         _mockRepository
-            .Setup(x => x.ExistsByNameAsync(It.IsAny<string>(), It.IsAny<WorkoutTemplateId>()))
-            .ReturnsAsync(true);
+            .Setup(x => x.GetByIdWithDetailsAsync(It.IsAny<WorkoutTemplateId>()))
+            .ReturnsAsync(_testTemplate);
             
         _mockRepository
-            .Setup(x => x.ExistsByNameAsync(It.IsAny<string>(), It.IsAny<WorkoutTemplateId>()))
-            .ReturnsAsync(true);
+            .Setup(x => x.GetByIdAsync(It.IsAny<WorkoutTemplateId>()))
+            .ReturnsAsync(_testTemplate);
             
         _mockRepository
-            .Setup(x => x.ExistsByNameAsync(It.IsAny<string>(), It.IsAny<WorkoutTemplateId>()))
-            .ReturnsAsync(true);
+            .Setup(x => x.UpdateAsync(It.IsAny<WorkoutTemplate>()))
+            .ReturnsAsync(_testTemplate);
             
         // Act
         var result = await _service.ChangeStateAsync(_testTemplateId, newStateId);
@@ -354,8 +382,8 @@ public class WorkoutTemplateServiceTests
     {
         // Arrange
         _mockRepository
-            .Setup(x => x.ExistsByNameAsync(It.IsAny<string>(), It.IsAny<WorkoutTemplateId>()))
-            .ReturnsAsync(true);
+            .Setup(x => x.GetByIdWithDetailsAsync(It.IsAny<WorkoutTemplateId>()))
+            .ReturnsAsync(_testTemplate);
             
         // Act
         var result = await _service.ChangeStateAsync(_testTemplateId, WorkoutStateId.Empty);
@@ -373,11 +401,11 @@ public class WorkoutTemplateServiceTests
     {
         // Arrange
         _mockRepository
-            .Setup(x => x.ExistsByNameAsync(It.IsAny<string>(), It.IsAny<WorkoutTemplateId>()))
-            .ReturnsAsync(true);
+            .Setup(x => x.GetByIdWithDetailsAsync(It.IsAny<WorkoutTemplateId>()))
+            .ReturnsAsync(_testTemplate);
             
         _mockRepository
-            .Setup(x => x.ExistsByNameAsync(It.IsAny<string>(), It.IsAny<WorkoutTemplateId>()))
+            .Setup(x => x.SoftDeleteAsync(It.IsAny<WorkoutTemplateId>()))
             .ReturnsAsync(true);
             
         // Act
@@ -393,11 +421,11 @@ public class WorkoutTemplateServiceTests
     {
         // Arrange
         _mockRepository
-            .Setup(x => x.ExistsByNameAsync(It.IsAny<string>(), It.IsAny<WorkoutTemplateId>()))
-            .ReturnsAsync(true);
+            .Setup(x => x.GetByIdWithDetailsAsync(It.IsAny<WorkoutTemplateId>()))
+            .ReturnsAsync(_testTemplate);
             
         _mockRepository
-            .Setup(x => x.ExistsByNameAsync(It.IsAny<string>(), It.IsAny<WorkoutTemplateId>()))
+            .Setup(x => x.DeleteAsync(It.IsAny<WorkoutTemplateId>()))
             .ReturnsAsync(true);
             
         // Act
@@ -417,6 +445,10 @@ public class WorkoutTemplateServiceTests
     {
         // Arrange
         var templates = new List<WorkoutTemplate> { _testTemplate }.BuildAsyncQueryable();
+        
+        _mockRepository
+            .Setup(x => x.GetWorkoutTemplatesQueryable())
+            .Returns(templates);
         
         _mockRepository
             .Setup(x => x.ExistsByNameAsync(It.IsAny<string>(), It.IsAny<WorkoutTemplateId>()))
@@ -445,6 +477,10 @@ public class WorkoutTemplateServiceTests
         // Arrange
         var categoryId = WorkoutCategoryId.ParseOrEmpty(TestIds.WorkoutCategoryIds.Strength);
         var templates = new List<WorkoutTemplate> { _testTemplate }.BuildAsyncQueryable();
+        
+        _mockRepository
+            .Setup(x => x.GetWorkoutTemplatesQueryable())
+            .Returns(templates);
         
         _mockRepository
             .Setup(x => x.ExistsByNameAsync(It.IsAny<string>(), It.IsAny<WorkoutTemplateId>()))
@@ -483,6 +519,10 @@ public class WorkoutTemplateServiceTests
                 .Build())
             .ToList()
             .BuildAsyncQueryable();
+            
+        _mockRepository
+            .Setup(x => x.GetWorkoutTemplatesQueryable())
+            .Returns(templates);
             
         _mockRepository
             .Setup(x => x.ExistsByNameAsync(It.IsAny<string>(), It.IsAny<WorkoutTemplateId>()))
@@ -534,6 +574,10 @@ public class WorkoutTemplateServiceTests
         var templates = new List<WorkoutTemplate> { templateWithObjective }.BuildAsyncQueryable();
         
         _mockRepository
+            .Setup(x => x.GetWorkoutTemplatesQueryable())
+            .Returns(templates);
+        
+        _mockRepository
             .Setup(x => x.ExistsByNameAsync(It.IsAny<string>(), It.IsAny<WorkoutTemplateId>()))
             .ReturnsAsync(true);
             
@@ -559,6 +603,10 @@ public class WorkoutTemplateServiceTests
         // Arrange
         var difficultyId = DifficultyLevelId.ParseOrEmpty(TestIds.DifficultyLevelIds.Beginner);
         var templates = new List<WorkoutTemplate> { _testTemplate }.BuildAsyncQueryable();
+        
+        _mockRepository
+            .Setup(x => x.GetWorkoutTemplatesQueryable())
+            .Returns(templates);
         
         _mockRepository
             .Setup(x => x.ExistsByNameAsync(It.IsAny<string>(), It.IsAny<WorkoutTemplateId>()))
@@ -593,6 +641,10 @@ public class WorkoutTemplateServiceTests
         var templates = new List<WorkoutTemplate> { _testTemplate }.BuildAsyncQueryable();
         
         _mockRepository
+            .Setup(x => x.GetWorkoutTemplatesQueryable())
+            .Returns(templates);
+        
+        _mockRepository
             .Setup(x => x.ExistsByNameAsync(It.IsAny<string>(), It.IsAny<WorkoutTemplateId>()))
             .ReturnsAsync(true);
             
@@ -625,16 +677,16 @@ public class WorkoutTemplateServiceTests
         var newCreatorId = UserId.ParseOrEmpty(TestIds.UserIds.JaneDoe);
         
         _mockRepository
-            .Setup(x => x.ExistsByNameAsync(It.IsAny<string>(), It.IsAny<WorkoutTemplateId>()))
-            .ReturnsAsync(true);
+            .Setup(x => x.GetByIdWithDetailsAsync(It.IsAny<WorkoutTemplateId>()))
+            .ReturnsAsync(_testTemplate);
             
         _mockRepository
             .Setup(x => x.ExistsByNameAsync(It.IsAny<string>(), It.IsAny<WorkoutTemplateId>()))
-            .ReturnsAsync(true);
+            .ReturnsAsync(false);
             
         _mockRepository
-            .Setup(x => x.ExistsByNameAsync(It.IsAny<string>(), It.IsAny<WorkoutTemplateId>()))
-            .ReturnsAsync(true);
+            .Setup(x => x.AddAsync(It.IsAny<WorkoutTemplate>()))
+            .ReturnsAsync(_testTemplate);
             
         // Act
         var result = await _service.DuplicateAsync(_testTemplateId, newName);
@@ -648,8 +700,8 @@ public class WorkoutTemplateServiceTests
     {
         // Arrange
         _mockRepository
-            .Setup(x => x.ExistsByNameAsync(It.IsAny<string>(), It.IsAny<WorkoutTemplateId>()))
-            .ReturnsAsync(true);
+            .Setup(x => x.GetByIdWithDetailsAsync(It.IsAny<WorkoutTemplateId>()))
+            .ReturnsAsync(_testTemplate);
             
         // Act
         var result = await _service.DuplicateAsync(_testTemplateId, "");
@@ -668,7 +720,7 @@ public class WorkoutTemplateServiceTests
     {
         // Arrange
         _mockRepository
-            .Setup(x => x.ExistsByNameAsync(It.IsAny<string>(), It.IsAny<WorkoutTemplateId>()))
+            .Setup(x => x.ExistsAsync(It.IsAny<WorkoutTemplateId>()))
             .ReturnsAsync(true);
             
         // Act
@@ -695,7 +747,7 @@ public class WorkoutTemplateServiceTests
         // Arrange
         var stringId = TestIds.WorkoutTemplateIds.BasicTemplate;
         _mockRepository
-            .Setup(x => x.ExistsByNameAsync(It.IsAny<string>(), It.IsAny<WorkoutTemplateId>()))
+            .Setup(x => x.ExistsAsync(It.IsAny<WorkoutTemplateId>()))
             .ReturnsAsync(true);
             
         // Act

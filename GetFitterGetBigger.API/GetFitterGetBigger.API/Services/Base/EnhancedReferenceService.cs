@@ -122,6 +122,9 @@ public abstract class EnhancedReferenceService<TEntity, TDto, TCreateCommand, TU
     /// </summary>
     protected virtual bool IsEntityValidForReturn(TEntity entity)
     {
+        if (entity == null)
+            return false;
+            
         // Check if entity is empty (for entities implementing IEmptyEntity)
         var entityType = entity.GetType();
         var isEmptyProperty = entityType.GetProperty("IsEmpty");

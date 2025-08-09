@@ -299,8 +299,9 @@ public class WorkoutTemplateExerciseServiceTests
         // Arrange
         var exerciseIds = new List<ExerciseId> { _testExerciseEntityId };
         
+        // Mock the actual method called by ValidateTemplateExistsAsync
         _mockTemplateRepo
-            .Setup(x => x.GetByIdWithDetailsAsync(_testTemplateId))
+            .Setup(x => x.GetByIdAsync(_testTemplateId))
             .ReturnsAsync(_testTemplate);
             
         _mockExerciseRepo
@@ -339,8 +340,9 @@ public class WorkoutTemplateExerciseServiceTests
         // Arrange
         var exerciseIds = new List<ExerciseId> { _testExerciseEntityId };
         
+        // Mock the actual method called by ValidateTemplateExistsAsync  
         _mockTemplateRepo
-            .Setup(x => x.GetByIdWithDetailsAsync(_testTemplateId))
+            .Setup(x => x.GetByIdAsync(_testTemplateId))
             .ReturnsAsync(_testTemplate);
             
         _mockExerciseRepo

@@ -141,7 +141,7 @@ public class CommonSteps
     }
 
     [AfterScenario]
-    public async Task AfterScenario()
+    public Task AfterScenario()
     {
         // Clean up any created entities
         if (_scenarioContext.ScenarioExecutionStatus == ScenarioExecutionStatus.TestError)
@@ -155,5 +155,6 @@ public class CommonSteps
                 Console.WriteLine($"Stack Trace: {_scenarioContext.TestError.StackTrace}");
             }
         }
+        return Task.CompletedTask;
     }
 }

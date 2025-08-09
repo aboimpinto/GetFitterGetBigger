@@ -97,13 +97,14 @@ public class WorkoutTemplateExerciseService : IWorkoutTemplateExerciseService
         
         var exercise = await repository.GetByIdWithDetailsAsync(exerciseId);
 
-        var result = exercise.IsEmpty switch
+        if (exercise == null || exercise.IsEmpty)
         {
-            true => ServiceResult<WorkoutTemplateExerciseDto>.Failure(
+            return ServiceResult<WorkoutTemplateExerciseDto>.Failure(
                 new WorkoutTemplateExerciseDto(),
-                ServiceError.NotFound("Exercise not found")),
-            false => ServiceResult<WorkoutTemplateExerciseDto>.Success(MapToDto(exercise))
-        };
+                ServiceError.NotFound("Exercise not found"));
+        }
+        
+        var result = ServiceResult<WorkoutTemplateExerciseDto>.Success(MapToDto(exercise));
         
         return result;
     }
@@ -177,16 +178,21 @@ public class WorkoutTemplateExerciseService : IWorkoutTemplateExerciseService
         var templateRepo = unitOfWork.GetRepository<IWorkoutTemplateRepository>();
         var template = await templateRepo.GetByIdAsync(workoutTemplateId);
         
-        var result = template.IsEmpty switch
+        if (template == null || template.IsEmpty)
         {
-            true => ServiceResult<WorkoutTemplateExerciseDto>.Failure(
+            return ServiceResult<WorkoutTemplateExerciseDto>.Failure(
                 new WorkoutTemplateExerciseDto(),
-                ServiceError.NotFound("Workout template not found")),
-            false when template.WorkoutState.Value != "DRAFT" => ServiceResult<WorkoutTemplateExerciseDto>.Failure(
+                ServiceError.NotFound("Workout template not found"));
+        }
+        
+        if (template.WorkoutState?.Value != "DRAFT")
+        {
+            return ServiceResult<WorkoutTemplateExerciseDto>.Failure(
                 new WorkoutTemplateExerciseDto(),
-                ServiceError.ValidationFailed("Can only add exercises to templates in DRAFT state")),
-            false => ServiceResult<WorkoutTemplateExerciseDto>.Success(new WorkoutTemplateExerciseDto()) // Dummy success
-        };
+                ServiceError.ValidationFailed("Can only add exercises to templates in DRAFT state"));
+        }
+        
+        var result = ServiceResult<WorkoutTemplateExerciseDto>.Success(new WorkoutTemplateExerciseDto());
         
         return result;
     }
@@ -198,13 +204,14 @@ public class WorkoutTemplateExerciseService : IWorkoutTemplateExerciseService
         var exerciseRepo = unitOfWork.GetRepository<IExerciseRepository>();
         var exercise = await exerciseRepo.GetByIdAsync(command.ExerciseId);
         
-        var result = exercise.IsEmpty switch
+        if (exercise == null || exercise.IsEmpty)
         {
-            true => ServiceResult<WorkoutTemplateExerciseDto>.Failure(
+            return ServiceResult<WorkoutTemplateExerciseDto>.Failure(
                 new WorkoutTemplateExerciseDto(),
-                ServiceError.NotFound("Exercise not found")),
-            false => await CreateWorkoutTemplateExerciseAsync(unitOfWork, command)
-        };
+                ServiceError.NotFound("Exercise not found"));
+        }
+        
+        var result = await CreateWorkoutTemplateExerciseAsync(unitOfWork, command);
         
         return result;
     }
@@ -281,13 +288,14 @@ public class WorkoutTemplateExerciseService : IWorkoutTemplateExerciseService
         var exerciseTemplateRepo = unitOfWork.GetRepository<IWorkoutTemplateExerciseRepository>();
         
         var exerciseTemplate = await exerciseTemplateRepo.GetByIdWithDetailsAsync(command.WorkoutTemplateExerciseId);
-        var result = exerciseTemplate.IsEmpty switch
+        if (exerciseTemplate == null || exerciseTemplate.IsEmpty)
         {
-            true => ServiceResult<WorkoutTemplateExerciseDto>.Failure(
+            return ServiceResult<WorkoutTemplateExerciseDto>.Failure(
                 new WorkoutTemplateExerciseDto(),
-                ServiceError.NotFound("Template exercise not found")),
-            false => await ValidateAndPerformUpdateAsync(unitOfWork, exerciseTemplate, command, exerciseTemplateRepo)
-        };
+                ServiceError.NotFound("Template exercise not found"));
+        }
+        
+        var result = await ValidateAndPerformUpdateAsync(unitOfWork, exerciseTemplate, command, exerciseTemplateRepo);
         
         return result;
     }
@@ -361,13 +369,14 @@ public class WorkoutTemplateExerciseService : IWorkoutTemplateExerciseService
         var exerciseTemplateRepo = unitOfWork.GetRepository<IWorkoutTemplateExerciseRepository>();
         
         var exerciseTemplate = await exerciseTemplateRepo.GetByIdWithDetailsAsync(workoutTemplateExerciseId);
-        var result = exerciseTemplate.IsEmpty switch
+        if (exerciseTemplate == null || exerciseTemplate.IsEmpty)
         {
-            true => ServiceResult<bool>.Failure(
+            return ServiceResult<bool>.Failure(
                 false,
-                ServiceError.NotFound("Template exercise not found")),
-            false => await ValidateAndRemoveExerciseAsync(unitOfWork, exerciseTemplate, exerciseTemplateRepo, workoutTemplateExerciseId)
-        };
+                ServiceError.NotFound("Template exercise not found"));
+        }
+        
+        var result = await ValidateAndRemoveExerciseAsync(unitOfWork, exerciseTemplate, exerciseTemplateRepo, workoutTemplateExerciseId);
         
         return result;
     }
@@ -470,16 +479,21 @@ public class WorkoutTemplateExerciseService : IWorkoutTemplateExerciseService
         var templateRepo = unitOfWork.GetRepository<IWorkoutTemplateRepository>();
         var template = await templateRepo.GetByIdAsync(workoutTemplateId);
         
-        var result = template.IsEmpty switch
+        if (template == null || template.IsEmpty)
         {
-            true => ServiceResult<bool>.Failure(
+            return ServiceResult<bool>.Failure(
                 false,
-                ServiceError.NotFound("Workout template not found")),
-            false when template.WorkoutState.Value != "DRAFT" => ServiceResult<bool>.Failure(
+                ServiceError.NotFound("Workout template not found"));
+        }
+        
+        if (template.WorkoutState?.Value != "DRAFT")
+        {
+            return ServiceResult<bool>.Failure(
                 false,
-                ServiceError.ValidationFailed("Can only reorder exercises in templates in DRAFT state")),
-            false => ServiceResult<bool>.Success(true) // Dummy success
-        };
+                ServiceError.ValidationFailed("Can only reorder exercises in templates in DRAFT state"));
+        }
+        
+        var result = ServiceResult<bool>.Success(true);
         
         return result;
     }
@@ -552,13 +566,14 @@ public class WorkoutTemplateExerciseService : IWorkoutTemplateExerciseService
         var exerciseTemplateRepo = unitOfWork.GetRepository<IWorkoutTemplateExerciseRepository>();
         
         var exerciseTemplate = await exerciseTemplateRepo.GetByIdWithDetailsAsync(command.WorkoutTemplateExerciseId);
-        var result = exerciseTemplate.IsEmpty switch
+        if (exerciseTemplate == null || exerciseTemplate.IsEmpty)
         {
-            true => ServiceResult<WorkoutTemplateExerciseDto>.Failure(
+            return ServiceResult<WorkoutTemplateExerciseDto>.Failure(
                 new WorkoutTemplateExerciseDto(),
-                ServiceError.NotFound("Template exercise not found")),
-            false => await ValidateAndPerformZoneChangeAsync(unitOfWork, exerciseTemplate, command, exerciseTemplateRepo)
-        };
+                ServiceError.NotFound("Template exercise not found"));
+        }
+        
+        var result = await ValidateAndPerformZoneChangeAsync(unitOfWork, exerciseTemplate, command, exerciseTemplateRepo);
         
         return result;
     }
@@ -664,13 +679,15 @@ public class WorkoutTemplateExerciseService : IWorkoutTemplateExerciseService
         var templateRepo = unitOfWork.GetRepository<IWorkoutTemplateRepository>();
         
         var sourceTemplate = await templateRepo.GetByIdAsync(command.SourceTemplateId);
-        var result = sourceTemplate.IsEmpty switch
+        
+        if (sourceTemplate == null || sourceTemplate.IsEmpty)
         {
-            true => ServiceResult<int>.Failure(
+            return ServiceResult<int>.Failure(
                 0,
-                ServiceError.NotFound("Source template not found")),
-            false => await ValidateTargetTemplateAsync(templateRepo, command)
-        };
+                ServiceError.NotFound("Source template not found"));
+        }
+        
+        var result = await ValidateTargetTemplateAsync(templateRepo, command);
         
         return result;
     }
@@ -680,16 +697,22 @@ public class WorkoutTemplateExerciseService : IWorkoutTemplateExerciseService
         DuplicateTemplateExercisesCommand command)
     {
         var targetTemplate = await templateRepo.GetByIdAsync(command.TargetTemplateId);
-        var result = targetTemplate.IsEmpty switch
+        
+        if (targetTemplate == null || targetTemplate.IsEmpty)
         {
-            true => ServiceResult<int>.Failure(
+            return ServiceResult<int>.Failure(
                 0,
-                ServiceError.NotFound("Target template not found")),
-            false when targetTemplate.WorkoutState.Value != "DRAFT" => ServiceResult<int>.Failure(
+                ServiceError.NotFound("Target template not found"));
+        }
+        
+        if (targetTemplate.WorkoutState?.Value != "DRAFT")
+        {
+            return ServiceResult<int>.Failure(
                 0,
-                ServiceError.ValidationFailed("Can only duplicate exercises to templates in DRAFT state")),
-            false => ServiceResult<int>.Success(0) // Dummy success to continue
-        };
+                ServiceError.ValidationFailed("Can only duplicate exercises to templates in DRAFT state"));
+        }
+        
+        var result = ServiceResult<int>.Success(0);
         
         return result;
     }
@@ -879,13 +902,14 @@ public class WorkoutTemplateExerciseService : IWorkoutTemplateExerciseService
         var templateRepo = unitOfWork.GetRepository<IWorkoutTemplateRepository>();
         var template = await templateRepo.GetByIdAsync(workoutTemplateId);
         
-        var result = template.IsEmpty switch
+        if (template == null || template.IsEmpty)
         {
-            true => ServiceResult<bool>.Failure(
+            return ServiceResult<bool>.Failure(
                 false,
-                ServiceError.NotFound("Workout template not found")),
-            false => ServiceResult<bool>.Success(true)
-        };
+                ServiceError.NotFound("Workout template not found"));
+        }
+        
+        var result = ServiceResult<bool>.Success(true);
         
         return result;
     }

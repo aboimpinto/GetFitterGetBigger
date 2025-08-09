@@ -88,8 +88,10 @@ public abstract class PureReferenceService<TEntity, TDto> : EntityServiceBase<TE
         // New services should override this method
         try
         {
+#pragma warning disable CS0618 // Type or member is obsolete - intentional for backward compatibility
             var entities = await LoadAllEntitiesAsync();
             var dtos = entities.Select(MapToDto).ToList();
+#pragma warning restore CS0618 // Type or member is obsolete
             return ServiceResult<IEnumerable<TDto>>.Success(dtos);
         }
         catch (Exception ex)
@@ -114,7 +116,9 @@ public abstract class PureReferenceService<TEntity, TDto> : EntityServiceBase<TE
         // New services should override this method
         try
         {
+#pragma warning disable CS0618 // Type or member is obsolete - intentional for backward compatibility
             var entityResult = await LoadEntityByIdAsync(id);
+#pragma warning restore CS0618 // Type or member is obsolete
             
             if (!entityResult.IsSuccess)
             {
@@ -130,7 +134,9 @@ public abstract class PureReferenceService<TEntity, TDto> : EntityServiceBase<TE
                     ServiceError.NotFound(typeof(TEntity).Name));
             }
             
+#pragma warning disable CS0618 // Type or member is obsolete - intentional for backward compatibility
             var dto = MapToDto(entityResult.Data);
+#pragma warning restore CS0618 // Type or member is obsolete
             return ServiceResult<TDto>.Success(dto);
         }
         catch (Exception ex)

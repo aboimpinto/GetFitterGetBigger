@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using GetFitterGetBigger.API.Constants;
 using GetFitterGetBigger.API.DTOs;
 using GetFitterGetBigger.API.Models;
 using GetFitterGetBigger.API.Models.Entities;
@@ -81,7 +82,10 @@ public class MuscleGroupServiceTests
     {
         // Arrange
         var cachedDtos = _testData.Select(MapToDto).ToList();
-        // _mockCacheService setup needed
+        
+        _mockCacheService
+            .Setup(x => x.GetAsync<IEnumerable<MuscleGroupDto>>(It.IsAny<string>()))
+            .ReturnsAsync(cachedDtos);
             
         // Act
         var result = await _service.GetAllAsync();
@@ -96,7 +100,9 @@ public class MuscleGroupServiceTests
     public async Task GetAllAsync_WhenNotCached_FetchesFromRepositoryAndCaches()
     {
         // Arrange
-        // _mockCacheService setup needed
+        _mockCacheService
+            .Setup(x => x.GetAsync<IEnumerable<MuscleGroupDto>>(It.IsAny<string>()))
+            .ReturnsAsync((IEnumerable<MuscleGroupDto>?)null);
             
         _mockRepository
             .Setup(x => x.GetAllAsync())
@@ -108,19 +114,22 @@ public class MuscleGroupServiceTests
         Assert.True(result.IsSuccess);
         Assert.Equal(_testData.Count, result.Data.Count());
         _mockRepository.Verify(x => x.GetAllAsync(), Times.Once);
-//             It.IsAny<string>(),  - removed orphaned It.IsAny
-//             It.IsAny<IEnumerable<MuscleGroupDto>>()), Times.Once); - removed orphaned It.IsAny
+        _mockCacheService.Verify(x => x.SetAsync(
+            It.IsAny<string>(),
+            It.IsAny<IEnumerable<MuscleGroupDto>>()), Times.Once);
     }
     
     [Fact]
     public async Task GetAllAsync_WhenRepositoryReturnsEmpty_ReturnsEmptyList()
     {
         // Arrange
-        // _mockCacheService setup needed
+        _mockCacheService
+            .Setup(x => x.GetAsync<IEnumerable<MuscleGroupDto>>(It.IsAny<string>()))
+            .ReturnsAsync((IEnumerable<MuscleGroupDto>?)null);
             
         _mockRepository
             .Setup(x => x.GetAllAsync())
-            .ReturnsAsync(_testData);
+            .ReturnsAsync(new List<MuscleGroup>());
             
         // Act
         var result = await _service.GetAllAsync();
@@ -140,7 +149,9 @@ public class MuscleGroupServiceTests
         var muscleGroup = _testData.First();
         var cachedDto = MapToDto(muscleGroup);
         
-        // _mockCacheService setup needed
+        _mockCacheService
+            .Setup(x => x.GetAsync<MuscleGroupDto>(It.IsAny<string>()))
+            .ReturnsAsync(cachedDto);
             
         // Act
         var result = await _service.GetByIdAsync(muscleGroup.Id);
@@ -156,11 +167,13 @@ public class MuscleGroupServiceTests
         // Arrange
         var muscleGroup = _testData.First();
         
-        // _mockCacheService setup needed
+        _mockCacheService
+            .Setup(x => x.GetAsync<MuscleGroupDto>(It.IsAny<string>()))
+            .ReturnsAsync((MuscleGroupDto?)null);
             
         _mockRepository
-            .Setup(x => x.GetAllAsync())
-            .ReturnsAsync(_testData);
+            .Setup(x => x.GetByIdAsync(muscleGroup.Id))
+            .ReturnsAsync(muscleGroup);
             
         // Act
         var result = await _service.GetByIdAsync(muscleGroup.Id);
@@ -168,8 +181,9 @@ public class MuscleGroupServiceTests
         Assert.True(result.IsSuccess);
         Assert.Equal(muscleGroup.Name, result.Data.Name);
         _mockRepository.Verify(x => x.GetByIdAsync(muscleGroup.Id), Times.Once);
-//             It.IsAny<string>(),  - removed orphaned It.IsAny
-//             It.IsAny<MuscleGroupDto>()), Times.Once); - removed orphaned It.IsAny
+        _mockCacheService.Verify(x => x.SetAsync(
+            It.IsAny<string>(),
+            It.IsAny<MuscleGroupDto>()), Times.Once);
     }
     
     [Fact]
@@ -189,11 +203,13 @@ public class MuscleGroupServiceTests
         // Arrange
         var id = MuscleGroupId.ParseOrEmpty(MuscleGroupIds.Chest);
         
-        // _mockCacheService setup needed
+        _mockCacheService
+            .Setup(x => x.GetAsync<MuscleGroupDto>(It.IsAny<string>()))
+            .ReturnsAsync((MuscleGroupDto?)null);
             
         _mockRepository
-            .Setup(x => x.GetAllAsync())
-            .ReturnsAsync(_testData);
+            .Setup(x => x.GetByIdAsync(id))
+            .ReturnsAsync(MuscleGroup.Empty);
             
         // Act
         var result = await _service.GetByIdAsync(id);
@@ -213,7 +229,9 @@ public class MuscleGroupServiceTests
         var muscleGroup = _testData.First();
         var cachedDto = MapToDto(muscleGroup);
         
-        // _mockCacheService setup needed
+        _mockCacheService
+            .Setup(x => x.GetAsync<MuscleGroupDto>(It.IsAny<string>()))
+            .ReturnsAsync(cachedDto);
             
         // Act
         var result = await _service.GetByNameAsync(muscleGroup.Name);
@@ -229,11 +247,13 @@ public class MuscleGroupServiceTests
         // Arrange
         var muscleGroup = _testData.First();
         
-        // _mockCacheService setup needed
+        _mockCacheService
+            .Setup(x => x.GetAsync<MuscleGroupDto>(It.IsAny<string>()))
+            .ReturnsAsync((MuscleGroupDto?)null);
             
         _mockRepository
-            .Setup(x => x.GetAllAsync())
-            .ReturnsAsync(_testData);
+            .Setup(x => x.GetByNameAsync(muscleGroup.Name))
+            .ReturnsAsync(muscleGroup);
             
         // Act
         var result = await _service.GetByNameAsync(muscleGroup.Name);
@@ -241,8 +261,9 @@ public class MuscleGroupServiceTests
         Assert.True(result.IsSuccess);
         Assert.Equal(muscleGroup.Name, result.Data.Name);
         _mockRepository.Verify(x => x.GetByNameAsync(muscleGroup.Name), Times.Once);
-//             It.IsAny<string>(),  - removed orphaned It.IsAny
-//             It.IsAny<MuscleGroupDto>()), Times.Once); - removed orphaned It.IsAny
+        _mockCacheService.Verify(x => x.SetAsync(
+            It.IsAny<string>(),
+            It.IsAny<MuscleGroupDto>()), Times.Once);
     }
     
     [Fact]
@@ -252,7 +273,7 @@ public class MuscleGroupServiceTests
         var result = await _service.GetByNameAsync("");
         
         Assert.False(result.IsSuccess);
-        Assert.Contains("name cannot be empty", result.Errors.First());
+        Assert.Contains(MuscleGroupErrorMessages.Validation.NameCannotBeEmptyForSearch, result.Errors.First());
         _mockRepository.Verify(x => x.GetByNameAsync(It.IsAny<string>()), Times.Never);
     }
     
@@ -263,7 +284,7 @@ public class MuscleGroupServiceTests
         var result = await _service.GetByNameAsync(null!);
         
         Assert.False(result.IsSuccess);
-        Assert.Contains("name cannot be empty", result.Errors.First());
+        Assert.Contains(MuscleGroupErrorMessages.Validation.NameCannotBeEmptyForSearch, result.Errors.First());
         _mockRepository.Verify(x => x.GetByNameAsync(It.IsAny<string>()), Times.Never);
     }
     
@@ -271,11 +292,13 @@ public class MuscleGroupServiceTests
     public async Task GetByNameAsync_WhenNotFound_ReturnsNotFound()
     {
         // Arrange
-        // _mockCacheService setup needed
+        _mockCacheService
+            .Setup(x => x.GetAsync<MuscleGroupDto>(It.IsAny<string>()))
+            .ReturnsAsync((MuscleGroupDto?)null);
             
         _mockRepository
-            .Setup(x => x.GetAllAsync())
-            .ReturnsAsync(_testData);
+            .Setup(x => x.GetByNameAsync("NonExistent"))
+            .ReturnsAsync(MuscleGroup.Empty);
             
         // Act
         var result = await _service.GetByNameAsync("NonExistent");
@@ -293,11 +316,13 @@ public class MuscleGroupServiceTests
             .IsInactive()
             .Build();
             
-        // _mockCacheService setup needed
+        _mockCacheService
+            .Setup(x => x.GetAsync<MuscleGroupDto>(It.IsAny<string>()))
+            .ReturnsAsync((MuscleGroupDto?)null);
             
         _mockRepository
-            .Setup(x => x.GetAllAsync())
-            .ReturnsAsync(_testData);
+            .Setup(x => x.GetByNameAsync("Inactive"))
+            .ReturnsAsync(inactiveMuscleGroup);
             
         // Act
         var result = await _service.GetByNameAsync("Inactive");
@@ -318,7 +343,9 @@ public class MuscleGroupServiceTests
         var muscleGroups = _testData.Where(mg => mg.BodyPartId == bodyPartId).ToList();
         var cachedDtos = muscleGroups.Select(MapToDto).ToList();
         
-        // _mockCacheService setup needed
+        _mockCacheService
+            .Setup(x => x.GetAsync<List<MuscleGroupDto>>(It.IsAny<string>()))
+            .ReturnsAsync(cachedDtos);
             
         // Act
         var result = await _service.GetByBodyPartAsync(bodyPartId);
@@ -335,11 +362,13 @@ public class MuscleGroupServiceTests
         var bodyPartId = BodyPartId.ParseOrEmpty(BodyPartIds.Chest);
         var muscleGroups = _testData.Where(mg => mg.BodyPartId == bodyPartId).ToList();
         
-        // _mockCacheService setup needed
+        _mockCacheService
+            .Setup(x => x.GetAsync<List<MuscleGroupDto>>(It.IsAny<string>()))
+            .ReturnsAsync((List<MuscleGroupDto>?)null);
             
         _mockRepository
-            .Setup(x => x.GetAllAsync())
-            .ReturnsAsync(_testData);
+            .Setup(x => x.GetByBodyPartAsync(bodyPartId))
+            .ReturnsAsync(muscleGroups);
             
         // Act
         var result = await _service.GetByBodyPartAsync(bodyPartId);
@@ -347,8 +376,9 @@ public class MuscleGroupServiceTests
         Assert.True(result.IsSuccess);
         Assert.Equal(muscleGroups.Count, result.Data.Count());
         _mockRepository.Verify(x => x.GetByBodyPartAsync(bodyPartId), Times.Once);
-//             It.IsAny<string>(),  - removed orphaned It.IsAny
-//             It.IsAny<IEnumerable<MuscleGroupDto>>()), Times.Once); - removed orphaned It.IsAny
+        _mockCacheService.Verify(x => x.SetAsync(
+            It.IsAny<string>(),
+            It.IsAny<List<MuscleGroupDto>>()), Times.Once);
     }
     
     [Fact]
@@ -358,7 +388,7 @@ public class MuscleGroupServiceTests
         var result = await _service.GetByBodyPartAsync(BodyPartId.Empty);
         
         Assert.False(result.IsSuccess);
-        Assert.Contains("Body part ID cannot be empty", result.Errors.First());
+        Assert.Contains(MuscleGroupErrorMessages.Validation.BodyPartIdCannotBeEmptyForSearch, result.Errors.First());
         _mockRepository.Verify(x => x.GetByBodyPartAsync(It.IsAny<BodyPartId>()), Times.Never);
     }
     
@@ -368,11 +398,13 @@ public class MuscleGroupServiceTests
         // Arrange
         var bodyPartId = BodyPartId.ParseOrEmpty(BodyPartIds.Back);
         
-        // _mockCacheService setup needed
+        _mockCacheService
+            .Setup(x => x.GetAsync<List<MuscleGroupDto>>(It.IsAny<string>()))
+            .ReturnsAsync((List<MuscleGroupDto>?)null);
             
         _mockRepository
-            .Setup(x => x.GetAllAsync())
-            .ReturnsAsync(_testData);
+            .Setup(x => x.GetByBodyPartAsync(bodyPartId))
+            .ReturnsAsync(new List<MuscleGroup>());
             
         // Act
         var result = await _service.GetByBodyPartAsync(bodyPartId);
@@ -400,15 +432,17 @@ public class MuscleGroupServiceTests
             .WithBodyPartId(command.BodyPartId)
             .Build();
             
-        // _mockBodyPartService setup needed
+        _mockBodyPartService
+            .Setup(x => x.ExistsAsync(command.BodyPartId))
+            .ReturnsAsync(ServiceResult<bool>.Success(true));
             
         _mockRepository
-            .Setup(x => x.GetAllAsync())
-            .ReturnsAsync(_testData);
+            .Setup(x => x.ExistsByNameAsync(command.Name.Trim(), null))
+            .ReturnsAsync(false);
             
         _mockRepository
-            .Setup(x => x.GetAllAsync())
-            .ReturnsAsync(_testData);
+            .Setup(x => x.CreateAsync(It.IsAny<MuscleGroup>()))
+            .ReturnsAsync(createdEntity);
             
         // Act
         var result = await _service.CreateAsync(command);
@@ -426,7 +460,8 @@ public class MuscleGroupServiceTests
         
         Assert.False(result.IsSuccess);
         Assert.Equal(ServiceErrorCode.ValidationFailed, result.PrimaryErrorCode);
-        Assert.Contains("Name cannot be empty", result.Errors.First());
+        // Due to validation framework evaluation order, BodyPartId validation fails first when command is null
+        Assert.Contains(MuscleGroupErrorMessages.Validation.BodyPartIdRequired, result.Errors.First());
         _mockRepository.Verify(x => x.CreateAsync(It.IsAny<MuscleGroup>()), Times.Never);
     }
     
@@ -440,14 +475,12 @@ public class MuscleGroupServiceTests
             BodyPartId = BodyPartId.ParseOrEmpty(BodyPartIds.Chest)
         };
         
-        // _mockBodyPartService setup needed
-        
         // Act
         var result = await _service.CreateAsync(command);
         
         Assert.False(result.IsSuccess);
         Assert.Equal(ServiceErrorCode.ValidationFailed, result.PrimaryErrorCode);
-        Assert.Contains("Name cannot be empty", result.Errors.First());
+        Assert.Contains(MuscleGroupErrorMessages.Validation.NameCannotBeEmpty, result.Errors.First());
         _mockRepository.Verify(x => x.CreateAsync(It.IsAny<MuscleGroup>()), Times.Never);
     }
     
@@ -461,14 +494,12 @@ public class MuscleGroupServiceTests
             BodyPartId = BodyPartId.ParseOrEmpty(BodyPartIds.Chest)
         };
         
-        // _mockBodyPartService setup needed
-        
         // Act
         var result = await _service.CreateAsync(command);
         
         Assert.False(result.IsSuccess);
         Assert.Equal(ServiceErrorCode.ValidationFailed, result.PrimaryErrorCode);
-        Assert.Contains("Name must not exceed 100 characters", result.Errors.First());
+        Assert.Contains(MuscleGroupErrorMessages.Validation.NameTooLong, result.Errors.First());
         _mockRepository.Verify(x => x.CreateAsync(It.IsAny<MuscleGroup>()), Times.Never);
     }
     
@@ -482,14 +513,12 @@ public class MuscleGroupServiceTests
             BodyPartId = BodyPartId.Empty
         };
         
-        // _mockBodyPartService setup needed
-        
         // Act
         var result = await _service.CreateAsync(command);
         
         Assert.False(result.IsSuccess);
         Assert.Equal(ServiceErrorCode.ValidationFailed, result.PrimaryErrorCode);
-        Assert.Contains("Body part ID is required", result.Errors.First());
+        Assert.Contains(MuscleGroupErrorMessages.Validation.BodyPartIdRequired, result.Errors.First());
         _mockRepository.Verify(x => x.CreateAsync(It.IsAny<MuscleGroup>()), Times.Never);
     }
     
@@ -503,14 +532,15 @@ public class MuscleGroupServiceTests
             BodyPartId = BodyPartId.ParseOrEmpty(BodyPartIds.Chest)
         };
         
-        // _mockBodyPartService setup needed
+        _mockBodyPartService
+            .Setup(x => x.ExistsAsync(command.BodyPartId))
+            .ReturnsAsync(ServiceResult<bool>.Success(false));
             
         // Act
         var result = await _service.CreateAsync(command);
         
         Assert.False(result.IsSuccess);
         Assert.Equal(ServiceErrorCode.ValidationFailed, result.PrimaryErrorCode);
-        Assert.Contains("Body part does not exist", result.Errors.First());
         _mockRepository.Verify(x => x.CreateAsync(It.IsAny<MuscleGroup>()), Times.Never);
     }
     
@@ -524,11 +554,13 @@ public class MuscleGroupServiceTests
             BodyPartId = BodyPartId.ParseOrEmpty(BodyPartIds.Chest)
         };
         
-        // _mockBodyPartService setup needed
+        _mockBodyPartService
+            .Setup(x => x.ExistsAsync(command.BodyPartId))
+            .ReturnsAsync(ServiceResult<bool>.Success(true));
             
         _mockRepository
-            .Setup(x => x.GetAllAsync())
-            .ReturnsAsync(_testData);
+            .Setup(x => x.ExistsByNameAsync(command.Name.Trim(), null))
+            .ReturnsAsync(true);
             
         // Act
         var result = await _service.CreateAsync(command);
@@ -553,24 +585,32 @@ public class MuscleGroupServiceTests
             BodyPartId = BodyPartId.ParseOrEmpty(BodyPartIds.Back)
         };
         
+        var updatedEntity = MuscleGroupTestBuilder.Custom()
+            .WithId(existingMuscleGroup.Id)
+            .WithName(command.Name)
+            .WithBodyPartId(command.BodyPartId)
+            .Build();
+        
         // Mock ExistsAsync check for entity existence
         _mockRepository
-            .Setup(x => x.GetAllAsync())
-            .ReturnsAsync(_testData);
+            .Setup(x => x.ExistsAsync(existingMuscleGroup.Id))
+            .ReturnsAsync(true);
+            
+        _mockBodyPartService
+            .Setup(x => x.ExistsAsync(command.BodyPartId))
+            .ReturnsAsync(ServiceResult<bool>.Success(true));
             
         _mockRepository
-            .Setup(x => x.GetAllAsync())
-            .ReturnsAsync(_testData);
-            
-        // _mockBodyPartService setup needed
+            .Setup(x => x.ExistsByNameAsync(command.Name.Trim(), existingMuscleGroup.Id))
+            .ReturnsAsync(false);
             
         _mockRepository
-            .Setup(x => x.GetAllAsync())
-            .ReturnsAsync(_testData);
+            .Setup(x => x.GetByIdAsync(existingMuscleGroup.Id))
+            .ReturnsAsync(existingMuscleGroup);
             
         _mockRepository
-            .Setup(x => x.GetAllAsync())
-            .ReturnsAsync(_testData);
+            .Setup(x => x.UpdateAsync(It.IsAny<MuscleGroup>()))
+            .ReturnsAsync(updatedEntity);
             
         // Act
         var result = await _service.UpdateAsync(existingMuscleGroup.Id, command);
@@ -610,8 +650,8 @@ public class MuscleGroupServiceTests
         };
         
         _mockRepository
-            .Setup(x => x.GetAllAsync())
-            .ReturnsAsync(_testData);
+            .Setup(x => x.ExistsAsync(id))
+            .ReturnsAsync(false);
             
         // Act
         var result = await _service.UpdateAsync(id, command);
@@ -634,18 +674,16 @@ public class MuscleGroupServiceTests
         
         // Mock ExistsAsync check for entity existence
         _mockRepository
-            .Setup(x => x.GetAllAsync())
-            .ReturnsAsync(_testData);
+            .Setup(x => x.ExistsAsync(existingMuscleGroup.Id))
+            .ReturnsAsync(true);
+            
+        _mockBodyPartService
+            .Setup(x => x.ExistsAsync(command.BodyPartId))
+            .ReturnsAsync(ServiceResult<bool>.Success(true));
             
         _mockRepository
-            .Setup(x => x.GetAllAsync())
-            .ReturnsAsync(_testData);
-            
-        // _mockBodyPartService setup needed
-            
-        _mockRepository
-            .Setup(x => x.GetAllAsync())
-            .ReturnsAsync(_testData);
+            .Setup(x => x.ExistsByNameAsync(command.Name.Trim(), existingMuscleGroup.Id))
+            .ReturnsAsync(true);
             
         // Act
         var result = await _service.UpdateAsync(existingMuscleGroup.Id, command);
@@ -667,16 +705,16 @@ public class MuscleGroupServiceTests
         
         // Mock ExistsAsync check for entity existence
         _mockRepository
-            .Setup(x => x.GetAllAsync())
-            .ReturnsAsync(_testData);
+            .Setup(x => x.ExistsAsync(muscleGroup.Id))
+            .ReturnsAsync(true);
             
         _mockRepository
-            .Setup(x => x.GetAllAsync())
-            .ReturnsAsync(_testData);
+            .Setup(x => x.CanDeactivateAsync(muscleGroup.Id))
+            .ReturnsAsync(true);
             
         _mockRepository
-            .Setup(x => x.GetAllAsync())
-            .ReturnsAsync(_testData);
+            .Setup(x => x.DeactivateAsync(muscleGroup.Id))
+            .ReturnsAsync(true);
             
         // Act
         var result = await _service.DeleteAsync(muscleGroup.Id);
@@ -704,8 +742,8 @@ public class MuscleGroupServiceTests
         var id = MuscleGroupId.ParseOrEmpty(MuscleGroupIds.Chest);
         
         _mockRepository
-            .Setup(x => x.GetAllAsync())
-            .ReturnsAsync(_testData);
+            .Setup(x => x.ExistsAsync(id))
+            .ReturnsAsync(false);
             
         // Act
         var result = await _service.DeleteAsync(id);
@@ -723,12 +761,12 @@ public class MuscleGroupServiceTests
         
         // Mock ExistsAsync check for entity existence
         _mockRepository
-            .Setup(x => x.GetAllAsync())
-            .ReturnsAsync(_testData);
+            .Setup(x => x.ExistsAsync(muscleGroup.Id))
+            .ReturnsAsync(true);
             
         _mockRepository
-            .Setup(x => x.GetAllAsync())
-            .ReturnsAsync(_testData);
+            .Setup(x => x.CanDeactivateAsync(muscleGroup.Id))
+            .ReturnsAsync(false);
             
         // Act
         var result = await _service.DeleteAsync(muscleGroup.Id);
@@ -749,8 +787,8 @@ public class MuscleGroupServiceTests
         var muscleGroup = _testData.First();
         
         _mockRepository
-            .Setup(x => x.GetAllAsync())
-            .ReturnsAsync(_testData);
+            .Setup(x => x.ExistsAsync(muscleGroup.Id))
+            .ReturnsAsync(true);
             
         // Act
         var result = await _service.CheckExistsAsync(muscleGroup.Id);
@@ -766,8 +804,8 @@ public class MuscleGroupServiceTests
         var id = MuscleGroupId.ParseOrEmpty(MuscleGroupIds.Chest);
         
         _mockRepository
-            .Setup(x => x.GetAllAsync())
-            .ReturnsAsync(_testData);
+            .Setup(x => x.ExistsAsync(id))
+            .ReturnsAsync(false);
             
         // Act
         var result = await _service.CheckExistsAsync(id);

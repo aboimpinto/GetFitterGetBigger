@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -67,8 +68,9 @@ namespace GetFitterGetBigger.API.Tests.Services
                     true).Value
             };
 
-
-            // _mockMovementPatternRepository setup needed
+            _mockMovementPatternRepository
+                .Setup(x => x.GetAllActiveAsync())
+                .ReturnsAsync(movementPatterns);
 
             // Act
             var result = await _movementPatternService.GetAllActiveAsync();
@@ -94,6 +96,25 @@ namespace GetFitterGetBigger.API.Tests.Services
                 new() { Id = TestIds.MovementPatternIds.Pull, Value = MovementPatternTestConstants.VerticalPullName, Description = MovementPatternTestConstants.PullingDownwardDescription }
             };
 
+            var movementPatterns = new List<MovementPattern>
+            {
+                MovementPattern.Handler.Create(
+                    MovementPatternId.From(Guid.Parse("11111111-1111-1111-1111-111111111111")),
+                    MovementPatternTestConstants.HorizontalPushName,
+                    MovementPatternTestConstants.PushingForwardDescription,
+                    1,
+                    true).Value,
+                MovementPattern.Handler.Create(
+                    MovementPatternId.From(Guid.Parse("22222222-2222-2222-2222-222222222222")),
+                    MovementPatternTestConstants.VerticalPullName,
+                    MovementPatternTestConstants.PullingDownwardDescription,
+                    2,
+                    true).Value
+            };
+
+            _mockMovementPatternRepository
+                .Setup(x => x.GetAllActiveAsync())
+                .ReturnsAsync(movementPatterns);
 
             // Act
             var result = await _movementPatternService.GetAllActiveAsync();
@@ -120,8 +141,9 @@ namespace GetFitterGetBigger.API.Tests.Services
                 MovementPatternTestConstants.TestDisplayOrder,
                 true).Value;
 
-
-            // _mockMovementPatternRepository setup needed
+            _mockMovementPatternRepository
+                .Setup(x => x.GetByIdAsync(movementPatternId))
+                .ReturnsAsync(movementPattern);
 
             // Act
             var result = await _movementPatternService.GetByIdAsync(movementPatternId);
@@ -202,8 +224,9 @@ namespace GetFitterGetBigger.API.Tests.Services
                 MovementPatternTestConstants.TestDisplayOrder,
                 true).Value;
 
-
-            // _mockMovementPatternRepository setup needed
+            _mockMovementPatternRepository
+                .Setup(x => x.GetByValueAsync(value))
+                .ReturnsAsync(movementPattern);
 
             // Act
             var result = await _movementPatternService.GetByValueAsync(value);
@@ -235,15 +258,16 @@ namespace GetFitterGetBigger.API.Tests.Services
             // Arrange
             var value = "NonExistent";
 
-
-            // _mockMovementPatternRepository setup needed
+            _mockMovementPatternRepository
+                .Setup(x => x.GetByValueAsync(value))
+                .ReturnsAsync(MovementPattern.Empty);
 
             // Act
             var result = await _movementPatternService.GetByValueAsync(value);
 
             // Assert
             Assert.False(result.IsSuccess);
-            Assert.Contains($"Movement pattern with value '{value}' not found", string.Join(", ", result.Errors));
+            Assert.Contains($"MovementPattern with value '{value}'", string.Join(", ", result.Errors));
         }
 
         [Fact]
@@ -252,8 +276,9 @@ namespace GetFitterGetBigger.API.Tests.Services
             // Arrange
             var movementPatternId = MovementPatternId.New();
 
-
-            // _mockMovementPatternRepository setup needed
+            _mockMovementPatternRepository
+                .Setup(x => x.ExistsAsync(movementPatternId))
+                .ReturnsAsync(true);
 
             // Act
             var result = await _movementPatternService.ExistsAsync(movementPatternId);
@@ -269,8 +294,9 @@ namespace GetFitterGetBigger.API.Tests.Services
             // Arrange
             var movementPatternId = MovementPatternId.New();
 
-
-            // _mockMovementPatternRepository setup needed
+            _mockMovementPatternRepository
+                .Setup(x => x.ExistsAsync(movementPatternId))
+                .ReturnsAsync(false);
 
             // Act
             var result = await _movementPatternService.ExistsAsync(movementPatternId);
@@ -287,8 +313,9 @@ namespace GetFitterGetBigger.API.Tests.Services
             var movementPatternId = MovementPatternId.New();
             var stringId = movementPatternId.ToString();
 
-
-            // _mockMovementPatternRepository setup needed
+            _mockMovementPatternRepository
+                .Setup(x => x.ExistsAsync(movementPatternId))
+                .ReturnsAsync(true);
 
             // Act
             var result = await _movementPatternService.ExistsAsync(MovementPatternId.ParseOrEmpty(stringId));
@@ -311,8 +338,8 @@ namespace GetFitterGetBigger.API.Tests.Services
             var result = await _movementPatternService.ExistsAsync(MovementPatternId.ParseOrEmpty(invalidFormatId));
 
             // Assert
-            Assert.True(result.IsSuccess);
-            Assert.False(result.Data);
+            Assert.False(result.IsSuccess);  // Service returns validation failure for empty ID
+            Assert.Equal(ServiceErrorCode.InvalidFormat, result.PrimaryErrorCode);
         }
     }
 }

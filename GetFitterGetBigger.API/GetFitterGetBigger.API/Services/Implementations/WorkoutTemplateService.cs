@@ -62,13 +62,14 @@ public class WorkoutTemplateService : IWorkoutTemplateService
         
         var workoutTemplate = await repository.GetByIdWithDetailsAsync(id);
         
-        var result = workoutTemplate.IsEmpty switch
+        if (workoutTemplate == null || workoutTemplate.IsEmpty)
         {
-            true => ServiceResult<WorkoutTemplateDto>.Failure(
+            return ServiceResult<WorkoutTemplateDto>.Failure(
                 CreateEmptyDto(),
-                ServiceError.NotFound("Workout template")),
-            false => ServiceResult<WorkoutTemplateDto>.Success(MapToDto(workoutTemplate))
-        };
+                ServiceError.NotFound("Workout template"));
+        }
+        
+        var result = ServiceResult<WorkoutTemplateDto>.Success(MapToDto(workoutTemplate));
         
         return result;
     }
@@ -236,13 +237,14 @@ public class WorkoutTemplateService : IWorkoutTemplateService
         var repository = unitOfWork.GetRepository<IWorkoutTemplateRepository>();
         
         var existingTemplate = await repository.GetByIdAsync(id);
-        var result = existingTemplate.IsEmpty switch
+        if (existingTemplate == null || existingTemplate.IsEmpty)
         {
-            true => ServiceResult<WorkoutTemplateDto>.Failure(
+            return ServiceResult<WorkoutTemplateDto>.Failure(
                 CreateEmptyDto(),
-                ServiceError.NotFound("Workout template")),
-            false => await PerformWorkoutTemplateUpdateAsync(repository, existingTemplate, command, unitOfWork, id)
-        };
+                ServiceError.NotFound("Workout template"));
+        }
+        
+        var result = await PerformWorkoutTemplateUpdateAsync(repository, existingTemplate, command, unitOfWork, id);
         
         return result;
     }
@@ -320,13 +322,14 @@ public class WorkoutTemplateService : IWorkoutTemplateService
         var repository = unitOfWork.GetRepository<IWorkoutTemplateRepository>();
         
         var existingTemplate = await repository.GetByIdAsync(id);
-        var result = existingTemplate.IsEmpty switch
+        if (existingTemplate == null || existingTemplate.IsEmpty)
         {
-            true => ServiceResult<WorkoutTemplateDto>.Failure(
+            return ServiceResult<WorkoutTemplateDto>.Failure(
                 CreateEmptyDto(),
-                ServiceError.NotFound("Workout template")),
-            false => await PerformStateChangeAsync(repository, existingTemplate, newStateId, unitOfWork, id)
-        };
+                ServiceError.NotFound("Workout template"));
+        }
+        
+        var result = await PerformStateChangeAsync(repository, existingTemplate, newStateId, unitOfWork, id);
         
         return result;
     }
@@ -422,13 +425,14 @@ public class WorkoutTemplateService : IWorkoutTemplateService
         var repository = unitOfWork.GetRepository<IWorkoutTemplateRepository>();
         
         var originalTemplate = await repository.GetByIdWithDetailsAsync(id);
-        var result = originalTemplate.IsEmpty switch
+        if (originalTemplate == null || originalTemplate.IsEmpty)
         {
-            true => ServiceResult<WorkoutTemplateDto>.Failure(
+            return ServiceResult<WorkoutTemplateDto>.Failure(
                 CreateEmptyDto(),
-                ServiceError.NotFound("Original workout template")),
-            false => await CreateDuplicateAsync(repository, originalTemplate, newName, unitOfWork, id)
-        };
+                ServiceError.NotFound("Original workout template"));
+        }
+        
+        var result = await CreateDuplicateAsync(repository, originalTemplate, newName, unitOfWork, id);
         
         return result;
     }

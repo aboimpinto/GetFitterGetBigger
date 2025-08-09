@@ -53,6 +53,13 @@ public class ExerciseTypeService(
     /// <returns>A service result containing the exercise_type if found</returns>
     public async Task<ServiceResult<ReferenceDataDto>> GetByIdAsync(string id)
     {
+        if (string.IsNullOrWhiteSpace(id))
+        {
+            return ServiceResult<ReferenceDataDto>.Failure(
+                ReferenceDataDto.Empty,
+                ServiceError.ValidationFailed(ExerciseTypeErrorMessages.IdCannotBeEmpty));
+        }
+        
         var exercise_typeId = ExerciseTypeId.ParseOrEmpty(id);
         
         return await ServiceValidate.For<ReferenceDataDto>()
@@ -68,7 +75,7 @@ public class ExerciseTypeService(
         var repository = unitOfWork.GetRepository<IExerciseTypeRepository>();
         var entity = await repository.GetByIdAsync(id);
         
-        return (entity.IsEmpty || !entity.IsActive) switch
+        return (entity == null || entity.IsEmpty || !entity.IsActive) switch
         {
             true => ServiceResult<ReferenceDataDto>.Failure(
                 ReferenceDataDto.Empty,
@@ -93,7 +100,7 @@ public class ExerciseTypeService(
         var repository = unitOfWork.GetRepository<IExerciseTypeRepository>();
         var entity = await repository.GetByValueAsync(value);
         
-        return (entity.IsEmpty || !entity.IsActive) switch
+        return (entity == null || entity.IsEmpty || !entity.IsActive) switch
         {
             true => ServiceResult<ReferenceDataDto>.Failure(
                 ReferenceDataDto.Empty,
@@ -143,13 +150,13 @@ public class ExerciseTypeService(
     }
     
     /// <inheritdoc/>
-    public async Task<bool> AnyIsRestTypeAsync(IEnumerable<string> ids)
+    public Task<bool> AnyIsRestTypeAsync(IEnumerable<string> ids)
     {
         // The REST exercise type has a fixed ID that never changes
         const string REST_EXERCISE_TYPE_ID = "exercisetype-d4e5f6a7-8b9c-0d1e-2f3a-4b5c6d7e8f9a";
         
         // Simply check if any of the provided IDs match the REST type ID
-        return ids.Any(id => string.Equals(id, REST_EXERCISE_TYPE_ID, StringComparison.OrdinalIgnoreCase));
+        return Task.FromResult(ids.Any(id => string.Equals(id, REST_EXERCISE_TYPE_ID, StringComparison.OrdinalIgnoreCase)));
     }
     
     /// <summary>

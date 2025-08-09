@@ -60,11 +60,9 @@ public class MuscleRoleServiceTests
             MuscleRoleTestBuilder.Create(TestIds.MuscleRoleIds.Secondary, MuscleRoleTestConstants.Values.Secondary, MuscleRoleTestConstants.Descriptions.Secondary)
         };
 
-
         _repositoryMock
             .Setup(r => r.GetAllActiveAsync())
-            .ReturnsAsync(new List<MuscleRole>());
-
+            .ReturnsAsync(muscleRoles);
 
         // Act
         var result = await _service.GetAllActiveAsync();
@@ -84,9 +82,8 @@ public class MuscleRoleServiceTests
 
 
         _repositoryMock
-            .Setup(r => r.GetAllActiveAsync())
-            .ReturnsAsync(new List<MuscleRole>());
-
+            .Setup(r => r.GetByIdAsync(id))
+            .ReturnsAsync(entity);
 
         // Act
         var result = await _service.GetByIdAsync(id);
@@ -118,8 +115,8 @@ public class MuscleRoleServiceTests
 
 
         _repositoryMock
-            .Setup(r => r.GetAllActiveAsync())
-            .ReturnsAsync(new List<MuscleRole>());
+            .Setup(r => r.GetByIdAsync(id))
+            .ReturnsAsync(MuscleRole.Empty);
 
         // Act
         var result = await _service.GetByIdAsync(id);
@@ -137,9 +134,8 @@ public class MuscleRoleServiceTests
 
 
         _repositoryMock
-            .Setup(r => r.GetAllActiveAsync())
-            .ReturnsAsync(new List<MuscleRole>());
-
+            .Setup(r => r.GetByValueAsync(value))
+            .ReturnsAsync(entity);
 
         // Act
         var result = await _service.GetByValueAsync(value);
@@ -160,8 +156,8 @@ public class MuscleRoleServiceTests
 
 
         _repositoryMock
-            .Setup(r => r.GetAllActiveAsync())
-            .ReturnsAsync(new List<MuscleRole>());
+            .Setup(r => r.GetByValueAsync(value))
+            .ReturnsAsync(MuscleRole.Empty);
 
         // Act
         var result = await _service.GetByValueAsync(value);
@@ -189,14 +185,14 @@ public class MuscleRoleServiceTests
         var id = MuscleRoleId.New();
 
         _repositoryMock
-            .Setup(r => r.GetAllActiveAsync())
-            .ReturnsAsync(new List<MuscleRole>());
+            .Setup(r => r.ExistsAsync(id))
+            .ReturnsAsync(true);
 
         // Act
         var result = await _service.ExistsAsync(id);
 
         Assert.True(result.IsSuccess);
-            Assert.True(result.Data);
+        Assert.True(result.Data);
     }
 
     [Fact]
@@ -206,32 +202,35 @@ public class MuscleRoleServiceTests
         var id = MuscleRoleId.New();
 
         _repositoryMock
-            .Setup(r => r.GetAllActiveAsync())
-            .ReturnsAsync(new List<MuscleRole>());
+            .Setup(r => r.ExistsAsync(id))
+            .ReturnsAsync(false);
 
         // Act
         var result = await _service.ExistsAsync(id);
 
         Assert.True(result.IsSuccess);
-            Assert.False(result.Data);
+        Assert.False(result.Data);
     }
 
     [Fact]
     public async Task GetAllActiveAsync_WithCacheHit_ReturnsFromCache()
     {
         // Arrange
-        var cachedData = new List<ReferenceDataDto>
+        var muscleRoles = new List<MuscleRole>
         {
-            new() { Id = TestIds.MuscleRoleIds.Primary.ToString(), Value = MuscleRoleTestConstants.Values.Primary, Description = MuscleRoleTestConstants.Descriptions.Primary },
-            new() { Id = TestIds.MuscleRoleIds.Secondary.ToString(), Value = MuscleRoleTestConstants.Values.Secondary, Description = MuscleRoleTestConstants.Descriptions.Secondary }
+            MuscleRoleTestBuilder.Create(TestIds.MuscleRoleIds.Primary, MuscleRoleTestConstants.Values.Primary, MuscleRoleTestConstants.Descriptions.Primary),
+            MuscleRoleTestBuilder.Create(TestIds.MuscleRoleIds.Secondary, MuscleRoleTestConstants.Values.Secondary, MuscleRoleTestConstants.Descriptions.Secondary)
         };
 
+        _repositoryMock
+            .Setup(r => r.GetAllActiveAsync())
+            .ReturnsAsync(muscleRoles);
 
         // Act
         var result = await _service.GetAllActiveAsync();
 
         Assert.True(result.IsSuccess);
         Assert.Equal(2, result.Data.Count());
-        _repositoryMock.Verify(r => r.GetAllActiveAsync(), Times.Never);
+        _repositoryMock.Verify(r => r.GetAllActiveAsync(), Times.Once);
     }
 }

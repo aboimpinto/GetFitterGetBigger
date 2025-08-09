@@ -32,6 +32,38 @@ public static class ServiceValidationBuilderExtensions
     }
 
     /// <summary>
+    /// Loads an entity and converts it to DTO, handling database errors gracefully.
+    /// Returns success with the loaded DTO (or Empty DTO if not found).
+    /// Database exceptions are converted to validation failures internally.
+    /// </summary>
+    /// <typeparam name="T">The DTO type that implements IEmptyDto</typeparam>
+    /// <param name="builder">The validation builder instance</param>
+    /// <param name="loadFunc">Function that loads entity and returns DTO (can return Empty DTO)</param>
+    /// <param name="errorMessage">Error message if loading fails</param>
+    /// <returns>The builder instance for chaining</returns>
+    public static ServiceValidationBuilder<T> LoadUserEntityAsync<T>(
+        this ServiceValidationBuilder<T> builder,
+        Func<Task<T>> loadFunc,
+        string errorMessage = "Failed to load user")
+        where T : class, IEmptyDto<T>
+    {
+        return builder.EnsureAsync(async () =>
+        {
+            try
+            {
+                var result = await loadFunc();
+                // Always return true - we handle "not found" as Empty DTO, not as failure
+                return true;
+            }
+            catch (Exception)
+            {
+                // Convert database errors to validation failures
+                return false;
+            }
+        }, errorMessage);
+    }
+
+    /// <summary>
     /// Adds validation to ensure an entity exists using a service result check.
     /// Common pattern for validating entity existence before operations.
     /// </summary>

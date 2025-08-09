@@ -22,10 +22,11 @@ public class DatabaseHooks
     }
     
     [AfterScenario]
-    public async Task AfterScenario()
+    public Task AfterScenario()
     {
         // Optional: could clean up here too if needed
         // But cleaning before scenario is usually sufficient
+        return Task.CompletedTask;
     }
     
     [BeforeFeature]

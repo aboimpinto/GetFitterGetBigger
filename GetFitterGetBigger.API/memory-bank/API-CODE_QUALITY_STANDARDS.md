@@ -135,7 +135,7 @@ protected override async Task<ValidationResult> ValidateCreateCommand(CreateEqui
 public async Task<ServiceResult<BodyPartDto>> GetByValueAsync(string value)
 {
     return await ServiceValidate.For<BodyPartDto>()
-        .EnsureNotWhiteSpace(value, ServiceError.ValidationFailed(BodyPartErrorMessages.ValueCannotBeEmpty))
+        .EnsureNotWhiteSpace(value, BodyPartErrorMessages.ValueCannotBeEmpty)
         .MatchAsync(
             whenValid: async () => await GetFromCacheOrLoadAsync(
                 GetValueCacheKey(value),
@@ -158,12 +158,84 @@ protected override async Task<ValidationResult> ValidateCreateCommand(CreateEqui
 }
 ```
 
-**Key Features:**
-- Chainable validation methods
-- Support for both sync and async validations
-- Direct integration with ServiceResult pattern
-- Built-in ServiceError support
-- Match pattern for conditional logic
+#### **🚀 Advanced Features (2025 Update)**
+
+##### **Mixed Sync/Async Validation Chains**
+ServiceValidate now supports seamless mixing of synchronous and asynchronous validations:
+
+```csharp
+// ✅ POWERFUL - Mix sync and async validations in one chain
+public async Task<ServiceResult<AuthenticationResponse>> AuthenticateAsync(AuthenticationCommand command)
+{
+    return await ServiceValidate.For<AuthenticationResponse>()
+        .EnsureNotNull(command, AuthenticationErrorMessages.Validation.RequestCannotBeNull)  // Sync
+        .EnsureNotWhiteSpace(command?.Email, AuthenticationErrorMessages.Validation.EmailCannotBeEmpty)  // Sync
+        .AsAsync()  // Bridge to async operations when needed
+        .EnsureServiceResultAsync(() => ValidateUserAsync(command.Email))  // Async
+        .ThenMatchAsync(
+            whenValid: async () => await ProcessAuthenticationAsync(command!)
+        );
+}
+```
+
+##### **ServiceResult Integration with EnsureServiceResultAsync**
+Validate ServiceResult operations and integrate them into the validation chain:
+
+```csharp
+// ✅ ELEGANT - Chain ServiceResult validations
+private async Task<ServiceResult<AuthenticationResponse>> HandleNewUserAsync(string email)
+{
+    return await ServiceValidate.For<AuthenticationResponse>()
+        .EnsureServiceResultAsync(() => CreateNewUserAccountAsync(email))  // Validates ServiceResult<bool>
+        .ThenMatchAsync(
+            whenValid: async () =>
+            {
+                var userResult = await LoadUserByEmailAsync(email);
+                return userResult.IsSuccess 
+                    ? GenerateAuthTokenAsync(userResult.Data)
+                    : ServiceResult<AuthenticationResponse>.Failure(
+                        AuthenticationResponse.Empty,
+                        userResult.Errors);
+            });
+}
+```
+
+##### **ThenMatchAsync for Fluent Chain Continuation**
+Continue validation chains without breaking the fluent pattern:
+
+```csharp
+// ✅ BEAUTIFUL - Complete fluent chain without intermediate variables
+public async Task<ServiceResult<WorkoutTemplateDto>> CreateTemplateAsync(CreateTemplateCommand command)
+{
+    return await ServiceValidate.For<WorkoutTemplateDto>()
+        .EnsureNotNull(command, "Command cannot be null")
+        .EnsureNotWhiteSpace(command?.Name, "Name is required")
+        .Ensure(() => command?.Name?.Length <= 100, "Name too long")
+        .AsAsync()  // Bridge to async when mixing sync/async
+        .EnsureServiceResultAsync(() => ValidateCategoryAsync(command.CategoryId))
+        .EnsureServiceResultAsync(() => ValidateExercisesAsync(command.ExerciseIds))
+        .ThenMatchAsync(
+            whenValid: async () => await CreateAndSaveTemplateAsync(command)
+        );
+}
+```
+
+**Key Extension Methods:**
+- `.AsAsync()` - Converts sync validation chain to async for continuation
+- `.EnsureServiceResultAsync()` - Validates a ServiceResult and adds errors to chain
+- `.ThenMatchAsync()` - Continues chain from async operations without breaking fluency
+
+**Benefits:**
+- **Performance**: Sync validations execute immediately, no unnecessary async overhead
+- **Short-Circuit**: Early validation failures prevent expensive async operations
+- **Readability**: Intent is crystal clear at each step
+- **Composability**: Mix and match sync/async as needed
+- **Type Safety**: Full compile-time checking throughout
+
+**CRITICAL VALIDATION PATTERN** 🚨:
+- Use error message strings directly: `.EnsureNotNull(command, ErrorMessages.RequestCannotBeNull)`
+- **NEVER** wrap in ServiceError.ValidationFailed(): ❌ `.EnsureNotNull(command, ServiceError.ValidationFailed(...))`
+- ServiceValidate methods handle ServiceError creation internally
 
 **MANDATORY RULE**: 
 - **NEVER** use `string.IsNullOrWhiteSpace()` or `string.IsNullOrEmpty()` directly with switch expressions or if statements for single values
