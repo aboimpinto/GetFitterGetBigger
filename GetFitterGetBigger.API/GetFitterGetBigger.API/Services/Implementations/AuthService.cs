@@ -1,6 +1,3 @@
-using System;
-using System.Linq;
-using System.Threading.Tasks;
 using GetFitterGetBigger.API.Constants;
 using GetFitterGetBigger.API.DTOs;
 using GetFitterGetBigger.API.Mappers;
@@ -45,7 +42,7 @@ public class AuthService(
             .WithServiceResultAsync(() => LoadUserByEmailAsync(command.Email))
             .ThenMatchDataAsync<AuthenticationResponse, UserDto>(
                 whenEmpty: async () => await HandleNewUserAsync(command.Email),
-                whenNotEmpty: userData => Task.FromResult(GenerateAuthTokenAsync(userData))
+                whenNotEmpty: userData => Task.FromResult(GenerateAuthToken(userData))
             );
     }
 
@@ -58,7 +55,7 @@ public class AuthService(
                 {
                     var userResult = await LoadUserByEmailAsync(email);
                     return userResult.IsSuccess 
-                        ? GenerateAuthTokenAsync(userResult.Data)
+                        ? GenerateAuthToken(userResult.Data)
                         : ServiceResult<AuthenticationResponse>.Failure(
                             AuthenticationResponse.Empty,
                             userResult.Errors);
@@ -67,98 +64,38 @@ public class AuthService(
 
     private async Task<ServiceResult<UserDto>> LoadUserByEmailAsync(string email)
     {
-        try
-        {
-            using var readOnlyUow = _unitOfWorkProvider.CreateReadOnly();
-            var readOnlyUserRepo = readOnlyUow.GetRepository<IUserRepository>();
-            var user = await readOnlyUserRepo.GetUserByEmailAsync(email);
-            
-            // Handle null here - this is the only place we deal with entity nulls
-            var userDto = user?.ToDto() ?? UserDto.Empty;
-            return ServiceResult<UserDto>.Success(userDto);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error loading user by email: {Email}", email);
-            return ServiceResult<UserDto>.Failure(
-                UserDto.Empty,
-                ServiceError.InternalError(AuthenticationErrorMessages.Operations.FailedToLoadUser));
-        }
+        using var readOnlyUow = _unitOfWorkProvider.CreateReadOnly();
+        var readOnlyUserRepo = readOnlyUow.GetRepository<IUserRepository>();
+        var user = await readOnlyUserRepo.GetUserByEmailAsync(email);
+        
+        // Handle null here - this is the only place we deal with entity nulls
+        var userDto = user?.ToDto() ?? UserDto.Empty;
+        return ServiceResult<UserDto>.Success(userDto);
     }
 
     private async Task<ServiceResult<bool>> CreateNewUserAccountAsync(string email)
     {
-        try
-        {
-            using var unitOfWork = _unitOfWorkProvider.CreateWritable();
-            var userRepository = unitOfWork.GetRepository<IUserRepository>();
+        using var unitOfWork = _unitOfWorkProvider.CreateWritable();
+        var userRepository = unitOfWork.GetRepository<IUserRepository>();
 
-            // Double-check in case of race condition
-            var existingUser = await userRepository.GetUserByEmailAsync(email);
-            if (existingUser != null)
-            {
-                // User was created by another thread/request between the read-only check and now
-                return ServiceResult<bool>.Success(true);
-            }
+        // Create new user - we already validated it doesn't exist in LoadUserByEmailAsync
+        var user = new User { Id = UserId.New(), Email = email };
+        await userRepository.AddUserAsync(user);
 
-            // User truly doesn't exist, create new user
-            var user = new User { Id = UserId.New(), Email = email };
-            await userRepository.AddUserAsync(user);
+        // Use ClaimService with the same UnitOfWork for transactional consistency
+        await _claimService.CreateUserClaimAsync(user.Id, "Free-Tier", unitOfWork);
+        
+        await unitOfWork.CommitAsync();
 
-            // Use ClaimService with the same UnitOfWork for transactional consistency
-            await _claimService.CreateUserClaimAsync(user.Id, "Free-Tier", unitOfWork);
-            
-            await unitOfWork.CommitAsync();
-
-            return ServiceResult<bool>.Success(true);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error creating new user for email: {Email}", email);
-            return ServiceResult<bool>.Failure(
-                false,
-                ServiceError.InternalError(AuthenticationErrorMessages.Operations.FailedToCreateUser));
-        }
+        return ServiceResult<bool>.Success(true);
     }
 
-    private ServiceResult<AuthenticationResponse> GenerateAuthTokenAsync(UserDto userDto)
+    private ServiceResult<AuthenticationResponse> GenerateAuthToken(UserDto userDto)
     {
-        try
-        {
-            // Validate user has claims
-            if (userDto.Claims == null || !userDto.Claims.Any())
-            {
-                _logger.LogError("User has no valid claims: {UserId}", userDto.Id);
-                return ServiceResult<AuthenticationResponse>.Failure(
-                    AuthenticationResponse.Empty,
-                    ServiceError.InternalError(AuthenticationErrorMessages.Operations.FailedToGenerateToken));
-            }
-            
-            // We need to convert UserDto back to User for JWT generation
-            // This is acceptable since it's internal to the service
-            var user = new User 
-            { 
-                Id = UserId.ParseOrEmpty(userDto.Id), 
-                Email = userDto.Email,
-                Claims = userDto.Claims.Select(c => new Claim 
-                { 
-                    Id = ClaimId.ParseOrEmpty(c.Id), 
-                    ClaimType = c.ClaimType, 
-                    ExpirationDate = c.ExpirationDate, 
-                    Resource = c.Resource 
-                }).ToList()
-            };
-            
-            var token = _jwtService.GenerateToken(user);
-            var response = new AuthenticationResponse(token, userDto.Claims);
-            return ServiceResult<AuthenticationResponse>.Success(response);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error generating authentication response for user: {UserId}", userDto.Id);
-            return ServiceResult<AuthenticationResponse>.Failure(
-                AuthenticationResponse.Empty, 
-                ServiceError.InternalError(AuthenticationErrorMessages.Operations.FailedToGenerateToken));
-        }
+        var token = _jwtService.GenerateToken(userDto);
+        // Handle null claims gracefully - convert to empty list
+        var claims = userDto.Claims ?? [];
+        var response = new AuthenticationResponse(token, claims);
+        return ServiceResult<AuthenticationResponse>.Success(response);
     }
 }

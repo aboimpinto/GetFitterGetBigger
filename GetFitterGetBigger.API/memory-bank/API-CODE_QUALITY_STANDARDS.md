@@ -835,7 +835,30 @@ private async Task<ServiceResult<WorkoutStateDto>> ProcessUncachedEntity(Workout
 - Lowers cyclomatic complexity
 - More readable and maintainable
 
-### 5. **Primary Constructors and Dependency Injection** 🚨 NEW
+### 5. **Modern C# Patterns (C# 12+)** 🚨 NEW
+
+#### **Collection Expressions - Mandatory for Empty Collections**
+**Use collection expressions `[]` instead of verbose constructors:**
+
+```csharp
+// ❌ OLD STYLE - Verbose collection initialization
+var claims = userDto.Claims ?? new List<ClaimInfo>();
+var errors = command?.Errors ?? new List<string>();
+var items = response?.Items ?? new Dictionary<string, object>();
+
+// ✅ MODERN - Collection expressions (C# 12+)
+var claims = userDto.Claims ?? [];
+var errors = command?.Errors ?? [];
+var items = response?.Items ?? [];
+```
+
+**Benefits:**
+- **Concise**: Reduces boilerplate code
+- **Readable**: Intent is immediately clear
+- **Consistent**: Same syntax for all collection types
+- **Performance**: Compiler-optimized collection creation
+
+#### **Primary Constructors for Dependency Injection**
 **Use C# 12 primary constructors for cleaner service and repository implementations:**
 
 ```csharp
@@ -1396,6 +1419,8 @@ var exercises = await context.Exercises
 - [ ] 🆕 Use CacheLoad pattern for all cache operations
 - [ ] 🆕 All DTOs implement IEmptyDto<T> interface
 - [ ] 🆕 Service base classes use TDto.Empty instead of CreateEmptyDto()
+- [ ] 🚨 **MODERN**: Use collection expressions `[]` for empty collections instead of `new List<T>()`
+- [ ] 🚨 **MODERN**: Use primary constructors for dependency injection classes
 
 ### ✅ Database Access
 - [ ] No N+1 queries
