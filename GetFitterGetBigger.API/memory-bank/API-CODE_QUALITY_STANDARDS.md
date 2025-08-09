@@ -220,10 +220,42 @@ public async Task<ServiceResult<WorkoutTemplateDto>> CreateTemplateAsync(CreateT
 }
 ```
 
+##### **WithServiceResultAsync and ThenMatchDataAsync - Advanced Data Flow Pattern**
+Load data and branch logic based on Empty pattern without breaking fluency:
+
+```csharp
+// ✅ ELEGANT - Load data and branch on Empty pattern
+public async Task<ServiceResult<AuthenticationResponse>> AuthenticateAsync(AuthenticationCommand command)
+{
+    return await ServiceValidate.For<AuthenticationResponse>()
+        .WithServiceResultAsync(() => LoadUserByEmailAsync(command.Email))  // Returns ServiceResult<UserDto>
+        .ThenMatchDataAsync<AuthenticationResponse, UserDto>(
+            whenEmpty: async () => await HandleNewUserAsync(command.Email),  // UserDto.IsEmpty == true
+            whenNotEmpty: userData => Task.FromResult(GenerateAuthTokenAsync(userData))  // Process existing user
+        );
+}
+
+// ✅ POWERFUL - Chain multiple data loads with Empty pattern branching
+public async Task<ServiceResult<WorkoutSummaryDto>> GetWorkoutWithDetailsAsync(WorkoutId id)
+{
+    return await ServiceValidate.For<WorkoutSummaryDto>()
+        .WithServiceResultAsync(() => LoadWorkoutAsync(id))
+        .ThenMatchDataAsync<WorkoutSummaryDto, WorkoutDto>(
+            whenEmpty: () => Task.FromResult(
+                ServiceResult<WorkoutSummaryDto>.Failure(
+                    WorkoutSummaryDto.Empty, 
+                    ServiceError.NotFound("Workout", id))),
+            whenNotEmpty: async workout => await EnrichWorkoutWithDetailsAsync(workout)
+        );
+}
+```
+
 **Key Extension Methods:**
 - `.AsAsync()` - Converts sync validation chain to async for continuation
 - `.EnsureServiceResultAsync()` - Validates a ServiceResult and adds errors to chain
 - `.ThenMatchAsync()` - Continues chain from async operations without breaking fluency
+- `.WithServiceResultAsync()` - Loads data via ServiceResult and prepares for pattern matching
+- `.ThenMatchDataAsync<TResult, TData>()` - Pattern matches on loaded data's Empty state
 
 **Benefits:**
 - **Performance**: Sync validations execute immediately, no unnecessary async overhead
@@ -231,6 +263,13 @@ public async Task<ServiceResult<WorkoutTemplateDto>> CreateTemplateAsync(CreateT
 - **Readability**: Intent is crystal clear at each step
 - **Composability**: Mix and match sync/async as needed
 - **Type Safety**: Full compile-time checking throughout
+- **Empty Pattern Integration**: Seamless branching based on Empty state without null checks
+
+**When to Use Each Pattern:**
+- **`EnsureServiceResultAsync`** - When you need to validate that an operation succeeded before continuing
+- **`ThenMatchAsync`** - When validation is complete and you need to execute the main logic
+- **`WithServiceResultAsync` + `ThenMatchDataAsync`** - When you need to load data and branch based on whether it's Empty
+- **`AsAsync`** - When transitioning from synchronous to asynchronous validation chains
 
 **CRITICAL VALIDATION PATTERN** 🚨:
 - Use error message strings directly: `.EnsureNotNull(command, ErrorMessages.RequestCannotBeNull)`
