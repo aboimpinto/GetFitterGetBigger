@@ -26,13 +26,22 @@ public class DifficultyLevelService(
     /// <inheritdoc/>
     public async Task<ServiceResult<IEnumerable<ReferenceDataDto>>> GetAllActiveAsync()
     {
+        return await ServiceValidate.Build<IEnumerable<ReferenceDataDto>>()
+            .WhenValidAsync(async () => await LoadAllActiveFromDatabaseAsync());
+    }
+    
+    /// <summary>
+    /// Loads all active DifficultyLevels from the database and maps to DTOs
+    /// </summary>
+    private async Task<ServiceResult<IEnumerable<ReferenceDataDto>>> LoadAllActiveFromDatabaseAsync()
+    {
         using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
         var repository = unitOfWork.GetRepository<IDifficultyLevelRepository>();
         var entities = await repository.GetAllActiveAsync();
         
-        var dtos = entities.Select(MapToDto).ToList();
+        var dtos = entities.Select(MapToDto);
         
-        _logger.LogInformation("Loaded {Count} active difficulty levels", dtos.Count);
+        _logger.LogInformation("Loaded {Count} active difficulty levels", dtos.Count());
         return ServiceResult<IEnumerable<ReferenceDataDto>>.Success(dtos);
     }
 
@@ -41,8 +50,14 @@ public class DifficultyLevelService(
     {
         return await ServiceValidate.For<ReferenceDataDto>()
             .EnsureNotEmpty(id, DifficultyLevelErrorMessages.InvalidIdFormat)
-            .MatchAsync(
-                whenValid: async () => await LoadByIdFromDatabaseAsync(id)
+            .WithServiceResultAsync(() => LoadByIdFromDatabaseAsync(id))
+            .ThenMatchDataAsync<ReferenceDataDto, ReferenceDataDto>(
+                whenEmpty: () => Task.FromResult(
+                    ServiceResult<ReferenceDataDto>.Failure(
+                        ReferenceDataDto.Empty,
+                        ServiceError.NotFound("DifficultyLevel", id.ToString()))),
+                whenNotEmpty: dto => Task.FromResult(
+                    ServiceResult<ReferenceDataDto>.Success(dto))
             );
     }
     
@@ -57,24 +72,31 @@ public class DifficultyLevelService(
         
         return await ServiceValidate.For<ReferenceDataDto>()
             .EnsureNotEmpty(difficultyLevelId, DifficultyLevelErrorMessages.InvalidIdFormat)
-            .MatchAsync(
-                whenValid: async () => await LoadByIdFromDatabaseAsync(difficultyLevelId)
+            .WithServiceResultAsync(() => LoadByIdFromDatabaseAsync(difficultyLevelId))
+            .ThenMatchDataAsync<ReferenceDataDto, ReferenceDataDto>(
+                whenEmpty: () => Task.FromResult(
+                    ServiceResult<ReferenceDataDto>.Failure(
+                        ReferenceDataDto.Empty,
+                        ServiceError.NotFound("DifficultyLevel", id))),
+                whenNotEmpty: dto => Task.FromResult(
+                    ServiceResult<ReferenceDataDto>.Success(dto))
             );
     }
     
+    /// <summary>
+    /// Loads a DifficultyLevel by ID from the database and maps to DTO
+    /// Returns Success with Empty if the entity is not active - validation happens in the caller
+    /// </summary>
     private async Task<ServiceResult<ReferenceDataDto>> LoadByIdFromDatabaseAsync(DifficultyLevelId id)
     {
         using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
         var repository = unitOfWork.GetRepository<IDifficultyLevelRepository>();
         var entity = await repository.GetByIdAsync(id);
         
-        return (entity.IsEmpty || !entity.IsActive) switch
-        {
-            true => ServiceResult<ReferenceDataDto>.Failure(
-                ReferenceDataDto.Empty,
-                ServiceError.NotFound("DifficultyLevel", id.ToString())),
-            false => ServiceResult<ReferenceDataDto>.Success(MapToDto(entity))
-        };
+        // Simply return what we found - let the caller decide how to handle empty results
+        return entity.IsActive
+            ? ServiceResult<ReferenceDataDto>.Success(MapToDto(entity))
+            : ServiceResult<ReferenceDataDto>.Success(ReferenceDataDto.Empty);
     }
     
     /// <inheritdoc/>
@@ -82,38 +104,52 @@ public class DifficultyLevelService(
     {
         return await ServiceValidate.For<ReferenceDataDto>()
             .EnsureNotWhiteSpace(value, DifficultyLevelErrorMessages.ValueCannotBeEmpty)
-            .MatchAsync(
-                whenValid: async () => await LoadByValueFromDatabaseAsync(value)
+            .WithServiceResultAsync(() => LoadByValueFromDatabaseAsync(value))
+            .ThenMatchDataAsync<ReferenceDataDto, ReferenceDataDto>(
+                whenEmpty: () => Task.FromResult(
+                    ServiceResult<ReferenceDataDto>.Failure(
+                        ReferenceDataDto.Empty,
+                        ServiceError.NotFound("DifficultyLevel", value))),
+                whenNotEmpty: dto => Task.FromResult(
+                    ServiceResult<ReferenceDataDto>.Success(dto))
             );
     }
     
+    /// <summary>
+    /// Loads a DifficultyLevel by value from the database and maps to DTO
+    /// Returns Success with Empty if the entity is not active - validation happens in the caller
+    /// </summary>
     private async Task<ServiceResult<ReferenceDataDto>> LoadByValueFromDatabaseAsync(string value)
     {
         using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
         var repository = unitOfWork.GetRepository<IDifficultyLevelRepository>();
         var entity = await repository.GetByValueAsync(value);
         
-        return (entity.IsEmpty || !entity.IsActive) switch
-        {
-            true => ServiceResult<ReferenceDataDto>.Failure(
-                ReferenceDataDto.Empty,
-                ServiceError.NotFound("DifficultyLevel", value)),
-            false => ServiceResult<ReferenceDataDto>.Success(MapToDto(entity))
-        };
+        // Simply return what we found - let the caller decide how to handle empty results
+        return entity.IsActive
+            ? ServiceResult<ReferenceDataDto>.Success(MapToDto(entity))
+            : ServiceResult<ReferenceDataDto>.Success(ReferenceDataDto.Empty);
     }
 
     /// <inheritdoc/>
-    public async Task<ServiceResult<bool>> ExistsAsync(DifficultyLevelId id)
+    public async Task<ServiceResult<BooleanResultDto>> ExistsAsync(DifficultyLevelId id)
     {
-        return await ServiceValidate.Build<bool>()
+        return await ServiceValidate.For<BooleanResultDto>()
             .EnsureNotEmpty(id, DifficultyLevelErrorMessages.InvalidIdFormat)
-            .WhenValidAsync(async () =>
-            {
-                using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
-                var repository = unitOfWork.GetRepository<IDifficultyLevelRepository>();
-                var exists = await repository.ExistsAsync(id);
-                return ServiceResult<bool>.Success(exists);
-            });
+            .MatchAsync(
+                whenValid: async () => await CheckExistsInDatabaseAsync(id)
+            );
+    }
+    
+    /// <summary>
+    /// Checks if a DifficultyLevel exists in the database by ID
+    /// </summary>
+    private async Task<ServiceResult<BooleanResultDto>> CheckExistsInDatabaseAsync(DifficultyLevelId id)
+    {
+        using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
+        var repository = unitOfWork.GetRepository<IDifficultyLevelRepository>();
+        var exists = await repository.ExistsAsync(id);
+        return ServiceResult<BooleanResultDto>.Success(BooleanResultDto.Create(exists));
     }
     
     /// <summary>
@@ -122,6 +158,9 @@ public class DifficultyLevelService(
     /// </summary>
     private ReferenceDataDto MapToDto(DifficultyLevel entity)
     {
+        if (entity.IsEmpty)
+            return ReferenceDataDto.Empty;
+            
         return new ReferenceDataDto
         {
             Id = entity.DifficultyLevelId.ToString(),

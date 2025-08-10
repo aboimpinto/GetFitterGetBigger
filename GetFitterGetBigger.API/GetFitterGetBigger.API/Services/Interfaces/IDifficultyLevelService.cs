@@ -33,7 +33,7 @@ public interface IDifficultyLevelService
     /// Checks if a difficulty level exists
     /// </summary>
     /// <param name="id">The difficulty level ID to check</param>
-    /// <returns>A service result containing true if the difficulty level exists, false otherwise</returns>
-    Task<ServiceResult<bool>> ExistsAsync(DifficultyLevelId id);
+    /// <returns>A service result containing a boolean result indicating if the difficulty level exists</returns>
+    Task<ServiceResult<BooleanResultDto>> ExistsAsync(DifficultyLevelId id);
     
 }
