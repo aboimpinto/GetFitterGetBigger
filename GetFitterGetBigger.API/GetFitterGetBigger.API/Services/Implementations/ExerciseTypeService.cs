@@ -41,8 +41,14 @@ public class ExerciseTypeService(
     {
         return await ServiceValidate.For<ReferenceDataDto>()
             .EnsureNotEmpty(id, ExerciseTypeErrorMessages.InvalidIdFormat)
-            .MatchAsync(
-                whenValid: async () => await LoadByIdFromDatabaseAsync(id)
+            .WithServiceResultAsync(() => LoadByIdFromDatabaseAsync(id))
+            .ThenMatchDataAsync<ReferenceDataDto, ReferenceDataDto>(
+                whenEmpty: () => Task.FromResult(
+                    ServiceResult<ReferenceDataDto>.Failure(
+                        ReferenceDataDto.Empty,
+                        ServiceError.NotFound("ExerciseType", id.ToString()))),
+                whenNotEmpty: dto => Task.FromResult(
+                    ServiceResult<ReferenceDataDto>.Success(dto))
             );
     }
     
@@ -53,19 +59,18 @@ public class ExerciseTypeService(
     /// <returns>A service result containing the exercise_type if found</returns>
     public async Task<ServiceResult<ReferenceDataDto>> GetByIdAsync(string id)
     {
-        if (string.IsNullOrWhiteSpace(id))
-        {
-            return ServiceResult<ReferenceDataDto>.Failure(
-                ReferenceDataDto.Empty,
-                ServiceError.ValidationFailed(ExerciseTypeErrorMessages.IdCannotBeEmpty));
-        }
-        
         var exercise_typeId = ExerciseTypeId.ParseOrEmpty(id);
         
         return await ServiceValidate.For<ReferenceDataDto>()
             .EnsureNotEmpty(exercise_typeId, ExerciseTypeErrorMessages.InvalidIdFormat)
-            .MatchAsync(
-                whenValid: async () => await LoadByIdFromDatabaseAsync(exercise_typeId)
+            .WithServiceResultAsync(() => LoadByIdFromDatabaseAsync(exercise_typeId))
+            .ThenMatchDataAsync<ReferenceDataDto, ReferenceDataDto>(
+                whenEmpty: () => Task.FromResult(
+                    ServiceResult<ReferenceDataDto>.Failure(
+                        ReferenceDataDto.Empty,
+                        ServiceError.NotFound("ExerciseType", id))),
+                whenNotEmpty: dto => Task.FromResult(
+                    ServiceResult<ReferenceDataDto>.Success(dto))
             );
     }
     
@@ -75,13 +80,10 @@ public class ExerciseTypeService(
         var repository = unitOfWork.GetRepository<IExerciseTypeRepository>();
         var entity = await repository.GetByIdAsync(id);
         
-        return (entity == null || entity.IsEmpty || !entity.IsActive) switch
-        {
-            true => ServiceResult<ReferenceDataDto>.Failure(
-                ReferenceDataDto.Empty,
-                ServiceError.NotFound("ExerciseType", id.ToString())),
-            false => ServiceResult<ReferenceDataDto>.Success(MapToDto(entity))
-        };
+        // Clean separation: business logic only
+        return entity.IsActive
+            ? ServiceResult<ReferenceDataDto>.Success(MapToDto(entity))
+            : ServiceResult<ReferenceDataDto>.Success(ReferenceDataDto.Empty);
     }
     
     /// <inheritdoc/>
@@ -89,8 +91,14 @@ public class ExerciseTypeService(
     {
         return await ServiceValidate.For<ReferenceDataDto>()
             .EnsureNotWhiteSpace(value, ExerciseTypeErrorMessages.ValueCannotBeEmpty)
-            .MatchAsync(
-                whenValid: async () => await LoadByValueFromDatabaseAsync(value)
+            .WithServiceResultAsync(() => LoadByValueFromDatabaseAsync(value))
+            .ThenMatchDataAsync<ReferenceDataDto, ReferenceDataDto>(
+                whenEmpty: () => Task.FromResult(
+                    ServiceResult<ReferenceDataDto>.Failure(
+                        ReferenceDataDto.Empty,
+                        ServiceError.NotFound("ExerciseType", value))),
+                whenNotEmpty: dto => Task.FromResult(
+                    ServiceResult<ReferenceDataDto>.Success(dto))
             );
     }
     
@@ -100,13 +108,10 @@ public class ExerciseTypeService(
         var repository = unitOfWork.GetRepository<IExerciseTypeRepository>();
         var entity = await repository.GetByValueAsync(value);
         
-        return (entity == null || entity.IsEmpty || !entity.IsActive) switch
-        {
-            true => ServiceResult<ReferenceDataDto>.Failure(
-                ReferenceDataDto.Empty,
-                ServiceError.NotFound("ExerciseType", value)),
-            false => ServiceResult<ReferenceDataDto>.Success(MapToDto(entity))
-        };
+        // Clean separation: business logic only
+        return entity.IsActive
+            ? ServiceResult<ReferenceDataDto>.Success(MapToDto(entity))
+            : ServiceResult<ReferenceDataDto>.Success(ReferenceDataDto.Empty);
     }
 
     /// <inheritdoc/>
