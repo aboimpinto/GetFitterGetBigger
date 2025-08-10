@@ -41,8 +41,14 @@ public class MetricTypeService(
     {
         return await ServiceValidate.For<ReferenceDataDto>()
             .EnsureNotEmpty(id, MetricTypeErrorMessages.InvalidIdFormat)
-            .MatchAsync(
-                whenValid: async () => await LoadByIdFromDatabaseAsync(id)
+            .WithServiceResultAsync(() => LoadByIdFromDatabaseAsync(id))
+            .ThenMatchDataAsync<ReferenceDataDto, ReferenceDataDto>(
+                whenEmpty: () => Task.FromResult(
+                    ServiceResult<ReferenceDataDto>.Failure(
+                        ReferenceDataDto.Empty,
+                        ServiceError.NotFound("MetricType", id.ToString()))),
+                whenNotEmpty: dto => Task.FromResult(
+                    ServiceResult<ReferenceDataDto>.Success(dto))
             );
     }
     
@@ -53,19 +59,17 @@ public class MetricTypeService(
     /// <returns>A service result containing the metric_type if found</returns>
     public async Task<ServiceResult<ReferenceDataDto>> GetByIdAsync(string id)
     {
-        if (string.IsNullOrWhiteSpace(id))
-        {
-            return ServiceResult<ReferenceDataDto>.Failure(
-                ReferenceDataDto.Empty,
-                ServiceError.ValidationFailed(MetricTypeErrorMessages.IdCannotBeEmpty));
-        }
-        
-        var metric_typeId = MetricTypeId.ParseOrEmpty(id);
-        
         return await ServiceValidate.For<ReferenceDataDto>()
-            .EnsureNotEmpty(metric_typeId, MetricTypeErrorMessages.InvalidIdFormat)
-            .MatchAsync(
-                whenValid: async () => await LoadByIdFromDatabaseAsync(metric_typeId)
+            .EnsureNotWhiteSpace(id, MetricTypeErrorMessages.IdCannotBeEmpty)
+            .Ensure(() => MetricTypeId.ParseOrEmpty(id) != MetricTypeId.Empty, MetricTypeErrorMessages.InvalidIdFormat)
+            .WithServiceResultAsync(() => LoadByIdFromDatabaseAsync(MetricTypeId.ParseOrEmpty(id)))
+            .ThenMatchDataAsync<ReferenceDataDto, ReferenceDataDto>(
+                whenEmpty: () => Task.FromResult(
+                    ServiceResult<ReferenceDataDto>.Failure(
+                        ReferenceDataDto.Empty,
+                        ServiceError.NotFound("MetricType", id))),
+                whenNotEmpty: dto => Task.FromResult(
+                    ServiceResult<ReferenceDataDto>.Success(dto))
             );
     }
     
@@ -75,13 +79,10 @@ public class MetricTypeService(
         var repository = unitOfWork.GetRepository<IMetricTypeRepository>();
         var entity = await repository.GetByIdAsync(id);
         
-        return (entity == null || entity.IsEmpty || !entity.IsActive) switch
-        {
-            true => ServiceResult<ReferenceDataDto>.Failure(
-                ReferenceDataDto.Empty,
-                ServiceError.NotFound("MetricType", id.ToString())),
-            false => ServiceResult<ReferenceDataDto>.Success(MapToDto(entity))
-        };
+        // Clean separation: business logic only, no IsEmpty check
+        return entity.IsActive
+            ? ServiceResult<ReferenceDataDto>.Success(MapToDto(entity))
+            : ServiceResult<ReferenceDataDto>.Success(ReferenceDataDto.Empty);
     }
     
     /// <inheritdoc/>
@@ -89,8 +90,14 @@ public class MetricTypeService(
     {
         return await ServiceValidate.For<ReferenceDataDto>()
             .EnsureNotWhiteSpace(value, MetricTypeErrorMessages.ValueCannotBeEmpty)
-            .MatchAsync(
-                whenValid: async () => await LoadByValueFromDatabaseAsync(value)
+            .WithServiceResultAsync(() => LoadByValueFromDatabaseAsync(value))
+            .ThenMatchDataAsync<ReferenceDataDto, ReferenceDataDto>(
+                whenEmpty: () => Task.FromResult(
+                    ServiceResult<ReferenceDataDto>.Failure(
+                        ReferenceDataDto.Empty,
+                        ServiceError.NotFound("MetricType", value))),
+                whenNotEmpty: dto => Task.FromResult(
+                    ServiceResult<ReferenceDataDto>.Success(dto))
             );
     }
     
@@ -100,27 +107,25 @@ public class MetricTypeService(
         var repository = unitOfWork.GetRepository<IMetricTypeRepository>();
         var entity = await repository.GetByValueAsync(value);
         
-        return (entity == null || entity.IsEmpty || !entity.IsActive) switch
-        {
-            true => ServiceResult<ReferenceDataDto>.Failure(
-                ReferenceDataDto.Empty,
-                ServiceError.NotFound("MetricType", value)),
-            false => ServiceResult<ReferenceDataDto>.Success(MapToDto(entity))
-        };
+        // Clean separation: business logic only, no IsEmpty check
+        return entity.IsActive
+            ? ServiceResult<ReferenceDataDto>.Success(MapToDto(entity))
+            : ServiceResult<ReferenceDataDto>.Success(ReferenceDataDto.Empty);
     }
 
     /// <inheritdoc/>
-    public async Task<ServiceResult<bool>> ExistsAsync(MetricTypeId id)
+    public async Task<ServiceResult<BooleanResultDto>> ExistsAsync(MetricTypeId id)
     {
-        return await ServiceValidate.Build<bool>()
+        return await ServiceValidate.For<BooleanResultDto>()
             .EnsureNotEmpty(id, MetricTypeErrorMessages.InvalidIdFormat)
-            .WhenValidAsync(async () =>
-            {
-                using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
-                var repository = unitOfWork.GetRepository<IMetricTypeRepository>();
-                var exists = await repository.ExistsAsync(id);
-                return ServiceResult<bool>.Success(exists);
-            });
+            .MatchAsync(
+                whenValid: async () =>
+                {
+                    using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
+                    var repository = unitOfWork.GetRepository<IMetricTypeRepository>();
+                    var exists = await repository.ExistsAsync(id);
+                    return ServiceResult<BooleanResultDto>.Success(BooleanResultDto.Create(exists));
+                });
     }
     
     /// <summary>

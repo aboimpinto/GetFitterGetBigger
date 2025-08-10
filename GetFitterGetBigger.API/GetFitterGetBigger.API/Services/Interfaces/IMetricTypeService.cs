@@ -34,5 +34,5 @@ public interface IMetricTypeService
     /// </summary>
     /// <param name="id">The ID to check</param>
     /// <returns>A service result containing true if the metric type exists, false otherwise</returns>
-    Task<ServiceResult<bool>> ExistsAsync(MetricTypeId id);
+    Task<ServiceResult<BooleanResultDto>> ExistsAsync(MetricTypeId id);
 }
