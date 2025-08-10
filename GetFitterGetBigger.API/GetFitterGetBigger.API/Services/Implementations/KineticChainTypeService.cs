@@ -41,8 +41,14 @@ public class KineticChainTypeService(
     {
         return await ServiceValidate.For<ReferenceDataDto>()
             .EnsureNotEmpty(id, KineticChainTypeErrorMessages.InvalidIdFormat)
-            .MatchAsync(
-                whenValid: async () => await LoadByIdFromDatabaseAsync(id)
+            .WithServiceResultAsync(() => LoadByIdFromDatabaseAsync(id))
+            .ThenMatchDataAsync<ReferenceDataDto, ReferenceDataDto>(
+                whenEmpty: () => Task.FromResult(
+                    ServiceResult<ReferenceDataDto>.Failure(
+                        ReferenceDataDto.Empty,
+                        ServiceError.NotFound("KineticChainType", id.ToString()))),
+                whenNotEmpty: dto => Task.FromResult(
+                    ServiceResult<ReferenceDataDto>.Success(dto))
             );
     }
     
@@ -53,19 +59,24 @@ public class KineticChainTypeService(
     /// <returns>A service result containing the kinetic_chain_type if found</returns>
     public async Task<ServiceResult<ReferenceDataDto>> GetByIdAsync(string id)
     {
-        if (string.IsNullOrWhiteSpace(id))
-        {
-            return ServiceResult<ReferenceDataDto>.Failure(
-                ReferenceDataDto.Empty,
-                ServiceError.ValidationFailed(KineticChainTypeErrorMessages.IdCannotBeEmpty));
-        }
-        
-        var kinetic_chain_typeId = KineticChainTypeId.ParseOrEmpty(id);
-        
         return await ServiceValidate.For<ReferenceDataDto>()
-            .EnsureNotEmpty(kinetic_chain_typeId, KineticChainTypeErrorMessages.InvalidIdFormat)
+            .EnsureNotWhiteSpace(id, KineticChainTypeErrorMessages.IdCannotBeEmpty)
             .MatchAsync(
-                whenValid: async () => await LoadByIdFromDatabaseAsync(kinetic_chain_typeId)
+                whenValid: async () =>
+                {
+                    var kinetic_chain_typeId = KineticChainTypeId.ParseOrEmpty(id);
+                    return await ServiceValidate.For<ReferenceDataDto>()
+                        .EnsureNotEmpty(kinetic_chain_typeId, KineticChainTypeErrorMessages.InvalidIdFormat)
+                        .WithServiceResultAsync(() => LoadByIdFromDatabaseAsync(kinetic_chain_typeId))
+                        .ThenMatchDataAsync<ReferenceDataDto, ReferenceDataDto>(
+                            whenEmpty: () => Task.FromResult(
+                                ServiceResult<ReferenceDataDto>.Failure(
+                                    ReferenceDataDto.Empty,
+                                    ServiceError.NotFound("KineticChainType", id))),
+                            whenNotEmpty: dto => Task.FromResult(
+                                ServiceResult<ReferenceDataDto>.Success(dto))
+                        );
+                }
             );
     }
     
@@ -75,13 +86,9 @@ public class KineticChainTypeService(
         var repository = unitOfWork.GetRepository<IKineticChainTypeRepository>();
         var entity = await repository.GetByIdAsync(id);
         
-        return (entity == null || entity.IsEmpty || !entity.IsActive) switch
-        {
-            true => ServiceResult<ReferenceDataDto>.Failure(
-                ReferenceDataDto.Empty,
-                ServiceError.NotFound("KineticChainType", id.ToString())),
-            false => ServiceResult<ReferenceDataDto>.Success(MapToDto(entity))
-        };
+        return entity.IsActive
+            ? ServiceResult<ReferenceDataDto>.Success(MapToDto(entity))
+            : ServiceResult<ReferenceDataDto>.Success(ReferenceDataDto.Empty);
     }
     
     /// <inheritdoc/>
@@ -89,8 +96,14 @@ public class KineticChainTypeService(
     {
         return await ServiceValidate.For<ReferenceDataDto>()
             .EnsureNotWhiteSpace(value, KineticChainTypeErrorMessages.ValueCannotBeEmptyEntity)
-            .MatchAsync(
-                whenValid: async () => await LoadByValueFromDatabaseAsync(value)
+            .WithServiceResultAsync(() => LoadByValueFromDatabaseAsync(value))
+            .ThenMatchDataAsync<ReferenceDataDto, ReferenceDataDto>(
+                whenEmpty: () => Task.FromResult(
+                    ServiceResult<ReferenceDataDto>.Failure(
+                        ReferenceDataDto.Empty,
+                        ServiceError.NotFound("KineticChainType", value))),
+                whenNotEmpty: dto => Task.FromResult(
+                    ServiceResult<ReferenceDataDto>.Success(dto))
             );
     }
     
@@ -100,27 +113,25 @@ public class KineticChainTypeService(
         var repository = unitOfWork.GetRepository<IKineticChainTypeRepository>();
         var entity = await repository.GetByValueAsync(value);
         
-        return (entity == null || entity.IsEmpty || !entity.IsActive) switch
-        {
-            true => ServiceResult<ReferenceDataDto>.Failure(
-                ReferenceDataDto.Empty,
-                ServiceError.NotFound("KineticChainType", value)),
-            false => ServiceResult<ReferenceDataDto>.Success(MapToDto(entity))
-        };
+        return entity.IsActive
+            ? ServiceResult<ReferenceDataDto>.Success(MapToDto(entity))
+            : ServiceResult<ReferenceDataDto>.Success(ReferenceDataDto.Empty);
     }
 
     /// <inheritdoc/>
-    public async Task<ServiceResult<bool>> ExistsAsync(KineticChainTypeId id)
+    public async Task<ServiceResult<BooleanResultDto>> ExistsAsync(KineticChainTypeId id)
     {
-        return await ServiceValidate.Build<bool>()
+        return await ServiceValidate.For<BooleanResultDto>()
             .EnsureNotEmpty(id, KineticChainTypeErrorMessages.InvalidIdFormat)
-            .WhenValidAsync(async () =>
-            {
-                using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
-                var repository = unitOfWork.GetRepository<IKineticChainTypeRepository>();
-                var exists = await repository.ExistsAsync(id);
-                return ServiceResult<bool>.Success(exists);
-            });
+            .MatchAsync(
+                whenValid: async () =>
+                {
+                    using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
+                    var repository = unitOfWork.GetRepository<IKineticChainTypeRepository>();
+                    var exists = await repository.ExistsAsync(id);
+                    return ServiceResult<BooleanResultDto>.Success(new BooleanResultDto { Value = exists });
+                }
+            );
     }
     
     /// <summary>
