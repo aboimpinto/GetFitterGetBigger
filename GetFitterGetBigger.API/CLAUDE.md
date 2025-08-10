@@ -70,6 +70,13 @@ The `/memory-bank/` directory contains all project knowledge and processes:
   - Guidelines: CamelCase (e.g., `ServiceValidatePattern.md`)
   - Context files: camelCase (e.g., `productContext.md`)
 
+### Temporary Files Policy
+**IMPORTANT**: ALL temporary files, analysis documents, migration plans, or helper files MUST be created in `/memory-bank/temp/` folder:
+- This folder is gitignored and won't be committed
+- Use for: analysis files, migration plans, summaries, work-in-progress documents
+- Examples: `DOCUMENT_ANALYSIS.md`, `MIGRATION_PLAN.md`, `TODO_LIST.md`
+- Never create temporary files in the main memory-bank folder
+
 ### Process Documentation
 - **`BUG_IMPLEMENTATION_PROCESS.md`** - How to fix bugs systematically
 - **`BUG_WORKFLOW_PROCESS.md`** - Bug lifecycle and folder structure
@@ -105,11 +112,14 @@ The `/memory-bank/` directory contains all project knowledge and processes:
 - **`4-BLOCKED/`** - Features waiting on dependencies
 - **`5-SKIPPED/`** - Features postponed
 
-### Technical Documentation
-- **`systemPatterns.md`** - Architecture patterns used
-- **`databaseModelPattern.md`** - Database design patterns
-- **`unitOfWorkPattern.md`** - Repository/UoW implementation
-- **`cache-configuration.md`** & **`cache-invalidation-strategy.md`** - Caching details
+### System Overview (`/Overview/`)
+Architecture and system documentation organized in one place:
+- **`SystemPatterns.md`** - Architecture patterns and rules
+- **`DatabaseModelPattern.md`** - Database design patterns  
+- **`ThreeTierEntityArchitecture.md`** - Entity classification system (Pure/Enhanced/Domain)
+- **`ReferenceTablesOverview.md`** - Complete reference table documentation
+- **`CacheConfiguration.md`** - Caching system configuration
+- **`CacheInvalidationStrategy.md`** - Cache invalidation patterns
 
 ### Context Files
 - **`productContext.md`** - Product vision and goals

@@ -444,4 +444,4 @@ When implementing a repository:
 - `/memory-bank/unitOfWorkPattern.md` - Unit of Work integration
 - `/memory-bank/CodeQualityGuidelines/ServiceRepositoryBoundaries.md` - Service-repository boundaries
 - `/memory-bank/CodeQualityGuidelines/EmptyObjectPattern.md` - Empty pattern implementation
-- `/memory-bank/databaseModelPattern.md` - Database design patterns
+- `/memory-bank/Overview/DatabaseModelPattern.md` - Database design patterns

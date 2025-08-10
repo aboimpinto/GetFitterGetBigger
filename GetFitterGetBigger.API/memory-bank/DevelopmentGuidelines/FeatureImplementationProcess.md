@@ -308,7 +308,7 @@ Before marking any task as `[Implemented]`, verify:
 ## Actual Total Time: [To be calculated at completion]
 
 ## 📚 Pre-Implementation Checklist
-- [ ] Read `/memory-bank/systemPatterns.md` - Architecture rules
+- [ ] Read `/memory-bank/Overview/SystemPatterns.md` - Architecture rules
 - [ ] Read `/memory-bank/unitOfWorkPattern.md` - Critical ReadOnly vs Writable patterns
 - [ ] Read `/memory-bank/common-implementation-pitfalls.md` - Common mistakes to avoid
 - [ ] Read `/memory-bank/UNIT-VS-INTEGRATION-TESTS.md` - Test separation rules
@@ -384,7 +384,7 @@ Then the response status should be 401
 - ✅ Database/workflow tests = API.IntegrationTests project in BDD format
 
 ### Category 1 (e.g., Models & DTOs) - Estimated: Xh
-#### 📖 Before Starting: Review entity pattern in `/memory-bank/databaseModelPattern.md`
+#### 📖 Before Starting: Review entity pattern in `/memory-bank/Overview/DatabaseModelPattern.md`
 - **Task 1.1:** Create [Name] entity model `[ReadyToDevelop]` (Est: 30m)
 - **Task 1.2:** Create [Name]Dto and request/response models `[ReadyToDevelop]` (Est: 45m)
 - **Task 1.3:** Write unit tests for DTOs `[ReadyToDevelop]` (Est: 30m)

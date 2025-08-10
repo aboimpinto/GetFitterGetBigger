@@ -21,7 +21,7 @@ You are tasked with intelligently fixing failing tests by analyzing the root cau
 
 1. **Quality Standards Compliance**: Strictly follow both:
    - `/memory-bank/CODE_QUALITY_STANDARDS.md` 
-   - `/memory-bank/API-CODE_QUALITY_STANDARDS.md`
+   - `/memory-bank/CODE_QUALITY_STANDARDS.md`
 
 2. **Test Analysis Strategy**: For each failing test, perform this analysis:
 

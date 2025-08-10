@@ -34,13 +34,25 @@
 - Mixed sync/async chains
 - Integration with ServiceResult
 
-#### [Empty Object Pattern](./CodeQualityGuidelines/EmptyObjectPattern.md)
-- Null Object Pattern implementation
+#### [Null Object Pattern](./CodeQualityGuidelines/NullObjectPattern.md)
+- **CRITICAL** Empty Object Pattern implementation
 - IEmptyDto<T> interface requirements
 - Layer-specific behavior (Database vs API)
-- Decision framework for tests vs production
+- Avoiding over-validation anti-patterns
 
 ### Architecture Patterns
+
+#### [Layered Architecture Rules](./CodeQualityGuidelines/ArchitecturalPatterns/LayeredArchitectureRules.md)
+- **MANDATORY** separation of concerns
+- Controller → Service → Repository layers
+- No direct repository access from controllers
+- Transaction management in service layer
+
+#### [Request-Command Separation](./CodeQualityGuidelines/ArchitecturalPatterns/RequestCommandSeparation.md)
+- Clean separation between web and service layers
+- Request DTOs → Commands → Domain objects
+- Type-safe ID handling
+- Assembly independence
 
 #### [Service Repository Boundaries](./CodeQualityGuidelines/ServiceRepositoryBoundaries.md)
 - **CRITICAL** Single Repository Rule
@@ -143,7 +155,9 @@ return await ServiceValidate.For<T>()
 |----------|---------------|---------------|
 | Service method return type | ServiceResult<T> | [ServiceResultPattern.md](./CodeQualityGuidelines/ServiceResultPattern.md) |
 | Input validation | ServiceValidate fluent API | [ServiceValidatePattern.md](./CodeQualityGuidelines/ServiceValidatePattern.md) |
-| Null handling | Empty Object Pattern | [EmptyObjectPattern.md](./CodeQualityGuidelines/EmptyObjectPattern.md) |
+| Null handling | Null Object Pattern | [NullObjectPattern.md](./CodeQualityGuidelines/NullObjectPattern.md) |
+| Layer separation | Layered Architecture | [LayeredArchitectureRules.md](./CodeQualityGuidelines/ArchitecturalPatterns/LayeredArchitectureRules.md) |
+| Web to service mapping | Request-Command Pattern | [RequestCommandSeparation.md](./CodeQualityGuidelines/ArchitecturalPatterns/RequestCommandSeparation.md) |
 | Query operations | ReadOnlyUnitOfWork | [UnitOfWorkPattern.md](./CodeQualityGuidelines/UnitOfWorkPattern.md) |
 | Modifications | WritableUnitOfWork | [UnitOfWorkPattern.md](./CodeQualityGuidelines/UnitOfWorkPattern.md) |
 | Cross-domain access | Service dependencies | [ServiceRepositoryBoundaries.md](./CodeQualityGuidelines/ServiceRepositoryBoundaries.md) |
@@ -185,9 +199,11 @@ Before approving any PR, verify:
 - [service-implementation-checklist.md](./service-implementation-checklist.md) 📋
 
 ### Architecture Documentation
-- [systemPatterns.md](./systemPatterns.md)
-- [databaseModelPattern.md](./databaseModelPattern.md)
-- [unitOfWorkPattern.md](./unitOfWorkPattern.md)
+- [System Patterns](./Overview/SystemPatterns.md)
+- [Database Model Pattern](./Overview/DatabaseModelPattern.md)
+- [Three-Tier Entity Architecture](./Overview/ThreeTierEntityArchitecture.md)
+- [Reference Tables Overview](./Overview/ReferenceTablesOverview.md)
+- [Cache Configuration](./Overview/CacheConfiguration.md)
 
 ## 💡 Getting Started
 

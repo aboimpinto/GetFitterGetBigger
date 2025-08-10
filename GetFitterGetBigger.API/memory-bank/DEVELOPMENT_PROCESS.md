@@ -35,20 +35,20 @@
 - NO EXCEPTIONS - This is non-negotiable!
 
 #### Step 1: Create Feature Structure
-**📖 Use**: `FEATURE_WORKFLOW_PROCESS.md` - Section "0. Feature Submission"
+**📖 Use**: `DevelopmentGuidelines/FeatureWorkflowProcess.md` - Section "0. Feature Submission"
 1. Assign Feature ID from `NEXT_FEATURE_ID.txt`
 2. Create folder: `0-SUBMITTED/FEAT-XXX-feature-name/`
 3. Create `feature-description.md`
 4. Update `NEXT_FEATURE_ID.txt`
 
 #### Step 2: Plan the Feature
-**📖 Use**: `FEATURE_IMPLEMENTATION_PROCESS.md` - Section "1. Feature Analysis & Planning"
+**📖 Use**: `DevelopmentGuidelines/FeatureImplementationProcess.md` - Section "1. Feature Analysis & Planning"
 1. Analyze requirements
 2. Create `feature-tasks.md` with time estimates
 3. Move folder to `1-READY_TO_DEVELOP`
 
 #### Step 3: Start Implementation
-**📖 Use**: `FEATURE_IMPLEMENTATION_PROCESS.md` - Section "3. Baseline Health Check"
+**📖 Use**: `DevelopmentGuidelines/FeatureImplementationProcess.md` - Section "3. Baseline Health Check"
 1. Move folder to `2-IN_PROGRESS`
 2. Create feature branch
 3. **MANDATORY**: Run baseline health check
@@ -57,7 +57,7 @@
 ### During Implementation
 
 #### Daily Work
-**📖 Primary**: `FEATURE_IMPLEMENTATION_PROCESS.md` - Section "4. Implementation Phase"
+**📖 Primary**: `DevelopmentGuidelines/FeatureImplementationProcess.md` - Section "4. Implementation Phase"
 - Follow task list sequentially
 - Update task status with timestamps
 - **Calculate duration when finishing each task** (Duration vs Est comparison)
@@ -66,8 +66,8 @@
   - Always clean first to catch all warnings
 
 #### Quality Checkpoints
-**📖 Check**: `UNIFIED_DEVELOPMENT_PROCESS.md` - "Baseline Health Check" section  
-**📖 Template**: `FEATURE_CHECKPOINT_TEMPLATE.md` - **MANDATORY checkpoint format and requirements**
+**📖 Check**: `DevelopmentGuidelines/UnifiedDevelopmentProcess.md` - "Baseline Health Check" section  
+**📖 Template**: `DevelopmentGuidelines/Templates/FeatureCheckpointTemplate.md` - **MANDATORY checkpoint format and requirements**
 
 **MANDATORY Checkpoint Commands**:
 ```bash
@@ -94,11 +94,11 @@ dotnet clean && dotnet test     # Run ALL tests (not just new ones)
 - This should only be used when you're confident in the implementation flow
 
 #### 📝 Code Review Process
-**📖 Template**: `FEATURE_CHECKPOINT_TEMPLATE.md` - **MANDATORY: Follow exact checkpoint format**
+**📖 Template**: `DevelopmentGuidelines/Templates/FeatureCheckpointTemplate.md` - **MANDATORY: Follow exact checkpoint format**
 
 **After completing a category's implementation**:
-1. **CREATE** code review using `CODE-REVIEW-TEMPLATE.md`
-2. **SAVE** in `/2-IN_PROGRESS/FEAT-XXX/code-reviews/Category_X/` (see FEATURE_CHECKPOINT_TEMPLATE.md)
+1. **CREATE** code review using `DevelopmentGuidelines/Templates/CodeReviewTemplate.md`
+2. **SAVE** in `/2-IN_PROGRESS/FEAT-XXX/code-reviews/Category_X/` (see DevelopmentGuidelines/Templates/FeatureCheckpointTemplate.md)
 3. **NAME** as `Code-Review-Category-X-YYYY-MM-DD-HH-MM-{STATUS}.md`
 4. **CREATE** git commit with descriptive message
 5. **ADD** git commit hash to checkpoint in feature-tasks.md ⚠️ MANDATORY
@@ -120,7 +120,7 @@ dotnet clean && dotnet test     # Run ALL tests (not just new ones)
 ```
 
 #### 🚨 Checkpoint Failure Protocol
-**📖 Reference**: `FEATURE_CHECKPOINT_TEMPLATE.md` - Critical requirements section
+**📖 Reference**: `DevelopmentGuidelines/Templates/FeatureCheckpointTemplate.md` - Critical requirements section
 
 **If ANY checkpoint fails**:
 1. **STOP** - Do NOT proceed to next category
@@ -156,7 +156,7 @@ When creating a fix task, use this format:
 ### When Completing a Feature
 
 #### Step 1: Final Code Review
-**📖 Use**: `FINAL-CODE-REVIEW-TEMPLATE.md`
+**📖 Use**: `DevelopmentGuidelines/Templates/FinalCodeReviewTemplate.md`
 - **MANDATORY**: Complete final overall code review
 - **COMBINE**: Summary of all category reviews
 - **SCAN**: All files against CODE_QUALITY_STANDARDS.md
@@ -168,13 +168,13 @@ When creating a fix task, use this format:
 - **REQUIRES_CHANGES** ❌: Must fix all issues and create new final review
 
 #### Step 2: Final Testing
-**📖 Use**: `UNIFIED_DEVELOPMENT_PROCESS.md` - "Manual Testing Policy"
+**📖 Use**: `DevelopmentGuidelines/UnifiedDevelopmentProcess.md` - "Manual Testing Policy"
 - **MANDATORY**: Manual testing by user
 - Provide test scenarios
 - Wait for explicit acceptance
 
 #### Step 3: Create Completion Reports
-**📖 Use**: `FEATURE_WORKFLOW_PROCESS.md` - "Completion Report Templates"
+**📖 Use**: `DevelopmentGuidelines/FeatureWorkflowProcess.md` - "Completion Report Templates"
 Create these four MANDATORY reports:
 1. `COMPLETION-REPORT.md`
 2. `TECHNICAL-SUMMARY.md`
@@ -182,7 +182,7 @@ Create these four MANDATORY reports:
 4. `QUICK-REFERENCE.md`
 
 #### Step 4: Move to Completed
-**📖 Use**: `FEATURE_WORKFLOW_PROCESS.md` - Section "3. Feature Completion"
+**📖 Use**: `DevelopmentGuidelines/FeatureWorkflowProcess.md` - Section "3. Feature Completion"
 - **REQUIRES**: Final code review APPROVED (or APPROVED_WITH_NOTES + user approval)
 - Only after user acceptance
 - Move folder to `3-COMPLETED`
@@ -195,14 +195,14 @@ Create these four MANDATORY reports:
 ### When Starting a Bug Fix
 
 #### Step 1: Create Bug Structure
-**📖 Use**: `BUG_WORKFLOW_PROCESS.md` - Section "Creating a New Bug"
+**📖 Use**: `DevelopmentGuidelines/BugWorkflowProcess.md` - Section "Creating a New Bug"
 1. Assign Bug ID from `NEXT_BUG_ID.txt`
 2. Create folder: `1-OPEN/BUG-XXX-brief-description/`
 3. Create `bug-report.md`
 4. Update `NEXT_BUG_ID.txt`
 
 #### Step 2: Plan the Fix
-**📖 Use**: `BUG_IMPLEMENTATION_PROCESS.md` - Section "2. Bug Analysis"
+**📖 Use**: `DevelopmentGuidelines/BugImplementationProcess.md` - Section "2. Bug Analysis"
 1. Reproduce the bug
 2. Create `bug-tasks.md`
 3. Move to `2-IN_PROGRESS`
@@ -210,7 +210,7 @@ Create these four MANDATORY reports:
 ### During Bug Fix
 
 #### Implementation
-**📖 Use**: `BUG_IMPLEMENTATION_PROCESS.md` - Section "4. Implementation"
+**📖 Use**: `DevelopmentGuidelines/BugImplementationProcess.md` - Section "4. Implementation"
 - Create bug fix branch: `bugfix/BUG-XXX-description`
 - Follow same quality standards as features
 - Write regression tests
@@ -218,7 +218,7 @@ Create these four MANDATORY reports:
 ### When Completing a Bug Fix
 
 #### Finalization
-**📖 Use**: `BUG_WORKFLOW_PROCESS.md` - Section "Bug Completion"
+**📖 Use**: `DevelopmentGuidelines/BugWorkflowProcess.md` - Section "Bug Completion"
 1. Verify fix with user
 2. Move to `3-FIXED`
 3. Document resolution in bug-report.md
@@ -256,7 +256,7 @@ return result;
 ```
 
 ### Service Layer Error Handling
-**📖 Source**: `SERVICE-RESULT-PATTERN.md` - **MANDATORY for all service implementations**
+**📖 Source**: `CodeQualityGuidelines/ServiceResultPattern.md` - **MANDATORY for all service implementations**
 
 **Key Pattern**:
 - ✅ Use ServiceResult<T> for all service methods
@@ -265,7 +265,7 @@ return result;
 - ✅ Pattern matching in controllers for clean responses
 
 ### 🚨 CRITICAL: Service Architecture Boundaries
-**📖 Source**: `API-CODE_QUALITY_STANDARDS.md` - **Service Repository Boundaries section**
+**📖 Source**: `CODE_QUALITY_STANDARDS.md` - **Service Repository Boundaries section**
 
 **The Single Repository Rule - MANDATORY**:
 - ✅ Each service MUST only access its own repository directly
@@ -285,10 +285,10 @@ var templateExerciseRepository = unitOfWork.GetRepository<IWorkoutTemplateExerci
 - [ ] Cross-domain operations use service dependencies, not direct repository access
 - [ ] Service constructors inject other services for cross-domain operations
 
-**📖 For Details**: See `/memory-bank/API-CODE_QUALITY_STANDARDS.md` - Service Repository Boundaries section
+**📖 For Details**: See `/memory-bank/CodeQualityGuidelines/ServiceRepositoryBoundaries.md`
 
 ### File Management Rules
-**📖 Source**: `UNIFIED_DEVELOPMENT_PROCESS.md` - "Mandatory File Management Rules"
+**📖 Source**: `DevelopmentGuidelines/UnifiedDevelopmentProcess.md` - "Mandatory File Management Rules"
 
 **NEVER CREATE**:
 - ❌ README.md in feature/bug folders
@@ -301,7 +301,7 @@ var templateExerciseRepository = unitOfWork.GetRepository<IWorkoutTemplateExerci
 - ✅ API specs if relevant
 
 ### Quality Gates
-**📖 Source**: `UNIFIED_DEVELOPMENT_PROCESS.md` - "Baseline Health Check"
+**📖 Source**: `DevelopmentGuidelines/UnifiedDevelopmentProcess.md` - "Baseline Health Check"
 
 **MANDATORY before proceeding**:
 - ✅ `dotnet clean && dotnet build` - zero errors
@@ -316,11 +316,11 @@ var templateExerciseRepository = unitOfWork.GetRepository<IWorkoutTemplateExerci
   - Cross-domain access via service dependencies only
   - NO direct access to repositories outside service domain
 - ✅ **Code Review**: APPROVED status for each category
-  - Use CODE-REVIEW-TEMPLATE.md after each category
+  - Use CodeReviewTemplate.md after each category
   - Final review before moving to COMPLETED
 
 ### Manual Testing Policy
-**📖 Source**: `UNIFIED_DEVELOPMENT_PROCESS.md` - "Manual Testing Policy"
+**📖 Source**: `DevelopmentGuidelines/UnifiedDevelopmentProcess.md` - "Manual Testing Policy"
 
 **🚨 MANDATORY for ALL work - NO EXCEPTIONS 🚨**
 - Can only skip if explicitly requested at start
@@ -332,7 +332,7 @@ var templateExerciseRepository = unitOfWork.GetRepository<IWorkoutTemplateExerci
 ## 🔄 Cross-Project Coordination
 
 ### Feature Propagation Flow
-**📖 Source**: `UNIFIED_DEVELOPMENT_PROCESS.md` - "Feature Origin and Flow"
+**📖 Source**: `DevelopmentGuidelines/UnifiedDevelopmentProcess.md` - "Feature Origin and Flow"
 
 #### API → UI Projects
 1. Implement in API
@@ -354,28 +354,28 @@ What am I doing?
 │   └── READ → CODE_QUALITY_STANDARDS.md (MANDATORY!)
 │
 ├── 🆕 New Feature
-│   ├── Starting? → CODE_QUALITY_STANDARDS.md + FEATURE_WORKFLOW_PROCESS.md
-│   ├── Planning? → FEATURE_IMPLEMENTATION_PROCESS.md (Section 1)
-│   ├── Coding? → FEATURE_IMPLEMENTATION_PROCESS.md (Section 4)
-│   │   └── Services? → SERVICE_RESULT_PATTERN.md (Error handling)
-│   ├── Checkpoint? → FEATURE_CHECKPOINT_TEMPLATE.md ⚠️ MANDATORY
-│   └── Completing? → FEATURE_WORKFLOW_PROCESS.md (Completion)
+│   ├── Starting? → CODE_QUALITY_STANDARDS.md + DevelopmentGuidelines/FeatureWorkflowProcess.md
+│   ├── Planning? → DevelopmentGuidelines/FeatureImplementationProcess.md (Section 1)
+│   ├── Coding? → DevelopmentGuidelines/FeatureImplementationProcess.md (Section 4)
+│   │   └── Services? → CodeQualityGuidelines/ServiceResultPattern.md (Error handling)
+│   ├── Checkpoint? → DevelopmentGuidelines/Templates/FeatureCheckpointTemplate.md ⚠️ MANDATORY
+│   └── Completing? → DevelopmentGuidelines/FeatureWorkflowProcess.md (Completion)
 │
 ├── 🐛 Bug Fix
-│   ├── Starting? → CODE_QUALITY_STANDARDS.md + BUG_WORKFLOW_PROCESS.md
-│   ├── Analyzing? → BUG_IMPLEMENTATION_PROCESS.md (Section 2)
-│   └── Fixing? → BUG_IMPLEMENTATION_PROCESS.md (Section 4)
-│       └── Services? → SERVICE_RESULT_PATTERN.md (Error handling)
+│   ├── Starting? → CODE_QUALITY_STANDARDS.md + DevelopmentGuidelines/BugWorkflowProcess.md
+│   ├── Analyzing? → DevelopmentGuidelines/BugImplementationProcess.md (Section 2)
+│   └── Fixing? → DevelopmentGuidelines/BugImplementationProcess.md (Section 4)
+│       └── Services? → CodeQualityGuidelines/ServiceResultPattern.md (Error handling)
 │
 ├── 📋 Process Question
 │   ├── Code Quality? → CODE_QUALITY_STANDARDS.md
-│   ├── Service Errors? → SERVICE_RESULT_PATTERN.md
-│   ├── Quality Standards? → UNIFIED_DEVELOPMENT_PROCESS.md
-│   ├── File Rules? → UNIFIED_DEVELOPMENT_PROCESS.md
-│   └── Testing Policy? → UNIFIED_DEVELOPMENT_PROCESS.md
+│   ├── Service Errors? → CodeQualityGuidelines/ServiceResultPattern.md
+│   ├── Quality Standards? → DevelopmentGuidelines/UnifiedDevelopmentProcess.md
+│   ├── File Rules? → DevelopmentGuidelines/UnifiedDevelopmentProcess.md
+│   └── Testing Policy? → DevelopmentGuidelines/UnifiedDevelopmentProcess.md
 │
 └── 🔄 Cross-Project
-    └── All cases → UNIFIED_DEVELOPMENT_PROCESS.md
+    └── All cases → DevelopmentGuidelines/UnifiedDevelopmentProcess.md
 ```
 
 ---
@@ -384,23 +384,23 @@ What am I doing?
 
 ### Core Process Documents
 1. **CODE_QUALITY_STANDARDS.md** - 🚨 MANDATORY code quality rules (READ FIRST!)
-2. **SERVICE_RESULT_PATTERN.md** - 🚨 MANDATORY for service layer implementations
-3. **UNIFIED_DEVELOPMENT_PROCESS.md** - Standards and policies for all projects
-4. **FEATURE_WORKFLOW_PROCESS.md** - Feature states and transitions
-5. **FEATURE_IMPLEMENTATION_PROCESS.md** - Step-by-step feature implementation
-6. **FEATURE_CHECKPOINT_TEMPLATE.md** - 🚨 MANDATORY checkpoint format and git commit requirements
-7. **BUG_WORKFLOW_PROCESS.md** - Bug states and transitions
-8. **BUG_IMPLEMENTATION_PROCESS.md** - Step-by-step bug fixing
+2. **CodeQualityGuidelines/ServiceResultPattern.md** - 🚨 MANDATORY for service layer implementations
+3. **DevelopmentGuidelines/UnifiedDevelopmentProcess.md** - Standards and policies for all projects
+4. **DevelopmentGuidelines/FeatureWorkflowProcess.md** - Feature states and transitions
+5. **DevelopmentGuidelines/FeatureImplementationProcess.md** - Step-by-step feature implementation
+6. **DevelopmentGuidelines/Templates/FeatureCheckpointTemplate.md** - 🚨 MANDATORY checkpoint format and git commit requirements
+7. **DevelopmentGuidelines/BugWorkflowProcess.md** - Bug states and transitions
+8. **DevelopmentGuidelines/BugImplementationProcess.md** - Step-by-step bug fixing
 
 ### When to Use Multiple Documents
 - **Starting work**: Usually need 2 documents (Workflow + Implementation)
 - **During work**: Primarily Implementation document
-- **Creating checkpoints**: ALWAYS use FEATURE_CHECKPOINT_TEMPLATE.md ⚠️ MANDATORY
-- **Checking standards**: Always UNIFIED_DEVELOPMENT_PROCESS
+- **Creating checkpoints**: ALWAYS use DevelopmentGuidelines/Templates/FeatureCheckpointTemplate.md ⚠️ MANDATORY
+- **Checking standards**: Always DevelopmentGuidelines/UnifiedDevelopmentProcess.md
 - **Completing work**: Workflow for templates + Implementation for steps
 
-### 🚨 Critical: FEATURE_CHECKPOINT_TEMPLATE.md Usage
-**WHEN TO USE**: Every phase completion in feature-tasks.md
+### 🚨 Critical: Feature Checkpoint Template Usage
+**WHEN TO USE**: Every phase completion in feature-tasks.md (using DevelopmentGuidelines/Templates/FeatureCheckpointTemplate.md)
 **WHY CRITICAL**: 
 - Prevents missing git commit hashes (blocks future traceability)
 - Ensures consistent code review folder structure
@@ -419,7 +419,7 @@ What am I doing?
 
 1. **Bookmark this page** - It's your main entry point
 2. **Follow the process** - Don't skip steps
-3. **When in doubt** - Check UNIFIED_DEVELOPMENT_PROCESS.md
+3. **When in doubt** - Check DevelopmentGuidelines/UnifiedDevelopmentProcess.md
 4. **Ask if unsure** - Better to clarify than assume
 
 ---

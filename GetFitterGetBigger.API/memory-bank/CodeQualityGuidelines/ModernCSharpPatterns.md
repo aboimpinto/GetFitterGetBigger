@@ -42,6 +42,15 @@ int[] numbers = [1, 2, 3, 4, 5];
 
 ## Primary Constructors for Dependency Injection
 
+### Key Principle: No Guard Clauses for DI Parameters
+
+When using Dependency Injection (DI) in ASP.NET Core, **guard clauses (null checks) in constructors are unnecessary and should be avoided**.
+
+**Why?**
+1. **DI Container Guarantees**: The DI container will never pass null dependencies
+2. **Fail Fast at Startup**: Missing dependencies are caught during application startup
+3. **Cleaner Code**: Removing unnecessary guard clauses reduces boilerplate
+
 ### ❌ OLD STYLE - Traditional Constructor with Null Validation
 
 ```csharp

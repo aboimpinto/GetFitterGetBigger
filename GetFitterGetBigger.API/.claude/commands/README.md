@@ -17,7 +17,7 @@ Performs a comprehensive final code review for the entire current feature.
 
 ### `/file-code-review`
 Performs a detailed code review of a specific file.
-- Uses: `CODE_QUALITY_STANDARDS.md` and `API-CODE_QUALITY_STANDARDS.md`
+- Uses: `CODE_QUALITY_STANDARDS.md` and `CodeQualityGuidelines/`
 - Output: Detailed file analysis with line-by-line feedback
 - When to use: When you need to review a single file in detail
 

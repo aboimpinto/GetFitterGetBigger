@@ -3,7 +3,7 @@ Perform a detailed code review of a specific file against CODE_QUALITY_STANDARDS
 Instructions:
 1. Ask the user for the file path to review (or use the currently open/mentioned file)
 2. Read and analyze the entire file thoroughly
-3. Review against both universal CODE_QUALITY_STANDARDS.md and API-CODE_QUALITY_STANDARDS.md
+3. Review against CODE_QUALITY_STANDARDS.md and detailed guidelines in CodeQualityGuidelines/
 4. Check for compliance with project-specific patterns and conventions
 5. Identify any issues, improvements, or violations
 6. Provide actionable feedback with code examples when applicable

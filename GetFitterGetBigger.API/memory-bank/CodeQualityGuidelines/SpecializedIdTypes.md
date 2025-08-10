@@ -88,6 +88,44 @@ public record EquipmentId : ISpecializedId<EquipmentId>
 }
 ```
 
+## Empty GUID and Invalid ID Handling
+
+### Empty GUIDs Should Be Treated as Valid IDs
+
+When a service receives an empty GUID (e.g., `bodypart-00000000-0000-0000-0000-000000000000`):
+
+1. **NOT** return a validation error (400 Bad Request)
+2. **INSTEAD** treat it as a valid ID that doesn't exist
+3. **RETURN** NotFound (404) when the ID doesn't exist in the database
+
+### Invalid Formats Should Return Bad Request
+
+When a service receives an ID without the proper prefix (e.g., `7c5a2d6e-e87e-4c8a-9f1d-9eb734f3df3c` instead of `bodypart-7c5a2d6e-e87e-4c8a-9f1d-9eb734f3df3c`):
+
+1. **RETURN** a validation error (400 Bad Request)
+2. **ERROR MESSAGE**: "Invalid {entity} ID format. Expected format: '{prefix}-{guid}'"
+
+### Implementation Pattern
+
+```csharp
+// ✅ CORRECT - Let database determine if ID exists
+public async Task<ServiceResult<ReferenceDataDto>> GetByIdAsync(EntityId id) => 
+    await GetByIdAsync(id.ToString());
+
+// ❌ WRONG - Premature validation
+public async Task<ServiceResult<ReferenceDataDto>> GetByIdAsync(EntityId id) => 
+    id.IsEmpty 
+        ? ServiceResult<ReferenceDataDto>.Failure(CreateEmptyDto(), ServiceError.ValidationFailed("Invalid entity ID"))
+        : await GetByIdAsync(id.ToString());
+```
+
+### Rationale
+
+1. **Consistency**: Empty GUIDs are syntactically valid, just non-existent
+2. **Database Authority**: Let the database be the source of truth for existence
+3. **Clear Semantics**: 404 means "not found", 400 means "invalid format"
+4. **Performance**: Avoid unnecessary validation when database will check anyway
+
 ## 🎯 ParseOrEmpty Validation Pattern
 
 **CRITICAL**: Always use `ParseOrEmpty` for ID validation. It handles ALL invalid inputs uniformly.

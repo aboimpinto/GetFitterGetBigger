@@ -484,9 +484,9 @@ When implementing cache integration for a reference data service:
 
 - `/memory-bank/API-CODE_QUALITY_STANDARDS.md` - Lines 1573-1630 (CacheLoad Pattern)
 - `/memory-bank/REFERENCE_TABLE_CRUD_PROCESS.md` - Converting reference tables to CRUD with cache
-- `/memory-bank/reference-tables-overview.md` - Complete list of reference tables
-- `/memory-bank/cache-configuration.md` - Cache service configuration
-- `/memory-bank/cache-invalidation-strategy.md` - Invalidation patterns
+- `/memory-bank/Overview/ReferenceTablesOverview.md` - Complete list of reference tables
+- `/memory-bank/Overview/CacheConfiguration.md` - Cache service configuration
+- `/memory-bank/Overview/CacheInvalidationStrategy.md` - Invalidation patterns
 - `/GetFitterGetBigger.API/Services/Cache/CacheLoad.cs` - CacheLoad implementation
 - `/GetFitterGetBigger.API/Utilities/CacheKeyGenerator.cs` - Key generation utility
 

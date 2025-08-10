@@ -333,5 +333,5 @@ This unified process should be:
 
 - Project-specific implementations: `FEATURE_IMPLEMENTATION_PROCESS.md`
 - Workflow details: `FEATURE_WORKFLOW_PROCESS.md`
-- Technical patterns: `systemPatterns.md`
+- Technical patterns: `/memory-bank/Overview/SystemPatterns.md`
 - Testing guidelines: `TESTING-QUICK-REFERENCE.md`

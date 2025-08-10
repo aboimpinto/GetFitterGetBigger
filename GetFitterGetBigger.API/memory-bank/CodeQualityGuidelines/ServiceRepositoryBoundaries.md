@@ -323,6 +323,6 @@ public class WorkoutTemplateServiceTests
 
 ## Related Documentation
 
-- `/memory-bank/systemPatterns.md` - Lines 118-136 for comprehensive service-to-service communication patterns
+- `/memory-bank/Overview/SystemPatterns.md` - Lines 118-136 for comprehensive service-to-service communication patterns
 - `/memory-bank/API-CODE_QUALITY_STANDARDS.md` - Main quality standards
 - `/memory-bank/unitOfWorkPattern.md` - Unit of Work pattern details

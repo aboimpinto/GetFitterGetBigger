@@ -163,6 +163,6 @@ Reference tables are seeded during migrations with predefined data:
 ## Related Documentation
 
 - `/memory-bank/REFERENCE_TABLE_CRUD_PROCESS.md` - How to convert read-only tables to CRUD
-- `/memory-bank/cache-configuration.md` - Caching configuration details
-- `/memory-bank/cache-invalidation-strategy.md` - Cache invalidation patterns
+- `/memory-bank/Overview/CacheConfiguration.md` - Caching configuration details
+- `/memory-bank/Overview/CacheInvalidationStrategy.md` - Cache invalidation patterns
 - `/api-docs/reference-tables/` - Individual table API documentation

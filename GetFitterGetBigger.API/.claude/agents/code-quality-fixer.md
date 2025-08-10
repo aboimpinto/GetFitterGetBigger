@@ -22,7 +22,7 @@ You are a specialized code quality fixing agent for the GetFitterGetBigger API p
 You must follow these standards strictly:
 - `/memory-bank/CODE_QUALITY_STANDARDS.md` - Primary reference for API quality standards
 - `/memory-bank/CodeQualityGuidelines/` - Detailed pattern guidelines
-- `/memory-bank/NULL_OBJECT_PATTERN_GUIDELINES.md` - CRITICAL guidance on avoiding over-validation
+- `/memory-bank/CodeQualityGuidelines/NullObjectPattern.md` - CRITICAL guidance on avoiding over-validation
 
 ## Input Requirements
 
@@ -35,7 +35,7 @@ When invoked, you should receive:
 
 ### Phase 1: Setup and Analysis
 1. Read the target file using Read tool
-2. Read `/memory-bank/API-CODE_QUALITY_STANDARDS.md` for patterns
+2. Read `/memory-bank/CODE_QUALITY_STANDARDS.md` for patterns
 3. If no violation report provided, perform quick analysis to identify issues
 4. Create TodoWrite list of violations to fix, ordered by priority
 
@@ -235,7 +235,7 @@ var empty = [];
 ```
 
 ##### 3. CacheLoad Pattern
-Apply for all cache operations (see API-CODE_QUALITY_STANDARDS.md lines 1317-1374)
+Apply for all cache operations (see CodeQualityGuidelines/CacheIntegrationPattern.md)
 
 ### Phase 3: Test Updates
 
@@ -321,7 +321,7 @@ Priority order:
 ## Special Patterns
 
 ### ServiceValidate Flow Patterns
-Refer to API-CODE_QUALITY_STANDARDS.md lines 375-507 for complete patterns:
+Refer to CodeQualityGuidelines/ServiceValidatePattern.md for complete patterns:
 - No Pre-validation → Execution
 - With Pre-validation → Execution
 - With Pre-validation → Execution → Post-validation
@@ -426,11 +426,12 @@ Remaining issues (if any):
 ## References
 
 Primary reference for all patterns:
-- `/memory-bank/API-CODE_QUALITY_STANDARDS.md`
+- `/memory-bank/CODE_QUALITY_STANDARDS.md` - Main index
+- `/memory-bank/CodeQualityGuidelines/` - Detailed pattern guidelines
 
-Specific sections for patterns:
-- ServiceValidate: Lines 153-507
-- Empty Pattern: Lines 551-594
-- Single Repository Rule: Lines 971-1241
-- Modern C# Features: Lines 838-968
-- Controller Standards: Lines 686-781
+Specific pattern documentation:
+- ServiceValidate: ServiceValidatePattern.md
+- Empty Pattern: NullObjectPattern.md
+- Single Repository Rule: ServiceRepositoryBoundaries.md
+- Modern C# Features: ModernCSharpPatterns.md
+- Controller Standards: ControllerPatterns.md

@@ -21,7 +21,6 @@ Launch the csharp-build-warnings-fixer agent with these instructions:
 **Critical Guidelines**:
 1. **Code Quality Standards Compliance**: 
    - Strictly follow `/memory-bank/CODE_QUALITY_STANDARDS.md`
-   - Strictly follow `/memory-bank/API-CODE_QUALITY_STANDARDS.md`
    
 2. **Warning Fix Strategy**:
    - Run `dotnet clean && dotnet build` to identify all warnings
@@ -29,7 +28,7 @@ Launch the csharp-build-warnings-fixer agent with these instructions:
    - **SKIP all CS0618/CS0619 obsolete warnings** - report count only
    - Fix all other warnings following quality standards
    
-3. **Implementation Standards** (from API-CODE_QUALITY_STANDARDS.md):
+3. **Implementation Standards** (from CODE_QUALITY_STANDARDS.md and guidelines):
    - Use ServiceValidate fluent API for all validation
    - Implement proper Empty pattern with IEmptyDto<T>
    - Use collection expressions `[]` for empty collections

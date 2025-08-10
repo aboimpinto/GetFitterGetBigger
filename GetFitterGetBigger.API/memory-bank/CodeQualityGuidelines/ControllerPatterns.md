@@ -253,9 +253,75 @@ public async Task<IActionResult> GetAll() =>
 4. **Maintenance**: Business logic changes happen only in services
 5. **Consistency**: Uniform error handling across all endpoints
 
+## Reference Table Controller Pattern
+
+### Key Principle: Controllers are DUMB
+
+Controllers in our architecture have ONE job: **Parse input and delegate to services**. They do NOT:
+- Validate business rules
+- Check if IDs are empty
+- Decide what constitutes an invalid format
+- Make any business decisions
+
+### Correct Implementation
+```csharp
+[HttpGet("{id}")]
+public async Task<IActionResult> GetBodyPartById(string id)
+{
+    _logger.LogInformation("Getting body part with ID: {Id}", id);
+    
+    var result = await _bodyPartService.GetByIdAsync(BodyPartId.ParseOrEmpty(id));
+    
+    return result switch
+    {
+        { IsSuccess: true } => Ok(result.Data),
+        { Errors: var errors } when errors.Any(e => e.Contains("not found")) => NotFound(),
+        { Errors: var errors } => BadRequest(new { errors })
+    };
+}
+```
+
+### What This Does:
+1. **Parse the ID** - Use `ParseOrEmpty` to get a valid ID object (even if empty)
+2. **Call the service** - Pass the parsed ID without any validation
+3. **Map the response**:
+   - Success → 200 OK
+   - Error contains "not found" → 404 Not Found
+   - Any other error → 400 Bad Request
+
+### Common Reference Table Mistakes
+
+❌ **DON'T check if ID is empty in controller**
+```csharp
+// WRONG
+if (movementPatternId.IsEmpty)
+{
+    return NotFound("MovementPattern not found");
+}
+```
+
+❌ **DON'T validate format in controller**
+```csharp
+// WRONG
+if (!id.StartsWith("movementpattern-"))
+{
+    return BadRequest("Invalid format");
+}
+```
+
+### The Service's Responsibility
+
+The SERVICE decides:
+- What constitutes a valid ID
+- Whether an empty ID should return "not found" or "invalid format"
+- What error messages to return
+- All business logic and validation
+
 ## Key Principles
 
 > "Controllers are dumb pipes. They know nothing about business logic, they just map HTTP to services and back."
+
+> "The controller is just a translator between HTTP and your service. It doesn't think, it just translates."
 
 ## Common Violations to Avoid
 

@@ -23,7 +23,7 @@ You are a specialized code quality analysis agent for the GetFitterGetBigger API
 You must have access to and follow these standards documents:
 - `/memory-bank/CODE_QUALITY_STANDARDS.md` - API quality standards and patterns
 - `/memory-bank/CodeQualityGuidelines/` - Detailed pattern guidelines
-- `/memory-bank/NULL_OBJECT_PATTERN_GUIDELINES.md` - Critical guidance on avoiding over-validation
+- `/memory-bank/CodeQualityGuidelines/NullObjectPattern.md` - Critical guidance on avoiding over-validation
 
 ## Input Requirements
 
@@ -38,7 +38,7 @@ You should follow this systematic process:
 
 ### Phase 1: Analysis
 1. Read the target file(s) using the Read tool
-2. Read the standards documents specified (/memory-bank/API-CODE_QUALITY_STANDARDS.md)
+2. Read the standards documents specified (/memory-bank/CODE_QUALITY_STANDARDS.md)
 3. Identify the class type (Service, Repository, Controller, Entity, DTO)
 4. Check for violations based on class type:
 
