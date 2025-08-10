@@ -23,6 +23,13 @@ public interface IWorkoutCategoryService
     Task<ServiceResult<WorkoutCategoryDto>> GetByIdAsync(WorkoutCategoryId id);
     
     /// <summary>
+    /// Get workout category by ID string
+    /// </summary>
+    /// <param name="id">The workout category ID as string</param>
+    /// <returns>Service result containing the workout category or error</returns>
+    Task<ServiceResult<WorkoutCategoryDto>> GetByIdAsync(string id);
+    
+    /// <summary>
     /// Get workout category by value
     /// </summary>
     /// <param name="value">The workout category value (case insensitive)</param>
@@ -33,7 +40,7 @@ public interface IWorkoutCategoryService
     /// Check if workout category exists
     /// </summary>
     /// <param name="id">The workout category ID</param>
-    /// <returns>A service result containing true if exists, false otherwise</returns>
-    Task<ServiceResult<bool>> ExistsAsync(WorkoutCategoryId id);
+    /// <returns>A service result containing boolean result DTO</returns>
+    Task<ServiceResult<BooleanResultDto>> ExistsAsync(WorkoutCategoryId id);
     
 }

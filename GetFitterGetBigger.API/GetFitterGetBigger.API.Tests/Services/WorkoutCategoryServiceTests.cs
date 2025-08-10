@@ -189,7 +189,7 @@ public class WorkoutCategoryServiceTests
     }
     
     [Fact]
-    public async Task GetByIdAsync_InactiveCategory_ReturnsEmpty()
+    public async Task GetByIdAsync_InactiveCategory_ReturnsNotFound()
     {
         // Arrange
         var inactiveCategory = WorkoutCategoryTestBuilder.InactiveCategory().Build();
@@ -201,10 +201,10 @@ public class WorkoutCategoryServiceTests
         // Act
         var result = await _service.GetByIdAsync(inactiveCategory.WorkoutCategoryId);
         
+        // With the new pattern, inactive categories return NotFound failure
         Assert.False(result.IsSuccess);
         Assert.Equal(ServiceErrorCode.NotFound, result.PrimaryErrorCode);
-//             It.IsAny<string>(), - removed orphaned It.IsAny
-//             It.IsAny<WorkoutCategoryDto>()), Times.Never); - removed orphaned It.IsAny
+        Assert.True(result.Data.IsEmpty);
     }
     
     [Fact]
@@ -291,7 +291,7 @@ public class WorkoutCategoryServiceTests
         var result = await _service.ExistsAsync(category.WorkoutCategoryId);
         
         Assert.True(result.IsSuccess);
-        Assert.True(result.Data);
+        Assert.True(result.Data.Value);
     }
     
     [Fact]
@@ -308,7 +308,7 @@ public class WorkoutCategoryServiceTests
         var result = await _service.ExistsAsync(id);
         
         Assert.True(result.IsSuccess);
-        Assert.False(result.Data);
+        Assert.False(result.Data.Value);
     }
     
     [Fact]
@@ -318,7 +318,7 @@ public class WorkoutCategoryServiceTests
         var result = await _service.ExistsAsync(WorkoutCategoryId.Empty);
         
         Assert.False(result.IsSuccess);
-        Assert.Equal(ServiceErrorCode.InvalidFormat, result.PrimaryErrorCode);
+        Assert.Equal(ServiceErrorCode.ValidationFailed, result.PrimaryErrorCode);
     }
     
     private static WorkoutCategoryDto MapToDto(WorkoutCategory entity) => new()

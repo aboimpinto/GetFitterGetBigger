@@ -47,8 +47,14 @@ public class WorkoutCategoryService(
     {
         return await ServiceValidate.For<WorkoutCategoryDto>()
             .EnsureNotEmpty(id, WorkoutCategoryErrorMessages.InvalidIdFormat)
-            .MatchAsync(
-                whenValid: async () => await LoadByIdFromDatabaseAsync(id)
+            .WithServiceResultAsync(() => LoadByIdFromDatabaseAsync(id))
+            .ThenMatchDataAsync<WorkoutCategoryDto, WorkoutCategoryDto>(
+                whenEmpty: () => Task.FromResult(
+                    ServiceResult<WorkoutCategoryDto>.Failure(
+                        WorkoutCategoryDto.Empty,
+                        ServiceError.NotFound("WorkoutCategory", id.ToString()))),
+                whenNotEmpty: dto => Task.FromResult(
+                    ServiceResult<WorkoutCategoryDto>.Success(dto))
             );
     }
     
@@ -59,19 +65,18 @@ public class WorkoutCategoryService(
     /// <returns>A service result containing the workout_category if found</returns>
     public async Task<ServiceResult<WorkoutCategoryDto>> GetByIdAsync(string id)
     {
-        if (string.IsNullOrWhiteSpace(id))
-        {
-            return ServiceResult<WorkoutCategoryDto>.Failure(
-                WorkoutCategoryDto.Empty,
-                ServiceError.ValidationFailed(WorkoutCategoryErrorMessages.IdCannotBeEmpty));
-        }
-        
-        var workout_categoryId = WorkoutCategoryId.ParseOrEmpty(id);
+        var workoutCategoryId = WorkoutCategoryId.ParseOrEmpty(id);
         
         return await ServiceValidate.For<WorkoutCategoryDto>()
-            .EnsureNotEmpty(workout_categoryId, WorkoutCategoryErrorMessages.InvalidIdFormat)
-            .MatchAsync(
-                whenValid: async () => await LoadByIdFromDatabaseAsync(workout_categoryId)
+            .EnsureNotEmpty(workoutCategoryId, WorkoutCategoryErrorMessages.InvalidIdFormat)
+            .WithServiceResultAsync(() => LoadByIdFromDatabaseAsync(workoutCategoryId))
+            .ThenMatchDataAsync<WorkoutCategoryDto, WorkoutCategoryDto>(
+                whenEmpty: () => Task.FromResult(
+                    ServiceResult<WorkoutCategoryDto>.Failure(
+                        WorkoutCategoryDto.Empty,
+                        ServiceError.NotFound("WorkoutCategory", id))),
+                whenNotEmpty: dto => Task.FromResult(
+                    ServiceResult<WorkoutCategoryDto>.Success(dto))
             );
     }
     
@@ -81,13 +86,10 @@ public class WorkoutCategoryService(
         var repository = unitOfWork.GetRepository<IWorkoutCategoryRepository>();
         var entity = await repository.GetByIdAsync(id);
         
-        return (entity == null || entity.IsEmpty || !entity.IsActive) switch
-        {
-            true => ServiceResult<WorkoutCategoryDto>.Failure(
-                WorkoutCategoryDto.Empty,
-                ServiceError.NotFound("WorkoutCategory", id.ToString())),
-            false => ServiceResult<WorkoutCategoryDto>.Success(MapToDto(entity))
-        };
+        // Clean separation: only check business logic (IsActive), not IsEmpty
+        return entity.IsActive
+            ? ServiceResult<WorkoutCategoryDto>.Success(MapToDto(entity))
+            : ServiceResult<WorkoutCategoryDto>.Success(WorkoutCategoryDto.Empty);
     }
     
     /// <inheritdoc/>
@@ -95,8 +97,14 @@ public class WorkoutCategoryService(
     {
         return await ServiceValidate.For<WorkoutCategoryDto>()
             .EnsureNotWhiteSpace(value, WorkoutCategoryErrorMessages.ValueCannotBeEmpty)
-            .MatchAsync(
-                whenValid: async () => await LoadByValueFromDatabaseAsync(value)
+            .WithServiceResultAsync(() => LoadByValueFromDatabaseAsync(value))
+            .ThenMatchDataAsync<WorkoutCategoryDto, WorkoutCategoryDto>(
+                whenEmpty: () => Task.FromResult(
+                    ServiceResult<WorkoutCategoryDto>.Failure(
+                        WorkoutCategoryDto.Empty,
+                        ServiceError.NotFound("WorkoutCategory", value))),
+                whenNotEmpty: dto => Task.FromResult(
+                    ServiceResult<WorkoutCategoryDto>.Success(dto))
             );
     }
     
@@ -106,27 +114,25 @@ public class WorkoutCategoryService(
         var repository = unitOfWork.GetRepository<IWorkoutCategoryRepository>();
         var entity = await repository.GetByValueAsync(value);
         
-        return (entity == null || entity.IsEmpty || !entity.IsActive) switch
-        {
-            true => ServiceResult<WorkoutCategoryDto>.Failure(
-                WorkoutCategoryDto.Empty,
-                ServiceError.NotFound("WorkoutCategory", value)),
-            false => ServiceResult<WorkoutCategoryDto>.Success(MapToDto(entity))
-        };
+        // Clean separation: only check business logic (IsActive), not IsEmpty
+        return entity.IsActive
+            ? ServiceResult<WorkoutCategoryDto>.Success(MapToDto(entity))
+            : ServiceResult<WorkoutCategoryDto>.Success(WorkoutCategoryDto.Empty);
     }
 
     /// <inheritdoc/>
-    public async Task<ServiceResult<bool>> ExistsAsync(WorkoutCategoryId id)
+    public async Task<ServiceResult<BooleanResultDto>> ExistsAsync(WorkoutCategoryId id)
     {
-        return await ServiceValidate.Build<bool>()
+        return await ServiceValidate.For<BooleanResultDto>()
             .EnsureNotEmpty(id, WorkoutCategoryErrorMessages.InvalidIdFormat)
-            .WhenValidAsync(async () =>
-            {
-                using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
-                var repository = unitOfWork.GetRepository<IWorkoutCategoryRepository>();
-                var exists = await repository.ExistsAsync(id);
-                return ServiceResult<bool>.Success(exists);
-            });
+            .MatchAsync(
+                whenValid: async () =>
+                {
+                    using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
+                    var repository = unitOfWork.GetRepository<IWorkoutCategoryRepository>();
+                    var exists = await repository.ExistsAsync(id);
+                    return ServiceResult<BooleanResultDto>.Success(new BooleanResultDto { Value = exists });
+                });
     }
     
     /// <summary>
@@ -135,6 +141,9 @@ public class WorkoutCategoryService(
     /// </summary>
     private WorkoutCategoryDto MapToDto(WorkoutCategory entity)
     {
+        if (entity.IsEmpty)
+            return WorkoutCategoryDto.Empty;
+            
         return new WorkoutCategoryDto
         {
             WorkoutCategoryId = entity.WorkoutCategoryId.ToString(),
