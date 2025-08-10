@@ -246,7 +246,7 @@ Caching behavior can be customized via configuration:
 - [CONTROLLER-SERVICE-CLEAN-ARCHITECTURE.md](./CONTROLLER-SERVICE-CLEAN-ARCHITECTURE.md) - Clean architecture patterns
 - [SERVICE-LAYER-PATTERNS.md](./SERVICE-LAYER-PATTERNS.md) - Service layer implementation
 - [SERVICE-RESULT-PATTERN.md](./SERVICE-RESULT-PATTERN.md) - Error handling patterns
-- [common-implementation-pitfalls.md](./common-implementation-pitfalls.md) - Common mistakes to avoid
+- [CommonImplementationPitfalls.md](../PracticalGuides/CommonImplementationPitfalls.md) - Common mistakes to avoid
 
 ---
 

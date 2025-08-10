@@ -36,7 +36,7 @@ The API will be available at:
 
 ### Prerequisites for Testing
 - Docker must be installed and running (required for integration tests)
-- See [INTEGRATION-TESTING.md](memory-bank/INTEGRATION-TESTING.md) for detailed setup
+- See [IntegrationTestingSetup.md](memory-bank/PracticalGuides/IntegrationTestingSetup.md) for detailed setup
 
 ### Running Tests
 ```bash
@@ -78,7 +78,7 @@ This architecture ensures type safety, eliminates unnecessary conversions, and p
 
 ## Documentation
 
-- [Integration Testing Guide](memory-bank/INTEGRATION-TESTING.md)
+- [Integration Testing Guide](memory-bank/PracticalGuides/IntegrationTestingSetup.md)
 - [Memory Bank](memory-bank/README.md) - Project knowledge base
 - API Documentation: Run the project and visit `/swagger`
 

@@ -1,8 +1,0 @@
-### Test Movement Pattern Empty GUID
-GET http://localhost:5214/api/ReferenceTables/MovementPatterns/movementpattern-00000000-0000-0000-0000-000000000000
-
-### Test Body Part Empty GUID
-GET http://localhost:5214/api/ReferenceTables/BodyParts/bodypart-00000000-0000-0000-0000-000000000000
-
-### Test Invalid Format
-GET http://localhost:5214/api/ReferenceTables/MovementPatterns/abcdef12-3456-7890-abcd-ef1234567890

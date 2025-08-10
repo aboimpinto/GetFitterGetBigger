@@ -53,7 +53,7 @@ When propagating API documentation:
 
 ## Testing Guidelines
 
-**IMPORTANT**: When debugging test failures, ALWAYS check `/memory-bank/TESTING-QUICK-REFERENCE.md` first! It contains critical patterns learned from fixing 87 test failures, including:
+**IMPORTANT**: When debugging test failures, ALWAYS check `/memory-bank/PracticalGuides/TestingQuickReference.md` first! It contains critical patterns learned from fixing 87 test failures, including:
 - Common ID format errors
 - Missing mock setups
 - Navigation property loading issues
@@ -84,16 +84,16 @@ The `/memory-bank/` directory contains all project knowledge and processes:
 - **`FEATURE_WORKFLOW_PROCESS.md`** - Feature lifecycle and states
 - **`RELEASE_PROCESS.md`** - Release management and PI planning
 
-### Quick References
-- **`TESTING-QUICK-REFERENCE.md`** ⚡ - Common test failures and solutions (CHECK FIRST!)
-- **`common-testing-errors-and-solutions.md`** - Detailed testing patterns
-- **`common-implementation-pitfalls.md`** ⚠️ - Critical implementation mistakes to avoid
-- **`service-implementation-checklist.md`** 📋 - Quick checklist for EVERY service implementation
-- **`TestingGuidelines.md`** - Overall testing strategy
+### Practical Guides
+**Located in `/memory-bank/PracticalGuides/`** - CHECK FIRST when debugging!
+- **`TestingQuickReference.md`** ⚡ - Common test failures and solutions (CHECK FIRST!)
+- **`CommonTestingErrorsAndSolutions.md`** - Detailed testing patterns
+- **`CommonImplementationPitfalls.md`** ⚠️ - Critical implementation mistakes to avoid
+- **`ServiceImplementationChecklist.md`** 📋 - Quick checklist for EVERY service implementation
 
 **CRITICAL REMINDERS**:
-1. Always check `common-implementation-pitfalls.md` before implementing service methods
-2. Use `service-implementation-checklist.md` as a quick reference while coding
+1. Always check `PracticalGuides/CommonImplementationPitfalls.md` before implementing service methods
+2. Use `PracticalGuides/ServiceImplementationChecklist.md` as a quick reference while coding
 3. Remember: ReadOnlyUnitOfWork for queries, WritableUnitOfWork for modifications ONLY!
 
 ### Bug Management (`/bugs/`)
@@ -120,6 +120,9 @@ Architecture and system documentation organized in one place:
 - **`ReferenceTablesOverview.md`** - Complete reference table documentation
 - **`CacheConfiguration.md`** - Caching system configuration
 - **`CacheInvalidationStrategy.md`** - Cache invalidation patterns
+- **`UnitVsIntegrationTests.md`** - Testing architecture and separation strategy
+- **`TestingGuidelines.md`** - Overall testing philosophy and branch coverage
+- **`TestBuilderPattern.md`** - Architectural pattern for test data creation
 
 ### Context Files
 - **`productContext.md`** - Product vision and goals
@@ -127,7 +130,7 @@ Architecture and system documentation organized in one place:
 - **`projectbrief.md`** - Project overview
 - **`activeContext.md`** - Current work context
 
-**💡 Pro Tip**: When debugging, start with TESTING-QUICK-REFERENCE.md, then check relevant process docs!
+**💡 Pro Tip**: When debugging, start with PracticalGuides/, then check relevant process docs!
 
 ## ⚠️ CRITICAL: No Try-Catch Anti-Pattern
 

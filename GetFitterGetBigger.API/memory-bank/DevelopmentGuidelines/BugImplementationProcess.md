@@ -87,7 +87,7 @@ Before starting ANY bug fix:
 - Execute tasks sequentially from the bug tracking file
 
 #### 📚 Before Starting ANY Service Modifications:
-- [ ] Read `/memory-bank/common-implementation-pitfalls.md`
+- [ ] Read `/memory-bank/PracticalGuides/CommonImplementationPitfalls.md`
 - [ ] Review `/memory-bank/service-implementation-checklist.md`
 - [ ] Remember: ReadOnlyUnitOfWork for queries, WritableUnitOfWork for saves ONLY
 
@@ -209,7 +209,7 @@ When a bug cannot be fixed due to dependencies:
 - [Affected features]
 
 ## 📚 Pre-Implementation Checklist
-- [ ] Read `/memory-bank/common-implementation-pitfalls.md`
+- [ ] Read `/memory-bank/PracticalGuides/CommonImplementationPitfalls.md`
 - [ ] Review `/memory-bank/service-implementation-checklist.md`
 - [ ] Understand ReadOnly vs Writable UnitOfWork pattern
 - [ ] Run baseline health check

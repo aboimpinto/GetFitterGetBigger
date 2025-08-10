@@ -16,16 +16,25 @@ Automatically fixes code quality violations identified by the analyze-code-quali
 /fix-code-quality DTOs/ExerciseDto.cs
 ```
 
+## Quality Fix References
+
+**Critical guides:**
+- `/memory-bank/PracticalGuides/CommonImplementationPitfalls.md` - ⚠️ Common violations to fix
+- `/memory-bank/PracticalGuides/ServiceImplementationChecklist.md` - 📋 Compliance checklist
+- `/memory-bank/PracticalGuides/AccuracyInFailureAnalysis.md` - 🎯 Report fixes accurately, admit unknowns
+- `/memory-bank/CODE_QUALITY_STANDARDS.md` - Standards to apply
+
 ## Description
 
 This command triggers the Code Quality Fixer agent to:
 
 1. **Load** the specified file and identify violations
-2. **Fix** violations in priority order (Critical → High → Medium → Low)
-3. **Apply** refactoring patterns from CODE_QUALITY_STANDARDS.md
-4. **Update** associated tests to match refactored code
-5. **Verify** all changes compile and tests pass
-6. **Report** summary of changes made
+2. **Check** PracticalGuides for known patterns
+3. **Fix** violations in priority order (Critical → High → Medium → Low)
+4. **Apply** refactoring patterns from CODE_QUALITY_STANDARDS.md
+5. **Update** associated tests to match refactored code
+6. **Verify** all changes compile and tests pass
+7. **Report** summary of changes made
 
 ## Process Flow
 

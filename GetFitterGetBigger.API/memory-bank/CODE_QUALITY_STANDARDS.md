@@ -189,14 +189,17 @@ Before approving any PR, verify:
 ## 🔗 Related Documents
 
 ### Process Documentation
-- [BUG_IMPLEMENTATION_PROCESS.md](./BUG_IMPLEMENTATION_PROCESS.md)
-- [FEATURE_IMPLEMENTATION_PROCESS.md](./FEATURE_IMPLEMENTATION_PROCESS.md)
-- [RELEASE_PROCESS.md](./RELEASE_PROCESS.md)
+- [BUG_IMPLEMENTATION_PROCESS.md](./DevelopmentGuidelines/BugImplementationProcess.md)
+- [FEATURE_IMPLEMENTATION_PROCESS.md](./DevelopmentGuidelines/FeatureImplementationProcess.md)
+- [RELEASE_PROCESS.md](./DevelopmentGuidelines/ReleaseProcess.md)
 
-### Quick References
-- [TESTING-QUICK-REFERENCE.md](./TESTING-QUICK-REFERENCE.md) ⚡
-- [common-implementation-pitfalls.md](./common-implementation-pitfalls.md) ⚠️
-- [service-implementation-checklist.md](./service-implementation-checklist.md) 📋
+### Practical Guides & Quick References
+- [TestingQuickReference.md](./PracticalGuides/TestingQuickReference.md) ⚡ - Common test failures & instant solutions
+- [CommonImplementationPitfalls.md](./PracticalGuides/CommonImplementationPitfalls.md) ⚠️ - Critical mistakes to avoid
+- [ServiceImplementationChecklist.md](./PracticalGuides/ServiceImplementationChecklist.md) 📋 - Step-by-step checklist
+- [CommonTestingErrorsAndSolutions.md](./PracticalGuides/CommonTestingErrorsAndSolutions.md) - Detailed testing patterns
+- [IntegrationTestingSetup.md](./PracticalGuides/IntegrationTestingSetup.md) 🐳 - Docker + PostgreSQL setup guide
+- [AccuracyInFailureAnalysis.md](./PracticalGuides/AccuracyInFailureAnalysis.md) 🎯 - How to analyze failures accurately (never speculate!)
 
 ### Architecture Documentation
 - [System Patterns](./Overview/SystemPatterns.md)
@@ -208,9 +211,12 @@ Before approving any PR, verify:
 ## 💡 Getting Started
 
 1. **New to the project?** Start with the [Golden Rules](#-golden-rules---non-negotiable)
-2. **Implementing a service?** Check [service-implementation-checklist.md](./service-implementation-checklist.md)
-3. **Fixing test failures?** See [TESTING-QUICK-REFERENCE.md](./TESTING-QUICK-REFERENCE.md)
-4. **Refactoring code?** Review relevant pattern guidelines in [CodeQualityGuidelines/](./CodeQualityGuidelines/)
+2. **Implementing a service?** Check [ServiceImplementationChecklist.md](./PracticalGuides/ServiceImplementationChecklist.md)
+3. **Fixing test failures?** See [TestingQuickReference.md](./PracticalGuides/TestingQuickReference.md)
+4. **Setting up integration tests?** Check [IntegrationTestingSetup.md](./PracticalGuides/IntegrationTestingSetup.md)
+5. **Avoiding common mistakes?** Review [CommonImplementationPitfalls.md](./PracticalGuides/CommonImplementationPitfalls.md)
+6. **Analyzing problems accurately?** Follow [AccuracyInFailureAnalysis.md](./PracticalGuides/AccuracyInFailureAnalysis.md)
+7. **Refactoring code?** Review relevant pattern guidelines in [CodeQualityGuidelines/](./CodeQualityGuidelines/)
 
 ## ⚠️ Remember
 

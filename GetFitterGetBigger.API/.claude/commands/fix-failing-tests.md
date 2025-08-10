@@ -19,11 +19,19 @@ Launch the csharp-build-test-fixer agent with the following specialized instruct
 ### Primary Mission
 You are tasked with intelligently fixing failing tests by analyzing the root cause and determining the appropriate fix strategy. Follow these critical guidelines:
 
-1. **Quality Standards Compliance**: Strictly follow both:
-   - `/memory-bank/CODE_QUALITY_STANDARDS.md` 
-   - `/memory-bank/CODE_QUALITY_STANDARDS.md`
+1. **Quality Standards Compliance**: 
+   **ALWAYS check these FIRST:**
+   - `/memory-bank/PracticalGuides/TestingQuickReference.md` - ⚡ 87+ common failures with solutions
+   - `/memory-bank/PracticalGuides/CommonTestingErrorsAndSolutions.md` - Detailed patterns
+   - `/memory-bank/PracticalGuides/AccuracyInFailureAnalysis.md` - 🎯 Never speculate - be precise or admit you don't know
+   - `/memory-bank/CODE_QUALITY_STANDARDS.md` - Quality standards to maintain
 
 2. **Test Analysis Strategy**: For each failing test, perform this analysis:
+
+   **Step 0: Quick Reference Check**
+   - FIRST check `/memory-bank/PracticalGuides/TestingQuickReference.md` for known patterns
+   - 80% of failures are already documented there
+   - Apply the documented solution if found
 
    **Step 1: Context Analysis**
    - Review the user-provided context: "{{ANALYSIS_CONTEXT}}"
@@ -48,7 +56,7 @@ You are tasked with intelligently fixing failing tests by analyzing the root cau
    - Test uses deprecated patterns (e.g., testing error message strings instead of ServiceErrorCode)
    - Test expects old validation behavior that has been properly refactored
    - Test setup doesn't align with new architectural patterns
-   - Test doesn't follow current testing standards from `/memory-bank/TESTING-QUICK-REFERENCE.md`
+   - Test doesn't follow current testing standards from `/memory-bank/PracticalGuides/TestingQuickReference.md`
 
    **Fix Production Code When:**
    - Implementation violates quality standards
@@ -69,7 +77,7 @@ You are tasked with intelligently fixing failing tests by analyzing the root cau
    - Test ServiceErrorCode, not error message content
    - Use proper mock setups for service dependencies
    - Follow ID format patterns (entity-guid)
-   - Check `/memory-bank/TESTING-QUICK-REFERENCE.md` for common patterns
+   - Check `/memory-bank/PracticalGuides/TestingQuickReference.md` for common patterns
 
 ### Execution Steps
 

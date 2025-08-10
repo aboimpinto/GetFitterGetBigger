@@ -63,10 +63,10 @@ Task X.X: Study codebase for similar implementations
 ### 3. Reference Key Documents
 The generated tasks should reference (not copy):
 - `/memory-bank/FEATURE_IMPLEMENTATION_PROCESS.md` - For task structure template
-- `/memory-bank/common-implementation-pitfalls.md` - Before service implementation
-- `/memory-bank/service-implementation-checklist.md` - Quick reference during coding
-- `/memory-bank/SERVICE-RESULT-PATTERN.md` - For error handling
-- `/memory-bank/TESTING-QUICK-REFERENCE.md` - For test implementation
+- `/memory-bank/PracticalGuides/CommonImplementationPitfalls.md` - Before service implementation
+- `/memory-bank/PracticalGuides/ServiceImplementationChecklist.md` - Quick reference during coding
+- `/memory-bank/CodeQualityGuidelines/ServiceResultPattern.md` - For error handling
+- `/memory-bank/PracticalGuides/TestingQuickReference.md` - For test implementation
 
 ### 4. Include Lessons Learned
 Review and incorporate lessons from:

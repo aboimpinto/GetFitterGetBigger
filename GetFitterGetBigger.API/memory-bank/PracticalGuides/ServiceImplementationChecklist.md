@@ -3,7 +3,7 @@
 This is a quick reference checklist to use **EVERY TIME** you implement or modify a service method.
 
 ## 🔍 Pre-Implementation Review
-- [ ] Have I read `/memory-bank/common-implementation-pitfalls.md`?
+- [ ] Have I read `/memory-bank/PracticalGuides/CommonImplementationPitfalls.md`?
 - [ ] Do I understand the ReadOnly vs Writable UnitOfWork pattern?
 
 ## ✅ Implementation Checklist

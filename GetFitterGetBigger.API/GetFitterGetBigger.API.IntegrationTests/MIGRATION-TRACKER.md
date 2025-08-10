@@ -20,7 +20,7 @@ This document tracks the migration of existing integration tests from `GetFitter
 **Initial Analysis Error**: Originally stated "advanced scenarios - refinement needed"  
 **Actual Root Cause**: MissingStepDefinitionException - missing GIVEN patterns for HTTP requests  
 **Resolution**: Added `[Given(...)]` attributes to RequestSteps.cs and ResponseSteps.cs  
-**Lesson Learned**: Always provide accurate technical analysis; avoid speculation (documented in ACCURACY-IN-FAILURE-ANALYSIS.md)
+**Lesson Learned**: Always provide accurate technical analysis; avoid speculation (documented in `/memory-bank/PracticalGuides/AccuracyInFailureAnalysis.md`)
 
 ### ✅ **BUG-001 RESOLVED: JSON Property Casing**
 **Final Issue**: Placeholder resolution property name casing mismatch  

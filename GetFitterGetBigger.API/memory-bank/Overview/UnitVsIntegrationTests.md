@@ -305,7 +305,7 @@ GetFitterGetBigger.API.IntegrationTests/
 
 ## 📚 Related Documentation
 
-- [TESTING-QUICK-REFERENCE.md](TESTING-QUICK-REFERENCE.md) - Common test patterns
+- [TestingQuickReference.md](../PracticalGuides/TestingQuickReference.md) - Common test patterns
 - [TestingGuidelines.md](TestingGuidelines.md) - Branch coverage guidelines
 - [FEATURE_IMPLEMENTATION_PROCESS.md](FEATURE_IMPLEMENTATION_PROCESS.md) - Feature development process
 - [MissingIntegrationTests.md](MissingIntegrationTests.md) - Tests to implement

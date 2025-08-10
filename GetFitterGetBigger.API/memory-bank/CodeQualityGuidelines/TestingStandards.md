@@ -438,7 +438,7 @@ public async Task UpdateAsync_WithValidData_UpdatesAndReturnsSuccess() { }
 
 ## Related Documentation
 
-- `/memory-bank/TESTING-QUICK-REFERENCE.md` - Common test failures and solutions
-- `/memory-bank/common-testing-errors-and-solutions.md` - Detailed testing patterns
-- `/memory-bank/TestingGuidelines.md` - Overall testing strategy
+- `/memory-bank/PracticalGuides/TestingQuickReference.md` - Common test failures and solutions
+- `/memory-bank/PracticalGuides/CommonTestingErrorsAndSolutions.md` - Detailed testing patterns
+- `/memory-bank/Overview/TestingGuidelines.md` - Overall testing strategy
 - `/memory-bank/API-CODE_QUALITY_STANDARDS.md` - Main quality standards

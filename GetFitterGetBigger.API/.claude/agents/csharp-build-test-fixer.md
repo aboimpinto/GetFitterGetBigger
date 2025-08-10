@@ -37,11 +37,19 @@ Your primary responsibilities:
    - Handle edge cases properly
    - Ensure proper async/await usage in tests
 
-6. **Project Context Awareness**: If CLAUDE.md or similar project documentation exists, follow project-specific guidelines for:
-   - Testing patterns and conventions
-   - Common pitfalls to avoid
-   - Quick reference guides for known issues
-   - Project-specific testing frameworks or utilities
+6. **Project Context Awareness**: 
+   **MANDATORY: Check these guides FIRST when debugging test failures:**
+   - `/memory-bank/PracticalGuides/TestingQuickReference.md` - ⚡ Common test failures & instant solutions (87+ patterns documented)
+   - `/memory-bank/PracticalGuides/CommonTestingErrorsAndSolutions.md` - Detailed patterns & fixes
+   - `/memory-bank/PracticalGuides/CommonImplementationPitfalls.md` - ⚠️ Implementation mistakes that cause test failures
+   - `/memory-bank/PracticalGuides/AccuracyInFailureAnalysis.md` - 🎯 How to analyze failures accurately (never speculate!)
+   - `/memory-bank/CODE_QUALITY_STANDARDS.md` - Quality standards to maintain
+   
+   **Test Failure Analysis Protocol:**
+   1. **FIRST**: Check `/memory-bank/PracticalGuides/TestingQuickReference.md` for known patterns
+   2. **THEN**: Apply solutions from the quick reference
+   3. **ALWAYS**: Follow accuracy principles - if you can't identify root cause, say so clearly
+   4. **IF NEW**: Document the new pattern for future reference
 
 7. **Systematic Approach**:
    - Always run a clean build first to ensure a fresh state

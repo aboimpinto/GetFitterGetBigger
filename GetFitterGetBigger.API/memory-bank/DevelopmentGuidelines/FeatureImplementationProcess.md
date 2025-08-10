@@ -118,7 +118,7 @@ Before starting ANY implementation:
 - **For EVERY task implementation:**
   1. Update task status to `[InProgress: Started: YYYY-MM-DD HH:MM]` when starting
   2. Write the implementation code
-     - **⚠️ CRITICAL: Check `common-implementation-pitfalls.md` before implementing services**
+     - **⚠️ CRITICAL: Check `PracticalGuides/CommonImplementationPitfalls.md` before implementing services**
      - **ALWAYS use ReadOnlyUnitOfWork for validation queries**
      - **ONLY use WritableUnitOfWork for actual data modifications**
   3. **MANDATORY: Write unit tests for the implemented code in the immediately following task**
@@ -310,8 +310,8 @@ Before marking any task as `[Implemented]`, verify:
 ## 📚 Pre-Implementation Checklist
 - [ ] Read `/memory-bank/Overview/SystemPatterns.md` - Architecture rules
 - [ ] Read `/memory-bank/unitOfWorkPattern.md` - Critical ReadOnly vs Writable patterns
-- [ ] Read `/memory-bank/common-implementation-pitfalls.md` - Common mistakes to avoid
-- [ ] Read `/memory-bank/UNIT-VS-INTEGRATION-TESTS.md` - Test separation rules
+- [ ] Read `/memory-bank/PracticalGuides/CommonImplementationPitfalls.md` - Common mistakes to avoid
+- [ ] Read `/memory-bank/Overview/UnitVsIntegrationTests.md` - Test separation rules
 - [ ] Run baseline health check (`dotnet build` and `dotnet test`)
 - [ ] Define BDD scenarios for all feature endpoints
 
@@ -378,7 +378,7 @@ Then the response status should be 401
 3. **BDD Scenarios**: Every business rule and API endpoint MUST have BDD coverage
 4. **Migration Tasks**: Any existing integration tests to migrate to BDD format
 
-**Test Placement Rules** (See `/memory-bank/UNIT-VS-INTEGRATION-TESTS.md`):
+**Test Placement Rules** (See `/memory-bank/Overview/UnitVsIntegrationTests.md`):
 - ❌ Database tests in API.Tests project = ARCHITECTURE VIOLATION
 - ✅ Unit tests with ALL dependencies mocked = API.Tests project
 - ✅ Database/workflow tests = API.IntegrationTests project in BDD format
@@ -397,7 +397,7 @@ Then the response status should be 401
 
 ### Category 3 (e.g., Service Layer) - Estimated: Xh
 #### ⚠️ CRITICAL Before Starting: 
-- [ ] Re-read `/memory-bank/common-implementation-pitfalls.md` Section 1
+- [ ] Re-read `/memory-bank/PracticalGuides/CommonImplementationPitfalls.md` Section 1
 - [ ] Remember: ReadOnlyUnitOfWork for validation, WritableUnitOfWork for modifications ONLY
 - **Task 3.1:** Create I[Name]Service interface `[ReadyToDevelop]` (Est: 15m)
 - **Task 3.2:** Implement [Name]Service with business logic `[ReadyToDevelop]` (Est: 2h)
@@ -500,7 +500,7 @@ Then the response status should be 401
 ## 🔄 Mid-Implementation Checkpoint
 - [ ] All tests still passing (`dotnet test`)
 - [ ] Build has no errors (`dotnet clean && dotnet build`)
-- [ ] Re-read `/memory-bank/common-implementation-pitfalls.md` if any issues
+- [ ] Re-read `/memory-bank/PracticalGuides/CommonImplementationPitfalls.md` if any issues
 - [ ] Verify correct UnitOfWork usage in all services
 
 ## Time Tracking Summary

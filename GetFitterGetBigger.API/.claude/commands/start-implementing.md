@@ -1,6 +1,13 @@
 Start implementing a feature from the READY_TO_DEVELOP folder following @memory-bank/DEVELOPMENT_PROCESS.md and @memory-bank/CODE_QUALITY_STANDARDS.md.
 Usage: /start-implementing [FEAT-XXX or feature selection]
 
+## Implementation Guides
+
+**Use these while coding:**
+- `/memory-bank/PracticalGuides/ServiceImplementationChecklist.md` - 📋 Step-by-step checklist
+- `/memory-bank/PracticalGuides/CommonImplementationPitfalls.md` - ⚠️ Mistakes to avoid
+- `/memory-bank/CODE_QUALITY_STANDARDS.md` - Quality standards to follow
+
 Instructions:
 1. List features in /memory-bank/features/1-READY_TO_DEVELOP/
 2. Select the specified feature or highest priority if none specified

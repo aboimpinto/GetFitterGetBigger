@@ -16,6 +16,9 @@
 ### I need to propagate changes to other projects
 👉 Go to: [Cross-Project Coordination](#cross-project-coordination)
 
+### I'm debugging issues or stuck on errors
+👉 Go to: [Practical Guides & Quick References](#practical-guides--quick-references)
+
 ### 🛑 Important: Checkpoint Behavior
 - **DEFAULT**: AI stops after each successful checkpoint for user review
 - **To continue after a pause**: `/continue-implementation`
@@ -329,6 +332,52 @@ var templateExerciseRepository = unitOfWork.GetRepository<IWorkoutTemplateExerci
 
 ---
 
+## 🔧 Practical Guides & Quick References
+
+### When You're Stuck or Debugging
+**📖 Essential Guides for Common Issues**:
+
+#### Testing Issues
+**📖 Guide**: `PracticalGuides/TestingQuickReference.md` - ⚡ CHECK FIRST for test failures!
+- Common test failure patterns with solutions
+- ID format errors, mock setups, navigation properties
+- Quick debugging checklist from 87+ fixed test failures
+
+#### Integration Test Setup
+**📖 Guide**: `PracticalGuides/IntegrationTestingSetup.md` - 🐳 Docker + PostgreSQL setup guide
+- TestContainers configuration and troubleshooting
+- Docker setup requirements and common issues
+- CI/CD pipeline configuration for integration tests
+- Performance optimization and debugging tips
+
+#### Implementation Pitfalls
+**📖 Guide**: `PracticalGuides/CommonImplementationPitfalls.md` - ⚠️ CRITICAL mistakes to avoid
+- ReadOnly vs Writable UnitOfWork confusion
+- Entity tracking issues
+- Service boundary violations
+- Real examples with solutions
+
+#### Service Implementation
+**📖 Guide**: `PracticalGuides/ServiceImplementationChecklist.md` - 📋 Step-by-step checklist
+- Quick reference while coding
+- Ensures nothing is missed
+- Pattern compliance verification
+
+#### Testing Patterns
+**📖 Guide**: `PracticalGuides/CommonTestingErrorsAndSolutions.md` - Detailed testing patterns
+- Mock setup patterns
+- Assertion best practices
+- Test organization strategies
+
+#### Debugging Methodology
+**📖 Guide**: `PracticalGuides/AccuracyInFailureAnalysis.md` - 🎯 How to analyze failures accurately
+- Never speculate when you don't know the root cause
+- Provide precise technical details when you do know
+- Critical for building trust in debugging analysis
+- Essential reading for all problem-solving activities
+
+---
+
 ## 🔄 Cross-Project Coordination
 
 ### Feature Propagation Flow
@@ -353,11 +402,20 @@ What am I doing?
 ├── 🚨 FIRST TIME or NEED REMINDER?
 │   └── READ → CODE_QUALITY_STANDARDS.md (MANDATORY!)
 │
+├── 🔧 Debugging/Troubleshooting?
+│   ├── Test Failures? → PracticalGuides/TestingQuickReference.md ⚡
+│   ├── Integration Tests? → PracticalGuides/IntegrationTestingSetup.md 🐳
+│   ├── Build Errors? → PracticalGuides/CommonImplementationPitfalls.md
+│   ├── Service Issues? → PracticalGuides/ServiceImplementationChecklist.md
+│   ├── Testing Patterns? → PracticalGuides/CommonTestingErrorsAndSolutions.md
+│   └── Analysis Method? → PracticalGuides/AccuracyInFailureAnalysis.md 🎯
+│
 ├── 🆕 New Feature
 │   ├── Starting? → CODE_QUALITY_STANDARDS.md + DevelopmentGuidelines/FeatureWorkflowProcess.md
 │   ├── Planning? → DevelopmentGuidelines/FeatureImplementationProcess.md (Section 1)
 │   ├── Coding? → DevelopmentGuidelines/FeatureImplementationProcess.md (Section 4)
-│   │   └── Services? → CodeQualityGuidelines/ServiceResultPattern.md (Error handling)
+│   │   ├── Services? → CodeQualityGuidelines/ServiceResultPattern.md (Error handling)
+│   │   └── Checklist? → PracticalGuides/ServiceImplementationChecklist.md 📋
 │   ├── Checkpoint? → DevelopmentGuidelines/Templates/FeatureCheckpointTemplate.md ⚠️ MANDATORY
 │   └── Completing? → DevelopmentGuidelines/FeatureWorkflowProcess.md (Completion)
 │
@@ -365,7 +423,8 @@ What am I doing?
 │   ├── Starting? → CODE_QUALITY_STANDARDS.md + DevelopmentGuidelines/BugWorkflowProcess.md
 │   ├── Analyzing? → DevelopmentGuidelines/BugImplementationProcess.md (Section 2)
 │   └── Fixing? → DevelopmentGuidelines/BugImplementationProcess.md (Section 4)
-│       └── Services? → CodeQualityGuidelines/ServiceResultPattern.md (Error handling)
+│       ├── Services? → CodeQualityGuidelines/ServiceResultPattern.md (Error handling)
+│       └── Common Issues? → PracticalGuides/CommonImplementationPitfalls.md ⚠️
 │
 ├── 📋 Process Question
 │   ├── Code Quality? → CODE_QUALITY_STANDARDS.md

@@ -23,7 +23,7 @@ We maintain two distinct integration test approaches to balance speed and accura
 - ⚠️ Developers must choose appropriate fixture
 - ⚠️ Some tests may need migration between fixtures
 
-**See TESTING-QUICK-REFERENCE.md for detailed usage guidelines**
+**See PracticalGuides/TestingQuickReference.md for detailed usage guidelines**
 
 ## Why Branch Coverage Matters
 
