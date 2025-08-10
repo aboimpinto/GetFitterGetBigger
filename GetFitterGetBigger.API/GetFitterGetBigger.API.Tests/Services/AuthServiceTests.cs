@@ -114,7 +114,7 @@ namespace GetFitterGetBigger.API.Tests.Services
                 .ReturnsAsync((UserId userId, string claimType, IWritableUnitOfWork<FitnessDbContext> uow) => capturedClaimId ?? ClaimId.New());
 
             _mockJwtService
-                .Setup(x => x.GenerateToken(It.IsAny<User>()))
+                .Setup(x => x.GenerateToken(It.IsAny<UserDto>()))
                 .Returns(expectedToken);
 
             // Act
@@ -176,7 +176,7 @@ namespace GetFitterGetBigger.API.Tests.Services
                 .ReturnsAsync(existingUser);
 
             _mockJwtService
-                .Setup(x => x.GenerateToken(It.IsAny<User>()))
+                .Setup(x => x.GenerateToken(It.IsAny<UserDto>()))
                 .Returns(expectedToken);
 
             // Act
@@ -244,7 +244,7 @@ namespace GetFitterGetBigger.API.Tests.Services
                 .ReturnsAsync(existingUser);
                 
             _mockJwtService
-                .Setup(x => x.GenerateToken(It.IsAny<User>()))
+                .Setup(x => x.GenerateToken(It.IsAny<UserDto>()))
                 .Returns("token");
 
             // Act
@@ -280,7 +280,7 @@ namespace GetFitterGetBigger.API.Tests.Services
                 .ReturnsAsync(ClaimId.New());
                 
             _mockJwtService
-                .Setup(x => x.GenerateToken(It.IsAny<User>()))
+                .Setup(x => x.GenerateToken(It.IsAny<UserDto>()))
                 .Returns("token");
 
             // Act
@@ -312,7 +312,7 @@ namespace GetFitterGetBigger.API.Tests.Services
         }
 
         [Fact]
-        public async Task AuthenticateAsync_WhenUserRepositoryThrows_ReturnsInternalError()
+        public async Task AuthenticateAsync_WhenUserRepositoryThrows_ThrowsException()
         {
             // Arrange
             var command = new AuthenticationCommand { Email = "test@example.com" };
@@ -320,17 +320,15 @@ namespace GetFitterGetBigger.API.Tests.Services
                 .Setup(x => x.GetUserByEmailAsync(It.IsAny<string>()))
                 .ThrowsAsync(new InvalidOperationException("Database error"));
 
-            // Act
-            var result = await _authService.AuthenticateAsync(command);
-
-            // Assert
-            Assert.False(result.IsSuccess);
-            Assert.Equal(ServiceErrorCode.InternalError, result.PrimaryErrorCode);
+            // Act & Assert
+            // With the new no-try-catch architecture, exceptions bubble up naturally
+            var exception = await Assert.ThrowsAsync<InvalidOperationException>(() => _authService.AuthenticateAsync(command));
+            Assert.Equal("Database error", exception.Message);
             _mockReadOnlyUnitOfWork.Verify(x => x.Dispose(), Times.Once);
         }
 
         [Fact]
-        public async Task AuthenticateAsync_WhenJwtServiceThrows_ReturnsInternalError()
+        public async Task AuthenticateAsync_WhenJwtServiceThrows_ThrowsException()
         {
             // Arrange
             var command = new AuthenticationCommand { Email = "test@example.com" };
@@ -353,20 +351,18 @@ namespace GetFitterGetBigger.API.Tests.Services
                 .ReturnsAsync(ClaimId.New());
                 
             _mockJwtService
-                .Setup(x => x.GenerateToken(It.IsAny<User>()))
+                .Setup(x => x.GenerateToken(It.IsAny<UserDto>()))
                 .Throws(new InvalidOperationException("JWT configuration error"));
 
-            // Act
-            var result = await _authService.AuthenticateAsync(command);
-
-            // Assert
-            Assert.False(result.IsSuccess);
-            Assert.Equal(ServiceErrorCode.InternalError, result.PrimaryErrorCode);
+            // Act & Assert
+            // With the new no-try-catch architecture, exceptions bubble up naturally
+            var exception = await Assert.ThrowsAsync<InvalidOperationException>(() => _authService.AuthenticateAsync(command));
+            Assert.Equal("JWT configuration error", exception.Message);
             _mockUnitOfWork.Verify(x => x.Dispose(), Times.Once);
         }
 
         [Fact]
-        public async Task AuthenticateAsync_WhenCommitFails_ReturnsInternalError()
+        public async Task AuthenticateAsync_WhenCommitFails_ThrowsException()
         {
             // Arrange
             var command = new AuthenticationCommand { Email = "test@example.com" };
@@ -380,7 +376,7 @@ namespace GetFitterGetBigger.API.Tests.Services
                 .ReturnsAsync((User?)null);  // Second call: still doesn't exist after failed creation
                 
             _mockJwtService
-                .Setup(x => x.GenerateToken(It.IsAny<User>()))
+                .Setup(x => x.GenerateToken(It.IsAny<UserDto>()))
                 .Returns("token");
                 
             _mockUserRepository
@@ -398,17 +394,15 @@ namespace GetFitterGetBigger.API.Tests.Services
                 .Setup(x => x.CommitAsync())
                 .ThrowsAsync(new InvalidOperationException("Database commit error"));
 
-            // Act
-            var result = await _authService.AuthenticateAsync(command);
-
-            // Assert
-            Assert.False(result.IsSuccess);
-            Assert.Equal(ServiceErrorCode.InternalError, result.PrimaryErrorCode);
+            // Act & Assert
+            // With the new no-try-catch architecture, exceptions bubble up naturally
+            var exception = await Assert.ThrowsAsync<InvalidOperationException>(() => _authService.AuthenticateAsync(command));
+            Assert.Equal("Database commit error", exception.Message);
             _mockUnitOfWork.Verify(x => x.Dispose(), Times.Once);
         }
 
         [Fact]
-        public async Task AuthenticateAsync_WithUserHavingNullClaimsList_ReturnsInternalError()
+        public async Task AuthenticateAsync_WithUserHavingNullClaimsList_SucceedsWithEmptyClaimsList()
         {
             // Arrange
             var command = new AuthenticationCommand { Email = "test@example.com" };
@@ -425,15 +419,18 @@ namespace GetFitterGetBigger.API.Tests.Services
                 .ReturnsAsync(user);
                 
             _mockJwtService
-                .Setup(x => x.GenerateToken(It.IsAny<User>()))
+                .Setup(x => x.GenerateToken(It.IsAny<UserDto>()))
                 .Returns("token");
 
             // Act
             var result = await _authService.AuthenticateAsync(command);
 
             // Assert
-            Assert.False(result.IsSuccess);
-            Assert.Equal(ServiceErrorCode.InternalError, result.PrimaryErrorCode);
+            // The new architecture handles null claims gracefully by converting to empty list
+            Assert.True(result.IsSuccess);
+            Assert.Equal("token", result.Data.Token);
+            Assert.NotNull(result.Data.Claims);
+            Assert.Empty(result.Data.Claims);
         }
     }
 }

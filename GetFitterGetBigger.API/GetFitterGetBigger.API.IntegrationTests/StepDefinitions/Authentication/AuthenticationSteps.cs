@@ -120,7 +120,7 @@ public class AuthenticationSteps
     }
     
     [Then(@"I should receive a valid authentication token")]
-    public async Task ThenIShouldReceiveAValidAuthenticationToken()
+    public Task ThenIShouldReceiveAValidAuthenticationToken()
     {
         var response = _scenarioContext.GetLastResponse();
         response.EnsureSuccessStatusCode();
@@ -140,10 +140,12 @@ public class AuthenticationSteps
         Assert.NotEmpty(authResponse.Token);
         Assert.NotNull(authResponse.Claims);
         Assert.True(authResponse.Claims.Count > 0, $"Claims collection is empty. Claims count: {authResponse.Claims?.Count ?? -1}");
+        
+        return Task.CompletedTask;
     }
     
     [Then(@"the token should contain claim ""(.*)"" with value ""(.*)""")]
-    public async Task ThenTheTokenShouldContainClaimWithValue(string claimType, string claimValue)
+    public Task ThenTheTokenShouldContainClaimWithValue(string claimType, string claimValue)
     {
         // Get the content that was already read in the When step
         var contentString = _scenarioContext.GetLastResponseContent();
@@ -175,6 +177,8 @@ public class AuthenticationSteps
             Assert.NotNull(claim);
             Assert.Equal(claimValue, claim.Resource ?? claim.ClaimType);
         }
+        
+        return Task.CompletedTask;
     }
     
     /// <summary>

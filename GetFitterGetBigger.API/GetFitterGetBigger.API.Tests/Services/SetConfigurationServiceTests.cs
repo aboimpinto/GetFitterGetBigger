@@ -66,7 +66,7 @@ public class SetConfigurationServiceTests
     {
         // Arrange
         _repository.Setup(x => x.GetByIdAsync(_validSetConfigurationId))
-            .ReturnsAsync((SetConfiguration?)null);
+            .ReturnsAsync(SetConfiguration.Empty);
 
         // Act
         var result = await _service.GetByIdAsync(_validSetConfigurationId);
@@ -320,7 +320,7 @@ public class SetConfigurationServiceTests
         };
 
         _repository.Setup(x => x.GetByIdAsync(_validSetConfigurationId))
-            .ReturnsAsync((SetConfiguration?)null);
+            .ReturnsAsync(SetConfiguration.Empty);
 
         // Act
         var result = await _service.UpdateAsync(command);
@@ -473,7 +473,7 @@ public class SetConfigurationServiceTests
     {
         // Arrange
         _repository.Setup(x => x.GetByIdAsync(_validSetConfigurationId))
-            .ReturnsAsync((SetConfiguration?)null);
+            .ReturnsAsync(SetConfiguration.Empty);
 
         // Act
         var result = await _service.DeleteAsync(_validSetConfigurationId);
@@ -565,7 +565,7 @@ public class SetConfigurationServiceTests
     {
         // Arrange
         _repository.Setup(x => x.GetByIdAsync(_validSetConfigurationId))
-            .ReturnsAsync((SetConfiguration?)null);
+            .ReturnsAsync(SetConfiguration.Empty);
 
         // Act
         var result = await _service.ExistsAsync(_validSetConfigurationId);

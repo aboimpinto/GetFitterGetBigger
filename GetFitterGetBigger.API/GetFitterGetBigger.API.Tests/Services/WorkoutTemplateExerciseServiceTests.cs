@@ -253,7 +253,7 @@ public class WorkoutTemplateExerciseServiceTests
     {
         // Arrange
         _mockExerciseTemplateRepo.Setup(x => x.GetByIdWithDetailsAsync(_testExerciseId))
-            .ReturnsAsync((WorkoutTemplateExercise?)null);
+            .ReturnsAsync(WorkoutTemplateExercise.Empty);
         
         // Act
         var result = await _service.GetByIdAsync(_testExerciseId);
@@ -323,7 +323,7 @@ public class WorkoutTemplateExerciseServiceTests
         
         _mockTemplateRepo
             .Setup(x => x.GetByIdWithDetailsAsync(_testTemplateId))
-            .ReturnsAsync((WorkoutTemplate?)null);
+            .ReturnsAsync(WorkoutTemplate.Empty);
         
         // Act
         var result = await _service.ValidateExercisesAsync(_testTemplateId, exerciseIds);

@@ -206,10 +206,14 @@ public class MuscleGroupService : EnhancedReferenceService<MuscleGroup, MuscleGr
             
             // Async validations - atomic, one validation per aspect
             .EnsureAsync(
-                async () => (await _bodyPartService.ExistsAsync(command.BodyPartId)).Data?.Value ?? false,
+                async () => {
+                    if (command == null) return false;
+                    var existsResult = await _bodyPartService.ExistsAsync(command.BodyPartId);
+                    return existsResult.Data?.Value == true;
+                },
                 ServiceError.ValidationFailed(MuscleGroupErrorMessages.Validation.InvalidBodyPartId))
             .EnsureAsync(
-                async () => !await CheckDuplicateNameAsync(command.Name),
+                async () => command == null || !await CheckDuplicateNameAsync(command.Name),
                 ServiceError.AlreadyExists("MuscleGroup", command?.Name ?? string.Empty))
             .ToValidationResultAsync();
     }
@@ -238,10 +242,14 @@ public class MuscleGroupService : EnhancedReferenceService<MuscleGroup, MuscleGr
             
             // Async validations - atomic, one validation per aspect
             .EnsureAsync(
-                async () => (await _bodyPartService.ExistsAsync(command.BodyPartId)).Data?.Value ?? false,
+                async () => {
+                    if (command == null) return false;
+                    var existsResult = await _bodyPartService.ExistsAsync(command.BodyPartId);
+                    return existsResult.Data?.Value == true;
+                },
                 ServiceError.ValidationFailed(MuscleGroupErrorMessages.Validation.InvalidBodyPartId))
             .EnsureAsync(
-                async () => !await CheckDuplicateNameAsync(command.Name, muscleGroupId),
+                async () => command == null || !await CheckDuplicateNameAsync(command.Name, muscleGroupId),
                 ServiceError.AlreadyExists("MuscleGroup", command?.Name ?? string.Empty))
             .ToValidationResultAsync();
     }

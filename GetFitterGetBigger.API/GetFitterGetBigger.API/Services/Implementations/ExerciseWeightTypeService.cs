@@ -145,7 +145,7 @@ public class ExerciseWeightTypeService(
     public async Task<bool> IsValidWeightForTypeAsync(ExerciseWeightTypeId weightTypeId, decimal? weight)
     {
         // Early return for invalid ID
-        if (weightTypeId == null || weightTypeId.IsEmpty)
+        if (weightTypeId.IsEmpty)
             return false;
             
         // Get the weight type to check its rules
