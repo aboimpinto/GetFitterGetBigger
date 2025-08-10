@@ -23,6 +23,13 @@ public interface IExerciseWeightTypeService
     Task<ServiceResult<ReferenceDataDto>> GetByIdAsync(ExerciseWeightTypeId id);
     
     /// <summary>
+    /// Gets an exercise weight type by ID string
+    /// </summary>
+    /// <param name="id">The exercise weight type ID as a string</param>
+    /// <returns>Service result containing the reference data DTO</returns>
+    Task<ServiceResult<ReferenceDataDto>> GetByIdAsync(string id);
+    
+    /// <summary>
     /// Gets an exercise weight type by value
     /// </summary>
     /// <param name="value">The value (name) of the weight type</param>
@@ -41,14 +48,5 @@ public interface IExerciseWeightTypeService
     /// </summary>
     /// <param name="id">The exercise weight type ID to check</param>
     /// <returns>A service result containing true if the weight type exists and is active, false otherwise</returns>
-    Task<ServiceResult<bool>> ExistsAsync(ExerciseWeightTypeId id);
-    
-    
-    /// <summary>
-    /// Validates if a weight value is appropriate for the given weight type
-    /// </summary>
-    /// <param name="weightTypeId">The exercise weight type ID</param>
-    /// <param name="weight">The weight value to validate (null for no weight)</param>
-    /// <returns>True if the weight is valid for the type, false otherwise</returns>
-    Task<bool> IsValidWeightForTypeAsync(ExerciseWeightTypeId weightTypeId, decimal? weight);
+    Task<ServiceResult<BooleanResultDto>> ExistsAsync(ExerciseWeightTypeId id);
 }

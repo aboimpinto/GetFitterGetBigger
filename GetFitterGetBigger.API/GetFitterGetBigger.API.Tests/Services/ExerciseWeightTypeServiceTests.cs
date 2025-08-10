@@ -397,7 +397,7 @@ namespace GetFitterGetBigger.API.Tests.Services
             
             // Assert
             Assert.False(result.IsSuccess);
-            Assert.Equal(ServiceErrorCode.InvalidFormat, result.PrimaryErrorCode);
+            Assert.Equal(ServiceErrorCode.ValidationFailed, result.PrimaryErrorCode);
             _mockUnitOfWorkProvider.Verify(x => x.CreateReadOnly(), Times.Never);
         }
         
@@ -416,7 +416,7 @@ namespace GetFitterGetBigger.API.Tests.Services
             
             // Assert
             Assert.True(result.IsSuccess);
-            Assert.True(result.Data);
+            Assert.True(result.Data.Value);
         }
         
         [Fact]
@@ -435,125 +435,7 @@ namespace GetFitterGetBigger.API.Tests.Services
             
             // Assert
             Assert.True(result.IsSuccess);
-            Assert.False(result.Data);
-        }
-        
-        #endregion
-        
-        #region IsValidWeightForTypeAsync Tests
-        
-        [Fact]
-        public async Task IsValidWeightForTypeAsync_WithEmptyId_ReturnsFalse()
-        {
-            // Arrange
-            var emptyId = ExerciseWeightTypeId.Empty;
-            
-            // Act
-            var result = await _service.IsValidWeightForTypeAsync(emptyId, 10);
-            
-            // Assert
-            Assert.False(result);
-            _mockUnitOfWorkProvider.Verify(x => x.CreateReadOnly(), Times.Never);
-        }
-        
-        [Fact]
-        public async Task IsValidWeightForTypeAsync_BodyweightOnly_WithNullWeight_ReturnsTrue()
-        {
-            // Arrange
-            var weightType = _testData[0]; // BODYWEIGHT_ONLY
-            var id = weightType.Id;
-            
-            SetupGetByIdForValidation(id, weightType);
-            
-            // Act
-            var result = await _service.IsValidWeightForTypeAsync(id, null);
-            
-            // Assert
-            Assert.True(result);
-        }
-        
-        [Fact]
-        public async Task IsValidWeightForTypeAsync_BodyweightOnly_WithZeroWeight_ReturnsTrue()
-        {
-            // Arrange
-            var weightType = _testData[0]; // BODYWEIGHT_ONLY
-            var id = weightType.Id;
-            
-            SetupGetByIdForValidation(id, weightType);
-            
-            // Act
-            var result = await _service.IsValidWeightForTypeAsync(id, 0);
-            
-            // Assert
-            Assert.True(result);
-        }
-        
-        [Fact]
-        public async Task IsValidWeightForTypeAsync_BodyweightOnly_WithPositiveWeight_ReturnsFalse()
-        {
-            // Arrange
-            var weightType = _testData[0]; // BODYWEIGHT_ONLY
-            var id = weightType.Id;
-            
-            SetupGetByIdForValidation(id, weightType);
-            
-            // Act
-            var result = await _service.IsValidWeightForTypeAsync(id, 10);
-            
-            // Assert
-            Assert.False(result);
-        }
-        
-        [Fact]
-        public async Task IsValidWeightForTypeAsync_WeightRequired_WithPositiveWeight_ReturnsTrue()
-        {
-            // Arrange
-            var weightType = _testData[2]; // WEIGHT_REQUIRED
-            var id = weightType.Id;
-            
-            SetupGetByIdForValidation(id, weightType);
-            
-            // Act
-            var result = await _service.IsValidWeightForTypeAsync(id, 50);
-            
-            // Assert
-            Assert.True(result);
-        }
-        
-        [Fact]
-        public async Task IsValidWeightForTypeAsync_WeightRequired_WithNullWeight_ReturnsFalse()
-        {
-            // Arrange
-            var weightType = _testData[2]; // WEIGHT_REQUIRED
-            var id = weightType.Id;
-            
-            SetupGetByIdForValidation(id, weightType);
-            
-            // Act
-            var result = await _service.IsValidWeightForTypeAsync(id, null);
-            
-            // Assert
-            Assert.False(result);
-        }
-        
-        [Fact]
-        public async Task IsValidWeightForTypeAsync_BodyweightOptional_WithAnyWeight_ReturnsTrue()
-        {
-            // Arrange
-            var weightType = _testData[1]; // BODYWEIGHT_OPTIONAL
-            var id = weightType.Id;
-            
-            SetupGetByIdForValidation(id, weightType);
-            
-            // Act
-            var resultNull = await _service.IsValidWeightForTypeAsync(id, null);
-            var resultZero = await _service.IsValidWeightForTypeAsync(id, 0);
-            var resultPositive = await _service.IsValidWeightForTypeAsync(id, 25);
-            
-            // Assert
-            Assert.True(resultNull);
-            Assert.True(resultZero);
-            Assert.True(resultPositive);
+            Assert.False(result.Data.Value);
         }
         
         #endregion
@@ -568,16 +450,6 @@ namespace GetFitterGetBigger.API.Tests.Services
                 Value = entity.Value,
                 Description = entity.Description
             };
-        }
-        
-        private void SetupGetByIdForValidation(ExerciseWeightTypeId id, ExerciseWeightType weightType)
-        {
-            var dto = MapToDto(weightType);
-            
-                
-            _mockRepository
-                .Setup(x => x.GetByIdAsync(id))
-                .ReturnsAsync(weightType);
         }
         
         #endregion
