@@ -116,8 +116,8 @@ These will be documented for manual resolution.
 ## Standards Applied
 
 The agent enforces standards from:
-- `/memory-bank/API-CODE_QUALITY_STANDARDS.md` - API-specific patterns and rules
-- Universal standards where applicable
+- `/memory-bank/CODE_QUALITY_STANDARDS.md` - API quality standards and patterns
+- Guidelines in `/memory-bank/CodeQualityGuidelines/` folder
 
 Key patterns enforced:
 - ServiceResult<T> for all service methods

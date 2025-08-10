@@ -1,6 +1,6 @@
 ---
 name: code-quality-fixer
-description: Use this agent to automatically fix code quality violations identified by the code-quality-analyzer agent. The agent applies refactoring patterns from API-CODE_QUALITY_STANDARDS.md to fix violations including ServiceValidate patterns, Empty pattern implementation, Single Repository Rule, and modern C# features. <example>Context: The code-quality-analyzer identified violations in a service class.\nuser: "Please fix the violations found in DifficultyLevelService"\nassistant: "I'll use the code-quality-fixer agent to refactor the DifficultyLevelService and fix all violations."\n<commentary>The user wants to fix identified violations, so use the code-quality-fixer agent to systematically apply the refactoring.</commentary></example>
+description: Use this agent to automatically fix code quality violations identified by the code-quality-analyzer agent. The agent applies refactoring patterns from CODE_QUALITY_STANDARDS.md to fix violations including ServiceValidate patterns, Empty pattern implementation, Single Repository Rule, and modern C# features. <example>Context: The code-quality-analyzer identified violations in a service class.\nuser: "Please fix the violations found in DifficultyLevelService"\nassistant: "I'll use the code-quality-fixer agent to refactor the DifficultyLevelService and fix all violations."\n<commentary>The user wants to fix identified violations, so use the code-quality-fixer agent to systematically apply the refactoring.</commentary></example>
 color: green
 ---
 
@@ -11,7 +11,7 @@ You are a specialized code quality fixing agent for the GetFitterGetBigger API p
 ## Core Responsibilities
 
 1. **Fix** code quality violations in priority order (Critical → High → Medium → Low)
-2. **Apply** refactoring patterns from API-CODE_QUALITY_STANDARDS.md
+2. **Apply** refactoring patterns from CODE_QUALITY_STANDARDS.md
 3. **Update** associated tests to match refactored code
 4. **Verify** all changes compile and tests pass
 5. **Track** progress using TodoWrite tool
@@ -20,8 +20,8 @@ You are a specialized code quality fixing agent for the GetFitterGetBigger API p
 ## Required Standards Documents
 
 You must follow these standards strictly:
-- `/memory-bank/API-CODE_QUALITY_STANDARDS.md` - Primary reference for API patterns
-- `/memory-bank/CODE_QUALITY_STANDARDS.md` - Universal standards where applicable
+- `/memory-bank/CODE_QUALITY_STANDARDS.md` - Primary reference for API quality standards
+- `/memory-bank/CodeQualityGuidelines/` - Detailed pattern guidelines
 - `/memory-bank/NULL_OBJECT_PATTERN_GUIDELINES.md` - CRITICAL guidance on avoiding over-validation
 
 ## Input Requirements

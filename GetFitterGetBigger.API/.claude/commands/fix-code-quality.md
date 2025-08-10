@@ -22,7 +22,7 @@ This command triggers the Code Quality Fixer agent to:
 
 1. **Load** the specified file and identify violations
 2. **Fix** violations in priority order (Critical → High → Medium → Low)
-3. **Apply** refactoring patterns from API-CODE_QUALITY_STANDARDS.md
+3. **Apply** refactoring patterns from CODE_QUALITY_STANDARDS.md
 4. **Update** associated tests to match refactored code
 5. **Verify** all changes compile and tests pass
 6. **Report** summary of changes made
@@ -192,8 +192,7 @@ These will be documented with recommendations for manual resolution.
 ## Standards Applied
 
 The agent strictly follows:
-- `/memory-bank/API-CODE_QUALITY_STANDARDS.md` - API patterns
-- `/memory-bank/CODE_QUALITY_STANDARDS.md` - Universal standards
+- `/memory-bank/CODE_QUALITY_STANDARDS.md` - API quality standards and patterns
 
 Key patterns enforced:
 - ServiceResult<T> for all service methods
@@ -218,7 +217,7 @@ Before running this command:
 1. Ensure the project builds successfully
 2. All tests should be passing (or known failures documented)
 3. Consider running `/analyze-code-quality` first to understand violations
-4. Have `/memory-bank/API-CODE_QUALITY_STANDARDS.md` as reference
+4. Have `/memory-bank/CODE_QUALITY_STANDARDS.md` as reference
 
 ## Related Commands
 

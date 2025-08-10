@@ -164,6 +164,20 @@ public async Task<AuthenticationResponse> AuthenticateAsync(AuthenticationReques
 - **Shared Models**: Using models from the Shared project for consistency
 - **Entity Framework Core**: For ORM-based database access with specialized ID type conversions
 
+### Reference Data Patterns
+- **Reference Tables**: Lookup tables with relatively static data
+  - **Pure Reference Data**: Inherits from ReferenceDataBase (BodyParts, DifficultyLevels, etc.)
+  - **Dynamic Reference Data**: Custom implementation with CRUD support (MuscleGroups, Equipment)
+  - **Cache Integration**: Direct cache integration in services (see `/memory-bank/CACHE_INTEGRATION_PATTERN.md`)
+  - **CRUD Conversion Process**: Converting read-only tables to CRUD (see `/memory-bank/REFERENCE_TABLE_CRUD_PROCESS.md`)
+- **Caching Strategy**:
+  - **IEternalCacheService**: 365-day cache for pure reference data
+  - **ICacheService**: 1-hour cache for dynamic reference data
+  - **Direct Integration**: Services own their caching logic, no wrapper classes
+- **Related Documentation**:
+  - `/memory-bank/reference-tables-overview.md` - Complete list of reference tables
+  - `/memory-bank/CodeQualityGuidelines/CacheIntegrationPattern.md` - Cache integration implementation
+
 ## API Endpoint Organization
 
 - **Resource-Based Endpoints**: Organized around resources (exercises, workouts, plans)

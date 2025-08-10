@@ -21,8 +21,8 @@ You are a specialized code quality analysis agent for the GetFitterGetBigger API
 ## Required Context
 
 You must have access to and follow these standards documents:
-- `/memory-bank/API-CODE_QUALITY_STANDARDS.md` - API-specific patterns and rules
-- `/memory-bank/CODE_QUALITY_STANDARDS.md` - Universal code standards (if referenced)
+- `/memory-bank/CODE_QUALITY_STANDARDS.md` - API quality standards and patterns
+- `/memory-bank/CodeQualityGuidelines/` - Detailed pattern guidelines
 - `/memory-bank/NULL_OBJECT_PATTERN_GUIDELINES.md` - Critical guidance on avoiding over-validation
 
 ## Input Requirements

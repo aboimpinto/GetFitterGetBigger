@@ -63,6 +63,13 @@ When propagating API documentation:
 
 The `/memory-bank/` directory contains all project knowledge and processes:
 
+### Naming Conventions
+- **Folders**: Use CamelCase (e.g., `CodeQualityGuidelines/`, `ServicePatterns/`)
+- **Files**: Use appropriate naming for the content type:
+  - Process docs: SCREAMING_SNAKE_CASE (e.g., `FEATURE_IMPLEMENTATION_PROCESS.md`)
+  - Guidelines: CamelCase (e.g., `ServiceValidatePattern.md`)
+  - Context files: camelCase (e.g., `productContext.md`)
+
 ### Process Documentation
 - **`BUG_IMPLEMENTATION_PROCESS.md`** - How to fix bugs systematically
 - **`BUG_WORKFLOW_PROCESS.md`** - Bug lifecycle and folder structure
