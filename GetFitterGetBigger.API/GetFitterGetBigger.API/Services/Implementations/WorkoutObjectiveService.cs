@@ -41,8 +41,14 @@ public class WorkoutObjectiveService(
     {
         return await ServiceValidate.For<ReferenceDataDto>()
             .EnsureNotEmpty(id, WorkoutObjectiveErrorMessages.InvalidIdFormat)
-            .MatchAsync(
-                whenValid: async () => await LoadByIdFromDatabaseAsync(id)
+            .WithServiceResultAsync(() => LoadByIdFromDatabaseAsync(id))
+            .ThenMatchDataAsync<ReferenceDataDto, ReferenceDataDto>(
+                whenEmpty: () => Task.FromResult(
+                    ServiceResult<ReferenceDataDto>.Failure(
+                        ReferenceDataDto.Empty,
+                        ServiceError.NotFound("WorkoutObjective", id.ToString()))),
+                whenNotEmpty: dto => Task.FromResult(
+                    ServiceResult<ReferenceDataDto>.Success(dto))
             );
     }
     
@@ -53,12 +59,14 @@ public class WorkoutObjectiveService(
     /// <returns>A service result containing the workout_objective if found</returns>
     public async Task<ServiceResult<ReferenceDataDto>> GetByIdAsync(string id)
     {
-        var workout_objectiveId = WorkoutObjectiveId.ParseOrEmpty(id);
-        
         return await ServiceValidate.For<ReferenceDataDto>()
-            .EnsureNotEmpty(workout_objectiveId, WorkoutObjectiveErrorMessages.InvalidIdFormat)
+            .EnsureNotWhiteSpace(id, WorkoutObjectiveErrorMessages.InvalidIdFormat)
             .MatchAsync(
-                whenValid: async () => await LoadByIdFromDatabaseAsync(workout_objectiveId)
+                whenValid: async () =>
+                {
+                    var workout_objectiveId = WorkoutObjectiveId.ParseOrEmpty(id);
+                    return await GetByIdAsync(workout_objectiveId);
+                }
             );
     }
     
@@ -68,13 +76,9 @@ public class WorkoutObjectiveService(
         var repository = unitOfWork.GetRepository<IWorkoutObjectiveRepository>();
         var entity = await repository.GetByIdAsync(id);
         
-        return (entity.IsEmpty || !entity.IsActive) switch
-        {
-            true => ServiceResult<ReferenceDataDto>.Failure(
-                ReferenceDataDto.Empty,
-                ServiceError.NotFound("WorkoutObjective", id.ToString())),
-            false => ServiceResult<ReferenceDataDto>.Success(MapToDto(entity))
-        };
+        return entity.IsActive
+            ? ServiceResult<ReferenceDataDto>.Success(MapToDto(entity))
+            : ServiceResult<ReferenceDataDto>.Success(ReferenceDataDto.Empty);
     }
     
     /// <inheritdoc/>
@@ -82,8 +86,14 @@ public class WorkoutObjectiveService(
     {
         return await ServiceValidate.For<ReferenceDataDto>()
             .EnsureNotWhiteSpace(value, WorkoutObjectiveErrorMessages.ValueCannotBeEmpty)
-            .MatchAsync(
-                whenValid: async () => await LoadByValueFromDatabaseAsync(value)
+            .WithServiceResultAsync(() => LoadByValueFromDatabaseAsync(value))
+            .ThenMatchDataAsync<ReferenceDataDto, ReferenceDataDto>(
+                whenEmpty: () => Task.FromResult(
+                    ServiceResult<ReferenceDataDto>.Failure(
+                        ReferenceDataDto.Empty,
+                        ServiceError.NotFound("WorkoutObjective", value))),
+                whenNotEmpty: dto => Task.FromResult(
+                    ServiceResult<ReferenceDataDto>.Success(dto))
             );
     }
     
@@ -93,27 +103,24 @@ public class WorkoutObjectiveService(
         var repository = unitOfWork.GetRepository<IWorkoutObjectiveRepository>();
         var entity = await repository.GetByValueAsync(value);
         
-        return (entity.IsEmpty || !entity.IsActive) switch
-        {
-            true => ServiceResult<ReferenceDataDto>.Failure(
-                ReferenceDataDto.Empty,
-                ServiceError.NotFound("WorkoutObjective", value)),
-            false => ServiceResult<ReferenceDataDto>.Success(MapToDto(entity))
-        };
+        return entity.IsActive
+            ? ServiceResult<ReferenceDataDto>.Success(MapToDto(entity))
+            : ServiceResult<ReferenceDataDto>.Success(ReferenceDataDto.Empty);
     }
 
     /// <inheritdoc/>
-    public async Task<ServiceResult<bool>> ExistsAsync(WorkoutObjectiveId id)
+    public async Task<ServiceResult<BooleanResultDto>> ExistsAsync(WorkoutObjectiveId id)
     {
-        return await ServiceValidate.Build<bool>()
+        return await ServiceValidate.For<BooleanResultDto>()
             .EnsureNotEmpty(id, WorkoutObjectiveErrorMessages.InvalidIdFormat)
-            .WhenValidAsync(async () =>
-            {
-                using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
-                var repository = unitOfWork.GetRepository<IWorkoutObjectiveRepository>();
-                var exists = await repository.ExistsAsync(id);
-                return ServiceResult<bool>.Success(exists);
-            });
+            .MatchAsync(
+                whenValid: async () =>
+                {
+                    using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
+                    var repository = unitOfWork.GetRepository<IWorkoutObjectiveRepository>();
+                    var exists = await repository.ExistsAsync(id);
+                    return ServiceResult<BooleanResultDto>.Success(new BooleanResultDto { Value = exists });
+                });
     }
     
     /// <summary>

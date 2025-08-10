@@ -33,7 +33,7 @@ public interface IWorkoutObjectiveService
     /// Checks if a workout objective exists
     /// </summary>
     /// <param name="id">The workout objective ID</param>
-    /// <returns>A service result containing true if exists, false otherwise</returns>
-    Task<ServiceResult<bool>> ExistsAsync(WorkoutObjectiveId id);
+    /// <returns>A service result containing a boolean result if exists, false otherwise</returns>
+    Task<ServiceResult<BooleanResultDto>> ExistsAsync(WorkoutObjectiveId id);
     
 }
