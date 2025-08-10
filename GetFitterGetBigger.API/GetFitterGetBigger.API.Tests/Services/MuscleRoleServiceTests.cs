@@ -192,7 +192,7 @@ public class MuscleRoleServiceTests
         var result = await _service.ExistsAsync(id);
 
         Assert.True(result.IsSuccess);
-        Assert.True(result.Data);
+        Assert.True(result.Data.Value);
     }
 
     [Fact]
@@ -209,7 +209,7 @@ public class MuscleRoleServiceTests
         var result = await _service.ExistsAsync(id);
 
         Assert.True(result.IsSuccess);
-        Assert.False(result.Data);
+        Assert.False(result.Data.Value);
     }
 
     [Fact]
