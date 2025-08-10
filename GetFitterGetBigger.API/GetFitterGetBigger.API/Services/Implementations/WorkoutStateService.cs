@@ -47,8 +47,14 @@ public class WorkoutStateService(
     {
         return await ServiceValidate.For<WorkoutStateDto>()
             .EnsureNotEmpty(id, WorkoutStateErrorMessages.InvalidIdFormat)
-            .MatchAsync(
-                whenValid: async () => await LoadByIdFromDatabaseAsync(id)
+            .WithServiceResultAsync(() => LoadByIdFromDatabaseAsync(id))
+            .ThenMatchDataAsync<WorkoutStateDto, WorkoutStateDto>(
+                whenEmpty: () => Task.FromResult(
+                    ServiceResult<WorkoutStateDto>.Failure(
+                        WorkoutStateDto.Empty,
+                        ServiceError.NotFound("WorkoutState", id.ToString()))),
+                whenNotEmpty: dto => Task.FromResult(
+                    ServiceResult<WorkoutStateDto>.Success(dto))
             );
     }
     
@@ -59,12 +65,12 @@ public class WorkoutStateService(
     /// <returns>A service result containing the workout_state if found</returns>
     public async Task<ServiceResult<WorkoutStateDto>> GetByIdAsync(string id)
     {
-        var workout_stateId = WorkoutStateId.ParseOrEmpty(id);
+        var workoutStateId = WorkoutStateId.ParseOrEmpty(id);
         
         return await ServiceValidate.For<WorkoutStateDto>()
-            .EnsureNotEmpty(workout_stateId, WorkoutStateErrorMessages.InvalidIdFormat)
+            .EnsureNotEmpty(workoutStateId, WorkoutStateErrorMessages.InvalidIdFormat)
             .MatchAsync(
-                whenValid: async () => await LoadByIdFromDatabaseAsync(workout_stateId)
+                whenValid: async () => await LoadByIdFromDatabaseAsync(workoutStateId)
             );
     }
     
@@ -74,13 +80,10 @@ public class WorkoutStateService(
         var repository = unitOfWork.GetRepository<IWorkoutStateRepository>();
         var entity = await repository.GetByIdAsync(id);
         
-        return (entity.IsEmpty || !entity.IsActive) switch
-        {
-            true => ServiceResult<WorkoutStateDto>.Failure(
-                WorkoutStateDto.Empty,
-                ServiceError.NotFound("WorkoutState", id.ToString())),
-            false => ServiceResult<WorkoutStateDto>.Success(MapToDto(entity))
-        };
+        // Database layer: Return what we find - let API layer decide HTTP response
+        return entity.IsActive
+            ? ServiceResult<WorkoutStateDto>.Success(MapToDto(entity))
+            : ServiceResult<WorkoutStateDto>.Success(WorkoutStateDto.Empty);
     }
     
     /// <inheritdoc/>
@@ -88,8 +91,14 @@ public class WorkoutStateService(
     {
         return await ServiceValidate.For<WorkoutStateDto>()
             .EnsureNotWhiteSpace(value, WorkoutStateErrorMessages.ValueCannotBeEmpty)
-            .MatchAsync(
-                whenValid: async () => await LoadByValueFromDatabaseAsync(value)
+            .WithServiceResultAsync(() => LoadByValueFromDatabaseAsync(value))
+            .ThenMatchDataAsync<WorkoutStateDto, WorkoutStateDto>(
+                whenEmpty: () => Task.FromResult(
+                    ServiceResult<WorkoutStateDto>.Failure(
+                        WorkoutStateDto.Empty,
+                        ServiceError.NotFound("WorkoutState", value))),
+                whenNotEmpty: dto => Task.FromResult(
+                    ServiceResult<WorkoutStateDto>.Success(dto))
             );
     }
     
@@ -99,27 +108,25 @@ public class WorkoutStateService(
         var repository = unitOfWork.GetRepository<IWorkoutStateRepository>();
         var entity = await repository.GetByValueAsync(value);
         
-        return (entity.IsEmpty || !entity.IsActive) switch
-        {
-            true => ServiceResult<WorkoutStateDto>.Failure(
-                WorkoutStateDto.Empty,
-                ServiceError.NotFound("WorkoutState", value)),
-            false => ServiceResult<WorkoutStateDto>.Success(MapToDto(entity))
-        };
+        // Database layer: Return what we find - let API layer decide HTTP response
+        return entity.IsActive
+            ? ServiceResult<WorkoutStateDto>.Success(MapToDto(entity))
+            : ServiceResult<WorkoutStateDto>.Success(WorkoutStateDto.Empty);
     }
 
     /// <inheritdoc/>
-    public async Task<ServiceResult<bool>> ExistsAsync(WorkoutStateId id)
+    public async Task<ServiceResult<BooleanResultDto>> ExistsAsync(WorkoutStateId id)
     {
-        return await ServiceValidate.Build<bool>()
+        return await ServiceValidate.For<BooleanResultDto>()
             .EnsureNotEmpty(id, WorkoutStateErrorMessages.InvalidIdFormat)
-            .WhenValidAsync(async () =>
-            {
-                using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
-                var repository = unitOfWork.GetRepository<IWorkoutStateRepository>();
-                var exists = await repository.ExistsAsync(id);
-                return ServiceResult<bool>.Success(exists);
-            });
+            .MatchAsync(
+                whenValid: async () =>
+                {
+                    using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
+                    var repository = unitOfWork.GetRepository<IWorkoutStateRepository>();
+                    var exists = await repository.ExistsAsync(id);
+                    return ServiceResult<BooleanResultDto>.Success(new BooleanResultDto { Value = exists });
+                });
     }
     
     /// <summary>
@@ -128,6 +135,9 @@ public class WorkoutStateService(
     /// </summary>
     private WorkoutStateDto MapToDto(WorkoutState entity)
     {
+        if (entity.IsEmpty)
+            return WorkoutStateDto.Empty;
+            
         return new WorkoutStateDto
         {
             Id = entity.WorkoutStateId.ToString(),

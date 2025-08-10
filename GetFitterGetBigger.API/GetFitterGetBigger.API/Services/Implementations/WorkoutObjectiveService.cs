@@ -59,15 +59,8 @@ public class WorkoutObjectiveService(
     /// <returns>A service result containing the workout_objective if found</returns>
     public async Task<ServiceResult<ReferenceDataDto>> GetByIdAsync(string id)
     {
-        return await ServiceValidate.For<ReferenceDataDto>()
-            .EnsureNotWhiteSpace(id, WorkoutObjectiveErrorMessages.InvalidIdFormat)
-            .MatchAsync(
-                whenValid: async () =>
-                {
-                    var workout_objectiveId = WorkoutObjectiveId.ParseOrEmpty(id);
-                    return await GetByIdAsync(workout_objectiveId);
-                }
-            );
+        var workoutObjectiveId = WorkoutObjectiveId.ParseOrEmpty(id);
+        return await GetByIdAsync(workoutObjectiveId);
     }
     
     private async Task<ServiceResult<ReferenceDataDto>> LoadByIdFromDatabaseAsync(WorkoutObjectiveId id)

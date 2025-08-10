@@ -59,24 +59,18 @@ public class MuscleRoleService(
     /// <returns>A service result containing the muscle_role if found</returns>
     public async Task<ServiceResult<ReferenceDataDto>> GetByIdAsync(string id)
     {
+        var muscleRoleId = MuscleRoleId.ParseOrEmpty(id);
+        
         return await ServiceValidate.For<ReferenceDataDto>()
-            .EnsureNotWhiteSpace(id, MuscleRoleErrorMessages.IdCannotBeEmpty)
-            .MatchAsync(
-                whenValid: async () =>
-                {
-                    var muscleRoleId = MuscleRoleId.ParseOrEmpty(id);
-                    return await ServiceValidate.For<ReferenceDataDto>()
-                        .EnsureNotEmpty(muscleRoleId, MuscleRoleErrorMessages.InvalidIdFormat)
-                        .WithServiceResultAsync(() => LoadByIdFromDatabaseAsync(muscleRoleId))
-                        .ThenMatchDataAsync<ReferenceDataDto, ReferenceDataDto>(
-                            whenEmpty: () => Task.FromResult(
-                                ServiceResult<ReferenceDataDto>.Failure(
-                                    ReferenceDataDto.Empty,
-                                    ServiceError.NotFound("MuscleRole", id))),
-                            whenNotEmpty: dto => Task.FromResult(
-                                ServiceResult<ReferenceDataDto>.Success(dto))
-                        );
-                }
+            .EnsureNotEmpty(muscleRoleId, MuscleRoleErrorMessages.InvalidIdFormat)
+            .WithServiceResultAsync(() => LoadByIdFromDatabaseAsync(muscleRoleId))
+            .ThenMatchDataAsync<ReferenceDataDto, ReferenceDataDto>(
+                whenEmpty: () => Task.FromResult(
+                    ServiceResult<ReferenceDataDto>.Failure(
+                        ReferenceDataDto.Empty,
+                        ServiceError.NotFound("MuscleRole", muscleRoleId.ToString()))),
+                whenNotEmpty: dto => Task.FromResult(
+                    ServiceResult<ReferenceDataDto>.Success(dto))
             );
     }
     

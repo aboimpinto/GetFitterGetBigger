@@ -59,17 +59,16 @@ public class MovementPatternService(
     /// <returns>A service result containing the movement_pattern if found</returns>
     public async Task<ServiceResult<ReferenceDataDto>> GetByIdAsync(string id)
     {
-        var movement_patternId = MovementPatternId.ParseOrEmpty(id);
+        var movementPatternId = MovementPatternId.ParseOrEmpty(id);
         
         return await ServiceValidate.For<ReferenceDataDto>()
-            .EnsureNotWhiteSpace(id, MovementPatternErrorMessages.IdCannotBeEmpty)
-            .EnsureNotEmpty(movement_patternId, MovementPatternErrorMessages.InvalidIdFormat)
-            .WithServiceResultAsync(() => LoadByIdFromDatabaseAsync(movement_patternId))
+            .EnsureNotEmpty(movementPatternId, MovementPatternErrorMessages.InvalidIdFormat)
+            .WithServiceResultAsync(() => LoadByIdFromDatabaseAsync(movementPatternId))
             .ThenMatchDataAsync<ReferenceDataDto, ReferenceDataDto>(
                 whenEmpty: () => Task.FromResult(
                     ServiceResult<ReferenceDataDto>.Failure(
                         ReferenceDataDto.Empty,
-                        ServiceError.NotFound("MovementPattern", id))),
+                        ServiceError.NotFound("MovementPattern", movementPatternId.ToString()))),
                 whenNotEmpty: dto => Task.FromResult(
                     ServiceResult<ReferenceDataDto>.Success(dto))
             );

@@ -59,15 +59,16 @@ public class MetricTypeService(
     /// <returns>A service result containing the metric_type if found</returns>
     public async Task<ServiceResult<ReferenceDataDto>> GetByIdAsync(string id)
     {
+        var metricTypeId = MetricTypeId.ParseOrEmpty(id);
+        
         return await ServiceValidate.For<ReferenceDataDto>()
-            .EnsureNotWhiteSpace(id, MetricTypeErrorMessages.IdCannotBeEmpty)
-            .Ensure(() => MetricTypeId.ParseOrEmpty(id) != MetricTypeId.Empty, MetricTypeErrorMessages.InvalidIdFormat)
-            .WithServiceResultAsync(() => LoadByIdFromDatabaseAsync(MetricTypeId.ParseOrEmpty(id)))
+            .EnsureNotEmpty(metricTypeId, MetricTypeErrorMessages.InvalidIdFormat)
+            .WithServiceResultAsync(() => LoadByIdFromDatabaseAsync(metricTypeId))
             .ThenMatchDataAsync<ReferenceDataDto, ReferenceDataDto>(
                 whenEmpty: () => Task.FromResult(
                     ServiceResult<ReferenceDataDto>.Failure(
                         ReferenceDataDto.Empty,
-                        ServiceError.NotFound("MetricType", id))),
+                        ServiceError.NotFound("MetricType", metricTypeId.ToString()))),
                 whenNotEmpty: dto => Task.FromResult(
                     ServiceResult<ReferenceDataDto>.Success(dto))
             );

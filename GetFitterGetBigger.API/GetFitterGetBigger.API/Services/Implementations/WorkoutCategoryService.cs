@@ -74,7 +74,7 @@ public class WorkoutCategoryService(
                 whenEmpty: () => Task.FromResult(
                     ServiceResult<WorkoutCategoryDto>.Failure(
                         WorkoutCategoryDto.Empty,
-                        ServiceError.NotFound("WorkoutCategory", id))),
+                        ServiceError.NotFound("WorkoutCategory", workoutCategoryId.ToString()))),
                 whenNotEmpty: dto => Task.FromResult(
                     ServiceResult<WorkoutCategoryDto>.Success(dto))
             );

@@ -784,6 +784,90 @@ public async Task<ServiceResult<bool>> AddMuscleToExercise(ExerciseId exerciseId
 
 ID format: `{entitytype}-{guid}` (e.g., `exercise-550e8400-e29b-41d4-a716-446655440000`)
 
+#### **🎯 Specialized ID Validation Pattern - Leverage ParseOrEmpty**
+
+When validating string IDs that will be converted to SpecializedIds, **ALWAYS parse first, then validate once**:
+
+```csharp
+// ❌ REDUNDANT - Double validation anti-pattern
+public async Task<ServiceResult<TDto>> GetByIdAsync(string id)
+{
+    return await ServiceValidate.For<TDto>()
+        .EnsureNotWhiteSpace(id, ErrorMessages.InvalidIdFormat)  // First validation
+        .MatchAsync(
+            whenValid: async () =>
+            {
+                var specializedId = TId.ParseOrEmpty(id);
+                
+                return await ServiceValidate.For<TDto>()
+                    .EnsureNotEmpty(specializedId, ErrorMessages.InvalidIdFormat)  // Redundant!
+                    .MatchAsync(
+                        whenValid: async () => await LoadByIdFromDatabaseAsync(specializedId)
+                    );
+            }
+        );
+}
+
+// ✅ OPTIMAL - Parse once, validate once
+public async Task<ServiceResult<TDto>> GetByIdAsync(string id)
+{
+    var specializedId = TId.ParseOrEmpty(id);  // Handles null, empty, whitespace, invalid format
+    
+    return await ServiceValidate.For<TDto>()
+        .EnsureNotEmpty(specializedId, ErrorMessages.InvalidIdFormat)  // Single validation
+        .MatchAsync(
+            whenValid: async () => await LoadByIdFromDatabaseAsync(specializedId)
+        );
+}
+```
+
+**Key Principle**: `ParseOrEmpty` is your validation tool - it returns `Empty` for ALL invalid inputs:
+- `null` → `TId.Empty`
+- `""` (empty string) → `TId.Empty`
+- `"   "` (whitespace) → `TId.Empty`
+- `"invalid-format"` → `TId.Empty`
+- `"entity-valid-guid"` → Valid `TId`
+
+**Benefits**:
+- **Simpler Code**: One validation instead of nested validations
+- **Better Performance**: No redundant checks
+- **Cleaner Logic**: Parse → Validate → Execute
+- **Consistent Pattern**: Same approach for all SpecializedId validations
+
+**When to Apply This Pattern**:
+- ✅ Any method accepting `string id` parameter that converts to SpecializedId
+- ✅ Controller methods before calling services
+- ✅ Service methods with string overloads that convert to SpecializedId
+
+**IMPORTANT**: `EnsureNotWhiteSpace` is still the correct validation for regular string parameters:
+```csharp
+// ✅ CORRECT - Use EnsureNotWhiteSpace for non-ID strings
+public async Task<ServiceResult<ReferenceDataDto>> GetByValueAsync(string value)
+{
+    return await ServiceValidate.For<ReferenceDataDto>()
+        .EnsureNotWhiteSpace(value, ErrorMessages.ValueCannotBeEmpty)  // Perfect for string values!
+        .MatchAsync(
+            whenValid: async () => await LoadByValueFromDatabaseAsync(value)
+        );
+}
+
+// ✅ CORRECT - Use EnsureNotWhiteSpace for names, descriptions, etc.
+public async Task<ServiceResult<EquipmentDto>> CreateAsync(CreateEquipmentCommand command)
+{
+    return await ServiceValidate.For<EquipmentDto>()
+        .EnsureNotNull(command, ErrorMessages.CommandCannotBeNull)
+        .EnsureNotWhiteSpace(command?.Name, ErrorMessages.NameCannotBeEmpty)  // String validation!
+        .EnsureNotWhiteSpace(command?.Description, ErrorMessages.DescriptionCannotBeEmpty)
+        .MatchAsync(
+            whenValid: async () => await CreateEquipmentAsync(command)
+        );
+}
+```
+
+**The Rule**: 
+- For SpecializedId: Parse first with `ParseOrEmpty`, then `EnsureNotEmpty`
+- For regular strings: Use `EnsureNotWhiteSpace` directly
+
 ---
 
 ## 🏗️ API Architecture Standards
