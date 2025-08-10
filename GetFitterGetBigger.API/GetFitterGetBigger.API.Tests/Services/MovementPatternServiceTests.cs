@@ -181,8 +181,7 @@ namespace GetFitterGetBigger.API.Tests.Services
         {
             // Arrange
             var emptyId = MovementPatternTestConstants.EmptyString;
-            // Note: The service only validates for null/empty. Format validation 
-            // is handled by the controller and MovementPatternId.ParseOrEmpty()
+            // Note: Empty string is parsed to MovementPatternId.Empty, which fails the format validation
 
             // Act
             var result = await _movementPatternService.GetByIdAsync(emptyId);
@@ -191,7 +190,7 @@ namespace GetFitterGetBigger.API.Tests.Services
             Assert.False(result.IsSuccess);
             Assert.NotNull(result.Data);
             Assert.Equal(ServiceErrorCode.ValidationFailed, result.PrimaryErrorCode);
-            Assert.Contains("Movement pattern ID cannot be empty", result.Errors);
+            Assert.Contains(MovementPatternErrorMessages.InvalidIdFormat, result.Errors);
             // _mockMovementPatternRepository setup needed.Verify(x => x.GetByIdAsync(It.IsAny<MovementPatternId>()), Times.Never);
         }
 
@@ -208,7 +207,7 @@ namespace GetFitterGetBigger.API.Tests.Services
             Assert.False(result.IsSuccess);
             Assert.NotNull(result.Data);
             Assert.Equal(ServiceErrorCode.ValidationFailed, result.PrimaryErrorCode);
-            Assert.Contains("Movement pattern ID cannot be empty", result.Errors);
+            Assert.Contains(MovementPatternErrorMessages.InvalidIdFormat, result.Errors);
             // _mockMovementPatternRepository setup needed.Verify(x => x.GetByIdAsync(It.IsAny<MovementPatternId>()), Times.Never);
         }
 
@@ -265,7 +264,7 @@ namespace GetFitterGetBigger.API.Tests.Services
             // Act
             var result = await _movementPatternService.GetByValueAsync(value);
 
-            // Assert
+            // Assert - Empty entities from database are treated as not found at API level
             Assert.False(result.IsSuccess);
             Assert.Contains($"MovementPattern with value '{value}'", string.Join(", ", result.Errors));
         }
@@ -285,7 +284,7 @@ namespace GetFitterGetBigger.API.Tests.Services
 
             // Assert
             Assert.True(result.IsSuccess);
-            Assert.True(result.Data);
+            Assert.True(result.Data.Value);
         }
 
         [Fact]
@@ -303,7 +302,7 @@ namespace GetFitterGetBigger.API.Tests.Services
 
             // Assert
             Assert.True(result.IsSuccess);
-            Assert.False(result.Data);
+            Assert.False(result.Data.Value);
         }
 
         [Fact]
@@ -322,7 +321,7 @@ namespace GetFitterGetBigger.API.Tests.Services
 
             // Assert
             Assert.True(result.IsSuccess);
-            Assert.True(result.Data);
+            Assert.True(result.Data.Value);
         }
 
         [Fact]
@@ -330,16 +329,15 @@ namespace GetFitterGetBigger.API.Tests.Services
         {
             // Arrange
             var invalidFormatId = MovementPatternTestConstants.InvalidFormatId;
-            // Note: Service allows any non-empty string to pass validation.
-            // MovementPatternId.ParseOrEmpty() will convert this to Empty,
-            // causing ExistsAsync to return false.
+            // Note: Invalid format strings are parsed to Empty MovementPatternId,
+            // causing ExistsAsync validation to fail.
 
             // Act
             var result = await _movementPatternService.ExistsAsync(MovementPatternId.ParseOrEmpty(invalidFormatId));
 
             // Assert
             Assert.False(result.IsSuccess);  // Service returns validation failure for empty ID
-            Assert.Equal(ServiceErrorCode.InvalidFormat, result.PrimaryErrorCode);
+            Assert.Equal(ServiceErrorCode.ValidationFailed, result.PrimaryErrorCode);
         }
     }
 }

@@ -41,8 +41,14 @@ public class MovementPatternService(
     {
         return await ServiceValidate.For<ReferenceDataDto>()
             .EnsureNotEmpty(id, MovementPatternErrorMessages.InvalidIdFormat)
-            .MatchAsync(
-                whenValid: async () => await LoadByIdFromDatabaseAsync(id)
+            .WithServiceResultAsync(() => LoadByIdFromDatabaseAsync(id))
+            .ThenMatchDataAsync<ReferenceDataDto, ReferenceDataDto>(
+                whenEmpty: () => Task.FromResult(
+                    ServiceResult<ReferenceDataDto>.Failure(
+                        ReferenceDataDto.Empty,
+                        ServiceError.NotFound("MovementPattern", id.ToString()))),
+                whenNotEmpty: dto => Task.FromResult(
+                    ServiceResult<ReferenceDataDto>.Success(dto))
             );
     }
     
@@ -53,19 +59,19 @@ public class MovementPatternService(
     /// <returns>A service result containing the movement_pattern if found</returns>
     public async Task<ServiceResult<ReferenceDataDto>> GetByIdAsync(string id)
     {
-        if (string.IsNullOrWhiteSpace(id))
-        {
-            return ServiceResult<ReferenceDataDto>.Failure(
-                ReferenceDataDto.Empty,
-                ServiceError.ValidationFailed(MovementPatternErrorMessages.IdCannotBeEmpty));
-        }
-        
         var movement_patternId = MovementPatternId.ParseOrEmpty(id);
         
         return await ServiceValidate.For<ReferenceDataDto>()
+            .EnsureNotWhiteSpace(id, MovementPatternErrorMessages.IdCannotBeEmpty)
             .EnsureNotEmpty(movement_patternId, MovementPatternErrorMessages.InvalidIdFormat)
-            .MatchAsync(
-                whenValid: async () => await LoadByIdFromDatabaseAsync(movement_patternId)
+            .WithServiceResultAsync(() => LoadByIdFromDatabaseAsync(movement_patternId))
+            .ThenMatchDataAsync<ReferenceDataDto, ReferenceDataDto>(
+                whenEmpty: () => Task.FromResult(
+                    ServiceResult<ReferenceDataDto>.Failure(
+                        ReferenceDataDto.Empty,
+                        ServiceError.NotFound("MovementPattern", id))),
+                whenNotEmpty: dto => Task.FromResult(
+                    ServiceResult<ReferenceDataDto>.Success(dto))
             );
     }
     
@@ -75,13 +81,9 @@ public class MovementPatternService(
         var repository = unitOfWork.GetRepository<IMovementPatternRepository>();
         var entity = await repository.GetByIdAsync(id);
         
-        return (entity == null || entity.IsEmpty || !entity.IsActive) switch
-        {
-            true => ServiceResult<ReferenceDataDto>.Failure(
-                ReferenceDataDto.Empty,
-                ServiceError.NotFound("MovementPattern", id.ToString())),
-            false => ServiceResult<ReferenceDataDto>.Success(MapToDto(entity))
-        };
+        return entity.IsActive
+            ? ServiceResult<ReferenceDataDto>.Success(MapToDto(entity))
+            : ServiceResult<ReferenceDataDto>.Success(ReferenceDataDto.Empty);
     }
     
     /// <inheritdoc/>
@@ -89,8 +91,14 @@ public class MovementPatternService(
     {
         return await ServiceValidate.For<ReferenceDataDto>()
             .EnsureNotWhiteSpace(value, MovementPatternErrorMessages.ValueCannotBeEmpty)
-            .MatchAsync(
-                whenValid: async () => await LoadByValueFromDatabaseAsync(value)
+            .WithServiceResultAsync(() => LoadByValueFromDatabaseAsync(value))
+            .ThenMatchDataAsync<ReferenceDataDto, ReferenceDataDto>(
+                whenEmpty: () => Task.FromResult(
+                    ServiceResult<ReferenceDataDto>.Failure(
+                        ReferenceDataDto.Empty,
+                        ServiceError.NotFound("MovementPattern", value))),
+                whenNotEmpty: dto => Task.FromResult(
+                    ServiceResult<ReferenceDataDto>.Success(dto))
             );
     }
     
@@ -100,27 +108,24 @@ public class MovementPatternService(
         var repository = unitOfWork.GetRepository<IMovementPatternRepository>();
         var entity = await repository.GetByValueAsync(value);
         
-        return (entity == null || entity.IsEmpty || !entity.IsActive) switch
-        {
-            true => ServiceResult<ReferenceDataDto>.Failure(
-                ReferenceDataDto.Empty,
-                ServiceError.NotFound("MovementPattern", value)),
-            false => ServiceResult<ReferenceDataDto>.Success(MapToDto(entity))
-        };
+        return entity.IsActive
+            ? ServiceResult<ReferenceDataDto>.Success(MapToDto(entity))
+            : ServiceResult<ReferenceDataDto>.Success(ReferenceDataDto.Empty);
     }
 
     /// <inheritdoc/>
-    public async Task<ServiceResult<bool>> ExistsAsync(MovementPatternId id)
+    public async Task<ServiceResult<BooleanResultDto>> ExistsAsync(MovementPatternId id)
     {
-        return await ServiceValidate.Build<bool>()
+        return await ServiceValidate.For<BooleanResultDto>()
             .EnsureNotEmpty(id, MovementPatternErrorMessages.InvalidIdFormat)
-            .WhenValidAsync(async () =>
-            {
-                using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
-                var repository = unitOfWork.GetRepository<IMovementPatternRepository>();
-                var exists = await repository.ExistsAsync(id);
-                return ServiceResult<bool>.Success(exists);
-            });
+            .MatchAsync(
+                whenValid: async () =>
+                {
+                    using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
+                    var repository = unitOfWork.GetRepository<IMovementPatternRepository>();
+                    var exists = await repository.ExistsAsync(id);
+                    return ServiceResult<BooleanResultDto>.Success(new BooleanResultDto { Value = exists });
+                });
     }
     
     /// <summary>

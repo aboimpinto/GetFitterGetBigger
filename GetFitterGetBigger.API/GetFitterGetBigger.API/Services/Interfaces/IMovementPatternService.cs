@@ -33,7 +33,7 @@ public interface IMovementPatternService
     /// Checks if a movement pattern exists
     /// </summary>
     /// <param name="id">The movement pattern ID to check</param>
-    /// <returns>A service result containing true if the movement pattern exists, false otherwise</returns>
-    Task<ServiceResult<bool>> ExistsAsync(MovementPatternId id);
+    /// <returns>A service result containing a boolean result indicating if the movement pattern exists</returns>
+    Task<ServiceResult<BooleanResultDto>> ExistsAsync(MovementPatternId id);
     
 }
