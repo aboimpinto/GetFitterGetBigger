@@ -11,6 +11,7 @@ using GetFitterGetBigger.API.Services.Commands.MuscleGroup;
 using GetFitterGetBigger.API.Services.Interfaces;
 using GetFitterGetBigger.API.Services.Results;
 using GetFitterGetBigger.API.Services.Validation;
+using GetFitterGetBigger.API.Utilities;
 using Olimpo.EntityFramework.Persistency;
 
 namespace GetFitterGetBigger.API.Services.Implementations;

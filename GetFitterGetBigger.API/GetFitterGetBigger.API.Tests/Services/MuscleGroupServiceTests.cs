@@ -848,8 +848,8 @@ public class MuscleGroupServiceTests
         await _service.GetByNameAsync("CHEST");
         
         Assert.NotNull(expectedCacheKey);
-        // The cache key format is now "EntityName:operation:parameters"
-        Assert.Contains("musclegroup:byname:chest", expectedCacheKey.ToLowerInvariant()); // Should be lowercased
+        // The cache key format is now "ReferenceTable:EntityName:operation:parameters"
+        Assert.Contains("referencetable:musclegroups:byname:chest", expectedCacheKey.ToLowerInvariant()); // Should be lowercased
     }
     
     #endregion
