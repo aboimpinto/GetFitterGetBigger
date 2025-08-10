@@ -41,6 +41,6 @@ public interface IExecutionProtocolService
     /// </summary>
     /// <param name="id">The execution protocol ID to check</param>
     /// <returns>A service result containing true if the execution protocol exists, false otherwise</returns>
-    Task<ServiceResult<bool>> ExistsAsync(ExecutionProtocolId id);
+    Task<ServiceResult<BooleanResultDto>> ExistsAsync(ExecutionProtocolId id);
     
 }

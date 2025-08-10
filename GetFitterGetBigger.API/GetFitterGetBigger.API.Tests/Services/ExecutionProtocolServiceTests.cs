@@ -206,7 +206,7 @@ public class ExecutionProtocolServiceTests
         Assert.False(result.IsSuccess);
         Assert.NotNull(result.Data);
         Assert.Equal(ServiceErrorCode.ValidationFailed, result.PrimaryErrorCode);
-        Assert.Contains(ExecutionProtocolErrorMessages.IdCannotBeEmpty, result.Errors);
+        Assert.Contains(ExecutionProtocolErrorMessages.InvalidIdFormat, result.Errors);
         _mockRepository.Verify(x => x.GetByIdAsync(It.IsAny<ExecutionProtocolId>()), Times.Never);
     }
     
@@ -426,7 +426,7 @@ public class ExecutionProtocolServiceTests
         var result = await _service.ExistsAsync(executionProtocolId);
 
         Assert.True(result.IsSuccess);
-            Assert.True(result.Data);
+            Assert.True(result.Data.Value);
         _mockUnitOfWorkProvider.Verify(x => x.CreateReadOnly(), Times.Once);
         _mockRepository.Verify(x => x.ExistsAsync(It.IsAny<ExecutionProtocolId>()), Times.Once);
     }
@@ -446,7 +446,7 @@ public class ExecutionProtocolServiceTests
         var result = await _service.ExistsAsync(executionProtocolId);
 
         Assert.True(result.IsSuccess);
-            Assert.False(result.Data);
+            Assert.False(result.Data.Value);
         _mockUnitOfWorkProvider.Verify(x => x.CreateReadOnly(), Times.Once);
         _mockRepository.Verify(x => x.ExistsAsync(It.IsAny<ExecutionProtocolId>()), Times.Once);
     }
@@ -479,7 +479,7 @@ public class ExecutionProtocolServiceTests
         var result = await _service.ExistsAsync(ExecutionProtocolId.ParseOrEmpty(executionProtocolIdString));
 
         Assert.True(result.IsSuccess);
-            Assert.True(result.Data);
+            Assert.True(result.Data.Value);
         _mockUnitOfWorkProvider.Verify(x => x.CreateReadOnly(), Times.Once);
         _mockRepository.Verify(x => x.ExistsAsync(It.IsAny<ExecutionProtocolId>()), Times.Once);
     }
