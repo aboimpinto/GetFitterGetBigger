@@ -172,8 +172,6 @@ public class EquipmentService : EnhancedReferenceService<Equipment, EquipmentDto
         };
     }
 
-
-
     protected override async Task<ValidationResult> ValidateCreateCommand(CreateEquipmentCommand command)
     {
         var validation = await ServiceValidate.Build()

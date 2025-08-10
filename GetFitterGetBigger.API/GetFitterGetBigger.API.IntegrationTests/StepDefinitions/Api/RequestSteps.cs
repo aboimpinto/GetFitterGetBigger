@@ -30,6 +30,9 @@ public class RequestSteps
         // Resolve any placeholders in the endpoint
         endpoint = _scenarioContext.ResolvePlaceholders(endpoint);
         
+        // Store the endpoint for caching tests
+        _scenarioContext["LastEndpoint"] = endpoint;
+        
         HttpResponseMessage response = method.ToUpper() switch
         {
             "GET" => await httpClient.GetAsync(endpoint),

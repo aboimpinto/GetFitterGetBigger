@@ -4,30 +4,36 @@ using GetFitterGetBigger.API.Models;
 using GetFitterGetBigger.API.Models.Entities;
 using GetFitterGetBigger.API.Models.SpecializedIds;
 using GetFitterGetBigger.API.Repositories.Interfaces;
+using GetFitterGetBigger.API.Services.Cache;
 using GetFitterGetBigger.API.Services.Interfaces;
 using GetFitterGetBigger.API.Services.Results;
 using GetFitterGetBigger.API.Services.Validation;
 using Olimpo.EntityFramework.Persistency;
+using CacheKeyGenerator = GetFitterGetBigger.API.Utilities.CacheKeyGenerator;
 
 namespace GetFitterGetBigger.API.Services.Implementations;
 
 /// <summary>
-/// Service implementation for body part operations
-/// This service focuses solely on business logic and data access
-/// Caching is handled by the wrapping PureReferenceService layer
+/// Service implementation for body part operations with integrated eternal caching
+/// BodyParts are pure reference data that never changes after deployment
 /// </summary>
 public class BodyPartService(
     IUnitOfWorkProvider<FitnessDbContext> unitOfWorkProvider,
+    IEternalCacheService cacheService,
     ILogger<BodyPartService> logger) : IBodyPartService
 {
     private readonly IUnitOfWorkProvider<FitnessDbContext> _unitOfWorkProvider = unitOfWorkProvider;
+    private readonly IEternalCacheService _cacheService = cacheService;
     private readonly ILogger<BodyPartService> _logger = logger;
 
     /// <inheritdoc/>
     public async Task<ServiceResult<IEnumerable<BodyPartDto>>> GetAllActiveAsync()
     {
-        return await ServiceValidate.Build<IEnumerable<BodyPartDto>>()
-            .WhenValidAsync(async () => await LoadAllActiveFromDatabaseAsync());
+        var cacheKey = CacheKeyGenerator.GetAllKey("BodyParts");
+        
+        return await CacheLoad.For<IEnumerable<BodyPartDto>>(_cacheService, cacheKey)
+            .WithLogging(_logger, "BodyParts")
+            .WithAutoCacheAsync(LoadAllActiveFromDatabaseAsync);
     }
     
     /// <summary>
@@ -50,14 +56,26 @@ public class BodyPartService(
     {
         return await ServiceValidate.For<BodyPartDto>()
             .EnsureNotEmpty(id, BodyPartErrorMessages.InvalidIdFormat)
-            .WithServiceResultAsync(() => LoadByIdFromDatabaseAsync(id))
-            .ThenMatchDataAsync<BodyPartDto, BodyPartDto>(
-                whenEmpty: () => Task.FromResult(
-                    ServiceResult<BodyPartDto>.Failure(
-                        BodyPartDto.Empty,
-                        ServiceError.NotFound("BodyPart", id.ToString()))),
-                whenNotEmpty: dto => Task.FromResult(
-                    ServiceResult<BodyPartDto>.Success(dto))
+            .MatchAsync(
+                whenValid: async () =>
+                {
+                    var cacheKey = CacheKeyGenerator.GetByIdKey("BodyParts", id.ToString());
+                    
+                    return await CacheLoad.For<BodyPartDto>(_cacheService, cacheKey)
+                        .WithLogging(_logger, "BodyPart")
+                        .WithAutoCacheAsync(async () =>
+                        {
+                            var result = await LoadByIdFromDatabaseAsync(id);
+                            // Convert Empty to NotFound at the API layer
+                            if (result.IsSuccess && result.Data.IsEmpty)
+                            {
+                                return ServiceResult<BodyPartDto>.Failure(
+                                    BodyPartDto.Empty,
+                                    ServiceError.NotFound("BodyPart", id.ToString()));
+                            }
+                            return result;
+                        });
+                }
             );
     }
     
@@ -69,18 +87,7 @@ public class BodyPartService(
     public async Task<ServiceResult<BodyPartDto>> GetByIdAsync(string id)
     {
         var bodyPartId = BodyPartId.ParseOrEmpty(id);
-        
-        return await ServiceValidate.For<BodyPartDto>()
-            .EnsureNotEmpty(bodyPartId, BodyPartErrorMessages.InvalidIdFormat)
-            .WithServiceResultAsync(() => LoadByIdFromDatabaseAsync(bodyPartId))
-            .ThenMatchDataAsync<BodyPartDto, BodyPartDto>(
-                whenEmpty: () => Task.FromResult(
-                    ServiceResult<BodyPartDto>.Failure(
-                        BodyPartDto.Empty,
-                        ServiceError.NotFound("BodyPart", id))),
-                whenNotEmpty: dto => Task.FromResult(
-                    ServiceResult<BodyPartDto>.Success(dto))
-            );
+        return await GetByIdAsync(bodyPartId);
     }
     
     /// <summary>
@@ -102,14 +109,26 @@ public class BodyPartService(
     {
         return await ServiceValidate.For<BodyPartDto>()
             .EnsureNotWhiteSpace(value, BodyPartErrorMessages.ValueCannotBeEmpty)
-            .WithServiceResultAsync(() => LoadByValueFromDatabaseAsync(value))
-            .ThenMatchDataAsync<BodyPartDto, BodyPartDto>(
-                whenEmpty: () => Task.FromResult(
-                    ServiceResult<BodyPartDto>.Failure(
-                        BodyPartDto.Empty,
-                        ServiceError.NotFound("BodyPart", value))),
-                whenNotEmpty: dto => Task.FromResult(
-                    ServiceResult<BodyPartDto>.Success(dto))
+            .MatchAsync(
+                whenValid: async () =>
+                {
+                    var cacheKey = CacheKeyGenerator.GetByValueKey("BodyParts", value);
+                    
+                    return await CacheLoad.For<BodyPartDto>(_cacheService, cacheKey)
+                        .WithLogging(_logger, "BodyPart")
+                        .WithAutoCacheAsync(async () =>
+                        {
+                            var result = await LoadByValueFromDatabaseAsync(value);
+                            // Convert Empty to NotFound at the API layer
+                            if (result.IsSuccess && result.Data.IsEmpty)
+                            {
+                                return ServiceResult<BodyPartDto>.Failure(
+                                    BodyPartDto.Empty,
+                                    ServiceError.NotFound("BodyPart", value));
+                            }
+                            return result;
+                        });
+                }
             );
     }
     
@@ -133,19 +152,15 @@ public class BodyPartService(
         return await ServiceValidate.For<BooleanResultDto>()
             .EnsureNotEmpty(id, BodyPartErrorMessages.InvalidIdFormat)
             .MatchAsync(
-                whenValid: async () => await CheckExistsInDatabaseAsync(id)
+                whenValid: async () =>
+                {
+                    // Leverage the GetById cache for existence checks
+                    var result = await GetByIdAsync(id);
+                    return ServiceResult<BooleanResultDto>.Success(
+                        BooleanResultDto.Create(result.IsSuccess && !result.Data.IsEmpty)
+                    );
+                }
             );
-    }
-    
-    /// <summary>
-    /// Checks if a BodyPart exists in the database by ID
-    /// </summary>
-    private async Task<ServiceResult<BooleanResultDto>> CheckExistsInDatabaseAsync(BodyPartId id)
-    {
-        using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
-        var repository = unitOfWork.GetRepository<IBodyPartRepository>();
-        var exists = await repository.ExistsAsync(id);
-        return ServiceResult<BooleanResultDto>.Success(BooleanResultDto.Create(exists));
     }
     
     /// <summary>

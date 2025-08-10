@@ -16,6 +16,7 @@ namespace GetFitterGetBigger.API.IntegrationTests.TestInfrastructure.Fixtures;
 public class IntegrationTestWebApplicationFactory : WebApplicationFactory<Program>, IAsyncLifetime
 {
     private string? _connectionString;
+    private DatabaseQueryTrackerProvider? _queryTrackerProvider;
     
     public IntegrationTestWebApplicationFactory()
     {
@@ -82,6 +83,10 @@ public class IntegrationTestWebApplicationFactory : WebApplicationFactory<Progra
                 options.EnableSensitiveDataLogging(); // For debugging
                 options.LogTo(Console.WriteLine, LogLevel.Information); // Log SQL queries
             });
+            
+            // Add database query tracking for tests
+            _queryTrackerProvider = new DatabaseQueryTrackerProvider();
+            services.AddSingleton<ILoggerProvider>(_queryTrackerProvider);
         });
 
         var host = base.CreateHost(builder);
@@ -211,5 +216,13 @@ public class IntegrationTestWebApplicationFactory : WebApplicationFactory<Progra
         using var scope = Services.CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<FitnessDbContext>();
         await action(context);
+    }
+    
+    /// <summary>
+    /// Gets the database query tracker for assertions
+    /// </summary>
+    public DatabaseQueryTracker? GetQueryTracker()
+    {
+        return _queryTrackerProvider?.Tracker;
     }
 }
