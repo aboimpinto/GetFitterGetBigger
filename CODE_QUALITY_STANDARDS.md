@@ -46,12 +46,14 @@ return result switch
 };
 ```
 
-### 2. **Null Safety First**
+### 2. **Null Safety First - Understanding the Null Object Pattern**
 Minimize null usage through language features and patterns:
 - Use nullable reference types where available
-- Prefer Option/Maybe types or Empty Object Pattern
+- Prefer Option/Maybe types or **Empty Object Pattern**
 - Validate at boundaries, not throughout the code
 - Document when null is intentionally allowed
+
+⚠️ **CRITICAL**: When using the Null Object Pattern, understand that **Empty IS valid** and doesn't need constant validation:
 
 ```typescript
 // ❌ BAD - Null checks everywhere
@@ -62,12 +64,22 @@ function processUser(user: User | null) {
     // actual logic
 }
 
-// ✅ GOOD - Validate at boundary
+// ❌ BAD - Over-validating with Null Object Pattern
 function processUser(user: User) {
-    // User is guaranteed to be valid with all required properties
-    // Validation happened at API boundary
+    if (user.isEmpty || !user.isActive) return; // Mixing concerns!
+    // Defeats the purpose of Null Object Pattern
+}
+
+// ✅ GOOD - Trust the Null Object Pattern
+function processUser(user: User) {
+    // User is never null - might be User.Empty which is valid
+    // Check business logic (isActive) separately from null safety
+    if (!user.isActive) return UserNotActive;
+    // Process user - Empty users will behave correctly
 }
 ```
+
+**Key Principle**: The Null Object Pattern eliminates null checks. Don't add `isEmpty` checks everywhere - that defeats the pattern's purpose. See [NULL_OBJECT_PATTERN_GUIDELINES.md](./GetFitterGetBigger.API/memory-bank/NULL_OBJECT_PATTERN_GUIDELINES.md) for detailed guidelines.
 
 ### 3. **Method Length and Complexity**
 - **Target**: Methods < 20 lines

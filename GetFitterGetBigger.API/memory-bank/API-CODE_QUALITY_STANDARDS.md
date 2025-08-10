@@ -277,6 +277,8 @@ public async Task<ServiceResult<WorkoutTemplateDto>> CreateTemplateAsync(CreateT
 ##### **WithServiceResultAsync and ThenMatchDataAsync - Advanced Data Flow Pattern**
 Load data and branch logic based on Empty pattern without breaking fluency:
 
+⚠️ **CRITICAL**: Understand when Empty means "not found" vs "valid empty state":
+
 ```csharp
 // ✅ ELEGANT - Load data and branch on Empty pattern
 public async Task<ServiceResult<AuthenticationResponse>> AuthenticateAsync(AuthenticationCommand command)
@@ -287,6 +289,31 @@ public async Task<ServiceResult<AuthenticationResponse>> AuthenticateAsync(Authe
             whenEmpty: async () => await HandleNewUserAsync(command.Email),  // UserDto.IsEmpty == true
             whenNotEmpty: userData => Task.FromResult(GenerateAuthTokenAsync(userData))  // Process existing user
         );
+}
+
+// ⚠️ IMPORTANT: Database methods should NOT decide if Empty is an error
+// ❌ BAD - Database method making business decisions
+private async Task<ServiceResult<ReferenceDataDto>> LoadByIdFromDatabaseAsync(Id id)
+{
+    var entity = await repository.GetByIdAsync(id);
+    
+    // DON'T DO THIS - mixing IsEmpty with business logic
+    return (entity.IsEmpty || !entity.IsActive) switch
+    {
+        true => ServiceResult<ReferenceDataDto>.Failure(...),  // Wrong!
+        false => ServiceResult<ReferenceDataDto>.Success(MapToDto(entity))
+    };
+}
+
+// ✅ GOOD - Database method returns what it finds, caller decides
+private async Task<ServiceResult<ReferenceDataDto>> LoadByIdFromDatabaseAsync(Id id)
+{
+    var entity = await repository.GetByIdAsync(id);
+    
+    // Simple and clear - no confusion about Empty vs business logic
+    return entity.IsActive
+        ? ServiceResult<ReferenceDataDto>.Success(MapToDto(entity))
+        : ServiceResult<ReferenceDataDto>.Success(ReferenceDataDto.Empty);
 }
 
 // ✅ POWERFUL - Chain multiple data loads with Empty pattern branching
@@ -682,6 +709,36 @@ public async Task<ServiceResult<TDto>> UpdateAsync(TId id, TCommand command)
 - `WritableUnitOfWork`: ONLY for Create/Update/Delete
 - One UnitOfWork per method
 - Reuse existing query methods for validation
+
+⚠️ **CRITICAL - Null Object Pattern with Repositories**:
+When repositories return entities with the Empty pattern, **DO NOT** add unnecessary validation:
+
+```csharp
+// ❌ BAD - Over-validating Empty pattern
+private async Task<ServiceResult<TDto>> LoadFromDatabaseAsync(TId id)
+{
+    var entity = await repository.GetByIdAsync(id);
+    
+    // UNNECESSARY - IsEmpty check defeats Null Object Pattern
+    if (entity.IsEmpty || !entity.IsActive)
+        return ServiceResult<TDto>.Failure(...);
+        
+    return ServiceResult<TDto>.Success(MapToDto(entity));
+}
+
+// ✅ GOOD - Trust the pattern, separate concerns
+private async Task<ServiceResult<TDto>> LoadFromDatabaseAsync(TId id)
+{
+    var entity = await repository.GetByIdAsync(id);
+    
+    // Clean separation: business logic only
+    return entity.IsActive
+        ? ServiceResult<TDto>.Success(MapToDto(entity))
+        : ServiceResult<TDto>.Success(TDto.Empty);
+}
+```
+
+See [NULL_OBJECT_PATTERN_GUIDELINES.md](./NULL_OBJECT_PATTERN_GUIDELINES.md) for detailed guidance.
 
 ### 2. **Controller Standards**
 Controllers are thin pass-through layers:
