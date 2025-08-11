@@ -155,7 +155,7 @@ public class ServiceValidation<T> : ValidationBase<ServiceResult<T>>
     /// <returns>The current validation instance for chaining</returns>
     public ServiceValidation<T> EnsureNotEmpty(ISpecializedIdBase id, ServiceError serviceError)
     {
-        return Ensure(() => !id.IsEmpty, serviceError);
+        return Ensure(() => id != null && !id.IsEmpty, serviceError);
     }
 
     /// <summary>

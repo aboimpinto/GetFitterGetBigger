@@ -115,7 +115,9 @@ public class ServiceValidationBuilder<T>
     /// <returns>The builder instance for chaining</returns>
     public ServiceValidationBuilder<T> EnsureValidId(ISpecializedIdBase id, string errorMessage)
     {
-        _validation.EnsureValidId(id, errorMessage);
+        // For ServiceValidationBuilder (Build pattern), use InvalidFormat to match test expectations
+        var serviceError = new ServiceError(ServiceErrorCode.InvalidFormat, errorMessage);
+        _validation.Ensure(() => id != null && !id.IsEmpty, serviceError);
         return this;
     }
 

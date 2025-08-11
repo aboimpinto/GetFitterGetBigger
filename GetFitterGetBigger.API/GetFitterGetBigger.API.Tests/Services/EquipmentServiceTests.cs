@@ -153,7 +153,7 @@ public class EquipmentServiceTests
         
         _mockRepository
             .Setup(x => x.GetByIdAsync(equipmentId))
-            .ReturnsAsync((Equipment?)null);
+            .ReturnsAsync(Equipment.Empty);
             
         // Act
         var result = await _service.GetByIdAsync(equipmentId);
@@ -205,7 +205,7 @@ public class EquipmentServiceTests
         
         _mockRepository
             .Setup(x => x.GetByNameAsync(name))
-            .ReturnsAsync((Equipment?)null);
+            .ReturnsAsync(Equipment.Empty);
             
         // Act
         var result = await _service.GetByNameAsync(name);
