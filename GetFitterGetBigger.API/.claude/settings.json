@@ -1,0 +1,6 @@
+{
+  "statusLine": {
+    "type": "command",
+    "command": "input=$(cat); session_start=$(echo \"$input\" | jq -r '.session_id' | cut -c1-8); current_time=$(date +%s); session_duration=$((current_time - 0x$session_start)); hours=$((session_duration / 3600)); minutes=$(((session_duration % 3600) / 60)); model=$(echo \"$input\" | jq -r '.model.display_name'); branch=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo 'no-git'); folder=$(basename \"$(echo \"$input\" | jq -r '.workspace.current_dir')\"); printf \"⏱️  %02d:%02d | 🤖 %s | 🌿 %s | 📁 %s\" $hours $minutes \"$model\" \"$branch\" \"$folder\""
+  }
+}
