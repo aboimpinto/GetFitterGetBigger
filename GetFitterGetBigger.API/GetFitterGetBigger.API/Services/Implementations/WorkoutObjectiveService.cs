@@ -4,27 +4,42 @@ using GetFitterGetBigger.API.Models;
 using GetFitterGetBigger.API.Models.Entities;
 using GetFitterGetBigger.API.Models.SpecializedIds;
 using GetFitterGetBigger.API.Repositories.Interfaces;
+using GetFitterGetBigger.API.Services.Cache;
 using GetFitterGetBigger.API.Services.Interfaces;
 using GetFitterGetBigger.API.Services.Results;
 using GetFitterGetBigger.API.Services.Validation;
 using Olimpo.EntityFramework.Persistency;
+using CacheKeyGenerator = GetFitterGetBigger.API.Utilities.CacheKeyGenerator;
 
 namespace GetFitterGetBigger.API.Services.Implementations;
 
 /// <summary>
-/// Service implementation for workout_objective operations
-/// This service focuses solely on business logic and data access
-/// Caching is handled by the wrapping WorkoutObjectiveReferenceService layer
+/// Service implementation for workout objective operations with integrated eternal caching
+/// WorkoutObjectives are pure reference data that never changes after deployment
 /// </summary>
 public class WorkoutObjectiveService(
     IUnitOfWorkProvider<FitnessDbContext> unitOfWorkProvider,
+    IEternalCacheService cacheService,
     ILogger<WorkoutObjectiveService> logger) : IWorkoutObjectiveService
 {
     private readonly IUnitOfWorkProvider<FitnessDbContext> _unitOfWorkProvider = unitOfWorkProvider;
+    private readonly IEternalCacheService _cacheService = cacheService;
     private readonly ILogger<WorkoutObjectiveService> _logger = logger;
 
     /// <inheritdoc/>
     public async Task<ServiceResult<IEnumerable<ReferenceDataDto>>> GetAllActiveAsync()
+    {
+        var cacheKey = CacheKeyGenerator.GetAllKey("WorkoutObjectives");
+        
+        return await CacheLoad.For<IEnumerable<ReferenceDataDto>>(_cacheService, cacheKey)
+            .WithLogging(_logger, "WorkoutObjectives")
+            .WithAutoCacheAsync(LoadAllActiveFromDatabaseAsync);
+    }
+    
+    /// <summary>
+    /// Loads all active WorkoutObjectives from the database and maps to DTOs
+    /// </summary>
+    private async Task<ServiceResult<IEnumerable<ReferenceDataDto>>> LoadAllActiveFromDatabaseAsync()
     {
         using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
         var repository = unitOfWork.GetRepository<IWorkoutObjectiveRepository>();
@@ -32,7 +47,7 @@ public class WorkoutObjectiveService(
         
         var dtos = entities.Select(MapToDto).ToList();
         
-        _logger.LogInformation("Loaded {Count} active workout_objectives", dtos.Count);
+        _logger.LogInformation("Loaded {Count} active workout objectives", dtos.Count);
         return ServiceResult<IEnumerable<ReferenceDataDto>>.Success(dtos);
     }
 
@@ -41,28 +56,43 @@ public class WorkoutObjectiveService(
     {
         return await ServiceValidate.For<ReferenceDataDto>()
             .EnsureNotEmpty(id, WorkoutObjectiveErrorMessages.InvalidIdFormat)
-            .WithServiceResultAsync(() => LoadByIdFromDatabaseAsync(id))
-            .ThenMatchDataAsync<ReferenceDataDto, ReferenceDataDto>(
-                whenEmpty: () => Task.FromResult(
-                    ServiceResult<ReferenceDataDto>.Failure(
-                        ReferenceDataDto.Empty,
-                        ServiceError.NotFound("WorkoutObjective", id.ToString()))),
-                whenNotEmpty: dto => Task.FromResult(
-                    ServiceResult<ReferenceDataDto>.Success(dto))
+            .MatchAsync(
+                whenValid: async () =>
+                {
+                    var cacheKey = CacheKeyGenerator.GetByIdKey("WorkoutObjectives", id.ToString());
+                    
+                    return await CacheLoad.For<ReferenceDataDto>(_cacheService, cacheKey)
+                        .WithLogging(_logger, "WorkoutObjective")
+                        .WithAutoCacheAsync(async () =>
+                        {
+                            var result = await LoadByIdFromDatabaseAsync(id);
+                            // Convert Empty to NotFound at the API layer
+                            if (result.IsSuccess && result.Data.IsEmpty)
+                            {
+                                return ServiceResult<ReferenceDataDto>.Failure(
+                                    ReferenceDataDto.Empty,
+                                    ServiceError.NotFound("WorkoutObjective", id.ToString()));
+                            }
+                            return result;
+                        });
+                }
             );
     }
     
     /// <summary>
-    /// Gets a workout_objective by its ID string
+    /// Gets a workout objective by its ID string
     /// </summary>
-    /// <param name="id">The workout_objective ID as a string</param>
-    /// <returns>A service result containing the workout_objective if found</returns>
+    /// <param name="id">The workout objective ID as a string</param>
+    /// <returns>A service result containing the workout objective if found</returns>
     public async Task<ServiceResult<ReferenceDataDto>> GetByIdAsync(string id)
     {
         var workoutObjectiveId = WorkoutObjectiveId.ParseOrEmpty(id);
         return await GetByIdAsync(workoutObjectiveId);
     }
     
+    /// <summary>
+    /// Loads a WorkoutObjective by ID from the database and maps to DTO
+    /// </summary>
     private async Task<ServiceResult<ReferenceDataDto>> LoadByIdFromDatabaseAsync(WorkoutObjectiveId id)
     {
         using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
@@ -79,17 +109,32 @@ public class WorkoutObjectiveService(
     {
         return await ServiceValidate.For<ReferenceDataDto>()
             .EnsureNotWhiteSpace(value, WorkoutObjectiveErrorMessages.ValueCannotBeEmpty)
-            .WithServiceResultAsync(() => LoadByValueFromDatabaseAsync(value))
-            .ThenMatchDataAsync<ReferenceDataDto, ReferenceDataDto>(
-                whenEmpty: () => Task.FromResult(
-                    ServiceResult<ReferenceDataDto>.Failure(
-                        ReferenceDataDto.Empty,
-                        ServiceError.NotFound("WorkoutObjective", value))),
-                whenNotEmpty: dto => Task.FromResult(
-                    ServiceResult<ReferenceDataDto>.Success(dto))
+            .MatchAsync(
+                whenValid: async () =>
+                {
+                    var cacheKey = CacheKeyGenerator.GetByValueKey("WorkoutObjectives", value);
+                    
+                    return await CacheLoad.For<ReferenceDataDto>(_cacheService, cacheKey)
+                        .WithLogging(_logger, "WorkoutObjective")
+                        .WithAutoCacheAsync(async () =>
+                        {
+                            var result = await LoadByValueFromDatabaseAsync(value);
+                            // Convert Empty to NotFound at the API layer
+                            if (result.IsSuccess && result.Data.IsEmpty)
+                            {
+                                return ServiceResult<ReferenceDataDto>.Failure(
+                                    ReferenceDataDto.Empty,
+                                    ServiceError.NotFound("WorkoutObjective", value));
+                            }
+                            return result;
+                        });
+                }
             );
     }
     
+    /// <summary>
+    /// Loads a WorkoutObjective by value from the database and maps to DTO
+    /// </summary>
     private async Task<ServiceResult<ReferenceDataDto>> LoadByValueFromDatabaseAsync(string value)
     {
         using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
@@ -98,7 +143,7 @@ public class WorkoutObjectiveService(
         
         return entity.IsActive
             ? ServiceResult<ReferenceDataDto>.Success(MapToDto(entity))
-            : ServiceResult<ReferenceDataDto>.Success(ReferenceDataDto.Empty);
+            : ServiceResult<ReferenceDataDto>.Success(ReferenceDataDto.Empty);   
     }
 
     /// <inheritdoc/>
@@ -109,11 +154,13 @@ public class WorkoutObjectiveService(
             .MatchAsync(
                 whenValid: async () =>
                 {
-                    using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
-                    var repository = unitOfWork.GetRepository<IWorkoutObjectiveRepository>();
-                    var exists = await repository.ExistsAsync(id);
-                    return ServiceResult<BooleanResultDto>.Success(new BooleanResultDto { Value = exists });
-                });
+                    // Leverage the GetById cache for existence checks
+                    var result = await GetByIdAsync(id);
+                    return ServiceResult<BooleanResultDto>.Success(
+                        BooleanResultDto.Create(result.IsSuccess && !result.Data.IsEmpty)
+                    );
+                }
+            );
     }
     
     /// <summary>
@@ -122,6 +169,9 @@ public class WorkoutObjectiveService(
     /// </summary>
     private ReferenceDataDto MapToDto(WorkoutObjective entity)
     {
+        if (entity.IsEmpty)
+            return ReferenceDataDto.Empty;
+            
         return new ReferenceDataDto
         {
             Id = entity.WorkoutObjectiveId.ToString(),

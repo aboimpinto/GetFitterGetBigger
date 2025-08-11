@@ -113,7 +113,6 @@ builder.Services.AddTransient<IMuscleRoleService, MuscleRoleService>();
 builder.Services.AddTransient<IWorkoutCategoryService, WorkoutCategoryService>();
 
 builder.Services.AddTransient<IWorkoutObjectiveService, WorkoutObjectiveService>();
-builder.Services.AddTransient<WorkoutObjectiveReferenceService>();
 
 builder.Services.AddTransient<IWorkoutStateService, WorkoutStateService>();
 builder.Services.AddTransient<WorkoutStateReferenceService>();

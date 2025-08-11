@@ -7,6 +7,7 @@ using GetFitterGetBigger.API.Models;
 using GetFitterGetBigger.API.Models.Entities;
 using GetFitterGetBigger.API.Models.SpecializedIds;
 using GetFitterGetBigger.API.Repositories.Interfaces;
+using GetFitterGetBigger.API.Services.Cache;
 using GetFitterGetBigger.API.Services.Implementations;
 using GetFitterGetBigger.API.Services.Interfaces;
 using GetFitterGetBigger.API.Services.Results;
@@ -20,6 +21,7 @@ namespace GetFitterGetBigger.API.Tests.Services;
 public class WorkoutObjectiveServiceTests
 {
     private readonly Mock<IUnitOfWorkProvider<FitnessDbContext>> _unitOfWorkProviderMock;
+    private readonly Mock<IEternalCacheService> _cacheServiceMock;
     private readonly Mock<ILogger<WorkoutObjectiveService>> _loggerMock;
     private readonly Mock<IReadOnlyUnitOfWork<FitnessDbContext>> _unitOfWorkMock;
     private readonly Mock<IWorkoutObjectiveRepository> _repositoryMock;
@@ -28,6 +30,7 @@ public class WorkoutObjectiveServiceTests
     public WorkoutObjectiveServiceTests()
     {
         _unitOfWorkProviderMock = new Mock<IUnitOfWorkProvider<FitnessDbContext>>();
+        _cacheServiceMock = new Mock<IEternalCacheService>();
         _loggerMock = new Mock<ILogger<WorkoutObjectiveService>>();
         _unitOfWorkMock = new Mock<IReadOnlyUnitOfWork<FitnessDbContext>>();
         _repositoryMock = new Mock<IWorkoutObjectiveRepository>();
@@ -38,8 +41,22 @@ public class WorkoutObjectiveServiceTests
         _unitOfWorkMock.Setup(x => x.GetRepository<IWorkoutObjectiveRepository>())
             .Returns(_repositoryMock.Object);
 
+        // Setup cache to force cache miss for testing
+        _cacheServiceMock
+            .Setup(x => x.GetAsync<ReferenceDataDto>(It.IsAny<string>()))
+            .ReturnsAsync(CacheResult<ReferenceDataDto>.Miss());
+
+        _cacheServiceMock
+            .Setup(x => x.GetAsync<IEnumerable<ReferenceDataDto>>(It.IsAny<string>()))
+            .ReturnsAsync(CacheResult<IEnumerable<ReferenceDataDto>>.Miss());
+
+        _cacheServiceMock
+            .Setup(x => x.GetAsync<BooleanResultDto>(It.IsAny<string>()))
+            .ReturnsAsync(CacheResult<BooleanResultDto>.Miss());
+
         _service = new WorkoutObjectiveService(
             _unitOfWorkProviderMock.Object,
+            _cacheServiceMock.Object,
             _loggerMock.Object);
     }
 
