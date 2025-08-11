@@ -19,7 +19,7 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.ReferenceData
     
     [System.CodeDom.Compiler.GeneratedCodeAttribute("TechTalk.SpecFlow", "4.0.0.0")]
     [System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
-    public partial class MetricTypeAdvancedCachingFeature : object, Xunit.IClassFixture<MetricTypeAdvancedCachingFeature.FixtureData>, Xunit.IAsyncLifetime
+    public partial class MovementPatternCachingFeature : object, Xunit.IClassFixture<MovementPatternCachingFeature.FixtureData>, Xunit.IAsyncLifetime
     {
         
         private static TechTalk.SpecFlow.ITestRunner testRunner;
@@ -28,7 +28,7 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.ReferenceData
         
         private Xunit.Abstractions.ITestOutputHelper _testOutputHelper;
         
-        public MetricTypeAdvancedCachingFeature(MetricTypeAdvancedCachingFeature.FixtureData fixtureData, Xunit.Abstractions.ITestOutputHelper testOutputHelper)
+        public MovementPatternCachingFeature(MovementPatternCachingFeature.FixtureData fixtureData, Xunit.Abstractions.ITestOutputHelper testOutputHelper)
         {
             this._testOutputHelper = testOutputHelper;
         }
@@ -36,9 +36,8 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.ReferenceData
         public static async System.Threading.Tasks.Task FeatureSetupAsync()
         {
             testRunner = TechTalk.SpecFlow.TestRunnerManager.GetTestRunnerForAssembly(null, TechTalk.SpecFlow.xUnit.SpecFlowPlugin.XUnitParallelWorkerTracker.Instance.GetWorkerId());
-            TechTalk.SpecFlow.FeatureInfo featureInfo = new TechTalk.SpecFlow.FeatureInfo(new System.Globalization.CultureInfo("en-US"), "Features/ReferenceData", "MetricType Advanced Caching", "  As a system administrator\n  I want metric type data to be cached properly for c" +
-                    "omplex scenarios\n  So that the cache handles different access patterns correctly" +
-                    "", ProgrammingLanguage.CSharp, featureTags);
+            TechTalk.SpecFlow.FeatureInfo featureInfo = new TechTalk.SpecFlow.FeatureInfo(new System.Globalization.CultureInfo("en-US"), "Features/ReferenceData", "MovementPattern Caching", "  As a system administrator\n  I want movement pattern data to be cached\n  So that" +
+                    " repeated requests don\'t hit the database unnecessarily", ProgrammingLanguage.CSharp, featureTags);
             await testRunner.OnFeatureStartAsync(featureInfo);
         }
         
@@ -92,18 +91,18 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.ReferenceData
             await this.TestTearDownAsync();
         }
         
-        [Xunit.SkippableFactAttribute(DisplayName="Different metric type IDs should result in separate cache entries")]
-        [Xunit.TraitAttribute("FeatureTitle", "MetricType Advanced Caching")]
-        [Xunit.TraitAttribute("Description", "Different metric type IDs should result in separate cache entries")]
+        [Xunit.SkippableFactAttribute(DisplayName="Calling get all movement patterns twice should only hit database once")]
+        [Xunit.TraitAttribute("FeatureTitle", "MovementPattern Caching")]
+        [Xunit.TraitAttribute("Description", "Calling get all movement patterns twice should only hit database once")]
         [Xunit.TraitAttribute("Category", "caching")]
         [Xunit.TraitAttribute("Category", "reference-data")]
-        public async System.Threading.Tasks.Task DifferentMetricTypeIDsShouldResultInSeparateCacheEntries()
+        public async System.Threading.Tasks.Task CallingGetAllMovementPatternsTwiceShouldOnlyHitDatabaseOnce()
         {
             string[] tagsOfScenario = new string[] {
                     "caching",
                     "reference-data"};
             System.Collections.Specialized.OrderedDictionary argumentsOfScenario = new System.Collections.Specialized.OrderedDictionary();
-            TechTalk.SpecFlow.ScenarioInfo scenarioInfo = new TechTalk.SpecFlow.ScenarioInfo("Different metric type IDs should result in separate cache entries", null, tagsOfScenario, argumentsOfScenario, featureTags);
+            TechTalk.SpecFlow.ScenarioInfo scenarioInfo = new TechTalk.SpecFlow.ScenarioInfo("Calling get all movement patterns twice should only hit database once", null, tagsOfScenario, argumentsOfScenario, featureTags);
             this.ScenarioInitialize(scenarioInfo);
             if ((TagHelper.ContainsIgnoreTag(tagsOfScenario) || TagHelper.ContainsIgnoreTag(featureTags)))
             {
@@ -113,36 +112,29 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.ReferenceData
             {
                 await this.ScenarioStartAsync();
                 await this.FeatureBackgroundAsync();
-                await testRunner.GivenAsync("I am tracking database queries", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Given ");
-                await testRunner.AndAsync("I send a GET request to \"/api/ReferenceTables/MetricTypes\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
-                await testRunner.AndAsync("the response contains at least 2 items", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
-                await testRunner.AndAsync("I store the first item from the response as \"firstMetricType\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
-                await testRunner.AndAsync("I store the second item from the response as \"secondMetricType\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
-                await testRunner.WhenAsync("I send a GET request to \"/api/ReferenceTables/MetricTypes/<firstMetricType.id>\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
+                await testRunner.WhenAsync("I send a GET request to \"/api/ReferenceTables/MovementPatterns\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
                 await testRunner.ThenAsync("the response status should be 200", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
-                await testRunner.AndAsync("the response property \"id\" should be \"<firstMetricType.id>\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
-                await testRunner.WhenAsync("I send a GET request to \"/api/ReferenceTables/MetricTypes/<secondMetricType.id>\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
+                await testRunner.AndAsync("the database query count should be 1", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
+                await testRunner.GivenAsync("I reset the database query counter", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Given ");
+                await testRunner.WhenAsync("I send a GET request to \"/api/ReferenceTables/MovementPatterns\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
                 await testRunner.ThenAsync("the response status should be 200", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
-                await testRunner.AndAsync("the response property \"id\" should be \"<secondMetricType.id>\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
-                await testRunner.WhenAsync("I send a GET request to \"/api/ReferenceTables/MetricTypes/<firstMetricType.id>\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
-                await testRunner.ThenAsync("the response status should be 200", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
-                await testRunner.AndAsync("the response property \"id\" should be \"<firstMetricType.id>\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
+                await testRunner.AndAsync("the database query count should be 0", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
             }
             await this.ScenarioCleanupAsync();
         }
         
-        [Xunit.SkippableFactAttribute(DisplayName="Get by value should also use cache")]
-        [Xunit.TraitAttribute("FeatureTitle", "MetricType Advanced Caching")]
-        [Xunit.TraitAttribute("Description", "Get by value should also use cache")]
+        [Xunit.SkippableFactAttribute(DisplayName="Calling get movement pattern by ID twice should only hit database once")]
+        [Xunit.TraitAttribute("FeatureTitle", "MovementPattern Caching")]
+        [Xunit.TraitAttribute("Description", "Calling get movement pattern by ID twice should only hit database once")]
         [Xunit.TraitAttribute("Category", "caching")]
         [Xunit.TraitAttribute("Category", "reference-data")]
-        public async System.Threading.Tasks.Task GetByValueShouldAlsoUseCache()
+        public async System.Threading.Tasks.Task CallingGetMovementPatternByIDTwiceShouldOnlyHitDatabaseOnce()
         {
             string[] tagsOfScenario = new string[] {
                     "caching",
                     "reference-data"};
             System.Collections.Specialized.OrderedDictionary argumentsOfScenario = new System.Collections.Specialized.OrderedDictionary();
-            TechTalk.SpecFlow.ScenarioInfo scenarioInfo = new TechTalk.SpecFlow.ScenarioInfo("Get by value should also use cache", null, tagsOfScenario, argumentsOfScenario, featureTags);
+            TechTalk.SpecFlow.ScenarioInfo scenarioInfo = new TechTalk.SpecFlow.ScenarioInfo("Calling get movement pattern by ID twice should only hit database once", null, tagsOfScenario, argumentsOfScenario, featureTags);
             this.ScenarioInitialize(scenarioInfo);
             if ((TagHelper.ContainsIgnoreTag(tagsOfScenario) || TagHelper.ContainsIgnoreTag(featureTags)))
             {
@@ -152,14 +144,17 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.ReferenceData
             {
                 await this.ScenarioStartAsync();
                 await this.FeatureBackgroundAsync();
-                await testRunner.GivenAsync("I send a GET request to \"/api/ReferenceTables/MetricTypes\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Given ");
-                await testRunner.AndAsync("the response contains an item with value \"Weight\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
+                await testRunner.GivenAsync("I send a GET request to \"/api/ReferenceTables/MovementPatterns\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Given ");
+                await testRunner.AndAsync("the response contains at least 1 item", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
+                await testRunner.AndAsync("I store the first item from the response as \"firstMovementPattern\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
                 await testRunner.AndAsync("I reset the database query counter", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
-                await testRunner.WhenAsync("I send a GET request to \"/api/ReferenceTables/MetricTypes/ByValue/Weight\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
+                await testRunner.WhenAsync("I send a GET request to \"/api/ReferenceTables/MovementPatterns/<firstMovementPatt" +
+                        "ern.id>\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
                 await testRunner.ThenAsync("the response status should be 200", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
                 await testRunner.AndAsync("the database query count should be 1", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
                 await testRunner.GivenAsync("I reset the database query counter", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Given ");
-                await testRunner.WhenAsync("I send a GET request to \"/api/ReferenceTables/MetricTypes/ByValue/Weight\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
+                await testRunner.WhenAsync("I send a GET request to \"/api/ReferenceTables/MovementPatterns/<firstMovementPatt" +
+                        "ern.id>\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
                 await testRunner.ThenAsync("the response status should be 200", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
                 await testRunner.AndAsync("the database query count should be 0", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
             }
@@ -173,12 +168,12 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.ReferenceData
             
             async System.Threading.Tasks.Task Xunit.IAsyncLifetime.InitializeAsync()
             {
-                await MetricTypeAdvancedCachingFeature.FeatureSetupAsync();
+                await MovementPatternCachingFeature.FeatureSetupAsync();
             }
             
             async System.Threading.Tasks.Task Xunit.IAsyncLifetime.DisposeAsync()
             {
-                await MetricTypeAdvancedCachingFeature.FeatureTearDownAsync();
+                await MovementPatternCachingFeature.FeatureTearDownAsync();
             }
         }
     }

@@ -1,6 +1,6 @@
-Feature: MetricType Caching
+Feature: MovementPattern Caching
   As a system administrator
-  I want metric type data to be cached
+  I want movement pattern data to be cached
   So that repeated requests don't hit the database unnecessarily
 
   Background:
@@ -9,30 +9,31 @@ Feature: MetricType Caching
     And I am tracking database queries
 
   @caching @reference-data
-  Scenario: Calling get all metric types twice should use cache effectively
-    # First call may or may not hit database (might be pre-cached from seeding)
-    When I send a GET request to "/api/ReferenceTables/MetricTypes"
+  Scenario: Calling get all movement patterns twice should only hit database once
+    # First call should hit the database
+    When I send a GET request to "/api/ReferenceTables/MovementPatterns"
     Then the response status should be 200
+    And the database query count should be 1
     # Reset counter to clearly show second call uses cache
     Given I reset the database query counter
     # Second call should use cache and NOT hit the database
-    When I send a GET request to "/api/ReferenceTables/MetricTypes"
+    When I send a GET request to "/api/ReferenceTables/MovementPatterns"
     Then the response status should be 200
     And the database query count should be 0
     
   @caching @reference-data
-  Scenario: Calling get metric type by ID twice should only hit database once
-    Given I send a GET request to "/api/ReferenceTables/MetricTypes"
+  Scenario: Calling get movement pattern by ID twice should only hit database once
+    Given I send a GET request to "/api/ReferenceTables/MovementPatterns"
     And the response contains at least 1 item
-    And I store the first item from the response as "firstMetricType"
+    And I store the first item from the response as "firstMovementPattern"
     And I reset the database query counter
     # First GetById call should hit the database
-    When I send a GET request to "/api/ReferenceTables/MetricTypes/<firstMetricType.id>"
+    When I send a GET request to "/api/ReferenceTables/MovementPatterns/<firstMovementPattern.id>"
     Then the response status should be 200
     And the database query count should be 1
     # Reset counter to clearly show second call uses cache
     Given I reset the database query counter
     # Second GetById call should use cache and NOT hit the database
-    When I send a GET request to "/api/ReferenceTables/MetricTypes/<firstMetricType.id>"
+    When I send a GET request to "/api/ReferenceTables/MovementPatterns/<firstMovementPattern.id>"
     Then the response status should be 200
     And the database query count should be 0

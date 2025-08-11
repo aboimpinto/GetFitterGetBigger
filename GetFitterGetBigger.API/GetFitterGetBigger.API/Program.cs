@@ -107,7 +107,6 @@ builder.Services.AddTransient<IKineticChainTypeService, KineticChainTypeService>
 builder.Services.AddTransient<IMetricTypeService, MetricTypeService>();
 
 builder.Services.AddTransient<IMovementPatternService, MovementPatternService>();
-builder.Services.AddTransient<MovementPatternReferenceService>();
 
 builder.Services.AddTransient<IMuscleRoleService, MuscleRoleService>();
 builder.Services.AddTransient<MuscleRoleReferenceService>();
