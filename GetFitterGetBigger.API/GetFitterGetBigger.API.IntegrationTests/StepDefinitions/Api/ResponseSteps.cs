@@ -374,6 +374,28 @@ public class ResponseSteps
         found.Should().BeTrue($"Expected to find an item with value '{expectedValue}' in the response");
     }
     
+    [Given(@"the response contains an item with code ""(.*)""")]
+    [Then(@"the response contains an item with code ""(.*)""")]
+    public void ThenTheResponseContainsAnItemWithCode(string expectedCode)
+    {
+        var content = _scenarioContext.GetLastResponseContent();
+        
+        var jsonArray = JsonDocument.Parse(content);
+        
+        bool found = false;
+        foreach (var item in jsonArray.RootElement.EnumerateArray())
+        {
+            if (item.TryGetProperty("code", out var codeProperty) && 
+                codeProperty.GetString()?.Equals(expectedCode, StringComparison.OrdinalIgnoreCase) == true)
+            {
+                found = true;
+                break;
+            }
+        }
+        
+        found.Should().BeTrue($"Expected to find an item with code '{expectedCode}' in the response");
+    }
+    
     [Given(@"I store the item with property ""(.*)"" equals ""(.*)"" from the response as ""(.*)""")]
     [When(@"I store the item with property ""(.*)"" equals ""(.*)"" from the response as ""(.*)""")]
     [Then(@"I store the item with property ""(.*)"" equals ""(.*)"" from the response as ""(.*)""")]

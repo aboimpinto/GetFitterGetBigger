@@ -23,6 +23,13 @@ public interface IExecutionProtocolService
     Task<ServiceResult<ExecutionProtocolDto>> GetByIdAsync(ExecutionProtocolId id);
     
     /// <summary>
+    /// Gets an execution protocol by its ID string
+    /// </summary>
+    /// <param name="id">The execution protocol ID as a string</param>
+    /// <returns>A service result containing the execution protocol if found</returns>
+    Task<ServiceResult<ExecutionProtocolDto>> GetByIdAsync(string id);
+    
+    /// <summary>
     /// Gets an execution protocol by its value
     /// </summary>
     /// <param name="value">The execution protocol value</param>

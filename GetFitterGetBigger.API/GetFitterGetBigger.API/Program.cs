@@ -97,7 +97,6 @@ builder.Services.AddTransient<IBodyPartService, BodyPartService>();
 builder.Services.AddTransient<IDifficultyLevelService, DifficultyLevelService>();
 
 builder.Services.AddTransient<IExecutionProtocolService, ExecutionProtocolService>();
-builder.Services.AddTransient<ExecutionProtocolReferenceService>();
 
 builder.Services.AddTransient<IExerciseTypeService, ExerciseTypeService>();
 builder.Services.AddTransient<ExerciseTypeReferenceService>();

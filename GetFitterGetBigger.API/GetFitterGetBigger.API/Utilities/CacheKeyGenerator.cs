@@ -47,6 +47,19 @@ public static class CacheKeyGenerator
     }
 
     /// <summary>
+    /// Generates a cache key for getting an item by code
+    /// </summary>
+    /// <param name="tableName">The name of the reference table</param>
+    /// <param name="code">The code to search for</param>
+    /// <returns>The generated cache key</returns>
+    public static string GetByCodeKey(string tableName, string code)
+    {
+        // Normalize the code to handle case-insensitive searches
+        var normalizedCode = code?.ToLowerInvariant() ?? string.Empty;
+        return $"{ReferenceTablePrefix}:{tableName}:GetByCode:{normalizedCode}";
+    }
+
+    /// <summary>
     /// Generates a pattern for removing all cache entries for a specific table
     /// </summary>
     /// <param name="tableName">The name of the reference table</param>

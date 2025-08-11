@@ -1,0 +1,31 @@
+Feature: Execution Protocol Caching
+  As a system administrator
+  I want execution protocol data to be cached
+  So that repeated requests don't hit the database unnecessarily
+
+  Background:
+    Given the database is empty
+    And the database has reference data
+    And I am tracking database queries
+
+  @caching @reference-data
+  Scenario: Calling get all execution protocols twice should only hit database once
+    When I send a GET request to "/api/ReferenceTables/ExecutionProtocols"
+    Then the response status should be 200
+    And the database query count should be 1
+    When I send a GET request to "/api/ReferenceTables/ExecutionProtocols"
+    Then the response status should be 200
+    And the database query count should be 1
+    
+  @caching @reference-data
+  Scenario: Calling get execution protocol by ID twice should only hit database once
+    Given I send a GET request to "/api/ReferenceTables/ExecutionProtocols"
+    And the response contains at least 1 item
+    And I store the first item from the response as "firstExecutionProtocol"
+    And I reset the database query counter
+    When I send a GET request to "/api/ReferenceTables/ExecutionProtocols/<firstExecutionProtocol.executionProtocolId>"
+    Then the response status should be 200
+    And the database query count should be 1
+    When I send a GET request to "/api/ReferenceTables/ExecutionProtocols/<firstExecutionProtocol.executionProtocolId>"
+    Then the response status should be 200
+    And the database query count should be 1
