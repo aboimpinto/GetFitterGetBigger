@@ -336,6 +336,90 @@ Scenario: Duplicate equipment name
     And the error code should be "Conflict"
 ```
 
+### ⚠️ CRITICAL: Feature File Test Isolation
+
+**PROBLEM**: Tests within the same `.feature` file share the same `IClassFixture` instance in xUnit/SpecFlow, which means they share:
+- The same PostgreSQL test container
+- The same WebApplicationFactory instance  
+- The same database state (unless explicitly reset)
+
+This can cause test failures when tests have conflicting requirements or when cache state from one test affects another.
+
+#### Symptoms of Fixture Sharing Issues
+
+1. **Tests pass individually but fail when run together**
+2. **Cache tests showing 0 queries instead of expected 1**
+3. **Database state from Test 1 affecting Test 3**
+4. **Tests pass in different order but fail in CI/CD**
+
+#### Solutions for Test Isolation
+
+##### Solution 1: Separate Feature Files (RECOMMENDED)
+
+When tests have conflicting requirements, separate them into different `.feature` files:
+
+```gherkin
+# File: DifficultyLevelCaching.feature
+Feature: Difficulty Level Caching
+  # Basic caching scenarios that work well together
+  
+  Scenario: Calling get all twice should only hit database once
+  Scenario: Calling get by ID twice should only hit database once
+
+# File: DifficultyLevelAdvancedCaching.feature  
+Feature: Difficulty Level Advanced Caching
+  # Advanced scenarios that need isolation
+  
+  Scenario: Different IDs should result in separate cache entries
+  Scenario: Get by value should also use cache
+```
+
+Each `.feature` file gets its own:
+- `IClassFixture<FeatureName.FixtureData>` instance
+- PostgreSQL container
+- WebApplicationFactory
+- Complete isolation from other feature files
+
+##### Solution 2: Test Collections (LIMITED SUCCESS)
+
+Adding `@collection:Serial` tags does NOT provide fixture isolation:
+
+```gherkin
+# ⚠️ This doesn't isolate fixtures - tests still share resources
+@collection:Serial
+Scenario: Test that needs isolation
+```
+
+Test collections only control parallel execution, not fixture sharing within a feature file.
+
+##### Solution 3: Explicit State Reset (COMPLEX)
+
+Reset state between tests in the same feature:
+- Clear memory cache using reflection
+- Reset database to known state
+- Clear any singleton services
+
+This is complex and error-prone - prefer Solution 1.
+
+#### Real-World Example
+
+**Problem Encountered**: DifficultyLevelCaching tests failing after migration from PureReferenceService
+- Tests 1 & 2: Passed when run together
+- Tests 1 & 3: Failed when run together (Test 1 failed)
+- Tests 3 & 4: Always problematic
+
+**Investigation Process**:
+1. Added extensive logging - didn't reveal issue
+2. Changed service lifetimes (Singleton → Scoped) - didn't help
+3. Added test collections - didn't provide isolation
+4. Verified BodyParts tests passed - proved migration was correct
+
+**Root Cause**: All 4 tests in same feature file sharing fixtures
+
+**Solution Applied**: Moved Tests 3 & 4 to `DifficultyLevelAdvancedCaching.feature`
+
+**Result**: All tests passed with proper isolation
+
 ### Integration Test Structure
 
 ```csharp

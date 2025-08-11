@@ -35,6 +35,7 @@ When tests fail, check IN THIS ORDER:
 2. **Mock Setup** - Did you mock ALL repository calls?
 3. **Test Type** - Unit test (needs mocks) or Integration test (needs seed data)?
 4. **Navigation Properties** - Are they loaded after insert/update?
+5. **Feature File Isolation** - Are conflicting tests in the same `.feature` file? (See TestingStandards.md)
 
 ## 🎯 Key Patterns to Remember
 
@@ -85,6 +86,7 @@ await Context.Entry(entity).Collection(e => e.Collection).LoadAsync();
 2. **Mock<IRepository>** = Unit test (only mocked data exists)
 3. **EF Core In-Memory** = Some features don't work (see skipped tests)
 4. **ID Parsing** = Will fail silently with wrong format
+5. **Feature File Sharing** = All tests in same `.feature` file share fixtures (can cause conflicts!)
 
 ## 🔄 Integration Test Types - CRITICAL KNOWLEDGE
 

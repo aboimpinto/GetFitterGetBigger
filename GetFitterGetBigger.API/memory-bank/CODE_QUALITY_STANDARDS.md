@@ -95,6 +95,7 @@
 - Test error codes, not messages
 - Mock patterns and verification
 - BDD integration testing approach
+- **NEW**: Feature file test isolation patterns
 
 ### Data Access Patterns
 
