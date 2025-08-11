@@ -23,6 +23,7 @@ namespace GetFitterGetBigger.API.Tests.Services
         private readonly Mock<IUnitOfWorkProvider<FitnessDbContext>> _mockUnitOfWorkProvider;
         private readonly Mock<IReadOnlyUnitOfWork<FitnessDbContext>> _mockReadOnlyUnitOfWork;
         private readonly Mock<IMetricTypeRepository> _mockMetricTypeRepository;
+        private readonly Mock<IEternalCacheService> _mockCacheService;
         private readonly Mock<ILogger<MetricTypeService>> _mockLogger;
         private readonly MetricTypeService _metricTypeService;
 
@@ -31,6 +32,7 @@ namespace GetFitterGetBigger.API.Tests.Services
             _mockUnitOfWorkProvider = new Mock<IUnitOfWorkProvider<FitnessDbContext>>();
             _mockReadOnlyUnitOfWork = new Mock<IReadOnlyUnitOfWork<FitnessDbContext>>();
             _mockMetricTypeRepository = new Mock<IMetricTypeRepository>();
+            _mockCacheService = new Mock<IEternalCacheService>();
             _mockLogger = new Mock<ILogger<MetricTypeService>>();
 
             _mockUnitOfWorkProvider
@@ -41,8 +43,18 @@ namespace GetFitterGetBigger.API.Tests.Services
                 .Setup(x => x.GetRepository<IMetricTypeRepository>())
                 .Returns(_mockMetricTypeRepository.Object);
 
+            // Setup cache behavior - force cache miss for testing
+            _mockCacheService
+                .Setup(x => x.GetAsync<ReferenceDataDto>(It.IsAny<string>()))
+                .ReturnsAsync(CacheResult<ReferenceDataDto>.Miss());
+                
+            _mockCacheService
+                .Setup(x => x.GetAsync<IEnumerable<ReferenceDataDto>>(It.IsAny<string>()))
+                .ReturnsAsync(CacheResult<IEnumerable<ReferenceDataDto>>.Miss());
+
             _metricTypeService = new MetricTypeService(
                 _mockUnitOfWorkProvider.Object,
+                _mockCacheService.Object,
                 _mockLogger.Object);
         }
 
@@ -51,10 +63,16 @@ namespace GetFitterGetBigger.API.Tests.Services
         {
             // Arrange
             var metricTypeId = MetricTypeId.New();
+            var metricType = MetricType.Handler.Create(
+                metricTypeId,
+                "Weight",
+                "Weight measurement in kg or lbs",
+                1,
+                true).Value;
 
             _mockMetricTypeRepository
-                .Setup(x => x.ExistsAsync(metricTypeId))
-                .ReturnsAsync(true);
+                .Setup(x => x.GetByIdAsync(metricTypeId))
+                .ReturnsAsync(metricType);
 
             // Act
             var result = await _metricTypeService.ExistsAsync(metricTypeId);
@@ -62,8 +80,8 @@ namespace GetFitterGetBigger.API.Tests.Services
             // Assert
             Assert.True(result.IsSuccess);
             Assert.True(result.Data.Value);
-            _mockUnitOfWorkProvider.Verify(x => x.CreateReadOnly(), Times.Once);
-            _mockMetricTypeRepository.Verify(x => x.ExistsAsync(It.IsAny<MetricTypeId>()), Times.Once);
+            // ExistsAsync now leverages GetByIdAsync which uses cache
+            _mockMetricTypeRepository.Verify(x => x.GetByIdAsync(It.IsAny<MetricTypeId>()), Times.Once);
         }
 
         [Fact]
@@ -71,10 +89,11 @@ namespace GetFitterGetBigger.API.Tests.Services
         {
             // Arrange
             var metricTypeId = MetricTypeId.New();
+            var emptyMetricType = MetricType.Empty;
 
             _mockMetricTypeRepository
-                .Setup(x => x.ExistsAsync(metricTypeId))
-                .ReturnsAsync(false);
+                .Setup(x => x.GetByIdAsync(metricTypeId))
+                .ReturnsAsync(emptyMetricType);
 
             // Act
             var result = await _metricTypeService.ExistsAsync(metricTypeId);
@@ -82,8 +101,8 @@ namespace GetFitterGetBigger.API.Tests.Services
             // Assert
             Assert.True(result.IsSuccess);
             Assert.False(result.Data.Value);
-            _mockUnitOfWorkProvider.Verify(x => x.CreateReadOnly(), Times.Once);
-            _mockMetricTypeRepository.Verify(x => x.ExistsAsync(It.IsAny<MetricTypeId>()), Times.Once);
+            // ExistsAsync now leverages GetByIdAsync which uses cache
+            _mockMetricTypeRepository.Verify(x => x.GetByIdAsync(It.IsAny<MetricTypeId>()), Times.Once);
         }
 
         [Fact]
@@ -98,7 +117,7 @@ namespace GetFitterGetBigger.API.Tests.Services
             // Assert
             Assert.False(result.IsSuccess);
             Assert.Equal(ServiceErrorCode.ValidationFailed, result.PrimaryErrorCode);
-            _mockUnitOfWorkProvider.Verify(x => x.CreateReadOnly(), Times.Never);
+            // With new implementation, no repository calls should be made for invalid IDs
             _mockMetricTypeRepository.Verify(x => x.GetByIdAsync(It.IsAny<MetricTypeId>()), Times.Never);
         }
 
