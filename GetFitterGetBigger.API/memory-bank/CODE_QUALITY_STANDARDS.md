@@ -124,6 +124,12 @@
 - Primary constructors for DI
 - Pattern matching and switch expressions
 
+#### [Extension Method Pattern](./CodeQualityGuidelines/ExtensionMethodPattern.md)
+- **MANDATORY** Extract static helper methods as extensions
+- Reduces service file size by 20-40%
+- Improves readability and reusability
+- "Too Much Information = No Information" principle
+
 ### Quality Assurance
 
 #### [Testing Standards](./CodeQualityGuidelines/TestingStandards.md)
@@ -196,6 +202,7 @@ return await ServiceValidate.For<T>()
 | Clean validation approach | Positive assertions | [CleanValidationPattern.md](./CodeQualityGuidelines/CleanValidationPattern.md) |
 | Validation mistakes | Avoid anti-patterns | [ValidationAntiPatterns.md](./CodeQualityGuidelines/ValidationAntiPatterns.md) |
 | Null handling | Null Object Pattern | [NullObjectPattern.md](./CodeQualityGuidelines/NullObjectPattern.md) |
+| Static helper methods | Extension methods | [ExtensionMethodPattern.md](./CodeQualityGuidelines/ExtensionMethodPattern.md) |
 | Layer separation | Layered Architecture | [LayeredArchitectureRules.md](./CodeQualityGuidelines/ArchitecturalPatterns/LayeredArchitectureRules.md) |
 | Web to service mapping | Request-Command Pattern | [RequestCommandSeparation.md](./CodeQualityGuidelines/ArchitecturalPatterns/RequestCommandSeparation.md) |
 | Query operations | ReadOnlyUnitOfWork | [UnitOfWorkPattern.md](./CodeQualityGuidelines/UnitOfWorkPattern.md) |
@@ -226,6 +233,7 @@ Before approving any PR, verify:
 - [ ] No try-catch for business logic
 - [ ] Tests check error codes, not messages
 - [ ] Modern C# patterns applied (C# 12+)
+- [ ] Static helpers extracted as extension methods
 - [ ] Cache integration follows patterns
 
 ## 🔗 Related Documents

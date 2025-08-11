@@ -4,10 +4,10 @@ using GetFitterGetBigger.API.Models.Entities;
 using GetFitterGetBigger.API.Models.SpecializedIds;
 using GetFitterGetBigger.API.Repositories.Interfaces;
 using GetFitterGetBigger.API.Services.Commands;
+using GetFitterGetBigger.API.Services.Implementations.Extensions;
 using GetFitterGetBigger.API.Services.Interfaces;
 using GetFitterGetBigger.API.Services.Results;
 using GetFitterGetBigger.API.Services.Validation;
-using GetFitterGetBigger.API.Builders;
 using GetFitterGetBigger.API.Constants;
 using Olimpo.EntityFramework.Persistency;
 
@@ -40,7 +40,7 @@ public class ExerciseService(
             filterParams.IsActive);
 
         var exerciseDtos = exercises
-            .Select(MapToExerciseDto)
+            .Select(e => e.ToDto())
             .ToList();
 
         var response = new PagedResponse<ExerciseDto>
@@ -71,7 +71,7 @@ public class ExerciseService(
         var repository = readOnlyUow.GetRepository<IExerciseRepository>();
         
         var exercise = await repository.GetByIdAsync(id);
-        return ServiceResult<ExerciseDto>.Success(MapToExerciseDto(exercise));
+        return ServiceResult<ExerciseDto>.Success(exercise.ToDto());
     }
 
     public async Task<ServiceResult<ExerciseDto>> CreateAsync(CreateExerciseCommand command)
@@ -120,18 +120,18 @@ public class ExerciseService(
         
         // ADD all related data:
         var exerciseWithRelations = exercise with {
-            ExerciseExerciseTypes = MapToExerciseTypes(command.ExerciseTypeIds, exercise.Id),
-            ExerciseMuscleGroups = MapToMuscleGroups(command.MuscleGroups, exercise.Id),
-            CoachNotes = MapToCoachNotes(command.CoachNotes, exercise.Id),
-            ExerciseEquipment = MapToEquipment(command.EquipmentIds, exercise.Id),
-            ExerciseBodyParts = MapToBodyParts(command.BodyPartIds, exercise.Id),
-            ExerciseMovementPatterns = MapToMovementPatterns(command.MovementPatternIds, exercise.Id)
+            ExerciseExerciseTypes = command.ExerciseTypeIds.ToExerciseTypes(exercise.Id),
+            ExerciseMuscleGroups = command.MuscleGroups.ToExerciseMuscleGroups(exercise.Id),
+            CoachNotes = command.CoachNotes.ToCoachNotes(exercise.Id),
+            ExerciseEquipment = command.EquipmentIds.ToExerciseEquipment(exercise.Id),
+            ExerciseBodyParts = command.BodyPartIds.ToExerciseBodyParts(exercise.Id),
+            ExerciseMovementPatterns = command.MovementPatternIds.ToExerciseMovementPatterns(exercise.Id)
         };
             
         var createdExercise = await repository.AddAsync(exerciseWithRelations);
         await writableUow.CommitAsync();
         
-        return ServiceResult<ExerciseDto>.Success(MapToExerciseDto(createdExercise));
+        return ServiceResult<ExerciseDto>.Success(createdExercise.ToDto());
     }
 
     private async Task<bool> IsNameUniqueAsync(string name, ExerciseId? excludeId)
@@ -213,12 +213,12 @@ public class ExerciseService(
             ExerciseWeightTypeId = command.ExerciseWeightTypeId.IsEmpty ? null : command.ExerciseWeightTypeId,
             
             // UPDATE related collections instead of losing them:
-            ExerciseExerciseTypes = MapToExerciseTypes(command.ExerciseTypeIds, id),
-            ExerciseMuscleGroups = MapToMuscleGroups(command.MuscleGroups, id),
-            CoachNotes = MapToCoachNotes(command.CoachNotes, id),
-            ExerciseEquipment = MapToEquipment(command.EquipmentIds, id),
-            ExerciseBodyParts = MapToBodyParts(command.BodyPartIds, id),
-            ExerciseMovementPatterns = MapToMovementPatterns(command.MovementPatternIds, id)
+            ExerciseExerciseTypes = command.ExerciseTypeIds.ToExerciseTypes(id),
+            ExerciseMuscleGroups = command.MuscleGroups.ToExerciseMuscleGroups(id),
+            CoachNotes = command.CoachNotes.ToCoachNotes(id),
+            ExerciseEquipment = command.EquipmentIds.ToExerciseEquipment(id),
+            ExerciseBodyParts = command.BodyPartIds.ToExerciseBodyParts(id),
+            ExerciseMovementPatterns = command.MovementPatternIds.ToExerciseMovementPatterns(id)
         };
         
         await repository.UpdateAsync(updatedExercise);
@@ -227,7 +227,7 @@ public class ExerciseService(
         // Reload the exercise with all navigation properties for proper mapping
         var reloadedExercise = await repository.GetByIdAsync(id);
         
-        return ServiceResult<ExerciseDto>.Success(MapToExerciseDto(reloadedExercise));
+        return ServiceResult<ExerciseDto>.Success(reloadedExercise.ToDto());
     }
 
     public async Task<ServiceResult<bool>> DeleteAsync(ExerciseId id)
@@ -263,80 +263,6 @@ public class ExerciseService(
         var exercise = await repository.GetByIdAsync(id);
         return !exercise.IsEmpty;
     }
-
-    #region Private Methods
-
-    #region Mapping Helper Methods
-    
-    /// <summary>
-    /// Maps exercise type IDs to ExerciseExerciseType entities
-    /// </summary>
-    private static ICollection<ExerciseExerciseType> MapToExerciseTypes(List<ExerciseTypeId> exerciseTypeIds, ExerciseId exerciseId)
-    {
-        return exerciseTypeIds
-            .Where(id => !id.IsEmpty)
-            .Select(id => ExerciseExerciseType.Handler.Create(exerciseId, id))
-            .ToList();
-    }
-    
-    /// <summary>
-    /// Maps muscle group assignments to ExerciseMuscleGroup entities
-    /// </summary>
-    private static ICollection<ExerciseMuscleGroup> MapToMuscleGroups(List<MuscleGroupAssignment> muscleGroups, ExerciseId exerciseId)
-    {
-        return muscleGroups
-            .Where(mg => !mg.MuscleGroupId.IsEmpty && !mg.MuscleRoleId.IsEmpty)
-            .Select(mg => ExerciseMuscleGroup.Handler.Create(exerciseId, mg.MuscleGroupId, mg.MuscleRoleId))
-            .ToList();
-    }
-    
-    /// <summary>
-    /// Maps coach note commands to CoachNote entities
-    /// </summary>
-    private static ICollection<CoachNote> MapToCoachNotes(List<CoachNoteCommand> coachNotes, ExerciseId exerciseId)
-    {
-        return coachNotes
-            .Where(cn => !string.IsNullOrWhiteSpace(cn.Text))
-            .Select(cn => cn.Id.HasValue && !cn.Id.Value.IsEmpty
-                ? CoachNote.Handler.Create(cn.Id.Value, exerciseId, cn.Text, cn.Order)
-                : CoachNote.Handler.CreateNew(exerciseId, cn.Text, cn.Order))
-            .ToList();
-    }
-    
-    /// <summary>
-    /// Maps equipment IDs to ExerciseEquipment entities
-    /// </summary>
-    private static ICollection<ExerciseEquipment> MapToEquipment(List<EquipmentId> equipmentIds, ExerciseId exerciseId)
-    {
-        return equipmentIds
-            .Where(id => !id.IsEmpty)
-            .Select(id => ExerciseEquipment.Handler.Create(exerciseId, id))
-            .ToList();
-    }
-    
-    /// <summary>
-    /// Maps body part IDs to ExerciseBodyPart entities
-    /// </summary>
-    private static ICollection<ExerciseBodyPart> MapToBodyParts(List<BodyPartId> bodyPartIds, ExerciseId exerciseId)
-    {
-        return bodyPartIds
-            .Where(id => !id.IsEmpty)
-            .Select(id => ExerciseBodyPart.Handler.Create(exerciseId, id))
-            .ToList();
-    }
-    
-    /// <summary>
-    /// Maps movement pattern IDs to ExerciseMovementPattern entities
-    /// </summary>
-    private static ICollection<ExerciseMovementPattern> MapToMovementPatterns(List<MovementPatternId> movementPatternIds, ExerciseId exerciseId)
-    {
-        return movementPatternIds
-            .Where(id => !id.IsEmpty)
-            .Select(id => ExerciseMovementPattern.Handler.Create(exerciseId, id))
-            .ToList();
-    }
-    
-    #endregion
 
     #region Validation Helper Methods
 
@@ -404,28 +330,6 @@ public class ExerciseService(
         
         // Non-REST exercises must have at least one muscle group
         return hasMuscleGroups;
-    }
-
-    #endregion
-
-
-    private static ExerciseDto MapToExerciseDto(Exercise exercise)
-    {
-        if (exercise.IsEmpty)
-        {
-            return ExerciseDto.Empty;
-        }
-        
-        return new ExerciseDtoBuilder(exercise)
-            .WithBasicInfo()
-            .WithCoachNotes()
-            .WithExerciseTypes()
-            .WithMuscleGroups()
-            .WithEquipment()
-            .WithBodyParts()
-            .WithMovementPatterns()
-            .WithReferenceData()
-            .Build();
     }
 
     #endregion
