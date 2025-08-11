@@ -63,7 +63,7 @@ public class ExerciseServiceRestExclusivityTests
         // Default behavior: all exercise types exist
         _mockExerciseTypeService
             .Setup(s => s.ExistsAsync(It.IsAny<ExerciseTypeId>()))
-            .ReturnsAsync(ServiceResult<bool>.Success(true));
+            .ReturnsAsync(ServiceResult<BooleanResultDto>.Success(BooleanResultDto.Create(true)));
         
         _exerciseService = new ExerciseService(_unitOfWorkProviderMock.Object, _mockExerciseTypeService.Object);
     }

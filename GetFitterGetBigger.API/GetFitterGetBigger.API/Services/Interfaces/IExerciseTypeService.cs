@@ -15,28 +15,35 @@ public interface IExerciseTypeService
     /// Gets all active exercise types
     /// </summary>
     /// <returns>A collection of active exercise types</returns>
-    Task<ServiceResult<IEnumerable<ReferenceDataDto>>> GetAllActiveAsync();
+    Task<ServiceResult<IEnumerable<ExerciseTypeDto>>> GetAllActiveAsync();
     
     /// <summary>
     /// Gets an exercise type by ID
     /// </summary>
     /// <param name="id">The exercise type ID</param>
     /// <returns>The exercise type if found</returns>
-    Task<ServiceResult<ReferenceDataDto>> GetByIdAsync(ExerciseTypeId id);
+    Task<ServiceResult<ExerciseTypeDto>> GetByIdAsync(ExerciseTypeId id);
+    
+    /// <summary>
+    /// Gets an exercise type by its ID string
+    /// </summary>
+    /// <param name="id">The exercise type ID as a string</param>
+    /// <returns>The exercise type if found</returns>
+    Task<ServiceResult<ExerciseTypeDto>> GetByIdAsync(string id);
     
     /// <summary>
     /// Gets an exercise type by value
     /// </summary>
     /// <param name="value">The exercise type value</param>
     /// <returns>The exercise type if found</returns>
-    Task<ServiceResult<ReferenceDataDto>> GetByValueAsync(string value);
+    Task<ServiceResult<ExerciseTypeDto>> GetByValueAsync(string value);
     
     /// <summary>
     /// Checks if an exercise type exists
     /// </summary>
     /// <param name="id">The exercise type ID to check</param>
-    /// <returns>A service result containing true if the exercise type exists, false otherwise</returns>
-    Task<ServiceResult<bool>> ExistsAsync(ExerciseTypeId id);
+    /// <returns>A service result containing a boolean result DTO</returns>
+    Task<ServiceResult<BooleanResultDto>> ExistsAsync(ExerciseTypeId id);
     
 
     /// <summary>

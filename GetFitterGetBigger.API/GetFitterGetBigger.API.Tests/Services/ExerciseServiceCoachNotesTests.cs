@@ -61,7 +61,7 @@ public class ExerciseServiceCoachNotesTests
         // Default behavior: all exercise types exist
         _mockExerciseTypeService
             .Setup(s => s.ExistsAsync(It.IsAny<ExerciseTypeId>()))
-            .ReturnsAsync(ServiceResult<bool>.Success(true));
+            .ReturnsAsync(ServiceResult<BooleanResultDto>.Success(BooleanResultDto.Create(true)));
         
         _exerciseService = new ExerciseService(_unitOfWorkProviderMock.Object, _mockExerciseTypeService.Object);
     }
@@ -209,7 +209,7 @@ public class ExerciseServiceCoachNotesTests
         // Mock ExistsAsync to return true only for the valid ID
         _mockExerciseTypeService
             .Setup(s => s.ExistsAsync(validId))
-            .ReturnsAsync(ServiceResult<bool>.Success(true));
+            .ReturnsAsync(ServiceResult<BooleanResultDto>.Success(BooleanResultDto.Create(true)));
         
         Exercise? capturedExercise = null;
         _exerciseRepositoryMock.Setup(r => r.AddAsync(It.IsAny<Exercise>()))
