@@ -10,12 +10,16 @@ Feature: Body Parts Caching
 
   @caching @reference-data
   Scenario: Calling get all body parts twice should only hit database once
+    # First call should hit the database
     When I send a GET request to "/api/ReferenceTables/BodyParts"
     Then the response status should be 200
     And the database query count should be 1
+    # Reset counter to clearly show second call uses cache
+    Given I reset the database query counter
+    # Second call should use cache and NOT hit the database
     When I send a GET request to "/api/ReferenceTables/BodyParts"
     Then the response status should be 200
-    And the database query count should be 1
+    And the database query count should be 0
     
   @caching @reference-data
   Scenario: Calling get body part by ID twice should only hit database once
@@ -23,12 +27,16 @@ Feature: Body Parts Caching
     And the response contains at least 1 item
     And I store the first item from the response as "firstBodyPart"
     And I reset the database query counter
+    # First call should hit the database
     When I send a GET request to "/api/ReferenceTables/BodyParts/<firstBodyPart.id>"
     Then the response status should be 200
     And the database query count should be 1
+    # Reset counter to clearly show second call uses cache
+    Given I reset the database query counter
+    # Second call should use cache and NOT hit the database
     When I send a GET request to "/api/ReferenceTables/BodyParts/<firstBodyPart.id>"
     Then the response status should be 200
-    And the database query count should be 1
+    And the database query count should be 0
 
   @caching @reference-data
   Scenario: Different body part IDs should result in separate cache entries
@@ -57,9 +65,13 @@ Feature: Body Parts Caching
     Given I send a GET request to "/api/ReferenceTables/BodyParts"
     And the response contains an item with value "Chest"
     And I reset the database query counter
+    # First call should hit the database
     When I send a GET request to "/api/ReferenceTables/BodyParts/ByValue/Chest"
     Then the response status should be 200
     And the database query count should be 1
+    # Reset counter to clearly show second call uses cache
+    Given I reset the database query counter
+    # Second call should use cache and NOT hit the database
     When I send a GET request to "/api/ReferenceTables/BodyParts/ByValue/Chest"
     Then the response status should be 200
-    And the database query count should be 1
+    And the database query count should be 0

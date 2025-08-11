@@ -36,6 +36,7 @@ When tests fail, check IN THIS ORDER:
 3. **Test Type** - Unit test (needs mocks) or Integration test (needs seed data)?
 4. **Navigation Properties** - Are they loaded after insert/update?
 5. **Feature File Isolation** - Are conflicting tests in the same `.feature` file? (See TestingStandards.md)
+6. **Query Count Ambiguity** - Are you using cumulative counts? Use Reset & Recount pattern!
 
 ## 🎯 Key Patterns to Remember
 
@@ -43,6 +44,22 @@ When tests fail, check IN THIS ORDER:
 ```csharp
 _repositoryMock.Setup(r => r.GetByIdAsync(It.IsAny<TId>()))
     .ReturnsAsync(entity);
+```
+
+### Query Count Testing Pattern (Reset & Recount)
+```gherkin
+# ❌ WRONG - Ambiguous cumulative count
+When I call API first time
+Then database query count should be 1
+When I call API second time  
+Then database query count should be 1  # Is cache working? Unclear!
+
+# ✅ RIGHT - Clear with reset
+When I call API first time
+Then database query count should be 1
+Given I reset the database query counter  # <-- CRITICAL!
+When I call API second time
+Then database query count should be 0  # Crystal clear: cache is working!
 ```
 
 ### Navigation Loading Pattern

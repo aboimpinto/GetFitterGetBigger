@@ -96,6 +96,7 @@
 - Mock patterns and verification
 - BDD integration testing approach
 - **NEW**: Feature file test isolation patterns
+- **NEW**: Non-cumulative query counting pattern (Reset & Recount)
 
 ### Data Access Patterns
 

@@ -10,12 +10,16 @@ Feature: Exercise Weight Type Caching
 
   @caching @reference-data
   Scenario: Calling get all exercise weight types twice should only hit database once
+    # First call should hit the database
     When I send a GET request to "/api/ReferenceTables/ExerciseWeightTypes"
     Then the response status should be 200
     And the database query count should be 1
+    # Reset counter to clearly show second call uses cache
+    Given I reset the database query counter
+    # Second call should use cache and NOT hit the database
     When I send a GET request to "/api/ReferenceTables/ExerciseWeightTypes"
     Then the response status should be 200
-    And the database query count should be 1
+    And the database query count should be 0
     
   @caching @reference-data
   Scenario: Calling get exercise weight type by ID twice should only hit database once
@@ -23,21 +27,29 @@ Feature: Exercise Weight Type Caching
     And the response contains at least 1 item
     And I store the first item from the response as "firstExerciseWeightType"
     And I reset the database query counter
+    # First call should hit the database
     When I send a GET request to "/api/ReferenceTables/ExerciseWeightTypes/<firstExerciseWeightType.id>"
     Then the response status should be 200
     And the database query count should be 1
+    # Reset counter to clearly show second call uses cache
+    Given I reset the database query counter
+    # Second call should use cache and NOT hit the database
     When I send a GET request to "/api/ReferenceTables/ExerciseWeightTypes/<firstExerciseWeightType.id>"
     Then the response status should be 200
-    And the database query count should be 1
+    And the database query count should be 0
     
   @caching @reference-data
   Scenario: Get by value should also use cache
     Given I send a GET request to "/api/ReferenceTables/ExerciseWeightTypes"
     And the response contains an item with value "Weight Required"
     And I reset the database query counter
+    # First call should hit the database
     When I send a GET request to "/api/ReferenceTables/ExerciseWeightTypes/ByValue/Weight Required"
     Then the response status should be 200
     And the database query count should be 1
+    # Reset counter to clearly show second call uses cache
+    Given I reset the database query counter
+    # Second call should use cache and NOT hit the database
     When I send a GET request to "/api/ReferenceTables/ExerciseWeightTypes/ByValue/Weight Required"
     Then the response status should be 200
-    And the database query count should be 1
+    And the database query count should be 0

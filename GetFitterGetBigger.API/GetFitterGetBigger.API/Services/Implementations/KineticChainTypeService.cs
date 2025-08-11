@@ -4,27 +4,42 @@ using GetFitterGetBigger.API.Models;
 using GetFitterGetBigger.API.Models.Entities;
 using GetFitterGetBigger.API.Models.SpecializedIds;
 using GetFitterGetBigger.API.Repositories.Interfaces;
+using GetFitterGetBigger.API.Services.Cache;
 using GetFitterGetBigger.API.Services.Interfaces;
 using GetFitterGetBigger.API.Services.Results;
 using GetFitterGetBigger.API.Services.Validation;
 using Olimpo.EntityFramework.Persistency;
+using CacheKeyGenerator = GetFitterGetBigger.API.Utilities.CacheKeyGenerator;
 
 namespace GetFitterGetBigger.API.Services.Implementations;
 
 /// <summary>
-/// Service implementation for kinetic_chain_type operations
-/// This service focuses solely on business logic and data access
-/// Caching is handled by the wrapping KineticChainTypeReferenceService layer
+/// Service implementation for kinetic chain type operations with integrated eternal caching
+/// KineticChainTypes are pure reference data that never changes after deployment
 /// </summary>
 public class KineticChainTypeService(
     IUnitOfWorkProvider<FitnessDbContext> unitOfWorkProvider,
+    IEternalCacheService cacheService,
     ILogger<KineticChainTypeService> logger) : IKineticChainTypeService
 {
     private readonly IUnitOfWorkProvider<FitnessDbContext> _unitOfWorkProvider = unitOfWorkProvider;
+    private readonly IEternalCacheService _cacheService = cacheService;
     private readonly ILogger<KineticChainTypeService> _logger = logger;
 
     /// <inheritdoc/>
     public async Task<ServiceResult<IEnumerable<ReferenceDataDto>>> GetAllActiveAsync()
+    {
+        var cacheKey = CacheKeyGenerator.GetAllKey("KineticChainTypes");
+        
+        return await CacheLoad.For<IEnumerable<ReferenceDataDto>>(_cacheService, cacheKey)
+            .WithLogging(_logger, "KineticChainTypes")
+            .WithAutoCacheAsync(LoadAllActiveFromDatabaseAsync);
+    }
+    
+    /// <summary>
+    /// Loads all active KineticChainTypes from the database and maps to DTOs
+    /// </summary>
+    private async Task<ServiceResult<IEnumerable<ReferenceDataDto>>> LoadAllActiveFromDatabaseAsync()
     {
         using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
         var repository = unitOfWork.GetRepository<IKineticChainTypeRepository>();
@@ -32,7 +47,7 @@ public class KineticChainTypeService(
         
         var dtos = entities.Select(MapToDto).ToList();
         
-        _logger.LogInformation("Loaded {Count} active kinetic_chain_types", dtos.Count);
+        _logger.LogInformation("Loaded {Count} active kinetic chain types", dtos.Count);
         return ServiceResult<IEnumerable<ReferenceDataDto>>.Success(dtos);
     }
 
@@ -41,45 +56,43 @@ public class KineticChainTypeService(
     {
         return await ServiceValidate.For<ReferenceDataDto>()
             .EnsureNotEmpty(id, KineticChainTypeErrorMessages.InvalidIdFormat)
-            .WithServiceResultAsync(() => LoadByIdFromDatabaseAsync(id))
-            .ThenMatchDataAsync<ReferenceDataDto, ReferenceDataDto>(
-                whenEmpty: () => Task.FromResult(
-                    ServiceResult<ReferenceDataDto>.Failure(
-                        ReferenceDataDto.Empty,
-                        ServiceError.NotFound("KineticChainType", id.ToString()))),
-                whenNotEmpty: dto => Task.FromResult(
-                    ServiceResult<ReferenceDataDto>.Success(dto))
-            );
-    }
-    
-    /// <summary>
-    /// Gets a kinetic_chain_type by its ID string
-    /// </summary>
-    /// <param name="id">The kinetic_chain_type ID as a string</param>
-    /// <returns>A service result containing the kinetic_chain_type if found</returns>
-    public async Task<ServiceResult<ReferenceDataDto>> GetByIdAsync(string id)
-    {
-        return await ServiceValidate.For<ReferenceDataDto>()
-            .EnsureNotWhiteSpace(id, KineticChainTypeErrorMessages.IdCannotBeEmpty)
             .MatchAsync(
                 whenValid: async () =>
                 {
-                    var kinetic_chain_typeId = KineticChainTypeId.ParseOrEmpty(id);
-                    return await ServiceValidate.For<ReferenceDataDto>()
-                        .EnsureNotEmpty(kinetic_chain_typeId, KineticChainTypeErrorMessages.InvalidIdFormat)
-                        .WithServiceResultAsync(() => LoadByIdFromDatabaseAsync(kinetic_chain_typeId))
-                        .ThenMatchDataAsync<ReferenceDataDto, ReferenceDataDto>(
-                            whenEmpty: () => Task.FromResult(
-                                ServiceResult<ReferenceDataDto>.Failure(
+                    var cacheKey = CacheKeyGenerator.GetByIdKey("KineticChainTypes", id.ToString());
+                    
+                    return await CacheLoad.For<ReferenceDataDto>(_cacheService, cacheKey)
+                        .WithLogging(_logger, "KineticChainType")
+                        .WithAutoCacheAsync(async () =>
+                        {
+                            var result = await LoadByIdFromDatabaseAsync(id);
+                            // Convert Empty to NotFound at the API layer
+                            if (result.IsSuccess && result.Data.IsEmpty)
+                            {
+                                return ServiceResult<ReferenceDataDto>.Failure(
                                     ReferenceDataDto.Empty,
-                                    ServiceError.NotFound("KineticChainType", id))),
-                            whenNotEmpty: dto => Task.FromResult(
-                                ServiceResult<ReferenceDataDto>.Success(dto))
-                        );
+                                    ServiceError.NotFound("KineticChainType", id.ToString()));
+                            }
+                            return result;
+                        });
                 }
             );
     }
     
+    /// <summary>
+    /// Gets a kinetic chain type by its ID string
+    /// </summary>
+    /// <param name="id">The kinetic chain type ID as a string</param>
+    /// <returns>A service result containing the kinetic chain type if found</returns>
+    public async Task<ServiceResult<ReferenceDataDto>> GetByIdAsync(string id)
+    {
+        var kineticChainTypeId = KineticChainTypeId.ParseOrEmpty(id);
+        return await GetByIdAsync(kineticChainTypeId);
+    }
+    
+    /// <summary>
+    /// Loads a KineticChainType by ID from the database and maps to DTO
+    /// </summary>
     private async Task<ServiceResult<ReferenceDataDto>> LoadByIdFromDatabaseAsync(KineticChainTypeId id)
     {
         using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
@@ -96,17 +109,32 @@ public class KineticChainTypeService(
     {
         return await ServiceValidate.For<ReferenceDataDto>()
             .EnsureNotWhiteSpace(value, KineticChainTypeErrorMessages.ValueCannotBeEmptyEntity)
-            .WithServiceResultAsync(() => LoadByValueFromDatabaseAsync(value))
-            .ThenMatchDataAsync<ReferenceDataDto, ReferenceDataDto>(
-                whenEmpty: () => Task.FromResult(
-                    ServiceResult<ReferenceDataDto>.Failure(
-                        ReferenceDataDto.Empty,
-                        ServiceError.NotFound("KineticChainType", value))),
-                whenNotEmpty: dto => Task.FromResult(
-                    ServiceResult<ReferenceDataDto>.Success(dto))
+            .MatchAsync(
+                whenValid: async () =>
+                {
+                    var cacheKey = CacheKeyGenerator.GetByValueKey("KineticChainTypes", value);
+                    
+                    return await CacheLoad.For<ReferenceDataDto>(_cacheService, cacheKey)
+                        .WithLogging(_logger, "KineticChainType")
+                        .WithAutoCacheAsync(async () =>
+                        {
+                            var result = await LoadByValueFromDatabaseAsync(value);
+                            // Convert Empty to NotFound at the API layer
+                            if (result.IsSuccess && result.Data.IsEmpty)
+                            {
+                                return ServiceResult<ReferenceDataDto>.Failure(
+                                    ReferenceDataDto.Empty,
+                                    ServiceError.NotFound("KineticChainType", value));
+                            }
+                            return result;
+                        });
+                }
             );
     }
     
+    /// <summary>
+    /// Loads a KineticChainType by value from the database and maps to DTO
+    /// </summary>
     private async Task<ServiceResult<ReferenceDataDto>> LoadByValueFromDatabaseAsync(string value)
     {
         using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
@@ -126,10 +154,11 @@ public class KineticChainTypeService(
             .MatchAsync(
                 whenValid: async () =>
                 {
-                    using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
-                    var repository = unitOfWork.GetRepository<IKineticChainTypeRepository>();
-                    var exists = await repository.ExistsAsync(id);
-                    return ServiceResult<BooleanResultDto>.Success(new BooleanResultDto { Value = exists });
+                    // Leverage the GetById cache for existence checks
+                    var result = await GetByIdAsync(id);
+                    return ServiceResult<BooleanResultDto>.Success(
+                        BooleanResultDto.Create(result.IsSuccess && !result.Data.IsEmpty)
+                    );
                 }
             );
     }
@@ -140,6 +169,9 @@ public class KineticChainTypeService(
     /// </summary>
     private ReferenceDataDto MapToDto(KineticChainType entity)
     {
+        if (entity.IsEmpty)
+            return ReferenceDataDto.Empty;
+            
         return new ReferenceDataDto
         {
             Id = entity.KineticChainTypeId.ToString(),

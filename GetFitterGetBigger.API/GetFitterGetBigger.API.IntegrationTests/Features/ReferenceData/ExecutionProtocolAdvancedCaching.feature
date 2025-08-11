@@ -35,21 +35,29 @@ Feature: Execution Protocol Advanced Caching
     Given I send a GET request to "/api/ReferenceTables/ExecutionProtocols"
     And the response contains an item with value "Standard"
     And I reset the database query counter
+    # First call should hit the database
     When I send a GET request to "/api/ReferenceTables/ExecutionProtocols/ByValue/Standard"
     Then the response status should be 200
     And the database query count should be 1
+    # Reset counter to clearly show second call uses cache
+    Given I reset the database query counter
+    # Second call should use cache and NOT hit the database
     When I send a GET request to "/api/ReferenceTables/ExecutionProtocols/ByValue/Standard"
     Then the response status should be 200
-    And the database query count should be 1
+    And the database query count should be 0
 
   @caching @reference-data
   Scenario: Get by code should also use cache
     Given I send a GET request to "/api/ReferenceTables/ExecutionProtocols"
     And the response contains an item with code "STANDARD"
     And I reset the database query counter
+    # First call should hit the database
     When I send a GET request to "/api/ReferenceTables/ExecutionProtocols/ByCode/STANDARD"
     Then the response status should be 200
     And the database query count should be 1
+    # Reset counter to clearly show second call uses cache
+    Given I reset the database query counter
+    # Second call should use cache and NOT hit the database
     When I send a GET request to "/api/ReferenceTables/ExecutionProtocols/ByCode/STANDARD"
     Then the response status should be 200
-    And the database query count should be 1
+    And the database query count should be 0

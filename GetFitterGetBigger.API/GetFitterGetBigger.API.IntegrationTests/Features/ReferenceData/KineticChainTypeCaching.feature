@@ -1,6 +1,6 @@
-Feature: Exercise Types Caching
+Feature: KineticChainType Caching
   As a system administrator
-  I want exercise types data to be cached
+  I want kinetic chain type data to be cached
   So that repeated requests don't hit the database unnecessarily
 
   Background:
@@ -9,14 +9,15 @@ Feature: Exercise Types Caching
     And I am tracking database queries
 
   @caching @reference-data
-  Scenario: Calling get all exercise types twice should only hit database once
+  Scenario: Calling get all kinetic chain types twice should only hit database once
     # First call should hit the database
-    When I send a GET request to "/api/ReferenceTables/ExerciseTypes"
+    When I send a GET request to "/api/ReferenceTables/KineticChainTypes"
     Then the response status should be 200
     And the database query count should be 1
     # Reset counter to clearly show second call uses cache
     Given I reset the database query counter
     # Second call should use cache and NOT hit the database
-    When I send a GET request to "/api/ReferenceTables/ExerciseTypes"
+    When I send a GET request to "/api/ReferenceTables/KineticChainTypes"
     Then the response status should be 200
     And the database query count should be 0
+    

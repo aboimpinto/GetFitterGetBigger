@@ -19,7 +19,7 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.ReferenceData
     
     [System.CodeDom.Compiler.GeneratedCodeAttribute("TechTalk.SpecFlow", "4.0.0.0")]
     [System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
-    public partial class ExecutionProtocolCachingFeature : object, Xunit.IClassFixture<ExecutionProtocolCachingFeature.FixtureData>, Xunit.IAsyncLifetime
+    public partial class KineticChainTypeAdvancedCachingFeature : object, Xunit.IClassFixture<KineticChainTypeAdvancedCachingFeature.FixtureData>, Xunit.IAsyncLifetime
     {
         
         private static TechTalk.SpecFlow.ITestRunner testRunner;
@@ -28,7 +28,7 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.ReferenceData
         
         private Xunit.Abstractions.ITestOutputHelper _testOutputHelper;
         
-        public ExecutionProtocolCachingFeature(ExecutionProtocolCachingFeature.FixtureData fixtureData, Xunit.Abstractions.ITestOutputHelper testOutputHelper)
+        public KineticChainTypeAdvancedCachingFeature(KineticChainTypeAdvancedCachingFeature.FixtureData fixtureData, Xunit.Abstractions.ITestOutputHelper testOutputHelper)
         {
             this._testOutputHelper = testOutputHelper;
         }
@@ -36,8 +36,9 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.ReferenceData
         public static async System.Threading.Tasks.Task FeatureSetupAsync()
         {
             testRunner = TechTalk.SpecFlow.TestRunnerManager.GetTestRunnerForAssembly(null, TechTalk.SpecFlow.xUnit.SpecFlowPlugin.XUnitParallelWorkerTracker.Instance.GetWorkerId());
-            TechTalk.SpecFlow.FeatureInfo featureInfo = new TechTalk.SpecFlow.FeatureInfo(new System.Globalization.CultureInfo("en-US"), "Features/ReferenceData", "Execution Protocol Caching", "  As a system administrator\n  I want execution protocol data to be cached\n  So th" +
-                    "at repeated requests don\'t hit the database unnecessarily", ProgrammingLanguage.CSharp, featureTags);
+            TechTalk.SpecFlow.FeatureInfo featureInfo = new TechTalk.SpecFlow.FeatureInfo(new System.Globalization.CultureInfo("en-US"), "Features/ReferenceData", "KineticChainType Advanced Caching", "  As a system administrator\n  I want kinetic chain type data to be cached properl" +
+                    "y for complex scenarios\n  So that the cache handles different access patterns co" +
+                    "rrectly", ProgrammingLanguage.CSharp, featureTags);
             await testRunner.OnFeatureStartAsync(featureInfo);
         }
         
@@ -91,18 +92,18 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.ReferenceData
             await this.TestTearDownAsync();
         }
         
-        [Xunit.SkippableFactAttribute(DisplayName="Calling get all execution protocols twice should only hit database once")]
-        [Xunit.TraitAttribute("FeatureTitle", "Execution Protocol Caching")]
-        [Xunit.TraitAttribute("Description", "Calling get all execution protocols twice should only hit database once")]
+        [Xunit.SkippableFactAttribute(DisplayName="Different kinetic chain type IDs should result in separate cache entries")]
+        [Xunit.TraitAttribute("FeatureTitle", "KineticChainType Advanced Caching")]
+        [Xunit.TraitAttribute("Description", "Different kinetic chain type IDs should result in separate cache entries")]
         [Xunit.TraitAttribute("Category", "caching")]
         [Xunit.TraitAttribute("Category", "reference-data")]
-        public async System.Threading.Tasks.Task CallingGetAllExecutionProtocolsTwiceShouldOnlyHitDatabaseOnce()
+        public async System.Threading.Tasks.Task DifferentKineticChainTypeIDsShouldResultInSeparateCacheEntries()
         {
             string[] tagsOfScenario = new string[] {
                     "caching",
                     "reference-data"};
             System.Collections.Specialized.OrderedDictionary argumentsOfScenario = new System.Collections.Specialized.OrderedDictionary();
-            TechTalk.SpecFlow.ScenarioInfo scenarioInfo = new TechTalk.SpecFlow.ScenarioInfo("Calling get all execution protocols twice should only hit database once", null, tagsOfScenario, argumentsOfScenario, featureTags);
+            TechTalk.SpecFlow.ScenarioInfo scenarioInfo = new TechTalk.SpecFlow.ScenarioInfo("Different kinetic chain type IDs should result in separate cache entries", null, tagsOfScenario, argumentsOfScenario, featureTags);
             this.ScenarioInitialize(scenarioInfo);
             if ((TagHelper.ContainsIgnoreTag(tagsOfScenario) || TagHelper.ContainsIgnoreTag(featureTags)))
             {
@@ -112,29 +113,39 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.ReferenceData
             {
                 await this.ScenarioStartAsync();
                 await this.FeatureBackgroundAsync();
-                await testRunner.WhenAsync("I send a GET request to \"/api/ReferenceTables/ExecutionProtocols\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
+                await testRunner.GivenAsync("I am tracking database queries", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Given ");
+                await testRunner.AndAsync("I send a GET request to \"/api/ReferenceTables/KineticChainTypes\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
+                await testRunner.AndAsync("the response contains at least 2 items", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
+                await testRunner.AndAsync("I store the first item from the response as \"firstKineticChainType\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
+                await testRunner.AndAsync("I store the second item from the response as \"secondKineticChainType\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
+                await testRunner.WhenAsync("I send a GET request to \"/api/ReferenceTables/KineticChainTypes/<firstKineticChai" +
+                        "nType.id>\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
                 await testRunner.ThenAsync("the response status should be 200", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
-                await testRunner.AndAsync("the database query count should be 1", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
-                await testRunner.GivenAsync("I reset the database query counter", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Given ");
-                await testRunner.WhenAsync("I send a GET request to \"/api/ReferenceTables/ExecutionProtocols\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
+                await testRunner.AndAsync("the response property \"id\" should be \"<firstKineticChainType.id>\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
+                await testRunner.WhenAsync("I send a GET request to \"/api/ReferenceTables/KineticChainTypes/<secondKineticCha" +
+                        "inType.id>\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
                 await testRunner.ThenAsync("the response status should be 200", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
-                await testRunner.AndAsync("the database query count should be 0", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
+                await testRunner.AndAsync("the response property \"id\" should be \"<secondKineticChainType.id>\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
+                await testRunner.WhenAsync("I send a GET request to \"/api/ReferenceTables/KineticChainTypes/<firstKineticChai" +
+                        "nType.id>\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
+                await testRunner.ThenAsync("the response status should be 200", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
+                await testRunner.AndAsync("the response property \"id\" should be \"<firstKineticChainType.id>\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
             }
             await this.ScenarioCleanupAsync();
         }
         
-        [Xunit.SkippableFactAttribute(DisplayName="Calling get execution protocol by ID twice should only hit database once")]
-        [Xunit.TraitAttribute("FeatureTitle", "Execution Protocol Caching")]
-        [Xunit.TraitAttribute("Description", "Calling get execution protocol by ID twice should only hit database once")]
+        [Xunit.SkippableFactAttribute(DisplayName="Get by value should also use cache")]
+        [Xunit.TraitAttribute("FeatureTitle", "KineticChainType Advanced Caching")]
+        [Xunit.TraitAttribute("Description", "Get by value should also use cache")]
         [Xunit.TraitAttribute("Category", "caching")]
         [Xunit.TraitAttribute("Category", "reference-data")]
-        public async System.Threading.Tasks.Task CallingGetExecutionProtocolByIDTwiceShouldOnlyHitDatabaseOnce()
+        public async System.Threading.Tasks.Task GetByValueShouldAlsoUseCache()
         {
             string[] tagsOfScenario = new string[] {
                     "caching",
                     "reference-data"};
             System.Collections.Specialized.OrderedDictionary argumentsOfScenario = new System.Collections.Specialized.OrderedDictionary();
-            TechTalk.SpecFlow.ScenarioInfo scenarioInfo = new TechTalk.SpecFlow.ScenarioInfo("Calling get execution protocol by ID twice should only hit database once", null, tagsOfScenario, argumentsOfScenario, featureTags);
+            TechTalk.SpecFlow.ScenarioInfo scenarioInfo = new TechTalk.SpecFlow.ScenarioInfo("Get by value should also use cache", null, tagsOfScenario, argumentsOfScenario, featureTags);
             this.ScenarioInitialize(scenarioInfo);
             if ((TagHelper.ContainsIgnoreTag(tagsOfScenario) || TagHelper.ContainsIgnoreTag(featureTags)))
             {
@@ -144,17 +155,16 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.ReferenceData
             {
                 await this.ScenarioStartAsync();
                 await this.FeatureBackgroundAsync();
-                await testRunner.GivenAsync("I send a GET request to \"/api/ReferenceTables/ExecutionProtocols\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Given ");
-                await testRunner.AndAsync("the response contains at least 1 item", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
-                await testRunner.AndAsync("I store the first item from the response as \"firstExecutionProtocol\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
+                await testRunner.GivenAsync("I send a GET request to \"/api/ReferenceTables/KineticChainTypes\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Given ");
+                await testRunner.AndAsync("the response contains an item with value \"Compound\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
                 await testRunner.AndAsync("I reset the database query counter", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
-                await testRunner.WhenAsync("I send a GET request to \"/api/ReferenceTables/ExecutionProtocols/<firstExecutionP" +
-                        "rotocol.executionProtocolId>\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
+                await testRunner.WhenAsync("I send a GET request to \"/api/ReferenceTables/KineticChainTypes/ByValue/Compound\"" +
+                        "", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
                 await testRunner.ThenAsync("the response status should be 200", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
                 await testRunner.AndAsync("the database query count should be 1", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
                 await testRunner.GivenAsync("I reset the database query counter", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Given ");
-                await testRunner.WhenAsync("I send a GET request to \"/api/ReferenceTables/ExecutionProtocols/<firstExecutionP" +
-                        "rotocol.executionProtocolId>\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
+                await testRunner.WhenAsync("I send a GET request to \"/api/ReferenceTables/KineticChainTypes/ByValue/Compound\"" +
+                        "", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
                 await testRunner.ThenAsync("the response status should be 200", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
                 await testRunner.AndAsync("the database query count should be 0", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
             }
@@ -168,12 +178,12 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.ReferenceData
             
             async System.Threading.Tasks.Task Xunit.IAsyncLifetime.InitializeAsync()
             {
-                await ExecutionProtocolCachingFeature.FeatureSetupAsync();
+                await KineticChainTypeAdvancedCachingFeature.FeatureSetupAsync();
             }
             
             async System.Threading.Tasks.Task Xunit.IAsyncLifetime.DisposeAsync()
             {
-                await ExecutionProtocolCachingFeature.FeatureTearDownAsync();
+                await KineticChainTypeAdvancedCachingFeature.FeatureTearDownAsync();
             }
         }
     }

@@ -103,7 +103,6 @@ builder.Services.AddTransient<IExerciseTypeService, ExerciseTypeService>();
 builder.Services.AddTransient<IExerciseWeightTypeService, ExerciseWeightTypeService>();
 
 builder.Services.AddTransient<IKineticChainTypeService, KineticChainTypeService>();
-builder.Services.AddTransient<KineticChainTypeReferenceService>();
 
 builder.Services.AddTransient<IMetricTypeService, MetricTypeService>();
 builder.Services.AddTransient<MetricTypeReferenceService>();

@@ -313,6 +313,137 @@ public async Task GetAllActiveAsync_WhenCacheMiss_CallsRepositoryAndCaches()
 }
 ```
 
+## Testing Query Counts and Performance Metrics
+
+### ⚠️ CRITICAL: Non-Cumulative Query Counting Pattern
+
+**PROBLEM**: When testing database query counts (for cache verification, performance testing, or optimization), cumulative counts make tests ambiguous and hard to understand.
+
+#### The Problem with Cumulative Counts
+
+```gherkin
+# ❌ BAD - Ambiguous cumulative counting
+Scenario: Calling get by ID twice should only hit database once
+    Given I reset the database query counter
+    When I send a GET request to "/api/items/123"
+    Then the database query count should be 1
+    When I send a GET request to "/api/items/123"  
+    Then the database query count should be 1  # Still 1? Or cumulative 2?
+```
+
+This test is ambiguous:
+- Does "1" mean no additional queries (cache working)?
+- Does "1" mean we're asserting wrong and cache isn't working?
+- Reader must mentally track cumulative state
+
+#### The Solution: Reset and Recount Pattern
+
+```gherkin
+# ✅ GOOD - Clear, explicit counting with resets
+Scenario: Calling get by ID twice should only hit database once
+    Given I reset the database query counter
+    # First call should hit the database
+    When I send a GET request to "/api/items/123"
+    Then the response status should be 200
+    And the database query count should be 1
+    # Reset counter to clearly show second call uses cache
+    Given I reset the database query counter
+    # Second call should use cache and NOT hit the database
+    When I send a GET request to "/api/items/123"
+    Then the response status should be 200
+    And the database query count should be 0  # Crystal clear: NO database hit!
+```
+
+#### Benefits of Reset Pattern
+
+1. **Unambiguous**: `0` clearly means "no database hit"
+2. **Self-documenting**: Comments + reset make intent obvious
+3. **Easier debugging**: Each phase is isolated
+4. **Better readability**: No mental math required
+5. **Failure clarity**: When it fails, you know exactly which call had the issue
+
+#### Applying to Different Scenarios
+
+##### Cache Testing
+```gherkin
+Scenario: GetAll then GetById should use separate caches
+    Given I reset the database query counter
+    When I send a GET request to "/api/items"
+    Then the database query count should be 1
+    Given I reset the database query counter
+    When I send a GET request to "/api/items/123"
+    Then the database query count should be 1  # Different cache key
+    Given I reset the database query counter
+    When I send a GET request to "/api/items/123"
+    Then the database query count should be 0  # Now cached
+```
+
+##### Performance Testing
+```gherkin
+Scenario: Bulk operation should use optimized queries
+    Given I reset the database query counter
+    When I bulk create 10 items
+    Then the database query count should be 2  # 1 for validation, 1 for insert
+    Given I reset the database query counter
+    When I request all 10 items
+    Then the database query count should be 1  # Single query with includes
+```
+
+##### N+1 Query Detection
+```gherkin
+Scenario: Loading items with relationships should avoid N+1
+    Given 5 items exist with categories
+    And I reset the database query counter
+    When I request all items with categories
+    Then the database query count should be 1  # Not 6 (1+5 N+1 problem)
+```
+
+#### Implementation Pattern
+
+```csharp
+[Given(@"I reset the database query counter")]
+public void GivenIResetTheDatabaseQueryCounter()
+{
+    var tracker = _fixture.Factory.GetQueryTracker();
+    tracker?.Reset();
+}
+
+[Then(@"the database query count should be (.*)")]
+public void ThenTheDatabaseQueryCountShouldBe(int expectedCount)
+{
+    var tracker = _fixture.Factory.GetQueryTracker();
+    var actualCount = tracker.GetQueryCountForTable(_tableName);
+    
+    Assert.Equal(expectedCount, actualCount, 
+        $"Expected {expectedCount} queries but found {actualCount}. " +
+        $"Queries executed: {string.Join(", ", tracker.ExecutedQueries)}");
+}
+```
+
+#### Key Principles
+
+1. **Reset between measurements**: Always reset before measuring a new operation
+2. **Comment your intent**: Explain what each measurement is verifying
+3. **Use 0 for "no queries"**: Makes cache hits unmistakable
+4. **Group related assertions**: Reset marks boundaries between test phases
+5. **Be explicit**: Better to be verbose and clear than terse and ambiguous
+
+#### When to Apply This Pattern
+
+- ✅ Cache effectiveness testing
+- ✅ Query optimization verification
+- ✅ N+1 query prevention
+- ✅ Batch operation efficiency
+- ✅ Lazy loading verification
+- ✅ Any performance-critical path testing
+
+This pattern isn't limited to database queries - apply it to any cumulative metric:
+- API call counts
+- Event emissions
+- Message queue operations
+- File system operations
+- Network requests
+
 ## Integration Test Standards
 
 ### BDD Approach with SpecFlow

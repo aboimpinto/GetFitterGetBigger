@@ -92,43 +92,6 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.ReferenceData
             await this.TestTearDownAsync();
         }
         
-        [Xunit.SkippableFactAttribute(DisplayName="Calling get exercise type by ID twice should only hit database once")]
-        [Xunit.TraitAttribute("FeatureTitle", "Exercise Types Advanced Caching")]
-        [Xunit.TraitAttribute("Description", "Calling get exercise type by ID twice should only hit database once")]
-        [Xunit.TraitAttribute("Category", "caching")]
-        [Xunit.TraitAttribute("Category", "reference-data")]
-        public async System.Threading.Tasks.Task CallingGetExerciseTypeByIDTwiceShouldOnlyHitDatabaseOnce()
-        {
-            string[] tagsOfScenario = new string[] {
-                    "caching",
-                    "reference-data"};
-            System.Collections.Specialized.OrderedDictionary argumentsOfScenario = new System.Collections.Specialized.OrderedDictionary();
-            TechTalk.SpecFlow.ScenarioInfo scenarioInfo = new TechTalk.SpecFlow.ScenarioInfo("Calling get exercise type by ID twice should only hit database once", null, tagsOfScenario, argumentsOfScenario, featureTags);
-            this.ScenarioInitialize(scenarioInfo);
-            if ((TagHelper.ContainsIgnoreTag(tagsOfScenario) || TagHelper.ContainsIgnoreTag(featureTags)))
-            {
-                testRunner.SkipScenario();
-            }
-            else
-            {
-                await this.ScenarioStartAsync();
-                await this.FeatureBackgroundAsync();
-                await testRunner.GivenAsync("I send a GET request to \"/api/ReferenceTables/ExerciseTypes\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Given ");
-                await testRunner.AndAsync("the response contains at least 1 item", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
-                await testRunner.AndAsync("I store the first item from the response as \"firstExerciseType\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
-                await testRunner.AndAsync("I reset the database query counter", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
-                await testRunner.WhenAsync("I send a GET request to \"/api/ReferenceTables/ExerciseTypes/<firstExerciseType.id" +
-                        ">\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
-                await testRunner.ThenAsync("the response status should be 200", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
-                await testRunner.AndAsync("the database query count should be 1", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
-                await testRunner.WhenAsync("I send a GET request to \"/api/ReferenceTables/ExerciseTypes/<firstExerciseType.id" +
-                        ">\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
-                await testRunner.ThenAsync("the response status should be 200", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
-                await testRunner.AndAsync("the database query count should be 1", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
-            }
-            await this.ScenarioCleanupAsync();
-        }
-        
         [Xunit.SkippableFactAttribute(DisplayName="Different exercise type IDs should result in separate cache entries")]
         [Xunit.TraitAttribute("FeatureTitle", "Exercise Types Advanced Caching")]
         [Xunit.TraitAttribute("Description", "Different exercise type IDs should result in separate cache entries")]
@@ -198,9 +161,10 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.ReferenceData
                 await testRunner.WhenAsync("I send a GET request to \"/api/ReferenceTables/ExerciseTypes/ByValue/Warmup\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
                 await testRunner.ThenAsync("the response status should be 200", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
                 await testRunner.AndAsync("the database query count should be 1", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
+                await testRunner.GivenAsync("I reset the database query counter", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Given ");
                 await testRunner.WhenAsync("I send a GET request to \"/api/ReferenceTables/ExerciseTypes/ByValue/Warmup\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
                 await testRunner.ThenAsync("the response status should be 200", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
-                await testRunner.AndAsync("the database query count should be 1", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
+                await testRunner.AndAsync("the database query count should be 0", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
             }
             await this.ScenarioCleanupAsync();
         }
