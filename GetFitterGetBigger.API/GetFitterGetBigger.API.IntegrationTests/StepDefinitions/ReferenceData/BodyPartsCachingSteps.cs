@@ -113,6 +113,7 @@ public class BodyPartsCachingSteps
             var e when e.Contains("/api/ReferenceTables/ExerciseWeightTypes") => "ExerciseWeightTypes",
             var e when e.Contains("/api/ReferenceTables/WorkoutCategories") => "WorkoutCategories",
             var e when e.Contains("/api/ReferenceTables/WorkoutObjectives") => "WorkoutObjectives",
+            var e when e.Contains("/api/workout-states") => "WorkoutStates",
             // Fallback to BodyParts for backward compatibility
             _ => "BodyParts"
         };

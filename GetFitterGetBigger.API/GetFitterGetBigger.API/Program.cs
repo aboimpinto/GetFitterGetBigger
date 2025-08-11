@@ -6,7 +6,6 @@ using GetFitterGetBigger.API.Repositories.Interfaces;
 using GetFitterGetBigger.API.Repositories.Implementations;
 using GetFitterGetBigger.API.Services.Interfaces;
 using GetFitterGetBigger.API.Services.Implementations;
-using GetFitterGetBigger.API.Services.ReferenceTables;
 using Microsoft.OpenApi.Models;
 using System.Reflection;
 using GetFitterGetBigger.API.Configuration;
@@ -114,8 +113,6 @@ builder.Services.AddTransient<IWorkoutCategoryService, WorkoutCategoryService>()
 
 builder.Services.AddTransient<IWorkoutObjectiveService, WorkoutObjectiveService>();
 
-builder.Services.AddTransient<IWorkoutStateService, WorkoutStateService>();
-builder.Services.AddTransient<WorkoutStateReferenceService>();
 
 builder.Services.AddTransient<IClaimService, ClaimService>();
 
