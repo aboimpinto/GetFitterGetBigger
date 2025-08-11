@@ -101,7 +101,6 @@ builder.Services.AddTransient<IExecutionProtocolService, ExecutionProtocolServic
 builder.Services.AddTransient<IExerciseTypeService, ExerciseTypeService>();
 
 builder.Services.AddTransient<IExerciseWeightTypeService, ExerciseWeightTypeService>();
-builder.Services.AddTransient<ExerciseWeightTypeReferenceService>();
 
 builder.Services.AddTransient<IKineticChainTypeService, KineticChainTypeService>();
 builder.Services.AddTransient<KineticChainTypeReferenceService>();

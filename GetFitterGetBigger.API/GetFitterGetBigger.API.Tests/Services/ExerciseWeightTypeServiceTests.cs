@@ -23,6 +23,7 @@ namespace GetFitterGetBigger.API.Tests.Services
         private readonly Mock<IUnitOfWorkProvider<FitnessDbContext>> _mockUnitOfWorkProvider;
         private readonly Mock<IReadOnlyUnitOfWork<FitnessDbContext>> _mockReadOnlyUnitOfWork;
         private readonly Mock<IExerciseWeightTypeRepository> _mockRepository;
+        private readonly Mock<IEternalCacheService> _mockCacheService;
         private readonly Mock<ILogger<ExerciseWeightTypeService>> _mockLogger;
         private readonly ExerciseWeightTypeService _service;
         
@@ -33,6 +34,7 @@ namespace GetFitterGetBigger.API.Tests.Services
             _mockUnitOfWorkProvider = new Mock<IUnitOfWorkProvider<FitnessDbContext>>();
             _mockReadOnlyUnitOfWork = new Mock<IReadOnlyUnitOfWork<FitnessDbContext>>();
             _mockRepository = new Mock<IExerciseWeightTypeRepository>();
+            _mockCacheService = new Mock<IEternalCacheService>();
             _mockLogger = new Mock<ILogger<ExerciseWeightTypeService>>();
             
             _mockUnitOfWorkProvider
@@ -43,8 +45,18 @@ namespace GetFitterGetBigger.API.Tests.Services
                 .Setup(x => x.GetRepository<IExerciseWeightTypeRepository>())
                 .Returns(_mockRepository.Object);
                 
+            // Setup cache to return cache miss by default
+            _mockCacheService
+                .Setup(x => x.GetAsync<IEnumerable<ReferenceDataDto>>(It.IsAny<string>()))
+                .ReturnsAsync(CacheResult<IEnumerable<ReferenceDataDto>>.Miss());
+                
+            _mockCacheService
+                .Setup(x => x.GetAsync<ReferenceDataDto>(It.IsAny<string>()))
+                .ReturnsAsync(CacheResult<ReferenceDataDto>.Miss());
+                
             _service = new ExerciseWeightTypeService(
                 _mockUnitOfWorkProvider.Object,
+                _mockCacheService.Object,
                 _mockLogger.Object);
                 
             // Initialize test data
@@ -96,9 +108,9 @@ namespace GetFitterGetBigger.API.Tests.Services
             // Arrange
             var cachedDtos = _testData.Select(MapToDto).ToList();
             
-            _mockRepository
-                .Setup(x => x.GetAllActiveAsync())
-                .ReturnsAsync(_testData);
+            _mockCacheService
+                .Setup(x => x.GetAsync<IEnumerable<ReferenceDataDto>>(It.IsAny<string>()))
+                .ReturnsAsync(CacheResult<IEnumerable<ReferenceDataDto>>.Hit(cachedDtos));
             
             // Act
             var result = await _service.GetAllActiveAsync();
@@ -106,19 +118,20 @@ namespace GetFitterGetBigger.API.Tests.Services
             // Assert
             Assert.True(result.IsSuccess);
             Assert.Equal(5, result.Data.Count());
-            _mockUnitOfWorkProvider.Verify(x => x.CreateReadOnly(), Times.Once);
-            _mockRepository.Verify(x => x.GetAllActiveAsync(), Times.Once);
+            _mockRepository.Verify(x => x.GetAllActiveAsync(), Times.Never);
         }
         
         [Fact]
         public async Task GetAllActiveAsync_WhenNotCached_LoadsFromDatabase()
         {
             // Arrange
+            _mockCacheService
+                .Setup(x => x.GetAsync<IEnumerable<ReferenceDataDto>>(It.IsAny<string>()))
+                .ReturnsAsync(CacheResult<IEnumerable<ReferenceDataDto>>.Miss());
                 
             _mockRepository
                 .Setup(x => x.GetAllActiveAsync())
                 .ReturnsAsync(_testData);
-                
             
             // Act
             var result = await _service.GetAllActiveAsync();
@@ -128,6 +141,7 @@ namespace GetFitterGetBigger.API.Tests.Services
             Assert.Equal(5, result.Data.Count());
             _mockUnitOfWorkProvider.Verify(x => x.CreateReadOnly(), Times.Once);
             _mockRepository.Verify(x => x.GetAllActiveAsync(), Times.Once);
+            _mockCacheService.Verify(x => x.SetAsync(It.IsAny<string>(), It.IsAny<IEnumerable<ReferenceDataDto>>()), Times.Once);
         }
         
         #endregion
@@ -154,26 +168,25 @@ namespace GetFitterGetBigger.API.Tests.Services
         {
             // Arrange
             var id = ExerciseWeightTypeTestConstants.BodyweightOnlyId;
-            var weightType = _testData[0];
-            var dto = new ReferenceDataDto
-                {
+            var cachedDto = new ReferenceDataDto
+            {
                 Id = id.ToString(),
                 Value = ExerciseWeightTypeTestConstants.BodyweightOnlyValue,
                 Description = ExerciseWeightTypeTestConstants.BodyweightOnlyDescription
             };
             
-            _mockRepository
-                .Setup(x => x.GetByIdAsync(id))
-                .ReturnsAsync(weightType);
+            _mockCacheService
+                .Setup(x => x.GetAsync<ReferenceDataDto>(It.IsAny<string>()))
+                .ReturnsAsync(CacheResult<ReferenceDataDto>.Hit(cachedDto));
             
             // Act
             var result = await _service.GetByIdAsync(id);
             
             // Assert
             Assert.True(result.IsSuccess);
-            Assert.Equal(dto.Id, result.Data.Id);
-            Assert.Equal(dto.Value, result.Data.Value);
-            _mockUnitOfWorkProvider.Verify(x => x.CreateReadOnly(), Times.Once);
+            Assert.Equal(cachedDto.Id, result.Data.Id);
+            Assert.Equal(cachedDto.Value, result.Data.Value);
+            _mockRepository.Verify(x => x.GetByIdAsync(It.IsAny<ExerciseWeightTypeId>()), Times.Never);
         }
         
         [Fact]
@@ -183,11 +196,13 @@ namespace GetFitterGetBigger.API.Tests.Services
             var weightType = _testData[0];
             var id = weightType.Id;
             
+            _mockCacheService
+                .Setup(x => x.GetAsync<ReferenceDataDto>(It.IsAny<string>()))
+                .ReturnsAsync(CacheResult<ReferenceDataDto>.Miss());
                 
             _mockRepository
                 .Setup(x => x.GetByIdAsync(id))
                 .ReturnsAsync(weightType);
-                
             
             // Act
             var result = await _service.GetByIdAsync(id);
@@ -198,6 +213,7 @@ namespace GetFitterGetBigger.API.Tests.Services
             Assert.Equal(weightType.Value, result.Data.Value);
             _mockUnitOfWorkProvider.Verify(x => x.CreateReadOnly(), Times.Once);
             _mockRepository.Verify(x => x.GetByIdAsync(id), Times.Once);
+            _mockCacheService.Verify(x => x.SetAsync(It.IsAny<string>(), It.IsAny<ReferenceDataDto>()), Times.Once);
         }
         
         [Fact]
@@ -206,6 +222,9 @@ namespace GetFitterGetBigger.API.Tests.Services
             // Arrange
             var id = ExerciseWeightTypeId.From(Guid.NewGuid());
             
+            _mockCacheService
+                .Setup(x => x.GetAsync<ReferenceDataDto>(It.IsAny<string>()))
+                .ReturnsAsync(CacheResult<ReferenceDataDto>.Miss());
                 
             _mockRepository
                 .Setup(x => x.GetByIdAsync(id))
@@ -254,25 +273,24 @@ namespace GetFitterGetBigger.API.Tests.Services
         {
             // Arrange
             var value = ExerciseWeightTypeTestConstants.BodyweightOnlyValue;
-            var weightType = _testData[0];
-            var dto = new ReferenceDataDto
-                {
+            var cachedDto = new ReferenceDataDto
+            {
                 Id = ExerciseWeightTypeTestConstants.BodyweightOnlyDtoId,
                 Value = value,
                 Description = ExerciseWeightTypeTestConstants.BodyweightOnlyDescription
             };
             
-            _mockRepository
-                .Setup(x => x.GetByValueAsync(value))
-                .ReturnsAsync(weightType);
+            _mockCacheService
+                .Setup(x => x.GetAsync<ReferenceDataDto>(It.IsAny<string>()))
+                .ReturnsAsync(CacheResult<ReferenceDataDto>.Hit(cachedDto));
             
             // Act
             var result = await _service.GetByValueAsync(value);
             
             // Assert
             Assert.True(result.IsSuccess);
-            Assert.Equal(dto.Value, result.Data.Value);
-            _mockUnitOfWorkProvider.Verify(x => x.CreateReadOnly(), Times.Once);
+            Assert.Equal(cachedDto.Value, result.Data.Value);
+            _mockRepository.Verify(x => x.GetByValueAsync(It.IsAny<string>()), Times.Never);
         }
         
         [Fact]
@@ -282,11 +300,13 @@ namespace GetFitterGetBigger.API.Tests.Services
             var weightType = _testData[0];
             var value = weightType.Value;
             
+            _mockCacheService
+                .Setup(x => x.GetAsync<ReferenceDataDto>(It.IsAny<string>()))
+                .ReturnsAsync(CacheResult<ReferenceDataDto>.Miss());
                 
             _mockRepository
                 .Setup(x => x.GetByValueAsync(value))
                 .ReturnsAsync(weightType);
-                
             
             // Act
             var result = await _service.GetByValueAsync(value);
@@ -296,6 +316,7 @@ namespace GetFitterGetBigger.API.Tests.Services
             Assert.Equal(value, result.Data.Value);
             _mockUnitOfWorkProvider.Verify(x => x.CreateReadOnly(), Times.Once);
             _mockRepository.Verify(x => x.GetByValueAsync(value), Times.Once);
+            _mockCacheService.Verify(x => x.SetAsync(It.IsAny<string>(), It.IsAny<ReferenceDataDto>()), Times.Once);
         }
         
         [Fact]
@@ -304,6 +325,9 @@ namespace GetFitterGetBigger.API.Tests.Services
             // Arrange
             var value = ExerciseWeightTypeTestConstants.NonExistentValue;
             
+            _mockCacheService
+                .Setup(x => x.GetAsync<ReferenceDataDto>(It.IsAny<string>()))
+                .ReturnsAsync(CacheResult<ReferenceDataDto>.Miss());
                 
             _mockRepository
                 .Setup(x => x.GetByValueAsync(value))
@@ -338,25 +362,24 @@ namespace GetFitterGetBigger.API.Tests.Services
         {
             // Arrange
             var code = ExerciseWeightTypeTestConstants.BodyweightOnlyCode;
-            var weightType = _testData[0];
-            var dto = new ReferenceDataDto
-                {
+            var cachedDto = new ReferenceDataDto
+            {
                 Id = ExerciseWeightTypeTestConstants.BodyweightOnlyDtoId,
                 Value = ExerciseWeightTypeTestConstants.BodyweightOnlyValue,
                 Description = ExerciseWeightTypeTestConstants.BodyweightOnlyDescription
             };
             
-            _mockRepository
-                .Setup(x => x.GetByCodeAsync(code))
-                .ReturnsAsync(weightType);
+            _mockCacheService
+                .Setup(x => x.GetAsync<ReferenceDataDto>(It.IsAny<string>()))
+                .ReturnsAsync(CacheResult<ReferenceDataDto>.Hit(cachedDto));
             
             // Act
             var result = await _service.GetByCodeAsync(code);
             
             // Assert
             Assert.True(result.IsSuccess);
-            Assert.Equal(dto.Value, result.Data.Value);
-            _mockUnitOfWorkProvider.Verify(x => x.CreateReadOnly(), Times.Once);
+            Assert.Equal(cachedDto.Value, result.Data.Value);
+            _mockRepository.Verify(x => x.GetByCodeAsync(It.IsAny<string>()), Times.Never);
         }
         
         [Fact]
@@ -366,11 +389,13 @@ namespace GetFitterGetBigger.API.Tests.Services
             var weightType = _testData[0];
             var code = weightType.Code;
             
+            _mockCacheService
+                .Setup(x => x.GetAsync<ReferenceDataDto>(It.IsAny<string>()))
+                .ReturnsAsync(CacheResult<ReferenceDataDto>.Miss());
                 
             _mockRepository
                 .Setup(x => x.GetByCodeAsync(code))
                 .ReturnsAsync(weightType);
-                
             
             // Act
             var result = await _service.GetByCodeAsync(code);
@@ -380,6 +405,7 @@ namespace GetFitterGetBigger.API.Tests.Services
             Assert.Equal(weightType.Value, result.Data.Value);
             _mockUnitOfWorkProvider.Verify(x => x.CreateReadOnly(), Times.Once);
             _mockRepository.Verify(x => x.GetByCodeAsync(code), Times.Once);
+            _mockCacheService.Verify(x => x.SetAsync(It.IsAny<string>(), It.IsAny<ReferenceDataDto>()), Times.Once);
         }
         
         #endregion
@@ -406,10 +432,16 @@ namespace GetFitterGetBigger.API.Tests.Services
         {
             // Arrange
             var id = ExerciseWeightTypeTestConstants.BodyweightOnlyId;
+            var cachedDto = new ReferenceDataDto
+            {
+                Id = id.ToString(),
+                Value = ExerciseWeightTypeTestConstants.BodyweightOnlyValue,
+                Description = ExerciseWeightTypeTestConstants.BodyweightOnlyDescription
+            };
             
-            _mockRepository
-                .Setup(x => x.ExistsAsync(id))
-                .ReturnsAsync(true);
+            _mockCacheService
+                .Setup(x => x.GetAsync<ReferenceDataDto>(It.IsAny<string>()))
+                .ReturnsAsync(CacheResult<ReferenceDataDto>.Hit(cachedDto));
             
             // Act
             var result = await _service.ExistsAsync(id);
@@ -425,10 +457,13 @@ namespace GetFitterGetBigger.API.Tests.Services
             // Arrange
             var id = ExerciseWeightTypeId.From(Guid.NewGuid());
             
+            _mockCacheService
+                .Setup(x => x.GetAsync<ReferenceDataDto>(It.IsAny<string>()))
+                .ReturnsAsync(CacheResult<ReferenceDataDto>.Miss());
                 
             _mockRepository
-                .Setup(x => x.ExistsAsync(id))
-                .ReturnsAsync(false);
+                .Setup(x => x.GetByIdAsync(id))
+                .ReturnsAsync(ExerciseWeightType.Empty);
             
             // Act
             var result = await _service.ExistsAsync(id);
