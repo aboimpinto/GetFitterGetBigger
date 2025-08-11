@@ -610,4 +610,62 @@ public class ResponseSteps
     {
         ThenTheResponseStatusShouldBe("bad request");
     }
+
+    [Given(@"the response property ""([^""]+)"" contains at least (\d+) items?")]
+    [Then(@"the response property ""([^""]+)"" contains at least (\d+) items?")]
+    public void ThenTheResponsePropertyContainsAtLeastItems(string propertyPath, int minimumCount)
+    {
+        var content = _scenarioContext.GetLastResponseContent();
+        var jsonDocument = JsonDocument.Parse(content);
+        
+        var element = GetJsonElement(jsonDocument.RootElement, propertyPath);
+        
+        element?.ValueKind.Should().Be(JsonValueKind.Array, $"Property '{propertyPath}' should be an array");
+        element?.GetArrayLength().Should().BeGreaterOrEqualTo(minimumCount, 
+            $"Property '{propertyPath}' should contain at least {minimumCount} item(s)");
+    }
+
+    [Given(@"the response property ""([^""]+)"" contains an item with value ""([^""]+)""")]
+    [Then(@"the response property ""([^""]+)"" contains an item with value ""([^""]+)""")]
+    public void ThenTheResponsePropertyContainsAnItemWithValue(string propertyPath, string expectedValue)
+    {
+        var content = _scenarioContext.GetLastResponseContent();
+        var jsonDocument = JsonDocument.Parse(content);
+        
+        var element = GetJsonElement(jsonDocument.RootElement, propertyPath);
+        
+        element?.ValueKind.Should().Be(JsonValueKind.Array, $"Property '{propertyPath}' should be an array");
+        
+        bool found = false;
+        foreach (var item in element?.EnumerateArray() ?? Enumerable.Empty<JsonElement>())
+        {
+            if (item.TryGetProperty("value", out var valueProperty) && 
+                valueProperty.GetString()?.Equals(expectedValue, StringComparison.OrdinalIgnoreCase) == true)
+            {
+                found = true;
+                break;
+            }
+        }
+        
+        found.Should().BeTrue($"Expected to find an item with value '{expectedValue}' in property '{propertyPath}'");
+    }
+
+    [Given(@"I store the second item from the response property ""([^""]+)"" as ""([^""]+)""")]
+    [Then(@"I store the second item from the response property ""([^""]+)"" as ""([^""]+)""")]
+    public void StoreTheSecondItemFromTheResponseProperty(string propertyPath, string variableName)
+    {
+        var content = _scenarioContext.GetLastResponseContent();
+        var jsonDocument = JsonDocument.Parse(content);
+        
+        var element = GetJsonElement(jsonDocument.RootElement, propertyPath);
+        
+        element?.ValueKind.Should().Be(JsonValueKind.Array, $"Property '{propertyPath}' should be an array");
+        element?.GetArrayLength().Should().BeGreaterThan(1, $"Property '{propertyPath}' should contain at least 2 items");
+        
+        var secondItem = element?.EnumerateArray().Skip(1).First();
+        
+        // Store as JSON string to avoid value type issues
+        _scenarioContext.SetTestData(variableName, secondItem?.GetRawText() ?? string.Empty);
+    }
+
 }
