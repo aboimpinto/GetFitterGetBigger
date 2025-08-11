@@ -86,10 +86,9 @@ builder.Services.AddTransient<IWorkoutTemplateService, WorkoutTemplateService>()
 builder.Services.AddTransient<IWorkoutTemplateExerciseService, WorkoutTemplateExerciseService>();
 builder.Services.AddTransient<ISetConfigurationService, SetConfigurationService>();
 
-// Register reference table validation services
-// All reference tables now use the new separated architecture pattern:
-// - Business logic service (handles data access only)
-// - Reference service wrapper (handles caching via PureReferenceService)
+// Register reference table services
+// All reference tables now use direct cache integration with IEternalCacheService
+// No longer using PureReferenceService wrapper pattern
 
 builder.Services.AddTransient<IBodyPartService, BodyPartService>();
 
