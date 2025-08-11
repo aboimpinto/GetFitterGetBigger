@@ -11,20 +11,20 @@ public class DatabaseSteps
 {
     private readonly ScenarioContext _scenarioContext;
     private readonly PostgreSqlTestFixture _fixture;
-    
+
     public DatabaseSteps(ScenarioContext scenarioContext, PostgreSqlTestFixture fixture)
     {
         _scenarioContext = scenarioContext;
         _fixture = fixture;
     }
-    
+
     [Given(@"the following (.*) exists:")]
     public async Task GivenTheFollowingEntityExists(string entityType, Table table)
     {
         await _fixture.ExecuteDbContextAsync(async context =>
         {
             var seeder = new TestDatabaseSeeder(context);
-            
+
             // For now, we'll use the SeedDataBuilder for reference data
             // and expand this method as we implement specific entity creation
             switch (entityType.ToLower())
@@ -34,56 +34,56 @@ public class DatabaseSteps
                 case "difficulty levels":
                     await seeder.SeedDifficultyLevelsAsync();
                     break;
-                    
+
                 case "equipment":
                     await seeder.SeedEquipmentAsync();
                     break;
-                    
+
                 case "bodypart":
                 case "body part":
                 case "body parts":
                     await seeder.SeedBodyPartsAsync();
                     break;
-                    
+
                 case "musclegroup":
                 case "muscle group":
                 case "muscle groups":
                     await seeder.SeedMuscleGroupsAsync();
                     break;
-                    
+
                 case "exercisetype":
                 case "exercise type":
                 case "exercise types":
                     await seeder.SeedExerciseTypesAsync();
                     break;
-                    
+
                 default:
                     throw new NotSupportedException($"Entity type '{entityType}' is not yet supported in this simplified implementation");
             }
-            
+
             await context.SaveChangesAsync();
         });
     }
-    
+
     [Given(@"the database is empty")]
     public async Task GivenTheDatabaseIsEmpty()
     {
         await _fixture.CleanDatabaseAsync();
     }
-    
+
     [Given(@"the database has reference data")]
     [When(@"the database has reference data")]
     public async Task GivenTheDatabaseHasReferenceData()
     {
         await _fixture.InitializeDatabaseAsync();
     }
-    
+
     [Given(@"the database is initialized with test data")]
     public async Task GivenTheDatabaseIsInitializedWithTestData()
     {
         await _fixture.InitializeDatabaseAsync();
     }
-    
+
     [Then(@"the database should contain (\d+) (.*) records?")]
     public async Task ThenTheDatabaseShouldContain(int expectedCount, string entityType)
     {
@@ -101,39 +101,39 @@ public class DatabaseSteps
                 _ => throw new NotSupportedException($"Entity type '{entityType}' is not supported")
             };
         });
-        
-        actualCount.Should().Be(expectedCount, 
+
+        actualCount.Should().Be(expectedCount,
             $"expected {expectedCount} {entityType} records but found {actualCount}");
     }
-    
+
     [Then(@"the (.*) with id ""(.*)"" should exist")]
     public Task ThenTheEntityWithIdShouldExist(string entityType, string id)
     {
         var resolvedId = _scenarioContext.ResolvePlaceholders(id);
-        
+
         // For now, just check if the ID format is valid
         // We'll expand this once we have proper entity creation
         Guid.TryParse(resolvedId.Replace($"{entityType.ToLower()}-", ""), out var guidId)
             .Should().BeTrue($"'{resolvedId}' should be a valid {entityType} ID");
-        
+
         // TODO: Implement actual database checks once entity creation is properly implemented
         return Task.CompletedTask;
     }
-    
+
     [Then(@"the (.*) with id ""(.*)"" should not exist")]
     public Task ThenTheEntityWithIdShouldNotExist(string entityType, string id)
     {
         var resolvedId = _scenarioContext.ResolvePlaceholders(id);
-        
+
         // For now, just check if the ID format is valid
         // We'll expand this once we have proper entity creation
         Guid.TryParse(resolvedId.Replace($"{entityType.ToLower()}-", ""), out var guidId)
             .Should().BeTrue($"'{resolvedId}' should be a valid {entityType} ID");
-        
+
         // TODO: Implement actual database checks once entity creation is properly implemented
         return Task.CompletedTask;
     }
-    
+
     [Then(@"the exercise ""(.*)"" should have the following properties:")]
     public async Task ThenTheExerciseShouldHaveTheFollowingProperties(string exerciseName, Table expectedProperties)
     {
@@ -147,14 +147,14 @@ public class DatabaseSteps
                 .Include(e => e.ExerciseWeightType)
                 .FirstOrDefaultAsync(e => e.Name == exerciseName);
         });
-        
+
         if (exercise != null)
         {
             exercise.Name.Should().Be(exerciseName);
             // Additional property checks will be implemented when entity creation is fixed
         }
     }
-    
+
     [Then(@"the database should be accessible")]
     public async Task ThenTheDatabaseShouldBeAccessible()
     {
@@ -162,10 +162,10 @@ public class DatabaseSteps
         {
             return await context.Database.CanConnectAsync();
         });
-        
+
         canConnect.Should().BeTrue("database should be accessible");
     }
-    
+
     [Then(@"the database should contain reference data")]
     public async Task ThenTheDatabaseShouldContainReferenceData()
     {
@@ -180,14 +180,14 @@ public class DatabaseSteps
                 Equipment = await context.Equipment.CountAsync()
             };
         });
-        
+
         counts.DifficultyLevels.Should().BeGreaterThan(0, "should have difficulty levels");
         counts.ExerciseTypes.Should().BeGreaterThan(0, "should have exercise types");
         counts.BodyParts.Should().BeGreaterThan(0, "should have body parts");
         counts.MuscleGroups.Should().BeGreaterThan(0, "should have muscle groups");
         counts.Equipment.Should().BeGreaterThan(0, "should have equipment");
     }
-    
+
     [When(@"I check database connectivity")]
     public async Task WhenICheckDatabaseConnectivity()
     {
@@ -197,14 +197,14 @@ public class DatabaseSteps
             _scenarioContext.Set(canConnect, "DatabaseConnectivity");
         });
     }
-    
+
     [Then(@"the database should be connected")]
     public void ThenTheDatabaseShouldBeConnected()
     {
         var isConnected = _scenarioContext.Get<bool>("DatabaseConnectivity");
         isConnected.Should().BeTrue("database should be accessible");
     }
-    
+
     [Then(@"the database should have the expected schema")]
     public async Task ThenTheDatabaseShouldHaveTheExpectedSchema()
     {
@@ -213,19 +213,19 @@ public class DatabaseSteps
             // Check that key tables exist by attempting to query them
             var exerciseCount = await context.Exercises.CountAsync();
             exerciseCount.Should().BeGreaterOrEqualTo(0, "Exercises table should exist");
-            
+
             var bodyPartCount = await context.BodyParts.CountAsync();
             bodyPartCount.Should().BeGreaterOrEqualTo(0, "BodyParts table should exist");
-            
+
             var muscleGroupCount = await context.MuscleGroups.CountAsync();
             muscleGroupCount.Should().BeGreaterOrEqualTo(0, "MuscleGroups table should exist");
-            
+
             var difficultyLevelCount = await context.DifficultyLevels.CountAsync();
             difficultyLevelCount.Should().BeGreaterOrEqualTo(0, "DifficultyLevels table should exist");
         });
     }
-    
-    [Given(@"an exercise exists with id ""(.*)""")] 
+
+    [Given(@"an exercise exists with id ""(.*)""")]
     public void GivenAnExerciseExistsWithId(string exerciseId)
     {
         // For now, we'll assume the exercise exists in the seeded data

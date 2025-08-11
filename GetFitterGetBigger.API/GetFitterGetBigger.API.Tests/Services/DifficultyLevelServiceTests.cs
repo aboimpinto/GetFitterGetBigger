@@ -23,6 +23,7 @@ namespace GetFitterGetBigger.API.Tests.Services
         private readonly Mock<IUnitOfWorkProvider<FitnessDbContext>> _mockUnitOfWorkProvider;
         private readonly Mock<IReadOnlyUnitOfWork<FitnessDbContext>> _mockReadOnlyUnitOfWork;
         private readonly Mock<IDifficultyLevelRepository> _mockDifficultyLevelRepository;
+        private readonly Mock<IEternalCacheService> _mockCacheService;
         private readonly Mock<ILogger<DifficultyLevelService>> _mockLogger;
         private readonly DifficultyLevelService _difficultyLevelService;
 
@@ -31,6 +32,7 @@ namespace GetFitterGetBigger.API.Tests.Services
             _mockUnitOfWorkProvider = new Mock<IUnitOfWorkProvider<FitnessDbContext>>();
             _mockReadOnlyUnitOfWork = new Mock<IReadOnlyUnitOfWork<FitnessDbContext>>();
             _mockDifficultyLevelRepository = new Mock<IDifficultyLevelRepository>();
+            _mockCacheService = new Mock<IEternalCacheService>();
             _mockLogger = new Mock<ILogger<DifficultyLevelService>>();
 
             _mockUnitOfWorkProvider
@@ -43,6 +45,7 @@ namespace GetFitterGetBigger.API.Tests.Services
 
             _difficultyLevelService = new DifficultyLevelService(
                 _mockUnitOfWorkProvider.Object,
+                _mockCacheService.Object,
                 _mockLogger.Object);
         }
 
@@ -51,10 +54,23 @@ namespace GetFitterGetBigger.API.Tests.Services
         {
             // Arrange
             var difficultyLevelId = DifficultyLevelId.New();
+            var createResult = DifficultyLevel.Handler.Create(
+                difficultyLevelId,
+                "Intermediate",
+                "For intermediate users",
+                2,
+                true);
+            Assert.True(createResult.IsSuccess, "DifficultyLevel creation should succeed");
+            var difficultyLevel = createResult.Value;
+
+            // Setup cache miss so it goes to database
+            _mockCacheService
+                .Setup(x => x.GetAsync<ReferenceDataDto>(It.IsAny<string>()))
+                .ReturnsAsync(CacheResult<ReferenceDataDto>.Miss());
 
             _mockDifficultyLevelRepository
-                .Setup(x => x.ExistsAsync(It.IsAny<DifficultyLevelId>()))
-                .ReturnsAsync(true);
+                .Setup(x => x.GetByIdAsync(It.IsAny<DifficultyLevelId>()))
+                .ReturnsAsync(difficultyLevel);
 
             // Act
             var result = await _difficultyLevelService.ExistsAsync(difficultyLevelId);
@@ -63,7 +79,7 @@ namespace GetFitterGetBigger.API.Tests.Services
             Assert.True(result.IsSuccess);
             Assert.True(result.Data.Value);
             _mockUnitOfWorkProvider.Verify(x => x.CreateReadOnly(), Times.Once);
-            _mockDifficultyLevelRepository.Verify(x => x.ExistsAsync(It.IsAny<DifficultyLevelId>()), Times.Once);
+            _mockDifficultyLevelRepository.Verify(x => x.GetByIdAsync(It.IsAny<DifficultyLevelId>()), Times.Once);
         }
 
         [Fact]
@@ -72,9 +88,14 @@ namespace GetFitterGetBigger.API.Tests.Services
             // Arrange
             var difficultyLevelId = DifficultyLevelId.New();
 
+            // Setup cache miss so it goes to database
+            _mockCacheService
+                .Setup(x => x.GetAsync<ReferenceDataDto>(It.IsAny<string>()))
+                .ReturnsAsync(CacheResult<ReferenceDataDto>.Miss());
+
             _mockDifficultyLevelRepository
-                .Setup(x => x.ExistsAsync(It.IsAny<DifficultyLevelId>()))
-                .ReturnsAsync(false);
+                .Setup(x => x.GetByIdAsync(It.IsAny<DifficultyLevelId>()))
+                .ReturnsAsync(DifficultyLevel.Empty);
 
             // Act
             var result = await _difficultyLevelService.ExistsAsync(difficultyLevelId);
@@ -83,7 +104,7 @@ namespace GetFitterGetBigger.API.Tests.Services
             Assert.True(result.IsSuccess);
             Assert.False(result.Data.Value);
             _mockUnitOfWorkProvider.Verify(x => x.CreateReadOnly(), Times.Once);
-            _mockDifficultyLevelRepository.Verify(x => x.ExistsAsync(It.IsAny<DifficultyLevelId>()), Times.Once);
+            _mockDifficultyLevelRepository.Verify(x => x.GetByIdAsync(It.IsAny<DifficultyLevelId>()), Times.Once);
         }
 
         [Fact]
@@ -116,11 +137,14 @@ namespace GetFitterGetBigger.API.Tests.Services
             Assert.True(createResult.IsSuccess, "DifficultyLevel creation should succeed");
             var difficultyLevel = createResult.Value;
 
+            // Setup cache miss so it goes to database
+            _mockCacheService
+                .Setup(x => x.GetAsync<ReferenceDataDto>(It.IsAny<string>()))
+                .ReturnsAsync(CacheResult<ReferenceDataDto>.Miss());
 
             _mockDifficultyLevelRepository
                 .Setup(x => x.GetByIdAsync(It.IsAny<DifficultyLevelId>()))
                 .ReturnsAsync(difficultyLevel);
-
 
             // Act
             var result = await _difficultyLevelService.GetByIdAsync(difficultyLevelId);
@@ -129,6 +153,8 @@ namespace GetFitterGetBigger.API.Tests.Services
             Assert.True(result.IsSuccess);
             Assert.Equal("Intermediate", result.Data.Value);
             Assert.Equal("For intermediate users", result.Data.Description);
+            _mockUnitOfWorkProvider.Verify(x => x.CreateReadOnly(), Times.Once);
+            _mockDifficultyLevelRepository.Verify(x => x.GetByIdAsync(difficultyLevelId), Times.Once);
         }
 
         [Fact]
@@ -136,18 +162,17 @@ namespace GetFitterGetBigger.API.Tests.Services
         {
             // Arrange
             var difficultyLevelId = DifficultyLevelId.New();
-            var createResult = DifficultyLevel.Handler.Create(
-                difficultyLevelId,
-                "Advanced",
-                "For advanced users",
-                3,
-                true);
-            Assert.True(createResult.IsSuccess, "DifficultyLevel creation should succeed");
-            var difficultyLevel = createResult.Value;
+            var cachedDto = new ReferenceDataDto
+            {
+                Id = difficultyLevelId.ToString(),
+                Value = "Advanced",
+                Description = "For advanced users"
+            };
 
-            _mockDifficultyLevelRepository
-                .Setup(x => x.GetByIdAsync(It.IsAny<DifficultyLevelId>()))
-                .ReturnsAsync(difficultyLevel);
+            // Setup cache hit
+            _mockCacheService
+                .Setup(x => x.GetAsync<ReferenceDataDto>(It.IsAny<string>()))
+                .ReturnsAsync(CacheResult<ReferenceDataDto>.Hit(cachedDto));
 
             // Act
             var result = await _difficultyLevelService.GetByIdAsync(difficultyLevelId);
@@ -155,8 +180,9 @@ namespace GetFitterGetBigger.API.Tests.Services
             // Assert
             Assert.True(result.IsSuccess);
             Assert.Equal("Advanced", result.Data.Value);
-            _mockUnitOfWorkProvider.Verify(x => x.CreateReadOnly(), Times.Once);
-            _mockDifficultyLevelRepository.Verify(x => x.GetByIdAsync(difficultyLevelId), Times.Once);
+            // Should not hit database when cache hit occurs
+            _mockUnitOfWorkProvider.Verify(x => x.CreateReadOnly(), Times.Never);
+            _mockDifficultyLevelRepository.Verify(x => x.GetByIdAsync(It.IsAny<DifficultyLevelId>()), Times.Never);
         }
 
         [Fact]
@@ -181,6 +207,10 @@ namespace GetFitterGetBigger.API.Tests.Services
             // Arrange
             var value = "NonExistent";
 
+            // Setup cache miss so it goes to database
+            _mockCacheService
+                .Setup(x => x.GetAsync<ReferenceDataDto>(It.IsAny<string>()))
+                .ReturnsAsync(CacheResult<ReferenceDataDto>.Miss());
 
             _mockDifficultyLevelRepository
                 .Setup(x => x.GetByValueAsync(value))
@@ -206,11 +236,14 @@ namespace GetFitterGetBigger.API.Tests.Services
                 DifficultyLevel.Handler.Create(DifficultyLevelId.New(), "Advanced", "For advanced users", 3, true).Value
             };
 
+            // Setup cache miss so it goes to database
+            _mockCacheService
+                .Setup(x => x.GetAsync<IEnumerable<ReferenceDataDto>>(It.IsAny<string>()))
+                .ReturnsAsync(CacheResult<IEnumerable<ReferenceDataDto>>.Miss());
 
             _mockDifficultyLevelRepository
                 .Setup(x => x.GetAllActiveAsync())
                 .ReturnsAsync(difficultyLevels);
-
 
             // Act
             var result = await _difficultyLevelService.GetAllActiveAsync();
@@ -224,6 +257,8 @@ namespace GetFitterGetBigger.API.Tests.Services
             Assert.Contains("Beginner", values);
             Assert.Contains("Intermediate", values);
             Assert.Contains("Advanced", values);
+            _mockUnitOfWorkProvider.Verify(x => x.CreateReadOnly(), Times.Once);
+            _mockDifficultyLevelRepository.Verify(x => x.GetAllActiveAsync(), Times.Once);
         }
 
         [Fact]
@@ -236,11 +271,14 @@ namespace GetFitterGetBigger.API.Tests.Services
                 DifficultyLevel.Handler.Create(DifficultyLevelId.New(), "Intermediate", "For intermediate users", 2, true).Value
             };
 
+            // Setup cache miss so it goes to database
+            _mockCacheService
+                .Setup(x => x.GetAsync<IEnumerable<ReferenceDataDto>>(It.IsAny<string>()))
+                .ReturnsAsync(CacheResult<IEnumerable<ReferenceDataDto>>.Miss());
 
             _mockDifficultyLevelRepository
                 .Setup(x => x.GetAllActiveAsync())
                 .ReturnsAsync(difficultyLevels);
-
 
             // Act
             var result = await _difficultyLevelService.GetAllActiveAsync();

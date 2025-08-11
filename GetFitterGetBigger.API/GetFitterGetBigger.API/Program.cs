@@ -93,10 +93,8 @@ builder.Services.AddTransient<ISetConfigurationService, SetConfigurationService>
 // - Reference service wrapper (handles caching via PureReferenceService)
 
 builder.Services.AddTransient<IBodyPartService, BodyPartService>();
-builder.Services.AddTransient<BodyPartReferenceService>();
 
 builder.Services.AddTransient<IDifficultyLevelService, DifficultyLevelService>();
-builder.Services.AddTransient<DifficultyLevelReferenceService>();
 
 builder.Services.AddTransient<IExecutionProtocolService, ExecutionProtocolService>();
 builder.Services.AddTransient<ExecutionProtocolReferenceService>();

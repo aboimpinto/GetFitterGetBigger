@@ -22,9 +22,42 @@ public class BodyPartsCachingSteps
     [Given(@"I am tracking database queries")]
     public void GivenIAmTrackingDatabaseQueries()
     {
+        // Clear cache to ensure clean test state
+        ClearCache();
+        
         // Reset the query tracker
         var tracker = _fixture.Factory.GetQueryTracker();
         tracker?.Reset();
+    }
+    
+    private void ClearCache()
+    {
+        // Clear the eternal cache by clearing the underlying IMemoryCache
+        // This ensures cache tests start with a clean state
+        try
+        {
+            var memoryCache = _fixture.Factory.Services.GetService(typeof(Microsoft.Extensions.Caching.Memory.IMemoryCache));
+            if (memoryCache is Microsoft.Extensions.Caching.Memory.MemoryCache mc)
+            {
+                // Use reflection to access the internal field and clear it
+                var field = typeof(Microsoft.Extensions.Caching.Memory.MemoryCache).GetField("_coherentState", 
+                    System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                if (field?.GetValue(mc) is object coherentState)
+                {
+                    var entriesCollection = coherentState.GetType().GetProperty("EntriesCollection", 
+                        System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                    if (entriesCollection?.GetValue(coherentState) is System.Collections.IDictionary entries)
+                    {
+                        entries.Clear();
+                    }
+                }
+            }
+        }
+        catch
+        {
+            // If cache clearing fails, continue with the test
+            // This is a best-effort operation for test isolation
+        }
     }
     
     [Given(@"I reset the database query counter")]
@@ -44,13 +77,45 @@ public class BodyPartsCachingSteps
             throw new InvalidOperationException("Database query tracker is not initialized");
         }
         
-        // Count actual SELECT queries on the BodyParts table
-        var actualCount = tracker.GetQueryCountForTable("BodyParts");
+        // Determine the table name from the last endpoint used in the test
+        var tableName = GetTableNameFromLastEndpoint();
+        
+        // Count actual SELECT queries on the determined table
+        var actualCount = tracker.GetQueryCountForTable(tableName);
         
         Assert.True(actualCount == expectedCount, 
-            $"Expected {expectedCount} database queries to BodyParts table but found {actualCount}. " +
+            $"Expected {expectedCount} database queries to {tableName} table but found {actualCount}. " +
             $"This indicates that caching is {(actualCount > expectedCount ? "NOT" : "")} working properly. " +
             $"{(actualCount > expectedCount ? "Each API request is hitting the database instead of using cache." : "Cache is working as expected.")}");
+    }
+    
+    private string GetTableNameFromLastEndpoint()
+    {
+        if (!_scenarioContext.TryGetValue("LastEndpoint", out var endpointObj) || endpointObj is not string endpoint)
+        {
+            // Fallback to BodyParts for backward compatibility
+            return "BodyParts";
+        }
+        
+        // Map endpoint patterns to table names
+        return endpoint switch
+        {
+            var e when e.Contains("/api/ReferenceTables/DifficultyLevels") => "DifficultyLevels",
+            var e when e.Contains("/api/ReferenceTables/BodyParts") => "BodyParts",
+            var e when e.Contains("/api/ReferenceTables/ExerciseTypes") => "ExerciseTypes",
+            var e when e.Contains("/api/ReferenceTables/MuscleGroups") => "MuscleGroups",
+            var e when e.Contains("/api/ReferenceTables/Equipment") => "Equipment",
+            var e when e.Contains("/api/ReferenceTables/MovementPatterns") => "MovementPatterns",
+            var e when e.Contains("/api/ReferenceTables/KineticChainTypes") => "KineticChainTypes",
+            var e when e.Contains("/api/ReferenceTables/MuscleRoles") => "MuscleRoles",
+            var e when e.Contains("/api/ReferenceTables/ExecutionProtocols") => "ExecutionProtocols",
+            var e when e.Contains("/api/ReferenceTables/MetricTypes") => "MetricTypes",
+            var e when e.Contains("/api/ReferenceTables/ExerciseWeightTypes") => "ExerciseWeightTypes",
+            var e when e.Contains("/api/ReferenceTables/WorkoutCategories") => "WorkoutCategories",
+            var e when e.Contains("/api/ReferenceTables/WorkoutObjectives") => "WorkoutObjectives",
+            // Fallback to BodyParts for backward compatibility
+            _ => "BodyParts"
+        };
     }
     
     [Given(@"the response contains at least (\d+) items")]
@@ -149,4 +214,5 @@ public class BodyPartsCachingSteps
             throw new InvalidOperationException("Second body part does not have an 'id' property");
         }
     }
+    
 }

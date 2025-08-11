@@ -1,6 +1,8 @@
 using System.Net.Http.Headers;
 using GetFitterGetBigger.API.Models;
 using GetFitterGetBigger.API.IntegrationTests.TestBuilders;
+using GetFitterGetBigger.API.Services.Interfaces;
+using GetFitterGetBigger.API.Services.Implementations;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
@@ -71,6 +73,14 @@ public class IntegrationTestWebApplicationFactory : WebApplicationFactory<Progra
             {
                 services.Remove(descriptor);
             }
+
+            // Override EternalCacheService to be Scoped instead of Singleton for test isolation
+            var cacheServiceDescriptor = services.FirstOrDefault(d => d.ServiceType == typeof(IEternalCacheService));
+            if (cacheServiceDescriptor != null)
+            {
+                services.Remove(cacheServiceDescriptor);
+            }
+            services.AddScoped<IEternalCacheService, EternalCacheService>();
 
             // Add DbContext using PostgreSQL from the container
             services.AddDbContext<FitnessDbContext>(options =>
