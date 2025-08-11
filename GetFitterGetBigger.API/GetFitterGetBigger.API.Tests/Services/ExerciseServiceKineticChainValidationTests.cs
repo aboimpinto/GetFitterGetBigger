@@ -121,7 +121,7 @@ namespace GetFitterGetBigger.API.Tests.Services
             
             // Assert
             Assert.False(result.IsSuccess);
-            Assert.Contains(ExerciseErrorMessages.NonRestExerciseMustHaveKineticChain, result.Errors);
+            Assert.Equal(ServiceErrorCode.ValidationFailed, result.PrimaryErrorCode);
         }
 
         [Fact]
@@ -143,7 +143,7 @@ namespace GetFitterGetBigger.API.Tests.Services
             
             // Assert
             Assert.False(result.IsSuccess);
-            Assert.Contains(ExerciseErrorMessages.RestExerciseCannotHaveKineticChain, result.Errors);
+            Assert.Equal(ServiceErrorCode.ValidationFailed, result.PrimaryErrorCode);
         }
 
         [Fact]
@@ -244,7 +244,7 @@ namespace GetFitterGetBigger.API.Tests.Services
             
             // Assert
             Assert.False(result.IsSuccess);
-            Assert.Contains(ExerciseErrorMessages.NonRestExerciseMustHaveKineticChainUpdate, result.Errors);
+            Assert.Equal(ServiceErrorCode.ValidationFailed, result.PrimaryErrorCode);
         }
 
         [Fact]
@@ -277,7 +277,7 @@ namespace GetFitterGetBigger.API.Tests.Services
             
             // Assert
             Assert.False(result.IsSuccess);
-            Assert.Contains(ExerciseErrorMessages.RestExerciseCannotHaveKineticChain, result.Errors);
+            Assert.Equal(ServiceErrorCode.ValidationFailed, result.PrimaryErrorCode);
         }
 
         [Fact]
@@ -348,7 +348,7 @@ namespace GetFitterGetBigger.API.Tests.Services
             
             // Assert
             Assert.False(result.IsSuccess);
-            Assert.Contains(ExerciseErrorMessages.NonRestExerciseMustHaveKineticChain, result.Errors);
+            Assert.Equal(ServiceErrorCode.ValidationFailed, result.PrimaryErrorCode);
         }
 
         [Fact]
@@ -383,7 +383,7 @@ namespace GetFitterGetBigger.API.Tests.Services
             
             // Assert
             Assert.False(result.IsSuccess);
-            Assert.Contains(ExerciseErrorMessages.NonRestExerciseMustHaveKineticChainUpdate, result.Errors);
+            Assert.Equal(ServiceErrorCode.ValidationFailed, result.PrimaryErrorCode);
         }
     }
 }

@@ -174,8 +174,8 @@ public class ExerciseLinkService : IExerciseLinkService
             if (includeExerciseDetails && link.TargetExercise != null)
             {
                 // Get full exercise details from ExerciseService
-                var exerciseDto = await _exerciseService.GetByIdAsync(link.TargetExerciseId);
-                dto.TargetExercise = exerciseDto;
+                var exerciseResult = await _exerciseService.GetByIdAsync(link.TargetExerciseId);
+                dto.TargetExercise = exerciseResult.Data;
             }
             
             linkDtos.Add(dto);

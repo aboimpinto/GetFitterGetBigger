@@ -122,20 +122,20 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.Exercise
             await this.ScenarioCleanupAsync();
         }
         
-        [Xunit.SkippableFactAttribute(DisplayName="Get exercise with invalid format returns not found")]
+        [Xunit.SkippableFactAttribute(DisplayName="Get exercise with invalid format returns bad request")]
         [Xunit.TraitAttribute("FeatureTitle", "Exercise Basic Operations")]
-        [Xunit.TraitAttribute("Description", "Get exercise with invalid format returns not found")]
+        [Xunit.TraitAttribute("Description", "Get exercise with invalid format returns bad request")]
         [Xunit.TraitAttribute("Category", "exercise")]
         [Xunit.TraitAttribute("Category", "basic")]
         [Xunit.TraitAttribute("Category", "validation")]
-        public async System.Threading.Tasks.Task GetExerciseWithInvalidFormatReturnsNotFound()
+        public async System.Threading.Tasks.Task GetExerciseWithInvalidFormatReturnsBadRequest()
         {
             string[] tagsOfScenario = new string[] {
                     "exercise",
                     "basic",
                     "validation"};
             System.Collections.Specialized.OrderedDictionary argumentsOfScenario = new System.Collections.Specialized.OrderedDictionary();
-            TechTalk.SpecFlow.ScenarioInfo scenarioInfo = new TechTalk.SpecFlow.ScenarioInfo("Get exercise with invalid format returns not found", null, tagsOfScenario, argumentsOfScenario, featureTags);
+            TechTalk.SpecFlow.ScenarioInfo scenarioInfo = new TechTalk.SpecFlow.ScenarioInfo("Get exercise with invalid format returns bad request", null, tagsOfScenario, argumentsOfScenario, featureTags);
             this.ScenarioInitialize(scenarioInfo);
             if ((TagHelper.ContainsIgnoreTag(tagsOfScenario) || TagHelper.ContainsIgnoreTag(featureTags)))
             {
@@ -146,7 +146,7 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.Exercise
                 await this.ScenarioStartAsync();
                 await this.FeatureBackgroundAsync();
                 await testRunner.WhenAsync("I send a GET request to \"/api/exercises/invalid-format\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
-                await testRunner.ThenAsync("the response status should be 404", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
+                await testRunner.ThenAsync("the response status should be 400", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
             }
             await this.ScenarioCleanupAsync();
         }

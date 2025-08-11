@@ -6,6 +6,7 @@ using GetFitterGetBigger.API.Repositories.Interfaces;
 using GetFitterGetBigger.API.Services.Commands;
 using GetFitterGetBigger.API.Services.Interfaces;
 using GetFitterGetBigger.API.Services.Results;
+using GetFitterGetBigger.API.Services.Validation;
 using GetFitterGetBigger.API.Builders;
 using GetFitterGetBigger.API.Constants;
 using Olimpo.EntityFramework.Persistency;
@@ -15,20 +16,14 @@ namespace GetFitterGetBigger.API.Services.Implementations;
 /// <summary>
 /// Service for Exercise business logic using clean architecture command pattern
 /// </summary>
-public class ExerciseService : IExerciseService
+public class ExerciseService(
+    IUnitOfWorkProvider<FitnessDbContext> unitOfWorkProvider,
+    IExerciseTypeService exerciseTypeService) : IExerciseService
 {
-    private readonly IUnitOfWorkProvider<FitnessDbContext> _unitOfWorkProvider;
-    private readonly IExerciseTypeService _exerciseTypeService;
+    private readonly IUnitOfWorkProvider<FitnessDbContext> _unitOfWorkProvider = unitOfWorkProvider;
+    private readonly IExerciseTypeService _exerciseTypeService = exerciseTypeService;
 
-    public ExerciseService(
-        IUnitOfWorkProvider<FitnessDbContext> unitOfWorkProvider,
-        IExerciseTypeService exerciseTypeService)
-    {
-        _unitOfWorkProvider = unitOfWorkProvider;
-        _exerciseTypeService = exerciseTypeService;
-    }
-
-    public async Task<PagedResponse<ExerciseDto>> GetPagedAsync(GetExercisesCommand filterParams)
+    public async Task<ServiceResult<PagedResponse<ExerciseDto>>> GetPagedAsync(GetExercisesCommand filterParams)
     {
         using var readOnlyUow = _unitOfWorkProvider.CreateReadOnly();
         var repository = readOnlyUow.GetRepository<IExerciseRepository>();
@@ -48,46 +43,69 @@ public class ExerciseService : IExerciseService
             .Select(MapToExerciseDto)
             .ToList();
 
-        return new PagedResponse<ExerciseDto>
+        var response = new PagedResponse<ExerciseDto>
         {
             Items = exerciseDtos,
             TotalCount = totalCount,
             PageSize = filterParams.PageSize,
             CurrentPage = filterParams.Page
         };
+
+        return ServiceResult<PagedResponse<ExerciseDto>>.Success(response);
     }
 
-    public async Task<ExerciseDto> GetByIdAsync(ExerciseId id)
+    public async Task<ServiceResult<ExerciseDto>> GetByIdAsync(ExerciseId id)
     {
-        if (id.IsEmpty)
-        {
-            return ExerciseDto.Empty;
-        }
-        
+        return await ServiceValidate.Build<ExerciseDto>()
+            .EnsureNotEmpty(id, ExerciseErrorMessages.InvalidIdFormat)
+            .EnsureAsync(
+                async () => await ExerciseExistsAsync(id),
+                ServiceError.NotFound("Exercise", id.ToString()))
+            .MatchAsync(
+                whenValid: async () => await GetExerciseByIdInternalAsync(id));
+    }
+    
+    private async Task<ServiceResult<ExerciseDto>> GetExerciseByIdInternalAsync(ExerciseId id)
+    {
         using var readOnlyUow = _unitOfWorkProvider.CreateReadOnly();
         var repository = readOnlyUow.GetRepository<IExerciseRepository>();
         
         var exercise = await repository.GetByIdAsync(id);
-        return MapToExerciseDto(exercise);
+        return ServiceResult<ExerciseDto>.Success(MapToExerciseDto(exercise));
     }
 
     public async Task<ServiceResult<ExerciseDto>> CreateAsync(CreateExerciseCommand command)
     {
-        // Business validation
-        var validationResult = await ValidateCreateCommand(command);
-        if (!validationResult.IsValid)
-        {
-            return ServiceResult<ExerciseDto>.Failure(ExerciseDto.Empty, validationResult.Errors);
-        }
-        
+        return await ServiceValidate.Build<ExerciseDto>()
+            .EnsureNotWhiteSpace(command.Name, ExerciseErrorMessages.ExerciseNameRequired)
+            .EnsureNotWhiteSpace(command.Description, ExerciseErrorMessages.ExerciseDescriptionRequired)
+            .EnsureNotEmpty(command.DifficultyId, ExerciseErrorMessages.DifficultyLevelRequired)
+            .EnsureMaxLength(command.Name, 255, ExerciseErrorMessages.ExerciseNameMaxLength)
+            .EnsureNameIsUniqueAsync(
+                async () => await IsNameUniqueAsync(command.Name, null),
+                "Exercise",
+                command.Name)
+            .EnsureHasValidAsync(
+                async () => await HasValidExerciseTypesAsync(command.ExerciseTypeIds),
+                ExerciseErrorMessages.InvalidExerciseTypeConfiguration)
+            .EnsureHasValidAsync(
+                async () => await ValidateKineticChainForExerciseTypesAsync(command.ExerciseTypeIds, command.KineticChainId),
+                "REST exercises cannot have kinetic chain; Non-REST exercises must have kinetic chain")
+            .EnsureHasValidAsync(
+                async () => await ValidateWeightTypeForExerciseTypesAsync(command.ExerciseTypeIds, command.ExerciseWeightTypeId),
+                "REST exercises cannot have weight type")
+            .EnsureHasValidAsync(
+                async () => await ValidateMuscleGroupsForExerciseTypesAsync(command.ExerciseTypeIds, command.MuscleGroups),
+                "REST exercises cannot have muscle groups; Non-REST exercises must have at least one muscle group")
+            .MatchAsync(
+                whenValid: async () => await CreateExerciseInternalAsync(command)
+            );
+    }
+
+    private async Task<ServiceResult<ExerciseDto>> CreateExerciseInternalAsync(CreateExerciseCommand command)
+    {
         using var writableUow = _unitOfWorkProvider.CreateWritable();
         var repository = writableUow.GetRepository<IExerciseRepository>();
-        
-        // Check for duplicate name
-        if (await repository.ExistsAsync(command.Name, null))
-        {
-            return ServiceResult<ExerciseDto>.Failure(ExerciseDto.Empty, string.Format(ExerciseErrorMessages.DuplicateNameFormat, command.Name));
-        }
         
         // Create exercise with all data, not just basic fields
         var exercise = Exercise.Handler.CreateNew(
@@ -116,34 +134,70 @@ public class ExerciseService : IExerciseService
         return ServiceResult<ExerciseDto>.Success(MapToExerciseDto(createdExercise));
     }
 
+    private async Task<bool> IsNameUniqueAsync(string name, ExerciseId? excludeId)
+    {
+        using var readOnlyUow = _unitOfWorkProvider.CreateReadOnly();
+        var repository = readOnlyUow.GetRepository<IExerciseRepository>();
+        var exists = await repository.ExistsAsync(name, excludeId);
+        return !exists; // Return true when name IS unique
+    }
+
+    private async Task<bool> HasValidExerciseTypesAsync(List<ExerciseTypeId> exerciseTypeIds)
+    {
+        // Empty list is valid
+        var hasNoTypes = exerciseTypeIds.Count == 0;
+        
+        // Filter out empty IDs
+        var validIds = exerciseTypeIds.Where(id => !id.IsEmpty).ToList();
+        var allIdsAreEmpty = exerciseTypeIds.Count > 0 && validIds.Count == 0;
+        
+        // Check REST exercise business rule
+        var isRestExercise = validIds.Count > 0 
+            && await _exerciseTypeService.AnyIsRestTypeAsync(validIds.Select(id => id.ToString()).ToList());
+        var restExerciseHasMultipleTypes = isRestExercise && validIds.Count > 1;
+        
+        // Single exit point with clear boolean logic
+        return hasNoTypes || (!allIdsAreEmpty && !restExerciseHasMultipleTypes);
+    }
+
     public async Task<ServiceResult<ExerciseDto>> UpdateAsync(ExerciseId id, UpdateExerciseCommand command)
     {
-        // Validate the ID first
-        if (id.IsEmpty)
-        {
-            return ServiceResult<ExerciseDto>.Failure(ExerciseDto.Empty, ExerciseErrorMessages.InvalidExerciseId);
-        }
-        
-        // Business validation
-        var validationResult = await ValidateUpdateCommand(command);
-        if (!validationResult.IsValid)
-        {
-            return ServiceResult<ExerciseDto>.Failure(ExerciseDto.Empty, validationResult.Errors);
-        }
-        
+        return await ServiceValidate.Build<ExerciseDto>()
+            .EnsureNotEmpty(id, ExerciseErrorMessages.InvalidIdFormat)
+            .EnsureNotWhiteSpace(command.Name, ExerciseErrorMessages.ExerciseNameRequired)
+            .EnsureNotWhiteSpace(command.Description, ExerciseErrorMessages.ExerciseDescriptionRequired)
+            .EnsureNotEmpty(command.DifficultyId, ExerciseErrorMessages.DifficultyLevelRequired)
+            .EnsureMaxLength(command.Name, 255, ExerciseErrorMessages.ExerciseNameMaxLength)
+            .EnsureNameIsUniqueAsync(
+                async () => await IsNameUniqueAsync(command.Name, id),
+                "Exercise",
+                command.Name)
+            .EnsureHasValidAsync(
+                async () => await HasValidExerciseTypesAsync(command.ExerciseTypeIds),
+                ExerciseErrorMessages.InvalidExerciseTypeConfiguration)
+            .EnsureHasValidAsync(
+                async () => await ValidateKineticChainForExerciseTypesAsync(command.ExerciseTypeIds, command.KineticChainId),
+                "REST exercises cannot have kinetic chain; Non-REST exercises must have kinetic chain")
+            .EnsureHasValidAsync(
+                async () => await ValidateWeightTypeForExerciseTypesAsync(command.ExerciseTypeIds, command.ExerciseWeightTypeId),
+                "REST exercises cannot have weight type")
+            .EnsureHasValidAsync(
+                async () => await ValidateMuscleGroupsForExerciseTypesAsync(command.ExerciseTypeIds, command.MuscleGroups),
+                "REST exercises cannot have muscle groups; Non-REST exercises must have at least one muscle group")
+            .MatchAsync(
+                whenValid: async () => await UpdateExerciseInternalAsync(id, command)
+            );
+    }
+
+    private async Task<ServiceResult<ExerciseDto>> UpdateExerciseInternalAsync(ExerciseId id, UpdateExerciseCommand command)
+    {
         using var writableUow = _unitOfWorkProvider.CreateWritable();
         var repository = writableUow.GetRepository<IExerciseRepository>();
-        
-        // Check for duplicate name (excluding current exercise)
-        if (await repository.ExistsAsync(command.Name, id))
-        {
-            return ServiceResult<ExerciseDto>.Failure(ExerciseDto.Empty, string.Format(ExerciseErrorMessages.DuplicateNameFormat, command.Name));
-        }
         
         var exercise = await repository.GetByIdAsync(id);
         if (exercise.IsEmpty)
         {
-            return ServiceResult<ExerciseDto>.Failure(ExerciseDto.Empty, ExerciseErrorMessages.ExerciseNotFound);
+            return ServiceResult<ExerciseDto>.Failure(ExerciseDto.Empty, ServiceError.NotFound("Exercise", id.ToString()));
         }
         
         // PROPER UPDATE: Modify existing exercise instead of creating new one
@@ -167,9 +221,7 @@ public class ExerciseService : IExerciseService
             ExerciseMovementPatterns = MapToMovementPatterns(command.MovementPatternIds, id)
         };
         
-        var finalExercise = updatedExercise;
-        
-        await repository.UpdateAsync(finalExercise);
+        await repository.UpdateAsync(updatedExercise);
         await writableUow.CommitAsync();
         
         // Reload the exercise with all navigation properties for proper mapping
@@ -180,20 +232,21 @@ public class ExerciseService : IExerciseService
 
     public async Task<ServiceResult<bool>> DeleteAsync(ExerciseId id)
     {
-        // Validate the ID first
-        if (id.IsEmpty)
-        {
-            return ServiceResult<bool>.Failure(false, ExerciseErrorMessages.InvalidExerciseId);
-        }
-        
+        return await ServiceValidate.Build<bool>()
+            .EnsureNotEmpty(id, ExerciseErrorMessages.InvalidIdFormat)
+            .EnsureAsync(
+                async () => await ExerciseExistsAsync(id),
+                ServiceError.NotFound("Exercise", id.ToString()))
+            .MatchAsync(
+                whenValid: async () => await DeleteExerciseInternalAsync(id),
+                whenInvalid: errors => ServiceResult<bool>.Failure(false, errors.FirstOrDefault() ?? ServiceError.ValidationFailed("Unknown error"))
+            );
+    }
+
+    private async Task<ServiceResult<bool>> DeleteExerciseInternalAsync(ExerciseId id)
+    {
         using var writableUow = _unitOfWorkProvider.CreateWritable();
         var repository = writableUow.GetRepository<IExerciseRepository>();
-        
-        var exercise = await repository.GetByIdAsync(id);
-        if (exercise.IsEmpty)
-        {
-            return ServiceResult<bool>.Failure(false, ExerciseErrorMessages.ExerciseNotFound);
-        }
         
         // For now, just soft delete (mark as inactive)
         // Use direct Entity Framework update to avoid relationship clearing
@@ -201,6 +254,14 @@ public class ExerciseService : IExerciseService
         await writableUow.CommitAsync();
         
         return ServiceResult<bool>.Success(true);
+    }
+    
+    private async Task<bool> ExerciseExistsAsync(ExerciseId id)
+    {
+        using var readOnlyUow = _unitOfWorkProvider.CreateReadOnly();
+        var repository = readOnlyUow.GetRepository<IExerciseRepository>();
+        var exercise = await repository.GetByIdAsync(id);
+        return !exercise.IsEmpty;
     }
 
     #region Private Methods
@@ -277,84 +338,76 @@ public class ExerciseService : IExerciseService
     
     #endregion
 
-    private async Task<ValidationResult> ValidateCreateCommand(CreateExerciseCommand command)
+    #region Validation Helper Methods
+
+    private async Task<bool> ValidateKineticChainForExerciseTypesAsync(List<ExerciseTypeId> exerciseTypeIds, KineticChainTypeId kineticChainId)
     {
-        var errors = new List<string>();
+        // Filter out empty IDs
+        var validIds = exerciseTypeIds.Where(id => !id.IsEmpty).ToList();
         
-        // Validate required fields
-        if (string.IsNullOrWhiteSpace(command.Name))
-            errors.Add(ExerciseErrorMessages.ExerciseNameRequired);
-            
-        if (string.IsNullOrWhiteSpace(command.Description))
-            errors.Add(ExerciseErrorMessages.ExerciseDescriptionRequired);
-            
-        if (command.DifficultyId.IsEmpty)
-            errors.Add(ExerciseErrorMessages.DifficultyLevelRequired);
+        // If no valid exercise types, validation passes
+        if (validIds.Count == 0) return true;
         
-        // Validate exercise type IDs are not empty
-        var validExerciseTypeIds = command.ExerciseTypeIds.Where(id => !id.IsEmpty).ToList();
-        if (command.ExerciseTypeIds.Any() && !validExerciseTypeIds.Any())
+        // Check if this is a REST exercise
+        var isRestExercise = await _exerciseTypeService.AnyIsRestTypeAsync(validIds.Select(id => id.ToString()).ToList());
+        var hasKineticChain = !kineticChainId.IsEmpty;
+        
+        if (isRestExercise)
         {
-            errors.Add(ExerciseErrorMessages.InvalidExerciseTypeIds);
+            // REST exercises cannot have kinetic chain
+            return !hasKineticChain;
         }
         
-        // Business validation: Check if exercise types contain REST
-        bool isRestExercise = false;
-        if (validExerciseTypeIds.Any())
-        {
-            var exerciseTypeIdStrings = validExerciseTypeIds.Select(id => id.ToString()).ToList();
-            isRestExercise = await _exerciseTypeService.AnyIsRestTypeAsync(exerciseTypeIdStrings);
-        }
-        
-        // Exercise type-specific validation using pattern matching
-        var typeSpecificErrors = isRestExercise switch
-        {
-            true => ValidateRestExercise(command, validExerciseTypeIds),
-            false => ValidateNonRestExercise(command)
-        };
-        
-        errors.AddRange(typeSpecificErrors);
-        
-        return errors.Any() 
-            ? ValidationResult.Failure(errors.ToArray()) 
-            : ValidationResult.Success();
+        // Non-REST exercises must have kinetic chain
+        return hasKineticChain;
     }
-    
-    private async Task<ValidationResult> ValidateUpdateCommand(UpdateExerciseCommand command)
+
+    private async Task<bool> ValidateWeightTypeForExerciseTypesAsync(List<ExerciseTypeId> exerciseTypeIds, ExerciseWeightTypeId weightTypeId)
     {
-        var errors = new List<string>();
+        // Filter out empty IDs
+        var validIds = exerciseTypeIds.Where(id => !id.IsEmpty).ToList();
         
-        // Validate required fields
-        if (string.IsNullOrWhiteSpace(command.Name))
-            errors.Add(ExerciseErrorMessages.ExerciseNameRequired);
-            
-        if (string.IsNullOrWhiteSpace(command.Description))
-            errors.Add(ExerciseErrorMessages.ExerciseDescriptionRequired);
-            
-        if (command.DifficultyId.IsEmpty)
-            errors.Add(ExerciseErrorMessages.DifficultyLevelRequired);
+        // If no valid exercise types, validation passes
+        if (validIds.Count == 0) return true;
         
-        // Same validation logic as create
-        bool isRestExercise = false;
-        if (command.ExerciseTypeIds.Any())
+        // Check if this is a REST exercise
+        var isRestExercise = await _exerciseTypeService.AnyIsRestTypeAsync(validIds.Select(id => id.ToString()).ToList());
+        var hasWeightType = !weightTypeId.IsEmpty;
+        
+        if (isRestExercise)
         {
-            var exerciseTypeIdStrings = command.ExerciseTypeIds.Select(id => id.ToString()).ToList();
-            isRestExercise = await _exerciseTypeService.AnyIsRestTypeAsync(exerciseTypeIdStrings);
+            // REST exercises cannot have weight type
+            return !hasWeightType;
         }
         
-        // Exercise type-specific validation using pattern matching
-        var typeSpecificErrors = isRestExercise switch
-        {
-            true => ValidateRestExercise(command, command.ExerciseTypeIds),
-            false => ValidateNonRestExercise(command)
-        };
-        
-        errors.AddRange(typeSpecificErrors);
-        
-        return errors.Any() 
-            ? ValidationResult.Failure(errors.ToArray()) 
-            : ValidationResult.Success();
+        // Non-REST exercises should have weight type (optional for now)
+        return true; // Allow non-REST without weight type for flexibility
     }
+
+    private async Task<bool> ValidateMuscleGroupsForExerciseTypesAsync(List<ExerciseTypeId> exerciseTypeIds, List<MuscleGroupAssignment> muscleGroups)
+    {
+        // Filter out empty IDs
+        var validIds = exerciseTypeIds.Where(id => !id.IsEmpty).ToList();
+        
+        // If no valid exercise types, validation passes
+        if (validIds.Count == 0) return true;
+        
+        // Check if this is a REST exercise
+        var isRestExercise = await _exerciseTypeService.AnyIsRestTypeAsync(validIds.Select(id => id.ToString()).ToList());
+        var hasMuscleGroups = muscleGroups.Count > 0;
+        
+        if (isRestExercise)
+        {
+            // REST exercises should not have muscle groups
+            return !hasMuscleGroups;
+        }
+        
+        // Non-REST exercises must have at least one muscle group
+        return hasMuscleGroups;
+    }
+
+    #endregion
+
 
     private static ExerciseDto MapToExerciseDto(Exercise exercise)
     {
@@ -377,115 +430,4 @@ public class ExerciseService : IExerciseService
 
     #endregion
 
-    #region Exercise Type Validation Methods
-
-    private static List<string> ValidateRestExercise(CreateExerciseCommand command, List<ExerciseTypeId> exerciseTypeIds)
-    {
-        return ValidateRestExerciseInternal(
-            command.KineticChainId,
-            command.ExerciseWeightTypeId,
-            exerciseTypeIds);
-    }
-
-    private static List<string> ValidateRestExercise(UpdateExerciseCommand command, List<ExerciseTypeId> exerciseTypeIds)
-    {
-        return ValidateRestExerciseInternal(
-            command.KineticChainId,
-            command.ExerciseWeightTypeId,
-            exerciseTypeIds);
-    }
-
-    private static List<string> ValidateRestExerciseInternal(
-        KineticChainTypeId kineticChainId,
-        ExerciseWeightTypeId exerciseWeightTypeId,
-        List<ExerciseTypeId> exerciseTypeIds)
-    {
-        var errors = new List<string>();
-
-        if (!kineticChainId.IsEmpty)
-        {
-            errors.Add(ExerciseErrorMessages.RestExerciseCannotHaveKineticChain);
-        }
-        
-        if (!exerciseWeightTypeId.IsEmpty)
-        {
-            errors.Add(ExerciseErrorMessages.RestExerciseCannotHaveWeightType);
-        }
-        
-        // Check if REST is mixed with other types
-        if (exerciseTypeIds.Count > 1)
-        {
-            errors.Add(ExerciseErrorMessages.RestExerciseCannotBeCombined);
-        }
-
-        return errors;
-    }
-
-    private static List<string> ValidateNonRestExercise(CreateExerciseCommand command)
-    {
-        return ValidateNonRestExerciseInternal(
-            command.KineticChainId,
-            command.ExerciseWeightTypeId,
-            command.MuscleGroups,
-            ExerciseErrorMessages.NonRestExerciseMustHaveKineticChain);
-    }
-
-    private static List<string> ValidateNonRestExercise(UpdateExerciseCommand command)
-    {
-        return ValidateNonRestExerciseInternal(
-            command.KineticChainId,
-            command.ExerciseWeightTypeId,
-            command.MuscleGroups,
-            ExerciseErrorMessages.NonRestExerciseMustHaveKineticChainUpdate);
-    }
-
-    private static List<string> ValidateNonRestExerciseInternal(
-        KineticChainTypeId kineticChainId,
-        ExerciseWeightTypeId exerciseWeightTypeId,
-        List<MuscleGroupAssignment> muscleGroups,
-        string kineticChainErrorMessage)
-    {
-        var errors = new List<string>();
-
-        if (kineticChainId.IsEmpty)
-        {
-            errors.Add(kineticChainErrorMessage);
-        }
-        
-        if (exerciseWeightTypeId.IsEmpty)
-        {
-            errors.Add(ExerciseErrorMessages.NonRestExerciseMustHaveWeightType);
-        }
-        
-        // Must have muscle groups for non-REST exercises
-        if (!muscleGroups.Any())
-        {
-            errors.Add(ExerciseErrorMessages.NonRestExerciseMustHaveMuscleGroups);
-        }
-        else
-        {
-            // Validate muscle groups don't have empty IDs
-            var muscleGroupErrors = ValidateMuscleGroups(muscleGroups);
-            errors.AddRange(muscleGroupErrors);
-        }
-
-        return errors;
-    }
-
-    private static List<string> ValidateMuscleGroups(List<MuscleGroupAssignment> muscleGroups)
-    {
-        var errors = new List<string>();
-        
-        foreach (var mg in muscleGroups)
-        {
-            if (mg.MuscleGroupId.IsEmpty)
-                errors.Add(ExerciseErrorMessages.InvalidMuscleGroupId);
-            if (mg.MuscleRoleId.IsEmpty)
-                errors.Add(ExerciseErrorMessages.InvalidMuscleRoleId);
-        }
-        
-        return errors;
-    }
-
-    #endregion
 }

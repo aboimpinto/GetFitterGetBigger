@@ -34,11 +34,29 @@
 - Mixed sync/async chains
 - Integration with ServiceResult
 
+#### [Validation Extensions Catalog](./CodeQualityGuidelines/ValidationExtensionsCatalog.md)
+- **COMPLETE REFERENCE** All validation extensions
+- EnsureNotEmpty, EnsureMaxLength, EnsureNameIsUniqueAsync
+- EnsureHasValidAsync, EnsureNotWhiteSpace patterns
+- Quick reference table and examples
+
 #### [Clean Validation Pattern](./CodeQualityGuidelines/CleanValidationPattern.md)
 - **NEW** Positive assertions and trust boundaries
 - Simplified validation with smart overloads
 - Minimal defensive programming
 - Helper methods with positive naming
+
+#### [Positive Validation Pattern](./CodeQualityGuidelines/PositiveValidationPattern.md)
+- **CRITICAL** Use positive assertions (IS, HAS, CAN)
+- No double negations in validations
+- EnsureNameIsUniqueAsync, EnsureHasValidAsync patterns
+- Helper methods return true for positive state
+
+#### [No Null Command Pattern](./CodeQualityGuidelines/NoNullCommandPattern.md)
+- **CRITICAL** Commands passed to services are NEVER null
+- Controllers always create valid commands via ToCommand()
+- No null checks on command parameters - EVER
+- Trust the architecture, validate business rules only
 
 #### [Validation Anti-Patterns](./CodeQualityGuidelines/ValidationAntiPatterns.md)
 - **NEW** Common validation mistakes to avoid
@@ -91,6 +109,12 @@
 - ParseOrEmpty validation pattern
 - ID format: `{entitytype}-{guid}`
 - Controller and service usage patterns
+
+#### [ID Validation Pattern](./CodeQualityGuidelines/IdValidationPattern.md)
+- **CONSISTENT** Use EnsureNotEmpty for all ID validation
+- No lambda expressions with negation for IDs
+- Returns ValidationFailed (not InvalidFormat)
+- Simplifies controller error handling
 
 ### Code Style
 

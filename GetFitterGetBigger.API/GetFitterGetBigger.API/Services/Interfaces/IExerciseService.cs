@@ -15,15 +15,15 @@ public interface IExerciseService
     /// Gets a paginated list of exercises with filtering
     /// </summary>
     /// <param name="filterParams">The filtering and pagination parameters</param>
-    /// <returns>A paged response containing exercises</returns>
-    Task<PagedResponse<ExerciseDto>> GetPagedAsync(GetExercisesCommand filterParams);
+    /// <returns>Service result containing a paged response of exercises</returns>
+    Task<ServiceResult<PagedResponse<ExerciseDto>>> GetPagedAsync(GetExercisesCommand filterParams);
     
     /// <summary>
     /// Gets an exercise by its ID
     /// </summary>
     /// <param name="id">The ID of the exercise</param>
-    /// <returns>The exercise DTO if found, ExerciseDto.Empty otherwise</returns>
-    Task<ExerciseDto> GetByIdAsync(ExerciseId id);
+    /// <returns>Service result containing the exercise DTO if found, or appropriate error</returns>
+    Task<ServiceResult<ExerciseDto>> GetByIdAsync(ExerciseId id);
     
     /// <summary>
     /// Creates a new exercise

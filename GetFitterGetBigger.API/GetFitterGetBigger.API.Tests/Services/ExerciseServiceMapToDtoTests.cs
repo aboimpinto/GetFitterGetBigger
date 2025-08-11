@@ -89,10 +89,10 @@ public class ExerciseServiceMapToDtoTests
         
         // Assert
         Assert.NotNull(result);
-        Assert.NotNull(result.KineticChain);
-        Assert.Equal(kineticChainId.ToString(), result.KineticChain.Id);
-        Assert.Equal("Open Chain", result.KineticChain.Value);
-        Assert.Equal("Open kinetic chain movement", result.KineticChain.Description);
+        Assert.NotNull(result.Data.KineticChain);
+        Assert.Equal(kineticChainId.ToString(), result.Data.KineticChain.Id);
+        Assert.Equal("Open Chain", result.Data.KineticChain.Value);
+        Assert.Equal("Open kinetic chain movement", result.Data.KineticChain.Description);
     }
     
     [Fact]
@@ -124,7 +124,7 @@ public class ExerciseServiceMapToDtoTests
         
         // Assert
         Assert.NotNull(result);
-        Assert.Null(result.KineticChain);
+        Assert.Null(result.Data.KineticChain);
     }
     
     [Fact]
@@ -158,20 +158,20 @@ public class ExerciseServiceMapToDtoTests
         
         // Assert
         Assert.NotNull(result);
-        Assert.Equal(3, result.CoachNotes.Count);
+        Assert.Equal(3, result.Data.CoachNotes.Count);
         
         // Verify ordering
-        Assert.Equal(note1.Id.ToString(), result.CoachNotes[0].Id);
-        Assert.Equal("First note", result.CoachNotes[0].Text);
-        Assert.Equal(1, result.CoachNotes[0].Order);
+        Assert.Equal(note1.Id.ToString(), result.Data.CoachNotes[0].Id);
+        Assert.Equal("First note", result.Data.CoachNotes[0].Text);
+        Assert.Equal(1, result.Data.CoachNotes[0].Order);
         
-        Assert.Equal(note2.Id.ToString(), result.CoachNotes[1].Id);
-        Assert.Equal("Second note", result.CoachNotes[1].Text);
-        Assert.Equal(2, result.CoachNotes[1].Order);
+        Assert.Equal(note2.Id.ToString(), result.Data.CoachNotes[1].Id);
+        Assert.Equal("Second note", result.Data.CoachNotes[1].Text);
+        Assert.Equal(2, result.Data.CoachNotes[1].Order);
         
-        Assert.Equal(note3.Id.ToString(), result.CoachNotes[2].Id);
-        Assert.Equal("Third note", result.CoachNotes[2].Text);
-        Assert.Equal(3, result.CoachNotes[2].Order);
+        Assert.Equal(note3.Id.ToString(), result.Data.CoachNotes[2].Id);
+        Assert.Equal("Third note", result.Data.CoachNotes[2].Text);
+        Assert.Equal(3, result.Data.CoachNotes[2].Order);
     }
     
     [Fact]
@@ -210,14 +210,14 @@ public class ExerciseServiceMapToDtoTests
         
         // Assert
         Assert.NotNull(result);
-        Assert.Equal(2, result.ExerciseTypes.Count);
+        Assert.Equal(2, result.Data.ExerciseTypes.Count);
         
-        var warmupDto = result.ExerciseTypes.FirstOrDefault(et => et.Value == "Warmup");
+        var warmupDto = result.Data.ExerciseTypes.FirstOrDefault(et => et.Value == "Warmup");
         Assert.NotNull(warmupDto);
         Assert.Equal(warmupType.Id.ToString(), warmupDto.Id);
         Assert.Equal("Warmup exercises", warmupDto.Description);
         
-        var workoutDto = result.ExerciseTypes.FirstOrDefault(et => et.Value == "Workout");
+        var workoutDto = result.Data.ExerciseTypes.FirstOrDefault(et => et.Value == "Workout");
         Assert.NotNull(workoutDto);
         Assert.Equal(workoutType.Id.ToString(), workoutDto.Id);
         Assert.Equal("Main workout", workoutDto.Description);
@@ -244,8 +244,8 @@ public class ExerciseServiceMapToDtoTests
         
         // Assert
         Assert.NotNull(result);
-        Assert.Empty(result.CoachNotes);
-        Assert.Empty(result.ExerciseTypes);
+        Assert.Empty(result.Data.CoachNotes);
+        Assert.Empty(result.Data.ExerciseTypes);
     }
     
     [Fact]
@@ -304,15 +304,15 @@ public class ExerciseServiceMapToDtoTests
         
         // Assert
         Assert.NotNull(result);
-        Assert.Equal(2, result.Items.Count());
+        Assert.Equal(2, result.Data.Items.Count());
         
         // Check exercise1 has coach notes
-        var dto1 = result.Items.First(d => d.Name == "Exercise 1");
+        var dto1 = result.Data.Items.First(d => d.Name == "Exercise 1");
         Assert.Equal(2, dto1.CoachNotes.Count);
         Assert.Empty(dto1.ExerciseTypes);
         
         // Check exercise2 has exercise types
-        var dto2 = result.Items.First(d => d.Name == "Exercise 2");
+        var dto2 = result.Data.Items.First(d => d.Name == "Exercise 2");
         Assert.Empty(dto2.CoachNotes);
         Assert.Single(dto2.ExerciseTypes);
         Assert.Equal("Cooldown", dto2.ExerciseTypes[0].Value);
@@ -344,6 +344,6 @@ public class ExerciseServiceMapToDtoTests
         
         // Assert
         Assert.NotNull(result);
-        Assert.Empty(result.ExerciseTypes); // Null navigation properties are filtered out
+        Assert.Empty(result.Data.ExerciseTypes); // Null navigation properties are filtered out
     }
 }

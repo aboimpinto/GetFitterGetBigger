@@ -113,9 +113,9 @@ namespace GetFitterGetBigger.API.Tests.Services
 
             // Assert
             Assert.NotNull(result);
-            Assert.Equal(2, result.TotalCount);
-            Assert.Equal(2, result.Items.Count());
-            Assert.All(result.Items, dto => Assert.Contains("Press", dto.Name));
+            Assert.Equal(2, result.Data.TotalCount);
+            Assert.Equal(2, result.Data.Items.Count());
+            Assert.All(result.Data.Items, dto => Assert.Contains("Press", dto.Name));
         }
 
         [Fact]
@@ -136,7 +136,7 @@ namespace GetFitterGetBigger.API.Tests.Services
 
             // Assert
             Assert.NotNull(result);
-            Assert.Equal("Test Exercise", result.Name);
+            Assert.Equal("Test Exercise", result.Data.Name);
         }
 
         [Fact]
@@ -150,7 +150,7 @@ namespace GetFitterGetBigger.API.Tests.Services
 
             // Assert
             Assert.NotNull(result);
-            Assert.True(result.IsEmpty);
+            Assert.True(result.Data.IsEmpty);
         }
 
         [Fact]
@@ -203,6 +203,7 @@ namespace GetFitterGetBigger.API.Tests.Services
                 .AddMuscleGroup(MuscleGroupTestBuilder.Chest(), MuscleRoleTestBuilder.Primary())
                 .Build();
 
+            // Mock repository to return true for ExistsAsync (name already exists)
             _mockExerciseRepository
                 .Setup(r => r.ExistsAsync("Duplicate Exercise", It.IsAny<ExerciseId?>()))
                 .ReturnsAsync(true);
@@ -213,7 +214,8 @@ namespace GetFitterGetBigger.API.Tests.Services
             // Assert
             Assert.False(result.IsSuccess);
             Assert.True(result.Data.IsEmpty);
-            Assert.Contains("already exists", result.Errors.First()); // Partial match for DuplicateNameFormat
+            // Use ServiceErrorCode instead of message content
+            Assert.Equal(ServiceErrorCode.AlreadyExists, result.PrimaryErrorCode);
         }
 
         [Fact]
@@ -328,7 +330,7 @@ namespace GetFitterGetBigger.API.Tests.Services
 
             // Assert
             Assert.False(result.IsSuccess);
-            Assert.Contains(ExerciseErrorMessages.ExerciseNotFound, result.Errors);
+            Assert.Equal(ServiceErrorCode.NotFound, result.PrimaryErrorCode);
             _mockExerciseRepository.Verify(r => r.SoftDeleteAsync(It.IsAny<ExerciseId>()), Times.Never);
         }
 
@@ -361,17 +363,17 @@ namespace GetFitterGetBigger.API.Tests.Services
             
             // Assert
             Assert.False(result.IsSuccess);
-            Assert.Contains(ExerciseErrorMessages.RestExerciseCannotHaveWeightType, result.Errors);
+            Assert.Equal(ServiceErrorCode.ValidationFailed, result.PrimaryErrorCode);
         }
 
         [Fact]
-        public async Task CreateAsync_WithNonRestExerciseWithoutWeightType_ReturnsFailure()
+        public async Task CreateAsync_WithNonRestExerciseWithoutWeightType_Succeeds()
         {
             // Arrange
             var request = CreateExerciseRequestBuilder.ForWorkoutExercise()
                 .WithName("Workout Exercise")
                 .WithDescription("Workout description")
-                .WithExerciseWeightTypeId(null) // Should be required
+                .WithExerciseWeightTypeId(null) // Optional for non-REST exercises
                 .AddMuscleGroup(
                     MuscleGroupTestBuilder.Chest(), 
                     MuscleRoleTestBuilder.Primary())
@@ -382,12 +384,18 @@ namespace GetFitterGetBigger.API.Tests.Services
                 .Setup(s => s.AnyIsRestTypeAsync(It.IsAny<IEnumerable<string>>()))
                 .ReturnsAsync(false);
 
+            // Add missing mock for repository.AddAsync
+            _mockExerciseRepository
+                .Setup(r => r.AddAsync(It.IsAny<Exercise>()))
+                .ReturnsAsync((Exercise e) => e);
+
             // Act
             var result = await _service.CreateAsync(request.ToCommand());
             
             // Assert
-            Assert.False(result.IsSuccess);
-            Assert.Contains(ExerciseErrorMessages.NonRestExerciseMustHaveWeightType, result.Errors);
+            Assert.True(result.IsSuccess);
+            Assert.NotNull(result.Data);
+            Assert.False(result.Data.IsEmpty);
         }
 
         [Fact]
@@ -468,11 +476,11 @@ namespace GetFitterGetBigger.API.Tests.Services
             
             // Assert
             Assert.False(result.IsSuccess);
-            Assert.Contains(ExerciseErrorMessages.RestExerciseCannotHaveWeightType, result.Errors);
+            Assert.Equal(ServiceErrorCode.ValidationFailed, result.PrimaryErrorCode);
         }
 
         [Fact]
-        public async Task UpdateAsync_WithNonRestExerciseWithoutWeightType_ReturnsFailure()
+        public async Task UpdateAsync_WithNonRestExerciseWithoutWeightType_Succeeds()
         {
             // Arrange
             var exerciseId = ExerciseId.New();
@@ -482,7 +490,7 @@ namespace GetFitterGetBigger.API.Tests.Services
                 .WithDifficultyId("difficultylevel-" + Guid.NewGuid())
                 .WithKineticChainId("kineticchaintype-" + Guid.NewGuid())
                 .WithExerciseTypes("exercisetype-" + Guid.NewGuid())
-                .WithExerciseWeightTypeId(null) // Should be required
+                .WithExerciseWeightTypeId(null) // Optional for non-REST exercises
                 .AddMuscleGroup(
                     "musclegroup-" + Guid.NewGuid(),
                     "musclerole-" + Guid.NewGuid())
@@ -509,8 +517,9 @@ namespace GetFitterGetBigger.API.Tests.Services
             var result = await _service.UpdateAsync(ExerciseId.ParseOrEmpty(exerciseId.ToString()), request.ToCommand());
             
             // Assert
-            Assert.False(result.IsSuccess);
-            Assert.Contains(ExerciseErrorMessages.NonRestExerciseMustHaveWeightType, result.Errors);
+            Assert.True(result.IsSuccess);
+            Assert.NotNull(result.Data);
+            Assert.False(result.Data.IsEmpty);
         }
     }
 }

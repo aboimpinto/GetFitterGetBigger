@@ -1,7 +1,9 @@
 using GetFitterGetBigger.API.DTOs;
+using GetFitterGetBigger.API.Extensions;
 using GetFitterGetBigger.API.Mappers;
 using GetFitterGetBigger.API.Models.SpecializedIds;
 using GetFitterGetBigger.API.Services.Interfaces;
+using GetFitterGetBigger.API.Services.Results;
 using Microsoft.AspNetCore.Mvc;
 
 namespace GetFitterGetBigger.API.Controllers;
@@ -13,21 +15,12 @@ namespace GetFitterGetBigger.API.Controllers;
 [Route("api/[controller]")]
 [Produces("application/json")]
 [Tags("Exercises")]
-public class ExercisesController : ControllerBase
+public class ExercisesController(
+    IExerciseService exerciseService,
+    ILogger<ExercisesController> logger) : ControllerBase
 {
-    private readonly IExerciseService _exerciseService;
-    private readonly ILogger<ExercisesController> _logger;
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="ExercisesController"/> class
-    /// </summary>
-    /// <param name="exerciseService">The exercise service</param>
-    /// <param name="logger">The logger</param>
-    public ExercisesController(IExerciseService exerciseService, ILogger<ExercisesController> logger)
-    {
-        _exerciseService = exerciseService;
-        _logger = logger;
-    }
+    private readonly IExerciseService _exerciseService = exerciseService;
+    private readonly ILogger<ExercisesController> _logger = logger;
 
     /// <summary>
     /// Gets a paginated list of exercises with optional filtering
@@ -41,15 +34,15 @@ public class ExercisesController : ControllerBase
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> GetExercises([FromQuery] ExerciseFilterParams filterParams)
     {
-        if (!ModelState.IsValid)
-        {
-            return BadRequest(ModelState);
-        }
-
         _logger.LogInformation("Getting exercises with filters: {@FilterParams}", filterParams);
         
         var result = await _exerciseService.GetPagedAsync(filterParams.ToCommand());
-        return Ok(result);
+        
+        return result switch
+        {
+            { IsSuccess: true, Data: var pagedResponse } => Ok(pagedResponse),
+            _ => BadRequest(result.GetCombinedErrorMessage())
+        };
     }
 
     /// <summary>
@@ -66,11 +59,15 @@ public class ExercisesController : ControllerBase
     {
         _logger.LogInformation("Getting exercise with ID: {Id}", id);
         
-        var exercise = await _exerciseService.GetByIdAsync(ExerciseId.ParseOrEmpty(id));
+        var result = await _exerciseService.GetByIdAsync(ExerciseId.ParseOrEmpty(id));
         
-        return exercise.IsEmpty 
-            ? NotFound() 
-            : Ok(exercise);
+        return result switch
+        {
+            { IsSuccess: true, Data: var exercise } => Ok(exercise),
+            { PrimaryErrorCode: ServiceErrorCode.NotFound } => NotFound(result.GetCombinedErrorMessage()),
+            { PrimaryErrorCode: ServiceErrorCode.ValidationFailed } => BadRequest(result.GetCombinedErrorMessage()),
+            _ => BadRequest(result.GetCombinedErrorMessage())
+        };
     }
 
     /// <summary>
@@ -133,11 +130,6 @@ public class ExercisesController : ControllerBase
     [ProducesResponseType(StatusCodes.Status409Conflict)]
     public async Task<IActionResult> CreateExercise([FromBody] CreateExerciseRequest request)
     {
-        if (!ModelState.IsValid)
-        {
-            return BadRequest(ModelState);
-        }
-
         _logger.LogInformation("Creating new exercise: {Name}", request.Name);
         
         var result = await _exerciseService.CreateAsync(request.ToCommand());
@@ -145,8 +137,9 @@ public class ExercisesController : ControllerBase
         return result switch
         {
             { IsSuccess: true } => CreatedAtAction(nameof(GetExercise), new { id = result.Data.Id }, result.Data),
-            { Errors: var errors } when errors.Any(e => e.Contains("already exists")) => Conflict(new { errors }),
-            { Errors: var errors } => BadRequest(new { errors })
+            { PrimaryErrorCode: ServiceErrorCode.AlreadyExists } => Conflict(result.GetCombinedErrorMessage()),
+            { PrimaryErrorCode: ServiceErrorCode.ValidationFailed } => BadRequest(result.GetCombinedErrorMessage()),
+            _ => BadRequest(result.GetCombinedErrorMessage())
         };
     }
 
@@ -216,11 +209,6 @@ public class ExercisesController : ControllerBase
     [ProducesResponseType(StatusCodes.Status409Conflict)]
     public async Task<IActionResult> UpdateExercise(string id, [FromBody] UpdateExerciseRequest request)
     {
-        if (!ModelState.IsValid)
-        {
-            return BadRequest(ModelState);
-        }
-
         _logger.LogInformation("Updating exercise with ID: {Id}", id);
         
         var result = await _exerciseService.UpdateAsync(ExerciseId.ParseOrEmpty(id), request.ToCommand());
@@ -228,9 +216,10 @@ public class ExercisesController : ControllerBase
         return result switch
         {
             { IsSuccess: true } => Ok(result.Data),
-            { Errors: var errors } when errors.Any(e => e.Contains("not found")) => NotFound(new { errors }),
-            { Errors: var errors } when errors.Any(e => e.Contains("already exists")) => Conflict(new { errors }),
-            { Errors: var errors } => BadRequest(new { errors })
+            { PrimaryErrorCode: ServiceErrorCode.NotFound } => NotFound(result.GetCombinedErrorMessage()),
+            { PrimaryErrorCode: ServiceErrorCode.AlreadyExists } => Conflict(result.GetCombinedErrorMessage()),
+            { PrimaryErrorCode: ServiceErrorCode.ValidationFailed } => BadRequest(result.GetCombinedErrorMessage()),
+            _ => BadRequest(result.GetCombinedErrorMessage())
         };
     }
 
@@ -264,9 +253,9 @@ public class ExercisesController : ControllerBase
         return result switch
         {
             { IsSuccess: true } => NoContent(),
-            { Errors: var errors } when errors.Any(e => e.Contains("Invalid exercise ID")) => NotFound(),
-            { Errors: var errors } when errors.Any(e => e.Contains("not found")) => NotFound(),
-            { Errors: var errors } => BadRequest(new { errors })
+            { PrimaryErrorCode: ServiceErrorCode.NotFound } => NotFound(result.GetCombinedErrorMessage()),
+            { PrimaryErrorCode: ServiceErrorCode.ValidationFailed } => BadRequest(result.GetCombinedErrorMessage()),
+            _ => BadRequest(result.GetCombinedErrorMessage())
         };
     }
 }

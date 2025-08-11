@@ -122,6 +122,57 @@ public class ServiceValidationBuilder<T>
     }
 
     /// <summary>
+    /// Validates that a string does not exceed a maximum length.
+    /// </summary>
+    /// <param name="value">The string value to validate</param>
+    /// <param name="maxLength">The maximum allowed length</param>
+    /// <param name="errorMessage">The error message if validation fails</param>
+    /// <returns>The builder instance for chaining</returns>
+    public ServiceValidationBuilder<T> EnsureMaxLength(string value, int maxLength, string errorMessage)
+    {
+        _validation.Ensure(() => value.Length <= maxLength, ServiceError.ValidationFailed(errorMessage));
+        return this;
+    }
+
+    /// <summary>
+    /// Validates that a name IS unique (positive assertion).
+    /// </summary>
+    /// <param name="isUniqueCheck">Async function that returns true if the name IS unique</param>
+    /// <param name="entityName">The entity name for the error message</param>
+    /// <param name="nameValue">The name value being checked</param>
+    /// <returns>The builder instance for chaining</returns>
+    public ServiceValidationBuilder<T> EnsureNameIsUniqueAsync(
+        Func<Task<bool>> isUniqueCheck,
+        string entityName,
+        string nameValue)
+    {
+        _asyncServiceErrorValidations.Add(async () =>
+        {
+            var isUnique = await isUniqueCheck();
+            return (isUnique, isUnique ? null : ServiceError.AlreadyExists(entityName, nameValue));
+        });
+        return this;
+    }
+
+    /// <summary>
+    /// Validates that something HAS a valid configuration (positive assertion).
+    /// </summary>
+    /// <param name="hasValidCheck">Async function that returns true if configuration IS valid</param>
+    /// <param name="errorMessage">The error message if validation fails</param>
+    /// <returns>The builder instance for chaining</returns>
+    public ServiceValidationBuilder<T> EnsureHasValidAsync(
+        Func<Task<bool>> hasValidCheck,
+        string errorMessage)
+    {
+        _asyncServiceErrorValidations.Add(async () =>
+        {
+            var isValid = await hasValidCheck();
+            return (isValid, isValid ? null : ServiceError.ValidationFailed(errorMessage));
+        });
+        return this;
+    }
+
+    /// <summary>
     /// Validates that an item is unique using a positive check.
     /// The predicate should return true when the item IS unique.
     /// </summary>

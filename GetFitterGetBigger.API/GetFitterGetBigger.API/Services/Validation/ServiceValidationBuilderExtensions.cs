@@ -21,14 +21,16 @@ public static class ServiceValidationBuilderExtensions
         Func<Task<ServiceResult<T>>> whenValid)
         where T : class, IEmptyDto<T>
     {
-        // First check if validation has already failed
-        if (builder.Validation.HasErrors)
-        {
-            return builder.Validation.CreateFailureWithEmpty(T.Empty);
-        }
-
-        // If no errors, execute the valid function
-        return await whenValid();
+        // Execute all validations (including async) using the builder's MatchAsync method
+        // IMPORTANT: Use the ServiceError overload to ensure async ServiceError validations are executed
+        return await builder.MatchAsync(
+            whenValid: whenValid,
+            whenInvalid: (IReadOnlyList<ServiceError> errors) => 
+            {
+                // Use the first ServiceError if available, otherwise create ValidationFailed
+                var firstError = errors.FirstOrDefault() ?? ServiceError.ValidationFailed("Validation failed");
+                return ServiceResult<T>.Failure(T.Empty, firstError);
+            });
     }
 
     /// <summary>

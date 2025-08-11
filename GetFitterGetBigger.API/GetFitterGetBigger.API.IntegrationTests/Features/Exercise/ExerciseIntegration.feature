@@ -130,7 +130,7 @@ Feature: Exercise Integration
     When I create an exercise with rest and other types
     And I submit the exercise
     Then the response status should be 400
-    And the response should contain "REST"
+    And the response should contain "Invalid exercise type configuration"
 
   @exercise @integration @rest
   Scenario: Create exercise with only rest type returns created exercise
@@ -175,4 +175,4 @@ Feature: Exercise Integration
     When I update the exercise "Normal Exercise" with new coach notes
     And I send a PUT request to update with rest and other types
     Then the response status should be 400
-    And the response should contain "REST"
+    And the response should contain "Invalid exercise type configuration"

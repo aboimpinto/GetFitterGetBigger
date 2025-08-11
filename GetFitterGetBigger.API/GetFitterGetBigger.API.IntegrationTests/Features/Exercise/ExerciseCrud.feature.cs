@@ -201,8 +201,8 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.Exercise
             {
                 await this.ScenarioStartAsync();
                 await this.FeatureBackgroundAsync();
-                await testRunner.WhenAsync("I send a GET request to \"/api/exercises/exercise-00000000-0000-0000-0000-00000000" +
-                        "0000\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
+                await testRunner.WhenAsync("I send a GET request to \"/api/exercises/exercise-99999999-9999-9999-9999-99999999" +
+                        "9999\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
                 await testRunner.ThenAsync("the response status should be 404", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
             }
             await this.ScenarioCleanupAsync();

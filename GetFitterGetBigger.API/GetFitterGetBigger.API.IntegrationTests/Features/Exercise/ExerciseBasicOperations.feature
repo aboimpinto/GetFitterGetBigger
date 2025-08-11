@@ -18,9 +18,9 @@ Feature: Exercise Basic Operations
     And the response should have property "totalPages"
 
   @exercise @basic @validation
-  Scenario: Get exercise with invalid format returns not found
+  Scenario: Get exercise with invalid format returns bad request
     When I send a GET request to "/api/exercises/invalid-format"
-    Then the response status should be 404
+    Then the response status should be 400
 
   @exercise @basic @validation
   Scenario: Create exercise with empty name returns bad request

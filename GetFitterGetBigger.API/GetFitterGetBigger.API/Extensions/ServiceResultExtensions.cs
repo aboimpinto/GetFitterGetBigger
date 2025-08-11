@@ -9,141 +9,27 @@ namespace GetFitterGetBigger.API.Extensions;
 public static class ServiceResultExtensions
 {
     /// <summary>
-    /// Converts a ServiceResult to an appropriate IActionResult using error codes
+    /// Gets a combined error message from all errors in the result
     /// </summary>
-    public static IActionResult ToActionResultWithErrorCodes<T>(
-        this ServiceResult<T> result,
-        ControllerBase controller)
+    /// <param name="result">The service result</param>
+    /// <param name="separator">The separator between error messages (default: " | ")</param>
+    /// <returns>A single string with all error messages combined</returns>
+    public static string GetCombinedErrorMessage<T>(this ServiceResult<T> result, string separator = " | ")
     {
-        return result switch
-        {
-            { IsSuccess: true } => controller.Ok(result.Data),
-            { PrimaryErrorCode: ServiceErrorCode.NotFound } => controller.NotFound(new { result.StructuredErrors }),
-            { PrimaryErrorCode: ServiceErrorCode.AlreadyExists } => controller.Conflict(new { result.StructuredErrors }),
-            { PrimaryErrorCode: ServiceErrorCode.Unauthorized } => controller.Unauthorized(new { result.StructuredErrors }),
-            { StructuredErrors: var errors } => controller.BadRequest(new { errors })
-        };
+        if (result.IsSuccess || !result.Errors.Any())
+            return string.Empty;
+
+        // Using Aggregate to combine all error messages (Errors is List<string>)
+        return result.Errors.Aggregate((current, next) => $"{current}{separator}{next}");
     }
-    
+
     /// <summary>
-    /// Converts a ServiceResult to an appropriate IActionResult for creation operations using error codes
+    /// Gets the primary error message (first error) or empty string
     /// </summary>
-    public static IActionResult ToCreatedResultWithErrorCodes<T>(
-        this ServiceResult<T> result, 
-        string actionName, 
-        Func<T, object> routeValuesSelector,
-        ControllerBase controller)
+    /// <param name="result">The service result</param>
+    /// <returns>The first error message or empty string</returns>
+    public static string GetPrimaryErrorMessage<T>(this ServiceResult<T> result)
     {
-        return result switch
-        {
-            { IsSuccess: true } => controller.CreatedAtAction(
-                actionName, 
-                routeValuesSelector(result.Data), 
-                result.Data),
-            { PrimaryErrorCode: ServiceErrorCode.AlreadyExists } => 
-                controller.Conflict(new { result.StructuredErrors }),
-            { PrimaryErrorCode: ServiceErrorCode.ValidationFailed } => 
-                controller.BadRequest(new { result.StructuredErrors }),
-            { StructuredErrors: var errors } => 
-                controller.BadRequest(new { errors })
-        };
-    }
-    
-    /// <summary>
-    /// Converts a ServiceResult to an appropriate IActionResult for update operations using error codes
-    /// </summary>
-    public static IActionResult ToUpdateResultWithErrorCodes<T>(this ServiceResult<T> result, ControllerBase controller)
-    {
-        return result switch
-        {
-            { IsSuccess: true } => controller.Ok(result.Data),
-            { PrimaryErrorCode: ServiceErrorCode.NotFound } => 
-                controller.NotFound(new { result.StructuredErrors }),
-            { PrimaryErrorCode: ServiceErrorCode.AlreadyExists } => 
-                controller.Conflict(new { result.StructuredErrors }),
-            { PrimaryErrorCode: ServiceErrorCode.ConcurrencyConflict } => 
-                controller.Conflict(new { result.StructuredErrors }),
-            { StructuredErrors: var errors } => 
-                controller.BadRequest(new { errors })
-        };
-    }
-    
-    /// <summary>
-    /// Converts a ServiceResult to an appropriate IActionResult for delete operations using error codes
-    /// </summary>
-    public static IActionResult ToDeleteResultWithErrorCodes(this ServiceResult<bool> result, ControllerBase controller)
-    {
-        return result switch
-        {
-            { IsSuccess: true } => controller.NoContent(),
-            { PrimaryErrorCode: ServiceErrorCode.NotFound } => 
-                controller.NotFound(new { result.StructuredErrors }),
-            { PrimaryErrorCode: ServiceErrorCode.DependencyExists } => 
-                controller.Conflict(new { result.StructuredErrors }),
-            { StructuredErrors: var errors } => 
-                controller.BadRequest(new { errors })
-        };
-    }
-    
-    /// <summary>
-    /// Converts a ServiceResult to an appropriate IActionResult for creation operations
-    /// </summary>
-    public static IActionResult ToCreatedResult<T>(
-        this ServiceResult<T> result, 
-        string actionName, 
-        Func<T, object> routeValuesSelector,
-        ControllerBase controller)
-    {
-        return result switch
-        {
-            { IsSuccess: true } => controller.CreatedAtAction(
-                actionName, 
-                routeValuesSelector(result.Data), 
-                result.Data),
-            { Errors: var errors } when errors.Any(e => e.Contains("already exists")) => 
-                controller.Conflict(new { errors }),
-            { Errors: var errors } => 
-                controller.BadRequest(new { errors })
-        };
-    }
-    
-    /// <summary>
-    /// Converts a ServiceResult to an appropriate IActionResult for update operations
-    /// </summary>
-    public static IActionResult ToUpdateResult<T>(this ServiceResult<T> result, ControllerBase controller)
-    {
-        return result switch
-        {
-            { IsSuccess: true } => controller.Ok(result.Data),
-            { Errors: var errors } when errors.Any(e => e.Contains("not found")) => 
-                controller.NotFound(new { errors }),
-            { Errors: var errors } when errors.Any(e => e.Contains("already exists")) => 
-                controller.Conflict(new { errors }),
-            { Errors: var errors } => 
-                controller.BadRequest(new { errors })
-        };
-    }
-    
-    /// <summary>
-    /// Converts a ServiceResult to an appropriate IActionResult with custom error mapping
-    /// </summary>
-    public static IActionResult ToActionResult<T>(
-        this ServiceResult<T> result, 
-        ControllerBase controller,
-        Func<T, IActionResult> successHandler,
-        params (Func<string, bool> predicate, Func<object, IActionResult> handler)[] errorHandlers)
-    {
-        if (result.IsSuccess)
-            return successHandler(result.Data);
-        
-        var errors = new { errors = result.Errors };
-        
-        foreach (var (predicate, handler) in errorHandlers)
-        {
-            if (result.Errors.Any(predicate))
-                return handler(errors);
-        }
-        
-        return controller.BadRequest(errors);
+        return result.Errors.FirstOrDefault() ?? string.Empty;
     }
 }

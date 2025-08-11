@@ -55,7 +55,7 @@ Feature: REST Exercise Muscle Group Validation
     And the response body should contain "muscle group"
 
   @exercise @rest-validation
-  Scenario: Create REST exercise with muscle groups still succeeds
+  Scenario: Create REST exercise with muscle groups returns bad request
     When I send a GET request to "/api/ReferenceTables/MuscleGroups"
     Then the response status should be 200
     And I store the first item from the response as "firstMuscleGroup"
@@ -63,8 +63,8 @@ Feature: REST Exercise Muscle Group Validation
     When I send a POST request to "/api/exercises" with body:
       """
       {
-        "name": "Rest Period With Optional Muscle Groups",
-        "description": "REST exercise can have muscle groups but doesn't require them",
+        "name": "Invalid Rest Period With Muscle Groups",
+        "description": "REST exercise cannot have muscle groups",
         "coachNotes": [],
         "exerciseTypeIds": ["exercisetype-d4e5f6a7-8b9c-0d1e-2f3a-4b5c6d7e8f9a"],
         "isUnilateral": false,
@@ -82,7 +82,6 @@ Feature: REST Exercise Muscle Group Validation
         "movementPatternIds": []
       }
       """
-    Then the response status should be 201
-    And the response should have property "name" with value "Rest Period With Optional Muscle Groups"
-    And the response should have property "muscleGroups" as array with length 1
+    Then the response status should be 400
+    And the response body should contain "muscle group"
 

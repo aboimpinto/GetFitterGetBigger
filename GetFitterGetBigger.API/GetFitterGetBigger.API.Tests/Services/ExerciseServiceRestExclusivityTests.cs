@@ -100,7 +100,7 @@ public class ExerciseServiceRestExclusivityTests
         
         // Assert
         Assert.False(result.IsSuccess);
-        Assert.Contains(ExerciseErrorMessages.RestExerciseCannotBeCombined, result.Errors);
+        Assert.Equal(ServiceErrorCode.ValidationFailed, result.PrimaryErrorCode);
     }
     
     [Fact]
@@ -153,7 +153,7 @@ public class ExerciseServiceRestExclusivityTests
         
         // Assert
         Assert.False(result.IsSuccess);
-        Assert.Contains(ExerciseErrorMessages.RestExerciseCannotBeCombined, result.Errors);
+        Assert.Equal(ServiceErrorCode.ValidationFailed, result.PrimaryErrorCode);
     }
     
     [Fact]

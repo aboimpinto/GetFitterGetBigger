@@ -22,10 +22,12 @@ namespace GetFitterGetBigger.API.Constants
         public static string NonRestExerciseMustHaveKineticChainUpdate => "Non-REST exercises must have a kinetic chain.";
         
         // General validation
+        public static string InvalidIdFormat => "Invalid Exercise ID format. Expected format: exercise-{guid}";
         public static string InvalidExerciseId => "Invalid exercise ID";
         public static string ExerciseNotFound => "Exercise not found";
         public static string DifficultyLevelRequired => "Difficulty level is required.";
         public static string ExerciseNameRequired => "Exercise name is required.";
+        public static string ExerciseNameMaxLength => "Exercise name cannot exceed 255 characters.";
         public static string ExerciseDescriptionRequired => "Exercise description is required.";
         public static string AtLeastOneExerciseTypeRequired => "At least one exercise type must be specified.";
         public static string InvalidExerciseTypeIds => "Invalid exercise type IDs provided.";
@@ -37,6 +39,7 @@ namespace GetFitterGetBigger.API.Constants
         public static string InvalidMuscleRoleId => "Invalid muscle role ID found.";
         
         // Exercise type validation
+        public static string InvalidExerciseTypeConfiguration => "Invalid exercise type configuration.";
         public static string SomeExerciseTypesDoNotExist => "Some exercise types do not exist.";
     }
 }

@@ -617,7 +617,7 @@ public class WorkoutTemplateService : IWorkoutTemplateService
         // - Consider muscle group distribution
         // - Match exercises to workout category characteristics
         // - Consider difficulty levels and progression
-        var suggestedExercises = exercisesResult.Items
+        var suggestedExercises = exercisesResult.Data.Items
             .Where(exercise => !existingIdSet.Contains(ExerciseId.ParseOrEmpty(exercise.Id)))
             .Take(maxSuggestions)
             .ToList();
@@ -674,7 +674,8 @@ public class WorkoutTemplateService : IWorkoutTemplateService
         
         foreach (var exerciseId in exerciseIds)
         {
-            var exerciseDto = await _exerciseService.GetByIdAsync(exerciseId);
+            var exerciseResult = await _exerciseService.GetByIdAsync(exerciseId);
+            var exerciseDto = exerciseResult.Data;
             if (!exerciseDto.IsEmpty && exerciseDto.Equipment?.Any() == true)
             {
                 foreach (var equipmentRef in exerciseDto.Equipment)

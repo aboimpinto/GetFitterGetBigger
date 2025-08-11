@@ -176,18 +176,18 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.Exercise
             await this.ScenarioCleanupAsync();
         }
         
-        [Xunit.SkippableFactAttribute(DisplayName="Create REST exercise with muscle groups still succeeds")]
+        [Xunit.SkippableFactAttribute(DisplayName="Create REST exercise with muscle groups returns bad request")]
         [Xunit.TraitAttribute("FeatureTitle", "REST Exercise Muscle Group Validation")]
-        [Xunit.TraitAttribute("Description", "Create REST exercise with muscle groups still succeeds")]
+        [Xunit.TraitAttribute("Description", "Create REST exercise with muscle groups returns bad request")]
         [Xunit.TraitAttribute("Category", "exercise")]
         [Xunit.TraitAttribute("Category", "rest-validation")]
-        public async System.Threading.Tasks.Task CreateRESTExerciseWithMuscleGroupsStillSucceeds()
+        public async System.Threading.Tasks.Task CreateRESTExerciseWithMuscleGroupsReturnsBadRequest()
         {
             string[] tagsOfScenario = new string[] {
                     "exercise",
                     "rest-validation"};
             System.Collections.Specialized.OrderedDictionary argumentsOfScenario = new System.Collections.Specialized.OrderedDictionary();
-            TechTalk.SpecFlow.ScenarioInfo scenarioInfo = new TechTalk.SpecFlow.ScenarioInfo("Create REST exercise with muscle groups still succeeds", null, tagsOfScenario, argumentsOfScenario, featureTags);
+            TechTalk.SpecFlow.ScenarioInfo scenarioInfo = new TechTalk.SpecFlow.ScenarioInfo("Create REST exercise with muscle groups returns bad request", null, tagsOfScenario, argumentsOfScenario, featureTags);
             this.ScenarioInitialize(scenarioInfo);
             if ((TagHelper.ContainsIgnoreTag(tagsOfScenario) || TagHelper.ContainsIgnoreTag(featureTags)))
             {
@@ -201,8 +201,8 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.Exercise
                 await testRunner.ThenAsync("the response status should be 200", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
                 await testRunner.AndAsync("I store the first item from the response as \"firstMuscleGroup\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
                 await testRunner.WhenAsync("I send a POST request to \"/api/exercises\" with body:", @"{
-  ""name"": ""Rest Period With Optional Muscle Groups"",
-  ""description"": ""REST exercise can have muscle groups but doesn't require them"",
+  ""name"": ""Invalid Rest Period With Muscle Groups"",
+  ""description"": ""REST exercise cannot have muscle groups"",
   ""coachNotes"": [],
   ""exerciseTypeIds"": [""exercisetype-d4e5f6a7-8b9c-0d1e-2f3a-4b5c6d7e8f9a""],
   ""isUnilateral"": false,
@@ -219,10 +219,8 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.Exercise
   ""bodyPartIds"": [],
   ""movementPatternIds"": []
 }", ((TechTalk.SpecFlow.Table)(null)), "When ");
-                await testRunner.ThenAsync("the response status should be 201", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
-                await testRunner.AndAsync("the response should have property \"name\" with value \"Rest Period With Optional Mu" +
-                        "scle Groups\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
-                await testRunner.AndAsync("the response should have property \"muscleGroups\" as array with length 1", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
+                await testRunner.ThenAsync("the response status should be 400", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
+                await testRunner.AndAsync("the response body should contain \"muscle group\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
             }
             await this.ScenarioCleanupAsync();
         }

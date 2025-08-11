@@ -59,7 +59,7 @@ Feature: Exercise CRUD Operations
 
   @exercise @crud
   Scenario: Get non-existent exercise returns 404
-    When I send a GET request to "/api/exercises/exercise-00000000-0000-0000-0000-000000000000"
+    When I send a GET request to "/api/exercises/exercise-99999999-9999-9999-9999-999999999999"
     Then the response status should be 404
 
   @exercise @crud @search
