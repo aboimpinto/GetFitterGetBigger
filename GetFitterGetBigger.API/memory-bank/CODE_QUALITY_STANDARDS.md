@@ -34,6 +34,18 @@
 - Mixed sync/async chains
 - Integration with ServiceResult
 
+#### [Clean Validation Pattern](./CodeQualityGuidelines/CleanValidationPattern.md)
+- **NEW** Positive assertions and trust boundaries
+- Simplified validation with smart overloads
+- Minimal defensive programming
+- Helper methods with positive naming
+
+#### [Validation Anti-Patterns](./CodeQualityGuidelines/ValidationAntiPatterns.md)
+- **NEW** Common validation mistakes to avoid
+- Execution-Validation-Execution anti-pattern
+- Defensive null-checking proliferation
+- Solutions with pattern matching
+
 #### [Null Object Pattern](./CodeQualityGuidelines/NullObjectPattern.md)
 - **CRITICAL** Empty Object Pattern implementation
 - IEmptyDto<T> interface requirements
@@ -157,6 +169,8 @@ return await ServiceValidate.For<T>()
 |----------|---------------|---------------|
 | Service method return type | ServiceResult<T> | [ServiceResultPattern.md](./CodeQualityGuidelines/ServiceResultPattern.md) |
 | Input validation | ServiceValidate fluent API | [ServiceValidatePattern.md](./CodeQualityGuidelines/ServiceValidatePattern.md) |
+| Clean validation approach | Positive assertions | [CleanValidationPattern.md](./CodeQualityGuidelines/CleanValidationPattern.md) |
+| Validation mistakes | Avoid anti-patterns | [ValidationAntiPatterns.md](./CodeQualityGuidelines/ValidationAntiPatterns.md) |
 | Null handling | Null Object Pattern | [NullObjectPattern.md](./CodeQualityGuidelines/NullObjectPattern.md) |
 | Layer separation | Layered Architecture | [LayeredArchitectureRules.md](./CodeQualityGuidelines/ArchitecturalPatterns/LayeredArchitectureRules.md) |
 | Web to service mapping | Request-Command Pattern | [RequestCommandSeparation.md](./CodeQualityGuidelines/ArchitecturalPatterns/RequestCommandSeparation.md) |
@@ -179,6 +193,8 @@ Before approving any PR, verify:
 - [ ] No null returns (Empty pattern used)
 - [ ] ServiceValidate used for validation
 - [ ] Single exit points in all methods
+- [ ] Validation uses positive assertions (no double negatives)
+- [ ] Minimal defensive null checking (trust boundaries)
 - [ ] Controllers have no business logic
 - [ ] ReadOnly for queries, Writable for modifications
 - [ ] Services only access their own repositories

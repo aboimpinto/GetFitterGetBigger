@@ -55,7 +55,8 @@ public class EquipmentController : ControllerBase
     public async Task<IActionResult> GetById(string id) =>
         await _equipmentService.GetByIdAsync(EquipmentId.ParseOrEmpty(id)) switch
         {
-            { IsSuccess: true, Data: var data } => Ok(data),
+            { IsSuccess: true, Data: var data } when !data.IsEmpty => Ok(data),
+            { IsSuccess: true, Data: { IsEmpty: true } } => NotFound(),
             { PrimaryErrorCode: ServiceErrorCode.NotFound } => NotFound(),
             { StructuredErrors: var errors } => BadRequest(new { errors })
         };
@@ -72,7 +73,8 @@ public class EquipmentController : ControllerBase
     public async Task<IActionResult> GetByValue(string value) =>
         await _equipmentService.GetByNameAsync(value) switch
         {
-            { IsSuccess: true, Data: var data } => Ok(data),
+            { IsSuccess: true, Data: var data } when !data.IsEmpty => Ok(data),
+            { IsSuccess: true, Data: { IsEmpty: true } } => NotFound(),
             { PrimaryErrorCode: ServiceErrorCode.NotFound } => NotFound(),
             { StructuredErrors: var errors } => BadRequest(new { errors })
         };

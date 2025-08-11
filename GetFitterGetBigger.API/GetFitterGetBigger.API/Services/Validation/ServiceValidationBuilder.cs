@@ -107,21 +107,84 @@ public class ServiceValidationBuilder<T>
     }
 
     /// <summary>
+    /// Validates that a specialized ID is valid (not null and not empty).
+    /// Uses positive phrasing: "Ensure ID IS valid" instead of "Ensure NOT empty".
+    /// </summary>
+    /// <param name="id">The specialized ID to validate</param>
+    /// <param name="errorMessage">The error message if validation fails</param>
+    /// <returns>The builder instance for chaining</returns>
+    public ServiceValidationBuilder<T> EnsureValidId(ISpecializedIdBase id, string errorMessage)
+    {
+        _validation.EnsureValidId(id, errorMessage);
+        return this;
+    }
+
+    /// <summary>
+    /// Validates that an item is unique using a positive check.
+    /// The predicate should return true when the item IS unique.
+    /// </summary>
+    /// <param name="isUniqueCheck">Async function that returns true if the item is unique</param>
+    /// <param name="serviceError">The service error if the item is not unique</param>
+    /// <returns>The builder instance for chaining</returns>
+    public ServiceValidationBuilder<T> EnsureIsUniqueAsync(
+        Func<Task<bool>> isUniqueCheck,
+        ServiceError serviceError)
+    {
+        _asyncServiceErrorValidations.Add(async () =>
+        {
+            var isUnique = await isUniqueCheck();
+            return (isUnique, isUnique ? null : serviceError);
+        });
+        return this;
+    }
+
+    /// <summary>
+    /// Validates that an item is unique using a positive check.
+    /// Automatically creates a ServiceError.AlreadyExists with the entity name and value.
+    /// </summary>
+    /// <param name="isUniqueCheck">Async function that returns true if the item is unique</param>
+    /// <param name="entityName">The name of the entity for the error message</param>
+    /// <param name="itemValue">The value that already exists</param>
+    /// <returns>The builder instance for chaining</returns>
+    public ServiceValidationBuilder<T> EnsureIsUniqueAsync(
+        Func<Task<bool>> isUniqueCheck,
+        string entityName,
+        string itemValue)
+    {
+        return EnsureIsUniqueAsync(isUniqueCheck, ServiceError.AlreadyExists(entityName, itemValue));
+    }
+
+    /// <summary>
+    /// Validates that an item does not exist.
+    /// The predicate should return true when the item does NOT exist.
+    /// </summary>
+    /// <param name="doesNotExistCheck">Async function that returns true if the item doesn't exist</param>
+    /// <param name="serviceError">The service error if the item exists</param>
+    /// <returns>The builder instance for chaining</returns>
+    public ServiceValidationBuilder<T> EnsureNotExistsAsync(
+        Func<Task<bool>> doesNotExistCheck,
+        ServiceError serviceError)
+    {
+        _asyncServiceErrorValidations.Add(async () =>
+        {
+            var doesNotExist = await doesNotExistCheck();
+            return (doesNotExist, doesNotExist ? null : serviceError);
+        });
+        return this;
+    }
+
+    /// <summary>
     /// Adds an async validation that checks if an entity exists.
+    /// Automatically creates a ServiceError.NotFound with the entity name.
     /// </summary>
     /// <param name="existenceCheck">Function that returns true if entity exists</param>
-    /// <param name="errorMessage">Error message if entity doesn't exist</param>
+    /// <param name="entityName">The name of the entity for the error message</param>
     /// <returns>The builder instance for chaining</returns>
     public ServiceValidationBuilder<T> EnsureExistsAsync(
         Func<Task<bool>> existenceCheck, 
-        string errorMessage)
+        string entityName)
     {
-        _asyncValidations.Add(async () => 
-        {
-            var exists = await existenceCheck();
-            return (exists, exists ? null : errorMessage);
-        });
-        return this;
+        return EnsureExistsAsync(existenceCheck, ServiceError.NotFound(entityName));
     }
     
     /// <summary>
