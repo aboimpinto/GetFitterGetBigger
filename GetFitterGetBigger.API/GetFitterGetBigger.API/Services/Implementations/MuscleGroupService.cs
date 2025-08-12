@@ -63,8 +63,8 @@ public class MuscleGroupService(IUnitOfWorkProvider<FitnessDbContext> unitOfWork
         // Now we can trust command is not null
         return await ServiceValidate.Build<MuscleGroupDto>()
             .EnsureNotWhiteSpace(command.Name, MuscleGroupErrorMessages.Validation.NameCannotBeEmpty)
-            .Ensure(() => command.Name?.Length <= 100, MuscleGroupErrorMessages.Validation.NameTooLong)
-            .Ensure(() => !command.BodyPartId.IsEmpty, MuscleGroupErrorMessages.Validation.BodyPartIdRequired)
+            .EnsureMaxLength(command.Name, 100, MuscleGroupErrorMessages.Validation.NameTooLong)
+            .EnsureNotEmpty(command.BodyPartId, MuscleGroupErrorMessages.Validation.BodyPartIdRequired)
             .EnsureAsync(
                 async () => await BodyPartExistsAsync(command.BodyPartId),
                 ServiceError.NotFound("BodyPart"))
@@ -91,8 +91,8 @@ public class MuscleGroupService(IUnitOfWorkProvider<FitnessDbContext> unitOfWork
         return await ServiceValidate.Build<MuscleGroupDto>()
             .EnsureValidId(id, MuscleGroupErrorMessages.Validation.InvalidMuscleGroupId)
             .EnsureNotWhiteSpace(command.Name, MuscleGroupErrorMessages.Validation.NameCannotBeEmpty)
-            .Ensure(() => command.Name?.Length <= 100, MuscleGroupErrorMessages.Validation.NameTooLong)
-            .Ensure(() => !command.BodyPartId.IsEmpty, MuscleGroupErrorMessages.Validation.BodyPartIdRequired)
+            .EnsureMaxLength(command.Name, 100, MuscleGroupErrorMessages.Validation.NameTooLong)
+            .EnsureNotEmpty(command.BodyPartId, MuscleGroupErrorMessages.Validation.BodyPartIdRequired)
             .EnsureExistsAsync(
                 async () => await MuscleGroupExistsAsync(id),
                 "MuscleGroup")

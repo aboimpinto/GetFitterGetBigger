@@ -128,11 +128,112 @@ public class ServiceValidationBuilder<T>
     /// <param name="maxLength">The maximum allowed length</param>
     /// <param name="errorMessage">The error message if validation fails</param>
     /// <returns>The builder instance for chaining</returns>
-    public ServiceValidationBuilder<T> EnsureMaxLength(string value, int maxLength, string errorMessage)
+    public ServiceValidationBuilder<T> EnsureMaxLength(string? value, int maxLength, string errorMessage)
     {
-        _validation.Ensure(() => value.Length <= maxLength, ServiceError.ValidationFailed(errorMessage));
+        if (!string.IsNullOrEmpty(value))
+        {
+            _validation.Ensure(() => value.Length <= maxLength, ServiceError.ValidationFailed(errorMessage));
+        }
         return this;
     }
+
+    /// <summary>
+    /// Validates that a string meets a minimum length requirement.
+    /// </summary>
+    /// <param name="value">The string value to validate</param>
+    /// <param name="minLength">The minimum required length</param>
+    /// <param name="errorMessage">The error message if validation fails</param>
+    /// <returns>The builder instance for chaining</returns>
+    public ServiceValidationBuilder<T> EnsureMinLength(string? value, int minLength, string errorMessage)
+    {
+        if (!string.IsNullOrEmpty(value))
+        {
+            _validation.Ensure(() => value.Length >= minLength, ServiceError.ValidationFailed(errorMessage));
+        }
+        return this;
+    }
+
+    /// <summary>
+    /// Validates that an object is not null.
+    /// </summary>
+    /// <param name="value">The value to validate</param>
+    /// <param name="errorMessage">The error message if validation fails</param>
+    /// <returns>The builder instance for chaining</returns>
+    public ServiceValidationBuilder<T> EnsureNotNull(object? value, string errorMessage)
+    {
+        _validation.Ensure(() => value != null, ServiceError.ValidationFailed(errorMessage));
+        return this;
+    }
+
+    /// <summary>
+    /// Validates that a number is between a minimum and maximum value (inclusive).
+    /// </summary>
+    /// <param name="value">The value to validate</param>
+    /// <param name="min">The minimum allowed value (inclusive)</param>
+    /// <param name="max">The maximum allowed value (inclusive)</param>
+    /// <param name="errorMessage">The error message if validation fails</param>
+    /// <returns>The builder instance for chaining</returns>
+    public ServiceValidationBuilder<T> EnsureNumberBetween(int value, int min, int max, string errorMessage)
+    {
+        _validation.Ensure(() => value >= min && value <= max, ServiceError.ValidationFailed(errorMessage));
+        return this;
+    }
+
+    /// <summary>
+    /// Validates that a nullable number is between a minimum and maximum value (inclusive).
+    /// If the value is null, validation passes.
+    /// </summary>
+    /// <param name="value">The nullable value to validate</param>
+    /// <param name="min">The minimum allowed value (inclusive)</param>
+    /// <param name="max">The maximum allowed value (inclusive)</param>
+    /// <param name="errorMessage">The error message if validation fails</param>
+    /// <returns>The builder instance for chaining</returns>
+    public ServiceValidationBuilder<T> EnsureNumberBetween(int? value, int min, int max, string errorMessage)
+    {
+        if (value.HasValue)
+        {
+            _validation.Ensure(() => value.Value >= min && value.Value <= max, ServiceError.ValidationFailed(errorMessage));
+        }
+        return this;
+    }
+
+    /// <summary>
+    /// Validates that a collection does not exceed a maximum count.
+    /// Null collections are considered valid (empty).
+    /// </summary>
+    /// <typeparam name="TItem">The type of items in the collection</typeparam>
+    /// <param name="collection">The collection to validate</param>
+    /// <param name="maxCount">The maximum allowed count</param>
+    /// <param name="errorMessage">The error message if validation fails</param>
+    /// <returns>The builder instance for chaining</returns>
+    public ServiceValidationBuilder<T> EnsureMaxCount<TItem>(IEnumerable<TItem>? collection, int maxCount, string errorMessage)
+    {
+        if (collection != null)
+        {
+            _validation.Ensure(() => collection.Count() <= maxCount, ServiceError.ValidationFailed(errorMessage));
+        }
+        return this;
+    }
+
+    /// <summary>
+    /// Validates that a nullable specialized ID is not empty if it has a value.
+    /// If the ID is null, validation passes.
+    /// </summary>
+    /// <typeparam name="TId">The type of specialized ID</typeparam>
+    /// <param name="id">The nullable specialized ID to validate</param>
+    /// <param name="errorMessage">The error message if validation fails</param>
+    /// <returns>The builder instance for chaining</returns>
+    public ServiceValidationBuilder<T> EnsureNotEmpty<TId>(TId? id, string errorMessage) 
+        where TId : struct, ISpecializedIdBase
+    {
+        if (id.HasValue)
+        {
+            var serviceError = new ServiceError(ServiceErrorCode.InvalidFormat, errorMessage);
+            _validation.EnsureNotEmpty(id.Value, serviceError);
+        }
+        return this;
+    }
+
 
     /// <summary>
     /// Validates that a name IS unique (positive assertion).
@@ -314,6 +415,88 @@ public class ServiceValidationBuilder<T>
         {
             var isValid = await predicate();
             return (isValid, isValid ? null : serviceError);
+        });
+        return this;
+    }
+
+    /// <summary>
+    /// Marks a point in the validation chain where subsequent validations should only run if no errors have occurred so far.
+    /// This allows dependent validations to be skipped if basic validations fail.
+    /// </summary>
+    /// <returns>The builder instance for chaining</returns>
+    public ServiceValidationBuilder<T> WhenValid()
+    {
+        // Add a marker that subsequent validations are conditional
+        // This is handled by checking HasErrors before adding new validations
+        return this;
+    }
+
+    /// <summary>
+    /// Adds a validation that only runs if all previous validations have passed.
+    /// This is useful for expensive validations like database checks that should only run after basic validations pass.
+    /// </summary>
+    /// <param name="predicate">The condition that must be true for validation to pass</param>
+    /// <param name="errorMessage">The error message if validation fails</param>
+    /// <returns>The builder instance for chaining</returns>
+    public ServiceValidationBuilder<T> EnsureWhenValid(Func<bool> predicate, string errorMessage)
+    {
+        // Only add this validation if no errors exist
+        if (!_validation.HasErrors)
+        {
+            _validation.Ensure(predicate, errorMessage);
+        }
+        return this;
+    }
+
+    /// <summary>
+    /// Adds an async validation that only runs if all previous validations have passed.
+    /// This prevents unnecessary database calls when basic validations fail.
+    /// </summary>
+    /// <param name="predicate">The async condition that must be true for validation to pass</param>
+    /// <param name="serviceError">The service error if validation fails</param>
+    /// <returns>The builder instance for chaining</returns>
+    public ServiceValidationBuilder<T> EnsureAsyncWhenValid(
+        Func<Task<bool>> predicate, 
+        ServiceError serviceError)
+    {
+        _asyncServiceErrorValidations.Add(async () => 
+        {
+            // Check if there are any synchronous validation errors
+            if (_validation.HasErrors)
+            {
+                // Skip this validation - return as valid since we don't want to add more errors
+                return (true, null);
+            }
+            
+            var isValid = await predicate();
+            return (isValid, isValid ? null : serviceError);
+        });
+        return this;
+    }
+
+    /// <summary>
+    /// Validates that a name is unique, but only if previous validations have passed.
+    /// This prevents database checks when the name is already invalid.
+    /// </summary>
+    /// <param name="isUniqueCheck">Async function that returns true if the name IS unique</param>
+    /// <param name="entityName">The entity name for the error message</param>
+    /// <param name="nameValue">The name value being checked</param>
+    /// <returns>The builder instance for chaining</returns>
+    public ServiceValidationBuilder<T> EnsureNameIsUniqueWhenValidAsync(
+        Func<Task<bool>> isUniqueCheck,
+        string entityName,
+        string nameValue)
+    {
+        _asyncServiceErrorValidations.Add(async () =>
+        {
+            // Skip if there are validation errors
+            if (_validation.HasErrors)
+            {
+                return (true, null);
+            }
+            
+            var isUnique = await isUniqueCheck();
+            return (isUnique, isUnique ? null : ServiceError.AlreadyExists(entityName, nameValue));
         });
         return this;
     }

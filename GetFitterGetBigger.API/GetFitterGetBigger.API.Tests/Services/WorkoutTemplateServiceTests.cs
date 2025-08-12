@@ -1,119 +1,22 @@
+using FluentAssertions;
 using GetFitterGetBigger.API.DTOs;
-using GetFitterGetBigger.API.Models;
 using GetFitterGetBigger.API.Models.Entities;
 using GetFitterGetBigger.API.Models.SpecializedIds;
 using GetFitterGetBigger.API.Repositories.Interfaces;
 using GetFitterGetBigger.API.Services.Commands.WorkoutTemplate;
 using GetFitterGetBigger.API.Services.Implementations;
-using GetFitterGetBigger.API.Services.Interfaces;
 using GetFitterGetBigger.API.Services.Results;
 using GetFitterGetBigger.API.Tests.TestBuilders;
 using GetFitterGetBigger.API.Tests.TestBuilders.Domain;
+using GetFitterGetBigger.API.Tests.Services.Extensions;
 using GetFitterGetBigger.API.Tests.TestHelpers;
-using Microsoft.Extensions.Logging;
 using Moq;
-using Olimpo.EntityFramework.Persistency;
+using Moq.AutoMock;
 
 namespace GetFitterGetBigger.API.Tests.Services;
 
 public class WorkoutTemplateServiceTests
 {
-    private readonly Mock<IUnitOfWorkProvider<FitnessDbContext>> _mockUnitOfWorkProvider;
-    private readonly Mock<IReadOnlyUnitOfWork<FitnessDbContext>> _mockReadOnlyUnitOfWork;
-    private readonly Mock<IWritableUnitOfWork<FitnessDbContext>> _mockWritableUnitOfWork;
-    private readonly Mock<IWorkoutTemplateRepository> _mockRepository;
-    private readonly Mock<IWorkoutStateRepository> _mockWorkoutStateRepository;
-    private readonly Mock<IWorkoutStateService> _mockWorkoutStateService;
-    private readonly Mock<IExerciseService> _mockExerciseService;
-    private readonly Mock<IWorkoutTemplateExerciseService> _mockWorkoutTemplateExerciseService;
-    private readonly Mock<ILogger<WorkoutTemplateService>> _mockLogger;
-    private readonly WorkoutTemplateService _service;
-    
-    private readonly WorkoutTemplate _testTemplate;
-    private readonly WorkoutTemplateId _testTemplateId;
-    
-    public WorkoutTemplateServiceTests()
-    {
-        _mockUnitOfWorkProvider = new Mock<IUnitOfWorkProvider<FitnessDbContext>>();
-        _mockReadOnlyUnitOfWork = new Mock<IReadOnlyUnitOfWork<FitnessDbContext>>();
-        _mockWritableUnitOfWork = new Mock<IWritableUnitOfWork<FitnessDbContext>>();
-        _mockRepository = new Mock<IWorkoutTemplateRepository>();
-        _mockWorkoutStateRepository = new Mock<IWorkoutStateRepository>();
-        _mockLogger = new Mock<ILogger<WorkoutTemplateService>>();
-        
-        _mockUnitOfWorkProvider
-            .Setup(x => x.CreateReadOnly())
-            .Returns(_mockReadOnlyUnitOfWork.Object);
-            
-        _mockUnitOfWorkProvider
-            .Setup(x => x.CreateReadOnly())
-            .Returns(_mockReadOnlyUnitOfWork.Object);
-            
-        _mockReadOnlyUnitOfWork
-            .Setup(x => x.GetRepository<IWorkoutTemplateRepository>())
-            .Returns(_mockRepository.Object);
-            
-        _mockReadOnlyUnitOfWork
-            .Setup(x => x.GetRepository<IWorkoutTemplateRepository>())
-            .Returns(_mockRepository.Object);
-            
-        _mockUnitOfWorkProvider
-            .Setup(x => x.CreateWritable())
-            .Returns(_mockWritableUnitOfWork.Object);
-            
-        _mockWritableUnitOfWork
-            .Setup(x => x.GetRepository<IWorkoutTemplateRepository>())
-            .Returns(_mockRepository.Object);
-            
-        _mockWritableUnitOfWork
-            .Setup(x => x.CommitAsync())
-            .Returns(Task.CompletedTask);
-            
-        _mockWorkoutStateService = new Mock<IWorkoutStateService>();
-        _mockExerciseService = new Mock<IExerciseService>();
-        _mockWorkoutTemplateExerciseService = new Mock<IWorkoutTemplateExerciseService>();
-        
-        _service = new WorkoutTemplateService(
-            _mockUnitOfWorkProvider.Object, 
-            _mockWorkoutStateService.Object, 
-            _mockExerciseService.Object,
-            _mockWorkoutTemplateExerciseService.Object,
-            _mockLogger.Object);
-        
-        // Setup test data
-        _testTemplateId = WorkoutTemplateId.ParseOrEmpty(TestIds.WorkoutTemplateIds.BasicTemplate);
-        
-        // Create a workout state for testing
-        var productionState = WorkoutStateTestBuilder.Production().Build();
-            
-        _testTemplate = new WorkoutTemplateBuilder()
-            .WithId(_testTemplateId)
-            .WithName("Test Workout Template")
-            .WithDescription("Test Description")
-            .WithCategoryId(TestIds.WorkoutCategoryIds.Strength)
-            .WithDifficultyId(TestIds.DifficultyLevelIds.Beginner)
-            .WithWorkoutStateId(TestIds.WorkoutStateIds.Production)
-            .WithWorkoutState(productionState)
-            .Build();
-            
-        // Setup WorkoutState mock to return Draft state
-        var draftWorkoutState = WorkoutStateTestBuilder.Default()
-            .WithValue("Draft")
-            .WithDescription("Draft state for new workout templates")
-            .Build();
-            
-        // _mockWorkoutStateRepository setup needed
-            
-        // Setup WorkoutStateService mock
-        var draftWorkoutStateDto = new WorkoutStateDto
-            {
-            Id = draftWorkoutState.Id.ToString(),
-            Value = draftWorkoutState.Value,
-            Description = draftWorkoutState.Description
-        };
-            
-        // _mockWorkoutStateService setup needed
-    }
     
     #region GetById Tests
     
@@ -121,46 +24,80 @@ public class WorkoutTemplateServiceTests
     public async Task GetByIdAsync_WithValidId_ReturnsSuccess()
     {
         // Arrange
-        _mockRepository
-            .Setup(x => x.GetByIdWithDetailsAsync(It.IsAny<WorkoutTemplateId>()))
-            .ReturnsAsync(_testTemplate);
-            
-        // Act
-        var result = await _service.GetByIdAsync(_testTemplateId);
+        var automocker = new AutoMocker();
+        var testee = automocker.CreateInstance<WorkoutTemplateService>();
         
-        Assert.True(result.IsSuccess);
-        Assert.NotNull(result.Data);
-        Assert.Equal(_testTemplate.Name, result.Data.Name);
-        Assert.Equal(_testTemplate.Description, result.Data.Description);
+        var templateId = WorkoutTemplateId.ParseOrEmpty(TestIds.WorkoutTemplateIds.BasicTemplate);
+        const string expectedName = "Test Workout Template";
+        const string expectedDescription = "Test Description";
+        
+        var productionState = WorkoutStateTestBuilder.Production().Build();
+        var testTemplate = new WorkoutTemplateBuilder()
+            .WithId(templateId)
+            .WithName(expectedName)
+            .WithDescription(expectedDescription)
+            .WithCategoryId(TestIds.WorkoutCategoryIds.Strength)
+            .WithDifficultyId(TestIds.DifficultyLevelIds.Beginner)
+            .WithWorkoutStateId(TestIds.WorkoutStateIds.Production)
+            .WithWorkoutState(productionState)
+            .Build();
+        
+        automocker
+            .SetupWorkoutTemplateUnitOfWork()
+            .SetupWorkoutTemplateGetByIdWithDetails(testTemplate);
+        
+        // Act
+        var result = await testee.GetByIdAsync(templateId);
+        
+        // Assert
+        result.Should().NotBeNull();
+        result.IsSuccess.Should().BeTrue();
+        result.Data.Name.Should().Be(expectedName);
+        result.Data.Description.Should().Be(expectedDescription);
     }
     
     [Fact]
-    public async Task GetByIdAsync_WithEmptyId_ReturnsFailure()
+    public async Task GetByIdAsync_WithEmptyId_ReturnsInvalidFormatError()
     {
         // Arrange
+        var automocker = new AutoMocker();
+        var testee = automocker.CreateInstance<WorkoutTemplateService>();
+        
         var emptyId = WorkoutTemplateId.Empty;
         
         // Act
-        var result = await _service.GetByIdAsync(emptyId);
+        var result = await testee.GetByIdAsync(emptyId);
         
-        Assert.False(result.IsSuccess);
-        Assert.Equal(ServiceErrorCode.InvalidFormat, result.PrimaryErrorCode);
-        _mockRepository.Verify(x => x.GetByIdWithDetailsAsync(It.IsAny<WorkoutTemplateId>()), Times.Never);
+        // Assert
+        result.Should().NotBeNull();
+        result.IsSuccess.Should().BeFalse();
+        result.Data.IsEmpty.Should().BeTrue(because: "empty ID should result in Empty DTO");
+        result.PrimaryErrorCode.Should().Be(ServiceErrorCode.InvalidFormat);
+        
+        automocker.VerifyWorkoutTemplateGetByIdWithDetailsNeverCalled();
     }
     
     [Fact]
-    public async Task GetByIdAsync_WhenNotFound_ReturnsFailure()
+    public async Task GetByIdAsync_WhenNotFound_ReturnsNotFoundError()
     {
         // Arrange
-        _mockRepository
-            .Setup(x => x.GetByIdWithDetailsAsync(It.IsAny<WorkoutTemplateId>()))
-            .ReturnsAsync((WorkoutTemplate)null!);
-            
-        // Act
-        var result = await _service.GetByIdAsync(_testTemplateId);
+        var automocker = new AutoMocker();
+        var testee = automocker.CreateInstance<WorkoutTemplateService>();
         
-        Assert.False(result.IsSuccess);
-        Assert.Equal(ServiceErrorCode.NotFound, result.PrimaryErrorCode);
+        var templateId = WorkoutTemplateId.ParseOrEmpty(TestIds.WorkoutTemplateIds.BasicTemplate);
+        
+        automocker
+            .SetupWorkoutTemplateUnitOfWork()
+            .SetupWorkoutTemplateGetByIdWithDetails(WorkoutTemplate.Empty);
+        
+        // Act
+        var result = await testee.GetByIdAsync(templateId);
+        
+        // Assert
+        result.Should().NotBeNull();
+        result.IsSuccess.Should().BeFalse();
+        result.Data.IsEmpty.Should().BeTrue();
+        result.PrimaryErrorCode.Should().Be(ServiceErrorCode.NotFound);
     }
     
     #endregion
@@ -172,26 +109,23 @@ public class WorkoutTemplateServiceTests
     public async Task CreateAsync_WithValidCommand_ReturnsSuccess()
     {
         // Arrange
+        var automocker = new AutoMocker();
+        var testee = automocker.CreateInstance<WorkoutTemplateService>();
+        
+        const string workoutName = "New Workout";
+        const string workoutDescription = "New Description";
+        
         var command = new CreateWorkoutTemplateCommand
-            {
-            Name = "New Workout",
-            Description = "New Description",
+        {
+            Name = workoutName,
+            Description = workoutDescription,
             CategoryId = WorkoutCategoryId.ParseOrEmpty(TestIds.WorkoutCategoryIds.Strength),
             DifficultyId = DifficultyLevelId.ParseOrEmpty(TestIds.DifficultyLevelIds.Beginner),
             EstimatedDurationMinutes = 60,
-            Tags = new List<string> { "test", "workout" },
+            Tags = ["test", "workout"],
             IsPublic = true
         };
         
-        _mockRepository
-            .Setup(x => x.ExistsByNameAsync(It.IsAny<string>(), It.IsAny<WorkoutTemplateId>()))
-            .ReturnsAsync(false);
-            
-        _mockRepository
-            .Setup(x => x.AddAsync(It.IsAny<WorkoutTemplate>()))
-            .ReturnsAsync(_testTemplate);
-            
-        // Setup WorkoutStateService mock for Draft state
         var draftWorkoutStateDto = new WorkoutStateDto
         {
             Id = TestIds.WorkoutStateIds.Draft,
@@ -199,79 +133,113 @@ public class WorkoutTemplateServiceTests
             Description = "Draft state for new workout templates"
         };
         
-        _mockWorkoutStateService
-            .Setup(x => x.GetByValueAsync(It.IsAny<string>()))
-            .ReturnsAsync(ServiceResult<WorkoutStateDto>.Success(draftWorkoutStateDto));
-            
-        // Act
-        var result = await _service.CreateAsync(command);
+        var createdTemplate = new WorkoutTemplateBuilder()
+            .WithName(workoutName)
+            .WithDescription(workoutDescription)
+            .Build();
         
-        if (!result.IsSuccess)
-        {
-            var errors = string.Join(", ", result.Errors);
-            Assert.True(result.IsSuccess, $"Create failed with errors: {errors}");
-        }
-        Assert.NotNull(result.Data);
-        _mockWritableUnitOfWork.Verify(x => x.CommitAsync(), Times.Once);
+        automocker
+            .SetupWorkoutTemplateUnitOfWork()
+            .SetupWorkoutTemplateExists(workoutName, false)
+            .SetupWorkoutTemplateAdd(createdTemplate)
+            .SetupWorkoutStateService(draftWorkoutStateDto);
+        
+        // Act
+        var result = await testee.CreateAsync(command);
+        
+        // Assert
+        result.Should().NotBeNull();
+        result.IsSuccess.Should().BeTrue();
+        result.Data.Should().NotBeNull();
+        result.Data.IsEmpty.Should().BeFalse();
+        result.Data.Name.Should().Be(workoutName);
+        
+        automocker.VerifyWorkoutTemplateAddOnce();
     }
     
     [Fact]
-    public async Task CreateAsync_WithNullCommand_ReturnsFailure()
-    {
-        // Act
-        var result = await _service.CreateAsync(null!);
-        
-        Assert.False(result.IsSuccess);
-        Assert.Equal(ServiceErrorCode.ValidationFailed, result.PrimaryErrorCode);
-    }
-    
-    [Fact]
-    public async Task CreateAsync_WithDuplicateName_ReturnsFailure()
+    public async Task CreateAsync_WithNullCommand_ReturnsValidationFailedError()
     {
         // Arrange
+        var automocker = new AutoMocker();
+        var testee = automocker.CreateInstance<WorkoutTemplateService>();
+        
+        // Act
+        var result = await testee.CreateAsync(null!);
+        
+        // Assert
+        result.Should().NotBeNull();
+        result.IsSuccess.Should().BeFalse();
+        result.Data.IsEmpty.Should().BeTrue();
+        result.PrimaryErrorCode.Should().Be(ServiceErrorCode.ValidationFailed);
+        
+        automocker.VerifyWorkoutTemplateAddNeverCalled();
+    }
+    
+    [Fact]
+    public async Task CreateAsync_WithDuplicateName_ReturnsAlreadyExistsError()
+    {
+        // Arrange
+        var automocker = new AutoMocker();
+        var testee = automocker.CreateInstance<WorkoutTemplateService>();
+        
+        const string existingName = "Existing Workout";
+        
         var command = new CreateWorkoutTemplateCommand
-            {
-            Name = "Existing Workout",
+        {
+            Name = existingName,
             Description = "Description",
             CategoryId = WorkoutCategoryId.ParseOrEmpty(TestIds.WorkoutCategoryIds.Strength),
             DifficultyId = DifficultyLevelId.ParseOrEmpty(TestIds.DifficultyLevelIds.Beginner),
             EstimatedDurationMinutes = 60,
-            Tags = new List<string>(),
+            Tags = [],
             IsPublic = true
         };
         
-        _mockRepository
-            .Setup(x => x.ExistsByNameAsync(It.IsAny<string>(), It.IsAny<WorkoutTemplateId>()))
-            .ReturnsAsync(true);
-            
-        // Act
-        var result = await _service.CreateAsync(command);
+        automocker
+            .SetupWorkoutTemplateUnitOfWork()
+            .SetupWorkoutTemplateExists(existingName, true);
         
-        Assert.False(result.IsSuccess);
-        Assert.Equal(ServiceErrorCode.AlreadyExists, result.PrimaryErrorCode);
-        _mockRepository.Verify(x => x.AddAsync(It.IsAny<WorkoutTemplate>()), Times.Never);
+        // Act
+        var result = await testee.CreateAsync(command);
+        
+        // Assert
+        result.Should().NotBeNull();
+        result.IsSuccess.Should().BeFalse();
+        result.Data.IsEmpty.Should().BeTrue();
+        result.PrimaryErrorCode.Should().Be(ServiceErrorCode.AlreadyExists);
+        
+        automocker.VerifyWorkoutTemplateAddNeverCalled();
     }
     
     [Fact]
-    public async Task CreateAsync_WithInvalidName_ReturnsFailure()
+    public async Task CreateAsync_WithInvalidName_ReturnsValidationFailedError()
     {
         // Arrange
+        var automocker = new AutoMocker();
+        var testee = automocker.CreateInstance<WorkoutTemplateService>();
+        
         var command = new CreateWorkoutTemplateCommand
-            {
+        {
             Name = "AB", // Too short
             Description = "Description",
             CategoryId = WorkoutCategoryId.ParseOrEmpty(TestIds.WorkoutCategoryIds.Strength),
             DifficultyId = DifficultyLevelId.ParseOrEmpty(TestIds.DifficultyLevelIds.Beginner),
             EstimatedDurationMinutes = 60,
-            Tags = new List<string>(),
+            Tags = [],
             IsPublic = true
         };
         
         // Act
-        var result = await _service.CreateAsync(command);
+        var result = await testee.CreateAsync(command);
         
-        Assert.False(result.IsSuccess);
-        Assert.Equal(ServiceErrorCode.ValidationFailed, result.PrimaryErrorCode);
+        // Assert
+        result.Should().NotBeNull();
+        result.IsSuccess.Should().BeFalse();
+        result.Data.IsEmpty.Should().BeTrue();
+        result.PrimaryErrorCode.Should().Be(ServiceErrorCode.ValidationFailed);
+        
+        automocker.VerifyWorkoutTemplateRepositoryNotAccessedForValidationFailure();
     }
     
     #endregion
@@ -282,70 +250,103 @@ public class WorkoutTemplateServiceTests
     public async Task UpdateAsync_WithValidCommand_ReturnsSuccess()
     {
         // Arrange
+        var automocker = new AutoMocker();
+        var testee = automocker.CreateInstance<WorkoutTemplateService>();
+        
+        var templateId = WorkoutTemplateId.ParseOrEmpty(TestIds.WorkoutTemplateIds.Template1);
+        const string originalName = "Original Workout";
+        const string updatedName = "Updated Workout";
+        const string updatedDescription = "Updated Description";
+        
         var command = new UpdateWorkoutTemplateCommand
-            {
-            Id = WorkoutTemplateId.ParseOrEmpty(TestIds.WorkoutTemplateIds.Template1),
-            Name = "Updated Workout",
-            Description = "Updated Description",
+        {
+            Id = templateId,
+            Name = updatedName,
+            Description = updatedDescription,
             CategoryId = WorkoutCategoryId.ParseOrEmpty(TestIds.WorkoutCategoryIds.Strength),
             DifficultyId = DifficultyLevelId.ParseOrEmpty(TestIds.DifficultyLevelIds.Intermediate),
             EstimatedDurationMinutes = 45,
-            Tags = new List<string> { "updated" },
+            Tags = ["updated"],
             IsPublic = false
         };
         
-        // Mock GetByIdWithDetailsAsync for the existence check in UpdateAsync
-        _mockRepository
-            .Setup(x => x.GetByIdWithDetailsAsync(_testTemplateId))
-            .ReturnsAsync(_testTemplate);
+        var existingTemplate = new WorkoutTemplateBuilder()
+            .WithId(templateId)
+            .WithName(originalName)
+            .Build();
             
-        // Mock GetByIdAsync for loading the existing template during update
-        _mockRepository
-            .Setup(x => x.GetByIdAsync(It.IsAny<WorkoutTemplateId>()))
-            .ReturnsAsync(_testTemplate);
-            
-        // Mock ExistsByNameAsync to allow name update (return false = name doesn't exist yet)
-        _mockRepository
-            .Setup(x => x.ExistsByNameAsync(It.IsAny<string>(), It.IsAny<WorkoutTemplateId>()))
-            .ReturnsAsync(false);
-            
-        // Mock UpdateAsync to return updated template
-        _mockRepository
-            .Setup(x => x.UpdateAsync(It.IsAny<WorkoutTemplate>()))
-            .ReturnsAsync(_testTemplate);
-            
-        // Act
-        var result = await _service.UpdateAsync(_testTemplateId, command);
+        var updatedTemplate = new WorkoutTemplateBuilder()
+            .WithId(templateId)
+            .WithName(updatedName)
+            .WithDescription(updatedDescription)
+            .Build();
         
-        Assert.True(result.IsSuccess);
-        _mockWritableUnitOfWork.Verify(x => x.CommitAsync(), Times.Once);
+        // Setup different returns for multiple calls
+        var getByIdCallCount = 0;
+        automocker.GetMock<IWorkoutTemplateRepository>()
+            .Setup(r => r.GetByIdAsync(It.IsAny<WorkoutTemplateId>()))
+            .ReturnsAsync(() => {
+                getByIdCallCount++;
+                return getByIdCallCount == 1 ? existingTemplate : updatedTemplate;
+            });
+        
+        automocker
+            .SetupWorkoutTemplateUnitOfWork()
+            .SetupWorkoutTemplateGetByIdWithDetails(existingTemplate)
+            .SetupWorkoutTemplateExistsById(templateId, true)  // Template exists for update
+            .SetupWorkoutTemplateExists(updatedName, false)
+            .SetupWorkoutTemplateQueryable([existingTemplate])  // Setup for name uniqueness check
+            .SetupWorkoutTemplateUpdate(updatedTemplate);
+        
+        // Act
+        var result = await testee.UpdateAsync(templateId, command);
+        
+        // Assert
+        result.Should().NotBeNull();
+        result.IsSuccess.Should().BeTrue();
+        result.Data.Should().NotBeNull();
+        result.Data.IsEmpty.Should().BeFalse();
+        result.Data.Name.Should().Be(updatedName);
+        result.Data.Description.Should().Be(updatedDescription);
+        
+        automocker.VerifyWorkoutTemplateUpdateOnce();
     }
     
     [Fact]
-    public async Task UpdateAsync_WhenTemplateNotFound_ReturnsFailure()
+    public async Task UpdateAsync_WhenTemplateNotFound_ReturnsNotFoundError()
     {
         // Arrange
+        var automocker = new AutoMocker();
+        var testee = automocker.CreateInstance<WorkoutTemplateService>();
+        
+        var templateId = WorkoutTemplateId.ParseOrEmpty(TestIds.WorkoutTemplateIds.Template1);
+        
         var command = new UpdateWorkoutTemplateCommand
-            {
-            Id = WorkoutTemplateId.ParseOrEmpty(TestIds.WorkoutTemplateIds.Template1),
+        {
+            Id = templateId,
             Name = "Updated Workout",
             Description = "Updated Description",
             CategoryId = WorkoutCategoryId.ParseOrEmpty(TestIds.WorkoutCategoryIds.Strength),
             DifficultyId = DifficultyLevelId.ParseOrEmpty(TestIds.DifficultyLevelIds.Intermediate),
             EstimatedDurationMinutes = 45,
-            Tags = new List<string>(),
+            Tags = [],
             IsPublic = false
         };
         
-        _mockRepository
-            .Setup(x => x.ExistsByNameAsync(It.IsAny<string>(), It.IsAny<WorkoutTemplateId>()))
-            .ReturnsAsync(true);
-            
-        // Act
-        var result = await _service.UpdateAsync(_testTemplateId, command);
+        automocker
+            .SetupWorkoutTemplateUnitOfWork()
+            .SetupWorkoutTemplateGetByIdWithDetails(WorkoutTemplate.Empty);
         
-        Assert.False(result.IsSuccess);
-        Assert.Equal(ServiceErrorCode.NotFound, result.PrimaryErrorCode);
+        // Act
+        var result = await testee.UpdateAsync(templateId, command);
+        
+        // Assert
+        result.Should().NotBeNull();
+        result.IsSuccess.Should().BeFalse();
+        result.Data.IsEmpty.Should().BeTrue();
+        result.PrimaryErrorCode.Should().Be(ServiceErrorCode.NotFound);
+        
+        automocker.VerifyWorkoutTemplateUpdateNeverCalled();
     }
     
     #endregion
@@ -356,40 +357,78 @@ public class WorkoutTemplateServiceTests
     public async Task ChangeStateAsync_WithValidState_ReturnsSuccess()
     {
         // Arrange
+        var automocker = new AutoMocker();
+        var testee = automocker.CreateInstance<WorkoutTemplateService>();
+        
+        var templateId = WorkoutTemplateId.ParseOrEmpty(TestIds.WorkoutTemplateIds.BasicTemplate);
         var newStateId = WorkoutStateId.ParseOrEmpty(TestIds.WorkoutStateIds.Production);
         
-        _mockRepository
-            .Setup(x => x.GetByIdWithDetailsAsync(It.IsAny<WorkoutTemplateId>()))
-            .ReturnsAsync(_testTemplate);
-            
-        _mockRepository
-            .Setup(x => x.GetByIdAsync(It.IsAny<WorkoutTemplateId>()))
-            .ReturnsAsync(_testTemplate);
-            
-        _mockRepository
-            .Setup(x => x.UpdateAsync(It.IsAny<WorkoutTemplate>()))
-            .ReturnsAsync(_testTemplate);
-            
-        // Act
-        var result = await _service.ChangeStateAsync(_testTemplateId, newStateId);
+        var existingTemplate = new WorkoutTemplateBuilder()
+            .WithId(templateId)
+            .WithName("Test Template")
+            .WithWorkoutStateId(TestIds.WorkoutStateIds.Draft)
+            .Build();
         
-        Assert.True(result.IsSuccess);
-        _mockWritableUnitOfWork.Verify(x => x.CommitAsync(), Times.Once);
+        var updatedTemplate = new WorkoutTemplateBuilder()
+            .WithId(templateId)
+            .WithName("Test Template")
+            .WithWorkoutStateId(TestIds.WorkoutStateIds.Production)
+            .Build();
+        
+        // Setup different returns for multiple calls
+        var getByIdCallCount = 0;
+        automocker.GetMock<IWorkoutTemplateRepository>()
+            .Setup(r => r.GetByIdAsync(It.IsAny<WorkoutTemplateId>()))
+            .ReturnsAsync(() => {
+                getByIdCallCount++;
+                return getByIdCallCount == 1 ? existingTemplate : updatedTemplate;
+            });
+        
+        automocker
+            .SetupWorkoutTemplateUnitOfWork()
+            .SetupWorkoutTemplateGetByIdWithDetails(existingTemplate)
+            .SetupWorkoutTemplateUpdate(updatedTemplate);
+        
+        // Act
+        var result = await testee.ChangeStateAsync(templateId, newStateId);
+        
+        // Assert
+        result.Should().NotBeNull();
+        result.IsSuccess.Should().BeTrue();
+        result.Data.Should().NotBeNull();
+        result.Data.IsEmpty.Should().BeFalse();
+        
+        automocker.VerifyWorkoutTemplateUpdateOnce();
     }
     
     [Fact]
-    public async Task ChangeStateAsync_WithEmptyStateId_ReturnsFailure()
+    public async Task ChangeStateAsync_WithEmptyStateId_ReturnsInvalidFormatError()
     {
         // Arrange
-        _mockRepository
-            .Setup(x => x.GetByIdWithDetailsAsync(It.IsAny<WorkoutTemplateId>()))
-            .ReturnsAsync(_testTemplate);
-            
-        // Act
-        var result = await _service.ChangeStateAsync(_testTemplateId, WorkoutStateId.Empty);
+        var automocker = new AutoMocker();
+        var testee = automocker.CreateInstance<WorkoutTemplateService>();
         
-        Assert.False(result.IsSuccess);
-        Assert.Equal(ServiceErrorCode.InvalidFormat, result.PrimaryErrorCode);
+        var templateId = WorkoutTemplateId.ParseOrEmpty(TestIds.WorkoutTemplateIds.BasicTemplate);
+        
+        var existingTemplate = new WorkoutTemplateBuilder()
+            .WithId(templateId)
+            .WithName("Test Template")
+            .Build();
+        
+        automocker
+            .SetupWorkoutTemplateUnitOfWork()
+            .SetupWorkoutTemplateGetByIdWithDetails(existingTemplate);
+        
+        // Act
+        var result = await testee.ChangeStateAsync(templateId, WorkoutStateId.Empty);
+        
+        // Assert
+        result.Should().NotBeNull();
+        result.IsSuccess.Should().BeFalse();
+        result.Data.IsEmpty.Should().BeTrue();
+        result.PrimaryErrorCode.Should().Be(ServiceErrorCode.InvalidFormat);
+        
+        automocker.VerifyWorkoutTemplateUpdateNeverCalled();
     }
     
     #endregion
@@ -400,40 +439,110 @@ public class WorkoutTemplateServiceTests
     public async Task SoftDeleteAsync_WithValidId_ReturnsSuccess()
     {
         // Arrange
-        _mockRepository
-            .Setup(x => x.GetByIdWithDetailsAsync(It.IsAny<WorkoutTemplateId>()))
-            .ReturnsAsync(_testTemplate);
-            
-        _mockRepository
-            .Setup(x => x.SoftDeleteAsync(It.IsAny<WorkoutTemplateId>()))
-            .ReturnsAsync(true);
-            
-        // Act
-        var result = await _service.SoftDeleteAsync(_testTemplateId);
+        var automocker = new AutoMocker();
+        var testee = automocker.CreateInstance<WorkoutTemplateService>();
         
-        Assert.True(result.IsSuccess);
-        Assert.True(result.Data);
-        _mockWritableUnitOfWork.Verify(x => x.CommitAsync(), Times.Once);
+        var templateId = WorkoutTemplateId.ParseOrEmpty(TestIds.WorkoutTemplateIds.BasicTemplate);
+        
+        var existingTemplate = new WorkoutTemplateBuilder()
+            .WithId(templateId)
+            .WithName("Test Template")
+            .Build();
+        
+        automocker
+            .SetupWorkoutTemplateUnitOfWork()
+            .SetupWorkoutTemplateGetByIdWithDetails(existingTemplate)
+            .SetupWorkoutTemplateSoftDelete(true);
+        
+        // Act
+        var result = await testee.SoftDeleteAsync(templateId);
+        
+        // Assert
+        result.Should().NotBeNull();
+        result.IsSuccess.Should().BeTrue();
+        result.Data.Should().BeTrue();
+        
+        automocker.VerifyWorkoutTemplateSoftDeleteOnce(templateId);
+    }
+    
+    [Fact]
+    public async Task SoftDeleteAsync_WhenTemplateNotFound_ReturnsNotFoundError()
+    {
+        // Arrange
+        var automocker = new AutoMocker();
+        var testee = automocker.CreateInstance<WorkoutTemplateService>();
+        
+        var templateId = WorkoutTemplateId.ParseOrEmpty(TestIds.WorkoutTemplateIds.BasicTemplate);
+        
+        automocker
+            .SetupWorkoutTemplateUnitOfWork()
+            .SetupWorkoutTemplateGetByIdWithDetails(null!);
+        
+        // Act
+        var result = await testee.SoftDeleteAsync(templateId);
+        
+        // Assert
+        result.Should().NotBeNull();
+        result.IsSuccess.Should().BeFalse(because: "template not found should return failure");
+        result.Data.Should().BeFalse();
+        result.PrimaryErrorCode.Should().Be(ServiceErrorCode.NotFound);
+        
+        automocker.VerifyWorkoutTemplateSoftDeleteNeverCalled();
     }
     
     [Fact]
     public async Task DeleteAsync_WithValidId_ReturnsSuccess()
     {
         // Arrange
-        _mockRepository
-            .Setup(x => x.GetByIdWithDetailsAsync(It.IsAny<WorkoutTemplateId>()))
-            .ReturnsAsync(_testTemplate);
-            
-        _mockRepository
-            .Setup(x => x.DeleteAsync(It.IsAny<WorkoutTemplateId>()))
-            .ReturnsAsync(true);
-            
-        // Act
-        var result = await _service.DeleteAsync(_testTemplateId);
+        var automocker = new AutoMocker();
+        var testee = automocker.CreateInstance<WorkoutTemplateService>();
         
-        Assert.True(result.IsSuccess);
-        Assert.True(result.Data);
-        _mockWritableUnitOfWork.Verify(x => x.CommitAsync(), Times.Once);
+        var templateId = WorkoutTemplateId.ParseOrEmpty(TestIds.WorkoutTemplateIds.BasicTemplate);
+        
+        var existingTemplate = new WorkoutTemplateBuilder()
+            .WithId(templateId)
+            .WithName("Test Template")
+            .Build();
+        
+        automocker
+            .SetupWorkoutTemplateUnitOfWork()
+            .SetupWorkoutTemplateGetByIdWithDetails(existingTemplate)
+            .SetupWorkoutTemplateDelete(true);
+        
+        // Act
+        var result = await testee.DeleteAsync(templateId);
+        
+        // Assert
+        result.Should().NotBeNull();
+        result.IsSuccess.Should().BeTrue();
+        result.Data.Should().BeTrue();
+        
+        automocker.VerifyWorkoutTemplateDeleteOnce(templateId);
+    }
+    
+    [Fact]
+    public async Task DeleteAsync_WhenTemplateNotFound_ReturnsNotFoundError()
+    {
+        // Arrange
+        var automocker = new AutoMocker();
+        var testee = automocker.CreateInstance<WorkoutTemplateService>();
+        
+        var templateId = WorkoutTemplateId.ParseOrEmpty(TestIds.WorkoutTemplateIds.BasicTemplate);
+        
+        automocker
+            .SetupWorkoutTemplateUnitOfWork()
+            .SetupWorkoutTemplateGetByIdWithDetails(null!);
+        
+        // Act
+        var result = await testee.DeleteAsync(templateId);
+        
+        // Assert
+        result.Should().NotBeNull();
+        result.IsSuccess.Should().BeFalse(because: "template not found should return failure");
+        result.Data.Should().BeFalse();
+        result.PrimaryErrorCode.Should().Be(ServiceErrorCode.NotFound);
+        
+        automocker.VerifyWorkoutTemplateDeleteNeverCalled();
     }
     
     #endregion
@@ -444,18 +553,22 @@ public class WorkoutTemplateServiceTests
     public async Task SearchAsync_WithEmptyParameters_ReturnsAllResults()
     {
         // Arrange
-        var templates = new List<WorkoutTemplate> { _testTemplate }.BuildAsyncQueryable();
+        var automocker = new AutoMocker();
+        var testee = automocker.CreateInstance<WorkoutTemplateService>();
         
-        _mockRepository
-            .Setup(x => x.GetWorkoutTemplatesQueryable())
-            .Returns(templates);
-        
-        _mockRepository
-            .Setup(x => x.ExistsByNameAsync(It.IsAny<string>(), It.IsAny<WorkoutTemplateId>()))
-            .ReturnsAsync(true);
+        var testTemplate = new WorkoutTemplateBuilder()
+            .WithName("Test Template")
+            .WithWorkoutState(WorkoutStateTestBuilder.Production().Build())
+            .Build();
             
+        var templates = new List<WorkoutTemplate> { testTemplate }.BuildAsyncQueryable();
+        
+        automocker
+            .SetupWorkoutTemplateUnitOfWork()
+            .SetupWorkoutTemplateQueryable(templates);
+        
         // Act
-        var result = await _service.SearchAsync(
+        var result = await testee.SearchAsync(
             namePattern: string.Empty,
             categoryId: WorkoutCategoryId.Empty,
             objectiveId: WorkoutObjectiveId.Empty,
@@ -466,28 +579,37 @@ public class WorkoutTemplateServiceTests
             sortBy: "name",
             sortOrder: "asc");
         
-        Assert.True(result.IsSuccess);
-        Assert.Single(result.Data.Items);
-        _mockRepository.Verify(x => x.GetWorkoutTemplatesQueryable(), Times.Once);
+        // Assert
+        result.Should().NotBeNull();
+        result.IsSuccess.Should().BeTrue();
+        result.Data.Items.Should().HaveCount(1);
+        
+        automocker.VerifyWorkoutTemplateQueryableOnce();
     }
     
     [Fact]
     public async Task SearchAsync_WithCategoryFilter_ReturnsFilteredResults()
     {
         // Arrange
+        var automocker = new AutoMocker();
+        var testee = automocker.CreateInstance<WorkoutTemplateService>();
+        
         var categoryId = WorkoutCategoryId.ParseOrEmpty(TestIds.WorkoutCategoryIds.Strength);
-        var templates = new List<WorkoutTemplate> { _testTemplate }.BuildAsyncQueryable();
         
-        _mockRepository
-            .Setup(x => x.GetWorkoutTemplatesQueryable())
-            .Returns(templates);
-        
-        _mockRepository
-            .Setup(x => x.ExistsByNameAsync(It.IsAny<string>(), It.IsAny<WorkoutTemplateId>()))
-            .ReturnsAsync(true);
+        var testTemplate = new WorkoutTemplateBuilder()
+            .WithName("Strength Template")
+            .WithCategoryId(TestIds.WorkoutCategoryIds.Strength)
+            .WithWorkoutState(WorkoutStateTestBuilder.Production().Build())
+            .Build();
             
+        var templates = new List<WorkoutTemplate> { testTemplate }.BuildAsyncQueryable();
+        
+        automocker
+            .SetupWorkoutTemplateUnitOfWork()
+            .SetupWorkoutTemplateQueryable(templates);
+        
         // Act
-        var result = await _service.SearchAsync(
+        var result = await testee.SearchAsync(
             namePattern: string.Empty,
             categoryId: categoryId,
             objectiveId: WorkoutObjectiveId.Empty,
@@ -498,14 +620,19 @@ public class WorkoutTemplateServiceTests
             sortBy: "name",
             sortOrder: "asc");
         
-        Assert.True(result.IsSuccess);
-        Assert.Single(result.Data.Items);
+        // Assert
+        result.Should().NotBeNull();
+        result.IsSuccess.Should().BeTrue();
+        result.Data.Items.Should().HaveCount(1);
     }
     
     [Fact]
     public async Task SearchAsync_WithPagination_ReturnsCorrectPage()
     {
         // Arrange
+        var automocker = new AutoMocker();
+        var testee = automocker.CreateInstance<WorkoutTemplateService>();
+        
         var productionState = WorkoutStateTestBuilder.Default()
             .WithValue("PRODUCTION")
             .WithDescription("Production state")
@@ -517,19 +644,14 @@ public class WorkoutTemplateServiceTests
                 .WithName($"Template {i}")
                 .WithWorkoutState(productionState)
                 .Build())
-            .ToList()
-            .BuildAsyncQueryable();
-            
-        _mockRepository
-            .Setup(x => x.GetWorkoutTemplatesQueryable())
-            .Returns(templates);
-            
-        _mockRepository
-            .Setup(x => x.ExistsByNameAsync(It.IsAny<string>(), It.IsAny<WorkoutTemplateId>()))
-            .ReturnsAsync(true);
-            
+            .ToList();
+        
+        automocker
+            .SetupWorkoutTemplateUnitOfWork()
+            .SetupWorkoutTemplateQueryable(templates);
+        
         // Act
-        var result = await _service.SearchAsync(
+        var result = await testee.SearchAsync(
             namePattern: string.Empty,
             categoryId: WorkoutCategoryId.Empty,
             objectiveId: WorkoutObjectiveId.Empty,
@@ -540,28 +662,33 @@ public class WorkoutTemplateServiceTests
             sortBy: "name",
             sortOrder: "asc");
         
-        Assert.True(result.IsSuccess);
-        Assert.Equal(10, result.Data.Items.Count());
-        Assert.Equal(30, result.Data.TotalCount);
-        Assert.Equal(2, result.Data.CurrentPage);
-        Assert.Equal(3, result.Data.TotalPages);
+        // Assert
+        result.Should().NotBeNull();
+        result.IsSuccess.Should().BeTrue();
+        result.Data.Items.Should().HaveCount(10);
+        result.Data.TotalCount.Should().Be(30);
+        result.Data.CurrentPage.Should().Be(2);
+        result.Data.TotalPages.Should().Be(3);
     }
     
     [Fact]
     public async Task SearchAsync_WithObjectiveFilter_ReturnsFilteredResults()
     {
         // Arrange
-        var objectiveId = WorkoutObjectiveId.ParseOrEmpty(TestIds.WorkoutObjectiveIds.BuildMuscle);
+        var automocker = new AutoMocker();
+        var testee = automocker.CreateInstance<WorkoutTemplateService>();
         
-        // Create a template with the objective we're searching for
+        var objectiveId = WorkoutObjectiveId.ParseOrEmpty(TestIds.WorkoutObjectiveIds.BuildMuscle);
+        var templateId = WorkoutTemplateId.ParseOrEmpty(TestIds.WorkoutTemplateIds.BasicTemplate);
+        
         var productionState = WorkoutStateTestBuilder.Default()
             .WithValue("PRODUCTION")
             .WithDescription("Production state")
             .Build();
             
-        var objective = WorkoutTemplateObjective.Handler.Create(_testTemplateId, objectiveId).Value!;
+        var objective = WorkoutTemplateObjective.Handler.Create(templateId, objectiveId).Value!;
         var templateWithObjective = new WorkoutTemplateBuilder()
-            .WithId(_testTemplateId)
+            .WithId(templateId)
             .WithName("Test Workout Template")
             .WithDescription("Test Description")
             .WithCategoryId(TestIds.WorkoutCategoryIds.Strength)
@@ -571,18 +698,14 @@ public class WorkoutTemplateServiceTests
             .WithObjective(objective)
             .Build();
             
-        var templates = new List<WorkoutTemplate> { templateWithObjective }.BuildAsyncQueryable();
+        var templates = new List<WorkoutTemplate> { templateWithObjective };
         
-        _mockRepository
-            .Setup(x => x.GetWorkoutTemplatesQueryable())
-            .Returns(templates);
+        automocker
+            .SetupWorkoutTemplateUnitOfWork()
+            .SetupWorkoutTemplateQueryable(templates);
         
-        _mockRepository
-            .Setup(x => x.ExistsByNameAsync(It.IsAny<string>(), It.IsAny<WorkoutTemplateId>()))
-            .ReturnsAsync(true);
-            
         // Act
-        var result = await _service.SearchAsync(
+        var result = await testee.SearchAsync(
             namePattern: string.Empty,
             categoryId: WorkoutCategoryId.Empty,
             objectiveId: objectiveId,
@@ -593,27 +716,35 @@ public class WorkoutTemplateServiceTests
             sortBy: "name",
             sortOrder: "asc");
         
-        Assert.True(result.IsSuccess);
-        Assert.Single(result.Data.Items);
+        // Assert
+        result.Should().NotBeNull();
+        result.IsSuccess.Should().BeTrue();
+        result.Data.Items.Should().HaveCount(1);
     }
     
     [Fact]
     public async Task SearchAsync_WithDifficultyFilter_ReturnsFilteredResults()
     {
         // Arrange
+        var automocker = new AutoMocker();
+        var testee = automocker.CreateInstance<WorkoutTemplateService>();
+        
         var difficultyId = DifficultyLevelId.ParseOrEmpty(TestIds.DifficultyLevelIds.Beginner);
-        var templates = new List<WorkoutTemplate> { _testTemplate }.BuildAsyncQueryable();
         
-        _mockRepository
-            .Setup(x => x.GetWorkoutTemplatesQueryable())
-            .Returns(templates);
-        
-        _mockRepository
-            .Setup(x => x.ExistsByNameAsync(It.IsAny<string>(), It.IsAny<WorkoutTemplateId>()))
-            .ReturnsAsync(true);
+        var testTemplate = new WorkoutTemplateBuilder()
+            .WithName("Beginner Template")
+            .WithDifficultyId(TestIds.DifficultyLevelIds.Beginner)
+            .WithWorkoutState(WorkoutStateTestBuilder.Production().Build())
+            .Build();
             
+        var templates = new List<WorkoutTemplate> { testTemplate };
+        
+        automocker
+            .SetupWorkoutTemplateUnitOfWork()
+            .SetupWorkoutTemplateQueryable(templates);
+        
         // Act
-        var result = await _service.SearchAsync(
+        var result = await testee.SearchAsync(
             namePattern: string.Empty,
             categoryId: WorkoutCategoryId.Empty,
             objectiveId: WorkoutObjectiveId.Empty,
@@ -624,8 +755,10 @@ public class WorkoutTemplateServiceTests
             sortBy: "name",
             sortOrder: "asc");
         
-        Assert.True(result.IsSuccess);
-        Assert.Single(result.Data.Items);
+        // Assert
+        result.Should().NotBeNull();
+        result.IsSuccess.Should().BeTrue();
+        result.Data.Items.Should().HaveCount(1);
     }
     
     [Fact]
@@ -635,21 +768,31 @@ public class WorkoutTemplateServiceTests
         // doesn't support EF.Functions.ILike. Name pattern testing is covered in integration tests.
         
         // Arrange
+        var automocker = new AutoMocker();
+        var testee = automocker.CreateInstance<WorkoutTemplateService>();
+        
         var categoryId = WorkoutCategoryId.ParseOrEmpty(TestIds.WorkoutCategoryIds.Strength);
         var difficultyId = DifficultyLevelId.ParseOrEmpty(TestIds.DifficultyLevelIds.Beginner);
         var stateId = WorkoutStateId.ParseOrEmpty(TestIds.WorkoutStateIds.Production);
-        var templates = new List<WorkoutTemplate> { _testTemplate }.BuildAsyncQueryable();
         
-        _mockRepository
-            .Setup(x => x.GetWorkoutTemplatesQueryable())
-            .Returns(templates);
+        const string templateName = "Multi-Filter Template";
         
-        _mockRepository
-            .Setup(x => x.ExistsByNameAsync(It.IsAny<string>(), It.IsAny<WorkoutTemplateId>()))
-            .ReturnsAsync(true);
+        var testTemplate = new WorkoutTemplateBuilder()
+            .WithName(templateName)
+            .WithCategoryId(TestIds.WorkoutCategoryIds.Strength)
+            .WithDifficultyId(TestIds.DifficultyLevelIds.Beginner)
+            .WithWorkoutStateId(TestIds.WorkoutStateIds.Production)
+            .WithWorkoutState(WorkoutStateTestBuilder.Production().Build())
+            .Build();
             
+        var templates = new List<WorkoutTemplate> { testTemplate };
+        
+        automocker
+            .SetupWorkoutTemplateUnitOfWork()
+            .SetupWorkoutTemplateQueryable(templates);
+        
         // Act - test without name pattern
-        var result = await _service.SearchAsync(
+        var result = await testee.SearchAsync(
             namePattern: string.Empty,  // No name pattern to avoid ILike
             categoryId: categoryId,
             objectiveId: WorkoutObjectiveId.Empty,
@@ -660,9 +803,11 @@ public class WorkoutTemplateServiceTests
             sortBy: "name",
             sortOrder: "desc");
         
-        Assert.True(result.IsSuccess);
-        Assert.Single(result.Data.Items);
-        Assert.Equal(_testTemplate.Name, result.Data.Items.First().Name);
+        // Assert
+        result.Should().NotBeNull();
+        result.IsSuccess.Should().BeTrue();
+        result.Data.Items.Should().HaveCount(1);
+        result.Data.Items.First().Name.Should().Be(templateName);
     }
     
     #endregion
@@ -673,43 +818,99 @@ public class WorkoutTemplateServiceTests
     public async Task DuplicateAsync_WithValidParameters_ReturnsSuccess()
     {
         // Arrange
-        var newName = "Duplicated Workout";
-        var newCreatorId = UserId.ParseOrEmpty(TestIds.UserIds.JaneDoe);
+        var automocker = new AutoMocker();
+        var testee = automocker.CreateInstance<WorkoutTemplateService>();
         
-        _mockRepository
-            .Setup(x => x.GetByIdWithDetailsAsync(It.IsAny<WorkoutTemplateId>()))
-            .ReturnsAsync(_testTemplate);
+        var templateId = WorkoutTemplateId.ParseOrEmpty(TestIds.WorkoutTemplateIds.BasicTemplate);
+        const string originalName = "Original Template";
+        const string newName = "Duplicated Workout";
+        
+        var originalTemplate = new WorkoutTemplateBuilder()
+            .WithId(templateId)
+            .WithName(originalName)
+            .WithDescription("Original Description")
+            .Build();
             
-        _mockRepository
-            .Setup(x => x.ExistsByNameAsync(It.IsAny<string>(), It.IsAny<WorkoutTemplateId>()))
-            .ReturnsAsync(false);
-            
-        _mockRepository
-            .Setup(x => x.AddAsync(It.IsAny<WorkoutTemplate>()))
-            .ReturnsAsync(_testTemplate);
-            
+        var duplicatedTemplate = new WorkoutTemplateBuilder()
+            .WithId(WorkoutTemplateId.New())
+            .WithName(newName)
+            .WithDescription("Original Description")
+            .Build();
+        
+        automocker
+            .SetupWorkoutTemplateUnitOfWork()
+            .SetupWorkoutTemplateGetByIdWithDetails(originalTemplate)
+            .SetupWorkoutTemplateExists(newName, false)
+            .SetupWorkoutTemplateAdd(duplicatedTemplate);
+        
         // Act
-        var result = await _service.DuplicateAsync(_testTemplateId, newName);
+        var result = await testee.DuplicateAsync(templateId, newName);
         
-        Assert.True(result.IsSuccess);
-        _mockWritableUnitOfWork.Verify(x => x.CommitAsync(), Times.Once);
+        // Assert
+        result.Should().NotBeNull();
+        result.IsSuccess.Should().BeTrue();
+        result.Data.Should().NotBeNull();
+        result.Data.IsEmpty.Should().BeFalse();
+        result.Data.Name.Should().Be(newName);
+        
+        automocker.VerifyWorkoutTemplateAddOnce();
     }
     
     [Fact]
-    public async Task DuplicateAsync_WithEmptyName_ReturnsFailure()
+    public async Task DuplicateAsync_WithEmptyName_ReturnsValidationFailedError()
     {
         // Arrange
-        _mockRepository
-            .Setup(x => x.GetByIdWithDetailsAsync(It.IsAny<WorkoutTemplateId>()))
-            .ReturnsAsync(_testTemplate);
-            
-        // Act
-        var result = await _service.DuplicateAsync(_testTemplateId, "");
+        var automocker = new AutoMocker();
+        var testee = automocker.CreateInstance<WorkoutTemplateService>();
         
-        Assert.False(result.IsSuccess);
-        Assert.Equal(ServiceErrorCode.ValidationFailed, result.PrimaryErrorCode);
+        var templateId = WorkoutTemplateId.ParseOrEmpty(TestIds.WorkoutTemplateIds.BasicTemplate);
+        
+        var existingTemplate = new WorkoutTemplateBuilder()
+            .WithId(templateId)
+            .WithName("Original Template")
+            .Build();
+        
+        automocker
+            .SetupWorkoutTemplateUnitOfWork()
+            .SetupWorkoutTemplateGetByIdWithDetails(existingTemplate);
+        
+        // Act
+        var result = await testee.DuplicateAsync(templateId, "");
+        
+        // Assert
+        result.Should().NotBeNull();
+        result.IsSuccess.Should().BeFalse();
+        result.Data.IsEmpty.Should().BeTrue();
+        result.PrimaryErrorCode.Should().Be(ServiceErrorCode.ValidationFailed);
+        
+        automocker.VerifyWorkoutTemplateAddNeverCalled();
     }
     
+    [Fact]
+    public async Task DuplicateAsync_WhenTemplateNotFound_ReturnsNotFoundError()
+    {
+        // Arrange
+        var automocker = new AutoMocker();
+        var testee = automocker.CreateInstance<WorkoutTemplateService>();
+        
+        var templateId = WorkoutTemplateId.ParseOrEmpty(TestIds.WorkoutTemplateIds.BasicTemplate);
+        const string newName = "Duplicated Workout";
+        
+        automocker
+            .SetupWorkoutTemplateUnitOfWork()
+            .SetupWorkoutTemplateGetByIdWithDetails(WorkoutTemplate.Empty);
+        
+        // Act
+        var result = await testee.DuplicateAsync(templateId, newName);
+        
+        // Assert
+        result.Should().NotBeNull();
+        result.IsSuccess.Should().BeFalse();
+        result.Data.IsEmpty.Should().BeTrue();
+        result.PrimaryErrorCode.Should().Be(ServiceErrorCode.NotFound);
+        
+        automocker.VerifyWorkoutTemplateAddNeverCalled();
+    }
     
     #endregion
     
@@ -719,68 +920,128 @@ public class WorkoutTemplateServiceTests
     public async Task ExistsAsync_WithExistingId_ReturnsTrue()
     {
         // Arrange
-        _mockRepository
-            .Setup(x => x.ExistsAsync(It.IsAny<WorkoutTemplateId>()))
-            .ReturnsAsync(true);
-            
-        // Act
-        var result = await _service.ExistsAsync(_testTemplateId);
+        var automocker = new AutoMocker();
+        var testee = automocker.CreateInstance<WorkoutTemplateService>();
         
-        Assert.True(result.IsSuccess);
-        Assert.True(result.Data);
+        var templateId = WorkoutTemplateId.ParseOrEmpty(TestIds.WorkoutTemplateIds.BasicTemplate);
+        
+        automocker
+            .SetupWorkoutTemplateUnitOfWork()
+            .SetupWorkoutTemplateExistsById(templateId, true);
+        
+        // Act
+        var result = await testee.ExistsAsync(templateId);
+        
+        // Assert
+        result.Should().NotBeNull();
+        result.IsSuccess.Should().BeTrue();
+        result.Data.Should().BeTrue();
+        
+        automocker.VerifyWorkoutTemplateExistsByIdOnce(templateId);
     }
     
     [Fact]
-    public async Task ExistsAsync_WithEmptyId_ReturnsFalse()
-    {
-        // Act
-        var result = await _service.ExistsAsync(WorkoutTemplateId.Empty);
-        
-        Assert.False(result.IsSuccess);
-        Assert.Equal(ServiceErrorCode.InvalidFormat, result.PrimaryErrorCode);
-        _mockRepository.Verify(x => x.ExistsAsync(It.IsAny<WorkoutTemplateId>()), Times.Never);
-    }
-    
-    [Fact]
-    public async Task ExistsAsync_WithStringId_ParsesAndChecks()
+    public async Task ExistsAsync_WithNonExistentId_ReturnsFalse()
     {
         // Arrange
-        var stringId = TestIds.WorkoutTemplateIds.BasicTemplate;
-        _mockRepository
-            .Setup(x => x.ExistsAsync(It.IsAny<WorkoutTemplateId>()))
-            .ReturnsAsync(true);
-            
-        // Act
-        var result = await _service.ExistsAsync(WorkoutTemplateId.ParseOrEmpty(stringId));
+        var automocker = new AutoMocker();
+        var testee = automocker.CreateInstance<WorkoutTemplateService>();
         
-        Assert.True(result.IsSuccess);
-        Assert.True(result.Data);
-        _mockRepository.Verify(x => x.ExistsAsync(_testTemplateId), Times.Once);
+        var templateId = WorkoutTemplateId.ParseOrEmpty(TestIds.WorkoutTemplateIds.BasicTemplate);
+        
+        automocker
+            .SetupWorkoutTemplateUnitOfWork()
+            .SetupWorkoutTemplateExistsById(templateId, false);
+        
+        // Act
+        var result = await testee.ExistsAsync(templateId);
+        
+        // Assert
+        result.Should().NotBeNull();
+        result.IsSuccess.Should().BeTrue();
+        result.Data.Should().BeFalse();
+        
+        automocker.VerifyWorkoutTemplateExistsByIdOnce(templateId);
+    }
+    
+    [Fact]
+    public async Task ExistsAsync_WithEmptyId_ReturnsInvalidFormatError()
+    {
+        // Arrange
+        var automocker = new AutoMocker();
+        var testee = automocker.CreateInstance<WorkoutTemplateService>();
+        
+        // Act
+        var result = await testee.ExistsAsync(WorkoutTemplateId.Empty);
+        
+        // Assert
+        result.Should().NotBeNull();
+        result.IsSuccess.Should().BeFalse();
+        result.Data.Should().BeFalse();
+        result.PrimaryErrorCode.Should().Be(ServiceErrorCode.InvalidFormat);
+        
+        automocker.VerifyWorkoutTemplateRepositoryNotAccessedForValidationFailure();
     }
     
     [Fact]
     public async Task ExistsByNameAsync_WithExistingName_ReturnsTrue()
     {
         // Arrange
-        var name = "Existing Workout";
-        _mockRepository
-            .Setup(x => x.ExistsByNameAsync(It.IsAny<string>(), It.IsAny<WorkoutTemplateId>()))
-            .ReturnsAsync(true);
-            
-        // Act
-        var result = await _service.ExistsByNameAsync(name);
+        var automocker = new AutoMocker();
+        var testee = automocker.CreateInstance<WorkoutTemplateService>();
         
-        Assert.True(result);
+        const string existingName = "Existing Workout";
+        
+        automocker
+            .SetupWorkoutTemplateUnitOfWork()
+            .SetupWorkoutTemplateExists(existingName, true);
+        
+        // Act
+        var result = await testee.ExistsByNameAsync(existingName);
+        
+        // Assert
+        result.Should().BeTrue();
+        
+        automocker.VerifyWorkoutTemplateExistsByNameOnce(existingName);
+    }
+    
+    [Fact]
+    public async Task ExistsByNameAsync_WithNonExistentName_ReturnsFalse()
+    {
+        // Arrange
+        var automocker = new AutoMocker();
+        var testee = automocker.CreateInstance<WorkoutTemplateService>();
+        
+        const string nonExistentName = "Non-Existent Workout";
+        
+        automocker
+            .SetupWorkoutTemplateUnitOfWork()
+            .SetupWorkoutTemplateExists(nonExistentName, false);
+        
+        // Act
+        var result = await testee.ExistsByNameAsync(nonExistentName);
+        
+        // Assert
+        result.Should().BeFalse();
+        
+        automocker.VerifyWorkoutTemplateExistsByNameOnce(nonExistentName);
     }
     
     [Fact]
     public async Task ExistsByNameAsync_WithEmptyName_ReturnsFalse()
     {
-        // Act
-        var result = await _service.ExistsByNameAsync("");
+        // Arrange
+        var automocker = new AutoMocker();
+        var testee = automocker.CreateInstance<WorkoutTemplateService>();
         
-        Assert.False(result);
-        _mockRepository.Verify(x => x.ExistsByNameAsync(It.IsAny<string>(), It.IsAny<WorkoutTemplateId>()), Times.Never);
+        // Act
+        var result = await testee.ExistsByNameAsync("");
+        
+        // Assert
+        result.Should().BeFalse(because: "empty names should not be considered as existing");
+        
+        // Verify that repository was not called for empty names
+        automocker.VerifyWorkoutTemplateRepositoryNotAccessedForValidationFailure();
     }
     
     #endregion
