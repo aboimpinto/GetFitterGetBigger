@@ -245,6 +245,7 @@ Before approving any PR, verify:
 
 ### Practical Guides & Quick References
 - [TestingQuickReference.md](./PracticalGuides/TestingQuickReference.md) ⚡ - Common test failures & instant solutions
+- [UnitTestingWithAutoMocker.md](./PracticalGuides/UnitTestingWithAutoMocker.md) 🎯 - Modern unit testing with AutoMocker & FluentAssertions
 - [CommonImplementationPitfalls.md](./PracticalGuides/CommonImplementationPitfalls.md) ⚠️ - Critical mistakes to avoid
 - [ServiceImplementationChecklist.md](./PracticalGuides/ServiceImplementationChecklist.md) 📋 - Step-by-step checklist
 - [CommonTestingErrorsAndSolutions.md](./PracticalGuides/CommonTestingErrorsAndSolutions.md) - Detailed testing patterns
@@ -257,16 +258,18 @@ Before approving any PR, verify:
 - [Three-Tier Entity Architecture](./Overview/ThreeTierEntityArchitecture.md)
 - [Reference Tables Overview](./Overview/ReferenceTablesOverview.md)
 - [Cache Configuration](./Overview/CacheConfiguration.md)
+- [AutoMocker Testing Pattern](./Overview/AutoMockerTestingPattern.md) 📊 - 12% code reduction & 6,240% ROI proof
 
 ## 💡 Getting Started
 
 1. **New to the project?** Start with the [Golden Rules](#-golden-rules---non-negotiable)
-2. **Implementing a service?** Check [ServiceImplementationChecklist.md](./PracticalGuides/ServiceImplementationChecklist.md)
-3. **Fixing test failures?** See [TestingQuickReference.md](./PracticalGuides/TestingQuickReference.md)
-4. **Setting up integration tests?** Check [IntegrationTestingSetup.md](./PracticalGuides/IntegrationTestingSetup.md)
-5. **Avoiding common mistakes?** Review [CommonImplementationPitfalls.md](./PracticalGuides/CommonImplementationPitfalls.md)
-6. **Analyzing problems accurately?** Follow [AccuracyInFailureAnalysis.md](./PracticalGuides/AccuracyInFailureAnalysis.md)
-7. **Refactoring code?** Review relevant pattern guidelines in [CodeQualityGuidelines/](./CodeQualityGuidelines/)
+2. **Writing unit tests?** Follow [UnitTestingWithAutoMocker.md](./PracticalGuides/UnitTestingWithAutoMocker.md)
+3. **Implementing a service?** Check [ServiceImplementationChecklist.md](./PracticalGuides/ServiceImplementationChecklist.md)
+4. **Fixing test failures?** See [TestingQuickReference.md](./PracticalGuides/TestingQuickReference.md)
+5. **Setting up integration tests?** Check [IntegrationTestingSetup.md](./PracticalGuides/IntegrationTestingSetup.md)
+6. **Avoiding common mistakes?** Review [CommonImplementationPitfalls.md](./PracticalGuides/CommonImplementationPitfalls.md)
+7. **Analyzing problems accurately?** Follow [AccuracyInFailureAnalysis.md](./PracticalGuides/AccuracyInFailureAnalysis.md)
+8. **Refactoring code?** Review relevant pattern guidelines in [CodeQualityGuidelines/](./CodeQualityGuidelines/)
 
 ## ⚠️ Remember
 

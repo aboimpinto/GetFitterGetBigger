@@ -1,431 +1,379 @@
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using FluentAssertions;
 using GetFitterGetBigger.API.Constants;
 using GetFitterGetBigger.API.DTOs;
-using GetFitterGetBigger.API.Models;
 using GetFitterGetBigger.API.Models.Entities;
 using GetFitterGetBigger.API.Models.SpecializedIds;
 using GetFitterGetBigger.API.Repositories.Interfaces;
 using GetFitterGetBigger.API.Services.Implementations;
-using GetFitterGetBigger.API.Services.Interfaces;
 using GetFitterGetBigger.API.Services.Results;
+using GetFitterGetBigger.API.Tests.Services.Builders;
+using GetFitterGetBigger.API.Tests.Services.Extensions;
 using GetFitterGetBigger.API.Tests.TestConstants;
-using Microsoft.Extensions.Logging;
 using Moq;
-using Olimpo.EntityFramework.Persistency;
-using Xunit;
+using Moq.AutoMock;
 
 namespace GetFitterGetBigger.API.Tests.Services
 {
     public class BodyPartServiceTests
     {
-        private readonly Mock<IUnitOfWorkProvider<FitnessDbContext>> _mockUnitOfWorkProvider;
-        private readonly Mock<IReadOnlyUnitOfWork<FitnessDbContext>> _mockReadOnlyUnitOfWork;
-        private readonly Mock<IBodyPartRepository> _mockBodyPartRepository;
-        private readonly Mock<IEternalCacheService> _mockCacheService;
-        private readonly Mock<ILogger<BodyPartService>> _mockLogger;
-        private readonly BodyPartService _bodyPartService;
-
-        public BodyPartServiceTests()
-        {
-            _mockUnitOfWorkProvider = new Mock<IUnitOfWorkProvider<FitnessDbContext>>();
-            _mockReadOnlyUnitOfWork = new Mock<IReadOnlyUnitOfWork<FitnessDbContext>>();
-            _mockBodyPartRepository = new Mock<IBodyPartRepository>();
-            _mockCacheService = new Mock<IEternalCacheService>();
-            _mockLogger = new Mock<ILogger<BodyPartService>>();
-
-            _mockUnitOfWorkProvider
-                .Setup(x => x.CreateReadOnly())
-                .Returns(_mockReadOnlyUnitOfWork.Object);
-
-            _mockReadOnlyUnitOfWork
-                .Setup(x => x.GetRepository<IBodyPartRepository>())
-                .Returns(_mockBodyPartRepository.Object);
-
-            _bodyPartService = new BodyPartService(
-                _mockUnitOfWorkProvider.Object,
-                _mockCacheService.Object,
-                _mockLogger.Object);
-        }
 
         [Fact]
         public async Task ExistsAsync_WithBodyPartId_WhenBodyPartExists_ReturnsTrue()
         {
             // Arrange
+            var automocker = new AutoMocker();
+            var testee = automocker.CreateInstance<BodyPartService>();
+
             var bodyPartId = BodyPartId.New();
-            var createResult = BodyPart.Handler.Create(bodyPartId, "Chest", "Chest muscles", 1, true);
-            Assert.True(createResult.IsSuccess, "BodyPart creation should succeed");
-            var bodyPart = createResult.Value;
+            var bodyPart = new BodyPartBuilder()
+                .WithBodyPartId(bodyPartId)
+                .Build();
 
-            // Setup cache miss so it goes to database
-            _mockCacheService
-                .Setup(x => x.GetAsync<BodyPartDto>(It.IsAny<string>()))
-                .ReturnsAsync(CacheResult<BodyPartDto>.Miss());
-
-            _mockBodyPartRepository
-                .Setup(x => x.GetByIdAsync(It.IsAny<BodyPartId>()))
-                .ReturnsAsync(bodyPart);
+            automocker
+                .SetupBodyPartUnitOfWork()
+                .SetupCacheMiss<BodyPartDto>()
+                .SetupBodyPartGetById(bodyPart);
 
             // Act
-            var result = await _bodyPartService.ExistsAsync(bodyPartId);
+            var result = await testee.ExistsAsync(bodyPartId);
 
             // Assert
-            Assert.True(result.IsSuccess);
-            Assert.True(result.Data.Value);
-            _mockUnitOfWorkProvider.Verify(x => x.CreateReadOnly(), Times.Once);
-            _mockBodyPartRepository.Verify(x => x.GetByIdAsync(It.IsAny<BodyPartId>()), Times.Once);
+            result.IsSuccess.Should().BeTrue();
+            result.Data.Value.Should().BeTrue();
+
+            automocker
+                .VerifyReadOnlyUnitOfWorkCreatedOnce()
+                .VerifyBodyPartGetByIdOnce(bodyPartId);
         }
 
         [Fact]
         public async Task ExistsAsync_WithBodyPartId_WhenBodyPartDoesNotExist_ReturnsFalse()
         {
             // Arrange
+            var automocker = new AutoMocker();
+            var testee = automocker.CreateInstance<BodyPartService>();
+
             var bodyPartId = BodyPartId.New();
 
-            // Setup cache miss so it goes to database
-            _mockCacheService
-                .Setup(x => x.GetAsync<BodyPartDto>(It.IsAny<string>()))
-                .ReturnsAsync(CacheResult<BodyPartDto>.Miss());
-
-            _mockBodyPartRepository
-                .Setup(x => x.GetByIdAsync(It.IsAny<BodyPartId>()))
-                .ReturnsAsync(BodyPart.Empty);
+            automocker
+                .SetupBodyPartUnitOfWork()
+                .SetupCacheMiss<BodyPartDto>()
+                .SetupBodyPartGetById(BodyPart.Empty);
 
             // Act
-            var result = await _bodyPartService.ExistsAsync(bodyPartId);
+            var result = await testee.ExistsAsync(bodyPartId);
 
             // Assert
-            Assert.True(result.IsSuccess);
-            Assert.False(result.Data.Value);
-            _mockUnitOfWorkProvider.Verify(x => x.CreateReadOnly(), Times.Once);
-            _mockBodyPartRepository.Verify(x => x.GetByIdAsync(It.IsAny<BodyPartId>()), Times.Once);
+            result.IsSuccess.Should().BeTrue();
+            result.Data.Value.Should().BeFalse();
+
+            automocker
+                .VerifyReadOnlyUnitOfWorkCreatedOnce()
+                .VerifyBodyPartGetByIdOnce(bodyPartId);
         }
 
         [Fact]
         public async Task ExistsAsync_WithStringId_WhenBodyPartExists_ReturnsTrue()
         {
             // Arrange
+            var automocker = new AutoMocker();
+            var testee = automocker.CreateInstance<BodyPartService>();
+
             var bodyPartId = BodyPartId.New();
             var bodyPartIdString = bodyPartId.ToString();
-            var createResult = BodyPart.Handler.Create(bodyPartId, "Chest", "Chest muscles", 1, true);
-            Assert.True(createResult.IsSuccess, "BodyPart creation should succeed");
-            var bodyPart = createResult.Value;
+            var bodyPart = new BodyPartBuilder()
+                .WithBodyPartId(bodyPartId)
+                .Build();
 
-            // Setup cache miss so it goes to database
-            _mockCacheService
-                .Setup(x => x.GetAsync<BodyPartDto>(It.IsAny<string>()))
-                .ReturnsAsync(CacheResult<BodyPartDto>.Miss());
-
-            _mockBodyPartRepository
-                .Setup(x => x.GetByIdAsync(It.IsAny<BodyPartId>()))
-                .ReturnsAsync(bodyPart);
+            automocker
+                .SetupBodyPartUnitOfWork()
+                .SetupCacheMiss<BodyPartDto>()
+                .SetupBodyPartGetById(bodyPart);
 
             // Act
-            var result = await _bodyPartService.ExistsAsync(BodyPartId.ParseOrEmpty(bodyPartIdString));
+            var result = await testee.ExistsAsync(BodyPartId.ParseOrEmpty(bodyPartIdString));
 
             // Assert
-            Assert.True(result.IsSuccess);
-            Assert.True(result.Data.Value);
-            _mockUnitOfWorkProvider.Verify(x => x.CreateReadOnly(), Times.Once);
-            _mockBodyPartRepository.Verify(x => x.GetByIdAsync(It.IsAny<BodyPartId>()), Times.Once);
+            result.IsSuccess.Should().BeTrue();
+            result.Data.Value.Should().BeTrue();
+
+            automocker
+                .VerifyReadOnlyUnitOfWorkCreatedOnce()
+                .VerifyBodyPartGetByIdOnce(bodyPartId);
         }
 
         [Fact]
         public async Task GetAllActiveAsync_ReturnsSuccessWithBodyParts()
         {
             // Arrange
-            var chestResult = BodyPart.Handler.Create(BodyPartId.New(), "Chest", "Chest muscles", 1, true);
-            var backResult = BodyPart.Handler.Create(BodyPartId.New(), "Back", "Back muscles", 2, true);
-            
-            Assert.True(chestResult.IsSuccess, "Chest BodyPart creation should succeed");
-            Assert.True(backResult.IsSuccess, "Back BodyPart creation should succeed");
-            
-            var bodyParts = new List<BodyPart>
-            {
-                chestResult.Value,
-                backResult.Value
-            };
+            var automocker = new AutoMocker();
+            var testee = automocker.CreateInstance<BodyPartService>();
 
-            // Setup cache miss so it goes to database
-            _mockCacheService
-                .Setup(x => x.GetAsync<IEnumerable<BodyPartDto>>(It.IsAny<string>()))
-                .ReturnsAsync(CacheResult<IEnumerable<BodyPartDto>>.Miss());
+            var chest = new BodyPartBuilder()
+                .WithBodyPartId(BodyPartId.New())
+                .Build();
 
-            _mockBodyPartRepository
-                .Setup(x => x.GetAllActiveAsync())
-                .ReturnsAsync(bodyParts);
+            var back = new BodyPartBuilder()
+                .WithBodyPartId(BodyPartId.New())
+                .Build();
 
+            var bodyParts = new List<BodyPart> { chest, back };
+
+            automocker
+                .SetupBodyPartUnitOfWork()
+                .SetupCacheMissForList<BodyPartDto>()
+                .SetupBodyPartGetAllActive(bodyParts);
 
             // Act
-            var result = await _bodyPartService.GetAllActiveAsync();
+            var result = await testee.GetAllActiveAsync();
 
             // Assert
-            Assert.True(result.IsSuccess);
-            Assert.NotNull(result.Data);
-            Assert.Equal(2, result.Data.Count());
-            Assert.Empty(result.Errors);
-            _mockBodyPartRepository.Verify(x => x.GetAllActiveAsync(), Times.Once);
+            result.IsSuccess.Should().BeTrue();
+            result.Data.Should().NotBeNull();
+            result.Data.Count().Should().Be(2);
+            result.Errors.Should().BeEmpty();
+
+            automocker.VerifyBodyPartGetAllActiveOnce();
         }
 
         [Fact]
         public async Task GetByIdAsync_WithValidId_ReturnsSuccessWithBodyPart()
         {
             // Arrange
+            var automocker = new AutoMocker();
+            var testee = automocker.CreateInstance<BodyPartService>();
+
             var bodyPartId = BodyPartId.New();
             var bodyPartIdString = bodyPartId.ToString();
-            var createResult = BodyPart.Handler.Create(
-                bodyPartId,
-                "Chest",
-                "Chest muscles",
-                1,
-                true);
-            Assert.True(createResult.IsSuccess, "BodyPart creation should succeed");
-            var bodyPart = createResult.Value;
+            var bodyPart = new BodyPartBuilder()
+                .WithBodyPartId(bodyPartId)
+                .WithValue("Chest")  // Need this for assertion
+                .Build();
 
-            // Setup cache miss so it goes to database
-            _mockCacheService
-                .Setup(x => x.GetAsync<BodyPartDto>(It.IsAny<string>()))
-                .ReturnsAsync(CacheResult<BodyPartDto>.Miss());
-
-            _mockBodyPartRepository
-                .Setup(x => x.GetByIdAsync(It.IsAny<BodyPartId>()))
-                .ReturnsAsync(bodyPart);
-
+            automocker
+                .SetupBodyPartUnitOfWork()
+                .SetupCacheMiss<BodyPartDto>()
+                .SetupBodyPartGetById(bodyPart);
 
             // Act
-            var result = await _bodyPartService.GetByIdAsync(bodyPartIdString);
+            var result = await testee.GetByIdAsync(bodyPartIdString);
 
             // Assert
-            Assert.True(result.IsSuccess);
-            Assert.NotNull(result.Data);
-            Assert.Equal(bodyPartIdString, result.Data.Id);
-            Assert.Equal("Chest", result.Data.Value);
-            Assert.Empty(result.Errors);
+            result.IsSuccess.Should().BeTrue();
+            result.Data.Should().NotBeNull();
+            result.Data.Id.Should().Be(bodyPartIdString);
+            result.Data.Value.Should().Be("Chest");
+            result.Errors.Should().BeEmpty();
         }
 
         [Fact]
         public async Task GetByIdAsync_WithBodyPartId_ReturnsSuccessWithBodyPart()
         {
             // Arrange
+            var automocker = new AutoMocker();
+            var testee = automocker.CreateInstance<BodyPartService>();
+
             var bodyPartId = BodyPartId.New();
-            var createResult = BodyPart.Handler.Create(
-                bodyPartId,
-                "Back",
-                "Back muscles",
-                2,
-                true);
-            
-            // Ensure creation succeeded
-            Assert.True(createResult.IsSuccess, "BodyPart creation should succeed");
-            var bodyPart = createResult.Value;
-            Assert.NotNull(bodyPart);
+            var bodyPart = new BodyPartBuilder()
+                .WithBodyPartId(bodyPartId)
+                .WithValue("Back")  // Need this for assertion
+                .Build();
 
-            // Setup cache miss so it goes to database
-            _mockCacheService
-                .Setup(x => x.GetAsync<BodyPartDto>(It.IsAny<string>()))
-                .ReturnsAsync(CacheResult<BodyPartDto>.Miss());
-
-            _mockBodyPartRepository
-                .Setup(x => x.GetByIdAsync(It.IsAny<BodyPartId>()))
-                .ReturnsAsync(bodyPart);
-
+            automocker
+                .SetupBodyPartUnitOfWork()
+                .SetupCacheMiss<BodyPartDto>()
+                .SetupBodyPartGetById(bodyPart);
 
             // Act
-            var result = await _bodyPartService.GetByIdAsync(bodyPartId);
+            var result = await testee.GetByIdAsync(bodyPartId);
 
             // Assert
-            Assert.True(result.IsSuccess);
-            Assert.NotNull(result.Data);
-            Assert.Equal(bodyPartId.ToString(), result.Data.Id);
-            Assert.Equal("Back", result.Data.Value);
-            Assert.Empty(result.Errors);
-            
-            // Verify the repository was called
-            _mockBodyPartRepository.Verify(x => x.GetByIdAsync(It.IsAny<BodyPartId>()), Times.Once);
+            result.IsSuccess.Should().BeTrue();
+            result.Data.Should().NotBeNull();
+            result.Data.Id.Should().Be(bodyPartId.ToString());
+            result.Data.Value.Should().Be("Back");
+            result.Errors.Should().BeEmpty();
+
+            automocker.VerifyBodyPartGetByIdOnce(bodyPartId);
         }
 
         [Fact]
         public async Task GetByIdAsync_WithEmptyBodyPartId_ReturnsValidationFailure()
         {
             // Arrange
+            var automocker = new AutoMocker();
+            var testee = automocker.CreateInstance<BodyPartService>();
             var emptyBodyPartId = BodyPartId.Empty;
-            // No need to setup repository - service returns ValidationFailed immediately for empty IDs
+
+            // No setup needed - service returns ValidationFailed immediately for empty IDs
 
             // Act
-            var result = await _bodyPartService.GetByIdAsync(emptyBodyPartId);
+            var result = await testee.GetByIdAsync(emptyBodyPartId);
 
             // Assert
-            Assert.False(result.IsSuccess);
-            Assert.NotNull(result.Data);
-            Assert.Equal(ServiceErrorCode.ValidationFailed, result.PrimaryErrorCode);
-            Assert.Contains(BodyPartErrorMessages.InvalidIdFormat, result.Errors);
+            result.IsSuccess.Should().BeFalse();
+            result.Data.Should().NotBeNull();
+            result.PrimaryErrorCode.Should().Be(ServiceErrorCode.ValidationFailed);
+            result.Errors.Should().Contain(BodyPartErrorMessages.InvalidIdFormat);
+
             // Verify the repository was NOT called (optimization - empty IDs are rejected immediately)
-            _mockBodyPartRepository.Verify(x => x.GetByIdAsync(It.IsAny<BodyPartId>()), Times.Never);
+            automocker.VerifyBodyPartGetByIdNeverCalled();
         }
 
         [Fact]
         public async Task GetByIdAsync_WithEmptyString_ReturnsValidationFailure()
         {
             // Arrange
+            var automocker = new AutoMocker();
+            var testee = automocker.CreateInstance<BodyPartService>();
             var emptyId = "";
+
             // Note: The service only validates for null/empty. Format validation 
             // is handled by the controller and BodyPartId.ParseOrEmpty()
 
             // Act
-            var result = await _bodyPartService.GetByIdAsync(emptyId);
+            var result = await testee.GetByIdAsync(emptyId);
 
             // Assert
-            Assert.False(result.IsSuccess);
-            Assert.NotNull(result.Data);
-            Assert.Equal(ServiceErrorCode.ValidationFailed, result.PrimaryErrorCode);
-            Assert.Contains(BodyPartErrorMessages.InvalidIdFormat, result.Errors);
-            _mockBodyPartRepository.Verify(x => x.GetByIdAsync(It.IsAny<BodyPartId>()), Times.Never);
+            result.IsSuccess.Should().BeFalse();
+            result.Data.Should().NotBeNull();
+            result.PrimaryErrorCode.Should().Be(ServiceErrorCode.ValidationFailed);
+            result.Errors.Should().Contain(BodyPartErrorMessages.InvalidIdFormat);
+
+            automocker.VerifyBodyPartGetByIdNeverCalled();
         }
 
         [Fact]
         public async Task GetByIdAsync_WithNullString_ReturnsValidationFailure()
         {
             // Arrange
+            var automocker = new AutoMocker();
+            var testee = automocker.CreateInstance<BodyPartService>();
             string? nullId = null;
 
             // Act
-            var result = await _bodyPartService.GetByIdAsync(nullId!);
+            var result = await testee.GetByIdAsync(nullId!);
 
             // Assert
-            Assert.False(result.IsSuccess);
-            Assert.NotNull(result.Data);
-            Assert.Equal(ServiceErrorCode.ValidationFailed, result.PrimaryErrorCode);
-            Assert.Contains(BodyPartErrorMessages.InvalidIdFormat, result.Errors);
-            _mockBodyPartRepository.Verify(x => x.GetByIdAsync(It.IsAny<BodyPartId>()), Times.Never);
+            result.IsSuccess.Should().BeFalse();
+            result.Data.Should().NotBeNull();
+            result.PrimaryErrorCode.Should().Be(ServiceErrorCode.ValidationFailed);
+            result.Errors.Should().Contain(BodyPartErrorMessages.InvalidIdFormat);
+
+            automocker.VerifyBodyPartGetByIdNeverCalled();
         }
 
         [Fact]
         public async Task GetByIdAsync_WithInactiveBodyPart_ReturnsNotFound()
         {
             // Arrange
+            var automocker = new AutoMocker();
+            var testee = automocker.CreateInstance<BodyPartService>();
+
             var bodyPartId = BodyPartId.New();
-            var createResult = BodyPart.Handler.Create(
-                bodyPartId,
-                "Chest",
-                "Chest muscles",
-                1,
-                false); // IsActive = false
-            Assert.True(createResult.IsSuccess, "Inactive BodyPart creation should succeed");
-            var inactiveBodyPart = createResult.Value;
+            var inactiveBodyPart = new BodyPartBuilder()
+                .WithBodyPartId(bodyPartId)
+                .WithInactiveFlag()  // Only testing inactive state
+                .Build();
 
-            // Setup cache miss so it goes to database
-            _mockCacheService
-                .Setup(x => x.GetAsync<BodyPartDto>(It.IsAny<string>()))
-                .ReturnsAsync(CacheResult<BodyPartDto>.Miss());
-
-            _mockBodyPartRepository
-                .Setup(x => x.GetByIdAsync(It.IsAny<BodyPartId>()))
-                .ReturnsAsync(inactiveBodyPart);
+            automocker
+                .SetupBodyPartUnitOfWork()
+                .SetupCacheMiss<BodyPartDto>()
+                .SetupBodyPartGetById(inactiveBodyPart);
 
             // Act
-            var result = await _bodyPartService.GetByIdAsync(bodyPartId.ToString());
+            var result = await testee.GetByIdAsync(bodyPartId.ToString());
 
             // Assert
-            Assert.False(result.IsSuccess);
-            Assert.NotNull(result.Data);
-            Assert.NotEmpty(result.Errors);
-            Assert.Contains(BodyPartTestConstants.NotFoundPartialMessage, result.Errors[0]);
-            _mockBodyPartRepository.Verify(x => x.GetByIdAsync(bodyPartId), Times.Once);
+            result.IsSuccess.Should().BeFalse();
+            result.Data.Should().NotBeNull();
+            result.Errors.Should().NotBeEmpty();
+            result.Errors[0].Should().Contain(BodyPartTestConstants.NotFoundPartialMessage);
+
+            automocker.VerifyBodyPartGetByIdOnce(bodyPartId);
         }
 
         [Fact]
         public async Task GetByValueAsync_WithExistingValue_ReturnsSuccess()
         {
             // Arrange
+            var automocker = new AutoMocker();
+            var testee = automocker.CreateInstance<BodyPartService>();
+
             var value = "Chest";
-            var bodyPartId = BodyPartId.New();
-            var createResult = BodyPart.Handler.Create(
-                bodyPartId,
-                value,
-                "Chest muscles",
-                1,
-                true);
-            Assert.True(createResult.IsSuccess, "BodyPart creation should succeed");
-            var bodyPart = createResult.Value;
+            var bodyPart = new BodyPartBuilder()
+                .WithBodyPartId(BodyPartId.New())
+                .WithValue(value)  // Need this for test and assertion
+                .Build();
 
-            // Setup cache miss so it goes to database
-            _mockCacheService
-                .Setup(x => x.GetAsync<BodyPartDto>(It.IsAny<string>()))
-                .ReturnsAsync(CacheResult<BodyPartDto>.Miss());
-
-            _mockBodyPartRepository
-                .Setup(x => x.GetByValueAsync(value))
-                .ReturnsAsync(bodyPart);
-
+            automocker
+                .SetupBodyPartUnitOfWork()
+                .SetupCacheMiss<BodyPartDto>()
+                .SetupBodyPartGetByValue(value, bodyPart);
 
             // Act
-            var result = await _bodyPartService.GetByValueAsync(value);
+            var result = await testee.GetByValueAsync(value);
 
             // Assert
-            Assert.True(result.IsSuccess);
-            Assert.NotNull(result.Data);
-            Assert.Equal(value, result.Data.Value);
-            Assert.Empty(result.Errors);
+            result.IsSuccess.Should().BeTrue();
+            result.Data.Should().NotBeNull();
+            result.Data.Value.Should().Be(value);
+            result.Errors.Should().BeEmpty();
         }
 
         [Fact]
         public async Task GetByValueAsync_WithNonExistingValue_ReturnsFailure()
         {
             // Arrange
+            var automocker = new AutoMocker();
+            var testee = automocker.CreateInstance<BodyPartService>();
+
             var value = "NonExistent";
 
-            // Setup cache miss so it goes to database
-            _mockCacheService
-                .Setup(x => x.GetAsync<BodyPartDto>(It.IsAny<string>()))
-                .ReturnsAsync(CacheResult<BodyPartDto>.Miss());
-
-            _mockBodyPartRepository
-                .Setup(x => x.GetByValueAsync(value))
-                .ReturnsAsync(BodyPart.Empty);
+            automocker
+                .SetupBodyPartUnitOfWork()
+                .SetupCacheMiss<BodyPartDto>()
+                .SetupBodyPartGetByValue(value, BodyPart.Empty);
 
             // Act
-            var result = await _bodyPartService.GetByValueAsync(value);
+            var result = await testee.GetByValueAsync(value);
 
             // Assert
-            Assert.False(result.IsSuccess);
-            Assert.NotNull(result.Data);
-            Assert.NotEmpty(result.Errors);
-            Assert.Contains(BodyPartTestConstants.NotFoundPartialMessage, result.Errors[0]);
+            result.IsSuccess.Should().BeFalse();
+            result.Data.Should().NotBeNull();
+            result.Errors.Should().NotBeEmpty();
+            result.Errors[0].Should().Contain(BodyPartTestConstants.NotFoundPartialMessage);
         }
 
         [Fact]
         public async Task GetByValueAsync_WithInactiveBodyPart_ReturnsNotFound()
         {
             // Arrange
+            var automocker = new AutoMocker();
+            var testee = automocker.CreateInstance<BodyPartService>();
+
             var value = "InactiveBodyPart";
-            var createResult = BodyPart.Handler.Create(
-                BodyPartId.New(),
-                value,
-                "Inactive body part",
-                1,
-                false); // IsActive = false
-            Assert.True(createResult.IsSuccess, "Inactive BodyPart creation should succeed");
-            var inactiveBodyPart = createResult.Value;
+            var inactiveBodyPart = new BodyPartBuilder()
+                .WithBodyPartId(BodyPartId.New())
+                .WithValue(value)  // Need this for test setup
+                .WithInactiveFlag()  // Testing inactive state
+                .Build();
 
-            // Setup cache miss so it goes to database
-            _mockCacheService
-                .Setup(x => x.GetAsync<BodyPartDto>(It.IsAny<string>()))
-                .ReturnsAsync(CacheResult<BodyPartDto>.Miss());
-
-            _mockBodyPartRepository
-                .Setup(x => x.GetByValueAsync(value))
-                .ReturnsAsync(inactiveBodyPart);
+            automocker
+                .SetupBodyPartUnitOfWork()
+                .SetupCacheMiss<BodyPartDto>()
+                .SetupBodyPartGetByValue(value, inactiveBodyPart);
 
             // Act
-            var result = await _bodyPartService.GetByValueAsync(value);
+            var result = await testee.GetByValueAsync(value);
 
             // Assert
-            Assert.False(result.IsSuccess);
-            Assert.NotNull(result.Data);
-            Assert.NotEmpty(result.Errors);
-            Assert.Contains(BodyPartTestConstants.NotFoundPartialMessage, result.Errors[0]);
-            _mockBodyPartRepository.Verify(x => x.GetByValueAsync(value), Times.Once);
+            result.IsSuccess.Should().BeFalse();
+            result.Data.Should().NotBeNull();
+            result.Errors.Should().NotBeEmpty();
+            result.Errors[0].Should().Contain(BodyPartTestConstants.NotFoundPartialMessage);
+
+            automocker.VerifyBodyPartGetByValueOnce(value);
         }
     }
 }
