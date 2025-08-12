@@ -2,21 +2,270 @@
 
 **🎯 PURPOSE**: This document defines **MANDATORY** testing standards and patterns for the GetFitterGetBigger API to ensure reliable, maintainable tests.
 
-## 🚨 CRITICAL Rules
+## 🚨 CRITICAL Rules - CODE REVIEW BLOCKERS
 
 ```
 ┌──────────────────────────────────────────────────────────────┐
-│ 🔴 CRITICAL: Testing Rules - MUST be followed               │
+│ 🔴 CRITICAL: Testing Rules - PR WILL BE REJECTED           │
 ├──────────────────────────────────────────────────────────────┤
-│ 1. NEVER test error message content - only error codes      │
-│ 2. Mock all dependencies in unit tests                      │
-│ 3. Use TestIds for consistent test data                     │
-│ 4. One assert per test preferred                            │
-│ 5. Test behavior, not implementation                        │
+│ 1. NO MAGIC STRINGS - Extract ALL literals to constants     │
+│ 2. TEST NAMES MUST EXPRESS INTENT - Method_Scenario_Outcome │
+│ 3. NEVER test error message content - only error codes      │
+│ 4. Constants MUST connect arrange to assert phases          │
+│ 5. Mock all dependencies in unit tests                      │
+│ 6. Remove unused test data - only test what you assert      │
+│ 7. Test behavior, not implementation                        │
 └──────────────────────────────────────────────────────────────┘
 ```
 
-## No Magic Strings in Tests
+**⚠️ CODE REVIEW REQUIREMENT**: Any PR containing tests with magic strings or unclear test names will be marked as **"NEEDS CHANGES"** and must be fixed before merge.
+
+## No Magic Strings in Tests - Complete Guide
+
+### Rule 1: Extract ALL String Literals to Constants
+
+**NEVER use magic strings in tests**. Every string literal should be extracted to a constant variable that connects the arrange and assert phases.
+
+#### ❌ VIOLATION - Magic Strings Everywhere
+```csharp
+[Fact]
+public async Task GetPagedAsync_ReturnsPagedResponse()  // Vague name!
+{
+    var filterParams = new ExerciseFilterParams
+    {
+        Name = "Press"  // Magic string!
+    };
+    
+    var exercises = new List<Exercise>
+    {
+        ExerciseBuilder.AWorkoutExercise()
+            .WithName("Bench Press")  // Magic string!
+            .Build(),
+        ExerciseBuilder.AWorkoutExercise()
+            .WithName("Overhead Press")  // Magic string!
+            .Build()
+    };
+    
+    // ... test execution ...
+    
+    result.Data.Items.Should().OnlyContain(dto => dto.Name.Contains("Press")); // DIFFERENT magic string!
+}
+```
+
+**What's wrong?**
+- If someone changes `Name = "Press"` to `Name = "Squat"` for testing a new feature, the assertion still checks for "Press"
+- The test becomes disconnected and fails mysteriously
+- Takes time to debug why it's failing
+- The test name doesn't express what's actually being tested
+
+#### ✅ CORRECT - Constants That Connect
+```csharp
+[Fact]
+public async Task GetPagedAsync_WithNameFilter_ReturnsOnlyMatchingExercises()  // Clear intent!
+{
+    // Arrange
+    const string searchTerm = "Press";
+    const string matchingExercise1 = "Bench Press";
+    const string matchingExercise2 = "Overhead Press";
+    
+    var filterParams = new ExerciseFilterParams
+    {
+        Name = searchTerm  // Using constant
+    };
+    
+    var exercises = new List<Exercise>
+    {
+        ExerciseBuilder.AWorkoutExercise()
+            .WithName(matchingExercise1)  // Using constant
+            .Build(),
+        ExerciseBuilder.AWorkoutExercise()
+            .WithName(matchingExercise2)  // Using constant
+            .Build()
+    };
+    
+    // ... test execution ...
+    
+    // Assert uses the SAME constant - automatically stays in sync!
+    result.Data.Items.Should().OnlyContain(dto => dto.Name.Contains(searchTerm));
+}
+```
+
+### Rule 2: Test Names Must Express Clear Intent
+
+Test names should follow the pattern: **Method_Scenario_ExpectedOutcome**
+
+#### ❌ VIOLATION - Misleading or Vague Test Names
+```csharp
+[Fact]
+public async Task GetPagedAsync_ReturnsPagedResponse()  
+// What scenario? With filters? Without? What's being tested?
+
+[Fact]
+public async Task CreateAsync_WithValidRequest_CreatesExercise()  
+// What makes the request valid? What's the specific scenario?
+
+[Fact]
+public async Task DeleteAsync_WithInvalidId_ReturnsFailure()  
+// Invalid how? Empty? Non-existent? Wrong format?
+```
+
+#### ✅ CORRECT - Clear, Specific Test Names
+```csharp
+[Fact]
+public async Task GetPagedAsync_WithNameFilter_ReturnsOnlyMatchingExercises()
+// Clear: testing name filtering functionality
+
+[Fact]
+public async Task CreateAsync_WithNewExerciseName_CreatesAndReturnsExercise()
+// Clear: testing creation with a new (non-duplicate) name
+
+[Fact]
+public async Task DeleteAsync_WithNonExistentExercise_ReturnsNotFoundError()
+// Clear: testing deletion when exercise doesn't exist
+
+[Fact]
+public async Task GetByIdAsync_WithEmptyId_ReturnsEmptyDto()
+// Clear: testing behavior with empty ID
+```
+
+### Rule 3: Link Test Data to Assertions
+
+Every piece of test data that's being verified should use the same constant in both arrange and assert phases.
+
+#### ❌ VIOLATION - Disconnected Data
+```csharp
+[Fact]
+public async Task CreateAsync_WithValidRequest_CreatesExercise()
+{
+    var request = CreateExerciseRequestBuilder.ForWorkoutExercise()
+        .WithName("New Exercise")  // Magic string #1
+        .Build();
+
+    var createdExercise = ExerciseBuilder.AWorkoutExercise()
+        .WithName("New Exercise")  // Magic string #2 (duplicate)
+        .Build();
+    
+    // ... test execution ...
+    
+    result.Data.Name.Should().Be("New Exercise");  // Magic string #3!
+}
+```
+
+**Problems:**
+- Three separate magic strings that happen to match
+- Change one and the test breaks mysteriously
+- No clear connection between setup and assertion
+
+#### ✅ CORRECT - Connected Data with Single Source of Truth
+```csharp
+[Fact]
+public async Task CreateAsync_WithNewExerciseName_CreatesAndReturnsExercise()
+{
+    // Single source of truth
+    const string exerciseName = "Squat";
+    
+    var request = CreateExerciseRequestBuilder.ForWorkoutExercise()
+        .WithName(exerciseName)  // Same constant
+        .Build();
+
+    var createdExercise = ExerciseBuilder.AWorkoutExercise()
+        .WithName(exerciseName)  // Same constant
+        .Build();
+    
+    // ... test execution ...
+    
+    result.Data.Name.Should().Be(exerciseName);  // Same constant in assertion
+}
+```
+
+### Rule 4: Don't Test What You Don't Assert
+
+Remove test data that isn't being verified - it adds noise and confusion.
+
+#### ❌ VIOLATION - Unused Test Data
+```csharp
+[Fact]
+public async Task DeleteAsync_WithValidId_PerformsSoftDelete()
+{
+    var exercise = ExerciseBuilder.AWorkoutExercise()
+        .WithId(exerciseId)
+        .WithName("To Delete")  // Never verified!
+        .WithDescription("Some description")  // Never verified!
+        .WithDifficultyLevel("Beginner")  // Never verified!
+        .Build();
+    
+    // ... test execution ...
+    
+    result.IsSuccess.Should().BeTrue();  // Only checking success
+}
+```
+
+#### ✅ CORRECT - Only Necessary Data
+```csharp
+[Fact]
+public async Task DeleteAsync_WithExistingExercise_PerformsSoftDelete()
+{
+    var exercise = ExerciseBuilder.AWorkoutExercise()
+        .WithId(exerciseId)  // Only what's needed
+        .Build();
+    
+    // ... test execution ...
+    
+    result.IsSuccess.Should().BeTrue();
+}
+```
+
+### Rule 5: Use 'because' Clauses for Non-Obvious Assertions
+
+When the reason for an assertion might not be immediately clear, add a `because` clause.
+
+#### ✅ GOOD - Explaining Why
+```csharp
+result.IsSuccess.Should().BeFalse(because: "REST exercises cannot have weight types");
+
+result.Data.IsEmpty.Should().BeTrue(because: "invalid ID should result in Empty ID which returns Empty DTO");
+
+result.IsSuccess.Should().BeTrue(because: "weight type is optional for non-REST exercises");
+```
+
+### The "Future Developer" Test
+
+Before committing any test, ask yourself:
+1. **"If someone changes this test data 6 months from now, will the test still make sense?"**
+2. **"If this test fails at 3 AM, will the on-call developer understand what broke?"**
+3. **"Can a new team member understand what this test validates without asking?"**
+
+### Why This Matters
+
+#### The Copy-Paste-Forget Anti-Pattern
+Developers copy tests and forget to update all magic strings, leading to tests that pass for the wrong reasons.
+
+#### The Works-on-My-Machine Anti-Pattern  
+Magic strings that happen to work with current data but break when someone innocently changes test data.
+
+#### The Mystery Failure Anti-Pattern
+Test fails and it takes 10+ minutes to figure out why because the assertion checks a hardcoded value disconnected from the test setup.
+
+### Quick Checklist for Every Test
+
+Before committing any test, verify:
+
+- [ ] **No magic strings** - Every string literal is in a const variable
+- [ ] **Test name describes intent** - Method_Scenario_Outcome pattern
+- [ ] **Constants connect arrange to assert** - Same variable used in both
+- [ ] **No unused test data** - Only set up what you assert on
+- [ ] **Clear test names** - Would a new developer understand?
+- [ ] **Because clauses where helpful** - Explain non-obvious assertions
+
+### The Golden Rule
+
+> **"Write tests as if the person who maintains them is a violent psychopath who knows where you live."**
+
+Or more professionally:
+
+> **"Write tests that are so clear and robust that they never need explanation, never break from innocent changes, and always clearly indicate what went wrong when they fail."**
+
+### Rule 6: Never Test Error Message Content
 
 **NEVER test error message content - only test ServiceErrorCode:**
 
@@ -650,6 +899,47 @@ public async Task UpdateAsync_WithValidData_UpdatesAndReturnsSuccess() { }
 3. **Clarity**: Test names should clearly describe the scenario
 4. **Stability**: Tests should not break with refactoring
 5. **Speed**: Unit tests should run fast (mock external dependencies)
+
+## 🔍 Code Review Checklist for Tests
+
+### MUST REJECT PR If Any Test Has:
+
+- [ ] **Magic strings** - Any string literal not in a const variable
+- [ ] **Vague test names** - Names that don't describe the specific scenario
+- [ ] **Disconnected assertions** - Assertions using different values than setup
+- [ ] **Error message testing** - Using `Assert.Contains()` on error messages
+- [ ] **Unused test data** - Setting up data that's never asserted
+- [ ] **Missing intent** - Test names like `Test1`, `TestMethod`, `WorksCorrectly`
+
+### Example Code Review Comments:
+
+```markdown
+❌ NEEDS CHANGES: This test contains magic strings. Please extract all string 
+literals to const variables that connect the arrange and assert phases.
+
+❌ NEEDS CHANGES: Test name "GetPagedAsync_ReturnsPagedResponse" doesn't express 
+what scenario is being tested. Please rename to describe the specific case 
+(e.g., "GetPagedAsync_WithNameFilter_ReturnsOnlyMatchingExercises").
+
+❌ NEEDS CHANGES: The assertion checks for "Press" but the filter uses a different 
+string. Please use the same constant for both to prevent disconnected test failures.
+
+❌ NEEDS CHANGES: This test is checking error message content. Please test only 
+the ServiceErrorCode instead, as messages may change or be localized.
+
+❌ NEEDS CHANGES: The test sets up Name, Description, and DifficultyLevel but 
+only asserts on IsSuccess. Please remove unused test data to improve clarity.
+```
+
+### When to Approve:
+
+✅ **APPROVE** only when ALL tests:
+- Use constants for every string value
+- Have clear, descriptive names following Method_Scenario_Outcome pattern
+- Use the same constants in arrange and assert
+- Test only error codes, not messages
+- Set up only data that's being verified
+- Include `because` clauses for non-obvious assertions
 
 ## Related Documentation
 
