@@ -133,6 +133,148 @@ automocker
     .VerifyBodyPartGetByIdOnce(providedBodyPartId);  // Exact ID
 ```
 
+## Service-Specific Extension Pattern
+
+### ⚠️ CRITICAL: One Extension Class Per Service
+
+**PROBLEM**: As we add more services and tests, having all AutoMocker extensions in a single file becomes unmanageable. A single `AutoMockerExtensions.cs` file with extensions for 20+ services would be thousands of lines long.
+
+**SOLUTION**: Create service-specific extension classes following this pattern:
+
+```
+GetFitterGetBigger.API.Tests/
+├── Services/
+│   ├── Extensions/
+│   │   ├── AutoMockerExtensions.cs              # Shared/common extensions only
+│   │   ├── AutoMockerExerciseServiceExtensions.cs    # Exercise-specific
+│   │   ├── AutoMockerBodyPartServiceExtensions.cs    # BodyPart-specific
+│   │   ├── AutoMockerEquipmentServiceExtensions.cs   # Equipment-specific
+│   │   └── AutoMockerWorkoutTemplateExtensions.cs    # WorkoutTemplate-specific
+│   └── ExerciseServiceTests.cs
+```
+
+### Naming Convention
+
+**Pattern**: `AutoMocker{ServiceName}Extensions.cs`
+
+Examples:
+- `AutoMockerExerciseServiceExtensions.cs`
+- `AutoMockerUserServiceExtensions.cs`
+- `AutoMockerWorkoutTemplateServiceExtensions.cs`
+
+### Structure of Service-Specific Extensions
+
+```csharp
+namespace GetFitterGetBigger.API.Tests.Services.Extensions;
+
+public static class AutoMockerExerciseServiceExtensions
+{
+    // Setup methods specific to ExerciseService testing
+    public static AutoMocker SetupExerciseUnitOfWork(this AutoMocker mocker)
+    {
+        // Setup both read-only and writable unit of work for exercises
+    }
+    
+    public static AutoMocker SetupExerciseGetById(this AutoMocker mocker, Exercise returnValue)
+    {
+        // Setup repository to return specific exercise
+    }
+    
+    public static AutoMocker SetupExerciseTypeServiceIsRestType(this AutoMocker mocker, bool isRestType)
+    {
+        // Setup exercise type service behavior
+    }
+    
+    // Verification methods - Positive cases
+    public static AutoMocker VerifyExerciseAddOnce(this AutoMocker mocker)
+    {
+        // Verify exercise was added exactly once
+    }
+    
+    // Verification methods - Negative cases (explicit naming!)
+    public static AutoMocker VerifyExerciseRepositoryNotAccessedForValidationFailure(this AutoMocker mocker)
+    {
+        // Clear intent - validation failed so repository shouldn't be touched
+    }
+}
+```
+
+### What Goes in Each Extension File
+
+#### Service-Specific Extension (e.g., AutoMockerExerciseServiceExtensions)
+- Setup methods for that service's repository
+- Setup methods for that service's dependencies
+- Verification methods specific to that service
+- Helper methods for common test scenarios
+
+#### Shared Extensions (AutoMockerExtensions.cs)
+- Cross-cutting concerns (cache, logging)
+- Common patterns used by multiple services
+- Generic helper methods
+- Base infrastructure setup
+
+### Benefits of This Pattern
+
+1. **Scalability**: Each service's test helpers are isolated
+2. **Discoverability**: Easy to find extensions for a specific service
+3. **Maintainability**: Changes to one service don't affect others
+4. **Team Work**: Multiple developers can work on different services without conflicts
+5. **IntelliSense**: Better IDE support with smaller, focused files
+
+### Example Usage in Tests
+
+```csharp
+using GetFitterGetBigger.API.Tests.Services.Extensions; // Import extensions
+
+public class ExerciseServiceTests
+{
+    [Fact]
+    public async Task CreateAsync_WithNewExerciseName_CreatesAndReturnsExercise()
+    {
+        // Arrange
+        var automocker = new AutoMocker();
+        var testee = automocker.CreateInstance<ExerciseService>();
+        
+        const string exerciseName = "Squat";
+        
+        // Using Exercise-specific extensions
+        automocker
+            .SetupExerciseUnitOfWork()           // From AutoMockerExerciseServiceExtensions
+            .SetupExerciseExists(exerciseName, false)  // From AutoMockerExerciseServiceExtensions
+            .SetupCacheMiss<ExerciseDto>()       // From shared AutoMockerExtensions
+            .SetupExerciseAdd(createdExercise);  // From AutoMockerExerciseServiceExtensions
+        
+        // Act
+        var result = await testee.CreateAsync(request.ToCommand());
+        
+        // Assert & Verify using specific extensions
+        automocker
+            .VerifyExerciseAddOnce()             // From AutoMockerExerciseServiceExtensions
+            .VerifyWritableUnitOfWorkCommitOnce(); // From AutoMockerExerciseServiceExtensions
+    }
+}
+```
+
+### Migration Strategy for Existing Tests
+
+When you have a large `AutoMockerExtensions.cs`:
+
+1. **Identify service-specific methods** by looking for method names containing service names
+2. **Create new extension class** for each service
+3. **Move methods** to appropriate service-specific class
+4. **Update using statements** in test files
+5. **Keep only shared methods** in the original file
+
+### Checklist for Creating New Service Tests
+
+- [ ] Create `AutoMocker{ServiceName}Extensions.cs` file
+- [ ] Add setup methods for the service's repository
+- [ ] Add setup methods for the service's dependencies
+- [ ] Add positive verification methods (Once, CalledWith)
+- [ ] Add negative verification methods (NeverCalled, NotAccessed)
+- [ ] Use explicit naming for "Never" methods to show intent
+- [ ] Import the extension namespace in test files
+
 ## Implementation Pattern
 
 ### 1. Test Structure
