@@ -10,7 +10,6 @@ using GetFitterGetBigger.API.Services.Interfaces;
 using GetFitterGetBigger.API.Services.Results;
 using GetFitterGetBigger.API.Services.Validation;
 using ValidationResult = GetFitterGetBigger.API.Services.Results.ValidationResult;
-using Microsoft.Extensions.Logging;
 using Olimpo.EntityFramework.Persistency;
 using GetFitterGetBigger.API.Extensions;
 using Microsoft.EntityFrameworkCore;
