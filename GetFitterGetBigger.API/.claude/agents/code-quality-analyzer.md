@@ -65,6 +65,19 @@ You should follow this systematic process:
 - [ ] Not using primary constructors for DI
 - [ ] Using verbose collection initialization instead of []
 
+#### Positive Validation Pattern Violations ⚠️ CRITICAL
+- [ ] **Double negations in validation predicates** - `!(await something)` instead of positive assertion
+- [ ] **Command-like validation method names** - ValidateX() instead of IsXValid()
+- [ ] **Negative helper method names** - CheckDuplicate() instead of IsUnique()
+- [ ] **Complex boolean expressions in predicates** - Using `!`, `||`, `&&` combinations
+- [ ] **Validation predicates returning wrong polarity** - IsUnique() returning false when unique
+
+#### Code Organization Violations
+- [ ] **Magic strings in error messages** - Hardcoded strings instead of constants
+- [ ] **Scattered error messages** - Not centralized in ErrorMessages classes
+- [ ] **Missing extension methods** - Static helpers not extracted as extensions
+- [ ] **Public helper methods** - Should be private with clear intent
+
 #### Controller Class Violations
 - [ ] Business logic in controller (should be pass-through only)
 - [ ] Not using pattern matching for ServiceResult handling
@@ -143,12 +156,16 @@ If any changes were applied:
 - Null returns instead of Empty pattern
 - WritableUnitOfWork used for queries
 - **Over-validation anti-pattern** - Unnecessary IsEmpty checks mixed with business logic (e.g., `entity.IsEmpty || !entity.IsActive`)
+- **Double negations in validation** - `!(await something)` patterns that hurt readability
+- **Magic strings in production code** - Hardcoded error messages and values
 
 ### High (Should Fix)
 - Not using ServiceValidate fluent API
 - Multiple exit points in methods
 - Business logic in controllers
 - Missing IEmptyDto<T> implementation
+- **Command-like validation method names** - ValidateX() instead of IsXValid()
+- **Negative helper method names** - Not using positive assertions
 
 ### Medium (Recommended)
 - Not using primary constructors
@@ -191,6 +208,73 @@ When tests fail after refactoring:
    - Continue with other tests
 
 ## Example Violations and Fixes
+
+### Double Negation in Validation
+```csharp
+// VIOLATION - Double negation is hard to read
+.EnsureNameIsUniqueAsync(
+    async () => !(await _queryDataService.ExistsByNameAsync(command.Name)).Data.Value,
+    "Exercise",
+    command.Name)
+
+// FIXED - Create extension method with positive naming
+// Step 1: Create extension method file (e.g., ExerciseDataServiceExtensions.cs)
+public static class ExerciseDataServiceExtensions
+{
+    public static async Task<bool> IsExerciseNameUniqueAsync(
+        this IExerciseQueryDataService dataService,
+        string name,
+        ExerciseId? excludeId = null)
+    {
+        var existsResult = await dataService.ExistsByNameAsync(name, excludeId);
+        return existsResult.IsSuccess && !existsResult.Data.Value;
+    }
+}
+
+// Step 2: Use the extension method in validation
+.EnsureNameIsUniqueAsync(
+    async () => await _queryDataService.IsExerciseNameUniqueAsync(command.Name),
+    "Exercise",
+    command.Name)
+```
+
+### Extension Method Naming Convention
+Follow the pattern: Is<What><Result>Async
+- IsExerciseNameUniqueAsync
+- AreExerciseTypesValidAsync
+- IsKineticChainValidAsync
+- CanDeleteExerciseAsync
+
+### Command-like Method Names
+```csharp
+// VIOLATION - Sounds like a command, not a question
+private async Task<bool> ValidateExerciseTypesAsync(List<ExerciseTypeId> ids)
+private async Task<bool> ValidateKineticChainAsync(List<ExerciseTypeId> types, KineticChainId id)
+
+// FIXED - Clear question format
+private async Task<bool> AreExerciseTypesValidAsync(List<ExerciseTypeId> ids)
+private async Task<bool> IsKineticChainValidAsync(List<ExerciseTypeId> types, KineticChainId id)
+```
+
+### Magic Strings
+```csharp
+// VIOLATION - Hardcoded error messages
+.EnsureHasValidAsync(
+    async () => await IsKineticChainValidAsync(command.ExerciseTypeIds, command.KineticChainId),
+    "REST exercises cannot have kinetic chain; Non-REST exercises must have kinetic chain")
+
+// FIXED - Centralized error messages
+.EnsureHasValidAsync(
+    async () => await IsKineticChainValidAsync(command.ExerciseTypeIds, command.KineticChainId),
+    ExerciseErrorMessages.InvalidKineticChainForExerciseType)
+
+// In ExerciseErrorMessages.cs:
+public static class ExerciseErrorMessages
+{
+    public const string InvalidKineticChainForExerciseType = 
+        "REST exercises cannot have kinetic chain; Non-REST exercises must have kinetic chain";
+}
+```
 
 ### Try-Catch Anti-Pattern
 ```csharp

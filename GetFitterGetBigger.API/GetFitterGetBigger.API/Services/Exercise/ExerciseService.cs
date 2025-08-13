@@ -1,5 +1,4 @@
 using GetFitterGetBigger.API.DTOs;
-using GetFitterGetBigger.API.Models.Entities;
 using GetFitterGetBigger.API.Models.SpecializedIds;
 using GetFitterGetBigger.API.Services.Commands;
 using GetFitterGetBigger.API.Services.Exercise.DataServices;
@@ -9,6 +8,7 @@ using GetFitterGetBigger.API.Services.Interfaces;
 using GetFitterGetBigger.API.Services.Results;
 using GetFitterGetBigger.API.Services.Validation;
 using GetFitterGetBigger.API.Constants;
+using GetFitterGetBigger.API.Services.Exercise.Extensions;
 
 namespace GetFitterGetBigger.API.Services.Exercise;
 
@@ -16,23 +16,15 @@ namespace GetFitterGetBigger.API.Services.Exercise;
 /// Service for Exercise business logic using clean architecture command pattern.
 /// Delegates data access to DataServices and complex logic to Handlers.
 /// </summary>
-public class ExerciseService : IExerciseService
+public class ExerciseService(
+    IExerciseQueryDataService queryDataService,
+    IExerciseCommandDataService commandDataService,
+    IExerciseTypeService exerciseTypeService) : IExerciseService
 {
-    private readonly IExerciseQueryDataService _queryDataService;
-    private readonly IExerciseCommandDataService _commandDataService;
-    private readonly ExerciseTypeValidationHandler _typeValidationHandler;
-    private readonly DeleteHandler _deleteHandler;
-    
-    public ExerciseService(
-        IExerciseQueryDataService queryDataService,
-        IExerciseCommandDataService commandDataService,
-        IExerciseTypeService exerciseTypeService)
-    {
-        _queryDataService = queryDataService;
-        _commandDataService = commandDataService;
-        _typeValidationHandler = new ExerciseTypeValidationHandler(exerciseTypeService);
-        _deleteHandler = new DeleteHandler(commandDataService);
-    }
+    private readonly IExerciseQueryDataService _queryDataService = queryDataService;
+    private readonly IExerciseCommandDataService _commandDataService = commandDataService;
+    private readonly ExerciseTypeValidationHandler _typeValidationHandler = new(exerciseTypeService);
+    private readonly DeleteHandler _deleteHandler = new(commandDataService);
     
     public async Task<ServiceResult<PagedResponse<ExerciseDto>>> GetPagedAsync(GetExercisesCommand filterParams)
     {
@@ -58,24 +50,24 @@ public class ExerciseService : IExerciseService
             .EnsureNotEmpty(command.DifficultyId, ExerciseErrorMessages.DifficultyLevelRequired)
             .EnsureMaxLength(command.Name, 255, ExerciseErrorMessages.ExerciseNameMaxLength)
             .EnsureNameIsUniqueAsync(
-                async () => !(await _queryDataService.ExistsByNameAsync(command.Name)).Data.Value,
+                async () => await _queryDataService.IsExerciseNameUniqueAsync(command.Name),
                 "Exercise",
                 command.Name)
             .EnsureHasValidAsync(
-                async () => await _typeValidationHandler.ValidateExerciseTypesAsync(command.ExerciseTypeIds),
+                async () => await _typeValidationHandler.AreExerciseTypesValidAsync(command.ExerciseTypeIds),
                 ExerciseErrorMessages.InvalidExerciseTypeConfiguration)
             .EnsureHasValidAsync(
-                async () => await _typeValidationHandler.ValidateKineticChainAsync(
+                async () => await _typeValidationHandler.IsKineticChainValidAsync(
                     command.ExerciseTypeIds, command.KineticChainId),
-                "REST exercises cannot have kinetic chain; Non-REST exercises must have kinetic chain")
+                ExerciseErrorMessages.InvalidKineticChainForExerciseType)
             .EnsureHasValidAsync(
-                async () => await _typeValidationHandler.ValidateWeightTypeAsync(
+                async () => await _typeValidationHandler.IsWeightTypeValidAsync(
                     command.ExerciseTypeIds, command.ExerciseWeightTypeId),
-                "REST exercises cannot have weight type")
+                ExerciseErrorMessages.InvalidWeightTypeForExerciseType)
             .EnsureHasValidAsync(
-                async () => await _typeValidationHandler.ValidateMuscleGroupsAsync(
+                async () => await _typeValidationHandler.AreMuscleGroupsValidAsync(
                     command.ExerciseTypeIds, command.MuscleGroups),
-                "REST exercises cannot have muscle groups; Non-REST exercises must have at least one muscle group")
+                ExerciseErrorMessages.InvalidMuscleGroupsForExerciseType)
             .MatchAsync(
                 whenValid: async () => await CreateExerciseInternalAsync(command)
             );
@@ -116,24 +108,24 @@ public class ExerciseService : IExerciseService
             .EnsureNotEmpty(command.DifficultyId, ExerciseErrorMessages.DifficultyLevelRequired)
             .EnsureMaxLength(command.Name, 255, ExerciseErrorMessages.ExerciseNameMaxLength)
             .EnsureNameIsUniqueAsync(
-                async () => !(await _queryDataService.ExistsByNameAsync(command.Name, id)).Data.Value,
+                async () => await _queryDataService.IsExerciseNameUniqueAsync(command.Name, id),
                 "Exercise",
                 command.Name)
             .EnsureHasValidAsync(
-                async () => await _typeValidationHandler.ValidateExerciseTypesAsync(command.ExerciseTypeIds),
+                async () => await _typeValidationHandler.AreExerciseTypesValidAsync(command.ExerciseTypeIds),
                 ExerciseErrorMessages.InvalidExerciseTypeConfiguration)
             .EnsureHasValidAsync(
-                async () => await _typeValidationHandler.ValidateKineticChainAsync(
+                async () => await _typeValidationHandler.IsKineticChainValidAsync(
                     command.ExerciseTypeIds, command.KineticChainId),
-                "REST exercises cannot have kinetic chain; Non-REST exercises must have kinetic chain")
+                ExerciseErrorMessages.InvalidKineticChainForExerciseType)
             .EnsureHasValidAsync(
-                async () => await _typeValidationHandler.ValidateWeightTypeAsync(
+                async () => await _typeValidationHandler.IsWeightTypeValidAsync(
                     command.ExerciseTypeIds, command.ExerciseWeightTypeId),
-                "REST exercises cannot have weight type")
+                ExerciseErrorMessages.InvalidWeightTypeForExerciseType)
             .EnsureHasValidAsync(
-                async () => await _typeValidationHandler.ValidateMuscleGroupsAsync(
+                async () => await _typeValidationHandler.AreMuscleGroupsValidAsync(
                     command.ExerciseTypeIds, command.MuscleGroups),
-                "REST exercises cannot have muscle groups; Non-REST exercises must have at least one muscle group")
+                ExerciseErrorMessages.InvalidMuscleGroupsForExerciseType)
             .MatchAsync(
                 whenValid: async () => await UpdateExerciseInternalAsync(id, command)
             );
@@ -175,9 +167,6 @@ public class ExerciseService : IExerciseService
                 ServiceError.NotFound("Exercise", id.ToString()))
             .MatchAsync(
                 whenValid: async () => await _deleteHandler.DeleteAsync(id),
-                whenInvalid: errors => ServiceResult<bool>.Failure(
-                    false, 
-                    errors.FirstOrDefault() ?? ServiceError.ValidationFailed("Unknown error"))
-            );
+                whenInvalid: errors => ServiceResult<bool>.Failure(false, errors.FirstOrDefault() ?? ServiceError.ValidationFailed("Unknown error")));
     }
 }

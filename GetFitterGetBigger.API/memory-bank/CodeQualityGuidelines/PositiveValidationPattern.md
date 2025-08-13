@@ -27,18 +27,65 @@
 // "Ensure that NOT check duplicate name" - WTF?!
 ```
 
-## The Solution: Positive Assertions
+## The Solution: Positive Assertions with Extension Methods
 
+### Option 1: Create Private Extension Methods (PREFERRED)
 ```csharp
-// ✅ GOOD - Clear positive assertion
+// ✅ BEST - Extension method with positive naming
+.EnsureNameIsUniqueAsync(
+    async () => await _queryDataService.IsExerciseNameUniqueAsync(command.Name),
+    "Exercise",
+    command.Name)
+
+// Extension method to create:
+public static class ExerciseDataServiceExtensions
+{
+    /// <summary>
+    /// Checks if an exercise name is unique (doesn't exist).
+    /// </summary>
+    /// <returns>True if the name is unique, false if it already exists</returns>
+    public static async Task<bool> IsExerciseNameUniqueAsync(
+        this IExerciseQueryDataService dataService,
+        string name,
+        ExerciseId? excludeId = null)
+    {
+        var existsResult = await dataService.ExistsByNameAsync(name, excludeId);
+        return existsResult.IsSuccess && !existsResult.Data.Value;
+    }
+}
+```
+
+### Option 2: Private Helper Method in Service
+```csharp
+// ✅ GOOD - Private helper with positive naming
 .EnsureNameIsUniqueAsync(
     async () => await IsNameUniqueAsync(command.Name, null),
     "Exercise",
     command.Name)
 
-// Reading this in plain English:
-// "Ensure name IS unique" - Crystal clear!
+// Private helper method:
+private async Task<bool> IsNameUniqueAsync(string name, ExerciseId? excludeId)
+{
+    var existsResult = await _queryDataService.ExistsByNameAsync(name, excludeId);
+    return existsResult.IsSuccess && !existsResult.Data.Value;
+}
 ```
+
+### Extension Method Naming Pattern
+When creating extension methods for validation predicates, follow this pattern:
+
+```
+Is<What><Result>Async
+```
+
+Examples:
+- `IsExerciseNameUniqueAsync()` - Checks if exercise name is unique
+- `IsWorkoutTemplateNameUniqueAsync()` - Checks if workout template name is unique
+- `IsEquipmentNameUniqueAsync()` - Checks if equipment name is unique
+- `AreExerciseTypesValidAsync()` - Checks if exercise types are valid
+- `IsKineticChainValidAsync()` - Checks if kinetic chain is valid
+- `CanDeleteExerciseAsync()` - Checks if exercise can be deleted
+- `HasValidConfigurationAsync()` - Checks if configuration is valid
 
 ## Standard Validation Extensions
 

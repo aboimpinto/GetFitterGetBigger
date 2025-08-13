@@ -18,9 +18,9 @@ public class ExerciseTypeValidationHandler
     }
     
     /// <summary>
-    /// Validates that the exercise types configuration is valid
+    /// Checks if the exercise types configuration is valid
     /// </summary>
-    public async Task<bool> ValidateExerciseTypesAsync(List<ExerciseTypeId> exerciseTypeIds)
+    public async Task<bool> AreExerciseTypesValidAsync(List<ExerciseTypeId> exerciseTypeIds)
     {
         // Empty list is valid
         var hasNoTypes = exerciseTypeIds.Count == 0;
@@ -39,9 +39,9 @@ public class ExerciseTypeValidationHandler
     }
     
     /// <summary>
-    /// Validates kinetic chain configuration for the given exercise types
+    /// Checks if kinetic chain configuration is valid for the given exercise types
     /// </summary>
-    public async Task<bool> ValidateKineticChainAsync(
+    public async Task<bool> IsKineticChainValidAsync(
         List<ExerciseTypeId> exerciseTypeIds, 
         KineticChainTypeId kineticChainId)
     {
@@ -67,9 +67,9 @@ public class ExerciseTypeValidationHandler
     }
     
     /// <summary>
-    /// Validates weight type configuration for the given exercise types
+    /// Checks if weight type configuration is valid for the given exercise types
     /// </summary>
-    public async Task<bool> ValidateWeightTypeAsync(
+    public async Task<bool> IsWeightTypeValidAsync(
         List<ExerciseTypeId> exerciseTypeIds, 
         ExerciseWeightTypeId weightTypeId)
     {
@@ -95,9 +95,9 @@ public class ExerciseTypeValidationHandler
     }
     
     /// <summary>
-    /// Validates muscle groups configuration for the given exercise types
+    /// Checks if muscle groups configuration is valid for the given exercise types
     /// </summary>
-    public async Task<bool> ValidateMuscleGroupsAsync(
+    public async Task<bool> AreMuscleGroupsValidAsync(
         List<ExerciseTypeId> exerciseTypeIds, 
         List<MuscleGroupAssignment> muscleGroups)
     {

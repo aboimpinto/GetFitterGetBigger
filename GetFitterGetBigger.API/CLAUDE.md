@@ -132,6 +132,55 @@ Architecture and system documentation organized in one place:
 
 **💡 Pro Tip**: When debugging, start with PracticalGuides/, then check relevant process docs!
 
+## ⚠️ CRITICAL: Validation Pattern Rules
+
+### 1. NO Double Negations in Validation
+**NEVER use `!(await something)` in validation predicates!** This is confusing and error-prone.
+
+```csharp
+// ❌ BAD - Double negation
+.EnsureNameIsUniqueAsync(
+    async () => !(await _dataService.ExistsByNameAsync(name)).Data.Value,
+    "Entity", name)
+
+// ✅ GOOD - Positive assertion with helper
+.EnsureNameIsUniqueAsync(
+    async () => await IsNameUniqueAsync(name),
+    "Entity", name)
+
+private async Task<bool> IsNameUniqueAsync(string name)
+{
+    var exists = await _dataService.ExistsByNameAsync(name);
+    return !exists.Data.Value; // Returns true when unique
+}
+```
+
+### 2. Validation Methods Are QUESTIONS, Not COMMANDS
+**Validation methods should ask questions (IsValid), not give commands (Validate)!**
+
+```csharp
+// ❌ BAD - Command-like names
+ValidateExerciseTypesAsync()
+ValidateKineticChainAsync()
+CheckDuplicateNameAsync()
+
+// ✅ GOOD - Question format
+AreExerciseTypesValidAsync()
+IsKineticChainValidAsync()
+IsNameUniqueAsync()
+```
+
+### 3. NO Magic Strings
+**ALL error messages and string literals must be constants!**
+
+```csharp
+// ❌ BAD - Hardcoded string
+"REST exercises cannot have kinetic chain"
+
+// ✅ GOOD - Constant
+ExerciseErrorMessages.InvalidKineticChainForExerciseType
+```
+
 ## ⚠️ CRITICAL: No Try-Catch Anti-Pattern
 
 **NEVER use blanket try-catch blocks around entire methods!** This is an anti-pattern that shows lack of control over the code.

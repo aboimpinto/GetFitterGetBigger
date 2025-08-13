@@ -41,5 +41,10 @@ namespace GetFitterGetBigger.API.Constants
         // Exercise type validation
         public static string InvalidExerciseTypeConfiguration => "Invalid exercise type configuration.";
         public static string SomeExerciseTypesDoNotExist => "Some exercise types do not exist.";
+        
+        // Combined validation error messages
+        public static string InvalidKineticChainForExerciseType => "REST exercises cannot have kinetic chain; Non-REST exercises must have kinetic chain";
+        public static string InvalidWeightTypeForExerciseType => "REST exercises cannot have weight type";
+        public static string InvalidMuscleGroupsForExerciseType => "REST exercises cannot have muscle groups; Non-REST exercises must have at least one muscle group";
     }
 }

@@ -15,6 +15,9 @@
 │ 5. Pattern matching in controllers for ServiceResult handling  │
 │ 6. No try-catch for business logic - ANTI-PATTERN             │
 │ 7. No bulk scripts for refactoring - MANUAL ONLY              │
+│ 8. POSITIVE validation assertions - NO double negations        │
+│ 9. Validation methods are QUESTIONS (IsValid) not COMMANDS    │
+│ 10. NO magic strings - ALL messages in constants              │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
@@ -178,6 +181,55 @@
 
 ## 🚫 Critical Anti-Patterns to Avoid
 
+### Double Negation in Validation
+**NEVER use double negations in validation predicates!** They're hard to read and error-prone.
+
+```csharp
+// ❌ ANTI-PATTERN - Double negation is confusing
+.EnsureNameIsUniqueAsync(
+    async () => !(await _queryDataService.ExistsByNameAsync(name)).Data.Value,
+    "Exercise", name)
+
+// ✅ CORRECT - Positive assertion with helper method
+.EnsureNameIsUniqueAsync(
+    async () => await IsExerciseNameUniqueAsync(name),
+    "Exercise", name)
+
+private async Task<bool> IsExerciseNameUniqueAsync(string name)
+{
+    var existsResult = await _queryDataService.ExistsByNameAsync(name);
+    return !existsResult.Data.Value; // Returns true when unique
+}
+```
+
+### Command-like Validation Methods
+**Validation methods should be QUESTIONS, not COMMANDS!**
+
+```csharp
+// ❌ ANTI-PATTERN - Sounds like a command
+private async Task<bool> ValidateExerciseTypesAsync(ids)
+private async Task<bool> ValidateKineticChainAsync(types, id)
+
+// ✅ CORRECT - Clear question format
+private async Task<bool> AreExerciseTypesValidAsync(ids)
+private async Task<bool> IsKineticChainValidAsync(types, id)
+```
+
+### Magic Strings in Code
+**NEVER hardcode error messages or other strings!** Use constants.
+
+```csharp
+// ❌ ANTI-PATTERN - Hardcoded error message
+.EnsureHasValidAsync(
+    async () => await IsKineticChainValidAsync(types, id),
+    "REST exercises cannot have kinetic chain")
+
+// ✅ CORRECT - Centralized constant
+.EnsureHasValidAsync(
+    async () => await IsKineticChainValidAsync(types, id),
+    ExerciseErrorMessages.InvalidKineticChainForExerciseType)
+```
+
 ### No Try-Catch Anti-Pattern
 **NEVER use blanket try-catch blocks!** Shows lack of control over code flow.
 
@@ -233,7 +285,10 @@ Before approving any PR, verify:
 - [ ] No null returns (Empty pattern used)
 - [ ] ServiceValidate used for validation
 - [ ] Single exit points in all methods
-- [ ] Validation uses positive assertions (no double negatives)
+- [ ] **NO double negations in validation predicates** (`!(await something)` is WRONG)
+- [ ] **Validation methods are questions** (IsValid, HasPermission, CanDelete)
+- [ ] **Helper methods use positive naming** (returns true for positive state)
+- [ ] **NO magic strings** - All error messages in constants
 - [ ] Minimal defensive null checking (trust boundaries)
 - [ ] Controllers have no business logic
 - [ ] ReadOnly for queries, Writable for modifications
