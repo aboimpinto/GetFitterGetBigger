@@ -1,3 +1,5 @@
+using GetFitterGetBigger.API.Models.Interfaces;
+
 namespace GetFitterGetBigger.API.Models;
 
 /// <summary>
@@ -20,13 +22,8 @@ public interface IEntity
 /// Interface for entities that support the Empty/Null Object pattern
 /// </summary>
 /// <typeparam name="TSelf">The entity type itself (for static polymorphism)</typeparam>
-public interface IEmptyEntity<TSelf> : IEntity where TSelf : IEmptyEntity<TSelf>
+public interface IEmptyEntity<TSelf> : IEntity, IEmpty where TSelf : IEmptyEntity<TSelf>
 {
-    /// <summary>
-    /// Gets a value indicating whether this is an empty/null object instance
-    /// </summary>
-    bool IsEmpty { get; }
-    
     /// <summary>
     /// Gets the empty instance of this entity type
     /// </summary>

@@ -29,6 +29,7 @@
 - Controller mapping patterns
 
 #### [ServiceValidate Pattern](./CodeQualityGuidelines/ServiceValidatePattern.md)
+- **CRITICAL**: Use `Build<T>()` if ANY validation is async, `For<T>()` only for all-sync
 - Fluent validation API replacing manual validation
 - Single exit points
 - Mixed sync/async chains
@@ -124,6 +125,13 @@
 - Primary constructors for DI
 - Pattern matching and switch expressions
 
+#### [Pattern Matching Over If Statements](./CodeQualityGuidelines/PatternMatchingOverIfStatements.md)
+- **PREFERRED** Use pattern matching instead of if statements
+- Single exit point per method
+- Switch expressions for success/failure checks
+- Ternary operators for simple conditionals
+- Eliminates early returns and nested blocks
+
 #### [Extension Method Pattern](./CodeQualityGuidelines/ExtensionMethodPattern.md)
 - **MANDATORY** Extract static helper methods as extensions
 - Reduces service file size by 20-40%
@@ -198,7 +206,8 @@ return await ServiceValidate.For<T>()
 | Scenario | Pattern to Use | Documentation |
 |----------|---------------|---------------|
 | Service method return type | ServiceResult<T> | [ServiceResultPattern.md](./CodeQualityGuidelines/ServiceResultPattern.md) |
-| Input validation | ServiceValidate fluent API | [ServiceValidatePattern.md](./CodeQualityGuidelines/ServiceValidatePattern.md) |
+| Input validation (all sync) | ServiceValidate.For<T>() | [ServiceValidatePattern.md](./CodeQualityGuidelines/ServiceValidatePattern.md) |
+| Input validation (any async) | ServiceValidate.Build<T>() | [ServiceValidatePattern.md](./CodeQualityGuidelines/ServiceValidatePattern.md) |
 | Clean validation approach | Positive assertions | [CleanValidationPattern.md](./CodeQualityGuidelines/CleanValidationPattern.md) |
 | Validation mistakes | Avoid anti-patterns | [ValidationAntiPatterns.md](./CodeQualityGuidelines/ValidationAntiPatterns.md) |
 | Null handling | Null Object Pattern | [NullObjectPattern.md](./CodeQualityGuidelines/NullObjectPattern.md) |

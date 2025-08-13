@@ -8,11 +8,6 @@ namespace GetFitterGetBigger.API.Services.Commands.WorkoutTemplate;
 public class UpdateWorkoutTemplateCommand
 {
     /// <summary>
-    /// The ID of the workout template to update
-    /// </summary>
-    public required WorkoutTemplateId Id { get; init; }
-
-    /// <summary>
     /// The name of the workout template
     /// </summary>
     public string? Name { get; init; }

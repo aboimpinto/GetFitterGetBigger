@@ -11,6 +11,35 @@ ServiceValidate is a **MANDATORY** fluent validation API that replaces all manua
 - Mix of sync/async operations
 - Integration with ServiceResult pattern
 
+## 🚨 Build vs For - Critical Decision
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│ GOLDEN RULE: Use Build<T>() if ANY validation is async         │
+│ Use For<T>() ONLY when ALL validations are synchronous         │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### Quick Decision Guide
+- Have ANY async validation? → Use `ServiceValidate.Build<T>()`
+- ALL validations synchronous? → Use `ServiceValidate.For<T>()`
+- Not sure? → Use `ServiceValidate.Build<T>()` (always safe)
+
+### Common Async Validations (require Build)
+- `EnsureExistsAsync()`
+- `EnsureNameIsUniqueAsync()`
+- `EnsureHasValidAsync()`
+- `EnsureAsync()`
+- `EnsureServiceResultAsync()`
+
+### EnsureNotEmpty Works with SpecializedIds
+```csharp
+// ✅ WORKS perfectly with all SpecializedId types
+.EnsureNotEmpty(command.CategoryId, "Category required")     // WorkoutCategoryId
+.EnsureNotEmpty(command.DifficultyId, "Difficulty required")  // DifficultyLevelId
+.EnsureNotEmpty(workoutTemplateId, "Template ID required")    // WorkoutTemplateId
+```
+
 ## Basic Usage
 
 ### ❌ BAD - Manual Validation Patterns to Avoid

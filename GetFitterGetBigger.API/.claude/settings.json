@@ -1,6 +1,7 @@
 {
   "statusLine": {
     "type": "command",
-    "command": "input=$(cat); session_file=\"/tmp/claude_session_$(id -u).txt\"; if [ ! -f \"$session_file\" ]; then date +%s > \"$session_file\"; fi; session_start=$(cat \"$session_file\"); current_time=$(date +%s); session_duration=$((current_time - session_start)); hours=$((session_duration / 3600)); minutes=$(((session_duration % 3600) / 60)); seconds=$((session_duration % 60)); model=$(echo \"$input\" | jq -r '.model.display_name // \"Claude\"'); branch=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo 'no-git'); folder=$(basename \"$(pwd)\"); printf \"⏱️  %02d:%02d:%02d | 🤖 %s | 🌿 %s | 📁 %s\" $hours $minutes $seconds \"$model\" \"$branch\" \"$folder\""
+    "command": "npx ccusage statusline", 
+    "padding": 0 
   }
 }

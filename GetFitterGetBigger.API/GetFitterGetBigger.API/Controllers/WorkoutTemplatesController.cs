@@ -4,6 +4,7 @@ using GetFitterGetBigger.API.Services.Commands.WorkoutTemplate;
 using GetFitterGetBigger.API.Services.Commands.WorkoutTemplateExercises;
 using GetFitterGetBigger.API.Services.Commands.SetConfigurations;
 using GetFitterGetBigger.API.Services.Interfaces;
+using GetFitterGetBigger.API.Services.WorkoutTemplate;
 using Microsoft.AspNetCore.Mvc;
 
 namespace GetFitterGetBigger.API.Controllers;
@@ -71,14 +72,6 @@ public class WorkoutTemplatesController : ControllerBase
         [FromQuery] string sortBy = "name",
         [FromQuery] string sortOrder = "asc")
     {
-        // Always log all parameters
-        _logger.LogInformation(
-            "GetWorkoutTemplates called - Page: {Page}, PageSize: {PageSize}, NamePattern: {NamePattern}, " +
-            "CategoryId: {CategoryId}, ObjectiveId: {ObjectiveId}, DifficultyId: {DifficultyId}, " +
-            "StateId: {StateId}, SortBy: {SortBy}, SortOrder: {SortOrder}",
-            page, pageSize, namePattern, categoryId, objectiveId, difficultyId, 
-            stateId, sortBy, sortOrder);
-
         // Parse specialized IDs - ParseOrEmpty handles null/invalid values
         var parsedCategoryId = WorkoutCategoryId.ParseOrEmpty(categoryId);
         var parsedObjectiveId = WorkoutObjectiveId.ParseOrEmpty(objectiveId);
@@ -235,9 +228,9 @@ public class WorkoutTemplatesController : ControllerBase
 
         _logger.LogInformation("Updating workout template with ID: {Id}", id);
 
+        var templateId = WorkoutTemplateId.ParseOrEmpty(id);
         var command = new UpdateWorkoutTemplateCommand
         {
-            Id = WorkoutTemplateId.ParseOrEmpty(id),
             Name = request.Name,
             Description = request.Description,
             CategoryId = request.CategoryId != null ? WorkoutCategoryId.ParseOrEmpty(request.CategoryId) : null,
@@ -248,7 +241,7 @@ public class WorkoutTemplatesController : ControllerBase
             ObjectiveIds = request.ObjectiveIds?.Select(WorkoutObjectiveId.ParseOrEmpty).ToList()
         };
 
-        var result = await _workoutTemplateService.UpdateAsync(command.Id, command);
+        var result = await _workoutTemplateService.UpdateAsync(templateId, command);
 
         return result switch
         {
@@ -331,11 +324,8 @@ public class WorkoutTemplatesController : ControllerBase
 
         _logger.LogInformation("Changing state of workout template {Id} to {StateId}", id, request.WorkoutStateId);
         
-        // Log parsed IDs for debugging
         var parsedTemplateId = WorkoutTemplateId.ParseOrEmpty(id);
         var parsedStateId = WorkoutStateId.ParseOrEmpty(request.WorkoutStateId);
-        _logger.LogDebug("Parsed IDs - Template: {TemplateId} (IsEmpty: {TemplateEmpty}), State: {StateId} (IsEmpty: {StateEmpty})", 
-            parsedTemplateId, parsedTemplateId.IsEmpty, parsedStateId, parsedStateId.IsEmpty);
 
         var result = await _workoutTemplateService.ChangeStateAsync(
             WorkoutTemplateId.ParseOrEmpty(id),

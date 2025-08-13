@@ -1,8 +1,9 @@
 using GetFitterGetBigger.API.DTOs;
 using GetFitterGetBigger.API.Models;
 using GetFitterGetBigger.API.Models.Entities;
+using WorkoutTemplateEntity = GetFitterGetBigger.API.Models.Entities.WorkoutTemplate;
 
-namespace GetFitterGetBigger.API.Services.Implementations.Extensions;
+namespace GetFitterGetBigger.API.Services.WorkoutTemplate.Extensions;
 
 /// <summary>
 /// Extension methods for WorkoutTemplate entity to DTO mapping
@@ -12,7 +13,7 @@ public static class WorkoutTemplateExtensions
     /// <summary>
     /// Maps a WorkoutTemplate entity to its DTO representation
     /// </summary>
-    public static WorkoutTemplateDto ToDto(this WorkoutTemplate workoutTemplate)
+    public static WorkoutTemplateDto ToDto(this WorkoutTemplateEntity workoutTemplate)
     {
         if (workoutTemplate.IsEmpty)
             return WorkoutTemplateDto.Empty;

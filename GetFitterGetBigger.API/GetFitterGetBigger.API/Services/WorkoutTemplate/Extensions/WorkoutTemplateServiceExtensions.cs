@@ -1,7 +1,7 @@
 using GetFitterGetBigger.API.Models.SpecializedIds;
 using GetFitterGetBigger.API.Services.Commands.WorkoutTemplate;
 
-namespace GetFitterGetBigger.API.Services.Implementations.Extensions;
+namespace GetFitterGetBigger.API.Services.WorkoutTemplate.Extensions;
 
 /// <summary>
 /// Extension methods for WorkoutTemplateService helpers and utilities
@@ -20,8 +20,8 @@ public static class WorkoutTemplateServiceExtensions
             return false;
             
         // Use the existing ExistsByNameAsync but invert the result for semantic clarity
-        var exists = await service.ExistsByNameAsync(name);
-        return !exists;
+        var existsResult = await service.ExistsByNameAsync(name);
+        return !existsResult.Data.Value;
     }
 
     /// <summary>

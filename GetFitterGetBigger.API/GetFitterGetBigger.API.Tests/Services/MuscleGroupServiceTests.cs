@@ -134,7 +134,7 @@ public class MuscleGroupServiceTests
         var result = await _service.GetByIdAsync(MuscleGroupId.Empty);
         
         Assert.False(result.IsSuccess);
-        Assert.Equal(ServiceErrorCode.InvalidFormat, result.PrimaryErrorCode);
+        Assert.Equal(ServiceErrorCode.ValidationFailed, result.PrimaryErrorCode);
         _mockRepository.Verify(x => x.GetByIdAsync(It.IsAny<MuscleGroupId>()), Times.Never);
     }
     

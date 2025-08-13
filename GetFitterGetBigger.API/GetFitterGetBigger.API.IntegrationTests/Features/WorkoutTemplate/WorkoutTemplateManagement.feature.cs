@@ -370,12 +370,13 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.WorkoutTemplate
             await this.ScenarioCleanupAsync();
         }
         
-        [Xunit.SkippableFactAttribute(DisplayName="Get paged workout templates")]
+        [Xunit.SkippableFactAttribute(DisplayName="Get paged workout templates", Skip="Ignored")]
         [Xunit.TraitAttribute("FeatureTitle", "Workout Template Management")]
         [Xunit.TraitAttribute("Description", "Get paged workout templates")]
         public async System.Threading.Tasks.Task GetPagedWorkoutTemplates()
         {
-            string[] tagsOfScenario = ((string[])(null));
+            string[] tagsOfScenario = new string[] {
+                    "ignore"};
             System.Collections.Specialized.OrderedDictionary argumentsOfScenario = new System.Collections.Specialized.OrderedDictionary();
             TechTalk.SpecFlow.ScenarioInfo scenarioInfo = new TechTalk.SpecFlow.ScenarioInfo("Get paged workout templates", null, tagsOfScenario, argumentsOfScenario, featureTags);
             this.ScenarioInitialize(scenarioInfo);
@@ -396,12 +397,13 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.WorkoutTemplate
             await this.ScenarioCleanupAsync();
         }
         
-        [Xunit.SkippableFactAttribute(DisplayName="Search templates by name pattern")]
+        [Xunit.SkippableFactAttribute(DisplayName="Search templates by name pattern", Skip="Ignored")]
         [Xunit.TraitAttribute("FeatureTitle", "Workout Template Management")]
         [Xunit.TraitAttribute("Description", "Search templates by name pattern")]
         public async System.Threading.Tasks.Task SearchTemplatesByNamePattern()
         {
-            string[] tagsOfScenario = ((string[])(null));
+            string[] tagsOfScenario = new string[] {
+                    "ignore"};
             System.Collections.Specialized.OrderedDictionary argumentsOfScenario = new System.Collections.Specialized.OrderedDictionary();
             TechTalk.SpecFlow.ScenarioInfo scenarioInfo = new TechTalk.SpecFlow.ScenarioInfo("Search templates by name pattern", null, tagsOfScenario, argumentsOfScenario, featureTags);
             this.ScenarioInitialize(scenarioInfo);
@@ -429,12 +431,13 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.WorkoutTemplate
             await this.ScenarioCleanupAsync();
         }
         
-        [Xunit.SkippableFactAttribute(DisplayName="Filter templates by category")]
+        [Xunit.SkippableFactAttribute(DisplayName="Filter templates by category", Skip="Ignored")]
         [Xunit.TraitAttribute("FeatureTitle", "Workout Template Management")]
         [Xunit.TraitAttribute("Description", "Filter templates by category")]
         public async System.Threading.Tasks.Task FilterTemplatesByCategory()
         {
-            string[] tagsOfScenario = ((string[])(null));
+            string[] tagsOfScenario = new string[] {
+                    "ignore"};
             System.Collections.Specialized.OrderedDictionary argumentsOfScenario = new System.Collections.Specialized.OrderedDictionary();
             TechTalk.SpecFlow.ScenarioInfo scenarioInfo = new TechTalk.SpecFlow.ScenarioInfo("Filter templates by category", null, tagsOfScenario, argumentsOfScenario, featureTags);
             this.ScenarioInitialize(scenarioInfo);
@@ -453,12 +456,13 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.WorkoutTemplate
             await this.ScenarioCleanupAsync();
         }
         
-        [Xunit.SkippableFactAttribute(DisplayName="Filter templates by difficulty")]
+        [Xunit.SkippableFactAttribute(DisplayName="Filter templates by difficulty", Skip="Ignored")]
         [Xunit.TraitAttribute("FeatureTitle", "Workout Template Management")]
         [Xunit.TraitAttribute("Description", "Filter templates by difficulty")]
         public async System.Threading.Tasks.Task FilterTemplatesByDifficulty()
         {
-            string[] tagsOfScenario = ((string[])(null));
+            string[] tagsOfScenario = new string[] {
+                    "ignore"};
             System.Collections.Specialized.OrderedDictionary argumentsOfScenario = new System.Collections.Specialized.OrderedDictionary();
             TechTalk.SpecFlow.ScenarioInfo scenarioInfo = new TechTalk.SpecFlow.ScenarioInfo("Filter templates by difficulty", null, tagsOfScenario, argumentsOfScenario, featureTags);
             this.ScenarioInitialize(scenarioInfo);
@@ -563,12 +567,13 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.WorkoutTemplate
             await this.ScenarioCleanupAsync();
         }
         
-        [Xunit.SkippableFactAttribute(DisplayName="Duplicate a workout template")]
+        [Xunit.SkippableFactAttribute(DisplayName="Duplicate a workout template", Skip="Ignored")]
         [Xunit.TraitAttribute("FeatureTitle", "Workout Template Management")]
         [Xunit.TraitAttribute("Description", "Duplicate a workout template")]
         public async System.Threading.Tasks.Task DuplicateAWorkoutTemplate()
         {
-            string[] tagsOfScenario = ((string[])(null));
+            string[] tagsOfScenario = new string[] {
+                    "ignore"};
             System.Collections.Specialized.OrderedDictionary argumentsOfScenario = new System.Collections.Specialized.OrderedDictionary();
             TechTalk.SpecFlow.ScenarioInfo scenarioInfo = new TechTalk.SpecFlow.ScenarioInfo("Duplicate a workout template", null, tagsOfScenario, argumentsOfScenario, featureTags);
             this.ScenarioInitialize(scenarioInfo);
@@ -590,12 +595,13 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.WorkoutTemplate
             await this.ScenarioCleanupAsync();
         }
         
-        [Xunit.SkippableFactAttribute(DisplayName="Handle large number of templates efficiently")]
+        [Xunit.SkippableFactAttribute(DisplayName="Handle large number of templates efficiently", Skip="Ignored")]
         [Xunit.TraitAttribute("FeatureTitle", "Workout Template Management")]
         [Xunit.TraitAttribute("Description", "Handle large number of templates efficiently")]
         public async System.Threading.Tasks.Task HandleLargeNumberOfTemplatesEfficiently()
         {
-            string[] tagsOfScenario = ((string[])(null));
+            string[] tagsOfScenario = new string[] {
+                    "ignore"};
             System.Collections.Specialized.OrderedDictionary argumentsOfScenario = new System.Collections.Specialized.OrderedDictionary();
             TechTalk.SpecFlow.ScenarioInfo scenarioInfo = new TechTalk.SpecFlow.ScenarioInfo("Handle large number of templates efficiently", null, tagsOfScenario, argumentsOfScenario, featureTags);
             this.ScenarioInitialize(scenarioInfo);

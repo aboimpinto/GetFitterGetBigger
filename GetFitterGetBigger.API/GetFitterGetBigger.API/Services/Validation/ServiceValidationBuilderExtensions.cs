@@ -108,6 +108,7 @@ public static class ServiceValidationBuilderExtensions
     /// Executes the provided function when validation passes.
     /// Automatically returns validation failure if validation fails.
     /// For async operations that return Task of ServiceResult.
+    /// Uses Empty Object Pattern for types that implement IEmptyDto.
     /// </summary>
     /// <typeparam name="T">The result type</typeparam>
     /// <param name="builder">The validation builder instance</param>
@@ -117,14 +118,40 @@ public static class ServiceValidationBuilderExtensions
         this ServiceValidationBuilder<T> builder,
         Func<Task<ServiceResult<T>>> whenValid)
     {
-        // Check if validation has already failed
+        // Execute async validations first
+        await ExecuteAsyncValidations(builder);
+        
+        // Check if validation has failed (including async validations)
         if (builder.Validation.HasErrors)
         {
+            // Determine the empty value to use
+            T emptyValue;
+            var type = typeof(T);
+            
+            // Check if type implements IEmptyDto<T> interface
+            var emptyDtoInterface = type.GetInterfaces()
+                .FirstOrDefault(i => i.IsGenericType && 
+                    i.GetGenericTypeDefinition() == typeof(IEmptyDto<>) &&
+                    i.GetGenericArguments()[0] == type);
+            
+            if (emptyDtoInterface != null)
+            {
+                // Use Empty Object Pattern for DTOs that implement IEmptyDto
+                var emptyProperty = type.GetProperty("Empty", 
+                    System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static);
+                emptyValue = (T)(emptyProperty?.GetValue(null) ?? default(T)!);
+            }
+            else
+            {
+                // Use default for other types
+                emptyValue = default(T)!;
+            }
+
             // If it has a ServiceError, use it; otherwise create ValidationFailed
             var error = builder.Validation.HasServiceError 
-                ? builder.Validation.CreateFailureWithEmpty(default(T)!)
+                ? builder.Validation.CreateFailureWithEmpty(emptyValue)
                 : ServiceResult<T>.Failure(
-                    default(T)!, 
+                    emptyValue, 
                     ServiceError.ValidationFailed(builder.Validation.ValidationErrors.FirstOrDefault() ?? "Validation failed"));
             
             return error;
@@ -132,5 +159,44 @@ public static class ServiceValidationBuilderExtensions
 
         // If no errors, execute the valid function
         return await whenValid();
+    }
+
+    /// <summary>
+    /// Executes async validations stored in the builder.
+    /// This method uses reflection to access private fields since the async validations aren't publicly exposed.
+    /// </summary>
+    private static async Task ExecuteAsyncValidations<T>(ServiceValidationBuilder<T> builder)
+    {
+        var builderType = typeof(ServiceValidationBuilder<T>);
+        
+        // Get the private fields using reflection
+        var asyncValidationsField = builderType.GetField("_asyncValidations", 
+            System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        var asyncServiceErrorValidationsField = builderType.GetField("_asyncServiceErrorValidations", 
+            System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+
+        if (asyncValidationsField?.GetValue(builder) is List<Func<Task<(bool IsValid, string? Error)>>> asyncValidations)
+        {
+            foreach (var validation in asyncValidations)
+            {
+                var (isValid, error) = await validation();
+                if (!isValid && error != null)
+                {
+                    builder.Validation.Ensure(() => false, error);
+                }
+            }
+        }
+
+        if (asyncServiceErrorValidationsField?.GetValue(builder) is List<Func<Task<(bool IsValid, ServiceError? Error)>>> asyncServiceErrorValidations)
+        {
+            foreach (var validation in asyncServiceErrorValidations)
+            {
+                var (isValid, error) = await validation();
+                if (!isValid && error != null)
+                {
+                    builder.Validation.Ensure(() => false, error);
+                }
+            }
+        }
     }
 }

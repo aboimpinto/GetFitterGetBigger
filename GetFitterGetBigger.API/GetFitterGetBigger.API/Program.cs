@@ -6,6 +6,10 @@ using GetFitterGetBigger.API.Repositories.Interfaces;
 using GetFitterGetBigger.API.Repositories.Implementations;
 using GetFitterGetBigger.API.Services.Interfaces;
 using GetFitterGetBigger.API.Services.Implementations;
+using GetFitterGetBigger.API.Services.WorkoutTemplate;
+using GetFitterGetBigger.API.Services.WorkoutTemplate.DataServices;
+using GetFitterGetBigger.API.Services.WorkoutTemplate.Features.Equipment;
+using GetFitterGetBigger.API.Services.WorkoutTemplate.Handlers;
 using Microsoft.OpenApi.Models;
 using System.Reflection;
 using GetFitterGetBigger.API.Configuration;
@@ -83,8 +87,20 @@ builder.Services.AddTransient<IWorkoutCategoryService, WorkoutCategoryService>()
 builder.Services.AddTransient<IExecutionProtocolService, ExecutionProtocolService>();
 builder.Services.AddTransient<IWorkoutStateService, WorkoutStateService>();
 builder.Services.AddTransient<IWorkoutTemplateService, WorkoutTemplateService>();
+builder.Services.AddTransient<IEquipmentRequirementsService, EquipmentRequirementsService>();
 builder.Services.AddTransient<IWorkoutTemplateExerciseService, WorkoutTemplateExerciseService>();
 builder.Services.AddTransient<ISetConfigurationService, SetConfigurationService>();
+
+// WorkoutTemplate DataServices - Data Access Layer
+builder.Services.AddTransient<IWorkoutTemplateQueryDataService, WorkoutTemplateQueryDataService>();
+builder.Services.AddTransient<IWorkoutTemplateCommandDataService, WorkoutTemplateCommandDataService>();
+builder.Services.AddTransient<IWorkoutTemplateExerciseCommandDataService, WorkoutTemplateExerciseCommandDataService>();
+
+// Workout Template Handlers (internal components - no interfaces)
+builder.Services.AddTransient<StateTransitionHandler>();
+builder.Services.AddTransient<DuplicationHandler>();
+builder.Services.AddTransient<SearchQueryBuilder>();
+builder.Services.AddTransient<SuggestionHandler>();
 
 // Register reference table services
 // All reference tables now use direct cache integration with IEternalCacheService

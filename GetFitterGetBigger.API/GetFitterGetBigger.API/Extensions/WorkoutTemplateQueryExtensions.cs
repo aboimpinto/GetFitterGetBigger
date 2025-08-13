@@ -19,9 +19,13 @@ public static class WorkoutTemplateQueryExtensions
     public static IQueryable<WorkoutTemplate> ApplyNamePatternFilter(
         this IQueryable<WorkoutTemplate> query, string namePattern)
     {
-        return string.IsNullOrEmpty(namePattern) 
-            ? query 
-            : query.Where(w => EF.Functions.ILike(w.Name, $"%{namePattern}%"));
+        if (string.IsNullOrEmpty(namePattern))
+            return query;
+            
+        // Use standard LINQ for case-insensitive search that works everywhere
+        // EF Core will translate this to appropriate SQL (ILIKE for PostgreSQL, LIKE LOWER for others)
+        var lowerPattern = namePattern.ToLower();
+        return query.Where(w => w.Name != null && w.Name.ToLower().Contains(lowerPattern));
     }
     
     /// <summary>
@@ -63,7 +67,7 @@ public static class WorkoutTemplateQueryExtensions
     {
         return objectiveId.IsEmpty 
             ? query 
-            : query.Where(w => w.Objectives.Any(o => o.WorkoutObjectiveId == objectiveId));
+            : query.Where(w => w.Objectives != null && w.Objectives.Any(o => o.WorkoutObjectiveId == objectiveId));
     }
     
     /// <summary>
@@ -90,7 +94,7 @@ public static class WorkoutTemplateQueryExtensions
     {
         // This assumes there's a way to identify archived state
         // We'll need to filter by state value since we don't have the ID constant
-        return query.Where(w => w.WorkoutState.Value != "ARCHIVED");
+        return query.Where(w => w.WorkoutState != null && w.WorkoutState.Value != "ARCHIVED");
     }
     
     /// <summary>
@@ -120,11 +124,11 @@ public static class WorkoutTemplateQueryExtensions
                 ? query.OrderByDescending(w => w.EstimatedDurationMinutes)
                 : query.OrderBy(w => w.EstimatedDurationMinutes),
             "category" => isDescending
-                ? query.OrderByDescending(w => w.Category.Value)
-                : query.OrderBy(w => w.Category.Value),
+                ? query.OrderByDescending(w => w.Category != null ? w.Category.Value : "")
+                : query.OrderBy(w => w.Category != null ? w.Category.Value : ""),
             "difficulty" => isDescending
-                ? query.OrderByDescending(w => w.Difficulty.DisplayOrder)
-                : query.OrderBy(w => w.Difficulty.DisplayOrder),
+                ? query.OrderByDescending(w => w.Difficulty != null ? w.Difficulty.DisplayOrder : 0)
+                : query.OrderBy(w => w.Difficulty != null ? w.Difficulty.DisplayOrder : 0),
             _ => query.OrderBy(w => w.Name) // default sort by name ascending
         };
     }

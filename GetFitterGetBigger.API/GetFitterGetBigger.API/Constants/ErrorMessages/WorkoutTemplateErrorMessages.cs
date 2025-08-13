@@ -20,8 +20,10 @@ public static class WorkoutTemplateErrorMessages
     
     // Duplicate/Conflict Errors
     public static string DuplicateNameFormat => "Workout template with name '{0}' already exists";
+    public static string NameAlreadyExists => "A workout template with this name already exists";
     
     // State Transition Errors
+    public static string InvalidStateTransition => "Invalid state transition";
     public static string InvalidStateTransitionFormat => "Invalid state transition from {0} to {1}";
     public static string StateTransitionBlockedFormat => "State transition from {0} to {1} is blocked: {2}";
     

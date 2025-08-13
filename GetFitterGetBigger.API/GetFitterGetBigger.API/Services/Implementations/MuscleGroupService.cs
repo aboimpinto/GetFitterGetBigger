@@ -40,15 +40,9 @@ public class MuscleGroupService(IUnitOfWorkProvider<FitnessDbContext> unitOfWork
     /// </summary>
     public async Task<ServiceResult<MuscleGroupDto>> GetByIdAsync(MuscleGroupId id)
     {
-        // Handle empty ID validation directly to ensure correct error code
-        if (id.IsEmpty)
-        {
-            return ServiceResult<MuscleGroupDto>.Failure(
-                MuscleGroupDto.Empty, 
-                ServiceError.InvalidFormat("MuscleGroupId", "GUID format"));
-        }
-        
-        return await LoadMuscleGroupByIdAsync(id);
+        return await ServiceValidate.For<MuscleGroupDto>()
+            .EnsureNotEmpty(id, MuscleGroupErrorMessages.Validation.InvalidMuscleGroupId)
+            .MatchAsync(async () => await LoadMuscleGroupByIdAsync(id));
     }
     
     /// <summary>
@@ -89,7 +83,7 @@ public class MuscleGroupService(IUnitOfWorkProvider<FitnessDbContext> unitOfWork
             
         // Now we can trust command is not null
         return await ServiceValidate.Build<MuscleGroupDto>()
-            .EnsureValidId(id, MuscleGroupErrorMessages.Validation.InvalidMuscleGroupId)
+            .EnsureNotEmpty(id, MuscleGroupErrorMessages.Validation.InvalidMuscleGroupId)
             .EnsureNotWhiteSpace(command.Name, MuscleGroupErrorMessages.Validation.NameCannotBeEmpty)
             .EnsureMaxLength(command.Name, 100, MuscleGroupErrorMessages.Validation.NameTooLong)
             .EnsureNotEmpty(command.BodyPartId, MuscleGroupErrorMessages.Validation.BodyPartIdRequired)
@@ -115,7 +109,7 @@ public class MuscleGroupService(IUnitOfWorkProvider<FitnessDbContext> unitOfWork
     public async Task<ServiceResult<bool>> DeleteAsync(MuscleGroupId id)
     {
         return await ServiceValidate.Build<bool>()
-            .EnsureValidId(id, MuscleGroupErrorMessages.Validation.InvalidMuscleGroupId)
+            .EnsureNotEmpty(id, MuscleGroupErrorMessages.Validation.InvalidMuscleGroupId)
             .EnsureExistsAsync(
                 async () => await MuscleGroupExistsAsync(id),
                 "MuscleGroup")
@@ -133,15 +127,12 @@ public class MuscleGroupService(IUnitOfWorkProvider<FitnessDbContext> unitOfWork
     /// </summary>
     public async Task<ServiceResult<bool>> CheckExistsAsync(MuscleGroupId id)
     {
-        // Handle empty ID validation directly to ensure correct error code
-        if (id.IsEmpty)
-        {
-            return ServiceResult<bool>.Failure(
-                false, 
-                ServiceError.ValidationFailed(MuscleGroupErrorMessages.Validation.InvalidMuscleGroupId));
-        }
-        
-        return await CheckMuscleGroupExistenceAsync(id);
+        return await ServiceValidate.Build<bool>()
+            .EnsureNotEmpty(id, MuscleGroupErrorMessages.Validation.InvalidMuscleGroupId)
+            .MatchAsync(
+                whenValid: async () => await CheckMuscleGroupExistenceAsync(id),
+                whenInvalid: errors => ServiceResult<bool>.Failure(false, errors.FirstOrDefault() ?? ServiceError.ValidationFailed("Unknown error"))
+            );
     }
     
     /// <summary>
@@ -164,7 +155,7 @@ public class MuscleGroupService(IUnitOfWorkProvider<FitnessDbContext> unitOfWork
     public async Task<ServiceResult<IEnumerable<MuscleGroupDto>>> GetByBodyPartAsync(BodyPartId bodyPartId)
     {
         return await ServiceValidate.For<IEnumerable<MuscleGroupDto>>()
-            .EnsureValidId(bodyPartId, MuscleGroupErrorMessages.Validation.BodyPartIdCannotBeEmptyForSearch)
+            .EnsureNotEmpty(bodyPartId, MuscleGroupErrorMessages.Validation.BodyPartIdCannotBeEmptyForSearch)
             .Match(
                 whenValid: async () => await LoadMuscleGroupsByBodyPartAsync(bodyPartId),
                 whenInvalid: errors => ServiceResult<IEnumerable<MuscleGroupDto>>.Failure([], errors.ToArray())

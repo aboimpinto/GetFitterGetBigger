@@ -3,7 +3,7 @@ using GetFitterGetBigger.API.Models.SpecializedIds;
 using GetFitterGetBigger.API.Services.Commands.WorkoutTemplate;
 using GetFitterGetBigger.API.Services.Results;
 
-namespace GetFitterGetBigger.API.Services.Interfaces;
+namespace GetFitterGetBigger.API.Services.WorkoutTemplate;
 
 /// <summary>
 /// Service interface for WorkoutTemplate operations
@@ -78,21 +78,21 @@ public interface IWorkoutTemplateService
     /// </summary>
     /// <param name="id">The workout template ID</param>
     /// <returns>Service result indicating success or failure</returns>
-    Task<ServiceResult<bool>> SoftDeleteAsync(WorkoutTemplateId id);
+    Task<ServiceResult<BooleanResultDto>> SoftDeleteAsync(WorkoutTemplateId id);
 
     /// <summary>
     /// Permanently deletes a workout template (only allowed if no execution logs exist)
     /// </summary>
     /// <param name="id">The workout template ID</param>
     /// <returns>Service result indicating success or failure</returns>
-    Task<ServiceResult<bool>> DeleteAsync(WorkoutTemplateId id);
+    Task<ServiceResult<BooleanResultDto>> DeleteAsync(WorkoutTemplateId id);
 
     /// <summary>
     /// Checks if a workout template exists by ID
     /// </summary>
     /// <param name="id">The workout template ID</param>
     /// <returns>A service result containing true if the template exists, false otherwise</returns>
-    Task<ServiceResult<bool>> ExistsAsync(WorkoutTemplateId id);
+    Task<ServiceResult<BooleanResultDto>> ExistsAsync(WorkoutTemplateId id);
 
 
     /// <summary>
@@ -100,7 +100,7 @@ public interface IWorkoutTemplateService
     /// </summary>
     /// <param name="name">The template name</param>
     /// <returns>True if a template with the name exists</returns>
-    Task<bool> ExistsByNameAsync(string name);
+    Task<ServiceResult<BooleanResultDto>> ExistsByNameAsync(string name);
 
     /// <summary>
     /// Gets suggested exercises for a workout template based on category and existing exercises

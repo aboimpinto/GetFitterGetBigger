@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using GetFitterGetBigger.API.DTOs;
 using GetFitterGetBigger.API.Models;
 using GetFitterGetBigger.API.Models.Entities;
 using GetFitterGetBigger.API.Models.SpecializedIds;
@@ -187,6 +188,25 @@ public static class AutoMockerExtensions
     {
         mocker.GetMock<IUnitOfWorkProvider<FitnessDbContext>>()
             .Verify(x => x.CreateWritable(), Times.Never);
+
+        return mocker;
+    }
+
+    // WorkoutStateService setup extensions
+    public static AutoMocker SetupWorkoutStateService(this AutoMocker mocker, WorkoutStateDto archivedStateDto)
+    {
+        mocker.GetMock<IWorkoutStateService>()
+            .Setup(x => x.GetByValueAsync("ARCHIVED"))
+            .ReturnsAsync(ServiceResult<WorkoutStateDto>.Success(archivedStateDto));
+
+        return mocker;
+    }
+
+    public static AutoMocker SetupWorkoutStateServiceGetByValue(this AutoMocker mocker, string value, WorkoutStateDto stateDto)
+    {
+        mocker.GetMock<IWorkoutStateService>()
+            .Setup(x => x.GetByValueAsync(value))
+            .ReturnsAsync(ServiceResult<WorkoutStateDto>.Success(stateDto));
 
         return mocker;
     }

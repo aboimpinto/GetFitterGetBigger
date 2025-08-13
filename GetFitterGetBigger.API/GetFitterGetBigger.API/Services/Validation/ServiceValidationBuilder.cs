@@ -26,7 +26,7 @@ public class ServiceValidationBuilder<T>
     /// <summary>
     /// Gets the underlying validation instance.
     /// </summary>
-    internal ServiceValidation<T> Validation => _validation;
+    public ServiceValidation<T> Validation => _validation;
 
     /// <summary>
     /// Adds a synchronous validation rule.
@@ -87,10 +87,25 @@ public class ServiceValidationBuilder<T>
     /// <returns>The builder instance for chaining</returns>
     public ServiceValidationBuilder<T> EnsureNotEmpty(ISpecializedIdBase id, string errorMessage)
     {
-        // For ID validation, we use InvalidFormat error code to match test expectations
-        // The message is used as-is to avoid redundant "Invalid X format. Expected format: Y" pattern
-        var serviceError = new ServiceError(ServiceErrorCode.InvalidFormat, errorMessage);
+        // For ID validation, we use ValidationFailed error code to match ID Validation Pattern
+        // This ensures consistency with the established ID validation standards
+        var serviceError = ServiceError.ValidationFailed(errorMessage);
         _validation.EnsureNotEmpty(id, serviceError);
+        return this;
+    }
+
+    /// <summary>
+    /// Validates that an IEmpty object is not empty.
+    /// Creates a ServiceError.NotFound with the provided error message.
+    /// </summary>
+    /// <typeparam name="TEmpty">The type implementing IEmpty</typeparam>
+    /// <param name="entity">The entity to validate</param>
+    /// <param name="errorMessage">The error message if entity is empty</param>
+    /// <returns>The builder instance for chaining</returns>
+    public ServiceValidationBuilder<T> EnsureNotEmpty<TEmpty>(TEmpty entity, string errorMessage) 
+        where TEmpty : IEmpty
+    {
+        _validation.Ensure(() => !entity.IsEmpty, ServiceError.NotFound(errorMessage));
         return this;
     }
 
@@ -549,11 +564,19 @@ public class ServiceValidationBuilder<T>
         // First check synchronous validations
         if (_validation.HasErrors)
         {
-            // Convert string errors to ServiceError.ValidationFailed
-            var syncServiceErrors = _validation.ValidationErrors
-                .Select(msg => ServiceError.ValidationFailed(msg))
-                .ToList();
-            return whenInvalid(syncServiceErrors);
+            // Use the ServiceError if available, otherwise convert string errors to ValidationFailed
+            if (_validation.HasServiceError)
+            {
+                var failureResult = _validation.CreateFailureWithEmpty(default(T)!);
+                return whenInvalid(failureResult.StructuredErrors);
+            }
+            else
+            {
+                var syncServiceErrors = _validation.ValidationErrors
+                    .Select(msg => ServiceError.ValidationFailed(msg))
+                    .ToList();
+                return whenInvalid(syncServiceErrors);
+            }
         }
 
         // Run async string validations
