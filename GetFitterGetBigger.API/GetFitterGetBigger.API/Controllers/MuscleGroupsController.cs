@@ -2,7 +2,7 @@ using GetFitterGetBigger.API.DTOs;
 using GetFitterGetBigger.API.Mappers;
 using GetFitterGetBigger.API.Models.SpecializedIds;
 using Microsoft.AspNetCore.Mvc;
-using GetFitterGetBigger.API.Services.Interfaces;
+using GetFitterGetBigger.API.Services.ReferenceTables.MuscleGroup;
 using GetFitterGetBigger.API.Services.Results;
 
 namespace GetFitterGetBigger.API.Controllers;

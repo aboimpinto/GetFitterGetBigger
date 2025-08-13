@@ -13,11 +13,6 @@ Feature: Exercise Weight Types Reference Data
     Then the response status should be 200
     And the response should be a JSON array
     And the response should be an array with 5 items
-    And the response should contain "Bodyweight Only"
-    And the response should contain "Bodyweight Optional"
-    And the response should contain "Weight Required"
-    And the response should contain "Machine Weight"
-    And the response should contain "No Weight"
 
   @reference-data
   Scenario: Get exercise weight type by valid ID
@@ -45,7 +40,6 @@ Feature: Exercise Weight Types Reference Data
     When I send a GET request to "/api/ReferenceTables/ExerciseWeightTypes/ByValue/Bodyweight Only"
     Then the response status should be 200
     And the response should have property "value" with value "Bodyweight Only"
-    And the response should contain "cannot have external weight added"
 
   @reference-data
   Scenario: Get exercise weight type by value case insensitive

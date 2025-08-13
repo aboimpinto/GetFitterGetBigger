@@ -60,6 +60,18 @@ public static class CacheKeyGenerator
     }
 
     /// <summary>
+    /// Generates a cache key for getting items by parent relationship
+    /// </summary>
+    /// <param name="tableName">The name of the reference table</param>
+    /// <param name="parentType">The type of the parent entity</param>
+    /// <param name="parentId">The ID of the parent entity</param>
+    /// <returns>The generated cache key</returns>
+    public static string GetByParentKey(string tableName, string parentType, string parentId)
+    {
+        return $"{ReferenceTablePrefix}:{tableName}:GetBy{parentType}:{parentId}";
+    }
+
+    /// <summary>
     /// Generates a pattern for removing all cache entries for a specific table
     /// </summary>
     /// <param name="tableName">The name of the reference table</param>

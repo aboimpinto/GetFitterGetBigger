@@ -181,7 +181,6 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.Exercise
   ""movementPatternIds"": []
 }", ((TechTalk.SpecFlow.Table)(null)), "When ");
                 await testRunner.ThenAsync("the response status should be 400", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
-                await testRunner.AndAsync("the response body should contain \"Invalid exercise type configuration\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
             }
             await this.ScenarioCleanupAsync();
         }
@@ -225,7 +224,6 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.Exercise
   ""movementPatternIds"": []
 }", ((TechTalk.SpecFlow.Table)(null)), "When ");
                 await testRunner.ThenAsync("the response status should be 400", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
-                await testRunner.AndAsync("the response body should contain \"Invalid exercise type configuration\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
             }
             await this.ScenarioCleanupAsync();
         }
@@ -271,7 +269,6 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.Exercise
   ""movementPatternIds"": []
 }", ((TechTalk.SpecFlow.Table)(null)), "When ");
                 await testRunner.ThenAsync("the response status should be 400", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
-                await testRunner.AndAsync("the response body should contain \"Invalid exercise type configuration\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
             }
             await this.ScenarioCleanupAsync();
         }

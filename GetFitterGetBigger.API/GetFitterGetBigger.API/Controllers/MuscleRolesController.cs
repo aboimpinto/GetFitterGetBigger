@@ -1,6 +1,6 @@
 using GetFitterGetBigger.API.DTOs;
 using GetFitterGetBigger.API.Models.SpecializedIds;
-using GetFitterGetBigger.API.Services.Interfaces;
+using GetFitterGetBigger.API.Services.ReferenceTables.MuscleRole;
 using GetFitterGetBigger.API.Services.Results;
 using Microsoft.AspNetCore.Mvc;
 

@@ -1,271 +1,265 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using FluentAssertions;
 using GetFitterGetBigger.API.Constants;
 using GetFitterGetBigger.API.DTOs;
-using GetFitterGetBigger.API.Models;
-using GetFitterGetBigger.API.Models.Entities;
 using GetFitterGetBigger.API.Models.SpecializedIds;
-using GetFitterGetBigger.API.Repositories.Interfaces;
-using GetFitterGetBigger.API.Services.Implementations;
-using GetFitterGetBigger.API.Services.Interfaces;
+using GetFitterGetBigger.API.Services.ReferenceTables.KineticChainType;
 using GetFitterGetBigger.API.Services.Results;
-using GetFitterGetBigger.API.Tests.TestBuilders;
-using GetFitterGetBigger.API.Tests.TestBuilders.Domain;
-using Microsoft.Extensions.Logging;
-using Moq;
-using Olimpo.EntityFramework.Persistency;
-using Xunit;
+using GetFitterGetBigger.API.Tests.Services.Builders;
+using GetFitterGetBigger.API.Tests.Services.Extensions;
+using Moq.AutoMock;
 
 namespace GetFitterGetBigger.API.Tests.Services;
 
+/// <summary>
+/// Unit tests for KineticChainTypeService using the modern DataService architecture
+/// Tests focus on service layer behavior, validation, and caching integration
+/// </summary>
 public class KineticChainTypeServiceTests
 {
-    private readonly Mock<IUnitOfWorkProvider<FitnessDbContext>> _unitOfWorkProviderMock;
-    private readonly Mock<IReadOnlyUnitOfWork<FitnessDbContext>> _unitOfWorkMock;
-    private readonly Mock<IKineticChainTypeRepository> _repositoryMock;
-    private readonly Mock<IEternalCacheService> _cacheServiceMock;
-    private readonly Mock<ILogger<KineticChainTypeService>> _loggerMock;
-    private readonly KineticChainTypeService _service;
-
-    public KineticChainTypeServiceTests()
-    {
-        _unitOfWorkProviderMock = new Mock<IUnitOfWorkProvider<FitnessDbContext>>();
-        _unitOfWorkMock = new Mock<IReadOnlyUnitOfWork<FitnessDbContext>>();
-        _repositoryMock = new Mock<IKineticChainTypeRepository>();
-        _cacheServiceMock = new Mock<IEternalCacheService>();
-        _loggerMock = new Mock<ILogger<KineticChainTypeService>>();
-
-        _unitOfWorkProviderMock
-            .Setup(p => p.CreateReadOnly())
-            .Returns(_unitOfWorkMock.Object);
-
-        _unitOfWorkMock
-            .Setup(u => u.GetRepository<IKineticChainTypeRepository>())
-            .Returns(_repositoryMock.Object);
-
-        // Cache service will return cache miss by default for specific types in individual tests
-
-        _service = new KineticChainTypeService(
-            _unitOfWorkProviderMock.Object,
-            _cacheServiceMock.Object,
-            _loggerMock.Object);
-    }
-
     [Fact]
-    public async Task GetAllActiveAsync_ReturnsAllKineticChainTypes()
+    public async Task ExistsAsync_WithValidId_WhenKineticChainTypeExists_ReturnsTrue()
     {
         // Arrange
-        var kineticChainTypes = new List<KineticChainType>
-        {
-            KineticChainTypeTestBuilder.Compound().Build(),
-            KineticChainTypeTestBuilder.Isolation().Build()
-        };
+        var automocker = new AutoMocker();
+        var testee = automocker.CreateInstance<KineticChainTypeService>();
 
-        _repositoryMock
-            .Setup(r => r.GetAllActiveAsync())
-            .ReturnsAsync(kineticChainTypes);
+        var kineticChainTypeId = KineticChainTypeId.New();
+        var kineticChainTypeDto = ReferenceDataDtoBuilder.ForOpenChain()
+            .WithId(kineticChainTypeId)
+            .Build();
+
+        automocker
+            .SetupReferenceDataCacheMiss()
+            .SetupKineticChainTypeDataServiceGetById(kineticChainTypeId, kineticChainTypeDto);
 
         // Act
-        var result = await _service.GetAllActiveAsync();
+        var result = await testee.ExistsAsync(kineticChainTypeId);
 
-        Assert.True(result.IsSuccess);
-        Assert.NotNull(result.Data);
-        Assert.Equal(2, result.Data.Count());
-        
-        var dtos = result.Data.ToList();
-        Assert.Equal("COMPOUND", dtos[0].Value);
-        Assert.Equal("ISOLATION", dtos[1].Value);
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+        result.Data.Value.Should().BeTrue();
     }
 
     [Fact]
-    public async Task GetByIdAsync_WithValidId_ReturnsKineticChainType()
+    public async Task ExistsAsync_WithValidId_WhenKineticChainTypeDoesNotExist_ReturnsFalse()
     {
         // Arrange
-        var kineticChainType = KineticChainTypeTestBuilder.Compound().Build();
-        var id = KineticChainTypeId.ParseOrEmpty(TestIds.KineticChainTypeIds.Compound);
+        var automocker = new AutoMocker();
+        var testee = automocker.CreateInstance<KineticChainTypeService>();
 
-        _repositoryMock
-            .Setup(r => r.GetByIdAsync(id))
-            .ReturnsAsync(kineticChainType);
+        var kineticChainTypeId = KineticChainTypeId.New();
+
+        automocker
+            .SetupReferenceDataCacheMiss()
+            .SetupKineticChainTypeDataServiceGetByIdNotFound(kineticChainTypeId);
 
         // Act
-        var result = await _service.GetByIdAsync(id);
+        var result = await testee.ExistsAsync(kineticChainTypeId);
 
-        Assert.True(result.IsSuccess);
-        Assert.NotNull(result.Data);
-        Assert.Equal("COMPOUND", result.Data.Value);
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+        result.Data.Value.Should().BeFalse();
     }
 
     [Fact]
-    public async Task GetByIdAsync_WithEmptyId_ReturnsValidationError()
+    public async Task ExistsAsync_WithEmptyId_ReturnsValidationFailure()
     {
         // Arrange
+        var automocker = new AutoMocker();
+        var testee = automocker.CreateInstance<KineticChainTypeService>();
+
         var emptyId = KineticChainTypeId.Empty;
 
         // Act
-        var result = await _service.GetByIdAsync(emptyId);
+        var result = await testee.ExistsAsync(emptyId);
 
-        Assert.False(result.IsSuccess);
-        Assert.NotNull(result.Errors);
-        Assert.Equal(ServiceErrorCode.ValidationFailed, result.PrimaryErrorCode);
-        Assert.Contains(KineticChainTypeErrorMessages.InvalidIdFormat, result.Errors.First());
+        // Assert
+        result.IsSuccess.Should().BeFalse();
+        result.PrimaryErrorCode.Should().Be(ServiceErrorCode.ValidationFailed);
+        result.Errors.Should().Contain(KineticChainTypeErrorMessages.InvalidIdFormat);
+
+        automocker.VerifyKineticChainTypeDataServiceGetByIdNeverCalled();
     }
 
     [Fact]
-    public async Task GetByIdAsync_WithNonExistentId_ReturnsNotFound()
+    public async Task GetByIdAsync_WithValidId_WhenCacheMiss_LoadsFromDataService()
     {
         // Arrange
-        var id = KineticChainTypeId.ParseOrEmpty(TestIds.KineticChainTypeIds.NonExistent);
+        var automocker = new AutoMocker();
+        var testee = automocker.CreateInstance<KineticChainTypeService>();
 
-        _repositoryMock
-            .Setup(r => r.GetByIdAsync(id))
-            .ReturnsAsync(KineticChainType.Empty);
+        var kineticChainTypeId = KineticChainTypeId.New();
+        var kineticChainTypeDto = ReferenceDataDtoBuilder.ForClosedChain()
+            .WithId(kineticChainTypeId)
+            .Build();
+
+        automocker
+            .SetupReferenceDataCacheMiss()
+            .SetupKineticChainTypeDataServiceGetById(kineticChainTypeId, kineticChainTypeDto);
 
         // Act
-        var result = await _service.GetByIdAsync(id);
+        var result = await testee.GetByIdAsync(kineticChainTypeId);
 
-        Assert.False(result.IsSuccess);
-        Assert.NotNull(result.Errors);
-        Assert.Equal(ServiceErrorCode.NotFound, result.PrimaryErrorCode);
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+        result.Data.Value.Should().Be("Closed Chain");
+        result.Data.Description.Should().Be("Closed kinetic chain movement");
     }
 
     [Fact]
-    public async Task GetByValueAsync_WithValidValue_ReturnsKineticChainType()
+    public async Task GetByIdAsync_WithValidStringId_LoadsFromDataService()
     {
         // Arrange
-        var kineticChainType = KineticChainTypeTestBuilder.Compound().Build();
+        var automocker = new AutoMocker();
+        var testee = automocker.CreateInstance<KineticChainTypeService>();
 
-        _repositoryMock
-            .Setup(r => r.GetByValueAsync("COMPOUND"))
-            .ReturnsAsync(kineticChainType);
+        var kineticChainTypeId = KineticChainTypeId.New();
+        var kineticChainTypeIdString = kineticChainTypeId.ToString();
+        var kineticChainTypeDto = ReferenceDataDtoBuilder.ForOpenChain()
+            .WithId(kineticChainTypeId)
+            .Build();
+
+        automocker
+            .SetupReferenceDataCacheMiss()
+            .SetupKineticChainTypeDataServiceGetById(kineticChainTypeId, kineticChainTypeDto);
 
         // Act
-        var result = await _service.GetByValueAsync("COMPOUND");
+        var result = await testee.GetByIdAsync(kineticChainTypeIdString);
 
-        Assert.True(result.IsSuccess);
-        Assert.NotNull(result.Data);
-        Assert.Equal("COMPOUND", result.Data.Value);
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+        result.Data.Value.Should().Be("Open Chain");
+        result.Data.Id.Should().Be(kineticChainTypeIdString);
     }
 
     [Fact]
-    public async Task GetByValueAsync_WithEmptyValue_ReturnsValidationError()
-    {
-        // Act
-        var result = await _service.GetByValueAsync("");
-
-        Assert.False(result.IsSuccess);
-        Assert.NotNull(result.Errors);
-        Assert.Equal(ServiceErrorCode.ValidationFailed, result.PrimaryErrorCode);
-    }
-
-    [Fact]
-    public async Task GetByValueAsync_WithNonExistentValue_ReturnsNotFound()
+    public async Task GetByIdAsync_WithEmptyId_ReturnsValidationFailure()
     {
         // Arrange
-        _repositoryMock
-            .Setup(r => r.GetByValueAsync("NONEXISTENT"))
-            .ReturnsAsync(KineticChainType.Empty);
+        var automocker = new AutoMocker();
+        var testee = automocker.CreateInstance<KineticChainTypeService>();
+
+        var emptyId = KineticChainTypeId.Empty;
 
         // Act
-        var result = await _service.GetByValueAsync("NONEXISTENT");
+        var result = await testee.GetByIdAsync(emptyId);
 
-        Assert.False(result.IsSuccess);
-        Assert.NotNull(result.Errors);
-        Assert.Equal(ServiceErrorCode.NotFound, result.PrimaryErrorCode);
+        // Assert
+        result.IsSuccess.Should().BeFalse();
+        result.PrimaryErrorCode.Should().Be(ServiceErrorCode.ValidationFailed);
+        result.Errors.Should().Contain(KineticChainTypeErrorMessages.InvalidIdFormat);
+
+        automocker.VerifyKineticChainTypeDataServiceGetByIdNeverCalled();
     }
 
     [Fact]
-    public async Task GetByIdAsync_WhenCached_ReturnsCachedData()
+    public async Task GetByIdAsync_WhenNotFound_ReturnsNotFound()
     {
         // Arrange
-        var cachedDto = new ReferenceDataDto
+        var automocker = new AutoMocker();
+        var testee = automocker.CreateInstance<KineticChainTypeService>();
+
+        var kineticChainTypeId = KineticChainTypeId.New();
+
+        automocker
+            .SetupReferenceDataCacheMiss()
+            .SetupKineticChainTypeDataServiceGetByIdNotFound(kineticChainTypeId);
+
+        // Act
+        var result = await testee.GetByIdAsync(kineticChainTypeId);
+
+        // Assert
+        result.IsSuccess.Should().BeFalse();
+        result.PrimaryErrorCode.Should().Be(ServiceErrorCode.NotFound);
+        result.Data.Should().NotBeNull();
+    }
+
+    [Fact]
+    public async Task GetByValueAsync_WithEmptyValue_ReturnsValidationFailure()
+    {
+        // Arrange
+        var automocker = new AutoMocker();
+        var testee = automocker.CreateInstance<KineticChainTypeService>();
+
+        const string emptyValue = "";
+
+        // Act
+        var result = await testee.GetByValueAsync(emptyValue);
+
+        // Assert
+        result.IsSuccess.Should().BeFalse();
+        result.PrimaryErrorCode.Should().Be(ServiceErrorCode.ValidationFailed);
+        result.Errors.Should().Contain(KineticChainTypeErrorMessages.ValueCannotBeEmpty);
+    }
+
+    [Fact]
+    public async Task GetAllActiveAsync_WhenCacheMiss_LoadsFromDataService()
+    {
+        // Arrange
+        var automocker = new AutoMocker();
+        var testee = automocker.CreateInstance<KineticChainTypeService>();
+
+        var kineticChainTypes = new List<ReferenceDataDto>
         {
-            Id = TestIds.KineticChainTypeIds.Compound,
-            Value = "COMPOUND",
-            Description = "Multi-joint movement engaging multiple muscle groups"
+            ReferenceDataDtoBuilder.ForOpenChain().Build(),
+            ReferenceDataDtoBuilder.ForClosedChain().Build()
         };
-        
-        var id = KineticChainTypeId.ParseOrEmpty(TestIds.KineticChainTypeIds.Compound);
-        
-        _cacheServiceMock
-            .Setup(x => x.GetAsync<ReferenceDataDto>(It.IsAny<string>()))
-            .ReturnsAsync(CacheResult<ReferenceDataDto>.Hit(cachedDto));
-        
+
+        automocker
+            .SetupReferenceDataCacheMissList()
+            .SetupKineticChainTypeDataServiceGetAllActive(kineticChainTypes);
+
         // Act
-        var result = await _service.GetByIdAsync(id);
-        
+        var result = await testee.GetAllActiveAsync();
+
         // Assert
-        Assert.True(result.IsSuccess);
-        Assert.Equal("COMPOUND", result.Data.Value);
-        _repositoryMock.Verify(x => x.GetByIdAsync(It.IsAny<KineticChainTypeId>()), Times.Never);
+        result.IsSuccess.Should().BeTrue();
+        result.Data.Should().NotBeNull();
+        var items = result.Data.ToList();
+        items.Should().HaveCount(2);
+        
+        var values = items.Select(d => d.Value);
+        values.Should().Contain("Open Chain");
+        values.Should().Contain("Closed Chain");
     }
 
     [Fact]
-    public async Task GetByIdAsync_WhenNotCached_FetchesFromDatabaseAndCaches()
+    public async Task GetByIdAsync_WithNullString_ReturnsValidationFailure()
     {
         // Arrange
-        _cacheServiceMock
-            .Setup(x => x.GetAsync<ReferenceDataDto>(It.IsAny<string>()))
-            .ReturnsAsync(CacheResult<ReferenceDataDto>.Miss());
-        
-        var kineticChainType = KineticChainTypeTestBuilder.Compound().Build();
-        var id = KineticChainTypeId.ParseOrEmpty(TestIds.KineticChainTypeIds.Compound);
-        
-        _repositoryMock
-            .Setup(x => x.GetByIdAsync(id))
-            .ReturnsAsync(kineticChainType);
-        
+        var automocker = new AutoMocker();
+        var testee = automocker.CreateInstance<KineticChainTypeService>();
+
+        string? nullId = null;
+
         // Act
-        var result = await _service.GetByIdAsync(id);
-        
+        var result = await testee.GetByIdAsync(nullId!);
+
         // Assert
-        Assert.True(result.IsSuccess);
-        _repositoryMock.Verify(x => x.GetByIdAsync(id), Times.Once);
-        _cacheServiceMock.Verify(x => x.SetAsync(It.IsAny<string>(), It.IsAny<ReferenceDataDto>()), Times.Once);
+        result.IsSuccess.Should().BeFalse();
+        result.PrimaryErrorCode.Should().Be(ServiceErrorCode.ValidationFailed);
+        result.Errors.Should().Contain(KineticChainTypeErrorMessages.InvalidIdFormat);
+
+        automocker.VerifyKineticChainTypeDataServiceGetByIdNeverCalled();
     }
 
     [Fact]
-    public async Task ExistsAsync_WithValidId_ReturnsTrue()
+    public async Task GetByIdAsync_WithEmptyString_ReturnsValidationFailure()
     {
         // Arrange
-        var id = KineticChainTypeId.ParseOrEmpty(TestIds.KineticChainTypeIds.Compound);
-        var kineticChainType = KineticChainTypeTestBuilder.Compound().Build();
+        var automocker = new AutoMocker();
+        var testee = automocker.CreateInstance<KineticChainTypeService>();
 
-        _cacheServiceMock
-            .Setup(x => x.GetAsync<ReferenceDataDto>(It.IsAny<string>()))
-            .ReturnsAsync(CacheResult<ReferenceDataDto>.Miss());
-
-        _repositoryMock
-            .Setup(r => r.GetByIdAsync(id))
-            .ReturnsAsync(kineticChainType);
+        const string emptyId = "";
 
         // Act
-        var result = await _service.ExistsAsync(id);
+        var result = await testee.GetByIdAsync(emptyId);
 
-        Assert.True(result.IsSuccess);
-        Assert.True(result.Data.Value);
-    }
+        // Assert
+        result.IsSuccess.Should().BeFalse();
+        result.PrimaryErrorCode.Should().Be(ServiceErrorCode.ValidationFailed);
+        result.Errors.Should().Contain(KineticChainTypeErrorMessages.InvalidIdFormat);
 
-    [Fact]
-    public async Task ExistsAsync_WithInvalidId_ReturnsFalse()
-    {
-        // Arrange
-        var id = KineticChainTypeId.ParseOrEmpty(TestIds.KineticChainTypeIds.NonExistent);
-
-        _cacheServiceMock
-            .Setup(x => x.GetAsync<ReferenceDataDto>(It.IsAny<string>()))
-            .ReturnsAsync(CacheResult<ReferenceDataDto>.Miss());
-
-        _repositoryMock
-            .Setup(r => r.GetByIdAsync(id))
-            .ReturnsAsync(KineticChainType.Empty);
-
-        // Act
-        var result = await _service.ExistsAsync(id);
-
-        Assert.True(result.IsSuccess);
-        Assert.False(result.Data.Value);
+        automocker.VerifyKineticChainTypeDataServiceGetByIdNeverCalled();
     }
 }

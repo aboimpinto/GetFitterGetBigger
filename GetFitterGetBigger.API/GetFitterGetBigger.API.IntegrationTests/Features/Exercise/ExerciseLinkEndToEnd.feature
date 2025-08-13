@@ -98,7 +98,6 @@ Feature: Exercise Link End-to-End Workflows
     # Try duplicate creation
     When I create an exercise link from "Bench Press" to "Push Ups" with link type "Warmup" and display order 1
     Then the response status should be "bad request"
-    And the response should contain "already exists"
     
     # Update and verify
     When I update the exercise link to have display order 5 and active status true

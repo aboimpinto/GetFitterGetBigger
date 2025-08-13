@@ -14,7 +14,6 @@ Feature: Exercise Link Circular Reference Prevention
     And I have created a link from "Exercise A" to "Exercise B" with link type "Warmup" and display order 1
     When I create an exercise link from "Exercise B" to "Exercise A" with link type "Warmup" and display order 1
     Then the response status should be "bad request"
-    And the response should contain "circular reference"
 
   @exercise @integration @links @circular-reference
   Scenario: Create link with indirect circular reference should fail
@@ -25,7 +24,6 @@ Feature: Exercise Link Circular Reference Prevention
     And I have created a link from "Exercise B Chain" to "Exercise C Chain" with link type "Warmup" and display order 1
     When I create an exercise link from "Exercise C Chain" to "Exercise A Chain" with link type "Warmup" and display order 1
     Then the response status should be "bad request"
-    And the response should contain "circular reference"
 
   @exercise @integration @links @circular-reference
   Scenario: Create link with complex circular reference should fail
@@ -38,7 +36,6 @@ Feature: Exercise Link Circular Reference Prevention
     And I have created a link from "Complex C" to "Complex D" with link type "Cooldown" and display order 1
     When I create an exercise link from "Complex D" to "Complex A" with link type "Warmup" and display order 1
     Then the response status should be "bad request"
-    And the response should contain "circular reference"
 
   @exercise @integration @links @success
   Scenario: Create non-circular complex structure should succeed

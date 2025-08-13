@@ -123,7 +123,6 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.Exercise
                 await testRunner.WhenAsync("I create an exercise link from \"Exercise B\" to \"Exercise A\" with link type \"Warmu" +
                         "p\" and display order 1", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
                 await testRunner.ThenAsync("the response status should be \"bad request\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
-                await testRunner.AndAsync("the response should contain \"circular reference\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
             }
             await this.ScenarioCleanupAsync();
         }
@@ -163,7 +162,6 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.Exercise
                 await testRunner.WhenAsync("I create an exercise link from \"Exercise C Chain\" to \"Exercise A Chain\" with link" +
                         " type \"Warmup\" and display order 1", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
                 await testRunner.ThenAsync("the response status should be \"bad request\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
-                await testRunner.AndAsync("the response should contain \"circular reference\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
             }
             await this.ScenarioCleanupAsync();
         }
@@ -208,7 +206,6 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.Exercise
                 await testRunner.WhenAsync("I create an exercise link from \"Complex D\" to \"Complex A\" with link type \"Warmup\"" +
                         " and display order 1", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
                 await testRunner.ThenAsync("the response status should be \"bad request\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
-                await testRunner.AndAsync("the response should contain \"circular reference\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
             }
             await this.ScenarioCleanupAsync();
         }

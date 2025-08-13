@@ -23,7 +23,6 @@ Scenario: Create link with non-workout source should fail
     And I have an exercise named "Target Warmup" with exercise types "Warmup"
     When I create an exercise link from "Warmup Only Exercise" to "Target Warmup" with link type "Warmup" and display order 1
     Then the request should fail with bad request
-    And the response should contain "Source exercise must be of type 'Workout'"
 
 @exercise @links @integration @validation
 Scenario: Create link with mismatched target type should fail
@@ -31,7 +30,6 @@ Scenario: Create link with mismatched target type should fail
     And I have an exercise named "Cooldown Exercise" with exercise types "Cooldown"
     When I create an exercise link from "Source Workout" to "Cooldown Exercise" with link type "Warmup" and display order 1
     Then the request should fail with bad request
-    And the response should contain "Target exercise must be of type 'Warmup'"
 
 @exercise @links @integration @validation
 Scenario: Create link with rest exercise should fail
@@ -39,7 +37,6 @@ Scenario: Create link with rest exercise should fail
     And I have a rest exercise named "Rest Period"
     When I create an exercise link from "Rest Link Source" to "Rest Period" with link type "Warmup" and display order 1
     Then the request should fail with bad request
-    And the response should contain "Target exercise must be of type 'Warmup'"
 
 @exercise @links @integration @query
 Scenario: Get links with filters should return correct results

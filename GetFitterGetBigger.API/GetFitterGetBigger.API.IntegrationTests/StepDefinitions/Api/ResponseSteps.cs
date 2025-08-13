@@ -56,21 +56,25 @@ public class ResponseSteps
         ThenTheResponseStatusShouldBe(expectedStatusCode);
     }
     
-    [Then(@"the response should contain ""(.*)""")]
-    public void ThenTheResponseShouldContain(string expectedText)
-    {
-        var content = _scenarioContext.GetLastResponseContent();
-        content.Should().Contain(expectedText, 
-            $"expected response to contain '{expectedText}'");
-    }
-    
-    [Then(@"the response should not contain ""(.*)""")]
-    public void ThenTheResponseShouldNotContain(string unexpectedText)
-    {
-        var content = _scenarioContext.GetLastResponseContent();
-        content.Should().NotContain(unexpectedText, 
-            $"expected response to not contain '{unexpectedText}'");
-    }
+    // REMOVED: Magic string assertions are an anti-pattern!
+    // Tests should check ServiceErrorCode/status codes, not message content
+    // See CODE_QUALITY_STANDARDS.md - "Test ServiceErrorCode, not error message content"
+    //
+    // [Then(@"the response should contain ""(.*)""")]
+    // public void ThenTheResponseShouldContain(string expectedText)
+    // {
+    //     var content = _scenarioContext.GetLastResponseContent();
+    //     content.Should().Contain(expectedText, 
+    //         $"expected response to contain '{expectedText}'");
+    // }
+    //
+    // [Then(@"the response should not contain ""(.*)""")]
+    // public void ThenTheResponseShouldNotContain(string unexpectedText)
+    // {
+    //     var content = _scenarioContext.GetLastResponseContent();
+    //     content.Should().NotContain(unexpectedText, 
+    //         $"expected response to not contain '{unexpectedText}'");
+    // }
     
     [Then(@"the response should be empty")]
     public void ThenTheResponseShouldBeEmpty()
@@ -487,13 +491,17 @@ public class ResponseSteps
         value.Should().NotBeNullOrEmpty($"property '{propertyName}' should not be empty");
     }
     
-    [Then(@"the response body should contain ""(.*)""")] 
-    public void ThenTheResponseBodyShouldContain(string expectedContent)
-    {
-        var content = _scenarioContext.GetLastResponseContent();
-        content.Should().Contain(expectedContent, 
-            $"Response body should contain '{expectedContent}'");
-    }
+    // REMOVED: Magic string assertions are an anti-pattern!
+    // Tests should check ServiceErrorCode/status codes, not message content
+    // See CODE_QUALITY_STANDARDS.md - "Test ServiceErrorCode, not error message content"
+    //
+    // [Then(@"the response body should contain ""(.*)""")] 
+    // public void ThenTheResponseBodyShouldContain(string expectedContent)
+    // {
+    //     var content = _scenarioContext.GetLastResponseContent();
+    //     content.Should().Contain(expectedContent, 
+    //         $"Response body should contain '{expectedContent}'");
+    // }
     
     [Then(@"the response should have property ""(.*)"" as array with length (\d+)")]
     public void ThenTheResponseShouldHavePropertyAsArrayWithLength(string propertyPath, int expectedLength)

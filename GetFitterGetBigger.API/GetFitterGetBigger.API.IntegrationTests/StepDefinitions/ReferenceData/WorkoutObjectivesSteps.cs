@@ -55,8 +55,17 @@ public class WorkoutObjectivesSteps
     }
 
     [Then(@"each workout objective should have the following fields:")]
-    public void ThenEachWorkoutObjectiveShouldHaveTheFollowingFields(Table table)
+    public async Task ThenEachWorkoutObjectiveShouldHaveTheFollowingFields(Table table)
     {
+        // If response wasn't parsed yet, parse it now
+        if (_workoutObjectivesResponse == null)
+        {
+            var response = _scenarioContext.GetLastResponse();
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+            _workoutObjectivesResponse = await response.Content.ReadFromJsonAsync<List<ReferenceDataDto>>();
+            _workoutObjectivesResponse.Should().NotBeNull();
+        }
+        
         _workoutObjectivesResponse.Should().NotBeNull();
         
         foreach (var objective in _workoutObjectivesResponse!)
@@ -88,15 +97,33 @@ public class WorkoutObjectivesSteps
     }
 
     [Then(@"the workout objectives should be ordered by displayOrder ascending")]
-    public void ThenTheWorkoutObjectivesShouldBeOrderedByDisplayOrderAscending()
+    public async Task ThenTheWorkoutObjectivesShouldBeOrderedByDisplayOrderAscending()
     {
+        // If response wasn't parsed yet, parse it now
+        if (_workoutObjectivesResponse == null)
+        {
+            var response = _scenarioContext.GetLastResponse();
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+            _workoutObjectivesResponse = await response.Content.ReadFromJsonAsync<List<ReferenceDataDto>>();
+            _workoutObjectivesResponse.Should().NotBeNull();
+        }
+        
         // Since ReferenceDataDto doesn't have DisplayOrder, we'll just verify they exist
         _workoutObjectivesResponse.Should().NotBeNull();
     }
 
     [Then(@"no inactive objectives should be included")]
-    public void ThenNoInactiveObjectivesShouldBeIncluded()
+    public async Task ThenNoInactiveObjectivesShouldBeIncluded()
     {
+        // If response wasn't parsed yet, parse it now
+        if (_workoutObjectivesResponse == null)
+        {
+            var response = _scenarioContext.GetLastResponse();
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+            _workoutObjectivesResponse = await response.Content.ReadFromJsonAsync<List<ReferenceDataDto>>();
+            _workoutObjectivesResponse.Should().NotBeNull();
+        }
+        
         // Since ReferenceDataDto doesn't have IsActive, we verify by count
         _workoutObjectivesResponse.Should().NotBeNull();
         // We expect only 4 active objectives out of 5 total

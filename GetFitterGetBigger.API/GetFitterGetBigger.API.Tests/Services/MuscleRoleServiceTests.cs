@@ -1,252 +1,267 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using FluentAssertions;
 using GetFitterGetBigger.API.Constants;
 using GetFitterGetBigger.API.DTOs;
-using GetFitterGetBigger.API.Models;
-using GetFitterGetBigger.API.Models.Entities;
 using GetFitterGetBigger.API.Models.SpecializedIds;
-using GetFitterGetBigger.API.Repositories.Interfaces;
-using GetFitterGetBigger.API.Services.Implementations;
-using GetFitterGetBigger.API.Services.Interfaces;
+using GetFitterGetBigger.API.Services.ReferenceTables.MuscleRole;
 using GetFitterGetBigger.API.Services.Results;
-using GetFitterGetBigger.API.Tests.TestBuilders;
-using GetFitterGetBigger.API.Tests.TestBuilders.Domain;
-using GetFitterGetBigger.API.Tests.TestConstants;
-using Microsoft.Extensions.Logging;
-using Moq;
-using Olimpo.EntityFramework.Persistency;
-using Xunit;
+using GetFitterGetBigger.API.Tests.Services.Builders;
+using GetFitterGetBigger.API.Tests.Services.Extensions;
+using Moq.AutoMock;
 
 namespace GetFitterGetBigger.API.Tests.Services;
 
+/// <summary>
+/// Unit tests for MuscleRoleService using the modern DataService architecture
+/// Tests focus on service layer behavior, validation, and caching integration
+/// </summary>
 public class MuscleRoleServiceTests
 {
-    private readonly Mock<IUnitOfWorkProvider<FitnessDbContext>> _unitOfWorkProviderMock;
-    private readonly Mock<IReadOnlyUnitOfWork<FitnessDbContext>> _readOnlyUnitOfWorkMock;
-    private readonly Mock<IMuscleRoleRepository> _repositoryMock;
-    private readonly Mock<IEternalCacheService> _cacheServiceMock;
-    private readonly Mock<ILogger<MuscleRoleService>> _loggerMock;
-    private readonly MuscleRoleService _service;
-
-    public MuscleRoleServiceTests()
+    [Fact]
+    public async Task ExistsAsync_WithValidId_WhenMuscleRoleExists_ReturnsTrue()
     {
-        _unitOfWorkProviderMock = new Mock<IUnitOfWorkProvider<FitnessDbContext>>();
-        _readOnlyUnitOfWorkMock = new Mock<IReadOnlyUnitOfWork<FitnessDbContext>>();
-        _repositoryMock = new Mock<IMuscleRoleRepository>();
-        _cacheServiceMock = new Mock<IEternalCacheService>();
-        _loggerMock = new Mock<ILogger<MuscleRoleService>>();
+        // Arrange
+        var automocker = new AutoMocker();
+        var testee = automocker.CreateInstance<MuscleRoleService>();
 
-        _unitOfWorkProviderMock
-            .Setup(p => p.CreateReadOnly())
-            .Returns(_readOnlyUnitOfWorkMock.Object);
+        var muscleRoleId = MuscleRoleId.New();
+        var muscleRoleDto = ReferenceDataDtoBuilder.ForAgonist()
+            .WithId(muscleRoleId)
+            .Build();
 
-        _readOnlyUnitOfWorkMock
-            .Setup(x => x.GetRepository<IMuscleRoleRepository>())
-            .Returns(_repositoryMock.Object);
+        automocker
+            .SetupReferenceDataCacheMiss()
+            .SetupMuscleRoleDataServiceGetById(muscleRoleId, muscleRoleDto);
 
-        // Setup cache behavior to force cache miss for testing database operations
-        _cacheServiceMock
-            .Setup(x => x.GetAsync<IEnumerable<ReferenceDataDto>>(It.IsAny<string>()))
-            .ReturnsAsync(CacheResult<IEnumerable<ReferenceDataDto>>.Miss());
+        // Act
+        var result = await testee.ExistsAsync(muscleRoleId);
+
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+        result.Data.Value.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task ExistsAsync_WithValidId_WhenMuscleRoleDoesNotExist_ReturnsFalse()
+    {
+        // Arrange
+        var automocker = new AutoMocker();
+        var testee = automocker.CreateInstance<MuscleRoleService>();
+
+        var muscleRoleId = MuscleRoleId.New();
+
+        automocker
+            .SetupReferenceDataCacheMiss()
+            .SetupMuscleRoleDataServiceGetByIdNotFound(muscleRoleId);
+
+        // Act
+        var result = await testee.ExistsAsync(muscleRoleId);
+
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+        result.Data.Value.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task ExistsAsync_WithEmptyId_ReturnsValidationFailure()
+    {
+        // Arrange
+        var automocker = new AutoMocker();
+        var testee = automocker.CreateInstance<MuscleRoleService>();
+
+        var emptyId = MuscleRoleId.Empty;
+
+        // Act
+        var result = await testee.ExistsAsync(emptyId);
+
+        // Assert
+        result.IsSuccess.Should().BeFalse();
+        result.PrimaryErrorCode.Should().Be(ServiceErrorCode.ValidationFailed);
+        result.Errors.Should().Contain(MuscleRoleErrorMessages.InvalidIdFormat);
+
+        automocker.VerifyMuscleRoleDataServiceGetByIdNeverCalled();
+    }
+
+    [Fact]
+    public async Task GetByIdAsync_WithValidId_WhenCacheMiss_LoadsFromDataService()
+    {
+        // Arrange
+        var automocker = new AutoMocker();
+        var testee = automocker.CreateInstance<MuscleRoleService>();
+
+        var muscleRoleId = MuscleRoleId.New();
+        var muscleRoleDto = ReferenceDataDtoBuilder.ForAntagonist()
+            .WithId(muscleRoleId)
+            .Build();
+
+        automocker
+            .SetupReferenceDataCacheMiss()
+            .SetupMuscleRoleDataServiceGetById(muscleRoleId, muscleRoleDto);
+
+        // Act
+        var result = await testee.GetByIdAsync(muscleRoleId);
+
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+        result.Data.Value.Should().Be("Antagonist");
+        result.Data.Description.Should().Be("Opposing muscle");
+    }
+
+    [Fact]
+    public async Task GetByIdAsync_WithValidStringId_LoadsFromDataService()
+    {
+        // Arrange
+        var automocker = new AutoMocker();
+        var testee = automocker.CreateInstance<MuscleRoleService>();
+
+        var muscleRoleId = MuscleRoleId.New();
+        var muscleRoleIdString = muscleRoleId.ToString();
+        var muscleRoleDto = ReferenceDataDtoBuilder.ForSynergist()
+            .WithId(muscleRoleId)
+            .Build();
+
+        automocker
+            .SetupReferenceDataCacheMiss()
+            .SetupMuscleRoleDataServiceGetById(muscleRoleId, muscleRoleDto);
+
+        // Act
+        var result = await testee.GetByIdAsync(muscleRoleIdString);
+
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+        result.Data.Value.Should().Be("Synergist");
+        result.Data.Id.Should().Be(muscleRoleIdString);
+    }
+
+    [Fact]
+    public async Task GetByIdAsync_WithEmptyId_ReturnsValidationFailure()
+    {
+        // Arrange
+        var automocker = new AutoMocker();
+        var testee = automocker.CreateInstance<MuscleRoleService>();
+
+        var emptyId = MuscleRoleId.Empty;
+
+        // Act
+        var result = await testee.GetByIdAsync(emptyId);
+
+        // Assert
+        result.IsSuccess.Should().BeFalse();
+        result.PrimaryErrorCode.Should().Be(ServiceErrorCode.ValidationFailed);
+        result.Errors.Should().Contain(MuscleRoleErrorMessages.InvalidIdFormat);
+
+        automocker.VerifyMuscleRoleDataServiceGetByIdNeverCalled();
+    }
+
+    [Fact]
+    public async Task GetByIdAsync_WhenNotFound_ReturnsNotFound()
+    {
+        // Arrange
+        var automocker = new AutoMocker();
+        var testee = automocker.CreateInstance<MuscleRoleService>();
+
+        var muscleRoleId = MuscleRoleId.New();
+
+        automocker
+            .SetupReferenceDataCacheMiss()
+            .SetupMuscleRoleDataServiceGetByIdNotFound(muscleRoleId);
+
+        // Act
+        var result = await testee.GetByIdAsync(muscleRoleId);
+
+        // Assert
+        result.IsSuccess.Should().BeFalse();
+        result.PrimaryErrorCode.Should().Be(ServiceErrorCode.NotFound);
+        result.Data.Should().NotBeNull();
+    }
+
+    [Fact]
+    public async Task GetByValueAsync_WithEmptyValue_ReturnsValidationFailure()
+    {
+        // Arrange
+        var automocker = new AutoMocker();
+        var testee = automocker.CreateInstance<MuscleRoleService>();
+
+        const string emptyValue = "";
+
+        // Act
+        var result = await testee.GetByValueAsync(emptyValue);
+
+        // Assert
+        result.IsSuccess.Should().BeFalse();
+        result.PrimaryErrorCode.Should().Be(ServiceErrorCode.ValidationFailed);
+        result.Errors.Should().Contain(MuscleRoleErrorMessages.ValueCannotBeEmpty);
+    }
+
+    [Fact]
+    public async Task GetAllActiveAsync_WhenCacheMiss_LoadsFromDataService()
+    {
+        // Arrange
+        var automocker = new AutoMocker();
+        var testee = automocker.CreateInstance<MuscleRoleService>();
+
+        var muscleRoles = new List<ReferenceDataDto>
+        {
+            ReferenceDataDtoBuilder.ForAgonist().Build(),
+            ReferenceDataDtoBuilder.ForAntagonist().Build(),
+            ReferenceDataDtoBuilder.ForSynergist().Build()
+        };
+
+        automocker
+            .SetupReferenceDataCacheMissList()
+            .SetupMuscleRoleDataServiceGetAllActive(muscleRoles);
+
+        // Act
+        var result = await testee.GetAllActiveAsync();
+
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+        result.Data.Should().NotBeNull();
+        var items = result.Data.ToList();
+        items.Should().HaveCount(3);
         
-        _cacheServiceMock
-            .Setup(x => x.GetAsync<ReferenceDataDto>(It.IsAny<string>()))
-            .ReturnsAsync(CacheResult<ReferenceDataDto>.Miss());
-
-        _service = new MuscleRoleService(
-            _unitOfWorkProviderMock.Object,
-            _cacheServiceMock.Object,
-            _loggerMock.Object);
+        var values = items.Select(d => d.Value);
+        values.Should().Contain("Agonist");
+        values.Should().Contain("Antagonist");
+        values.Should().Contain("Synergist");
     }
 
     [Fact]
-    public async Task GetAllActiveAsync_ReturnsSuccessWithAllMuscleRoles()
+    public async Task GetByIdAsync_WithNullString_ReturnsValidationFailure()
     {
         // Arrange
-        var muscleRoles = new List<MuscleRole>
-        {
-            MuscleRoleTestBuilder.Create(TestIds.MuscleRoleIds.Primary, MuscleRoleTestConstants.Values.Primary, MuscleRoleTestConstants.Descriptions.Primary),
-            MuscleRoleTestBuilder.Create(TestIds.MuscleRoleIds.Secondary, MuscleRoleTestConstants.Values.Secondary, MuscleRoleTestConstants.Descriptions.Secondary)
-        };
+        var automocker = new AutoMocker();
+        var testee = automocker.CreateInstance<MuscleRoleService>();
 
-        _repositoryMock
-            .Setup(r => r.GetAllActiveAsync())
-            .ReturnsAsync(muscleRoles);
+        string? nullId = null;
 
         // Act
-        var result = await _service.GetAllActiveAsync();
+        var result = await testee.GetByIdAsync(nullId!);
 
         // Assert
-        Assert.True(result.IsSuccess);
-        Assert.Equal(2, result.Data.Count());
-        Assert.Empty(result.Errors);
-        _repositoryMock.Verify(r => r.GetAllActiveAsync(), Times.Once);
-        _cacheServiceMock.Verify(x => x.SetAsync(It.IsAny<string>(), It.IsAny<IEnumerable<ReferenceDataDto>>()), Times.Once);
+        result.IsSuccess.Should().BeFalse();
+        result.PrimaryErrorCode.Should().Be(ServiceErrorCode.ValidationFailed);
+        result.Errors.Should().Contain(MuscleRoleErrorMessages.InvalidIdFormat);
+
+        automocker.VerifyMuscleRoleDataServiceGetByIdNeverCalled();
     }
 
     [Fact]
-    public async Task GetByIdAsync_WithValidId_ReturnsSuccess()
+    public async Task GetByIdAsync_WithEmptyString_ReturnsValidationFailure()
     {
         // Arrange
-        var id = MuscleRoleId.From(Guid.Parse(TestIds.MuscleRoleIds.Primary.Replace("musclerole-", "")));
-        var entity = MuscleRoleTestBuilder.Create(TestIds.MuscleRoleIds.Primary, MuscleRoleTestConstants.Values.Primary, MuscleRoleTestConstants.Descriptions.Primary);
+        var automocker = new AutoMocker();
+        var testee = automocker.CreateInstance<MuscleRoleService>();
 
-
-        _repositoryMock
-            .Setup(r => r.GetByIdAsync(id))
-            .ReturnsAsync(entity);
+        const string emptyId = "";
 
         // Act
-        var result = await _service.GetByIdAsync(id);
-
-        Assert.True(result.IsSuccess);
-        var dto = result.Data;
-        Assert.Equal(entity.Id, dto.Id);
-        Assert.Equal(entity.Value, dto.Value);
-        Assert.Equal(entity.Description, dto.Description);
-        Assert.Empty(result.Errors);
-    }
-
-    [Fact]
-    public async Task GetByIdAsync_WithEmptyId_ReturnsValidationError()
-    {
-        // Arrange & Act
-        var result = await _service.GetByIdAsync(MuscleRoleId.Empty);
-
-        Assert.False(result.IsSuccess);
-        Assert.Equal(ServiceErrorCode.ValidationFailed, result.PrimaryErrorCode);
-        Assert.Contains(MuscleRoleErrorMessages.InvalidIdFormat, result.Errors.First());
-    }
-
-    [Fact]
-    public async Task GetByIdAsync_WithNonExistentId_ReturnsNotFound()
-    {
-        // Arrange
-        var id = MuscleRoleId.New();
-
-
-        _repositoryMock
-            .Setup(r => r.GetByIdAsync(id))
-            .ReturnsAsync(MuscleRole.Empty);
-
-        // Act
-        var result = await _service.GetByIdAsync(id);
-
-        Assert.False(result.IsSuccess);
-        Assert.Equal(ServiceErrorCode.NotFound, result.PrimaryErrorCode);
-    }
-
-    [Fact]
-    public async Task GetByValueAsync_WithValidValue_ReturnsSuccess()
-    {
-        // Arrange
-        var value = MuscleRoleTestConstants.Values.Primary;
-        var entity = MuscleRoleTestBuilder.Create(TestIds.MuscleRoleIds.Primary, value, "Primary muscle");
-
-
-        _repositoryMock
-            .Setup(r => r.GetByValueAsync(value))
-            .ReturnsAsync(entity);
-
-        // Act
-        var result = await _service.GetByValueAsync(value);
-
-        Assert.True(result.IsSuccess);
-        var dto = result.Data;
-        Assert.Equal(entity.Id, dto.Id);
-        Assert.Equal(value, dto.Value);
-        Assert.Equal(entity.Description, dto.Description);
-        Assert.Empty(result.Errors);
-    }
-
-    [Fact]
-    public async Task GetByValueAsync_WithNonExistentValue_ReturnsNotFound()
-    {
-        // Arrange
-        var value = MuscleRoleTestConstants.Values.NonExistent;
-
-
-        _repositoryMock
-            .Setup(r => r.GetByValueAsync(value))
-            .ReturnsAsync(MuscleRole.Empty);
-
-        // Act
-        var result = await _service.GetByValueAsync(value);
-
-        Assert.False(result.IsSuccess);
-        Assert.Equal(ServiceErrorCode.NotFound, result.PrimaryErrorCode);
-        Assert.Contains("not found", result.Errors.First(), StringComparison.OrdinalIgnoreCase);
-    }
-
-    [Fact]
-    public async Task GetByValueAsync_WithEmptyValue_ReturnsValidationError()
-    {
-        // Arrange & Act
-        var result = await _service.GetByValueAsync("");
-
-        Assert.False(result.IsSuccess);
-        Assert.Equal(ServiceErrorCode.ValidationFailed, result.PrimaryErrorCode);
-        Assert.Contains(MuscleRoleErrorMessages.ValueCannotBeEmpty, result.Errors.First());
-    }
-
-    [Fact]
-    public async Task ExistsAsync_WhenExists_ReturnsTrue()
-    {
-        // Arrange
-        var id = MuscleRoleId.New();
-        var entity = MuscleRoleTestBuilder.Create(id.ToString(), MuscleRoleTestConstants.Values.Primary, MuscleRoleTestConstants.Descriptions.Primary);
-
-        _repositoryMock
-            .Setup(r => r.GetByIdAsync(id))
-            .ReturnsAsync(entity);
-
-        // Act
-        var result = await _service.ExistsAsync(id);
-
-        Assert.True(result.IsSuccess);
-        Assert.True(result.Data.Value);
-    }
-
-    [Fact]
-    public async Task ExistsAsync_WhenNotExists_ReturnsFalse()
-    {
-        // Arrange
-        var id = MuscleRoleId.New();
-
-        _repositoryMock
-            .Setup(r => r.GetByIdAsync(id))
-            .ReturnsAsync(MuscleRole.Empty);
-
-        // Act
-        var result = await _service.ExistsAsync(id);
-
-        Assert.True(result.IsSuccess);
-        Assert.False(result.Data.Value);
-    }
-
-    [Fact]
-    public async Task GetAllActiveAsync_WithCacheHit_ReturnsFromCache()
-    {
-        // Arrange
-        var cachedDtos = new List<ReferenceDataDto>
-        {
-            new() { Id = TestIds.MuscleRoleIds.Primary, Value = MuscleRoleTestConstants.Values.Primary, Description = MuscleRoleTestConstants.Descriptions.Primary },
-            new() { Id = TestIds.MuscleRoleIds.Secondary, Value = MuscleRoleTestConstants.Values.Secondary, Description = MuscleRoleTestConstants.Descriptions.Secondary }
-        };
-
-        _cacheServiceMock
-            .Setup(x => x.GetAsync<IEnumerable<ReferenceDataDto>>(It.IsAny<string>()))
-            .ReturnsAsync(CacheResult<IEnumerable<ReferenceDataDto>>.Hit(cachedDtos));
-
-        // Act
-        var result = await _service.GetAllActiveAsync();
+        var result = await testee.GetByIdAsync(emptyId);
 
         // Assert
-        Assert.True(result.IsSuccess);
-        Assert.Equal(2, result.Data.Count());
-        _repositoryMock.Verify(r => r.GetAllActiveAsync(), Times.Never);
-        _cacheServiceMock.Verify(x => x.GetAsync<IEnumerable<ReferenceDataDto>>(It.IsAny<string>()), Times.Once);
+        result.IsSuccess.Should().BeFalse();
+        result.PrimaryErrorCode.Should().Be(ServiceErrorCode.ValidationFailed);
+        result.Errors.Should().Contain(MuscleRoleErrorMessages.InvalidIdFormat);
+
+        automocker.VerifyMuscleRoleDataServiceGetByIdNeverCalled();
     }
 }

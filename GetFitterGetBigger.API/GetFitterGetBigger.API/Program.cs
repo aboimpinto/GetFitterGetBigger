@@ -9,6 +9,26 @@ using GetFitterGetBigger.API.Services.Implementations;
 using GetFitterGetBigger.API.Services.Exercise;
 using GetFitterGetBigger.API.Services.Exercise.DataServices;
 using GetFitterGetBigger.API.Services.Exercise.Features.Links;
+using GetFitterGetBigger.API.Services.ReferenceTables.BodyPart;
+using GetFitterGetBigger.API.Services.ReferenceTables.BodyPart.DataServices;
+using GetFitterGetBigger.API.Services.ReferenceTables.DifficultyLevel;
+using GetFitterGetBigger.API.Services.ReferenceTables.DifficultyLevel.DataServices;
+using GetFitterGetBigger.API.Services.ReferenceTables.ExerciseType;
+using GetFitterGetBigger.API.Services.ReferenceTables.ExerciseType.DataServices;
+using GetFitterGetBigger.API.Services.ReferenceTables.KineticChainType;
+using GetFitterGetBigger.API.Services.ReferenceTables.KineticChainType.DataServices;
+using GetFitterGetBigger.API.Services.ReferenceTables.MetricType;
+using GetFitterGetBigger.API.Services.ReferenceTables.MetricType.DataServices;
+using GetFitterGetBigger.API.Services.ReferenceTables.MovementPattern;
+using GetFitterGetBigger.API.Services.ReferenceTables.MovementPattern.DataServices;
+using GetFitterGetBigger.API.Services.ReferenceTables.MuscleRole;
+using GetFitterGetBigger.API.Services.ReferenceTables.MuscleRole.DataServices;
+using GetFitterGetBigger.API.Services.ReferenceTables.ExerciseWeightType;
+using GetFitterGetBigger.API.Services.ReferenceTables.ExerciseWeightType.DataServices;
+using GetFitterGetBigger.API.Services.ReferenceTables.MuscleGroup;
+using GetFitterGetBigger.API.Services.ReferenceTables.MuscleGroup.DataServices;
+using GetFitterGetBigger.API.Services.ReferenceTables.Equipment;
+using GetFitterGetBigger.API.Services.ReferenceTables.Equipment.DataServices;
 using GetFitterGetBigger.API.Services.WorkoutTemplate;
 using GetFitterGetBigger.API.Services.WorkoutTemplate.DataServices;
 using GetFitterGetBigger.API.Services.WorkoutTemplate.Features.Equipment;
@@ -86,8 +106,6 @@ builder.Services.AddTransient<IExerciseService, ExerciseService>();
 // Exercise DataServices - Data Access Layer
 builder.Services.AddTransient<IExerciseQueryDataService, ExerciseQueryDataService>();
 builder.Services.AddTransient<IExerciseCommandDataService, ExerciseCommandDataService>();
-builder.Services.AddTransient<IEquipmentService, EquipmentService>();
-builder.Services.AddTransient<IMuscleGroupService, MuscleGroupService>();
 builder.Services.AddTransient<IExerciseLinkService, ExerciseLinkService>();
 builder.Services.AddTransient<IWorkoutObjectiveService, WorkoutObjectiveService>();
 builder.Services.AddTransient<IWorkoutCategoryService, WorkoutCategoryService>();
@@ -113,23 +131,47 @@ builder.Services.AddTransient<SuggestionHandler>();
 // All reference tables now use direct cache integration with IEternalCacheService
 // No longer using PureReferenceService wrapper pattern
 
-builder.Services.AddTransient<IBodyPartService, BodyPartService>();
+// BodyPart Services - Refactored Pattern
+builder.Services.AddTransient<IBodyPartDataService, BodyPartDataService>();
+builder.Services.AddTransient<GetFitterGetBigger.API.Services.ReferenceTables.BodyPart.IBodyPartService, GetFitterGetBigger.API.Services.ReferenceTables.BodyPart.BodyPartService>();
 
-builder.Services.AddTransient<IDifficultyLevelService, DifficultyLevelService>();
+// DifficultyLevel Services - Refactored Pattern
+builder.Services.AddTransient<IDifficultyLevelDataService, DifficultyLevelDataService>();
+builder.Services.AddTransient<GetFitterGetBigger.API.Services.ReferenceTables.DifficultyLevel.IDifficultyLevelService, GetFitterGetBigger.API.Services.ReferenceTables.DifficultyLevel.DifficultyLevelService>();
+
+// ExerciseType Services - Refactored Pattern
+builder.Services.AddTransient<IExerciseTypeDataService, ExerciseTypeDataService>();
+builder.Services.AddTransient<GetFitterGetBigger.API.Services.ReferenceTables.ExerciseType.IExerciseTypeService, GetFitterGetBigger.API.Services.ReferenceTables.ExerciseType.ExerciseTypeService>();
+
+// KineticChainType Services - Refactored Pattern
+builder.Services.AddTransient<IKineticChainTypeDataService, KineticChainTypeDataService>();
+builder.Services.AddTransient<GetFitterGetBigger.API.Services.ReferenceTables.KineticChainType.IKineticChainTypeService, GetFitterGetBigger.API.Services.ReferenceTables.KineticChainType.KineticChainTypeService>();
+
+// MetricType Services - Refactored Pattern
+builder.Services.AddTransient<IMetricTypeDataService, MetricTypeDataService>();
+builder.Services.AddTransient<GetFitterGetBigger.API.Services.ReferenceTables.MetricType.IMetricTypeService, GetFitterGetBigger.API.Services.ReferenceTables.MetricType.MetricTypeService>();
+
+// MovementPattern Services - Refactored Pattern
+builder.Services.AddTransient<IMovementPatternDataService, MovementPatternDataService>();
+builder.Services.AddTransient<GetFitterGetBigger.API.Services.ReferenceTables.MovementPattern.IMovementPatternService, GetFitterGetBigger.API.Services.ReferenceTables.MovementPattern.MovementPatternService>();
+
+// MuscleRole Services - Refactored Pattern
+builder.Services.AddTransient<IMuscleRoleDataService, MuscleRoleDataService>();
+builder.Services.AddTransient<GetFitterGetBigger.API.Services.ReferenceTables.MuscleRole.IMuscleRoleService, GetFitterGetBigger.API.Services.ReferenceTables.MuscleRole.MuscleRoleService>();
+
+// ExerciseWeightType Services - Refactored Pattern
+builder.Services.AddTransient<IExerciseWeightTypeDataService, ExerciseWeightTypeDataService>();
+builder.Services.AddTransient<GetFitterGetBigger.API.Services.ReferenceTables.ExerciseWeightType.IExerciseWeightTypeService, GetFitterGetBigger.API.Services.ReferenceTables.ExerciseWeightType.ExerciseWeightTypeService>();
+
+// MuscleGroup Services - Refactored Pattern (CRUD enabled)
+builder.Services.AddTransient<IMuscleGroupDataService, MuscleGroupDataService>();
+builder.Services.AddTransient<GetFitterGetBigger.API.Services.ReferenceTables.MuscleGroup.IMuscleGroupService, GetFitterGetBigger.API.Services.ReferenceTables.MuscleGroup.MuscleGroupService>();
+
+// Equipment Services - Refactored Pattern (CRUD enabled)
+builder.Services.AddTransient<IEquipmentDataService, EquipmentDataService>();
+builder.Services.AddTransient<GetFitterGetBigger.API.Services.ReferenceTables.Equipment.IEquipmentService, GetFitterGetBigger.API.Services.ReferenceTables.Equipment.EquipmentService>();
 
 builder.Services.AddTransient<IExecutionProtocolService, ExecutionProtocolService>();
-
-builder.Services.AddTransient<IExerciseTypeService, ExerciseTypeService>();
-
-builder.Services.AddTransient<IExerciseWeightTypeService, ExerciseWeightTypeService>();
-
-builder.Services.AddTransient<IKineticChainTypeService, KineticChainTypeService>();
-
-builder.Services.AddTransient<IMetricTypeService, MetricTypeService>();
-
-builder.Services.AddTransient<IMovementPatternService, MovementPatternService>();
-
-builder.Services.AddTransient<IMuscleRoleService, MuscleRoleService>();
 
 builder.Services.AddTransient<IWorkoutCategoryService, WorkoutCategoryService>();
 

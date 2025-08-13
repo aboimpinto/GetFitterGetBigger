@@ -42,4 +42,14 @@ public static class MuscleGroupErrorMessages
         public static string DuplicateNameFormat => "A muscle group with the name '{0}' already exists";
         public static string CannotDeleteInUse => "Cannot deactivate muscle group as it is being used by active exercises";
     }
+    
+    // Service-specific constants needed for validation patterns
+    public const string InvalidIdFormat = "Invalid muscle group ID format. Expected format: 'musclegroup-{guid}'";
+    public const string ValueCannotBeEmpty = "Muscle group value cannot be empty";
+    public const string CommandCannotBeNull = "Muscle group command cannot be null";
+    public const string NameCannotBeEmpty = "Muscle group name cannot be empty";
+    public const string BodyPartIdCannotBeEmpty = "Body part ID cannot be empty";
+    public const string NameMustBeUnique = "Muscle group name must be unique";
+    public const string NotFound = "Muscle group not found";
+    public const string CannotDeleteReferenced = "Cannot delete muscle group that is referenced by other entities";
 }

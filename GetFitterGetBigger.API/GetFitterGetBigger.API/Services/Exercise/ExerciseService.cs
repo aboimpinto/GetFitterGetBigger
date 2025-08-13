@@ -4,7 +4,7 @@ using GetFitterGetBigger.API.Services.Commands;
 using GetFitterGetBigger.API.Services.Exercise.DataServices;
 using GetFitterGetBigger.API.Services.Exercise.Handlers;
 using GetFitterGetBigger.API.Services.Implementations.Extensions;
-using GetFitterGetBigger.API.Services.Interfaces;
+using GetFitterGetBigger.API.Services.ReferenceTables.ExerciseType;
 using GetFitterGetBigger.API.Services.Results;
 using GetFitterGetBigger.API.Services.Validation;
 using GetFitterGetBigger.API.Constants;

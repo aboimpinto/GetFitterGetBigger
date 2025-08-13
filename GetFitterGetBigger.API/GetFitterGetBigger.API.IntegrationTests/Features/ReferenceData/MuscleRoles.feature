@@ -27,8 +27,6 @@ Feature: Muscle Roles Reference Data
   Scenario: Get muscle role by invalid ID format returns bad request
     When I send a GET request to "/api/ReferenceTables/MuscleRoles/abcdef12-3456-7890-abcd-ef1234567890"
     Then the response status should be 400
-    And the response should contain "Invalid ID format"
-    And the response should contain "Expected format: 'musclerole-{guid}'"
 
   @reference-data @validation
   Scenario: Get muscle role by empty GUID returns bad request

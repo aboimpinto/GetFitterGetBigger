@@ -6,7 +6,7 @@ using GetFitterGetBigger.API.Controllers;
 using GetFitterGetBigger.API.DTOs;
 using GetFitterGetBigger.API.Models.SpecializedIds;
 using GetFitterGetBigger.API.Services.Commands.Equipment;
-using GetFitterGetBigger.API.Services.Interfaces;
+using GetFitterGetBigger.API.Services.ReferenceTables.Equipment;
 using GetFitterGetBigger.API.Services.Results;
 using GetFitterGetBigger.API.Tests.TestConstants;
 using Microsoft.AspNetCore.Mvc;
@@ -360,7 +360,7 @@ public class EquipmentControllerTests
         
         _mockService
             .Setup(x => x.DeleteAsync(It.IsAny<EquipmentId>()))
-            .ReturnsAsync(ServiceResult<bool>.Success(true));
+            .ReturnsAsync(ServiceResult<BooleanResultDto>.Success(BooleanResultDto.Create(true)));
             
         // Act
         var result = await _controller.Delete(id);
@@ -377,8 +377,8 @@ public class EquipmentControllerTests
         
         _mockService
             .Setup(x => x.DeleteAsync(It.IsAny<EquipmentId>()))
-            .ReturnsAsync(ServiceResult<bool>.Failure(
-                false,
+            .ReturnsAsync(ServiceResult<BooleanResultDto>.Failure(
+                BooleanResultDto.Create(false),
                 ServiceError.NotFound("Equipment")));
             
         // Act
@@ -396,8 +396,8 @@ public class EquipmentControllerTests
         
         _mockService
             .Setup(x => x.DeleteAsync(It.IsAny<EquipmentId>()))
-            .ReturnsAsync(ServiceResult<bool>.Failure(
-                false,
+            .ReturnsAsync(ServiceResult<BooleanResultDto>.Failure(
+                BooleanResultDto.Create(false),
                 ServiceError.DependencyExists("Equipment", "exercises that reference it")));
             
         // Act
@@ -416,8 +416,8 @@ public class EquipmentControllerTests
         
         _mockService
             .Setup(x => x.DeleteAsync(It.IsAny<EquipmentId>()))
-            .ReturnsAsync(ServiceResult<bool>.Failure(
-                false,
+            .ReturnsAsync(ServiceResult<BooleanResultDto>.Failure(
+                BooleanResultDto.Create(false),
                 ServiceError.ValidationFailed("Invalid ID")));
         
         // Act

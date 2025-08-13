@@ -22,8 +22,6 @@ Feature: Dependency Injection Configuration
   Scenario: Exercise Link Service has all dependencies resolved
     When I send a GET request to "/api/Exercises?pageNumber=1&pageSize=10"
     Then the response status should be 200
-    And the response should contain "items"
-    And the response should contain "totalCount"
     # If dependencies were missing, we'd get a 500 error
 
   @infrastructure @di

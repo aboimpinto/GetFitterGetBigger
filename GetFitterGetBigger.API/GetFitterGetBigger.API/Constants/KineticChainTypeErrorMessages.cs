@@ -10,6 +10,7 @@ public static class KineticChainTypeErrorMessages
     public const string DisplayOrderMustBeNonNegative = "Display order must be non-negative";
     
     // Service error messages
+    public const string ValueCannotBeEmpty = "Kinetic chain type value cannot be empty";
     public const string InvalidIdFormat = "Invalid kinetic chain type ID format. Expected format: 'kineticchaintype-{guid}'";
     public const string IdCannotBeEmpty = "Kinetic chain type ID cannot be empty";
     public const string NotFound = "Kinetic chain type not found";

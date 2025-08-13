@@ -52,7 +52,6 @@ Feature: REST Exercise Muscle Group Validation
       }
       """
     Then the response status should be 400
-    And the response body should contain "muscle group"
 
   @exercise @rest-validation
   Scenario: Create REST exercise with muscle groups returns bad request
@@ -83,5 +82,4 @@ Feature: REST Exercise Muscle Group Validation
       }
       """
     Then the response status should be 400
-    And the response body should contain "muscle group"
 

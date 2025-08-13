@@ -55,8 +55,17 @@ public class WorkoutCategoriesSteps
     }
 
     [Then(@"each workout category should have the following fields:")]
-    public void ThenEachWorkoutCategoryShouldHaveTheFollowingFields(Table table)
+    public async Task ThenEachWorkoutCategoryShouldHaveTheFollowingFields(Table table)
     {
+        // If response wasn't parsed yet, parse it now
+        if (_workoutCategoriesResponse == null)
+        {
+            var response = _scenarioContext.GetLastResponse();
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+            _workoutCategoriesResponse = await response.Content.ReadFromJsonAsync<WorkoutCategoriesResponseDto>();
+            _workoutCategoriesResponse.Should().NotBeNull();
+        }
+        
         _workoutCategoriesResponse.Should().NotBeNull();
         
         foreach (var category in _workoutCategoriesResponse!.WorkoutCategories)
@@ -93,24 +102,51 @@ public class WorkoutCategoriesSteps
     }
 
     [Then(@"the workout categories should be ordered by displayOrder ascending")]
-    public void ThenTheWorkoutCategoriesShouldBeOrderedByDisplayOrderAscending()
+    public async Task ThenTheWorkoutCategoriesShouldBeOrderedByDisplayOrderAscending()
     {
+        // If response wasn't parsed yet, parse it now
+        if (_workoutCategoriesResponse == null)
+        {
+            var response = _scenarioContext.GetLastResponse();
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+            _workoutCategoriesResponse = await response.Content.ReadFromJsonAsync<WorkoutCategoriesResponseDto>();
+            _workoutCategoriesResponse.Should().NotBeNull();
+        }
+        
         _workoutCategoriesResponse.Should().NotBeNull();
         _workoutCategoriesResponse!.WorkoutCategories
             .Should().BeInAscendingOrder(x => x.DisplayOrder);
     }
 
     [Then(@"no inactive categories should be included")]
-    public void ThenNoInactiveCategoriesShouldBeIncluded()
+    public async Task ThenNoInactiveCategoriesShouldBeIncluded()
     {
+        // If response wasn't parsed yet, parse it now
+        if (_workoutCategoriesResponse == null)
+        {
+            var response = _scenarioContext.GetLastResponse();
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+            _workoutCategoriesResponse = await response.Content.ReadFromJsonAsync<WorkoutCategoriesResponseDto>();
+            _workoutCategoriesResponse.Should().NotBeNull();
+        }
+        
         _workoutCategoriesResponse.Should().NotBeNull();
         _workoutCategoriesResponse!.WorkoutCategories
             .Should().OnlyContain(x => x.IsActive == true);
     }
 
     [Then(@"the response should include both active and inactive categories")]
-    public void ThenTheResponseShouldIncludeBothActiveAndInactiveCategories()
+    public async Task ThenTheResponseShouldIncludeBothActiveAndInactiveCategories()
     {
+        // If response wasn't parsed yet, parse it now
+        if (_workoutCategoriesResponse == null)
+        {
+            var response = _scenarioContext.GetLastResponse();
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+            _workoutCategoriesResponse = await response.Content.ReadFromJsonAsync<WorkoutCategoriesResponseDto>();
+            _workoutCategoriesResponse.Should().NotBeNull();
+        }
+        
         _workoutCategoriesResponse.Should().NotBeNull();
         _workoutCategoriesResponse!.WorkoutCategories
             .Should().Contain(x => x.IsActive == true)

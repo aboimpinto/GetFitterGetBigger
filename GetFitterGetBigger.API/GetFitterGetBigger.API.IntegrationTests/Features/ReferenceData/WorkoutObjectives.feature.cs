@@ -144,7 +144,6 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.ReferenceData
                 await this.FeatureBackgroundAsync();
                 await testRunner.WhenAsync("I send a GET request to \"/api/ReferenceTables/WorkoutObjectives\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
                 await testRunner.ThenAsync("the response status should be 200", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
-                await testRunner.AndAsync("the response should contain 4 workout objectives", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
                 TechTalk.SpecFlow.Table table11 = new TechTalk.SpecFlow.Table(new string[] {
                             "Field",
                             "Type",

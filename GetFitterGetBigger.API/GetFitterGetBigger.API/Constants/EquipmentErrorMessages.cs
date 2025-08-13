@@ -74,4 +74,10 @@ public static class EquipmentErrorMessages
     
     [Obsolete("Use Validation.InvalidEquipmentId instead")]
     public static string InvalidEquipmentId => Validation.InvalidEquipmentId;
+    
+    // Service-specific constants needed for validation patterns
+    public const string ValueCannotBeEmpty = "Equipment value cannot be empty";
+    public const string CommandCannotBeNull = "Equipment command cannot be null";
+    public const string NameMustBeUnique = "Equipment name must be unique";
+    public const string CannotDeleteReferenced = "Cannot delete equipment that is referenced by other entities";
 }

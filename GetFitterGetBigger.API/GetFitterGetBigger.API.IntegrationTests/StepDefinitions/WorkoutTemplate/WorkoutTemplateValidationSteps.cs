@@ -89,13 +89,17 @@ public class WorkoutTemplateValidationSteps
         _lastResponse!.StatusCode.Should().Be(statusCode);
     }
 
-    [Then(@"the error message should contain ""(.*)""")]
-    public async Task ThenTheErrorMessageShouldContain(string expectedText)
-    {
-        _lastResponse.Should().NotBeNull();
-        var content = await _lastResponse!.Content.ReadAsStringAsync();
-        content.Should().Contain(expectedText, Exactly.Once());
-    }
+    // REMOVED: Magic string assertions are an anti-pattern!
+    // Tests should check ServiceErrorCode/status codes, not message content
+    // See CODE_QUALITY_STANDARDS.md - "Test ServiceErrorCode, not error message content"
+    //
+    // [Then(@"the error message should contain ""(.*)""")]
+    // public async Task ThenTheErrorMessageShouldContain(string expectedText)
+    // {
+    //     _lastResponse.Should().NotBeNull();
+    //     var content = await _lastResponse!.Content.ReadAsStringAsync();
+    //     content.Should().Contain(expectedText, Exactly.Once());
+    // }
 
     [Given(@"I have a workout template in PRODUCTION state")]
     public async Task GivenIHaveAWorkoutTemplateInPRODUCTIONState()

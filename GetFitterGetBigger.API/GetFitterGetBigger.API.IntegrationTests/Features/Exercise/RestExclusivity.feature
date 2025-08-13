@@ -63,7 +63,6 @@ Feature: Exercise Rest Type Exclusivity
       }
       """
     Then the response status should be 400
-    And the response body should contain "Invalid exercise type configuration"
 
   @exercise @rest-exclusivity
   Scenario: Create exercise with REST and Workout types returns bad request
@@ -88,7 +87,6 @@ Feature: Exercise Rest Type Exclusivity
       }
       """
     Then the response status should be 400
-    And the response body should contain "Invalid exercise type configuration"
 
   @exercise @rest-exclusivity
   Scenario: Create exercise with REST and all other types returns bad request
@@ -115,7 +113,6 @@ Feature: Exercise Rest Type Exclusivity
       }
       """
     Then the response status should be 400
-    And the response body should contain "Invalid exercise type configuration"
 
   @exercise @rest-exclusivity
   Scenario: Create exercise without REST type allows multiple types

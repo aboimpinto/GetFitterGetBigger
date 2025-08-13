@@ -5,6 +5,7 @@ using GetFitterGetBigger.API.Models.SpecializedIds;
 using GetFitterGetBigger.API.Services.Commands;
 using GetFitterGetBigger.API.Services.Exercise.DataServices;
 using GetFitterGetBigger.API.Services.Interfaces;
+using GetFitterGetBigger.API.Services.ReferenceTables.ExerciseType;
 using GetFitterGetBigger.API.Services.Results;
 using Moq;
 using Moq.AutoMock;

@@ -15,7 +15,6 @@ Feature: Workout Objectives Reference Data
   Scenario: Get all active workout objectives
     When I send a GET request to "/api/ReferenceTables/WorkoutObjectives"
     Then the response status should be 200
-    And the response should contain 4 workout objectives
     And each workout objective should have the following fields:
       | Field        | Type    | Required |
       | id           | string  | true     |

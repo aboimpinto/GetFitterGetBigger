@@ -1,294 +1,434 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using FluentAssertions;
 using GetFitterGetBigger.API.Constants;
 using GetFitterGetBigger.API.DTOs;
-using GetFitterGetBigger.API.Models;
-using GetFitterGetBigger.API.Models.Entities;
 using GetFitterGetBigger.API.Models.SpecializedIds;
-using GetFitterGetBigger.API.Repositories.Interfaces;
-using GetFitterGetBigger.API.Services.Implementations;
-using GetFitterGetBigger.API.Services.Interfaces;
+using GetFitterGetBigger.API.Services.ReferenceTables.DifficultyLevel;
 using GetFitterGetBigger.API.Services.Results;
-using Microsoft.Extensions.Logging;
-using Moq;
-using Olimpo.EntityFramework.Persistency;
-using Xunit;
+using GetFitterGetBigger.API.Tests.Services.Builders;
+using GetFitterGetBigger.API.Tests.Services.Extensions;
+using Moq.AutoMock;
 
-namespace GetFitterGetBigger.API.Tests.Services
+namespace GetFitterGetBigger.API.Tests.Services;
+
+/// <summary>
+/// Unit tests for DifficultyLevelService using the modern DataService architecture
+/// Tests focus on service layer behavior, validation, and caching integration
+/// </summary>
+public class DifficultyLevelServiceTests
 {
-    public class DifficultyLevelServiceTests
+    [Fact]
+    public async Task ExistsAsync_WithValidId_WhenDifficultyLevelExists_ReturnsTrue()
     {
-        private readonly Mock<IUnitOfWorkProvider<FitnessDbContext>> _mockUnitOfWorkProvider;
-        private readonly Mock<IReadOnlyUnitOfWork<FitnessDbContext>> _mockReadOnlyUnitOfWork;
-        private readonly Mock<IDifficultyLevelRepository> _mockDifficultyLevelRepository;
-        private readonly Mock<IEternalCacheService> _mockCacheService;
-        private readonly Mock<ILogger<DifficultyLevelService>> _mockLogger;
-        private readonly DifficultyLevelService _difficultyLevelService;
+        // Arrange
+        var automocker = new AutoMocker();
+        var testee = automocker.CreateInstance<DifficultyLevelService>();
 
-        public DifficultyLevelServiceTests()
+        var difficultyLevelId = DifficultyLevelId.New();
+        var difficultyLevelDto = ReferenceDataDtoBuilder.ForIntermediate()
+            .WithId(difficultyLevelId)
+            .Build();
+
+        automocker
+            .SetupReferenceDataCacheMiss()
+            .SetupDifficultyLevelDataServiceGetById(difficultyLevelId, difficultyLevelDto);
+
+        // Act
+        var result = await testee.ExistsAsync(difficultyLevelId);
+
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+        result.Data.Value.Should().BeTrue();
+
+        automocker
+            .VerifyReferenceDataCacheGetOnce()
+            .VerifyDifficultyLevelDataServiceGetByIdOnce(difficultyLevelId);
+    }
+
+    [Fact]
+    public async Task ExistsAsync_WithValidId_WhenDifficultyLevelDoesNotExist_ReturnsFalse()
+    {
+        // Arrange
+        var automocker = new AutoMocker();
+        var testee = automocker.CreateInstance<DifficultyLevelService>();
+
+        var difficultyLevelId = DifficultyLevelId.New();
+
+        automocker
+            .SetupReferenceDataCacheMiss()
+            .SetupDifficultyLevelDataServiceGetByIdNotFound(difficultyLevelId);
+
+        // Act
+        var result = await testee.ExistsAsync(difficultyLevelId);
+
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+        result.Data.Value.Should().BeFalse();
+
+        automocker
+            .VerifyReferenceDataCacheGetOnce()
+            .VerifyDifficultyLevelDataServiceGetByIdOnce(difficultyLevelId);
+    }
+
+    [Fact]
+    public async Task ExistsAsync_WithEmptyId_ReturnsValidationFailure()
+    {
+        // Arrange
+        var automocker = new AutoMocker();
+        var testee = automocker.CreateInstance<DifficultyLevelService>();
+
+        var emptyId = DifficultyLevelId.Empty;
+
+        // Act
+        var result = await testee.ExistsAsync(emptyId);
+
+        // Assert
+        result.IsSuccess.Should().BeFalse();
+        result.PrimaryErrorCode.Should().Be(ServiceErrorCode.ValidationFailed);
+        result.Errors.Should().Contain(DifficultyLevelErrorMessages.InvalidIdFormat);
+
+        // Verify DataService was not called for validation failures
+        automocker.VerifyDifficultyLevelDataServiceGetByIdNeverCalled();
+    }
+
+    [Fact]
+    public async Task GetByIdAsync_WithValidId_WhenCacheMiss_LoadsFromDataService()
+    {
+        // Arrange
+        var automocker = new AutoMocker();
+        var testee = automocker.CreateInstance<DifficultyLevelService>();
+
+        var difficultyLevelId = DifficultyLevelId.New();
+        var difficultyLevelDto = ReferenceDataDtoBuilder.ForIntermediate()
+            .WithId(difficultyLevelId)
+            .Build();
+
+        automocker
+            .SetupReferenceDataCacheMiss()
+            .SetupDifficultyLevelDataServiceGetById(difficultyLevelId, difficultyLevelDto);
+
+        // Act
+        var result = await testee.GetByIdAsync(difficultyLevelId);
+
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+        result.Data.Value.Should().Be("Intermediate");
+        result.Data.Description.Should().Be("For intermediate users");
+
+        automocker
+            .VerifyReferenceDataCacheGetOnce()
+            .VerifyDifficultyLevelDataServiceGetByIdOnce(difficultyLevelId)
+            .VerifyReferenceDataCacheSetOnce();
+    }
+
+    [Fact]
+    public async Task GetByIdAsync_WithValidStringId_LoadsFromDataService()
+    {
+        // Arrange
+        var automocker = new AutoMocker();
+        var testee = automocker.CreateInstance<DifficultyLevelService>();
+
+        var difficultyLevelId = DifficultyLevelId.New();
+        var difficultyLevelIdString = difficultyLevelId.ToString();
+        var difficultyLevelDto = ReferenceDataDtoBuilder.ForAdvanced()
+            .WithId(difficultyLevelId)
+            .Build();
+
+        automocker
+            .SetupReferenceDataCacheMiss()
+            .SetupDifficultyLevelDataServiceGetById(difficultyLevelId, difficultyLevelDto);
+
+        // Act
+        var result = await testee.GetByIdAsync(difficultyLevelIdString);
+
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+        result.Data.Value.Should().Be("Advanced");
+        result.Data.Id.Should().Be(difficultyLevelIdString);
+
+        automocker
+            .VerifyReferenceDataCacheGetOnce()
+            .VerifyDifficultyLevelDataServiceGetByIdOnce(difficultyLevelId);
+    }
+
+    [Fact]
+    public async Task GetByIdAsync_WithValidId_WhenCacheHit_ReturnsFromCache()
+    {
+        // Arrange
+        var automocker = new AutoMocker();
+        var testee = automocker.CreateInstance<DifficultyLevelService>();
+
+        var difficultyLevelId = DifficultyLevelId.New();
+        var cachedDto = ReferenceDataDtoBuilder.ForAdvanced()
+            .WithId(difficultyLevelId)
+            .Build();
+
+        automocker.SetupReferenceDataCacheHit(cachedDto);
+
+        // Act
+        var result = await testee.GetByIdAsync(difficultyLevelId);
+
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+        result.Data.Value.Should().Be("Advanced");
+
+        // Verify cache was checked but DataService was NOT called
+        automocker
+            .VerifyReferenceDataCacheGetOnce()
+            .VerifyDifficultyLevelDataServiceGetByIdNeverCalled();
+    }
+
+    [Fact]
+    public async Task GetByIdAsync_WithEmptyId_ReturnsValidationFailure()
+    {
+        // Arrange
+        var automocker = new AutoMocker();
+        var testee = automocker.CreateInstance<DifficultyLevelService>();
+
+        var emptyId = DifficultyLevelId.Empty;
+
+        // Act
+        var result = await testee.GetByIdAsync(emptyId);
+
+        // Assert
+        result.IsSuccess.Should().BeFalse();
+        result.PrimaryErrorCode.Should().Be(ServiceErrorCode.ValidationFailed);
+        result.Errors.Should().Contain(DifficultyLevelErrorMessages.InvalidIdFormat);
+
+        automocker.VerifyDifficultyLevelDataServiceGetByIdNeverCalled();
+    }
+
+    [Fact]
+    public async Task GetByIdAsync_WhenNotFound_ReturnsNotFound()
+    {
+        // Arrange
+        var automocker = new AutoMocker();
+        var testee = automocker.CreateInstance<DifficultyLevelService>();
+
+        var difficultyLevelId = DifficultyLevelId.New();
+
+        automocker
+            .SetupReferenceDataCacheMiss()
+            .SetupDifficultyLevelDataServiceGetByIdNotFound(difficultyLevelId);
+
+        // Act
+        var result = await testee.GetByIdAsync(difficultyLevelId);
+
+        // Assert
+        result.IsSuccess.Should().BeFalse();
+        result.PrimaryErrorCode.Should().Be(ServiceErrorCode.NotFound);
+        result.Data.Should().NotBeNull();
+
+        automocker
+            .VerifyReferenceDataCacheGetOnce()
+            .VerifyDifficultyLevelDataServiceGetByIdOnce(difficultyLevelId);
+    }
+
+    [Fact]
+    public async Task GetByValueAsync_WithEmptyValue_ReturnsValidationFailure()
+    {
+        // Arrange
+        var automocker = new AutoMocker();
+        var testee = automocker.CreateInstance<DifficultyLevelService>();
+
+        const string emptyValue = "";
+
+        // Act
+        var result = await testee.GetByValueAsync(emptyValue);
+
+        // Assert
+        result.IsSuccess.Should().BeFalse();
+        result.PrimaryErrorCode.Should().Be(ServiceErrorCode.ValidationFailed);
+        result.Errors.Should().Contain(DifficultyLevelErrorMessages.ValueCannotBeEmpty);
+
+        automocker.VerifyDifficultyLevelDataServiceGetByValueNeverCalled();
+    }
+
+    [Fact]
+    public async Task GetByValueAsync_WithValidValue_ReturnsSuccess()
+    {
+        // Arrange
+        var automocker = new AutoMocker();
+        var testee = automocker.CreateInstance<DifficultyLevelService>();
+
+        const string value = "Beginner";
+        var difficultyLevelDto = ReferenceDataDtoBuilder.ForBeginner()
+            .WithValue(value)
+            .Build();
+
+        automocker
+            .SetupReferenceDataCacheMiss()
+            .SetupDifficultyLevelDataServiceGetByValue(value, difficultyLevelDto);
+
+        // Act
+        var result = await testee.GetByValueAsync(value);
+
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+        result.Data.Value.Should().Be(value);
+
+        automocker
+            .VerifyReferenceDataCacheGetOnce()
+            .VerifyDifficultyLevelDataServiceGetByValueOnce(value);
+    }
+
+    [Fact]
+    public async Task GetByValueAsync_WithNonExistentValue_ReturnsNotFound()
+    {
+        // Arrange
+        var automocker = new AutoMocker();
+        var testee = automocker.CreateInstance<DifficultyLevelService>();
+
+        const string value = "NonExistent";
+
+        automocker
+            .SetupReferenceDataCacheMiss()
+            .SetupDifficultyLevelDataServiceGetByValueNotFound(value);
+
+        // Act
+        var result = await testee.GetByValueAsync(value);
+
+        // Assert
+        result.IsSuccess.Should().BeFalse();
+        result.PrimaryErrorCode.Should().Be(ServiceErrorCode.NotFound);
+
+        automocker
+            .VerifyReferenceDataCacheGetOnce()
+            .VerifyDifficultyLevelDataServiceGetByValueOnce(value);
+    }
+
+    [Fact]
+    public async Task GetAllActiveAsync_WhenCacheMiss_LoadsFromDataService()
+    {
+        // Arrange
+        var automocker = new AutoMocker();
+        var testee = automocker.CreateInstance<DifficultyLevelService>();
+
+        var difficultyLevels = new List<ReferenceDataDto>
         {
-            _mockUnitOfWorkProvider = new Mock<IUnitOfWorkProvider<FitnessDbContext>>();
-            _mockReadOnlyUnitOfWork = new Mock<IReadOnlyUnitOfWork<FitnessDbContext>>();
-            _mockDifficultyLevelRepository = new Mock<IDifficultyLevelRepository>();
-            _mockCacheService = new Mock<IEternalCacheService>();
-            _mockLogger = new Mock<ILogger<DifficultyLevelService>>();
+            ReferenceDataDtoBuilder.ForBeginner().Build(),
+            ReferenceDataDtoBuilder.ForIntermediate().Build(),
+            ReferenceDataDtoBuilder.ForAdvanced().Build()
+        };
 
-            _mockUnitOfWorkProvider
-                .Setup(x => x.CreateReadOnly())
-                .Returns(_mockReadOnlyUnitOfWork.Object);
+        automocker
+            .SetupReferenceDataCacheMissList()
+            .SetupDifficultyLevelDataServiceGetAllActive(difficultyLevels);
 
-            _mockReadOnlyUnitOfWork
-                .Setup(x => x.GetRepository<IDifficultyLevelRepository>())
-                .Returns(_mockDifficultyLevelRepository.Object);
+        // Act
+        var result = await testee.GetAllActiveAsync();
 
-            _difficultyLevelService = new DifficultyLevelService(
-                _mockUnitOfWorkProvider.Object,
-                _mockCacheService.Object,
-                _mockLogger.Object);
-        }
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+        result.Data.Should().NotBeNull();
+        var items = result.Data.ToList();
+        items.Should().HaveCount(3);
+        
+        var values = items.Select(d => d.Value);
+        values.Should().Contain("Beginner");
+        values.Should().Contain("Intermediate");
+        values.Should().Contain("Advanced");
 
-        [Fact]
-        public async Task ExistsAsync_WithDifficultyLevelId_WhenDifficultyLevelExists_ReturnsTrue()
+        automocker
+            .VerifyReferenceDataCacheGetListOnce()
+            .VerifyDifficultyLevelDataServiceGetAllActiveOnce()
+            .VerifyReferenceDataCacheSetListOnce();
+    }
+
+    [Fact]
+    public async Task GetAllActiveAsync_WhenCacheHit_ReturnsFromCache()
+    {
+        // Arrange
+        var automocker = new AutoMocker();
+        var testee = automocker.CreateInstance<DifficultyLevelService>();
+
+        var cachedLevels = new List<ReferenceDataDto>
         {
-            // Arrange
-            var difficultyLevelId = DifficultyLevelId.New();
-            var createResult = DifficultyLevel.Handler.Create(
-                difficultyLevelId,
-                "Intermediate",
-                "For intermediate users",
-                2,
-                true);
-            Assert.True(createResult.IsSuccess, "DifficultyLevel creation should succeed");
-            var difficultyLevel = createResult.Value;
+            ReferenceDataDtoBuilder.ForBeginner().Build(),
+            ReferenceDataDtoBuilder.ForIntermediate().Build()
+        };
 
-            // Setup cache miss so it goes to database
-            _mockCacheService
-                .Setup(x => x.GetAsync<ReferenceDataDto>(It.IsAny<string>()))
-                .ReturnsAsync(CacheResult<ReferenceDataDto>.Miss());
+        automocker.SetupReferenceDataCacheHitList(cachedLevels);
 
-            _mockDifficultyLevelRepository
-                .Setup(x => x.GetByIdAsync(It.IsAny<DifficultyLevelId>()))
-                .ReturnsAsync(difficultyLevel);
+        // Act
+        var result = await testee.GetAllActiveAsync();
 
-            // Act
-            var result = await _difficultyLevelService.ExistsAsync(difficultyLevelId);
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+        result.Data.Should().NotBeNull();
+        result.Data.Count().Should().Be(2);
 
-            // Assert
-            Assert.True(result.IsSuccess);
-            Assert.True(result.Data.Value);
-            _mockUnitOfWorkProvider.Verify(x => x.CreateReadOnly(), Times.Once);
-            _mockDifficultyLevelRepository.Verify(x => x.GetByIdAsync(It.IsAny<DifficultyLevelId>()), Times.Once);
-        }
+        // Verify cache was checked but DataService was NOT called
+        automocker
+            .VerifyReferenceDataCacheGetListOnce()
+            .VerifyDifficultyLevelDataServiceGetAllActiveNeverCalled();
+    }
 
-        [Fact]
-        public async Task ExistsAsync_WithDifficultyLevelId_WhenDifficultyLevelDoesNotExist_ReturnsFalse()
+    [Fact]
+    public async Task GetAllActiveAsync_OnlyReturnsActiveOnes()
+    {
+        // Arrange
+        var automocker = new AutoMocker();
+        var testee = automocker.CreateInstance<DifficultyLevelService>();
+
+        // DataService should only return active items (this is ensured at DataService level)
+        var activeLevels = new List<ReferenceDataDto>
         {
-            // Arrange
-            var difficultyLevelId = DifficultyLevelId.New();
+            ReferenceDataDtoBuilder.ForBeginner().Build(),
+            ReferenceDataDtoBuilder.ForIntermediate().Build()
+        };
 
-            // Setup cache miss so it goes to database
-            _mockCacheService
-                .Setup(x => x.GetAsync<ReferenceDataDto>(It.IsAny<string>()))
-                .ReturnsAsync(CacheResult<ReferenceDataDto>.Miss());
+        automocker
+            .SetupReferenceDataCacheMissList()
+            .SetupDifficultyLevelDataServiceGetAllActive(activeLevels);
 
-            _mockDifficultyLevelRepository
-                .Setup(x => x.GetByIdAsync(It.IsAny<DifficultyLevelId>()))
-                .ReturnsAsync(DifficultyLevel.Empty);
+        // Act
+        var result = await testee.GetAllActiveAsync();
 
-            // Act
-            var result = await _difficultyLevelService.ExistsAsync(difficultyLevelId);
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+        result.Data.Should().NotBeNull();
+        result.Data.Count().Should().Be(2);
 
-            // Assert
-            Assert.True(result.IsSuccess);
-            Assert.False(result.Data.Value);
-            _mockUnitOfWorkProvider.Verify(x => x.CreateReadOnly(), Times.Once);
-            _mockDifficultyLevelRepository.Verify(x => x.GetByIdAsync(It.IsAny<DifficultyLevelId>()), Times.Once);
-        }
+        automocker.VerifyDifficultyLevelDataServiceGetAllActiveOnce();
+    }
 
-        [Fact]
-        public async Task ExistsAsync_WithEmptyDifficultyLevelId_ReturnsFalse()
-        {
-            // Arrange
-            var emptyId = DifficultyLevelId.Empty;
+    [Fact]
+    public async Task GetByIdAsync_WithNullString_ReturnsValidationFailure()
+    {
+        // Arrange
+        var automocker = new AutoMocker();
+        var testee = automocker.CreateInstance<DifficultyLevelService>();
 
-            // Act
-            var result = await _difficultyLevelService.ExistsAsync(emptyId);
+        string? nullId = null;
 
-            // Assert
-            Assert.False(result.IsSuccess);
-            Assert.Equal(ServiceErrorCode.ValidationFailed, result.PrimaryErrorCode);
-            _mockUnitOfWorkProvider.Verify(x => x.CreateReadOnly(), Times.Never);
-            _mockDifficultyLevelRepository.Verify(x => x.GetByIdAsync(It.IsAny<DifficultyLevelId>()), Times.Never);
-        }
+        // Act
+        var result = await testee.GetByIdAsync(nullId!);
 
-        [Fact]
-        public async Task GetByIdAsync_WithValidId_WhenCacheMiss_LoadsFromDatabase()
-        {
-            // Arrange
-            var difficultyLevelId = DifficultyLevelId.New();
-            var createResult = DifficultyLevel.Handler.Create(
-                difficultyLevelId,
-                "Intermediate",
-                "For intermediate users",
-                2,
-                true);
-            Assert.True(createResult.IsSuccess, "DifficultyLevel creation should succeed");
-            var difficultyLevel = createResult.Value;
+        // Assert
+        result.IsSuccess.Should().BeFalse();
+        result.PrimaryErrorCode.Should().Be(ServiceErrorCode.ValidationFailed);
+        result.Errors.Should().Contain(DifficultyLevelErrorMessages.InvalidIdFormat);
 
-            // Setup cache miss so it goes to database
-            _mockCacheService
-                .Setup(x => x.GetAsync<ReferenceDataDto>(It.IsAny<string>()))
-                .ReturnsAsync(CacheResult<ReferenceDataDto>.Miss());
+        automocker.VerifyDifficultyLevelDataServiceGetByIdNeverCalled();
+    }
 
-            _mockDifficultyLevelRepository
-                .Setup(x => x.GetByIdAsync(It.IsAny<DifficultyLevelId>()))
-                .ReturnsAsync(difficultyLevel);
+    [Fact]
+    public async Task GetByIdAsync_WithEmptyString_ReturnsValidationFailure()
+    {
+        // Arrange
+        var automocker = new AutoMocker();
+        var testee = automocker.CreateInstance<DifficultyLevelService>();
 
-            // Act
-            var result = await _difficultyLevelService.GetByIdAsync(difficultyLevelId);
+        const string emptyId = "";
 
-            // Assert
-            Assert.True(result.IsSuccess);
-            Assert.Equal("Intermediate", result.Data.Value);
-            Assert.Equal("For intermediate users", result.Data.Description);
-            _mockUnitOfWorkProvider.Verify(x => x.CreateReadOnly(), Times.Once);
-            _mockDifficultyLevelRepository.Verify(x => x.GetByIdAsync(difficultyLevelId), Times.Once);
-        }
+        // Act
+        var result = await testee.GetByIdAsync(emptyId);
 
-        [Fact]
-        public async Task GetByIdAsync_WithValidId_WhenCacheHit_ReturnsFromCache()
-        {
-            // Arrange
-            var difficultyLevelId = DifficultyLevelId.New();
-            var cachedDto = new ReferenceDataDto
-            {
-                Id = difficultyLevelId.ToString(),
-                Value = "Advanced",
-                Description = "For advanced users"
-            };
+        // Assert
+        result.IsSuccess.Should().BeFalse();
+        result.PrimaryErrorCode.Should().Be(ServiceErrorCode.ValidationFailed);
+        result.Errors.Should().Contain(DifficultyLevelErrorMessages.InvalidIdFormat);
 
-            // Setup cache hit
-            _mockCacheService
-                .Setup(x => x.GetAsync<ReferenceDataDto>(It.IsAny<string>()))
-                .ReturnsAsync(CacheResult<ReferenceDataDto>.Hit(cachedDto));
-
-            // Act
-            var result = await _difficultyLevelService.GetByIdAsync(difficultyLevelId);
-
-            // Assert
-            Assert.True(result.IsSuccess);
-            Assert.Equal("Advanced", result.Data.Value);
-            // Should not hit database when cache hit occurs
-            _mockUnitOfWorkProvider.Verify(x => x.CreateReadOnly(), Times.Never);
-            _mockDifficultyLevelRepository.Verify(x => x.GetByIdAsync(It.IsAny<DifficultyLevelId>()), Times.Never);
-        }
-
-        [Fact]
-        public async Task GetByValueAsync_WithEmptyValue_ReturnsValidationFailure()
-        {
-            // Arrange
-            var emptyValue = "";
-
-            // Act
-            var result = await _difficultyLevelService.GetByValueAsync(emptyValue);
-
-            // Assert
-            Assert.False(result.IsSuccess);
-            Assert.Equal(ServiceErrorCode.ValidationFailed, result.PrimaryErrorCode);
-            Assert.Contains(DifficultyLevelErrorMessages.ValueCannotBeEmpty, result.Errors.First());
-            _mockUnitOfWorkProvider.Verify(x => x.CreateReadOnly(), Times.Never);
-        }
-
-        [Fact]
-        public async Task GetByValueAsync_WithNonExistentValue_ReturnsNotFound()
-        {
-            // Arrange
-            var value = "NonExistent";
-
-            // Setup cache miss so it goes to database
-            _mockCacheService
-                .Setup(x => x.GetAsync<ReferenceDataDto>(It.IsAny<string>()))
-                .ReturnsAsync(CacheResult<ReferenceDataDto>.Miss());
-
-            _mockDifficultyLevelRepository
-                .Setup(x => x.GetByValueAsync(value))
-                .ReturnsAsync(DifficultyLevel.Empty);
-
-            // Act
-            var result = await _difficultyLevelService.GetByValueAsync(value);
-
-            // Assert
-            Assert.False(result.IsSuccess);
-            Assert.Equal(ServiceErrorCode.NotFound, result.PrimaryErrorCode);
-            _mockDifficultyLevelRepository.Verify(x => x.GetByValueAsync(value), Times.Once);
-        }
-
-        [Fact]
-        public async Task GetAllActiveAsync_WhenCacheMiss_LoadsFromDatabase()
-        {
-            // Arrange
-            var difficultyLevels = new List<DifficultyLevel>
-            {
-                DifficultyLevel.Handler.Create(DifficultyLevelId.New(), "Beginner", "For beginners", 1, true).Value,
-                DifficultyLevel.Handler.Create(DifficultyLevelId.New(), "Intermediate", "For intermediate users", 2, true).Value,
-                DifficultyLevel.Handler.Create(DifficultyLevelId.New(), "Advanced", "For advanced users", 3, true).Value
-            };
-
-            // Setup cache miss so it goes to database
-            _mockCacheService
-                .Setup(x => x.GetAsync<IEnumerable<ReferenceDataDto>>(It.IsAny<string>()))
-                .ReturnsAsync(CacheResult<IEnumerable<ReferenceDataDto>>.Miss());
-
-            _mockDifficultyLevelRepository
-                .Setup(x => x.GetAllActiveAsync())
-                .ReturnsAsync(difficultyLevels);
-
-            // Act
-            var result = await _difficultyLevelService.GetAllActiveAsync();
-
-            // Assert
-            Assert.True(result.IsSuccess);
-            Assert.NotNull(result.Data);
-            var items = result.Data.ToList();
-            Assert.Equal(3, items.Count);
-            var values = items.Select(d => d.Value);
-            Assert.Contains("Beginner", values);
-            Assert.Contains("Intermediate", values);
-            Assert.Contains("Advanced", values);
-            _mockUnitOfWorkProvider.Verify(x => x.CreateReadOnly(), Times.Once);
-            _mockDifficultyLevelRepository.Verify(x => x.GetAllActiveAsync(), Times.Once);
-        }
-
-        [Fact]
-        public async Task GetAllActiveAsync_WithInactiveLevel_OnlyReturnsActiveOnes()
-        {
-            // Arrange
-            var difficultyLevels = new List<DifficultyLevel>
-            {
-                DifficultyLevel.Handler.Create(DifficultyLevelId.New(), "Beginner", "For beginners", 1, true).Value,
-                DifficultyLevel.Handler.Create(DifficultyLevelId.New(), "Intermediate", "For intermediate users", 2, true).Value
-            };
-
-            // Setup cache miss so it goes to database
-            _mockCacheService
-                .Setup(x => x.GetAsync<IEnumerable<ReferenceDataDto>>(It.IsAny<string>()))
-                .ReturnsAsync(CacheResult<IEnumerable<ReferenceDataDto>>.Miss());
-
-            _mockDifficultyLevelRepository
-                .Setup(x => x.GetAllActiveAsync())
-                .ReturnsAsync(difficultyLevels);
-
-            // Act
-            var result = await _difficultyLevelService.GetAllActiveAsync();
-
-            // Assert
-            Assert.True(result.IsSuccess);
-            Assert.NotNull(result.Data);
-            var count = result.Data.Count();
-            Assert.Equal(2, count);
-            _mockDifficultyLevelRepository.Verify(x => x.GetAllActiveAsync(), Times.Once);
-        }
+        automocker.VerifyDifficultyLevelDataServiceGetByIdNeverCalled();
     }
 }

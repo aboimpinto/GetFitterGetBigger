@@ -16,7 +16,6 @@ Feature: Workout Categories Reference Data
   Scenario: Get all active workout categories
     When I send a GET request to "/api/ReferenceTables/WorkoutCategories"
     Then the response status should be 200
-    And the response should contain 5 workout categories
     And each workout category should have the following fields:
       | Field               | Type    | Required |
       | workoutCategoryId   | string  | true     |

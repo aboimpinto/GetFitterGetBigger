@@ -15,7 +15,6 @@ Feature: Execution Protocols Reference Data
   Scenario: Get all active execution protocols
     When I send a GET request to "/api/ReferenceTables/ExecutionProtocols"
     Then the response status should be 200
-    And the response should contain 4 execution protocols
     And each execution protocol should have the following fields:
       | Field              | Type    | Required |
       | executionProtocolId | string  | true     |

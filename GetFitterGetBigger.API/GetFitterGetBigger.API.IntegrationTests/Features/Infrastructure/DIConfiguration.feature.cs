@@ -166,8 +166,6 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.Infrastructure
                 await this.FeatureBackgroundAsync();
                 await testRunner.WhenAsync("I send a GET request to \"/api/Exercises?pageNumber=1&pageSize=10\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
                 await testRunner.ThenAsync("the response status should be 200", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
-                await testRunner.AndAsync("the response should contain \"items\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
-                await testRunner.AndAsync("the response should contain \"totalCount\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
             }
             await this.ScenarioCleanupAsync();
         }

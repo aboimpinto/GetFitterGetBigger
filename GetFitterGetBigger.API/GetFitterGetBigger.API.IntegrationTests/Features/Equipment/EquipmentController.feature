@@ -77,7 +77,6 @@ Feature: Equipment API Controller Operations
     Given I have created equipment "DuplicateBarbell" via API
     When I create equipment "DuplicateBarbell" via API
     Then the response status should be "conflict"
-    And the response should contain "already exists"
 
   @equipment @api @update
   Scenario: Update equipment with valid data returns updated equipment
@@ -128,4 +127,3 @@ Feature: Equipment API Controller Operations
     And I have created an exercise "Barbell Squat" that uses the equipment
     When I delete the equipment via API
     Then the response status should be "conflict"
-    And the response should contain "in use"

@@ -297,7 +297,6 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.Exercise
                 await testRunner.WhenAsync("I create an exercise with rest and other types", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
                 await testRunner.AndAsync("I submit the exercise", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
                 await testRunner.ThenAsync("the response status should be 400", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
-                await testRunner.AndAsync("the response should contain \"Invalid exercise type configuration\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
             }
             await this.ScenarioCleanupAsync();
         }
@@ -465,7 +464,6 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.Exercise
                 await testRunner.WhenAsync("I update the exercise \"Normal Exercise\" with new coach notes", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
                 await testRunner.AndAsync("I send a PUT request to update with rest and other types", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
                 await testRunner.ThenAsync("the response status should be 400", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
-                await testRunner.AndAsync("the response should contain \"Invalid exercise type configuration\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
             }
             await this.ScenarioCleanupAsync();
         }

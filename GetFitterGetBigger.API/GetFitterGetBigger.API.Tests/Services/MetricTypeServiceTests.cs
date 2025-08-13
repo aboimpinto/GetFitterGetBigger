@@ -1,266 +1,181 @@
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using GetFitterGetBigger.API.Constants;
+using FluentAssertions;
 using GetFitterGetBigger.API.DTOs;
-using GetFitterGetBigger.API.Models;
-using GetFitterGetBigger.API.Models.Entities;
 using GetFitterGetBigger.API.Models.SpecializedIds;
-using GetFitterGetBigger.API.Repositories.Interfaces;
-using GetFitterGetBigger.API.Services.Implementations;
+using GetFitterGetBigger.API.Services.ReferenceTables.MetricType;
+using GetFitterGetBigger.API.Services.ReferenceTables.MetricType.DataServices;
 using GetFitterGetBigger.API.Services.Interfaces;
-using GetFitterGetBigger.API.Services.Results;
-using GetFitterGetBigger.API.Tests.TestConstants;
-using Microsoft.Extensions.Logging;
+using GetFitterGetBigger.API.Tests.Services.Extensions;
+using GetFitterGetBigger.API.Tests.TestBuilders.DTOs;
 using Moq;
-using Olimpo.EntityFramework.Persistency;
+using Moq.AutoMock;
 using Xunit;
 
-namespace GetFitterGetBigger.API.Tests.Services
+namespace GetFitterGetBigger.API.Tests.Services;
+
+/// <summary>
+/// Unit tests for MetricTypeService using AutoMocker pattern
+/// Tests the MetricType service layer with proper mocking and isolation
+/// </summary>
+public class MetricTypeServiceTests
 {
-    public class MetricTypeServiceTests
+    [Fact]
+    public async Task GetAllActiveAsync_CacheHit_ReturnsFromCache()
     {
-        private readonly Mock<IUnitOfWorkProvider<FitnessDbContext>> _mockUnitOfWorkProvider;
-        private readonly Mock<IReadOnlyUnitOfWork<FitnessDbContext>> _mockReadOnlyUnitOfWork;
-        private readonly Mock<IMetricTypeRepository> _mockMetricTypeRepository;
-        private readonly Mock<IEternalCacheService> _mockCacheService;
-        private readonly Mock<ILogger<MetricTypeService>> _mockLogger;
-        private readonly MetricTypeService _metricTypeService;
-
-        public MetricTypeServiceTests()
+        // Arrange
+        var autoMocker = new AutoMocker();
+        var testee = autoMocker.CreateInstance<MetricTypeService>();
+        
+        var expectedMetricTypes = new[]
         {
-            _mockUnitOfWorkProvider = new Mock<IUnitOfWorkProvider<FitnessDbContext>>();
-            _mockReadOnlyUnitOfWork = new Mock<IReadOnlyUnitOfWork<FitnessDbContext>>();
-            _mockMetricTypeRepository = new Mock<IMetricTypeRepository>();
-            _mockCacheService = new Mock<IEternalCacheService>();
-            _mockLogger = new Mock<ILogger<MetricTypeService>>();
+            ReferenceDataDtoTestBuilder.Default().WithValue("Weight").Build(),
+            ReferenceDataDtoTestBuilder.Default().WithValue("Distance").Build()
+        };
 
-            _mockUnitOfWorkProvider
-                .Setup(x => x.CreateReadOnly())
-                .Returns(_mockReadOnlyUnitOfWork.Object);
+        autoMocker.SetupReferenceDataCacheHitList(expectedMetricTypes);
 
-            _mockReadOnlyUnitOfWork
-                .Setup(x => x.GetRepository<IMetricTypeRepository>())
-                .Returns(_mockMetricTypeRepository.Object);
+        // Act
+        var result = await testee.GetAllActiveAsync();
 
-            // Setup cache behavior - force cache miss for testing
-            _mockCacheService
-                .Setup(x => x.GetAsync<ReferenceDataDto>(It.IsAny<string>()))
-                .ReturnsAsync(CacheResult<ReferenceDataDto>.Miss());
-                
-            _mockCacheService
-                .Setup(x => x.GetAsync<IEnumerable<ReferenceDataDto>>(It.IsAny<string>()))
-                .ReturnsAsync(CacheResult<IEnumerable<ReferenceDataDto>>.Miss());
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+        result.Data.Should().BeEquivalentTo(expectedMetricTypes);
+        autoMocker.VerifyReferenceDataCacheGetListOnce();
+        autoMocker.GetMock<IMetricTypeDataService>().Verify(x => x.GetAllActiveAsync(), Times.Never);
+    }
 
-            _metricTypeService = new MetricTypeService(
-                _mockUnitOfWorkProvider.Object,
-                _mockCacheService.Object,
-                _mockLogger.Object);
-        }
-
-        [Fact]
-        public async Task ExistsAsync_WithMetricTypeId_WhenMetricTypeExists_ReturnsTrue()
+    [Fact]
+    public async Task GetAllActiveAsync_CacheMiss_LoadsFromDataServiceAndCaches()
+    {
+        // Arrange
+        var autoMocker = new AutoMocker();
+        var testee = autoMocker.CreateInstance<MetricTypeService>();
+        
+        var expectedMetricTypes = new[]
         {
-            // Arrange
-            var metricTypeId = MetricTypeId.New();
-            var metricType = MetricType.Handler.Create(
-                metricTypeId,
-                "Weight",
-                "Weight measurement in kg or lbs",
-                1,
-                true).Value;
+            ReferenceDataDtoTestBuilder.Default().WithValue("Weight").Build(),
+            ReferenceDataDtoTestBuilder.Default().WithValue("Distance").Build()
+        };
 
-            _mockMetricTypeRepository
-                .Setup(x => x.GetByIdAsync(metricTypeId))
-                .ReturnsAsync(metricType);
+        autoMocker.SetupReferenceDataCacheMissList()
+                  .SetupMetricTypeDataServiceGetAllActive(expectedMetricTypes);
 
-            // Act
-            var result = await _metricTypeService.ExistsAsync(metricTypeId);
+        // Act
+        var result = await testee.GetAllActiveAsync();
 
-            // Assert
-            Assert.True(result.IsSuccess);
-            Assert.True(result.Data.Value);
-            // ExistsAsync now leverages GetByIdAsync which uses cache
-            _mockMetricTypeRepository.Verify(x => x.GetByIdAsync(It.IsAny<MetricTypeId>()), Times.Once);
-        }
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+        result.Data.Should().BeEquivalentTo(expectedMetricTypes);
+        autoMocker.VerifyReferenceDataCacheGetListOnce()
+                  .VerifyReferenceDataCacheSetListOnce();
+        autoMocker.GetMock<IMetricTypeDataService>().Verify(x => x.GetAllActiveAsync(), Times.Once);
+    }
 
-        [Fact]
-        public async Task ExistsAsync_WithMetricTypeId_WhenMetricTypeDoesNotExist_ReturnsFalse()
-        {
-            // Arrange
-            var metricTypeId = MetricTypeId.New();
-            var emptyMetricType = MetricType.Empty;
+    [Fact]
+    public async Task GetByIdAsync_ValidId_CacheHit_ReturnsFromCache()
+    {
+        // Arrange
+        var autoMocker = new AutoMocker();
+        var testee = autoMocker.CreateInstance<MetricTypeService>();
+        
+        var metricTypeId = MetricTypeId.New();
+        var expectedMetricType = ReferenceDataDtoTestBuilder.Default().WithId(metricTypeId.ToString()).WithValue("Weight").Build();
 
-            _mockMetricTypeRepository
-                .Setup(x => x.GetByIdAsync(metricTypeId))
-                .ReturnsAsync(emptyMetricType);
+        autoMocker.SetupReferenceDataCacheHit(expectedMetricType);
 
-            // Act
-            var result = await _metricTypeService.ExistsAsync(metricTypeId);
+        // Act
+        var result = await testee.GetByIdAsync(metricTypeId);
 
-            // Assert
-            Assert.True(result.IsSuccess);
-            Assert.False(result.Data.Value);
-            // ExistsAsync now leverages GetByIdAsync which uses cache
-            _mockMetricTypeRepository.Verify(x => x.GetByIdAsync(It.IsAny<MetricTypeId>()), Times.Once);
-        }
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+        result.Data.Should().BeEquivalentTo(expectedMetricType);
+        autoMocker.VerifyReferenceDataCacheGetOnce();
+        autoMocker.GetMock<IMetricTypeDataService>().Verify(x => x.GetByIdAsync(It.IsAny<MetricTypeId>()), Times.Never);
+    }
 
-        [Fact]
-        public async Task ExistsAsync_WithEmptyMetricTypeId_ReturnsFalse()
-        {
-            // Arrange
-            var emptyId = MetricTypeId.Empty;
+    [Fact]
+    public async Task GetByIdAsync_ValidId_CacheMiss_LoadsFromDataServiceAndCaches()
+    {
+        // Arrange
+        var autoMocker = new AutoMocker();
+        var testee = autoMocker.CreateInstance<MetricTypeService>();
+        
+        var metricTypeId = MetricTypeId.New();
+        var expectedMetricType = ReferenceDataDtoTestBuilder.Default().WithId(metricTypeId.ToString()).WithValue("Weight").Build();
 
-            // Act
-            var result = await _metricTypeService.ExistsAsync(emptyId);
+        autoMocker.SetupReferenceDataCacheMiss()
+                  .SetupMetricTypeDataServiceGetById(metricTypeId, expectedMetricType);
 
-            // Assert
-            Assert.False(result.IsSuccess);
-            Assert.Equal(ServiceErrorCode.ValidationFailed, result.PrimaryErrorCode);
-            // With new implementation, no repository calls should be made for invalid IDs
-            _mockMetricTypeRepository.Verify(x => x.GetByIdAsync(It.IsAny<MetricTypeId>()), Times.Never);
-        }
+        // Act
+        var result = await testee.GetByIdAsync(metricTypeId);
 
-        [Fact]
-        public async Task GetByIdAsync_WithValidId_WhenMetricTypeExists_ReturnsSuccess()
-        {
-            // Arrange
-            var metricTypeId = MetricTypeId.New();
-            var metricType = MetricType.Handler.Create(
-                metricTypeId,
-                "Weight",
-                "Weight measurement in kg or lbs",
-                1,
-                true).Value;
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+        result.Data.Should().BeEquivalentTo(expectedMetricType);
+        autoMocker.VerifyReferenceDataCacheGetOnce()
+                  .VerifyReferenceDataCacheSetOnce();
+        autoMocker.GetMock<IMetricTypeDataService>().Verify(x => x.GetByIdAsync(metricTypeId), Times.Once);
+    }
 
+    [Fact]
+    public async Task GetByIdAsync_EmptyId_ReturnsValidationError()
+    {
+        // Arrange
+        var autoMocker = new AutoMocker();
+        var testee = autoMocker.CreateInstance<MetricTypeService>();
+        
+        var emptyId = MetricTypeId.Empty;
 
-            _mockMetricTypeRepository
-                .Setup(x => x.GetByIdAsync(It.IsAny<MetricTypeId>()))
-                .ReturnsAsync(metricType);
+        // Act
+        var result = await testee.GetByIdAsync(emptyId);
 
-            // Act
-            var result = await _metricTypeService.GetByIdAsync(metricTypeId);
+        // Assert
+        result.IsSuccess.Should().BeFalse();
+        result.Errors.Should().NotBeEmpty();
+        autoMocker.GetMock<IEternalCacheService>().Verify(x => x.GetAsync<ReferenceDataDto>(It.IsAny<string>()), Times.Never);
+        autoMocker.GetMock<IMetricTypeDataService>().Verify(x => x.GetByIdAsync(It.IsAny<MetricTypeId>()), Times.Never);
+    }
 
-            // Assert
-            Assert.True(result.IsSuccess);
-            Assert.Equal(metricType.Id, result.Data.Id);
-            Assert.Equal(metricType.Value, result.Data.Value);
-            Assert.Equal(metricType.Description, result.Data.Description);
-        }
+    [Fact]
+    public async Task ExistsAsync_ValidId_ReturnsTrue()
+    {
+        // Arrange
+        var autoMocker = new AutoMocker();
+        var testee = autoMocker.CreateInstance<MetricTypeService>();
+        
+        var metricTypeId = MetricTypeId.New();
+        var metricTypeDto = ReferenceDataDtoTestBuilder.Default()
+            .WithId(metricTypeId.ToString())
+            .WithValue("Weight")
+            .Build();
 
-        [Fact]
-        public async Task GetByIdAsync_WithEmptyId_ReturnsValidationFailed()
-        {
-            // Arrange
-            var emptyId = MetricTypeId.Empty;
+        autoMocker
+            .SetupReferenceDataCacheMiss()
+            .SetupMetricTypeDataServiceGetById(metricTypeId, metricTypeDto);
 
-            // Act
-            var result = await _metricTypeService.GetByIdAsync(emptyId);
+        // Act
+        var result = await testee.ExistsAsync(metricTypeId);
 
-            // Assert
-            Assert.False(result.IsSuccess);
-            Assert.Equal(ServiceErrorCode.ValidationFailed, result.PrimaryErrorCode);
-            Assert.Contains(MetricTypeErrorMessages.InvalidIdFormat, result.StructuredErrors.Select(e => e.Message));
-        }
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+        result.Data.Value.Should().BeTrue();
+        autoMocker.GetMock<IMetricTypeDataService>().Verify(x => x.GetByIdAsync(metricTypeId), Times.Once);
+    }
 
-        [Fact]
-        public async Task GetByValueAsync_WithValidValue_WhenMetricTypeExists_ReturnsSuccess()
-        {
-            // Arrange
-            var value = "Weight";
-            var metricType = MetricType.Handler.Create(
-                MetricTypeId.New(),
-                value,
-                "Weight measurement in kg or lbs",
-                1,
-                true).Value;
+    [Fact]
+    public async Task ExistsAsync_EmptyId_ReturnsValidationError()
+    {
+        // Arrange
+        var autoMocker = new AutoMocker();
+        var testee = autoMocker.CreateInstance<MetricTypeService>();
+        
+        var emptyId = MetricTypeId.Empty;
 
-            _mockMetricTypeRepository
-                .Setup(x => x.GetByValueAsync(value))
-                .ReturnsAsync(metricType);
+        // Act
+        var result = await testee.ExistsAsync(emptyId);
 
-            // Act
-            var result = await _metricTypeService.GetByValueAsync(value);
-
-            // Assert
-            Assert.True(result.IsSuccess);
-            Assert.Equal(metricType.Id, result.Data.Id);
-            Assert.Equal(metricType.Value, result.Data.Value);
-            Assert.Equal(metricType.Description, result.Data.Description);
-        }
-
-        [Fact]
-        public async Task GetByValueAsync_WithEmptyValue_ReturnsValidationFailed()
-        {
-            // Arrange
-            var emptyValue = string.Empty;
-
-            // Act
-            var result = await _metricTypeService.GetByValueAsync(emptyValue);
-
-            // Assert
-            Assert.False(result.IsSuccess);
-            Assert.Equal(ServiceErrorCode.ValidationFailed, result.PrimaryErrorCode);
-            Assert.Contains(MetricTypeErrorMessages.ValueCannotBeEmpty, result.StructuredErrors.Select(e => e.Message));
-        }
-
-        [Fact]
-        public async Task GetAllActiveAsync_ReturnsAllActiveMetricTypes()
-        {
-            // Arrange
-            var metricTypes = new List<MetricType>
-            {
-                MetricType.Handler.Create(MetricTypeId.New(), "Weight", "Weight measurement", 1, true).Value,
-                MetricType.Handler.Create(MetricTypeId.New(), "Repetitions", "Number of reps", 2, true).Value,
-                MetricType.Handler.Create(MetricTypeId.New(), "Time", "Duration in seconds", 3, true).Value
-            };
-
-
-            _mockMetricTypeRepository
-                .Setup(x => x.GetAllActiveAsync())
-                .ReturnsAsync(metricTypes);
-
-            // Act
-            var result = await _metricTypeService.GetAllActiveAsync();
-
-            // Assert
-            Assert.True(result.IsSuccess);
-            Assert.Equal(3, result.Data.Count());
-            Assert.All(result.Data, dto => Assert.NotNull(dto.Value));
-        }
-
-        [Fact]
-        public async Task GetByIdAsync_WithCacheHit_ReturnsCachedData()
-        {
-            // Arrange
-            var metricTypeId = MetricTypeId.New();
-            var cachedDto = new ReferenceDataDto
-                {
-                Id = metricTypeId.ToString(),
-                Value = "Weight",
-                Description = "Weight measurement in kg or lbs"
-            };
-
-            var metricType = MetricType.Handler.Create(
-                metricTypeId,
-                "Weight",
-                "Weight measurement in kg or lbs",
-                1,
-                true).Value;
-
-            _mockMetricTypeRepository
-                .Setup(x => x.GetByIdAsync(metricTypeId))
-                .ReturnsAsync(metricType);
-
-            // Act
-            var result = await _metricTypeService.GetByIdAsync(metricTypeId);
-
-            // Assert
-            Assert.True(result.IsSuccess);
-            Assert.Equal(cachedDto.Id, result.Data.Id);
-            Assert.Equal(cachedDto.Value, result.Data.Value);
-            Assert.Equal(cachedDto.Description, result.Data.Description);
-            _mockMetricTypeRepository.Verify(x => x.GetByIdAsync(metricTypeId), Times.Once);
-        }
+        // Assert
+        result.IsSuccess.Should().BeFalse();
+        result.Errors.Should().NotBeEmpty();
+        autoMocker.GetMock<IMetricTypeDataService>().Verify(x => x.ExistsAsync(It.IsAny<MetricTypeId>()), Times.Never);
     }
 }

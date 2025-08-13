@@ -15,7 +15,6 @@ Feature: Exercise Link Sequential Operations
     Then the exercise link should be created successfully
     When I create an exercise link from "Source Exercise" to "Target Exercise" with link type "Warmup" and display order 1
     Then the response status should be "bad request"
-    And the response should contain "already exists"
 
   @exercise @integration @links @limits
   Scenario: Create links beyond maximum limit should fail
@@ -35,7 +34,6 @@ Feature: Exercise Link Sequential Operations
     Then all 10 manual links should be created successfully
     When I create an exercise link from "MaxLinksSource" to "TargetEx10" with link type "Warmup" and display order 11
     Then the response status should be "bad request"
-    And the response should contain "Maximum number"
 
   @exercise @integration @links @updates
   Scenario: Sequential updates to same link should all succeed

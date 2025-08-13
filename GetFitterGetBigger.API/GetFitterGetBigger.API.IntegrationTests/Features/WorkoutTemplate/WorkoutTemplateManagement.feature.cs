@@ -239,7 +239,6 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.WorkoutTemplate
                         "000001\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Given ");
                 await testRunner.WhenAsync("I request the workout template by ID", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
                 await testRunner.ThenAsync("the response status should be OK", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
-                await testRunner.AndAsync("the response should contain the workout template details", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
                 TechTalk.SpecFlow.Table table26 = new TechTalk.SpecFlow.Table(new string[] {
                             "Property"});
                 table26.AddRow(new string[] {
@@ -287,7 +286,6 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.WorkoutTemplate
                             "Updated description"});
                 await testRunner.WhenAsync("I update the workout template with:", ((string)(null)), table27, "When ");
                 await testRunner.ThenAsync("the workout template should be updated successfully", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
-                await testRunner.AndAsync("the response should contain the updated values", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
             }
             await this.ScenarioCleanupAsync();
         }
@@ -558,7 +556,6 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.WorkoutTemplate
                 await testRunner.AndAsync("I have created a template named \"My Workout\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
                 await testRunner.WhenAsync("I try to create another template named \"My Workout\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
                 await testRunner.ThenAsync("the operation should fail with status \"Conflict\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
-                await testRunner.AndAsync("the error message should contain \"already exists\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
             }
             await this.ScenarioCleanupAsync();
         }

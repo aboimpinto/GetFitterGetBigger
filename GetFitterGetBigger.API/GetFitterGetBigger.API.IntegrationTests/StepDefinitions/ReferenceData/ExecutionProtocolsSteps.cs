@@ -67,8 +67,17 @@ public class ExecutionProtocolsSteps
     }
 
     [Then(@"each execution protocol should have the following fields:")]
-    public void ThenEachExecutionProtocolShouldHaveTheFollowingFields(Table table)
+    public async Task ThenEachExecutionProtocolShouldHaveTheFollowingFields(Table table)
     {
+        // If response wasn't parsed yet, parse it now
+        if (_executionProtocolsResponse == null)
+        {
+            var response = _scenarioContext.GetLastResponse();
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+            _executionProtocolsResponse = await response.Content.ReadFromJsonAsync<List<ExecutionProtocolDto>>();
+            _executionProtocolsResponse.Should().NotBeNull();
+        }
+        
         _executionProtocolsResponse.Should().NotBeNull();
         
         foreach (var protocol in _executionProtocolsResponse!)
@@ -123,24 +132,51 @@ public class ExecutionProtocolsSteps
     }
 
     [Then(@"the execution protocols should be ordered by displayOrder ascending")]
-    public void ThenTheExecutionProtocolsShouldBeOrderedByDisplayOrderAscending()
+    public async Task ThenTheExecutionProtocolsShouldBeOrderedByDisplayOrderAscending()
     {
+        // If response wasn't parsed yet, parse it now
+        if (_executionProtocolsResponse == null)
+        {
+            var response = _scenarioContext.GetLastResponse();
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+            _executionProtocolsResponse = await response.Content.ReadFromJsonAsync<List<ExecutionProtocolDto>>();
+            _executionProtocolsResponse.Should().NotBeNull();
+        }
+        
         _executionProtocolsResponse.Should().NotBeNull();
         _executionProtocolsResponse!
             .Should().BeInAscendingOrder(x => x.DisplayOrder);
     }
 
     [Then(@"no inactive protocols should be included")]
-    public void ThenNoInactiveProtocolsShouldBeIncluded()
+    public async Task ThenNoInactiveProtocolsShouldBeIncluded()
     {
+        // If response wasn't parsed yet, parse it now
+        if (_executionProtocolsResponse == null)
+        {
+            var response = _scenarioContext.GetLastResponse();
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+            _executionProtocolsResponse = await response.Content.ReadFromJsonAsync<List<ExecutionProtocolDto>>();
+            _executionProtocolsResponse.Should().NotBeNull();
+        }
+        
         _executionProtocolsResponse.Should().NotBeNull();
         _executionProtocolsResponse!
             .Should().OnlyContain(x => x.IsActive == true);
     }
 
     [Then(@"the response should include both active and inactive protocols")]
-    public void ThenTheResponseShouldIncludeBothActiveAndInactiveProtocols()
+    public async Task ThenTheResponseShouldIncludeBothActiveAndInactiveProtocols()
     {
+        // If response wasn't parsed yet, parse it now
+        if (_executionProtocolsResponse == null)
+        {
+            var response = _scenarioContext.GetLastResponse();
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+            _executionProtocolsResponse = await response.Content.ReadFromJsonAsync<List<ExecutionProtocolDto>>();
+            _executionProtocolsResponse.Should().NotBeNull();
+        }
+        
         _executionProtocolsResponse.Should().NotBeNull();
         _executionProtocolsResponse!
             .Should().Contain(x => x.IsActive == true)

@@ -1,492 +1,181 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using FluentAssertions;
 using GetFitterGetBigger.API.DTOs;
-using GetFitterGetBigger.API.Models;
-using GetFitterGetBigger.API.Models.Entities;
 using GetFitterGetBigger.API.Models.SpecializedIds;
-using GetFitterGetBigger.API.Repositories.Interfaces;
-using GetFitterGetBigger.API.Services.Implementations;
+using GetFitterGetBigger.API.Services.ReferenceTables.ExerciseWeightType;
+using GetFitterGetBigger.API.Services.ReferenceTables.ExerciseWeightType.DataServices;
 using GetFitterGetBigger.API.Services.Interfaces;
-using GetFitterGetBigger.API.Services.Results;
-using GetFitterGetBigger.API.Tests.Constants;
-using Microsoft.Extensions.Logging;
+using GetFitterGetBigger.API.Tests.Services.Extensions;
+using GetFitterGetBigger.API.Tests.TestBuilders.DTOs;
 using Moq;
-using Olimpo.EntityFramework.Persistency;
+using Moq.AutoMock;
 using Xunit;
 
-namespace GetFitterGetBigger.API.Tests.Services
+namespace GetFitterGetBigger.API.Tests.Services;
+
+/// <summary>
+/// Unit tests for ExerciseWeightTypeService using AutoMocker pattern
+/// Tests the ExerciseWeightType service layer with proper mocking and isolation
+/// </summary>
+public class ExerciseWeightTypeServiceTests
 {
-    public class ExerciseWeightTypeServiceTests
+    [Fact]
+    public async Task GetAllActiveAsync_CacheHit_ReturnsFromCache()
     {
-        private readonly Mock<IUnitOfWorkProvider<FitnessDbContext>> _mockUnitOfWorkProvider;
-        private readonly Mock<IReadOnlyUnitOfWork<FitnessDbContext>> _mockReadOnlyUnitOfWork;
-        private readonly Mock<IExerciseWeightTypeRepository> _mockRepository;
-        private readonly Mock<IEternalCacheService> _mockCacheService;
-        private readonly Mock<ILogger<ExerciseWeightTypeService>> _mockLogger;
-        private readonly ExerciseWeightTypeService _service;
+        // Arrange
+        var autoMocker = new AutoMocker();
+        var testee = autoMocker.CreateInstance<ExerciseWeightTypeService>();
         
-        private readonly List<ExerciseWeightType> _testData;
-        
-        public ExerciseWeightTypeServiceTests()
+        var expectedExerciseWeightTypes = new[]
         {
-            _mockUnitOfWorkProvider = new Mock<IUnitOfWorkProvider<FitnessDbContext>>();
-            _mockReadOnlyUnitOfWork = new Mock<IReadOnlyUnitOfWork<FitnessDbContext>>();
-            _mockRepository = new Mock<IExerciseWeightTypeRepository>();
-            _mockCacheService = new Mock<IEternalCacheService>();
-            _mockLogger = new Mock<ILogger<ExerciseWeightTypeService>>();
-            
-            _mockUnitOfWorkProvider
-                .Setup(x => x.CreateReadOnly())
-                .Returns(_mockReadOnlyUnitOfWork.Object);
-                
-            _mockReadOnlyUnitOfWork
-                .Setup(x => x.GetRepository<IExerciseWeightTypeRepository>())
-                .Returns(_mockRepository.Object);
-                
-            // Setup cache to return cache miss by default
-            _mockCacheService
-                .Setup(x => x.GetAsync<IEnumerable<ReferenceDataDto>>(It.IsAny<string>()))
-                .ReturnsAsync(CacheResult<IEnumerable<ReferenceDataDto>>.Miss());
-                
-            _mockCacheService
-                .Setup(x => x.GetAsync<ReferenceDataDto>(It.IsAny<string>()))
-                .ReturnsAsync(CacheResult<ReferenceDataDto>.Miss());
-                
-            _service = new ExerciseWeightTypeService(
-                _mockUnitOfWorkProvider.Object,
-                _mockCacheService.Object,
-                _mockLogger.Object);
-                
-            // Initialize test data
-            _testData = new List<ExerciseWeightType>
-            {
-                ExerciseWeightType.Handler.Create(
-                    ExerciseWeightTypeTestConstants.BodyweightOnlyId,
-                    ExerciseWeightTypeTestConstants.BodyweightOnlyCode,
-                    ExerciseWeightTypeTestConstants.BodyweightOnlyValue,
-                    ExerciseWeightTypeTestConstants.BodyweightOnlyDescription,
-                    1,
-                    true).Value,
-                ExerciseWeightType.Handler.Create(
-                    ExerciseWeightTypeTestConstants.BodyweightOptionalId,
-                    ExerciseWeightTypeTestConstants.BodyweightOptionalCode,
-                    ExerciseWeightTypeTestConstants.BodyweightOptionalValue,
-                    ExerciseWeightTypeTestConstants.BodyweightOptionalDescription,
-                    2,
-                    true).Value,
-                ExerciseWeightType.Handler.Create(
-                    ExerciseWeightTypeTestConstants.WeightRequiredId,
-                    ExerciseWeightTypeTestConstants.WeightRequiredCode,
-                    ExerciseWeightTypeTestConstants.WeightRequiredValue,
-                    ExerciseWeightTypeTestConstants.WeightRequiredDescription,
-                    3,
-                    true).Value,
-                ExerciseWeightType.Handler.Create(
-                    ExerciseWeightTypeTestConstants.MachineWeightId,
-                    ExerciseWeightTypeTestConstants.MachineWeightCode,
-                    ExerciseWeightTypeTestConstants.MachineWeightValue,
-                    ExerciseWeightTypeTestConstants.MachineWeightDescription,
-                    4,
-                    true).Value,
-                ExerciseWeightType.Handler.Create(
-                    ExerciseWeightTypeTestConstants.NoWeightId,
-                    ExerciseWeightTypeTestConstants.NoWeightCode,
-                    ExerciseWeightTypeTestConstants.NoWeightValue,
-                    ExerciseWeightTypeTestConstants.NoWeightDescription,
-                    5,
-                    true).Value
-            };
-        }
+            ReferenceDataDtoTestBuilder.Default().WithValue("Bodyweight").Build(),
+            ReferenceDataDtoTestBuilder.Default().WithValue("Weighted").Build()
+        };
+
+        autoMocker.SetupReferenceDataCacheHitList(expectedExerciseWeightTypes);
+
+        // Act
+        var result = await testee.GetAllActiveAsync();
+
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+        result.Data.Should().BeEquivalentTo(expectedExerciseWeightTypes);
+        autoMocker.VerifyReferenceDataCacheGetListOnce();
+        autoMocker.GetMock<IExerciseWeightTypeDataService>().Verify(x => x.GetAllActiveAsync(), Times.Never);
+    }
+
+    [Fact]
+    public async Task GetAllActiveAsync_CacheMiss_LoadsFromDataServiceAndCaches()
+    {
+        // Arrange
+        var autoMocker = new AutoMocker();
+        var testee = autoMocker.CreateInstance<ExerciseWeightTypeService>();
         
-        #region GetAllActiveAsync Tests
-        
-        [Fact]
-        public async Task GetAllActiveAsync_WhenCached_ReturnsCachedData()
+        var expectedExerciseWeightTypes = new[]
         {
-            // Arrange
-            var cachedDtos = _testData.Select(MapToDto).ToList();
-            
-            _mockCacheService
-                .Setup(x => x.GetAsync<IEnumerable<ReferenceDataDto>>(It.IsAny<string>()))
-                .ReturnsAsync(CacheResult<IEnumerable<ReferenceDataDto>>.Hit(cachedDtos));
-            
-            // Act
-            var result = await _service.GetAllActiveAsync();
-            
-            // Assert
-            Assert.True(result.IsSuccess);
-            Assert.Equal(5, result.Data.Count());
-            _mockRepository.Verify(x => x.GetAllActiveAsync(), Times.Never);
-        }
+            ReferenceDataDtoTestBuilder.Default().WithValue("Bodyweight").Build(),
+            ReferenceDataDtoTestBuilder.Default().WithValue("Weighted").Build()
+        };
+
+        autoMocker.SetupReferenceDataCacheMissList()
+                  .SetupExerciseWeightTypeDataServiceGetAllActive(expectedExerciseWeightTypes);
+
+        // Act
+        var result = await testee.GetAllActiveAsync();
+
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+        result.Data.Should().BeEquivalentTo(expectedExerciseWeightTypes);
+        autoMocker.VerifyReferenceDataCacheGetListOnce()
+                  .VerifyReferenceDataCacheSetListOnce();
+        autoMocker.GetMock<IExerciseWeightTypeDataService>().Verify(x => x.GetAllActiveAsync(), Times.Once);
+    }
+
+    [Fact]
+    public async Task GetByIdAsync_ValidId_CacheHit_ReturnsFromCache()
+    {
+        // Arrange
+        var autoMocker = new AutoMocker();
+        var testee = autoMocker.CreateInstance<ExerciseWeightTypeService>();
         
-        [Fact]
-        public async Task GetAllActiveAsync_WhenNotCached_LoadsFromDatabase()
-        {
-            // Arrange
-            _mockCacheService
-                .Setup(x => x.GetAsync<IEnumerable<ReferenceDataDto>>(It.IsAny<string>()))
-                .ReturnsAsync(CacheResult<IEnumerable<ReferenceDataDto>>.Miss());
-                
-            _mockRepository
-                .Setup(x => x.GetAllActiveAsync())
-                .ReturnsAsync(_testData);
-            
-            // Act
-            var result = await _service.GetAllActiveAsync();
-            
-            // Assert
-            Assert.True(result.IsSuccess);
-            Assert.Equal(5, result.Data.Count());
-            _mockUnitOfWorkProvider.Verify(x => x.CreateReadOnly(), Times.Once);
-            _mockRepository.Verify(x => x.GetAllActiveAsync(), Times.Once);
-            _mockCacheService.Verify(x => x.SetAsync(It.IsAny<string>(), It.IsAny<IEnumerable<ReferenceDataDto>>()), Times.Once);
-        }
+        var exerciseWeightTypeId = ExerciseWeightTypeId.New();
+        var expectedExerciseWeightType = ReferenceDataDtoTestBuilder.Default().WithId(exerciseWeightTypeId.ToString()).WithValue("Bodyweight").Build();
+
+        autoMocker.SetupReferenceDataCacheHit(expectedExerciseWeightType);
+
+        // Act
+        var result = await testee.GetByIdAsync(exerciseWeightTypeId);
+
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+        result.Data.Should().BeEquivalentTo(expectedExerciseWeightType);
+        autoMocker.VerifyReferenceDataCacheGetOnce();
+        autoMocker.GetMock<IExerciseWeightTypeDataService>().Verify(x => x.GetByIdAsync(It.IsAny<ExerciseWeightTypeId>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task GetByIdAsync_ValidId_CacheMiss_LoadsFromDataServiceAndCaches()
+    {
+        // Arrange
+        var autoMocker = new AutoMocker();
+        var testee = autoMocker.CreateInstance<ExerciseWeightTypeService>();
         
-        #endregion
+        var exerciseWeightTypeId = ExerciseWeightTypeId.New();
+        var expectedExerciseWeightType = ReferenceDataDtoTestBuilder.Default().WithId(exerciseWeightTypeId.ToString()).WithValue("Bodyweight").Build();
+
+        autoMocker.SetupReferenceDataCacheMiss()
+                  .SetupExerciseWeightTypeDataServiceGetById(exerciseWeightTypeId, expectedExerciseWeightType);
+
+        // Act
+        var result = await testee.GetByIdAsync(exerciseWeightTypeId);
+
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+        result.Data.Should().BeEquivalentTo(expectedExerciseWeightType);
+        autoMocker.VerifyReferenceDataCacheGetOnce()
+                  .VerifyReferenceDataCacheSetOnce();
+        autoMocker.GetMock<IExerciseWeightTypeDataService>().Verify(x => x.GetByIdAsync(exerciseWeightTypeId), Times.Once);
+    }
+
+    [Fact]
+    public async Task GetByIdAsync_EmptyId_ReturnsValidationError()
+    {
+        // Arrange
+        var autoMocker = new AutoMocker();
+        var testee = autoMocker.CreateInstance<ExerciseWeightTypeService>();
         
-        #region GetByIdAsync Tests
+        var emptyId = ExerciseWeightTypeId.Empty;
+
+        // Act
+        var result = await testee.GetByIdAsync(emptyId);
+
+        // Assert
+        result.IsSuccess.Should().BeFalse();
+        result.Errors.Should().NotBeEmpty();
+        autoMocker.GetMock<IEternalCacheService>().Verify(x => x.GetAsync<ReferenceDataDto>(It.IsAny<string>()), Times.Never);
+        autoMocker.GetMock<IExerciseWeightTypeDataService>().Verify(x => x.GetByIdAsync(It.IsAny<ExerciseWeightTypeId>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task ExistsAsync_ValidId_ReturnsTrue()
+    {
+        // Arrange
+        var autoMocker = new AutoMocker();
+        var testee = autoMocker.CreateInstance<ExerciseWeightTypeService>();
         
-        [Fact]
-        public async Task GetByIdAsync_WithEmptyId_ReturnsValidationError()
-        {
-            // Arrange
-            var emptyId = ExerciseWeightTypeId.Empty;
-            
-            // Act
-            var result = await _service.GetByIdAsync(emptyId);
-            
-            // Assert
-            Assert.False(result.IsSuccess);
-            Assert.Equal(ServiceErrorCode.ValidationFailed, result.PrimaryErrorCode);
-            _mockUnitOfWorkProvider.Verify(x => x.CreateReadOnly(), Times.Never);
-        }
+        var exerciseWeightTypeId = ExerciseWeightTypeId.New();
+        var exerciseWeightTypeDto = ReferenceDataDtoTestBuilder.Default()
+            .WithId(exerciseWeightTypeId.ToString())
+            .WithValue("Free Weight")
+            .Build();
+
+        autoMocker
+            .SetupReferenceDataCacheMiss()
+            .SetupExerciseWeightTypeDataServiceGetById(exerciseWeightTypeId, exerciseWeightTypeDto);
+
+        // Act
+        var result = await testee.ExistsAsync(exerciseWeightTypeId);
+
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+        result.Data.Value.Should().BeTrue();
+        autoMocker.GetMock<IExerciseWeightTypeDataService>().Verify(x => x.GetByIdAsync(exerciseWeightTypeId), Times.Once);
+    }
+
+    [Fact]
+    public async Task ExistsAsync_EmptyId_ReturnsValidationError()
+    {
+        // Arrange
+        var autoMocker = new AutoMocker();
+        var testee = autoMocker.CreateInstance<ExerciseWeightTypeService>();
         
-        [Fact]
-        public async Task GetByIdAsync_WhenCached_ReturnsCachedData()
-        {
-            // Arrange
-            var id = ExerciseWeightTypeTestConstants.BodyweightOnlyId;
-            var cachedDto = new ReferenceDataDto
-            {
-                Id = id.ToString(),
-                Value = ExerciseWeightTypeTestConstants.BodyweightOnlyValue,
-                Description = ExerciseWeightTypeTestConstants.BodyweightOnlyDescription
-            };
-            
-            _mockCacheService
-                .Setup(x => x.GetAsync<ReferenceDataDto>(It.IsAny<string>()))
-                .ReturnsAsync(CacheResult<ReferenceDataDto>.Hit(cachedDto));
-            
-            // Act
-            var result = await _service.GetByIdAsync(id);
-            
-            // Assert
-            Assert.True(result.IsSuccess);
-            Assert.Equal(cachedDto.Id, result.Data.Id);
-            Assert.Equal(cachedDto.Value, result.Data.Value);
-            _mockRepository.Verify(x => x.GetByIdAsync(It.IsAny<ExerciseWeightTypeId>()), Times.Never);
-        }
-        
-        [Fact]
-        public async Task GetByIdAsync_WhenNotCachedAndExists_LoadsFromDatabase()
-        {
-            // Arrange
-            var weightType = _testData[0];
-            var id = weightType.Id;
-            
-            _mockCacheService
-                .Setup(x => x.GetAsync<ReferenceDataDto>(It.IsAny<string>()))
-                .ReturnsAsync(CacheResult<ReferenceDataDto>.Miss());
-                
-            _mockRepository
-                .Setup(x => x.GetByIdAsync(id))
-                .ReturnsAsync(weightType);
-            
-            // Act
-            var result = await _service.GetByIdAsync(id);
-            
-            // Assert
-            Assert.True(result.IsSuccess);
-            Assert.Equal(id.ToString(), result.Data.Id);
-            Assert.Equal(weightType.Value, result.Data.Value);
-            _mockUnitOfWorkProvider.Verify(x => x.CreateReadOnly(), Times.Once);
-            _mockRepository.Verify(x => x.GetByIdAsync(id), Times.Once);
-            _mockCacheService.Verify(x => x.SetAsync(It.IsAny<string>(), It.IsAny<ReferenceDataDto>()), Times.Once);
-        }
-        
-        [Fact]
-        public async Task GetByIdAsync_WhenNotFound_ReturnsNotFoundError()
-        {
-            // Arrange
-            var id = ExerciseWeightTypeId.From(Guid.NewGuid());
-            
-            _mockCacheService
-                .Setup(x => x.GetAsync<ReferenceDataDto>(It.IsAny<string>()))
-                .ReturnsAsync(CacheResult<ReferenceDataDto>.Miss());
-                
-            _mockRepository
-                .Setup(x => x.GetByIdAsync(id))
-                .ReturnsAsync(ExerciseWeightType.Empty);
-            
-            // Act
-            var result = await _service.GetByIdAsync(id);
-            
-            // Assert
-            Assert.False(result.IsSuccess);
-            Assert.Equal(ServiceErrorCode.NotFound, result.PrimaryErrorCode);
-            _mockUnitOfWorkProvider.Verify(x => x.CreateReadOnly(), Times.Once);
-            _mockRepository.Verify(x => x.GetByIdAsync(id), Times.Once);
-        }
-        
-        #endregion
-        
-        #region GetByValueAsync Tests
-        
-        [Fact]
-        public async Task GetByValueAsync_WithEmptyValue_ReturnsValidationError()
-        {
-            // Act
-            var result = await _service.GetByValueAsync(string.Empty);
-            
-            // Assert
-            Assert.False(result.IsSuccess);
-            Assert.Equal(ServiceErrorCode.ValidationFailed, result.PrimaryErrorCode);
-            _mockUnitOfWorkProvider.Verify(x => x.CreateReadOnly(), Times.Never);
-        }
-        
-        [Fact]
-        public async Task GetByValueAsync_WithNullValue_ReturnsValidationError()
-        {
-            // Act
-            var result = await _service.GetByValueAsync(null!);
-            
-            // Assert
-            Assert.False(result.IsSuccess);
-            Assert.Equal(ServiceErrorCode.ValidationFailed, result.PrimaryErrorCode);
-            _mockUnitOfWorkProvider.Verify(x => x.CreateReadOnly(), Times.Never);
-        }
-        
-        [Fact]
-        public async Task GetByValueAsync_WhenCached_ReturnsCachedData()
-        {
-            // Arrange
-            var value = ExerciseWeightTypeTestConstants.BodyweightOnlyValue;
-            var cachedDto = new ReferenceDataDto
-            {
-                Id = ExerciseWeightTypeTestConstants.BodyweightOnlyDtoId,
-                Value = value,
-                Description = ExerciseWeightTypeTestConstants.BodyweightOnlyDescription
-            };
-            
-            _mockCacheService
-                .Setup(x => x.GetAsync<ReferenceDataDto>(It.IsAny<string>()))
-                .ReturnsAsync(CacheResult<ReferenceDataDto>.Hit(cachedDto));
-            
-            // Act
-            var result = await _service.GetByValueAsync(value);
-            
-            // Assert
-            Assert.True(result.IsSuccess);
-            Assert.Equal(cachedDto.Value, result.Data.Value);
-            _mockRepository.Verify(x => x.GetByValueAsync(It.IsAny<string>()), Times.Never);
-        }
-        
-        [Fact]
-        public async Task GetByValueAsync_WhenNotCachedAndExists_LoadsFromDatabase()
-        {
-            // Arrange
-            var weightType = _testData[0];
-            var value = weightType.Value;
-            
-            _mockCacheService
-                .Setup(x => x.GetAsync<ReferenceDataDto>(It.IsAny<string>()))
-                .ReturnsAsync(CacheResult<ReferenceDataDto>.Miss());
-                
-            _mockRepository
-                .Setup(x => x.GetByValueAsync(value))
-                .ReturnsAsync(weightType);
-            
-            // Act
-            var result = await _service.GetByValueAsync(value);
-            
-            // Assert
-            Assert.True(result.IsSuccess);
-            Assert.Equal(value, result.Data.Value);
-            _mockUnitOfWorkProvider.Verify(x => x.CreateReadOnly(), Times.Once);
-            _mockRepository.Verify(x => x.GetByValueAsync(value), Times.Once);
-            _mockCacheService.Verify(x => x.SetAsync(It.IsAny<string>(), It.IsAny<ReferenceDataDto>()), Times.Once);
-        }
-        
-        [Fact]
-        public async Task GetByValueAsync_WhenNotFound_ReturnsNotFoundError()
-        {
-            // Arrange
-            var value = ExerciseWeightTypeTestConstants.NonExistentValue;
-            
-            _mockCacheService
-                .Setup(x => x.GetAsync<ReferenceDataDto>(It.IsAny<string>()))
-                .ReturnsAsync(CacheResult<ReferenceDataDto>.Miss());
-                
-            _mockRepository
-                .Setup(x => x.GetByValueAsync(value))
-                .ReturnsAsync(ExerciseWeightType.Empty);
-            
-            // Act
-            var result = await _service.GetByValueAsync(value);
-            
-            // Assert
-            Assert.False(result.IsSuccess);
-            Assert.Equal(ServiceErrorCode.NotFound, result.PrimaryErrorCode);
-        }
-        
-        #endregion
-        
-        #region GetByCodeAsync Tests
-        
-        [Fact]
-        public async Task GetByCodeAsync_WithEmptyCode_ReturnsValidationError()
-        {
-            // Act
-            var result = await _service.GetByCodeAsync(string.Empty);
-            
-            // Assert
-            Assert.False(result.IsSuccess);
-            Assert.Equal(ServiceErrorCode.ValidationFailed, result.PrimaryErrorCode);
-            _mockUnitOfWorkProvider.Verify(x => x.CreateReadOnly(), Times.Never);
-        }
-        
-        [Fact]
-        public async Task GetByCodeAsync_WhenCached_ReturnsCachedData()
-        {
-            // Arrange
-            var code = ExerciseWeightTypeTestConstants.BodyweightOnlyCode;
-            var cachedDto = new ReferenceDataDto
-            {
-                Id = ExerciseWeightTypeTestConstants.BodyweightOnlyDtoId,
-                Value = ExerciseWeightTypeTestConstants.BodyweightOnlyValue,
-                Description = ExerciseWeightTypeTestConstants.BodyweightOnlyDescription
-            };
-            
-            _mockCacheService
-                .Setup(x => x.GetAsync<ReferenceDataDto>(It.IsAny<string>()))
-                .ReturnsAsync(CacheResult<ReferenceDataDto>.Hit(cachedDto));
-            
-            // Act
-            var result = await _service.GetByCodeAsync(code);
-            
-            // Assert
-            Assert.True(result.IsSuccess);
-            Assert.Equal(cachedDto.Value, result.Data.Value);
-            _mockRepository.Verify(x => x.GetByCodeAsync(It.IsAny<string>()), Times.Never);
-        }
-        
-        [Fact]
-        public async Task GetByCodeAsync_WhenNotCachedAndExists_LoadsFromDatabase()
-        {
-            // Arrange
-            var weightType = _testData[0];
-            var code = weightType.Code;
-            
-            _mockCacheService
-                .Setup(x => x.GetAsync<ReferenceDataDto>(It.IsAny<string>()))
-                .ReturnsAsync(CacheResult<ReferenceDataDto>.Miss());
-                
-            _mockRepository
-                .Setup(x => x.GetByCodeAsync(code))
-                .ReturnsAsync(weightType);
-            
-            // Act
-            var result = await _service.GetByCodeAsync(code);
-            
-            // Assert
-            Assert.True(result.IsSuccess);
-            Assert.Equal(weightType.Value, result.Data.Value);
-            _mockUnitOfWorkProvider.Verify(x => x.CreateReadOnly(), Times.Once);
-            _mockRepository.Verify(x => x.GetByCodeAsync(code), Times.Once);
-            _mockCacheService.Verify(x => x.SetAsync(It.IsAny<string>(), It.IsAny<ReferenceDataDto>()), Times.Once);
-        }
-        
-        #endregion
-        
-        #region ExistsAsync Tests
-        
-        [Fact]
-        public async Task ExistsAsync_WithEmptyId_ReturnsFalse()
-        {
-            // Arrange
-            var emptyId = ExerciseWeightTypeId.Empty;
-            
-            // Act
-            var result = await _service.ExistsAsync(emptyId);
-            
-            // Assert
-            Assert.False(result.IsSuccess);
-            Assert.Equal(ServiceErrorCode.ValidationFailed, result.PrimaryErrorCode);
-            _mockUnitOfWorkProvider.Verify(x => x.CreateReadOnly(), Times.Never);
-        }
-        
-        [Fact]
-        public async Task ExistsAsync_WhenExists_ReturnsTrue()
-        {
-            // Arrange
-            var id = ExerciseWeightTypeTestConstants.BodyweightOnlyId;
-            var cachedDto = new ReferenceDataDto
-            {
-                Id = id.ToString(),
-                Value = ExerciseWeightTypeTestConstants.BodyweightOnlyValue,
-                Description = ExerciseWeightTypeTestConstants.BodyweightOnlyDescription
-            };
-            
-            _mockCacheService
-                .Setup(x => x.GetAsync<ReferenceDataDto>(It.IsAny<string>()))
-                .ReturnsAsync(CacheResult<ReferenceDataDto>.Hit(cachedDto));
-            
-            // Act
-            var result = await _service.ExistsAsync(id);
-            
-            // Assert
-            Assert.True(result.IsSuccess);
-            Assert.True(result.Data.Value);
-        }
-        
-        [Fact]
-        public async Task ExistsAsync_WhenNotExists_ReturnsFalse()
-        {
-            // Arrange
-            var id = ExerciseWeightTypeId.From(Guid.NewGuid());
-            
-            _mockCacheService
-                .Setup(x => x.GetAsync<ReferenceDataDto>(It.IsAny<string>()))
-                .ReturnsAsync(CacheResult<ReferenceDataDto>.Miss());
-                
-            _mockRepository
-                .Setup(x => x.GetByIdAsync(id))
-                .ReturnsAsync(ExerciseWeightType.Empty);
-            
-            // Act
-            var result = await _service.ExistsAsync(id);
-            
-            // Assert
-            Assert.True(result.IsSuccess);
-            Assert.False(result.Data.Value);
-        }
-        
-        #endregion
-        
-        #region Helper Methods
-        
-        private static ReferenceDataDto MapToDto(ExerciseWeightType entity)
-        {
-            return new ReferenceDataDto
-            {
-                Id = entity.Id.ToString(),
-                Value = entity.Value,
-                Description = entity.Description
-            };
-        }
-        
-        #endregion
+        var emptyId = ExerciseWeightTypeId.Empty;
+
+        // Act
+        var result = await testee.ExistsAsync(emptyId);
+
+        // Assert
+        result.IsSuccess.Should().BeFalse();
+        result.Errors.Should().NotBeEmpty();
+        autoMocker.GetMock<IExerciseWeightTypeDataService>().Verify(x => x.ExistsAsync(It.IsAny<ExerciseWeightTypeId>()), Times.Never);
     }
 }

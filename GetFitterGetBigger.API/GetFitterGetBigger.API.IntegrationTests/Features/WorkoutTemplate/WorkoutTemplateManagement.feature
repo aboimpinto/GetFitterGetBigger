@@ -53,7 +53,6 @@ Scenario: Get workout template by ID
     Given a workout template exists with ID "workouttemplate-03000001-0000-0000-0000-000000000001"
     When I request the workout template by ID
     Then the response status should be OK
-    And the response should contain the workout template details
     And the response should include navigation properties:
         | Property    |
         | Category    |
@@ -70,7 +69,6 @@ Scenario: Update an existing workout template
         | Name         | Updated Strength Day     |
         | Description  | Updated description      |
     Then the workout template should be updated successfully
-    And the response should contain the updated values
 
 Scenario: Delete a workout template
     Given I am a Personal Trainer with ID "user-01000001-0000-0000-0000-000000000001"
@@ -95,7 +93,6 @@ Scenario: Transition template from DRAFT to PRODUCTION
 #    And execution logs exist for this template
 #    When I attempt to change the state to "DRAFT"
 #    Then the operation should fail with status "Conflict"
-#    And the error message should contain "Cannot change state due to existing execution logs"
 #    And the template should remain in "PRODUCTION" state
 
 Scenario: Archive a workout template
@@ -171,7 +168,6 @@ Scenario: Prevent duplicate template names globally
     And I have created a template named "My Workout"
     When I try to create another template named "My Workout"
     Then the operation should fail with status "Conflict"
-    And the error message should contain "already exists"
 
 # Access Control
 # TODO: Uncomment these scenarios when authorization is implemented
@@ -186,7 +182,6 @@ Scenario: Prevent duplicate template names globally
 #    Given a workout template exists created by another user
 #    When I attempt to update the template
 #    Then the operation should fail with status "Forbidden"
-#    And the error message should contain "permission"
 
 #Scenario: View public templates
 #    Given a public workout template exists

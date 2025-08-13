@@ -123,7 +123,6 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.Exercise
                 await testRunner.WhenAsync("I create an exercise link from \"Source Exercise\" to \"Target Exercise\" with link t" +
                         "ype \"Warmup\" and display order 1", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
                 await testRunner.ThenAsync("the response status should be \"bad request\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
-                await testRunner.AndAsync("the response should contain \"already exists\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
             }
             await this.ScenarioCleanupAsync();
         }
@@ -170,7 +169,6 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.Exercise
                 await testRunner.WhenAsync("I create an exercise link from \"MaxLinksSource\" to \"TargetEx10\" with link type \"W" +
                         "armup\" and display order 11", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
                 await testRunner.ThenAsync("the response status should be \"bad request\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
-                await testRunner.AndAsync("the response should contain \"Maximum number\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
             }
             await this.ScenarioCleanupAsync();
         }

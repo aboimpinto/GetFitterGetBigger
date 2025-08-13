@@ -1,5 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
-using GetFitterGetBigger.API.Services.Interfaces;
+using GetFitterGetBigger.API.Services.ReferenceTables.MetricType;
 using GetFitterGetBigger.API.Services.Results;
 using GetFitterGetBigger.API.Models.SpecializedIds;
 

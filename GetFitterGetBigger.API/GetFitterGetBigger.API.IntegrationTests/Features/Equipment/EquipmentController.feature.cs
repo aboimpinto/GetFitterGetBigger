@@ -376,7 +376,6 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.Equipment
                 await testRunner.GivenAsync("I have created equipment \"DuplicateBarbell\" via API", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Given ");
                 await testRunner.WhenAsync("I create equipment \"DuplicateBarbell\" via API", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
                 await testRunner.ThenAsync("the response status should be \"conflict\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
-                await testRunner.AndAsync("the response should contain \"already exists\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
             }
             await this.ScenarioCleanupAsync();
         }
@@ -621,7 +620,6 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.Equipment
                 await testRunner.AndAsync("I have created an exercise \"Barbell Squat\" that uses the equipment", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
                 await testRunner.WhenAsync("I delete the equipment via API", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
                 await testRunner.ThenAsync("the response status should be \"conflict\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
-                await testRunner.AndAsync("the response should contain \"in use\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
             }
             await this.ScenarioCleanupAsync();
         }

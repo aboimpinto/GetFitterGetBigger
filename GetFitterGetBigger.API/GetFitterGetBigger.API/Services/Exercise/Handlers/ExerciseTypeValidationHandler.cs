@@ -1,6 +1,6 @@
 using GetFitterGetBigger.API.Models.SpecializedIds;
 using GetFitterGetBigger.API.Services.Commands;
-using GetFitterGetBigger.API.Services.Interfaces;
+using GetFitterGetBigger.API.Services.ReferenceTables.ExerciseType;
 
 namespace GetFitterGetBigger.API.Services.Exercise.Handlers;
 

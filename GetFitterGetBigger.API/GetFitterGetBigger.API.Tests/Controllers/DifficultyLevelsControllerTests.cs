@@ -1,16 +1,12 @@
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using GetFitterGetBigger.API.Constants;
 using GetFitterGetBigger.API.Controllers;
 using GetFitterGetBigger.API.DTOs;
 using GetFitterGetBigger.API.Models.SpecializedIds;
-using GetFitterGetBigger.API.Services.Interfaces;
+using GetFitterGetBigger.API.Services.ReferenceTables.DifficultyLevel;
 using GetFitterGetBigger.API.Services.Results;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Moq;
-using Xunit;
 
 namespace GetFitterGetBigger.API.Tests.Controllers
 {

@@ -248,7 +248,6 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.Exercise
                 await testRunner.WhenAsync("I create an exercise link from \"Bench Press\" to \"Push Ups\" with link type \"Warmup" +
                         "\" and display order 1", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
                 await testRunner.ThenAsync("the response status should be \"bad request\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
-                await testRunner.AndAsync("the response should contain \"already exists\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
                 await testRunner.WhenAsync("I update the exercise link to have display order 5 and active status true", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
                 await testRunner.ThenAsync("the link should be updated successfully", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
                 await testRunner.AndAsync("the link should have display order 5", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");

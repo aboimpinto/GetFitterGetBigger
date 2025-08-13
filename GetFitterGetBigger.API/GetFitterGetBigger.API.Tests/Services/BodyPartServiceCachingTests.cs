@@ -1,262 +1,331 @@
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using FluentAssertions;
 using GetFitterGetBigger.API.DTOs;
-using GetFitterGetBigger.API.Models;
-using GetFitterGetBigger.API.Models.Entities;
 using GetFitterGetBigger.API.Models.SpecializedIds;
-using GetFitterGetBigger.API.Repositories.Interfaces;
-using GetFitterGetBigger.API.Services.Implementations;
-using GetFitterGetBigger.API.Services.Interfaces;
-using GetFitterGetBigger.API.Services.Results;
-using Microsoft.Extensions.Logging;
-using Moq;
-using Olimpo.EntityFramework.Persistency;
-using Xunit;
+using GetFitterGetBigger.API.Services.ReferenceTables.BodyPart;
+using GetFitterGetBigger.API.Tests.Services.Builders;
+using GetFitterGetBigger.API.Tests.Services.Extensions;
+using Moq.AutoMock;
 
-namespace GetFitterGetBigger.API.Tests.Services
+namespace GetFitterGetBigger.API.Tests.Services;
+
+/// <summary>
+/// Unit tests for BodyPartService caching behavior using DataService architecture
+/// Tests verify that caching works correctly and reduces DataService calls
+/// </summary>
+public class BodyPartServiceCachingTests
 {
-    public class BodyPartServiceCachingTests
+    [Fact]
+    public async Task GetByIdAsync_WhenCacheHit_DoesNotCallDataService()
     {
-        private readonly Mock<IUnitOfWorkProvider<FitnessDbContext>> _mockUnitOfWorkProvider;
-        private readonly Mock<IReadOnlyUnitOfWork<FitnessDbContext>> _mockReadOnlyUnitOfWork;
-        private readonly Mock<IBodyPartRepository> _mockBodyPartRepository;
-        private readonly Mock<IEternalCacheService> _mockCacheService;
-        private readonly Mock<ILogger<BodyPartService>> _mockLogger;
-        private readonly BodyPartService _bodyPartService;
+        // Arrange
+        var automocker = new AutoMocker();
+        var testee = automocker.CreateInstance<BodyPartService>();
 
-        public BodyPartServiceCachingTests()
+        var bodyPartId = BodyPartId.New();
+        var cachedDto = BodyPartDtoBuilder.ForChest()
+            .WithId(bodyPartId)
+            .Build();
+
+        automocker.SetupBodyPartCacheHit(cachedDto);
+
+        // Act
+        var result = await testee.GetByIdAsync(bodyPartId.ToString());
+
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+        result.Data.Should().NotBeNull();
+        result.Data.Value.Should().Be("Chest");
+
+        // Verify cache was checked but DataService was NOT called
+        automocker
+            .VerifyBodyPartCacheGetOnce()
+            .VerifyBodyPartDataServiceGetByIdNeverCalled();
+    }
+
+    [Fact]
+    public async Task GetByIdAsync_WhenCacheMiss_CallsDataServiceAndStoresInCache()
+    {
+        // Arrange
+        var automocker = new AutoMocker();
+        var testee = automocker.CreateInstance<BodyPartService>();
+
+        var bodyPartId = BodyPartId.New();
+        var bodyPartDto = BodyPartDtoBuilder.ForBack()
+            .WithId(bodyPartId)
+            .Build();
+
+        automocker
+            .SetupBodyPartCacheMiss()
+            .SetupBodyPartDataServiceGetById(bodyPartId, bodyPartDto);
+
+        // Act
+        var result = await testee.GetByIdAsync(bodyPartId.ToString());
+
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+        result.Data.Should().NotBeNull();
+        result.Data.Value.Should().Be("Back");
+
+        // Verify both cache and DataService were called
+        automocker
+            .VerifyBodyPartCacheGetOnce()
+            .VerifyBodyPartDataServiceGetByIdOnce(bodyPartId)
+            .VerifyBodyPartCacheSetOnce();
+    }
+
+    [Fact]
+    public async Task GetAllActiveAsync_WhenCacheHit_DoesNotCallDataService()
+    {
+        // Arrange
+        var automocker = new AutoMocker();
+        var testee = automocker.CreateInstance<BodyPartService>();
+
+        var cachedDtos = new List<BodyPartDto>
         {
-            _mockUnitOfWorkProvider = new Mock<IUnitOfWorkProvider<FitnessDbContext>>();
-            _mockReadOnlyUnitOfWork = new Mock<IReadOnlyUnitOfWork<FitnessDbContext>>();
-            _mockBodyPartRepository = new Mock<IBodyPartRepository>();
-            _mockCacheService = new Mock<IEternalCacheService>();
-            _mockLogger = new Mock<ILogger<BodyPartService>>();
+            BodyPartDtoBuilder.ForChest().Build(),
+            BodyPartDtoBuilder.ForBack().Build()
+        };
 
-            _mockUnitOfWorkProvider
-                .Setup(x => x.CreateReadOnly())
-                .Returns(_mockReadOnlyUnitOfWork.Object);
+        automocker.SetupBodyPartCacheHitList(cachedDtos);
 
-            _mockReadOnlyUnitOfWork
-                .Setup(x => x.GetRepository<IBodyPartRepository>())
-                .Returns(_mockBodyPartRepository.Object);
+        // Act
+        var result = await testee.GetAllActiveAsync();
 
-            _bodyPartService = new BodyPartService(
-                _mockUnitOfWorkProvider.Object,
-                _mockCacheService.Object,
-                _mockLogger.Object);
-        }
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+        result.Data.Should().NotBeNull();
+        result.Data.Count().Should().Be(2);
 
-        [Fact]
-        public async Task GetByIdAsync_WhenCacheHit_DoesNotCallDatabase()
+        // Verify cache was checked but DataService was NOT called
+        automocker
+            .VerifyBodyPartCacheGetListOnce()
+            .VerifyBodyPartDataServiceGetAllActiveNeverCalled();
+    }
+
+    [Fact]
+    public async Task GetAllActiveAsync_WhenCacheMiss_CallsDataServiceAndStoresInCache()
+    {
+        // Arrange
+        var automocker = new AutoMocker();
+        var testee = automocker.CreateInstance<BodyPartService>();
+
+        var bodyPartDtos = new List<BodyPartDto>
         {
-            // Arrange
-            var bodyPartId = BodyPartId.New();
-            var cachedDto = new BodyPartDto
-            {
-                Id = bodyPartId.ToString(),
-                Value = "Chest",
-                Description = "Chest muscles"
-            };
+            BodyPartDtoBuilder.ForChest().Build(),
+            BodyPartDtoBuilder.ForBack().Build()
+        };
 
-            // Setup cache hit
-            _mockCacheService
-                .Setup(x => x.GetAsync<BodyPartDto>(It.IsAny<string>()))
-                .ReturnsAsync(CacheResult<BodyPartDto>.Hit(cachedDto));
+        automocker
+            .SetupBodyPartCacheMissList()
+            .SetupBodyPartDataServiceGetAllActive(bodyPartDtos);
 
-            // Act
-            var result = await _bodyPartService.GetByIdAsync(bodyPartId.ToString());
+        // Act
+        var result = await testee.GetAllActiveAsync();
 
-            // Assert
-            Assert.True(result.IsSuccess);
-            Assert.NotNull(result.Data);
-            Assert.Equal("Chest", result.Data.Value);
-            
-            // Verify database was NOT called
-            _mockUnitOfWorkProvider.Verify(x => x.CreateReadOnly(), Times.Never);
-            _mockBodyPartRepository.Verify(x => x.GetByIdAsync(It.IsAny<BodyPartId>()), Times.Never);
-            
-            // Verify cache was checked
-            _mockCacheService.Verify(x => x.GetAsync<BodyPartDto>(It.IsAny<string>()), Times.Once);
-        }
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+        result.Data.Should().NotBeNull();
+        result.Data.Count().Should().Be(2);
 
-        [Fact]
-        public async Task GetByIdAsync_WhenCacheMiss_CallsDatabaseAndStoresInCache()
+        // Verify both cache and DataService were called
+        automocker
+            .VerifyBodyPartCacheGetListOnce()
+            .VerifyBodyPartDataServiceGetAllActiveOnce()
+            .VerifyBodyPartCacheSetListOnce();
+    }
+
+    [Fact]
+    public async Task GetByValueAsync_WhenCacheHit_DoesNotCallDataService()
+    {
+        // Arrange
+        var automocker = new AutoMocker();
+        var testee = automocker.CreateInstance<BodyPartService>();
+
+        const string value = "Shoulders";
+        var cachedDto = new BodyPartDtoBuilder()
+            .WithValue(value)
+            .Build();
+
+        automocker.SetupBodyPartCacheHit(cachedDto);
+
+        // Act
+        var result = await testee.GetByValueAsync(value);
+
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+        result.Data.Should().NotBeNull();
+        result.Data.Value.Should().Be(value);
+
+        // Verify cache was checked but DataService was NOT called
+        automocker
+            .VerifyBodyPartCacheGetOnce()
+            .VerifyBodyPartDataServiceGetByValueNeverCalled();
+    }
+
+    [Fact]
+    public async Task GetByValueAsync_WhenCacheMiss_CallsDataServiceAndStoresInCache()
+    {
+        // Arrange
+        var automocker = new AutoMocker();
+        var testee = automocker.CreateInstance<BodyPartService>();
+
+        const string value = "Shoulders";
+        var bodyPartDto = new BodyPartDtoBuilder()
+            .WithValue(value)
+            .Build();
+
+        automocker
+            .SetupBodyPartCacheMiss()
+            .SetupBodyPartDataServiceGetByValue(value, bodyPartDto);
+
+        // Act
+        var result = await testee.GetByValueAsync(value);
+
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+        result.Data.Should().NotBeNull();
+        result.Data.Value.Should().Be(value);
+
+        // Verify both cache and DataService were called
+        automocker
+            .VerifyBodyPartCacheGetOnce()
+            .VerifyBodyPartDataServiceGetByValueOnce(value)
+            .VerifyBodyPartCacheSetOnce();
+    }
+
+    [Fact]
+    public async Task ExistsAsync_LeveragesGetByIdCache_WhenCacheHit()
+    {
+        // Arrange
+        var automocker = new AutoMocker();
+        var testee = automocker.CreateInstance<BodyPartService>();
+
+        var bodyPartId = BodyPartId.New();
+        var cachedDto = BodyPartDtoBuilder.ForLegs()
+            .WithId(bodyPartId)
+            .Build();
+
+        automocker.SetupBodyPartCacheHit(cachedDto);
+
+        // Act
+        var result = await testee.ExistsAsync(bodyPartId);
+
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+        result.Data.Value.Should().BeTrue();
+
+        // Verify cache was checked but DataService was NOT called
+        // (ExistsAsync leverages GetByIdAsync which uses cache)
+        automocker
+            .VerifyBodyPartCacheGetOnce()
+            .VerifyBodyPartDataServiceGetByIdNeverCalled();
+    }
+
+    [Fact]
+    public async Task ExistsAsync_LeveragesGetByIdCache_WhenCacheMiss()
+    {
+        // Arrange
+        var automocker = new AutoMocker();
+        var testee = automocker.CreateInstance<BodyPartService>();
+
+        var bodyPartId = BodyPartId.New();
+        var bodyPartDto = BodyPartDtoBuilder.ForLegs()
+            .WithId(bodyPartId)
+            .Build();
+
+        automocker
+            .SetupBodyPartCacheMiss()
+            .SetupBodyPartDataServiceGetById(bodyPartId, bodyPartDto);
+
+        // Act
+        var result = await testee.ExistsAsync(bodyPartId);
+
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+        result.Data.Value.Should().BeTrue();
+
+        // Verify both cache and DataService were called through GetByIdAsync
+        automocker
+            .VerifyBodyPartCacheGetOnce()
+            .VerifyBodyPartDataServiceGetByIdOnce(bodyPartId)
+            .VerifyBodyPartCacheSetOnce();
+    }
+
+    [Fact]
+    public async Task ExistsAsync_WithCachedNonExistentEntity_ReturnsFalseWithoutDataServiceCall()
+    {
+        // Arrange
+        var automocker = new AutoMocker();
+        var testee = automocker.CreateInstance<BodyPartService>();
+
+        var bodyPartId = BodyPartId.New();
+
+        automocker
+            .SetupBodyPartCacheMiss()
+            .SetupBodyPartDataServiceGetByIdNotFound(bodyPartId);
+
+        // Act
+        var result = await testee.ExistsAsync(bodyPartId);
+
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+        result.Data.Value.Should().BeFalse();
+
+        // Verify cache miss triggered DataService call
+        automocker
+            .VerifyBodyPartCacheGetOnce()
+            .VerifyBodyPartDataServiceGetByIdOnce(bodyPartId);
+    }
+
+    [Fact]
+    public async Task CacheKeyGeneration_IsDifferentForDifferentOperations()
+    {
+        // This test verifies that different operations use different cache keys
+        // by ensuring each operation can have its own cached value
+
+        // Arrange
+        var automocker = new AutoMocker();
+        var testee = automocker.CreateInstance<BodyPartService>();
+
+        var bodyPartId = BodyPartId.New();
+        const string value = "Chest";
+
+        var bodyPartDtoById = BodyPartDtoBuilder.ForChest()
+            .WithId(bodyPartId)
+            .WithValue(value)
+            .Build();
+
+        var bodyPartDtoByValue = BodyPartDtoBuilder.ForChest()
+            .WithId(BodyPartId.New()) // Different ID
+            .WithValue(value)
+            .Build();
+
+        var allActiveBodyParts = new List<BodyPartDto>
         {
-            // Arrange
-            var bodyPartId = BodyPartId.New();
-            var createResult = BodyPart.Handler.Create(
-                bodyPartId,
-                "Back",
-                "Back muscles",
-                2,
-                true);
-            Assert.True(createResult.IsSuccess);
-            var bodyPart = createResult.Value;
+            BodyPartDtoBuilder.ForChest().Build(),
+            BodyPartDtoBuilder.ForBack().Build()
+        };
 
-            // Setup cache miss
-            _mockCacheService
-                .Setup(x => x.GetAsync<BodyPartDto>(It.IsAny<string>()))
-                .ReturnsAsync(CacheResult<BodyPartDto>.Miss());
+        // Setup different cache results for different operations
+        // Each operation should have its own cache key
+        automocker
+            .SetupBodyPartCacheHit(bodyPartDtoById)  // For GetById
+            .SetupBodyPartCacheHitList(allActiveBodyParts); // For GetAllActive
 
-            // Setup database return
-            _mockBodyPartRepository
-                .Setup(x => x.GetByIdAsync(It.IsAny<BodyPartId>()))
-                .ReturnsAsync(bodyPart);
+        // Act & Assert - GetByIdAsync should hit cache
+        var resultById = await testee.GetByIdAsync(bodyPartId);
+        resultById.IsSuccess.Should().BeTrue();
+        resultById.Data.Id.Should().Be(bodyPartId.ToString());
 
-            // Act
-            var result = await _bodyPartService.GetByIdAsync(bodyPartId.ToString());
+        // Act & Assert - GetAllActiveAsync should hit cache
+        var resultAllActive = await testee.GetAllActiveAsync();
+        resultAllActive.IsSuccess.Should().BeTrue();
+        resultAllActive.Data.Count().Should().Be(2);
 
-            // Assert
-            Assert.True(result.IsSuccess);
-            Assert.NotNull(result.Data);
-            Assert.Equal("Back", result.Data.Value);
-            
-            // Verify database was called
-            _mockUnitOfWorkProvider.Verify(x => x.CreateReadOnly(), Times.Once);
-            _mockBodyPartRepository.Verify(x => x.GetByIdAsync(It.IsAny<BodyPartId>()), Times.Once);
-            
-            // Verify cache was checked and then set
-            _mockCacheService.Verify(x => x.GetAsync<BodyPartDto>(It.IsAny<string>()), Times.Once);
-            _mockCacheService.Verify(x => x.SetAsync(It.IsAny<string>(), It.IsAny<BodyPartDto>()), Times.Once);
-        }
-
-        [Fact]
-        public async Task GetAllActiveAsync_WhenCacheHit_DoesNotCallDatabase()
-        {
-            // Arrange
-            var cachedDtos = new List<BodyPartDto>
-            {
-                new BodyPartDto { Id = BodyPartId.New().ToString(), Value = "Chest", Description = "Chest muscles" },
-                new BodyPartDto { Id = BodyPartId.New().ToString(), Value = "Back", Description = "Back muscles" }
-            };
-
-            // Setup cache hit
-            _mockCacheService
-                .Setup(x => x.GetAsync<IEnumerable<BodyPartDto>>(It.IsAny<string>()))
-                .ReturnsAsync(CacheResult<IEnumerable<BodyPartDto>>.Hit(cachedDtos));
-
-            // Act
-            var result = await _bodyPartService.GetAllActiveAsync();
-
-            // Assert
-            Assert.True(result.IsSuccess);
-            Assert.NotNull(result.Data);
-            Assert.Equal(2, result.Data.Count());
-            
-            // Verify database was NOT called
-            _mockUnitOfWorkProvider.Verify(x => x.CreateReadOnly(), Times.Never);
-            _mockBodyPartRepository.Verify(x => x.GetAllActiveAsync(), Times.Never);
-            
-            // Verify cache was checked
-            _mockCacheService.Verify(x => x.GetAsync<IEnumerable<BodyPartDto>>(It.IsAny<string>()), Times.Once);
-        }
-
-        [Fact]
-        public async Task GetAllActiveAsync_WhenCacheMiss_CallsDatabaseAndStoresInCache()
-        {
-            // Arrange
-            var chestResult = BodyPart.Handler.Create(BodyPartId.New(), "Chest", "Chest muscles", 1, true);
-            var backResult = BodyPart.Handler.Create(BodyPartId.New(), "Back", "Back muscles", 2, true);
-            Assert.True(chestResult.IsSuccess);
-            Assert.True(backResult.IsSuccess);
-            
-            var bodyParts = new List<BodyPart>
-            {
-                chestResult.Value,
-                backResult.Value
-            };
-
-            // Setup cache miss
-            _mockCacheService
-                .Setup(x => x.GetAsync<IEnumerable<BodyPartDto>>(It.IsAny<string>()))
-                .ReturnsAsync(CacheResult<IEnumerable<BodyPartDto>>.Miss());
-
-            // Setup database return
-            _mockBodyPartRepository
-                .Setup(x => x.GetAllActiveAsync())
-                .ReturnsAsync(bodyParts);
-
-            // Act
-            var result = await _bodyPartService.GetAllActiveAsync();
-
-            // Assert
-            Assert.True(result.IsSuccess);
-            Assert.NotNull(result.Data);
-            Assert.Equal(2, result.Data.Count());
-            
-            // Verify database was called
-            _mockUnitOfWorkProvider.Verify(x => x.CreateReadOnly(), Times.Once);
-            _mockBodyPartRepository.Verify(x => x.GetAllActiveAsync(), Times.Once);
-            
-            // Verify cache was checked and then set
-            _mockCacheService.Verify(x => x.GetAsync<IEnumerable<BodyPartDto>>(It.IsAny<string>()), Times.Once);
-            _mockCacheService.Verify(x => x.SetAsync(It.IsAny<string>(), It.IsAny<IEnumerable<BodyPartDto>>()), Times.Once);
-        }
-
-        [Fact]
-        public async Task GetByValueAsync_WhenCacheHit_DoesNotCallDatabase()
-        {
-            // Arrange
-            var value = "Shoulders";
-            var cachedDto = new BodyPartDto
-            {
-                Id = BodyPartId.New().ToString(),
-                Value = value,
-                Description = "Shoulder muscles"
-            };
-
-            // Setup cache hit
-            _mockCacheService
-                .Setup(x => x.GetAsync<BodyPartDto>(It.IsAny<string>()))
-                .ReturnsAsync(CacheResult<BodyPartDto>.Hit(cachedDto));
-
-            // Act
-            var result = await _bodyPartService.GetByValueAsync(value);
-
-            // Assert
-            Assert.True(result.IsSuccess);
-            Assert.NotNull(result.Data);
-            Assert.Equal(value, result.Data.Value);
-            
-            // Verify database was NOT called
-            _mockUnitOfWorkProvider.Verify(x => x.CreateReadOnly(), Times.Never);
-            _mockBodyPartRepository.Verify(x => x.GetByValueAsync(It.IsAny<string>()), Times.Never);
-            
-            // Verify cache was checked
-            _mockCacheService.Verify(x => x.GetAsync<BodyPartDto>(It.IsAny<string>()), Times.Once);
-        }
-
-        [Fact]
-        public async Task ExistsAsync_LeveragesGetByIdCache()
-        {
-            // Arrange
-            var bodyPartId = BodyPartId.New();
-            var cachedDto = new BodyPartDto
-            {
-                Id = bodyPartId.ToString(),
-                Value = "Legs",
-                Description = "Leg muscles"
-            };
-
-            // Setup cache hit for GetByIdAsync
-            _mockCacheService
-                .Setup(x => x.GetAsync<BodyPartDto>(It.IsAny<string>()))
-                .ReturnsAsync(CacheResult<BodyPartDto>.Hit(cachedDto));
-
-            // Act
-            var result = await _bodyPartService.ExistsAsync(bodyPartId);
-
-            // Assert
-            Assert.True(result.IsSuccess);
-            Assert.True(result.Data.Value);
-            
-            // Verify database was NOT called
-            _mockUnitOfWorkProvider.Verify(x => x.CreateReadOnly(), Times.Never);
-            _mockBodyPartRepository.Verify(x => x.GetByIdAsync(It.IsAny<BodyPartId>()), Times.Never);
-            
-            // Verify cache was checked (by GetByIdAsync internally)
-            _mockCacheService.Verify(x => x.GetAsync<BodyPartDto>(It.IsAny<string>()), Times.Once);
-        }
+        // Verify caches were accessed but DataService was not called
+        automocker
+            .VerifyBodyPartDataServiceGetByIdNeverCalled()
+            .VerifyBodyPartDataServiceGetAllActiveNeverCalled()
+            .VerifyBodyPartDataServiceGetByValueNeverCalled();
     }
 }

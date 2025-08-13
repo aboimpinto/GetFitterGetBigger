@@ -14,6 +14,11 @@ public class ReferenceDataDtoTestBuilder
     private ReferenceDataDtoTestBuilder() { }
 
     /// <summary>
+    /// Creates a default builder instance
+    /// </summary>
+    public static ReferenceDataDtoTestBuilder Default() => new ReferenceDataDtoTestBuilder();
+
+    /// <summary>
     /// Creates a builder for MUSCULAR STRENGTH objective DTO
     /// </summary>
     public static ReferenceDataDtoTestBuilder MuscularStrength() => new ReferenceDataDtoTestBuilder()
