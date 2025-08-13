@@ -20,10 +20,6 @@ public class EquipmentRequirementsService(
     IExerciseService exerciseService,
     ILogger<EquipmentRequirementsService> logger) : IEquipmentRequirementsService
 {
-    private readonly IUnitOfWorkProvider<FitnessDbContext> _unitOfWorkProvider = unitOfWorkProvider;
-    private readonly IWorkoutTemplateExerciseService _workoutTemplateExerciseService = workoutTemplateExerciseService;
-    private readonly IExerciseService _exerciseService = exerciseService;
-    private readonly ILogger<EquipmentRequirementsService> _logger = logger;
 
     public async Task<ServiceResult<IEnumerable<EquipmentDto>>> GetRequiredEquipmentAsync(WorkoutTemplateId workoutTemplateId)
     {
@@ -76,24 +72,26 @@ public class EquipmentRequirementsService(
     private async Task<ServiceResult<IEnumerable<EquipmentDto>>> LoadRequiredEquipmentAsync(WorkoutTemplateId id)
     {
         // Get all template exercises using WorkoutTemplateExerciseService
-        var templateExercisesResult = await _workoutTemplateExerciseService.GetByWorkoutTemplateAsync(id);
-        if (!templateExercisesResult.IsSuccess)
-        {
-            return ServiceResult<IEnumerable<EquipmentDto>>.Failure(
-                [],
-                templateExercisesResult.Errors);
-        }
+        var templateExercisesResult = await workoutTemplateExerciseService.GetByWorkoutTemplateAsync(id);
         
-        var templateExercises = templateExercisesResult.Data.WarmupExercises
-            .Concat(templateExercisesResult.Data.MainExercises)
-            .Concat(templateExercisesResult.Data.CooldownExercises);
+        var result = !templateExercisesResult.IsSuccess
+            ? ServiceResult<IEnumerable<EquipmentDto>>.Failure([], templateExercisesResult.Errors)
+            : await ProcessTemplateExercisesAsync(templateExercisesResult.Data);
             
-        if (!templateExercises.Any())
-        {
-            return ServiceResult<IEnumerable<EquipmentDto>>.Success([]);
-        }
-        
-        return await ExtractEquipmentFromExercisesAsync(templateExercises);
+        return result;
+    }
+    
+    private async Task<ServiceResult<IEnumerable<EquipmentDto>>> ProcessTemplateExercisesAsync(WorkoutTemplateExerciseListDto sessionData)
+    {
+        var templateExercises = sessionData.WarmupExercises
+            .Concat(sessionData.MainExercises)
+            .Concat(sessionData.CooldownExercises);
+            
+        var result = !templateExercises.Any()
+            ? ServiceResult<IEnumerable<EquipmentDto>>.Success([])
+            : await ExtractEquipmentFromExercisesAsync(templateExercises);
+            
+        return result;
     }
     
     private async Task<ServiceResult<IEnumerable<EquipmentDto>>> ExtractEquipmentFromExercisesAsync(
@@ -111,11 +109,11 @@ public class EquipmentRequirementsService(
         
         foreach (var exerciseId in exerciseIds)
         {
-            var exerciseResult = await _exerciseService.GetByIdAsync(exerciseId);
+            var exerciseResult = await exerciseService.GetByIdAsync(exerciseId);
             if (!exerciseResult.IsSuccess)
             {
                 // Log warning but continue - one exercise failing shouldn't fail the whole operation
-                _logger.LogWarning("Failed to get exercise {ExerciseId} for equipment extraction", exerciseId);
+                logger.LogWarning("Failed to get exercise {ExerciseId} for equipment extraction", exerciseId);
                 continue;
             }
             
@@ -144,7 +142,7 @@ public class EquipmentRequirementsService(
             var equipmentResult = await GetRequiredEquipmentAsync(templateId);
             if (!equipmentResult.IsSuccess)
             {
-                _logger.LogWarning("Failed to get equipment for template {TemplateId}", templateId);
+                logger.LogWarning("Failed to get equipment for template {TemplateId}", templateId);
                 continue;
             }
             
@@ -217,7 +215,7 @@ public class EquipmentRequirementsService(
     
     private async Task<bool> WorkoutTemplateExistsAsync(WorkoutTemplateId id)
     {
-        using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
+        using var unitOfWork = unitOfWorkProvider.CreateReadOnly();
         var repository = unitOfWork.GetRepository<IWorkoutTemplateRepository>();
         return await repository.ExistsAsync(id);
     }
