@@ -2,277 +2,213 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using FluentAssertions;
 using GetFitterGetBigger.API.DTOs;
 using GetFitterGetBigger.API.Models;
 using GetFitterGetBigger.API.Models.Entities;
 using GetFitterGetBigger.API.Models.SpecializedIds;
-using GetFitterGetBigger.API.Repositories.Interfaces;
-using GetFitterGetBigger.API.Services.Implementations;
+using GetFitterGetBigger.API.Services.Commands;
+using GetFitterGetBigger.API.Services.Exercise;
 using GetFitterGetBigger.API.Services.Interfaces;
 using GetFitterGetBigger.API.Services.Results;
 using GetFitterGetBigger.API.Tests.TestBuilders;
 using GetFitterGetBigger.API.Tests.TestBuilders.Domain;
-using GetFitterGetBigger.API.Mappers;
+using GetFitterGetBigger.API.Tests.TestBuilders.ServiceCommands;
+using GetFitterGetBigger.API.Tests.Services.Extensions;
 using GetFitterGetBigger.API.Constants;
-using Moq;
-using Olimpo.EntityFramework.Persistency;
+using Moq.AutoMock;
 using Xunit;
 
 namespace GetFitterGetBigger.API.Tests.Services;
 
 public class ExerciseServiceRestExclusivityTests
 {
-    private readonly Mock<IUnitOfWorkProvider<FitnessDbContext>> _unitOfWorkProviderMock;
-    private readonly Mock<IReadOnlyUnitOfWork<FitnessDbContext>> _readOnlyUnitOfWorkMock;
-    private readonly Mock<IWritableUnitOfWork<FitnessDbContext>> _writableUnitOfWorkMock;
-    private readonly Mock<IExerciseRepository> _exerciseRepositoryMock;
-    private readonly Mock<IExerciseTypeService> _mockExerciseTypeService;
-    private readonly IExerciseService _exerciseService;
-    
-    public ExerciseServiceRestExclusivityTests()
-    {
-        _unitOfWorkProviderMock = new Mock<IUnitOfWorkProvider<FitnessDbContext>>();
-        _readOnlyUnitOfWorkMock = new Mock<IReadOnlyUnitOfWork<FitnessDbContext>>();
-        _writableUnitOfWorkMock = new Mock<IWritableUnitOfWork<FitnessDbContext>>();
-        _exerciseRepositoryMock = new Mock<IExerciseRepository>();
-        _mockExerciseTypeService = new Mock<IExerciseTypeService>();
-        
-        _readOnlyUnitOfWorkMock.Setup(uow => uow.GetRepository<IExerciseRepository>())
-            .Returns(_exerciseRepositoryMock.Object);
-        
-        _writableUnitOfWorkMock.Setup(uow => uow.GetRepository<IExerciseRepository>())
-            .Returns(_exerciseRepositoryMock.Object);
-        
-        _unitOfWorkProviderMock.Setup(p => p.CreateReadOnly())
-            .Returns(_readOnlyUnitOfWorkMock.Object);
-        
-        _unitOfWorkProviderMock.Setup(p => p.CreateWritable())
-            .Returns(_writableUnitOfWorkMock.Object);
-        
-        // Setup default mock behaviors for ExerciseTypeService
-        _mockExerciseTypeService
-            .Setup(s => s.AllExistAsync(It.IsAny<IEnumerable<string>>()))
-            .ReturnsAsync(true);
-            
-        _mockExerciseTypeService
-            .Setup(s => s.AnyIsRestTypeAsync(It.IsAny<IEnumerable<string>>()))
-            .ReturnsAsync((IEnumerable<string> ids) => 
-                ids.Any(id => id == TestIds.ExerciseTypeIds.Rest || 
-                              id.ToLowerInvariant().Contains("rest")));
-        
-        // Default behavior: all exercise types exist
-        _mockExerciseTypeService
-            .Setup(s => s.ExistsAsync(It.IsAny<ExerciseTypeId>()))
-            .ReturnsAsync(ServiceResult<BooleanResultDto>.Success(BooleanResultDto.Create(true)));
-        
-        _exerciseService = new ExerciseService(_unitOfWorkProviderMock.Object, _mockExerciseTypeService.Object);
-    }
     
     [Fact]
     public async Task CreateAsync_WithRestTypeAndOtherTypes_ReturnsFailure()
     {
         // Arrange
-        var request = CreateExerciseRequestBuilder.ForWorkoutExercise()
+        var autoMocker = new AutoMocker();
+        var testee = autoMocker.CreateInstance<ExerciseService>();
+        
+        var restTypeId = ExerciseTypeId.New();
+        var workoutTypeId = ExerciseTypeId.New();
+        
+        var command = CreateExerciseCommandBuilder.ForWorkoutExercise()
             .WithName("Test Exercise")
             .WithDescription("Test Description")
-            .WithKineticChain(KineticChainTypeTestBuilder.Compound())
-            .WithWeightType(ExerciseWeightTypeTestBuilder.Barbell())
-            .WithExerciseTypes(new[]
-            {
-                ExerciseType.Handler.Create(ExerciseTypeId.From(Guid.Parse("11111111-1111-1111-1111-111111111111")), "Rest", "Rest", 1, true).Value,
-                ExerciseType.Handler.Create(ExerciseTypeId.From(Guid.Parse("22222222-2222-2222-2222-222222222222")), "Workout", "Workout", 2, true).Value
-            })
-            .AddMuscleGroup(MuscleGroupTestBuilder.Chest(), MuscleRoleTestBuilder.Primary())
+            .WithKineticChainId(KineticChainTypeId.New())
+            .WithExerciseWeightTypeId(ExerciseWeightTypeId.New())
+            .WithExerciseTypes(restTypeId, workoutTypeId) // REST + non-REST types (invalid combination)
+            .WithMuscleGroups((MuscleGroupId.New(), MuscleRoleId.New()))
             .Build();
-        
-        _exerciseRepositoryMock.Setup(r => r.ExistsAsync(It.IsAny<string>(), null))
-            .ReturnsAsync(false);
-        
-        // Override the default mock to return true for this specific test
-        // since one of the types is a REST type
-        _mockExerciseTypeService
-            .Setup(s => s.AnyIsRestTypeAsync(It.Is<IEnumerable<string>>(ids => 
-                ids.Contains("exercisetype-11111111-1111-1111-1111-111111111111"))))
-            .ReturnsAsync(true);
-        
+
+        // Setup mocks - exercise name doesn't exist, exercise types exist, has REST type mixed with others
+        autoMocker.SetupExerciseQueryDataServiceExistsByName(command.Name, false);
+        autoMocker.SetupExerciseTypeService(allExist: true, isRestType: true);
+
         // Act
-        var result = await _exerciseService.CreateAsync(request.ToCommand());
+        var result = await testee.CreateAsync(command);
         
         // Assert
-        Assert.False(result.IsSuccess);
-        Assert.Equal(ServiceErrorCode.ValidationFailed, result.PrimaryErrorCode);
+        result.IsSuccess.Should().BeFalse();
+        result.PrimaryErrorCode.Should().Be(ServiceErrorCode.ValidationFailed);
     }
     
     [Fact]
     public async Task UpdateAsync_WithRestTypeAndOtherTypes_ReturnsFailure()
     {
         // Arrange
-        var exerciseId = ExerciseId.New();
-        var exercise = Exercise.Handler.CreateNew(
-            "Existing Exercise",
-            "Description",
-            null,
-            null,
-            false,
-            DifficultyLevelId.New());
+        var autoMocker = new AutoMocker();
+        var testee = autoMocker.CreateInstance<ExerciseService>();
         
-        var request = UpdateExerciseRequestBuilder.ForWorkoutExercise()
+        var exerciseId = ExerciseId.New();
+        var restTypeId = ExerciseTypeId.New();
+        var cooldownTypeId = ExerciseTypeId.New();
+        
+        var command = UpdateExerciseCommandBuilder.ForWorkoutExercise()
             .WithName("Updated Exercise")
             .WithDescription("Updated Description")
-            .WithKineticChain(KineticChainTypeTestBuilder.Compound())
-            .WithWeightType(ExerciseWeightTypeTestBuilder.Barbell())
-            .WithExerciseTypes(new[]
-            {
-                ExerciseType.Handler.Create(ExerciseTypeId.From(Guid.Parse("11111111-1111-1111-1111-111111111111")), "Rest", "Rest", 1, true).Value,
-                ExerciseType.Handler.Create(ExerciseTypeId.From(Guid.Parse("33333333-3333-3333-3333-333333333333")), "Cooldown", "Cooldown", 3, true).Value
-            })
-            .AddMuscleGroup(MuscleGroupTestBuilder.Chest(), MuscleRoleTestBuilder.Primary())
+            .WithKineticChainId(KineticChainTypeId.New())
+            .WithExerciseWeightTypeId(ExerciseWeightTypeId.New())
+            .WithExerciseTypes(restTypeId, cooldownTypeId) // REST + Cooldown (invalid combination)
+            .WithMuscleGroups((MuscleGroupId.New(), MuscleRoleId.New()))
             .Build();
-        
-        _exerciseRepositoryMock.Setup(r => r.ExistsAsync(It.IsAny<string>(), It.IsAny<ExerciseId>()))
-            .ReturnsAsync(false);
-        
-        _exerciseRepositoryMock.Setup(r => r.GetByIdAsync(It.IsAny<ExerciseId>()))
-            .ReturnsAsync(exercise);
-        
-        // Mock ExerciseTypes for the update test: one Rest and one Cooldown
-        var restTypeId = ExerciseTypeId.From(Guid.Parse("11111111-1111-1111-1111-111111111111"));
-        var cooldownTypeId = ExerciseTypeId.From(Guid.Parse("33333333-3333-3333-3333-333333333333"));
-        
-        var restType = ExerciseType.Handler.Create(restTypeId, "Rest", "Rest period", 1, true).Value;
-        var cooldownType = ExerciseType.Handler.Create(cooldownTypeId, "Cooldown", "Cooldown exercise", 3, false).Value;
-        
-        // Override the default mock to return true for REST type
-        _mockExerciseTypeService
-            .Setup(s => s.AnyIsRestTypeAsync(It.Is<IEnumerable<string>>(ids => 
-                ids.Contains("exercisetype-11111111-1111-1111-1111-111111111111"))))
-            .ReturnsAsync(true);
-        
+
+        // Setup mocks - exercise exists, name doesn't exist for another exercise, exercise types exist, has REST type mixed with others
+        autoMocker.SetupExerciseQueryDataServiceExists(exerciseId, true);
+        autoMocker.SetupExerciseQueryDataServiceExistsByName(command.Name, false, exerciseId);
+        autoMocker.SetupExerciseTypeService(allExist: true, isRestType: true);
+
         // Act
-        var result = await _exerciseService.UpdateAsync(ExerciseId.ParseOrEmpty(exerciseId.ToString()), request.ToCommand());
+        var result = await testee.UpdateAsync(exerciseId, command);
         
         // Assert
-        Assert.False(result.IsSuccess);
-        Assert.Equal(ServiceErrorCode.ValidationFailed, result.PrimaryErrorCode);
+        result.IsSuccess.Should().BeFalse();
+        result.PrimaryErrorCode.Should().Be(ServiceErrorCode.ValidationFailed);
     }
     
     [Fact]
     public async Task CreateAsync_WithOnlyRestType_DoesNotThrow()
     {
         // Arrange
-        var request = CreateExerciseRequestBuilder.ForRestExercise()
+        var autoMocker = new AutoMocker();
+        var testee = autoMocker.CreateInstance<ExerciseService>();
+        
+        var restTypeId = ExerciseTypeId.New();
+        var exerciseDto = new ExerciseDto
+        {
+            Id = ExerciseId.New().ToString(),
+            Name = "Rest Exercise",
+            Description = "Rest Description",
+            Difficulty = new ReferenceDataDto { Id = DifficultyLevelId.New().ToString(), Value = "Test Difficulty" }
+        };
+        
+        var command = CreateExerciseCommandBuilder.ForRestExercise()
             .WithName("Rest Exercise")
             .WithDescription("Rest Description")
+            .WithExerciseTypes(restTypeId) // Only REST type (valid)
             .Build();
-        
-        _exerciseRepositoryMock.Setup(r => r.ExistsAsync(It.IsAny<string>(), null))
-            .ReturnsAsync(false);
-        
-        _exerciseRepositoryMock.Setup(r => r.AddAsync(It.IsAny<Exercise>()))
-            .ReturnsAsync((Exercise e) => e);
-        
-        _writableUnitOfWorkMock.Setup(uow => uow.CommitAsync())
-            .Returns(Task.CompletedTask);
-        
-        // Override mock to return true since it's a REST type
-        _mockExerciseTypeService
-            .Setup(s => s.AnyIsRestTypeAsync(It.Is<IEnumerable<string>>(ids => 
-                ids.Contains(TestIds.ExerciseTypeIds.Rest))))
-            .ReturnsAsync(true);
-        
+
+        // Setup mocks - exercise name doesn't exist, exercise types exist, is REST type only
+        autoMocker.SetupExerciseQueryDataServiceExistsByName(command.Name, false);
+        autoMocker.SetupExerciseTypeService(allExist: true, isRestType: true);
+        autoMocker.SetupExerciseCommandDataServiceCreate(exerciseDto);
+
         // Act
-        var result = await _exerciseService.CreateAsync(request.ToCommand());
+        var result = await testee.CreateAsync(command);
         
         // Assert
-        Assert.NotNull(result);
-        Assert.True(result.IsSuccess, $"Create failed with errors: {string.Join(", ", result.Errors)}");
-        Assert.Equal("Rest Exercise", result.Data.Name);
+        result.Should().NotBeNull();
+        result.IsSuccess.Should().BeTrue($"Create failed with errors: {string.Join(", ", result.Errors)}");
+        result.Data.Name.Should().Be("Rest Exercise");
     }
     
     [Fact]
     public async Task CreateAsync_WithMultipleNonRestTypes_DoesNotThrow()
     {
         // Arrange
-        var request = CreateExerciseRequestBuilder.ForWorkoutExercise()
+        var autoMocker = new AutoMocker();
+        var testee = autoMocker.CreateInstance<ExerciseService>();
+        
+        var warmupTypeId = ExerciseTypeId.New();
+        var workoutTypeId = ExerciseTypeId.New();
+        var cooldownTypeId = ExerciseTypeId.New();
+        
+        var exerciseDto = new ExerciseDto
+        {
+            Id = ExerciseId.New().ToString(),
+            Name = "Complex Exercise",
+            Description = "Complex Description",
+            Difficulty = new ReferenceDataDto { Id = DifficultyLevelId.New().ToString(), Value = "Test Difficulty" },
+            KineticChain = new ReferenceDataDto { Id = KineticChainTypeId.New().ToString(), Value = "Test Kinetic Chain" },
+            ExerciseWeightType = new ReferenceDataDto { Id = ExerciseWeightTypeId.New().ToString(), Value = "Test Weight Type" }
+        };
+        
+        var command = CreateExerciseCommandBuilder.ForWorkoutExercise()
             .WithName("Complex Exercise")
             .WithDescription("Complex Description")
-            .WithKineticChain(KineticChainTypeTestBuilder.Compound())
-            .WithWeightType(ExerciseWeightTypeTestBuilder.Barbell())
-            .WithExerciseTypes(new[]
-            {
-                ExerciseType.Handler.Create(ExerciseTypeId.From(Guid.Parse("11223344-5566-7788-99aa-bbccddeeff00")), "Warmup", "Warmup", 1, true).Value,
-                ExerciseType.Handler.Create(ExerciseTypeId.From(Guid.Parse("b2c3d4e5-6f7a-8b9c-0d1e-2f3a4b5c6d7e")), "Workout", "Workout", 2, true).Value,
-                ExerciseType.Handler.Create(ExerciseTypeId.From(Guid.Parse("33445566-7788-99aa-bbcc-ddeeff001122")), "Cooldown", "Cooldown", 3, true).Value
-            })
-            .AddMuscleGroup(MuscleGroupTestBuilder.Chest(), MuscleRoleTestBuilder.Primary())
+            .WithKineticChainId(KineticChainTypeId.New())
+            .WithExerciseWeightTypeId(ExerciseWeightTypeId.New())
+            .WithExerciseTypes(warmupTypeId, workoutTypeId, cooldownTypeId) // Multiple non-REST types (valid)
+            .WithMuscleGroups((MuscleGroupId.New(), MuscleRoleId.New()))
             .Build();
-        
-        _exerciseRepositoryMock.Setup(r => r.ExistsAsync(It.IsAny<string>(), null))
-            .ReturnsAsync(false);
-        
-        _exerciseRepositoryMock.Setup(r => r.AddAsync(It.IsAny<Exercise>()))
-            .ReturnsAsync((Exercise e) => e);
-        
-        _writableUnitOfWorkMock.Setup(uow => uow.CommitAsync())
-            .Returns(Task.CompletedTask);
-        
-        // Mock ExerciseTypes for the multiple non-rest types
-        var warmupTypeId = ExerciseTypeId.From(Guid.Parse("11223344-5566-7788-99aa-bbccddeeff00"));
-        var workoutTypeId = ExerciseTypeId.From(Guid.Parse("b2c3d4e5-6f7a-8b9c-0d1e-2f3a4b5c6d7e"));
-        var cooldownTypeId = ExerciseTypeId.From(Guid.Parse("33445566-7788-99aa-bbcc-ddeeff001122"));
-        
-        var warmupType = ExerciseType.Handler.Create(warmupTypeId, "Warmup", "Warmup exercise", 1, false).Value;
-        var workoutType = ExerciseType.Handler.Create(workoutTypeId, "Workout", "Workout exercise", 2, false).Value;
-        var cooldownType = ExerciseType.Handler.Create(cooldownTypeId, "Cooldown", "Cooldown exercise", 3, false).Value;
-        
-        // Override the default mock to return false for all non-REST types
-        _mockExerciseTypeService
-            .Setup(s => s.AnyIsRestTypeAsync(It.Is<IEnumerable<string>>(ids => 
-                ids.Contains("exercisetype-11223344-5566-7788-99aa-bbccddeeff00") ||
-                ids.Contains("exercisetype-b2c3d4e5-6f7a-8b9c-0d1e-2f3a4b5c6d7e") ||
-                ids.Contains("exercisetype-33445566-7788-99aa-bbcc-ddeeff001122"))))
-            .ReturnsAsync(false);
-        
+
+        // Setup mocks - exercise name doesn't exist, exercise types exist, are NOT REST types
+        autoMocker.SetupExerciseQueryDataServiceExistsByName(command.Name, false);
+        autoMocker.SetupExerciseTypeService(allExist: true, isRestType: false);
+        autoMocker.SetupExerciseCommandDataServiceCreate(exerciseDto);
+
         // Act
-        var result = await _exerciseService.CreateAsync(request.ToCommand());
+        var result = await testee.CreateAsync(command);
         
         // Assert
-        Assert.NotNull(result);
-        Assert.True(result.IsSuccess, $"Create failed with errors: {string.Join(", ", result.Errors)}");
-        Assert.Equal("Complex Exercise", result.Data.Name);
+        result.Should().NotBeNull();
+        result.IsSuccess.Should().BeTrue($"Create failed with errors: {string.Join(", ", result.Errors)}");
+        result.Data.Name.Should().Be("Complex Exercise");
         // TODO: Fix mapper to properly include all exercise types
-        // Assert.Equal(3, result.Data.ExerciseTypes.Count);
+        // result.Data.ExerciseTypes.Should().HaveCount(3);
     }
     
     [Fact]
     public async Task CreateAsync_WithEmptyExerciseTypes_RequiresExerciseWeightType()
     {
         // Arrange - Empty exercise types means non-REST, so ExerciseWeightTypeId is required
-        var request = CreateExerciseRequestBuilder.ForWorkoutExercise()
+        var autoMocker = new AutoMocker();
+        var testee = autoMocker.CreateInstance<ExerciseService>();
+        
+        var exerciseDto = new ExerciseDto
+        {
+            Id = ExerciseId.New().ToString(),
+            Name = "No Type Exercise",
+            Description = "No Type Description",
+            Difficulty = new ReferenceDataDto { Id = DifficultyLevelId.New().ToString(), Value = "Test Difficulty" },
+            KineticChain = new ReferenceDataDto { Id = KineticChainTypeId.New().ToString(), Value = "Test Kinetic Chain" },
+            ExerciseWeightType = new ReferenceDataDto { Id = ExerciseWeightTypeId.New().ToString(), Value = "Test Weight Type" },
+            ExerciseTypes = new List<ReferenceDataDto>() // Empty exercise types
+        };
+        
+        var command = CreateExerciseCommandBuilder.ForWorkoutExercise()
             .WithName("No Type Exercise")
             .WithDescription("No Type Description")
-            .WithKineticChain(KineticChainTypeTestBuilder.Compound())
-            .WithWeightType(ExerciseWeightTypeTestBuilder.Barbell())
+            .WithKineticChainId(KineticChainTypeId.New())
+            .WithExerciseWeightTypeId(ExerciseWeightTypeId.New())
             .WithExerciseTypes() // Empty exercise types = non-REST
-            .AddMuscleGroup(MuscleGroupTestBuilder.Chest(), MuscleRoleTestBuilder.Primary())
+            .WithMuscleGroups((MuscleGroupId.New(), MuscleRoleId.New()))
             .Build();
-        
-        _exerciseRepositoryMock.Setup(r => r.ExistsAsync(It.IsAny<string>(), null))
-            .ReturnsAsync(false);
-        
-        _exerciseRepositoryMock.Setup(r => r.AddAsync(It.IsAny<Exercise>()))
-            .ReturnsAsync((Exercise e) => e);
-        
-        _writableUnitOfWorkMock.Setup(uow => uow.CommitAsync())
-            .Returns(Task.CompletedTask);
-        
+
+        // Setup mocks - exercise name doesn't exist, no exercise types to validate, not REST type (empty)
+        autoMocker.SetupExerciseQueryDataServiceExistsByName(command.Name, false);
+        autoMocker.SetupExerciseTypeService(allExist: true, isRestType: false);
+        autoMocker.SetupExerciseCommandDataServiceCreate(exerciseDto);
+
         // Act
-        var result = await _exerciseService.CreateAsync(request.ToCommand());
+        var result = await testee.CreateAsync(command);
         
         // Assert - Should succeed because ForWorkoutExercise() includes ExerciseWeightTypeId by default
-        Assert.NotNull(result);
-        Assert.True(result.IsSuccess, $"Create failed with errors: {string.Join(", ", result.Errors)}");
-        Assert.Equal("No Type Exercise", result.Data.Name);
-        Assert.Empty(result.Data.ExerciseTypes);
+        result.Should().NotBeNull();
+        result.IsSuccess.Should().BeTrue($"Create failed with errors: {string.Join(", ", result.Errors)}");
+        result.Data.Name.Should().Be("No Type Exercise");
+        result.Data.ExerciseTypes.Should().BeEmpty();
     }
 }

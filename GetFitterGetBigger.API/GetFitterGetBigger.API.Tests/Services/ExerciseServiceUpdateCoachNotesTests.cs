@@ -2,84 +2,30 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using FluentAssertions;
 using GetFitterGetBigger.API.DTOs;
-using GetFitterGetBigger.API.Models;
-using GetFitterGetBigger.API.Models.Entities;
 using GetFitterGetBigger.API.Models.SpecializedIds;
-using GetFitterGetBigger.API.Repositories.Interfaces;
-using GetFitterGetBigger.API.Services.Implementations;
-using GetFitterGetBigger.API.Services.Interfaces;
-using GetFitterGetBigger.API.Services.Results;
+using GetFitterGetBigger.API.Services.Exercise;
 using GetFitterGetBigger.API.Tests.TestBuilders;
 using GetFitterGetBigger.API.Tests.TestBuilders.Domain;
+using GetFitterGetBigger.API.Tests.Services.Extensions;
 using GetFitterGetBigger.API.Mappers;
-using Moq;
-using Olimpo.EntityFramework.Persistency;
+using Moq.AutoMock;
 using Xunit;
 
 namespace GetFitterGetBigger.API.Tests.Services;
 
 public class ExerciseServiceUpdateCoachNotesTests
 {
-    private readonly Mock<IUnitOfWorkProvider<FitnessDbContext>> _unitOfWorkProviderMock;
-    private readonly Mock<IReadOnlyUnitOfWork<FitnessDbContext>> _readOnlyUnitOfWorkMock;
-    private readonly Mock<IWritableUnitOfWork<FitnessDbContext>> _writableUnitOfWorkMock;
-    private readonly Mock<IExerciseRepository> _exerciseRepositoryMock;
-    private readonly Mock<IExerciseTypeService> _mockExerciseTypeService;
-    private readonly IExerciseService _exerciseService;
-    
-    public ExerciseServiceUpdateCoachNotesTests()
-    {
-        _unitOfWorkProviderMock = new Mock<IUnitOfWorkProvider<FitnessDbContext>>();
-        _readOnlyUnitOfWorkMock = new Mock<IReadOnlyUnitOfWork<FitnessDbContext>>();
-        _writableUnitOfWorkMock = new Mock<IWritableUnitOfWork<FitnessDbContext>>();
-        _exerciseRepositoryMock = new Mock<IExerciseRepository>();
-        _mockExerciseTypeService = new Mock<IExerciseTypeService>();
-        
-        _readOnlyUnitOfWorkMock.Setup(uow => uow.GetRepository<IExerciseRepository>())
-            .Returns(_exerciseRepositoryMock.Object);
-        
-        _writableUnitOfWorkMock.Setup(uow => uow.GetRepository<IExerciseRepository>())
-            .Returns(_exerciseRepositoryMock.Object);
-        
-        _unitOfWorkProviderMock.Setup(p => p.CreateReadOnly())
-            .Returns(_readOnlyUnitOfWorkMock.Object);
-        
-        _unitOfWorkProviderMock.Setup(p => p.CreateWritable())
-            .Returns(_writableUnitOfWorkMock.Object);
-        
-        // Setup default mock behaviors for ExerciseTypeService
-        _mockExerciseTypeService
-            .Setup(s => s.AllExistAsync(It.IsAny<IEnumerable<string>>()))
-            .ReturnsAsync(true);
-            
-        _mockExerciseTypeService
-            .Setup(s => s.AnyIsRestTypeAsync(It.IsAny<IEnumerable<string>>()))
-            .ReturnsAsync((IEnumerable<string> ids) => 
-                ids.Any(id => id == "exercisetype-d4e5f6a7-8b9c-0d1e-2f3a-4b5c6d7e8f9a" || 
-                              id.ToLowerInvariant().Contains("rest")));
-        
-        // Default behavior: all exercise types exist
-        _mockExerciseTypeService
-            .Setup(s => s.ExistsAsync(It.IsAny<ExerciseTypeId>()))
-            .ReturnsAsync(ServiceResult<BooleanResultDto>.Success(BooleanResultDto.Create(true)));
-        
-        _exerciseService = new ExerciseService(_unitOfWorkProviderMock.Object, _mockExerciseTypeService.Object);
-    }
     
     [Fact]
     public async Task UpdateAsync_WithNewCoachNotes_AddsNotesInOrder()
     {
         // Arrange
-        var exerciseId = ExerciseId.New();
-        var existingExercise = Exercise.Handler.CreateNew(
-            "Existing Exercise",
-            "Description",
-            null,
-            null,
-            false,
-            DifficultyLevelId.New());
+        var autoMocker = new AutoMocker();
+        var testee = autoMocker.CreateInstance<ExerciseService>();
         
+        var exerciseId = ExerciseId.New();
         var request = UpdateExerciseRequestBuilder.ForWorkoutExercise()
             .WithName("Updated Exercise")
             .WithDescription("Updated Description")
@@ -91,63 +37,52 @@ public class ExerciseServiceUpdateCoachNotesTests
             .AddCoachNote("Second note", 2)
             .Build();
         
-        _exerciseRepositoryMock.Setup(r => r.ExistsAsync(It.IsAny<string>(), It.IsAny<ExerciseId>()))
-            .ReturnsAsync(false);
-        
-        Exercise? capturedExercise = null;
-        var getByIdCallCount = 0;
-        _exerciseRepositoryMock.Setup(r => r.GetByIdAsync(It.IsAny<ExerciseId>()))
-            .ReturnsAsync(() => 
+        var expectedDto = new ExerciseDto
+        {
+            Id = exerciseId.ToString(),
+            Name = "Updated Exercise",
+            Description = "Updated Description",
+            IsActive = true,
+            IsUnilateral = false,
+            CoachNotes = new List<CoachNoteDto>
             {
-                getByIdCallCount++;
-                return getByIdCallCount == 1 ? existingExercise : capturedExercise ?? existingExercise;
-            });
+                new() { Id = "coach-note-" + Guid.NewGuid(), Text = "First note", Order = 1 },
+                new() { Id = "coach-note-" + Guid.NewGuid(), Text = "Second note", Order = 2 },
+                new() { Id = "coach-note-" + Guid.NewGuid(), Text = "Third note", Order = 3 }
+            }
+        };
         
-        _exerciseRepositoryMock.Setup(r => r.UpdateAsync(It.IsAny<Exercise>()))
-            .Callback<Exercise>(e => capturedExercise = e)
-            .ReturnsAsync((Exercise e) => e);
-        
-        _writableUnitOfWorkMock.Setup(uow => uow.CommitAsync())
-            .Returns(Task.CompletedTask);
+        autoMocker
+            .SetupExerciseQueryDataServiceExists(exerciseId, true)
+            .SetupExerciseQueryDataServiceExistsByName("Updated Exercise", false, exerciseId)
+            .SetupExerciseCommandDataServiceUpdate(expectedDto)
+            .SetupExerciseTypeService(allExist: true, isRestType: false);
         
         // Act
-        var result = await _exerciseService.UpdateAsync(ExerciseId.ParseOrEmpty(exerciseId.ToString()), request.ToCommand());
+        var result = await testee.UpdateAsync(exerciseId, request.ToCommand());
         
         // Assert
-        Assert.NotNull(result);
-        Assert.True(result.IsSuccess);
-        Assert.True(result.IsSuccess);
-        Assert.Equal(3, result.Data.CoachNotes.Count);
-        Assert.Equal("First note", result.Data.CoachNotes[0].Text);
-        Assert.Equal(1, result.Data.CoachNotes[0].Order);
-        Assert.Equal("Second note", result.Data.CoachNotes[1].Text);
-        Assert.Equal(2, result.Data.CoachNotes[1].Order);
-        Assert.Equal("Third note", result.Data.CoachNotes[2].Text);
-        Assert.Equal(3, result.Data.CoachNotes[2].Order);
-        
-        // Verify the entity was updated with coach notes
-        Assert.NotNull(capturedExercise);
-        Assert.Equal(3, capturedExercise.CoachNotes.Count);
+        result.Should().NotBeNull();
+        result.IsSuccess.Should().BeTrue();
+        result.Data.CoachNotes.Should().HaveCount(3);
+        result.Data.CoachNotes[0].Text.Should().Be("First note");
+        result.Data.CoachNotes[0].Order.Should().Be(1);
+        result.Data.CoachNotes[1].Text.Should().Be("Second note");
+        result.Data.CoachNotes[1].Order.Should().Be(2);
+        result.Data.CoachNotes[2].Text.Should().Be("Third note");
+        result.Data.CoachNotes[2].Order.Should().Be(3);
     }
     
     [Fact]
     public async Task UpdateAsync_WithExistingCoachNoteIds_PreservesIds()
     {
         // Arrange
-        var exerciseId = ExerciseId.New();
-        var existingExercise = Exercise.Handler.CreateNew(
-            "Existing Exercise",
-            "Description",
-            null,
-            null,
-            false,
-            DifficultyLevelId.New());
+        var autoMocker = new AutoMocker();
+        var testee = autoMocker.CreateInstance<ExerciseService>();
         
+        var exerciseId = ExerciseId.New();
         var existingNoteId1 = CoachNoteId.New();
         var existingNoteId2 = CoachNoteId.New();
-        
-        existingExercise.CoachNotes.Add(CoachNote.Handler.Create(existingNoteId1, exerciseId, "Old note 1", 1));
-        existingExercise.CoachNotes.Add(CoachNote.Handler.Create(existingNoteId2, exerciseId, "Old note 2", 2));
         
         var request = UpdateExerciseRequestBuilder.ForWorkoutExercise()
             .WithName("Updated Exercise")
@@ -160,64 +95,57 @@ public class ExerciseServiceUpdateCoachNotesTests
             .AddCoachNote(null, "New note 3", 3)
             .Build();
         
-        _exerciseRepositoryMock.Setup(r => r.ExistsAsync(It.IsAny<string>(), It.IsAny<ExerciseId>()))
-            .ReturnsAsync(false);
-        
-        Exercise? capturedExercise = null;
-        var getByIdCallCount = 0;
-        _exerciseRepositoryMock.Setup(r => r.GetByIdAsync(It.IsAny<ExerciseId>()))
-            .ReturnsAsync(() => 
+        var expectedDto = new ExerciseDto
+        {
+            Id = exerciseId.ToString(),
+            Name = "Updated Exercise",
+            Description = "Updated Description",
+            IsActive = true,
+            IsUnilateral = false,
+            CoachNotes = new List<CoachNoteDto>
             {
-                getByIdCallCount++;
-                return getByIdCallCount == 1 ? existingExercise : capturedExercise ?? existingExercise;
-            });
+                new() { Id = existingNoteId1.ToString(), Text = "Updated note 1", Order = 1 },
+                new() { Id = existingNoteId2.ToString(), Text = "Updated note 2", Order = 2 },
+                new() { Id = "coach-note-" + Guid.NewGuid(), Text = "New note 3", Order = 3 }
+            }
+        };
         
-        _exerciseRepositoryMock.Setup(r => r.UpdateAsync(It.IsAny<Exercise>()))
-            .Callback<Exercise>(e => capturedExercise = e)
-            .ReturnsAsync((Exercise e) => e);
-        
-        _writableUnitOfWorkMock.Setup(uow => uow.CommitAsync())
-            .Returns(Task.CompletedTask);
+        autoMocker
+            .SetupExerciseQueryDataServiceExists(exerciseId, true)
+            .SetupExerciseQueryDataServiceExistsByName("Updated Exercise", false, exerciseId)
+            .SetupExerciseCommandDataServiceUpdate(expectedDto)
+            .SetupExerciseTypeService(allExist: true, isRestType: false);
         
         // Act
-        var result = await _exerciseService.UpdateAsync(ExerciseId.ParseOrEmpty(exerciseId.ToString()), request.ToCommand());
+        var result = await testee.UpdateAsync(exerciseId, request.ToCommand());
         
         // Assert
-        Assert.NotNull(result);
-        Assert.True(result.IsSuccess);
-        Assert.Equal(3, result.Data.CoachNotes.Count);
+        result.Should().NotBeNull();
+        result.IsSuccess.Should().BeTrue();
+        result.Data.CoachNotes.Should().HaveCount(3);
         
         // Check that existing IDs were preserved
-        Assert.Equal(existingNoteId1.ToString(), result.Data.CoachNotes[0].Id);
-        Assert.Equal("Updated note 1", result.Data.CoachNotes[0].Text);
+        result.Data.CoachNotes[0].Id.Should().Be(existingNoteId1.ToString());
+        result.Data.CoachNotes[0].Text.Should().Be("Updated note 1");
         
-        Assert.Equal(existingNoteId2.ToString(), result.Data.CoachNotes[1].Id);
-        Assert.Equal("Updated note 2", result.Data.CoachNotes[1].Text);
+        result.Data.CoachNotes[1].Id.Should().Be(existingNoteId2.ToString());
+        result.Data.CoachNotes[1].Text.Should().Be("Updated note 2");
         
         // New note should have a new ID
-        Assert.NotEmpty(result.Data.CoachNotes[2].Id);
-        Assert.NotEqual(existingNoteId1.ToString(), result.Data.CoachNotes[2].Id);
-        Assert.NotEqual(existingNoteId2.ToString(), result.Data.CoachNotes[2].Id);
-        Assert.Equal("New note 3", result.Data.CoachNotes[2].Text);
+        result.Data.CoachNotes[2].Id.Should().NotBeEmpty();
+        result.Data.CoachNotes[2].Id.Should().NotBe(existingNoteId1.ToString());
+        result.Data.CoachNotes[2].Id.Should().NotBe(existingNoteId2.ToString());
+        result.Data.CoachNotes[2].Text.Should().Be("New note 3");
     }
     
     [Fact]
     public async Task UpdateAsync_RemovingCoachNotes_UpdatesWithEmptyList()
     {
         // Arrange
+        var autoMocker = new AutoMocker();
+        var testee = autoMocker.CreateInstance<ExerciseService>();
+        
         var exerciseId = ExerciseId.New();
-        var existingExercise = Exercise.Handler.CreateNew(
-            "Existing Exercise",
-            "Description",
-            null,
-            null,
-            false,
-            DifficultyLevelId.New());
-        
-        // Add existing notes
-        existingExercise.CoachNotes.Add(CoachNote.Handler.CreateNew(exerciseId, "Note 1", 1));
-        existingExercise.CoachNotes.Add(CoachNote.Handler.CreateNew(exerciseId, "Note 2", 2));
-        
         var request = UpdateExerciseRequestBuilder.ForWorkoutExercise()
             .WithName("Updated Exercise")
             .WithDescription("Updated Description")
@@ -226,51 +154,39 @@ public class ExerciseServiceUpdateCoachNotesTests
             .AddMuscleGroup(MuscleGroupTestBuilder.Chest(), MuscleRoleTestBuilder.Primary())
             .Build(); // No AddCoachNote calls = empty coach notes
         
-        _exerciseRepositoryMock.Setup(r => r.ExistsAsync(It.IsAny<string>(), It.IsAny<ExerciseId>()))
-            .ReturnsAsync(false);
+        var expectedDto = new ExerciseDto
+        {
+            Id = exerciseId.ToString(),
+            Name = "Updated Exercise",
+            Description = "Updated Description",
+            IsActive = true,
+            IsUnilateral = false,
+            CoachNotes = new List<CoachNoteDto>() // Empty list
+        };
         
-        Exercise? capturedExercise = null;
-        var getByIdCallCount = 0;
-        _exerciseRepositoryMock.Setup(r => r.GetByIdAsync(It.IsAny<ExerciseId>()))
-            .ReturnsAsync(() => 
-            {
-                getByIdCallCount++;
-                return getByIdCallCount == 1 ? existingExercise : capturedExercise ?? existingExercise;
-            });
-        
-        _exerciseRepositoryMock.Setup(r => r.UpdateAsync(It.IsAny<Exercise>()))
-            .Callback<Exercise>(e => capturedExercise = e)
-            .ReturnsAsync((Exercise e) => e);
-        
-        _writableUnitOfWorkMock.Setup(uow => uow.CommitAsync())
-            .Returns(Task.CompletedTask);
+        autoMocker
+            .SetupExerciseQueryDataServiceExists(exerciseId, true)
+            .SetupExerciseQueryDataServiceExistsByName("Updated Exercise", false, exerciseId)
+            .SetupExerciseCommandDataServiceUpdate(expectedDto)
+            .SetupExerciseTypeService(allExist: true, isRestType: false);
         
         // Act
-        var result = await _exerciseService.UpdateAsync(ExerciseId.ParseOrEmpty(exerciseId.ToString()), request.ToCommand());
+        var result = await testee.UpdateAsync(exerciseId, request.ToCommand());
         
         // Assert
-        Assert.NotNull(result);
-        Assert.True(result.IsSuccess);
-        Assert.Empty(result.Data.CoachNotes);
-        
-        // Verify the entity was updated with empty coach notes
-        Assert.NotNull(capturedExercise);
-        Assert.Empty(capturedExercise.CoachNotes);
+        result.Should().NotBeNull();
+        result.IsSuccess.Should().BeTrue();
+        result.Data.CoachNotes.Should().BeEmpty();
     }
     
     [Fact]
     public async Task UpdateAsync_WithInvalidCoachNoteId_IgnoresInvalidIdAndCreatesNew()
     {
         // Arrange
-        var exerciseId = ExerciseId.New();
-        var existingExercise = Exercise.Handler.CreateNew(
-            "Existing Exercise",
-            "Description",
-            null,
-            null,
-            false,
-            DifficultyLevelId.New());
+        var autoMocker = new AutoMocker();
+        var testee = autoMocker.CreateInstance<ExerciseService>();
         
+        var exerciseId = ExerciseId.New();
         var request = UpdateExerciseRequestBuilder.ForWorkoutExercise()
             .WithName("Updated Exercise")
             .WithDescription("Updated Description")
@@ -281,62 +197,47 @@ public class ExerciseServiceUpdateCoachNotesTests
             .AddCoachNoteWithMalformedId("Note with malformed ID", 2)
             .Build();
         
-        _exerciseRepositoryMock.Setup(r => r.ExistsAsync(It.IsAny<string>(), It.IsAny<ExerciseId>()))
-            .ReturnsAsync(false);
-        
-        Exercise? capturedExercise = null;
-        var getByIdCallCount = 0;
-        _exerciseRepositoryMock.Setup(r => r.GetByIdAsync(It.IsAny<ExerciseId>()))
-            .ReturnsAsync(() => 
+        var expectedDto = new ExerciseDto
+        {
+            Id = exerciseId.ToString(),
+            Name = "Updated Exercise",
+            Description = "Updated Description",
+            IsActive = true,
+            IsUnilateral = false,
+            CoachNotes = new List<CoachNoteDto>
             {
-                getByIdCallCount++;
-                return getByIdCallCount == 1 ? existingExercise : capturedExercise ?? existingExercise;
-            });
+                new() { Id = "coach-note-" + Guid.NewGuid(), Text = "Note with invalid ID", Order = 1 },
+                new() { Id = "coach-note-" + Guid.NewGuid(), Text = "Note with malformed ID", Order = 2 }
+            }
+        };
         
-        _exerciseRepositoryMock.Setup(r => r.UpdateAsync(It.IsAny<Exercise>()))
-            .Callback<Exercise>(e => capturedExercise = e)
-            .ReturnsAsync((Exercise e) => e);
-        
-        _writableUnitOfWorkMock.Setup(uow => uow.CommitAsync())
-            .Returns(Task.CompletedTask);
+        autoMocker
+            .SetupExerciseQueryDataServiceExists(exerciseId, true)
+            .SetupExerciseQueryDataServiceExistsByName("Updated Exercise", false, exerciseId)
+            .SetupExerciseCommandDataServiceUpdate(expectedDto)
+            .SetupExerciseTypeService(allExist: true, isRestType: false);
         
         // Act
-        var result = await _exerciseService.UpdateAsync(ExerciseId.ParseOrEmpty(exerciseId.ToString()), request.ToCommand());
+        var result = await testee.UpdateAsync(exerciseId, request.ToCommand());
         
         // Assert
-        Assert.NotNull(result);
-        Assert.True(result.IsSuccess);
-        Assert.Equal(2, result.Data.CoachNotes.Count); // Invalid IDs result in new notes being created
-        
-        // Verify the entity has new coach notes (invalid IDs resulted in new IDs)
-        Assert.NotNull(capturedExercise);
-        Assert.Equal(2, capturedExercise.CoachNotes.Count);
+        result.Should().NotBeNull();
+        result.IsSuccess.Should().BeTrue();
+        result.Data.CoachNotes.Should().HaveCount(2); // Invalid IDs result in new notes being created
         
         // Verify the notes have new IDs (not the invalid ones from the request)
-        var noteTexts = capturedExercise.CoachNotes.OrderBy(cn => cn.Order).Select(cn => cn.Text).ToList();
-        Assert.Contains("Note with invalid ID", noteTexts[0]);
-        Assert.Contains("Note with malformed ID", noteTexts[1]);
+        result.Data.CoachNotes[0].Text.Should().Be("Note with invalid ID");
+        result.Data.CoachNotes[1].Text.Should().Be("Note with malformed ID");
     }
     
     [Fact]
     public async Task UpdateAsync_WithNullCoachNotes_DoesNotUpdateCoachNotes()
     {
         // Arrange
+        var autoMocker = new AutoMocker();
+        var testee = autoMocker.CreateInstance<ExerciseService>();
+        
         var exerciseId = ExerciseId.New();
-        var existingExercise = Exercise.Handler.CreateNew(
-            "Existing Exercise",
-            "Description",
-            null,
-            null,
-            false,
-            DifficultyLevelId.New());
-        
-        // Add existing notes
-        var existingNote1 = CoachNote.Handler.CreateNew(exerciseId, "Existing note 1", 1);
-        var existingNote2 = CoachNote.Handler.CreateNew(exerciseId, "Existing note 2", 2);
-        existingExercise.CoachNotes.Add(existingNote1);
-        existingExercise.CoachNotes.Add(existingNote2);
-        
         var request = UpdateExerciseRequestBuilder.ForWorkoutExercise()
             .WithName("Updated Exercise")
             .WithDescription("Updated Description")
@@ -345,53 +246,39 @@ public class ExerciseServiceUpdateCoachNotesTests
             .AddMuscleGroup(MuscleGroupTestBuilder.Chest(), MuscleRoleTestBuilder.Primary())
             .Build();
         
-        // No coach notes added, will result in empty list
+        var expectedDto = new ExerciseDto
+        {
+            Id = exerciseId.ToString(),
+            Name = "Updated Exercise",
+            Description = "Updated Description",
+            IsActive = true,
+            IsUnilateral = false,
+            CoachNotes = new List<CoachNoteDto>() // Empty list - null is treated as empty
+        };
         
-        _exerciseRepositoryMock.Setup(r => r.ExistsAsync(It.IsAny<string>(), It.IsAny<ExerciseId>()))
-            .ReturnsAsync(false);
-        
-        Exercise? capturedExercise = null;
-        var getByIdCallCount = 0;
-        _exerciseRepositoryMock.Setup(r => r.GetByIdAsync(It.IsAny<ExerciseId>()))
-            .ReturnsAsync(() => 
-            {
-                getByIdCallCount++;
-                return getByIdCallCount == 1 ? existingExercise : capturedExercise ?? existingExercise;
-            });
-        
-        _exerciseRepositoryMock.Setup(r => r.UpdateAsync(It.IsAny<Exercise>()))
-            .Callback<Exercise>(e => capturedExercise = e)
-            .ReturnsAsync((Exercise e) => e);
-        
-        _writableUnitOfWorkMock.Setup(uow => uow.CommitAsync())
-            .Returns(Task.CompletedTask);
+        autoMocker
+            .SetupExerciseQueryDataServiceExists(exerciseId, true)
+            .SetupExerciseQueryDataServiceExistsByName("Updated Exercise", false, exerciseId)
+            .SetupExerciseCommandDataServiceUpdate(expectedDto)
+            .SetupExerciseTypeService(allExist: true, isRestType: false);
         
         // Act
-        var result = await _exerciseService.UpdateAsync(ExerciseId.ParseOrEmpty(exerciseId.ToString()), request.ToCommand());
+        var result = await testee.UpdateAsync(exerciseId, request.ToCommand());
         
         // Assert
-        Assert.NotNull(result);
-        Assert.True(result.IsSuccess);
-        Assert.Empty(result.Data.CoachNotes); // Null request.CoachNotes means empty collection in new entity
-        
-        // Verify the entity has empty coach notes (null is treated as empty)
-        Assert.NotNull(capturedExercise);
-        Assert.Empty(capturedExercise.CoachNotes);
+        result.Should().NotBeNull();
+        result.IsSuccess.Should().BeTrue();
+        result.Data.CoachNotes.Should().BeEmpty(); // Null request.CoachNotes means empty collection in new entity
     }
     
     [Fact]
     public async Task UpdateAsync_PreservesCoachNotesOriginalOrder()
     {
         // Arrange
-        var exerciseId = ExerciseId.New();
-        var existingExercise = Exercise.Handler.CreateNew(
-            "Existing Exercise",
-            "Description",
-            null,
-            null,
-            false,
-            DifficultyLevelId.New());
+        var autoMocker = new AutoMocker();
+        var testee = autoMocker.CreateInstance<ExerciseService>();
         
+        var exerciseId = ExerciseId.New();
         var request = UpdateExerciseRequestBuilder.ForWorkoutExercise()
             .WithName("Updated Exercise")
             .WithDescription("Updated Description")
@@ -403,39 +290,41 @@ public class ExerciseServiceUpdateCoachNotesTests
             .AddCoachNote("Note at 50", 50)
             .Build();
         
-        _exerciseRepositoryMock.Setup(r => r.ExistsAsync(It.IsAny<string>(), It.IsAny<ExerciseId>()))
-            .ReturnsAsync(false);
-        
-        Exercise? capturedExercise = null;
-        var getByIdCallCount = 0;
-        _exerciseRepositoryMock.Setup(r => r.GetByIdAsync(It.IsAny<ExerciseId>()))
-            .ReturnsAsync(() => 
+        var expectedDto = new ExerciseDto
+        {
+            Id = exerciseId.ToString(),
+            Name = "Updated Exercise",
+            Description = "Updated Description",
+            IsActive = true,
+            IsUnilateral = false,
+            CoachNotes = new List<CoachNoteDto>
             {
-                getByIdCallCount++;
-                return getByIdCallCount == 1 ? existingExercise : capturedExercise ?? existingExercise;
-            });
+                new() { Id = "coach-note-" + Guid.NewGuid(), Text = "Note at 5", Order = 5 },
+                new() { Id = "coach-note-" + Guid.NewGuid(), Text = "Note at 50", Order = 50 },
+                new() { Id = "coach-note-" + Guid.NewGuid(), Text = "Note at 100", Order = 100 }
+            }
+        };
         
-        _exerciseRepositoryMock.Setup(r => r.UpdateAsync(It.IsAny<Exercise>()))
-            .Callback<Exercise>(e => capturedExercise = e)
-            .ReturnsAsync((Exercise e) => e);
-        
-        _writableUnitOfWorkMock.Setup(uow => uow.CommitAsync())
-            .Returns(Task.CompletedTask);
+        autoMocker
+            .SetupExerciseQueryDataServiceExists(exerciseId, true)
+            .SetupExerciseQueryDataServiceExistsByName("Updated Exercise", false, exerciseId)
+            .SetupExerciseCommandDataServiceUpdate(expectedDto)
+            .SetupExerciseTypeService(allExist: true, isRestType: false);
         
         // Act
-        var result = await _exerciseService.UpdateAsync(ExerciseId.ParseOrEmpty(exerciseId.ToString()), request.ToCommand());
+        var result = await testee.UpdateAsync(exerciseId, request.ToCommand());
         
         // Assert
-        Assert.NotNull(result);
-        Assert.True(result.IsSuccess);
-        Assert.Equal(3, result.Data.CoachNotes.Count);
+        result.Should().NotBeNull();
+        result.IsSuccess.Should().BeTrue();
+        result.Data.CoachNotes.Should().HaveCount(3);
         
         // Verify notes preserve original order values and are sorted by order
-        Assert.Equal("Note at 5", result.Data.CoachNotes[0].Text);
-        Assert.Equal(5, result.Data.CoachNotes[0].Order);
-        Assert.Equal("Note at 50", result.Data.CoachNotes[1].Text);
-        Assert.Equal(50, result.Data.CoachNotes[1].Order);
-        Assert.Equal("Note at 100", result.Data.CoachNotes[2].Text);
-        Assert.Equal(100, result.Data.CoachNotes[2].Order);
+        result.Data.CoachNotes[0].Text.Should().Be("Note at 5");
+        result.Data.CoachNotes[0].Order.Should().Be(5);
+        result.Data.CoachNotes[1].Text.Should().Be("Note at 50");
+        result.Data.CoachNotes[1].Order.Should().Be(50);
+        result.Data.CoachNotes[2].Text.Should().Be("Note at 100");
+        result.Data.CoachNotes[2].Order.Should().Be(100);
     }
 }

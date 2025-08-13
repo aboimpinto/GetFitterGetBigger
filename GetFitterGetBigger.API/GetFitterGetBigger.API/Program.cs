@@ -6,6 +6,9 @@ using GetFitterGetBigger.API.Repositories.Interfaces;
 using GetFitterGetBigger.API.Repositories.Implementations;
 using GetFitterGetBigger.API.Services.Interfaces;
 using GetFitterGetBigger.API.Services.Implementations;
+using GetFitterGetBigger.API.Services.Exercise;
+using GetFitterGetBigger.API.Services.Exercise.DataServices;
+using GetFitterGetBigger.API.Services.Exercise.Features.Links;
 using GetFitterGetBigger.API.Services.WorkoutTemplate;
 using GetFitterGetBigger.API.Services.WorkoutTemplate.DataServices;
 using GetFitterGetBigger.API.Services.WorkoutTemplate.Features.Equipment;
@@ -79,6 +82,10 @@ builder.Services.AddTransient<ISetConfigurationRepository, SetConfigurationRepos
 
 // Register services
 builder.Services.AddTransient<IExerciseService, ExerciseService>();
+
+// Exercise DataServices - Data Access Layer
+builder.Services.AddTransient<IExerciseQueryDataService, ExerciseQueryDataService>();
+builder.Services.AddTransient<IExerciseCommandDataService, ExerciseCommandDataService>();
 builder.Services.AddTransient<IEquipmentService, EquipmentService>();
 builder.Services.AddTransient<IMuscleGroupService, MuscleGroupService>();
 builder.Services.AddTransient<IExerciseLinkService, ExerciseLinkService>();

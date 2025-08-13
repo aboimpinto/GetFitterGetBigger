@@ -1,7 +1,7 @@
 using GetFitterGetBigger.API.DTOs;
 using GetFitterGetBigger.API.Models.SpecializedIds;
 
-namespace GetFitterGetBigger.API.Services.Interfaces;
+namespace GetFitterGetBigger.API.Services.Exercise.Features.Links;
 
 /// <summary>
 /// Service interface for managing exercise links

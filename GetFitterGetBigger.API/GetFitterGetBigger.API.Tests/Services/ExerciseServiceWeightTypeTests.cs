@@ -1,20 +1,19 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using FluentAssertions;
 using GetFitterGetBigger.API.DTOs;
 using GetFitterGetBigger.API.Models;
 using GetFitterGetBigger.API.Models.Entities;
 using GetFitterGetBigger.API.Models.SpecializedIds;
-using GetFitterGetBigger.API.Repositories.Interfaces;
-using GetFitterGetBigger.API.Services.Implementations;
-using GetFitterGetBigger.API.Services.Interfaces;
+using GetFitterGetBigger.API.Services.Exercise;
 using GetFitterGetBigger.API.Services.Results;
 using GetFitterGetBigger.API.Tests.TestBuilders;
 using GetFitterGetBigger.API.Tests.TestBuilders.Domain;
+using GetFitterGetBigger.API.Tests.Services.Extensions;
 using GetFitterGetBigger.API.Mappers;
 using GetFitterGetBigger.API.Constants;
-using Moq;
-using Olimpo.EntityFramework.Persistency;
+using Moq.AutoMock;
 using Xunit;
 
 namespace GetFitterGetBigger.API.Tests.Services;
@@ -24,57 +23,14 @@ namespace GetFitterGetBigger.API.Tests.Services;
 /// </summary>
 public class ExerciseServiceWeightTypeTests
 {
-    private readonly Mock<IUnitOfWorkProvider<FitnessDbContext>> _mockUnitOfWorkProvider;
-    private readonly Mock<IReadOnlyUnitOfWork<FitnessDbContext>> _mockReadOnlyUnitOfWork;
-    private readonly Mock<IWritableUnitOfWork<FitnessDbContext>> _mockWritableUnitOfWork;
-    private readonly Mock<IExerciseRepository> _mockExerciseRepository;
-    private readonly Mock<IExerciseTypeService> _mockExerciseTypeService;
-    private readonly IExerciseService _service;
-    
-    public ExerciseServiceWeightTypeTests()
-    {
-        _mockUnitOfWorkProvider = new Mock<IUnitOfWorkProvider<FitnessDbContext>>();
-        _mockReadOnlyUnitOfWork = new Mock<IReadOnlyUnitOfWork<FitnessDbContext>>();
-        _mockWritableUnitOfWork = new Mock<IWritableUnitOfWork<FitnessDbContext>>();
-        _mockExerciseRepository = new Mock<IExerciseRepository>();
-        _mockExerciseTypeService = new Mock<IExerciseTypeService>();
-        
-        _mockReadOnlyUnitOfWork
-            .Setup(uow => uow.GetRepository<IExerciseRepository>())
-            .Returns(_mockExerciseRepository.Object);
-        
-        _mockWritableUnitOfWork
-            .Setup(uow => uow.GetRepository<IExerciseRepository>())
-            .Returns(_mockExerciseRepository.Object);
-        
-        _mockUnitOfWorkProvider
-            .Setup(p => p.CreateReadOnly())
-            .Returns(_mockReadOnlyUnitOfWork.Object);
-        
-        _mockUnitOfWorkProvider
-            .Setup(p => p.CreateWritable())
-            .Returns(_mockWritableUnitOfWork.Object);
-        
-        // Setup default mock behaviors for ExerciseTypeService
-        _mockExerciseTypeService
-            .Setup(s => s.AllExistAsync(It.IsAny<IEnumerable<string>>()))
-            .ReturnsAsync(true);
-        
-        _mockExerciseTypeService
-            .Setup(s => s.AnyIsRestTypeAsync(It.IsAny<IEnumerable<string>>()))
-            .ReturnsAsync(false);
-        
-        _mockExerciseTypeService
-            .Setup(s => s.ExistsAsync(It.IsAny<ExerciseTypeId>()))
-            .ReturnsAsync(ServiceResult<BooleanResultDto>.Success(BooleanResultDto.Create(true)));
-        
-        _service = new ExerciseService(_mockUnitOfWorkProvider.Object, _mockExerciseTypeService.Object);
-    }
     
     [Fact]
     public async Task CreateAsync_WithExerciseWeightTypeId_CreatesExerciseWithWeightType()
     {
         // Arrange
+        var autoMocker = new AutoMocker();
+        var testee = autoMocker.CreateInstance<ExerciseService>();
+        
         var request = CreateExerciseRequestBuilder.ForWorkoutExercise()
             .WithName("Barbell Bench Press")
             .WithDescription("Classic chest exercise")
@@ -88,207 +44,189 @@ public class ExerciseServiceWeightTypeTests
                 .WithDisplayOrder(3))
             .AddMuscleGroup(MuscleGroupTestBuilder.Chest(), MuscleRoleTestBuilder.Primary())
             .Build();
-        
-        var exerciseWeightType = ExerciseWeightType.Handler.Create(
-            ExerciseWeightTypeId.From(Guid.Parse("c3d5c4b6-7b8c-6d9e-0f1a-2b3c4d5e6f7a")),
-            "WEIGHT_REQUIRED",
-            "Weight Required",
-            "Exercises that must have external weight specified",
-            3,
-            true
-        ).Value;
-        
-        // Create a proper difficulty for testing
-        var difficulty = DifficultyLevel.Handler.Create(
-            DifficultyLevelId.From(Guid.Parse("8a8adb1d-24d2-4979-a5a6-0d760e6da24b")),
-            "Beginner",
-            "For beginners",
-            1,
-            true
-        ).Value;
-        
-        // Set up mocks
-        _mockExerciseRepository.Setup(r => r.ExistsAsync(It.IsAny<string>(), It.IsAny<ExerciseId?>())).ReturnsAsync(false);
-        
-        Exercise? capturedExercise = null;
-        _mockExerciseRepository.Setup(r => r.AddAsync(It.IsAny<Exercise>()))
-            .Callback<Exercise>(e => capturedExercise = e)
-            .ReturnsAsync((Exercise e) => 
+            
+        var expectedDto = new ExerciseDto
+        {
+            Id = "exercise-" + Guid.NewGuid(),
+            Name = "Barbell Bench Press",
+            Description = "Classic chest exercise",
+            IsActive = true,
+            IsUnilateral = false,
+            ExerciseWeightType = new ReferenceDataDto
             {
-                // Simulate the repository returning the entity with navigation properties loaded
-                var exerciseType = e.GetType();
-                exerciseType.GetProperty("ExerciseWeightType")?.SetValue(e, exerciseWeightType);
-                exerciseType.GetProperty("Difficulty")?.SetValue(e, difficulty);
-                return e;
-            });
+                Id = "exerciseweighttype-c3d5c4b6-7b8c-6d9e-0f1a-2b3c4d5e6f7a",
+                Value = "Weight Required",
+                Description = "Exercises that must have external weight specified"
+            }
+        };
         
-        // Mock unit of work commit
-        _mockWritableUnitOfWork.Setup(uow => uow.CommitAsync()).Returns(Task.FromResult(true));
+        autoMocker
+            .SetupExerciseTypeService(allExist: true, isRestType: false)
+            .SetupExerciseQueryDataServiceExistsByName("Barbell Bench Press", false)
+            .SetupExerciseCommandDataServiceCreate(expectedDto);
         
         // Act
-        var result = await _service.CreateAsync(request.ToCommand());
+        var result = await testee.CreateAsync(request.ToCommand());
         
         // Assert
-        Assert.NotNull(result);
-        Assert.True(result.IsSuccess);
-        Assert.NotNull(result.Data.ExerciseWeightType);
-        Assert.Equal("exerciseweighttype-c3d5c4b6-7b8c-6d9e-0f1a-2b3c4d5e6f7a", result.Data.ExerciseWeightType.Id);
-        Assert.Equal("Weight Required", result.Data.ExerciseWeightType.Value);
-        Assert.Equal("Exercises that must have external weight specified", result.Data.ExerciseWeightType.Description);
-        
-        // Verify the entity was created with the weight type ID
-        Assert.NotNull(capturedExercise);
-        Assert.NotNull(capturedExercise.ExerciseWeightTypeId);
-        Assert.Equal(ExerciseWeightTypeId.From(Guid.Parse("c3d5c4b6-7b8c-6d9e-0f1a-2b3c4d5e6f7a")), capturedExercise.ExerciseWeightTypeId);
+        result.Should().NotBeNull();
+        result.IsSuccess.Should().BeTrue();
+        result.Data.ExerciseWeightType.Should().NotBeNull();
+        result.Data.ExerciseWeightType.Id.Should().Be("exerciseweighttype-c3d5c4b6-7b8c-6d9e-0f1a-2b3c4d5e6f7a");
+        result.Data.ExerciseWeightType.Value.Should().Be("Weight Required");
+        result.Data.ExerciseWeightType.Description.Should().Be("Exercises that must have external weight specified");
     }
     
     [Fact]
     public async Task CreateAsync_WithoutExerciseWeightTypeId_Succeeds()
     {
-        // Arrange - Non-REST exercise without ExerciseWeightTypeId is allowed (optional for flexibility)
+        // Arrange
+        var autoMocker = new AutoMocker();
+        var testee = autoMocker.CreateInstance<ExerciseService>();
+        
         var request = CreateExerciseRequestBuilder.ForWorkoutExercise()
             .WithName("Running")
             .WithDescription("Basic cardio exercise")
-            .WithExerciseWeightTypeId(null) // Optional for non-REST exercises
+            .WithExerciseWeightTypeId(null)
             .AddMuscleGroup(
                 TestIds.MuscleGroupIds.Quadriceps,
                 TestIds.MuscleRoleIds.Primary)
             .Build();
+            
+        var expectedDto = new ExerciseDto
+        {
+            Id = "exercise-" + Guid.NewGuid(),
+            Name = "Running",
+            Description = "Basic cardio exercise",
+            IsActive = true,
+            IsUnilateral = false
+        };
         
-        // Set up mocks
-        _mockExerciseRepository.Setup(r => r.ExistsAsync(It.IsAny<string>(), It.IsAny<ExerciseId?>())).ReturnsAsync(false);
-        _mockExerciseRepository.Setup(r => r.AddAsync(It.IsAny<Exercise>()))
-            .ReturnsAsync((Exercise e) => e);
+        autoMocker
+            .SetupExerciseTypeService(allExist: true, isRestType: false)
+            .SetupExerciseQueryDataServiceExistsByName("Running", false)
+            .SetupExerciseCommandDataServiceCreate(expectedDto);
         
         // Act
-        var result = await _service.CreateAsync(request.ToCommand());
+        var result = await testee.CreateAsync(request.ToCommand());
         
         // Assert
-        Assert.True(result.IsSuccess);
-        Assert.NotNull(result.Data);
-        Assert.False(result.Data.IsEmpty);
+        result.IsSuccess.Should().BeTrue();
+        result.Data.Should().NotBeNull();
+        result.Data.IsEmpty.Should().BeFalse();
     }
     
     [Fact]
     public async Task CreateAsync_RestExerciseWithoutWeightType_CreatesSuccessfully()
     {
-        // Arrange - REST exercise without ExerciseWeightTypeId should succeed
+        // Arrange
+        var autoMocker = new AutoMocker();
+        var testee = autoMocker.CreateInstance<ExerciseService>();
+        
         var request = CreateExerciseRequestBuilder.ForRestExercise()
             .WithName("Rest Period")
             .WithDescription("Recovery time between sets")
             .Build();
+            
+        var expectedDto = new ExerciseDto
+        {
+            Id = "exercise-" + Guid.NewGuid(),
+            Name = "Rest Period",
+            Description = "Recovery time between sets",
+            IsActive = true,
+            IsUnilateral = false
+        };
         
-        // Create a proper difficulty for testing
-        var difficulty = DifficultyLevel.Handler.Create(
-            DifficultyLevelId.From(Guid.Parse("8a8adb1d-24d2-4979-a5a6-0d760e6da24b")),
-            "Beginner",
-            "For beginners",
-            1,
-            true
-        ).Value;
-        
-        // Set up mocks
-        _mockExerciseRepository.Setup(r => r.ExistsAsync(It.IsAny<string>(), It.IsAny<ExerciseId?>())).ReturnsAsync(false);
-        
-        // Override default mock to return true for REST type
-        _mockExerciseTypeService
-            .Setup(s => s.AnyIsRestTypeAsync(It.IsAny<IEnumerable<string>>()))
-            .ReturnsAsync(true);
-        
-        Exercise? capturedExercise = null;
-        _mockExerciseRepository.Setup(r => r.AddAsync(It.IsAny<Exercise>()))
-            .Callback<Exercise>(e => capturedExercise = e)
-            .ReturnsAsync((Exercise e) => e);
-        
-        _mockWritableUnitOfWork.Setup(uow => uow.CommitAsync()).Returns(Task.FromResult(true));
+        autoMocker
+            .SetupExerciseTypeService(allExist: true, isRestType: true)
+            .SetupExerciseQueryDataServiceExistsByName("Rest Period", false)
+            .SetupExerciseCommandDataServiceCreate(expectedDto);
         
         // Act
-        var result = await _service.CreateAsync(request.ToCommand());
+        var result = await testee.CreateAsync(request.ToCommand());
         
         // Assert
-        Assert.NotNull(result);
-        Assert.True(result.IsSuccess);
-        Assert.Null(result.Data.ExerciseWeightType);
-        
-        // Verify the entity was created without weight type ID (Empty is treated as null in Null Object Pattern)
-        Assert.NotNull(capturedExercise);
-        Assert.True(capturedExercise.ExerciseWeightTypeId == null || capturedExercise.ExerciseWeightTypeId.Value.IsEmpty);
+        result.Should().NotBeNull();
+        result.IsSuccess.Should().BeTrue();
+        result.Data.ExerciseWeightType.Should().BeNull();
     }
     
     [Fact]
     public async Task CreateAsync_WithInvalidExerciseWeightTypeId_Succeeds()
     {
-        // Arrange - Build request to test invalid ID format (current behavior: accepted)
+        // Arrange
+        var autoMocker = new AutoMocker();
+        var testee = autoMocker.CreateInstance<ExerciseService>();
+        
         var request = CreateExerciseRequestBuilder.ForWorkoutExercise()
             .WithName("Invalid Weight Type Exercise")
             .WithDescription("Exercise with invalid weight type")
-            .WithExerciseWeightTypeId("invalid-weight-type-id") // Invalid format but currently accepted
+            .WithExerciseWeightTypeId("invalid-weight-type-id")
             .AddMuscleGroup(
                 TestIds.MuscleGroupIds.Chest,
                 TestIds.MuscleRoleIds.Primary)
             .Build();
+            
+        var expectedDto = new ExerciseDto
+        {
+            Id = "exercise-" + Guid.NewGuid(),
+            Name = "Invalid Weight Type Exercise",
+            Description = "Exercise with invalid weight type",
+            IsActive = true,
+            IsUnilateral = false
+        };
         
-        // Set up mocks
-        _mockExerciseRepository.Setup(r => r.ExistsAsync(It.IsAny<string>(), It.IsAny<ExerciseId?>())).ReturnsAsync(false);
-        _mockExerciseRepository.Setup(r => r.AddAsync(It.IsAny<Exercise>()))
-            .ReturnsAsync((Exercise e) => e);
+        autoMocker
+            .SetupExerciseTypeService(allExist: true, isRestType: false)
+            .SetupExerciseQueryDataServiceExistsByName("Invalid Weight Type Exercise", false)
+            .SetupExerciseCommandDataServiceCreate(expectedDto);
         
         // Act
-        var result = await _service.CreateAsync(request.ToCommand());
+        var result = await testee.CreateAsync(request.ToCommand());
         
-        // Assert - Current behavior: invalid format IDs are accepted
-        Assert.True(result.IsSuccess);
-        Assert.NotNull(result.Data);
-        Assert.False(result.Data.IsEmpty);
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+        result.Data.Should().NotBeNull();
+        result.Data.IsEmpty.Should().BeFalse();
     }
     
     [Fact]
     public async Task GetByIdAsync_ReturnsExerciseWithWeightType()
     {
         // Arrange
+        var autoMocker = new AutoMocker();
+        var testee = autoMocker.CreateInstance<ExerciseService>();
+        
         var exerciseId = ExerciseId.New();
-        var exerciseWeightType = ExerciseWeightType.Handler.Create(
-            ExerciseWeightTypeId.From(Guid.Parse("d4c6b5a7-8c9d-7e0f-1a2b-3c4d5e6f7a8b")),
-            "MACHINE_WEIGHT",
-            "Machine Weight",
-            "Exercises performed on machines with weight stacks",
-            4,
-            true
-        ).Value;
         
-        var difficulty = DifficultyLevel.Handler.Create(
-            DifficultyLevelId.From(Guid.Parse("8a8adb1d-24d2-4979-a5a6-0d760e6da24b")),
-            "Beginner",
-            "For beginners",
-            1,
-            true
-        ).Value;
+        var expectedDto = new ExerciseDto
+        {
+            Id = exerciseId.ToString(),
+            Name = "Lat Pulldown",
+            Description = "Back exercise on machine",
+            IsActive = true,
+            IsUnilateral = false,
+            ExerciseWeightType = new ReferenceDataDto
+            {
+                Id = "exerciseweighttype-d4c6b5a7-8c9d-7e0f-1a2b-3c4d5e6f7a8b",
+                Value = "Machine Weight",
+                Description = "Exercises performed on machines with weight stacks"
+            }
+        };
         
-        var exercise = ExerciseBuilder.AWorkoutExercise()
-            .WithId(exerciseId)
-            .WithName("Lat Pulldown")
-            .WithDescription("Back exercise on machine")
-            .WithDifficultyId(difficulty.DifficultyLevelId)
-            .WithKineticChainId(KineticChainTypeId.From(Guid.Parse("f5d5a2de-9c4e-4b87-b8c3-5d1e17d0b1f4")))
-            .WithExerciseWeightTypeId(exerciseWeightType.Id)
-            .Build();
-        
-        // Set the navigation properties using reflection
-        var exerciseType = exercise.GetType();
-        exerciseType.GetProperty("ExerciseWeightType")?.SetValue(exercise, exerciseWeightType);
-        exerciseType.GetProperty("Difficulty")?.SetValue(exercise, difficulty);
-        
-        // Set up mocks
-        _mockExerciseRepository.Setup(r => r.GetByIdAsync(exerciseId)).ReturnsAsync(exercise);
+        autoMocker
+            .SetupExerciseQueryDataServiceExists(exerciseId, true)
+            .SetupExerciseQueryDataServiceGetById(expectedDto)
+            .SetupExerciseTypeService();
         
         // Act
-        var result = await _service.GetByIdAsync(ExerciseId.ParseOrEmpty(exerciseId.ToString()));
+        var result = await testee.GetByIdAsync(exerciseId);
         
         // Assert
-        Assert.NotNull(result);
-        Assert.NotNull(result.Data.ExerciseWeightType);
-        Assert.Equal("exerciseweighttype-d4c6b5a7-8c9d-7e0f-1a2b-3c4d5e6f7a8b", result.Data.ExerciseWeightType.Id);
-        Assert.Equal("Machine Weight", result.Data.ExerciseWeightType.Value);
-        Assert.Equal("Exercises performed on machines with weight stacks", result.Data.ExerciseWeightType.Description);
+        result.Should().NotBeNull();
+        result.Data.ExerciseWeightType.Should().NotBeNull();
+        result.Data.ExerciseWeightType.Id.Should().Be("exerciseweighttype-d4c6b5a7-8c9d-7e0f-1a2b-3c4d5e6f7a8b");
+        result.Data.ExerciseWeightType.Value.Should().Be("Machine Weight");
+        result.Data.ExerciseWeightType.Description.Should().Be("Exercises performed on machines with weight stacks");
     }
 }

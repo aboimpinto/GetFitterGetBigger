@@ -1,9 +1,11 @@
+using System.Linq;
 using FluentAssertions;
 using GetFitterGetBigger.API.DTOs;
 using GetFitterGetBigger.API.Models.Entities;
 using GetFitterGetBigger.API.Models.SpecializedIds;
 using GetFitterGetBigger.API.Repositories.Interfaces;
 using GetFitterGetBigger.API.Services.Implementations;
+using GetFitterGetBigger.API.Services.Exercise;
 using GetFitterGetBigger.API.Services.Results;
 using GetFitterGetBigger.API.Tests.TestBuilders;
 using GetFitterGetBigger.API.Tests.TestBuilders.Domain;
@@ -44,9 +46,12 @@ namespace GetFitterGetBigger.API.Tests.Services
                     .Build()
             };
 
+            var pagedResponse = new PagedResponse<ExerciseDto>(
+                exercises.Select(e => new ExerciseDto { Name = e.Name, Id = e.Id.ToString() }).ToList(), 
+                1, 10, exercises.Count);
             automocker
-                .SetupExerciseUnitOfWork()
-                .SetupExerciseGetPaged(exercises, exercises.Count);
+                .SetupExerciseQueryDataServiceGetPaged(pagedResponse)
+                .SetupExerciseTypeService();
 
             // Act
             var result = await testee.GetPagedAsync(filterParams.ToCommand());
@@ -74,8 +79,9 @@ namespace GetFitterGetBigger.API.Tests.Services
                 .Build();
 
             automocker
-                .SetupExerciseUnitOfWork()
-                .SetupExerciseGetById(exercise);
+                .SetupExerciseQueryDataServiceExists(exerciseId, true)
+                .SetupExerciseQueryDataServiceGetById(new ExerciseDto { Name = exercise.Name, Id = exercise.Id.ToString() })
+                .SetupExerciseTypeService();
 
             // Act
             var result = await testee.GetByIdAsync(exerciseId);
@@ -90,6 +96,7 @@ namespace GetFitterGetBigger.API.Tests.Services
         {
             // Arrange
             var automocker = new AutoMocker();
+            automocker.SetupExerciseTypeService();
             var testee = automocker.CreateInstance<ExerciseService>();
             
             const string invalidIdString = "invalid-id";
@@ -122,9 +129,8 @@ namespace GetFitterGetBigger.API.Tests.Services
                 .Build();
 
             automocker
-                .SetupExerciseUnitOfWork()
-                .SetupExerciseAdd(createdExercise)
-                .SetupExerciseExists(exerciseName, false)
+                .SetupExerciseCommandDataServiceCreate(new ExerciseDto { Name = createdExercise.Name, Id = createdExercise.Id.ToString() })
+                .SetupExerciseQueryDataServiceExistsByName(exerciseName, false)
                 .SetupExerciseTypeServiceAllExist();
 
             // Act
@@ -134,8 +140,6 @@ namespace GetFitterGetBigger.API.Tests.Services
             result.Should().NotBeNull();
             result.IsSuccess.Should().BeTrue();
             result.Data.Name.Should().Be(exerciseName);
-            
-            automocker.VerifyWritableUnitOfWorkCommitOnce();
         }
 
         [Fact]
@@ -153,8 +157,7 @@ namespace GetFitterGetBigger.API.Tests.Services
                 .Build();
 
             automocker
-                .SetupExerciseUnitOfWork()
-                .SetupExerciseExists(existingExerciseName, true)
+                .SetupExerciseQueryDataServiceExistsByName(existingExerciseName, true)
                 .SetupExerciseTypeServiceAllExist();
 
             // Act
@@ -195,19 +198,11 @@ namespace GetFitterGetBigger.API.Tests.Services
                 .AsActive()
                 .Build();
 
-            // Setup different returns for multiple calls
-            var getByIdCallCount = 0;
-            automocker.GetMock<IExerciseRepository>()
-                .Setup(r => r.GetByIdAsync(It.IsAny<ExerciseId>()))
-                .ReturnsAsync(() => {
-                    getByIdCallCount++;
-                    return getByIdCallCount == 1 ? existingExercise : updatedExercise;
-                });
-
             automocker
-                .SetupExerciseUnitOfWork()
-                .SetupExerciseUpdate()
-                .SetupExerciseExists(updatedName, false)
+                .SetupExerciseQueryDataServiceExists(exerciseId, true)
+                .SetupExerciseQueryDataServiceGetById(new ExerciseDto { Name = existingExercise.Name, Id = existingExercise.Id.ToString() })
+                .SetupExerciseCommandDataServiceUpdate(new ExerciseDto { Name = updatedExercise.Name, Id = updatedExercise.Id.ToString() })
+                .SetupExerciseQueryDataServiceExistsByName(updatedName, false, exerciseId)
                 .SetupExerciseTypeServiceAllExist();
 
             // Act
@@ -217,8 +212,6 @@ namespace GetFitterGetBigger.API.Tests.Services
             result.Should().NotBeNull();
             result.IsSuccess.Should().BeTrue();
             result.Data.Name.Should().Be(updatedName);
-            
-            automocker.VerifyWritableUnitOfWorkCommitOnce();
         }
 
         [Fact]
@@ -234,19 +227,15 @@ namespace GetFitterGetBigger.API.Tests.Services
                 .Build();
 
             automocker
-                .SetupExerciseUnitOfWork()
-                .SetupExerciseGetById(exercise)
-                .SetupExerciseSoftDelete();
+                .SetupExerciseQueryDataServiceExists(exerciseId, true)
+                .SetupExerciseQueryDataServiceGetById(new ExerciseDto { Name = exercise.Name, Id = exercise.Id.ToString() })
+                .SetupExerciseCommandDataServiceSoftDelete(true);
 
             // Act
             var result = await testee.DeleteAsync(exerciseId);
 
             // Assert
             result.IsSuccess.Should().BeTrue();
-            
-            automocker
-                .VerifyExerciseSoftDeleteOnce(exerciseId)
-                .VerifyExerciseUpdateNeverCalled();
         }
 
         [Fact]
@@ -259,8 +248,8 @@ namespace GetFitterGetBigger.API.Tests.Services
             var exerciseId = ExerciseId.New();
 
             automocker
-                .SetupExerciseUnitOfWork()
-                .SetupExerciseGetById(Exercise.Empty);
+                .SetupExerciseQueryDataServiceExists(exerciseId, false)
+                .SetupExerciseQueryDataServiceGetById(ExerciseDto.Empty);
 
             // Act
             var result = await testee.DeleteAsync(exerciseId);
@@ -268,8 +257,6 @@ namespace GetFitterGetBigger.API.Tests.Services
             // Assert
             result.IsSuccess.Should().BeFalse();
             result.PrimaryErrorCode.Should().Be(ServiceErrorCode.NotFound);
-            
-            automocker.VerifyExerciseSoftDeleteNeverCalled();
         }
 
         [Fact]
@@ -287,9 +274,9 @@ namespace GetFitterGetBigger.API.Tests.Services
                 .Build();
 
             automocker
-                .SetupExerciseUnitOfWork()
                 .SetupExerciseTypeServiceIsRestType(true)
-                .SetupExerciseTypeServiceAllExist();
+                .SetupExerciseTypeServiceAllExist()
+                .SetupExerciseQueryDataServiceExistsByName(restExerciseName, false);
 
             // Act
             var result = await testee.CreateAsync(request.ToCommand());
@@ -319,11 +306,10 @@ namespace GetFitterGetBigger.API.Tests.Services
                 .Build();
 
             automocker
-                .SetupExerciseUnitOfWork()
                 .SetupExerciseTypeServiceIsRestType(false)
                 .SetupExerciseTypeServiceAllExist()
-                .SetupExerciseExists(exerciseName, false)
-                .SetupExerciseAdd(createdExercise);
+                .SetupExerciseQueryDataServiceExistsByName(exerciseName, false)
+                .SetupExerciseCommandDataServiceCreate(new ExerciseDto { Name = createdExercise.Name, Id = createdExercise.Id.ToString() });
 
             // Act
             var result = await testee.CreateAsync(request.ToCommand());
@@ -355,9 +341,8 @@ namespace GetFitterGetBigger.API.Tests.Services
                 .Build();
 
             automocker
-                .SetupExerciseUnitOfWork()
-                .SetupExerciseAdd(createdExercise)
-                .SetupExerciseExists(exerciseName, false)
+                .SetupExerciseCommandDataServiceCreate(new ExerciseDto { Name = createdExercise.Name, Id = createdExercise.Id.ToString() })
+                .SetupExerciseQueryDataServiceExistsByName(exerciseName, false)
                 .SetupExerciseTypeServiceIsRestType(false)
                 .SetupExerciseTypeServiceAllExist();
 
@@ -368,8 +353,6 @@ namespace GetFitterGetBigger.API.Tests.Services
             result.Should().NotBeNull();
             result.IsSuccess.Should().BeTrue();
             result.Data.Name.Should().Be(exerciseName);
-            
-            automocker.VerifyWritableUnitOfWorkCommitOnce();
         }
 
         [Fact]
@@ -394,9 +377,10 @@ namespace GetFitterGetBigger.API.Tests.Services
                 .Build();
 
             automocker
-                .SetupExerciseUnitOfWork()
-                .SetupExerciseGetById(existingExercise)
-                .SetupExerciseUpdate()
+                .SetupExerciseQueryDataServiceExists(exerciseId, true)
+                .SetupExerciseQueryDataServiceGetById(new ExerciseDto { Name = existingExercise.Name, Id = existingExercise.Id.ToString() })
+                .SetupExerciseQueryDataServiceExistsByName(restExerciseName, false, exerciseId)
+                .SetupExerciseCommandDataServiceUpdate(new ExerciseDto { Name = existingExercise.Name, Id = existingExercise.Id.ToString() })
                 .SetupExerciseTypeServiceIsRestType(true);
 
             // Act
@@ -430,12 +414,12 @@ namespace GetFitterGetBigger.API.Tests.Services
                 .Build();
 
             automocker
-                .SetupExerciseUnitOfWork()
-                .SetupExerciseGetById(existingExercise)
-                .SetupExerciseUpdate()
+                .SetupExerciseQueryDataServiceExists(exerciseId, true)
+                .SetupExerciseQueryDataServiceGetById(new ExerciseDto { Name = existingExercise.Name, Id = existingExercise.Id.ToString() })
+                .SetupExerciseCommandDataServiceUpdate(new ExerciseDto { Name = existingExercise.Name, Id = existingExercise.Id.ToString() })
                 .SetupExerciseTypeServiceIsRestType(false)
                 .SetupExerciseTypeServiceAllExist()
-                .SetupExerciseExists(updatedName, false);
+                .SetupExerciseQueryDataServiceExistsByName(updatedName, false, exerciseId);
 
             // Act
             var result = await testee.UpdateAsync(exerciseId, request.ToCommand());

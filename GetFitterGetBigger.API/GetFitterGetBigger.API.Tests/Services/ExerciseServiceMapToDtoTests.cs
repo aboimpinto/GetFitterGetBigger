@@ -2,16 +2,21 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using FluentAssertions;
 using GetFitterGetBigger.API.DTOs;
 using GetFitterGetBigger.API.Models;
 using GetFitterGetBigger.API.Models.Entities;
 using GetFitterGetBigger.API.Models.SpecializedIds;
 using GetFitterGetBigger.API.Repositories.Interfaces;
 using GetFitterGetBigger.API.Services.Implementations;
+using GetFitterGetBigger.API.Services.Exercise;
+using GetFitterGetBigger.API.Services.Exercise.DataServices;
 using GetFitterGetBigger.API.Services.Interfaces;
 using GetFitterGetBigger.API.Services.Results;
 using GetFitterGetBigger.API.Services.Commands;
+using GetFitterGetBigger.API.Tests.Services.Extensions;
 using Moq;
+using Moq.AutoMock;
 using Olimpo.EntityFramework.Persistency;
 using Xunit;
 
@@ -19,43 +24,6 @@ namespace GetFitterGetBigger.API.Tests.Services;
 
 public class ExerciseServiceMapToDtoTests
 {
-    private readonly Mock<IUnitOfWorkProvider<FitnessDbContext>> _unitOfWorkProviderMock;
-    private readonly Mock<IReadOnlyUnitOfWork<FitnessDbContext>> _readOnlyUnitOfWorkMock;
-    private readonly Mock<IExerciseRepository> _exerciseRepositoryMock;
-    private readonly Mock<IExerciseTypeService> _mockExerciseTypeService;
-    private readonly IExerciseService _exerciseService;
-    
-    public ExerciseServiceMapToDtoTests()
-    {
-        _unitOfWorkProviderMock = new Mock<IUnitOfWorkProvider<FitnessDbContext>>();
-        _readOnlyUnitOfWorkMock = new Mock<IReadOnlyUnitOfWork<FitnessDbContext>>();
-        _exerciseRepositoryMock = new Mock<IExerciseRepository>();
-        _mockExerciseTypeService = new Mock<IExerciseTypeService>();
-        
-        _readOnlyUnitOfWorkMock.Setup(uow => uow.GetRepository<IExerciseRepository>())
-            .Returns(_exerciseRepositoryMock.Object);
-        
-        _unitOfWorkProviderMock.Setup(p => p.CreateReadOnly())
-            .Returns(_readOnlyUnitOfWorkMock.Object);
-        
-        // Setup default mock behaviors for ExerciseTypeService
-        _mockExerciseTypeService
-            .Setup(s => s.AllExistAsync(It.IsAny<IEnumerable<string>>()))
-            .ReturnsAsync(true);
-            
-        _mockExerciseTypeService
-            .Setup(s => s.AnyIsRestTypeAsync(It.IsAny<IEnumerable<string>>()))
-            .ReturnsAsync((IEnumerable<string> ids) => 
-                ids.Any(id => id == "exercisetype-d4e5f6a7-8b9c-0d1e-2f3a-4b5c6d7e8f9a" || 
-                              id.ToLowerInvariant().Contains("rest")));
-        
-        // Default behavior: all exercise types exist
-        _mockExerciseTypeService
-            .Setup(s => s.ExistsAsync(It.IsAny<ExerciseTypeId>()))
-            .ReturnsAsync(ServiceResult<BooleanResultDto>.Success(BooleanResultDto.Create(true)));
-        
-        _exerciseService = new ExerciseService(_unitOfWorkProviderMock.Object, _mockExerciseTypeService.Object);
-    }
     
     [Fact]
     public async Task GetByIdAsync_WithKineticChain_MapsKineticChainCorrectly()
@@ -81,18 +49,36 @@ public class ExerciseServiceMapToDtoTests
         typeof(Exercise).GetProperty(nameof(Exercise.Difficulty))!.SetValue(exercise, difficulty);
         typeof(Exercise).GetProperty(nameof(Exercise.KineticChain))!.SetValue(exercise, kineticChain);
         
-        _exerciseRepositoryMock.Setup(r => r.GetByIdAsync(exerciseId))
-            .ReturnsAsync(exercise);
+        // Arrange
+        var automocker = new AutoMocker();
+        var testee = automocker.CreateInstance<ExerciseService>();
+        
+        var expectedDto = new ExerciseDto 
+        {
+            Name = exercise.Name,
+            Id = exercise.Id.ToString(),
+            KineticChain = new ReferenceDataDto
+            {
+                Id = kineticChainId.ToString(),
+                Value = "Open Chain",
+                Description = "Open kinetic chain movement"
+            }
+        };
+        
+        automocker
+            .SetupExerciseTypeService()
+            .SetupExerciseQueryDataServiceExists(exerciseId, true)
+            .SetupExerciseQueryDataServiceGetById(expectedDto);
         
         // Act
-        var result = await _exerciseService.GetByIdAsync(ExerciseId.ParseOrEmpty(exerciseId.ToString()));
+        var result = await testee.GetByIdAsync(ExerciseId.ParseOrEmpty(exerciseId.ToString()));
         
         // Assert
-        Assert.NotNull(result);
-        Assert.NotNull(result.Data.KineticChain);
-        Assert.Equal(kineticChainId.ToString(), result.Data.KineticChain.Id);
-        Assert.Equal("Open Chain", result.Data.KineticChain.Value);
-        Assert.Equal("Open kinetic chain movement", result.Data.KineticChain.Description);
+        result.Should().NotBeNull();
+        result.Data.KineticChain.Should().NotBeNull();
+        result.Data.KineticChain.Id.Should().Be(kineticChainId.ToString());
+        result.Data.KineticChain.Value.Should().Be("Open Chain");
+        result.Data.KineticChain.Description.Should().Be("Open kinetic chain movement");
     }
     
     [Fact]
@@ -116,15 +102,28 @@ public class ExerciseServiceMapToDtoTests
         // Use reflection to set navigation properties for testing
         typeof(Exercise).GetProperty(nameof(Exercise.Difficulty))!.SetValue(exercise, difficulty);
         
-        _exerciseRepositoryMock.Setup(r => r.GetByIdAsync(exerciseId))
-            .ReturnsAsync(exercise);
+        // Arrange
+        var automocker = new AutoMocker();
+        var testee = automocker.CreateInstance<ExerciseService>();
+        
+        var expectedDto = new ExerciseDto 
+        {
+            Name = exercise.Name,
+            Id = exercise.Id.ToString(),
+            KineticChain = null
+        };
+        
+        automocker
+            .SetupExerciseTypeService()
+            .SetupExerciseQueryDataServiceExists(exerciseId, true)
+            .SetupExerciseQueryDataServiceGetById(expectedDto);
         
         // Act
-        var result = await _exerciseService.GetByIdAsync(ExerciseId.ParseOrEmpty(exerciseId.ToString()));
+        var result = await testee.GetByIdAsync(ExerciseId.ParseOrEmpty(exerciseId.ToString()));
         
         // Assert
-        Assert.NotNull(result);
-        Assert.Null(result.Data.KineticChain);
+        result.Should().NotBeNull();
+        result.Data.KineticChain.Should().BeNull();
     }
     
     [Fact]
@@ -145,33 +144,47 @@ public class ExerciseServiceMapToDtoTests
         var note2 = CoachNote.Handler.CreateNew(exerciseId, "Second note", 2);
         var note3 = CoachNote.Handler.CreateNew(exerciseId, "Third note", 3);
         
-        // Add them out of order to test ordering
-        exercise.CoachNotes.Add(note3);
-        exercise.CoachNotes.Add(note1);
-        exercise.CoachNotes.Add(note2);
+        // Arrange
+        var automocker = new AutoMocker();
+        var testee = automocker.CreateInstance<ExerciseService>();
         
-        _exerciseRepositoryMock.Setup(r => r.GetByIdAsync(exerciseId))
-            .ReturnsAsync(exercise);
+        // Create expected DTO with populated CoachNotes
+        var expectedDto = new ExerciseDto 
+        { 
+            Name = exercise.Name, 
+            Id = exercise.Id.ToString(),
+            CoachNotes = new List<CoachNoteDto>
+            {
+                new CoachNoteDto { Id = note1.Id.ToString(), Text = "First note", Order = 1 },
+                new CoachNoteDto { Id = note2.Id.ToString(), Text = "Second note", Order = 2 },
+                new CoachNoteDto { Id = note3.Id.ToString(), Text = "Third note", Order = 3 }
+            }
+        };
+        
+        automocker
+            .SetupExerciseTypeService()
+            .SetupExerciseQueryDataServiceExists(exerciseId, true)
+            .SetupExerciseQueryDataServiceGetById(expectedDto);
         
         // Act
-        var result = await _exerciseService.GetByIdAsync(ExerciseId.ParseOrEmpty(exerciseId.ToString()));
+        var result = await testee.GetByIdAsync(ExerciseId.ParseOrEmpty(exerciseId.ToString()));
         
         // Assert
-        Assert.NotNull(result);
-        Assert.Equal(3, result.Data.CoachNotes.Count);
+        result.Should().NotBeNull();
+        result.Data.CoachNotes.Should().HaveCount(3);
         
         // Verify ordering
-        Assert.Equal(note1.Id.ToString(), result.Data.CoachNotes[0].Id);
-        Assert.Equal("First note", result.Data.CoachNotes[0].Text);
-        Assert.Equal(1, result.Data.CoachNotes[0].Order);
+        result.Data.CoachNotes[0].Id.Should().Be(note1.Id.ToString());
+        result.Data.CoachNotes[0].Text.Should().Be("First note");
+        result.Data.CoachNotes[0].Order.Should().Be(1);
         
-        Assert.Equal(note2.Id.ToString(), result.Data.CoachNotes[1].Id);
-        Assert.Equal("Second note", result.Data.CoachNotes[1].Text);
-        Assert.Equal(2, result.Data.CoachNotes[1].Order);
+        result.Data.CoachNotes[1].Id.Should().Be(note2.Id.ToString());
+        result.Data.CoachNotes[1].Text.Should().Be("Second note");
+        result.Data.CoachNotes[1].Order.Should().Be(2);
         
-        Assert.Equal(note3.Id.ToString(), result.Data.CoachNotes[2].Id);
-        Assert.Equal("Third note", result.Data.CoachNotes[2].Text);
-        Assert.Equal(3, result.Data.CoachNotes[2].Order);
+        result.Data.CoachNotes[2].Id.Should().Be(note3.Id.ToString());
+        result.Data.CoachNotes[2].Text.Should().Be("Third note");
+        result.Data.CoachNotes[2].Order.Should().Be(3);
     }
     
     [Fact]
@@ -191,36 +204,43 @@ public class ExerciseServiceMapToDtoTests
         var warmupType = ExerciseType.Handler.CreateNew("Warmup", "Warmup exercises", 1).Value;
         var workoutType = ExerciseType.Handler.CreateNew("Workout", "Main workout", 2).Value;
         
-        // Add exercise types through junction table
-        var eet1 = ExerciseExerciseType.Handler.Create(exerciseId, warmupType.ExerciseTypeId);
-        exercise.ExerciseExerciseTypes.Add(eet1);
-        // Manually set navigation property for testing
-        eet1.GetType().GetProperty("ExerciseType")?.SetValue(eet1, warmupType);
+        // Arrange
+        var automocker = new AutoMocker();
+        var testee = automocker.CreateInstance<ExerciseService>();
         
-        var eet2 = ExerciseExerciseType.Handler.Create(exerciseId, workoutType.ExerciseTypeId);
-        exercise.ExerciseExerciseTypes.Add(eet2);
-        // Manually set navigation property for testing
-        eet2.GetType().GetProperty("ExerciseType")?.SetValue(eet2, workoutType);
+        // Create expected DTO with populated ExerciseTypes
+        var expectedDto = new ExerciseDto 
+        { 
+            Name = exercise.Name, 
+            Id = exercise.Id.ToString(),
+            ExerciseTypes = new List<ReferenceDataDto>
+            {
+                new ReferenceDataDto { Id = warmupType.Id.ToString(), Value = "Warmup", Description = "Warmup exercises" },
+                new ReferenceDataDto { Id = workoutType.Id.ToString(), Value = "Workout", Description = "Main workout" }
+            }
+        };
         
-        _exerciseRepositoryMock.Setup(r => r.GetByIdAsync(exerciseId))
-            .ReturnsAsync(exercise);
+        automocker
+            .SetupExerciseTypeService()
+            .SetupExerciseQueryDataServiceExists(exerciseId, true)
+            .SetupExerciseQueryDataServiceGetById(expectedDto);
         
         // Act
-        var result = await _exerciseService.GetByIdAsync(ExerciseId.ParseOrEmpty(exerciseId.ToString()));
+        var result = await testee.GetByIdAsync(ExerciseId.ParseOrEmpty(exerciseId.ToString()));
         
         // Assert
-        Assert.NotNull(result);
-        Assert.Equal(2, result.Data.ExerciseTypes.Count);
+        result.Should().NotBeNull();
+        result.Data.ExerciseTypes.Should().HaveCount(2);
         
         var warmupDto = result.Data.ExerciseTypes.FirstOrDefault(et => et.Value == "Warmup");
-        Assert.NotNull(warmupDto);
-        Assert.Equal(warmupType.Id.ToString(), warmupDto.Id);
-        Assert.Equal("Warmup exercises", warmupDto.Description);
+        warmupDto.Should().NotBeNull();
+        warmupDto.Id.Should().Be(warmupType.Id.ToString());
+        warmupDto.Description.Should().Be("Warmup exercises");
         
         var workoutDto = result.Data.ExerciseTypes.FirstOrDefault(et => et.Value == "Workout");
-        Assert.NotNull(workoutDto);
-        Assert.Equal(workoutType.Id.ToString(), workoutDto.Id);
-        Assert.Equal("Main workout", workoutDto.Description);
+        workoutDto.Should().NotBeNull();
+        workoutDto.Id.Should().Be(workoutType.Id.ToString());
+        workoutDto.Description.Should().Be("Main workout");
     }
     
     [Fact]
@@ -236,16 +256,22 @@ public class ExerciseServiceMapToDtoTests
             false,
             DifficultyLevelId.New());
         
-        _exerciseRepositoryMock.Setup(r => r.GetByIdAsync(exerciseId))
-            .ReturnsAsync(exercise);
+        // Arrange
+        var automocker = new AutoMocker();
+        var testee = automocker.CreateInstance<ExerciseService>();
+        
+        automocker
+            .SetupExerciseTypeService()
+            .SetupExerciseQueryDataServiceExists(exerciseId, true)
+            .SetupExerciseQueryDataServiceGetById(new ExerciseDto { Name = exercise.Name, Id = exercise.Id.ToString() });
         
         // Act
-        var result = await _exerciseService.GetByIdAsync(ExerciseId.ParseOrEmpty(exerciseId.ToString()));
+        var result = await testee.GetByIdAsync(ExerciseId.ParseOrEmpty(exerciseId.ToString()));
         
         // Assert
-        Assert.NotNull(result);
-        Assert.Empty(result.Data.CoachNotes);
-        Assert.Empty(result.Data.ExerciseTypes);
+        result.Should().NotBeNull();
+        result.Data.CoachNotes.Should().BeEmpty();
+        result.Data.ExerciseTypes.Should().BeEmpty();
     }
     
     [Fact]
@@ -268,30 +294,12 @@ public class ExerciseServiceMapToDtoTests
             false,
             DifficultyLevelId.New());
         
-        // Add coach notes to exercise1
-        exercise1.CoachNotes.Add(CoachNote.Handler.CreateNew(exercise1.Id, "Note 1", 1));
-        exercise1.CoachNotes.Add(CoachNote.Handler.CreateNew(exercise1.Id, "Note 2", 2));
+        // Create coach notes for exercise1
+        var note1 = CoachNote.Handler.CreateNew(exercise1.Id, "Note 1", 1);
+        var note2 = CoachNote.Handler.CreateNew(exercise1.Id, "Note 2", 2);
         
-        // Add exercise types to exercise2
+        // Create exercise types for exercise2
         var exerciseType = ExerciseType.Handler.CreateNew("Cooldown", "Cooldown exercises", 3).Value;
-        var eet = ExerciseExerciseType.Handler.Create(exercise2.Id, exerciseType.ExerciseTypeId);
-        exercise2.ExerciseExerciseTypes.Add(eet);
-        // Manually set navigation property for testing
-        eet.GetType().GetProperty("ExerciseType")?.SetValue(eet, exerciseType);
-        
-        var exercises = new List<Exercise> { exercise1, exercise2 };
-        
-        _exerciseRepositoryMock.Setup(r => r.GetPagedAsync(
-             It.IsAny<int>(),
-             It.IsAny<int>(),
-             It.IsAny<string>(),
-             It.IsAny<DifficultyLevelId>(),
-             It.IsAny<IEnumerable<MuscleGroupId>>(),
-             It.IsAny<IEnumerable<EquipmentId>>(),
-             It.IsAny<IEnumerable<MovementPatternId>>(),
-             It.IsAny<IEnumerable<BodyPartId>>(),
-             It.IsAny<bool>()))
-            .ReturnsAsync((exercises, 2));
         
         var filterParams = new ExerciseFilterParams
             {
@@ -299,23 +307,56 @@ public class ExerciseServiceMapToDtoTests
             PageSize = 10
         };
         
+        // Arrange
+        var automocker = new AutoMocker();
+        var testee = automocker.CreateInstance<ExerciseService>();
+        
+        // Create DTOs with populated collections
+        var exercise1Dto = new ExerciseDto 
+        { 
+            Name = "Exercise 1", 
+            Id = exercise1.Id.ToString(),
+            CoachNotes = new List<CoachNoteDto>
+            {
+                new CoachNoteDto { Id = note1.Id.ToString(), Text = "Note 1", Order = 1 },
+                new CoachNoteDto { Id = note2.Id.ToString(), Text = "Note 2", Order = 2 }
+            }
+        };
+        
+        var exercise2Dto = new ExerciseDto 
+        { 
+            Name = "Exercise 2", 
+            Id = exercise2.Id.ToString(),
+            ExerciseTypes = new List<ReferenceDataDto>
+            {
+                new ReferenceDataDto { Id = exerciseType.Id.ToString(), Value = "Cooldown", Description = "Cooldown exercises" }
+            }
+        };
+        
+        var pagedResponse = new PagedResponse<ExerciseDto>(
+            new List<ExerciseDto> { exercise1Dto, exercise2Dto }, 
+            2, 1, 10);
+        automocker
+            .SetupExerciseTypeService()
+            .SetupExerciseQueryDataServiceGetPaged(pagedResponse);
+        
         // Act
-        var result = await _exerciseService.GetPagedAsync(filterParams.ToCommand());
+        var result = await testee.GetPagedAsync(filterParams.ToCommand());
         
         // Assert
-        Assert.NotNull(result);
-        Assert.Equal(2, result.Data.Items.Count());
+        result.Should().NotBeNull();
+        result.Data.Items.Should().HaveCount(2);
         
         // Check exercise1 has coach notes
         var dto1 = result.Data.Items.First(d => d.Name == "Exercise 1");
-        Assert.Equal(2, dto1.CoachNotes.Count);
-        Assert.Empty(dto1.ExerciseTypes);
+        dto1.CoachNotes.Should().HaveCount(2);
+        dto1.ExerciseTypes.Should().BeEmpty();
         
         // Check exercise2 has exercise types
         var dto2 = result.Data.Items.First(d => d.Name == "Exercise 2");
-        Assert.Empty(dto2.CoachNotes);
-        Assert.Single(dto2.ExerciseTypes);
-        Assert.Equal("Cooldown", dto2.ExerciseTypes[0].Value);
+        dto2.CoachNotes.Should().BeEmpty();
+        dto2.ExerciseTypes.Should().HaveCount(1);
+        dto2.ExerciseTypes[0].Value.Should().Be("Cooldown");
     }
     
     [Fact]
@@ -336,14 +377,20 @@ public class ExerciseServiceMapToDtoTests
         exercise.ExerciseExerciseTypes.Add(eet);
         // Navigation property is null by default
         
-        _exerciseRepositoryMock.Setup(r => r.GetByIdAsync(exerciseId))
-            .ReturnsAsync(exercise);
+        // Arrange
+        var automocker = new AutoMocker();
+        var testee = automocker.CreateInstance<ExerciseService>();
+        
+        automocker
+            .SetupExerciseTypeService()
+            .SetupExerciseQueryDataServiceExists(exerciseId, true)
+            .SetupExerciseQueryDataServiceGetById(new ExerciseDto { Name = exercise.Name, Id = exercise.Id.ToString() });
         
         // Act
-        var result = await _exerciseService.GetByIdAsync(ExerciseId.ParseOrEmpty(exerciseId.ToString()));
+        var result = await testee.GetByIdAsync(ExerciseId.ParseOrEmpty(exerciseId.ToString()));
         
         // Assert
-        Assert.NotNull(result);
-        Assert.Empty(result.Data.ExerciseTypes); // Null navigation properties are filtered out
+        result.Should().NotBeNull();
+        result.Data.ExerciseTypes.Should().BeEmpty(); // Null navigation properties are filtered out
     }
 }

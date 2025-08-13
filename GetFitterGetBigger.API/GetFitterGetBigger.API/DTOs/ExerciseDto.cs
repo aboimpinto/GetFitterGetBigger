@@ -1,5 +1,3 @@
-using System;
-using System.Collections.Generic;
 using GetFitterGetBigger.API.DTOs.Interfaces;
 
 namespace GetFitterGetBigger.API.DTOs;

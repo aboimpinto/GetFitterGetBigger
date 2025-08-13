@@ -1,7 +1,7 @@
 using System;
 using System.Threading.Tasks;
 using GetFitterGetBigger.API.DTOs;
-using GetFitterGetBigger.API.Services.Interfaces;
+using GetFitterGetBigger.API.Services.Exercise.Features.Links;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;

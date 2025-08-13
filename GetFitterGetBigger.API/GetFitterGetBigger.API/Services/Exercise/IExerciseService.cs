@@ -4,7 +4,7 @@ using GetFitterGetBigger.API.Models.SpecializedIds;
 using GetFitterGetBigger.API.Services.Commands;
 using GetFitterGetBigger.API.Services.Results;
 
-namespace GetFitterGetBigger.API.Services.Interfaces;
+namespace GetFitterGetBigger.API.Services.Exercise;
 
 /// <summary>
 /// Service interface for Exercise business logic

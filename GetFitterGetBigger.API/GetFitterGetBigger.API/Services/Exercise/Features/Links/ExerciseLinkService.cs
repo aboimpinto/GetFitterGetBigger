@@ -9,8 +9,9 @@ using GetFitterGetBigger.API.Models.SpecializedIds;
 using GetFitterGetBigger.API.Repositories.Interfaces;
 using GetFitterGetBigger.API.Services.Interfaces;
 using Olimpo.EntityFramework.Persistency;
+using IExerciseService = GetFitterGetBigger.API.Services.Exercise.IExerciseService;
 
-namespace GetFitterGetBigger.API.Services.Implementations;
+namespace GetFitterGetBigger.API.Services.Exercise.Features.Links;
 
 /// <summary>
 /// Service implementation for managing exercise links

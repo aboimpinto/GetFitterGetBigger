@@ -2,7 +2,7 @@ using GetFitterGetBigger.API.DTOs;
 using GetFitterGetBigger.API.Extensions;
 using GetFitterGetBigger.API.Mappers;
 using GetFitterGetBigger.API.Models.SpecializedIds;
-using GetFitterGetBigger.API.Services.Interfaces;
+using GetFitterGetBigger.API.Services.Exercise;
 using GetFitterGetBigger.API.Services.Results;
 using Microsoft.AspNetCore.Mvc;
 

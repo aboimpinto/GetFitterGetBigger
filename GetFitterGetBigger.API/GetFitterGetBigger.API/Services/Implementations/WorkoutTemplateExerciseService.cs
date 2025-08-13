@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using GetFitterGetBigger.API.DTOs;
 using GetFitterGetBigger.API.Models;
 using GetFitterGetBigger.API.Models.Entities;
+using ExerciseEntity = GetFitterGetBigger.API.Models.Entities.Exercise;
 using GetFitterGetBigger.API.Models.SpecializedIds;
 using GetFitterGetBigger.API.Repositories.Interfaces;
 using GetFitterGetBigger.API.Services.Commands.WorkoutTemplateExercises;
@@ -974,7 +975,7 @@ public class WorkoutTemplateExerciseService : IWorkoutTemplateExerciseService
         };
     }
 
-    private static ExerciseDto MapExerciseToDto(Exercise entity)
+    private static ExerciseDto MapExerciseToDto(ExerciseEntity entity)
     {
         // Using simplified mapping that matches the existing ExerciseDto structure
         return new ExerciseDto

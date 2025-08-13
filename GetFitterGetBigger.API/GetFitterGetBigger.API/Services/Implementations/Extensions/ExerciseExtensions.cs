@@ -1,5 +1,6 @@
 using GetFitterGetBigger.API.DTOs;
 using GetFitterGetBigger.API.Models.Entities;
+using ExerciseEntity = GetFitterGetBigger.API.Models.Entities.Exercise;
 using GetFitterGetBigger.API.Builders;
 
 namespace GetFitterGetBigger.API.Services.Implementations.Extensions;
@@ -12,7 +13,7 @@ public static class ExerciseExtensions
     /// <summary>
     /// Converts an Exercise entity to ExerciseDto
     /// </summary>
-    public static ExerciseDto ToDto(this Exercise exercise)
+    public static ExerciseDto ToDto(this ExerciseEntity exercise)
     {
         if (exercise.IsEmpty)
         {
