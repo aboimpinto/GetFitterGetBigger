@@ -56,17 +56,17 @@ public class EquipmentRequirementsService(
         WorkoutTemplateId workoutTemplateId,
         IEnumerable<EquipmentId> availableEquipmentIds)
     {
-        return await ServiceValidate.Build<EquipmentAvailabilityDto>()
-            .EnsureNotEmpty(workoutTemplateId, WorkoutTemplateErrorMessages.InvalidIdFormat)
-            .EnsureExistsAsync(
-                async () => await WorkoutTemplateExistsAsync(workoutTemplateId),
-                "WorkoutTemplate")
-            .MatchAsync(
-                whenValid: async () => await PerformAvailabilityCheckAsync(workoutTemplateId, availableEquipmentIds),
-                whenInvalid: errors => ServiceResult<EquipmentAvailabilityDto>.Failure(
-                    new EquipmentAvailabilityDto(),
-                    errors.FirstOrDefault() ?? ServiceError.ValidationFailed("Unknown error"))
-            );
+        // First get the required equipment
+        var requiredEquipmentResult = await GetRequiredEquipmentAsync(workoutTemplateId);
+        
+        // Use pattern matching to handle the result
+        return !requiredEquipmentResult.IsSuccess
+            ? ServiceResult<EquipmentAvailabilityDto>.Failure(
+                new EquipmentAvailabilityDto(),
+                requiredEquipmentResult.Errors)
+            : await CalculateEquipmentAvailabilityAsync(
+                requiredEquipmentResult.Data.ToList(),
+                availableEquipmentIds);
     }
     
     private async Task<ServiceResult<IEnumerable<EquipmentDto>>> LoadRequiredEquipmentAsync(WorkoutTemplateId id)
@@ -170,19 +170,10 @@ public class EquipmentRequirementsService(
         return ServiceResult<IEnumerable<EquipmentUsageDto>>.Success(usageStats);
     }
     
-    private async Task<ServiceResult<EquipmentAvailabilityDto>> PerformAvailabilityCheckAsync(
-        WorkoutTemplateId workoutTemplateId,
+    private async Task<ServiceResult<EquipmentAvailabilityDto>> CalculateEquipmentAvailabilityAsync(
+        List<EquipmentDto> requiredEquipment,
         IEnumerable<EquipmentId> availableEquipmentIds)
     {
-        var requiredEquipmentResult = await GetRequiredEquipmentAsync(workoutTemplateId);
-        if (!requiredEquipmentResult.IsSuccess)
-        {
-            return ServiceResult<EquipmentAvailabilityDto>.Failure(
-                new EquipmentAvailabilityDto(),
-                requiredEquipmentResult.Errors);
-        }
-        
-        var requiredEquipment = requiredEquipmentResult.Data.ToList();
         var availableIdSet = availableEquipmentIds
             .Where(id => !id.IsEmpty)
             .Select(id => id.ToString())
@@ -210,7 +201,7 @@ public class EquipmentRequirementsService(
         // TODO: In future, we could add logic to find alternative exercises
         // that can be performed with available equipment
         
-        return ServiceResult<EquipmentAvailabilityDto>.Success(availabilityDto);
+        return await Task.FromResult(ServiceResult<EquipmentAvailabilityDto>.Success(availabilityDto));
     }
     
     private async Task<bool> WorkoutTemplateExistsAsync(WorkoutTemplateId id)
