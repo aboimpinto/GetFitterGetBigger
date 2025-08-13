@@ -14,7 +14,7 @@ Feature: WorkoutTemplate Count Query Optimization
       | Test Workout 4 | Description for test workout | Lower Body         | Advanced       | 65       | test,workout4 |
       | Test Workout 5 | Description for test workout | Upper Body - Push  | Intermediate   | 70       | test,workout5 |
 
-  @workouttemplate @count @performance @ignore
+  @workouttemplate @count @performance
   Scenario: Count query ignores includes and executes simple count
     When I send a GET request to "/api/workout-templates"
     Then the response status should be 200
@@ -23,7 +23,7 @@ Feature: WorkoutTemplate Count Query Optimization
     And the response should have property "items" as array
     And the response should have property "items" as array with 5 items
 
-  @workouttemplate @count @performance @ignore
+  @workouttemplate @count @performance
   Scenario: Complex query with multiple filters executes count efficiently
     When I send a GET request to "/api/workout-templates?namePattern=Test&sortBy=name&sortOrder=asc"
     Then the response status should be 200
@@ -31,7 +31,7 @@ Feature: WorkoutTemplate Count Query Optimization
     And the response should have property "items" as array with 5 items
     And the response items should be sorted by name ascending
 
-  @workouttemplate @count @ignore
+  @workouttemplate @count
   Scenario: Count is accurate with pagination
     When I send a GET request to "/api/workout-templates?page=1&pageSize=2"
     Then the response status should be 200
@@ -43,7 +43,7 @@ Feature: WorkoutTemplate Count Query Optimization
     And the response should have property "totalCount" with value "5"
     And the response should have property "items" as array with 1 items
 
-  @workouttemplate @count @ignore
+  @workouttemplate @count
   Scenario: Count with no results returns zero
     When I send a GET request to "/api/workout-templates?namePattern=NonExistentWorkout"
     Then the response status should be 200

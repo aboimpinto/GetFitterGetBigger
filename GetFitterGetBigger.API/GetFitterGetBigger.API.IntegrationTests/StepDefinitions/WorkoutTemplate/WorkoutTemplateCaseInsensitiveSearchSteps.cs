@@ -40,7 +40,9 @@ public class WorkoutTemplateCaseInsensitiveSearchSteps
             // Get reference data
             var category = await context.Set<WorkoutCategory>().FirstOrDefaultAsync();
             var difficulty = await context.Set<DifficultyLevel>().FirstOrDefaultAsync();
-            var state = await context.Set<WorkoutState>().FirstOrDefaultAsync();
+            // Use DRAFT state to ensure templates are visible in queries (not ARCHIVED)
+            var state = await context.Set<WorkoutState>()
+                .FirstOrDefaultAsync(s => s.Value == "DRAFT");
             
             if (category == null || difficulty == null || state == null)
             {
@@ -87,7 +89,9 @@ public class WorkoutTemplateCaseInsensitiveSearchSteps
             // Get reference data
             var category = await context.Set<WorkoutCategory>().FirstOrDefaultAsync();
             var difficulty = await context.Set<DifficultyLevel>().FirstOrDefaultAsync();
-            var state = await context.Set<WorkoutState>().FirstOrDefaultAsync();
+            // Use DRAFT state to ensure templates are visible in queries (not ARCHIVED)
+            var state = await context.Set<WorkoutState>()
+                .FirstOrDefaultAsync(s => s.Value == "DRAFT");
             
             if (category == null || difficulty == null || state == null)
             {

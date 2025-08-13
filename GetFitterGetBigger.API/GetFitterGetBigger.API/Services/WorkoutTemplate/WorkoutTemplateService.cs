@@ -81,24 +81,46 @@ public class WorkoutTemplateService(
             {
                 var archivedStateId = WorkoutStateId.ParseOrEmpty(archivedStateResult.Data.Id);
                 
-                // Use the data service's search method but we'll need to filter out archived results
-                // For now, pass empty state and filter the results post-query
-                // TODO: Consider adding a SearchExcludingStateAsync method to the data service for better performance
+                // Need to get the correct total count excluding ARCHIVED templates
+                // First get the total count of non-archived templates
+                var countResult = await _queryDataService.GetCountAsync(
+                    namePattern, categoryId, objectiveId, difficultyId, WorkoutStateId.Empty);
+                
+                if (!countResult.IsSuccess)
+                {
+                    return ServiceResult<PagedResponse<WorkoutTemplateDto>>.Failure(
+                        new PagedResponse<WorkoutTemplateDto> { Items = [], TotalCount = 0, CurrentPage = page, PageSize = pageSize }, 
+                        ServiceError.InternalError("Failed to get workout template count"));
+                }
+                
+                // Get all templates for current page
                 var allResults = await _queryDataService.SearchAsync(
                     page, pageSize, namePattern, categoryId, objectiveId, 
                     difficultyId, WorkoutStateId.Empty, sortBy, sortOrder);
 
                 if (allResults.IsSuccess)
                 {
-                    // Filter out ARCHIVED templates from the results
+                    // Filter out ARCHIVED templates from the items
                     var filteredItems = allResults.Data.Items
                         .Where(item => item.WorkoutState?.Id != archivedStateId.ToString())
                         .ToList();
 
+                    // Calculate the correct total count by getting count of all non-archived templates
+                    var allTemplatesForCount = await _queryDataService.SearchAsync(
+                        1, int.MaxValue, namePattern, categoryId, objectiveId, 
+                        difficultyId, WorkoutStateId.Empty, sortBy, sortOrder);
+                    
+                    var totalNonArchivedCount = 0;
+                    if (allTemplatesForCount.IsSuccess)
+                    {
+                        totalNonArchivedCount = allTemplatesForCount.Data.Items
+                            .Count(item => item.WorkoutState?.Id != archivedStateId.ToString());
+                    }
+
                     var filteredResponse = new PagedResponse<WorkoutTemplateDto>
                     {
                         Items = filteredItems,
-                        TotalCount = filteredItems.Count, // Note: This may not be accurate for pagination
+                        TotalCount = totalNonArchivedCount,
                         CurrentPage = page,
                         PageSize = pageSize
                     };

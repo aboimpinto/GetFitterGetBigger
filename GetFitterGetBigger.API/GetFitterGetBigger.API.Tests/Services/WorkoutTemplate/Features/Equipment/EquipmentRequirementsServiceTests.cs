@@ -1,3 +1,4 @@
+using FluentAssertions;
 using GetFitterGetBigger.API.DTOs;
 using GetFitterGetBigger.API.Models;
 using GetFitterGetBigger.API.Models.SpecializedIds;
@@ -6,6 +7,7 @@ using GetFitterGetBigger.API.Services.Interfaces;
 using GetFitterGetBigger.API.Services.Results;
 using GetFitterGetBigger.API.Services.WorkoutTemplate.Features.Equipment;
 using GetFitterGetBigger.API.Services.WorkoutTemplate.Models.DTOs;
+using GetFitterGetBigger.API.Tests.Services.Extensions;
 using Microsoft.Extensions.Logging;
 using Moq;
 using Moq.AutoMock;
@@ -16,85 +18,54 @@ namespace GetFitterGetBigger.API.Tests.Services.WorkoutTemplate.Features.Equipme
 
 public class EquipmentRequirementsServiceTests
 {
-    private readonly AutoMocker _autoMocker;
-    private readonly EquipmentRequirementsService _service;
-    private readonly Mock<IUnitOfWorkProvider<FitnessDbContext>> _unitOfWorkProviderMock;
-    private readonly Mock<IWorkoutTemplateExerciseService> _workoutTemplateExerciseServiceMock;
-    private readonly Mock<IExerciseService> _exerciseServiceMock;
-    private readonly Mock<ILogger<EquipmentRequirementsService>> _loggerMock;
-    private readonly Mock<IReadOnlyUnitOfWork<FitnessDbContext>> _readOnlyUnitOfWorkMock;
-    private readonly Mock<IWorkoutTemplateRepository> _workoutTemplateRepositoryMock;
-
-    public EquipmentRequirementsServiceTests()
-    {
-        _autoMocker = new AutoMocker();
-        
-        _unitOfWorkProviderMock = _autoMocker.GetMock<IUnitOfWorkProvider<FitnessDbContext>>();
-        _workoutTemplateExerciseServiceMock = _autoMocker.GetMock<IWorkoutTemplateExerciseService>();
-        _exerciseServiceMock = _autoMocker.GetMock<IExerciseService>();
-        _loggerMock = _autoMocker.GetMock<ILogger<EquipmentRequirementsService>>();
-        
-        _readOnlyUnitOfWorkMock = new Mock<IReadOnlyUnitOfWork<FitnessDbContext>>();
-        _workoutTemplateRepositoryMock = new Mock<IWorkoutTemplateRepository>();
-        
-        // Setup UnitOfWork to return repository
-        _readOnlyUnitOfWorkMock
-            .Setup(x => x.GetRepository<IWorkoutTemplateRepository>())
-            .Returns(_workoutTemplateRepositoryMock.Object);
-            
-        _unitOfWorkProviderMock
-            .Setup(x => x.CreateReadOnly())
-            .Returns(_readOnlyUnitOfWorkMock.Object);
-        
-        _service = new EquipmentRequirementsService(
-            _unitOfWorkProviderMock.Object,
-            _workoutTemplateExerciseServiceMock.Object,
-            _exerciseServiceMock.Object,
-            _loggerMock.Object);
-    }
-
     [Fact]
     public async Task GetRequiredEquipmentAsync_WithEmptyId_ReturnsFailure()
     {
         // Arrange
+        var autoMocker = new AutoMocker();
+        var testee = autoMocker.CreateInstance<EquipmentRequirementsService>();
         var emptyId = WorkoutTemplateId.Empty;
         
         // Act
-        var result = await _service.GetRequiredEquipmentAsync(emptyId);
+        var result = await testee.GetRequiredEquipmentAsync(emptyId);
         
         // Assert
-        Assert.False(result.IsSuccess);
-        Assert.Contains("Invalid", result.Errors.First());
+        result.IsSuccess.Should().BeFalse();
+        result.Errors.Should().ContainSingle();
+        result.Errors.First().Should().Contain("Invalid");
     }
     
     [Fact]
     public async Task GetRequiredEquipmentAsync_WithNonExistentTemplate_ReturnsFailure()
     {
         // Arrange
+        var autoMocker = new AutoMocker();
+        var testee = autoMocker.CreateInstance<EquipmentRequirementsService>();
         var templateId = WorkoutTemplateId.ParseOrEmpty("workouttemplate-00000000-0000-0000-0000-000000000001");
         
-        _workoutTemplateRepositoryMock
-            .Setup(x => x.ExistsAsync(templateId))
-            .ReturnsAsync(false);
+        // Setup repository
+        autoMocker.SetupWorkoutTemplateExists(templateId, exists: false);
         
         // Act
-        var result = await _service.GetRequiredEquipmentAsync(templateId);
+        var result = await testee.GetRequiredEquipmentAsync(templateId);
         
         // Assert
-        Assert.False(result.IsSuccess);
-        Assert.Contains("not found", result.Errors.First(), StringComparison.OrdinalIgnoreCase);
+        result.IsSuccess.Should().BeFalse();
+        result.Errors.Should().ContainSingle();
+        result.Errors.First().ToLower().Should().Contain("not found");
     }
     
     [Fact]
     public async Task GetRequiredEquipmentAsync_WithTemplateHavingNoExercises_ReturnsEmptyList()
     {
         // Arrange
+        var autoMocker = new AutoMocker();
+        var testee = autoMocker.CreateInstance<EquipmentRequirementsService>();
         var templateId = WorkoutTemplateId.ParseOrEmpty("workouttemplate-00000000-0000-0000-0000-000000000001");
         
-        _workoutTemplateRepositoryMock
-            .Setup(x => x.ExistsAsync(templateId))
-            .ReturnsAsync(true);
-            
+        // Setup mocks
+        autoMocker.SetupWorkoutTemplateExists(templateId, exists: true);
+        
         var emptyExerciseCollection = new WorkoutTemplateExerciseListDto
         {
             WarmupExercises = [],
@@ -102,29 +73,30 @@ public class EquipmentRequirementsServiceTests
             CooldownExercises = []
         };
         
-        _workoutTemplateExerciseServiceMock
+        autoMocker.GetMock<IWorkoutTemplateExerciseService>()
             .Setup(x => x.GetByWorkoutTemplateAsync(templateId))
             .ReturnsAsync(ServiceResult<WorkoutTemplateExerciseListDto>.Success(emptyExerciseCollection));
         
         // Act
-        var result = await _service.GetRequiredEquipmentAsync(templateId);
+        var result = await testee.GetRequiredEquipmentAsync(templateId);
         
         // Assert
-        Assert.True(result.IsSuccess);
-        Assert.Empty(result.Data);
+        result.IsSuccess.Should().BeTrue();
+        result.Data.Should().BeEmpty();
     }
     
     [Fact]
     public async Task GetRequiredEquipmentAsync_WithExercisesHavingEquipment_ReturnsUniqueEquipment()
     {
         // Arrange
+        var autoMocker = new AutoMocker();
+        var testee = autoMocker.CreateInstance<EquipmentRequirementsService>();
         var templateId = WorkoutTemplateId.ParseOrEmpty("workouttemplate-00000000-0000-0000-0000-000000000001");
         var exerciseId1 = ExerciseId.ParseOrEmpty("exercise-00000000-0000-0000-0000-000000000001");
         var exerciseId2 = ExerciseId.ParseOrEmpty("exercise-00000000-0000-0000-0000-000000000002");
         
-        _workoutTemplateRepositoryMock
-            .Setup(x => x.ExistsAsync(templateId))
-            .ReturnsAsync(true);
+        // Setup mocks
+        autoMocker.SetupWorkoutTemplateExists(templateId, exists: true);
         
         // Setup template exercises
         var exerciseCollection = new WorkoutTemplateExerciseListDto
@@ -144,7 +116,7 @@ public class EquipmentRequirementsServiceTests
             CooldownExercises = []
         };
         
-        _workoutTemplateExerciseServiceMock
+        autoMocker.GetMock<IWorkoutTemplateExerciseService>()
             .Setup(x => x.GetByWorkoutTemplateAsync(templateId))
             .ReturnsAsync(ServiceResult<WorkoutTemplateExerciseListDto>.Success(exerciseCollection));
         
@@ -169,43 +141,41 @@ public class EquipmentRequirementsServiceTests
             ]
         };
         
-        _exerciseServiceMock
+        autoMocker.GetMock<IExerciseService>()
             .Setup(x => x.GetByIdAsync(exerciseId1))
             .ReturnsAsync(ServiceResult<ExerciseDto>.Success(exercise1));
             
-        _exerciseServiceMock
+        autoMocker.GetMock<IExerciseService>()
             .Setup(x => x.GetByIdAsync(exerciseId2))
             .ReturnsAsync(ServiceResult<ExerciseDto>.Success(exercise2));
         
         // Act
-        var result = await _service.GetRequiredEquipmentAsync(templateId);
+        var result = await testee.GetRequiredEquipmentAsync(templateId);
         
         // Assert
-        Assert.True(result.IsSuccess);
+        result.IsSuccess.Should().BeTrue();
         var equipment = result.Data.ToList();
-        Assert.Equal(3, equipment.Count); // Barbell, Bench, Dumbbell (no duplicates)
-        Assert.Contains(equipment, e => e.Name == "Barbell");
-        Assert.Contains(equipment, e => e.Name == "Bench");
-        Assert.Contains(equipment, e => e.Name == "Dumbbell");
+        equipment.Should().HaveCount(3); // Barbell, Bench, Dumbbell (no duplicates)
+        equipment.Should().Contain(e => e.Name == "Barbell");
+        equipment.Should().Contain(e => e.Name == "Bench");
+        equipment.Should().Contain(e => e.Name == "Dumbbell");
     }
     
-    // TODO: Fix these complex tests later
-    // For now we have successfully extracted the equipment service from the god class
-    /*
     [Fact]
     public async Task CheckEquipmentAvailabilityAsync_WithAllEquipmentAvailable_ReturnsCanPerform()
     {
         // Arrange
+        var autoMocker = new AutoMocker();
+        var testee = autoMocker.CreateInstance<EquipmentRequirementsService>();
         var templateId = WorkoutTemplateId.ParseOrEmpty("workouttemplate-00000000-0000-0000-0000-000000000001");
         var availableEquipmentIds = new[]
         {
-            EquipmentId.ParseOrEmpty("equipment-001"),
-            EquipmentId.ParseOrEmpty("equipment-002")
+            EquipmentId.ParseOrEmpty("equipment-00000000-0000-0000-0000-000000000001"),
+            EquipmentId.ParseOrEmpty("equipment-00000000-0000-0000-0000-000000000002")
         };
         
-        _workoutTemplateRepositoryMock
-            .Setup(x => x.ExistsAsync(templateId))
-            .ReturnsAsync(true);
+        // Setup mocks
+        autoMocker.SetupWorkoutTemplateExists(templateId, exists: true);
         
         // Setup required equipment
         var exerciseId = ExerciseId.ParseOrEmpty("exercise-00000000-0000-0000-0000-000000000001");
@@ -222,7 +192,7 @@ public class EquipmentRequirementsServiceTests
             CooldownExercises = []
         };
         
-        _workoutTemplateExerciseServiceMock
+        autoMocker.GetMock<IWorkoutTemplateExerciseService>()
             .Setup(x => x.GetByWorkoutTemplateAsync(templateId))
             .ReturnsAsync(ServiceResult<WorkoutTemplateExerciseListDto>.Success(exerciseCollection));
         
@@ -231,38 +201,39 @@ public class EquipmentRequirementsServiceTests
             Id = exerciseId.ToString(),
             Equipment = 
             [
-                new ReferenceDataDto { Id = "equipment-001", Value = "Barbell" },
-                new ReferenceDataDto { Id = "equipment-002", Value = "Bench" }
+                new ReferenceDataDto { Id = "equipment-00000000-0000-0000-0000-000000000001", Value = "Barbell" },
+                new ReferenceDataDto { Id = "equipment-00000000-0000-0000-0000-000000000002", Value = "Bench" }
             ]
         };
         
-        _exerciseServiceMock
+        autoMocker.GetMock<IExerciseService>()
             .Setup(x => x.GetByIdAsync(exerciseId))
             .ReturnsAsync(ServiceResult<ExerciseDto>.Success(exercise));
         
         // Act
-        var result = await _service.CheckEquipmentAvailabilityAsync(templateId, availableEquipmentIds);
+        var result = await testee.CheckEquipmentAvailabilityAsync(templateId, availableEquipmentIds);
         
         // Assert
-        Assert.True(result.IsSuccess);
-        Assert.True(result.Data.CanPerformWorkout);
-        Assert.Equal(100, result.Data.AvailabilityPercentage);
-        Assert.Empty(result.Data.MissingEquipment);
+        result.IsSuccess.Should().BeTrue();
+        result.Data.CanPerformWorkout.Should().BeTrue();
+        result.Data.AvailabilityPercentage.Should().Be(100);
+        result.Data.MissingEquipment.Should().BeEmpty();
     }
     
-    [Fact(Skip = "Need to fix mock setup")]
+    [Fact]
     public async Task CheckEquipmentAvailabilityAsync_WithMissingEquipment_ReturnsCannotPerform()
     {
         // Arrange
+        var autoMocker = new AutoMocker();
+        var testee = autoMocker.CreateInstance<EquipmentRequirementsService>();
         var templateId = WorkoutTemplateId.ParseOrEmpty("workouttemplate-00000000-0000-0000-0000-000000000001");
         var availableEquipmentIds = new[]
         {
-            EquipmentId.ParseOrEmpty("equipment-001") // Only barbell available
+            EquipmentId.ParseOrEmpty("equipment-00000000-0000-0000-0000-000000000001") // Only barbell available
         };
         
-        _workoutTemplateRepositoryMock
-            .Setup(x => x.ExistsAsync(templateId))
-            .ReturnsAsync(true);
+        // Setup mocks
+        autoMocker.SetupWorkoutTemplateExists(templateId, exists: true);
         
         // Setup required equipment
         var exerciseId = ExerciseId.ParseOrEmpty("exercise-00000000-0000-0000-0000-000000000001");
@@ -279,48 +250,49 @@ public class EquipmentRequirementsServiceTests
             CooldownExercises = []
         };
         
-        _workoutTemplateExerciseServiceMock
+        autoMocker.GetMock<IWorkoutTemplateExerciseService>()
             .Setup(x => x.GetByWorkoutTemplateAsync(templateId))
             .ReturnsAsync(ServiceResult<WorkoutTemplateExerciseListDto>.Success(exerciseCollection));
+            
         var exercise = new ExerciseDto
         {
             Id = exerciseId.ToString(),
             Equipment = 
             [
-                new ReferenceDataDto { Id = "equipment-001", Value = "Barbell" },
-                new ReferenceDataDto { Id = "equipment-002", Value = "Bench" } // This is missing
+                new ReferenceDataDto { Id = "equipment-00000000-0000-0000-0000-000000000001", Value = "Barbell" },
+                new ReferenceDataDto { Id = "equipment-00000000-0000-0000-0000-000000000002", Value = "Bench" } // This is missing
             ]
         };
         
-        _exerciseServiceMock
+        autoMocker.GetMock<IExerciseService>()
             .Setup(x => x.GetByIdAsync(exerciseId))
             .ReturnsAsync(ServiceResult<ExerciseDto>.Success(exercise));
         
         // Act
-        var result = await _service.CheckEquipmentAvailabilityAsync(templateId, availableEquipmentIds);
+        var result = await testee.CheckEquipmentAvailabilityAsync(templateId, availableEquipmentIds);
         
         // Assert
-        Assert.True(result.IsSuccess);
-        Assert.False(result.Data.CanPerformWorkout);
-        Assert.Equal(50, result.Data.AvailabilityPercentage);
-        Assert.Single(result.Data.MissingEquipment);
-        Assert.Equal("Bench", result.Data.MissingEquipment.First().Name);
+        result.IsSuccess.Should().BeTrue();
+        result.Data.CanPerformWorkout.Should().BeFalse();
+        result.Data.AvailabilityPercentage.Should().Be(50);
+        result.Data.MissingEquipment.Should().ContainSingle();
+        result.Data.MissingEquipment.First().Name.Should().Be("Bench");
     }
     
-    [Fact(Skip = "Need to fix mock setup")]
+    [Fact]
     public async Task AnalyzeEquipmentUsageAsync_WithMultipleTemplates_ReturnsUsageStatistics()
     {
         // Arrange
+        var autoMocker = new AutoMocker();
+        var testee = autoMocker.CreateInstance<EquipmentRequirementsService>();
         var templateIds = new[]
         {
             WorkoutTemplateId.ParseOrEmpty("workouttemplate-00000000-0000-0000-0000-000000000001"),
             WorkoutTemplateId.ParseOrEmpty("workouttemplate-00000000-0000-0000-0000-000000000002")
         };
         
-        // Template 1 has Barbell and Bench
-        _workoutTemplateRepositoryMock
-            .Setup(x => x.ExistsAsync(templateIds[0]))
-            .ReturnsAsync(true);
+        // Setup unit of work for both templates  
+        autoMocker.SetupMultipleWorkoutTemplateExists(templateIds);
             
         var exerciseCollection1 = new WorkoutTemplateExerciseListDto
         {
@@ -328,97 +300,143 @@ public class EquipmentRequirementsServiceTests
             [
                 new WorkoutTemplateExerciseDto 
                 { 
-                    Exercise = new ExerciseDto { Id = "exercise-001" }
+                    Exercise = new ExerciseDto { Id = "exercise-00000000-0000-0000-0000-000000000001" }
                 }
-            ]
+            ],
+            WarmupExercises = [],
+            CooldownExercises = []
         };
         
-        _workoutTemplateExerciseServiceMock
+        autoMocker.GetMock<IWorkoutTemplateExerciseService>()
             .Setup(x => x.GetByWorkoutTemplateAsync(templateIds[0]))
             .ReturnsAsync(ServiceResult<WorkoutTemplateExerciseListDto>.Success(exerciseCollection1));
         
-        // Template 2 has only Barbell
-        _workoutTemplateRepositoryMock
-            .Setup(x => x.ExistsAsync(templateIds[1]))
-            .ReturnsAsync(true);
-            
         var exerciseCollection2 = new WorkoutTemplateExerciseListDto
         {
             MainExercises = 
             [
                 new WorkoutTemplateExerciseDto 
                 { 
-                    Exercise = new ExerciseDto { Id = "exercise-002" }
+                    Exercise = new ExerciseDto { Id = "exercise-00000000-0000-0000-0000-000000000002" }
                 }
-            ]
+            ],
+            WarmupExercises = [],
+            CooldownExercises = []
         };
         
-        _workoutTemplateExerciseServiceMock
+        autoMocker.GetMock<IWorkoutTemplateExerciseService>()
             .Setup(x => x.GetByWorkoutTemplateAsync(templateIds[1]))
             .ReturnsAsync(ServiceResult<WorkoutTemplateExerciseListDto>.Success(exerciseCollection2));
         
         // Setup exercises
         var exercise1 = new ExerciseDto
         {
-            Id = "exercise-001",
+            Id = "exercise-00000000-0000-0000-0000-000000000001",
             Equipment = 
             [
-                new ReferenceDataDto { Id = "equipment-001", Value = "Barbell" },
-                new ReferenceDataDto { Id = "equipment-002", Value = "Bench" }
+                new ReferenceDataDto { Id = "equipment-00000000-0000-0000-0000-000000000001", Value = "Barbell" },
+                new ReferenceDataDto { Id = "equipment-00000000-0000-0000-0000-000000000002", Value = "Bench" }
             ]
         };
         
         var exercise2 = new ExerciseDto
         {
-            Id = "exercise-002",
+            Id = "exercise-00000000-0000-0000-0000-000000000002",
             Equipment = 
             [
-                new ReferenceDataDto { Id = "equipment-001", Value = "Barbell" }
+                new ReferenceDataDto { Id = "equipment-00000000-0000-0000-0000-000000000001", Value = "Barbell" }
             ]
         };
         
-        _exerciseServiceMock
+        autoMocker.GetMock<IExerciseService>()
             .Setup(x => x.GetByIdAsync(ExerciseId.ParseOrEmpty("exercise-00000000-0000-0000-0000-000000000001")))
             .ReturnsAsync(ServiceResult<ExerciseDto>.Success(exercise1));
             
-        _exerciseServiceMock
+        autoMocker.GetMock<IExerciseService>()
             .Setup(x => x.GetByIdAsync(ExerciseId.ParseOrEmpty("exercise-00000000-0000-0000-0000-000000000002")))
             .ReturnsAsync(ServiceResult<ExerciseDto>.Success(exercise2));
         
         // Act
-        var result = await _service.AnalyzeEquipmentUsageAsync(templateIds);
+        var result = await testee.AnalyzeEquipmentUsageAsync(templateIds);
         
         // Assert
-        Assert.True(result.IsSuccess);
+        result.IsSuccess.Should().BeTrue();
         var usageStats = result.Data.ToList();
         
         // Barbell used in 2/2 templates = 100%
         var barbellUsage = usageStats.FirstOrDefault(u => u.Equipment.Name == "Barbell");
-        Assert.NotNull(barbellUsage);
-        Assert.Equal(2, barbellUsage.UsageCount);
-        Assert.Equal(100, barbellUsage.UsagePercentage);
-        Assert.True(barbellUsage.IsEssential);
+        barbellUsage.Should().NotBeNull();
+        barbellUsage!.UsageCount.Should().Be(2);
+        barbellUsage.UsagePercentage.Should().Be(100);
+        barbellUsage.IsEssential.Should().BeTrue();
         
         // Bench used in 1/2 templates = 50%
         var benchUsage = usageStats.FirstOrDefault(u => u.Equipment.Name == "Bench");
-        Assert.NotNull(benchUsage);
-        Assert.Equal(1, benchUsage.UsageCount);
-        Assert.Equal(50, benchUsage.UsagePercentage);
-        Assert.False(benchUsage.IsEssential);
+        benchUsage.Should().NotBeNull();
+        benchUsage!.UsageCount.Should().Be(1);
+        benchUsage.UsagePercentage.Should().Be(50);
+        benchUsage.IsEssential.Should().BeFalse();
     }
     
     [Fact]
     public async Task AnalyzeEquipmentUsageAsync_WithEmptyTemplateList_ReturnsFailure()
     {
         // Arrange
+        var autoMocker = new AutoMocker();
+        var testee = autoMocker.CreateInstance<EquipmentRequirementsService>();
         var emptyTemplateIds = Array.Empty<WorkoutTemplateId>();
         
         // Act
-        var result = await _service.AnalyzeEquipmentUsageAsync(emptyTemplateIds);
+        var result = await testee.AnalyzeEquipmentUsageAsync(emptyTemplateIds);
         
         // Assert
-        Assert.False(result.IsSuccess);
-        Assert.Contains("at least one", result.Errors.First(), StringComparison.OrdinalIgnoreCase);
+        result.IsSuccess.Should().BeFalse();
+        result.Errors.Should().ContainSingle();
+        result.Errors.First().ToLower().Should().Contain("at least one");
     }
-    */
+}
+
+// Extension methods for setting up mocks
+public static class EquipmentRequirementsServiceTestExtensions
+{
+    public static void SetupWorkoutTemplateExists(this AutoMocker autoMocker, WorkoutTemplateId templateId, bool exists)
+    {
+        var readOnlyUnitOfWork = new Mock<IReadOnlyUnitOfWork<FitnessDbContext>>();
+        var workoutTemplateRepository = new Mock<IWorkoutTemplateRepository>();
+        
+        workoutTemplateRepository
+            .Setup(x => x.ExistsAsync(templateId))
+            .ReturnsAsync(exists);
+        
+        readOnlyUnitOfWork
+            .Setup(x => x.GetRepository<IWorkoutTemplateRepository>())
+            .Returns(workoutTemplateRepository.Object);
+            
+        autoMocker.GetMock<IUnitOfWorkProvider<FitnessDbContext>>()
+            .Setup(x => x.CreateReadOnly())
+            .Returns(readOnlyUnitOfWork.Object);
+    }
+    
+    public static void SetupMultipleWorkoutTemplateExists(this AutoMocker autoMocker, WorkoutTemplateId[] templateIds)
+    {
+        // Setup a single repository mock that can handle all template existence checks
+        var workoutTemplateRepository = new Mock<IWorkoutTemplateRepository>();
+        
+        foreach (var templateId in templateIds)
+        {
+            workoutTemplateRepository
+                .Setup(x => x.ExistsAsync(templateId))
+                .ReturnsAsync(true);
+        }
+        
+        // Setup unit of work to return the same repository instance for all calls
+        var readOnlyUnitOfWork = new Mock<IReadOnlyUnitOfWork<FitnessDbContext>>();
+        readOnlyUnitOfWork
+            .Setup(x => x.GetRepository<IWorkoutTemplateRepository>())
+            .Returns(workoutTemplateRepository.Object);
+            
+        autoMocker.GetMock<IUnitOfWorkProvider<FitnessDbContext>>()
+            .Setup(x => x.CreateReadOnly())
+            .Returns(readOnlyUnitOfWork.Object);
+    }
 }

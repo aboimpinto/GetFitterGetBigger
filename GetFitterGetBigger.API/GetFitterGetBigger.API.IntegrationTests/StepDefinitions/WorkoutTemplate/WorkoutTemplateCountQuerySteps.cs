@@ -31,13 +31,20 @@ public class WorkoutTemplateCountQuerySteps
         {
             // Clear existing workout templates for clean test state
             var existing = await context.WorkoutTemplates.ToListAsync();
+            Console.WriteLine($"DEBUG: Found {existing.Count} existing workout templates before clearing");
             context.WorkoutTemplates.RemoveRange(existing);
             await context.SaveChangesAsync();
+            
+            // Verify all templates are cleared
+            var afterClear = await context.WorkoutTemplates.CountAsync();
+            Console.WriteLine($"DEBUG: {afterClear} workout templates after clearing");
             
             // Get reference data - we'll map by name
             var categories = await context.Set<WorkoutCategory>().ToListAsync();
             var difficulties = await context.Set<DifficultyLevel>().ToListAsync();
-            var state = await context.Set<WorkoutState>().FirstOrDefaultAsync();
+            // Use DRAFT state to ensure templates are visible in queries (not ARCHIVED)
+            var state = await context.Set<WorkoutState>()
+                .FirstOrDefaultAsync(s => s.Value == "DRAFT");
             
             if (!categories.Any() || !difficulties.Any() || state == null)
             {
@@ -88,6 +95,10 @@ public class WorkoutTemplateCountQuerySteps
             }
             
             await context.SaveChangesAsync();
+            
+            // Debug: Verify templates were created
+            var createdCount = await context.WorkoutTemplates.CountAsync();
+            Console.WriteLine($"DEBUG: Created {createdCount} workout templates in database");
         });
     }
     

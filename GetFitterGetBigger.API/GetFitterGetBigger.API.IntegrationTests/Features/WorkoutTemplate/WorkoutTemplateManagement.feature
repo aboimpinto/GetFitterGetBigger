@@ -107,7 +107,6 @@ Scenario: Archive a workout template
 
 # Filtering and Search
 
-@ignore
 Scenario: Get paged workout templates
     Given I am a Personal Trainer with ID "user-01000001-0000-0000-0000-000000000001"
     And I have created 15 workout templates
@@ -115,7 +114,6 @@ Scenario: Get paged workout templates
     Then I should receive 10 templates in the first page
     And the total count should be 15
 
-@ignore
 Scenario: Search templates by name pattern
     Given the following workout templates exist:
         | Name                  |
@@ -126,13 +124,11 @@ Scenario: Search templates by name pattern
     Then I should receive 2 templates
     And all template names should contain "Upper"
 
-@ignore
 Scenario: Filter templates by category
     Given workout templates exist in different categories
     When I filter templates by category "Full Body"
     Then all returned templates should have category "Full Body"
 
-@ignore
 Scenario: Filter templates by difficulty
     Given workout templates exist with different difficulty levels
     When I filter templates by difficulty "Intermediate"
@@ -204,7 +200,6 @@ Scenario: Prevent duplicate template names globally
 
 # Template Duplication
 
-@ignore
 Scenario: Duplicate a workout template
     Given I am a Personal Trainer with ID "user-01000001-0000-0000-0000-000000000001"
     And I have an existing workout template "Original Full Body Workout"
@@ -215,7 +210,6 @@ Scenario: Duplicate a workout template
 
 # Performance
 
-@ignore
 Scenario: Handle large number of templates efficiently
     Given 1000 workout templates exist in the system
     When I request templates with pagination (page 1, size 20)

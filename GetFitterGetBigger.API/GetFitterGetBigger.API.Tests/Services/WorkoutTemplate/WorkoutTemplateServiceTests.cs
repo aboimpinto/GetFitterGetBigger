@@ -116,6 +116,16 @@ public class WorkoutTemplateServiceTests
         
         automocker.SetupWorkoutTemplateQueryDataService_Search(expectedResponse);
         
+        // Setup GetCountAsync to return the correct count
+        automocker.GetMock<IWorkoutTemplateQueryDataService>()
+            .Setup(x => x.GetCountAsync(
+                It.IsAny<string>(),
+                It.IsAny<WorkoutCategoryId?>(),
+                It.IsAny<WorkoutObjectiveId?>(),
+                It.IsAny<DifficultyLevelId?>(),
+                It.IsAny<WorkoutStateId?>()))
+            .ReturnsAsync(ServiceResult<int>.Success(2));
+        
         // Setup WorkoutStateService for business logic (when stateId is empty, it gets ARCHIVED state to exclude)
         var archivedStateDto = new WorkoutStateDto
         {

@@ -14,7 +14,7 @@ Feature: WorkoutTemplate Case Insensitive Search
       | Core Crusher         | Core strengthening routine       | 30       | core,abs       |
       | Full Body Blast      | Complete body workout            | 60       | full,complete  |
 
-  @workouttemplate @search @ignore
+  @workouttemplate @search
   Scenario: Search with lowercase pattern finds mixed case templates
     When I send a GET request to "/api/workout-templates?namePattern=leg"
     Then the response status should be 200
@@ -25,7 +25,7 @@ Feature: WorkoutTemplate Case Insensitive Search
       | Leg Burner I  |
       | Leg Burner II |
 
-  @workouttemplate @search @ignore
+  @workouttemplate @search
   Scenario: Search with uppercase pattern finds mixed case templates
     When I send a GET request to "/api/workout-templates?namePattern=BURNER"
     Then the response status should be 200
@@ -37,7 +37,7 @@ Feature: WorkoutTemplate Case Insensitive Search
       | Leg Burner II     |
       | Upper Body Burner |
 
-  @workouttemplate @search @ignore
+  @workouttemplate @search
   Scenario: Search with mixed case pattern finds all variations
     Given the following additional workout templates exist for case insensitive search:
       | Name             | Description     | Duration | Tags       |
@@ -57,14 +57,14 @@ Feature: WorkoutTemplate Case Insensitive Search
       | Leg Workout     |
       | LEGENDARY Legs  |
 
-  @workouttemplate @search @ignore
+  @workouttemplate @search
   Scenario: Partial match works with case insensitive search
     When I send a GET request to "/api/workout-templates?namePattern=burn"
     Then the response status should be 200
     And the response should have property "totalCount" with value "3"
     And all response items should contain "burn" in name (case insensitive)
 
-  @workouttemplate @search @pagination @ignore
+  @workouttemplate @search @pagination
   Scenario: Case insensitive search works with pagination
     When I send a GET request to "/api/workout-templates?namePattern=burner&page=1&pageSize=2"
     Then the response status should be 200

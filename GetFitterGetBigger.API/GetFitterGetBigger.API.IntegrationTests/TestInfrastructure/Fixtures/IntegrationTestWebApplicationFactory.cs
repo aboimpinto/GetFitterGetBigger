@@ -166,7 +166,10 @@ public class IntegrationTestWebApplicationFactory : WebApplicationFactory<Progra
                 context.ExerciseLinks.RemoveRange(context.ExerciseLinks);
             }
             
-            // Exercises table should exist after migrations
+            // Clean up test data in correct order to avoid FK constraint violations
+            // First remove dependent entities
+            context.WorkoutTemplateExercises.RemoveRange(context.WorkoutTemplateExercises);
+            context.WorkoutTemplates.RemoveRange(context.WorkoutTemplates);
             context.Exercises.RemoveRange(context.Exercises);
             // Add other entity cleanups here as needed
             

@@ -133,7 +133,7 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.WorkoutTemplate
             await this.TestTearDownAsync();
         }
         
-        [Xunit.SkippableFactAttribute(DisplayName="Count query ignores includes and executes simple count", Skip="Ignored")]
+        [Xunit.SkippableFactAttribute(DisplayName="Count query ignores includes and executes simple count")]
         [Xunit.TraitAttribute("FeatureTitle", "WorkoutTemplate Count Query Optimization")]
         [Xunit.TraitAttribute("Description", "Count query ignores includes and executes simple count")]
         [Xunit.TraitAttribute("Category", "workouttemplate")]
@@ -144,8 +144,7 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.WorkoutTemplate
             string[] tagsOfScenario = new string[] {
                     "workouttemplate",
                     "count",
-                    "performance",
-                    "ignore"};
+                    "performance"};
             System.Collections.Specialized.OrderedDictionary argumentsOfScenario = new System.Collections.Specialized.OrderedDictionary();
             TechTalk.SpecFlow.ScenarioInfo scenarioInfo = new TechTalk.SpecFlow.ScenarioInfo("Count query ignores includes and executes simple count", null, tagsOfScenario, argumentsOfScenario, featureTags);
             this.ScenarioInitialize(scenarioInfo);
@@ -166,7 +165,7 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.WorkoutTemplate
             await this.ScenarioCleanupAsync();
         }
         
-        [Xunit.SkippableFactAttribute(DisplayName="Complex query with multiple filters executes count efficiently", Skip="Ignored")]
+        [Xunit.SkippableFactAttribute(DisplayName="Complex query with multiple filters executes count efficiently")]
         [Xunit.TraitAttribute("FeatureTitle", "WorkoutTemplate Count Query Optimization")]
         [Xunit.TraitAttribute("Description", "Complex query with multiple filters executes count efficiently")]
         [Xunit.TraitAttribute("Category", "workouttemplate")]
@@ -177,8 +176,7 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.WorkoutTemplate
             string[] tagsOfScenario = new string[] {
                     "workouttemplate",
                     "count",
-                    "performance",
-                    "ignore"};
+                    "performance"};
             System.Collections.Specialized.OrderedDictionary argumentsOfScenario = new System.Collections.Specialized.OrderedDictionary();
             TechTalk.SpecFlow.ScenarioInfo scenarioInfo = new TechTalk.SpecFlow.ScenarioInfo("Complex query with multiple filters executes count efficiently", null, tagsOfScenario, argumentsOfScenario, featureTags);
             this.ScenarioInitialize(scenarioInfo);
@@ -200,7 +198,7 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.WorkoutTemplate
             await this.ScenarioCleanupAsync();
         }
         
-        [Xunit.SkippableFactAttribute(DisplayName="Count is accurate with pagination", Skip="Ignored")]
+        [Xunit.SkippableFactAttribute(DisplayName="Count is accurate with pagination")]
         [Xunit.TraitAttribute("FeatureTitle", "WorkoutTemplate Count Query Optimization")]
         [Xunit.TraitAttribute("Description", "Count is accurate with pagination")]
         [Xunit.TraitAttribute("Category", "workouttemplate")]
@@ -209,8 +207,7 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.WorkoutTemplate
         {
             string[] tagsOfScenario = new string[] {
                     "workouttemplate",
-                    "count",
-                    "ignore"};
+                    "count"};
             System.Collections.Specialized.OrderedDictionary argumentsOfScenario = new System.Collections.Specialized.OrderedDictionary();
             TechTalk.SpecFlow.ScenarioInfo scenarioInfo = new TechTalk.SpecFlow.ScenarioInfo("Count is accurate with pagination", null, tagsOfScenario, argumentsOfScenario, featureTags);
             this.ScenarioInitialize(scenarioInfo);
@@ -234,7 +231,7 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.WorkoutTemplate
             await this.ScenarioCleanupAsync();
         }
         
-        [Xunit.SkippableFactAttribute(DisplayName="Count with no results returns zero", Skip="Ignored")]
+        [Xunit.SkippableFactAttribute(DisplayName="Count with no results returns zero")]
         [Xunit.TraitAttribute("FeatureTitle", "WorkoutTemplate Count Query Optimization")]
         [Xunit.TraitAttribute("Description", "Count with no results returns zero")]
         [Xunit.TraitAttribute("Category", "workouttemplate")]
@@ -243,8 +240,7 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.WorkoutTemplate
         {
             string[] tagsOfScenario = new string[] {
                     "workouttemplate",
-                    "count",
-                    "ignore"};
+                    "count"};
             System.Collections.Specialized.OrderedDictionary argumentsOfScenario = new System.Collections.Specialized.OrderedDictionary();
             TechTalk.SpecFlow.ScenarioInfo scenarioInfo = new TechTalk.SpecFlow.ScenarioInfo("Count with no results returns zero", null, tagsOfScenario, argumentsOfScenario, featureTags);
             this.ScenarioInitialize(scenarioInfo);

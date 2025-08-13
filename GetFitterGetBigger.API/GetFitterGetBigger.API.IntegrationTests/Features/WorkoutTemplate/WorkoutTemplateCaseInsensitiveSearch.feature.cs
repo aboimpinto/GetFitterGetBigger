@@ -121,7 +121,7 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.WorkoutTemplate
             await this.TestTearDownAsync();
         }
         
-        [Xunit.SkippableFactAttribute(DisplayName="Search with lowercase pattern finds mixed case templates", Skip="Ignored")]
+        [Xunit.SkippableFactAttribute(DisplayName="Search with lowercase pattern finds mixed case templates")]
         [Xunit.TraitAttribute("FeatureTitle", "WorkoutTemplate Case Insensitive Search")]
         [Xunit.TraitAttribute("Description", "Search with lowercase pattern finds mixed case templates")]
         [Xunit.TraitAttribute("Category", "workouttemplate")]
@@ -130,8 +130,7 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.WorkoutTemplate
         {
             string[] tagsOfScenario = new string[] {
                     "workouttemplate",
-                    "search",
-                    "ignore"};
+                    "search"};
             System.Collections.Specialized.OrderedDictionary argumentsOfScenario = new System.Collections.Specialized.OrderedDictionary();
             TechTalk.SpecFlow.ScenarioInfo scenarioInfo = new TechTalk.SpecFlow.ScenarioInfo("Search with lowercase pattern finds mixed case templates", null, tagsOfScenario, argumentsOfScenario, featureTags);
             this.ScenarioInitialize(scenarioInfo);
@@ -158,7 +157,7 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.WorkoutTemplate
             await this.ScenarioCleanupAsync();
         }
         
-        [Xunit.SkippableFactAttribute(DisplayName="Search with uppercase pattern finds mixed case templates", Skip="Ignored")]
+        [Xunit.SkippableFactAttribute(DisplayName="Search with uppercase pattern finds mixed case templates")]
         [Xunit.TraitAttribute("FeatureTitle", "WorkoutTemplate Case Insensitive Search")]
         [Xunit.TraitAttribute("Description", "Search with uppercase pattern finds mixed case templates")]
         [Xunit.TraitAttribute("Category", "workouttemplate")]
@@ -167,8 +166,7 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.WorkoutTemplate
         {
             string[] tagsOfScenario = new string[] {
                     "workouttemplate",
-                    "search",
-                    "ignore"};
+                    "search"};
             System.Collections.Specialized.OrderedDictionary argumentsOfScenario = new System.Collections.Specialized.OrderedDictionary();
             TechTalk.SpecFlow.ScenarioInfo scenarioInfo = new TechTalk.SpecFlow.ScenarioInfo("Search with uppercase pattern finds mixed case templates", null, tagsOfScenario, argumentsOfScenario, featureTags);
             this.ScenarioInitialize(scenarioInfo);
@@ -197,7 +195,7 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.WorkoutTemplate
             await this.ScenarioCleanupAsync();
         }
         
-        [Xunit.SkippableFactAttribute(DisplayName="Search with mixed case pattern finds all variations", Skip="Ignored")]
+        [Xunit.SkippableFactAttribute(DisplayName="Search with mixed case pattern finds all variations")]
         [Xunit.TraitAttribute("FeatureTitle", "WorkoutTemplate Case Insensitive Search")]
         [Xunit.TraitAttribute("Description", "Search with mixed case pattern finds all variations")]
         [Xunit.TraitAttribute("Category", "workouttemplate")]
@@ -206,8 +204,7 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.WorkoutTemplate
         {
             string[] tagsOfScenario = new string[] {
                     "workouttemplate",
-                    "search",
-                    "ignore"};
+                    "search"};
             System.Collections.Specialized.OrderedDictionary argumentsOfScenario = new System.Collections.Specialized.OrderedDictionary();
             TechTalk.SpecFlow.ScenarioInfo scenarioInfo = new TechTalk.SpecFlow.ScenarioInfo("Search with mixed case pattern finds all variations", null, tagsOfScenario, argumentsOfScenario, featureTags);
             this.ScenarioInitialize(scenarioInfo);
@@ -267,7 +264,7 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.WorkoutTemplate
             await this.ScenarioCleanupAsync();
         }
         
-        [Xunit.SkippableFactAttribute(DisplayName="Partial match works with case insensitive search", Skip="Ignored")]
+        [Xunit.SkippableFactAttribute(DisplayName="Partial match works with case insensitive search")]
         [Xunit.TraitAttribute("FeatureTitle", "WorkoutTemplate Case Insensitive Search")]
         [Xunit.TraitAttribute("Description", "Partial match works with case insensitive search")]
         [Xunit.TraitAttribute("Category", "workouttemplate")]
@@ -276,8 +273,7 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.WorkoutTemplate
         {
             string[] tagsOfScenario = new string[] {
                     "workouttemplate",
-                    "search",
-                    "ignore"};
+                    "search"};
             System.Collections.Specialized.OrderedDictionary argumentsOfScenario = new System.Collections.Specialized.OrderedDictionary();
             TechTalk.SpecFlow.ScenarioInfo scenarioInfo = new TechTalk.SpecFlow.ScenarioInfo("Partial match works with case insensitive search", null, tagsOfScenario, argumentsOfScenario, featureTags);
             this.ScenarioInitialize(scenarioInfo);
@@ -297,7 +293,7 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.WorkoutTemplate
             await this.ScenarioCleanupAsync();
         }
         
-        [Xunit.SkippableFactAttribute(DisplayName="Case insensitive search works with pagination", Skip="Ignored")]
+        [Xunit.SkippableFactAttribute(DisplayName="Case insensitive search works with pagination")]
         [Xunit.TraitAttribute("FeatureTitle", "WorkoutTemplate Case Insensitive Search")]
         [Xunit.TraitAttribute("Description", "Case insensitive search works with pagination")]
         [Xunit.TraitAttribute("Category", "workouttemplate")]
@@ -308,8 +304,7 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.WorkoutTemplate
             string[] tagsOfScenario = new string[] {
                     "workouttemplate",
                     "search",
-                    "pagination",
-                    "ignore"};
+                    "pagination"};
             System.Collections.Specialized.OrderedDictionary argumentsOfScenario = new System.Collections.Specialized.OrderedDictionary();
             TechTalk.SpecFlow.ScenarioInfo scenarioInfo = new TechTalk.SpecFlow.ScenarioInfo("Case insensitive search works with pagination", null, tagsOfScenario, argumentsOfScenario, featureTags);
             this.ScenarioInitialize(scenarioInfo);
