@@ -250,6 +250,83 @@ public async Task<ServiceResult<SystemHealthDto>> CheckSystemHealthAsync()
 }
 ```
 
+## Critical Pattern: Chaining Business Validations 🚨
+
+### All Validations Must Be in the Chain, NOT Inside MatchAsync
+
+```csharp
+// ❌ WRONG - Multiple exit points inside MatchAsync
+public async Task<ServiceResult<bool>> DeleteAsync(EquipmentId id)
+{
+    return await ServiceValidate.Build<bool>()
+        .EnsureNotEmpty(id, ErrorMessages.InvalidId)
+        .MatchAsync(
+            whenValid: async () =>
+            {
+                // VIOLATION: Business logic validations inside MatchAsync!
+                if (!await ExistsAsync(id))
+                    return ServiceResult<bool>.Failure(false, ServiceError.NotFound(...));
+                
+                if (!await CanDeleteAsync(id))
+                    return ServiceResult<bool>.Failure(false, ServiceError.DependencyExists(...));
+                
+                return await _dataService.DeleteAsync(id);
+            }
+        );
+}
+
+// ✅ CORRECT - All validations chained before MatchAsync
+public async Task<ServiceResult<bool>> DeleteAsync(EquipmentId id)
+{
+    return await ServiceValidate.Build<bool>()
+        .EnsureNotEmpty(id, ErrorMessages.InvalidId)                    // Input validation
+        .EnsureAsync(                                                   // Business validation 1
+            async () => await ExistsAsync(id),
+            ServiceError.NotFound("Equipment", id.ToString()))
+        .EnsureAsync(                                                   // Business validation 2
+            async () => await CanDeleteAsync(id),
+            ServiceError.DependencyExists("Equipment", "dependencies"))
+        .MatchAsync(
+            whenValid: async () => (await _dataService.DeleteAsync(id)).Data  // Single operation only!
+        );
+}
+```
+
+### Complex Business Validation Example
+
+```csharp
+// ✅ CORRECT - Complete validation chain for CreateAsync
+public async Task<ServiceResult<ExerciseDto>> CreateAsync(CreateExerciseCommand command)
+{
+    return await ServiceValidate.Build<ExerciseDto>()
+        // Input validations
+        .EnsureNotNull(command, ErrorMessages.CommandCannotBeNull)
+        .EnsureNotWhiteSpace(command?.Name, ErrorMessages.NameRequired)
+        .EnsureMaxLength(command?.Name, 255, ErrorMessages.NameTooLong)
+        
+        // Business validations - ALL in the chain!
+        .EnsureNameIsUniqueAsync(
+            async () => await IsNameUniqueAsync(command.Name),
+            "Exercise", command.Name)
+        .EnsureAsync(
+            async () => await AreExerciseTypesValidAsync(command.ExerciseTypeIds),
+            ServiceError.ValidationFailed(ErrorMessages.InvalidExerciseTypes))
+        .EnsureAsync(
+            async () => await IsKineticChainValidAsync(command.ExerciseTypeIds, command.KineticChainId),
+            ServiceError.ValidationFailed(ErrorMessages.InvalidKineticChain))
+        .EnsureAsync(
+            async () => await AreMuscleGroupsValidAsync(command.MuscleGroups),
+            ServiceError.ValidationFailed(ErrorMessages.InvalidMuscleGroups))
+            
+        // Single operation when ALL validations pass
+        .MatchAsync(
+            whenValid: async () => await _dataService.CreateAsync(command)
+        );
+}
+```
+
+**Key Rule**: MatchAsync.whenValid must have ONLY ONE operation - no if statements, no multiple returns, no validation logic!
+
 ## Critical Validation Pattern Rules 🚨
 
 ### Use Error Message Strings Directly

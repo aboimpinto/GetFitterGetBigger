@@ -38,43 +38,6 @@ public static class EquipmentErrorMessages
         public static string CannotDeleteInUse => "Cannot delete equipment that is in use by exercises";
     }
     
-    // Backward compatibility properties
-    [Obsolete("Use Validation.IdCannotBeEmpty instead")]
-    public static string IdCannotBeEmpty => Validation.IdCannotBeEmpty;
-    
-    [Obsolete("Use Validation.InvalidIdFormat instead")]
-    public static string InvalidIdFormat => Validation.InvalidIdFormat;
-    
-    [Obsolete("Use Validation.NameCannotBeEmpty instead")]
-    public static string NameCannotBeEmpty => Validation.NameCannotBeEmpty;
-    
-    [Obsolete("Use Validation.RequestCannotBeNull instead")]
-    public static string RequestCannotBeNull => Validation.RequestCannotBeNull;
-    
-    [Obsolete("Use Operations.NotFound instead")]
-    public static string NotFound => Operations.NotFound;
-    
-    [Obsolete("Use Operations.FailedToCreate instead")]
-    public static string FailedToCreate => Operations.FailedToCreate;
-    
-    [Obsolete("Use Operations.FailedToUpdate instead")]
-    public static string FailedToUpdate => Operations.FailedToUpdate;
-    
-    [Obsolete("Use Operations.FailedToDelete instead")]
-    public static string FailedToDelete => Operations.FailedToDelete;
-    
-    [Obsolete("Use Operations.FailedToLoad instead")]
-    public static string FailedToLoad => Operations.FailedToLoad;
-    
-    [Obsolete("Use BusinessRules.DuplicateNameFormat instead")]
-    public static string DuplicateNameFormat => BusinessRules.DuplicateNameFormat;
-    
-    [Obsolete("Use BusinessRules.CannotDeleteInUse instead")]
-    public static string CannotDeleteInUse => BusinessRules.CannotDeleteInUse;
-    
-    [Obsolete("Use Validation.InvalidEquipmentId instead")]
-    public static string InvalidEquipmentId => Validation.InvalidEquipmentId;
-    
     // Service-specific constants needed for validation patterns
     public const string ValueCannotBeEmpty = "Equipment value cannot be empty";
     public const string CommandCannotBeNull = "Equipment command cannot be null";

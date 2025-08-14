@@ -13,18 +13,12 @@ namespace GetFitterGetBigger.API.Services.ReferenceTables.Equipment;
 /// Equipment supports Create/Update/Delete operations, so NO caching is used
 /// NO UnitOfWork here - all data access through IEquipmentDataService
 /// </summary>
-public class EquipmentService : IEquipmentService
+public class EquipmentService(
+    IEquipmentDataService dataService,
+    ILogger<EquipmentService> logger) : IEquipmentService
 {
-    private readonly IEquipmentDataService _dataService;
-    private readonly ILogger<EquipmentService> _logger;
-
-    public EquipmentService(
-        IEquipmentDataService dataService,
-        ILogger<EquipmentService> logger)
-    {
-        _dataService = dataService;
-        _logger = logger;
-    }
+    private readonly IEquipmentDataService _dataService = dataService;
+    private readonly ILogger<EquipmentService> _logger = logger;
 
     /// <inheritdoc/>
     public async Task<ServiceResult<IEnumerable<EquipmentDto>>> GetAllActiveAsync()
@@ -37,7 +31,7 @@ public class EquipmentService : IEquipmentService
     public async Task<ServiceResult<EquipmentDto>> GetByIdAsync(EquipmentId id)
     {
         return await ServiceValidate.For<EquipmentDto>()
-            .EnsureNotEmpty(id, EquipmentErrorMessages.InvalidIdFormat)
+            .EnsureNotEmpty(id, EquipmentErrorMessages.Validation.InvalidIdFormat)
             .MatchAsync(
                 whenValid: async () =>
                 {
@@ -88,7 +82,7 @@ public class EquipmentService : IEquipmentService
     public async Task<ServiceResult<BooleanResultDto>> ExistsAsync(EquipmentId id)
     {
         return await ServiceValidate.For<BooleanResultDto>()
-            .EnsureNotEmpty(id, EquipmentErrorMessages.InvalidIdFormat)
+            .EnsureNotEmpty(id, EquipmentErrorMessages.Validation.InvalidIdFormat)
             .MatchAsync(
                 whenValid: async () =>
                 {
@@ -116,103 +110,51 @@ public class EquipmentService : IEquipmentService
     /// <inheritdoc/>
     public async Task<ServiceResult<EquipmentDto>> CreateAsync(CreateEquipmentCommand command)
     {
-        // Validate basic input
-        if (command == null)
-        {
-            return ServiceResult<EquipmentDto>.Failure(EquipmentDto.Empty, 
-                ServiceError.ValidationFailed(EquipmentErrorMessages.CommandCannotBeNull));
-        }
-
-        if (string.IsNullOrWhiteSpace(command.Name))
-        {
-            return ServiceResult<EquipmentDto>.Failure(EquipmentDto.Empty, 
-                ServiceError.ValidationFailed(EquipmentErrorMessages.NameCannotBeEmpty));
-        }
-
-        // Validate business rules asynchronously
-        if (!await IsNameUniqueAsync(command!.Name))
-        {
-            return ServiceResult<EquipmentDto>.Failure(EquipmentDto.Empty, 
-                ServiceError.AlreadyExists("Equipment", command.Name));
-        }
-
-        // Perform the operation
-        var result = await _dataService.CreateAsync(command!);
-        // Note: For eternal reference data, cache invalidation is not needed
-        // Reference data is immutable after deployment
-        return result;
+        return await ServiceValidate.Build<EquipmentDto>()
+            .EnsureNotNull(command, EquipmentErrorMessages.CommandCannotBeNull)
+            .EnsureNotWhiteSpace(command?.Name, EquipmentErrorMessages.Validation.NameCannotBeEmpty)
+            .EnsureNameIsUniqueAsync(
+                async () => await IsNameUniqueAsync(command!.Name),
+                "Equipment",
+                command?.Name ?? string.Empty)
+            .MatchAsync(
+                whenValid: async () => await _dataService.CreateAsync(command!)
+            );
     }
 
     /// <inheritdoc/>
     public async Task<ServiceResult<EquipmentDto>> UpdateAsync(EquipmentId id, UpdateEquipmentCommand command)
     {
-        // Validate basic input
-        if (id.IsEmpty)
-        {
-            return ServiceResult<EquipmentDto>.Failure(EquipmentDto.Empty, 
-                ServiceError.ValidationFailed(EquipmentErrorMessages.InvalidIdFormat));
-        }
-
-        if (command == null)
-        {
-            return ServiceResult<EquipmentDto>.Failure(EquipmentDto.Empty, 
-                ServiceError.ValidationFailed(EquipmentErrorMessages.CommandCannotBeNull));
-        }
-
-        if (string.IsNullOrWhiteSpace(command.Name))
-        {
-            return ServiceResult<EquipmentDto>.Failure(EquipmentDto.Empty, 
-                ServiceError.ValidationFailed(EquipmentErrorMessages.NameCannotBeEmpty));
-        }
-
-        // Validate business rules asynchronously
-        if (!await ExistsInternalAsync(id))
-        {
-            return ServiceResult<EquipmentDto>.Failure(EquipmentDto.Empty, 
-                ServiceError.NotFound("Equipment", id.ToString()));
-        }
-
-        if (!await IsNameUniqueForUpdateAsync(command!.Name, id))
-        {
-            return ServiceResult<EquipmentDto>.Failure(EquipmentDto.Empty, 
-                ServiceError.AlreadyExists("Equipment", command.Name));
-        }
-
-        // Perform the operation
-        var result = await _dataService.UpdateAsync(id, command!);
-        // Note: For eternal reference data, cache invalidation is not needed
-        // Reference data is immutable after deployment
-        return result;
+        return await ServiceValidate.Build<EquipmentDto>()
+            .EnsureNotEmpty(id, EquipmentErrorMessages.Validation.InvalidIdFormat)
+            .EnsureNotNull(command, EquipmentErrorMessages.CommandCannotBeNull)
+            .EnsureNotWhiteSpace(command?.Name, EquipmentErrorMessages.Validation.NameCannotBeEmpty)
+            .EnsureAsync(
+                async () => await ExistsInternalAsync(id),
+                ServiceError.NotFound("Equipment", id.ToString()))
+            .EnsureNameIsUniqueAsync(
+                async () => await IsNameUniqueForUpdateAsync(command!.Name, id),
+                "Equipment",
+                command?.Name ?? string.Empty)
+            .MatchAsync(
+                whenValid: async () => await _dataService.UpdateAsync(id, command!)
+            );
     }
 
     /// <inheritdoc/>
     public async Task<ServiceResult<BooleanResultDto>> DeleteAsync(EquipmentId id)
     {
-        // Validate basic input
-        if (id.IsEmpty)
-        {
-            return ServiceResult<BooleanResultDto>.Failure(BooleanResultDto.Create(false), 
-                ServiceError.ValidationFailed(EquipmentErrorMessages.InvalidIdFormat));
-        }
-
-        // Validate business rules asynchronously
-        if (!await ExistsInternalAsync(id))
-        {
-            return ServiceResult<BooleanResultDto>.Failure(BooleanResultDto.Create(false), 
-                ServiceError.NotFound("Equipment", id.ToString()));
-        }
-
-        if (!await CanDeleteInternalAsync(id))
-        {
-            return ServiceResult<BooleanResultDto>.Failure(BooleanResultDto.Create(false), 
-                ServiceError.DependencyExists("Equipment", "dependent exercises"));
-        }
-
-        // Perform the operation
-        var result = await _dataService.DeleteAsync(id);
-        // Note: For eternal reference data, cache invalidation is not needed
-        // Reference data is immutable after deployment
-        return result;
+        return await ServiceValidate.Build<BooleanResultDto>()
+            .EnsureNotEmpty(id, EquipmentErrorMessages.Validation.InvalidIdFormat)
+            .EnsureAsync(
+                async () => await ExistsInternalAsync(id),
+                ServiceError.NotFound("Equipment", id.ToString()))
+            .EnsureAsync(
+                async () => await CanDeleteInternalAsync(id),
+                ServiceError.DependencyExists("Equipment", "dependent exercises"))
+            .MatchAsync(
+                whenValid: async () => await _dataService.DeleteAsync(id)
+            );
     }
 
     // Private helper methods for validation

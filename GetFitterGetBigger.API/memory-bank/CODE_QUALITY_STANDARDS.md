@@ -8,7 +8,7 @@
 ┌─────────────────────────────────────────────────────────────────┐
 │ 🔴 CRITICAL: These API rules MUST be followed - NO EXCEPTIONS  │
 ├─────────────────────────────────────────────────────────────────┤
-│ 1. Single Exit Point per method - USE PATTERN MATCHING         │
+│ 1. Single Exit Point per method AND inside MatchAsync         │
 │ 2. ServiceResult<T> for ALL service methods                    │
 │ 3. No null returns - USE EMPTY PATTERN                         │
 │ 4. ReadOnlyUnitOfWork for queries, WritableUnitOfWork for mods │
@@ -18,6 +18,7 @@
 │ 8. POSITIVE validation assertions - NO double negations        │
 │ 9. Validation methods are QUESTIONS (IsValid) not COMMANDS    │
 │ 10. NO magic strings - ALL messages in constants              │
+│ 11. Chain ALL validations in ServiceValidate, not MatchAsync  │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
@@ -248,6 +249,43 @@ return await ServiceValidate.For<T>()
     .MatchAsync(...);
 ```
 
+### Multiple Exit Points Inside MatchAsync
+**NEVER have multiple exit points inside MatchAsync!** All validations must be in the ServiceValidate chain.
+
+```csharp
+// ❌ ANTI-PATTERN - Multiple returns inside MatchAsync
+return await ServiceValidate.Build<BooleanResultDto>()
+    .EnsureNotEmpty(id, ErrorMessages.InvalidId)
+    .MatchAsync(
+        whenValid: async () =>
+        {
+            // VIOLATION: Multiple exit points inside MatchAsync!
+            if (!await ExistsAsync(id))
+                return ServiceResult<BooleanResultDto>.Failure(...);
+            
+            if (!await CanDeleteAsync(id))
+                return ServiceResult<BooleanResultDto>.Failure(...);
+            
+            return await _dataService.DeleteAsync(id);
+        }
+    );
+
+// ✅ CORRECT - Chain ALL validations before MatchAsync
+return await ServiceValidate.Build<bool>()
+    .EnsureNotEmpty(id, ErrorMessages.InvalidId)
+    .EnsureAsync(
+        async () => await ExistsAsync(id),
+        ServiceError.NotFound("Equipment", id.ToString()))
+    .EnsureAsync(
+        async () => await CanDeleteAsync(id),
+        ServiceError.DependencyExists("Equipment", "dependencies"))
+    .MatchAsync(
+        whenValid: async () => (await _dataService.DeleteAsync(id)).Data
+    );
+```
+
+**Key Rule**: MatchAsync.whenValid must contain ONLY the single operation to perform when all validations pass. No if statements, no multiple returns, no business logic checks.
+
 ### No Bulk Scripts Policy
 **NEVER use scripts for bulk file modifications!** Change files one-by-one manually.
 
@@ -260,6 +298,7 @@ return await ServiceValidate.For<T>()
 | Service method return type | ServiceResult<T> | [ServiceResultPattern.md](./CodeQualityGuidelines/ServiceResultPattern.md) |
 | Input validation (all sync) | ServiceValidate.For<T>() | [ServiceValidatePattern.md](./CodeQualityGuidelines/ServiceValidatePattern.md) |
 | Input validation (any async) | ServiceValidate.Build<T>() | [ServiceValidatePattern.md](./CodeQualityGuidelines/ServiceValidatePattern.md) |
+| Multiple business validations | Chain EnsureAsync calls, NOT inside MatchAsync | See examples in anti-patterns section |
 | Clean validation approach | Positive assertions | [CleanValidationPattern.md](./CodeQualityGuidelines/CleanValidationPattern.md) |
 | Validation mistakes | Avoid anti-patterns | [ValidationAntiPatterns.md](./CodeQualityGuidelines/ValidationAntiPatterns.md) |
 | Null handling | Null Object Pattern | [NullObjectPattern.md](./CodeQualityGuidelines/NullObjectPattern.md) |
@@ -285,6 +324,8 @@ Before approving any PR, verify:
 - [ ] No null returns (Empty pattern used)
 - [ ] ServiceValidate used for validation
 - [ ] Single exit points in all methods
+- [ ] **Single operation only in MatchAsync.whenValid** (no if statements or multiple returns)
+- [ ] **All validations chained in ServiceValidate** (not inside MatchAsync)
 - [ ] **NO double negations in validation predicates** (`!(await something)` is WRONG)
 - [ ] **Validation methods are questions** (IsValid, HasPermission, CanDelete)
 - [ ] **Helper methods use positive naming** (returns true for positive state)

@@ -54,7 +54,9 @@ You should follow this systematic process:
 - [ ] Not returning ServiceResult<T> from all public methods
 - [ ] Using try-catch anti-pattern (blanket exception handling)
 - [ ] Multiple exit points (not using pattern matching)
+- [ ] **Multiple exit points INSIDE MatchAsync** - if statements and multiple returns in whenValid
 - [ ] Not using ServiceValidate fluent API for validation
+- [ ] **Business validations inside MatchAsync** instead of in ServiceValidate chain
 - [ ] Direct string.IsNullOrWhiteSpace checks instead of ServiceValidate
 - [ ] Accessing repositories outside their domain (Single Repository Rule violation)
 - [ ] Using WritableUnitOfWork for queries
@@ -320,6 +322,150 @@ return result3;
 return condition1 ? result1 
     : condition2 ? result2 
     : result3;
+```
+
+## 🚨 CRITICAL: ServiceValidate Chaining Pattern
+
+### Business Validation Pattern
+When you have multiple async business validations (existence checks, dependency checks, uniqueness checks), they MUST be chained in the ServiceValidate builder, NOT inside MatchAsync:
+
+#### ❌ WRONG - Multiple exit points inside MatchAsync:
+```csharp
+public async Task<ServiceResult<BooleanResultDto>> DeleteAsync(EquipmentId id)
+{
+    return await ServiceValidate.Build<BooleanResultDto>()
+        .EnsureNotEmpty(id, ErrorMessages.InvalidId)
+        .MatchAsync(
+            whenValid: async () =>
+            {
+                // VIOLATION: Multiple exit points inside MatchAsync!
+                if (!await ExistsInternalAsync(id))
+                {
+                    return ServiceResult<BooleanResultDto>.Failure(
+                        BooleanResultDto.Create(false), 
+                        ServiceError.NotFound("Equipment", id.ToString()));
+                }
+                
+                if (!await CanDeleteInternalAsync(id))
+                {
+                    return ServiceResult<BooleanResultDto>.Failure(
+                        BooleanResultDto.Create(false), 
+                        ServiceError.DependencyExists("Equipment", "dependent exercises"));
+                }
+                
+                return await _dataService.DeleteAsync(id);
+            }
+        );
+}
+```
+
+#### ✅ CORRECT - Chain ALL validations in ServiceValidate:
+```csharp
+public async Task<ServiceResult<bool>> DeleteAsync(EquipmentId id)
+{
+    return await ServiceValidate.Build<bool>()
+        .EnsureNotEmpty(id, ErrorMessages.InvalidId)
+        .EnsureAsync(
+            async () => await ExistsInternalAsync(id),
+            ServiceError.NotFound("Equipment", id.ToString()))
+        .EnsureAsync(
+            async () => await CanDeleteInternalAsync(id),
+            ServiceError.DependencyExists("Equipment", "dependent exercises"))
+        .MatchAsync(
+            whenValid: async () => (await _dataService.DeleteAsync(id)).Data
+        );
+}
+```
+
+### Key Rule: MatchAsync whenValid should have ONLY ONE operation
+- **NO if statements** inside whenValid
+- **NO multiple returns** inside whenValid
+- **NO business logic validations** inside whenValid
+- Just the **single operation** to perform when all validations pass
+
+### Complex Validation Chain Example (CreateAsync):
+```csharp
+public async Task<ServiceResult<ExerciseDto>> CreateAsync(CreateExerciseCommand command)
+{
+    return await ServiceValidate.Build<ExerciseDto>()
+        // Input validations
+        .EnsureNotNull(command, ErrorMessages.CommandCannotBeNull)
+        .EnsureNotWhiteSpace(command?.Name, ErrorMessages.NameRequired)
+        .EnsureNotWhiteSpace(command?.Description, ErrorMessages.DescriptionRequired)
+        .EnsureMaxLength(command?.Name, 255, ErrorMessages.NameTooLong)
+        
+        // Business validations - ALL in the chain!
+        .EnsureNameIsUniqueAsync(
+            async () => await IsNameUniqueAsync(command.Name),
+            "Exercise", command.Name)
+        .EnsureAsync(
+            async () => await AreExerciseTypesValidAsync(command.ExerciseTypeIds),
+            ServiceError.ValidationFailed(ErrorMessages.InvalidExerciseTypes))
+        .EnsureAsync(
+            async () => await IsKineticChainValidAsync(command.ExerciseTypeIds, command.KineticChainId),
+            ServiceError.ValidationFailed(ErrorMessages.InvalidKineticChain))
+            
+        // Single operation when ALL validations pass
+        .MatchAsync(
+            whenValid: async () => await _dataService.CreateAsync(command)
+        );
+}
+```
+
+### UpdateAsync Pattern with Business Logic:
+```csharp
+public async Task<ServiceResult<EquipmentDto>> UpdateAsync(EquipmentId id, UpdateEquipmentCommand command)
+{
+    return await ServiceValidate.Build<EquipmentDto>()
+        // Input validations
+        .EnsureNotEmpty(id, ErrorMessages.InvalidId)
+        .EnsureNotNull(command, ErrorMessages.CommandCannotBeNull)
+        .EnsureNotWhiteSpace(command?.Name, ErrorMessages.NameRequired)
+        
+        // Business validations - chained, not inside MatchAsync!
+        .EnsureAsync(
+            async () => await ExistsInternalAsync(id),
+            ServiceError.NotFound("Equipment", id.ToString()))
+        .EnsureAsync(
+            async () => await IsNameUniqueForUpdateAsync(command.Name, id),
+            ServiceError.AlreadyExists("Equipment", command.Name))
+            
+        // Clean single operation
+        .MatchAsync(
+            whenValid: async () => await _dataService.UpdateAsync(id, command)
+        );
+}
+```
+
+### Common Mistake Pattern to Avoid:
+```csharp
+// ❌ NEVER DO THIS - Business logic inside MatchAsync
+.MatchAsync(
+    whenValid: async () =>
+    {
+        // Check if exists
+        var exists = await _dataService.ExistsAsync(id);
+        if (!exists.Data.Value)
+            return ServiceResult<T>.Failure(...);  // VIOLATION!
+            
+        // Check dependencies
+        var canDelete = await _dataService.CanDeleteAsync(id);
+        if (!canDelete)
+            return ServiceResult<T>.Failure(...);  // VIOLATION!
+            
+        // Actual operation
+        return await _dataService.DeleteAsync(id);
+    }
+);
+
+// ✅ ALWAYS DO THIS - All checks in the chain
+.EnsureAsync(async () => (await _dataService.ExistsAsync(id)).Data.Value,
+    ServiceError.NotFound("Entity", id.ToString()))
+.EnsureAsync(async () => await _dataService.CanDeleteAsync(id),
+    ServiceError.DependencyExists("Entity", "dependencies"))
+.MatchAsync(
+    whenValid: async () => await _dataService.DeleteAsync(id)
+);
 ```
 
 ## Output Format

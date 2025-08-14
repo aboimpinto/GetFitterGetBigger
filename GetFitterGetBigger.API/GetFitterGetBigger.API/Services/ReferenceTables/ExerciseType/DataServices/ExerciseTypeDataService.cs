@@ -91,13 +91,14 @@ public class ExerciseTypeDataService : IExerciseTypeDataService
     }
     
     /// <inheritdoc/>
-    public async Task<bool> AnyIsRestTypeAsync(IEnumerable<ExerciseTypeId> ids)
+    public Task<bool> AnyIsRestTypeAsync(IEnumerable<ExerciseTypeId> ids)
     {
         // The REST exercise type has a fixed ID that never changes
         var restTypeId = ExerciseTypeId.ParseOrEmpty("exercisetype-d4e5f6a7-8b9c-0d1e-2f3a-4b5c6d7e8f9a");
         
         // Simply check if any of the provided IDs match the REST type ID
-        return ids.Any(id => id.Equals(restTypeId));
+        var result = ids.Any(id => id.Equals(restTypeId));
+        return Task.FromResult(result);
     }
     
     /// <summary>
