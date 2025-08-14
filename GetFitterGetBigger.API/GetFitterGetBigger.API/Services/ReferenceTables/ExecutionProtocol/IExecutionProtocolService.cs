@@ -2,7 +2,7 @@ using GetFitterGetBigger.API.DTOs;
 using GetFitterGetBigger.API.Models.SpecializedIds;
 using GetFitterGetBigger.API.Services.Results;
 
-namespace GetFitterGetBigger.API.Services.Interfaces;
+namespace GetFitterGetBigger.API.Services.ReferenceTables.ExecutionProtocol;
 
 /// <summary>
 /// Service interface for managing execution protocol reference data
@@ -49,5 +49,4 @@ public interface IExecutionProtocolService
     /// <param name="id">The execution protocol ID to check</param>
     /// <returns>A service result containing true if the execution protocol exists, false otherwise</returns>
     Task<ServiceResult<BooleanResultDto>> ExistsAsync(ExecutionProtocolId id);
-    
 }

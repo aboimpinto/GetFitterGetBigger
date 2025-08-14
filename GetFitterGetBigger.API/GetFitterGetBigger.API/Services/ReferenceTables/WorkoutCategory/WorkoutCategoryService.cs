@@ -1,28 +1,26 @@
 using GetFitterGetBigger.API.Constants;
 using GetFitterGetBigger.API.DTOs;
-using GetFitterGetBigger.API.Models;
-using GetFitterGetBigger.API.Models.Entities;
 using GetFitterGetBigger.API.Models.SpecializedIds;
-using GetFitterGetBigger.API.Repositories.Interfaces;
 using GetFitterGetBigger.API.Services.Cache;
 using GetFitterGetBigger.API.Services.Interfaces;
+using GetFitterGetBigger.API.Services.ReferenceTables.WorkoutCategory.DataServices;
 using GetFitterGetBigger.API.Services.Results;
 using GetFitterGetBigger.API.Services.Validation;
-using Olimpo.EntityFramework.Persistency;
 using CacheKeyGenerator = GetFitterGetBigger.API.Utilities.CacheKeyGenerator;
 
-namespace GetFitterGetBigger.API.Services.Implementations;
+namespace GetFitterGetBigger.API.Services.ReferenceTables.WorkoutCategory;
 
 /// <summary>
 /// Service implementation for workout category operations with integrated eternal caching
 /// WorkoutCategories are pure reference data that never changes after deployment
+/// NO UnitOfWork here - all data access through IWorkoutCategoryDataService
 /// </summary>
 public class WorkoutCategoryService(
-    IUnitOfWorkProvider<FitnessDbContext> unitOfWorkProvider,
+    IWorkoutCategoryDataService dataService,
     IEternalCacheService cacheService,
     ILogger<WorkoutCategoryService> logger) : IWorkoutCategoryService
 {
-    private readonly IUnitOfWorkProvider<FitnessDbContext> _unitOfWorkProvider = unitOfWorkProvider;
+    private readonly IWorkoutCategoryDataService _dataService = dataService;
     private readonly IEternalCacheService _cacheService = cacheService;
     private readonly ILogger<WorkoutCategoryService> _logger = logger;
 
@@ -39,22 +37,7 @@ public class WorkoutCategoryService(
         
         return await CacheLoad.For<IEnumerable<WorkoutCategoryDto>>(_cacheService, cacheKey)
             .WithLogging(_logger, "WorkoutCategories")
-            .WithAutoCacheAsync(LoadAllActiveFromDatabaseAsync);
-    }
-    
-    /// <summary>
-    /// Loads all active WorkoutCategories from the database and maps to DTOs
-    /// </summary>
-    private async Task<ServiceResult<IEnumerable<WorkoutCategoryDto>>> LoadAllActiveFromDatabaseAsync()
-    {
-        using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
-        var repository = unitOfWork.GetRepository<IWorkoutCategoryRepository>();
-        var entities = await repository.GetAllActiveAsync();
-        
-        var dtos = entities.Select(MapToDto).ToList();
-        
-        _logger.LogInformation("Loaded {Count} active workout categories", dtos.Count);
-        return ServiceResult<IEnumerable<WorkoutCategoryDto>>.Success(dtos);
+            .WithAutoCacheAsync(async () => await _dataService.GetAllActiveAsync());
     }
 
     /// <inheritdoc/>
@@ -71,8 +54,8 @@ public class WorkoutCategoryService(
                         .WithLogging(_logger, "WorkoutCategory")
                         .WithAutoCacheAsync(async () =>
                         {
-                            var result = await LoadByIdFromDatabaseAsync(id);
-                            // Convert Empty to NotFound at the API layer
+                            var result = await _dataService.GetByIdAsync(id);
+                            // Convert Empty to NotFound at the service layer
                             if (result.IsSuccess && result.Data.IsEmpty)
                             {
                                 return ServiceResult<WorkoutCategoryDto>.Failure(
@@ -96,20 +79,6 @@ public class WorkoutCategoryService(
         return await GetByIdAsync(workoutCategoryId);
     }
     
-    /// <summary>
-    /// Loads a WorkoutCategory by ID from the database and maps to DTO
-    /// </summary>
-    private async Task<ServiceResult<WorkoutCategoryDto>> LoadByIdFromDatabaseAsync(WorkoutCategoryId id)
-    {
-        using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
-        var repository = unitOfWork.GetRepository<IWorkoutCategoryRepository>();
-        var entity = await repository.GetByIdAsync(id);
-        
-        return entity.IsActive
-            ? ServiceResult<WorkoutCategoryDto>.Success(MapToDto(entity))
-            : ServiceResult<WorkoutCategoryDto>.Success(WorkoutCategoryDto.Empty);
-    }
-    
     /// <inheritdoc/>
     public async Task<ServiceResult<WorkoutCategoryDto>> GetByValueAsync(string value)
     {
@@ -124,8 +93,8 @@ public class WorkoutCategoryService(
                         .WithLogging(_logger, "WorkoutCategory")
                         .WithAutoCacheAsync(async () =>
                         {
-                            var result = await LoadByValueFromDatabaseAsync(value);
-                            // Convert Empty to NotFound at the API layer
+                            var result = await _dataService.GetByValueAsync(value);
+                            // Convert Empty to NotFound at the service layer
                             if (result.IsSuccess && result.Data.IsEmpty)
                             {
                                 return ServiceResult<WorkoutCategoryDto>.Failure(
@@ -136,20 +105,6 @@ public class WorkoutCategoryService(
                         });
                 }
             );
-    }
-    
-    /// <summary>
-    /// Loads a WorkoutCategory by value from the database and maps to DTO
-    /// </summary>
-    private async Task<ServiceResult<WorkoutCategoryDto>> LoadByValueFromDatabaseAsync(string value)
-    {
-        using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
-        var repository = unitOfWork.GetRepository<IWorkoutCategoryRepository>();
-        var entity = await repository.GetByValueAsync(value);
-
-        return entity.IsActive
-            ? ServiceResult<WorkoutCategoryDto>.Success(MapToDto(entity))
-            : ServiceResult<WorkoutCategoryDto>.Success(WorkoutCategoryDto.Empty);   
     }
 
     /// <inheritdoc/>
@@ -167,27 +122,5 @@ public class WorkoutCategoryService(
                     );
                 }
             );
-    }
-    
-    /// <summary>
-    /// Maps a WorkoutCategory entity to its DTO representation
-    /// Entity stays within the service layer - only DTO is exposed
-    /// </summary>
-    private WorkoutCategoryDto MapToDto(WorkoutCategory entity)
-    {
-        if (entity.IsEmpty)
-            return WorkoutCategoryDto.Empty;
-            
-        return new WorkoutCategoryDto
-        {
-            WorkoutCategoryId = entity.WorkoutCategoryId.ToString(),
-            Value = entity.Value,
-            Description = entity.Description,
-            Icon = entity.Icon,
-            Color = entity.Color,
-            PrimaryMuscleGroups = entity.PrimaryMuscleGroups,
-            DisplayOrder = entity.DisplayOrder,
-            IsActive = entity.IsActive
-        };
     }
 }

@@ -1,5 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
-using GetFitterGetBigger.API.Services.Interfaces;
+using GetFitterGetBigger.API.Services.ReferenceTables.WorkoutState;
 using GetFitterGetBigger.API.Services.Results;
 using GetFitterGetBigger.API.Models.SpecializedIds;
 
@@ -38,7 +38,7 @@ public class WorkoutStatesController : ControllerBase
     {
         _logger.LogInformation("Getting all active workout states");
         
-        var result = await _workoutStateService.GetAllAsync();
+        var result = await _workoutStateService.GetAllActiveAsync();
         
         return result switch
         {

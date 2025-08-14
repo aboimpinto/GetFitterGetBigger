@@ -1,395 +1,288 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using FluentAssertions;
 using GetFitterGetBigger.API.Constants;
 using GetFitterGetBigger.API.DTOs;
-using GetFitterGetBigger.API.Models;
-using GetFitterGetBigger.API.Models.Entities;
 using GetFitterGetBigger.API.Models.SpecializedIds;
-using GetFitterGetBigger.API.Repositories.Interfaces;
-using GetFitterGetBigger.API.Services.Implementations;
 using GetFitterGetBigger.API.Services.Interfaces;
+using GetFitterGetBigger.API.Services.ReferenceTables.WorkoutState;
+using GetFitterGetBigger.API.Services.ReferenceTables.WorkoutState.DataServices;
 using GetFitterGetBigger.API.Services.Results;
-using GetFitterGetBigger.API.Tests.TestConstants;
 using Microsoft.Extensions.Logging;
 using Moq;
-using Olimpo.EntityFramework.Persistency;
+using Moq.AutoMock;
 using Xunit;
 
-namespace GetFitterGetBigger.API.Tests.Services
+namespace GetFitterGetBigger.API.Tests.Services;
+
+/// <summary>
+/// Unit tests for WorkoutStateService following the new DataService architecture.
+/// Uses AutoMocker for isolation and FluentAssertions for clear assertions.
+/// </summary>
+public class WorkoutStateServiceTests
 {
-    public class WorkoutStateServiceTests
+    [Fact]
+    public async Task GetAllActiveAsync_WhenCacheMiss_CallsDataServiceAndCachesResult()
     {
-        private readonly Mock<IUnitOfWorkProvider<FitnessDbContext>> _mockUnitOfWorkProvider;
-        private readonly Mock<IReadOnlyUnitOfWork<FitnessDbContext>> _mockReadOnlyUnitOfWork;
-        private readonly Mock<IWorkoutStateRepository> _mockWorkoutStateRepository;
-        private readonly Mock<IEternalCacheService> _mockCacheService;
-        private readonly Mock<ILogger<WorkoutStateService>> _mockLogger;
-        private readonly WorkoutStateService _workoutStateService;
-
-        public WorkoutStateServiceTests()
+        // Arrange
+        var autoMocker = new AutoMocker();
+        var testee = autoMocker.CreateInstance<WorkoutStateService>();
+        
+        var expectedDtos = new List<WorkoutStateDto>
         {
-            _mockUnitOfWorkProvider = new Mock<IUnitOfWorkProvider<FitnessDbContext>>();
-            _mockReadOnlyUnitOfWork = new Mock<IReadOnlyUnitOfWork<FitnessDbContext>>();
-            _mockWorkoutStateRepository = new Mock<IWorkoutStateRepository>();
-            _mockCacheService = new Mock<IEternalCacheService>();
-            _mockLogger = new Mock<ILogger<WorkoutStateService>>();
-
-            _mockUnitOfWorkProvider
-                .Setup(x => x.CreateReadOnly())
-                .Returns(_mockReadOnlyUnitOfWork.Object);
-
-            _mockReadOnlyUnitOfWork
-                .Setup(x => x.GetRepository<IWorkoutStateRepository>())
-                .Returns(_mockWorkoutStateRepository.Object);
-
-            _workoutStateService = new WorkoutStateService(
-                _mockUnitOfWorkProvider.Object,
-                _mockCacheService.Object,
-                _mockLogger.Object);
-        }
-
-        [Fact]
-        public async Task ExistsAsync_WithWorkoutStateId_WhenWorkoutStateExists_ReturnsTrue()
+            new() { Id = "workoutstate-guid1", Value = "Draft", Description = "Draft state" },
+            new() { Id = "workoutstate-guid2", Value = "Production", Description = "Production state" }
+        };
+        
+        autoMocker.GetMock<IWorkoutStateDataService>()
+            .Setup(x => x.GetAllActiveAsync())
+            .ReturnsAsync(ServiceResult<IEnumerable<WorkoutStateDto>>.Success(expectedDtos));
+        
+        autoMocker.GetMock<IEternalCacheService>()
+            .Setup(x => x.GetAsync<IEnumerable<WorkoutStateDto>>(It.IsAny<string>()))
+            .ReturnsAsync(CacheResult<IEnumerable<WorkoutStateDto>>.Miss());
+        
+        // Act
+        var result = await testee.GetAllActiveAsync();
+        
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+        result.Data.Should().BeEquivalentTo(expectedDtos);
+        
+        autoMocker.GetMock<IWorkoutStateDataService>()
+            .Verify(x => x.GetAllActiveAsync(), Times.Once);
+        
+        autoMocker.GetMock<IEternalCacheService>()
+            .Verify(x => x.SetAsync(It.IsAny<string>(), It.Is<IEnumerable<WorkoutStateDto>>(
+                data => data.Count() == expectedDtos.Count)), Times.Once);
+    }
+    
+    [Fact]
+    public async Task GetAllActiveAsync_WhenCacheHit_ReturnsFromCacheWithoutCallingDataService()
+    {
+        // Arrange
+        var autoMocker = new AutoMocker();
+        var testee = autoMocker.CreateInstance<WorkoutStateService>();
+        
+        var cachedDtos = new List<WorkoutStateDto>
         {
-            // Arrange
-            var workoutStateId = WorkoutStateId.New();
-            var createResult = WorkoutState.Handler.Create(workoutStateId, "DRAFT", "Template under construction", 1, true);
-            Assert.True(createResult.IsSuccess, "WorkoutState creation should succeed");
-            var workoutState = createResult.Value;
-
-            // Setup cache miss so it goes to database
-            _mockCacheService
-                .Setup(x => x.GetAsync<WorkoutStateDto>(It.IsAny<string>()))
-                .ReturnsAsync(CacheResult<WorkoutStateDto>.Miss());
-
-            _mockWorkoutStateRepository
-                .Setup(x => x.GetByIdAsync(It.IsAny<WorkoutStateId>()))
-                .ReturnsAsync(workoutState);
-
-            // Act
-            var result = await _workoutStateService.ExistsAsync(workoutStateId);
-
-            // Assert
-            Assert.True(result.IsSuccess);
-            Assert.True(result.Data.Value);
-            _mockUnitOfWorkProvider.Verify(x => x.CreateReadOnly(), Times.Once);
-            _mockWorkoutStateRepository.Verify(x => x.GetByIdAsync(It.IsAny<WorkoutStateId>()), Times.Once);
-        }
-
-        [Fact]
-        public async Task ExistsAsync_WithWorkoutStateId_WhenWorkoutStateDoesNotExist_ReturnsFalse()
-        {
-            // Arrange
-            var workoutStateId = WorkoutStateId.New();
-
-            // Setup cache miss so it goes to database
-            _mockCacheService
-                .Setup(x => x.GetAsync<WorkoutStateDto>(It.IsAny<string>()))
-                .ReturnsAsync(CacheResult<WorkoutStateDto>.Miss());
-
-            _mockWorkoutStateRepository
-                .Setup(x => x.GetByIdAsync(It.IsAny<WorkoutStateId>()))
-                .ReturnsAsync(WorkoutState.Empty);
-
-            // Act
-            var result = await _workoutStateService.ExistsAsync(workoutStateId);
-
-            // Assert
-            Assert.True(result.IsSuccess);
-            Assert.False(result.Data.Value);
-            _mockUnitOfWorkProvider.Verify(x => x.CreateReadOnly(), Times.Once);
-            _mockWorkoutStateRepository.Verify(x => x.GetByIdAsync(It.IsAny<WorkoutStateId>()), Times.Once);
-        }
-
-        [Fact]
-        public async Task GetAllActiveAsync_ReturnsSuccessWithWorkoutStates()
-        {
-            // Arrange
-            var draftResult = WorkoutState.Handler.Create(WorkoutStateId.New(), "DRAFT", "Template under construction", 1, true);
-            var productionResult = WorkoutState.Handler.Create(WorkoutStateId.New(), "PRODUCTION", "Active template for use", 2, true);
-            
-            Assert.True(draftResult.IsSuccess, "DRAFT WorkoutState creation should succeed");
-            Assert.True(productionResult.IsSuccess, "PRODUCTION WorkoutState creation should succeed");
-            
-            var workoutStates = new List<WorkoutState>
-            {
-                draftResult.Value,
-                productionResult.Value
-            };
-
-            // Setup cache miss so it goes to database
-            _mockCacheService
-                .Setup(x => x.GetAsync<IEnumerable<WorkoutStateDto>>(It.IsAny<string>()))
-                .ReturnsAsync(CacheResult<IEnumerable<WorkoutStateDto>>.Miss());
-
-            _mockWorkoutStateRepository
-                .Setup(x => x.GetAllActiveAsync())
-                .ReturnsAsync(workoutStates);
-
-            // Act
-            var result = await _workoutStateService.GetAllActiveAsync();
-
-            // Assert
-            Assert.True(result.IsSuccess);
-            Assert.Equal(2, result.Data.Count());
-            
-            var resultArray = result.Data.ToArray();
-            Assert.Equal("DRAFT", resultArray[0].Value);
-            Assert.Equal("PRODUCTION", resultArray[1].Value);
-            
-            _mockUnitOfWorkProvider.Verify(x => x.CreateReadOnly(), Times.Once);
-            _mockWorkoutStateRepository.Verify(x => x.GetAllActiveAsync(), Times.Once);
-        }
-
-        [Fact]
-        public async Task GetAllAsync_CallsGetAllActiveAsync()
-        {
-            // Arrange
-            var workoutStates = new List<WorkoutState>();
-
-            // Setup cache miss so it goes to database
-            _mockCacheService
-                .Setup(x => x.GetAsync<IEnumerable<WorkoutStateDto>>(It.IsAny<string>()))
-                .ReturnsAsync(CacheResult<IEnumerable<WorkoutStateDto>>.Miss());
-
-            _mockWorkoutStateRepository
-                .Setup(x => x.GetAllActiveAsync())
-                .ReturnsAsync(workoutStates);
-
-            // Act
-            var result = await _workoutStateService.GetAllAsync();
-
-            // Assert
-            Assert.True(result.IsSuccess);
-            _mockWorkoutStateRepository.Verify(x => x.GetAllActiveAsync(), Times.Once);
-        }
-
-        [Fact]
-        public async Task GetByIdAsync_WithWorkoutStateId_WhenExists_ReturnsWorkoutState()
-        {
-            // Arrange
-            var workoutStateId = WorkoutStateId.New();
-            var createResult = WorkoutState.Handler.Create(workoutStateId, "DRAFT", "Template under construction", 1, true);
-            Assert.True(createResult.IsSuccess, "WorkoutState creation should succeed");
-            var workoutState = createResult.Value;
-
-            // Setup cache miss so it goes to database
-            _mockCacheService
-                .Setup(x => x.GetAsync<WorkoutStateDto>(It.IsAny<string>()))
-                .ReturnsAsync(CacheResult<WorkoutStateDto>.Miss());
-
-            _mockWorkoutStateRepository
-                .Setup(x => x.GetByIdAsync(It.IsAny<WorkoutStateId>()))
-                .ReturnsAsync(workoutState);
-
-            // Act
-            var result = await _workoutStateService.GetByIdAsync(workoutStateId);
-
-            // Assert
-            Assert.True(result.IsSuccess);
-            Assert.Equal(workoutStateId.ToString(), result.Data.Id);
-            Assert.Equal("DRAFT", result.Data.Value);
-            _mockUnitOfWorkProvider.Verify(x => x.CreateReadOnly(), Times.Once);
-            _mockWorkoutStateRepository.Verify(x => x.GetByIdAsync(It.IsAny<WorkoutStateId>()), Times.Once);
-        }
-
-        [Fact]
-        public async Task GetByIdAsync_WithWorkoutStateId_WhenDoesNotExist_ReturnsNotFound()
-        {
-            // Arrange
-            var workoutStateId = WorkoutStateId.New();
-
-            // Setup cache miss so it goes to database
-            _mockCacheService
-                .Setup(x => x.GetAsync<WorkoutStateDto>(It.IsAny<string>()))
-                .ReturnsAsync(CacheResult<WorkoutStateDto>.Miss());
-
-            _mockWorkoutStateRepository
-                .Setup(x => x.GetByIdAsync(It.IsAny<WorkoutStateId>()))
-                .ReturnsAsync(WorkoutState.Empty);
-
-            // Act
-            var result = await _workoutStateService.GetByIdAsync(workoutStateId);
-
-            // Assert
-            Assert.False(result.IsSuccess);
-            Assert.Equal(ServiceErrorCode.NotFound, result.PrimaryErrorCode);
-            _mockUnitOfWorkProvider.Verify(x => x.CreateReadOnly(), Times.Once);
-            _mockWorkoutStateRepository.Verify(x => x.GetByIdAsync(It.IsAny<WorkoutStateId>()), Times.Once);
-        }
-
-        [Fact]
-        public async Task GetByIdAsync_WithStringId_CallsWorkoutStateIdOverload()
-        {
-            // Arrange
-            var workoutStateId = WorkoutStateId.New();
-            var workoutStateIdString = workoutStateId.ToString();
-            var createResult = WorkoutState.Handler.Create(workoutStateId, "DRAFT", "Template under construction", 1, true);
-            Assert.True(createResult.IsSuccess, "WorkoutState creation should succeed");
-            var workoutState = createResult.Value;
-
-            // Setup cache miss so it goes to database
-            _mockCacheService
-                .Setup(x => x.GetAsync<WorkoutStateDto>(It.IsAny<string>()))
-                .ReturnsAsync(CacheResult<WorkoutStateDto>.Miss());
-
-            _mockWorkoutStateRepository
-                .Setup(x => x.GetByIdAsync(It.IsAny<WorkoutStateId>()))
-                .ReturnsAsync(workoutState);
-
-            // Act
-            var result = await _workoutStateService.GetByIdAsync(workoutStateIdString);
-
-            // Assert
-            Assert.True(result.IsSuccess);
-            Assert.Equal(workoutStateId.ToString(), result.Data.Id);
-            Assert.Equal("DRAFT", result.Data.Value);
-            _mockUnitOfWorkProvider.Verify(x => x.CreateReadOnly(), Times.Once);
-            _mockWorkoutStateRepository.Verify(x => x.GetByIdAsync(It.IsAny<WorkoutStateId>()), Times.Once);
-        }
-
-        [Fact]
-        public async Task GetByValueAsync_WhenExists_ReturnsWorkoutState()
-        {
-            // Arrange
-            var workoutStateId = WorkoutStateId.New();
-            var createResult = WorkoutState.Handler.Create(workoutStateId, "DRAFT", "Template under construction", 1, true);
-            Assert.True(createResult.IsSuccess, "WorkoutState creation should succeed");
-            var workoutState = createResult.Value;
-
-            // Setup cache miss so it goes to database
-            _mockCacheService
-                .Setup(x => x.GetAsync<WorkoutStateDto>(It.IsAny<string>()))
-                .ReturnsAsync(CacheResult<WorkoutStateDto>.Miss());
-
-            _mockWorkoutStateRepository
-                .Setup(x => x.GetByValueAsync(It.IsAny<string>()))
-                .ReturnsAsync(workoutState);
-
-            // Act
-            var result = await _workoutStateService.GetByValueAsync("DRAFT");
-
-            // Assert
-            Assert.True(result.IsSuccess);
-            Assert.Equal("DRAFT", result.Data.Value);
-            _mockUnitOfWorkProvider.Verify(x => x.CreateReadOnly(), Times.Once);
-            _mockWorkoutStateRepository.Verify(x => x.GetByValueAsync("DRAFT"), Times.Once);
-        }
-
-        [Fact]
-        public async Task GetByValueAsync_WhenDoesNotExist_ReturnsNotFound()
-        {
-            // Arrange
-            // Setup cache miss so it goes to database
-            _mockCacheService
-                .Setup(x => x.GetAsync<WorkoutStateDto>(It.IsAny<string>()))
-                .ReturnsAsync(CacheResult<WorkoutStateDto>.Miss());
-
-            _mockWorkoutStateRepository
-                .Setup(x => x.GetByValueAsync(It.IsAny<string>()))
-                .ReturnsAsync(WorkoutState.Empty);
-
-            // Act
-            var result = await _workoutStateService.GetByValueAsync("NONEXISTENT");
-
-            // Assert
-            Assert.False(result.IsSuccess);
-            Assert.Equal(ServiceErrorCode.NotFound, result.PrimaryErrorCode);
-            _mockUnitOfWorkProvider.Verify(x => x.CreateReadOnly(), Times.Once);
-            _mockWorkoutStateRepository.Verify(x => x.GetByValueAsync("NONEXISTENT"), Times.Once);
-        }
-
-        [Fact]
-        public async Task GetByIdAsync_WithEmptyId_ReturnsValidationError()
-        {
-            // Act
-            var result = await _workoutStateService.GetByIdAsync(WorkoutStateId.Empty);
-
-            // Assert
-            Assert.False(result.IsSuccess);
-            Assert.Equal(ServiceErrorCode.ValidationFailed, result.PrimaryErrorCode);
-            _mockUnitOfWorkProvider.Verify(x => x.CreateReadOnly(), Times.Never);
-        }
-
-        [Fact]
-        public async Task GetByValueAsync_WithWhitespaceValue_ReturnsValidationError()
-        {
-            // Act
-            var result = await _workoutStateService.GetByValueAsync("   ");
-
-            // Assert
-            Assert.False(result.IsSuccess);
-            Assert.Equal(ServiceErrorCode.ValidationFailed, result.PrimaryErrorCode);
-            _mockUnitOfWorkProvider.Verify(x => x.CreateReadOnly(), Times.Never);
-        }
-
-        [Fact]
-        public async Task ExistsAsync_WithEmptyId_ReturnsValidationError()
-        {
-            // Act
-            var result = await _workoutStateService.ExistsAsync(WorkoutStateId.Empty);
-
-            // Assert
-            Assert.False(result.IsSuccess);
-            Assert.Equal(ServiceErrorCode.ValidationFailed, result.PrimaryErrorCode);
-            _mockUnitOfWorkProvider.Verify(x => x.CreateReadOnly(), Times.Never);
-        }
-
-        [Fact]
-        public async Task GetByIdAsync_WhenCacheHit_DoesNotHitDatabase()
-        {
-            // Arrange
-            var workoutStateId = WorkoutStateId.New();
-            var cachedDto = new WorkoutStateDto
-            {
-                Id = workoutStateId.ToString(),
-                Value = "DRAFT",
-                Description = "Template under construction"
-            };
-
-            // Setup cache hit
-            _mockCacheService
-                .Setup(x => x.GetAsync<WorkoutStateDto>(It.IsAny<string>()))
-                .ReturnsAsync(CacheResult<WorkoutStateDto>.Hit(cachedDto));
-
-            // Act
-            var result = await _workoutStateService.GetByIdAsync(workoutStateId);
-
-            // Assert
-            Assert.True(result.IsSuccess);
-            Assert.Equal("DRAFT", result.Data.Value);
-            
-            // Should not hit database when cache hits
-            _mockUnitOfWorkProvider.Verify(x => x.CreateReadOnly(), Times.Never);
-            _mockWorkoutStateRepository.Verify(x => x.GetByIdAsync(It.IsAny<WorkoutStateId>()), Times.Never);
-        }
-
-        [Fact]
-        public async Task GetAllActiveAsync_WhenCacheHit_DoesNotHitDatabase()
-        {
-            // Arrange
-            var cachedDtos = new List<WorkoutStateDto>
-            {
-                new() { Id = WorkoutStateId.New().ToString(), Value = "DRAFT", Description = "Template under construction" },
-                new() { Id = WorkoutStateId.New().ToString(), Value = "PRODUCTION", Description = "Active template for use" }
-            };
-
-            // Setup cache hit
-            _mockCacheService
-                .Setup(x => x.GetAsync<IEnumerable<WorkoutStateDto>>(It.IsAny<string>()))
-                .ReturnsAsync(CacheResult<IEnumerable<WorkoutStateDto>>.Hit(cachedDtos));
-
-            // Act
-            var result = await _workoutStateService.GetAllActiveAsync();
-
-            // Assert
-            Assert.True(result.IsSuccess);
-            Assert.Equal(2, result.Data.Count());
-            
-            // Should not hit database when cache hits
-            _mockUnitOfWorkProvider.Verify(x => x.CreateReadOnly(), Times.Never);
-            _mockWorkoutStateRepository.Verify(x => x.GetAllActiveAsync(), Times.Never);
-        }
+            new() { Id = "workoutstate-guid1", Value = "Draft", Description = "Draft state" },
+            new() { Id = "workoutstate-guid2", Value = "Production", Description = "Production state" }
+        };
+        
+        autoMocker.GetMock<IEternalCacheService>()
+            .Setup(x => x.GetAsync<IEnumerable<WorkoutStateDto>>(It.IsAny<string>()))
+            .ReturnsAsync(CacheResult<IEnumerable<WorkoutStateDto>>.Hit(cachedDtos));
+        
+        // Act
+        var result = await testee.GetAllActiveAsync();
+        
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+        result.Data.Should().BeEquivalentTo(cachedDtos);
+        
+        autoMocker.GetMock<IWorkoutStateDataService>()
+            .Verify(x => x.GetAllActiveAsync(), Times.Never);
+        
+        autoMocker.GetMock<IEternalCacheService>()
+            .Verify(x => x.SetAsync(It.IsAny<string>(), It.IsAny<IEnumerable<WorkoutStateDto>>()), Times.Never);
+    }
+    
+    [Fact]
+    public async Task GetByIdAsync_WithValidId_ReturnsSuccessWithData()
+    {
+        // Arrange
+        var autoMocker = new AutoMocker();
+        var testee = autoMocker.CreateInstance<WorkoutStateService>();
+        
+        var stateId = WorkoutStateId.New();
+        var expectedDto = new WorkoutStateDto 
+        { 
+            Id = stateId.ToString(), 
+            Value = "Draft", 
+            Description = "Draft state" 
+        };
+        
+        autoMocker.GetMock<IWorkoutStateDataService>()
+            .Setup(x => x.GetByIdAsync(stateId))
+            .ReturnsAsync(ServiceResult<WorkoutStateDto>.Success(expectedDto));
+        
+        autoMocker.GetMock<IEternalCacheService>()
+            .Setup(x => x.GetAsync<WorkoutStateDto>(It.IsAny<string>()))
+            .ReturnsAsync(CacheResult<WorkoutStateDto>.Miss());
+        
+        // Act
+        var result = await testee.GetByIdAsync(stateId);
+        
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+        result.Data.Should().BeEquivalentTo(expectedDto);
+        result.Errors.Should().BeEmpty();
+        
+        autoMocker.GetMock<IWorkoutStateDataService>()
+            .Verify(x => x.GetByIdAsync(stateId), Times.Once);
+    }
+    
+    [Fact]
+    public async Task GetByIdAsync_WithEmptyId_ReturnsValidationFailure()
+    {
+        // Arrange
+        var autoMocker = new AutoMocker();
+        var testee = autoMocker.CreateInstance<WorkoutStateService>();
+        
+        var emptyId = WorkoutStateId.Empty;
+        
+        // Act
+        var result = await testee.GetByIdAsync(emptyId);
+        
+        // Assert
+        result.IsSuccess.Should().BeFalse();
+        result.PrimaryErrorCode.Should().Be(ServiceErrorCode.ValidationFailed);
+        result.Errors.Should().Contain(WorkoutStateErrorMessages.InvalidIdFormat);
+        
+        autoMocker.GetMock<IWorkoutStateDataService>()
+            .Verify(x => x.GetByIdAsync(It.IsAny<WorkoutStateId>()), Times.Never);
+    }
+    
+    [Fact]
+    public async Task GetByValueAsync_WithValidValue_ReturnsSuccessWithData()
+    {
+        // Arrange
+        var autoMocker = new AutoMocker();
+        var testee = autoMocker.CreateInstance<WorkoutStateService>();
+        
+        var value = "Draft";
+        var expectedDto = new WorkoutStateDto 
+        { 
+            Id = "workoutstate-guid1", 
+            Value = value, 
+            Description = "Draft state" 
+        };
+        
+        autoMocker.GetMock<IWorkoutStateDataService>()
+            .Setup(x => x.GetByValueAsync(value))
+            .ReturnsAsync(ServiceResult<WorkoutStateDto>.Success(expectedDto));
+        
+        autoMocker.GetMock<IEternalCacheService>()
+            .Setup(x => x.GetAsync<WorkoutStateDto>(It.IsAny<string>()))
+            .ReturnsAsync(CacheResult<WorkoutStateDto>.Miss());
+        
+        // Act
+        var result = await testee.GetByValueAsync(value);
+        
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+        result.Data.Should().BeEquivalentTo(expectedDto);
+        result.Data.Value.Should().Be(value);
+        
+        autoMocker.GetMock<IWorkoutStateDataService>()
+            .Verify(x => x.GetByValueAsync(value), Times.Once);
+    }
+    
+    [Fact]
+    public async Task GetByValueAsync_WithEmptyValue_ReturnsValidationFailure()
+    {
+        // Arrange
+        var autoMocker = new AutoMocker();
+        var testee = autoMocker.CreateInstance<WorkoutStateService>();
+        
+        var emptyValue = "";
+        
+        // Act
+        var result = await testee.GetByValueAsync(emptyValue);
+        
+        // Assert
+        result.IsSuccess.Should().BeFalse();
+        result.PrimaryErrorCode.Should().Be(ServiceErrorCode.ValidationFailed);
+        result.Errors.Should().Contain(WorkoutStateErrorMessages.ValueCannotBeEmpty);
+        
+        autoMocker.GetMock<IWorkoutStateDataService>()
+            .Verify(x => x.GetByValueAsync(It.IsAny<string>()), Times.Never);
+    }
+    
+    [Fact]
+    public async Task ExistsAsync_WhenStateExists_ReturnsTrue()
+    {
+        // Arrange
+        var autoMocker = new AutoMocker();
+        var testee = autoMocker.CreateInstance<WorkoutStateService>();
+        
+        var stateId = WorkoutStateId.New();
+        var expectedDto = new WorkoutStateDto 
+        { 
+            Id = stateId.ToString(), 
+            Value = "Draft", 
+            Description = "Draft state" 
+        };
+        
+        // ExistsAsync calls GetByIdAsync internally, so we need to mock GetByIdAsync
+        autoMocker.GetMock<IWorkoutStateDataService>()
+            .Setup(x => x.GetByIdAsync(stateId))
+            .ReturnsAsync(ServiceResult<WorkoutStateDto>.Success(expectedDto));
+        
+        autoMocker.GetMock<IEternalCacheService>()
+            .Setup(x => x.GetAsync<WorkoutStateDto>(It.IsAny<string>()))
+            .ReturnsAsync(CacheResult<WorkoutStateDto>.Miss());
+        
+        // Act
+        var result = await testee.ExistsAsync(stateId);
+        
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+        result.Data.Value.Should().BeTrue();
+        
+        autoMocker.GetMock<IWorkoutStateDataService>()
+            .Verify(x => x.GetByIdAsync(stateId), Times.Once);
+    }
+    
+    [Fact]
+    public async Task ExistsAsync_WhenStateDoesNotExist_ReturnsFalse()
+    {
+        // Arrange
+        var autoMocker = new AutoMocker();
+        var testee = autoMocker.CreateInstance<WorkoutStateService>();
+        
+        var stateId = WorkoutStateId.New();
+        
+        // ExistsAsync calls GetByIdAsync internally, so we need to mock GetByIdAsync to return Empty
+        autoMocker.GetMock<IWorkoutStateDataService>()
+            .Setup(x => x.GetByIdAsync(stateId))
+            .ReturnsAsync(ServiceResult<WorkoutStateDto>.Success(WorkoutStateDto.Empty));
+        
+        autoMocker.GetMock<IEternalCacheService>()
+            .Setup(x => x.GetAsync<WorkoutStateDto>(It.IsAny<string>()))
+            .ReturnsAsync(CacheResult<WorkoutStateDto>.Miss());
+        
+        // Act
+        var result = await testee.ExistsAsync(stateId);
+        
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+        result.Data.Value.Should().BeFalse();
+        
+        autoMocker.GetMock<IWorkoutStateDataService>()
+            .Verify(x => x.GetByIdAsync(stateId), Times.Once);
+    }
+    
+    [Fact]
+    public async Task ExistsAsync_WithEmptyId_ReturnsValidationFailure()
+    {
+        // Arrange
+        var autoMocker = new AutoMocker();
+        var testee = autoMocker.CreateInstance<WorkoutStateService>();
+        
+        var emptyId = WorkoutStateId.Empty;
+        
+        // Act
+        var result = await testee.ExistsAsync(emptyId);
+        
+        // Assert
+        result.IsSuccess.Should().BeFalse();
+        result.PrimaryErrorCode.Should().Be(ServiceErrorCode.ValidationFailed);
+        result.Errors.Should().Contain(WorkoutStateErrorMessages.InvalidIdFormat);
+        
+        autoMocker.GetMock<IWorkoutStateDataService>()
+            .Verify(x => x.ExistsAsync(It.IsAny<WorkoutStateId>()), Times.Never);
     }
 }

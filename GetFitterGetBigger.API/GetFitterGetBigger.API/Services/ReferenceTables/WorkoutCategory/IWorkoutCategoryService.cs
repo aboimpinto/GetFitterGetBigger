@@ -2,7 +2,7 @@ using GetFitterGetBigger.API.DTOs;
 using GetFitterGetBigger.API.Models.SpecializedIds;
 using GetFitterGetBigger.API.Services.Results;
 
-namespace GetFitterGetBigger.API.Services.Interfaces;
+namespace GetFitterGetBigger.API.Services.ReferenceTables.WorkoutCategory;
 
 /// <summary>
 /// Service for managing workout categories reference data with Empty pattern support
@@ -14,6 +14,12 @@ public interface IWorkoutCategoryService
     /// </summary>
     /// <returns>Service result containing collection of active workout categories</returns>
     Task<ServiceResult<IEnumerable<WorkoutCategoryDto>>> GetAllAsync();
+    
+    /// <summary>
+    /// Get all active workout categories (alias for GetAllAsync)
+    /// </summary>
+    /// <returns>Service result containing collection of active workout categories</returns>
+    Task<ServiceResult<IEnumerable<WorkoutCategoryDto>>> GetAllActiveAsync();
     
     /// <summary>
     /// Get workout category by ID
@@ -42,5 +48,4 @@ public interface IWorkoutCategoryService
     /// <param name="id">The workout category ID</param>
     /// <returns>A service result containing boolean result DTO</returns>
     Task<ServiceResult<BooleanResultDto>> ExistsAsync(WorkoutCategoryId id);
-    
 }

@@ -291,6 +291,118 @@ return await ServiceValidate.Build<bool>()
 
 > "Better to spend 2 hours changing 20 files manually than 6 hours fixing 6000+ errors from a script gone wrong."
 
+### Defensive Code Anti-Pattern - Trust the Architecture
+**STOP writing defensive code when the architecture guarantees safety!** We follow the NULL OBJECT PATTERN throughout the codebase.
+
+#### Core Principle: We Are a NOT NULL Codebase
+This codebase follows the **Empty Object Pattern** (Null Object Pattern). If a method returns null, there's a bug - it should return an Empty object instead.
+
+#### Before Writing Defensive Code - CHECK THE SOURCE
+Before adding defensive checks, **ALWAYS review the method that generates the entity**:
+1. Check if the repository method can return null
+2. Check if the service method handles Empty correctly
+3. Check if MapToDto handles Empty/null cases
+
+#### Real Example from DataServices
+
+```csharp
+// ❌ ANTI-PATTERN - Unnecessary defensive code
+public async Task<ServiceResult<ExecutionProtocolDto>> GetByValueAsync(string value)
+{
+    using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
+    var repository = unitOfWork.GetRepository<IExecutionProtocolRepository>();
+    var entity = await repository.GetByValueAsync(value);
+    
+    // DEFENSIVE: Checking IsActive when repository ALWAYS returns Empty (never null)
+    var dto = entity?.IsActive == true ? MapToDto(entity) : ExecutionProtocolDto.Empty;
+    
+    return ServiceResult<ExecutionProtocolDto>.Success(dto);
+}
+
+// ✅ CORRECT - Trust the architecture
+public async Task<ServiceResult<ExecutionProtocolDto>> GetByValueAsync(string value)
+{
+    using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
+    var repository = unitOfWork.GetRepository<IExecutionProtocolRepository>();
+    var entity = await repository.GetByValueAsync(value);
+    
+    // MapToDto ALREADY handles Empty/null cases internally
+    var dto = MapToDto(entity);
+    
+    return ServiceResult<ExecutionProtocolDto>.Success(dto);
+}
+
+// Why this works - MapToDto implementation:
+private static ExecutionProtocolDto MapToDto(ExecutionProtocol entity)
+{
+    // MapToDto already handles both null AND IsEmpty cases!
+    if (entity == null || entity.IsEmpty)
+        return ExecutionProtocolDto.Empty;
+        
+    return new ExecutionProtocolDto { /* mapping */ };
+}
+```
+
+#### Key Rules for Defensive Code
+
+1. **Repositories Return Empty, Never Null**
+   - All repository methods return Empty entities when not found
+   - No need to check for null from repository calls
+   - Trust the repository pattern
+
+2. **MapToDto Handles Empty**
+   - All MapToDto methods check for null/IsEmpty
+   - Returns appropriate Empty DTO when needed
+   - No need for defensive checks before calling MapToDto
+
+3. **Commands Are Never Null**
+   - Controllers create commands via ToCommand()
+   - Services receive non-null commands
+   - No null checks on command parameters
+
+4. **ServiceResult Always Has Data**
+   - Success results always have data (may be Empty)
+   - Failure results always have Empty data
+   - No need to check Data for null
+
+#### When Defensive Code IS Appropriate
+
+✅ **DO use defensive code when:**
+- Integrating with external APIs
+- Processing user input at system boundaries
+- Dealing with legacy code that may return null
+- Working with third-party libraries
+
+❌ **DON'T use defensive code when:**
+- Calling repository methods (they return Empty)
+- Calling service methods (they return ServiceResult)
+- Working with commands (guaranteed non-null)
+- Inside MapToDto calls (already handles Empty)
+
+#### Checklist Before Adding Defensive Code
+
+- [ ] Did I check if the source method can actually return null?
+- [ ] Did I verify the Empty pattern is implemented?
+- [ ] Is this at a system boundary (controller/external API)?
+- [ ] Am I duplicating checks that exist elsewhere?
+- [ ] Would a unit test prove this check is unnecessary?
+
+#### The Trust Hierarchy
+
+```
+Controllers → Services → DataServices → Repositories → Database
+    ↓            ↓            ↓             ↓            ↓
+  Trust       Trust        Trust         Trust      Empty Pattern
+```
+
+Each layer trusts the layer below it because:
+1. **Controllers trust Services** - Services return ServiceResult
+2. **Services trust DataServices** - DataServices handle data access
+3. **DataServices trust Repositories** - Repositories return Empty
+4. **Repositories implement Empty Pattern** - Never return null
+
+> **Remember**: Defensive code is a code smell. If you're adding null checks everywhere, you don't trust your architecture. Fix the architecture, don't bandage it with defensive code.
+
 ## 🎯 Quick Decision Guide
 
 | Scenario | Pattern to Use | Documentation |

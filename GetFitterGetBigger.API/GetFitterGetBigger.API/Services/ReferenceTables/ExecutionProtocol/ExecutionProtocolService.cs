@@ -1,28 +1,26 @@
 using GetFitterGetBigger.API.Constants;
 using GetFitterGetBigger.API.DTOs;
-using GetFitterGetBigger.API.Models;
-using GetFitterGetBigger.API.Models.Entities;
 using GetFitterGetBigger.API.Models.SpecializedIds;
-using GetFitterGetBigger.API.Repositories.Interfaces;
 using GetFitterGetBigger.API.Services.Cache;
 using GetFitterGetBigger.API.Services.Interfaces;
+using GetFitterGetBigger.API.Services.ReferenceTables.ExecutionProtocol.DataServices;
 using GetFitterGetBigger.API.Services.Results;
 using GetFitterGetBigger.API.Services.Validation;
-using Olimpo.EntityFramework.Persistency;
 using CacheKeyGenerator = GetFitterGetBigger.API.Utilities.CacheKeyGenerator;
 
-namespace GetFitterGetBigger.API.Services.Implementations;
+namespace GetFitterGetBigger.API.Services.ReferenceTables.ExecutionProtocol;
 
 /// <summary>
 /// Service implementation for execution protocol operations with integrated eternal caching
 /// ExecutionProtocols are pure reference data that never changes after deployment
+/// NO UnitOfWork here - all data access through IExecutionProtocolDataService
 /// </summary>
 public class ExecutionProtocolService(
-    IUnitOfWorkProvider<FitnessDbContext> unitOfWorkProvider,
+    IExecutionProtocolDataService dataService,
     IEternalCacheService cacheService,
     ILogger<ExecutionProtocolService> logger) : IExecutionProtocolService
 {
-    private readonly IUnitOfWorkProvider<FitnessDbContext> _unitOfWorkProvider = unitOfWorkProvider;
+    private readonly IExecutionProtocolDataService _dataService = dataService;
     private readonly IEternalCacheService _cacheService = cacheService;
     private readonly ILogger<ExecutionProtocolService> _logger = logger;
 
@@ -33,22 +31,7 @@ public class ExecutionProtocolService(
         
         return await CacheLoad.For<IEnumerable<ExecutionProtocolDto>>(_cacheService, cacheKey)
             .WithLogging(_logger, "ExecutionProtocols")
-            .WithAutoCacheAsync(LoadAllActiveFromDatabaseAsync);
-    }
-    
-    /// <summary>
-    /// Loads all active ExecutionProtocols from the database and maps to DTOs
-    /// </summary>
-    private async Task<ServiceResult<IEnumerable<ExecutionProtocolDto>>> LoadAllActiveFromDatabaseAsync()
-    {
-        using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
-        var repository = unitOfWork.GetRepository<IExecutionProtocolRepository>();
-        var entities = await repository.GetAllActiveAsync();
-        
-        var dtos = entities.Select(MapToDto).ToList();
-        
-        _logger.LogInformation("Loaded {Count} active execution protocols", dtos.Count);
-        return ServiceResult<IEnumerable<ExecutionProtocolDto>>.Success(dtos);
+            .WithAutoCacheAsync(async () => await _dataService.GetAllActiveAsync());
     }
 
     /// <inheritdoc/>
@@ -65,8 +48,8 @@ public class ExecutionProtocolService(
                         .WithLogging(_logger, "ExecutionProtocol")
                         .WithAutoCacheAsync(async () =>
                         {
-                            var result = await LoadByIdFromDatabaseAsync(id);
-                            // Convert Empty to NotFound at the API layer
+                            var result = await _dataService.GetByIdAsync(id);
+                            // Convert Empty to NotFound at the service layer
                             if (result.IsSuccess && result.Data.IsEmpty)
                             {
                                 return ServiceResult<ExecutionProtocolDto>.Failure(
@@ -90,20 +73,6 @@ public class ExecutionProtocolService(
         return await GetByIdAsync(executionProtocolId);
     }
     
-    /// <summary>
-    /// Loads an ExecutionProtocol by ID from the database and maps to DTO
-    /// </summary>
-    private async Task<ServiceResult<ExecutionProtocolDto>> LoadByIdFromDatabaseAsync(ExecutionProtocolId id)
-    {
-        using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
-        var repository = unitOfWork.GetRepository<IExecutionProtocolRepository>();
-        var entity = await repository.GetByIdAsync(id);
-        
-        return entity.IsActive
-            ? ServiceResult<ExecutionProtocolDto>.Success(MapToDto(entity))
-            : ServiceResult<ExecutionProtocolDto>.Success(ExecutionProtocolDto.Empty);
-    }
-    
     /// <inheritdoc/>
     public async Task<ServiceResult<ExecutionProtocolDto>> GetByValueAsync(string value)
     {
@@ -118,8 +87,8 @@ public class ExecutionProtocolService(
                         .WithLogging(_logger, "ExecutionProtocol")
                         .WithAutoCacheAsync(async () =>
                         {
-                            var result = await LoadByValueFromDatabaseAsync(value);
-                            // Convert Empty to NotFound at the API layer
+                            var result = await _dataService.GetByValueAsync(value);
+                            // Convert Empty to NotFound at the service layer
                             if (result.IsSuccess && result.Data.IsEmpty)
                             {
                                 return ServiceResult<ExecutionProtocolDto>.Failure(
@@ -130,20 +99,6 @@ public class ExecutionProtocolService(
                         });
                 }
             );
-    }
-    
-    /// <summary>
-    /// Loads an ExecutionProtocol by value from the database and maps to DTO
-    /// </summary>
-    private async Task<ServiceResult<ExecutionProtocolDto>> LoadByValueFromDatabaseAsync(string value)
-    {
-        using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
-        var repository = unitOfWork.GetRepository<IExecutionProtocolRepository>();
-        var entity = await repository.GetByValueAsync(value);
-        
-        return entity.IsActive
-            ? ServiceResult<ExecutionProtocolDto>.Success(MapToDto(entity))
-            : ServiceResult<ExecutionProtocolDto>.Success(ExecutionProtocolDto.Empty);
     }
 
     /// <inheritdoc/>
@@ -177,8 +132,8 @@ public class ExecutionProtocolService(
                         .WithLogging(_logger, "ExecutionProtocol")
                         .WithAutoCacheAsync(async () =>
                         {
-                            var result = await LoadByCodeFromDatabaseAsync(code);
-                            // Convert Empty to NotFound at the API layer
+                            var result = await _dataService.GetByCodeAsync(code);
+                            // Convert Empty to NotFound at the service layer
                             if (result.IsSuccess && result.Data.IsEmpty)
                             {
                                 return ServiceResult<ExecutionProtocolDto>.Failure(
@@ -189,43 +144,5 @@ public class ExecutionProtocolService(
                         });
                 }
             );
-    }
-    
-    /// <summary>
-    /// Loads an ExecutionProtocol by code from the database and maps to DTO
-    /// </summary>
-    private async Task<ServiceResult<ExecutionProtocolDto>> LoadByCodeFromDatabaseAsync(string code)
-    {
-        using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
-        var repository = unitOfWork.GetRepository<IExecutionProtocolRepository>();
-        var entity = await repository.GetByCodeAsync(code);
-        
-        return entity.IsActive
-            ? ServiceResult<ExecutionProtocolDto>.Success(MapToDto(entity))
-            : ServiceResult<ExecutionProtocolDto>.Success(ExecutionProtocolDto.Empty);
-    }
-    
-    /// <summary>
-    /// Maps an ExecutionProtocol entity to its DTO representation
-    /// Entity stays within the service layer - only DTO is exposed
-    /// </summary>
-    private ExecutionProtocolDto MapToDto(ExecutionProtocol entity)
-    {
-        if (entity.IsEmpty)
-            return ExecutionProtocolDto.Empty;
-            
-        return new ExecutionProtocolDto
-        {
-            ExecutionProtocolId = entity.ExecutionProtocolId.ToString(),
-            Value = entity.Value,
-            Description = entity.Description,
-            Code = entity.Code,
-            TimeBase = entity.TimeBase,
-            RepBase = entity.RepBase,
-            RestPattern = entity.RestPattern,
-            IntensityLevel = entity.IntensityLevel,
-            DisplayOrder = entity.DisplayOrder,
-            IsActive = entity.IsActive
-        };
     }
 }

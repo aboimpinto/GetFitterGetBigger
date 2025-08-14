@@ -5,6 +5,7 @@ using GetFitterGetBigger.API.Models.Entities;
 using GetFitterGetBigger.API.Models.SpecializedIds;
 using GetFitterGetBigger.API.Repositories.Interfaces;
 using GetFitterGetBigger.API.Services.Interfaces;
+using GetFitterGetBigger.API.Services.ReferenceTables.WorkoutState;
 using GetFitterGetBigger.API.Services.Results;
 using Moq;
 using Moq.AutoMock;

@@ -1,5 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
-using GetFitterGetBigger.API.Services.Interfaces;
+using GetFitterGetBigger.API.Services.ReferenceTables.WorkoutCategory;
 using GetFitterGetBigger.API.Services.Results;
 using GetFitterGetBigger.API.Models.SpecializedIds;
 using GetFitterGetBigger.API.DTOs;
