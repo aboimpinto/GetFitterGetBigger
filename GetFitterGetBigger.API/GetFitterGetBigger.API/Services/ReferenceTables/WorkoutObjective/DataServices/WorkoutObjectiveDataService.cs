@@ -45,14 +45,12 @@ public class WorkoutObjectiveDataService : IWorkoutObjectiveDataService
         var repository = unitOfWork.GetRepository<IWorkoutObjectiveRepository>();
         var entity = await repository.GetByIdAsync(id);
         
-        // Only return active entities - inactive entities should be treated as not found
-        if (entity != null && !entity.IsActive)
+        // Pattern matching - trust the repository returns Empty, not null
+        var dto = entity switch
         {
-            _logger.LogDebug("Found inactive workout objective by ID {Id} - returning Empty", id);
-            entity = Models.Entities.WorkoutObjective.Empty;
-        }
-        
-        var dto = MapToDto(entity);
+            { IsActive: false } => MapToDto(Models.Entities.WorkoutObjective.Empty),
+            _ => MapToDto(entity)
+        };
         
         _logger.LogDebug("Retrieved workout objective by ID {Id}: {Found}", id, !dto.IsEmpty);
         return ServiceResult<ReferenceDataDto>.Success(dto);
@@ -65,14 +63,12 @@ public class WorkoutObjectiveDataService : IWorkoutObjectiveDataService
         var repository = unitOfWork.GetRepository<IWorkoutObjectiveRepository>();
         var entity = await repository.GetByValueAsync(value);
         
-        // Only return active entities - inactive entities should be treated as not found
-        if (entity != null && !entity.IsActive)
+        // Clean pattern matching
+        var dto = entity switch
         {
-            _logger.LogDebug("Found inactive workout objective by value '{Value}' - returning Empty", value);
-            entity = Models.Entities.WorkoutObjective.Empty;
-        }
-        
-        var dto = MapToDto(entity);
+            { IsActive: false } => MapToDto(Models.Entities.WorkoutObjective.Empty),
+            _ => MapToDto(entity)
+        };
         
         _logger.LogDebug("Retrieved workout objective by value '{Value}': {Found}", value, !dto.IsEmpty);
         return ServiceResult<ReferenceDataDto>.Success(dto);
@@ -84,7 +80,9 @@ public class WorkoutObjectiveDataService : IWorkoutObjectiveDataService
         using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
         var repository = unitOfWork.GetRepository<IWorkoutObjectiveRepository>();
         var entity = await repository.GetByIdAsync(id);
-        var exists = entity != null && entity.IsActive;
+        
+        // Clean pattern matching
+        var exists = entity is { IsActive: true };
         
         _logger.LogDebug("Checked existence of workout objective {Id}: {Exists}", id, exists);
         return ServiceResult<BooleanResultDto>.Success(BooleanResultDto.Create(exists));

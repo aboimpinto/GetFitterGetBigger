@@ -45,14 +45,12 @@ public class ExecutionProtocolDataService : IExecutionProtocolDataService
         var repository = unitOfWork.GetRepository<IExecutionProtocolRepository>();
         var entity = await repository.GetByIdAsync(id);
         
-        // Only return active entities - inactive entities should be treated as not found
-        if (entity != null && !entity.IsActive)
+        // Pattern matching - repository returns Empty (never null)
+        var dto = entity switch
         {
-            _logger.LogDebug("Found inactive execution protocol by ID {Id} - returning Empty", id);
-            entity = Models.Entities.ExecutionProtocol.Empty;
-        }
-        
-        var dto = MapToDto(entity);
+            { IsActive: false } => MapToDto(Models.Entities.ExecutionProtocol.Empty),
+            _ => MapToDto(entity)
+        };
         
         _logger.LogDebug("Retrieved execution protocol by ID {Id}: {Found}", id, !dto.IsEmpty);
         return ServiceResult<ExecutionProtocolDto>.Success(dto);
@@ -65,14 +63,12 @@ public class ExecutionProtocolDataService : IExecutionProtocolDataService
         var repository = unitOfWork.GetRepository<IExecutionProtocolRepository>();
         var entity = await repository.GetByValueAsync(value);
         
-        // Only return active entities - inactive entities should be treated as not found
-        if (entity != null && !entity.IsActive)
+        // Pattern matching for clean code
+        var dto = entity switch
         {
-            _logger.LogDebug("Found inactive execution protocol by value '{Value}' - returning Empty", value);
-            entity = Models.Entities.ExecutionProtocol.Empty;
-        }
-        
-        var dto = MapToDto(entity);
+            { IsActive: false } => MapToDto(Models.Entities.ExecutionProtocol.Empty),
+            _ => MapToDto(entity)
+        };
         
         _logger.LogDebug("Retrieved execution protocol by value '{Value}': {Found}", value, !dto.IsEmpty);
         return ServiceResult<ExecutionProtocolDto>.Success(dto);
@@ -85,14 +81,12 @@ public class ExecutionProtocolDataService : IExecutionProtocolDataService
         var repository = unitOfWork.GetRepository<IExecutionProtocolRepository>();
         var entity = await repository.GetByCodeAsync(code);
         
-        // Only return active entities - inactive entities should be treated as not found
-        if (entity != null && !entity.IsActive)
+        // Pattern matching approach
+        var dto = entity switch
         {
-            _logger.LogDebug("Found inactive execution protocol by code '{Code}' - returning Empty", code);
-            entity = Models.Entities.ExecutionProtocol.Empty;
-        }
-        
-        var dto = MapToDto(entity);
+            { IsActive: false } => MapToDto(Models.Entities.ExecutionProtocol.Empty),
+            _ => MapToDto(entity)
+        };
         
         _logger.LogDebug("Retrieved execution protocol by code '{Code}': {Found}", code, !dto.IsEmpty);
         return ServiceResult<ExecutionProtocolDto>.Success(dto);
@@ -104,7 +98,9 @@ public class ExecutionProtocolDataService : IExecutionProtocolDataService
         using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
         var repository = unitOfWork.GetRepository<IExecutionProtocolRepository>();
         var entity = await repository.GetByIdAsync(id);
-        var exists = entity != null && entity.IsActive;
+        
+        // Pattern matching for existence check
+        var exists = entity is { IsActive: true };
         
         _logger.LogDebug("Checked existence of execution protocol {Id}: {Exists}", id, exists);
         return ServiceResult<BooleanResultDto>.Success(BooleanResultDto.Create(exists));

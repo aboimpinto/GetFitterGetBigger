@@ -45,14 +45,12 @@ public class WorkoutStateDataService : IWorkoutStateDataService
         var repository = unitOfWork.GetRepository<IWorkoutStateRepository>();
         var entity = await repository.GetByIdAsync(id);
         
-        // Only return active entities - inactive entities should be treated as not found
-        if (entity != null && !entity.IsActive)
+        // Pattern matching - trust repository returns Empty, never null
+        var dto = entity switch
         {
-            _logger.LogDebug("Found inactive workout state by ID {Id} - returning Empty", id);
-            entity = Models.Entities.WorkoutState.Empty;
-        }
-        
-        var dto = MapToDto(entity);
+            { IsActive: false } => MapToDto(Models.Entities.WorkoutState.Empty),
+            _ => MapToDto(entity)
+        };
         
         _logger.LogDebug("Retrieved workout state by ID {Id}: {Found}", id, !dto.IsEmpty);
         return ServiceResult<WorkoutStateDto>.Success(dto);
@@ -65,14 +63,12 @@ public class WorkoutStateDataService : IWorkoutStateDataService
         var repository = unitOfWork.GetRepository<IWorkoutStateRepository>();
         var entity = await repository.GetByValueAsync(value);
         
-        // Only return active entities - inactive entities should be treated as not found
-        if (entity != null && !entity.IsActive)
+        // Clean pattern matching approach
+        var dto = entity switch
         {
-            _logger.LogDebug("Found inactive workout state by value '{Value}' - returning Empty", value);
-            entity = Models.Entities.WorkoutState.Empty;
-        }
-        
-        var dto = MapToDto(entity);
+            { IsActive: false } => MapToDto(Models.Entities.WorkoutState.Empty),
+            _ => MapToDto(entity)
+        };
         
         _logger.LogDebug("Retrieved workout state by value '{Value}': {Found}", value, !dto.IsEmpty);
         return ServiceResult<WorkoutStateDto>.Success(dto);
@@ -84,7 +80,9 @@ public class WorkoutStateDataService : IWorkoutStateDataService
         using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
         var repository = unitOfWork.GetRepository<IWorkoutStateRepository>();
         var entity = await repository.GetByIdAsync(id);
-        var exists = entity != null && entity.IsActive;
+        
+        // Pattern matching for clean existence check
+        var exists = entity is { IsActive: true };
         
         _logger.LogDebug("Checked existence of workout state {Id}: {Exists}", id, exists);
         return ServiceResult<BooleanResultDto>.Success(BooleanResultDto.Create(exists));

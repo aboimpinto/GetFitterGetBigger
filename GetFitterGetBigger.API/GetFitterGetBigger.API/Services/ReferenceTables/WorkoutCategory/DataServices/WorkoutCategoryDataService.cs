@@ -45,14 +45,13 @@ public class WorkoutCategoryDataService : IWorkoutCategoryDataService
         var repository = unitOfWork.GetRepository<IWorkoutCategoryRepository>();
         var entity = await repository.GetByIdAsync(id);
         
-        // Only return active entities - inactive entities should be treated as not found
-        if (entity != null && !entity.IsActive)
+        // Use pattern matching to handle active/inactive entities elegantly
+        // Repository returns Empty (never null), but may return inactive entities
+        var dto = entity switch
         {
-            _logger.LogDebug("Found inactive workout category by ID {Id} - returning Empty", id);
-            entity = Models.Entities.WorkoutCategory.Empty;
-        }
-        
-        var dto = MapToDto(entity);
+            { IsActive: false } => MapToDto(Models.Entities.WorkoutCategory.Empty),
+            _ => MapToDto(entity)
+        };
         
         _logger.LogDebug("Retrieved workout category by ID {Id}: {Found}", id, !dto.IsEmpty);
         return ServiceResult<WorkoutCategoryDto>.Success(dto);
@@ -65,14 +64,12 @@ public class WorkoutCategoryDataService : IWorkoutCategoryDataService
         var repository = unitOfWork.GetRepository<IWorkoutCategoryRepository>();
         var entity = await repository.GetByValueAsync(value);
         
-        // Only return active entities - inactive entities should be treated as not found
-        if (entity != null && !entity.IsActive)
+        // Use pattern matching - trust that repository returns Empty, not null
+        var dto = entity switch
         {
-            _logger.LogDebug("Found inactive workout category by value '{Value}' - returning Empty", value);
-            entity = Models.Entities.WorkoutCategory.Empty;
-        }
-        
-        var dto = MapToDto(entity);
+            { IsActive: false } => MapToDto(Models.Entities.WorkoutCategory.Empty),
+            _ => MapToDto(entity)
+        };
         
         _logger.LogDebug("Retrieved workout category by value '{Value}': {Found}", value, !dto.IsEmpty);
         return ServiceResult<WorkoutCategoryDto>.Success(dto);
@@ -84,7 +81,9 @@ public class WorkoutCategoryDataService : IWorkoutCategoryDataService
         using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
         var repository = unitOfWork.GetRepository<IWorkoutCategoryRepository>();
         var entity = await repository.GetByIdAsync(id);
-        var exists = entity != null && entity.IsActive;
+        
+        // Pattern matching for clean existence check
+        var exists = entity is { IsActive: true };
         
         _logger.LogDebug("Checked existence of workout category {Id}: {Exists}", id, exists);
         return ServiceResult<BooleanResultDto>.Success(BooleanResultDto.Create(exists));
