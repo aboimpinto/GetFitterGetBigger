@@ -98,13 +98,15 @@ public class ExerciseLinkRepository : RepositoryBase<FitnessDbContext>, IExercis
     /// <summary>
     /// Gets a specific exercise link by ID
     /// </summary>
-    public async Task<ExerciseLink?> GetByIdAsync(ExerciseLinkId id)
+    public async Task<ExerciseLink> GetByIdAsync(ExerciseLinkId id)
     {
-        return await Context.ExerciseLinks
+        var exerciseLink = await Context.ExerciseLinks
             .Include(el => el.SourceExercise)
             .Include(el => el.TargetExercise)
             .AsNoTracking()
             .FirstOrDefaultAsync(el => el.Id == id);
+        
+        return exerciseLink ?? ExerciseLink.Empty;
     }
     
     /// <summary>

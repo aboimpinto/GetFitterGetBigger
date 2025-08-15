@@ -258,7 +258,7 @@ public class ExerciseLinkService : IExerciseLinkService
         var repository = unitOfWork.GetRepository<IExerciseLinkRepository>();
         
         var existingLink = await repository.GetByIdAsync(parsedLinkId);
-        if (existingLink == null)
+        if (existingLink.IsEmpty)
         {
             return false;
         }

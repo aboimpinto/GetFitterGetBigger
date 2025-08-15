@@ -11,5 +11,23 @@ namespace GetFitterGetBigger.API.Models.Entities
         public DateTime? ExpirationDate { get; set; }
         public string? Resource { get; set; }
         public User User { get; set; } = null!;
+        
+        /// <summary>
+        /// Returns an Empty Claim instance following the Empty Object Pattern
+        /// </summary>
+        public static Claim Empty => new()
+        {
+            Id = ClaimId.Empty,
+            UserId = UserId.Empty,
+            ClaimType = string.Empty,
+            ExpirationDate = null,
+            Resource = null,
+            User = User.Empty
+        };
+        
+        /// <summary>
+        /// Determines if this is an empty instance
+        /// </summary>
+        public bool IsEmpty => Id.IsEmpty || UserId.IsEmpty;
     }
 }

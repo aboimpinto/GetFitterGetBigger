@@ -76,7 +76,7 @@ namespace GetFitterGetBigger.API.Tests.Repositories
             var result = await _repository.GetUserByEmailAsync(email);
 
             // Assert
-            Assert.Null(result);
+            Assert.True(result.IsEmpty);
         }
 
         [Fact]
@@ -138,7 +138,7 @@ namespace GetFitterGetBigger.API.Tests.Repositories
             var result = await _repository.GetUserByIdAsync(userId);
 
             // Assert
-            Assert.Null(result);
+            Assert.True(result.IsEmpty);
         }
 
         [Fact]

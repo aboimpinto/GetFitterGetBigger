@@ -4,7 +4,7 @@ using GetFitterGetBigger.API.Models.SpecializedIds;
 
 namespace GetFitterGetBigger.API.Models.Entities;
 
-public record MuscleGroup : IEnhancedReference<MuscleGroupId>, IEmptyEntity<MuscleGroup, MuscleGroupId>
+public record MuscleGroup : IEmptyEntity<MuscleGroup, MuscleGroupId>
 {
     public MuscleGroupId Id { get; init; }
     public string Name { get; init; } = string.Empty;
@@ -15,13 +15,6 @@ public record MuscleGroup : IEnhancedReference<MuscleGroupId>, IEmptyEntity<Musc
     
     // IEntity implementation (backward compatibility)
     string IEntity.Id => Id.ToString();
-    
-    // IEnhancedReference implementation
-    public string Value => Name;
-    public string? Description => null; // MuscleGroup doesn't have descriptions
-    
-    // ITrackedEntity implementation (through IEnhancedReference)
-    DateTime ITrackedEntity.UpdatedAt => UpdatedAt ?? CreatedAt;
     
     // IEmptyEntity implementation
     public bool IsEmpty => Id.IsEmpty;
@@ -35,10 +28,6 @@ public record MuscleGroup : IEnhancedReference<MuscleGroupId>, IEmptyEntity<Musc
         CreatedAt = DateTime.MinValue,
         UpdatedAt = null
     };
-    
-    // ICacheableEntity implementation (through IEnhancedReference)
-    public CacheStrategy GetCacheStrategy() => CacheStrategy.Invalidatable;
-    public TimeSpan? GetCacheDuration() => TimeSpan.FromHours(1);
     
     // Navigation properties
     public BodyPart? BodyPart { get; init; }

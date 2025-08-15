@@ -5,8 +5,7 @@ using Olimpo.EntityFramework.Persistency;
 namespace GetFitterGetBigger.API.Repositories.Interfaces;
 
 /// <summary>
-/// TEMPORARY: Repository interface for reference data entities that support the Empty pattern
-/// This interface will be merged with IReferenceDataRepository once all entities are migrated
+/// Repository interface for reference data entities that support the Empty pattern
 /// </summary>
 /// <typeparam name="TEntity">The reference data entity type that implements IEmptyEntity</typeparam>
 /// <typeparam name="TId">The ID type of the entity</typeparam>

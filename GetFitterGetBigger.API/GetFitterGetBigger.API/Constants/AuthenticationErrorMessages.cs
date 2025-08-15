@@ -13,6 +13,8 @@ public static class AuthenticationErrorMessages
         public static string EmailCannotBeEmpty => "Email cannot be empty";
         public static string RequestCannotBeNull => "Request cannot be null";
         public static string InvalidEmailFormat => "Invalid email format";
+        public static string UserIdCannotBeEmpty => "User ID cannot be empty";
+        public static string ClaimTypeCannotBeEmpty => "Claim type cannot be empty";
     }
     
     /// <summary>

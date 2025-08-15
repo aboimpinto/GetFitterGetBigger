@@ -6,6 +6,8 @@ using GetFitterGetBigger.API.Repositories.Interfaces;
 using GetFitterGetBigger.API.Repositories.Implementations;
 using GetFitterGetBigger.API.Services.Interfaces;
 using GetFitterGetBigger.API.Services.Implementations;
+using GetFitterGetBigger.API.Services.Authentication;
+using GetFitterGetBigger.API.Services.Authentication.DataServices;
 using GetFitterGetBigger.API.Services.Exercise;
 using GetFitterGetBigger.API.Services.Exercise.DataServices;
 using GetFitterGetBigger.API.Services.Exercise.Features.Links;
@@ -178,11 +180,21 @@ builder.Services.AddTransient<IWorkoutStateDataService, WorkoutStateDataService>
 builder.Services.AddTransient<GetFitterGetBigger.API.Services.ReferenceTables.WorkoutState.IWorkoutStateService, GetFitterGetBigger.API.Services.ReferenceTables.WorkoutState.WorkoutStateService>();
 
 
-builder.Services.AddTransient<IClaimService, ClaimService>();
+// Authentication Services - Refactored Pattern
+builder.Services.AddTransient<IUserQueryDataService, UserQueryDataService>();
+builder.Services.AddTransient<IUserCommandDataService, UserCommandDataService>();
+builder.Services.AddTransient<IClaimQueryDataService, ClaimQueryDataService>();
+builder.Services.AddTransient<IClaimCommandDataService, ClaimCommandDataService>();
+builder.Services.AddTransient<GetFitterGetBigger.API.Services.Authentication.IAuthService, GetFitterGetBigger.API.Services.Authentication.AuthService>();
+builder.Services.AddTransient<GetFitterGetBigger.API.Services.Authentication.IClaimService, GetFitterGetBigger.API.Services.Authentication.ClaimService>();
 
-// Register authentication services
+// Register old interfaces for backward compatibility (will be removed later)
+// For now, remove these registrations until we create adapters
+// builder.Services.AddTransient<GetFitterGetBigger.API.Services.Interfaces.IAuthService, AuthServiceAdapter>();
+// builder.Services.AddTransient<GetFitterGetBigger.API.Services.Interfaces.IClaimService, ClaimServiceAdapter>();
+
+// Register JWT service
 builder.Services.AddTransient<IJwtService, JwtService>();
-builder.Services.AddTransient<IAuthService, AuthService>();
 
 // Register validation services
 builder.Services.AddTransient<IExerciseWeightValidator, ExerciseWeightValidator>();

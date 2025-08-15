@@ -69,6 +69,13 @@
 - Defensive null-checking proliferation
 - Solutions with pattern matching
 
+#### [Empty Pattern - Complete Guide](./CodeQualityGuidelines/EmptyPatternComplete.md)
+- **🚨 CRITICAL** Universal Empty Pattern - NO EXCEPTIONS
+- ALL entities must implement Empty pattern
+- ALL repositories return Empty, never null
+- Common misconceptions debunked
+- Implementation checklist and violation detection
+
 #### [Null Object Pattern](./CodeQualityGuidelines/NullObjectPattern.md)
 - **CRITICAL** Empty Object Pattern implementation
 - IEmptyDto<T> interface requirements

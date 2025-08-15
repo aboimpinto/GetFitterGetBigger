@@ -44,8 +44,8 @@ public interface IExerciseLinkRepository : IRepository
     /// Gets a specific exercise link by ID
     /// </summary>
     /// <param name="id">The ID of the exercise link</param>
-    /// <returns>The exercise link if found, null otherwise</returns>
-    Task<ExerciseLink?> GetByIdAsync(ExerciseLinkId id);
+    /// <returns>The exercise link if found, Empty otherwise</returns>
+    Task<ExerciseLink> GetByIdAsync(ExerciseLinkId id);
     
     /// <summary>
     /// Adds a new exercise link

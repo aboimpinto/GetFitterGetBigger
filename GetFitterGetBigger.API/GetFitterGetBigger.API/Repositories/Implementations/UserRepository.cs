@@ -1,6 +1,7 @@
 using System.Threading.Tasks;
 using GetFitterGetBigger.API.Models;
 using GetFitterGetBigger.API.Models.Entities;
+using GetFitterGetBigger.API.Models.SpecializedIds;
 using GetFitterGetBigger.API.Repositories.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Olimpo.EntityFramework.Persistency;
@@ -9,18 +10,24 @@ namespace GetFitterGetBigger.API.Repositories.Implementations
 {
     public class UserRepository : RepositoryBase<FitnessDbContext>, IUserRepository
     {
-        public async Task<User?> GetUserByEmailAsync(string email)
+        public async Task<User> GetUserByEmailAsync(string email)
         {
-            return await Context.Users
+            var user = await Context.Users
                 .Include(u => u.Claims)
                 .FirstOrDefaultAsync(u => u.Email == email);
+            
+            // Apply Empty pattern at the data boundary
+            return user ?? User.Empty;
         }
 
-        public async Task<User?> GetUserByIdAsync(Models.SpecializedIds.UserId userId)
+        public async Task<User> GetUserByIdAsync(UserId userId)
         {
-            return await Context.Users
+            var user = await Context.Users
                 .Include(u => u.Claims)
                 .FirstOrDefaultAsync(u => u.Id == userId);
+            
+            // Apply Empty pattern at the data boundary
+            return user ?? User.Empty;
         }
 
         public async Task<User> AddUserAsync(User user)

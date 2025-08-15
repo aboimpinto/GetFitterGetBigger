@@ -3,17 +3,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using GetFitterGetBigger.API.DTOs;
-using GetFitterGetBigger.API.Models;
-using GetFitterGetBigger.API.Models.Entities;
 using GetFitterGetBigger.API.Models.SpecializedIds;
-using GetFitterGetBigger.API.Repositories.Interfaces;
+using GetFitterGetBigger.API.Services.Authentication;
+using GetFitterGetBigger.API.Services.Authentication.DataServices;
 using GetFitterGetBigger.API.Services.Commands.Authentication;
-using GetFitterGetBigger.API.Services.Implementations;
 using GetFitterGetBigger.API.Services.Interfaces;
 using GetFitterGetBigger.API.Services.Results;
 using Microsoft.Extensions.Logging;
 using Moq;
-using Olimpo.EntityFramework.Persistency;
 using Xunit;
 
 namespace GetFitterGetBigger.API.Tests.Services
@@ -21,44 +18,23 @@ namespace GetFitterGetBigger.API.Tests.Services
     public class AuthServiceTests
     {
         private readonly Mock<IJwtService> _mockJwtService;
-        private readonly Mock<IUnitOfWorkProvider<FitnessDbContext>> _mockUnitOfWorkProvider;
-        private readonly Mock<IWritableUnitOfWork<FitnessDbContext>> _mockUnitOfWork;
-        private readonly Mock<IReadOnlyUnitOfWork<FitnessDbContext>> _mockReadOnlyUnitOfWork;
-        private readonly Mock<IUserRepository> _mockUserRepository;
-        private readonly Mock<IUserRepository> _mockReadOnlyUserRepository;
-        private readonly Mock<IClaimService> _mockClaimService;
+        private readonly Mock<IUserQueryDataService> _mockUserQueryDataService;
+        private readonly Mock<IUserCommandDataService> _mockUserCommandDataService;
         private readonly Mock<ILogger<AuthService>> _mockLogger;
         private readonly AuthService _authService;
 
         public AuthServiceTests()
         {
             _mockJwtService = new Mock<IJwtService>();
-            _mockUnitOfWorkProvider = new Mock<IUnitOfWorkProvider<FitnessDbContext>>();
-            _mockUnitOfWork = new Mock<IWritableUnitOfWork<FitnessDbContext>>();
-            _mockReadOnlyUnitOfWork = new Mock<IReadOnlyUnitOfWork<FitnessDbContext>>();
-            _mockUserRepository = new Mock<IUserRepository>();
-            _mockReadOnlyUserRepository = new Mock<IUserRepository>();
-            _mockClaimService = new Mock<IClaimService>();
+            _mockUserQueryDataService = new Mock<IUserQueryDataService>();
+            _mockUserCommandDataService = new Mock<IUserCommandDataService>();
             _mockLogger = new Mock<ILogger<AuthService>>();
 
-            _mockUnitOfWorkProvider
-                .Setup(x => x.CreateReadOnly())
-                .Returns(_mockReadOnlyUnitOfWork.Object);
-
-            _mockUnitOfWorkProvider
-                .Setup(x => x.CreateWritable())
-                .Returns(_mockUnitOfWork.Object);
-
-            // Setup repository connections
-            _mockReadOnlyUnitOfWork
-                .Setup(x => x.GetRepository<IUserRepository>())
-                .Returns(_mockReadOnlyUserRepository.Object);
-                
-            _mockUnitOfWork
-                .Setup(x => x.GetRepository<IUserRepository>())
-                .Returns(_mockUserRepository.Object);
-
-            _authService = new AuthService(_mockJwtService.Object, _mockUnitOfWorkProvider.Object, _mockClaimService.Object, _mockLogger.Object);
+            _authService = new AuthService(
+                _mockJwtService.Object,
+                _mockUserQueryDataService.Object,
+                _mockUserCommandDataService.Object,
+                _mockLogger.Object);
         }
 
         [Fact]
@@ -68,53 +44,28 @@ namespace GetFitterGetBigger.API.Tests.Services
             var email = "newuser@example.com";
             var command = new AuthenticationCommand { Email = email };
             var expectedToken = "jwt-token";
+            var userId = UserId.New();
+            var claims = new List<ClaimInfo>
+            {
+                new ClaimInfo("claim1", "Free-Tier", null, null)
+            };
+            var expectedUserDto = new UserDto(
+                userId.ToString(),
+                email,
+                claims);
 
-            User? capturedUser = null;
-            ClaimId? capturedClaimId = null;
-            
-            // Setup for user repository - sequential calls to ReadOnlyUserRepository
-            _mockReadOnlyUserRepository
-                .SetupSequence(x => x.GetUserByEmailAsync(email))
-                .ReturnsAsync((User?)null) // First call: New user doesn't exist
-                .ReturnsAsync(() => capturedUser); // Second call: Return created user with claims
-            
-            _mockUserRepository
-                .Setup(x => x.AddUserAsync(It.IsAny<User>()))
-                .Callback<User>(u => 
-                {
-                    capturedUser = u;
-                    // Initialize Claims collection for new user
-                    u.Claims = new List<Claim>();
-                })
-                .ReturnsAsync((User u) => u);
+            // Setup: User doesn't exist initially
+            _mockUserQueryDataService
+                .Setup(x => x.GetByEmailAsync(email))
+                .ReturnsAsync(ServiceResult<UserDto>.Success(UserDto.Empty));
 
-            // Setup for the WritableUnitOfWork repository (for race condition check)
-            _mockUserRepository
-                .Setup(x => x.GetUserByEmailAsync(email))
-                .ReturnsAsync((User?)null);
-
-            _mockClaimService
-                .Setup(x => x.CreateUserClaimAsync(It.IsAny<UserId>(), It.IsAny<string>(), It.IsAny<IWritableUnitOfWork<FitnessDbContext>>()))
-                .Callback<UserId, string, IWritableUnitOfWork<FitnessDbContext>>((userId, claimType, uow) => 
-                {
-                    capturedClaimId = ClaimId.New();
-                    // Add the claim to the user's claims collection
-                    if (capturedUser != null && capturedUser.Claims != null)
-                    {
-                        capturedUser.Claims.Add(new Claim 
-                        { 
-                            Id = capturedClaimId.Value,
-                            UserId = userId,
-                            ClaimType = claimType,
-                            ExpirationDate = null,
-                            Resource = null
-                        });
-                    }
-                })
-                .ReturnsAsync((UserId userId, string claimType, IWritableUnitOfWork<FitnessDbContext> uow) => capturedClaimId ?? ClaimId.New());
+            // Setup: Creating new user with claim succeeds
+            _mockUserCommandDataService
+                .Setup(x => x.CreateUserWithClaimAsync(email, "Free-Tier"))
+                .ReturnsAsync(ServiceResult<UserDto>.Success(expectedUserDto));
 
             _mockJwtService
-                .Setup(x => x.GenerateToken(It.IsAny<UserDto>()))
+                .Setup(x => x.GenerateToken(expectedUserDto))
                 .Returns(expectedToken);
 
             // Act
@@ -122,17 +73,12 @@ namespace GetFitterGetBigger.API.Tests.Services
 
             // Assert
             Assert.True(result.IsSuccess);
-            Assert.NotNull(capturedUser);
-            Assert.Equal(email, capturedUser.Email);
-
-            Assert.NotNull(capturedClaimId);
-            _mockClaimService.Verify(x => x.CreateUserClaimAsync(capturedUser.Id, "Free-Tier", _mockUnitOfWork.Object), Times.Once);
-
             Assert.Equal(expectedToken, result.Data.Token);
             Assert.Single(result.Data.Claims);
             Assert.Equal("Free-Tier", result.Data.Claims[0].ClaimType);
 
-            _mockUnitOfWork.Verify(x => x.CommitAsync(), Times.Once);
+            _mockUserQueryDataService.Verify(x => x.GetByEmailAsync(email), Times.Once);
+            _mockUserCommandDataService.Verify(x => x.CreateUserWithClaimAsync(email, "Free-Tier"), Times.Once);
         }
 
         [Fact]
@@ -144,39 +90,23 @@ namespace GetFitterGetBigger.API.Tests.Services
             var userId = UserId.New();
             var expectedToken = "jwt-token";
 
-            var claims = new List<Claim>
+            var claims = new List<ClaimInfo>
             {
-                new Claim 
-                { 
-                    Id = ClaimId.New(), 
-                    UserId = userId, 
-                    ClaimType = "Free-Tier", 
-                    ExpirationDate = null,
-                    Resource = null
-                },
-                new Claim 
-                { 
-                    Id = ClaimId.New(), 
-                    UserId = userId, 
-                    ClaimType = "Premium-Tier", 
-                    ExpirationDate = DateTime.UtcNow.AddDays(30),
-                    Resource = "premium-features"
-                }
+                new ClaimInfo("claim1", "Free-Tier", null, null),
+                new ClaimInfo("claim2", "Premium-Tier", DateTime.UtcNow.AddDays(30), "premium-features")
             };
 
-            var existingUser = new User 
-            { 
-                Id = userId, 
-                Email = email,
-                Claims = claims
-            };
+            var existingUserDto = new UserDto(
+                userId.ToString(),
+                email,
+                claims);
 
-            _mockReadOnlyUserRepository
-                .Setup(x => x.GetUserByEmailAsync(email))
-                .ReturnsAsync(existingUser);
+            _mockUserQueryDataService
+                .Setup(x => x.GetByEmailAsync(email))
+                .ReturnsAsync(ServiceResult<UserDto>.Success(existingUserDto));
 
             _mockJwtService
-                .Setup(x => x.GenerateToken(It.IsAny<UserDto>()))
+                .Setup(x => x.GenerateToken(existingUserDto))
                 .Returns(expectedToken);
 
             // Act
@@ -189,10 +119,8 @@ namespace GetFitterGetBigger.API.Tests.Services
             Assert.Contains(result.Data.Claims, c => c.ClaimType == "Free-Tier");
             Assert.Contains(result.Data.Claims, c => c.ClaimType == "Premium-Tier");
 
-            _mockUserRepository.Verify(x => x.AddUserAsync(It.IsAny<User>()), Times.Never);
-            _mockClaimService.Verify(x => x.CreateUserClaimAsync(It.IsAny<UserId>(), It.IsAny<string>(), It.IsAny<IWritableUnitOfWork<FitnessDbContext>>()), Times.Never);
-            _mockUnitOfWork.Verify(x => x.CommitAsync(), Times.Never);
-            _mockReadOnlyUserRepository.Verify(x => x.GetUserByEmailAsync(email), Times.Once);
+            _mockUserQueryDataService.Verify(x => x.GetByEmailAsync(email), Times.Once);
+            _mockUserCommandDataService.Verify(x => x.CreateUserWithClaimAsync(It.IsAny<string>(), It.IsAny<string>()), Times.Never);
         }
 
         [Fact]
@@ -203,48 +131,24 @@ namespace GetFitterGetBigger.API.Tests.Services
             var command = new AuthenticationCommand { Email = email };
             var userId = UserId.New();
 
-            var claims = new List<Claim>
+            // Only include active claims in the UserDto (expired claims filtered by DataService)
+            var activeClaims = new List<ClaimInfo>
             {
-                new Claim 
-                { 
-                    Id = ClaimId.New(), 
-                    UserId = userId, 
-                    ClaimType = "Active-Claim", 
-                    ExpirationDate = DateTime.UtcNow.AddDays(30),
-                    Resource = null
-                },
-                new Claim 
-                { 
-                    Id = ClaimId.New(), 
-                    UserId = userId, 
-                    ClaimType = "Expired-Claim", 
-                    ExpirationDate = DateTime.UtcNow.AddDays(-1),
-                    Resource = null
-                },
-                new Claim 
-                { 
-                    Id = ClaimId.New(), 
-                    UserId = userId, 
-                    ClaimType = "No-Expiry-Claim", 
-                    ExpirationDate = null,
-                    Resource = null
-                }
+                new ClaimInfo("claim1", "Active-Claim", DateTime.UtcNow.AddDays(30), null),
+                new ClaimInfo("claim2", "No-Expiry-Claim", null, null)
             };
 
-            var existingUser = new User 
-            { 
-                Id = userId, 
-                Email = email,
-                Claims = claims
-            };
+            var existingUserDto = new UserDto(
+                userId.ToString(),
+                email,
+                activeClaims);
 
-            // Setup for user repository
-            _mockReadOnlyUserRepository
-                .Setup(x => x.GetUserByEmailAsync(email))
-                .ReturnsAsync(existingUser);
+            _mockUserQueryDataService
+                .Setup(x => x.GetByEmailAsync(email))
+                .ReturnsAsync(ServiceResult<UserDto>.Success(existingUserDto));
                 
             _mockJwtService
-                .Setup(x => x.GenerateToken(It.IsAny<UserDto>()))
+                .Setup(x => x.GenerateToken(existingUserDto))
                 .Returns("token");
 
             // Act
@@ -259,35 +163,35 @@ namespace GetFitterGetBigger.API.Tests.Services
         }
 
         [Fact]
-        public async Task AuthenticateAsync_DisposesUnitOfWork()
+        public async Task AuthenticateAsync_WithValidRequest_CallsCorrectServices()
         {
             // Arrange
-            var command = new AuthenticationCommand { Email = "test@example.com" };
-            // Setup for user repository
-            _mockReadOnlyUserRepository
-                .Setup(x => x.GetUserByEmailAsync("test@example.com"))
-                .ReturnsAsync((User?)null);
+            var email = "test@example.com";
+            var command = new AuthenticationCommand { Email = email };
+            var userId = UserId.New();
+            var claims = new List<ClaimInfo> { new ClaimInfo("claim1", "Free-Tier", null, null) };
+            var userDto = new UserDto(userId.ToString(), email, claims);
+
+            _mockUserQueryDataService
+                .Setup(x => x.GetByEmailAsync(email))
+                .ReturnsAsync(ServiceResult<UserDto>.Success(UserDto.Empty));
                 
-            _mockUserRepository
-                .Setup(x => x.AddUserAsync(It.IsAny<User>()))
-                .ReturnsAsync((User u) => {
-                    u.Claims = new List<Claim>();
-                    return u;
-                });
-                
-            _mockClaimService
-                .Setup(x => x.CreateUserClaimAsync(It.IsAny<UserId>(), It.IsAny<string>(), It.IsAny<IWritableUnitOfWork<FitnessDbContext>>()))
-                .ReturnsAsync(ClaimId.New());
+            _mockUserCommandDataService
+                .Setup(x => x.CreateUserWithClaimAsync(email, "Free-Tier"))
+                .ReturnsAsync(ServiceResult<UserDto>.Success(userDto));
                 
             _mockJwtService
-                .Setup(x => x.GenerateToken(It.IsAny<UserDto>()))
+                .Setup(x => x.GenerateToken(userDto))
                 .Returns("token");
 
             // Act
-            await _authService.AuthenticateAsync(command);
+            var result = await _authService.AuthenticateAsync(command);
 
             // Assert
-            _mockUnitOfWork.Verify(x => x.Dispose(), Times.Once);
+            Assert.True(result.IsSuccess);
+            _mockUserQueryDataService.Verify(x => x.GetByEmailAsync(email), Times.Once);
+            _mockUserCommandDataService.Verify(x => x.CreateUserWithClaimAsync(email, "Free-Tier"), Times.Once);
+            _mockJwtService.Verify(x => x.GenerateToken(userDto), Times.Once);
         }
 
         [Theory]
@@ -306,25 +210,24 @@ namespace GetFitterGetBigger.API.Tests.Services
             Assert.NotEmpty(result.Errors);
             Assert.Equal(ServiceErrorCode.ValidationFailed, result.PrimaryErrorCode);
             
-            // Verify no repository calls were made
-            _mockReadOnlyUserRepository.Verify(x => x.GetUserByEmailAsync(It.IsAny<string>()), Times.Never);
-            _mockUserRepository.Verify(x => x.AddUserAsync(It.IsAny<User>()), Times.Never);
+            // Verify no data service calls were made
+            _mockUserQueryDataService.Verify(x => x.GetByEmailAsync(It.IsAny<string>()), Times.Never);
+            _mockUserCommandDataService.Verify(x => x.CreateUserWithClaimAsync(It.IsAny<string>(), It.IsAny<string>()), Times.Never);
         }
 
         [Fact]
-        public async Task AuthenticateAsync_WhenUserRepositoryThrows_ThrowsException()
+        public async Task AuthenticateAsync_WhenUserQueryDataServiceThrows_ThrowsException()
         {
             // Arrange
             var command = new AuthenticationCommand { Email = "test@example.com" };
-            _mockReadOnlyUserRepository
-                .Setup(x => x.GetUserByEmailAsync(It.IsAny<string>()))
+            _mockUserQueryDataService
+                .Setup(x => x.GetByEmailAsync(It.IsAny<string>()))
                 .ThrowsAsync(new InvalidOperationException("Database error"));
 
             // Act & Assert
             // With the new no-try-catch architecture, exceptions bubble up naturally
             var exception = await Assert.ThrowsAsync<InvalidOperationException>(() => _authService.AuthenticateAsync(command));
             Assert.Equal("Database error", exception.Message);
-            _mockReadOnlyUnitOfWork.Verify(x => x.Dispose(), Times.Once);
         }
 
         [Fact]
@@ -332,73 +235,49 @@ namespace GetFitterGetBigger.API.Tests.Services
         {
             // Arrange
             var command = new AuthenticationCommand { Email = "test@example.com" };
-            var user = new User { Id = UserId.New(), Email = command.Email, Claims = new List<Claim>() };
+            var userId = UserId.New();
+            var userDto = new UserDto(userId.ToString(), command.Email, new List<ClaimInfo>());
             
-            // Setup for user repository
-            _mockReadOnlyUserRepository
-                .Setup(x => x.GetUserByEmailAsync(command.Email))
-                .ReturnsAsync((User?)null);
+            _mockUserQueryDataService
+                .Setup(x => x.GetByEmailAsync(command.Email))
+                .ReturnsAsync(ServiceResult<UserDto>.Success(UserDto.Empty));
                 
-            _mockUserRepository
-                .Setup(x => x.AddUserAsync(It.IsAny<User>()))
-                .ReturnsAsync((User u) => {
-                    u.Claims = new List<Claim>();
-                    return u;
-                });
-                
-            _mockClaimService
-                .Setup(x => x.CreateUserClaimAsync(It.IsAny<UserId>(), It.IsAny<string>(), It.IsAny<IWritableUnitOfWork<FitnessDbContext>>()))
-                .ReturnsAsync(ClaimId.New());
+            _mockUserCommandDataService
+                .Setup(x => x.CreateUserWithClaimAsync(command.Email, "Free-Tier"))
+                .ReturnsAsync(ServiceResult<UserDto>.Success(userDto));
                 
             _mockJwtService
-                .Setup(x => x.GenerateToken(It.IsAny<UserDto>()))
+                .Setup(x => x.GenerateToken(userDto))
                 .Throws(new InvalidOperationException("JWT configuration error"));
 
             // Act & Assert
             // With the new no-try-catch architecture, exceptions bubble up naturally
             var exception = await Assert.ThrowsAsync<InvalidOperationException>(() => _authService.AuthenticateAsync(command));
             Assert.Equal("JWT configuration error", exception.Message);
-            _mockUnitOfWork.Verify(x => x.Dispose(), Times.Once);
         }
 
         [Fact]
-        public async Task AuthenticateAsync_WhenCommitFails_ThrowsException()
+        public async Task AuthenticateAsync_WhenCreateUserWithClaimFails_ReturnsFailureResult()
         {
             // Arrange
             var command = new AuthenticationCommand { Email = "test@example.com" };
+            var errors = new List<ServiceError> { ServiceError.InternalError("Database commit error") };
             
-            // Setup for user repository - it's called twice in the new flow
-            // First call: check if user exists (returns null)
-            // Second call: after failed creation, try to load again (still returns null)
-            _mockReadOnlyUserRepository
-                .SetupSequence(x => x.GetUserByEmailAsync(command.Email))
-                .ReturnsAsync((User?)null)  // First call: user doesn't exist
-                .ReturnsAsync((User?)null);  // Second call: still doesn't exist after failed creation
+            _mockUserQueryDataService
+                .Setup(x => x.GetByEmailAsync(command.Email))
+                .ReturnsAsync(ServiceResult<UserDto>.Success(UserDto.Empty));
                 
-            _mockJwtService
-                .Setup(x => x.GenerateToken(It.IsAny<UserDto>()))
-                .Returns("token");
-                
-            _mockUserRepository
-                .Setup(x => x.AddUserAsync(It.IsAny<User>()))
-                .ReturnsAsync((User u) => {
-                    u.Claims = new List<Claim>();
-                    return u;
-                });
+            _mockUserCommandDataService
+                .Setup(x => x.CreateUserWithClaimAsync(command.Email, "Free-Tier"))
+                .ReturnsAsync(ServiceResult<UserDto>.Failure(UserDto.Empty, errors));
 
-            _mockClaimService
-                .Setup(x => x.CreateUserClaimAsync(It.IsAny<UserId>(), It.IsAny<string>(), It.IsAny<IWritableUnitOfWork<FitnessDbContext>>()))
-                .ReturnsAsync(ClaimId.New());
+            // Act
+            var result = await _authService.AuthenticateAsync(command);
 
-            _mockUnitOfWork
-                .Setup(x => x.CommitAsync())
-                .ThrowsAsync(new InvalidOperationException("Database commit error"));
-
-            // Act & Assert
-            // With the new no-try-catch architecture, exceptions bubble up naturally
-            var exception = await Assert.ThrowsAsync<InvalidOperationException>(() => _authService.AuthenticateAsync(command));
-            Assert.Equal("Database commit error", exception.Message);
-            _mockUnitOfWork.Verify(x => x.Dispose(), Times.Once);
+            // Assert
+            Assert.False(result.IsSuccess);
+            Assert.Equal(errors, result.StructuredErrors);
+            Assert.True(result.Data.IsEmpty);
         }
 
         [Fact]
@@ -406,20 +285,18 @@ namespace GetFitterGetBigger.API.Tests.Services
         {
             // Arrange
             var command = new AuthenticationCommand { Email = "test@example.com" };
-            var user = new User 
-            { 
-                Id = UserId.New(), 
-                Email = command.Email,
-                Claims = null! // Null claims collection
-            };
+            var userDto = new UserDto(
+                UserId.New().ToString(), 
+                command.Email,
+                null! // Null claims collection
+            );
             
-            // Setup for user repository
-            _mockReadOnlyUserRepository
-                .Setup(x => x.GetUserByEmailAsync(command.Email))
-                .ReturnsAsync(user);
+            _mockUserQueryDataService
+                .Setup(x => x.GetByEmailAsync(command.Email))
+                .ReturnsAsync(ServiceResult<UserDto>.Success(userDto));
                 
             _mockJwtService
-                .Setup(x => x.GenerateToken(It.IsAny<UserDto>()))
+                .Setup(x => x.GenerateToken(userDto))
                 .Returns("token");
 
             // Act

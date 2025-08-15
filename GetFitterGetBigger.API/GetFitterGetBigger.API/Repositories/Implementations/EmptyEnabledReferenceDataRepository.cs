@@ -8,8 +8,7 @@ using System;
 namespace GetFitterGetBigger.API.Repositories.Implementations;
 
 /// <summary>
-/// TEMPORARY: Base repository implementation for reference data entities that support the Empty pattern
-/// This class will be merged with ReferenceDataRepository once all entities are migrated
+/// Base repository implementation for reference data entities that support the Empty pattern
 /// </summary>
 /// <typeparam name="TEntity">The reference data entity type that implements IEmptyEntity</typeparam>
 /// <typeparam name="TId">The ID type of the entity</typeparam>

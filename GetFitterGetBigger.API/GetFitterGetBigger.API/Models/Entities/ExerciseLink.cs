@@ -1,11 +1,17 @@
 using System;
+using GetFitterGetBigger.API.Models.Interfaces;
 using GetFitterGetBigger.API.Models.SpecializedIds;
 
 namespace GetFitterGetBigger.API.Models.Entities;
 
-public record ExerciseLink
+public record ExerciseLink : IEmptyEntity<ExerciseLink>
 {
     public ExerciseLinkId Id { get; init; }
+    
+    // IEntity implementation
+    string IEntity.Id => Id.ToString();
+    bool IEntity.IsActive => IsActive;
+    
     public ExerciseId SourceExerciseId { get; init; }
     public ExerciseId TargetExerciseId { get; init; }
     public string LinkType { get; init; } = string.Empty; // "Warmup" or "Cooldown"
@@ -17,6 +23,21 @@ public record ExerciseLink
     // Navigation properties
     public Exercise? SourceExercise { get; init; }
     public Exercise? TargetExercise { get; init; }
+    
+    // Empty pattern implementation
+    public static ExerciseLink Empty => new()
+    {
+        Id = ExerciseLinkId.Empty,
+        SourceExerciseId = ExerciseId.Empty,
+        TargetExerciseId = ExerciseId.Empty,
+        LinkType = string.Empty,
+        DisplayOrder = 0,
+        IsActive = false,
+        CreatedAt = DateTime.MinValue,
+        UpdatedAt = DateTime.MinValue
+    };
+    
+    public bool IsEmpty => Id.IsEmpty;
     
     // Private constructor to force usage of Handler
     private ExerciseLink() { }

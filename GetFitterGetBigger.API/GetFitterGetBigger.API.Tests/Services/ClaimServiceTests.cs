@@ -1,63 +1,61 @@
 using System;
 using System.Threading.Tasks;
-using GetFitterGetBigger.API.Models;
-using GetFitterGetBigger.API.Models.Entities;
+using GetFitterGetBigger.API.DTOs;
 using GetFitterGetBigger.API.Models.SpecializedIds;
-using GetFitterGetBigger.API.Repositories.Interfaces;
-using GetFitterGetBigger.API.Services.Implementations;
+using GetFitterGetBigger.API.Services.Authentication;
+using GetFitterGetBigger.API.Services.Authentication.DataServices;
+using GetFitterGetBigger.API.Services.Authentication.Models.DTOs;
+using GetFitterGetBigger.API.Services.Results;
+using Microsoft.Extensions.Logging;
 using Moq;
-using Olimpo.EntityFramework.Persistency;
 using Xunit;
 
 namespace GetFitterGetBigger.API.Tests.Services
 {
     public class ClaimServiceTests
     {
-        private readonly Mock<IWritableUnitOfWork<FitnessDbContext>> _mockUnitOfWork;
-        private readonly Mock<IClaimRepository> _mockClaimRepository;
+        private readonly Mock<IClaimQueryDataService> _mockClaimQueryDataService;
+        private readonly Mock<IClaimCommandDataService> _mockClaimCommandDataService;
+        private readonly Mock<ILogger<ClaimService>> _mockLogger;
         private readonly ClaimService _claimService;
 
         public ClaimServiceTests()
         {
-            _mockUnitOfWork = new Mock<IWritableUnitOfWork<FitnessDbContext>>();
-            _mockClaimRepository = new Mock<IClaimRepository>();
+            _mockClaimQueryDataService = new Mock<IClaimQueryDataService>();
+            _mockClaimCommandDataService = new Mock<IClaimCommandDataService>();
+            _mockLogger = new Mock<ILogger<ClaimService>>();
 
-            _mockUnitOfWork
-                .Setup(x => x.GetRepository<IClaimRepository>())
-                .Returns(_mockClaimRepository.Object);
-
-            _claimService = new ClaimService();
+            _claimService = new ClaimService(
+                _mockClaimQueryDataService.Object,
+                _mockClaimCommandDataService.Object,
+                _mockLogger.Object);
         }
 
         [Fact]
-        public async Task CreateUserClaimAsync_WithValidData_CreatesClaimAndReturnsId()
+        public async Task CreateClaimAsync_WithValidData_CreatesClaimAndReturnsClaimInfo()
         {
             // Arrange
             var userId = UserId.New();
             var claimType = "Free-Tier";
-            Claim? capturedClaim = null;
+            var claimId = ClaimId.New();
+            var expectedClaimInfo = new ClaimInfo(claimId.ToString(), claimType, null, null);
 
-            _mockClaimRepository
-                .Setup(x => x.AddClaimAsync(It.IsAny<Claim>()))
-                .Callback<Claim>(c => capturedClaim = c);
+            _mockClaimCommandDataService
+                .Setup(x => x.CreateClaimAsync(userId, claimType, null, null))
+                .ReturnsAsync(ServiceResult<ClaimInfo>.Success(expectedClaimInfo));
 
             // Act
-            var claimId = await _claimService.CreateUserClaimAsync(userId, claimType, _mockUnitOfWork.Object);
+            var result = await _claimService.CreateClaimAsync(userId, claimType);
 
             // Assert
-            Assert.NotNull(capturedClaim);
-            Assert.Equal(userId, capturedClaim.UserId);
-            Assert.Equal(claimType, capturedClaim.ClaimType);
-            Assert.Null(capturedClaim.ExpirationDate);
-            Assert.Null(capturedClaim.Resource);
-            Assert.Equal(claimId, capturedClaim.Id);
+            Assert.True(result.IsSuccess);
+            Assert.Equal(expectedClaimInfo, result.Data);
             
-            _mockUnitOfWork.Verify(x => x.GetRepository<IClaimRepository>(), Times.Once);
-            _mockClaimRepository.Verify(x => x.AddClaimAsync(It.IsAny<Claim>()), Times.Once);
+            _mockClaimCommandDataService.Verify(x => x.CreateClaimAsync(userId, claimType, null, null), Times.Once);
         }
 
         [Fact]
-        public async Task CreateUserClaimAsync_DifferentClaimTypes_CreatesCorrectClaims()
+        public async Task CreateClaimAsync_DifferentClaimTypes_CreatesCorrectClaims()
         {
             // Arrange
             var userId = UserId.New();
@@ -65,45 +63,51 @@ namespace GetFitterGetBigger.API.Tests.Services
 
             foreach (var claimType in claimTypes)
             {
-                Claim? capturedClaim = null;
+                var claimId = ClaimId.New();
+                var expectedClaimInfo = new ClaimInfo(claimId.ToString(), claimType, null, null);
 
-                _mockClaimRepository
-                    .Setup(x => x.AddClaimAsync(It.IsAny<Claim>()))
-                    .Callback<Claim>(c => capturedClaim = c);
+                _mockClaimCommandDataService
+                    .Setup(x => x.CreateClaimAsync(userId, claimType, null, null))
+                    .ReturnsAsync(ServiceResult<ClaimInfo>.Success(expectedClaimInfo));
 
                 // Act
-                var claimId = await _claimService.CreateUserClaimAsync(userId, claimType, _mockUnitOfWork.Object);
+                var result = await _claimService.CreateClaimAsync(userId, claimType);
 
                 // Assert
-                Assert.NotNull(capturedClaim);
-                Assert.Equal(claimType, capturedClaim.ClaimType);
-                Assert.NotEqual(default(ClaimId), claimId);
+                Assert.True(result.IsSuccess);
+                Assert.Equal(claimType, result.Data.ClaimType);
+                Assert.NotEqual(default(string), result.Data.Id);
             }
         }
 
         [Fact]
-        public async Task CreateUserClaimAsync_MultipleCallsForSameUser_CreatesDistinctClaims()
+        public async Task CreateClaimAsync_MultipleCallsForSameUser_CreatesDistinctClaims()
         {
             // Arrange
             var userId = UserId.New();
             var claimType = "Free-Tier";
-            var capturedClaims = new System.Collections.Generic.List<Claim>();
+            var claimId1 = ClaimId.New();
+            var claimId2 = ClaimId.New();
+            var claimInfo1 = new ClaimInfo(claimId1.ToString(), claimType, null, null);
+            var claimInfo2 = new ClaimInfo(claimId2.ToString(), claimType, null, null);
 
-            _mockClaimRepository
-                .Setup(x => x.AddClaimAsync(It.IsAny<Claim>()))
-                .Callback<Claim>(c => capturedClaims.Add(c));
+            _mockClaimCommandDataService
+                .SetupSequence(x => x.CreateClaimAsync(userId, claimType, null, null))
+                .ReturnsAsync(ServiceResult<ClaimInfo>.Success(claimInfo1))
+                .ReturnsAsync(ServiceResult<ClaimInfo>.Success(claimInfo2));
 
             // Act
-            var claimId1 = await _claimService.CreateUserClaimAsync(userId, claimType, _mockUnitOfWork.Object);
-            var claimId2 = await _claimService.CreateUserClaimAsync(userId, claimType, _mockUnitOfWork.Object);
+            var result1 = await _claimService.CreateClaimAsync(userId, claimType);
+            var result2 = await _claimService.CreateClaimAsync(userId, claimType);
 
             // Assert
-            Assert.Equal(2, capturedClaims.Count);
-            Assert.NotEqual(claimId1, claimId2);
-            Assert.All(capturedClaims, c => Assert.Equal(userId, c.UserId));
-            Assert.All(capturedClaims, c => Assert.Equal(claimType, c.ClaimType));
+            Assert.True(result1.IsSuccess);
+            Assert.True(result2.IsSuccess);
+            Assert.NotEqual(result1.Data.Id, result2.Data.Id);
+            Assert.Equal(claimType, result1.Data.ClaimType);
+            Assert.Equal(claimType, result2.Data.ClaimType);
             
-            _mockClaimRepository.Verify(x => x.AddClaimAsync(It.IsAny<Claim>()), Times.Exactly(2));
+            _mockClaimCommandDataService.Verify(x => x.CreateClaimAsync(userId, claimType, null, null), Times.Exactly(2));
         }
     }
 }

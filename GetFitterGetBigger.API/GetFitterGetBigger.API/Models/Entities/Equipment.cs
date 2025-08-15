@@ -4,7 +4,7 @@ using GetFitterGetBigger.API.Models.SpecializedIds;
 
 namespace GetFitterGetBigger.API.Models.Entities;
 
-public record Equipment : IEnhancedReference<EquipmentId>, IEmptyEntity<Equipment, EquipmentId>
+public record Equipment : IEmptyEntity<Equipment, EquipmentId>
 {
     public EquipmentId EquipmentId { get; init; }
     public string Name { get; init; } = string.Empty;
@@ -18,13 +18,6 @@ public record Equipment : IEnhancedReference<EquipmentId>, IEmptyEntity<Equipmen
     // IEntity implementation (backward compatibility)
     string IEntity.Id => EquipmentId.ToString();
     
-    // IEnhancedReference implementation
-    public string Value => Name;
-    public string? Description => null; // Equipment doesn't have descriptions
-    
-    // ITrackedEntity implementation (through IEnhancedReference)
-    DateTime ITrackedEntity.UpdatedAt => UpdatedAt ?? CreatedAt;
-    
     // IEmptyEntity implementation
     public bool IsEmpty => EquipmentId.IsEmpty;
     
@@ -36,10 +29,6 @@ public record Equipment : IEnhancedReference<EquipmentId>, IEmptyEntity<Equipmen
         CreatedAt = DateTime.MinValue,
         UpdatedAt = null
     };
-    
-    // ICacheableEntity implementation (through IEnhancedReference)
-    public CacheStrategy GetCacheStrategy() => CacheStrategy.Invalidatable;
-    public TimeSpan? GetCacheDuration() => TimeSpan.FromHours(1);
     
     // Navigation properties
     public ICollection<ExerciseEquipment> Exercises { get; init; } = new List<ExerciseEquipment>();
