@@ -2,6 +2,7 @@ using GetFitterGetBigger.API.Models;
 using GetFitterGetBigger.API.Models.Entities;
 using GetFitterGetBigger.API.Models.SpecializedIds;
 using GetFitterGetBigger.API.Repositories.Interfaces;
+using GetFitterGetBigger.API.Services.Exercise.Extensions;
 using Microsoft.EntityFrameworkCore;
 using Olimpo.EntityFramework.Persistency;
 
@@ -26,62 +27,26 @@ public class ExerciseRepository : DomainRepository<Exercise, ExerciseId, Fitness
         IEnumerable<BodyPartId> bodyPartIds,
         bool includeInactive = false)
     {
+        // Build query using FluentAPI extensions
         var query = Context.Exercises
-            .Include(e => e.Difficulty)
-            .Include(e => e.KineticChain)
-            .Include(e => e.ExerciseWeightType)
-            .Include(e => e.CoachNotes)
-            .Include(e => e.ExerciseExerciseTypes)
-                .ThenInclude(eet => eet.ExerciseType)
-            .Include(e => e.ExerciseMuscleGroups)
-                .ThenInclude(emg => emg.MuscleGroup)
-            .Include(e => e.ExerciseMuscleGroups)
-                .ThenInclude(emg => emg.MuscleRole)
-            .Include(e => e.ExerciseEquipment)
-                .ThenInclude(ee => ee.Equipment)
-            .Include(e => e.ExerciseMovementPatterns)
-                .ThenInclude(emp => emp.MovementPattern)
-            .Include(e => e.ExerciseBodyParts)
-                .ThenInclude(ebp => ebp.BodyPart)
-            .AsSplitQuery()
-            .AsNoTracking();
-        
-        // Apply filters
-        if (!includeInactive)
-        {
-            query = query.Where(e => e.IsActive);
-        }
-        
-        if (!string.IsNullOrEmpty(name))
-        {
-            query = query.Where(e => e.Name.ToLower().Contains(name.ToLower()));
-        }
-        
-        if (!difficultyId.IsEmpty)
-        {
-            query = query.Where(e => e.DifficultyId == difficultyId);
-        }
-        
-        query = query.Where(e => !muscleGroupIds.Any() || 
-            e.ExerciseMuscleGroups.Any(emg => muscleGroupIds.Contains(emg.MuscleGroupId)));
-        
-        query = query.Where(e => !equipmentIds.Any() || 
-            e.ExerciseEquipment.Any(ee => equipmentIds.Contains(ee.EquipmentId)));
-        
-        query = query.Where(e => !movementPatternIds.Any() || 
-            e.ExerciseMovementPatterns.Any(emp => movementPatternIds.Contains(emp.MovementPatternId)));
-        
-        query = query.Where(e => !bodyPartIds.Any() || 
-            e.ExerciseBodyParts.Any(ebp => bodyPartIds.Contains(ebp.BodyPartId)));
+            .ApplyFilters(
+                namePattern: name,
+                difficultyId: difficultyId,
+                muscleGroupIds: muscleGroupIds,
+                equipmentIds: equipmentIds,
+                movementPatternIds: movementPatternIds,
+                bodyPartIds: bodyPartIds,
+                includeInactive: includeInactive)
+            .ApplyFluentSorting("name", "asc");
         
         // Get total count before pagination
         var totalCount = await query.CountAsync();
         
-        // Apply pagination
+        // Apply pagination and includes
         var exercises = await query
-            .OrderBy(e => e.Name)
             .Skip((pageNumber - 1) * pageSize)
             .Take(pageSize)
+            .IncludeStandardData()
             .ToListAsync();
         
         return (exercises, totalCount);
@@ -93,25 +58,10 @@ public class ExerciseRepository : DomainRepository<Exercise, ExerciseId, Fitness
     public override async Task<Exercise> GetByIdAsync(ExerciseId id)
     {
         var exercise = await Context.Exercises
-            .Include(e => e.Difficulty)
-            .Include(e => e.KineticChain)
-            .Include(e => e.ExerciseWeightType)
-            .Include(e => e.CoachNotes)
-            .Include(e => e.ExerciseExerciseTypes)
-                .ThenInclude(eet => eet.ExerciseType)
-            .Include(e => e.ExerciseMuscleGroups)
-                .ThenInclude(emg => emg.MuscleGroup)
-            .Include(e => e.ExerciseMuscleGroups)
-                .ThenInclude(emg => emg.MuscleRole)
-            .Include(e => e.ExerciseEquipment)
-                .ThenInclude(ee => ee.Equipment)
-            .Include(e => e.ExerciseMovementPatterns)
-                .ThenInclude(emp => emp.MovementPattern)
-            .Include(e => e.ExerciseBodyParts)
-                .ThenInclude(ebp => ebp.BodyPart)
-            .AsSplitQuery()
-            .AsNoTracking()
-            .FirstOrDefaultAsync(e => e.Id == id && e.IsActive);
+            .FilterByActiveStatus(includeInactive: false)
+            .Where(e => e.Id == id)
+            .IncludeStandardData()
+            .FirstOrDefaultAsync();
         
         return exercise ?? Exercise.Empty;
     }

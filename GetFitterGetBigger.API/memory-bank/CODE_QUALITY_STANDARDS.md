@@ -150,6 +150,12 @@
 - Improves readability and reusability
 - "Too Much Information = No Information" principle
 
+#### [Fluent Query Extensions Pattern](./CodeQualityGuidelines/FluentQueryExtensionsPattern.md)
+- **PREFERRED** Replace complex if-statement chains with FluentAPI
+- Clean, composable query building for repositories
+- Individual filter methods with chaining capability
+- Improves readability and maintainability of complex queries
+
 ### Quality Assurance
 
 #### [Testing Standards](./CodeQualityGuidelines/TestingStandards.md)
@@ -304,6 +310,29 @@ return await ServiceValidate.Build<bool>()
 **NEVER use scripts for bulk file modifications!** Change files one-by-one manually.
 
 > "Better to spend 2 hours changing 20 files manually than 6 hours fixing 6000+ errors from a script gone wrong."
+
+### Complex If-Statement Chains in Queries
+**AVOID complex conditional query building!** Use Fluent Query Extensions instead.
+
+```csharp
+// ❌ ANTI-PATTERN - Hard to read and maintain
+if (!includeInactive)
+    query = query.Where(e => e.IsActive);
+if (!string.IsNullOrEmpty(name))
+    query = query.Where(e => e.Name.Contains(name));
+if (!difficultyId.IsEmpty)
+    query = query.Where(e => e.DifficultyId == difficultyId);
+// ... more conditions
+
+// ✅ CORRECT - Fluent Query Extensions
+query = query
+    .FilterByActiveStatus(includeInactive)
+    .FilterByNamePattern(name)
+    .FilterByDifficulty(difficultyId)
+    .ApplyFluentSorting(sortBy, sortOrder);
+```
+
+See [FluentQueryExtensionsPattern.md](./CodeQualityGuidelines/FluentQueryExtensionsPattern.md) for implementation details.
 
 ### Defensive Code Anti-Pattern - Trust the Architecture
 **STOP writing defensive code when the architecture guarantees safety!** We follow the NULL OBJECT PATTERN throughout the codebase.
