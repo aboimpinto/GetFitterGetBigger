@@ -54,7 +54,7 @@ public static class ExerciseQueryExtensions
         if (string.IsNullOrWhiteSpace(namePattern))
             return query;
             
-        return query.Where(e => EF.Functions.ILike(e.Name, $"%{namePattern}%"));
+        return query.Where(e => e.Name.ToLower().Contains(namePattern.ToLower()));
     }
     
     /// <summary>
@@ -223,7 +223,7 @@ When implementing Fluent Query Extensions:
 - [ ] Create IncludeStandardData for common includes
 - [ ] Document each method with XML comments
 - [ ] Handle null/empty parameters gracefully
-- [ ] Use EF.Functions.ILike for case-insensitive search
+- [ ] Use ToLower().Contains() for database-agnostic case-insensitive search
 - [ ] Return IQueryable to maintain composability
 
 ## Real-World Example
@@ -240,7 +240,7 @@ See `WorkoutTemplateQueryExtensions.cs` for a complete implementation that demon
 2. **Eager evaluation**: Don't call ToList() inside extension methods
 3. **Missing null checks**: Handle null/empty parameters gracefully
 4. **Complex logic in extensions**: Keep each method focused on one filter
-5. **Not using EF.Functions**: Use EF.Functions.ILike for database-side operations
+5. **Database dependency**: Use ToLower().Contains() for database-agnostic operations instead of provider-specific functions
 
 ## Testing Considerations
 

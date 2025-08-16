@@ -23,7 +23,7 @@ public static class WorkoutTemplateQueryExtensions
         if (string.IsNullOrWhiteSpace(namePattern))
             return query;
 
-        return query.Where(wt => EF.Functions.ILike(wt.Name, $"%{namePattern}%"));
+        return query.Where(wt => wt.Name.ToLower().Contains(namePattern.ToLower()));
     }
 
     /// <summary>

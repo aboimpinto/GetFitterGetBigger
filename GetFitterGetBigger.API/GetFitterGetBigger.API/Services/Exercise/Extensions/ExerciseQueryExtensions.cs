@@ -39,7 +39,7 @@ public static class ExerciseQueryExtensions
         if (string.IsNullOrWhiteSpace(namePattern))
             return query;
         
-        return query.Where(e => EF.Functions.ILike(e.Name, $"%{namePattern}%"));
+        return query.Where(e => e.Name.ToLower().Contains(namePattern.ToLower()));
     }
     
     /// <summary>
