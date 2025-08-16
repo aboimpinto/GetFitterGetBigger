@@ -158,15 +158,15 @@ public class ExerciseService(
         });
     }
     
-    public async Task<ServiceResult<bool>> DeleteAsync(ExerciseId id)
+    public async Task<ServiceResult<BooleanResultDto>> DeleteAsync(ExerciseId id)
     {
-        return await ServiceValidate.Build<bool>()
+        return await ServiceValidate.Build<BooleanResultDto>()
             .EnsureNotEmpty(id, ExerciseErrorMessages.InvalidIdFormat)
             .EnsureAsync(
                 async () => (await _queryDataService.ExistsAsync(id)).Data.Value,
                 ServiceError.NotFound("Exercise", id.ToString()))
             .MatchAsync(
                 whenValid: async () => await _deleteHandler.DeleteAsync(id),
-                whenInvalid: errors => ServiceResult<bool>.Failure(false, errors.FirstOrDefault() ?? ServiceError.ValidationFailed("Unknown error")));
+                whenInvalid: errors => ServiceResult<BooleanResultDto>.Failure(BooleanResultDto.Empty, errors.FirstOrDefault() ?? ServiceError.ValidationFailed("Unknown error")));
     }
 }

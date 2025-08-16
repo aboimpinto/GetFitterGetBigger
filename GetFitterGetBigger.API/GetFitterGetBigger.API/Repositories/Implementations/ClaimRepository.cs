@@ -13,6 +13,7 @@ namespace GetFitterGetBigger.API.Repositories.Implementations
         {
             return await Context.Claims
                 .Where(c => c.UserId == userId)
+                .AsNoTracking()
                 .ToListAsync();
         }
 

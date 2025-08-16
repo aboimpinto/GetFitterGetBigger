@@ -43,14 +43,14 @@ public interface IWorkoutTemplateExerciseService
     /// </summary>
     /// <param name="workoutTemplateExerciseId">The exercise to remove</param>
     /// <returns>Success or error result</returns>
-    Task<ServiceResult<bool>> RemoveExerciseAsync(WorkoutTemplateExerciseId workoutTemplateExerciseId);
+    Task<ServiceResult<BooleanResultDto>> RemoveExerciseAsync(WorkoutTemplateExerciseId workoutTemplateExerciseId);
 
     /// <summary>
     /// Reorders exercises within a zone
     /// </summary>
     /// <param name="command">Command containing reordering details</param>
     /// <returns>Success or error result</returns>
-    Task<ServiceResult<bool>> ReorderExercisesAsync(ReorderTemplateExercisesCommand command);
+    Task<ServiceResult<BooleanResultDto>> ReorderExercisesAsync(ReorderTemplateExercisesCommand command);
 
     /// <summary>
     /// Changes the zone of an exercise
@@ -84,7 +84,7 @@ public interface IWorkoutTemplateExerciseService
     /// <param name="workoutTemplateId">The workout template ID</param>
     /// <param name="exerciseIds">List of exercise IDs to validate</param>
     /// <returns>Validation result with any issues found</returns>
-    Task<ServiceResult<bool>> ValidateExercisesAsync(
+    Task<ServiceResult<BooleanResultDto>> ValidateExercisesAsync(
         WorkoutTemplateId workoutTemplateId, 
         List<ExerciseId> exerciseIds);
 }

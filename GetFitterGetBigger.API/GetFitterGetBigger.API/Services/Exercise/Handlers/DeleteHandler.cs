@@ -1,3 +1,4 @@
+using GetFitterGetBigger.API.DTOs;
 using GetFitterGetBigger.API.Models.SpecializedIds;
 using GetFitterGetBigger.API.Services.Exercise.DataServices;
 using GetFitterGetBigger.API.Services.Results;
@@ -22,10 +23,10 @@ public class DeleteHandler
     /// </summary>
     /// <param name="id">The exercise ID to soft delete</param>
     /// <returns>Service result indicating success or failure</returns>
-    public async Task<ServiceResult<bool>> SoftDeleteAsync(ExerciseId id)
+    public async Task<ServiceResult<BooleanResultDto>> SoftDeleteAsync(ExerciseId id)
     {
         var result = await _commandDataService.SoftDeleteAsync(id);
-        return ServiceResult<bool>.Success(result.Data.Value);
+        return ServiceResult<BooleanResultDto>.Success(BooleanResultDto.Create(result.Data.Value));
     }
     
     /// <summary>
@@ -33,10 +34,10 @@ public class DeleteHandler
     /// </summary>
     /// <param name="id">The exercise ID to hard delete</param>
     /// <returns>Service result indicating success or failure</returns>
-    public async Task<ServiceResult<bool>> HardDeleteAsync(ExerciseId id)
+    public async Task<ServiceResult<BooleanResultDto>> HardDeleteAsync(ExerciseId id)
     {
         var result = await _commandDataService.HardDeleteAsync(id);
-        return ServiceResult<bool>.Success(result.Data.Value);
+        return ServiceResult<BooleanResultDto>.Success(BooleanResultDto.Create(result.Data.Value));
     }
     
     /// <summary>
@@ -45,7 +46,7 @@ public class DeleteHandler
     /// </summary>
     /// <param name="id">The exercise ID to delete</param>
     /// <returns>Service result indicating success or failure</returns>
-    public async Task<ServiceResult<bool>> DeleteAsync(ExerciseId id)
+    public async Task<ServiceResult<BooleanResultDto>> DeleteAsync(ExerciseId id)
     {
         // For now, just soft delete (mark as inactive)
         // This preserves relationships and historical data

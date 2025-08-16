@@ -52,4 +52,11 @@ public static class WorkoutTemplateErrorMessages
     
     // Internal Errors
     public static string DraftStateNotFound => "Draft workout state not found in database";
+    
+    // Additional Validation Messages
+    public static string NewStateIdRequired => "New state ID is required";
+    public static string NameCannotBeEmpty => "Name cannot be empty";
+    public static string CategoryIdRequired => "Category ID is required for suggestions";
+    public static string MaxSuggestionsRange => "Max suggestions must be between 1 and 50";
+    public static string CannotDeleteWithExecutionLogs => "Cannot delete workout template with execution logs";
 }

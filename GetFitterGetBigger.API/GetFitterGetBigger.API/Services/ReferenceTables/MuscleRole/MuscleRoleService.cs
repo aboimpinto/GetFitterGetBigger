@@ -15,21 +15,14 @@ namespace GetFitterGetBigger.API.Services.ReferenceTables.MuscleRole;
 /// MuscleRoles are pure reference data that never changes after deployment
 /// NO UnitOfWork here - all data access through IMuscleRoleDataService
 /// </summary>
-public class MuscleRoleService : IMuscleRoleService
+public class MuscleRoleService(
+    IMuscleRoleDataService dataService,
+    IEternalCacheService cacheService,
+    ILogger<MuscleRoleService> logger) : IMuscleRoleService
 {
-    private readonly IMuscleRoleDataService _dataService;
-    private readonly IEternalCacheService _cacheService;
-    private readonly ILogger<MuscleRoleService> _logger;
-
-    public MuscleRoleService(
-        IMuscleRoleDataService dataService,
-        IEternalCacheService cacheService,
-        ILogger<MuscleRoleService> logger)
-    {
-        _dataService = dataService;
-        _cacheService = cacheService;
-        _logger = logger;
-    }
+    private readonly IMuscleRoleDataService _dataService = dataService;
+    private readonly IEternalCacheService _cacheService = cacheService;
+    private readonly ILogger<MuscleRoleService> _logger = logger;
 
     /// <inheritdoc/>
     public async Task<ServiceResult<IEnumerable<ReferenceDataDto>>> GetAllActiveAsync()

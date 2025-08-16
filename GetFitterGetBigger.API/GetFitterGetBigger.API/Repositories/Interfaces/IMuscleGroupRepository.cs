@@ -1,27 +1,13 @@
 using GetFitterGetBigger.API.Models.Entities;
 using GetFitterGetBigger.API.Models.SpecializedIds;
-using Olimpo.EntityFramework.Persistency;
 
 namespace GetFitterGetBigger.API.Repositories.Interfaces;
 
 /// <summary>
 /// Repository interface for MuscleGroup data
 /// </summary>
-public interface IMuscleGroupRepository : IRepository
+public interface IMuscleGroupRepository : IDomainRepository<MuscleGroup, MuscleGroupId>
 {
-    /// <summary>
-    /// Gets all muscle groups
-    /// </summary>
-    /// <returns>A collection of muscle groups</returns>
-    Task<IEnumerable<MuscleGroup>> GetAllAsync();
-    
-    /// <summary>
-    /// Gets a muscle group by its ID
-    /// </summary>
-    /// <param name="id">The ID of the muscle group to retrieve</param>
-    /// <returns>The muscle group if found, MuscleGroup.Empty otherwise</returns>
-    Task<MuscleGroup> GetByIdAsync(MuscleGroupId id);
-    
     /// <summary>
     /// Gets a muscle group by its name
     /// </summary>
@@ -56,14 +42,6 @@ public interface IMuscleGroupRepository : IRepository
     /// <param name="id">The ID of the muscle group to deactivate</param>
     /// <returns>True if the muscle group was deactivated, false if not found</returns>
     Task<bool> DeactivateAsync(MuscleGroupId id);
-    
-    /// <summary>
-    /// Checks if a muscle group exists by its ID
-    /// Uses efficient database query with .Any() to avoid loading entire entity
-    /// </summary>
-    /// <param name="id">The ID of the muscle group to check</param>
-    /// <returns>True if the muscle group exists and is active, false otherwise</returns>
-    Task<bool> ExistsAsync(MuscleGroupId id);
     
     /// <summary>
     /// Checks if a muscle group with the given name exists

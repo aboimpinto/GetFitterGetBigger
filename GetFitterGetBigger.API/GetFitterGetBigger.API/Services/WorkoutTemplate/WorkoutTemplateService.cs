@@ -253,6 +253,12 @@ public class WorkoutTemplateService(
         return true;
     }
     
+    private async Task<bool> CanDeleteWorkoutTemplateAsync(WorkoutTemplateId id)
+    {
+        var hasLogsResult = await _queryDataService.HasExecutionLogsAsync(id);
+        return !hasLogsResult.Data.Value; // Return true when template CAN be deleted (no execution logs)
+    }
+    
     private async Task<ServiceResult<WorkoutTemplateDto>> UpdateWorkoutTemplateEntityAsync(
         WorkoutTemplateId id, 
         UpdateWorkoutTemplateCommand command)
@@ -281,7 +287,7 @@ public class WorkoutTemplateService(
     {
         return await ServiceValidate.Build<WorkoutTemplateDto>()
             .EnsureNotEmpty(id, WorkoutTemplateErrorMessages.InvalidIdFormat)
-            .EnsureNotEmpty(newStateId, "New state ID is required")
+            .EnsureNotEmpty(newStateId, WorkoutTemplateErrorMessages.NewStateIdRequired)
             .EnsureExistsAsync(
                 async () => (await _queryDataService.ExistsAsync(id)).Data.Value,
                 "WorkoutTemplate")
@@ -317,8 +323,8 @@ public class WorkoutTemplateService(
                 async () => (await _queryDataService.ExistsAsync(id)).Data.Value,
                 "WorkoutTemplate")
             .EnsureAsync(
-                async () => !(await _queryDataService.HasExecutionLogsAsync(id)).Data.Value,
-                ServiceError.ValidationFailed("Cannot delete workout template with execution logs"))
+                async () => await CanDeleteWorkoutTemplateAsync(id),
+                ServiceError.ValidationFailed(WorkoutTemplateErrorMessages.CannotDeleteWithExecutionLogs))
             .MatchAsync(async () => await _commandDataService.DeleteAsync(id));
     }
 
@@ -332,7 +338,7 @@ public class WorkoutTemplateService(
     public async Task<ServiceResult<BooleanResultDto>> ExistsByNameAsync(string name)
     {
         return await ServiceValidate.Build<BooleanResultDto>()
-            .EnsureNotWhiteSpace(name, "Name cannot be empty")
+            .EnsureNotWhiteSpace(name, WorkoutTemplateErrorMessages.NameCannotBeEmpty)
             .MatchAsync(async () => await _queryDataService.ExistsByNameAsync(name));
     }
 
@@ -342,8 +348,8 @@ public class WorkoutTemplateService(
         int maxSuggestions = 10)
     {
         return await ServiceValidate.Build<IEnumerable<ExerciseDto>>()
-            .EnsureNotEmpty(categoryId, "Category ID is required for suggestions")
-            .EnsureNumberBetween(maxSuggestions, 1, 50, "Max suggestions must be between 1 and 50")
+            .EnsureNotEmpty(categoryId, WorkoutTemplateErrorMessages.CategoryIdRequired)
+            .EnsureNumberBetween(maxSuggestions, 1, 50, WorkoutTemplateErrorMessages.MaxSuggestionsRange)
             .WhenValidAsync(async () => 
             {
                 // Delegate to suggestion handler

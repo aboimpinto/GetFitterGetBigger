@@ -13,18 +13,12 @@ namespace GetFitterGetBigger.API.Services.ReferenceTables.MuscleGroup;
 /// MuscleGroups support Create/Update/Delete operations, so NO caching is used
 /// NO UnitOfWork here - all data access through IMuscleGroupDataService
 /// </summary>
-public class MuscleGroupService : IMuscleGroupService
+public class MuscleGroupService(
+    IMuscleGroupDataService dataService,
+    ILogger<MuscleGroupService> logger) : IMuscleGroupService
 {
-    private readonly IMuscleGroupDataService _dataService;
-    private readonly ILogger<MuscleGroupService> _logger;
-
-    public MuscleGroupService(
-        IMuscleGroupDataService dataService,
-        ILogger<MuscleGroupService> logger)
-    {
-        _dataService = dataService;
-        _logger = logger;
-    }
+    private readonly IMuscleGroupDataService _dataService = dataService;
+    private readonly ILogger<MuscleGroupService> _logger = logger;
 
     /// <inheritdoc/>
     public async Task<ServiceResult<IEnumerable<MuscleGroupDto>>> GetAllActiveAsync()
@@ -130,115 +124,49 @@ public class MuscleGroupService : IMuscleGroupService
     /// <inheritdoc/>
     public async Task<ServiceResult<MuscleGroupDto>> CreateAsync(CreateMuscleGroupCommand command)
     {
-        // Validate basic input
-        if (command == null)
-        {
-            return ServiceResult<MuscleGroupDto>.Failure(MuscleGroupDto.Empty, 
-                ServiceError.ValidationFailed(MuscleGroupErrorMessages.CommandCannotBeNull));
-        }
-
-        if (string.IsNullOrWhiteSpace(command.Name))
-        {
-            return ServiceResult<MuscleGroupDto>.Failure(MuscleGroupDto.Empty, 
-                ServiceError.ValidationFailed(MuscleGroupErrorMessages.NameCannotBeEmpty));
-        }
-
-        if (command.BodyPartId.IsEmpty)
-        {
-            return ServiceResult<MuscleGroupDto>.Failure(MuscleGroupDto.Empty, 
-                ServiceError.ValidationFailed(MuscleGroupErrorMessages.BodyPartIdCannotBeEmpty));
-        }
-
-        // Validate business rules asynchronously
-        if (!await IsNameUniqueAsync(command!.Name))
-        {
-            return ServiceResult<MuscleGroupDto>.Failure(MuscleGroupDto.Empty, 
-                ServiceError.AlreadyExists("MuscleGroup", command.Name));
-        }
-
-        // Perform the operation
-        var result = await _dataService.CreateAsync(command!);
-        // Note: For eternal reference data, cache invalidation is not needed
-        // Reference data is immutable after deployment
-        return result;
+        return await ServiceValidate.Build<MuscleGroupDto>()
+            .EnsureNotWhiteSpace(command.Name, MuscleGroupErrorMessages.NameCannotBeEmpty)
+            .EnsureNotEmpty(command.BodyPartId, MuscleGroupErrorMessages.BodyPartIdCannotBeEmpty)
+            .EnsureNameIsUniqueAsync(
+                async () => await IsNameUniqueAsync(command.Name),
+                "MuscleGroup", command.Name)
+            .MatchAsync(
+                whenValid: async () => await _dataService.CreateAsync(command)
+            );
     }
 
     /// <inheritdoc/>
     public async Task<ServiceResult<MuscleGroupDto>> UpdateAsync(MuscleGroupId id, UpdateMuscleGroupCommand command)
     {
-        // Validate basic input
-        if (id.IsEmpty)
-        {
-            return ServiceResult<MuscleGroupDto>.Failure(MuscleGroupDto.Empty, 
-                ServiceError.ValidationFailed(MuscleGroupErrorMessages.InvalidIdFormat));
-        }
-
-        if (command == null)
-        {
-            return ServiceResult<MuscleGroupDto>.Failure(MuscleGroupDto.Empty, 
-                ServiceError.ValidationFailed(MuscleGroupErrorMessages.CommandCannotBeNull));
-        }
-
-        if (string.IsNullOrWhiteSpace(command.Name))
-        {
-            return ServiceResult<MuscleGroupDto>.Failure(MuscleGroupDto.Empty, 
-                ServiceError.ValidationFailed(MuscleGroupErrorMessages.NameCannotBeEmpty));
-        }
-
-        if (command.BodyPartId.IsEmpty)
-        {
-            return ServiceResult<MuscleGroupDto>.Failure(MuscleGroupDto.Empty, 
-                ServiceError.ValidationFailed(MuscleGroupErrorMessages.BodyPartIdCannotBeEmpty));
-        }
-
-        // Validate business rules asynchronously
-        if (!await ExistsInternalAsync(id))
-        {
-            return ServiceResult<MuscleGroupDto>.Failure(MuscleGroupDto.Empty, 
-                ServiceError.NotFound("MuscleGroup", id.ToString()));
-        }
-
-        if (!await IsNameUniqueForUpdateAsync(command!.Name, id))
-        {
-            return ServiceResult<MuscleGroupDto>.Failure(MuscleGroupDto.Empty, 
-                ServiceError.AlreadyExists("MuscleGroup", command.Name));
-        }
-
-        // Perform the operation
-        var result = await _dataService.UpdateAsync(id, command!);
-        // Note: For eternal reference data, cache invalidation is not needed
-        // Reference data is immutable after deployment
-        return result;
+        return await ServiceValidate.Build<MuscleGroupDto>()
+            .EnsureNotEmpty(id, MuscleGroupErrorMessages.InvalidIdFormat)
+            .EnsureNotWhiteSpace(command.Name, MuscleGroupErrorMessages.NameCannotBeEmpty)
+            .EnsureNotEmpty(command.BodyPartId, MuscleGroupErrorMessages.BodyPartIdCannotBeEmpty)
+            .EnsureAsync(
+                async () => await ExistsInternalAsync(id),
+                ServiceError.NotFound("MuscleGroup", id.ToString()))
+            .EnsureNameIsUniqueAsync(
+                async () => await IsNameUniqueForUpdateAsync(command.Name, id),
+                "MuscleGroup", command.Name)
+            .MatchAsync(
+                whenValid: async () => await _dataService.UpdateAsync(id, command)
+            );
     }
 
     /// <inheritdoc/>
     public async Task<ServiceResult<BooleanResultDto>> DeleteAsync(MuscleGroupId id)
     {
-        // Validate basic input
-        if (id.IsEmpty)
-        {
-            return ServiceResult<BooleanResultDto>.Failure(BooleanResultDto.Create(false), 
-                ServiceError.ValidationFailed(MuscleGroupErrorMessages.InvalidIdFormat));
-        }
-
-        // Validate business rules asynchronously
-        if (!await ExistsInternalAsync(id))
-        {
-            return ServiceResult<BooleanResultDto>.Failure(BooleanResultDto.Create(false), 
-                ServiceError.NotFound("MuscleGroup", id.ToString()));
-        }
-
-        if (!await CanDeleteInternalAsync(id))
-        {
-            return ServiceResult<BooleanResultDto>.Failure(BooleanResultDto.Create(false), 
-                ServiceError.DependencyExists("MuscleGroup", "dependent exercises"));
-        }
-
-        // Perform the operation
-        var result = await _dataService.DeleteAsync(id);
-        // Note: For eternal reference data, cache invalidation is not needed
-        // Reference data is immutable after deployment
-        return result;
+        return await ServiceValidate.Build<BooleanResultDto>()
+            .EnsureNotEmpty(id, MuscleGroupErrorMessages.InvalidIdFormat)
+            .EnsureAsync(
+                async () => await ExistsInternalAsync(id),
+                ServiceError.NotFound("MuscleGroup", id.ToString()))
+            .EnsureAsync(
+                async () => await CanDeleteInternalAsync(id),
+                ServiceError.DependencyExists("MuscleGroup", "dependent exercises"))
+            .MatchAsync(
+                whenValid: async () => await _dataService.DeleteAsync(id)
+            );
     }
 
     // Private helper methods for validation

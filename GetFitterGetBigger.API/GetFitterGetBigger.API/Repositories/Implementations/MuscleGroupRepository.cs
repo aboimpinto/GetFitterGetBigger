@@ -3,20 +3,19 @@ using GetFitterGetBigger.API.Models.Entities;
 using GetFitterGetBigger.API.Models.SpecializedIds;
 using GetFitterGetBigger.API.Repositories.Interfaces;
 using Microsoft.EntityFrameworkCore;
-using Olimpo.EntityFramework.Persistency;
 
 namespace GetFitterGetBigger.API.Repositories.Implementations;
 
 /// <summary>
 /// Repository implementation for MuscleGroup data
 /// </summary>
-public class MuscleGroupRepository : RepositoryBase<FitnessDbContext>, IMuscleGroupRepository
+public class MuscleGroupRepository : DomainRepository<MuscleGroup, MuscleGroupId, FitnessDbContext>, IMuscleGroupRepository
 {
     /// <summary>
-    /// Gets all muscle groups
+    /// Gets all active muscle groups with BodyPart navigation property, ordered by name
     /// </summary>
-    /// <returns>A collection of muscle groups</returns>
-    public async Task<IEnumerable<MuscleGroup>> GetAllAsync() =>
+    /// <returns>A collection of active muscle groups</returns>
+    public override async Task<IEnumerable<MuscleGroup>> GetAllAsync() =>
         await Context.MuscleGroups
             .AsNoTracking()
             .Include(mg => mg.BodyPart)
@@ -25,19 +24,29 @@ public class MuscleGroupRepository : RepositoryBase<FitnessDbContext>, IMuscleGr
             .ToListAsync();
     
     /// <summary>
-    /// Gets a muscle group by its ID
+    /// Gets a muscle group by its ID with BodyPart navigation property (only active)
     /// </summary>
     /// <param name="id">The ID of the muscle group to retrieve</param>
-    /// <returns>The muscle group if found, MuscleGroup.Empty otherwise</returns>
-    public async Task<MuscleGroup> GetByIdAsync(MuscleGroupId id)
+    /// <returns>The muscle group if found and active, MuscleGroup.Empty otherwise</returns>
+    public override async Task<MuscleGroup> GetByIdAsync(MuscleGroupId id)
     {
         var muscleGroup = await Context.MuscleGroups
             .AsNoTracking()
             .Include(mg => mg.BodyPart)
-            .FirstOrDefaultAsync(mg => mg.Id == id);
+            .FirstOrDefaultAsync(mg => mg.Id == id && mg.IsActive);
             
         return muscleGroup ?? MuscleGroup.Empty;
     }
+
+    /// <summary>
+    /// Checks if a muscle group exists by its ID (only active muscle groups)
+    /// </summary>
+    /// <param name="id">The ID of the muscle group to check</param>
+    /// <returns>True if the muscle group exists and is active, false otherwise</returns>
+    public override async Task<bool> ExistsAsync(MuscleGroupId id) =>
+        await Context.MuscleGroups
+            .AsNoTracking()
+            .AnyAsync(mg => mg.Id == id && mg.IsActive);
     
     /// <summary>
     /// Gets a muscle group by its name (case-insensitive)
@@ -151,17 +160,6 @@ public class MuscleGroupRepository : RepositoryBase<FitnessDbContext>, IMuscleGr
         
         return true;
     }
-    
-    /// <summary>
-    /// Checks if a muscle group exists by its ID
-    /// Uses efficient database query with .Any() to avoid loading entire entity
-    /// </summary>
-    /// <param name="id">The ID of the muscle group to check</param>
-    /// <returns>True if the muscle group exists and is active, false otherwise</returns>
-    public async Task<bool> ExistsAsync(MuscleGroupId id) =>
-        await Context.MuscleGroups
-            .AsNoTracking()
-            .AnyAsync(mg => mg.Id == id && mg.IsActive);
     
     /// <summary>
     /// Checks if a muscle group with the given name exists

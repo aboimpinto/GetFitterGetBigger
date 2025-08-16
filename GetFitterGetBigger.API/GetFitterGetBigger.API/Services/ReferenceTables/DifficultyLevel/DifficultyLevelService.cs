@@ -47,25 +47,7 @@ public class DifficultyLevelService : IDifficultyLevelService
         return await ServiceValidate.For<ReferenceDataDto>()
             .EnsureNotEmpty(id, DifficultyLevelErrorMessages.InvalidIdFormat)
             .MatchAsync(
-                whenValid: async () =>
-                {
-                    var cacheKey = CacheKeyGenerator.GetByIdKey("DifficultyLevels", id.ToString());
-                    
-                    return await CacheLoad.For<ReferenceDataDto>(_cacheService, cacheKey)
-                        .WithLogging(_logger, "DifficultyLevel")
-                        .WithAutoCacheAsync(async () =>
-                        {
-                            var result = await _dataService.GetByIdAsync(id);
-                            // Convert Empty to NotFound at the service layer
-                            if (result.IsSuccess && result.Data.IsEmpty)
-                            {
-                                return ServiceResult<ReferenceDataDto>.Failure(
-                                    ReferenceDataDto.Empty,
-                                    ServiceError.NotFound("DifficultyLevel", id.ToString()));
-                            }
-                            return result;
-                        });
-                }
+                whenValid: async () => await LoadByIdFromCacheAsync(id)
             );
     }
     
@@ -82,25 +64,7 @@ public class DifficultyLevelService : IDifficultyLevelService
         return await ServiceValidate.For<ReferenceDataDto>()
             .EnsureNotWhiteSpace(value, DifficultyLevelErrorMessages.ValueCannotBeEmpty)
             .MatchAsync(
-                whenValid: async () =>
-                {
-                    var cacheKey = CacheKeyGenerator.GetByValueKey("DifficultyLevels", value);
-                    
-                    return await CacheLoad.For<ReferenceDataDto>(_cacheService, cacheKey)
-                        .WithLogging(_logger, "DifficultyLevel")
-                        .WithAutoCacheAsync(async () =>
-                        {
-                            var result = await _dataService.GetByValueAsync(value);
-                            // Convert Empty to NotFound at the service layer
-                            if (result.IsSuccess && result.Data.IsEmpty)
-                            {
-                                return ServiceResult<ReferenceDataDto>.Failure(
-                                    ReferenceDataDto.Empty,
-                                    ServiceError.NotFound("DifficultyLevel", value));
-                            }
-                            return result;
-                        });
-                }
+                whenValid: async () => await LoadByValueFromCacheAsync(value)
             );
     }
 
@@ -110,14 +74,53 @@ public class DifficultyLevelService : IDifficultyLevelService
         return await ServiceValidate.For<BooleanResultDto>()
             .EnsureNotEmpty(id, DifficultyLevelErrorMessages.InvalidIdFormat)
             .MatchAsync(
-                whenValid: async () =>
-                {
-                    // Leverage the GetById cache for existence checks
-                    var result = await GetByIdAsync(id);
-                    return ServiceResult<BooleanResultDto>.Success(
-                        BooleanResultDto.Create(result.IsSuccess && !result.Data.IsEmpty)
-                    );
-                }
+                whenValid: async () => await CheckExistenceAsync(id)
             );
+    }
+
+    // Private helper methods for single operations
+    private async Task<ServiceResult<ReferenceDataDto>> LoadByIdFromCacheAsync(DifficultyLevelId id)
+    {
+        var cacheKey = CacheKeyGenerator.GetByIdKey("DifficultyLevels", id.ToString());
+        
+        return await CacheLoad.For<ReferenceDataDto>(_cacheService, cacheKey)
+            .WithLogging(_logger, "DifficultyLevel")
+            .WithAutoCacheAsync(async () =>
+            {
+                var result = await _dataService.GetByIdAsync(id);
+                // Convert Empty to NotFound at the service layer
+                return result.IsSuccess && result.Data.IsEmpty
+                    ? ServiceResult<ReferenceDataDto>.Failure(
+                        ReferenceDataDto.Empty,
+                        ServiceError.NotFound("DifficultyLevel", id.ToString()))
+                    : result;
+            });
+    }
+
+    private async Task<ServiceResult<ReferenceDataDto>> LoadByValueFromCacheAsync(string value)
+    {
+        var cacheKey = CacheKeyGenerator.GetByValueKey("DifficultyLevels", value);
+        
+        return await CacheLoad.For<ReferenceDataDto>(_cacheService, cacheKey)
+            .WithLogging(_logger, "DifficultyLevel")
+            .WithAutoCacheAsync(async () =>
+            {
+                var result = await _dataService.GetByValueAsync(value);
+                // Convert Empty to NotFound at the service layer
+                return result.IsSuccess && result.Data.IsEmpty
+                    ? ServiceResult<ReferenceDataDto>.Failure(
+                        ReferenceDataDto.Empty,
+                        ServiceError.NotFound("DifficultyLevel", value))
+                    : result;
+            });
+    }
+
+    private async Task<ServiceResult<BooleanResultDto>> CheckExistenceAsync(DifficultyLevelId id)
+    {
+        // Leverage the GetById cache for existence checks
+        var result = await GetByIdAsync(id);
+        return ServiceResult<BooleanResultDto>.Success(
+            BooleanResultDto.Create(result.IsSuccess && !result.Data.IsEmpty)
+        );
     }
 }

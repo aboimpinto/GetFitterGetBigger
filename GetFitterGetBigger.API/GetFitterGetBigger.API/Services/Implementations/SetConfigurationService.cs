@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using GetFitterGetBigger.API.Constants.ErrorMessages;
 using GetFitterGetBigger.API.DTOs;
 using GetFitterGetBigger.API.Models;
 using GetFitterGetBigger.API.Models.Entities;
@@ -76,7 +77,7 @@ public class SetConfigurationService : ISetConfigurationService
         {
             null => ServiceResult<SetConfigurationDto>.Failure(
                 new SetConfigurationDto(),
-                ServiceError.ValidationFailed("Command cannot be null")),
+                ServiceError.ValidationFailed(SetConfigurationErrorMessages.CommandCannotBeNull)),
             _ => await ValidateAndProcessCreateAsync(command)
         };
 
@@ -89,7 +90,7 @@ public class SetConfigurationService : ISetConfigurationService
         {
             null => ServiceResult<IEnumerable<SetConfigurationDto>>.Failure(
                 new List<SetConfigurationDto>(),
-                ServiceError.ValidationFailed("Command cannot be null")),
+                ServiceError.ValidationFailed(SetConfigurationErrorMessages.CommandCannotBeNull)),
             _ => await ValidateAndProcessBulkCreateAsync(command)
         };
 
@@ -102,7 +103,7 @@ public class SetConfigurationService : ISetConfigurationService
         {
             null => ServiceResult<SetConfigurationDto>.Failure(
                 new SetConfigurationDto(),
-                ServiceError.ValidationFailed("Command cannot be null")),
+                ServiceError.ValidationFailed(SetConfigurationErrorMessages.CommandCannotBeNull)),
             _ => await ValidateAndProcessUpdateAsync(command)
         };
 
@@ -115,32 +116,32 @@ public class SetConfigurationService : ISetConfigurationService
         {
             null => ServiceResult<int>.Failure(
                 0,
-                ServiceError.ValidationFailed("Command cannot be null")),
+                ServiceError.ValidationFailed(SetConfigurationErrorMessages.CommandCannotBeNull)),
             _ => await ValidateAndProcessBulkUpdateAsync(command)
         };
 
         return result;
     }
 
-    public async Task<ServiceResult<bool>> ReorderSetsAsync(ReorderSetConfigurationsCommand command)
+    public async Task<ServiceResult<BooleanResultDto>> ReorderSetsAsync(ReorderSetConfigurationsCommand command)
     {
         var result = command switch
         {
-            null => ServiceResult<bool>.Failure(
-                false,
-                ServiceError.ValidationFailed("Command cannot be null")),
+            null => ServiceResult<BooleanResultDto>.Failure(
+                BooleanResultDto.Empty,
+                ServiceError.ValidationFailed(SetConfigurationErrorMessages.CommandCannotBeNull)),
             _ => await ValidateAndProcessReorderAsync(command)
         };
 
         return result;
     }
 
-    public async Task<ServiceResult<bool>> DeleteAsync(SetConfigurationId id)
+    public async Task<ServiceResult<BooleanResultDto>> DeleteAsync(SetConfigurationId id)
     {
         var result = id.IsEmpty switch
         {
-            true => ServiceResult<bool>.Failure(
-                false,
+            true => ServiceResult<BooleanResultDto>.Failure(
+                BooleanResultDto.Empty,
                 ServiceError.InvalidFormat("SetConfigurationId", "GUID format")),
             false => await ValidateAndProcessDeleteAsync(id)
         };
@@ -161,36 +162,36 @@ public class SetConfigurationService : ISetConfigurationService
         return result;
     }
 
-    public async Task<ServiceResult<bool>> ExistsAsync(SetConfigurationId id)
+    public async Task<ServiceResult<BooleanResultDto>> ExistsAsync(SetConfigurationId id)
     {
         if (id.IsEmpty)
-            return ServiceResult<bool>.Success(false);
+            return ServiceResult<BooleanResultDto>.Success(BooleanResultDto.Create(false));
             
-        return await ServiceValidate.Build<bool>()
+        return await ServiceValidate.Build<BooleanResultDto>()
             .WhenValidAsync(async () =>
             {
                 using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
                 var repository = unitOfWork.GetRepository<ISetConfigurationRepository>();
                 var setConfiguration = await repository.GetByIdAsync(id);
-                return ServiceResult<bool>.Success(setConfiguration != null && !setConfiguration.IsEmpty);
+                return ServiceResult<BooleanResultDto>.Success(BooleanResultDto.Create(setConfiguration != null && !setConfiguration.IsEmpty));
             });
     }
 
-    public async Task<ServiceResult<bool>> ExistsAsync(WorkoutTemplateExerciseId workoutTemplateExerciseId, int setNumber)
+    public async Task<ServiceResult<BooleanResultDto>> ExistsAsync(WorkoutTemplateExerciseId workoutTemplateExerciseId, int setNumber)
     {
         if (workoutTemplateExerciseId.IsEmpty)
-            return ServiceResult<bool>.Success(false);
+            return ServiceResult<BooleanResultDto>.Success(BooleanResultDto.Create(false));
             
         if (setNumber <= 0)
-            return ServiceResult<bool>.Success(false);
+            return ServiceResult<BooleanResultDto>.Success(BooleanResultDto.Create(false));
             
-        return await ServiceValidate.Build<bool>()
+        return await ServiceValidate.Build<BooleanResultDto>()
             .WhenValidAsync(async () =>
             {
                 using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
                 var repository = unitOfWork.GetRepository<ISetConfigurationRepository>();
                 var exists = await repository.ExistsAsync(workoutTemplateExerciseId, setNumber);
-                return ServiceResult<bool>.Success(exists);
+                return ServiceResult<BooleanResultDto>.Success(BooleanResultDto.Create(exists));
             });
     }
 
@@ -206,7 +207,7 @@ public class SetConfigurationService : ISetConfigurationService
         {
             true => ServiceResult<SetConfigurationDto>.Failure(
                 new SetConfigurationDto(),
-                ServiceError.NotFound("Set configuration not found")),
+                ServiceError.NotFound(SetConfigurationErrorMessages.NotFound)),
             false => ServiceResult<SetConfigurationDto>.Success(MapToDto(setConfiguration))
         };
 
@@ -233,7 +234,7 @@ public class SetConfigurationService : ISetConfigurationService
 
     private async Task<ServiceResult<SetConfigurationDto>> ValidateAndProcessCreateAsync(CreateSetConfigurationCommand command)
     {
-        var validationResult = ValidateCreateCommand(command);
+        var validationResult = IsCreateCommandValid(command);
         
         var result = validationResult.IsValid switch
         {
@@ -286,7 +287,7 @@ public class SetConfigurationService : ISetConfigurationService
 
     private async Task<ServiceResult<IEnumerable<SetConfigurationDto>>> ValidateAndProcessBulkCreateAsync(CreateBulkSetConfigurationsCommand command)
     {
-        var validationResult = ValidateBulkCreateCommand(command);
+        var validationResult = IsBulkCreateCommandValid(command);
         
         var result = validationResult.IsValid switch
         {
@@ -334,7 +335,7 @@ public class SetConfigurationService : ISetConfigurationService
 
     private async Task<ServiceResult<SetConfigurationDto>> ValidateAndProcessUpdateAsync(UpdateSetConfigurationCommand command)
     {
-        var validationResult = ValidateUpdateCommand(command);
+        var validationResult = IsUpdateCommandValid(command);
         
         var result = validationResult.IsValid switch
         {
@@ -358,7 +359,7 @@ public class SetConfigurationService : ISetConfigurationService
         {
             true => ServiceResult<SetConfigurationDto>.Failure(
                 new SetConfigurationDto(),
-                ServiceError.NotFound("Set configuration not found")),
+                ServiceError.NotFound(SetConfigurationErrorMessages.NotFound)),
             false => await UpdateExistingSetConfigurationAsync(repository, unitOfWork, existing, command)
         };
 
@@ -402,7 +403,7 @@ public class SetConfigurationService : ISetConfigurationService
 
     private async Task<ServiceResult<int>> ValidateAndProcessBulkUpdateAsync(UpdateBulkSetConfigurationsCommand command)
     {
-        var validationResult = ValidateBulkUpdateCommand(command);
+        var validationResult = IsBulkUpdateCommandValid(command);
         
         var result = validationResult.IsValid switch
         {
@@ -430,7 +431,7 @@ public class SetConfigurationService : ISetConfigurationService
             {
                 return ServiceResult<int>.Failure(
                     0,
-                    ServiceError.NotFound($"Set configuration {updateData.SetConfigurationId} not found"));
+                    ServiceError.NotFound(string.Format(SetConfigurationErrorMessages.SetConfigurationNotFoundWithId, updateData.SetConfigurationId)));
             }
 
             var updateResult = SetConfiguration.Handler.Update(
@@ -456,14 +457,14 @@ public class SetConfigurationService : ISetConfigurationService
         return ServiceResult<int>.Success(updatedCount);
     }
 
-    private async Task<ServiceResult<bool>> ValidateAndProcessReorderAsync(ReorderSetConfigurationsCommand command)
+    private async Task<ServiceResult<BooleanResultDto>> ValidateAndProcessReorderAsync(ReorderSetConfigurationsCommand command)
     {
-        var validationResult = ValidateReorderCommand(command);
+        var validationResult = IsReorderCommandValid(command);
         
         var result = validationResult.IsValid switch
         {
-            false => ServiceResult<bool>.Failure(
-                false,
+            false => ServiceResult<BooleanResultDto>.Failure(
+                BooleanResultDto.Empty,
                 ServiceError.ValidationFailed(string.Join("; ", validationResult.Errors))),
             true => await ProcessReorderAsync(command)
         };
@@ -471,7 +472,7 @@ public class SetConfigurationService : ISetConfigurationService
         return result;
     }
 
-    private async Task<ServiceResult<bool>> ProcessReorderAsync(ReorderSetConfigurationsCommand command)
+    private async Task<ServiceResult<BooleanResultDto>> ProcessReorderAsync(ReorderSetConfigurationsCommand command)
     {
         using var unitOfWork = _unitOfWorkProvider.CreateWritable();
         var repository = unitOfWork.GetRepository<ISetConfigurationRepository>();
@@ -480,22 +481,22 @@ public class SetConfigurationService : ISetConfigurationService
         
         var result = success switch
         {
-            false => ServiceResult<bool>.Failure(
-                false,
-                ServiceError.ValidationFailed("Failed to reorder set configurations")),
+            false => ServiceResult<BooleanResultDto>.Failure(
+                BooleanResultDto.Empty,
+                ServiceError.ValidationFailed(SetConfigurationErrorMessages.FailedToReorderSetConfigurations)),
             true => await CommitReorderAsync(unitOfWork)
         };
 
         return result;
     }
 
-    private async Task<ServiceResult<bool>> CommitReorderAsync(IWritableUnitOfWork<FitnessDbContext> unitOfWork)
+    private async Task<ServiceResult<BooleanResultDto>> CommitReorderAsync(IWritableUnitOfWork<FitnessDbContext> unitOfWork)
     {
         await unitOfWork.CommitAsync();
-        return ServiceResult<bool>.Success(true);
+        return ServiceResult<BooleanResultDto>.Success(BooleanResultDto.Create(true));
     }
 
-    private async Task<ServiceResult<bool>> ValidateAndProcessDeleteAsync(SetConfigurationId id)
+    private async Task<ServiceResult<BooleanResultDto>> ValidateAndProcessDeleteAsync(SetConfigurationId id)
     {
         using var unitOfWork = _unitOfWorkProvider.CreateWritable();
         var repository = unitOfWork.GetRepository<ISetConfigurationRepository>();
@@ -504,16 +505,16 @@ public class SetConfigurationService : ISetConfigurationService
         
         var result = (existing == null || existing.IsEmpty) switch
         {
-            true => ServiceResult<bool>.Failure(
-                false,
-                ServiceError.NotFound("Set configuration not found")),
+            true => ServiceResult<BooleanResultDto>.Failure(
+                BooleanResultDto.Empty,
+                ServiceError.NotFound(SetConfigurationErrorMessages.NotFound)),
             false => await ProcessDeleteAsync(repository, unitOfWork, id)
         };
 
         return result;
     }
 
-    private async Task<ServiceResult<bool>> ProcessDeleteAsync(
+    private async Task<ServiceResult<BooleanResultDto>> ProcessDeleteAsync(
         ISetConfigurationRepository repository,
         IWritableUnitOfWork<FitnessDbContext> unitOfWork,
         SetConfigurationId id)
@@ -521,7 +522,7 @@ public class SetConfigurationService : ISetConfigurationService
         var success = await repository.DeleteAsync(id);
         await unitOfWork.CommitAsync();
 
-        return ServiceResult<bool>.Success(success);
+        return ServiceResult<BooleanResultDto>.Success(BooleanResultDto.Create(success));
     }
 
     private async Task<ServiceResult<int>> ValidateAndProcessBulkDeleteAsync(WorkoutTemplateExerciseId workoutTemplateExerciseId)
@@ -554,146 +555,146 @@ public class SetConfigurationService : ISetConfigurationService
 
     // Validation methods
 
-    private ValidationResult ValidateCreateCommand(CreateSetConfigurationCommand command)
+    private ValidationResult IsCreateCommandValid(CreateSetConfigurationCommand command)
     {
         var errors = new List<string>();
 
         if (command.WorkoutTemplateExerciseId.IsEmpty)
-            errors.Add("WorkoutTemplateExerciseId is required");
+            errors.Add(SetConfigurationErrorMessages.WorkoutTemplateExerciseIdRequired);
 
         if (command.SetNumber.HasValue && command.SetNumber.Value <= 0)
-            errors.Add("SetNumber must be greater than 0");
+            errors.Add(SetConfigurationErrorMessages.SetNumberMustBeGreaterThanZero);
 
         if (command.RestSeconds < 0)
-            errors.Add("RestSeconds cannot be negative");
+            errors.Add(SetConfigurationErrorMessages.RestSecondsCannotBeNegative);
 
         if (command.TargetWeight.HasValue && command.TargetWeight.Value < 0)
-            errors.Add("TargetWeight cannot be negative");
+            errors.Add(SetConfigurationErrorMessages.TargetWeightCannotBeNegative);
 
         if (command.TargetTimeSeconds.HasValue && command.TargetTimeSeconds.Value <= 0)
-            errors.Add("TargetTimeSeconds must be greater than 0");
+            errors.Add(SetConfigurationErrorMessages.TargetTimeSecondsMustBeGreaterThanZero);
 
         if (command.UserId.IsEmpty)
-            errors.Add("UserId is required");
+            errors.Add(SetConfigurationErrorMessages.UserIdRequired);
 
         return new ValidationResult(errors);
     }
 
-    private ValidationResult ValidateBulkCreateCommand(CreateBulkSetConfigurationsCommand command)
+    private ValidationResult IsBulkCreateCommandValid(CreateBulkSetConfigurationsCommand command)
     {
         var errors = new List<string>();
 
         if (command.WorkoutTemplateExerciseId.IsEmpty)
-            errors.Add("WorkoutTemplateExerciseId is required");
+            errors.Add(SetConfigurationErrorMessages.WorkoutTemplateExerciseIdRequired);
 
         if (!command.SetConfigurations.Any())
-            errors.Add("At least one set configuration is required");
+            errors.Add(SetConfigurationErrorMessages.AtLeastOneSetConfigurationRequired);
 
         if (command.UserId.IsEmpty)
-            errors.Add("UserId is required");
+            errors.Add(SetConfigurationErrorMessages.UserIdRequired);
 
         // Validate individual set configurations
         var setNumbers = new HashSet<int>();
         foreach (var setData in command.SetConfigurations)
         {
             if (setData.SetNumber <= 0)
-                errors.Add($"SetNumber {setData.SetNumber} must be greater than 0");
+                errors.Add(SetConfigurationErrorMessages.SetNumberMustBeGreaterThanZero);
 
             if (!setNumbers.Add(setData.SetNumber))
-                errors.Add($"Duplicate SetNumber {setData.SetNumber} found");
+                errors.Add(string.Format(SetConfigurationErrorMessages.DuplicateSetNumberFound, setData.SetNumber));
 
             if (setData.RestSeconds < 0)
-                errors.Add($"RestSeconds cannot be negative for set {setData.SetNumber}");
+                errors.Add(string.Format(SetConfigurationErrorMessages.RestSecondsCannotBeNegativeForSet, setData.SetNumber));
 
             if (setData.TargetWeight.HasValue && setData.TargetWeight.Value < 0)
-                errors.Add($"TargetWeight cannot be negative for set {setData.SetNumber}");
+                errors.Add(string.Format(SetConfigurationErrorMessages.TargetWeightCannotBeNegativeForSet, setData.SetNumber));
 
             if (setData.TargetTimeSeconds.HasValue && setData.TargetTimeSeconds.Value <= 0)
-                errors.Add($"TargetTimeSeconds must be greater than 0 for set {setData.SetNumber}");
+                errors.Add(string.Format(SetConfigurationErrorMessages.TargetTimeSecondsMustBeGreaterThanZeroForSet, setData.SetNumber));
         }
 
         return new ValidationResult(errors);
     }
 
-    private ValidationResult ValidateUpdateCommand(UpdateSetConfigurationCommand command)
+    private ValidationResult IsUpdateCommandValid(UpdateSetConfigurationCommand command)
     {
         var errors = new List<string>();
 
         if (command.SetConfigurationId.IsEmpty)
-            errors.Add("SetConfigurationId is required");
+            errors.Add(SetConfigurationErrorMessages.SetConfigurationIdRequired);
 
         if (command.RestSeconds < 0)
-            errors.Add("RestSeconds cannot be negative");
+            errors.Add(SetConfigurationErrorMessages.RestSecondsCannotBeNegative);
 
         if (command.TargetWeight.HasValue && command.TargetWeight.Value < 0)
-            errors.Add("TargetWeight cannot be negative");
+            errors.Add(SetConfigurationErrorMessages.TargetWeightCannotBeNegative);
 
         if (command.TargetTimeSeconds.HasValue && command.TargetTimeSeconds.Value <= 0)
-            errors.Add("TargetTimeSeconds must be greater than 0");
+            errors.Add(SetConfigurationErrorMessages.TargetTimeSecondsMustBeGreaterThanZero);
 
         if (command.UserId.IsEmpty)
-            errors.Add("UserId is required");
+            errors.Add(SetConfigurationErrorMessages.UserIdRequired);
 
         return new ValidationResult(errors);
     }
 
-    private ValidationResult ValidateBulkUpdateCommand(UpdateBulkSetConfigurationsCommand command)
+    private ValidationResult IsBulkUpdateCommandValid(UpdateBulkSetConfigurationsCommand command)
     {
         var errors = new List<string>();
 
         if (command.WorkoutTemplateExerciseId.IsEmpty)
-            errors.Add("WorkoutTemplateExerciseId is required");
+            errors.Add(SetConfigurationErrorMessages.WorkoutTemplateExerciseIdRequired);
 
         if (!command.SetConfigurationUpdates.Any())
-            errors.Add("At least one set configuration update is required");
+            errors.Add(SetConfigurationErrorMessages.AtLeastOneSetConfigurationUpdateRequired);
 
         if (command.UserId.IsEmpty)
-            errors.Add("UserId is required");
+            errors.Add(SetConfigurationErrorMessages.UserIdRequired);
 
         // Validate individual updates
         foreach (var updateData in command.SetConfigurationUpdates)
         {
             if (updateData.SetConfigurationId.IsEmpty)
-                errors.Add("SetConfigurationId is required for all updates");
+                errors.Add(SetConfigurationErrorMessages.SetConfigurationIdRequiredForAllUpdates);
 
             if (updateData.RestSeconds < 0)
-                errors.Add($"RestSeconds cannot be negative for set {updateData.SetConfigurationId}");
+                errors.Add(string.Format(SetConfigurationErrorMessages.RestSecondsCannotBeNegativeForSet, updateData.SetConfigurationId));
 
             if (updateData.TargetWeight.HasValue && updateData.TargetWeight.Value < 0)
-                errors.Add($"TargetWeight cannot be negative for set {updateData.SetConfigurationId}");
+                errors.Add(string.Format(SetConfigurationErrorMessages.TargetWeightCannotBeNegativeForSet, updateData.SetConfigurationId));
 
             if (updateData.TargetTimeSeconds.HasValue && updateData.TargetTimeSeconds.Value <= 0)
-                errors.Add($"TargetTimeSeconds must be greater than 0 for set {updateData.SetConfigurationId}");
+                errors.Add(string.Format(SetConfigurationErrorMessages.TargetTimeSecondsMustBeGreaterThanZeroForSet, updateData.SetConfigurationId));
         }
 
         return new ValidationResult(errors);
     }
 
-    private ValidationResult ValidateReorderCommand(ReorderSetConfigurationsCommand command)
+    private ValidationResult IsReorderCommandValid(ReorderSetConfigurationsCommand command)
     {
         var errors = new List<string>();
 
         if (command.WorkoutTemplateExerciseId.IsEmpty)
-            errors.Add("WorkoutTemplateExerciseId is required");
+            errors.Add(SetConfigurationErrorMessages.WorkoutTemplateExerciseIdRequired);
 
         if (!command.SetReorders.Any())
-            errors.Add("At least one set reorder is required");
+            errors.Add(SetConfigurationErrorMessages.AtLeastOneSetReorderRequired);
 
         if (command.UserId.IsEmpty)
-            errors.Add("UserId is required");
+            errors.Add(SetConfigurationErrorMessages.UserIdRequired);
 
         // Validate set numbers
         var setNumbers = new HashSet<int>();
         foreach (var reorder in command.SetReorders)
         {
             if (reorder.Key.IsEmpty)
-                errors.Add("SetConfigurationId is required for all reorders");
+                errors.Add(SetConfigurationErrorMessages.SetConfigurationIdRequiredForAllReorders);
 
             if (reorder.Value <= 0)
-                errors.Add($"SetNumber {reorder.Value} must be greater than 0");
+                errors.Add(SetConfigurationErrorMessages.SetNumberMustBeGreaterThanZero);
 
             if (!setNumbers.Add(reorder.Value))
-                errors.Add($"Duplicate SetNumber {reorder.Value} in reorder command");
+                errors.Add(string.Format(SetConfigurationErrorMessages.DuplicateSetNumberInReorder, reorder.Value));
         }
 
         return new ValidationResult(errors);

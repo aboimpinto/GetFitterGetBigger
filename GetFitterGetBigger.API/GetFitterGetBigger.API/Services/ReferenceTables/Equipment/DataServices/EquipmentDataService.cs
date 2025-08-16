@@ -122,10 +122,12 @@ public class EquipmentDataService : IEquipmentDataService
         using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
         var repository = unitOfWork.GetRepository<IEquipmentRepository>();
         
-        var isUnique = excludeId.HasValue
-            ? !await repository.ExistsAsync(name.Trim(), excludeId.Value)
-            : !await repository.ExistsAsync(name.Trim());
+        // Positive assertion: check if name exists, then determine uniqueness
+        var nameExists = excludeId.HasValue
+            ? await repository.ExistsAsync(name.Trim(), excludeId.Value)
+            : await repository.ExistsAsync(name.Trim());
         
+        var isUnique = !nameExists;
         _logger.LogDebug("Checked name uniqueness for '{Name}' (excluding {ExcludeId}): {IsUnique}", name, excludeId, isUnique);
         return isUnique;
     }
@@ -136,7 +138,9 @@ public class EquipmentDataService : IEquipmentDataService
         using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
         var repository = unitOfWork.GetRepository<IEquipmentRepository>();
         
-        var canDelete = !await repository.IsInUseAsync(id);
+        // Positive assertion: check if equipment is in use, then determine if can delete
+        var isInUse = await repository.IsInUseAsync(id);
+        var canDelete = !isInUse;
         
         _logger.LogDebug("Checked if equipment {Id} can be deleted: {CanDelete}", id, canDelete);
         return canDelete;

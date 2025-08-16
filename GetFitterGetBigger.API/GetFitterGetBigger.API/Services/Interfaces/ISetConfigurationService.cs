@@ -66,14 +66,14 @@ public interface ISetConfigurationService
     /// </summary>
     /// <param name="command">The reorder command with new set number assignments</param>
     /// <returns>ServiceResult with success or failure</returns>
-    Task<ServiceResult<bool>> ReorderSetsAsync(ReorderSetConfigurationsCommand command);
+    Task<ServiceResult<BooleanResultDto>> ReorderSetsAsync(ReorderSetConfigurationsCommand command);
     
     /// <summary>
     /// Deletes a set configuration
     /// </summary>
     /// <param name="id">The set configuration ID</param>
     /// <returns>ServiceResult with success or failure</returns>
-    Task<ServiceResult<bool>> DeleteAsync(SetConfigurationId id);
+    Task<ServiceResult<BooleanResultDto>> DeleteAsync(SetConfigurationId id);
     
     /// <summary>
     /// Deletes all set configurations for a workout template exercise
@@ -87,7 +87,7 @@ public interface ISetConfigurationService
     /// </summary>
     /// <param name="id">The set configuration ID</param>
     /// <returns>A service result containing true if the set configuration exists</returns>
-    Task<ServiceResult<bool>> ExistsAsync(SetConfigurationId id);
+    Task<ServiceResult<BooleanResultDto>> ExistsAsync(SetConfigurationId id);
     
     /// <summary>
     /// Checks if a set configuration exists for a specific exercise and set number
@@ -95,5 +95,5 @@ public interface ISetConfigurationService
     /// <param name="workoutTemplateExerciseId">The workout template exercise ID</param>
     /// <param name="setNumber">The set number</param>
     /// <returns>A service result containing true if the set configuration exists</returns>
-    Task<ServiceResult<bool>> ExistsAsync(WorkoutTemplateExerciseId workoutTemplateExerciseId, int setNumber);
+    Task<ServiceResult<BooleanResultDto>> ExistsAsync(WorkoutTemplateExerciseId workoutTemplateExerciseId, int setNumber);
 }

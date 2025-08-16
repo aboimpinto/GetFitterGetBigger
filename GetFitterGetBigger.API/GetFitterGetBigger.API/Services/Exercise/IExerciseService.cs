@@ -49,5 +49,5 @@ public interface IExerciseService
     /// If the exercise has references, it will be soft deleted (marked as inactive).
     /// If the exercise has no references, it will be hard deleted from the database.
     /// </remarks>
-    Task<ServiceResult<bool>> DeleteAsync(ExerciseId id);
+    Task<ServiceResult<BooleanResultDto>> DeleteAsync(ExerciseId id);
 }

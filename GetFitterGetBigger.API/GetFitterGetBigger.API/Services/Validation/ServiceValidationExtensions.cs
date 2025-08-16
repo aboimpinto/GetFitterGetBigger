@@ -1,3 +1,4 @@
+using GetFitterGetBigger.API.DTOs;
 using GetFitterGetBigger.API.DTOs.Interfaces;
 using GetFitterGetBigger.API.Services.Results;
 
@@ -104,7 +105,7 @@ public static class ServiceValidationExtensions
     /// <returns>The validation instance for chaining</returns>
     public static async Task<ServiceValidation<T>> EnsureServiceResultAsync<T>(
         this ServiceValidation<T> validation,
-        Func<Task<ServiceResult<bool>>> serviceResultFunc)
+        Func<Task<ServiceResult<BooleanResultDto>>> serviceResultFunc)
         where T : class, IEmptyDto<T>
     {
         // If validation already has errors, don't execute the service call
@@ -213,7 +214,7 @@ public static class ServiceValidationExtensions
     /// <returns>The validation instance for continued chaining</returns>
     public static async Task<ServiceValidation<T>> EnsureServiceResultAsync<T>(
         this Task<ServiceValidation<T>> validationTask,
-        Func<Task<ServiceResult<bool>>> serviceResultFunc)
+        Func<Task<ServiceResult<BooleanResultDto>>> serviceResultFunc)
         where T : class, IEmptyDto<T>
     {
         var validation = await validationTask;

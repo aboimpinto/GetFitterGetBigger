@@ -1,27 +1,13 @@
 using GetFitterGetBigger.API.Models.Entities;
 using GetFitterGetBigger.API.Models.SpecializedIds;
-using Olimpo.EntityFramework.Persistency;
 
 namespace GetFitterGetBigger.API.Repositories.Interfaces;
 
 /// <summary>
 /// Repository interface for Equipment data
 /// </summary>
-public interface IEquipmentRepository : IRepository
+public interface IEquipmentRepository : IDomainRepository<Equipment, EquipmentId>
 {
-    /// <summary>
-    /// Gets all equipment
-    /// </summary>
-    /// <returns>A collection of equipment</returns>
-    Task<IEnumerable<Equipment>> GetAllAsync();
-
-    /// <summary>
-    /// Gets equipment by its ID
-    /// </summary>
-    /// <param name="id">The ID of the equipment to retrieve</param>
-    /// <returns>The equipment if found, Equipment.Empty otherwise</returns>
-    Task<Equipment> GetByIdAsync(EquipmentId id);
-
     /// <summary>
     /// Gets equipment by its name
     /// </summary>
@@ -49,14 +35,6 @@ public interface IEquipmentRepository : IRepository
     /// <param name="id">The ID of the equipment to deactivate</param>
     /// <returns>True if the equipment was deactivated, false if not found</returns>
     Task<bool> DeactivateAsync(EquipmentId id);
-
-    /// <summary>
-    /// Checks if equipment exists by its ID
-    /// Uses efficient database query with .Any() to avoid loading entire entity
-    /// </summary>
-    /// <param name="id">The ID of the equipment to check</param>
-    /// <returns>True if the equipment exists and is active, false otherwise</returns>
-    Task<bool> ExistsAsync(EquipmentId id);
     
     /// <summary>
     /// Checks if equipment with the given name exists

@@ -4,20 +4,19 @@ using GetFitterGetBigger.API.Models.SpecializedIds;
 using GetFitterGetBigger.API.Repositories.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using Olimpo.EntityFramework.Persistency;
 
 namespace GetFitterGetBigger.API.Repositories.Implementations;
 
 /// <summary>
 /// Repository implementation for Equipment data
 /// </summary>
-public class EquipmentRepository : RepositoryBase<FitnessDbContext>, IEquipmentRepository
+public class EquipmentRepository : DomainRepository<Equipment, EquipmentId, FitnessDbContext>, IEquipmentRepository
 {
     /// <summary>
-    /// Gets all equipment
+    /// Gets all active equipment ordered by name
     /// </summary>
-    /// <returns>A collection of equipment</returns>
-    public async Task<IEnumerable<Equipment>> GetAllAsync() =>
+    /// <returns>A collection of active equipment</returns>
+    public override async Task<IEnumerable<Equipment>> GetAllAsync() =>
         await Context.Equipment
             .AsNoTracking()
             .Where(e => e.IsActive)
@@ -25,11 +24,11 @@ public class EquipmentRepository : RepositoryBase<FitnessDbContext>, IEquipmentR
             .ToListAsync();
 
     /// <summary>
-    /// Gets equipment by its ID
+    /// Gets equipment by its ID (only active)
     /// </summary>
     /// <param name="id">The ID of the equipment to retrieve</param>
-    /// <returns>The equipment if found, Equipment.Empty otherwise</returns>
-    public async Task<Equipment> GetByIdAsync(EquipmentId id)
+    /// <returns>The equipment if found and active, Equipment.Empty otherwise</returns>
+    public override async Task<Equipment> GetByIdAsync(EquipmentId id)
     {
         // Use AsNoTracking for read operations to avoid tracking conflicts
         var equipment = await Context.Equipment
@@ -39,6 +38,16 @@ public class EquipmentRepository : RepositoryBase<FitnessDbContext>, IEquipmentR
 
         return equipment ?? Equipment.Empty;
     }
+
+    /// <summary>
+    /// Checks if equipment exists by its ID (only active equipment)
+    /// </summary>
+    /// <param name="id">The ID of the equipment to check</param>
+    /// <returns>True if the equipment exists and is active, false otherwise</returns>
+    public override async Task<bool> ExistsAsync(EquipmentId id) =>
+        await Context.Equipment
+            .AsNoTracking()
+            .AnyAsync(e => e.EquipmentId == id && e.IsActive);
 
     /// <summary>
     /// Gets equipment by its name (case-insensitive)
@@ -109,17 +118,6 @@ public class EquipmentRepository : RepositoryBase<FitnessDbContext>, IEquipmentR
     }
 
     /// <summary>
-    /// Checks if equipment exists by its ID
-    /// Uses efficient database query with .Any() to avoid loading entire entity
-    /// </summary>
-    /// <param name="id">The ID of the equipment to check</param>
-    /// <returns>True if the equipment exists and is active, false otherwise</returns>
-    public async Task<bool> ExistsAsync(EquipmentId id) =>
-        await Context.Equipment
-            .AsNoTracking()
-            .AnyAsync(e => e.EquipmentId == id && e.IsActive);
-    
-    /// <summary>
     /// Checks if equipment with the given name exists
     /// </summary>
     /// <param name="name">The name to check</param>
@@ -161,18 +159,4 @@ public class EquipmentRepository : RepositoryBase<FitnessDbContext>, IEquipmentR
         return hasExercises;
     }
 
-    /// <summary>
-    /// Detaches any tracked entity with the same ID to prevent tracking conflicts
-    /// </summary>
-    /// <param name="equipmentId">The ID of the equipment to detach</param>
-    private void DetachTrackedEntity(EquipmentId equipmentId)
-    {
-        var tracked = Context.ChangeTracker.Entries<Equipment>()
-            .FirstOrDefault(e => e.Entity.EquipmentId == equipmentId);
-
-        if (tracked != null)
-        {
-            tracked.State = EntityState.Detached;
-        }
-    }
 }

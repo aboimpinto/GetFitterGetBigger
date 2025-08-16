@@ -47,25 +47,7 @@ public class ExerciseTypeService : IExerciseTypeService
         return await ServiceValidate.For<ExerciseTypeDto>()
             .EnsureNotEmpty(id, ExerciseTypeErrorMessages.InvalidIdFormat)
             .MatchAsync(
-                whenValid: async () =>
-                {
-                    var cacheKey = CacheKeyGenerator.GetByIdKey("ExerciseTypes", id.ToString());
-                    
-                    return await CacheLoad.For<ExerciseTypeDto>(_cacheService, cacheKey)
-                        .WithLogging(_logger, "ExerciseType")
-                        .WithAutoCacheAsync(async () =>
-                        {
-                            var result = await _dataService.GetByIdAsync(id);
-                            // Convert Empty to NotFound at the service layer
-                            if (result.IsSuccess && result.Data.IsEmpty)
-                            {
-                                return ServiceResult<ExerciseTypeDto>.Failure(
-                                    ExerciseTypeDto.Empty,
-                                    ServiceError.NotFound("ExerciseType", id.ToString()));
-                            }
-                            return result;
-                        });
-                }
+                whenValid: async () => await LoadByIdFromCacheAsync(id)
             );
     }
     
@@ -82,25 +64,7 @@ public class ExerciseTypeService : IExerciseTypeService
         return await ServiceValidate.For<ExerciseTypeDto>()
             .EnsureNotWhiteSpace(value, ExerciseTypeErrorMessages.ValueCannotBeEmpty)
             .MatchAsync(
-                whenValid: async () =>
-                {
-                    var cacheKey = CacheKeyGenerator.GetByValueKey("ExerciseTypes", value);
-                    
-                    return await CacheLoad.For<ExerciseTypeDto>(_cacheService, cacheKey)
-                        .WithLogging(_logger, "ExerciseType")
-                        .WithAutoCacheAsync(async () =>
-                        {
-                            var result = await _dataService.GetByValueAsync(value);
-                            // Convert Empty to NotFound at the service layer
-                            if (result.IsSuccess && result.Data.IsEmpty)
-                            {
-                                return ServiceResult<ExerciseTypeDto>.Failure(
-                                    ExerciseTypeDto.Empty,
-                                    ServiceError.NotFound("ExerciseType", value));
-                            }
-                            return result;
-                        });
-                }
+                whenValid: async () => await LoadByValueFromCacheAsync(value)
             );
     }
 
@@ -110,14 +74,7 @@ public class ExerciseTypeService : IExerciseTypeService
         return await ServiceValidate.For<BooleanResultDto>()
             .EnsureNotEmpty(id, ExerciseTypeErrorMessages.InvalidIdFormat)
             .MatchAsync(
-                whenValid: async () =>
-                {
-                    // Leverage the GetById cache for existence checks
-                    var result = await GetByIdAsync(id);
-                    return ServiceResult<BooleanResultDto>.Success(
-                        BooleanResultDto.Create(result.IsSuccess && !result.Data.IsEmpty)
-                    );
-                }
+                whenValid: async () => await CheckExistenceAsync(id)
             );
     }
     
@@ -147,5 +104,51 @@ public class ExerciseTypeService : IExerciseTypeService
         
         // Check if any is REST type using data service
         return await _dataService.AnyIsRestTypeAsync(exerciseTypeIds);
+    }
+
+    // Private helper methods for single operations
+    private async Task<ServiceResult<ExerciseTypeDto>> LoadByIdFromCacheAsync(ExerciseTypeId id)
+    {
+        var cacheKey = CacheKeyGenerator.GetByIdKey("ExerciseTypes", id.ToString());
+        
+        return await CacheLoad.For<ExerciseTypeDto>(_cacheService, cacheKey)
+            .WithLogging(_logger, "ExerciseType")
+            .WithAutoCacheAsync(async () =>
+            {
+                var result = await _dataService.GetByIdAsync(id);
+                // Convert Empty to NotFound at the service layer
+                return result.IsSuccess && result.Data.IsEmpty
+                    ? ServiceResult<ExerciseTypeDto>.Failure(
+                        ExerciseTypeDto.Empty,
+                        ServiceError.NotFound("ExerciseType", id.ToString()))
+                    : result;
+            });
+    }
+
+    private async Task<ServiceResult<ExerciseTypeDto>> LoadByValueFromCacheAsync(string value)
+    {
+        var cacheKey = CacheKeyGenerator.GetByValueKey("ExerciseTypes", value);
+        
+        return await CacheLoad.For<ExerciseTypeDto>(_cacheService, cacheKey)
+            .WithLogging(_logger, "ExerciseType")
+            .WithAutoCacheAsync(async () =>
+            {
+                var result = await _dataService.GetByValueAsync(value);
+                // Convert Empty to NotFound at the service layer
+                return result.IsSuccess && result.Data.IsEmpty
+                    ? ServiceResult<ExerciseTypeDto>.Failure(
+                        ExerciseTypeDto.Empty,
+                        ServiceError.NotFound("ExerciseType", value))
+                    : result;
+            });
+    }
+
+    private async Task<ServiceResult<BooleanResultDto>> CheckExistenceAsync(ExerciseTypeId id)
+    {
+        // Leverage the GetById cache for existence checks
+        var result = await GetByIdAsync(id);
+        return ServiceResult<BooleanResultDto>.Success(
+            BooleanResultDto.Create(result.IsSuccess && !result.Data.IsEmpty)
+        );
     }
 }

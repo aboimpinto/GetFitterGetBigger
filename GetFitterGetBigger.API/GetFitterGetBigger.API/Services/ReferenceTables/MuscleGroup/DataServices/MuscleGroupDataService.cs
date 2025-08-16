@@ -135,10 +135,12 @@ public class MuscleGroupDataService : IMuscleGroupDataService
         using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
         var repository = unitOfWork.GetRepository<IMuscleGroupRepository>();
         
-        var isUnique = excludeId.HasValue
-            ? !await repository.ExistsByNameAsync(name.Trim(), excludeId.Value)
-            : !await repository.ExistsByNameAsync(name.Trim());
+        // Positive assertion: check if name exists, then determine uniqueness
+        var nameExists = excludeId.HasValue
+            ? await repository.ExistsByNameAsync(name.Trim(), excludeId.Value)
+            : await repository.ExistsByNameAsync(name.Trim());
         
+        var isUnique = !nameExists;
         _logger.LogDebug("Checked name uniqueness for '{Name}' (excluding {ExcludeId}): {IsUnique}", name, excludeId, isUnique);
         return isUnique;
     }

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using GetFitterGetBigger.API.Constants.ErrorMessages;
 using GetFitterGetBigger.API.DTOs;
 using GetFitterGetBigger.API.Models;
 using GetFitterGetBigger.API.Models.Entities;
@@ -102,7 +103,7 @@ public class WorkoutTemplateExerciseService : IWorkoutTemplateExerciseService
         {
             return ServiceResult<WorkoutTemplateExerciseDto>.Failure(
                 new WorkoutTemplateExerciseDto(),
-                ServiceError.NotFound("Exercise not found"));
+                ServiceError.NotFound(WorkoutTemplateExerciseErrorMessages.ExerciseNotFound));
         }
         
         var result = ServiceResult<WorkoutTemplateExerciseDto>.Success(MapToDto(exercise));
@@ -117,7 +118,7 @@ public class WorkoutTemplateExerciseService : IWorkoutTemplateExerciseService
         {
             null => ServiceResult<WorkoutTemplateExerciseDto>.Failure(
                 new WorkoutTemplateExerciseDto(),
-                ServiceError.ValidationFailed("Command cannot be null")),
+                ServiceError.ValidationFailed(WorkoutTemplateExerciseErrorMessages.CommandCannotBeNull)),
             _ => await ValidateAndProcessAddExerciseAsync(command)
         };
         
@@ -126,7 +127,7 @@ public class WorkoutTemplateExerciseService : IWorkoutTemplateExerciseService
     
     private async Task<ServiceResult<WorkoutTemplateExerciseDto>> ValidateAndProcessAddExerciseAsync(AddExerciseToTemplateCommand command)
     {
-        var validationResult = ValidateAddExerciseCommand(command);
+        var validationResult = IsAddExerciseCommandValid(command);
         var result = validationResult.IsSuccess switch
         {
             false => validationResult,
@@ -136,7 +137,7 @@ public class WorkoutTemplateExerciseService : IWorkoutTemplateExerciseService
         return result;
     }
     
-    private ServiceResult<WorkoutTemplateExerciseDto> ValidateAddExerciseCommand(AddExerciseToTemplateCommand command)
+    private ServiceResult<WorkoutTemplateExerciseDto> IsAddExerciseCommandValid(AddExerciseToTemplateCommand command)
     {
         var result = (command.WorkoutTemplateId.IsEmpty, command.ExerciseId.IsEmpty, 
                      string.IsNullOrWhiteSpace(command.Zone), command.UserId.IsEmpty) switch
@@ -144,12 +145,12 @@ public class WorkoutTemplateExerciseService : IWorkoutTemplateExerciseService
             (true, _, _, _) or (_, true, _, _) or (_, _, true, _) or (_, _, _, true) => 
                 ServiceResult<WorkoutTemplateExerciseDto>.Failure(
                     new WorkoutTemplateExerciseDto(),
-                    ServiceError.ValidationFailed("Invalid command parameters")),
+                    ServiceError.ValidationFailed(WorkoutTemplateExerciseErrorMessages.InvalidCommandParameters)),
             _ => IsValidZone(command.Zone) switch
             {
                 false => ServiceResult<WorkoutTemplateExerciseDto>.Failure(
                     new WorkoutTemplateExerciseDto(),
-                    ServiceError.ValidationFailed($"Invalid zone: {command.Zone}. Must be Warmup, Main, or Cooldown")),
+                    ServiceError.ValidationFailed(string.Format(WorkoutTemplateExerciseErrorMessages.InvalidZoneWarmupMainCooldown, command.Zone))),
                 true => ServiceResult<WorkoutTemplateExerciseDto>.Success(new WorkoutTemplateExerciseDto()) // Dummy success
             }
         };
@@ -183,7 +184,7 @@ public class WorkoutTemplateExerciseService : IWorkoutTemplateExerciseService
         {
             return ServiceResult<WorkoutTemplateExerciseDto>.Failure(
                 new WorkoutTemplateExerciseDto(),
-                ServiceError.NotFound("Workout template not found"));
+                ServiceError.NotFound(WorkoutTemplateExerciseErrorMessages.WorkoutTemplateNotFound));
         }
         
         if (template.WorkoutState?.Value != "DRAFT")
@@ -209,7 +210,7 @@ public class WorkoutTemplateExerciseService : IWorkoutTemplateExerciseService
         {
             return ServiceResult<WorkoutTemplateExerciseDto>.Failure(
                 new WorkoutTemplateExerciseDto(),
-                ServiceError.NotFound("Exercise not found"));
+                ServiceError.NotFound(WorkoutTemplateExerciseErrorMessages.ExerciseNotFound));
         }
         
         var result = await CreateWorkoutTemplateExerciseAsync(unitOfWork, command);
@@ -263,7 +264,7 @@ public class WorkoutTemplateExerciseService : IWorkoutTemplateExerciseService
         {
             null => ServiceResult<WorkoutTemplateExerciseDto>.Failure(
                 new WorkoutTemplateExerciseDto(),
-                ServiceError.ValidationFailed("Command cannot be null")),
+                ServiceError.ValidationFailed(WorkoutTemplateExerciseErrorMessages.CommandCannotBeNull)),
             _ => await ValidateAndProcessUpdateExerciseAsync(command)
         };
         
@@ -293,7 +294,7 @@ public class WorkoutTemplateExerciseService : IWorkoutTemplateExerciseService
         {
             return ServiceResult<WorkoutTemplateExerciseDto>.Failure(
                 new WorkoutTemplateExerciseDto(),
-                ServiceError.NotFound("Template exercise not found"));
+                ServiceError.NotFound(WorkoutTemplateExerciseErrorMessages.TemplateExerciseNotFound));
         }
         
         var result = await ValidateAndPerformUpdateAsync(unitOfWork, exerciseTemplate, command, exerciseTemplateRepo);
@@ -351,20 +352,20 @@ public class WorkoutTemplateExerciseService : IWorkoutTemplateExerciseService
     }
 
     /// <inheritdoc />
-    public async Task<ServiceResult<bool>> RemoveExerciseAsync(WorkoutTemplateExerciseId workoutTemplateExerciseId)
+    public async Task<ServiceResult<BooleanResultDto>> RemoveExerciseAsync(WorkoutTemplateExerciseId workoutTemplateExerciseId)
     {
         var result = workoutTemplateExerciseId.IsEmpty switch
         {
-            true => ServiceResult<bool>.Failure(
-                false,
-                ServiceError.ValidationFailed("Invalid exercise ID")),
+            true => ServiceResult<BooleanResultDto>.Failure(
+                BooleanResultDto.Empty,
+                ServiceError.ValidationFailed(WorkoutTemplateExerciseErrorMessages.InvalidExerciseId)),
             false => await ProcessRemoveExerciseAsync(workoutTemplateExerciseId)
         };
         
         return result;
     }
     
-    private async Task<ServiceResult<bool>> ProcessRemoveExerciseAsync(WorkoutTemplateExerciseId workoutTemplateExerciseId)
+    private async Task<ServiceResult<BooleanResultDto>> ProcessRemoveExerciseAsync(WorkoutTemplateExerciseId workoutTemplateExerciseId)
     {
         using var unitOfWork = _unitOfWorkProvider.CreateWritable();
         var exerciseTemplateRepo = unitOfWork.GetRepository<IWorkoutTemplateExerciseRepository>();
@@ -372,9 +373,9 @@ public class WorkoutTemplateExerciseService : IWorkoutTemplateExerciseService
         var exerciseTemplate = await exerciseTemplateRepo.GetByIdWithDetailsAsync(workoutTemplateExerciseId);
         if (exerciseTemplate == null || exerciseTemplate.IsEmpty)
         {
-            return ServiceResult<bool>.Failure(
-                false,
-                ServiceError.NotFound("Template exercise not found"));
+            return ServiceResult<BooleanResultDto>.Failure(
+                BooleanResultDto.Empty,
+                ServiceError.NotFound(WorkoutTemplateExerciseErrorMessages.TemplateExerciseNotFound));
         }
         
         var result = await ValidateAndRemoveExerciseAsync(unitOfWork, exerciseTemplate, exerciseTemplateRepo, workoutTemplateExerciseId);
@@ -382,7 +383,7 @@ public class WorkoutTemplateExerciseService : IWorkoutTemplateExerciseService
         return result;
     }
     
-    private async Task<ServiceResult<bool>> ValidateAndRemoveExerciseAsync(
+    private async Task<ServiceResult<BooleanResultDto>> ValidateAndRemoveExerciseAsync(
         IWritableUnitOfWork<FitnessDbContext> unitOfWork,
         WorkoutTemplateExercise exerciseTemplate,
         IWorkoutTemplateExerciseRepository exerciseTemplateRepo,
@@ -392,15 +393,15 @@ public class WorkoutTemplateExerciseService : IWorkoutTemplateExerciseService
         var template = await templateRepo.GetByIdAsync(exerciseTemplate.WorkoutTemplateId);
         
         var result = template.WorkoutState.Value != "DRAFT"
-            ? ServiceResult<bool>.Failure(
-                false,
+            ? ServiceResult<BooleanResultDto>.Failure(
+                BooleanResultDto.Empty,
                 ServiceError.ValidationFailed("Can only remove exercises from templates in DRAFT state"))
             : await PerformRemoveExerciseAsync(exerciseTemplateRepo, workoutTemplateExerciseId, unitOfWork);
         
         return result;
     }
     
-    private async Task<ServiceResult<bool>> PerformRemoveExerciseAsync(
+    private async Task<ServiceResult<BooleanResultDto>> PerformRemoveExerciseAsync(
         IWorkoutTemplateExerciseRepository exerciseTemplateRepo,
         WorkoutTemplateExerciseId workoutTemplateExerciseId,
         IWritableUnitOfWork<FitnessDbContext> unitOfWork)
@@ -408,26 +409,26 @@ public class WorkoutTemplateExerciseService : IWorkoutTemplateExerciseService
         await exerciseTemplateRepo.DeleteAsync(workoutTemplateExerciseId);
         await unitOfWork.CommitAsync();
 
-        return ServiceResult<bool>.Success(true);
+        return ServiceResult<BooleanResultDto>.Success(BooleanResultDto.Create(true));
     }
 
     /// <inheritdoc />
-    public async Task<ServiceResult<bool>> ReorderExercisesAsync(ReorderTemplateExercisesCommand command)
+    public async Task<ServiceResult<BooleanResultDto>> ReorderExercisesAsync(ReorderTemplateExercisesCommand command)
     {
         var result = command switch
         {
-            null => ServiceResult<bool>.Failure(
-                false,
-                ServiceError.ValidationFailed("Command cannot be null")),
+            null => ServiceResult<BooleanResultDto>.Failure(
+                BooleanResultDto.Empty,
+                ServiceError.ValidationFailed(WorkoutTemplateExerciseErrorMessages.CommandCannotBeNull)),
             _ => await ValidateAndProcessReorderAsync(command)
         };
         
         return result;
     }
     
-    private async Task<ServiceResult<bool>> ValidateAndProcessReorderAsync(ReorderTemplateExercisesCommand command)
+    private async Task<ServiceResult<BooleanResultDto>> ValidateAndProcessReorderAsync(ReorderTemplateExercisesCommand command)
     {
-        var validationResult = ValidateReorderCommand(command);
+        var validationResult = IsReorderCommandValid(command);
         var result = validationResult.IsSuccess switch
         {
             false => validationResult,
@@ -437,28 +438,28 @@ public class WorkoutTemplateExerciseService : IWorkoutTemplateExerciseService
         return result;
     }
     
-    private ServiceResult<bool> ValidateReorderCommand(ReorderTemplateExercisesCommand command)
+    private ServiceResult<BooleanResultDto> IsReorderCommandValid(ReorderTemplateExercisesCommand command)
     {
         var result = (command.WorkoutTemplateId.IsEmpty, string.IsNullOrWhiteSpace(command.Zone),
                      command.ExerciseIds == null || command.ExerciseIds.Count == 0, command.UserId.IsEmpty) switch
         {
             (true, _, _, _) or (_, true, _, _) or (_, _, true, _) or (_, _, _, true) => 
-                ServiceResult<bool>.Failure(
-                    false,
-                    ServiceError.ValidationFailed("Invalid command parameters")),
+                ServiceResult<BooleanResultDto>.Failure(
+                    BooleanResultDto.Empty,
+                    ServiceError.ValidationFailed(WorkoutTemplateExerciseErrorMessages.InvalidCommandParameters)),
             _ => IsValidZone(command.Zone) switch
             {
-                false => ServiceResult<bool>.Failure(
-                    false,
-                    ServiceError.ValidationFailed($"Invalid zone: {command.Zone}")),
-                true => ServiceResult<bool>.Success(true) // Dummy success
+                false => ServiceResult<BooleanResultDto>.Failure(
+                    BooleanResultDto.Empty,
+                    ServiceError.ValidationFailed(string.Format(WorkoutTemplateExerciseErrorMessages.InvalidZone, command.Zone))),
+                true => ServiceResult<BooleanResultDto>.Success(BooleanResultDto.Create(true)) // Dummy success
             }
         };
         
         return result;
     }
     
-    private async Task<ServiceResult<bool>> ProcessReorderExercisesAsync(ReorderTemplateExercisesCommand command)
+    private async Task<ServiceResult<BooleanResultDto>> ProcessReorderExercisesAsync(ReorderTemplateExercisesCommand command)
     {
         using var unitOfWork = _unitOfWorkProvider.CreateWritable();
         
@@ -472,7 +473,7 @@ public class WorkoutTemplateExerciseService : IWorkoutTemplateExerciseService
         return result;
     }
     
-    private async Task<ServiceResult<bool>> ValidateTemplateForReorderAsync(
+    private async Task<ServiceResult<BooleanResultDto>> ValidateTemplateForReorderAsync(
         IWritableUnitOfWork<FitnessDbContext> unitOfWork,
         WorkoutTemplateId workoutTemplateId,
         UserId userId)
@@ -482,24 +483,24 @@ public class WorkoutTemplateExerciseService : IWorkoutTemplateExerciseService
         
         if (template == null || template.IsEmpty)
         {
-            return ServiceResult<bool>.Failure(
-                false,
-                ServiceError.NotFound("Workout template not found"));
+            return ServiceResult<BooleanResultDto>.Failure(
+                BooleanResultDto.Empty,
+                ServiceError.NotFound(WorkoutTemplateExerciseErrorMessages.WorkoutTemplateNotFound));
         }
         
         if (template.WorkoutState?.Value != "DRAFT")
         {
-            return ServiceResult<bool>.Failure(
-                false,
+            return ServiceResult<BooleanResultDto>.Failure(
+                BooleanResultDto.Empty,
                 ServiceError.ValidationFailed("Can only reorder exercises in templates in DRAFT state"));
         }
         
-        var result = ServiceResult<bool>.Success(true);
+        var result = ServiceResult<BooleanResultDto>.Success(BooleanResultDto.Create(true));
         
         return result;
     }
     
-    private async Task<ServiceResult<bool>> PerformReorderAsync(
+    private async Task<ServiceResult<BooleanResultDto>> PerformReorderAsync(
         IWritableUnitOfWork<FitnessDbContext> unitOfWork,
         ReorderTemplateExercisesCommand command)
     {
@@ -511,7 +512,7 @@ public class WorkoutTemplateExerciseService : IWorkoutTemplateExerciseService
         
         await unitOfWork.CommitAsync();
 
-        return ServiceResult<bool>.Success(true);
+        return ServiceResult<BooleanResultDto>.Success(BooleanResultDto.Create(true));
     }
 
     /// <inheritdoc />
@@ -521,7 +522,7 @@ public class WorkoutTemplateExerciseService : IWorkoutTemplateExerciseService
         {
             null => ServiceResult<WorkoutTemplateExerciseDto>.Failure(
                 new WorkoutTemplateExerciseDto(),
-                ServiceError.ValidationFailed("Command cannot be null")),
+                ServiceError.ValidationFailed(WorkoutTemplateExerciseErrorMessages.CommandCannotBeNull)),
             _ => await ValidateAndProcessChangeZoneAsync(command)
         };
         
@@ -530,7 +531,7 @@ public class WorkoutTemplateExerciseService : IWorkoutTemplateExerciseService
     
     private async Task<ServiceResult<WorkoutTemplateExerciseDto>> ValidateAndProcessChangeZoneAsync(ChangeExerciseZoneCommand command)
     {
-        var validationResult = ValidateChangeZoneCommand(command);
+        var validationResult = IsChangeZoneCommandValid(command);
         var result = validationResult.IsSuccess switch
         {
             false => validationResult,
@@ -540,7 +541,7 @@ public class WorkoutTemplateExerciseService : IWorkoutTemplateExerciseService
         return result;
     }
     
-    private ServiceResult<WorkoutTemplateExerciseDto> ValidateChangeZoneCommand(ChangeExerciseZoneCommand command)
+    private ServiceResult<WorkoutTemplateExerciseDto> IsChangeZoneCommandValid(ChangeExerciseZoneCommand command)
     {
         var result = (command.WorkoutTemplateExerciseId.IsEmpty, string.IsNullOrWhiteSpace(command.NewZone),
                      command.UserId.IsEmpty) switch
@@ -548,12 +549,12 @@ public class WorkoutTemplateExerciseService : IWorkoutTemplateExerciseService
             (true, _, _) or (_, true, _) or (_, _, true) => 
                 ServiceResult<WorkoutTemplateExerciseDto>.Failure(
                     new WorkoutTemplateExerciseDto(),
-                    ServiceError.ValidationFailed("Invalid command parameters")),
+                    ServiceError.ValidationFailed(WorkoutTemplateExerciseErrorMessages.InvalidCommandParameters)),
             _ => IsValidZone(command.NewZone) switch
             {
                 false => ServiceResult<WorkoutTemplateExerciseDto>.Failure(
                     new WorkoutTemplateExerciseDto(),
-                    ServiceError.ValidationFailed($"Invalid zone: {command.NewZone}")),
+                    ServiceError.ValidationFailed(string.Format(WorkoutTemplateExerciseErrorMessages.InvalidZone, command.NewZone))),
                 true => ServiceResult<WorkoutTemplateExerciseDto>.Success(new WorkoutTemplateExerciseDto()) // Dummy success
             }
         };
@@ -571,7 +572,7 @@ public class WorkoutTemplateExerciseService : IWorkoutTemplateExerciseService
         {
             return ServiceResult<WorkoutTemplateExerciseDto>.Failure(
                 new WorkoutTemplateExerciseDto(),
-                ServiceError.NotFound("Template exercise not found"));
+                ServiceError.NotFound(WorkoutTemplateExerciseErrorMessages.TemplateExerciseNotFound));
         }
         
         var result = await ValidateAndPerformZoneChangeAsync(unitOfWork, exerciseTemplate, command, exerciseTemplateRepo);
@@ -638,7 +639,7 @@ public class WorkoutTemplateExerciseService : IWorkoutTemplateExerciseService
         {
             null => ServiceResult<int>.Failure(
                 0,
-                ServiceError.ValidationFailed("Command cannot be null")),
+                ServiceError.ValidationFailed(WorkoutTemplateExerciseErrorMessages.CommandCannotBeNull)),
             _ => await ValidateAndProcessDuplicateAsync(command)
         };
         
@@ -685,7 +686,7 @@ public class WorkoutTemplateExerciseService : IWorkoutTemplateExerciseService
         {
             return ServiceResult<int>.Failure(
                 0,
-                ServiceError.NotFound("Source template not found"));
+                ServiceError.NotFound(WorkoutTemplateExerciseErrorMessages.SourceTemplateNotFound));
         }
         
         var result = await ValidateTargetTemplateAsync(templateRepo, command);
@@ -703,7 +704,7 @@ public class WorkoutTemplateExerciseService : IWorkoutTemplateExerciseService
         {
             return ServiceResult<int>.Failure(
                 0,
-                ServiceError.NotFound("Target template not found"));
+                ServiceError.NotFound(WorkoutTemplateExerciseErrorMessages.TargetTemplateNotFound));
         }
         
         if (targetTemplate.WorkoutState?.Value != "DRAFT")
@@ -837,7 +838,7 @@ public class WorkoutTemplateExerciseService : IWorkoutTemplateExerciseService
         {
             (true, _) or (_, true) => ServiceResult<List<ExerciseDto>>.Failure(
                 new List<ExerciseDto>(),
-                ServiceError.ValidationFailed("Invalid template ID or zone")),
+                ServiceError.ValidationFailed(WorkoutTemplateExerciseErrorMessages.InvalidTemplateIdOrZone)),
             _ => await LoadExerciseSuggestionsAsync(workoutTemplateId, zone, maxSuggestions)
         };
         
@@ -865,22 +866,22 @@ public class WorkoutTemplateExerciseService : IWorkoutTemplateExerciseService
     }
 
     /// <inheritdoc />
-    public async Task<ServiceResult<bool>> ValidateExercisesAsync(
+    public async Task<ServiceResult<BooleanResultDto>> ValidateExercisesAsync(
         WorkoutTemplateId workoutTemplateId, 
         List<ExerciseId> exerciseIds)
     {
         var result = (workoutTemplateId.IsEmpty, exerciseIds is null || exerciseIds.Count == 0) switch
         {
-            (true, _) or (_, true) => ServiceResult<bool>.Failure(
-                false,
-                ServiceError.ValidationFailed("Invalid template ID or exercise list")),
+            (true, _) or (_, true) => ServiceResult<BooleanResultDto>.Failure(
+                BooleanResultDto.Empty,
+                ServiceError.ValidationFailed(WorkoutTemplateExerciseErrorMessages.InvalidTemplateIdOrExerciseList)),
             _ => await PerformExerciseValidationAsync(workoutTemplateId, exerciseIds!)
         };
         
         return result;
     }
     
-    private async Task<ServiceResult<bool>> PerformExerciseValidationAsync(
+    private async Task<ServiceResult<BooleanResultDto>> PerformExerciseValidationAsync(
         WorkoutTemplateId workoutTemplateId, 
         List<ExerciseId> exerciseIds)
     {
@@ -896,7 +897,7 @@ public class WorkoutTemplateExerciseService : IWorkoutTemplateExerciseService
         return result;
     }
     
-    private async Task<ServiceResult<bool>> ValidateTemplateExistsAsync(
+    private async Task<ServiceResult<BooleanResultDto>> ValidateTemplateExistsAsync(
         IReadOnlyUnitOfWork<FitnessDbContext> unitOfWork,
         WorkoutTemplateId workoutTemplateId)
     {
@@ -905,31 +906,31 @@ public class WorkoutTemplateExerciseService : IWorkoutTemplateExerciseService
         
         if (template == null || template.IsEmpty)
         {
-            return ServiceResult<bool>.Failure(
-                false,
-                ServiceError.NotFound("Workout template not found"));
+            return ServiceResult<BooleanResultDto>.Failure(
+                BooleanResultDto.Empty,
+                ServiceError.NotFound(WorkoutTemplateExerciseErrorMessages.WorkoutTemplateNotFound));
         }
         
-        var result = ServiceResult<bool>.Success(true);
+        var result = ServiceResult<BooleanResultDto>.Success(BooleanResultDto.Create(true));
         
         return result;
     }
     
-    private async Task<ServiceResult<bool>> ValidateAllExercisesExistAsync(
+    private async Task<ServiceResult<BooleanResultDto>> ValidateAllExercisesExistAsync(
         IReadOnlyUnitOfWork<FitnessDbContext> unitOfWork,
         List<ExerciseId> exerciseIds)
     {
         var exerciseRepo = unitOfWork.GetRepository<IExerciseRepository>();
-        var result = ServiceResult<bool>.Success(true);
+        var result = ServiceResult<BooleanResultDto>.Success(BooleanResultDto.Create(true));
         
         foreach (var exerciseId in exerciseIds)
         {
             var exercise = await exerciseRepo.GetByIdAsync(exerciseId);
             if (exercise.IsEmpty)
             {
-                result = ServiceResult<bool>.Failure(
-                    false,
-                    ServiceError.NotFound($"Exercise {exerciseId} not found"));
+                result = ServiceResult<BooleanResultDto>.Failure(
+                    BooleanResultDto.Empty,
+                    ServiceError.NotFound(string.Format(WorkoutTemplateExerciseErrorMessages.ExerciseNotFoundWithId, exerciseId)));
                 break;
             }
         }

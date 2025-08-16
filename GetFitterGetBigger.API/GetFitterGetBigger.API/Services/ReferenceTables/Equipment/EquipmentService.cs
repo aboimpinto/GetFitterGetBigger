@@ -33,19 +33,7 @@ public class EquipmentService(
         return await ServiceValidate.For<EquipmentDto>()
             .EnsureNotEmpty(id, EquipmentErrorMessages.Validation.InvalidIdFormat)
             .MatchAsync(
-                whenValid: async () =>
-                {
-                    // No caching for CRUD-enabled lookup tables
-                    var result = await _dataService.GetByIdAsync(id);
-                    // Convert Empty to NotFound at the service layer
-                    if (result.IsSuccess && result.Data.IsEmpty)
-                    {
-                        return ServiceResult<EquipmentDto>.Failure(
-                            EquipmentDto.Empty,
-                            ServiceError.NotFound("Equipment", id.ToString()));
-                    }
-                    return result;
-                }
+                whenValid: async () => await LoadByIdFromDatabaseAsync(id)
             );
     }
     
@@ -62,19 +50,7 @@ public class EquipmentService(
         return await ServiceValidate.For<EquipmentDto>()
             .EnsureNotWhiteSpace(value, EquipmentErrorMessages.ValueCannotBeEmpty)
             .MatchAsync(
-                whenValid: async () =>
-                {
-                    // No caching for CRUD-enabled lookup tables
-                    var result = await _dataService.GetByNameAsync(value);
-                    // Convert Empty to NotFound at the service layer
-                    if (result.IsSuccess && result.Data.IsEmpty)
-                    {
-                        return ServiceResult<EquipmentDto>.Failure(
-                            EquipmentDto.Empty,
-                            ServiceError.NotFound("Equipment", value));
-                    }
-                    return result;
-                }
+                whenValid: async () => await LoadByNameFromDatabaseAsync(value)
             );
     }
 
@@ -84,14 +60,7 @@ public class EquipmentService(
         return await ServiceValidate.For<BooleanResultDto>()
             .EnsureNotEmpty(id, EquipmentErrorMessages.Validation.InvalidIdFormat)
             .MatchAsync(
-                whenValid: async () =>
-                {
-                    // Leverage the GetById cache for existence checks
-                    var result = await GetByIdAsync(id);
-                    return ServiceResult<BooleanResultDto>.Success(
-                        BooleanResultDto.Create(result.IsSuccess && !result.Data.IsEmpty)
-                    );
-                }
+                whenValid: async () => await CheckExistenceAsync(id)
             );
     }
 
@@ -177,5 +146,39 @@ public class EquipmentService(
     private async Task<bool> CanDeleteInternalAsync(EquipmentId id)
     {
         return await _dataService.CanDeleteAsync(id);
+    }
+
+    // Private helper methods for single operations
+    private async Task<ServiceResult<EquipmentDto>> LoadByIdFromDatabaseAsync(EquipmentId id)
+    {
+        // No caching for CRUD-enabled lookup tables
+        var result = await _dataService.GetByIdAsync(id);
+        // Convert Empty to NotFound at the service layer
+        return result.IsSuccess && result.Data.IsEmpty
+            ? ServiceResult<EquipmentDto>.Failure(
+                EquipmentDto.Empty,
+                ServiceError.NotFound("Equipment", id.ToString()))
+            : result;
+    }
+
+    private async Task<ServiceResult<EquipmentDto>> LoadByNameFromDatabaseAsync(string value)
+    {
+        // No caching for CRUD-enabled lookup tables
+        var result = await _dataService.GetByNameAsync(value);
+        // Convert Empty to NotFound at the service layer
+        return result.IsSuccess && result.Data.IsEmpty
+            ? ServiceResult<EquipmentDto>.Failure(
+                EquipmentDto.Empty,
+                ServiceError.NotFound("Equipment", value))
+            : result;
+    }
+
+    private async Task<ServiceResult<BooleanResultDto>> CheckExistenceAsync(EquipmentId id)
+    {
+        // Leverage the GetById for existence checks
+        var result = await GetByIdAsync(id);
+        return ServiceResult<BooleanResultDto>.Success(
+            BooleanResultDto.Create(result.IsSuccess && !result.Data.IsEmpty)
+        );
     }
 }
