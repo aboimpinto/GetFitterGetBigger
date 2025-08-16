@@ -1,9 +1,10 @@
+using GetFitterGetBigger.API.Extensions;
 using GetFitterGetBigger.API.Models;
 using GetFitterGetBigger.API.Models.Entities;
 using GetFitterGetBigger.API.Models.SpecializedIds;
+using GetFitterGetBigger.API.Repositories.Extensions;
 using GetFitterGetBigger.API.Repositories.Interfaces;
 using Microsoft.EntityFrameworkCore;
-using Olimpo.EntityFramework.Persistency;
 
 namespace GetFitterGetBigger.API.Repositories.Implementations;
 
@@ -12,6 +13,13 @@ namespace GetFitterGetBigger.API.Repositories.Implementations;
 /// </summary>
 public class WorkoutTemplateRepository : DomainRepository<WorkoutTemplate, WorkoutTemplateId, FitnessDbContext>, IWorkoutTemplateRepository
 {
+    private readonly IExerciseRepository _exerciseRepository;
+    
+    public WorkoutTemplateRepository(IExerciseRepository exerciseRepository)
+    {
+        _exerciseRepository = exerciseRepository;
+    }
+    
     /// <summary>
     /// Gets an IQueryable of workout templates with necessary includes for querying and filtering
     /// </summary>
@@ -80,8 +88,6 @@ public class WorkoutTemplateRepository : DomainRepository<WorkoutTemplate, Worko
         return template ?? WorkoutTemplate.Empty;
     }
 
-
-
     /// <summary>
     /// Checks if a workout template exists by ID
     /// </summary>
@@ -123,43 +129,16 @@ public class WorkoutTemplateRepository : DomainRepository<WorkoutTemplate, Worko
     {
         Context.WorkoutTemplates.Add(workoutTemplate);
         await Context.SaveChangesAsync();
-
-        // Load navigation properties
-        await Context.Entry(workoutTemplate)
-            .Reference(w => w.WorkoutState)
+        
+        // Load navigation properties using fluent API - each property is explicitly visible
+        return await Context.Entry(workoutTemplate)
+            .LoadNavigation()
+            .IncludeCategory()
+            .IncludeDifficulty()
+            .IncludeWorkoutState()
+            .IncludeObjectives()
+            .IncludeExercises(_exerciseRepository, loadNestedProperties: true)
             .LoadAsync();
-
-        await Context.Entry(workoutTemplate)
-            .Reference(w => w.Category)
-            .LoadAsync();
-
-        await Context.Entry(workoutTemplate)
-            .Reference(w => w.Difficulty)
-            .LoadAsync();
-
-        // Load exercises with their related data
-        await Context.Entry(workoutTemplate)
-            .Collection(w => w.Exercises)
-            .Query()
-            .Include(e => e.Exercise)
-                .ThenInclude(ex => ex!.Difficulty)
-            .Include(e => e.Exercise)
-                .ThenInclude(ex => ex!.ExerciseMuscleGroups)
-                    .ThenInclude(emg => emg.MuscleGroup)
-            .Include(e => e.Exercise)
-                .ThenInclude(ex => ex!.ExerciseEquipment)
-                    .ThenInclude(ee => ee.Equipment)
-            .Include(e => e.Configurations)
-            .LoadAsync();
-
-        // Load objectives
-        await Context.Entry(workoutTemplate)
-            .Collection(w => w.Objectives)
-            .Query()
-            .Include(o => o.WorkoutObjective)
-            .LoadAsync();
-
-        return workoutTemplate;
     }
 
     /// <summary>
@@ -260,28 +239,23 @@ public class WorkoutTemplateRepository : DomainRepository<WorkoutTemplate, Worko
         WorkoutTemplate existingTemplate,
         WorkoutTemplate workoutTemplate)
     {
-        // Clear existing relationships
-        existingTemplate.Exercises.Clear();
-        existingTemplate.Objectives.Clear();
-
         // Update scalar properties
         Context.Entry(existingTemplate).CurrentValues.SetValues(workoutTemplate);
-
-        // Add new exercises
-        foreach (var exercise in workoutTemplate.Exercises)
-        {
-            existingTemplate.Exercises.Add(exercise);
-        }
-
-        // Add new objectives
-        foreach (var objective in workoutTemplate.Objectives)
-        {
-            existingTemplate.Objectives.Add(objective);
-        }
+        
+        // Update all relationships using ReplaceWith extension
+        existingTemplate.Exercises.ReplaceWith(workoutTemplate.Exercises);
+        existingTemplate.Objectives.ReplaceWith(workoutTemplate.Objectives);
 
         await Context.SaveChangesAsync();
 
-        // Reload with all related data
-        return await GetByIdWithDetailsAsync(workoutTemplate.Id);
+        // Load navigation properties using fluent API - each property is explicitly visible
+        return await Context.Entry(existingTemplate)
+            .LoadNavigation()
+            .IncludeCategory()
+            .IncludeDifficulty()
+            .IncludeWorkoutState()
+            .IncludeObjectives()
+            .IncludeExercises(_exerciseRepository, loadNestedProperties: true)
+            .LoadAsync();
     }
 }

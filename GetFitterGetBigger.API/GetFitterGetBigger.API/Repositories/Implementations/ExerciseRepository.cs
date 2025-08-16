@@ -1,10 +1,11 @@
+using GetFitterGetBigger.API.Extensions;
 using GetFitterGetBigger.API.Models;
 using GetFitterGetBigger.API.Models.Entities;
 using GetFitterGetBigger.API.Models.SpecializedIds;
+using GetFitterGetBigger.API.Repositories.Extensions;
 using GetFitterGetBigger.API.Repositories.Interfaces;
 using GetFitterGetBigger.API.Services.Exercise.Extensions;
 using Microsoft.EntityFrameworkCore;
-using Olimpo.EntityFramework.Persistency;
 
 namespace GetFitterGetBigger.API.Repositories.Implementations;
 
@@ -27,26 +28,42 @@ public class ExerciseRepository : DomainRepository<Exercise, ExerciseId, Fitness
         IEnumerable<BodyPartId> bodyPartIds,
         bool includeInactive = false)
     {
-        // Build query using FluentAPI extensions
+        // Build query with explicit filters - each filter is visible
         var query = Context.Exercises
-            .ApplyFilters(
-                namePattern: name,
-                difficultyId: difficultyId,
-                muscleGroupIds: muscleGroupIds,
-                equipmentIds: equipmentIds,
-                movementPatternIds: movementPatternIds,
-                bodyPartIds: bodyPartIds,
-                includeInactive: includeInactive)
-            .ApplyFluentSorting("name", "asc");
+            .FilterByActiveStatus(includeInactive)
+            .FilterByNamePattern(name)
+            .FilterByDifficulty(difficultyId)
+            .FilterByMuscleGroups(muscleGroupIds)
+            .FilterByEquipment(equipmentIds)
+            .FilterByMovementPatterns(movementPatternIds)
+            .FilterByBodyParts(bodyPartIds)
+            .OrderBy(e => e.Name);
         
         // Get total count before pagination
         var totalCount = await query.CountAsync();
         
-        // Apply pagination and includes
+        // Apply pagination and explicit includes
         var exercises = await query
             .Skip((pageNumber - 1) * pageSize)
             .Take(pageSize)
-            .IncludeStandardData()
+            .Include(e => e.Difficulty)
+            .Include(e => e.KineticChain)
+            .Include(e => e.ExerciseWeightType)
+            .Include(e => e.CoachNotes)
+            .Include(e => e.ExerciseExerciseTypes)
+                .ThenInclude(eet => eet.ExerciseType)
+            .Include(e => e.ExerciseMuscleGroups)
+                .ThenInclude(emg => emg.MuscleGroup)
+            .Include(e => e.ExerciseMuscleGroups)
+                .ThenInclude(emg => emg.MuscleRole)
+            .Include(e => e.ExerciseEquipment)
+                .ThenInclude(ee => ee.Equipment)
+            .Include(e => e.ExerciseMovementPatterns)
+                .ThenInclude(emp => emp.MovementPattern)
+            .Include(e => e.ExerciseBodyParts)
+                .ThenInclude(ebp => ebp.BodyPart)
+            .AsSplitQuery()
+            .AsNoTracking()
             .ToListAsync();
         
         return (exercises, totalCount);
@@ -60,7 +77,24 @@ public class ExerciseRepository : DomainRepository<Exercise, ExerciseId, Fitness
         var exercise = await Context.Exercises
             .FilterByActiveStatus(includeInactive: false)
             .Where(e => e.Id == id)
-            .IncludeStandardData()
+            .Include(e => e.Difficulty)
+            .Include(e => e.KineticChain)
+            .Include(e => e.ExerciseWeightType)
+            .Include(e => e.CoachNotes)
+            .Include(e => e.ExerciseExerciseTypes)
+                .ThenInclude(eet => eet.ExerciseType)
+            .Include(e => e.ExerciseMuscleGroups)
+                .ThenInclude(emg => emg.MuscleGroup)
+            .Include(e => e.ExerciseMuscleGroups)
+                .ThenInclude(emg => emg.MuscleRole)
+            .Include(e => e.ExerciseEquipment)
+                .ThenInclude(ee => ee.Equipment)
+            .Include(e => e.ExerciseMovementPatterns)
+                .ThenInclude(emp => emp.MovementPattern)
+            .Include(e => e.ExerciseBodyParts)
+                .ThenInclude(ebp => ebp.BodyPart)
+            .AsSplitQuery()
+            .AsNoTracking()
             .FirstOrDefaultAsync();
         
         return exercise ?? Exercise.Empty;
@@ -121,66 +155,19 @@ public class ExerciseRepository : DomainRepository<Exercise, ExerciseId, Fitness
         Context.Exercises.Add(exercise);
         await Context.SaveChangesAsync();
 
-        // Load navigation properties explicitly for the join entities
-        foreach (var eet in exercise.ExerciseExerciseTypes)
-        {
-            await Context.Entry(eet)
-                .Reference(x => x.ExerciseType)
-                .LoadAsync();
-        }
-        
-        // Load Difficulty navigation property
-        await Context.Entry(exercise)
-            .Reference(e => e.Difficulty)
+        // Load navigation properties using fluent API - each property is explicitly visible
+        return await Context.Entry(exercise)
+            .LoadNavigation()
+            .IncludeDifficulty()
+            .IncludeKineticChain()
+            .IncludeExerciseWeightType()
+            .IncludeCoachNotes()
+            .IncludeExerciseTypes()
+            .IncludeMuscleGroups()
+            .IncludeEquipment()
+            .IncludeBodyParts()
+            .IncludeMovementPatterns()
             .LoadAsync();
-        
-        // Load KineticChain navigation property if present
-        if (exercise.KineticChainId.HasValue)
-        {
-            await Context.Entry(exercise)
-                .Reference(e => e.KineticChain)
-                .LoadAsync();
-        }
-        
-        // Load ExerciseWeightType navigation property if present
-        if (exercise.ExerciseWeightTypeId.HasValue)
-        {
-            await Context.Entry(exercise)
-                .Reference(e => e.ExerciseWeightType)
-                .LoadAsync();
-        }
-        
-        // Load collections
-        await Context.Entry(exercise)
-            .Collection(e => e.CoachNotes)
-            .LoadAsync();
-            
-        await Context.Entry(exercise)
-            .Collection(e => e.ExerciseMuscleGroups)
-            .Query()
-            .Include(emg => emg.MuscleGroup)
-            .Include(emg => emg.MuscleRole)
-            .LoadAsync();
-            
-        await Context.Entry(exercise)
-            .Collection(e => e.ExerciseEquipment)
-            .Query()
-            .Include(ee => ee.Equipment)
-            .LoadAsync();
-            
-        await Context.Entry(exercise)
-            .Collection(e => e.ExerciseBodyParts)
-            .Query()
-            .Include(ebp => ebp.BodyPart)
-            .LoadAsync();
-            
-        await Context.Entry(exercise)
-            .Collection(e => e.ExerciseMovementPatterns)
-            .Query()
-            .Include(emp => emp.MovementPattern)
-            .LoadAsync();
-        
-        return exercise;
     }
     
     /// <summary>
@@ -188,7 +175,7 @@ public class ExerciseRepository : DomainRepository<Exercise, ExerciseId, Fitness
     /// </summary>
     public async Task<Exercise> UpdateAsync(Exercise exercise)
     {
-        // First, remove all existing relationships
+        // Load the existing exercise with all relationships
         var existingExercise = await Context.Exercises
             .Include(e => e.CoachNotes)
             .Include(e => e.ExerciseExerciseTypes)
@@ -196,53 +183,23 @@ public class ExerciseRepository : DomainRepository<Exercise, ExerciseId, Fitness
             .Include(e => e.ExerciseEquipment)
             .Include(e => e.ExerciseMovementPatterns)
             .Include(e => e.ExerciseBodyParts)
-            .FirstOrDefaultAsync(e => e.Id == exercise.Id);
-        
-        if (existingExercise == null)
-        {
-            throw new InvalidOperationException($"Exercise with ID {exercise.Id} not found");
-        }
-        
-        // Clear existing relationships
-        existingExercise.CoachNotes.Clear();
-        existingExercise.ExerciseExerciseTypes.Clear();
-        existingExercise.ExerciseMuscleGroups.Clear();
-        existingExercise.ExerciseEquipment.Clear();
-        existingExercise.ExerciseMovementPatterns.Clear();
-        existingExercise.ExerciseBodyParts.Clear();
-        
-        // Update the exercise
+            .FirstOrDefaultAsync(e => e.Id == exercise.Id)
+                ?? throw new InvalidOperationException($"Exercise with ID {exercise.Id} not found");
+
+        // Update scalar properties
         Context.Entry(existingExercise).CurrentValues.SetValues(exercise);
         
-        // Add new relationships
-        foreach (var cn in exercise.CoachNotes)
-        {
-            existingExercise.CoachNotes.Add(cn);
-        }
-        foreach (var eet in exercise.ExerciseExerciseTypes)
-        {
-            existingExercise.ExerciseExerciseTypes.Add(eet);
-        }
-        foreach (var emg in exercise.ExerciseMuscleGroups)
-        {
-            existingExercise.ExerciseMuscleGroups.Add(emg);
-        }
-        foreach (var ee in exercise.ExerciseEquipment)
-        {
-            existingExercise.ExerciseEquipment.Add(ee);
-        }
-        foreach (var emp in exercise.ExerciseMovementPatterns)
-        {
-            existingExercise.ExerciseMovementPatterns.Add(emp);
-        }
-        foreach (var ebp in exercise.ExerciseBodyParts)
-        {
-            existingExercise.ExerciseBodyParts.Add(ebp);
-        }
+        // Update all relationships using ReplaceWith extension
+        existingExercise.CoachNotes.ReplaceWith(exercise.CoachNotes);
+        existingExercise.ExerciseExerciseTypes.ReplaceWith(exercise.ExerciseExerciseTypes);
+        existingExercise.ExerciseMuscleGroups.ReplaceWith(exercise.ExerciseMuscleGroups);
+        existingExercise.ExerciseEquipment.ReplaceWith(exercise.ExerciseEquipment);
+        existingExercise.ExerciseMovementPatterns.ReplaceWith(exercise.ExerciseMovementPatterns);
+        existingExercise.ExerciseBodyParts.ReplaceWith(exercise.ExerciseBodyParts);
         
         await Context.SaveChangesAsync();
         
-        // Reload with all related data
+        // Reload the exercise with all navigation properties
         return await GetByIdAsync(exercise.Id);
     }
     
