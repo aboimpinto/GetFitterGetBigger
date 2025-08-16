@@ -2,7 +2,6 @@ using GetFitterGetBigger.API.Constants.ErrorMessages;
 using GetFitterGetBigger.API.DTOs;
 using GetFitterGetBigger.API.Models.SpecializedIds;
 using GetFitterGetBigger.API.Services.Commands.WorkoutTemplate;
-using GetFitterGetBigger.API.Services.Interfaces;
 using GetFitterGetBigger.API.Services.ReferenceTables.WorkoutState;
 using GetFitterGetBigger.API.Services.Results;
 using GetFitterGetBigger.API.Services.Validation;
