@@ -9,7 +9,7 @@ namespace GetFitterGetBigger.API.Repositories.Implementations;
 /// Repository implementation for WorkoutState reference data
 /// </summary>
 public class WorkoutStateRepository : 
-    EmptyEnabledReferenceDataRepository<WorkoutState, WorkoutStateId, FitnessDbContext>,
+    ReferenceDataRepository<WorkoutState, WorkoutStateId, FitnessDbContext>,
     IWorkoutStateRepository
 {
     // Add any WorkoutState-specific repository methods here if needed

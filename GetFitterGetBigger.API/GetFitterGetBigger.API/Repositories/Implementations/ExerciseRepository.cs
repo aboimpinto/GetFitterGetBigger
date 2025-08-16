@@ -10,7 +10,7 @@ namespace GetFitterGetBigger.API.Repositories.Implementations;
 /// <summary>
 /// Repository implementation for Exercise data with advanced querying capabilities
 /// </summary>
-public class ExerciseRepository : RepositoryBase<FitnessDbContext>, IExerciseRepository
+public class ExerciseRepository : DomainRepository<Exercise, ExerciseId, FitnessDbContext>, IExerciseRepository
 {
     /// <summary>
     /// Gets a paginated list of exercises with optional filtering
@@ -90,7 +90,7 @@ public class ExerciseRepository : RepositoryBase<FitnessDbContext>, IExerciseRep
     /// <summary>
     /// Gets an exercise by its ID with all related data
     /// </summary>
-    public async Task<Exercise> GetByIdAsync(ExerciseId id)
+    public override async Task<Exercise> GetByIdAsync(ExerciseId id)
     {
         var exercise = await Context.Exercises
             .Include(e => e.Difficulty)

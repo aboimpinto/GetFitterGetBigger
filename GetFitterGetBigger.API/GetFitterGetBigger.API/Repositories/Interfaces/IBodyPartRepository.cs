@@ -5,9 +5,9 @@ namespace GetFitterGetBigger.API.Repositories.Interfaces;
 
 /// <summary>
 /// Repository interface for BodyPart reference data
-/// TEMPORARY: Using IEmptyEnabledReferenceDataRepository until all entities are migrated
+/// TEMPORARY: Using IReferenceDataRepository until all entities are migrated
 /// </summary>
-public interface IBodyPartRepository : IEmptyEnabledReferenceDataRepository<BodyPart, BodyPartId>
+public interface IBodyPartRepository : IReferenceDataRepository<BodyPart, BodyPartId>
 {
     // Add any BodyPart-specific repository methods here if needed
 }

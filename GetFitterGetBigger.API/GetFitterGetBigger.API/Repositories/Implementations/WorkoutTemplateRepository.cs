@@ -10,7 +10,7 @@ namespace GetFitterGetBigger.API.Repositories.Implementations;
 /// <summary>
 /// Repository implementation for WorkoutTemplate data with advanced querying capabilities
 /// </summary>
-public class WorkoutTemplateRepository : RepositoryBase<FitnessDbContext>, IWorkoutTemplateRepository
+public class WorkoutTemplateRepository : DomainRepository<WorkoutTemplate, WorkoutTemplateId, FitnessDbContext>, IWorkoutTemplateRepository
 {
     /// <summary>
     /// Gets an IQueryable of workout templates with necessary includes for querying and filtering
@@ -29,7 +29,7 @@ public class WorkoutTemplateRepository : RepositoryBase<FitnessDbContext>, IWork
     /// <summary>
     /// Gets a workout template by ID
     /// </summary>
-    public async Task<WorkoutTemplate> GetByIdAsync(WorkoutTemplateId id)
+    public override async Task<WorkoutTemplate> GetByIdAsync(WorkoutTemplateId id)
     {
         var result = id.IsEmpty switch
         {
@@ -85,7 +85,7 @@ public class WorkoutTemplateRepository : RepositoryBase<FitnessDbContext>, IWork
     /// <summary>
     /// Checks if a workout template exists by ID
     /// </summary>
-    public async Task<bool> ExistsAsync(WorkoutTemplateId id)
+    public override async Task<bool> ExistsAsync(WorkoutTemplateId id)
     {
         var result = id.IsEmpty switch
         {

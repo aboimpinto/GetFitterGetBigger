@@ -10,7 +10,7 @@ namespace GetFitterGetBigger.API.Repositories.Implementations;
 /// Repository implementation for ExecutionProtocol reference data
 /// </summary>
 public class ExecutionProtocolRepository : 
-    EmptyEnabledReferenceDataRepository<ExecutionProtocol, ExecutionProtocolId, FitnessDbContext>, 
+    ReferenceDataRepository<ExecutionProtocol, ExecutionProtocolId, FitnessDbContext>, 
     IExecutionProtocolRepository
 {
     /// <summary>

@@ -1,4 +1,3 @@
-using System.Threading.Tasks;
 using GetFitterGetBigger.API.Models;
 using GetFitterGetBigger.API.Models.Entities;
 using GetFitterGetBigger.API.Models.SpecializedIds;
@@ -8,7 +7,7 @@ using Olimpo.EntityFramework.Persistency;
 
 namespace GetFitterGetBigger.API.Repositories.Implementations
 {
-    public class UserRepository : RepositoryBase<FitnessDbContext>, IUserRepository
+    public class UserRepository : DomainRepository<User, UserId, FitnessDbContext>, IUserRepository
     {
         public async Task<User> GetUserByEmailAsync(string email)
         {
@@ -22,6 +21,7 @@ namespace GetFitterGetBigger.API.Repositories.Implementations
 
         public async Task<User> GetUserByIdAsync(UserId userId)
         {
+            // Override base GetByIdAsync to include Claims
             var user = await Context.Users
                 .Include(u => u.Claims)
                 .FirstOrDefaultAsync(u => u.Id == userId);

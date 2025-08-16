@@ -6,7 +6,7 @@ namespace GetFitterGetBigger.API.Repositories.Interfaces;
 /// <summary>
 /// Repository interface for ExecutionProtocol reference data
 /// </summary>
-public interface IExecutionProtocolRepository : IEmptyEnabledReferenceDataRepository<ExecutionProtocol, ExecutionProtocolId>
+public interface IExecutionProtocolRepository : IReferenceDataRepository<ExecutionProtocol, ExecutionProtocolId>
 {
     /// <summary>
     /// Gets an execution protocol by its code

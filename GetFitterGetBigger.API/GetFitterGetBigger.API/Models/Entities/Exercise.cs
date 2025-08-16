@@ -4,7 +4,7 @@ using GetFitterGetBigger.API.Models.SpecializedIds;
 
 namespace GetFitterGetBigger.API.Models.Entities;
 
-public record Exercise
+public record Exercise : IEmptyEntity<Exercise>
 {
     public ExerciseId Id { get; init; }
     public string Name { get; init; } = string.Empty;
@@ -13,6 +13,9 @@ public record Exercise
     public string? ImageUrl { get; init; }
     public bool IsUnilateral { get; init; }
     public bool IsActive { get; init; } = true;
+    
+    // IEntity implementation
+    string IEntity.Id => Id.ToString();
     public DifficultyLevelId DifficultyId { get; init; }
     public KineticChainTypeId? KineticChainId { get; init; }
     public ExerciseWeightTypeId? ExerciseWeightTypeId { get; init; }

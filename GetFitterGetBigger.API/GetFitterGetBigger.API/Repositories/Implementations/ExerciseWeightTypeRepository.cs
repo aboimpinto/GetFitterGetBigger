@@ -10,7 +10,7 @@ namespace GetFitterGetBigger.API.Repositories.Implementations;
 /// Repository implementation for ExerciseWeightType reference data
 /// </summary>
 public class ExerciseWeightTypeRepository : 
-    EmptyEnabledReferenceDataRepository<ExerciseWeightType, ExerciseWeightTypeId, FitnessDbContext>,
+    ReferenceDataRepository<ExerciseWeightType, ExerciseWeightTypeId, FitnessDbContext>,
     IExerciseWeightTypeRepository
 {
     /// <summary>

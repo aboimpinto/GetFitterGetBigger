@@ -6,7 +6,7 @@ namespace GetFitterGetBigger.API.Repositories.Interfaces;
 /// <summary>
 /// Repository interface for ExerciseWeightType reference data
 /// </summary>
-public interface IExerciseWeightTypeRepository : IEmptyEnabledReferenceDataRepository<ExerciseWeightType, ExerciseWeightTypeId>
+public interface IExerciseWeightTypeRepository : IReferenceDataRepository<ExerciseWeightType, ExerciseWeightTypeId>
 {
     /// <summary>
     /// Gets an exercise weight type by its code

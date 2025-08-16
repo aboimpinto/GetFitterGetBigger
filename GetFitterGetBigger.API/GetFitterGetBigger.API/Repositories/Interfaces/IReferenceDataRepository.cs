@@ -9,7 +9,7 @@ namespace GetFitterGetBigger.API.Repositories.Interfaces;
 /// </summary>
 /// <typeparam name="TEntity">The reference data entity type that implements IEmptyEntity</typeparam>
 /// <typeparam name="TId">The ID type of the entity</typeparam>
-public interface IEmptyEnabledReferenceDataRepository<TEntity, TId> : IRepository
+public interface IReferenceDataRepository<TEntity, TId> : IRepository
     where TEntity : ReferenceDataBase, IEmptyEntity<TEntity>
     where TId : struct
 {

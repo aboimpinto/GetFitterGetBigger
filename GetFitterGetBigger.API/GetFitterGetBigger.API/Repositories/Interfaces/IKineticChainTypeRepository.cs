@@ -6,7 +6,7 @@ namespace GetFitterGetBigger.API.Repositories.Interfaces;
 /// <summary>
 /// Repository interface for KineticChainType reference data
 /// </summary>
-public interface IKineticChainTypeRepository : IEmptyEnabledReferenceDataRepository<KineticChainType, KineticChainTypeId>
+public interface IKineticChainTypeRepository : IReferenceDataRepository<KineticChainType, KineticChainTypeId>
 {
     // Add any KineticChainType-specific repository methods here if needed
 }

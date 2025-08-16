@@ -6,6 +6,6 @@ namespace GetFitterGetBigger.API.Repositories.Interfaces;
 /// <summary>
 /// Repository interface for MetricType data with Empty pattern support
 /// </summary>
-public interface IMetricTypeRepository : IEmptyEnabledReferenceDataRepository<MetricType, MetricTypeId>
+public interface IMetricTypeRepository : IReferenceDataRepository<MetricType, MetricTypeId>
 {
 }

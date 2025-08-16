@@ -8,6 +8,6 @@ namespace GetFitterGetBigger.API.Repositories.Implementations;
 /// <summary>
 /// Repository implementation for MetricType data with Empty pattern support
 /// </summary>
-public class MetricTypeRepository : EmptyEnabledReferenceDataRepository<MetricType, MetricTypeId, FitnessDbContext>, IMetricTypeRepository
+public class MetricTypeRepository : ReferenceDataRepository<MetricType, MetricTypeId, FitnessDbContext>, IMetricTypeRepository
 {
 }

@@ -7,10 +7,10 @@ namespace GetFitterGetBigger.API.Repositories.Implementations;
 
 /// <summary>
 /// Repository implementation for MovementPattern reference data
-/// TEMPORARY: Using EmptyEnabledReferenceDataRepository until all entities are migrated
+/// TEMPORARY: Using ReferenceDataRepository until all entities are migrated
 /// </summary>
 public class MovementPatternRepository : 
-    EmptyEnabledReferenceDataRepository<MovementPattern, MovementPatternId, FitnessDbContext>,
+    ReferenceDataRepository<MovementPattern, MovementPatternId, FitnessDbContext>,
     IMovementPatternRepository
 {
     // Add any MovementPattern-specific repository methods here if needed

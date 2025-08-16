@@ -10,7 +10,7 @@ namespace GetFitterGetBigger.API.Repositories.Implementations;
 /// Repository implementation for MuscleRole reference data
 /// </summary>
 public class MuscleRoleRepository : 
-    EmptyEnabledReferenceDataRepository<MuscleRole, MuscleRoleId, FitnessDbContext>,
+    ReferenceDataRepository<MuscleRole, MuscleRoleId, FitnessDbContext>,
     IMuscleRoleRepository
 {
     // Add any MuscleRole-specific repository methods here if needed

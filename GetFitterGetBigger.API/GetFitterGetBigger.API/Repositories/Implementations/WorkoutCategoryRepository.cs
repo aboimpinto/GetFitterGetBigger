@@ -9,8 +9,8 @@ namespace GetFitterGetBigger.API.Repositories.Implementations;
 /// Repository implementation for WorkoutCategory reference data with Empty pattern support
 /// </summary>
 public class WorkoutCategoryRepository : 
-    EmptyEnabledReferenceDataRepository<WorkoutCategory, WorkoutCategoryId, FitnessDbContext>, 
+    ReferenceDataRepository<WorkoutCategory, WorkoutCategoryId, FitnessDbContext>, 
     IWorkoutCategoryRepository
 {
-    // All required methods are implemented by the base EmptyEnabledReferenceDataRepository class
+    // All required methods are implemented by the base ReferenceDataRepository class
 }

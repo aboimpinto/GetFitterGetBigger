@@ -3,7 +3,6 @@ using GetFitterGetBigger.API.Models.Entities;
 using GetFitterGetBigger.API.Repositories.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Olimpo.EntityFramework.Persistency;
-using System;
 
 namespace GetFitterGetBigger.API.Repositories.Implementations;
 
@@ -13,9 +12,9 @@ namespace GetFitterGetBigger.API.Repositories.Implementations;
 /// <typeparam name="TEntity">The reference data entity type that implements IEmptyEntity</typeparam>
 /// <typeparam name="TId">The ID type of the entity</typeparam>
 /// <typeparam name="TContext">The database context type</typeparam>
-public abstract class EmptyEnabledReferenceDataRepository<TEntity, TId, TContext> : 
+public abstract class ReferenceDataRepository<TEntity, TId, TContext> : 
     RepositoryBase<TContext>, 
-    IEmptyEnabledReferenceDataRepository<TEntity, TId>
+    IReferenceDataRepository<TEntity, TId>
     where TEntity : ReferenceDataBase, IEmptyEntity<TEntity>
     where TId : struct
     where TContext : DbContext

@@ -19,6 +19,7 @@
 │ 9. Validation methods are QUESTIONS (IsValid) not COMMANDS    │
 │ 10. NO magic strings - ALL messages in constants              │
 │ 11. Chain ALL validations in ServiceValidate, not MatchAsync  │
+│ 12. ALL repositories MUST inherit from base classes           │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
@@ -160,6 +161,12 @@
 - **NEW**: Non-cumulative query counting pattern (Reset & Recount)
 
 ### Data Access Patterns
+
+#### [Repository Base Class Architecture](./Overview/RepositoryBaseClassArchitecture.md)
+- **MANDATORY** All repositories must inherit from base classes
+- Compile-time Empty pattern enforcement via generic constraints
+- Eliminates null returns at architectural level
+- Base class tests ensure compliance
 
 #### [Repository Pattern](./CodeQualityGuidelines/RepositoryPattern.md)
 - Pure data access layer
@@ -434,6 +441,7 @@ Each layer trusts the layer below it because:
 | Single return statement | Pattern matching | [SingleExitPointPattern.md](./CodeQualityGuidelines/SingleExitPointPattern.md) |
 | Entity creation | EntityResult<T> | [EntityResultPattern.md](./CodeQualityGuidelines/EntityResultPattern.md) |
 | Data access layer | Pure repositories | [RepositoryPattern.md](./CodeQualityGuidelines/RepositoryPattern.md) |
+| Repository implementation | Inherit from base class | [RepositoryBaseClassPattern.md](./CodeQualityGuidelines/RepositoryBaseClassPattern.md) |
 
 ## 📊 Code Review Checklist
 
@@ -453,6 +461,7 @@ Before approving any PR, verify:
 - [ ] Controllers have no business logic
 - [ ] ReadOnly for queries, Writable for modifications
 - [ ] Services only access their own repositories
+- [ ] **Repositories inherit from base classes** (compile-time Empty enforcement)
 - [ ] Specialized IDs used (not strings)
 - [ ] No try-catch for business logic
 - [ ] Tests check error codes, not messages
