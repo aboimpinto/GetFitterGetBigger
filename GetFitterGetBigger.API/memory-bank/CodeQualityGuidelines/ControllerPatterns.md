@@ -124,6 +124,36 @@ return result switch
 };
 ```
 
+### 🚨 CRITICAL - Optimize Pattern Matching
+
+**Group switch cases by HTTP status code, not error code!** Avoid redundant cases that return the same HTTP status.
+
+```csharp
+// ❌ BAD - Redundant cases for same HTTP status
+return result switch
+{
+    { IsSuccess: true } => Ok(result.Data),
+    { PrimaryErrorCode: ServiceErrorCode.NotFound } => NotFound(),
+    { PrimaryErrorCode: ServiceErrorCode.ValidationFailed } => BadRequest(new { errors = result.Errors }),
+    { PrimaryErrorCode: ServiceErrorCode.InvalidFormat } => BadRequest(new { errors = result.Errors }),
+    { PrimaryErrorCode: ServiceErrorCode.InvalidInput } => BadRequest(new { errors = result.Errors }),
+    { Errors: var errors } => BadRequest(new { errors })
+};
+
+// ✅ GOOD - Optimized with single case per HTTP status
+return result switch
+{
+    { IsSuccess: true } => Ok(result.Data),
+    { PrimaryErrorCode: ServiceErrorCode.NotFound } => NotFound(),
+    { PrimaryErrorCode: ServiceErrorCode.DependencyExists } => Conflict(new { errors = result.Errors }),
+    { Errors: var errors } => BadRequest(new { errors })  // Handles ALL 400 errors
+};
+```
+
+**Key Rule**: Only add specific cases for DIFFERENT HTTP status codes. Let the default case handle all 400 Bad Request scenarios.
+
+See [ControllerPatternMatchingOptimization.md](./ControllerPatternMatchingOptimization.md) for detailed guidelines.
+
 ## Common Controller Patterns
 
 ### GET by ID

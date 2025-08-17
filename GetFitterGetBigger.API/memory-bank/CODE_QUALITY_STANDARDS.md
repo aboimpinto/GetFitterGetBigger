@@ -123,6 +123,12 @@
 - Pure error message pass-through
 - Pattern matching for HTTP status codes
 
+#### [Controller HTTP Response Pattern Matching](./CodeQualityGuidelines/ControllerPatternMatchingOptimization.md)
+- **OPTIMIZE** Group switch cases by HTTP status code, not error code
+- Eliminate redundant cases returning same HTTP status
+- Use default case for most common error response (BadRequest)
+- Quick decision guide for when to add specific cases
+
 ### Type System
 
 #### [Specialized ID Types](./CodeQualityGuidelines/SpecializedIdTypes.md)
@@ -448,6 +454,34 @@ query = query
 
 See [FluentQueryExtensionsPattern.md](./CodeQualityGuidelines/FluentQueryExtensionsPattern.md) and [FluentSortingPattern.md](./CodeQualityGuidelines/FluentSortingPattern.md) for implementation details.
 
+### Redundant Pattern Matching in Controllers
+**AVOID multiple switch cases that return the same HTTP status!** Group by HTTP status code, not error code.
+
+```csharp
+// ❌ ANTI-PATTERN - Multiple cases for same HTTP status
+return result switch
+{
+    { IsSuccess: true } => Ok(result.Data),
+    { PrimaryErrorCode: ServiceErrorCode.NotFound } => NotFound(),
+    { PrimaryErrorCode: ServiceErrorCode.ValidationFailed, StructuredErrors: var errors } => BadRequest(new { errors }),
+    { PrimaryErrorCode: ServiceErrorCode.InvalidFormat, StructuredErrors: var errors } => BadRequest(new { errors }),
+    { StructuredErrors: var errors } => BadRequest(new { errors })
+};
+
+// ✅ CORRECT - One case per HTTP status
+return result switch
+{
+    { IsSuccess: true } => Ok(result.Data),
+    { PrimaryErrorCode: ServiceErrorCode.NotFound } => NotFound(),
+    { PrimaryErrorCode: ServiceErrorCode.DependencyExists, StructuredErrors: var errors } => Conflict(new { errors }),
+    { StructuredErrors: var errors } => BadRequest(new { errors })  // Handles ALL 400 errors
+};
+```
+
+**Key Rule**: Controllers care about HTTP status codes, not business error codes. Only add specific cases for DIFFERENT HTTP statuses.
+
+See [ControllerPatternMatchingOptimization.md](./CodeQualityGuidelines/ControllerPatternMatchingOptimization.md) for detailed guidelines.
+
 ### Logging-Only If-Statements
 **AVOID if-statements that exist only for logging!** Push logging down to where operations occur.
 
@@ -612,6 +646,7 @@ Each layer trusts the layer below it because:
 | Cross-domain access | Service dependencies | [ServiceRepositoryBoundaries.md](./CodeQualityGuidelines/ServiceRepositoryBoundaries.md) |
 | ID parameters | Specialized ID types | [SpecializedIdTypes.md](./CodeQualityGuidelines/SpecializedIdTypes.md) |
 | Controller logic | Pattern matching only | [ControllerPatterns.md](./CodeQualityGuidelines/ControllerPatterns.md) |
+| Controller error responses | Group by HTTP status | [ControllerPatternMatchingOptimization.md](./CodeQualityGuidelines/ControllerPatternMatchingOptimization.md) |
 | Error testing | Test codes, not messages | [TestingStandards.md](./CodeQualityGuidelines/TestingStandards.md) |
 | Reference data caching | IEternalCacheService | [CacheIntegrationPattern.md](./CodeQualityGuidelines/CacheIntegrationPattern.md) |
 | Single return statement | Pattern matching | [SingleExitPointPattern.md](./CodeQualityGuidelines/SingleExitPointPattern.md) |
@@ -638,6 +673,7 @@ Before approving any PR, verify:
 - [ ] **NO magic strings** - All error messages in constants
 - [ ] Minimal defensive null checking (trust boundaries)
 - [ ] Controllers have no business logic
+- [ ] **Controller switch expressions group by HTTP status** (no duplicate BadRequest cases)
 - [ ] ReadOnly for queries, Writable for modifications
 - [ ] Services only access their own repositories
 - [ ] **Repositories inherit from base classes** (compile-time Empty enforcement)
