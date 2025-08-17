@@ -31,7 +31,6 @@ using GetFitterGetBigger.API.Services.WorkoutTemplate.Features.Equipment;
 using GetFitterGetBigger.API.Services.WorkoutTemplate.Handlers;
 using Microsoft.OpenApi.Models;
 using System.Reflection;
-using GetFitterGetBigger.API.Configuration;
 using GetFitterGetBigger.API.Validators;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -39,10 +38,6 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 // Add Memory Cache
 builder.Services.AddMemoryCache();
-
-// Configure cache settings
-builder.Services.Configure<CacheConfiguration>(
-    builder.Configuration.GetSection("CacheConfiguration"));
 
 // Register cache services
 // Standard cache service for lookup/enhanced reference tables (Equipment, MuscleGroup)
