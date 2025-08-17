@@ -111,7 +111,6 @@ builder.Services.AddTransient<IWorkoutTemplateExerciseCommandDataService, Workou
 // Workout Template Handlers (internal components - no interfaces)
 builder.Services.AddTransient<StateTransitionHandler>();
 builder.Services.AddTransient<DuplicationHandler>();
-builder.Services.AddTransient<SearchQueryBuilder>();
 builder.Services.AddTransient<SuggestionHandler>();
 
 // Register reference table services

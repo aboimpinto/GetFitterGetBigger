@@ -147,6 +147,28 @@ public static class CacheKeyGenerator
     #region Helper Methods
 
     /// <summary>
+    /// Dictionary mapping singular entity names to their plural forms
+    /// </summary>
+    private static readonly Dictionary<string, string> EntityPluralizations = new()
+    {
+        { "BodyPart", "BodyParts" },
+        { "MuscleGroup", "MuscleGroups" },
+        { "Equipment", "Equipment" }, // Already plural/uncountable
+        { "Exercise", "Exercises" },
+        { "ExerciseType", "ExerciseTypes" },
+        { "DifficultyLevel", "DifficultyLevels" },
+        { "ExecutionProtocol", "ExecutionProtocols" },
+        { "ExerciseWeightType", "ExerciseWeightTypes" },
+        { "KineticChainType", "KineticChainTypes" },
+        { "MetricType", "MetricTypes" },
+        { "MovementPattern", "MovementPatterns" },
+        { "MuscleRole", "MuscleRoles" },
+        { "WorkoutCategory", "WorkoutCategories" },
+        { "WorkoutObjective", "WorkoutObjectives" },
+        { "WorkoutState", "WorkoutStates" }
+    };
+
+    /// <summary>
     /// Extracts the entity name from a DTO type
     /// </summary>
     private static string ExtractEntityNameFromType<TDto>()
@@ -169,26 +191,10 @@ public static class CacheKeyGenerator
     /// </summary>
     private static string PluralizeEntityName(string entityName)
     {
-        // Handle common patterns
-        return entityName switch
-        {
-            "BodyPart" => "BodyParts",
-            "MuscleGroup" => "MuscleGroups",
-            "Equipment" => "Equipment", // Already plural/uncountable
-            "Exercise" => "Exercises",
-            "ExerciseType" => "ExerciseTypes",
-            "DifficultyLevel" => "DifficultyLevels",
-            "ExecutionProtocol" => "ExecutionProtocols",
-            "ExerciseWeightType" => "ExerciseWeightTypes",
-            "KineticChainType" => "KineticChainTypes",
-            "MetricType" => "MetricTypes",
-            "MovementPattern" => "MovementPatterns",
-            "MuscleRole" => "MuscleRoles",
-            "WorkoutCategory" => "WorkoutCategories",
-            "WorkoutObjective" => "WorkoutObjectives",
-            "WorkoutState" => "WorkoutStates",
-            _ => entityName + "s" // Default simple pluralization
-        };
+        // Use dictionary lookup with fallback to simple pluralization
+        return EntityPluralizations.TryGetValue(entityName, out var pluralForm) 
+            ? pluralForm 
+            : entityName + "s";
     }
 
     #endregion

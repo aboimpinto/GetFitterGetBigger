@@ -38,18 +38,7 @@ public class WorkoutTemplateService(
         return await ServiceValidate.For<WorkoutTemplateDto>()
             .EnsureNotEmpty(id, WorkoutTemplateErrorMessages.InvalidIdFormat)
             .MatchAsync(
-                whenValid: async () =>
-                {
-                    var result = await _queryDataService.GetByIdWithDetailsAsync(id);
-                    // Convert Empty to NotFound at the service layer
-                    if (result.IsSuccess && result.Data.IsEmpty)
-                    {
-                        return ServiceResult<WorkoutTemplateDto>.Failure(
-                            WorkoutTemplateDto.Empty,
-                            ServiceError.NotFound(WorkoutTemplateErrorMessages.NotFound));
-                    }
-                    return result;
-                }
+                whenValid: async () => await _queryDataService.GetByIdWithDetailsAsync(id)
             );
     }
 
@@ -149,14 +138,17 @@ public class WorkoutTemplateService(
             .Where(item => item.WorkoutState?.Id != archivedStateId.ToString())
             .ToList();
 
-        // Calculate the correct total count by getting count of all non-archived templates
-        var allTemplatesForCount = await _queryDataService.SearchAsync(
-            1, int.MaxValue, namePattern, categoryId, objectiveId, 
-            difficultyId, WorkoutStateId.Empty, sortBy, sortOrder);
+        // Use GetCountAsync to get the actual count without pagination limits
+        var totalCountResult = await _queryDataService.GetCountAsync(
+            namePattern, categoryId, objectiveId, difficultyId, WorkoutStateId.Empty);
         
-        var totalNonArchivedCount = allTemplatesForCount.IsSuccess 
-            ? allTemplatesForCount.Data.Items.Count(item => item.WorkoutState?.Id != archivedStateId.ToString())
-            : 0;
+        // Now we need to subtract the count of archived templates
+        var archivedCountResult = await _queryDataService.GetCountAsync(
+            namePattern, categoryId, objectiveId, difficultyId, archivedStateId);
+        
+        var totalNonArchivedCount = totalCountResult.IsSuccess && archivedCountResult.IsSuccess
+            ? totalCountResult.Data - archivedCountResult.Data
+            : allResults.Data.TotalCount; // Fallback to original count
 
         var filteredResponse = new PagedResponse<WorkoutTemplateDto>
         {

@@ -98,7 +98,139 @@ public static class WorkoutTemplateQueryExtensions
     }
     
     /// <summary>
-    /// Applies sorting to the workout template query
+    /// Applies state filter if provided, otherwise excludes archived templates
+    /// </summary>
+    /// <param name="query">The workout template query</param>
+    /// <param name="stateId">The workout state ID to filter by (optional)</param>
+    /// <returns>The filtered query</returns>
+    public static IQueryable<WorkoutTemplate> ApplyStateFilterOrExcludeArchived(
+        this IQueryable<WorkoutTemplate> query, WorkoutStateId stateId)
+    {
+        return stateId.IsEmpty 
+            ? query.ExcludeArchived()
+            : query.ApplyStateFilter(stateId);
+    }
+    
+    /// <summary>
+    /// Converts a query to a sortable query for fluent sorting
+    /// </summary>
+    /// <param name="query">The query to make sortable</param>
+    /// <returns>A sortable query wrapper</returns>
+    public static SortableQuery<WorkoutTemplate> ToSortable(
+        this IQueryable<WorkoutTemplate> query)
+    {
+        return new SortableQuery<WorkoutTemplate>(query);
+    }
+    
+    /// <summary>
+    /// Applies sorting by name if the sortBy field matches
+    /// </summary>
+    public static SortableQuery<WorkoutTemplate> ApplySortByName(
+        this SortableQuery<WorkoutTemplate> sortable,
+        string? sortBy,
+        string? sortOrder)
+    {
+        return sortable.ApplySortIf("name", sortBy, sortOrder,
+            (query, desc) => desc
+                ? query.OrderByDescending(w => w.Name)
+                : query.OrderBy(w => w.Name));
+    }
+    
+    /// <summary>
+    /// Applies sorting by created date if the sortBy field matches
+    /// </summary>
+    public static SortableQuery<WorkoutTemplate> ApplySortByCreatedAt(
+        this SortableQuery<WorkoutTemplate> sortable,
+        string? sortBy,
+        string? sortOrder)
+    {
+        return sortable
+            .ApplySortIf("createdat", sortBy, sortOrder,
+                (query, desc) => desc
+                    ? query.OrderByDescending(w => w.CreatedAt)
+                    : query.OrderBy(w => w.CreatedAt))
+            .ApplySortIf("created", sortBy, sortOrder,
+                (query, desc) => desc
+                    ? query.OrderByDescending(w => w.CreatedAt)
+                    : query.OrderBy(w => w.CreatedAt));
+    }
+    
+    /// <summary>
+    /// Applies sorting by updated date if the sortBy field matches
+    /// </summary>
+    public static SortableQuery<WorkoutTemplate> ApplySortByUpdatedAt(
+        this SortableQuery<WorkoutTemplate> sortable,
+        string? sortBy,
+        string? sortOrder)
+    {
+        return sortable
+            .ApplySortIf("updatedat", sortBy, sortOrder,
+                (query, desc) => desc
+                    ? query.OrderByDescending(w => w.UpdatedAt)
+                    : query.OrderBy(w => w.UpdatedAt))
+            .ApplySortIf("updated", sortBy, sortOrder,
+                (query, desc) => desc
+                    ? query.OrderByDescending(w => w.UpdatedAt)
+                    : query.OrderBy(w => w.UpdatedAt))
+            .ApplySortIf("lastmodified", sortBy, sortOrder,
+                (query, desc) => desc
+                    ? query.OrderByDescending(w => w.UpdatedAt)
+                    : query.OrderBy(w => w.UpdatedAt));
+    }
+    
+    /// <summary>
+    /// Applies sorting by duration if the sortBy field matches
+    /// </summary>
+    public static SortableQuery<WorkoutTemplate> ApplySortByDuration(
+        this SortableQuery<WorkoutTemplate> sortable,
+        string? sortBy,
+        string? sortOrder)
+    {
+        return sortable.ApplySortIf("duration", sortBy, sortOrder,
+            (query, desc) => desc
+                ? query.OrderByDescending(w => w.EstimatedDurationMinutes)
+                : query.OrderBy(w => w.EstimatedDurationMinutes));
+    }
+    
+    /// <summary>
+    /// Applies sorting by category if the sortBy field matches
+    /// </summary>
+    public static SortableQuery<WorkoutTemplate> ApplySortByCategory(
+        this SortableQuery<WorkoutTemplate> sortable,
+        string? sortBy,
+        string? sortOrder)
+    {
+        return sortable.ApplySortIf("category", sortBy, sortOrder,
+            (query, desc) => desc
+                ? query.OrderByDescending(w => w.Category != null ? w.Category.Value : "")
+                : query.OrderBy(w => w.Category != null ? w.Category.Value : ""));
+    }
+    
+    /// <summary>
+    /// Applies sorting by difficulty if the sortBy field matches
+    /// </summary>
+    public static SortableQuery<WorkoutTemplate> ApplySortByDifficulty(
+        this SortableQuery<WorkoutTemplate> sortable,
+        string? sortBy,
+        string? sortOrder)
+    {
+        return sortable.ApplySortIf("difficulty", sortBy, sortOrder,
+            (query, desc) => desc
+                ? query.OrderByDescending(w => w.Difficulty != null ? w.Difficulty.DisplayOrder : 0)
+                : query.OrderBy(w => w.Difficulty != null ? w.Difficulty.DisplayOrder : 0));
+    }
+    
+    /// <summary>
+    /// Applies the default sort for workout templates (by name ascending)
+    /// </summary>
+    public static IQueryable<WorkoutTemplate> WithDefaultWorkoutTemplateSort(
+        this SortableQuery<WorkoutTemplate> sortable)
+    {
+        return sortable.WithDefaultSort(q => q.OrderBy(w => w.Name));
+    }
+    
+    /// <summary>
+    /// Applies sorting to the workout template query using the fluent sorting pattern
     /// </summary>
     /// <param name="query">The workout template query</param>
     /// <param name="sortBy">The field to sort by</param>
@@ -107,30 +239,15 @@ public static class WorkoutTemplateQueryExtensions
     public static IQueryable<WorkoutTemplate> ApplySorting(
         this IQueryable<WorkoutTemplate> query, string sortBy, string sortOrder)
     {
-        var isDescending = sortOrder?.ToLower() == "desc";
-        
-        return sortBy?.ToLower() switch
-        {
-            "name" => isDescending 
-                ? query.OrderByDescending(w => w.Name)
-                : query.OrderBy(w => w.Name),
-            "createdat" or "created" => isDescending
-                ? query.OrderByDescending(w => w.CreatedAt)
-                : query.OrderBy(w => w.CreatedAt),
-            "updatedat" or "updated" or "lastmodified" => isDescending
-                ? query.OrderByDescending(w => w.UpdatedAt)
-                : query.OrderBy(w => w.UpdatedAt),
-            "duration" => isDescending
-                ? query.OrderByDescending(w => w.EstimatedDurationMinutes)
-                : query.OrderBy(w => w.EstimatedDurationMinutes),
-            "category" => isDescending
-                ? query.OrderByDescending(w => w.Category != null ? w.Category.Value : "")
-                : query.OrderBy(w => w.Category != null ? w.Category.Value : ""),
-            "difficulty" => isDescending
-                ? query.OrderByDescending(w => w.Difficulty != null ? w.Difficulty.DisplayOrder : 0)
-                : query.OrderBy(w => w.Difficulty != null ? w.Difficulty.DisplayOrder : 0),
-            _ => query.OrderBy(w => w.Name) // default sort by name ascending
-        };
+        return query
+            .ToSortable()
+            .ApplySortByName(sortBy, sortOrder)
+            .ApplySortByCreatedAt(sortBy, sortOrder)
+            .ApplySortByUpdatedAt(sortBy, sortOrder)
+            .ApplySortByDuration(sortBy, sortOrder)
+            .ApplySortByCategory(sortBy, sortOrder)
+            .ApplySortByDifficulty(sortBy, sortOrder)
+            .WithDefaultWorkoutTemplateSort();
     }
     
     /// <summary>

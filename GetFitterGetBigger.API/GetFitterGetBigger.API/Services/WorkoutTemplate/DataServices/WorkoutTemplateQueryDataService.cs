@@ -1,10 +1,13 @@
+using GetFitterGetBigger.API.Constants.ErrorMessages;
 using GetFitterGetBigger.API.DTOs;
+using GetFitterGetBigger.API.Extensions;
 using GetFitterGetBigger.API.Models;
 using GetFitterGetBigger.API.Models.SpecializedIds;
 using GetFitterGetBigger.API.Repositories.Interfaces;
 using GetFitterGetBigger.API.Services.Results;
 using GetFitterGetBigger.API.Services.WorkoutTemplate.Extensions;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using Olimpo.EntityFramework.Persistency;
 
 namespace GetFitterGetBigger.API.Services.WorkoutTemplate.DataServices;
@@ -14,7 +17,8 @@ namespace GetFitterGetBigger.API.Services.WorkoutTemplate.DataServices;
 /// Encapsulates all database queries and entity-to-DTO mapping.
 /// </summary>
 public class WorkoutTemplateQueryDataService(
-    IUnitOfWorkProvider<FitnessDbContext> unitOfWorkProvider) : IWorkoutTemplateQueryDataService
+    IUnitOfWorkProvider<FitnessDbContext> unitOfWorkProvider,
+    ILogger<WorkoutTemplateQueryDataService> logger) : IWorkoutTemplateQueryDataService
 {
     
     public async Task<ServiceResult<WorkoutTemplateDto>> GetByIdWithDetailsAsync(WorkoutTemplateId id)
@@ -24,7 +28,12 @@ public class WorkoutTemplateQueryDataService(
         
         var workoutTemplate = await repository.GetByIdWithDetailsAsync(id);
         var dto = workoutTemplate.ToDto();
-        return ServiceResult<WorkoutTemplateDto>.Success(dto);
+        
+        return dto.IsEmpty
+            ? ServiceResult<WorkoutTemplateDto>.Failure(
+                WorkoutTemplateDto.Empty, 
+                ServiceError.NotFound(WorkoutTemplateErrorMessages.NotFound))
+            : ServiceResult<WorkoutTemplateDto>.Success(dto);
     }
     
     public async Task<ServiceResult<BooleanResultDto>> ExistsAsync(WorkoutTemplateId id)
@@ -59,43 +68,44 @@ public class WorkoutTemplateQueryDataService(
         using var unitOfWork = unitOfWorkProvider.CreateReadOnly();
         var repository = unitOfWork.GetRepository<IWorkoutTemplateRepository>();
         
-        // Build query with filters and elegant sorting chain
+        // Build query with expressive fluent chain showing all operations
         var query = repository.GetWorkoutTemplatesQueryable()
-            .FilterByNamePattern(namePattern)
-            .FilterByCategory(categoryId)
-            .FilterByObjective(objectiveId)
-            .FilterByDifficulty(difficultyId)
-            .FilterByState(stateId)
+            .ApplyNamePatternFilter(namePattern)
+            .ApplyCategoryFilter(categoryId)
+            .ApplyObjectiveFilter(objectiveId)
+            .ApplyDifficultyFilter(difficultyId)
+            .ApplyStateFilter(stateId)
             .ToSortable()
             .ApplySortByName(sortBy, sortOrder)
             .ApplySortByCreatedAt(sortBy, sortOrder)
             .ApplySortByUpdatedAt(sortBy, sortOrder)
-            .ApplySortByDifficulty(sortBy, sortOrder)
+            .ApplySortByDuration(sortBy, sortOrder)
             .ApplySortByCategory(sortBy, sortOrder)
+            .ApplySortByDifficulty(sortBy, sortOrder)
             .WithDefaultWorkoutTemplateSort();
         
-        // Get total count
+        // Log for SQL verification (will help verify EF Core behavior)
+        logger.LogDebug("Executing count query for workout templates search");
         var totalCount = await query.CountAsync();
+        logger.LogDebug("Count query completed. Total: {TotalCount}", totalCount);
         
-        // Apply pagination
+        // Now apply paging and execute
+        logger.LogDebug("Executing paged query for workout templates");
         var items = await query
-            .Skip((page - 1) * pageSize)
-            .Take(pageSize)
+            .ApplyPaging(page, pageSize)
             .IncludeStandardData()
             .ToListAsync();
+        logger.LogDebug("Paged query completed. Retrieved: {ItemCount} items", items.Count);
         
-        var dtos = items.Select(wt => wt.ToDto()).ToList();
-        
-        var pagedResponse = new PagedResponse<WorkoutTemplateDto>
+        var response = new PagedResponse<WorkoutTemplateDto>
         {
-            Items = dtos,
+            Items = items.Select(t => t.ToDto()).ToList(),
             TotalCount = totalCount,
             CurrentPage = page,
-            PageSize = pageSize,
-            // TotalPages is computed property
+            PageSize = pageSize
         };
         
-        return ServiceResult<PagedResponse<WorkoutTemplateDto>>.Success(pagedResponse);
+        return ServiceResult<PagedResponse<WorkoutTemplateDto>>.Success(response);
     }
     
     public async Task<ServiceResult<int>> GetCountAsync(
