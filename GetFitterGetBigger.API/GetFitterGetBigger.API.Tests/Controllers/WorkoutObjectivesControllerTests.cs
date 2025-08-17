@@ -89,7 +89,7 @@ public class WorkoutObjectivesControllerTests
         var result = await _controller.GetWorkoutObjectiveById(workoutObjectiveId);
 
         // Assert
-        Assert.IsType<NotFoundObjectResult>(result);
+        Assert.IsType<NotFoundResult>(result);
     }
 
     [Fact]
@@ -105,6 +105,6 @@ public class WorkoutObjectivesControllerTests
         var result = await _controller.GetWorkoutObjectiveById(invalidId);
 
         // Assert
-        Assert.IsType<NotFoundObjectResult>(result);
+        Assert.IsType<NotFoundResult>(result);
     }
 }

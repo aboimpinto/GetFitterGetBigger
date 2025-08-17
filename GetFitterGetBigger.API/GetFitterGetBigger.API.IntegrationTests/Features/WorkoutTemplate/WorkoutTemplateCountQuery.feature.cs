@@ -78,49 +78,49 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.WorkoutTemplate
         {
             await testRunner.GivenAsync("I am authenticated as a user", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Given ");
             await testRunner.AndAsync("the database has reference data", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
-            TechTalk.SpecFlow.Table table19 = new TechTalk.SpecFlow.Table(new string[] {
+            TechTalk.SpecFlow.Table table18 = new TechTalk.SpecFlow.Table(new string[] {
                         "Name",
                         "Description",
                         "CategoryName",
                         "DifficultyName",
                         "Duration",
                         "Tags"});
-            table19.AddRow(new string[] {
+            table18.AddRow(new string[] {
                         "Test Workout 1",
                         "Description for test workout",
                         "Upper Body - Push",
                         "Beginner",
                         "50",
                         "test,workout1"});
-            table19.AddRow(new string[] {
+            table18.AddRow(new string[] {
                         "Test Workout 2",
                         "Description for test workout",
                         "Upper Body - Push",
                         "Intermediate",
                         "55",
                         "test,workout2"});
-            table19.AddRow(new string[] {
+            table18.AddRow(new string[] {
                         "Test Workout 3",
                         "Description for test workout",
                         "Lower Body",
                         "Beginner",
                         "60",
                         "test,workout3"});
-            table19.AddRow(new string[] {
+            table18.AddRow(new string[] {
                         "Test Workout 4",
                         "Description for test workout",
                         "Lower Body",
                         "Advanced",
                         "65",
                         "test,workout4"});
-            table19.AddRow(new string[] {
+            table18.AddRow(new string[] {
                         "Test Workout 5",
                         "Description for test workout",
                         "Upper Body - Push",
                         "Intermediate",
                         "70",
                         "test,workout5"});
-            await testRunner.AndAsync("the following workout templates exist for count tests:", ((string)(null)), table19, "And ");
+            await testRunner.AndAsync("the following workout templates exist for count tests:", ((string)(null)), table18, "And ");
         }
         
         async System.Threading.Tasks.Task Xunit.IAsyncLifetime.InitializeAsync()

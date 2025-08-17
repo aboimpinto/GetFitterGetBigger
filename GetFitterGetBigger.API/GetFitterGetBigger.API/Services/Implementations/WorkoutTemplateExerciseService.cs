@@ -187,11 +187,11 @@ public class WorkoutTemplateExerciseService : IWorkoutTemplateExerciseService
                 ServiceError.NotFound(WorkoutTemplateExerciseErrorMessages.WorkoutTemplateNotFound));
         }
         
-        if (template.WorkoutState?.Value != "DRAFT")
+        if (template.WorkoutState?.Value != WorkoutTemplateExerciseErrorMessages.DraftStateRequired)
         {
             return ServiceResult<WorkoutTemplateExerciseDto>.Failure(
                 new WorkoutTemplateExerciseDto(),
-                ServiceError.ValidationFailed("Can only add exercises to templates in DRAFT state"));
+                ServiceError.ValidationFailed(WorkoutTemplateExerciseErrorMessages.CanOnlyAddExercisesToDraftTemplates));
         }
         
         var result = ServiceResult<WorkoutTemplateExerciseDto>.Success(new WorkoutTemplateExerciseDto());
@@ -277,7 +277,7 @@ public class WorkoutTemplateExerciseService : IWorkoutTemplateExerciseService
         {
             (true, _) or (_, true) => ServiceResult<WorkoutTemplateExerciseDto>.Failure(
                 new WorkoutTemplateExerciseDto(),
-                ServiceError.ValidationFailed("Invalid command parameters")),
+                ServiceError.ValidationFailed(WorkoutTemplateExerciseErrorMessages.InvalidCommandParameters)),
             _ => await ProcessUpdateExerciseAsync(command)
         };
         
@@ -311,10 +311,10 @@ public class WorkoutTemplateExerciseService : IWorkoutTemplateExerciseService
         var templateRepo = unitOfWork.GetRepository<IWorkoutTemplateRepository>();
         var template = await templateRepo.GetByIdAsync(exerciseTemplate.WorkoutTemplateId);
         
-        var result = template.WorkoutState.Value != "DRAFT"
+        var result = template.WorkoutState.Value != WorkoutTemplateExerciseErrorMessages.DraftStateRequired
             ? ServiceResult<WorkoutTemplateExerciseDto>.Failure(
                 new WorkoutTemplateExerciseDto(),
-                ServiceError.ValidationFailed("Can only update exercises in templates in DRAFT state"))
+                ServiceError.ValidationFailed(WorkoutTemplateExerciseErrorMessages.CanOnlyUpdateExercisesInDraftTemplates))
             : await PerformUpdateAsync(exerciseTemplate, command, exerciseTemplateRepo, unitOfWork);
         
         return result;
@@ -392,10 +392,10 @@ public class WorkoutTemplateExerciseService : IWorkoutTemplateExerciseService
         var templateRepo = unitOfWork.GetRepository<IWorkoutTemplateRepository>();
         var template = await templateRepo.GetByIdAsync(exerciseTemplate.WorkoutTemplateId);
         
-        var result = template.WorkoutState.Value != "DRAFT"
+        var result = template.WorkoutState.Value != WorkoutTemplateExerciseErrorMessages.DraftStateRequired
             ? ServiceResult<BooleanResultDto>.Failure(
                 BooleanResultDto.Empty,
-                ServiceError.ValidationFailed("Can only remove exercises from templates in DRAFT state"))
+                ServiceError.ValidationFailed(WorkoutTemplateExerciseErrorMessages.CanOnlyRemoveExercisesFromDraftTemplates))
             : await PerformRemoveExerciseAsync(exerciseTemplateRepo, workoutTemplateExerciseId, unitOfWork);
         
         return result;
@@ -488,11 +488,11 @@ public class WorkoutTemplateExerciseService : IWorkoutTemplateExerciseService
                 ServiceError.NotFound(WorkoutTemplateExerciseErrorMessages.WorkoutTemplateNotFound));
         }
         
-        if (template.WorkoutState?.Value != "DRAFT")
+        if (template.WorkoutState?.Value != WorkoutTemplateExerciseErrorMessages.DraftStateRequired)
         {
             return ServiceResult<BooleanResultDto>.Failure(
                 BooleanResultDto.Empty,
-                ServiceError.ValidationFailed("Can only reorder exercises in templates in DRAFT state"));
+                ServiceError.ValidationFailed(WorkoutTemplateExerciseErrorMessages.CanOnlyReorderExercisesInDraftTemplates));
         }
         
         var result = ServiceResult<BooleanResultDto>.Success(BooleanResultDto.Create(true));
@@ -589,10 +589,10 @@ public class WorkoutTemplateExerciseService : IWorkoutTemplateExerciseService
         var templateRepo = unitOfWork.GetRepository<IWorkoutTemplateRepository>();
         var template = await templateRepo.GetByIdAsync(exerciseTemplate.WorkoutTemplateId);
         
-        var result = template.WorkoutState.Value != "DRAFT"
+        var result = template.WorkoutState.Value != WorkoutTemplateExerciseErrorMessages.DraftStateRequired
             ? ServiceResult<WorkoutTemplateExerciseDto>.Failure(
                 new WorkoutTemplateExerciseDto(),
-                ServiceError.ValidationFailed("Can only change zones in templates in DRAFT state"))
+                ServiceError.ValidationFailed(WorkoutTemplateExerciseErrorMessages.CanOnlyChangeZonesInDraftTemplates))
             : await PerformZoneChangeAsync(exerciseTemplate, command, exerciseTemplateRepo, unitOfWork);
         
         return result;
@@ -653,7 +653,7 @@ public class WorkoutTemplateExerciseService : IWorkoutTemplateExerciseService
             (true, _, _) or (_, true, _) or (_, _, true) => 
                 ServiceResult<int>.Failure(
                     0,
-                    ServiceError.ValidationFailed("Invalid command parameters")),
+                    ServiceError.ValidationFailed(WorkoutTemplateExerciseErrorMessages.InvalidCommandParameters)),
             _ => await ProcessDuplicateExercisesAsync(command)
         };
         
@@ -707,11 +707,11 @@ public class WorkoutTemplateExerciseService : IWorkoutTemplateExerciseService
                 ServiceError.NotFound(WorkoutTemplateExerciseErrorMessages.TargetTemplateNotFound));
         }
         
-        if (targetTemplate.WorkoutState?.Value != "DRAFT")
+        if (targetTemplate.WorkoutState?.Value != WorkoutTemplateExerciseErrorMessages.DraftStateRequired)
         {
             return ServiceResult<int>.Failure(
                 0,
-                ServiceError.ValidationFailed("Can only duplicate exercises to templates in DRAFT state"));
+                ServiceError.ValidationFailed(WorkoutTemplateExerciseErrorMessages.CanOnlyDuplicateExercisesToDraftTemplates));
         }
         
         var result = ServiceResult<int>.Success(0);

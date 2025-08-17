@@ -1,3 +1,4 @@
+using GetFitterGetBigger.API.Constants;
 using GetFitterGetBigger.API.Constants.ErrorMessages;
 using GetFitterGetBigger.API.DTOs;
 using GetFitterGetBigger.API.Models.SpecializedIds;
@@ -53,8 +54,8 @@ public class WorkoutTemplateService(
     {
         // Validate pagination parameters
         return await ServiceValidate.Build<PagedResponse<WorkoutTemplateDto>>()
-            .EnsureNumberBetween(page, 1, int.MaxValue, "Page number must be at least 1")
-            .EnsureNumberBetween(pageSize, 1, 100, "Page size must be between 1 and 100")
+            .EnsureNumberBetween(page, 1, int.MaxValue, WorkoutTemplateErrorMessages.PageNumberInvalid)
+            .EnsureNumberBetween(pageSize, 1, 100, WorkoutTemplateErrorMessages.PageSizeInvalid)
             .WhenValidAsync(async () => await SearchWithBusinessLogicAsync(
                 page, pageSize, namePattern, categoryId, objectiveId, 
                 difficultyId, stateId, sortBy, sortOrder));
@@ -161,7 +162,7 @@ public class WorkoutTemplateService(
     private async Task<ServiceResult<WorkoutTemplateDto>> CreateWorkoutTemplateEntityAsync(CreateWorkoutTemplateCommand command)
     {
         // Use service layer to get Draft state
-        var draftStateResult = await _workoutStateService.GetByValueAsync("Draft");
+        var draftStateResult = await _workoutStateService.GetByValueAsync(WorkoutStateConstants.Draft);
         
         if (!draftStateResult.IsSuccess)
         {

@@ -120,7 +120,7 @@ public class EquipmentService(
                 ServiceError.NotFound("Equipment", id.ToString()))
             .EnsureAsync(
                 async () => await CanDeleteInternalAsync(id),
-                ServiceError.DependencyExists("Equipment", "dependent exercises"))
+                new ServiceError(ServiceErrorCode.DependencyExists, EquipmentErrorMessages.BusinessRules.CannotDeleteInUse))
             .MatchAsync(
                 whenValid: async () => await _dataService.DeleteAsync(id)
             );

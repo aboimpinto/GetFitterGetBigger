@@ -65,8 +65,8 @@ public class KineticChainTypesController : ControllerBase
         return result switch
         {
             { IsSuccess: true } => Ok(result.Data),
-            { Errors: var errors } when errors.Any(e => e.Contains("not found")) => NotFound(),
-            { Errors: var errors } => BadRequest(new { errors })
+            { PrimaryErrorCode: ServiceErrorCode.NotFound } => NotFound(),
+            _ => BadRequest(new { errors = result.StructuredErrors })
         };
     }
 
@@ -88,8 +88,8 @@ public class KineticChainTypesController : ControllerBase
         return result switch
         {
             { IsSuccess: true } => Ok(result.Data),
-            { Errors: var errors } when errors.Any(e => e.Contains("not found")) => NotFound(),
-            { Errors: var errors } => BadRequest(new { errors })
+            { PrimaryErrorCode: ServiceErrorCode.NotFound } => NotFound(),
+            _ => BadRequest(new { errors = result.StructuredErrors })
         };
     }
 }

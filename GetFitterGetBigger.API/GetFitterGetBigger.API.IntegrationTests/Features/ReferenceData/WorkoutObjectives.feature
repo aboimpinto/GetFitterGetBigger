@@ -35,9 +35,6 @@ Feature: Workout Objectives Reference Data
   Scenario: Get workout objective by non-existent ID
     When I send a GET request to "/api/ReferenceTables/WorkoutObjectives/workoutobjective-11111111-1111-1111-1111-111111111111"
     Then the response status should be 404
-    And the response should contain an error with:
-      | Field   | Value                                    |
-      | message | Workout objective not found              |
 
   Scenario: Get workout objective by empty GUID
     When I send a GET request to "/api/ReferenceTables/WorkoutObjectives/workoutobjective-00000000-0000-0000-0000-000000000000"

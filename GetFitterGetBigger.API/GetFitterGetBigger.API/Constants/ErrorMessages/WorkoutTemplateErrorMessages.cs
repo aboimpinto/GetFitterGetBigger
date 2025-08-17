@@ -59,4 +59,8 @@ public static class WorkoutTemplateErrorMessages
     public static string CategoryIdRequired => "Category ID is required for suggestions";
     public static string MaxSuggestionsRange => "Max suggestions must be between 1 and 50";
     public static string CannotDeleteWithExecutionLogs => "Cannot delete workout template with execution logs";
+    
+    // Pagination Validation Messages
+    public static string PageNumberInvalid => "Page number must be at least 1";
+    public static string PageSizeInvalid => "Page size must be between 1 and 100";
 }

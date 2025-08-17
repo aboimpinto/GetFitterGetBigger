@@ -223,13 +223,6 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.ReferenceData
                 await testRunner.WhenAsync("I send a GET request to \"/api/ReferenceTables/WorkoutObjectives/workoutobjective-" +
                         "11111111-1111-1111-1111-111111111111\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
                 await testRunner.ThenAsync("the response status should be 404", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
-                TechTalk.SpecFlow.Table table13 = new TechTalk.SpecFlow.Table(new string[] {
-                            "Field",
-                            "Value"});
-                table13.AddRow(new string[] {
-                            "message",
-                            "Workout objective not found"});
-                await testRunner.AndAsync("the response should contain an error with:", ((string)(null)), table13, "And ");
             }
             await this.ScenarioCleanupAsync();
         }

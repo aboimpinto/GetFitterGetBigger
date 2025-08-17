@@ -78,37 +78,37 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.WorkoutTemplate
         {
             await testRunner.GivenAsync("I am authenticated as a user", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Given ");
             await testRunner.AndAsync("the database has reference data", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
-            TechTalk.SpecFlow.Table table14 = new TechTalk.SpecFlow.Table(new string[] {
+            TechTalk.SpecFlow.Table table13 = new TechTalk.SpecFlow.Table(new string[] {
                         "Name",
                         "Description",
                         "Duration",
                         "Tags"});
-            table14.AddRow(new string[] {
+            table13.AddRow(new string[] {
                         "Leg Burner I",
                         "High intensity leg workout",
                         "45",
                         "leg,intensity"});
-            table14.AddRow(new string[] {
+            table13.AddRow(new string[] {
                         "Leg Burner II",
                         "Advanced leg workout",
                         "60",
                         "leg,advanced"});
-            table14.AddRow(new string[] {
+            table13.AddRow(new string[] {
                         "Upper Body Burner",
                         "Upper body strength training",
                         "45",
                         "upper,strength"});
-            table14.AddRow(new string[] {
+            table13.AddRow(new string[] {
                         "Core Crusher",
                         "Core strengthening routine",
                         "30",
                         "core,abs"});
-            table14.AddRow(new string[] {
+            table13.AddRow(new string[] {
                         "Full Body Blast",
                         "Complete body workout",
                         "60",
                         "full,complete"});
-            await testRunner.AndAsync("the following workout templates exist for case insensitive search:", ((string)(null)), table14, "And ");
+            await testRunner.AndAsync("the following workout templates exist for case insensitive search:", ((string)(null)), table13, "And ");
         }
         
         async System.Threading.Tasks.Task Xunit.IAsyncLifetime.InitializeAsync()
@@ -146,13 +146,13 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.WorkoutTemplate
                 await testRunner.ThenAsync("the response status should be 200", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
                 await testRunner.AndAsync("the response should have property \"totalCount\" with value \"2\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
                 await testRunner.AndAsync("the response should have property \"items\" as array with 2 items", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
-                TechTalk.SpecFlow.Table table15 = new TechTalk.SpecFlow.Table(new string[] {
+                TechTalk.SpecFlow.Table table14 = new TechTalk.SpecFlow.Table(new string[] {
                             "Name"});
-                table15.AddRow(new string[] {
+                table14.AddRow(new string[] {
                             "Leg Burner I"});
-                table15.AddRow(new string[] {
+                table14.AddRow(new string[] {
                             "Leg Burner II"});
-                await testRunner.AndAsync("the response items should contain templates with names:", ((string)(null)), table15, "And ");
+                await testRunner.AndAsync("the response items should contain templates with names:", ((string)(null)), table14, "And ");
             }
             await this.ScenarioCleanupAsync();
         }
@@ -182,15 +182,15 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.WorkoutTemplate
                 await testRunner.ThenAsync("the response status should be 200", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
                 await testRunner.AndAsync("the response should have property \"totalCount\" with value \"3\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
                 await testRunner.AndAsync("the response should have property \"items\" as array with 3 items", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
-                TechTalk.SpecFlow.Table table16 = new TechTalk.SpecFlow.Table(new string[] {
+                TechTalk.SpecFlow.Table table15 = new TechTalk.SpecFlow.Table(new string[] {
                             "Name"});
-                table16.AddRow(new string[] {
+                table15.AddRow(new string[] {
                             "Leg Burner I"});
-                table16.AddRow(new string[] {
+                table15.AddRow(new string[] {
                             "Leg Burner II"});
-                table16.AddRow(new string[] {
+                table15.AddRow(new string[] {
                             "Upper Body Burner"});
-                await testRunner.AndAsync("the response items should contain templates with names:", ((string)(null)), table16, "And ");
+                await testRunner.AndAsync("the response items should contain templates with names:", ((string)(null)), table15, "And ");
             }
             await this.ScenarioCleanupAsync();
         }
@@ -216,50 +216,50 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.WorkoutTemplate
             {
                 await this.ScenarioStartAsync();
                 await this.FeatureBackgroundAsync();
-                TechTalk.SpecFlow.Table table17 = new TechTalk.SpecFlow.Table(new string[] {
+                TechTalk.SpecFlow.Table table16 = new TechTalk.SpecFlow.Table(new string[] {
                             "Name",
                             "Description",
                             "Duration",
                             "Tags"});
-                table17.AddRow(new string[] {
+                table16.AddRow(new string[] {
                             "LEG CRUSHER",
                             "All uppercase",
                             "45",
                             "leg,upper"});
-                table17.AddRow(new string[] {
+                table16.AddRow(new string[] {
                             "leg destroyer",
                             "All lowercase",
                             "45",
                             "leg,lower"});
-                table17.AddRow(new string[] {
+                table16.AddRow(new string[] {
                             "Leg Workout",
                             "Title case",
                             "30",
                             "leg,basic"});
-                table17.AddRow(new string[] {
+                table16.AddRow(new string[] {
                             "LEGENDARY Legs",
                             "Mixed case",
                             "50",
                             "leg,legend"});
-                await testRunner.GivenAsync("the following additional workout templates exist for case insensitive search:", ((string)(null)), table17, "Given ");
+                await testRunner.GivenAsync("the following additional workout templates exist for case insensitive search:", ((string)(null)), table16, "Given ");
                 await testRunner.WhenAsync("I send a GET request to \"/api/workout-templates?namePattern=LeG\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
                 await testRunner.ThenAsync("the response status should be 200", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
                 await testRunner.AndAsync("the response should have property \"totalCount\" with value \"6\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
-                TechTalk.SpecFlow.Table table18 = new TechTalk.SpecFlow.Table(new string[] {
+                TechTalk.SpecFlow.Table table17 = new TechTalk.SpecFlow.Table(new string[] {
                             "Name"});
-                table18.AddRow(new string[] {
+                table17.AddRow(new string[] {
                             "Leg Burner I"});
-                table18.AddRow(new string[] {
+                table17.AddRow(new string[] {
                             "Leg Burner II"});
-                table18.AddRow(new string[] {
+                table17.AddRow(new string[] {
                             "LEG CRUSHER"});
-                table18.AddRow(new string[] {
+                table17.AddRow(new string[] {
                             "leg destroyer"});
-                table18.AddRow(new string[] {
+                table17.AddRow(new string[] {
                             "Leg Workout"});
-                table18.AddRow(new string[] {
+                table17.AddRow(new string[] {
                             "LEGENDARY Legs"});
-                await testRunner.AndAsync("the response items should contain templates with names:", ((string)(null)), table18, "And ");
+                await testRunner.AndAsync("the response items should contain templates with names:", ((string)(null)), table17, "And ");
             }
             await this.ScenarioCleanupAsync();
         }

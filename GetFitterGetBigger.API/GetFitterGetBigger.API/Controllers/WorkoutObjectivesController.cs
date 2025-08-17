@@ -65,7 +65,7 @@ public class WorkoutObjectivesController : ControllerBase
         return result switch
         {
             { IsSuccess: true } => Ok(result.Data),
-            { PrimaryErrorCode: ServiceErrorCode.NotFound } => NotFound(new { message = "Workout objective not found" }),
+            { PrimaryErrorCode: ServiceErrorCode.NotFound } => NotFound(),
             _ => BadRequest(new { errors = result.StructuredErrors })
         };
     }
@@ -88,7 +88,7 @@ public class WorkoutObjectivesController : ControllerBase
         return result switch
         {
             { IsSuccess: true } => Ok(result.Data),
-            { PrimaryErrorCode: ServiceErrorCode.NotFound } => NotFound(new { message = "Workout objective not found" }),
+            { PrimaryErrorCode: ServiceErrorCode.NotFound } => NotFound(),
             _ => BadRequest(new { errors = result.StructuredErrors })
         };
     }

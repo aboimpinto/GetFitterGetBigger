@@ -163,7 +163,7 @@ public class MuscleGroupService(
                 ServiceError.NotFound("MuscleGroup", id.ToString()))
             .EnsureAsync(
                 async () => await CanDeleteInternalAsync(id),
-                ServiceError.DependencyExists("MuscleGroup", "dependent exercises"))
+                new ServiceError(ServiceErrorCode.DependencyExists, MuscleGroupErrorMessages.BusinessRules.CannotDeleteInUse))
             .MatchAsync(
                 whenValid: async () => await _dataService.DeleteAsync(id)
             );

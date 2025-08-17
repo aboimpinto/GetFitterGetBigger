@@ -27,4 +27,13 @@ public static class WorkoutTemplateExerciseErrorMessages
     
     // Exercise-specific Messages
     public static string ExerciseNotFoundWithId => "Exercise {0} not found";
+    
+    // State Validation Messages
+    public static string DraftStateRequired => "DRAFT";
+    public static string CanOnlyAddExercisesToDraftTemplates => "Can only add exercises to templates in DRAFT state";
+    public static string CanOnlyUpdateExercisesInDraftTemplates => "Can only update exercises in templates in DRAFT state";
+    public static string CanOnlyRemoveExercisesFromDraftTemplates => "Can only remove exercises from templates in DRAFT state";
+    public static string CanOnlyReorderExercisesInDraftTemplates => "Can only reorder exercises in templates in DRAFT state";
+    public static string CanOnlyChangeZonesInDraftTemplates => "Can only change zones in templates in DRAFT state";
+    public static string CanOnlyDuplicateExercisesToDraftTemplates => "Can only duplicate exercises to templates in DRAFT state";
 }
