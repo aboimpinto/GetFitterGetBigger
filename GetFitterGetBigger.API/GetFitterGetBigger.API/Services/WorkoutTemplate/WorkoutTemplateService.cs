@@ -24,8 +24,7 @@ public class WorkoutTemplateService(
     IWorkoutStateService workoutStateService,
     IEquipmentRequirementsService equipmentRequirementsService,
     SuggestionHandler suggestionHandler,
-    DuplicationHandler duplicationHandler,
-    ILogger<WorkoutTemplateService> logger) : IWorkoutTemplateService
+    DuplicationHandler duplicationHandler) : IWorkoutTemplateService
 {
     private readonly IWorkoutTemplateQueryDataService _queryDataService = queryDataService;
     private readonly IWorkoutTemplateCommandDataService _commandDataService = commandDataService;
@@ -33,13 +32,25 @@ public class WorkoutTemplateService(
     private readonly IEquipmentRequirementsService _equipmentRequirementsService = equipmentRequirementsService;
     private readonly SuggestionHandler _suggestionHandler = suggestionHandler;
     private readonly DuplicationHandler _duplicationHandler = duplicationHandler;
-    private readonly ILogger<WorkoutTemplateService> _logger = logger;
 
     public async Task<ServiceResult<WorkoutTemplateDto>> GetByIdAsync(WorkoutTemplateId id)
     {
         return await ServiceValidate.For<WorkoutTemplateDto>()
             .EnsureNotEmpty(id, WorkoutTemplateErrorMessages.InvalidIdFormat)
-            .MatchAsync(async () => await _queryDataService.GetByIdWithDetailsAsync(id));
+            .MatchAsync(
+                whenValid: async () =>
+                {
+                    var result = await _queryDataService.GetByIdWithDetailsAsync(id);
+                    // Convert Empty to NotFound at the service layer
+                    if (result.IsSuccess && result.Data.IsEmpty)
+                    {
+                        return ServiceResult<WorkoutTemplateDto>.Failure(
+                            WorkoutTemplateDto.Empty,
+                            ServiceError.NotFound(WorkoutTemplateErrorMessages.NotFound));
+                    }
+                    return result;
+                }
+            );
     }
 
     public async Task<ServiceResult<PagedResponse<WorkoutTemplateDto>>> SearchAsync(
@@ -170,28 +181,24 @@ public class WorkoutTemplateService(
             .EnsureNotEmpty(command.DifficultyId, WorkoutTemplateErrorMessages.DifficultyRequired)
             .EnsureNumberBetween(command.EstimatedDurationMinutes, 5, 300, WorkoutTemplateErrorMessages.DurationInvalid)
             .EnsureMaxCount(command.Tags, 10, WorkoutTemplateErrorMessages.TooManyTags)
-            // Dependent validations
+            // Business validations - ALL in the chain!
             .EnsureNameIsUniqueAsync(
                 async () => await IsNameUniqueAsync(command.Name),
                 "WorkoutTemplate", command.Name)
-            .MatchAsync(async () => await CreateWorkoutTemplateEntityAsync(command)
-            );
+            .EnsureAsync(
+                async () => await IsDraftStateAvailableAsync(),
+                ServiceError.InternalError(WorkoutTemplateErrorMessages.DraftStateNotFound))
+            // Single operation when ALL validations pass
+            .MatchAsync(async () => await CreateWorkoutTemplateEntityAsync(command));
     }
     
     private async Task<ServiceResult<WorkoutTemplateDto>> CreateWorkoutTemplateEntityAsync(CreateWorkoutTemplateCommand command)
     {
-        // Use service layer to get Draft state
+        // Get Draft state (validation already done in ServiceValidate chain)
         var draftStateResult = await _workoutStateService.GetByValueAsync(WorkoutStateConstants.Draft);
-        
-        if (!draftStateResult.IsSuccess)
-        {
-            return ServiceResult<WorkoutTemplateDto>.Failure(
-                WorkoutTemplateDto.Empty,
-                ServiceError.InternalError("Draft workout state not found in database"));
-        }
-        
         var defaultWorkoutStateId = WorkoutStateId.ParseOrEmpty(draftStateResult.Data.Id);
         
+        // Create entity (validation happens at entity level)
         var entityResult = WorkoutTemplateEntity.Handler.CreateNew(
             command.Name,
             command.Description,
@@ -202,22 +209,13 @@ public class WorkoutTemplateService(
             command.IsPublic,
             defaultWorkoutStateId);
 
-        if (!entityResult.IsSuccess)
+        return entityResult.IsSuccess switch
         {
-            return ServiceResult<WorkoutTemplateDto>.Failure(
+            true => await _commandDataService.CreateAsync(entityResult.Value),
+            false => ServiceResult<WorkoutTemplateDto>.Failure(
                 WorkoutTemplateDto.Empty,
-                ServiceError.ValidationFailed(string.Join(", ", entityResult.Errors)));
-        }
-        
-        // Use DataService for persistence
-        var result = await _commandDataService.CreateAsync(entityResult.Value);
-        
-        if (result.IsSuccess)
-        {
-            _logger.LogInformation("Created workout template {TemplateId}", result.Data.Id);
-        }
-        
-        return result;
+                ServiceError.ValidationFailed(string.Join(", ", entityResult.Errors)))
+        };
     }
 
     public async Task<ServiceResult<WorkoutTemplateDto>> UpdateAsync(WorkoutTemplateId id, UpdateWorkoutTemplateCommand command)
@@ -260,6 +258,12 @@ public class WorkoutTemplateService(
         return await _queryDataService.IsWorkoutTemplateDeletableAsync(id);
     }
     
+    private async Task<bool> IsDraftStateAvailableAsync()
+    {
+        var draftStateResult = await _workoutStateService.GetByValueAsync(WorkoutStateConstants.Draft);
+        return draftStateResult.IsSuccess;
+    }
+    
     private async Task<ServiceResult<WorkoutTemplateDto>> UpdateWorkoutTemplateEntityAsync(
         WorkoutTemplateId id, 
         UpdateWorkoutTemplateCommand command)
@@ -288,7 +292,7 @@ public class WorkoutTemplateService(
     {
         return await ServiceValidate.Build<WorkoutTemplateDto>()
             .EnsureNotEmpty(id, WorkoutTemplateErrorMessages.InvalidIdFormat)
-            .EnsureNotEmpty(newStateId, WorkoutTemplateErrorMessages.NewStateIdRequired)
+            .EnsureNotEmpty(newStateId, WorkoutTemplateErrorMessages.InvalidStateIdFormat)
             .EnsureExistsAsync(
                 async () => (await _queryDataService.ExistsAsync(id)).Data.Value,
                 "WorkoutTemplate")

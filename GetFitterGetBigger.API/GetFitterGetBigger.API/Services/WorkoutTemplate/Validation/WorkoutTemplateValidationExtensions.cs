@@ -37,6 +37,30 @@ public static class WorkoutTemplateValidationExtensions
     }
     
     /// <summary>
+    /// Loads and validates that a workout template exists with custom error message.
+    /// Adds a validation error if the template is not found or empty.
+    /// </summary>
+    /// <typeparam name="TResult">The result DTO type that implements IEmptyDto</typeparam>
+    /// <param name="validationTask">The async validation task</param>
+    /// <param name="queryService">The query service to load the template</param>
+    /// <param name="templateId">The ID of the template to load</param>
+    /// <param name="notFoundMessage">Custom error message for when template is not found</param>
+    /// <returns>A validation chain carrying the loaded workout template</returns>
+    public static Task<ServiceValidationWithData<TResult, WorkoutTemplateDto>> 
+        EnsureWorkoutTemplateExists<TResult>(
+            this Task<ServiceValidation<TResult>> validationTask,
+            IWorkoutTemplateQueryDataService queryService,
+            WorkoutTemplateId templateId,
+            string notFoundMessage)
+        where TResult : class, IEmptyDto<TResult>
+    {
+        return validationTask.EnsureEntityExists<TResult, WorkoutTemplateDto>(
+            async () => await queryService.GetByIdWithDetailsAsync(templateId),
+            ServiceError.NotFound(notFoundMessage)
+        );
+    }
+    
+    /// <summary>
     /// Continues the validation chain with the loaded workout template.
     /// This is the terminal operation for workout template validations.
     /// </summary>

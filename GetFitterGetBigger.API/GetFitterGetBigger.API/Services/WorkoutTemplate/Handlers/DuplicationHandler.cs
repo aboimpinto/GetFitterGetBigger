@@ -45,7 +45,10 @@ public class DuplicationHandler(
                 return await ServiceValidate.Build<WorkoutTemplateDto>()
                     .Validation
                     .AsAsync()
-                    .EnsureWorkoutTemplateExists(_queryDataService, originalTemplateId)
+                    .EnsureWorkoutTemplateExists(
+                        _queryDataService, 
+                        originalTemplateId, 
+                        WorkoutTemplateErrorMessages.OriginalNotFound)
                     .ThenWithWorkoutTemplate(async template => 
                         await ProcessDuplicationAsync(template, newName));
             });

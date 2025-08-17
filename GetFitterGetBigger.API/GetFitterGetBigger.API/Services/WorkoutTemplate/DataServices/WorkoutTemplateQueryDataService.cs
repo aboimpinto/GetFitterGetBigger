@@ -59,25 +59,20 @@ public class WorkoutTemplateQueryDataService(
         using var unitOfWork = unitOfWorkProvider.CreateReadOnly();
         var repository = unitOfWork.GetRepository<IWorkoutTemplateRepository>();
         
-        // Build query with individual, visible filter methods
+        // Build query with filters and elegant sorting chain
         var query = repository.GetWorkoutTemplatesQueryable()
             .FilterByNamePattern(namePattern)
             .FilterByCategory(categoryId)
             .FilterByObjective(objectiveId)
             .FilterByDifficulty(difficultyId)
-            .FilterByState(stateId);
-        
-        // Apply sorting based on sortBy parameter
-        var isDescending = sortOrder?.ToLower() == "desc";
-        query = (sortBy?.ToLower()) switch
-        {
-            "name" => query.SortByName(isDescending),
-            "createdat" => query.SortByCreatedAt(isDescending),
-            "updatedat" => query.SortByUpdatedAt(isDescending),
-            "difficulty" => query.SortByDifficulty(isDescending),
-            "category" => query.SortByCategory(isDescending),
-            _ => query.SortByUpdatedAt(descending: true) // Default sort
-        };
+            .FilterByState(stateId)
+            .ToSortable()
+            .ApplySortByName(sortBy, sortOrder)
+            .ApplySortByCreatedAt(sortBy, sortOrder)
+            .ApplySortByUpdatedAt(sortBy, sortOrder)
+            .ApplySortByDifficulty(sortBy, sortOrder)
+            .ApplySortByCategory(sortBy, sortOrder)
+            .WithDefaultWorkoutTemplateSort();
         
         // Get total count
         var totalCount = await query.CountAsync();

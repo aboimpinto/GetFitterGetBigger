@@ -309,6 +309,17 @@ public class WorkoutTemplateServiceTests
             IsPublic = true
         };
         
+        // Setup WorkoutStateService to pass draft state validation (needed for new validation)
+        var draftState = new WorkoutStateDto
+        {
+            Id = TestIds.WorkoutStateIds.Draft,
+            Value = "Draft",
+            Description = "Draft state"
+        };
+        automocker.GetMock<IWorkoutStateService>()
+            .Setup(x => x.GetByValueAsync("Draft"))
+            .ReturnsAsync(ServiceResult<WorkoutStateDto>.Success(draftState));
+        
         automocker.SetupWorkoutTemplateQueryDataService_ExistsByName(command.Name, true);
         
         // Act
@@ -376,6 +387,44 @@ public class WorkoutTemplateServiceTests
         result.Should().NotBeNull();
         result.IsSuccess.Should().BeFalse();
         result.PrimaryErrorCode.Should().Be(ServiceErrorCode.ValidationFailed);
+        
+        automocker.VerifyWorkoutTemplateCommandDataService_NeverCalled();
+    }
+    
+    [Fact]
+    public async Task CreateAsync_WhenDraftStateNotAvailable_ReturnsInternalError()
+    {
+        // Arrange
+        var automocker = new AutoMocker();
+        var testee = automocker.CreateInstance<WorkoutTemplateService>();
+        
+        var command = new CreateWorkoutTemplateCommand
+        {
+            Name = "Valid Template Name",
+            Description = "Description",
+            CategoryId = WorkoutCategoryId.ParseOrEmpty(TestIds.WorkoutCategoryIds.Strength),
+            DifficultyId = DifficultyLevelId.ParseOrEmpty(TestIds.DifficultyLevelIds.Beginner),
+            EstimatedDurationMinutes = 60,
+            Tags = [],
+            IsPublic = true
+        };
+        
+        // Setup WorkoutStateService to return failure for draft state lookup
+        automocker.GetMock<IWorkoutStateService>()
+            .Setup(x => x.GetByValueAsync("Draft"))
+            .ReturnsAsync(ServiceResult<WorkoutStateDto>.Failure(
+                WorkoutStateDto.Empty, 
+                ServiceError.NotFound("WorkoutState", "Draft")));
+        
+        automocker.SetupWorkoutTemplateQueryDataService_ExistsByName(command.Name, false);
+        
+        // Act
+        var result = await testee.CreateAsync(command);
+        
+        // Assert
+        result.Should().NotBeNull();
+        result.IsSuccess.Should().BeFalse();
+        result.PrimaryErrorCode.Should().Be(ServiceErrorCode.InternalError);
         
         automocker.VerifyWorkoutTemplateCommandDataService_NeverCalled();
     }

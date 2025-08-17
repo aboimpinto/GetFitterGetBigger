@@ -5,6 +5,7 @@ using GetFitterGetBigger.API.Services.Interfaces;
 using GetFitterGetBigger.API.Services.Exercise;
 using GetFitterGetBigger.API.Services.Results;
 using GetFitterGetBigger.API.Services.Validation;
+using GetFitterGetBigger.API.Constants.ErrorMessages;
 
 namespace GetFitterGetBigger.API.Services.WorkoutTemplate.Handlers;
 
@@ -34,7 +35,7 @@ public class SuggestionHandler
     {
         return await ServiceValidate.Build<IEnumerable<ExerciseDto>>()
             .EnsureNotEmpty(categoryId, "CategoryId is required")
-            .Ensure(() => maxSuggestions > 0, ServiceError.ValidationFailed("MaxSuggestions must be greater than 0"))
+            .Ensure(() => maxSuggestions > 0, ServiceError.ValidationFailed(WorkoutTemplateErrorMessages.MaxSuggestionsRange))
             .MatchAsync(
                 whenValid: async () => await LoadSuggestedExercisesAsync(categoryId, existingExerciseIds, maxSuggestions),
                 whenInvalid: errors => ServiceResult<IEnumerable<ExerciseDto>>.Failure(
@@ -55,7 +56,7 @@ public class SuggestionHandler
         
         return await ServiceValidate.Build<IEnumerable<ExerciseDto>>()
             .Ensure(() => muscleGroups.Any(), ServiceError.ValidationFailed("At least one muscle group is required"))
-            .Ensure(() => maxSuggestions > 0, ServiceError.ValidationFailed("MaxSuggestions must be greater than 0"))
+            .Ensure(() => maxSuggestions > 0, ServiceError.ValidationFailed(WorkoutTemplateErrorMessages.MaxSuggestionsRange))
             .MatchAsync(
                 whenValid: async () => await LoadSuggestedByMuscleGroupsAsync(muscleGroups, existingExerciseIds, maxSuggestions),
                 whenInvalid: errors => ServiceResult<IEnumerable<ExerciseDto>>.Failure(
@@ -109,7 +110,11 @@ public class SuggestionHandler
             "Generated {Count} complementary exercise suggestions",
             complementaryExercises.Count);
         
-        return ServiceResult<IEnumerable<ExerciseDto>>.Success(complementaryExercises);
+        return complementaryExercises.Any()
+            ? ServiceResult<IEnumerable<ExerciseDto>>.Success(complementaryExercises)
+            : ServiceResult<IEnumerable<ExerciseDto>>.Failure(
+                [],
+                ServiceError.NotFound(WorkoutTemplateErrorMessages.NoSuggestedExercisesFound));
     }
 
     private async Task<ServiceResult<IEnumerable<ExerciseDto>>> LoadSuggestedExercisesAsync(
@@ -150,7 +155,11 @@ public class SuggestionHandler
             "Generated {Count} exercise suggestions for category {CategoryId}",
             suggestedExercises.Count, categoryId);
         
-        return ServiceResult<IEnumerable<ExerciseDto>>.Success(suggestedExercises);
+        return suggestedExercises.Any()
+            ? ServiceResult<IEnumerable<ExerciseDto>>.Success(suggestedExercises)
+            : ServiceResult<IEnumerable<ExerciseDto>>.Failure(
+                [],
+                ServiceError.NotFound(WorkoutTemplateErrorMessages.NoSuggestedExercisesFound));
     }
 
     private async Task<ServiceResult<IEnumerable<ExerciseDto>>> LoadSuggestedByMuscleGroupsAsync(
@@ -185,6 +194,10 @@ public class SuggestionHandler
             "Generated {Count} exercise suggestions for muscle groups",
             suggestedExercises.Count);
         
-        return ServiceResult<IEnumerable<ExerciseDto>>.Success(suggestedExercises);
+        return suggestedExercises.Any()
+            ? ServiceResult<IEnumerable<ExerciseDto>>.Success(suggestedExercises)
+            : ServiceResult<IEnumerable<ExerciseDto>>.Failure(
+                [],
+                ServiceError.NotFound(WorkoutTemplateErrorMessages.NoSuggestedExercisesFound));
     }
 }
