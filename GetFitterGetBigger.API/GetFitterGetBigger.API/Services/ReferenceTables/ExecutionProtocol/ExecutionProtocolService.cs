@@ -54,7 +54,7 @@ public class ExecutionProtocolService(
                             {
                                 return ServiceResult<ExecutionProtocolDto>.Failure(
                                     ExecutionProtocolDto.Empty,
-                                    ServiceError.NotFound("ExecutionProtocol", id.ToString()));
+                                    ServiceError.NotFound(ExecutionProtocolErrorMessages.NotFound, id.ToString()));
                             }
                             return result;
                         });
@@ -93,7 +93,7 @@ public class ExecutionProtocolService(
                             {
                                 return ServiceResult<ExecutionProtocolDto>.Failure(
                                     ExecutionProtocolDto.Empty,
-                                    ServiceError.NotFound("ExecutionProtocol", value));
+                                    ServiceError.NotFound(ExecutionProtocolErrorMessages.NotFound, value));
                             }
                             return result;
                         });
@@ -138,7 +138,7 @@ public class ExecutionProtocolService(
                             {
                                 return ServiceResult<ExecutionProtocolDto>.Failure(
                                     ExecutionProtocolDto.Empty,
-                                    ServiceError.NotFound("ExecutionProtocol", code));
+                                    ServiceError.NotFound(ExecutionProtocolErrorMessages.NotFound, code));
                             }
                             return result;
                         });

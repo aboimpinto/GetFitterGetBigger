@@ -120,7 +120,7 @@ public class ExerciseTypeService : IExerciseTypeService
                 return result.IsSuccess && result.Data.IsEmpty
                     ? ServiceResult<ExerciseTypeDto>.Failure(
                         ExerciseTypeDto.Empty,
-                        ServiceError.NotFound("ExerciseType", id.ToString()))
+                        ServiceError.NotFound(ExerciseTypeErrorMessages.NotFound, id.ToString()))
                     : result;
             });
     }
@@ -138,7 +138,7 @@ public class ExerciseTypeService : IExerciseTypeService
                 return result.IsSuccess && result.Data.IsEmpty
                     ? ServiceResult<ExerciseTypeDto>.Failure(
                         ExerciseTypeDto.Empty,
-                        ServiceError.NotFound("ExerciseType", value))
+                        ServiceError.NotFound(ExerciseTypeErrorMessages.NotFound, value))
                     : result;
             });
     }

@@ -92,7 +92,7 @@ public class BodyPartService : IBodyPartService
                 return result.IsSuccess && result.Data.IsEmpty
                     ? ServiceResult<BodyPartDto>.Failure(
                         BodyPartDto.Empty,
-                        ServiceError.NotFound("BodyPart", id.ToString()))
+                        ServiceError.NotFound(BodyPartErrorMessages.NotFound, id.ToString()))
                     : result;
             });
     }
@@ -110,7 +110,7 @@ public class BodyPartService : IBodyPartService
                 return result.IsSuccess && result.Data.IsEmpty
                     ? ServiceResult<BodyPartDto>.Failure(
                         BodyPartDto.Empty,
-                        ServiceError.NotFound("BodyPart", value))
+                        ServiceError.NotFound(BodyPartErrorMessages.NotFound, value))
                     : result;
             });
     }

@@ -72,30 +72,6 @@ public interface IWorkoutTemplateQueryDataService
         WorkoutStateId? stateId = null);
     
     /// <summary>
-    /// Gets workout templates by creator ID
-    /// </summary>
-    /// <param name="createdById">The creator's user ID</param>
-    /// <param name="page">Page number</param>
-    /// <param name="pageSize">Page size</param>
-    /// <returns>Service result containing paginated workout templates</returns>
-    Task<ServiceResult<PagedResponse<WorkoutTemplateDto>>> GetByCreatorAsync(
-        UserId createdById,
-        int page = 1,
-        int pageSize = 10);
-    
-    /// <summary>
-    /// Gets workout templates in a specific state
-    /// </summary>
-    /// <param name="stateId">The workout state ID</param>
-    /// <param name="page">Page number</param>
-    /// <param name="pageSize">Page size</param>
-    /// <returns>Service result containing paginated workout templates</returns>
-    Task<ServiceResult<PagedResponse<WorkoutTemplateDto>>> GetByStateAsync(
-        WorkoutStateId stateId,
-        int page = 1,
-        int pageSize = 10);
-    
-    /// <summary>
     /// Checks if a workout template has any execution logs
     /// </summary>
     /// <param name="id">The workout template ID</param>

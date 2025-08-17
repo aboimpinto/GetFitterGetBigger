@@ -7,7 +7,6 @@ public static class BodyPartErrorMessages
 {
     // Validation errors
     public const string InvalidIdFormat = "Invalid body part ID format";
-    public const string IdCannotBeEmpty = "ID cannot be empty";
     public const string ValueCannotBeEmpty = "Body part value cannot be empty";
     public const string ValueCannotBeEmptyEntity = "Body part value cannot be empty";
     public const string DisplayOrderMustBeNonNegative = "Display order must be non-negative";

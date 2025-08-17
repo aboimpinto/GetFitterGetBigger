@@ -91,32 +91,6 @@ public static class WorkoutTemplateQueryExtensions
     }
 
     /// <summary>
-    /// Applies all filters in a fluent chain
-    /// </summary>
-    /// <param name="query">The queryable to extend</param>
-    /// <param name="namePattern">Name pattern filter</param>
-    /// <param name="categoryId">Category filter</param>
-    /// <param name="objectiveId">Objective filter</param>
-    /// <param name="difficultyId">Difficulty filter</param>
-    /// <param name="stateId">State filter</param>
-    /// <returns>Filtered queryable</returns>
-    public static IQueryable<WorkoutTemplateEntity> ApplyFilters(
-        this IQueryable<WorkoutTemplateEntity> query,
-        string? namePattern = null,
-        WorkoutCategoryId? categoryId = null,
-        WorkoutObjectiveId? objectiveId = null,
-        DifficultyLevelId? difficultyId = null,
-        WorkoutStateId? stateId = null)
-    {
-        return query
-            .FilterByNamePattern(namePattern)
-            .FilterByCategory(categoryId)
-            .FilterByObjective(objectiveId)
-            .FilterByDifficulty(difficultyId)
-            .FilterByState(stateId);
-    }
-
-    /// <summary>
     /// Applies sorting by name
     /// </summary>
     /// <param name="query">The queryable to extend</param>
@@ -189,31 +163,6 @@ public static class WorkoutTemplateQueryExtensions
         return descending 
             ? query.OrderByDescending(wt => wt.Category.Value)
             : query.OrderBy(wt => wt.Category.Value);
-    }
-
-    /// <summary>
-    /// Applies sorting based on sort criteria with fluent API
-    /// </summary>
-    /// <param name="query">The queryable to extend</param>
-    /// <param name="sortBy">The field to sort by (name, createdat, updatedat, difficulty, category)</param>
-    /// <param name="sortOrder">The sort order (asc, desc)</param>
-    /// <returns>Sorted queryable</returns>
-    public static IQueryable<WorkoutTemplateEntity> ApplyFluentSorting(
-        this IQueryable<WorkoutTemplateEntity> query,
-        string? sortBy,
-        string? sortOrder)
-    {
-        var isDescending = sortOrder?.ToLower() == "desc";
-
-        return (sortBy?.ToLower()) switch
-        {
-            "name" => query.SortByName(isDescending),
-            "createdat" => query.SortByCreatedAt(isDescending),
-            "updatedat" => query.SortByUpdatedAt(isDescending),
-            "difficulty" => query.SortByDifficulty(isDescending),
-            "category" => query.SortByCategory(isDescending),
-            _ => query.SortByUpdatedAt(descending: true) // Default sort
-        };
     }
 
     /// <summary>

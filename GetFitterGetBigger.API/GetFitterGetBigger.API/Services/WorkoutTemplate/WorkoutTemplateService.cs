@@ -9,6 +9,7 @@ using GetFitterGetBigger.API.Services.Validation;
 using GetFitterGetBigger.API.Services.WorkoutTemplate.DataServices;
 using GetFitterGetBigger.API.Services.WorkoutTemplate.Handlers;
 using GetFitterGetBigger.API.Services.WorkoutTemplate.Features.Equipment;
+using GetFitterGetBigger.API.Services.WorkoutTemplate.Extensions;
 using WorkoutTemplateEntity = GetFitterGetBigger.API.Models.Entities.WorkoutTemplate;
 
 namespace GetFitterGetBigger.API.Services.WorkoutTemplate;
@@ -74,69 +75,87 @@ public class WorkoutTemplateService(
     {
         // Business Logic: When no state filter is provided, exclude ARCHIVED templates
         // This ensures "active template lists" only show DRAFT and PRODUCTION templates
-        if (stateId.IsEmpty)
-        {
-            // Get ARCHIVED state ID to exclude it from results
-            var archivedStateResult = await _workoutStateService.GetByValueAsync("ARCHIVED");
-            if (archivedStateResult.IsSuccess)
-            {
-                var archivedStateId = WorkoutStateId.ParseOrEmpty(archivedStateResult.Data.Id);
-                
-                // Need to get the correct total count excluding ARCHIVED templates
-                // First get the total count of non-archived templates
-                var countResult = await _queryDataService.GetCountAsync(
-                    namePattern, categoryId, objectiveId, difficultyId, WorkoutStateId.Empty);
-                
-                if (!countResult.IsSuccess)
-                {
-                    return ServiceResult<PagedResponse<WorkoutTemplateDto>>.Failure(
-                        new PagedResponse<WorkoutTemplateDto> { Items = [], TotalCount = 0, CurrentPage = page, PageSize = pageSize }, 
-                        ServiceError.InternalError("Failed to get workout template count"));
-                }
-                
-                // Get all templates for current page
-                var allResults = await _queryDataService.SearchAsync(
-                    page, pageSize, namePattern, categoryId, objectiveId, 
-                    difficultyId, WorkoutStateId.Empty, sortBy, sortOrder);
-
-                if (allResults.IsSuccess)
-                {
-                    // Filter out ARCHIVED templates from the items
-                    var filteredItems = allResults.Data.Items
-                        .Where(item => item.WorkoutState?.Id != archivedStateId.ToString())
-                        .ToList();
-
-                    // Calculate the correct total count by getting count of all non-archived templates
-                    var allTemplatesForCount = await _queryDataService.SearchAsync(
-                        1, int.MaxValue, namePattern, categoryId, objectiveId, 
-                        difficultyId, WorkoutStateId.Empty, sortBy, sortOrder);
-                    
-                    var totalNonArchivedCount = 0;
-                    if (allTemplatesForCount.IsSuccess)
-                    {
-                        totalNonArchivedCount = allTemplatesForCount.Data.Items
-                            .Count(item => item.WorkoutState?.Id != archivedStateId.ToString());
-                    }
-
-                    var filteredResponse = new PagedResponse<WorkoutTemplateDto>
-                    {
-                        Items = filteredItems,
-                        TotalCount = totalNonArchivedCount,
-                        CurrentPage = page,
-                        PageSize = pageSize
-                    };
-
-                    return ServiceResult<PagedResponse<WorkoutTemplateDto>>.Success(filteredResponse);
-                }
-                
-                return allResults;
-            }
-        }
-
-        // If a specific state is requested, or if we can't get ARCHIVED state, use normal search
-        return await _queryDataService.SearchAsync(
+        return stateId.IsEmpty 
+            ? await SearchExcludingArchivedAsync(page, pageSize, namePattern, categoryId, objectiveId, difficultyId, sortBy, sortOrder)
+            : await _queryDataService.SearchAsync(page, pageSize, namePattern, categoryId, objectiveId, difficultyId, stateId, sortBy, sortOrder);
+    }
+    
+    private async Task<ServiceResult<PagedResponse<WorkoutTemplateDto>>> SearchExcludingArchivedAsync(
+        int page,
+        int pageSize, 
+        string namePattern,
+        WorkoutCategoryId categoryId,
+        WorkoutObjectiveId objectiveId,
+        DifficultyLevelId difficultyId,
+        string sortBy,
+        string sortOrder)
+    {
+        // Get ARCHIVED state ID to exclude it from results
+        var archivedStateResult = await _workoutStateService.GetByValueAsync("ARCHIVED");
+        
+        return archivedStateResult.IsSuccess 
+            ? await FilterArchivedTemplatesAsync(page, pageSize, namePattern, categoryId, objectiveId, difficultyId, sortBy, sortOrder, archivedStateResult.Data.Id)
+            : await _queryDataService.SearchAsync(page, pageSize, namePattern, categoryId, objectiveId, difficultyId, WorkoutStateId.Empty, sortBy, sortOrder);
+    }
+    
+    private async Task<ServiceResult<PagedResponse<WorkoutTemplateDto>>> FilterArchivedTemplatesAsync(
+        int page,
+        int pageSize,
+        string namePattern,
+        WorkoutCategoryId categoryId,
+        WorkoutObjectiveId objectiveId,
+        DifficultyLevelId difficultyId,
+        string sortBy,
+        string sortOrder,
+        string archivedStateIdString)
+    {
+        var archivedStateId = WorkoutStateId.ParseOrEmpty(archivedStateIdString);
+        
+        // Get all templates for current page
+        var allResults = await _queryDataService.SearchAsync(
             page, pageSize, namePattern, categoryId, objectiveId, 
-            difficultyId, stateId, sortBy, sortOrder);
+            difficultyId, WorkoutStateId.Empty, sortBy, sortOrder);
+
+        return allResults.IsSuccess 
+            ? await BuildFilteredResponseAsync(page, pageSize, namePattern, categoryId, objectiveId, difficultyId, sortBy, sortOrder, allResults, archivedStateId)
+            : allResults;
+    }
+    
+    private async Task<ServiceResult<PagedResponse<WorkoutTemplateDto>>> BuildFilteredResponseAsync(
+        int page,
+        int pageSize,
+        string namePattern,
+        WorkoutCategoryId categoryId,
+        WorkoutObjectiveId objectiveId,
+        DifficultyLevelId difficultyId,
+        string sortBy,
+        string sortOrder,
+        ServiceResult<PagedResponse<WorkoutTemplateDto>> allResults,
+        WorkoutStateId archivedStateId)
+    {
+        // Filter out ARCHIVED templates from the items
+        var filteredItems = allResults.Data.Items
+            .Where(item => item.WorkoutState?.Id != archivedStateId.ToString())
+            .ToList();
+
+        // Calculate the correct total count by getting count of all non-archived templates
+        var allTemplatesForCount = await _queryDataService.SearchAsync(
+            1, int.MaxValue, namePattern, categoryId, objectiveId, 
+            difficultyId, WorkoutStateId.Empty, sortBy, sortOrder);
+        
+        var totalNonArchivedCount = allTemplatesForCount.IsSuccess 
+            ? allTemplatesForCount.Data.Items.Count(item => item.WorkoutState?.Id != archivedStateId.ToString())
+            : 0;
+
+        var filteredResponse = new PagedResponse<WorkoutTemplateDto>
+        {
+            Items = filteredItems,
+            TotalCount = totalNonArchivedCount,
+            CurrentPage = page,
+            PageSize = pageSize
+        };
+
+        return ServiceResult<PagedResponse<WorkoutTemplateDto>>.Success(filteredResponse);
     }
 
     public async Task<ServiceResult<WorkoutTemplateDto>> CreateAsync(CreateWorkoutTemplateCommand command)
@@ -228,35 +247,17 @@ public class WorkoutTemplateService(
     
     private async Task<bool> IsNameUniqueAsync(string name)
     {
-        var existsResult = await _queryDataService.ExistsByNameAsync(name);
-        return !existsResult.Data.Value; // Return true when name IS unique
+        return await _queryDataService.IsWorkoutTemplateNameUniqueAsync(name);
     }
     
     private async Task<bool> IsNameUniqueForUpdateAsync(string name, WorkoutTemplateId excludeId)
     {
-        if (_queryDataService == null)
-        {
-            throw new InvalidOperationException("Query data service is not initialized");
-        }
-        
-        // Check if a template with this name exists
-        var existsResult = await _queryDataService.ExistsByNameAsync(name);
-        
-        if (existsResult?.Data == null || !existsResult.Data.Value)
-        {
-            return true; // Name doesn't exist, so it's unique
-        }
-        
-        // If it exists, we need to check if it's the same template we're updating
-        // TODO: Implement proper check to see if the existing template with this name has the excludeId
-        // For now, assuming it's valid for update scenarios (simplified)
-        return true;
+        return await _queryDataService.IsWorkoutTemplateNameUniqueAsync(name, excludeId);
     }
     
-    private async Task<bool> CanDeleteWorkoutTemplateAsync(WorkoutTemplateId id)
+    private async Task<bool> IsWorkoutTemplateDeletableAsync(WorkoutTemplateId id)
     {
-        var hasLogsResult = await _queryDataService.HasExecutionLogsAsync(id);
-        return !hasLogsResult.Data.Value; // Return true when template CAN be deleted (no execution logs)
+        return await _queryDataService.IsWorkoutTemplateDeletableAsync(id);
     }
     
     private async Task<ServiceResult<WorkoutTemplateDto>> UpdateWorkoutTemplateEntityAsync(
@@ -291,12 +292,7 @@ public class WorkoutTemplateService(
             .EnsureExistsAsync(
                 async () => (await _queryDataService.ExistsAsync(id)).Data.Value,
                 "WorkoutTemplate")
-            .MatchAsync(async () => 
-            {
-                // For now, just change the state directly
-                // In production, you would validate the transition rules here
-                return await _commandDataService.ChangeStateAsync(id, newStateId);
-            });
+            .MatchAsync(async () => await _commandDataService.ChangeStateAsync(id, newStateId));
     }
 
     public async Task<ServiceResult<WorkoutTemplateDto>> DuplicateAsync(WorkoutTemplateId id, string newName)
@@ -323,7 +319,7 @@ public class WorkoutTemplateService(
                 async () => (await _queryDataService.ExistsAsync(id)).Data.Value,
                 "WorkoutTemplate")
             .EnsureAsync(
-                async () => await CanDeleteWorkoutTemplateAsync(id),
+                async () => await IsWorkoutTemplateDeletableAsync(id),
                 ServiceError.ValidationFailed(WorkoutTemplateErrorMessages.CannotDeleteWithExecutionLogs))
             .MatchAsync(async () => await _commandDataService.DeleteAsync(id));
     }

@@ -59,9 +59,25 @@ public class WorkoutTemplateQueryDataService(
         using var unitOfWork = unitOfWorkProvider.CreateReadOnly();
         var repository = unitOfWork.GetRepository<IWorkoutTemplateRepository>();
         
+        // Build query with individual, visible filter methods
         var query = repository.GetWorkoutTemplatesQueryable()
-            .ApplyFilters(namePattern, categoryId, objectiveId, difficultyId, stateId)
-            .ApplyFluentSorting(sortBy, sortOrder);
+            .FilterByNamePattern(namePattern)
+            .FilterByCategory(categoryId)
+            .FilterByObjective(objectiveId)
+            .FilterByDifficulty(difficultyId)
+            .FilterByState(stateId);
+        
+        // Apply sorting based on sortBy parameter
+        var isDescending = sortOrder?.ToLower() == "desc";
+        query = (sortBy?.ToLower()) switch
+        {
+            "name" => query.SortByName(isDescending),
+            "createdat" => query.SortByCreatedAt(isDescending),
+            "updatedat" => query.SortByUpdatedAt(isDescending),
+            "difficulty" => query.SortByDifficulty(isDescending),
+            "category" => query.SortByCategory(isDescending),
+            _ => query.SortByUpdatedAt(descending: true) // Default sort
+        };
         
         // Get total count
         var totalCount = await query.CountAsync();
@@ -97,84 +113,16 @@ public class WorkoutTemplateQueryDataService(
         using var unitOfWork = unitOfWorkProvider.CreateReadOnly();
         var repository = unitOfWork.GetRepository<IWorkoutTemplateRepository>();
         
+        // Build query with individual, visible filter methods
         var query = repository.GetWorkoutTemplatesQueryable()
-            .ApplyFilters(
-                namePattern, 
-                categoryId, 
-                objectiveId, 
-                difficultyId, 
-                stateId);
+            .FilterByNamePattern(namePattern)
+            .FilterByCategory(categoryId)
+            .FilterByObjective(objectiveId)
+            .FilterByDifficulty(difficultyId)
+            .FilterByState(stateId);
         
         var count = await query.CountAsync();
         return ServiceResult<int>.Success(count);
-    }
-    
-    public async Task<ServiceResult<PagedResponse<WorkoutTemplateDto>>> GetByCreatorAsync(
-        UserId createdById,
-        int page = 1,
-        int pageSize = 10)
-    {
-        using var unitOfWork = unitOfWorkProvider.CreateReadOnly();
-        var repository = unitOfWork.GetRepository<IWorkoutTemplateRepository>();
-        
-        var query = repository.GetWorkoutTemplatesQueryable()
-            .Where(wt => wt.CreatedAt > DateTime.MinValue) // Placeholder since CreatedById doesn't exist
-            .OrderByDescending(wt => wt.CreatedAt);
-        
-        var totalCount = await query.CountAsync();
-        
-        var items = await query
-            .Skip((page - 1) * pageSize)
-            .Take(pageSize)
-            .IncludeStandardData()
-            .ToListAsync();
-        
-        var dtos = items.Select(wt => wt.ToDto()).ToList();
-        
-        var pagedResponse = new PagedResponse<WorkoutTemplateDto>
-        {
-            Items = dtos,
-            TotalCount = totalCount,
-            CurrentPage = page,
-            PageSize = pageSize,
-            // TotalPages is computed property
-        };
-        
-        return ServiceResult<PagedResponse<WorkoutTemplateDto>>.Success(pagedResponse);
-    }
-    
-    public async Task<ServiceResult<PagedResponse<WorkoutTemplateDto>>> GetByStateAsync(
-        WorkoutStateId stateId,
-        int page = 1,
-        int pageSize = 10)
-    {
-        using var unitOfWork = unitOfWorkProvider.CreateReadOnly();
-        var repository = unitOfWork.GetRepository<IWorkoutTemplateRepository>();
-        
-        var query = repository.GetWorkoutTemplatesQueryable()
-            .Where(wt => wt.WorkoutStateId == stateId)
-            .OrderByDescending(wt => wt.UpdatedAt);
-        
-        var totalCount = await query.CountAsync();
-        
-        var items = await query
-            .Skip((page - 1) * pageSize)
-            .Take(pageSize)
-            .IncludeStandardData()
-            .ToListAsync();
-        
-        var dtos = items.Select(wt => wt.ToDto()).ToList();
-        
-        var pagedResponse = new PagedResponse<WorkoutTemplateDto>
-        {
-            Items = dtos,
-            TotalCount = totalCount,
-            CurrentPage = page,
-            PageSize = pageSize,
-            // TotalPages is computed property
-        };
-        
-        return ServiceResult<PagedResponse<WorkoutTemplateDto>>.Success(pagedResponse);
     }
     
     public Task<ServiceResult<BooleanResultDto>> HasExecutionLogsAsync(WorkoutTemplateId id)

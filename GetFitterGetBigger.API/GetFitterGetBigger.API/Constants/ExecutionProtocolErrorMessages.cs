@@ -12,8 +12,6 @@ public static class ExecutionProtocolErrorMessages
     
     // Service error messages
     public const string InvalidIdFormat = "Invalid execution protocol ID format";
-    public const string IdCannotBeEmpty = "ExecutionProtocol ID cannot be empty";
     public const string ValueCannotBeEmpty = "Value cannot be empty";
     public const string NotFound = "ExecutionProtocol not found";
-    public const string AlreadyExists = "ExecutionProtocol with the same code already exists";
 }
