@@ -1,313 +1,354 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using FluentAssertions;
+using GetFitterGetBigger.API.Constants;
 using GetFitterGetBigger.API.DTOs;
 using GetFitterGetBigger.API.Models.SpecializedIds;
 using GetFitterGetBigger.API.Services.Authentication;
-using GetFitterGetBigger.API.Services.Authentication.DataServices;
 using GetFitterGetBigger.API.Services.Commands.Authentication;
-using GetFitterGetBigger.API.Services.Interfaces;
 using GetFitterGetBigger.API.Services.Results;
-using Microsoft.Extensions.Logging;
-using Moq;
-using Xunit;
+using GetFitterGetBigger.API.Tests.Services.Extensions;
+using Moq.AutoMock;
 
-namespace GetFitterGetBigger.API.Tests.Services
+namespace GetFitterGetBigger.API.Tests.Services;
+
+/// <summary>
+/// Unit tests for AuthService using AutoMocker pattern
+/// Tests authentication scenarios including new user creation, existing user login,
+/// validation failures, and error handling
+/// </summary>
+public class AuthServiceTests
 {
-    public class AuthServiceTests
+
+    [Fact]
+    public async Task AuthenticateAsync_WithNewUserEmail_CreatesUserAndReturnsFreeTierToken()
     {
-        private readonly Mock<IJwtService> _mockJwtService;
-        private readonly Mock<IUserQueryDataService> _mockUserQueryDataService;
-        private readonly Mock<IUserCommandDataService> _mockUserCommandDataService;
-        private readonly Mock<ILogger<AuthService>> _mockLogger;
-        private readonly AuthService _authService;
+        // Arrange
+        var automocker = new AutoMocker();
+        var testee = automocker.CreateInstance<AuthService>();
 
-        public AuthServiceTests()
+        const string newUserEmail = "newuser@example.com";
+        const string expectedToken = "jwt-token";
+        const string freeTierClaimType = "Free-Tier";
+        const string claimId = "claim1";
+        
+        var command = new AuthenticationCommand { Email = newUserEmail };
+        var userId = UserId.New();
+        var claims = new List<ClaimInfo>
         {
-            _mockJwtService = new Mock<IJwtService>();
-            _mockUserQueryDataService = new Mock<IUserQueryDataService>();
-            _mockUserCommandDataService = new Mock<IUserCommandDataService>();
-            _mockLogger = new Mock<ILogger<AuthService>>();
+            new ClaimInfo(claimId, freeTierClaimType, null, null)
+        };
+        var createdUserDto = new UserDto(
+            userId.ToString(),
+            newUserEmail,
+            claims);
 
-            _authService = new AuthService(
-                _mockJwtService.Object,
-                _mockUserQueryDataService.Object,
-                _mockUserCommandDataService.Object,
-                _mockLogger.Object);
-        }
+        automocker
+            .SetupUserNotFound(newUserEmail)
+            .SetupCreateUserWithClaimSuccess(newUserEmail, freeTierClaimType, createdUserDto)
+            .SetupJwtTokenGeneration(createdUserDto, expectedToken);
 
-        [Fact]
-        public async Task AuthenticateAsync_WithNewUser_CreatesUserAndFreeTierClaim()
+        // Act
+        var result = await testee.AuthenticateAsync(command);
+
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+        result.Data.Token.Should().Be(expectedToken);
+        result.Data.Claims.Should().ContainSingle();
+        result.Data.Claims[0].ClaimType.Should().Be(freeTierClaimType);
+
+        automocker
+            .VerifyUserQueryCalledOnceWith(newUserEmail)
+            .VerifyCreateUserWithClaimCalledOnceWith(newUserEmail, freeTierClaimType);
+    }
+
+    [Fact]
+    public async Task AuthenticateAsync_WithExistingUserEmail_ReturnsTokenWithExistingClaims()
+    {
+        // Arrange
+        var automocker = new AutoMocker();
+        var testee = automocker.CreateInstance<AuthService>();
+
+        const string existingUserEmail = "existing@example.com";
+        const string expectedToken = "jwt-token";
+        const string freeTierClaimType = "Free-Tier";
+        const string premiumTierClaimType = "Premium-Tier";
+        const string freeTierClaimId = "claim1";
+        const string premiumTierClaimId = "claim2";
+        const string premiumFeatures = "premium-features";
+        
+        var command = new AuthenticationCommand { Email = existingUserEmail };
+        var userId = UserId.New();
+
+        var existingClaims = new List<ClaimInfo>
         {
-            // Arrange
-            var email = "newuser@example.com";
-            var command = new AuthenticationCommand { Email = email };
-            var expectedToken = "jwt-token";
-            var userId = UserId.New();
-            var claims = new List<ClaimInfo>
-            {
-                new ClaimInfo("claim1", "Free-Tier", null, null)
-            };
-            var expectedUserDto = new UserDto(
-                userId.ToString(),
-                email,
-                claims);
+            new ClaimInfo(freeTierClaimId, freeTierClaimType, null, null),
+            new ClaimInfo(premiumTierClaimId, premiumTierClaimType, DateTime.UtcNow.AddDays(30), premiumFeatures)
+        };
 
-            // Setup: User doesn't exist initially
-            _mockUserQueryDataService
-                .Setup(x => x.GetByEmailAsync(email))
-                .ReturnsAsync(ServiceResult<UserDto>.Success(UserDto.Empty));
+        var existingUserDto = new UserDto(
+            userId.ToString(),
+            existingUserEmail,
+            existingClaims);
 
-            // Setup: Creating new user with claim succeeds
-            _mockUserCommandDataService
-                .Setup(x => x.CreateUserWithClaimAsync(email, "Free-Tier"))
-                .ReturnsAsync(ServiceResult<UserDto>.Success(expectedUserDto));
+        automocker
+            .SetupExistingUser(existingUserEmail, existingUserDto)
+            .SetupJwtTokenGeneration(existingUserDto, expectedToken);
 
-            _mockJwtService
-                .Setup(x => x.GenerateToken(expectedUserDto))
-                .Returns(expectedToken);
+        // Act
+        var result = await testee.AuthenticateAsync(command);
 
-            // Act
-            var result = await _authService.AuthenticateAsync(command);
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+        result.Data.Token.Should().Be(expectedToken);
+        result.Data.Claims.Should().HaveCount(2);
+        result.Data.Claims.Should().Contain(c => c.ClaimType == freeTierClaimType);
+        result.Data.Claims.Should().Contain(c => c.ClaimType == premiumTierClaimType);
 
-            // Assert
-            Assert.True(result.IsSuccess);
-            Assert.Equal(expectedToken, result.Data.Token);
-            Assert.Single(result.Data.Claims);
-            Assert.Equal("Free-Tier", result.Data.Claims[0].ClaimType);
+        automocker
+            .VerifyUserQueryCalledOnceWith(existingUserEmail)
+            .VerifyCreateUserWithClaimNeverCalledForExistingUser();
+    }
 
-            _mockUserQueryDataService.Verify(x => x.GetByEmailAsync(email), Times.Once);
-            _mockUserCommandDataService.Verify(x => x.CreateUserWithClaimAsync(email, "Free-Tier"), Times.Once);
-        }
+    [Fact]
+    public async Task AuthenticateAsync_WithUserHavingOnlyActiveClaims_ReturnsTokenWithActiveClaimsOnly()
+    {
+        // Arrange
+        var automocker = new AutoMocker();
+        var testee = automocker.CreateInstance<AuthService>();
 
-        [Fact]
-        public async Task AuthenticateAsync_WithExistingUser_ReturnsUserClaims()
+        const string userEmail = "user@example.com";
+        const string jwtToken = "token";
+        const string activeClaimType = "Active-Claim";
+        const string noExpiryClaimType = "No-Expiry-Claim";
+        const string activeClaimId = "claim1";
+        const string noExpiryClaimId = "claim2";
+        
+        var command = new AuthenticationCommand { Email = userEmail };
+        var userId = UserId.New();
+
+        // Note: DataService already filters expired claims, so we only get active ones
+        var activeClaims = new List<ClaimInfo>
         {
-            // Arrange
-            var email = "existing@example.com";
-            var command = new AuthenticationCommand { Email = email };
-            var userId = UserId.New();
-            var expectedToken = "jwt-token";
+            new ClaimInfo(activeClaimId, activeClaimType, DateTime.UtcNow.AddDays(30), null),
+            new ClaimInfo(noExpiryClaimId, noExpiryClaimType, null, null)
+        };
 
-            var claims = new List<ClaimInfo>
-            {
-                new ClaimInfo("claim1", "Free-Tier", null, null),
-                new ClaimInfo("claim2", "Premium-Tier", DateTime.UtcNow.AddDays(30), "premium-features")
-            };
+        var existingUserDto = new UserDto(
+            userId.ToString(),
+            userEmail,
+            activeClaims);
 
-            var existingUserDto = new UserDto(
-                userId.ToString(),
-                email,
-                claims);
+        automocker
+            .SetupExistingUser(userEmail, existingUserDto)
+            .SetupJwtTokenGeneration(existingUserDto, jwtToken);
 
-            _mockUserQueryDataService
-                .Setup(x => x.GetByEmailAsync(email))
-                .ReturnsAsync(ServiceResult<UserDto>.Success(existingUserDto));
+        // Act
+        var result = await testee.AuthenticateAsync(command);
 
-            _mockJwtService
-                .Setup(x => x.GenerateToken(existingUserDto))
-                .Returns(expectedToken);
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+        result.Data.Claims.Should().HaveCount(2);
+        result.Data.Claims.Should().Contain(c => c.ClaimType == activeClaimType);
+        result.Data.Claims.Should().Contain(c => c.ClaimType == noExpiryClaimType);
+        result.Data.Claims.Should().NotContain(c => c.ClaimType == "Expired-Claim",
+            because: "DataService filters expired claims before returning user");
+    }
 
-            // Act
-            var result = await _authService.AuthenticateAsync(command);
+    [Fact]
+    public async Task AuthenticateAsync_WithNewUserAndValidEmail_CallsAllRequiredServicesInCorrectOrder()
+    {
+        // Arrange
+        var automocker = new AutoMocker();
+        var testee = automocker.CreateInstance<AuthService>();
 
-            // Assert
-            Assert.True(result.IsSuccess);
-            Assert.Equal(expectedToken, result.Data.Token);
-            Assert.Equal(2, result.Data.Claims.Count);
-            Assert.Contains(result.Data.Claims, c => c.ClaimType == "Free-Tier");
-            Assert.Contains(result.Data.Claims, c => c.ClaimType == "Premium-Tier");
+        const string testEmail = "test@example.com";
+        const string freeTierClaimType = "Free-Tier";
+        const string jwtToken = "token";
+        const string claimId = "claim1";
+        
+        var command = new AuthenticationCommand { Email = testEmail };
+        var userId = UserId.New();
+        var claims = new List<ClaimInfo> { new ClaimInfo(claimId, freeTierClaimType, null, null) };
+        var createdUserDto = new UserDto(userId.ToString(), testEmail, claims);
 
-            _mockUserQueryDataService.Verify(x => x.GetByEmailAsync(email), Times.Once);
-            _mockUserCommandDataService.Verify(x => x.CreateUserWithClaimAsync(It.IsAny<string>(), It.IsAny<string>()), Times.Never);
-        }
+        automocker
+            .SetupUserNotFound(testEmail)
+            .SetupCreateUserWithClaimSuccess(testEmail, freeTierClaimType, createdUserDto)
+            .SetupJwtTokenGeneration(createdUserDto, jwtToken);
 
-        [Fact]
-        public async Task AuthenticateAsync_FiltersExpiredClaims()
-        {
-            // Arrange
-            var email = "user@example.com";
-            var command = new AuthenticationCommand { Email = email };
-            var userId = UserId.New();
+        // Act
+        var result = await testee.AuthenticateAsync(command);
 
-            // Only include active claims in the UserDto (expired claims filtered by DataService)
-            var activeClaims = new List<ClaimInfo>
-            {
-                new ClaimInfo("claim1", "Active-Claim", DateTime.UtcNow.AddDays(30), null),
-                new ClaimInfo("claim2", "No-Expiry-Claim", null, null)
-            };
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+        
+        automocker
+            .VerifyUserQueryCalledOnceWith(testEmail)
+            .VerifyCreateUserWithClaimCalledOnceWith(testEmail, freeTierClaimType)
+            .VerifyJwtTokenGenerationCalledOnceWith(createdUserDto);
+    }
 
-            var existingUserDto = new UserDto(
-                userId.ToString(),
-                email,
-                activeClaims);
+    [Theory]
+    [InlineData("")]
+    [InlineData(" ")]
+    public async Task AuthenticateAsync_WithEmptyOrWhitespaceEmail_ReturnsValidationFailureWithoutCallingServices(string invalidEmail)
+    {
+        // Arrange
+        var automocker = new AutoMocker();
+        var testee = automocker.CreateInstance<AuthService>();
+        
+        var command = new AuthenticationCommand { Email = invalidEmail };
 
-            _mockUserQueryDataService
-                .Setup(x => x.GetByEmailAsync(email))
-                .ReturnsAsync(ServiceResult<UserDto>.Success(existingUserDto));
-                
-            _mockJwtService
-                .Setup(x => x.GenerateToken(existingUserDto))
-                .Returns("token");
+        // Act
+        var result = await testee.AuthenticateAsync(command);
 
-            // Act
-            var result = await _authService.AuthenticateAsync(command);
+        // Assert
+        result.IsSuccess.Should().BeFalse();
+        result.Errors.Should().NotBeEmpty();
+        result.PrimaryErrorCode.Should().Be(ServiceErrorCode.ValidationFailed);
+        
+        // Verify no data service calls were made for invalid input
+        automocker
+            .VerifyUserQueryNeverCalledForValidationFailure()
+            .VerifyCreateUserWithClaimNeverCalledForValidationFailure();
+    }
 
-            // Assert
-            Assert.True(result.IsSuccess);
-            Assert.Equal(2, result.Data.Claims.Count);
-            Assert.Contains(result.Data.Claims, c => c.ClaimType == "Active-Claim");
-            Assert.Contains(result.Data.Claims, c => c.ClaimType == "No-Expiry-Claim");
-            Assert.DoesNotContain(result.Data.Claims, c => c.ClaimType == "Expired-Claim");
-        }
+    [Theory]
+    [InlineData("notanemail")]
+    [InlineData("missing@domain")]
+    [InlineData("@missinglocal.com")]
+    [InlineData("email@")]
+    [InlineData("two@@example.com")]
+    public async Task AuthenticateAsync_WithInvalidEmailFormat_ReturnsValidationFailureWithCorrectMessage(string invalidEmail)
+    {
+        // Arrange
+        var automocker = new AutoMocker();
+        var testee = automocker.CreateInstance<AuthService>();
+        
+        var command = new AuthenticationCommand { Email = invalidEmail };
 
-        [Fact]
-        public async Task AuthenticateAsync_WithValidRequest_CallsCorrectServices()
-        {
-            // Arrange
-            var email = "test@example.com";
-            var command = new AuthenticationCommand { Email = email };
-            var userId = UserId.New();
-            var claims = new List<ClaimInfo> { new ClaimInfo("claim1", "Free-Tier", null, null) };
-            var userDto = new UserDto(userId.ToString(), email, claims);
+        // Act
+        var result = await testee.AuthenticateAsync(command);
 
-            _mockUserQueryDataService
-                .Setup(x => x.GetByEmailAsync(email))
-                .ReturnsAsync(ServiceResult<UserDto>.Success(UserDto.Empty));
-                
-            _mockUserCommandDataService
-                .Setup(x => x.CreateUserWithClaimAsync(email, "Free-Tier"))
-                .ReturnsAsync(ServiceResult<UserDto>.Success(userDto));
-                
-            _mockJwtService
-                .Setup(x => x.GenerateToken(userDto))
-                .Returns("token");
+        // Assert
+        result.IsSuccess.Should().BeFalse();
+        result.PrimaryErrorCode.Should().Be(ServiceErrorCode.ValidationFailed);
+        result.Errors.Should().Contain(AuthenticationErrorMessages.Validation.InvalidEmailFormat);
+        
+        // Verify no data service calls were made for invalid input
+        automocker
+            .VerifyUserQueryNeverCalledForValidationFailure()
+            .VerifyCreateUserWithClaimNeverCalledForValidationFailure();
+    }
 
-            // Act
-            var result = await _authService.AuthenticateAsync(command);
+    [Fact]
+    public async Task AuthenticateAsync_WhenUserQueryDataServiceThrows_ExceptionBubblesUpNaturally()
+    {
+        // Arrange
+        var automocker = new AutoMocker();
+        var testee = automocker.CreateInstance<AuthService>();
 
-            // Assert
-            Assert.True(result.IsSuccess);
-            _mockUserQueryDataService.Verify(x => x.GetByEmailAsync(email), Times.Once);
-            _mockUserCommandDataService.Verify(x => x.CreateUserWithClaimAsync(email, "Free-Tier"), Times.Once);
-            _mockJwtService.Verify(x => x.GenerateToken(userDto), Times.Once);
-        }
+        const string testEmail = "test@example.com";
+        const string databaseErrorMessage = "Database error";
+        
+        var command = new AuthenticationCommand { Email = testEmail };
+        var databaseException = new InvalidOperationException(databaseErrorMessage);
+        
+        automocker.SetupUserQueryThrows(testEmail, databaseException);
 
-        [Theory]
-        [InlineData("")]
-        [InlineData(" ")]
-        public async Task AuthenticateAsync_WithInvalidEmail_ReturnsValidationError(string email)
-        {
-            // Arrange
-            var command = new AuthenticationCommand { Email = email };
+        // Act & Assert
+        // With the new no-try-catch architecture, exceptions bubble up naturally
+        var thrownException = await testee.Invoking(x => x.AuthenticateAsync(command))
+            .Should().ThrowAsync<InvalidOperationException>();
+        
+        thrownException.Which.Message.Should().Be(databaseErrorMessage);
+    }
 
-            // Act
-            var result = await _authService.AuthenticateAsync(command);
+    [Fact]
+    public async Task AuthenticateAsync_WhenJwtServiceThrows_ExceptionBubblesUpAfterUserCreation()
+    {
+        // Arrange
+        var automocker = new AutoMocker();
+        var testee = automocker.CreateInstance<AuthService>();
 
-            // Assert
-            Assert.False(result.IsSuccess);
-            Assert.NotEmpty(result.Errors);
-            Assert.Equal(ServiceErrorCode.ValidationFailed, result.PrimaryErrorCode);
+        const string testEmail = "test@example.com";
+        const string freeTierClaimType = "Free-Tier";
+        const string jwtErrorMessage = "JWT configuration error";
+        
+        var command = new AuthenticationCommand { Email = testEmail };
+        var userId = UserId.New();
+        var createdUserDto = new UserDto(userId.ToString(), testEmail, new List<ClaimInfo>());
+        var jwtException = new InvalidOperationException(jwtErrorMessage);
+        
+        automocker
+            .SetupUserNotFound(testEmail)
+            .SetupCreateUserWithClaimSuccess(testEmail, freeTierClaimType, createdUserDto)
+            .SetupJwtTokenGenerationThrows(createdUserDto, jwtException);
+
+        // Act & Assert
+        // With the new no-try-catch architecture, exceptions bubble up naturally
+        var thrownException = await testee.Invoking(x => x.AuthenticateAsync(command))
+            .Should().ThrowAsync<InvalidOperationException>();
             
-            // Verify no data service calls were made
-            _mockUserQueryDataService.Verify(x => x.GetByEmailAsync(It.IsAny<string>()), Times.Never);
-            _mockUserCommandDataService.Verify(x => x.CreateUserWithClaimAsync(It.IsAny<string>(), It.IsAny<string>()), Times.Never);
-        }
+        thrownException.Which.Message.Should().Be(jwtErrorMessage);
+    }
 
-        [Fact]
-        public async Task AuthenticateAsync_WhenUserQueryDataServiceThrows_ThrowsException()
-        {
-            // Arrange
-            var command = new AuthenticationCommand { Email = "test@example.com" };
-            _mockUserQueryDataService
-                .Setup(x => x.GetByEmailAsync(It.IsAny<string>()))
-                .ThrowsAsync(new InvalidOperationException("Database error"));
+    [Fact]
+    public async Task AuthenticateAsync_WhenCreateUserWithClaimFails_ReturnsFailureWithOriginalErrors()
+    {
+        // Arrange
+        var automocker = new AutoMocker();
+        var testee = automocker.CreateInstance<AuthService>();
 
-            // Act & Assert
-            // With the new no-try-catch architecture, exceptions bubble up naturally
-            var exception = await Assert.ThrowsAsync<InvalidOperationException>(() => _authService.AuthenticateAsync(command));
-            Assert.Equal("Database error", exception.Message);
-        }
+        const string testEmail = "test@example.com";
+        const string freeTierClaimType = "Free-Tier";
+        const string databaseCommitError = "Database commit error";
+        
+        var command = new AuthenticationCommand { Email = testEmail };
+        var serviceErrors = new List<ServiceError> { ServiceError.InternalError(databaseCommitError) };
+        
+        automocker
+            .SetupUserNotFound(testEmail)
+            .SetupCreateUserWithClaimFailure(testEmail, freeTierClaimType, serviceErrors);
 
-        [Fact]
-        public async Task AuthenticateAsync_WhenJwtServiceThrows_ThrowsException()
-        {
-            // Arrange
-            var command = new AuthenticationCommand { Email = "test@example.com" };
-            var userId = UserId.New();
-            var userDto = new UserDto(userId.ToString(), command.Email, new List<ClaimInfo>());
-            
-            _mockUserQueryDataService
-                .Setup(x => x.GetByEmailAsync(command.Email))
-                .ReturnsAsync(ServiceResult<UserDto>.Success(UserDto.Empty));
-                
-            _mockUserCommandDataService
-                .Setup(x => x.CreateUserWithClaimAsync(command.Email, "Free-Tier"))
-                .ReturnsAsync(ServiceResult<UserDto>.Success(userDto));
-                
-            _mockJwtService
-                .Setup(x => x.GenerateToken(userDto))
-                .Throws(new InvalidOperationException("JWT configuration error"));
+        // Act
+        var result = await testee.AuthenticateAsync(command);
 
-            // Act & Assert
-            // With the new no-try-catch architecture, exceptions bubble up naturally
-            var exception = await Assert.ThrowsAsync<InvalidOperationException>(() => _authService.AuthenticateAsync(command));
-            Assert.Equal("JWT configuration error", exception.Message);
-        }
+        // Assert
+        result.IsSuccess.Should().BeFalse();
+        result.StructuredErrors.Should().BeEquivalentTo(serviceErrors);
+        result.Data.IsEmpty.Should().BeTrue();
+    }
 
-        [Fact]
-        public async Task AuthenticateAsync_WhenCreateUserWithClaimFails_ReturnsFailureResult()
-        {
-            // Arrange
-            var command = new AuthenticationCommand { Email = "test@example.com" };
-            var errors = new List<ServiceError> { ServiceError.InternalError("Database commit error") };
-            
-            _mockUserQueryDataService
-                .Setup(x => x.GetByEmailAsync(command.Email))
-                .ReturnsAsync(ServiceResult<UserDto>.Success(UserDto.Empty));
-                
-            _mockUserCommandDataService
-                .Setup(x => x.CreateUserWithClaimAsync(command.Email, "Free-Tier"))
-                .ReturnsAsync(ServiceResult<UserDto>.Failure(UserDto.Empty, errors));
+    [Fact]
+    public async Task AuthenticateAsync_WithUserHavingNullClaimsList_HandlesNullClaimsGracefully()
+    {
+        // Arrange
+        var automocker = new AutoMocker();
+        var testee = automocker.CreateInstance<AuthService>();
 
-            // Act
-            var result = await _authService.AuthenticateAsync(command);
+        const string testEmail = "test@example.com";
+        const string jwtToken = "token";
+        
+        var command = new AuthenticationCommand { Email = testEmail };
+        var userDtoWithNullClaims = new UserDto(
+            UserId.New().ToString(), 
+            testEmail,
+            null! // Null claims collection
+        );
+        
+        automocker
+            .SetupExistingUser(testEmail, userDtoWithNullClaims)
+            .SetupJwtTokenGeneration(userDtoWithNullClaims, jwtToken);
 
-            // Assert
-            Assert.False(result.IsSuccess);
-            Assert.Equal(errors, result.StructuredErrors);
-            Assert.True(result.Data.IsEmpty);
-        }
+        // Act
+        var result = await testee.AuthenticateAsync(command);
 
-        [Fact]
-        public async Task AuthenticateAsync_WithUserHavingNullClaimsList_SucceedsWithEmptyClaimsList()
-        {
-            // Arrange
-            var command = new AuthenticationCommand { Email = "test@example.com" };
-            var userDto = new UserDto(
-                UserId.New().ToString(), 
-                command.Email,
-                null! // Null claims collection
-            );
-            
-            _mockUserQueryDataService
-                .Setup(x => x.GetByEmailAsync(command.Email))
-                .ReturnsAsync(ServiceResult<UserDto>.Success(userDto));
-                
-            _mockJwtService
-                .Setup(x => x.GenerateToken(userDto))
-                .Returns("token");
-
-            // Act
-            var result = await _authService.AuthenticateAsync(command);
-
-            // Assert
-            // The new architecture handles null claims gracefully by converting to empty list
-            Assert.True(result.IsSuccess);
-            Assert.Equal("token", result.Data.Token);
-            Assert.NotNull(result.Data.Claims);
-            Assert.Empty(result.Data.Claims);
-        }
+        // Assert
+        result.IsSuccess.Should().BeTrue(because: "architecture handles null claims gracefully");
+        result.Data.Token.Should().Be(jwtToken);
+        result.Data.Claims.Should().NotBeNull();
+        result.Data.Claims.Should().BeEmpty();
     }
 }

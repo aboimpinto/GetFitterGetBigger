@@ -40,6 +40,76 @@ ServiceValidate is a **MANDATORY** fluent validation API that replaces all manua
 .EnsureNotEmpty(workoutTemplateId, "Template ID required")    // WorkoutTemplateId
 ```
 
+## 🆕 Conditional Validation with ThenEnsure Pattern
+
+### When to Use ThenEnsure
+Use `ThenEnsure` methods when subsequent validations depend on previous ones passing:
+- Validating properties of a nullable object after null check
+- Performing format validation after emptiness check
+- Checking business rules that require valid input first
+
+### The Problem Without ThenEnsure
+```csharp
+// ❌ DANGEROUS - Potential null reference exceptions
+public async Task<ServiceResult<Response>> ProcessAsync(Command command)
+{
+    return await ServiceValidate.For<Response>()
+        .EnsureNotNull(command, "Command cannot be null")
+        .EnsureNotWhiteSpace(command?.Email, "Email required")    // Need ?. operator
+        .Ensure(() => IsValidFormat(command?.Email), "Invalid")  // Need ?. everywhere!
+        .MatchAsync(...);
+}
+```
+
+### The Solution With ThenEnsure
+```csharp
+// ✅ SAFE - No null reference possible
+public async Task<ServiceResult<Response>> ProcessAsync(Command command)
+{
+    return await ServiceValidate.For<Response>()
+        .EnsureNotNull(command, "Command cannot be null")
+        .ThenEnsureNotWhiteSpace(command.Email, "Email required")    // Safe - no ?. needed
+        .ThenEnsureEmailIsValid(command.Email, "Invalid format")     // Only runs if valid
+        .MatchAsync(...);
+}
+```
+
+### Available ThenEnsure Methods
+| Method | Purpose | Example |
+|--------|---------|---------|
+| `ThenEnsure(predicate, error)` | Generic conditional validation | `.ThenEnsure(() => IsValid(value), "Invalid")` |
+| `ThenEnsureAsync(asyncPredicate, error)` | Async conditional validation | `.ThenEnsureAsync(async () => await ExistsAsync(id), "Not found")` |
+| `ThenEnsureNotWhiteSpace(value, error)` | String validation after null check | `.ThenEnsureNotWhiteSpace(command.Name, "Name required")` |
+| `ThenEnsureEmailIsValid(email, error)` | Email format validation | `.ThenEnsureEmailIsValid(command.Email, "Invalid email")` |
+| `ThenEnsureNotEmpty(id, error)` | ID validation after null check | `.ThenEnsureNotEmpty(command.UserId, "User ID required")` |
+
+### Real-World Example: Authentication Service
+```csharp
+public async Task<ServiceResult<AuthenticationResponse>> AuthenticateAsync(AuthenticationCommand command)
+{
+    return await ServiceValidate.For<AuthenticationResponse>()
+        // First check: command not null
+        .EnsureNotNull(command, AuthenticationErrorMessages.Validation.RequestCannotBeNull)
+        // Second check: email not empty (safe because command is not null)
+        .ThenEnsureNotWhiteSpace(command.Email, AuthenticationErrorMessages.Validation.EmailCannotBeEmpty)
+        // Third check: email format valid (safe because email is not empty)
+        .ThenEnsureEmailIsValid(command.Email, AuthenticationErrorMessages.Validation.InvalidEmailFormat)
+        .MatchAsync(
+            whenValid: async () => await ProcessAuthenticationAsync(command)
+        );
+}
+```
+
+### Key Benefits
+1. **Safety**: No null reference exceptions
+2. **Clarity**: No need for `?.` operators after initial null check
+3. **User Experience**: Most relevant error returned first
+4. **Performance**: Skips unnecessary validations when chain fails
+
+### Implementation Location
+The ThenEnsure extension methods are defined in:
+`Services/Validation/ServiceValidationConditionalExtensions.cs`
+
 ## Basic Usage
 
 ### ❌ BAD - Manual Validation Patterns to Avoid

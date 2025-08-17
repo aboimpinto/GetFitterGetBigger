@@ -44,6 +44,7 @@
 - **COMPLETE REFERENCE** All validation extensions
 - EnsureNotEmpty, EnsureMaxLength, EnsureNameIsUniqueAsync
 - EnsureHasValidAsync, EnsureNotWhiteSpace patterns
+- **NEW**: ThenEnsure conditional validation pattern
 - Quick reference table and examples
 
 #### [Clean Validation Pattern](./CodeQualityGuidelines/CleanValidationPattern.md)
@@ -251,6 +252,62 @@ private async Task<bool> IsKineticChainValidAsync(types, id)
     ExerciseErrorMessages.InvalidKineticChainForExerciseType)
 ```
 
+### Conditional Validation with ThenEnsure Pattern
+**USE ThenEnsure methods for dependent validations!** Prevents null reference exceptions and provides cleaner validation chains.
+
+#### The Problem
+When validating nullable objects, subsequent validations can fail with null reference exceptions:
+
+```csharp
+// ❌ DANGEROUS - Null reference if command is null
+.EnsureNotNull(command, "Command cannot be null")
+.EnsureNotWhiteSpace(command?.Email, "Email cannot be empty")  // Need ?. operator
+.Ensure(() => IsValidEmail(command?.Email), "Invalid format")  // Need ?. operator everywhere!
+```
+
+#### The Solution: ThenEnsure Pattern
+ThenEnsure methods only execute if the validation chain is still valid:
+
+```csharp
+// ✅ SAFE - No null reference possible
+.EnsureNotNull(command, "Command cannot be null")
+.ThenEnsureNotWhiteSpace(command.Email, "Email cannot be empty")  // Safe! No ?. needed
+.ThenEnsureEmailIsValid(command.Email, "Invalid format")          // Safe! Chain continues only if valid
+```
+
+#### Available ThenEnsure Methods
+- `ThenEnsure(predicate, error)` - Generic conditional validation
+- `ThenEnsureAsync(asyncPredicate, error)` - Async conditional validation
+- `ThenEnsureNotWhiteSpace(value, error)` - String validation after null check
+- `ThenEnsureEmailIsValid(email, error)` - Email format validation
+- `ThenEnsureNotEmpty(id, error)` - ID validation after null check
+
+#### Key Benefits
+1. **No Null Reference Exceptions** - Subsequent validations skip if previous ones fail
+2. **Cleaner Code** - No need for `?.` null-conditional operators
+3. **Better User Experience** - Users get the most relevant error first
+4. **Progressive Validation** - Validates step-by-step, stopping at first failure
+
+#### Real-World Example
+```csharp
+public async Task<ServiceResult<AuthenticationResponse>> AuthenticateAsync(AuthenticationCommand command)
+{
+    return await ServiceValidate.For<AuthenticationResponse>()
+        .EnsureNotNull(command, AuthenticationErrorMessages.Validation.RequestCannotBeNull)
+        .ThenEnsureNotWhiteSpace(command.Email, AuthenticationErrorMessages.Validation.EmailCannotBeEmpty)
+        .ThenEnsureEmailIsValid(command.Email, AuthenticationErrorMessages.Validation.InvalidEmailFormat)
+        .MatchAsync(
+            whenValid: async () => await ProcessAuthenticationAsync(command)
+        );
+}
+```
+
+In this example:
+- If `command` is null → returns "Request cannot be null"
+- If `command.Email` is empty → returns "Email cannot be empty"  
+- If email format is invalid → returns "Invalid email format"
+- Otherwise → proceeds with authentication
+
 ### No Try-Catch Anti-Pattern
 **NEVER use blanket try-catch blocks!** Shows lack of control over code flow.
 
@@ -453,6 +510,7 @@ Each layer trusts the layer below it because:
 | Service method return type | ServiceResult<T> | [ServiceResultPattern.md](./CodeQualityGuidelines/ServiceResultPattern.md) |
 | Input validation (all sync) | ServiceValidate.For<T>() | [ServiceValidatePattern.md](./CodeQualityGuidelines/ServiceValidatePattern.md) |
 | Input validation (any async) | ServiceValidate.Build<T>() | [ServiceValidatePattern.md](./CodeQualityGuidelines/ServiceValidatePattern.md) |
+| Dependent validations | ThenEnsure methods | See Conditional Validation section above |
 | Multiple business validations | Chain EnsureAsync calls, NOT inside MatchAsync | See examples in anti-patterns section |
 | Clean validation approach | Positive assertions | [CleanValidationPattern.md](./CodeQualityGuidelines/CleanValidationPattern.md) |
 | Validation mistakes | Avoid anti-patterns | [ValidationAntiPatterns.md](./CodeQualityGuidelines/ValidationAntiPatterns.md) |

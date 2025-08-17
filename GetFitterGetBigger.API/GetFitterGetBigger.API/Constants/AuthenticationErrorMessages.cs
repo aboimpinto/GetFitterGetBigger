@@ -16,16 +16,4 @@ public static class AuthenticationErrorMessages
         public static string UserIdCannotBeEmpty => "User ID cannot be empty";
         public static string ClaimTypeCannotBeEmpty => "Claim type cannot be empty";
     }
-    
-    /// <summary>
-    /// Entity operation error messages
-    /// </summary>
-    public static class Operations
-    {
-        public static string FailedToCreateUser => "Failed to create user";
-        public static string FailedToCreateClaim => "Failed to create user claim";
-        public static string FailedToRetrieveUser => "Failed to retrieve created user";
-        public static string FailedToGenerateToken => "Failed to generate authentication token";
-        public static string FailedToLoadUser => "Failed to load user";
-    }
 }

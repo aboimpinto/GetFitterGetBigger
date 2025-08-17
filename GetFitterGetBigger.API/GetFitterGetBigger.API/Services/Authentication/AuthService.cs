@@ -26,7 +26,8 @@ public class AuthService(
     {
         return await ServiceValidate.For<AuthenticationResponse>()
             .EnsureNotNull(command, AuthenticationErrorMessages.Validation.RequestCannotBeNull)
-            .EnsureNotWhiteSpace(command?.Email, AuthenticationErrorMessages.Validation.EmailCannotBeEmpty)
+            .ThenEnsureNotWhiteSpace(command.Email, AuthenticationErrorMessages.Validation.EmailCannotBeEmpty)
+            .ThenEnsureEmailIsValid(command.Email, AuthenticationErrorMessages.Validation.InvalidEmailFormat)
             .MatchAsync(
                 whenValid: async () => await ProcessAuthenticationAsync(command!)
             );
