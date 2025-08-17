@@ -144,7 +144,10 @@ A convenience method that applies all filters in sequence:
 - Provides a single entry point for common scenarios
 
 ### 3. Sorting Extensions
-Separate methods for different sort criteria:
+
+**⚠️ IMPORTANT**: For sorting, use the [Fluent Sorting Pattern](./FluentSortingPattern.md) with SortableQuery wrapper for better readability and state tracking.
+
+#### Basic Sort Methods (Building Blocks)
 ```csharp
 public static IQueryable<Exercise> SortByName(
     this IQueryable<Exercise> query,
@@ -154,23 +157,33 @@ public static IQueryable<Exercise> SortByName(
         ? query.OrderByDescending(e => e.Name)
         : query.OrderBy(e => e.Name);
 }
+```
 
+#### ❌ AVOID: Combined Sorting Methods
+```csharp
+// ANTI-PATTERN - Hides which fields are sortable
 public static IQueryable<Exercise> ApplyFluentSorting(
     this IQueryable<Exercise> query,
     string? sortBy,
     string? sortOrder)
 {
+    // This hides the implementation details
     var isDescending = sortOrder?.ToLower() == "desc";
-    
-    return (sortBy?.ToLower()) switch
-    {
-        "name" => query.SortByName(isDescending),
-        "difficulty" => query.SortByDifficulty(isDescending),
-        "createdat" => query.SortByCreatedAt(isDescending),
-        _ => query.SortByName() // Default sort
-    };
+    return (sortBy?.ToLower()) switch { ... };
 }
 ```
+
+#### ✅ PREFERRED: Fluent Sorting Pattern
+```csharp
+// Use SortableQuery for elegant conditional sorting
+query.ToSortable()
+    .ApplySortByName(sortBy, sortOrder)
+    .ApplySortByDifficulty(sortBy, sortOrder)
+    .ApplySortByCreatedAt(sortBy, sortOrder)
+    .WithDefaultSort(q => q.OrderBy(e => e.Name));
+```
+
+See [Fluent Sorting Pattern](./FluentSortingPattern.md) for complete implementation details.
 
 ### 4. Include Extensions
 Methods for standard data loading patterns:

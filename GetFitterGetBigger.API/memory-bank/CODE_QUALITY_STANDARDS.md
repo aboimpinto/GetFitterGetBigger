@@ -157,6 +157,18 @@
 - Individual filter methods with chaining capability
 - Improves readability and maintainability of complex queries
 
+#### [Fluent Sorting Pattern](./CodeQualityGuidelines/FluentSortingPattern.md)
+- **NEW** Elegant conditional sorting with state tracking
+- SortableQuery wrapper for intelligent default handling
+- Replaces verbose switch/if statements for sorting
+- Clean fluent chain showing all sortable fields
+
+#### [Logging Hierarchy Pattern](./CodeQualityGuidelines/LoggingHierarchyPattern.md)
+- **NEW** Push logging down to where operations occur
+- Eliminates if-statements that exist only for logging
+- Services focus on orchestration, not infrastructure
+- Pattern matching replaces verbose logging conditions
+
 ### Quality Assurance
 
 #### [Testing Standards](./CodeQualityGuidelines/TestingStandards.md)
@@ -381,15 +393,85 @@ if (!difficultyId.IsEmpty)
     query = query.Where(e => e.DifficultyId == difficultyId);
 // ... more conditions
 
-// ✅ CORRECT - Fluent Query Extensions
+// ✅ CORRECT - Fluent Query Extensions for filtering
 query = query
     .FilterByActiveStatus(includeInactive)
     .FilterByNamePattern(name)
-    .FilterByDifficulty(difficultyId)
-    .ApplyFluentSorting(sortBy, sortOrder);
+    .FilterByDifficulty(difficultyId);
 ```
 
-See [FluentQueryExtensionsPattern.md](./CodeQualityGuidelines/FluentQueryExtensionsPattern.md) for implementation details.
+### Verbose Sorting Logic
+**AVOID verbose switch/if statements for sorting!** Use Fluent Sorting Pattern instead.
+
+```csharp
+// ❌ ANTI-PATTERN - Verbose sorting logic
+var isDescending = sortOrder?.ToLower() == "desc";
+query = (sortBy?.ToLower()) switch
+{
+    "name" => query.SortByName(isDescending),
+    "date" => query.SortByDate(isDescending),
+    _ => query.OrderBy(x => x.Id)
+};
+
+// ✅ CORRECT - Fluent Sorting Pattern
+query = query
+    .ToSortable()
+    .ApplySortByName(sortBy, sortOrder)
+    .ApplySortByDate(sortBy, sortOrder)
+    .WithDefaultSort(q => q.OrderBy(x => x.Id));
+```
+
+### Combined Filter/Sort Methods
+**NEVER hide multiple operations in a single method!** Keep filters and sorts visible.
+
+```csharp
+// ❌ ANTI-PATTERN - Hides what's being filtered/sorted
+query = query.ApplyFilters(namePattern, categoryId, objectiveId, difficultyId, stateId);
+query = query.ApplyFluentSorting(sortBy, sortOrder);
+
+// ✅ CORRECT - Each operation is visible
+query = query
+    .FilterByNamePattern(namePattern)
+    .FilterByCategory(categoryId)
+    .FilterByObjective(objectiveId)
+    .ToSortable()
+    .ApplySortByName(sortBy, sortOrder)
+    .WithDefaultSort(q => q.OrderBy(x => x.UpdatedAt));
+```
+
+See [FluentQueryExtensionsPattern.md](./CodeQualityGuidelines/FluentQueryExtensionsPattern.md) and [FluentSortingPattern.md](./CodeQualityGuidelines/FluentSortingPattern.md) for implementation details.
+
+### Logging-Only If-Statements
+**AVOID if-statements that exist only for logging!** Push logging down to where operations occur.
+
+```csharp
+// ❌ ANTI-PATTERN - If-statement exists only for logging
+if (!entityResult.IsSuccess)
+{
+    _logger.LogError("Entity creation failed: {Errors}", entityResult.Errors);
+    return ServiceResult.Failure(entityResult.Errors);
+}
+
+var result = await _dataService.CreateAsync(entityResult.Value);
+
+if (result.IsSuccess)
+{
+    _logger.LogInformation("Created {Id}", result.Data.Id);
+}
+
+return result;
+
+// ✅ CORRECT - Pattern matching without logging clutter
+return entityResult.IsSuccess switch
+{
+    true => await _dataService.CreateAsync(entityResult.Value),
+    false => ServiceResult.Failure(entityResult.Errors)
+};
+```
+
+**Key Principle**: Services orchestrate, they don't log. Logging belongs in DataServices, Repositories, and Handlers where operations actually occur.
+
+See [LoggingHierarchyPattern.md](./CodeQualityGuidelines/LoggingHierarchyPattern.md) for implementation details.
 
 ### Defensive Code Anti-Pattern - Trust the Architecture
 **STOP writing defensive code when the architecture guarantees safety!** We follow the NULL OBJECT PATTERN throughout the codebase.
@@ -529,6 +611,9 @@ Each layer trusts the layer below it because:
 | Entity creation | EntityResult<T> | [EntityResultPattern.md](./CodeQualityGuidelines/EntityResultPattern.md) |
 | Data access layer | Pure repositories | [RepositoryPattern.md](./CodeQualityGuidelines/RepositoryPattern.md) |
 | Repository implementation | Inherit from base class | [RepositoryBaseClassPattern.md](./CodeQualityGuidelines/RepositoryBaseClassPattern.md) |
+| Query filtering | Fluent extensions | [FluentQueryExtensionsPattern.md](./CodeQualityGuidelines/FluentQueryExtensionsPattern.md) |
+| Conditional sorting | SortableQuery pattern | [FluentSortingPattern.md](./CodeQualityGuidelines/FluentSortingPattern.md) |
+| Logging in services | Push down to operations | [LoggingHierarchyPattern.md](./CodeQualityGuidelines/LoggingHierarchyPattern.md) |
 
 ## 📊 Code Review Checklist
 
@@ -555,6 +640,10 @@ Before approving any PR, verify:
 - [ ] Modern C# patterns applied (C# 12+)
 - [ ] Static helpers extracted as extension methods
 - [ ] Cache integration follows patterns
+- [ ] **Query filtering uses individual extension methods** (not combined ApplyFilters)
+- [ ] **Conditional sorting uses SortableQuery pattern** (not verbose switch statements)
+- [ ] **No logging in service layer** (push logging down to operations)
+- [ ] **No if-statements that exist only for logging**
 
 ## 🔗 Related Documents
 

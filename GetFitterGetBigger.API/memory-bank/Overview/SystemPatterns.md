@@ -23,6 +23,8 @@ The GetFitterGetBigger API Application serves as the central hub for all data op
 - **Unit of Work Pattern**: For managing database transactions
 - **CQRS (Command Query Responsibility Segregation)**: Potentially for separating read and write operations
 - **Mediator Pattern**: Potentially for handling communication between components
+- **Fluent Query Extensions Pattern**: For composable, readable query building (see [FluentQueryExtensionsPattern.md](../CodeQualityGuidelines/FluentQueryExtensionsPattern.md))
+- **Fluent Sorting Pattern**: For elegant conditional sorting with state tracking (see [FluentSortingPattern.md](../CodeQualityGuidelines/FluentSortingPattern.md))
 
 ### Architectural Rules (MANDATORY)
 
