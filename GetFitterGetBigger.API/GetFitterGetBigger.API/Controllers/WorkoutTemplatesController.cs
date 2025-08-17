@@ -5,6 +5,7 @@ using GetFitterGetBigger.API.Services.Commands.WorkoutTemplateExercises;
 using GetFitterGetBigger.API.Services.Commands.SetConfigurations;
 using GetFitterGetBigger.API.Services.Interfaces;
 using GetFitterGetBigger.API.Services.WorkoutTemplate;
+using GetFitterGetBigger.API.Services.Results;
 using Microsoft.AspNetCore.Mvc;
 
 namespace GetFitterGetBigger.API.Controllers;
@@ -16,31 +17,16 @@ namespace GetFitterGetBigger.API.Controllers;
 [Route("api/workout-templates")]
 [Produces("application/json")]
 [Tags("Workout Templates")]
-public class WorkoutTemplatesController : ControllerBase
+public class WorkoutTemplatesController(
+    IWorkoutTemplateService workoutTemplateService,
+    IWorkoutTemplateExerciseService workoutTemplateExerciseService,
+    ISetConfigurationService setConfigurationService,
+    ILogger<WorkoutTemplatesController> logger) : ControllerBase
 {
-    private readonly IWorkoutTemplateService _workoutTemplateService;
-    private readonly IWorkoutTemplateExerciseService _workoutTemplateExerciseService;
-    private readonly ISetConfigurationService _setConfigurationService;
-    private readonly ILogger<WorkoutTemplatesController> _logger;
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="WorkoutTemplatesController"/> class
-    /// </summary>
-    /// <param name="workoutTemplateService">The workout template service</param>
-    /// <param name="workoutTemplateExerciseService">The workout template exercise service</param>
-    /// <param name="setConfigurationService">The set configuration service</param>
-    /// <param name="logger">The logger</param>
-    public WorkoutTemplatesController(
-        IWorkoutTemplateService workoutTemplateService,
-        IWorkoutTemplateExerciseService workoutTemplateExerciseService,
-        ISetConfigurationService setConfigurationService,
-        ILogger<WorkoutTemplatesController> logger)
-    {
-        _workoutTemplateService = workoutTemplateService;
-        _workoutTemplateExerciseService = workoutTemplateExerciseService;
-        _setConfigurationService = setConfigurationService;
-        _logger = logger;
-    }
+    private readonly IWorkoutTemplateService _workoutTemplateService = workoutTemplateService;
+    private readonly IWorkoutTemplateExerciseService _workoutTemplateExerciseService = workoutTemplateExerciseService;
+    private readonly ISetConfigurationService _setConfigurationService = setConfigurationService;
+    private readonly ILogger<WorkoutTemplatesController> _logger = logger;
 
 
     /// <summary>
@@ -78,29 +64,21 @@ public class WorkoutTemplatesController : ControllerBase
         var parsedDifficultyId = DifficultyLevelId.ParseOrEmpty(difficultyId);
         var parsedStateId = WorkoutStateId.ParseOrEmpty(stateId);
 
-        // Transform nullable parameters to meaningful values
-        var searchNamePattern = namePattern ?? string.Empty;
-        var searchSortBy = sortBy ?? "name";
-        var searchSortOrder = sortOrder ?? "asc";
-
         // Call the unified search method in the service
         var result = await _workoutTemplateService.SearchAsync(
             page,
             pageSize,
-            searchNamePattern,
+            namePattern ?? string.Empty,
             parsedCategoryId,
             parsedObjectiveId,
             parsedDifficultyId,
             parsedStateId,
-            searchSortBy,
-            searchSortOrder);
+            sortBy,
+            sortOrder);
 
-        // Single exit point - no business logic, just pass through the result
-        return result switch
-        {
-            { IsSuccess: true } => Ok(result.Data),
-            { Errors: var errors } => BadRequest(new { errors })
-        };
+        // For search operations, always return the data (empty list on any failure)
+        // This prevents information leakage about system state
+        return Ok(result.Data);
     }
 
 
@@ -125,9 +103,9 @@ public class WorkoutTemplatesController : ControllerBase
         return result switch
         {
             { IsSuccess: true } => Ok(result.Data),
-            { Errors: var errors } when errors.Any(e => e.Contains("not found")) => NotFound(new { errors }),
-            { Errors: var errors } when errors.Any(e => e.Contains("access denied")) => Forbid(),
-            { Errors: var errors } => BadRequest(new { errors })
+            { PrimaryErrorCode: ServiceErrorCode.NotFound } => NotFound(),
+            { PrimaryErrorCode: ServiceErrorCode.Unauthorized } => Forbid(),
+            { StructuredErrors: var errors } => BadRequest(new { errors })
         };
     }
 
@@ -160,11 +138,6 @@ public class WorkoutTemplatesController : ControllerBase
     [ProducesResponseType(StatusCodes.Status409Conflict)]
     public async Task<IActionResult> CreateWorkoutTemplate([FromBody] CreateWorkoutTemplateDto request)
     {
-        if (!ModelState.IsValid)
-        {
-            return BadRequest(ModelState);
-        }
-
         _logger.LogInformation("Creating new workout template: {Name}", request.Name);
 
         var command = new CreateWorkoutTemplateCommand
@@ -184,8 +157,8 @@ public class WorkoutTemplatesController : ControllerBase
         return result switch
         {
             { IsSuccess: true } => CreatedAtAction(nameof(GetWorkoutTemplate), new { id = result.Data.Id }, result.Data),
-            { Errors: var errors } when errors.Any(e => e.Contains("already exists")) => Conflict(new { errors }),
-            { Errors: var errors } => BadRequest(new { errors })
+            { PrimaryErrorCode: ServiceErrorCode.AlreadyExists, StructuredErrors: var errors } => Conflict(new { errors }),
+            { StructuredErrors: var errors } => BadRequest(new { errors })
         };
     }
 
@@ -221,11 +194,6 @@ public class WorkoutTemplatesController : ControllerBase
     [ProducesResponseType(StatusCodes.Status409Conflict)]
     public async Task<IActionResult> UpdateWorkoutTemplate(string id, [FromBody] UpdateWorkoutTemplateDto request)
     {
-        if (!ModelState.IsValid)
-        {
-            return BadRequest(ModelState);
-        }
-
         _logger.LogInformation("Updating workout template with ID: {Id}", id);
 
         var templateId = WorkoutTemplateId.ParseOrEmpty(id);
@@ -246,9 +214,9 @@ public class WorkoutTemplatesController : ControllerBase
         return result switch
         {
             { IsSuccess: true } => Ok(result.Data),
-            { Errors: var errors } when errors.Any(e => e.Contains("not found")) => NotFound(new { errors }),
-            { Errors: var errors } when errors.Any(e => e.Contains("already exists")) => Conflict(new { errors }),
-            { Errors: var errors } => BadRequest(new { errors })
+            { PrimaryErrorCode: ServiceErrorCode.NotFound } => NotFound(),
+            { PrimaryErrorCode: ServiceErrorCode.AlreadyExists, StructuredErrors: var errors } => Conflict(new { errors }),
+            { StructuredErrors: var errors } => BadRequest(new { errors })
         };
     }
 
@@ -280,9 +248,9 @@ public class WorkoutTemplatesController : ControllerBase
         return result switch
         {
             { IsSuccess: true } => NoContent(),
-            { Errors: var errors } when errors.Any(e => e.Contains("not found")) => NotFound(new { errors }),
-            { Errors: var errors } when errors.Any(e => e.Contains("access denied")) => Forbid(),
-            { Errors: var errors } => BadRequest(new { errors })
+            { PrimaryErrorCode: ServiceErrorCode.NotFound } => NotFound(),
+            { PrimaryErrorCode: ServiceErrorCode.Unauthorized } => Forbid(),
+            { StructuredErrors: var errors } => BadRequest(new { errors })
         };
     }
 
@@ -316,28 +284,22 @@ public class WorkoutTemplatesController : ControllerBase
     [ProducesResponseType(StatusCodes.Status409Conflict)]
     public async Task<IActionResult> ChangeWorkoutTemplateState(string id, [FromBody] ChangeWorkoutStateDto request)
     {
-        if (!ModelState.IsValid)
-        {
-            _logger.LogWarning("Invalid ModelState for ChangeWorkoutTemplateState: {@ModelState}", ModelState);
-            return BadRequest(ModelState);
-        }
-
         _logger.LogInformation("Changing state of workout template {Id} to {StateId}", id, request.WorkoutStateId);
         
         var parsedTemplateId = WorkoutTemplateId.ParseOrEmpty(id);
         var parsedStateId = WorkoutStateId.ParseOrEmpty(request.WorkoutStateId);
 
         var result = await _workoutTemplateService.ChangeStateAsync(
-            WorkoutTemplateId.ParseOrEmpty(id),
-            WorkoutStateId.ParseOrEmpty(request.WorkoutStateId));
+            parsedTemplateId,
+            parsedStateId);
 
         return result switch
         {
             { IsSuccess: true } => Ok(result.Data),
-            { Errors: var errors } when errors.Any(e => e.Contains("not found")) => NotFound(new { errors }),
-            { Errors: var errors } when errors.Any(e => e.Contains("invalid transition")) => BadRequest(new { errors }),
-            { Errors: var errors } when errors.Any(e => e.Contains("blocked")) => Conflict(new { errors }),
-            { Errors: var errors } => BadRequest(new { errors })
+            { PrimaryErrorCode: ServiceErrorCode.NotFound } => NotFound(),
+            { PrimaryErrorCode: ServiceErrorCode.ValidationFailed, StructuredErrors: var errors } => BadRequest(new { errors }),
+            { PrimaryErrorCode: ServiceErrorCode.DependencyExists, StructuredErrors: var errors } => Conflict(new { errors }),
+            { StructuredErrors: var errors } => BadRequest(new { errors })
         };
     }
 
@@ -369,11 +331,6 @@ public class WorkoutTemplatesController : ControllerBase
     [ProducesResponseType(StatusCodes.Status409Conflict)]
     public async Task<IActionResult> DuplicateWorkoutTemplate(string id, [FromBody] DuplicateWorkoutTemplateDto request)
     {
-        if (!ModelState.IsValid)
-        {
-            return BadRequest(ModelState);
-        }
-
         _logger.LogInformation("Duplicating workout template {Id} with new name: {NewName}", id, request.NewName);
 
         var result = await _workoutTemplateService.DuplicateAsync(
@@ -383,9 +340,9 @@ public class WorkoutTemplatesController : ControllerBase
         return result switch
         {
             { IsSuccess: true } => CreatedAtAction(nameof(GetWorkoutTemplate), new { id = result.Data.Id }, result.Data),
-            { Errors: var errors } when errors.Any(e => e.Contains("not found")) => NotFound(new { errors }),
-            { Errors: var errors } when errors.Any(e => e.Contains("already exists")) => Conflict(new { errors }),
-            { Errors: var errors } => BadRequest(new { errors })
+            { PrimaryErrorCode: ServiceErrorCode.NotFound } => NotFound(),
+            { PrimaryErrorCode: ServiceErrorCode.AlreadyExists, StructuredErrors: var errors } => Conflict(new { errors }),
+            { StructuredErrors: var errors } => BadRequest(new { errors })
         };
     }
 
@@ -415,9 +372,9 @@ public class WorkoutTemplatesController : ControllerBase
         return result switch
         {
             { IsSuccess: true } => Ok(result.Data),
-            { Errors: var errors } when errors.Any(e => e.Contains("not found")) => NotFound(new { errors }),
-            { Errors: var errors } when errors.Any(e => e.Contains("access denied")) => Forbid(),
-            { Errors: var errors } => BadRequest(new { errors })
+            { PrimaryErrorCode: ServiceErrorCode.NotFound } => NotFound(),
+            { PrimaryErrorCode: ServiceErrorCode.Unauthorized } => Forbid(),
+            { StructuredErrors: var errors } => BadRequest(new { errors })
         };
     }
 
@@ -443,9 +400,9 @@ public class WorkoutTemplatesController : ControllerBase
         return result switch
         {
             { IsSuccess: true } => Ok(result.Data),
-            { Errors: var errors } when errors.Any(e => e.Contains("not found")) => NotFound(new { errors }),
-            { Errors: var errors } when errors.Any(e => e.Contains("access denied")) => Forbid(),
-            { Errors: var errors } => BadRequest(new { errors })
+            { PrimaryErrorCode: ServiceErrorCode.NotFound } => NotFound(),
+            { PrimaryErrorCode: ServiceErrorCode.Unauthorized } => Forbid(),
+            { StructuredErrors: var errors } => BadRequest(new { errors })
         };
     }
 
@@ -477,11 +434,6 @@ public class WorkoutTemplatesController : ControllerBase
     [ProducesResponseType(StatusCodes.Status409Conflict)]
     public async Task<IActionResult> AddExerciseToTemplate(string id, [FromBody] AddExerciseToTemplateDto request)
     {
-        if (!ModelState.IsValid)
-        {
-            return BadRequest(ModelState);
-        }
-
         _logger.LogInformation("Adding exercise {ExerciseId} to workout template {TemplateId} in zone {Zone}", 
             request.ExerciseId, id, request.Zone);
 
@@ -500,9 +452,9 @@ public class WorkoutTemplatesController : ControllerBase
         {
             { IsSuccess: true } => CreatedAtAction(nameof(GetWorkoutTemplateExercise), 
                 new { id, exerciseId = result.Data.Id }, result.Data),
-            { Errors: var errors } when errors.Any(e => e.Contains("not found")) => NotFound(new { errors }),
-            { Errors: var errors } when errors.Any(e => e.Contains("already exists")) => Conflict(new { errors }),
-            { Errors: var errors } => BadRequest(new { errors })
+            { PrimaryErrorCode: ServiceErrorCode.NotFound } => NotFound(),
+            { PrimaryErrorCode: ServiceErrorCode.AlreadyExists, StructuredErrors: var errors } => Conflict(new { errors }),
+            { StructuredErrors: var errors } => BadRequest(new { errors })
         };
     }
 
@@ -530,11 +482,6 @@ public class WorkoutTemplatesController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> UpdateTemplateExercise(string id, string exerciseId, [FromBody] UpdateTemplateExerciseDto request)
     {
-        if (!ModelState.IsValid)
-        {
-            return BadRequest(ModelState);
-        }
-
         _logger.LogInformation("Updating exercise {ExerciseId} in workout template {TemplateId}", exerciseId, id);
 
         var command = new UpdateTemplateExerciseCommand
@@ -548,8 +495,8 @@ public class WorkoutTemplatesController : ControllerBase
         return result switch
         {
             { IsSuccess: true } => Ok(result.Data),
-            { Errors: var errors } when errors.Any(e => e.Contains("not found")) => NotFound(new { errors }),
-            { Errors: var errors } => BadRequest(new { errors })
+            { PrimaryErrorCode: ServiceErrorCode.NotFound } => NotFound(),
+            { StructuredErrors: var errors } => BadRequest(new { errors })
         };
     }
 
@@ -576,9 +523,9 @@ public class WorkoutTemplatesController : ControllerBase
         return result switch
         {
             { IsSuccess: true } => NoContent(),
-            { Errors: var errors } when errors.Any(e => e.Contains("not found")) => NotFound(new { errors }),
-            { Errors: var errors } when errors.Any(e => e.Contains("access denied")) => Forbid(),
-            { Errors: var errors } => BadRequest(new { errors })
+            { PrimaryErrorCode: ServiceErrorCode.NotFound } => NotFound(),
+            { PrimaryErrorCode: ServiceErrorCode.Unauthorized } => Forbid(),
+            { StructuredErrors: var errors } => BadRequest(new { errors })
         };
     }
 
@@ -607,11 +554,6 @@ public class WorkoutTemplatesController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> ChangeExerciseZone(string id, string exerciseId, [FromBody] ChangeExerciseZoneDto request)
     {
-        if (!ModelState.IsValid)
-        {
-            return BadRequest(ModelState);
-        }
-
         _logger.LogInformation("Changing zone of exercise {ExerciseId} in template {TemplateId} to {Zone}", 
             exerciseId, id, request.Zone);
 
@@ -627,8 +569,8 @@ public class WorkoutTemplatesController : ControllerBase
         return result switch
         {
             { IsSuccess: true } => Ok(result.Data),
-            { Errors: var errors } when errors.Any(e => e.Contains("not found")) => NotFound(new { errors }),
-            { Errors: var errors } => BadRequest(new { errors })
+            { PrimaryErrorCode: ServiceErrorCode.NotFound } => NotFound(),
+            { StructuredErrors: var errors } => BadRequest(new { errors })
         };
     }
 
@@ -665,11 +607,6 @@ public class WorkoutTemplatesController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> ReorderExercises(string id, [FromBody] ReorderTemplateExercisesDto request)
     {
-        if (!ModelState.IsValid)
-        {
-            return BadRequest(ModelState);
-        }
-
         _logger.LogInformation("Reordering exercises in zone {Zone} for workout template {TemplateId}", 
             request.Zone, id);
 
@@ -688,8 +625,8 @@ public class WorkoutTemplatesController : ControllerBase
         return result switch
         {
             { IsSuccess: true } => Ok(new { message = "Exercises reordered successfully" }),
-            { Errors: var errors } when errors.Any(e => e.Contains("not found")) => NotFound(new { errors }),
-            { Errors: var errors } => BadRequest(new { errors })
+            { PrimaryErrorCode: ServiceErrorCode.NotFound } => NotFound(),
+            { StructuredErrors: var errors } => BadRequest(new { errors })
         };
     }
 
@@ -721,9 +658,9 @@ public class WorkoutTemplatesController : ControllerBase
         return result switch
         {
             { IsSuccess: true } => Ok(result.Data),
-            { Errors: var errors } when errors.Any(e => e.Contains("not found")) => NotFound(new { errors }),
-            { Errors: var errors } when errors.Any(e => e.Contains("access denied")) => Forbid(),
-            { Errors: var errors } => BadRequest(new { errors })
+            { PrimaryErrorCode: ServiceErrorCode.NotFound } => NotFound(),
+            { PrimaryErrorCode: ServiceErrorCode.Unauthorized } => Forbid(),
+            { StructuredErrors: var errors } => BadRequest(new { errors })
         };
     }
 
@@ -751,9 +688,9 @@ public class WorkoutTemplatesController : ControllerBase
         return result switch
         {
             { IsSuccess: true } => Ok(result.Data),
-            { Errors: var errors } when errors.Any(e => e.Contains("not found")) => NotFound(new { errors }),
-            { Errors: var errors } when errors.Any(e => e.Contains("access denied")) => Forbid(),
-            { Errors: var errors } => BadRequest(new { errors })
+            { PrimaryErrorCode: ServiceErrorCode.NotFound } => NotFound(),
+            { PrimaryErrorCode: ServiceErrorCode.Unauthorized } => Forbid(),
+            { StructuredErrors: var errors } => BadRequest(new { errors })
         };
     }
 
@@ -786,11 +723,6 @@ public class WorkoutTemplatesController : ControllerBase
     [ProducesResponseType(StatusCodes.Status409Conflict)]
     public async Task<IActionResult> CreateSetConfiguration(string id, string exerciseId, [FromBody] CreateSetConfigurationDto request)
     {
-        if (!ModelState.IsValid)
-        {
-            return BadRequest(ModelState);
-        }
-
         _logger.LogInformation("Creating set configuration for exercise {ExerciseId} in template {TemplateId}", 
             exerciseId, id);
 
@@ -810,9 +742,9 @@ public class WorkoutTemplatesController : ControllerBase
         {
             { IsSuccess: true } => CreatedAtAction(nameof(GetSetConfiguration), 
                 new { id, exerciseId, setId = result.Data.Id }, result.Data),
-            { Errors: var errors } when errors.Any(e => e.Contains("not found")) => NotFound(new { errors }),
-            { Errors: var errors } when errors.Any(e => e.Contains("already exists")) => Conflict(new { errors }),
-            { Errors: var errors } => BadRequest(new { errors })
+            { PrimaryErrorCode: ServiceErrorCode.NotFound } => NotFound(),
+            { PrimaryErrorCode: ServiceErrorCode.AlreadyExists, StructuredErrors: var errors } => Conflict(new { errors }),
+            { StructuredErrors: var errors } => BadRequest(new { errors })
         };
     }
 
@@ -853,11 +785,6 @@ public class WorkoutTemplatesController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> CreateBulkSetConfigurations(string id, string exerciseId, [FromBody] CreateBulkSetConfigurationsDto request)
     {
-        if (!ModelState.IsValid)
-        {
-            return BadRequest(ModelState);
-        }
-
         _logger.LogInformation("Creating {Count} set configurations for exercise {ExerciseId} in template {TemplateId}", 
             request.Sets.Count, exerciseId, id);
 
@@ -880,8 +807,8 @@ public class WorkoutTemplatesController : ControllerBase
         {
             { IsSuccess: true } => CreatedAtAction(nameof(GetSetConfigurations), 
                 new { id, exerciseId }, result.Data),
-            { Errors: var errors } when errors.Any(e => e.Contains("not found")) => NotFound(new { errors }),
-            { Errors: var errors } => BadRequest(new { errors })
+            { PrimaryErrorCode: ServiceErrorCode.NotFound } => NotFound(),
+            { StructuredErrors: var errors } => BadRequest(new { errors })
         };
     }
 
@@ -912,11 +839,6 @@ public class WorkoutTemplatesController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> UpdateSetConfiguration(string id, string exerciseId, string setId, [FromBody] UpdateSetConfigurationDto request)
     {
-        if (!ModelState.IsValid)
-        {
-            return BadRequest(ModelState);
-        }
-
         _logger.LogInformation("Updating set configuration {SetId} for exercise {ExerciseId} in template {TemplateId}", 
             setId, exerciseId, id);
 
@@ -934,8 +856,8 @@ public class WorkoutTemplatesController : ControllerBase
         return result switch
         {
             { IsSuccess: true } => Ok(result.Data),
-            { Errors: var errors } when errors.Any(e => e.Contains("not found")) => NotFound(new { errors }),
-            { Errors: var errors } => BadRequest(new { errors })
+            { PrimaryErrorCode: ServiceErrorCode.NotFound } => NotFound(),
+            { StructuredErrors: var errors } => BadRequest(new { errors })
         };
     }
 
@@ -964,9 +886,9 @@ public class WorkoutTemplatesController : ControllerBase
         return result switch
         {
             { IsSuccess: true } => NoContent(),
-            { Errors: var errors } when errors.Any(e => e.Contains("not found")) => NotFound(new { errors }),
-            { Errors: var errors } when errors.Any(e => e.Contains("access denied")) => Forbid(),
-            { Errors: var errors } => BadRequest(new { errors })
+            { PrimaryErrorCode: ServiceErrorCode.NotFound } => NotFound(),
+            { PrimaryErrorCode: ServiceErrorCode.Unauthorized } => Forbid(),
+            { StructuredErrors: var errors } => BadRequest(new { errors })
         };
     }
 
@@ -1003,11 +925,6 @@ public class WorkoutTemplatesController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> ReorderSetConfigurations(string id, string exerciseId, [FromBody] ReorderSetConfigurationsDto request)
     {
-        if (!ModelState.IsValid)
-        {
-            return BadRequest(ModelState);
-        }
-
         _logger.LogInformation("Reordering set configurations for exercise {ExerciseId} in template {TemplateId}", 
             exerciseId, id);
 
@@ -1024,8 +941,8 @@ public class WorkoutTemplatesController : ControllerBase
         return result switch
         {
             { IsSuccess: true } => Ok(new { message = "Set configurations reordered successfully" }),
-            { Errors: var errors } when errors.Any(e => e.Contains("not found")) => NotFound(new { errors }),
-            { Errors: var errors } => BadRequest(new { errors })
+            { PrimaryErrorCode: ServiceErrorCode.NotFound } => NotFound(),
+            { StructuredErrors: var errors } => BadRequest(new { errors })
         };
     }
 

@@ -78,6 +78,13 @@
 - Common misconceptions debunked
 - Implementation checklist and violation detection
 
+#### [Search Operation Error Handling](./CodeQualityGuidelines/SearchOperationErrorHandling.md)
+- **SECURITY** Search/list operations always return 200 OK
+- No error exposure to prevent information leakage
+- Server-side logging for debugging
+- Help desk workflow for issue resolution
+- Applies to GET list endpoints only
+
 #### [Null Object Pattern](./CodeQualityGuidelines/NullObjectPattern.md)
 - **CRITICAL** Empty Object Pattern implementation
 - IEmptyDto<T> interface requirements

@@ -59,8 +59,7 @@ public class MuscleGroupsController : ControllerBase
             { PrimaryErrorCode: ServiceErrorCode.NotFound } => NotFound(),
             { PrimaryErrorCode: ServiceErrorCode.InvalidFormat, StructuredErrors: var errors } => BadRequest(new { errors }),
             { PrimaryErrorCode: ServiceErrorCode.ValidationFailed, StructuredErrors: var errors } => BadRequest(new { errors }),
-            { PrimaryErrorCode: ServiceErrorCode.InternalError, StructuredErrors: var errors } => StatusCode(StatusCodes.Status500InternalServerError, new { errors }),
-            { StructuredErrors: var errors } => BadRequest(new { errors })
+            { StructuredErrors: var errors } => StatusCode(StatusCodes.Status500InternalServerError, new { errors })
         };
 
     /// <summary>
@@ -80,8 +79,7 @@ public class MuscleGroupsController : ControllerBase
             { PrimaryErrorCode: ServiceErrorCode.NotFound } => NotFound(),
             { PrimaryErrorCode: ServiceErrorCode.InvalidFormat, StructuredErrors: var errors } => BadRequest(new { errors }),
             { PrimaryErrorCode: ServiceErrorCode.ValidationFailed, StructuredErrors: var errors } => BadRequest(new { errors }),
-            { PrimaryErrorCode: ServiceErrorCode.InternalError, StructuredErrors: var errors } => StatusCode(StatusCodes.Status500InternalServerError, new { errors }),
-            { StructuredErrors: var errors } => BadRequest(new { errors })
+            { StructuredErrors: var errors } => StatusCode(StatusCodes.Status500InternalServerError, new { errors })
         };
     
     
@@ -100,8 +98,7 @@ public class MuscleGroupsController : ControllerBase
             { IsSuccess: true, Data: var data } => Ok(data),
             { PrimaryErrorCode: ServiceErrorCode.InvalidFormat, StructuredErrors: var errors } => BadRequest(new { errors }),
             { PrimaryErrorCode: ServiceErrorCode.ValidationFailed, StructuredErrors: var errors } => BadRequest(new { errors }),
-            { PrimaryErrorCode: ServiceErrorCode.InternalError, StructuredErrors: var errors } => StatusCode(StatusCodes.Status500InternalServerError, new { errors }),
-            { StructuredErrors: var errors } => BadRequest(new { errors })
+            { StructuredErrors: var errors } => StatusCode(StatusCodes.Status500InternalServerError, new { errors })
         };
     
     /// <summary>
@@ -122,8 +119,7 @@ public class MuscleGroupsController : ControllerBase
             { PrimaryErrorCode: ServiceErrorCode.InvalidFormat, StructuredErrors: var errors } => BadRequest(new { errors }),
             { PrimaryErrorCode: ServiceErrorCode.ValidationFailed, StructuredErrors: var errors } => BadRequest(new { errors }),
             { PrimaryErrorCode: ServiceErrorCode.NotFound, StructuredErrors: var errors } => BadRequest(new { errors }), // Body part not found
-            { PrimaryErrorCode: ServiceErrorCode.InternalError, StructuredErrors: var errors } => StatusCode(StatusCodes.Status500InternalServerError, new { errors }),
-            { StructuredErrors: var errors } => BadRequest(new { errors })
+            { StructuredErrors: var errors } => StatusCode(StatusCodes.Status500InternalServerError, new { errors })
         };
     
     /// <summary>
@@ -147,8 +143,7 @@ public class MuscleGroupsController : ControllerBase
             { PrimaryErrorCode: ServiceErrorCode.InvalidFormat, StructuredErrors: var errors } => BadRequest(new { errors }),
             { PrimaryErrorCode: ServiceErrorCode.ValidationFailed, StructuredErrors: var errors } => BadRequest(new { errors }),
             { PrimaryErrorCode: ServiceErrorCode.ConcurrencyConflict, StructuredErrors: var errors } => Conflict(new { errors }),
-            { PrimaryErrorCode: ServiceErrorCode.InternalError, StructuredErrors: var errors } => StatusCode(StatusCodes.Status500InternalServerError, new { errors }),
-            { StructuredErrors: var errors } => BadRequest(new { errors })
+            { StructuredErrors: var errors } => StatusCode(StatusCodes.Status500InternalServerError, new { errors })
         };
     
     /// <summary>
@@ -171,7 +166,6 @@ public class MuscleGroupsController : ControllerBase
             { PrimaryErrorCode: ServiceErrorCode.InvalidFormat, StructuredErrors: var errors } => BadRequest(new { errors }),
             { PrimaryErrorCode: ServiceErrorCode.ValidationFailed, StructuredErrors: var errors } => BadRequest(new { errors }),
             { PrimaryErrorCode: ServiceErrorCode.ConcurrencyConflict, StructuredErrors: var errors } => Conflict(new { errors }),
-            { PrimaryErrorCode: ServiceErrorCode.InternalError, StructuredErrors: var errors } => StatusCode(StatusCodes.Status500InternalServerError, new { errors }),
-            { StructuredErrors: var errors } => BadRequest(new { errors })
+            { StructuredErrors: var errors } => StatusCode(StatusCodes.Status500InternalServerError, new { errors })
         };
 }
