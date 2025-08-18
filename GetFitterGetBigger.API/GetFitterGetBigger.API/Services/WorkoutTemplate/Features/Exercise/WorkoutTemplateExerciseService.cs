@@ -1,21 +1,16 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using GetFitterGetBigger.API.Constants.ErrorMessages;
 using GetFitterGetBigger.API.DTOs;
 using GetFitterGetBigger.API.Models;
 using GetFitterGetBigger.API.Models.Entities;
 using ExerciseEntity = GetFitterGetBigger.API.Models.Entities.Exercise;
+using SetConfigurationEntity = GetFitterGetBigger.API.Models.Entities.SetConfiguration;
 using GetFitterGetBigger.API.Models.SpecializedIds;
 using GetFitterGetBigger.API.Repositories.Interfaces;
 using GetFitterGetBigger.API.Services.Commands.WorkoutTemplateExercises;
-using GetFitterGetBigger.API.Services.Interfaces;
 using GetFitterGetBigger.API.Services.Results;
-using Microsoft.Extensions.Logging;
 using Olimpo.EntityFramework.Persistency;
 
-namespace GetFitterGetBigger.API.Services.Implementations;
+namespace GetFitterGetBigger.API.Services.WorkoutTemplate.Features.Exercise;
 
 /// <summary>
 /// Service implementation for managing exercises within workout templates
@@ -809,7 +804,7 @@ public class WorkoutTemplateExerciseService : IWorkoutTemplateExerciseService
             if (sourceExercises[i].Configurations.Count > 0)
             {
                 var newConfigs = sourceExercises[i].Configurations
-                    .Select(config => SetConfiguration.Handler.CreateNew(
+                    .Select(config => SetConfigurationEntity.Handler.CreateNew(
                         duplicatedExercises[i].Id,
                         config.SetNumber,
                         config.TargetReps,
@@ -992,7 +987,7 @@ public class WorkoutTemplateExerciseService : IWorkoutTemplateExerciseService
         };
     }
 
-    private static SetConfigurationDto MapSetConfigurationToDto(SetConfiguration entity)
+    private static SetConfigurationDto MapSetConfigurationToDto(SetConfigurationEntity entity)
     {
         return new SetConfigurationDto
         {

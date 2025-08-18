@@ -4,16 +4,12 @@ using GetFitterGetBigger.API.Models;
 using GetFitterGetBigger.API.Models.SpecializedIds;
 using GetFitterGetBigger.API.Repositories.Interfaces;
 using GetFitterGetBigger.API.Services.Exercise;
-using GetFitterGetBigger.API.Services.Interfaces;
 using GetFitterGetBigger.API.Services.Results;
 using GetFitterGetBigger.API.Services.WorkoutTemplate.Features.Equipment;
-using GetFitterGetBigger.API.Services.WorkoutTemplate.Models.DTOs;
-using GetFitterGetBigger.API.Tests.Services.Extensions;
-using Microsoft.Extensions.Logging;
+using GetFitterGetBigger.API.Services.WorkoutTemplate.Features.Exercise;
 using Moq;
 using Moq.AutoMock;
 using Olimpo.EntityFramework.Persistency;
-using Xunit;
 
 namespace GetFitterGetBigger.API.Tests.Services.WorkoutTemplate.Features.Equipment;
 

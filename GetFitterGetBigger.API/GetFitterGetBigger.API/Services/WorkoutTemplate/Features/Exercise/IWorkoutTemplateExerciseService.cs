@@ -3,7 +3,7 @@ using GetFitterGetBigger.API.Models.SpecializedIds;
 using GetFitterGetBigger.API.Services.Commands.WorkoutTemplateExercises;
 using GetFitterGetBigger.API.Services.Results;
 
-namespace GetFitterGetBigger.API.Services.Interfaces;
+namespace GetFitterGetBigger.API.Services.WorkoutTemplate.Features.Exercise;
 
 /// <summary>
 /// Service for managing exercises within workout templates

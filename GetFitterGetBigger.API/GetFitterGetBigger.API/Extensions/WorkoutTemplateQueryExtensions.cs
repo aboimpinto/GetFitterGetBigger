@@ -1,7 +1,5 @@
-using System.Linq;
 using GetFitterGetBigger.API.Models.Entities;
 using GetFitterGetBigger.API.Models.SpecializedIds;
-using Microsoft.EntityFrameworkCore;
 
 namespace GetFitterGetBigger.API.Extensions;
 

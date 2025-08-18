@@ -3,11 +3,11 @@ using GetFitterGetBigger.API.DTOs;
 using GetFitterGetBigger.API.Models;
 using GetFitterGetBigger.API.Models.SpecializedIds;
 using GetFitterGetBigger.API.Repositories.Interfaces;
-using GetFitterGetBigger.API.Services.Interfaces;
 using GetFitterGetBigger.API.Services.Exercise;
 using GetFitterGetBigger.API.Services.Results;
 using GetFitterGetBigger.API.Services.Validation;
 using GetFitterGetBigger.API.Services.WorkoutTemplate.Models.DTOs;
+using GetFitterGetBigger.API.Services.WorkoutTemplate.Features.Exercise;
 using Olimpo.EntityFramework.Persistency;
 
 namespace GetFitterGetBigger.API.Services.WorkoutTemplate.Features.Equipment;

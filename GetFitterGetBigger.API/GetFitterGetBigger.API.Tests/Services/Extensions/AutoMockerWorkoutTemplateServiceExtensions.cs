@@ -1,10 +1,10 @@
 using GetFitterGetBigger.API.DTOs;
 using GetFitterGetBigger.API.Models.SpecializedIds;
 using GetFitterGetBigger.API.Services.Commands.WorkoutTemplate;
-using GetFitterGetBigger.API.Services.Interfaces;
 using GetFitterGetBigger.API.Services.Results;
 using GetFitterGetBigger.API.Services.WorkoutTemplate;
-using Microsoft.Extensions.Logging;
+using GetFitterGetBigger.API.Services.WorkoutTemplate.Features.Exercise;
+using GetFitterGetBigger.API.Services.WorkoutTemplate.Features.SetConfiguration;
 using Moq;
 using Moq.AutoMock;
 

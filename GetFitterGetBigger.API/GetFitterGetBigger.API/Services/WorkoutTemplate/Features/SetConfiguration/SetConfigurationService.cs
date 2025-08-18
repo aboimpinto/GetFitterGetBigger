@@ -1,20 +1,15 @@
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using GetFitterGetBigger.API.Constants.ErrorMessages;
 using GetFitterGetBigger.API.DTOs;
 using GetFitterGetBigger.API.Models;
-using GetFitterGetBigger.API.Models.Entities;
+using SetConfigurationEntity = GetFitterGetBigger.API.Models.Entities.SetConfiguration;
 using GetFitterGetBigger.API.Models.SpecializedIds;
 using GetFitterGetBigger.API.Repositories.Interfaces;
 using GetFitterGetBigger.API.Services.Commands.SetConfigurations;
-using GetFitterGetBigger.API.Services.Interfaces;
 using GetFitterGetBigger.API.Services.Results;
 using GetFitterGetBigger.API.Services.Validation;
-using Microsoft.Extensions.Logging;
 using Olimpo.EntityFramework.Persistency;
 
-namespace GetFitterGetBigger.API.Services.Implementations;
+namespace GetFitterGetBigger.API.Services.WorkoutTemplate.Features.SetConfiguration;
 
 /// <summary>
 /// Service for managing set configurations
@@ -255,7 +250,7 @@ public class SetConfigurationService : ISetConfigurationService
         // Get next set number if not provided
         var setNumber = command.SetNumber ?? (await repository.GetMaxSetNumberAsync(command.WorkoutTemplateExerciseId) + 1);
 
-        var entityResult = SetConfiguration.Handler.CreateNew(
+        var entityResult = SetConfigurationEntity.Handler.CreateNew(
             command.WorkoutTemplateExerciseId,
             setNumber,
             command.TargetReps,
@@ -277,7 +272,7 @@ public class SetConfigurationService : ISetConfigurationService
     private async Task<ServiceResult<SetConfigurationDto>> SaveSetConfigurationAsync(
         ISetConfigurationRepository repository,
         IWritableUnitOfWork<FitnessDbContext> unitOfWork,
-        SetConfiguration setConfiguration)
+        SetConfigurationEntity setConfiguration)
     {
         var savedSetConfiguration = await repository.AddAsync(setConfiguration);
         await unitOfWork.CommitAsync();
@@ -305,11 +300,11 @@ public class SetConfigurationService : ISetConfigurationService
         using var unitOfWork = _unitOfWorkProvider.CreateWritable();
         var repository = unitOfWork.GetRepository<ISetConfigurationRepository>();
 
-        var setConfigurations = new List<SetConfiguration>();
+        var setConfigurations = new List<SetConfigurationEntity>();
 
         foreach (var setData in command.SetConfigurations)
         {
-            var entityResult = SetConfiguration.Handler.CreateNew(
+            var entityResult = SetConfigurationEntity.Handler.CreateNew(
                 command.WorkoutTemplateExerciseId,
                 setData.SetNumber,
                 setData.TargetReps,
@@ -369,10 +364,10 @@ public class SetConfigurationService : ISetConfigurationService
     private async Task<ServiceResult<SetConfigurationDto>> UpdateExistingSetConfigurationAsync(
         ISetConfigurationRepository repository,
         IWritableUnitOfWork<FitnessDbContext> unitOfWork,
-        SetConfiguration existing,
+        SetConfigurationEntity existing,
         UpdateSetConfigurationCommand command)
     {
-        var updateResult = SetConfiguration.Handler.Update(
+        var updateResult = SetConfigurationEntity.Handler.Update(
             existing,
             command.TargetReps,
             command.TargetWeight,
@@ -393,7 +388,7 @@ public class SetConfigurationService : ISetConfigurationService
     private async Task<ServiceResult<SetConfigurationDto>> SaveUpdatedSetConfigurationAsync(
         ISetConfigurationRepository repository,
         IWritableUnitOfWork<FitnessDbContext> unitOfWork,
-        SetConfiguration setConfiguration)
+        SetConfigurationEntity setConfiguration)
     {
         var updatedSetConfiguration = await repository.UpdateAsync(setConfiguration);
         await unitOfWork.CommitAsync();
@@ -421,7 +416,7 @@ public class SetConfigurationService : ISetConfigurationService
         using var unitOfWork = _unitOfWorkProvider.CreateWritable();
         var repository = unitOfWork.GetRepository<ISetConfigurationRepository>();
 
-        var setConfigurations = new List<SetConfiguration>();
+        var setConfigurations = new List<SetConfigurationEntity>();
 
         foreach (var updateData in command.SetConfigurationUpdates)
         {
@@ -434,7 +429,7 @@ public class SetConfigurationService : ISetConfigurationService
                     ServiceError.NotFound(string.Format(SetConfigurationErrorMessages.SetConfigurationNotFoundWithId, updateData.SetConfigurationId)));
             }
 
-            var updateResult = SetConfiguration.Handler.Update(
+            var updateResult = SetConfigurationEntity.Handler.Update(
                 existing,
                 updateData.TargetReps,
                 updateData.TargetWeight,
@@ -702,7 +697,7 @@ public class SetConfigurationService : ISetConfigurationService
 
     // Mapping methods
 
-    private static SetConfigurationDto MapToDto(SetConfiguration setConfiguration) => new()
+    private static SetConfigurationDto MapToDto(SetConfigurationEntity setConfiguration) => new()
     {
         Id = setConfiguration.Id.ToString(),
         SetNumber = setConfiguration.SetNumber,

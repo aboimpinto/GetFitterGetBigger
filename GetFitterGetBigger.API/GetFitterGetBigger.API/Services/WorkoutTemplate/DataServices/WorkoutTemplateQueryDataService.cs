@@ -7,7 +7,6 @@ using GetFitterGetBigger.API.Repositories.Interfaces;
 using GetFitterGetBigger.API.Services.Results;
 using GetFitterGetBigger.API.Services.WorkoutTemplate.Extensions;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
 using Olimpo.EntityFramework.Persistency;
 
 namespace GetFitterGetBigger.API.Services.WorkoutTemplate.DataServices;

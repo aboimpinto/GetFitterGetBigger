@@ -1,11 +1,9 @@
-using System.Collections.Generic;
-using System.Threading.Tasks;
 using GetFitterGetBigger.API.DTOs;
 using GetFitterGetBigger.API.Models.SpecializedIds;
 using GetFitterGetBigger.API.Services.Commands.SetConfigurations;
 using GetFitterGetBigger.API.Services.Results;
 
-namespace GetFitterGetBigger.API.Services.Interfaces;
+namespace GetFitterGetBigger.API.Services.WorkoutTemplate.Features.SetConfiguration;
 
 /// <summary>
 /// Service interface for managing set configurations

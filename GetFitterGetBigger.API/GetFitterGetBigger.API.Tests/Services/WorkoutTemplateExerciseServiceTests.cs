@@ -1,22 +1,13 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using GetFitterGetBigger.API.DTOs;
 using GetFitterGetBigger.API.Models;
 using GetFitterGetBigger.API.Models.Entities;
 using GetFitterGetBigger.API.Models.SpecializedIds;
 using WorkoutTemplateEntity = GetFitterGetBigger.API.Models.Entities.WorkoutTemplate;
 using GetFitterGetBigger.API.Repositories.Interfaces;
-using GetFitterGetBigger.API.Services.Commands.WorkoutTemplateExercises;
-using GetFitterGetBigger.API.Services.Implementations;
-using GetFitterGetBigger.API.Services.Interfaces;
-using GetFitterGetBigger.API.Services.Results;
+using GetFitterGetBigger.API.Services.WorkoutTemplate.Features.Exercise;
 using GetFitterGetBigger.API.Tests.TestBuilders;
 using GetFitterGetBigger.API.Tests.TestBuilders.Domain;
 using Microsoft.Extensions.Logging;
 using Moq;
-using Xunit;
 using Olimpo.EntityFramework.Persistency;
 
 namespace GetFitterGetBigger.API.Tests.Services;

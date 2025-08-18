@@ -1,7 +1,7 @@
 using GetFitterGetBigger.API.DTOs;
 using GetFitterGetBigger.API.Models.SpecializedIds;
 using GetFitterGetBigger.API.Services.Commands.WorkoutTemplateExercises;
-using GetFitterGetBigger.API.Services.Interfaces;
+using GetFitterGetBigger.API.Services.WorkoutTemplate.Features.Exercise;
 using GetFitterGetBigger.API.Services.Results;
 using Microsoft.AspNetCore.Mvc;
 
