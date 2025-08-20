@@ -12,6 +12,7 @@ using GetFitterGetBigger.API.Services.Authentication.DataServices;
 using GetFitterGetBigger.API.Services.Exercise;
 using GetFitterGetBigger.API.Services.Exercise.DataServices;
 using GetFitterGetBigger.API.Services.Exercise.Features.Links;
+using GetFitterGetBigger.API.Services.Exercise.Features.Links.DataServices;
 using GetFitterGetBigger.API.Services.ReferenceTables.BodyPart.DataServices;
 using GetFitterGetBigger.API.Services.ReferenceTables.DifficultyLevel.DataServices;
 using GetFitterGetBigger.API.Services.ReferenceTables.ExerciseType.DataServices;
@@ -98,6 +99,10 @@ builder.Services.AddTransient<IExerciseService, ExerciseService>();
 // Exercise DataServices - Data Access Layer
 builder.Services.AddTransient<IExerciseQueryDataService, ExerciseQueryDataService>();
 builder.Services.AddTransient<IExerciseCommandDataService, ExerciseCommandDataService>();
+
+// ExerciseLink DataServices - Data Access Layer  
+builder.Services.AddTransient<IExerciseLinkQueryDataService, ExerciseLinkQueryDataService>();
+builder.Services.AddTransient<IExerciseLinkCommandDataService, ExerciseLinkCommandDataService>();
 builder.Services.AddTransient<IExerciseLinkService, ExerciseLinkService>();
 builder.Services.AddTransient<IWorkoutTemplateService, WorkoutTemplateService>();
 builder.Services.AddTransient<IEquipmentRequirementsService, EquipmentRequirementsService>();

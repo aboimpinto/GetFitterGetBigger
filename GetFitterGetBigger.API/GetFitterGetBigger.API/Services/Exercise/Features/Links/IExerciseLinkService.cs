@@ -1,5 +1,6 @@
 using GetFitterGetBigger.API.DTOs;
-using GetFitterGetBigger.API.Models.SpecializedIds;
+using GetFitterGetBigger.API.Services.Exercise.Features.Links.Commands;
+using GetFitterGetBigger.API.Services.Results;
 
 namespace GetFitterGetBigger.API.Services.Exercise.Features.Links;
 
@@ -11,28 +12,23 @@ public interface IExerciseLinkService
     /// <summary>
     /// Creates a new link between exercises
     /// </summary>
-    /// <param name="sourceExerciseId">The source exercise ID (must be a Workout type)</param>
-    /// <param name="dto">The link creation data</param>
+    /// <param name="command">The link creation command</param>
     /// <returns>The created exercise link</returns>
-    Task<ExerciseLinkDto> CreateLinkAsync(string sourceExerciseId, CreateExerciseLinkDto dto);
+    Task<ServiceResult<ExerciseLinkDto>> CreateLinkAsync(CreateExerciseLinkCommand command);
     
     /// <summary>
     /// Gets all links for a specific exercise
     /// </summary>
-    /// <param name="exerciseId">The exercise ID</param>
-    /// <param name="linkType">Optional filter by link type</param>
-    /// <param name="includeExerciseDetails">Whether to include full exercise details</param>
+    /// <param name="command">The query command</param>
     /// <returns>The exercise links response</returns>
-    Task<ExerciseLinksResponseDto> GetLinksAsync(string exerciseId, string? linkType = null, bool includeExerciseDetails = false);
+    Task<ServiceResult<ExerciseLinksResponseDto>> GetLinksAsync(GetExerciseLinksCommand command);
     
     /// <summary>
     /// Updates an existing exercise link
     /// </summary>
-    /// <param name="exerciseId">The source exercise ID</param>
-    /// <param name="linkId">The link ID to update</param>
-    /// <param name="dto">The update data</param>
+    /// <param name="command">The update command</param>
     /// <returns>The updated exercise link</returns>
-    Task<ExerciseLinkDto> UpdateLinkAsync(string exerciseId, string linkId, UpdateExerciseLinkDto dto);
+    Task<ServiceResult<ExerciseLinkDto>> UpdateLinkAsync(UpdateExerciseLinkCommand command);
     
     /// <summary>
     /// Deletes an exercise link
@@ -40,7 +36,7 @@ public interface IExerciseLinkService
     /// <param name="exerciseId">The source exercise ID</param>
     /// <param name="linkId">The link ID to delete</param>
     /// <returns>True if deleted successfully</returns>
-    Task<bool> DeleteLinkAsync(string exerciseId, string linkId);
+    Task<ServiceResult<BooleanResultDto>> DeleteLinkAsync(string exerciseId, string linkId);
     
     /// <summary>
     /// Gets suggested links based on common usage patterns
@@ -48,13 +44,5 @@ public interface IExerciseLinkService
     /// <param name="exerciseId">The exercise ID</param>
     /// <param name="count">Number of suggestions to return</param>
     /// <returns>List of suggested exercise links</returns>
-    Task<List<ExerciseLinkDto>> GetSuggestedLinksAsync(string exerciseId, int count = 5);
-    
-    /// <summary>
-    /// Validates that no circular reference would be created
-    /// </summary>
-    /// <param name="sourceId">The source exercise ID</param>
-    /// <param name="targetId">The target exercise ID</param>
-    /// <returns>True if no circular reference exists</returns>
-    Task<bool> ValidateNoCircularReferenceAsync(ExerciseId sourceId, ExerciseId targetId);
+    Task<ServiceResult<List<ExerciseLinkDto>>> GetSuggestedLinksAsync(string exerciseId, int count = 5);
 }
