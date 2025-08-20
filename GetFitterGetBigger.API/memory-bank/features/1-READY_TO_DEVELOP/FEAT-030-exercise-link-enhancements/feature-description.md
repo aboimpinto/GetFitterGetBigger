@@ -85,20 +85,22 @@ This feature enhances the existing ExerciseLink system to support a comprehensiv
 #### Modified ExerciseLink Entity
 
 ```csharp
+// New file: /Models/Enums/ExerciseLinkType.cs
 public enum ExerciseLinkType
 {
-    WARMUP,
-    COOLDOWN,
-    WORKOUT,
-    ALTERNATIVE
+    WARMUP = 0,      // Warmup exercise for a workout
+    COOLDOWN = 1,    // Cooldown exercise for a workout
+    WORKOUT = 2,     // Main workout exercise
+    ALTERNATIVE = 3  // Alternative exercise option
 }
 
-public record ExerciseLink
+// Updated: /Models/Entities/ExerciseLink.cs
+public record ExerciseLink : IEmptyEntity<ExerciseLink>
 {
     public ExerciseLinkId Id { get; init; }
     public ExerciseId SourceExerciseId { get; init; }
     public ExerciseId TargetExerciseId { get; init; }
-    public ExerciseLinkType LinkType { get; init; }
+    public ExerciseLinkType LinkType { get; init; } // Changed from string to enum
     public int DisplayOrder { get; init; }
     public bool IsActive { get; init; }
     public DateTime CreatedAt { get; init; }
@@ -107,6 +109,19 @@ public record ExerciseLink
     // Navigation properties
     public Exercise? SourceExercise { get; init; }
     public Exercise? TargetExercise { get; init; }
+    
+    // Empty pattern implementation (unchanged)
+    public static ExerciseLink Empty => new()
+    {
+        Id = ExerciseLinkId.Empty,
+        SourceExerciseId = ExerciseId.Empty,
+        TargetExerciseId = ExerciseId.Empty,
+        LinkType = ExerciseLinkType.WARMUP, // Default enum value
+        DisplayOrder = 0,
+        IsActive = false,
+        CreatedAt = DateTime.MinValue,
+        UpdatedAt = DateTime.MinValue
+    };
 }
 ```
 
@@ -194,14 +209,22 @@ public interface IExerciseLinkService
 ### Database Changes
 
 #### 1. Migration: UpdateExerciseLinksForFourWaySystem
-- Modify LinkType column to support new enum values
-- Add index for bidirectional queries
-- Migrate existing "Warmup" → "WARMUP", "Cooldown" → "COOLDOWN"
-- Create reverse links for existing data
+**Code-First Migration Approach:**
+- Change LinkType column from `nvarchar` (string) to `int` (enum)
+- Data conversion during migration:
+  - Existing "Warmup" → 0 (WARMUP)
+  - Existing "Cooldown" → 1 (COOLDOWN)
+- **NO reverse links created during migration** - these will be created via application logic
+- Add necessary indexes for performance
 
 #### 2. New Indexes
 - `IX_ExerciseLinks_TargetExerciseId_LinkType` for reverse lookups
 - `IX_ExerciseLinks_SourceTarget` composite for bidirectional queries
+
+#### 3. Display Order Logic for Reverse Links
+- When creating a reverse link, calculate DisplayOrder based on existing links
+- Example: If exercise B already has 2 WORKOUT links, the new reverse link gets DisplayOrder = 3
+- Each exercise maintains its own DisplayOrder sequence per link type
 
 ### Cache Strategy
 
