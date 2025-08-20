@@ -1,4 +1,5 @@
 using GetFitterGetBigger.API.Models.Entities;
+using GetFitterGetBigger.API.Models.Enums;
 using GetFitterGetBigger.API.Models.SpecializedIds;
 using Olimpo.EntityFramework.Persistency;
 
@@ -67,4 +68,31 @@ public interface IExerciseLinkRepository : IRepository
     /// <param name="id">The ID of the exercise link to delete</param>
     /// <returns>True if deleted successfully, false otherwise</returns>
     Task<bool> DeleteAsync(ExerciseLinkId id);
+    
+    // ===== ENHANCED BIDIRECTIONAL REPOSITORY METHODS =====
+    
+    /// <summary>
+    /// Gets bidirectional links for an exercise (both source and target links of specified type)
+    /// </summary>
+    Task<IEnumerable<ExerciseLink>> GetBidirectionalLinksAsync(ExerciseId exerciseId, ExerciseLinkType linkType);
+    
+    /// <summary>
+    /// Checks if bidirectional links exist between two exercises for the specified type
+    /// </summary>
+    Task<bool> ExistsBidirectionalAsync(ExerciseId sourceId, ExerciseId targetId, ExerciseLinkType linkType);
+    
+    /// <summary>
+    /// Gets links by source exercise using enum-based filtering
+    /// </summary>
+    Task<IEnumerable<ExerciseLink>> GetBySourceExerciseAsync(ExerciseId sourceId, ExerciseLinkType? linkType = null);
+    
+    /// <summary>
+    /// Checks if a link exists using enum-based type matching
+    /// </summary>
+    Task<bool> ExistsAsync(ExerciseId sourceId, ExerciseId targetId, ExerciseLinkType linkType);
+    
+    /// <summary>
+    /// Gets links by source exercise and type for display order calculation
+    /// </summary>
+    Task<IEnumerable<ExerciseLink>> GetBySourceAndTypeAsync(ExerciseId sourceId, ExerciseLinkType linkType);
 }

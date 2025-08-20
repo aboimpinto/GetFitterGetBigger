@@ -1,4 +1,5 @@
 using GetFitterGetBigger.API.DTOs;
+using GetFitterGetBigger.API.Models.Enums;
 using GetFitterGetBigger.API.Models.SpecializedIds;
 using GetFitterGetBigger.API.Services.Exercise.Features.Links.Commands;
 using GetFitterGetBigger.API.Services.Results;
@@ -45,4 +46,47 @@ public interface IExerciseLinkQueryDataService
     /// Gets suggested links based on common usage patterns
     /// </summary>
     Task<ServiceResult<List<ExerciseLinkDto>>> GetSuggestedLinksAsync(string exerciseId, int count);
+    
+    // ===== ENHANCED BIDIRECTIONAL QUERY METHODS =====
+    
+    /// <summary>
+    /// Gets all links where the specified exercise is the TARGET (reverse links)
+    /// This enables efficient bidirectional link queries
+    /// </summary>
+    Task<ServiceResult<List<ExerciseLinkDto>>> GetByTargetExerciseAsync(ExerciseId targetExerciseId);
+    
+    /// <summary>
+    /// Gets bidirectional links for an exercise (both source and target links of specified type)
+    /// Useful for finding all ALTERNATIVE links or checking bidirectional relationships
+    /// </summary>
+    Task<ServiceResult<List<ExerciseLinkDto>>> GetBidirectionalLinksAsync(
+        ExerciseId exerciseId, 
+        ExerciseLinkType linkType);
+    
+    /// <summary>
+    /// Checks if bidirectional links exist between two exercises for the specified type
+    /// Used to prevent duplicate bidirectional link creation
+    /// </summary>
+    Task<ServiceResult<BooleanResultDto>> ExistsBidirectionalAsync(
+        ExerciseId sourceId, 
+        ExerciseId targetId, 
+        ExerciseLinkType linkType);
+    
+    /// <summary>
+    /// Gets links by source exercise using enum-based filtering
+    /// </summary>
+    Task<ServiceResult<List<ExerciseLinkDto>>> GetBySourceExerciseWithEnumAsync(ExerciseId sourceId, ExerciseLinkType? linkType = null);
+    
+    /// <summary>
+    /// Checks if a link exists using enum-based type matching (overload for enum support)
+    /// </summary>
+    Task<ServiceResult<BooleanResultDto>> ExistsAsync(ExerciseId sourceId, ExerciseId targetId, ExerciseLinkType linkType);
+    
+    /// <summary>
+    /// Gets links by source exercise and type for display order calculation
+    /// Used by bidirectional creation algorithm to calculate next available display order
+    /// </summary>
+    Task<ServiceResult<List<ExerciseLinkDto>>> GetBySourceAndTypeAsync(
+        ExerciseId sourceId, 
+        ExerciseLinkType linkType);
 }

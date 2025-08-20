@@ -1,6 +1,7 @@
 using GetFitterGetBigger.API.DTOs;
 using GetFitterGetBigger.API.Models;
 using GetFitterGetBigger.API.Models.Entities;
+using GetFitterGetBigger.API.Models.Enums;
 using GetFitterGetBigger.API.Models.SpecializedIds;
 using GetFitterGetBigger.API.Repositories.Interfaces;
 using GetFitterGetBigger.API.Services.Exercise.Features.Links.Commands;
@@ -122,6 +123,79 @@ public class ExerciseLinkQueryDataService(
         var dtos = mostUsedLinks
             .Select(tuple => tuple.link.ToDto())
             .ToList();
+        
+        return ServiceResult<List<ExerciseLinkDto>>.Success(dtos);
+    }
+    
+    // ===== ENHANCED BIDIRECTIONAL QUERY METHODS IMPLEMENTATION =====
+    
+    public async Task<ServiceResult<List<ExerciseLinkDto>>> GetByTargetExerciseAsync(ExerciseId targetExerciseId)
+    {
+        using var unitOfWork = unitOfWorkProvider.CreateReadOnly();
+        var repository = unitOfWork.GetRepository<IExerciseLinkRepository>();
+        
+        var links = await repository.GetByTargetExerciseAsync(targetExerciseId);
+        var dtos = links.Select(link => link.ToDto()).ToList();
+        
+        return ServiceResult<List<ExerciseLinkDto>>.Success(dtos);
+    }
+    
+    public async Task<ServiceResult<List<ExerciseLinkDto>>> GetBidirectionalLinksAsync(
+        ExerciseId exerciseId, 
+        ExerciseLinkType linkType)
+    {
+        using var unitOfWork = unitOfWorkProvider.CreateReadOnly();
+        var repository = unitOfWork.GetRepository<IExerciseLinkRepository>();
+        
+        var links = await repository.GetBidirectionalLinksAsync(exerciseId, linkType);
+        var dtos = links.Select(link => link.ToDto()).ToList();
+        
+        return ServiceResult<List<ExerciseLinkDto>>.Success(dtos);
+    }
+    
+    public async Task<ServiceResult<BooleanResultDto>> ExistsBidirectionalAsync(
+        ExerciseId sourceId, 
+        ExerciseId targetId, 
+        ExerciseLinkType linkType)
+    {
+        using var unitOfWork = unitOfWorkProvider.CreateReadOnly();
+        var repository = unitOfWork.GetRepository<IExerciseLinkRepository>();
+        
+        var exists = await repository.ExistsBidirectionalAsync(sourceId, targetId, linkType);
+        
+        return ServiceResult<BooleanResultDto>.Success(BooleanResultDto.Create(exists));
+    }
+    
+    public async Task<ServiceResult<List<ExerciseLinkDto>>> GetBySourceExerciseWithEnumAsync(ExerciseId sourceId, ExerciseLinkType? linkType = null)
+    {
+        using var unitOfWork = unitOfWorkProvider.CreateReadOnly();
+        var repository = unitOfWork.GetRepository<IExerciseLinkRepository>();
+        
+        var links = await repository.GetBySourceExerciseAsync(sourceId, linkType);
+        var dtos = links.Select(link => link.ToDto()).ToList();
+        
+        return ServiceResult<List<ExerciseLinkDto>>.Success(dtos);
+    }
+    
+    public async Task<ServiceResult<BooleanResultDto>> ExistsAsync(ExerciseId sourceId, ExerciseId targetId, ExerciseLinkType linkType)
+    {
+        using var unitOfWork = unitOfWorkProvider.CreateReadOnly();
+        var repository = unitOfWork.GetRepository<IExerciseLinkRepository>();
+        
+        var exists = await repository.ExistsAsync(sourceId, targetId, linkType);
+        
+        return ServiceResult<BooleanResultDto>.Success(BooleanResultDto.Create(exists));
+    }
+    
+    public async Task<ServiceResult<List<ExerciseLinkDto>>> GetBySourceAndTypeAsync(
+        ExerciseId sourceId, 
+        ExerciseLinkType linkType)
+    {
+        using var unitOfWork = unitOfWorkProvider.CreateReadOnly();
+        var repository = unitOfWork.GetRepository<IExerciseLinkRepository>();
+        
+        var links = await repository.GetBySourceAndTypeAsync(sourceId, linkType);
+        var dtos = links.Select(link => link.ToDto()).ToList();
         
         return ServiceResult<List<ExerciseLinkDto>>.Success(dtos);
     }

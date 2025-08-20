@@ -1,5 +1,6 @@
 using GetFitterGetBigger.API.Models;
 using GetFitterGetBigger.API.Models.Entities;
+using GetFitterGetBigger.API.Models.Enums;
 using GetFitterGetBigger.API.Models.SpecializedIds;
 using GetFitterGetBigger.API.Repositories.Interfaces;
 using Microsoft.EntityFrameworkCore;
@@ -150,5 +151,86 @@ public class ExerciseLinkRepository : RepositoryBase<FitnessDbContext>, IExercis
         Context.ExerciseLinks.Remove(exerciseLink);
         
         return true;
+    }
+    
+    // ===== ENHANCED BIDIRECTIONAL REPOSITORY METHODS IMPLEMENTATION =====
+    
+    /// <summary>
+    /// Gets bidirectional links for an exercise (both source and target links of specified type)
+    /// </summary>
+    public async Task<IEnumerable<ExerciseLink>> GetBidirectionalLinksAsync(ExerciseId exerciseId, ExerciseLinkType linkType)
+    {
+        return await Context.ExerciseLinks
+            .Include(el => el.SourceExercise)
+            .Include(el => el.TargetExercise)
+            .Where(el => el.IsActive && 
+                        (el.SourceExerciseId == exerciseId || el.TargetExerciseId == exerciseId) &&
+                        el.ActualLinkType == linkType)
+            .OrderBy(el => el.ActualLinkType)
+            .ThenBy(el => el.DisplayOrder)
+            .AsNoTracking()
+            .ToListAsync();
+    }
+    
+    /// <summary>
+    /// Checks if bidirectional links exist between two exercises for the specified type
+    /// </summary>
+    public async Task<bool> ExistsBidirectionalAsync(ExerciseId sourceId, ExerciseId targetId, ExerciseLinkType linkType)
+    {
+        return await Context.ExerciseLinks
+            .AnyAsync(el => el.IsActive &&
+                           el.ActualLinkType == linkType &&
+                           ((el.SourceExerciseId == sourceId && el.TargetExerciseId == targetId) ||
+                            (el.SourceExerciseId == targetId && el.TargetExerciseId == sourceId)));
+    }
+    
+    /// <summary>
+    /// Gets links by source exercise using enum-based filtering
+    /// </summary>
+    public async Task<IEnumerable<ExerciseLink>> GetBySourceExerciseAsync(ExerciseId sourceId, ExerciseLinkType? linkType = null)
+    {
+        var query = Context.ExerciseLinks
+            .Include(el => el.SourceExercise)
+            .Include(el => el.TargetExercise)
+            .Where(el => el.SourceExerciseId == sourceId && el.IsActive);
+            
+        if (linkType.HasValue)
+        {
+            query = query.Where(el => el.ActualLinkType == linkType.Value);
+        }
+        
+        return await query
+            .OrderBy(el => el.ActualLinkType)
+            .ThenBy(el => el.DisplayOrder)
+            .AsNoTracking()
+            .ToListAsync();
+    }
+    
+    /// <summary>
+    /// Checks if a link exists using enum-based type matching
+    /// </summary>
+    public async Task<bool> ExistsAsync(ExerciseId sourceId, ExerciseId targetId, ExerciseLinkType linkType)
+    {
+        return await Context.ExerciseLinks
+            .AnyAsync(el => el.SourceExerciseId == sourceId && 
+                           el.TargetExerciseId == targetId && 
+                           el.ActualLinkType == linkType && 
+                           el.IsActive);
+    }
+    
+    /// <summary>
+    /// Gets links by source exercise and type for display order calculation
+    /// </summary>
+    public async Task<IEnumerable<ExerciseLink>> GetBySourceAndTypeAsync(ExerciseId sourceId, ExerciseLinkType linkType)
+    {
+        return await Context.ExerciseLinks
+            .Include(el => el.SourceExercise)
+            .Include(el => el.TargetExercise)
+            .Where(el => el.SourceExerciseId == sourceId && 
+                        el.ActualLinkType == linkType && 
+                        el.IsActive)
+            .OrderBy(el => el.DisplayOrder)
+            .AsNoTracking()
+            .ToListAsync();
     }
 }
