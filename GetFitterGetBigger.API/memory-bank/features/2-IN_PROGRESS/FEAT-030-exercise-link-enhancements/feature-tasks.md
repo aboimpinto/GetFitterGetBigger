@@ -15,6 +15,22 @@
 - [ ] Define BDD scenarios for all feature enhancements
 - [ ] Study existing ExerciseLink implementation before making changes
 
+## 🔑 Important Design Decision: Server-Side DisplayOrder Calculation
+
+**Decision**: The `displayOrder` field is **calculated server-side**, not provided by the client.
+
+**Rationale**:
+- Prevents clients from creating gaps or duplicate display orders
+- Simplifies the API - one less field for clients to manage
+- Ensures consistency across all link types
+- Server knows existing links and can calculate the next sequential order
+- Essential for bidirectional links where reverse link order must be calculated anyway
+
+**Implementation**:
+- Client sends: `{ targetExerciseId, linkType }` (no displayOrder)
+- Server calculates: Next available displayOrder for that source exercise and link type
+- Server returns: Complete link with assigned displayOrder
+
 ## 🔍 Codebase Study Findings
 
 ### Current Implementation Analysis
@@ -66,12 +82,12 @@ When I send a POST request to "/api/exercises/exercise-123/links" with:
   """
   {
     "targetExerciseId": "exercise-456",
-    "linkType": "WARMUP",
-    "displayOrder": 1
+    "linkType": "WARMUP"
   }
   """
 Then the response status should be 201
 And the response should contain the created link with type "WARMUP"
+And the response should contain a server-assigned "displayOrder"
 And a reverse link should be automatically created with type "WORKOUT"
 And the database should contain both bidirectional links
 ```
@@ -85,12 +101,12 @@ When I send a POST request to "/api/exercises/exercise-111/links" with:
   """
   {
     "targetExerciseId": "exercise-222", 
-    "linkType": "ALTERNATIVE",
-    "displayOrder": 1
+    "linkType": "ALTERNATIVE"
   }
   """
 Then the response status should be 201
 And both exercises should have ALTERNATIVE links to each other
+And each link should have a server-assigned "displayOrder"
 ```
 
 ### Scenario 3: Prevent REST Exercise Links
@@ -128,7 +144,8 @@ And all existing functionality should remain intact
 - [ ] Migration rollback scenarios
 - [ ] Concurrent creation of bidirectional links
 - [ ] Link type validation with new enum values
-- [ ] Display order calculation for reverse links
+- [ ] Server-side displayOrder calculation (next available sequence number)
+- [ ] DisplayOrder calculation for reverse links (independent sequence per exercise)
 
 ## Phase 1: Planning & Analysis - Estimated: 1h 0m
 
@@ -181,6 +198,31 @@ And all existing functionality should remain intact
 - Bidirectional linking algorithm specification
 - Migration SQL scripts with exact data conversion
 - Rollback procedures for safe deployment
+
+## CHECKPOINT: Phase 1 Complete - Planning & Analysis
+`[PENDING]` - Date: YYYY-MM-DD HH:MM
+
+Build Report:
+- API Project: [STATUS] [X errors, Y warnings]
+- Test Project (Unit): [STATUS] [X errors, Y warnings]  
+- Test Project (Integration): [STATUS] [X errors, Y warnings]
+
+Planning Summary:
+- **ExerciseLink Analysis**: Current implementation documented
+- **Migration Strategy**: Safe enum conversion approach defined
+- **Bidirectional Algorithm**: Link creation/deletion logic specified
+- **Business Rules**: Validation matrix for new link types defined
+
+Code Review: `/memory-bank/features/2-IN_PROGRESS/FEAT-030-exercise-link-enhancements/code-reviews/Phase_1_Planning/Code-Review-Phase-1-Planning-YYYY-MM-DD-HH-MM-[STATUS].md` - [[STATUS]]
+
+Git Commit: `[COMMIT_HASH]` - [commit message summary]
+
+Status: [STATUS] Phase 1 Planning & Analysis
+Notes: 
+- All existing functionality analyzed
+- Migration strategy validated
+- Bidirectional algorithm designed
+- Ready to proceed to Phase 2
 
 ## Phase 2: Models & Database - Estimated: 2h 0m
 
@@ -276,27 +318,30 @@ And all existing functionality should remain intact
 - Use PostgreSQL-compatible integer enum storage
 - Implement proper rollback strategy
 
-## 🔄 Phase 2 Health Check
-**Date/Time**: YYYY-MM-DD HH:MM  
-**Status**: 🛑 PENDING / ❌ FAILED / ✅ PASSED
+## CHECKPOINT: Phase 2 Complete - Models & Database
+`[PENDING]` - Date: YYYY-MM-DD HH:MM
 
-#### Build Status
-- **Build Result**: [ ] Success / [ ] Failed / [ ] Success with warnings
-- **Warning Count**: X warnings  
-- **Command**: `dotnet clean && dotnet build`
+Build Report:
+- API Project: [STATUS] [X errors, Y warnings]
+- Test Project (Unit): [STATUS] [X errors, Y warnings]  
+- Test Project (Integration): [STATUS] [X errors, Y warnings]
 
-#### Test Status  
-- **Total Tests**: XXX
-- **Passed**: XXX
-- **Failed**: XXX (MUST be 0 to proceed)
-- **Command**: `dotnet clean && dotnet test`
+Test Execution Summary:
+- Total Tests: XXX
+- Passed: XXX
+- Failed: XXX (MUST be 0 to proceed)
+- Skipped: XXX
 
-#### Verification
-- [ ] All 1259+ tests still passing (critical - no regression)
-- [ ] Build successful with no errors
-- [ ] Zero warnings maintained (BOY SCOUT RULE)
-- [ ] Migration tested with existing data
-- [ ] Ready to proceed to Phase 3
+Code Review: `/memory-bank/features/2-IN_PROGRESS/FEAT-030-exercise-link-enhancements/code-reviews/Phase_2_Models_Database/Code-Review-Phase-2-Models-Database-YYYY-MM-DD-HH-MM-[STATUS].md` - [[STATUS]]
+
+Git Commit: `[COMMIT_HASH]` - [commit message summary]
+
+Status: [STATUS] Phase 2 Models & Database
+Notes: 
+- All 1259+ tests still passing (critical - no regression)
+- Migration tested with existing data
+- Enum implementation complete with backward compatibility
+- Ready to proceed to Phase 3
 
 ## Phase 3: Enhanced Repository Layer - Estimated: 1h 30m
 
@@ -370,6 +415,30 @@ And all existing functionality should remain intact
 - Include navigation properties for DTOs
 - Use computed ActualLinkType property for enum queries
 
+## CHECKPOINT: Phase 3 Complete - Enhanced Repository Layer
+`[PENDING]` - Date: YYYY-MM-DD HH:MM
+
+Build Report:
+- API Project: [STATUS] [X errors, Y warnings]
+- Test Project (Unit): [STATUS] [X errors, Y warnings]  
+- Test Project (Integration): [STATUS] [X errors, Y warnings]
+
+Repository Implementation Summary:
+- **IExerciseLinkQueryDataService**: Extended with bidirectional query methods
+- **Query Methods**: Added GetByTargetExerciseAsync, GetBidirectionalLinksAsync, ExistsBidirectionalAsync
+- **Enum Support**: Implemented alongside existing string-based methods
+
+Code Review: `/memory-bank/features/2-IN_PROGRESS/FEAT-030-exercise-link-enhancements/code-reviews/Phase_3_Repository_Layer/Code-Review-Phase-3-Repository-Layer-YYYY-MM-DD-HH-MM-[STATUS].md` - [[STATUS]]
+
+Git Commit: `[COMMIT_HASH]` - [commit message summary]
+
+Status: [STATUS] Phase 3 Repository Layer
+Notes: 
+- Repository interfaces and implementations follow established patterns
+- Bidirectional query methods tested and working
+- Navigation properties properly loaded
+- Ready to proceed to Phase 4
+
 ## Phase 4: Enhanced Service Layer - Estimated: 3h 0m
 
 ### ⚠️ CRITICAL Before Starting Phase 4:
@@ -427,6 +496,26 @@ And all existing functionality should remain intact
 `[ReadyToDevelop]` (Est: 1h 30m)
 
 **Implementation:**
+- Update ExerciseLinkService.CreateLinkAsync to accept parameters without displayOrder:
+  ```csharp
+  public async Task<ServiceResult<ExerciseLinkDto>> CreateLinkAsync(
+      string sourceExerciseId,
+      string targetExerciseId,
+      ExerciseLinkType linkType)
+  {
+      // Calculate displayOrder server-side
+      var displayOrder = await CalculateDisplayOrderAsync(sourceExerciseId, linkType);
+      
+      // Create command with calculated displayOrder
+      var command = new CreateExerciseLinkCommand(
+          sourceExerciseId,
+          targetExerciseId,
+          linkType,
+          displayOrder);
+          
+      return await CreateBidirectionalLinkAsync(command);
+  }
+  ```
 - Add bidirectional creation method to ExerciseLinkService:
   ```csharp
   private async Task<ServiceResult<ExerciseLinkDto>> CreateBidirectionalLinkAsync(
@@ -456,6 +545,24 @@ And all existing functionality should remain intact
       
       await unitOfWork.CommitAsync();
       return primaryLink;
+  }
+  
+  private async Task<int> CalculateDisplayOrderAsync(
+      string sourceExerciseId, 
+      ExerciseLinkType linkType)
+  {
+      using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
+      var repository = unitOfWork.GetRepository<IExerciseLinkQueryDataService>();
+      
+      // Get existing links of same type for this source exercise
+      var existingLinks = await repository.GetBySourceAndTypeAsync(
+          sourceExerciseId, 
+          linkType);
+          
+      // Return next available display order (max + 1, or 1 if no existing links)
+      return existingLinks.Any() 
+          ? existingLinks.Max(l => l.DisplayOrder) + 1 
+          : 1;
   }
   
   private static ExerciseLinkType? GetReverseLinkType(ExerciseLinkType linkType) =>
@@ -526,28 +633,36 @@ And all existing functionality should remain intact
 - Use transaction safety for bidirectional operations
 - Follow existing error handling patterns
 
-## 🔄 Phase 4 Health Check
-**Date/Time**: YYYY-MM-DD HH:MM
-**Status**: 🛑 PENDING / ❌ FAILED / ✅ PASSED
+## CHECKPOINT: Phase 4 Complete - Enhanced Service Layer
+`[PENDING]` - Date: YYYY-MM-DD HH:MM
 
-#### Build Status
-- **Build Result**: [ ] Success / [ ] Failed / [ ] Success with warnings
-- **Warning Count**: X warnings
-- **Command**: `dotnet clean && dotnet build`
+Build Report:
+- API Project: [STATUS] [X errors, Y warnings]
+- Test Project (Unit): [STATUS] [X errors, Y warnings]  
+- Test Project (Integration): [STATUS] [X errors, Y warnings]
 
-#### Test Status
-- **Total Tests**: XXX (should be > 1259)
-- **Passed**: XXX  
-- **Failed**: XXX (MUST be 0 to proceed)
-- **Command**: `dotnet clean && dotnet test`
+Service Implementation Summary:
+- **ExerciseLinkService**: Enhanced with enum validation and bidirectional logic
+- **Validation Methods**: Updated to support new link types
+- **Bidirectional Algorithm**: Implemented with transaction safety
 
-#### Verification
-- [ ] All existing 1259+ tests still passing (critical regression check)
-- [ ] New service validation tests passing
-- [ ] Bidirectional algorithm tests passing
-- [ ] Build successful with no errors
-- [ ] Zero warnings maintained
-- [ ] Ready to proceed to Phase 5
+Test Execution Summary:
+- Total Tests: XXX (should be > 1259)
+- Passed: XXX
+- Failed: XXX (MUST be 0 to proceed)
+- New Tests Added: XXX
+
+Code Review: `/memory-bank/features/2-IN_PROGRESS/FEAT-030-exercise-link-enhancements/code-reviews/Phase_4_Service_Layer/Code-Review-Phase-4-Service-Layer-YYYY-MM-DD-HH-MM-[STATUS].md` - [[STATUS]]
+
+Git Commit: `[COMMIT_HASH]` - [commit message summary]
+
+Status: [STATUS] Phase 4 Service Layer
+Notes: 
+- All existing 1259+ tests still passing (critical regression check)
+- New service validation tests passing
+- Bidirectional algorithm tested and working
+- ServiceValidate patterns properly implemented
+- Ready to proceed to Phase 5
 
 ## Phase 5: API Controller Enhancements - Estimated: 1h 30m
 
@@ -611,13 +726,12 @@ And all existing functionality should remain intact
           ? enumValue 
           : (request.LinkType == "Warmup" ? ExerciseLinkType.WARMUP : ExerciseLinkType.COOLDOWN);
           
-      var command = new CreateExerciseLinkCommand(
+      // Note: DisplayOrder is calculated server-side in the service layer
+      var result = await _exerciseLinkService.CreateLinkAsync(
           exerciseId,
           request.TargetExerciseId,
-          linkType,
-          request.DisplayOrder);
+          linkType);
           
-      var result = await _exerciseLinkService.CreateLinkAsync(command);
       // Return both created links in response for bidirectional creation
   }
   
@@ -646,6 +760,30 @@ And all existing functionality should remain intact
 - Use proper HTTP status codes (201 for bidirectional creation)
 - Support both string and enum in API for compatibility
 - Include comprehensive OpenAPI documentation for new features
+
+## CHECKPOINT: Phase 5 Complete - API Controller Enhancements
+`[PENDING]` - Date: YYYY-MM-DD HH:MM
+
+Build Report:
+- API Project: [STATUS] [X errors, Y warnings]
+- Test Project (Unit): [STATUS] [X errors, Y warnings]  
+- Test Project (Integration): [STATUS] [X errors, Y warnings]
+
+Controller Implementation Summary:
+- **CreateExerciseLinkCommand**: Updated to support enum-based operations
+- **ExerciseLinksController**: Enhanced with bidirectional link endpoints
+- **API Documentation**: OpenAPI specs updated with new link types
+
+Code Review: `/memory-bank/features/2-IN_PROGRESS/FEAT-030-exercise-link-enhancements/code-reviews/Phase_5_API_Controller/Code-Review-Phase-5-API-Controller-YYYY-MM-DD-HH-MM-[STATUS].md` - [[STATUS]]
+
+Git Commit: `[COMMIT_HASH]` - [commit message summary]
+
+Status: [STATUS] Phase 5 API Controller
+Notes: 
+- Controller endpoints support both string and enum requests
+- Bidirectional creation/deletion working correctly
+- OpenAPI documentation complete
+- Ready to proceed to Phase 6
 
 ## Phase 6: BDD Integration Tests - Estimated: 2h 0m
 
@@ -739,34 +877,37 @@ And all existing functionality should remain intact
 - Verify performance doesn't degrade
 - Use existing test data builders and patterns
 
-## 🔄 Phase 6 Health Check  
-**Date/Time**: YYYY-MM-DD HH:MM
-**Status**: 🛑 PENDING / ❌ FAILED / ✅ PASSED
+## CHECKPOINT: Phase 6 Complete - BDD Integration Tests
+`[PENDING]` - Date: YYYY-MM-DD HH:MM
 
-#### Build Status
-- **Build Result**: [ ] Success / [ ] Failed / [ ] Success with warnings
-- **Warning Count**: X warnings
-- **Command**: `dotnet clean && dotnet build`
+Build Report:
+- API Project: [STATUS] [X errors, Y warnings]
+- Test Project (Unit): [STATUS] [X errors, Y warnings]  
+- Test Project (Integration): [STATUS] [X errors, Y warnings]
 
-#### Test Status
-- **Total Tests**: XXX (should include new BDD tests)
-- **Passed**: XXX
-- **Failed**: XXX (MUST be 0 to proceed)
-- **Command**: `dotnet clean && dotnet test`
+Integration Test Summary:
+- **BDD Scenarios**: X scenarios implemented and passing
+- **Migration Tests**: String to enum migration verified
+- **Bidirectional Tests**: All creation/deletion scenarios tested
+- **Performance Tests**: Bidirectional queries < 100ms
 
-#### Integration Test Verification
-- **BDD Scenarios Passing**: [ ] All new scenarios passing
-- **Existing Tests**: [ ] All 1259+ existing tests still passing
-- **Migration Tests**: [ ] String to enum migration tests passing
-- **Performance**: [ ] Bidirectional queries perform adequately
+Test Execution Summary:
+- Total Tests: XXX (includes new BDD tests)
+- Passed: XXX
+- Failed: XXX (MUST be 0 to proceed)
+- BDD Tests Added: XXX
 
-#### Verification
-- [ ] All existing functionality preserved
-- [ ] New bidirectional functionality working
-- [ ] Migration scenarios tested and working
-- [ ] Build successful with no errors
-- [ ] Zero warnings maintained
-- [ ] Ready to proceed to Phase 7
+Code Review: `/memory-bank/features/2-IN_PROGRESS/FEAT-030-exercise-link-enhancements/code-reviews/Phase_6_Integration_Tests/Code-Review-Phase-6-Integration-Tests-YYYY-MM-DD-HH-MM-[STATUS].md` - [[STATUS]]
+
+Git Commit: `[COMMIT_HASH]` - [commit message summary]
+
+Status: [STATUS] Phase 6 Integration Tests
+Notes: 
+- All 1259+ existing tests still passing
+- New BDD scenarios fully implemented
+- Migration from string to enum tested
+- Backward compatibility verified
+- Ready to proceed to Phase 7
 
 ## Phase 7: Documentation & Deployment - Estimated: 1h 0m
 
@@ -821,9 +962,7 @@ And all existing functionality should remain intact
         type: string
         enum: ["WARMUP", "COOLDOWN", "WORKOUT", "ALTERNATIVE", "Warmup", "Cooldown"]
         example: "WARMUP"
-      displayOrder:
-        type: integer
-        example: 1
+      # displayOrder is calculated server-side (next available sequence number)
   
   CreateExerciseLinkResponse:
     type: object
@@ -849,30 +988,62 @@ And all existing functionality should remain intact
 - Document breaking changes and migration path for API consumers
 - Use clear descriptions for bidirectional behavior
 
-## 🔄 Final Implementation Checkpoint
-**Date/Time**: YYYY-MM-DD HH:MM
-**Status**: 🛑 PENDING / ❌ FAILED / ✅ PASSED
+## CHECKPOINT: Phase 7 Complete - Documentation & Deployment
+`[PENDING]` - Date: YYYY-MM-DD HH:MM
 
-### Build & Test Verification
-- **Build Result**: [ ] Success with 0 errors, 0 warnings
-- **Total Tests**: XXX (must include all new BDD and unit tests)
-- **Test Pass Rate**: [ ] 100% (all tests passing)
-- **Regression Check**: [ ] All original 1259+ tests still passing
+Build Report:
+- API Project: [STATUS] [X errors, Y warnings]
+- Test Project (Unit): [STATUS] [X errors, Y warnings]  
+- Test Project (Integration): [STATUS] [X errors, Y warnings]
 
-### Feature Functionality Verification  
-- [ ] **Four Link Types**: WARMUP, COOLDOWN, WORKOUT, ALTERNATIVE all working
-- [ ] **Bidirectional Creation**: Auto-creation of reverse links working
-- [ ] **Bidirectional Deletion**: Proper cleanup of both links working
-- [ ] **REST Constraints**: REST exercises properly blocked from all link types
-- [ ] **Migration**: String to enum migration working correctly
-- [ ] **Backward Compatibility**: Existing string-based API still functional
+Documentation Summary:
+- **Error Messages**: All new error constants added for enum validation
+- **OpenAPI Documentation**: Complete with examples and migration notes
+- **Swagger Annotations**: Updated on all affected endpoints
 
-### Code Quality Verification
-- [ ] **ServiceValidate Pattern**: All validations using proper ServiceValidate chains
-- [ ] **UnitOfWork Usage**: ReadOnly for validation, Writable for modifications only
-- [ ] **Error Handling**: ServiceResult pattern used throughout, no exceptions for control flow
-- [ ] **Test Coverage**: BDD integration tests covering all scenarios
-- [ ] **Documentation**: OpenAPI docs updated with new functionality
+Code Review: `/memory-bank/features/2-IN_PROGRESS/FEAT-030-exercise-link-enhancements/code-reviews/Phase_7_Documentation/Code-Review-Phase-7-Documentation-YYYY-MM-DD-HH-MM-[STATUS].md` - [[STATUS]]
+
+Git Commit: `[COMMIT_HASH]` - [commit message summary]
+
+Status: [STATUS] Phase 7 Documentation & Deployment
+Notes: 
+- API documentation complete with migration guide
+- Error messages comprehensive and clear
+- All documentation follows project standards
+- Feature implementation complete
+
+## CHECKPOINT: Final Implementation Complete - Four-Way Linking System
+`[STATUS]` - Date: YYYY-MM-DD HH:MM
+
+Build Report:
+- API Project: [STATUS] [X errors, Y warnings] (must be 0/0)
+- Test Project (Unit): [STATUS] [X errors, Y warnings] (must be 0/0)
+- Test Project (Integration): [STATUS] [X errors, Y warnings] (must be 0/0)
+
+Feature Verification Summary:
+- **Four Link Types**: ✅ WARMUP, COOLDOWN, WORKOUT, ALTERNATIVE all working
+- **Bidirectional Creation**: ✅ Auto-creation of reverse links verified
+- **Bidirectional Deletion**: ✅ Proper cleanup of both links verified
+- **REST Constraints**: ✅ REST exercises blocked from all link types
+- **Migration**: ✅ String to enum migration tested and working
+- **Backward Compatibility**: ✅ Existing string-based API still functional
+
+Test Summary:
+- Total Tests: XXX (baseline: 1259)
+- Tests Added: XXX
+- Pass Rate: 100%
+- Regression: None - all original tests passing
+
+Code Review: `/memory-bank/features/2-IN_PROGRESS/FEAT-030-exercise-link-enhancements/code-reviews/Final_Implementation/Code-Review-Final-Implementation-YYYY-MM-DD-HH-MM-[STATUS].md` - [[STATUS]]
+
+Git Commit: `[COMMIT_HASH]` - [commit message summary]
+
+Status: [STATUS] Feature Implementation
+Notes: 
+- All phases completed successfully
+- Code quality standards met
+- Full test coverage maintained
+- Ready for production deployment
 
 ## BOY SCOUT RULE - Code Quality Improvements
 

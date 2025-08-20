@@ -72,18 +72,10 @@ Tasks must follow logical dependency order:
 Each checkpoint between categories must be GREEN before proceeding:
 - **Build**: 0 errors, 0 warnings
 - **Tests**: All green/pass
-- **Code Review**: APPROVED status
-- **Report Format**: Every checkpoint must include:
-  ```markdown
-  ## CHECKPOINT: [Category Name]
-  `[Status]` - Date: YYYY-MM-DD
-  
-  Build Report: X errors, Y warnings
-  Test Report: A passed, B failed (Total: C)
-  Code Review: [filename] - [STATUS]
-  
-  Notes: [Any relevant observations]
-  ```
+- **Code Review**: APPROVED status following proper folder structure
+- **Git Commit Hash**: MANDATORY field that must be added after creating commit
+- **Report Format**: Every checkpoint must follow `/memory-bank/DevelopmentGuidelines/Templates/FeatureCheckpointTemplate.md`
+- **Critical Rule**: NEVER proceed to next phase without adding git commit hash to checkpoint
 
 ### 5. Reference Key Documents
 Generated tasks should reference (not copy):
@@ -92,6 +84,7 @@ Generated tasks should reference (not copy):
 - `/memory-bank/PracticalGuides/ServiceImplementationChecklist.md` - Quick reference during coding
 - `/memory-bank/CodeQualityGuidelines/ServiceResultPattern.md` - Error handling patterns
 - `/memory-bank/PracticalGuides/TestingQuickReference.md` - Test implementation guidance
+- `/memory-bank/DevelopmentGuidelines/Templates/FeatureCheckpointTemplate.md` - Checkpoint format and requirements
 
 ### 6. Test Structure Requirements
 Feature must include two levels of acceptance tests:
@@ -220,32 +213,24 @@ Generate a comprehensive `feature-tasks.md` file containing:
 6. **BOY SCOUT RULE section** for improvements found during implementation
 7. **Final verification** checklist
 
-## Checkpoint Template
+## Checkpoint Template Reference
 
-```markdown
-## CHECKPOINT: [Category Name]
-`[Status]` - Date: YYYY-MM-DD
+**IMPORTANT**: All checkpoints must follow the standardized template from:
+`/memory-bank/DevelopmentGuidelines/Templates/FeatureCheckpointTemplate.md`
 
-**Requirements for GREEN status:**
-- Build Report: 0 errors, 0 warnings
-- Test Report: All passed, 0 failed
-- Code Review: APPROVED status (see `/memory-bank/UNIFIED_DEVELOPMENT_PROCESS.md`)
+**Critical Requirements:**
+1. **Git Commit Hash**: MANDATORY field - never proceed without it
+2. **Code Review Path**: Must follow exact folder structure and naming convention
+3. **Status Tracking**: Clear phase completion status
+4. **Build/Test Reports**: Comprehensive verification results
 
-**Verification Steps:**
-1. Run `dotnet build` - must show 0 errors, 0 warnings
-2. Run `dotnet test` - all tests must pass
-3. Create code review file following naming convention
-4. Ensure code review status is APPROVED before proceeding
+**Key Template Features:**
+- Standardized folder structure for code reviews
+- Mandatory git commit hash for traceability
+- Proper file naming conventions
+- Complete audit trail for each phase
 
-**Report Template:**
-```
-Build Report: 0 errors, 0 warnings
-Test Report: X passed, 0 failed (Total: X)
-Code Review: code-review/code-review-YYYY-MM-DD-HHMMSS.md - APPROVED
-
-Notes: [Any relevant observations]
-```
-```
+**Usage**: Reference the template file for exact format when generating checkpoints in feature-tasks.md
 
 ## Success Criteria
 
