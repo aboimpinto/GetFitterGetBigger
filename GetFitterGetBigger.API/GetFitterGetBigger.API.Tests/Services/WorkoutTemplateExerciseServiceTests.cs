@@ -2,6 +2,7 @@ using GetFitterGetBigger.API.Models;
 using GetFitterGetBigger.API.Models.Entities;
 using GetFitterGetBigger.API.Models.SpecializedIds;
 using WorkoutTemplateEntity = GetFitterGetBigger.API.Models.Entities.WorkoutTemplate;
+using ExerciseEntity = GetFitterGetBigger.API.Models.Entities.Exercise;
 using GetFitterGetBigger.API.Repositories.Interfaces;
 using GetFitterGetBigger.API.Services.WorkoutTemplate.Features.Exercise;
 using GetFitterGetBigger.API.Tests.TestBuilders;
@@ -31,7 +32,7 @@ public class WorkoutTemplateExerciseServiceTests
     private readonly UserId _testUserId;
     private readonly WorkoutTemplateEntity _testTemplate;
     private readonly WorkoutTemplateExercise _testTemplateExercise;
-    private readonly Exercise _testExercise;
+    private readonly GetFitterGetBigger.API.Models.Entities.Exercise _testExercise;
     private readonly WorkoutState _draftState;
     private readonly WorkoutState _productionState;
     
@@ -339,7 +340,7 @@ public class WorkoutTemplateExerciseServiceTests
             
         _mockExerciseRepo
             .Setup(x => x.GetByIdAsync(_testExerciseEntityId))
-            .ReturnsAsync(Exercise.Empty);
+            .ReturnsAsync(ExerciseEntity.Empty);
         
         // Act
         var result = await _service.ValidateExercisesAsync(_testTemplateId, exerciseIds);

@@ -27,6 +27,16 @@ public static class ExerciseLinkErrorMessages
     // Validation
     public const string LinkTypeRequired = "Link type is required";
     public const string InvalidLinkType = "Link type must be either 'Warmup' or 'Cooldown'";
+    public const string InvalidLinkTypeEnum = "Link type must be WARMUP, COOLDOWN, WORKOUT, or ALTERNATIVE";
     public const string DisplayOrderMustBeNonNegative = "Display order must be a non-negative number";
     public const string CountMustBeBetween1And20 = "Count must be between 1 and 20";
+    
+    // Enhanced validation for new link types
+    public const string WorkoutLinksAutoCreated = "WORKOUT links are automatically created as reverse links";
+    public const string InvalidLinkTypeForRestExercise = "REST exercises cannot have any link types";
+    public const string BidirectionalLinkExists = "A bidirectional link of this type already exists";
+    public const string WarmupMustLinkToWorkout = "WARMUP links can only be created to WORKOUT exercises";
+    public const string CooldownMustLinkToWorkout = "COOLDOWN links can only be created to WORKOUT exercises";
+    public const string AlternativeCannotLinkToRest = "ALTERNATIVE links cannot be created to REST exercises";
+    public const string BidirectionalCreationFailed = "Failed to create bidirectional link - reverse link creation failed";
 }

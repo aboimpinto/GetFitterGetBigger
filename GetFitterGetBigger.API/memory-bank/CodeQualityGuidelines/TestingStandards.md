@@ -15,6 +15,9 @@
 │ 5. Mock all dependencies in unit tests                      │
 │ 6. Remove unused test data - only test what you assert      │
 │ 7. Test behavior, not implementation                        │
+│ 8. TEST BUILDER PATTERN MANDATORY for ALL DTOs/entities     │
+│ 9. MOCK SETUPS via extension methods ONLY                   │
+│ 10. FOCUS PRINCIPLE - set ONLY properties under test        │
 └──────────────────────────────────────────────────────────────┘
 ```
 
@@ -337,52 +340,183 @@ public async Task CreateAsync_WithDuplicateName_ReturnsConflictError()
 
 ## Unit Test Standards
 
-### Test Structure
+### 🚨 CRITICAL: Test Independence Rule
+
+**NEVER share mocks or test subjects at the class level!** Each test must be completely isolated to prevent:
+- Race conditions in parallel test execution
+- Mock state bleeding between tests
+- False positives/negatives from shared state
+- Difficult-to-debug test failures
+
+#### ❌ VIOLATION - Shared Mocks (DANGEROUS!)
 
 ```csharp
 public class EquipmentServiceTests
 {
-    private readonly Mock<IUnitOfWorkProvider<FitnessDbContext>> _mockUnitOfWorkProvider;
-    private readonly Mock<IReadOnlyUnitOfWork<FitnessDbContext>> _mockReadOnlyUnitOfWork;
-    private readonly Mock<IWritableUnitOfWork<FitnessDbContext>> _mockWritableUnitOfWork;
+    // ❌ SHARED STATE - Tests can interfere with each other!
+    private readonly Mock<IUnitOfWorkProvider> _mockUnitOfWorkProvider;
     private readonly Mock<IEquipmentRepository> _mockRepository;
-    private readonly Mock<ILogger<EquipmentService>> _mockLogger;
     private readonly EquipmentService _service;
-    
-    // Test IDs for consistency
-    private readonly EquipmentId _testId = EquipmentId.New();
-    private readonly string _testName = "Test Equipment";
     
     public EquipmentServiceTests()
     {
-        // Setup mocks
-        _mockUnitOfWorkProvider = new Mock<IUnitOfWorkProvider<FitnessDbContext>>();
-        _mockReadOnlyUnitOfWork = new Mock<IReadOnlyUnitOfWork<FitnessDbContext>>();
-        _mockWritableUnitOfWork = new Mock<IWritableUnitOfWork<FitnessDbContext>>();
+        _mockUnitOfWorkProvider = new Mock<IUnitOfWorkProvider>();
         _mockRepository = new Mock<IEquipmentRepository>();
-        _mockLogger = new Mock<ILogger<EquipmentService>>();
+        _service = new EquipmentService(_mockUnitOfWorkProvider.Object);
+    }
+    
+    [Fact]
+    public async Task Test1()
+    {
+        // This test's setup affects all other tests!
+        _mockRepository.Setup(x => x.GetByIdAsync(It.IsAny<EquipmentId>()))
+            .ReturnsAsync(Equipment.Empty);
+    }
+}
+```
+
+#### ✅ CORRECT - Independent Tests with AutoMocker
+
+```csharp
+public class EquipmentServiceTests
+{
+    // NO shared state - each test creates its own mocks
+    
+    [Fact]
+    public async Task GetByIdAsync_WhenEntityExists_ReturnsSuccess()
+    {
+        // Arrange - Each test has its own isolated setup
+        var autoMocker = new AutoMocker();
+        var testId = EquipmentId.New();
+        var testName = "Test Equipment";
         
-        // Wire up dependencies
-        _mockReadOnlyUnitOfWork
-            .Setup(x => x.GetRepository<IEquipmentRepository>())
-            .Returns(_mockRepository.Object);
-            
-        _mockWritableUnitOfWork
-            .Setup(x => x.GetRepository<IEquipmentRepository>())
-            .Returns(_mockRepository.Object);
-            
-        _mockUnitOfWorkProvider
-            .Setup(x => x.CreateReadOnly())
-            .Returns(_mockReadOnlyUnitOfWork.Object);
-            
-        _mockUnitOfWorkProvider
-            .Setup(x => x.CreateWritable())
-            .Returns(_mockWritableUnitOfWork.Object);
+        var mockRepository = autoMocker.GetMock<IEquipmentRepository>();
+        mockRepository.Setup(x => x.GetByIdAsync(testId))
+            .ReturnsAsync(Equipment.Create(testId, testName));
         
-        // Create service under test
-        _service = new EquipmentService(
-            _mockUnitOfWorkProvider.Object,
-            _mockLogger.Object);
+        var service = autoMocker.CreateInstance<EquipmentService>();
+        
+        // Act
+        var result = await service.GetByIdAsync(testId);
+        
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+        result.Data.Name.Should().Be(testName);
+    }
+    
+    [Fact]
+    public async Task GetByIdAsync_WhenEntityNotFound_ReturnsNotFoundError()
+    {
+        // Arrange - Completely independent from other tests
+        var autoMocker = new AutoMocker();
+        var testId = EquipmentId.New();
+        
+        var mockRepository = autoMocker.GetMock<IEquipmentRepository>();
+        mockRepository.Setup(x => x.GetByIdAsync(testId))
+            .ReturnsAsync(Equipment.Empty);
+        
+        var service = autoMocker.CreateInstance<EquipmentService>();
+        
+        // Act
+        var result = await service.GetByIdAsync(testId);
+        
+        // Assert
+        result.IsSuccess.Should().BeFalse();
+        result.PrimaryErrorCode.Should().Be(ServiceErrorCode.NotFound);
+    }
+}
+```
+
+### 🚨 CRITICAL: Error Message Constants Rule
+
+**Use production error constants directly - NEVER recreate them in tests!**
+
+#### ❌ VIOLATION - Recreating Error Constants
+
+```csharp
+public class ExerciseLinkServiceTests
+{
+    // ❌ WRONG - Recreating production constants in test!
+    private const string WorkoutLinksAutoCreated = "WORKOUT links are automatically created";
+    private const string RestExercisesCannotHaveLinks = "REST exercises cannot have links";
+    
+    [Fact]
+    public async Task CreateLinkAsync_WithWorkoutType_FailsValidation()
+    {
+        // Act
+        var result = await service.CreateLinkAsync(sourceId, targetId, ExerciseLinkType.WORKOUT);
+        
+        // Assert - Using recreated constant
+        result.Errors.Should().Contain(WorkoutLinksAutoCreated); // ❌ WRONG!
+    }
+}
+```
+
+#### ✅ CORRECT - Using Production Constants
+
+```csharp
+public class ExerciseLinkServiceTests
+{
+    // Test data constants are fine for test-specific strings
+    private const string WarmupExerciseName = "Warmup Exercise";
+    private const string WorkoutExerciseName = "Workout Exercise";
+    
+    [Fact]
+    public async Task CreateLinkAsync_WithWorkoutType_FailsValidation()
+    {
+        // Arrange
+        var autoMocker = new AutoMocker();
+        var service = autoMocker.CreateInstance<ExerciseLinkService>();
+        
+        // Act
+        var result = await service.CreateLinkAsync(
+            ExerciseId.New().ToString(), 
+            ExerciseId.New().ToString(), 
+            ExerciseLinkType.WORKOUT);
+        
+        // Assert - Using ACTUAL production constant
+        result.Errors.Should().Contain(ExerciseLinkErrorMessages.WorkoutLinksAutoCreated); // ✅ CORRECT!
+    }
+}
+```
+
+#### Key Distinction:
+- **Test Data Constants** (names, descriptions, test values) → Local constants are GOOD
+- **Error Message Constants** → MUST use production constants from `*ErrorMessages` classes
+- **Reference Data Values** → Local constants for test consistency are GOOD
+
+### Test Structure with AutoMocker Pattern
+
+```csharp
+public class EquipmentServiceTests
+{
+    // NO class-level fields except truly shared constants
+    
+    [Fact]
+    public async Task GetByIdAsync_WhenEntityExists_ReturnsSuccess()
+    {
+        // Arrange - Complete test isolation
+        var autoMocker = new AutoMocker();
+        var testId = EquipmentId.New();
+        const string testName = "Test Equipment";
+        
+        // Setup mocks for this specific test
+        var mockRepository = autoMocker.GetMock<IEquipmentRepository>();
+        mockRepository.Setup(x => x.GetByIdAsync(testId))
+            .ReturnsAsync(Equipment.Create(testId, testName));
+        
+        // Create service instance for this test only
+        var service = autoMocker.CreateInstance<EquipmentService>();
+        
+        // Act
+        var result = await service.GetByIdAsync(testId);
+        
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+        result.Data.Name.Should().Be(testName);
+        
+        // Verify (if needed)
+        mockRepository.Verify(x => x.GetByIdAsync(testId), Times.Once);
     }
 }
 ```
@@ -900,6 +1034,142 @@ public async Task UpdateAsync_WithValidData_UpdatesAndReturnsSuccess() { }
 4. **Stability**: Tests should not break with refactoring
 5. **Speed**: Unit tests should run fast (mock external dependencies)
 
+## 🔨 MANDATORY Test Patterns
+
+### Test Builder Pattern (REQUIRED)
+
+**ALL test data MUST be created using Test Builders.** No exceptions.
+
+#### ❌ VIOLATION - Verbose Object Creation
+```csharp
+public class ExerciseLinkServiceTests
+{
+    [Fact]
+    public async Task CreateLinkAsync_WithValidData_CreatesSuccessfully()
+    {
+        // ❌ WRONG - Creating objects with all properties
+        var sourceExerciseDto = new ExerciseDto
+        {
+            Id = sourceId.ToString(),
+            Name = "Warmup Exercise",
+            Description = "Test warmup exercise",
+            IsActive = true,
+            ExerciseTypes = [
+                new() { Id = "type-1", Value = "Warmup", Description = "Warmup type" }
+            ],
+            Difficulty = new ReferenceDataDto { Id = "diff-1", Value = "Easy", Description = "Easy" },
+            VideoUrl = "http://example.com/video",  // NOT UNDER TEST
+            ImageUrl = "http://example.com/image",  // NOT UNDER TEST
+            IsUnilateral = false,                   // NOT UNDER TEST
+            // ... more irrelevant properties
+        };
+    }
+}
+```
+
+#### ✅ CORRECT - Test Builder Pattern
+```csharp
+public class ExerciseLinkServiceTests
+{
+    [Fact]
+    public async Task CreateLinkAsync_WithValidWarmupLink_CreatesSuccessfully()
+    {
+        // ✅ CORRECT - Focused test data
+        var sourceExerciseDto = ExerciseDtoTestBuilder.WarmupExercise()
+            .WithId(sourceId)
+            .Build();
+    }
+}
+```
+
+**Test Builder Requirements:**
+- Live in `/TestBuilders/` folder
+- Have factory methods for common scenarios
+- Apply Focus Principle - only set what's tested
+- Use sensible defaults for all properties
+
+### Mock Extension Methods (REQUIRED)
+
+**ALL mock setups MUST use fluent extension methods.** No inline Setup() calls.
+
+#### ❌ VIOLATION - Inline Mock Setup
+```csharp
+[Fact]
+public async Task GetByIdAsync_WithValidId_ReturnsExercise()
+{
+    // ❌ WRONG - Verbose inline setup
+    exerciseServiceMock
+        .Setup(x => x.GetByIdAsync(sourceId))
+        .ReturnsAsync(ServiceResult<ExerciseDto>.Success(sourceExerciseDto));
+    
+    queryDataServiceMock
+        .Setup(x => x.GetLinkCountAsync(sourceId, ExerciseLinkType.WARMUP.ToString()))
+        .ReturnsAsync(ServiceResult<int>.Success(0));
+}
+```
+
+#### ✅ CORRECT - Fluent Extension Methods
+```csharp
+[Fact]
+public async Task GetByIdAsync_WithValidId_ReturnsExercise()
+{
+    // ✅ CORRECT - Clean, readable mock setup
+    exerciseServiceMock
+        .SetupExerciseById(sourceId, sourceExerciseDto)
+        .SetupExerciseById(targetId, targetExerciseDto);
+    
+    queryDataServiceMock
+        .SetupLinkCount(sourceId, ExerciseLinkType.WARMUP.ToString())
+        .SetupLinkCount(targetId, ExerciseLinkType.WORKOUT.ToString());
+}
+```
+
+**Extension Method Requirements:**
+- Live in `/Extensions/` folder
+- Return the mock for chaining
+- Have descriptive names (SetupExerciseById not Setup)
+- Group related setups (SetupSuccessfulCreation, SetupNotFound)
+
+### Focus Principle (REQUIRED)
+
+**Set ONLY properties that are being tested.** Every property you set should have a corresponding assertion.
+
+#### ❌ VIOLATION - Setting Unnecessary Properties
+```csharp
+[Fact]
+public async Task IsActive_WhenTrue_ReturnsActiveExercise()
+{
+    // ❌ WRONG - Setting properties not under test
+    var exercise = ExerciseBuilder.Default()
+        .WithName("Test Exercise")        // NOT ASSERTED
+        .WithDescription("Description")   // NOT ASSERTED
+        .WithVideoUrl("http://...")      // NOT ASSERTED
+        .WithImageUrl("http://...")      // NOT ASSERTED
+        .AsActive()                       // THIS is what we're testing
+        .Build();
+    
+    // ... test execution ...
+    
+    result.Data.IsActive.Should().BeTrue();  // Only testing IsActive
+}
+```
+
+#### ✅ CORRECT - Focus on What Matters
+```csharp
+[Fact]
+public async Task IsActive_WhenTrue_ReturnsActiveExercise()
+{
+    // ✅ CORRECT - Only set what's being tested
+    var exercise = ExerciseBuilder.Default()
+        .AsActive()  // ONLY what we're testing
+        .Build();
+    
+    // ... test execution ...
+    
+    result.Data.IsActive.Should().BeTrue();
+}
+```
+
 ## 🔍 Code Review Checklist for Tests
 
 ### MUST REJECT PR If Any Test Has:
@@ -910,6 +1180,10 @@ public async Task UpdateAsync_WithValidData_UpdatesAndReturnsSuccess() { }
 - [ ] **Error message testing** - Using `Assert.Contains()` on error messages
 - [ ] **Unused test data** - Setting up data that's never asserted
 - [ ] **Missing intent** - Test names like `Test1`, `TestMethod`, `WorksCorrectly`
+- [ ] **Verbose object creation** - Not using Test Builder Pattern for DTOs/entities
+- [ ] **Inline mock setups** - Using Setup() instead of extension methods
+- [ ] **Focus violations** - Setting properties that aren't being tested
+- [ ] **Test constants for defaults** - 40+ lines of constants for irrelevant data
 
 ### Example Code Review Comments:
 

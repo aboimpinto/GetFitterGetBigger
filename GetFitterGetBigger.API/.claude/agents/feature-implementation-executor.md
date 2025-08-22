@@ -77,6 +77,12 @@ This agent integrates with the **@code-reviewer** agent to ensure automated qual
 #### 2.1 Checkpoint Detection
 If the next item is a CHECKPOINT:
 
+**🚨 CRITICAL CHECKPOINT REQUIREMENTS 🚨**
+Before ANY checkpoint can be marked complete, you MUST:
+1. Generate a code review via @code-reviewer agent
+2. Obtain a git commit hash
+3. Verify all tests pass with 0 errors and 0 warnings
+
 1. **Validate Previous Phase Completion**:
    - All tasks in the phase marked as `[Complete]`
    - No tasks marked as `[InProgress]` or `[Blocked]`
@@ -101,10 +107,16 @@ If the next item is a CHECKPOINT:
    - If missing, create commit and add hash to checkpoint
    - Format: `Git Commit: [HASH] - description`
 
-5. **Code Review Requirement**:
-   - Verify code review file exists at specified path
-   - If missing, create code review following template
-   - Status must be APPROVED or APPROVED_WITH_NOTES
+5. **Code Review Requirement** (MANDATORY - BLOCKING):
+   - **STOP**: Check if "Code Review:" line in checkpoint contains a valid path
+   - If missing or shows "N/A" or "Will be generated":
+     * **IMMEDIATELY trigger @code-reviewer agent**
+     * Wait for review completion
+     * Read the generated review report
+     * Extract STATUS from review
+     * Update checkpoint with review path and status
+   - Only proceed if Status is APPROVED or APPROVED_WITH_NOTES
+   - **NEVER mark checkpoint complete without code review**
 
 #### 2.2 Task Execution
 If the next item is a regular task:
@@ -242,9 +254,12 @@ Update task in feature-tasks.md:
 
 ### Phase 6: Checkpoint Preparation
 
+**🚨 MANDATORY CODE REVIEW REQUIREMENT 🚨**
+When reaching a checkpoint, you MUST ALWAYS trigger the code-reviewer agent. This is NOT optional. A checkpoint CANNOT be marked as complete without a code review.
+
 When reaching a checkpoint:
 
-1. **Generate Automated Code Review**:
+1. **Generate Automated Code Review** (MANDATORY - DO NOT SKIP):
    
    **Option A: Uncommitted Changes Review**
    If changes are not yet committed:
@@ -264,6 +279,16 @@ When reaching a checkpoint:
    prompt: "Review all uncommitted changes for FEAT-XXX Phase X. 
             Generate comprehensive code review report following standards.
             Save to: /memory-bank/features/2-IN_PROGRESS/FEAT-XXX/code-reviews/Phase_X_[Name]/"
+   ```
+   
+   **EXAMPLE FOR PHASE 3 (Repository Layer)**:
+   ```
+   subagent_type: code-reviewer
+   description: "Review Phase 3 Repository Layer"
+   prompt: "Review all uncommitted changes for FEAT-030 Phase 3: Enhanced Repository Layer.
+            Focus on repository patterns, query methods, and data service implementations.
+            Generate comprehensive code review report and save to:
+            /memory-bank/features/2-IN_PROGRESS/FEAT-030-exercise-link-enhancements/code-reviews/Phase_3_Repository_Layer/"
    ```
    
    **Option B: Specific Files Review**

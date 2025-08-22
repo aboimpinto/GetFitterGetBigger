@@ -13,6 +13,7 @@ using GetFitterGetBigger.API.Tests.Services.Extensions;
 using GetFitterGetBigger.API.Mappers;
 using Moq;
 using Moq.AutoMock;
+using ExerciseEntity = GetFitterGetBigger.API.Models.Entities.Exercise;
 
 namespace GetFitterGetBigger.API.Tests.Services
 {
@@ -36,7 +37,7 @@ namespace GetFitterGetBigger.API.Tests.Services
                 Name = searchTerm
             };
             
-            var exercises = new List<Exercise>
+            var exercises = new List<ExerciseEntity>
             {
                 ExerciseBuilder.AWorkoutExercise()
                     .WithName(matchingExercise1)

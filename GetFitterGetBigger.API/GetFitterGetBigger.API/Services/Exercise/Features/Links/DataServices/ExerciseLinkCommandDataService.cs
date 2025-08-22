@@ -52,4 +52,28 @@ public class ExerciseLinkCommandDataService(
         
         return ServiceResult<BooleanResultDto>.Success(BooleanResultDto.Create(result));
     }
+    
+    public async Task<ServiceResult<ExerciseLinkDto>> CreateBidirectionalAsync(
+        ExerciseLink primaryLink, 
+        ExerciseLink? reverseLink = null)
+    {
+        using var unitOfWork = unitOfWorkProvider.CreateWritable();
+        var repository = unitOfWork.GetRepository<IExerciseLinkRepository>();
+        
+        // Create the primary link
+        var createdPrimaryLink = await repository.AddAsync(primaryLink);
+        
+        // Create the reverse link if provided
+        if (reverseLink != null)
+        {
+            await repository.AddAsync(reverseLink);
+        }
+        
+        // Commit both operations atomically
+        await unitOfWork.CommitAsync();
+        
+        // Return the primary link as DTO
+        var dto = createdPrimaryLink.ToDto();
+        return ServiceResult<ExerciseLinkDto>.Success(dto);
+    }
 }

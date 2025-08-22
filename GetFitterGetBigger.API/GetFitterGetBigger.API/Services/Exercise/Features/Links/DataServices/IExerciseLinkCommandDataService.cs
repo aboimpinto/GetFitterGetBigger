@@ -25,4 +25,14 @@ public interface IExerciseLinkCommandDataService
     /// Deletes an exercise link (soft delete)
     /// </summary>
     Task<ServiceResult<BooleanResultDto>> DeleteAsync(ExerciseLinkId id);
+    
+    /// <summary>
+    /// Creates bidirectional links in a single transaction
+    /// </summary>
+    /// <param name="primaryLink">The primary link to create</param>
+    /// <param name="reverseLink">Optional reverse link to create atomically</param>
+    /// <returns>The created primary link DTO</returns>
+    Task<ServiceResult<ExerciseLinkDto>> CreateBidirectionalAsync(
+        ExerciseLink primaryLink, 
+        ExerciseLink? reverseLink = null);
 }

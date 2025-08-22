@@ -165,8 +165,11 @@ public class ExerciseLinkRepository : RepositoryBase<FitnessDbContext>, IExercis
             .Include(el => el.TargetExercise)
             .Where(el => el.IsActive && 
                         (el.SourceExerciseId == exerciseId || el.TargetExerciseId == exerciseId) &&
-                        el.ActualLinkType == linkType)
-            .OrderBy(el => el.ActualLinkType)
+                        ((el.LinkTypeEnum != null && el.LinkTypeEnum == linkType) ||
+                         (el.LinkTypeEnum == null && 
+                          ((linkType == ExerciseLinkType.WARMUP && el.LinkType == "Warmup") ||
+                           (linkType == ExerciseLinkType.COOLDOWN && el.LinkType == "Cooldown")))))
+            .OrderBy(el => el.LinkTypeEnum ?? (el.LinkType == "Warmup" ? ExerciseLinkType.WARMUP : ExerciseLinkType.COOLDOWN))
             .ThenBy(el => el.DisplayOrder)
             .AsNoTracking()
             .ToListAsync();
@@ -179,7 +182,10 @@ public class ExerciseLinkRepository : RepositoryBase<FitnessDbContext>, IExercis
     {
         return await Context.ExerciseLinks
             .AnyAsync(el => el.IsActive &&
-                           el.ActualLinkType == linkType &&
+                           ((el.LinkTypeEnum != null && el.LinkTypeEnum == linkType) ||
+                            (el.LinkTypeEnum == null && 
+                             ((linkType == ExerciseLinkType.WARMUP && el.LinkType == "Warmup") ||
+                              (linkType == ExerciseLinkType.COOLDOWN && el.LinkType == "Cooldown")))) &&
                            ((el.SourceExerciseId == sourceId && el.TargetExerciseId == targetId) ||
                             (el.SourceExerciseId == targetId && el.TargetExerciseId == sourceId)));
     }
@@ -196,11 +202,16 @@ public class ExerciseLinkRepository : RepositoryBase<FitnessDbContext>, IExercis
             
         if (linkType.HasValue)
         {
-            query = query.Where(el => el.ActualLinkType == linkType.Value);
+            // Use database-translatable fields instead of computed property
+            query = query.Where(el => 
+                (el.LinkTypeEnum != null && el.LinkTypeEnum == linkType.Value) ||
+                (el.LinkTypeEnum == null && 
+                 ((linkType.Value == ExerciseLinkType.WARMUP && el.LinkType == "Warmup") ||
+                  (linkType.Value == ExerciseLinkType.COOLDOWN && el.LinkType == "Cooldown"))));
         }
         
         return await query
-            .OrderBy(el => el.ActualLinkType)
+            .OrderBy(el => el.LinkTypeEnum ?? (el.LinkType == "Warmup" ? ExerciseLinkType.WARMUP : ExerciseLinkType.COOLDOWN))
             .ThenBy(el => el.DisplayOrder)
             .AsNoTracking()
             .ToListAsync();
@@ -214,7 +225,10 @@ public class ExerciseLinkRepository : RepositoryBase<FitnessDbContext>, IExercis
         return await Context.ExerciseLinks
             .AnyAsync(el => el.SourceExerciseId == sourceId && 
                            el.TargetExerciseId == targetId && 
-                           el.ActualLinkType == linkType && 
+                           ((el.LinkTypeEnum != null && el.LinkTypeEnum == linkType) ||
+                            (el.LinkTypeEnum == null && 
+                             ((linkType == ExerciseLinkType.WARMUP && el.LinkType == "Warmup") ||
+                              (linkType == ExerciseLinkType.COOLDOWN && el.LinkType == "Cooldown")))) &&
                            el.IsActive);
     }
     
@@ -227,7 +241,10 @@ public class ExerciseLinkRepository : RepositoryBase<FitnessDbContext>, IExercis
             .Include(el => el.SourceExercise)
             .Include(el => el.TargetExercise)
             .Where(el => el.SourceExerciseId == sourceId && 
-                        el.ActualLinkType == linkType && 
+                        ((el.LinkTypeEnum != null && el.LinkTypeEnum == linkType) ||
+                         (el.LinkTypeEnum == null && 
+                          ((linkType == ExerciseLinkType.WARMUP && el.LinkType == "Warmup") ||
+                           (linkType == ExerciseLinkType.COOLDOWN && el.LinkType == "Cooldown")))) &&
                         el.IsActive)
             .OrderBy(el => el.DisplayOrder)
             .AsNoTracking()

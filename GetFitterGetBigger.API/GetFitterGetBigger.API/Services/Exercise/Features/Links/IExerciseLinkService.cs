@@ -1,4 +1,5 @@
 using GetFitterGetBigger.API.DTOs;
+using GetFitterGetBigger.API.Models.Enums;
 using GetFitterGetBigger.API.Services.Exercise.Features.Links.Commands;
 using GetFitterGetBigger.API.Services.Results;
 
@@ -10,7 +11,20 @@ namespace GetFitterGetBigger.API.Services.Exercise.Features.Links;
 public interface IExerciseLinkService
 {
     /// <summary>
-    /// Creates a new link between exercises
+    /// Creates a new link between exercises using enum LinkType (enhanced functionality)
+    /// DisplayOrder is calculated server-side based on existing links
+    /// </summary>
+    /// <param name="sourceExerciseId">The source exercise ID</param>
+    /// <param name="targetExerciseId">The target exercise ID</param>
+    /// <param name="linkType">The enum-based link type</param>
+    /// <returns>The created exercise link</returns>
+    Task<ServiceResult<ExerciseLinkDto>> CreateLinkAsync(
+        string sourceExerciseId,
+        string targetExerciseId,
+        ExerciseLinkType linkType);
+    
+    /// <summary>
+    /// Creates a new link between exercises using traditional command (backward compatibility)
     /// </summary>
     /// <param name="command">The link creation command</param>
     /// <returns>The created exercise link</returns>
@@ -35,8 +49,9 @@ public interface IExerciseLinkService
     /// </summary>
     /// <param name="exerciseId">The source exercise ID</param>
     /// <param name="linkId">The link ID to delete</param>
+    /// <param name="deleteReverse">Whether to delete the reverse bidirectional link (default: true)</param>
     /// <returns>True if deleted successfully</returns>
-    Task<ServiceResult<BooleanResultDto>> DeleteLinkAsync(string exerciseId, string linkId);
+    Task<ServiceResult<BooleanResultDto>> DeleteLinkAsync(string exerciseId, string linkId, bool deleteReverse = true);
     
     /// <summary>
     /// Gets suggested links based on common usage patterns

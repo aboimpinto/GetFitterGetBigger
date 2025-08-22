@@ -20,6 +20,11 @@
 │ 10. NO magic strings - ALL messages in constants              │
 │ 11. Chain ALL validations in ServiceValidate, not MatchAsync  │
 │ 12. ALL repositories MUST inherit from base classes           │
+│ 13. TEST INDEPENDENCE - NO shared mocks at class level         │
+│ 14. Use PRODUCTION error constants in tests - NO recreating    │
+│ 15. Test Builder Pattern MANDATORY for ALL DTOs and entities   │
+│ 16. Mock setups ONLY via fluent extension methods             │
+│ 17. Focus Principle: Set ONLY properties under test           │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
@@ -185,9 +190,11 @@
 ### Quality Assurance
 
 #### [Testing Standards](./CodeQualityGuidelines/TestingStandards.md)
+- **🚨 CRITICAL** Test Independence - NO shared mocks at class level
+- **🚨 CRITICAL** Use production error constants - NO recreating in tests
 - **CRITICAL** No magic strings rule
 - Test error codes, not messages
-- Mock patterns and verification
+- Mock patterns and verification with AutoMocker
 - BDD integration testing approach
 - **NEW**: Feature file test isolation patterns
 - **NEW**: Non-cumulative query counting pattern (Reset & Recount)
@@ -626,6 +633,116 @@ Each layer trusts the layer below it because:
 
 > **Remember**: Defensive code is a code smell. If you're adding null checks everywhere, you don't trust your architecture. Fix the architecture, don't bandage it with defensive code.
 
+## 🚨 Test Code Smells - Fix Immediately
+
+### Verbose Object Creation
+**THIS IS AN ANTI-PATTERN!** Creating test objects with all properties is a maintenance nightmare.
+
+```csharp
+// ❌ ANTI-PATTERN - Verbose object creation
+var exerciseDto = new ExerciseDto
+{
+    Id = sourceId.ToString(),
+    Name = "Warmup Exercise",
+    Description = "Test warmup exercise",
+    IsActive = true,
+    ExerciseTypes = [
+        new() { Id = "type-1", Value = "Warmup", Description = "Warmup type" }
+    ],
+    Difficulty = new ReferenceDataDto { Id = "diff-1", Value = "Easy", Description = "Easy" },
+    // ... 10 more properties not relevant to the test
+};
+
+// ✅ CORRECT - Test Builder Pattern
+var exerciseDto = ExerciseDtoTestBuilder.WarmupExercise()
+    .WithId(sourceId)
+    .Build();
+```
+
+### Inline Comments for Parameters
+**Parameters needing comments = BAD CODE!** Use builders with named methods.
+
+```csharp
+// ❌ ANTI-PATTERN - Comments explaining parameters
+ExecutionProtocol.Handler.Create(
+    ExecutionProtocolId.From(Guid.Parse("11111111-1111-1111-1111-111111111111")),
+    "Standard",                               // value
+    "Traditional set and rep scheme",         // description
+    "STANDARD",                               // code
+    false,                                    // timeBase
+    true,                                     // repBase
+    "Fixed Rest",                             // restPattern
+    "Moderate",                               // intensityLevel
+    1,                                        // displayOrder
+    true)                                     // isActive
+
+// ✅ CORRECT - Self-documenting builder
+ExecutionProtocolTestBuilder.Standard()
+    .WithDescription("Custom description")
+    .WithIntensityLevel("High")
+    .Build();
+```
+
+### Test Constants for Irrelevant Data
+**40+ lines of constants = WRONG!** Use builders with sensible defaults.
+
+```csharp
+// ❌ ANTI-PATTERN - Unnecessary constants
+public class ExerciseLinkServiceTests
+{
+    private const string WarmupExerciseName = "Warmup Exercise";
+    private const string WarmupExerciseDescription = "Test warmup exercise";
+    private const string WorkoutExerciseName = "Workout Exercise";
+    // ... 40 more lines of constants
+
+// ✅ CORRECT - Defaults in builders
+public class ExerciseLinkServiceTests
+{
+    // NO constants - builders have defaults
+    // Tests only specify what they're testing
+```
+
+### Verbose Mock Setup
+**Inline Setup() calls = POOR READABILITY!** Use extension methods.
+
+```csharp
+// ❌ ANTI-PATTERN - Verbose mock setup
+exerciseServiceMock
+    .Setup(x => x.GetByIdAsync(sourceId))
+    .ReturnsAsync(ServiceResult<ExerciseDto>.Success(sourceExerciseDto));
+    
+exerciseServiceMock
+    .Setup(x => x.GetByIdAsync(targetId))
+    .ReturnsAsync(ServiceResult<ExerciseDto>.Success(targetExerciseDto));
+
+// ✅ CORRECT - Fluent extension methods
+exerciseServiceMock
+    .SetupExerciseById(sourceId, sourceExerciseDto)
+    .SetupExerciseById(targetId, targetExerciseDto);
+```
+
+### Setting Properties Not Under Test
+**FOCUS VIOLATION!** Only set what you're testing.
+
+```csharp
+// ❌ ANTI-PATTERN - Setting everything
+var dto = new ExerciseDto
+{
+    Id = id,
+    Name = "Test",           // Not under test
+    Description = "Desc",    // Not under test
+    VideoUrl = "http://...", // Not under test
+    ImageUrl = "http://...", // Not under test
+    IsActive = true          // THIS is what we're testing
+};
+
+// ✅ CORRECT - Focus on what matters
+var dto = ExerciseDtoTestBuilder.Default()
+    .WithId(id)
+    .AsActive()  // Only what we're testing
+    .Build();
+```
+
 ## 🎯 Quick Decision Guide
 
 | Scenario | Pattern to Use | Documentation |
@@ -647,6 +764,9 @@ Each layer trusts the layer below it because:
 | ID parameters | Specialized ID types | [SpecializedIdTypes.md](./CodeQualityGuidelines/SpecializedIdTypes.md) |
 | Controller logic | Pattern matching only | [ControllerPatterns.md](./CodeQualityGuidelines/ControllerPatterns.md) |
 | Controller error responses | Group by HTTP status | [ControllerPatternMatchingOptimization.md](./CodeQualityGuidelines/ControllerPatternMatchingOptimization.md) |
+| Test data creation | Test Builder Pattern | [TestBuilderPattern.md](./Overview/TestBuilderPattern.md) |
+| Mock setup | Fluent extension methods | [TestingStandards.md](./CodeQualityGuidelines/TestingStandards.md) |
+| Test object properties | Focus Principle - only set what's tested | [TestBuilderPattern.md](./Overview/TestBuilderPattern.md) |
 | Error testing | Test codes, not messages | [TestingStandards.md](./CodeQualityGuidelines/TestingStandards.md) |
 | Reference data caching | IEternalCacheService | [CacheIntegrationPattern.md](./CodeQualityGuidelines/CacheIntegrationPattern.md) |
 | Single return statement | Pattern matching | [SingleExitPointPattern.md](./CodeQualityGuidelines/SingleExitPointPattern.md) |
@@ -680,6 +800,12 @@ Before approving any PR, verify:
 - [ ] Specialized IDs used (not strings)
 - [ ] No try-catch for business logic
 - [ ] Tests check error codes, not messages
+- [ ] **Tests have complete independence** (no shared mocks at class level)
+- [ ] **Tests use production error constants** (not recreated local constants)
+- [ ] **Test Builder Pattern used for ALL test data** (no verbose object creation)
+- [ ] **Mock setups use fluent extension methods** (no inline Setup() calls)
+- [ ] **Focus Principle applied** (only properties under test are set)
+- [ ] **No test constants for irrelevant data** (use builder defaults)
 - [ ] Modern C# patterns applied (C# 12+)
 - [ ] Static helpers extracted as extension methods
 - [ ] Cache integration follows patterns

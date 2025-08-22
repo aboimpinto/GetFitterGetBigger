@@ -1,6 +1,7 @@
 using GetFitterGetBigger.API.Constants;
 using GetFitterGetBigger.API.DTOs;
 using GetFitterGetBigger.API.Models.Entities;
+using GetFitterGetBigger.API.Models.Enums;
 using GetFitterGetBigger.API.Models.SpecializedIds;
 using GetFitterGetBigger.API.Services.Exercise.Features.Links.Commands;
 using GetFitterGetBigger.API.Services.Exercise.Features.Links.DataServices;
@@ -18,7 +19,56 @@ public class ExerciseLinkService(
     IExerciseService exerciseService) : IExerciseLinkService
 {
     /// <summary>
-    /// Creates a new link between exercises
+    /// Creates a new link between exercises using enum LinkType (enhanced functionality)
+    /// DisplayOrder is calculated server-side based on existing links
+    /// </summary>
+    public async Task<ServiceResult<ExerciseLinkDto>> CreateLinkAsync(
+        string sourceExerciseId,
+        string targetExerciseId,
+        ExerciseLinkType linkType)
+    {
+        // Validate parameters
+        var sourceId = ExerciseId.ParseOrEmpty(sourceExerciseId);
+        var targetId = ExerciseId.ParseOrEmpty(targetExerciseId);
+        
+        return await ServiceValidate.Build<ExerciseLinkDto>()
+            .EnsureNotEmpty(
+                sourceId,
+                ServiceError.ValidationFailed(ExerciseLinkErrorMessages.InvalidSourceExerciseId))
+            .EnsureNotEmpty(
+                targetId,
+                ServiceError.ValidationFailed(ExerciseLinkErrorMessages.InvalidTargetExerciseId))
+            .Ensure(
+                () => !AreSameExercise(sourceExerciseId, targetExerciseId),
+                ServiceError.ValidationFailed(ExerciseLinkErrorMessages.CannotLinkToSelf))
+            .Ensure(
+                () => IsValidLinkType(linkType),
+                ServiceError.ValidationFailed(ExerciseLinkErrorMessages.InvalidLinkTypeEnum))
+            .Ensure(
+                () => linkType != ExerciseLinkType.WORKOUT,
+                ServiceError.ValidationFailed(ExerciseLinkErrorMessages.WorkoutLinksAutoCreated))
+            .EnsureAsync(
+                async () => await IsSourceExerciseValidAsync(sourceExerciseId),
+                ServiceError.ValidationFailed(ExerciseLinkErrorMessages.SourceExerciseNotFound))
+            .EnsureAsync(
+                async () => await IsTargetExerciseValidAsync(targetExerciseId),
+                ServiceError.ValidationFailed(ExerciseLinkErrorMessages.TargetExerciseNotFound))
+            .EnsureAsync(
+                async () => await IsNotRestExerciseAsync(sourceExerciseId),
+                ServiceError.ValidationFailed(ExerciseLinkErrorMessages.RestExercisesCannotHaveLinks))
+            .EnsureAsync(
+                async () => await IsNotRestExerciseAsync(targetExerciseId),
+                ServiceError.ValidationFailed(ExerciseLinkErrorMessages.RestExercisesCannotBeLinked))
+            .EnsureAsync(
+                async () => await IsLinkTypeCompatibleAsync(sourceId, targetId, linkType),
+                ServiceError.ValidationFailed(GetLinkTypeCompatibilityError(linkType)))
+            .MatchAsync(
+                whenValid: async () => await CreateBidirectionalLinkAsync(sourceExerciseId, targetExerciseId, linkType)
+            );
+    }
+
+    /// <summary>
+    /// Creates a new link between exercises using traditional command (backward compatibility)
     /// </summary>
     public async Task<ServiceResult<ExerciseLinkDto>> CreateLinkAsync(CreateExerciseLinkCommand command)
     {
@@ -114,9 +164,9 @@ public class ExerciseLinkService(
     }
     
     /// <summary>
-    /// Deletes an exercise link
+    /// Deletes an exercise link with bidirectional deletion support
     /// </summary>
-    public async Task<ServiceResult<BooleanResultDto>> DeleteLinkAsync(string exerciseId, string linkId)
+    public async Task<ServiceResult<BooleanResultDto>> DeleteLinkAsync(string exerciseId, string linkId, bool deleteReverse = true)
     {
         return await ServiceValidate.Build<BooleanResultDto>()
             .EnsureNotEmpty(
@@ -132,7 +182,7 @@ public class ExerciseLinkService(
                 async () => await DoesLinkBelongToExerciseAsync(exerciseId, linkId),
                 ServiceError.ValidationFailed(ExerciseLinkErrorMessages.LinkDoesNotBelongToExercise))
             .MatchAsync(
-                whenValid: async () => await commandDataService.DeleteAsync(ExerciseLinkId.ParseOrEmpty(linkId))
+                whenValid: async () => await DeleteBidirectionalLinkAsync(exerciseId, linkId, deleteReverse)
             );
     }
     
@@ -155,6 +205,93 @@ public class ExerciseLinkService(
                     errors.FirstOrDefault() ?? ServiceError.ValidationFailed("Validation failed"))
             );
     }
+    private async Task<ServiceResult<BooleanResultDto>> DeleteBidirectionalLinkAsync(
+        string exerciseId, 
+        string linkId, 
+        bool deleteReverse)
+    {
+        var primaryLinkId = ExerciseLinkId.ParseOrEmpty(linkId);
+        
+        // Get the primary link first to determine reverse link details
+        var primaryLinkResult = await queryDataService.GetByIdAsync(primaryLinkId);
+        if (!primaryLinkResult.IsSuccess || primaryLinkResult.Data.IsEmpty)
+        {
+            return ServiceResult<BooleanResultDto>.Failure(
+                BooleanResultDto.Create(false),
+                ServiceError.NotFound("ExerciseLink", linkId));
+        }
+        
+        var primaryLink = primaryLinkResult.Data;
+        
+        // Delete the primary link first
+        var deleteResult = await commandDataService.DeleteAsync(primaryLinkId);
+        if (!deleteResult.IsSuccess)
+        {
+            return deleteResult;
+        }
+        
+        // If bidirectional deletion is requested, find and delete the reverse link
+        if (deleteReverse)
+        {
+            var reverseLinkResult = await FindReverseLinkAsync(primaryLink);
+            if (reverseLinkResult.IsSuccess && !reverseLinkResult.Data.IsEmpty)
+            {
+                // Delete the reverse link
+                var reverseLinkId = ExerciseLinkId.ParseOrEmpty(reverseLinkResult.Data.Id);
+                await commandDataService.DeleteAsync(reverseLinkId);
+            }
+        }
+        
+        return ServiceResult<BooleanResultDto>.Success(BooleanResultDto.Create(true));
+    }
+    
+    private async Task<ServiceResult<ExerciseLinkDto>> FindReverseLinkAsync(ExerciseLinkDto originalLink)
+    {
+        // Determine what the reverse link type should be based on the original link
+        var originalLinkType = DetermineActualLinkType(originalLink);
+        var reverseLinkType = GetReverseExerciseLinkType(originalLinkType);
+        
+        if (!reverseLinkType.HasValue)
+        {
+            // No reverse link expected for this link type
+            return ServiceResult<ExerciseLinkDto>.Success(ExerciseLinkDto.Empty);
+        }
+        
+        // Look for the reverse link: where original target becomes source and original source becomes target
+        var targetId = ExerciseId.ParseOrEmpty(originalLink.TargetExerciseId);
+        var reverseLinksResult = await queryDataService.GetBySourceExerciseWithEnumAsync(targetId, reverseLinkType.Value);
+        
+        if (reverseLinksResult == null || !reverseLinksResult.IsSuccess)
+        {
+            return ServiceResult<ExerciseLinkDto>.Success(ExerciseLinkDto.Empty);
+        }
+        
+        // Find the specific reverse link that points back to the original source
+        var reverseLink = reverseLinksResult.Data != null
+            ? reverseLinksResult.Data.FirstOrDefault(link => link.TargetExerciseId == originalLink.SourceExerciseId)
+            : null;
+            
+        return reverseLink != null
+            ? ServiceResult<ExerciseLinkDto>.Success(reverseLink)
+            : ServiceResult<ExerciseLinkDto>.Success(ExerciseLinkDto.Empty);
+    }
+    
+    private static ExerciseLinkType DetermineActualLinkType(ExerciseLinkDto link)
+    {
+        // Use the ActualLinkType logic from the entity
+        if (Enum.TryParse<ExerciseLinkType>(link.LinkType, out var enumValue))
+        {
+            return enumValue;
+        }
+        
+        // Fallback for string-based links
+        return link.LinkType switch
+        {
+            "Warmup" => ExerciseLinkType.WARMUP,
+            "Cooldown" => ExerciseLinkType.COOLDOWN,
+            _ => ExerciseLinkType.WARMUP // Default fallback
+        };
+    }
     
     // Private helper methods for validation
     
@@ -167,7 +304,13 @@ public class ExerciseLinkService(
     
     private static bool IsValidLinkType(string linkType)
     {
-        return linkType == "Warmup" || linkType == "Cooldown";
+        return linkType == "Warmup" || linkType == "Cooldown" || 
+               Enum.TryParse<ExerciseLinkType>(linkType, out _);
+    }
+    
+    private static bool IsValidLinkType(ExerciseLinkType linkType)
+    {
+        return Enum.IsDefined(typeof(ExerciseLinkType), linkType);
     }
     
     private async Task<bool> IsSourceExerciseValidAsync(string exerciseId)
@@ -204,6 +347,124 @@ public class ExerciseLinkService(
         return result.IsSuccess 
             ? !result.Data.ExerciseTypes.Any(et => et.Value == "Rest")
             : false;
+    }
+    
+    private async Task<bool> IsLinkTypeCompatibleAsync(
+        ExerciseId sourceId, 
+        ExerciseId targetId, 
+        ExerciseLinkType linkType)
+    {
+        // Get source exercise information
+        var sourceResult = await exerciseService.GetByIdAsync(sourceId);
+        if (!sourceResult.IsSuccess) return false;
+        
+        // Get target exercise information
+        var targetResult = await exerciseService.GetByIdAsync(targetId);
+        if (!targetResult.IsSuccess) return false;
+        
+        var sourceExercise = sourceResult.Data;
+        var targetExercise = targetResult.Data;
+        
+        // REST exercises cannot have any links
+        if (sourceExercise.ExerciseTypes.Any(et => et.Value == "Rest") ||
+            targetExercise.ExerciseTypes.Any(et => et.Value == "Rest"))
+        {
+            return false;
+        }
+        
+        // Implement compatibility matrix from feature requirements
+        return linkType switch
+        {
+            // WARMUP can only link to WORKOUT exercises
+            ExerciseLinkType.WARMUP => targetExercise.ExerciseTypes.Any(et => et.Value == "Workout"),
+            
+            // COOLDOWN can only link to WORKOUT exercises
+            ExerciseLinkType.COOLDOWN => targetExercise.ExerciseTypes.Any(et => et.Value == "Workout"),
+            
+            // ALTERNATIVE can link to any non-REST exercise (already checked above)
+            ExerciseLinkType.ALTERNATIVE => true,
+            
+            // WORKOUT links are only created automatically as reverse links
+            ExerciseLinkType.WORKOUT => false,
+            
+            _ => false
+        };
+    }
+    
+    private static string GetLinkTypeCompatibilityError(ExerciseLinkType linkType) =>
+        linkType switch
+        {
+            ExerciseLinkType.WARMUP => ExerciseLinkErrorMessages.WarmupMustLinkToWorkout,
+            ExerciseLinkType.COOLDOWN => ExerciseLinkErrorMessages.CooldownMustLinkToWorkout,
+            ExerciseLinkType.ALTERNATIVE => ExerciseLinkErrorMessages.AlternativeCannotLinkToRest,
+            ExerciseLinkType.WORKOUT => ExerciseLinkErrorMessages.WorkoutLinksAutoCreated,
+            _ => ExerciseLinkErrorMessages.InvalidLinkTypeEnum
+        };
+    
+    private async Task<ServiceResult<ExerciseLinkDto>> CreateBidirectionalLinkAsync(
+        string sourceExerciseId,
+        string targetExerciseId,
+        ExerciseLinkType linkType)
+    {
+        // Parse IDs
+        var sourceId = ExerciseId.ParseOrEmpty(sourceExerciseId);
+        var targetId = ExerciseId.ParseOrEmpty(targetExerciseId);
+        
+        // Get the reverse link type based on the mapping rules
+        var reverseLinkType = GetReverseExerciseLinkType(linkType);
+        
+        // Calculate display orders for both links
+        var primaryDisplayOrder = await CalculateDisplayOrderAsync(sourceExerciseId, linkType);
+        
+        // Create the primary link entity
+        var primaryLink = ExerciseLink.Handler.CreateNew(
+            sourceId,
+            targetId,
+            linkType,
+            primaryDisplayOrder
+        );
+        
+        // Create the reverse link entity if needed
+        ExerciseLink? reverseLink = null;
+        if (reverseLinkType.HasValue)
+        {
+            var reverseDisplayOrder = await CalculateDisplayOrderAsync(targetExerciseId, reverseLinkType.Value);
+            reverseLink = ExerciseLink.Handler.CreateNew(
+                targetId,
+                sourceId,
+                reverseLinkType.Value,
+                reverseDisplayOrder
+            );
+        }
+        
+        // Create both links atomically using the new transaction-aware method
+        return await commandDataService.CreateBidirectionalAsync(primaryLink, reverseLink);
+    }
+    
+    private static ExerciseLinkType? GetReverseExerciseLinkType(ExerciseLinkType linkType)
+    {
+        // Based on the feature requirements, determine the reverse link type
+        return linkType switch
+        {
+            ExerciseLinkType.WARMUP => ExerciseLinkType.WORKOUT,
+            ExerciseLinkType.COOLDOWN => ExerciseLinkType.WORKOUT,
+            ExerciseLinkType.ALTERNATIVE => ExerciseLinkType.ALTERNATIVE, // ALTERNATIVE is bidirectional with itself
+            ExerciseLinkType.WORKOUT => null, // WORKOUT links are only created as reverse, never as primary
+            _ => null
+        };
+    }
+    
+    private async Task<int> CalculateDisplayOrderAsync(
+        string sourceExerciseId, 
+        ExerciseLinkType linkType)
+    {
+        var source = ExerciseId.ParseOrEmpty(sourceExerciseId);
+        
+        // Get existing links of same type for this source exercise
+        var countResult = await queryDataService.GetLinkCountAsync(source, linkType.ToString());
+        
+        // Return next available display order (count + 1)
+        return countResult.IsSuccess ? countResult.Data + 1 : 1;
     }
     
     private async Task<bool> IsLinkUniqueAsync(string sourceId, string targetId, string linkType)

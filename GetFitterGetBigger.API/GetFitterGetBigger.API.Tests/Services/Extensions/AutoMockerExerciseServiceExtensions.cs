@@ -6,6 +6,7 @@ using GetFitterGetBigger.API.Services.ReferenceTables.ExerciseType;
 using Moq;
 using Moq.AutoMock;
 using Olimpo.EntityFramework.Persistency;
+using ExerciseEntity = GetFitterGetBigger.API.Models.Entities.Exercise;
 
 namespace GetFitterGetBigger.API.Tests.Services.Extensions;
 
@@ -43,7 +44,7 @@ public static class AutoMockerExerciseServiceExtensions
         return mocker;
     }
 
-    public static AutoMocker SetupExerciseGetById(this AutoMocker mocker, Exercise returnValue)
+    public static AutoMocker SetupExerciseGetById(this AutoMocker mocker, ExerciseEntity returnValue)
     {
         mocker.GetMock<IExerciseRepository>()
             .Setup(x => x.GetByIdAsync(It.IsAny<ExerciseId>()))
@@ -54,7 +55,7 @@ public static class AutoMockerExerciseServiceExtensions
 
     public static AutoMocker SetupExerciseGetPaged(
         this AutoMocker mocker, 
-        IEnumerable<Exercise> exercises, 
+        IEnumerable<ExerciseEntity> exercises, 
         int totalCount)
     {
         mocker.GetMock<IExerciseRepository>()
@@ -82,10 +83,10 @@ public static class AutoMockerExerciseServiceExtensions
         return mocker;
     }
 
-    public static AutoMocker SetupExerciseAdd(this AutoMocker mocker, Exercise returnValue)
+    public static AutoMocker SetupExerciseAdd(this AutoMocker mocker, ExerciseEntity returnValue)
     {
         mocker.GetMock<IExerciseRepository>()
-            .Setup(r => r.AddAsync(It.IsAny<Exercise>()))
+            .Setup(r => r.AddAsync(It.IsAny<ExerciseEntity>()))
             .ReturnsAsync(returnValue);
 
         return mocker;
@@ -94,8 +95,8 @@ public static class AutoMockerExerciseServiceExtensions
     public static AutoMocker SetupExerciseUpdate(this AutoMocker mocker)
     {
         mocker.GetMock<IExerciseRepository>()
-            .Setup(r => r.UpdateAsync(It.IsAny<Exercise>()))
-            .ReturnsAsync((Exercise e) => e);
+            .Setup(r => r.UpdateAsync(It.IsAny<ExerciseEntity>()))
+            .ReturnsAsync((ExerciseEntity e) => e);
 
         return mocker;
     }
@@ -140,7 +141,7 @@ public static class AutoMockerExerciseServiceExtensions
     public static AutoMocker VerifyExerciseAddOnce(this AutoMocker mocker)
     {
         mocker.GetMock<IExerciseRepository>()
-            .Verify(x => x.AddAsync(It.IsAny<Exercise>()), Times.Once());
+            .Verify(x => x.AddAsync(It.IsAny<ExerciseEntity>()), Times.Once());
 
         return mocker;
     }
@@ -148,7 +149,7 @@ public static class AutoMockerExerciseServiceExtensions
     public static AutoMocker VerifyExerciseUpdateOnce(this AutoMocker mocker)
     {
         mocker.GetMock<IExerciseRepository>()
-            .Verify(x => x.UpdateAsync(It.IsAny<Exercise>()), Times.Once());
+            .Verify(x => x.UpdateAsync(It.IsAny<ExerciseEntity>()), Times.Once());
 
         return mocker;
     }
@@ -198,7 +199,7 @@ public static class AutoMockerExerciseServiceExtensions
     public static AutoMocker VerifyExerciseAddNeverCalled(this AutoMocker mocker)
     {
         mocker.GetMock<IExerciseRepository>()
-            .Verify(x => x.AddAsync(It.IsAny<Exercise>()), Times.Never);
+            .Verify(x => x.AddAsync(It.IsAny<ExerciseEntity>()), Times.Never);
 
         return mocker;
     }
@@ -206,7 +207,7 @@ public static class AutoMockerExerciseServiceExtensions
     public static AutoMocker VerifyExerciseUpdateNeverCalled(this AutoMocker mocker)
     {
         mocker.GetMock<IExerciseRepository>()
-            .Verify(x => x.UpdateAsync(It.IsAny<Exercise>()), Times.Never);
+            .Verify(x => x.UpdateAsync(It.IsAny<ExerciseEntity>()), Times.Never);
 
         return mocker;
     }
