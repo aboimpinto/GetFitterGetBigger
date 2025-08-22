@@ -1,4 +1,5 @@
 using GetFitterGetBigger.API.DTOs;
+using GetFitterGetBigger.API.Models.Enums;
 using GetFitterGetBigger.API.Services.Exercise.Features.Links;
 using GetFitterGetBigger.API.Services.Exercise.Features.Links.Commands;
 using GetFitterGetBigger.API.Services.Results;
@@ -20,14 +21,15 @@ public class ExerciseLinksController(
     ILogger<ExerciseLinksController> logger) : ControllerBase
 {
     /// <summary>
-    /// Creates a new exercise link
+    /// Creates a new exercise link with enhanced four-way linking support
     /// </summary>
-    /// <param name="exerciseId">The source exercise ID (must be a Workout type)</param>
+    /// <param name="exerciseId">The source exercise ID</param>
     /// <param name="dto">The link creation data</param>
-    /// <returns>The created exercise link</returns>
-    /// <response code="201">Returns the created exercise link</response>
+    /// <returns>The created exercise link(s) - may include automatically created reverse link</returns>
+    /// <response code="201">Returns the created exercise link(s)</response>
     /// <response code="400">If the request is invalid or business rules are violated</response>
     [HttpPost]
+    [ProducesResponseType(typeof(BidirectionalLinkResponseDto), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(ExerciseLinkDto), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> CreateLink(string exerciseId, [FromBody] CreateExerciseLinkDto dto)
@@ -40,6 +42,37 @@ public class ExerciseLinksController(
         logger.LogInformation("Creating exercise link from {SourceId} to {TargetId} as {LinkType}", 
             exerciseId, dto.TargetExerciseId, dto.LinkType);
         
+        // Check if using new enum-based link types (enhanced functionality)
+        if (Enum.TryParse<ExerciseLinkType>(dto.LinkType, out var enumLinkType))
+        {
+            // Use enhanced enum-based service method (server-side displayOrder calculation + bidirectional)
+            var enumResult = await exerciseLinkService.CreateLinkAsync(
+                exerciseId,
+                dto.TargetExerciseId,
+                enumLinkType);
+                
+            if (enumResult.IsSuccess)
+            {
+                // For enum-based creation, return enhanced response indicating bidirectional creation
+                var response = new BidirectionalLinkResponseDto
+                {
+                    PrimaryLink = enumResult.Data,
+                    // Note: The service handles bidirectional creation internally
+                    // The reverse link is created automatically but not returned in this single response
+                    // This is acceptable as the primary link creation is what the client requested
+                    Description = $"Created {enumLinkType} link with automatic bidirectional linking"
+                };
+                
+                return CreatedAtAction(
+                    nameof(GetLinks), 
+                    new { exerciseId = exerciseId }, 
+                    response);
+            }
+            
+            return BadRequest(new { errors = enumResult.StructuredErrors });
+        }
+        
+        // Fallback to legacy string-based command approach for backward compatibility
         var command = new CreateExerciseLinkCommand
         {
             SourceExerciseId = exerciseId,
@@ -64,7 +97,7 @@ public class ExerciseLinksController(
     /// Gets all links for an exercise
     /// </summary>
     /// <param name="exerciseId">The exercise ID</param>
-    /// <param name="linkType">Optional filter by link type (Warmup or Cooldown)</param>
+    /// <param name="linkType">Optional filter by link type (supports: Warmup, Cooldown, WARMUP, COOLDOWN, WORKOUT, ALTERNATIVE)</param>
     /// <param name="includeExerciseDetails">Whether to include full exercise details</param>
     /// <returns>The exercise links</returns>
     /// <response code="200">Returns the exercise links</response>
@@ -154,10 +187,11 @@ public class ExerciseLinksController(
     }
 
     /// <summary>
-    /// Deletes an exercise link (soft delete)
+    /// Deletes an exercise link with bidirectional deletion support
     /// </summary>
     /// <param name="exerciseId">The source exercise ID</param>
     /// <param name="linkId">The link ID to delete</param>
+    /// <param name="deleteReverse">Whether to delete the reverse bidirectional link (default: true)</param>
     /// <returns>No content on success</returns>
     /// <response code="204">The link was deleted successfully</response>
     /// <response code="400">If the request is invalid</response>
@@ -166,12 +200,15 @@ public class ExerciseLinksController(
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> DeleteLink(string exerciseId, string linkId)
+    public async Task<IActionResult> DeleteLink(
+        string exerciseId, 
+        string linkId, 
+        [FromQuery] bool deleteReverse = true)
     {
-        logger.LogInformation("Deleting exercise link {LinkId} for exercise {ExerciseId}", 
-            linkId, exerciseId);
+        logger.LogInformation("Deleting exercise link {LinkId} for exercise {ExerciseId} with deleteReverse: {DeleteReverse}", 
+            linkId, exerciseId, deleteReverse);
         
-        var result = await exerciseLinkService.DeleteLinkAsync(exerciseId, linkId);
+        var result = await exerciseLinkService.DeleteLinkAsync(exerciseId, linkId, deleteReverse);
         
         return result switch
         {
