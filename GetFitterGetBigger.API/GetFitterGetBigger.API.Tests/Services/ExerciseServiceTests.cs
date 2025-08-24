@@ -108,7 +108,8 @@ namespace GetFitterGetBigger.API.Tests.Services
 
             // Assert
             result.Should().NotBeNull();
-            result.Data.IsEmpty.Should().BeTrue(because: "invalid ID should result in Empty ID which returns Empty DTO");
+            result.IsSuccess.Should().BeFalse();
+            result.Data.Should().BeNull();
         }
 
         [Fact]
@@ -166,7 +167,7 @@ namespace GetFitterGetBigger.API.Tests.Services
 
             // Assert
             result.IsSuccess.Should().BeFalse();
-            result.Data.IsEmpty.Should().BeTrue();
+            result.Data.Should().BeNull();
             result.PrimaryErrorCode.Should().Be(ServiceErrorCode.AlreadyExists);
         }
 

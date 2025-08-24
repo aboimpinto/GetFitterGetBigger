@@ -1,5 +1,6 @@
 using GetFitterGetBigger.API.DTOs;
 using GetFitterGetBigger.API.Models.Enums;
+using GetFitterGetBigger.API.Models.SpecializedIds;
 using GetFitterGetBigger.API.Services.Exercise.Features.Links.Commands;
 using GetFitterGetBigger.API.Services.Results;
 
@@ -19,8 +20,8 @@ public interface IExerciseLinkService
     /// <param name="linkType">The enum-based link type</param>
     /// <returns>The created exercise link</returns>
     Task<ServiceResult<ExerciseLinkDto>> CreateLinkAsync(
-        string sourceExerciseId,
-        string targetExerciseId,
+        ExerciseId sourceExerciseId,
+        ExerciseId targetExerciseId,
         ExerciseLinkType linkType);
     
     /// <summary>
@@ -51,7 +52,7 @@ public interface IExerciseLinkService
     /// <param name="linkId">The link ID to delete</param>
     /// <param name="deleteReverse">Whether to delete the reverse bidirectional link (default: true)</param>
     /// <returns>True if deleted successfully</returns>
-    Task<ServiceResult<BooleanResultDto>> DeleteLinkAsync(string exerciseId, string linkId, bool deleteReverse = true);
+    Task<ServiceResult<BooleanResultDto>> DeleteLinkAsync(ExerciseId exerciseId, ExerciseLinkId linkId, bool deleteReverse = true);
     
     /// <summary>
     /// Gets suggested links based on common usage patterns
@@ -59,5 +60,5 @@ public interface IExerciseLinkService
     /// <param name="exerciseId">The exercise ID</param>
     /// <param name="count">Number of suggestions to return</param>
     /// <returns>List of suggested exercise links</returns>
-    Task<ServiceResult<List<ExerciseLinkDto>>> GetSuggestedLinksAsync(string exerciseId, int count = 5);
+    Task<ServiceResult<List<ExerciseLinkDto>>> GetSuggestedLinksAsync(ExerciseId exerciseId, int count = 5);
 }

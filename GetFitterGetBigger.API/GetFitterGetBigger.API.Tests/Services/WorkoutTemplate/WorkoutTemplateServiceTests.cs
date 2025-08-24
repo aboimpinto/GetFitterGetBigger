@@ -956,9 +956,8 @@ public class WorkoutTemplateServiceTests
         // Assert
         result.Should().NotBeNull();
         result.IsSuccess.Should().BeFalse();
-        // Due to the async validation framework executing all validations,
-        // we get NotFound instead of ValidationFailed because EnsureExistsAsync runs after EnsureNotEmpty
-        result.PrimaryErrorCode.Should().Be(ServiceErrorCode.NotFound);
+        // Empty ID fails validation before checking existence
+        result.PrimaryErrorCode.Should().Be(ServiceErrorCode.ValidationFailed);
     }
     
     #endregion

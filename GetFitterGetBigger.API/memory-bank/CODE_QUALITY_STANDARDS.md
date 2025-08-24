@@ -25,6 +25,16 @@
 │ 15. Test Builder Pattern MANDATORY for ALL DTOs and entities   │
 │ 16. Mock setups ONLY via fluent extension methods             │
 │ 17. Focus Principle: Set ONLY properties under test           │
+│ 18. NO ServiceError.ValidationFailed wrapper in Ensure methods │
+│ 19. Replace ALL symbolic expressions with semantic extensions  │
+│ 20. Parse IDs ONCE, pass specialized types consistently       │
+│ 21. Load entities ONCE per request - use Dual-Entity Pattern  │
+│ 22. NEVER return entities from DataServices - DTOs ONLY       │
+│ 23. Entity manipulation ONLY inside DataServices              │
+│ 24. Update entities via Func<T,T> transformation functions    │
+│ 25. VALIDATE ONCE, TRUST FOREVER - No redundant checks        │
+│ 26. Each layer validates its responsibility, then TRUSTS      │
+│ 27. NEVER test logging - it's an implementation detail        │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
@@ -52,11 +62,31 @@
 - **NEW**: ThenEnsure conditional validation pattern
 - Quick reference table and examples
 
+#### [Service Validation Extension Patterns](./CodeQualityGuidelines/ServiceValidationExtensionPatterns.md)
+- **CRITICAL** No ServiceError.ValidationFailed wrapper for validation errors
+- **MANDATORY** Replace ALL symbolic expressions with semantic extensions
+- Parse IDs ONCE at method entry, use consistently
+- Commands must contain specialized IDs, not strings
+- Natural language methods over symbols (!=, >=, etc.)
+
+#### [Dual-Entity Validation Pattern](./CodeQualityGuidelines/DualEntityValidationPattern.md)
+- **OPTIMIZE** Load entities ONCE, validate many times
+- Eliminate redundant database calls (67% reduction)
+- Semantic extension methods for relationship validation
+- Carry loaded entities through validation chain
+- Blueprint for ExerciseLinks, Prerequisites, Dependencies
+
 #### [Clean Validation Pattern](./CodeQualityGuidelines/CleanValidationPattern.md)
 - **NEW** Positive assertions and trust boundaries
 - Simplified validation with smart overloads
 - Minimal defensive programming
 - Helper methods with positive naming
+
+#### [Trust the Validation Chain](./CodeQualityGuidelines/TrustTheValidationChain.md)
+- **CRITICAL** Validate once, trust forever principle
+- Validation responsibility matrix by layer
+- How to identify redundant validation
+- Performance benefits of trusting the chain
 
 #### [Positive Validation Pattern](./CodeQualityGuidelines/PositiveValidationPattern.md)
 - **CRITICAL** Use positive assertions (IS, HAS, CAN)
@@ -192,6 +222,7 @@
 #### [Testing Standards](./CodeQualityGuidelines/TestingStandards.md)
 - **🚨 CRITICAL** Test Independence - NO shared mocks at class level
 - **🚨 CRITICAL** Use production error constants - NO recreating in tests
+- **🚨 CRITICAL** NEVER test logging - it changes based on debugging needs
 - **CRITICAL** No magic strings rule
 - Test error codes, not messages
 - Mock patterns and verification with AutoMocker
@@ -234,6 +265,26 @@
 - Testing cache hit/miss scenarios
 
 ## 🚫 Critical Anti-Patterns to Avoid
+
+### Redundant Entity Loading
+**NEVER load the same entity multiple times in a validation chain!** This is a performance killer.
+
+```csharp
+// ❌ ANTI-PATTERN - Loading same entity 3+ times
+.EnsureAsync(async () => await ExerciseExistsAsync(id), ...)      // Load 1
+.EnsureAsync(async () => await IsExerciseActiveAsync(id), ...)     // Load 2
+.EnsureAsync(async () => await IsNotRestTypeAsync(id), ...)        // Load 3
+.EnsureAsync(async () => await HasValidMuscleGroupsAsync(id), ...) // Load 4
+
+// ✅ CORRECT - Load once, validate many
+.AsExerciseValidation()
+.EnsureExerciseExists(service, id, "Not found")        // Load ONCE
+.EnsureExerciseIsActive("Exercise is inactive")         // Use loaded entity
+.EnsureExerciseIsNotRestType("Cannot be REST")          // Use loaded entity
+.EnsureExerciseHasValidMuscleGroups("Invalid groups")   // Use loaded entity
+```
+
+**Key Rule**: Each entity should be loaded from the database EXACTLY ONCE per request. Use the Dual-Entity Validation Pattern for relationship validations.
 
 ### Double Negation in Validation
 **NEVER use double negations in validation predicates!** They're hard to read and error-prone.
@@ -549,6 +600,19 @@ public async Task<ServiceResult<ExecutionProtocolDto>> GetByValueAsync(string va
     return ServiceResult<ExecutionProtocolDto>.Success(dto);
 }
 
+// ❌ ANTI-PATTERN - Over-defensive ToDto() check
+public async Task<ServiceResult<ExerciseLinkDto>> GetByIdAsync(ExerciseLinkId id)
+{
+    using var unitOfWork = unitOfWorkProvider.CreateReadOnly();
+    var repository = unitOfWork.GetRepository<IExerciseLinkRepository>();
+    
+    var link = await repository.GetByIdAsync(id);
+    // OVER-DEFENSIVE: ToDto() already checks IsEmpty internally!
+    var dto = link.IsEmpty ? ExerciseLinkDto.Empty : link.ToDto();
+    
+    return ServiceResult<ExerciseLinkDto>.Success(dto);
+}
+
 // ✅ CORRECT - Trust the architecture
 public async Task<ServiceResult<ExecutionProtocolDto>> GetByValueAsync(string value)
 {
@@ -560,6 +624,18 @@ public async Task<ServiceResult<ExecutionProtocolDto>> GetByValueAsync(string va
     var dto = MapToDto(entity);
     
     return ServiceResult<ExecutionProtocolDto>.Success(dto);
+}
+
+// ✅ CORRECT - Trust ToDto() to handle Empty
+public async Task<ServiceResult<ExerciseLinkDto>> GetByIdAsync(ExerciseLinkId id)
+{
+    using var unitOfWork = unitOfWorkProvider.CreateReadOnly();
+    var repository = unitOfWork.GetRepository<IExerciseLinkRepository>();
+    
+    var link = await repository.GetByIdAsync(id);
+    var dto = link.ToDto(); // ToDto() handles Empty internally
+    
+    return ServiceResult<ExerciseLinkDto>.Success(dto);
 }
 
 // Why this works - MapToDto implementation:
@@ -608,6 +684,7 @@ private static ExecutionProtocolDto MapToDto(ExecutionProtocol entity)
 - Calling service methods (they return ServiceResult)
 - Working with commands (guaranteed non-null)
 - Inside MapToDto calls (already handles Empty)
+- **Before calling ToDto() methods** (they handle Empty internally)
 
 #### Checklist Before Adding Defensive Code
 
@@ -632,6 +709,168 @@ Each layer trusts the layer below it because:
 4. **Repositories implement Empty Pattern** - Never return null
 
 > **Remember**: Defensive code is a code smell. If you're adding null checks everywhere, you don't trust your architecture. Fix the architecture, don't bandage it with defensive code.
+
+### Trust the Infrastructure - No Redundant Validation
+**NEVER repeat validations that have already been done in the validation chain!** This violates the "Trust the Infrastructure" principle.
+
+```csharp
+// ❌ ANTI-PATTERN - Redundant validation in internal method
+public async Task<ServiceResult<T>> UpdateAsync(Command command)
+{
+    return await ServiceValidate.Build<T>()
+        .EnsureAsync(async () => await ExistsAsync(command.Id), NotFound())
+        .MatchAsync(whenValid: async () => await UpdateInternalAsync(command));
+}
+
+private async Task<ServiceResult<T>> UpdateInternalAsync(Command command)
+{
+    var entity = await GetByIdAsync(command.Id);
+    if (entity.IsEmpty) // REDUNDANT! Already validated above
+    {
+        return ServiceResult<T>.Failure(T.Empty, NotFound());
+    }
+    // ... update logic
+}
+
+// ❌ ANTI-PATTERN - DataService re-validating what Service already validated
+public async Task<ServiceResult<T>> UpdateAsync(T dto)
+{
+    var id = ParseId(dto.Id);
+    if (id.IsEmpty) // REDUNDANT! Service already validated
+    {
+        return ServiceResult<T>.Failure(T.Empty, ValidationFailed());
+    }
+    
+    var entity = await repository.GetByIdAsync(id);
+    if (entity.IsEmpty) // REDUNDANT! Service confirmed existence
+    {
+        return ServiceResult<T>.Failure(T.Empty, NotFound());
+    }
+}
+
+// ✅ CORRECT - Trust the validation chain
+public async Task<ServiceResult<T>> UpdateAsync(Command command)
+{
+    return await ServiceValidate.Build<T>()
+        .EnsureAsync(async () => await ExistsAsync(command.Id), NotFound())
+        .MatchAsync(whenValid: async () => await UpdateInternalAsync(command));
+}
+
+private async Task<ServiceResult<T>> UpdateInternalAsync(Command command)
+{
+    // TRUST! No defensive checks - validation already done
+    var entity = await GetByIdAsync(command.Id);
+    // ... update logic
+}
+
+// ✅ CORRECT - DataService trusts Service validation
+public async Task<ServiceResult<T>> UpdateAsync(T dto)
+{
+    // TRUST! Parse and use directly
+    var id = ParseId(dto.Id);
+    var entity = await repository.GetByIdAsync(id);
+    // ... update logic
+}
+```
+
+#### Key Principle: Validation Happens ONCE
+- **Service Layer**: All business validation in ServiceValidate chain
+- **Internal Methods**: Trust the validation chain, no redundant checks
+- **DataService Layer**: Trust that Service has validated everything
+- **Repository Layer**: Just execute, no validation
+
+### Entity Leakage Anti-Pattern - CRITICAL VIOLATION
+**NEVER return entities from DataServices to Services!** This violates the fundamental layered architecture.
+
+#### The Problem: Entities Escaping Data Layer
+
+```csharp
+// ❌ ANTI-PATTERN - DataService returns entity to Service
+public async Task<ServiceResult<ExerciseLink>> GetEntityByIdAsync(ExerciseLinkId id)
+{
+    var link = await repository.GetByIdAsync(id);
+    return ServiceResult<ExerciseLink>.Success(link); // WRONG! Entity leaked!
+}
+
+// ❌ ANTI-PATTERN - Service receives and manipulates entity
+var entityResult = await queryDataService.GetEntityByIdAsync(linkId);
+var existingLink = entityResult.Data;
+var updatedLink = ExerciseLink.Handler.Create(...); // Service creating entities!
+return await commandDataService.UpdateAsync(updatedLink); // Passing entity!
+
+// ❌ ANTI-PATTERN - CommandDataService takes entity as parameter
+public interface IExerciseLinkCommandDataService
+{
+    Task<ServiceResult<ExerciseLinkDto>> UpdateAsync(ExerciseLink exerciseLink); // Takes entity!
+}
+```
+
+#### The Correct Pattern: Transformation Functions
+
+```csharp
+// ✅ CORRECT - CommandDataService with transformation function
+public interface IExerciseCommandDataService
+{
+    Task<ServiceResult<ExerciseDto>> UpdateAsync(
+        ExerciseId id,
+        Func<Exercise, Exercise> updateAction); // Function, not entity!
+}
+
+// ✅ CORRECT - Service passes transformation logic, never sees entity
+return await _commandDataService.UpdateAsync(id, exercise =>
+{
+    return exercise with {
+        Name = command.Name,
+        Description = command.Description
+    };
+});
+
+// ✅ CORRECT - DataService handles entity internally
+public async Task<ServiceResult<ExerciseDto>> UpdateAsync(
+    ExerciseId id,
+    Func<Exercise, Exercise> updateAction)
+{
+    using var unitOfWork = _unitOfWorkProvider.CreateWritable();
+    var repository = unitOfWork.GetRepository<IExerciseRepository>();
+    
+    var entity = await repository.GetByIdAsync(id); // Entity stays here
+    var updated = updateAction(entity);             // Transform internally
+    await repository.UpdateAsync(updated);          // Save internally
+    await unitOfWork.SaveChangesAsync();
+    
+    return ServiceResult<ExerciseDto>.Success(updated.ToDto()); // Return DTO
+}
+```
+
+#### Architecture Rules for Entity Boundaries
+
+1. **Entities are Data Layer Citizens**: They NEVER leave DataServices
+2. **Services Work with DTOs/Commands**: Never with entities
+3. **DataServices Are the Boundary**: They encapsulate ALL entity operations
+4. **Use Transformation Functions**: Pass `Func<T,T>` for updates, not entities
+5. **Entity Creation in DataService**: `Handler.Create` calls belong in DataService
+
+#### The Layered Architecture Contract
+
+```
+Controllers → Services → DataServices → Repositories → Database
+     ↓           ↓            ↓              ↓            ↓
+  Requests   Commands      Internal      Entities     Tables
+  Responses    DTOs      Operations       Empty      Records
+              
+  NEVER: Services ← Entities (This is the violation!)
+```
+
+#### Checklist for Entity Boundary Compliance
+
+- [ ] No `GetEntityByIdAsync` methods returning entities to services
+- [ ] No service methods receiving entity parameters
+- [ ] No `Entity.Handler.Create` calls in service layer
+- [ ] All entity manipulation inside DataServices
+- [ ] Update operations use `Func<Entity, Entity>` pattern
+- [ ] Only DTOs and Commands cross service boundaries
+
+> **Remember**: If a service can see an entity, the architecture is broken. DataServices are the guardians of the entity boundary.
 
 ## 🚨 Test Code Smells - Fix Immediately
 
@@ -743,15 +982,42 @@ var dto = ExerciseDtoTestBuilder.Default()
     .Build();
 ```
 
+### Testing Logging - DON'T DO IT!
+**NEVER mock or test logging!** Logging is an implementation detail that changes based on debugging needs.
+
+```csharp
+// ❌ ANTI-PATTERN - Setting up logger mocks
+var loggerFactoryMock = autoMocker.GetMock<ILoggerFactory>();
+loggerFactoryMock
+    .Setup(x => x.CreateLogger(It.IsAny<string>()))
+    .Returns(Mock.Of<ILogger>());
+
+loggerMock.Verify(x => x.LogInformation(...), Times.Once); // WRONG!
+
+// ✅ CORRECT - Let AutoMocker handle it automatically
+var testee = autoMocker.CreateInstance<MyService>(); // AutoMocker provides logger mocks
+// NO verification of logger calls - we don't care!
+```
+
+**Why logging should NEVER be tested:**
+1. **It changes frequently** - More logs when debugging, fewer in production
+2. **Not business logic** - Logging is infrastructure, not behavior
+3. **Brittle tests** - Tests break when log messages change
+4. **No value** - Testing logging doesn't prove correctness
+5. **AutoMocker handles it** - The framework provides mocks automatically
+
 ## 🎯 Quick Decision Guide
 
 | Scenario | Pattern to Use | Documentation |
 |----------|---------------|---------------|
+| Redundant validation across layers | Trust the Validation Chain | [TrustTheValidationChain.md](./CodeQualityGuidelines/TrustTheValidationChain.md) |
 | Service method return type | ServiceResult<T> | [ServiceResultPattern.md](./CodeQualityGuidelines/ServiceResultPattern.md) |
 | Input validation (all sync) | ServiceValidate.For<T>() | [ServiceValidatePattern.md](./CodeQualityGuidelines/ServiceValidatePattern.md) |
 | Input validation (any async) | ServiceValidate.Build<T>() | [ServiceValidatePattern.md](./CodeQualityGuidelines/ServiceValidatePattern.md) |
 | Dependent validations | ThenEnsure methods | See Conditional Validation section above |
 | Multiple business validations | Chain EnsureAsync calls, NOT inside MatchAsync | See examples in anti-patterns section |
+| Relationship validation | Dual-Entity Pattern | [DualEntityValidationPattern.md](./CodeQualityGuidelines/DualEntityValidationPattern.md) |
+| Avoiding redundant DB calls | Load once, validate many | [DualEntityValidationPattern.md](./CodeQualityGuidelines/DualEntityValidationPattern.md) |
 | Clean validation approach | Positive assertions | [CleanValidationPattern.md](./CodeQualityGuidelines/CleanValidationPattern.md) |
 | Validation mistakes | Avoid anti-patterns | [ValidationAntiPatterns.md](./CodeQualityGuidelines/ValidationAntiPatterns.md) |
 | Null handling | Null Object Pattern | [NullObjectPattern.md](./CodeQualityGuidelines/NullObjectPattern.md) |
@@ -768,6 +1034,7 @@ var dto = ExerciseDtoTestBuilder.Default()
 | Mock setup | Fluent extension methods | [TestingStandards.md](./CodeQualityGuidelines/TestingStandards.md) |
 | Test object properties | Focus Principle - only set what's tested | [TestBuilderPattern.md](./Overview/TestBuilderPattern.md) |
 | Error testing | Test codes, not messages | [TestingStandards.md](./CodeQualityGuidelines/TestingStandards.md) |
+| Logging in tests | NEVER test or mock logging | See Testing Logging section above |
 | Reference data caching | IEternalCacheService | [CacheIntegrationPattern.md](./CodeQualityGuidelines/CacheIntegrationPattern.md) |
 | Single return statement | Pattern matching | [SingleExitPointPattern.md](./CodeQualityGuidelines/SingleExitPointPattern.md) |
 | Entity creation | EntityResult<T> | [EntityResultPattern.md](./CodeQualityGuidelines/EntityResultPattern.md) |
@@ -787,6 +1054,8 @@ Before approving any PR, verify:
 - [ ] Single exit points in all methods
 - [ ] **Single operation only in MatchAsync.whenValid** (no if statements or multiple returns)
 - [ ] **All validations chained in ServiceValidate** (not inside MatchAsync)
+- [ ] **NO redundant entity loading** (each entity loaded ONCE per request)
+- [ ] **Dual-Entity Pattern used for relationship validations**
 - [ ] **NO double negations in validation predicates** (`!(await something)` is WRONG)
 - [ ] **Validation methods are questions** (IsValid, HasPermission, CanDelete)
 - [ ] **Helper methods use positive naming** (returns true for positive state)
@@ -796,6 +1065,8 @@ Before approving any PR, verify:
 - [ ] **Controller switch expressions group by HTTP status** (no duplicate BadRequest cases)
 - [ ] ReadOnly for queries, Writable for modifications
 - [ ] Services only access their own repositories
+- [ ] **Services NEVER receive entities** (only DTOs and Commands)
+- [ ] **DataServices NEVER return entities** (transformation functions for updates)
 - [ ] **Repositories inherit from base classes** (compile-time Empty enforcement)
 - [ ] Specialized IDs used (not strings)
 - [ ] No try-catch for business logic
@@ -813,6 +1084,7 @@ Before approving any PR, verify:
 - [ ] **Conditional sorting uses SortableQuery pattern** (not verbose switch statements)
 - [ ] **No logging in service layer** (push logging down to operations)
 - [ ] **No if-statements that exist only for logging**
+- [ ] **NEVER test or verify logging calls** (implementation detail)
 
 ## 🔗 Related Documents
 

@@ -1,3 +1,5 @@
+using GetFitterGetBigger.API.Models.SpecializedIds;
+
 namespace GetFitterGetBigger.API.Services.Exercise.Features.Links.Commands;
 
 /// <summary>
@@ -8,7 +10,7 @@ public record GetExerciseLinksCommand
     /// <summary>
     /// The ID of the exercise to get links for
     /// </summary>
-    public string ExerciseId { get; init; } = string.Empty;
+    public ExerciseId ExerciseId { get; init; } = ExerciseId.Empty;
     
     /// <summary>
     /// Optional filter by link type (Warmup or Cooldown)

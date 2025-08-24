@@ -32,9 +32,8 @@ public class ServiceValidationBuilderExtensionsTests
 
         // Act
         // Explicitly use the extension method overload that doesn't require whenInvalid
-        var result = await ServiceValidationBuilderExtensions.MatchAsync(
-            builder,
-            whenValid: async () =>
+        var result = await builder.WhenValidAsync(
+            async () =>
             {
                 whenValidExecuted = true;
                 await Task.Delay(1);
@@ -68,8 +67,8 @@ public class ServiceValidationBuilderExtensionsTests
                 ServiceError.AlreadyExists("Exercise", "Test Exercise"));
 
         // Act
-        var result = await builder.MatchAsync(
-            whenValid: async () => await Task.FromResult(ServiceResult<ExerciseDto>.Success(new ExerciseDto())));
+        var result = await builder.WhenValidAsync(
+            async () => await Task.FromResult(ServiceResult<ExerciseDto>.Success(new ExerciseDto())));
 
         // Assert
         asyncValidationExecuted.Should().BeTrue("async validation should have been executed");
@@ -106,8 +105,8 @@ public class ServiceValidationBuilderExtensionsTests
                 ServiceError.ValidationFailed("Second validation failed"));
 
         // Act
-        var result = await builder.MatchAsync(
-            whenValid: async () => await Task.FromResult(ServiceResult<ExerciseDto>.Success(new ExerciseDto())));
+        var result = await builder.WhenValidAsync(
+            async () => await Task.FromResult(ServiceResult<ExerciseDto>.Success(new ExerciseDto())));
 
         // Assert
         firstAsyncExecuted.Should().BeTrue("first async validation should have been executed");
@@ -127,8 +126,8 @@ public class ServiceValidationBuilderExtensionsTests
             .Ensure(() => false, ServiceError.ValidationFailed("Sync validation failed"));
 
         // Act
-        var result = await builder.MatchAsync(
-            whenValid: async () => await Task.FromResult(ServiceResult<ExerciseDto>.Success(new ExerciseDto())));
+        var result = await builder.WhenValidAsync(
+            async () => await Task.FromResult(ServiceResult<ExerciseDto>.Success(new ExerciseDto())));
 
         // Assert
         result.IsSuccess.Should().BeFalse();
@@ -156,8 +155,8 @@ public class ServiceValidationBuilderExtensionsTests
                 ServiceError.ValidationFailed("Async validation failed"));
 
         // Act
-        var result = await builder.MatchAsync(
-            whenValid: async () => await Task.FromResult(ServiceResult<ExerciseDto>.Success(new ExerciseDto())));
+        var result = await builder.WhenValidAsync(
+            async () => await Task.FromResult(ServiceResult<ExerciseDto>.Success(new ExerciseDto())));
 
         // Assert
         asyncExecuted.Should().BeTrue("async validation should have been executed");
@@ -185,8 +184,8 @@ public class ServiceValidationBuilderExtensionsTests
                 ServiceError.ValidationFailed("Async validation"));
 
         // Act
-        var result = await builder.MatchAsync(
-            whenValid: async () =>
+        var result = await builder.WhenValidAsync(
+            async () =>
             {
                 whenValidExecuted = true;
                 await Task.Delay(1);

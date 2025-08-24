@@ -38,8 +38,7 @@ public class ExerciseService(
             .EnsureAsync(
                 async () => (await _queryDataService.ExistsAsync(id)).Data.Value,
                 ServiceError.NotFound("Exercise", id.ToString()))
-            .MatchAsync(
-                whenValid: async () => await _queryDataService.GetByIdAsync(id));
+            .WhenValidAsync(async () => await _queryDataService.GetByIdAsync(id));
     }
     
     public async Task<ServiceResult<ExerciseDto>> CreateAsync(CreateExerciseCommand command)
@@ -68,9 +67,7 @@ public class ExerciseService(
                 async () => await _typeValidationHandler.AreMuscleGroupsValidAsync(
                     command.ExerciseTypeIds, command.MuscleGroups),
                 ExerciseErrorMessages.InvalidMuscleGroupsForExerciseType)
-            .MatchAsync(
-                whenValid: async () => await CreateExerciseInternalAsync(command)
-            );
+            .WhenValidAsync(async () => await CreateExerciseInternalAsync(command));
     }
     
     private async Task<ServiceResult<ExerciseDto>> CreateExerciseInternalAsync(CreateExerciseCommand command)
@@ -126,9 +123,7 @@ public class ExerciseService(
                 async () => await _typeValidationHandler.AreMuscleGroupsValidAsync(
                     command.ExerciseTypeIds, command.MuscleGroups),
                 ExerciseErrorMessages.InvalidMuscleGroupsForExerciseType)
-            .MatchAsync(
-                whenValid: async () => await UpdateExerciseInternalAsync(id, command)
-            );
+            .WhenValidAsync(async () => await UpdateExerciseInternalAsync(id, command));
     }
     
     private async Task<ServiceResult<ExerciseDto>> UpdateExerciseInternalAsync(ExerciseId id, UpdateExerciseCommand command)

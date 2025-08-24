@@ -1,3 +1,5 @@
+using GetFitterGetBigger.API.Models.SpecializedIds;
+
 namespace GetFitterGetBigger.API.Services.Exercise.Features.Links.Commands;
 
 /// <summary>
@@ -8,12 +10,12 @@ public record UpdateExerciseLinkCommand
     /// <summary>
     /// The ID of the exercise that owns the link
     /// </summary>
-    public string ExerciseId { get; init; } = string.Empty;
+    public ExerciseId ExerciseId { get; init; } = ExerciseId.Empty;
     
     /// <summary>
     /// The ID of the link to update
     /// </summary>
-    public string LinkId { get; init; } = string.Empty;
+    public ExerciseLinkId LinkId { get; init; } = ExerciseLinkId.Empty;
     
     /// <summary>
     /// The display order for this link

@@ -34,8 +34,7 @@ public class StateTransitionHandler(
             .EnsureExistsAsync(
                 async () => await WorkoutStateExistsAsync(newStateId),
                 "WorkoutState")
-            .MatchAsync(
-                whenValid: async () => await PerformStateChangeAsync(templateId, newStateId));
+            .WhenValidAsync(async () => await PerformStateChangeAsync(templateId, newStateId));
     }
 
     private async Task<ServiceResult<WorkoutTemplateDto>> PerformStateChangeAsync(
@@ -52,8 +51,7 @@ public class StateTransitionHandler(
             .EnsureAsync(
                 async () => await IsValidStateTransitionAsync(existingTemplate, newStateId),
                 WorkoutTemplateErrorMessages.InvalidStateTransition)
-            .MatchAsync(
-                whenValid: async () =>
+            .WhenValidAsync(async () =>
                 {
                     // Update the state - create new record instance with updated values
                     var updatedTemplate = existingTemplate with 

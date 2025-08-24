@@ -1,11 +1,11 @@
 using GetFitterGetBigger.API.DTOs;
+using GetFitterGetBigger.API.Mappers;
 using GetFitterGetBigger.API.Models.Enums;
+using GetFitterGetBigger.API.Models.SpecializedIds;
 using GetFitterGetBigger.API.Services.Exercise.Features.Links;
 using GetFitterGetBigger.API.Services.Exercise.Features.Links.Commands;
 using GetFitterGetBigger.API.Services.Results;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
 
 namespace GetFitterGetBigger.API.Controllers;
 
@@ -32,66 +32,15 @@ public class ExerciseLinksController(
     [ProducesResponseType(typeof(BidirectionalLinkResponseDto), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(ExerciseLinkDto), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public async Task<IActionResult> CreateLink(string exerciseId, [FromBody] CreateExerciseLinkDto dto)
-    {
-        if (!ModelState.IsValid)
+    public async Task<IActionResult> CreateLink(string exerciseId, [FromBody] CreateExerciseLinkDto dto) =>
+        await exerciseLinkService.CreateLinkAsync(dto.ToCommand(exerciseId)) switch
         {
-            return BadRequest(ModelState);
-        }
-
-        logger.LogInformation("Creating exercise link from {SourceId} to {TargetId} as {LinkType}", 
-            exerciseId, dto.TargetExerciseId, dto.LinkType);
-        
-        // Check if using new enum-based link types (enhanced functionality)
-        if (Enum.TryParse<ExerciseLinkType>(dto.LinkType, out var enumLinkType))
-        {
-            // Use enhanced enum-based service method (server-side displayOrder calculation + bidirectional)
-            var enumResult = await exerciseLinkService.CreateLinkAsync(
-                exerciseId,
-                dto.TargetExerciseId,
-                enumLinkType);
-                
-            if (enumResult.IsSuccess)
-            {
-                // For enum-based creation, return enhanced response indicating bidirectional creation
-                var response = new BidirectionalLinkResponseDto
-                {
-                    PrimaryLink = enumResult.Data,
-                    // Note: The service handles bidirectional creation internally
-                    // The reverse link is created automatically but not returned in this single response
-                    // This is acceptable as the primary link creation is what the client requested
-                    Description = $"Created {enumLinkType} link with automatic bidirectional linking"
-                };
-                
-                return CreatedAtAction(
-                    nameof(GetLinks), 
-                    new { exerciseId = exerciseId }, 
-                    response);
-            }
-            
-            return BadRequest(new { errors = enumResult.StructuredErrors });
-        }
-        
-        // Fallback to legacy string-based command approach for backward compatibility
-        var command = new CreateExerciseLinkCommand
-        {
-            SourceExerciseId = exerciseId,
-            TargetExerciseId = dto.TargetExerciseId,
-            LinkType = dto.LinkType,
-            DisplayOrder = dto.DisplayOrder
-        };
-        
-        var result = await exerciseLinkService.CreateLinkAsync(command);
-        
-        return result switch
-        {
-            { IsSuccess: true } => CreatedAtAction(
+            { IsSuccess: true, Data: var data } => CreatedAtAction(
                 nameof(GetLinks), 
                 new { exerciseId = exerciseId }, 
-                result.Data),
+                data),
             { StructuredErrors: var errors } => BadRequest(new { errors })
         };
-    }
 
     /// <summary>
     /// Gets all links for an exercise
@@ -111,12 +60,7 @@ public class ExerciseLinksController(
         logger.LogInformation("Getting exercise links for {ExerciseId} with type filter: {LinkType}", 
             exerciseId, linkType);
         
-        var command = new GetExerciseLinksCommand
-        {
-            ExerciseId = exerciseId,
-            LinkType = linkType,
-            IncludeExerciseDetails = includeExerciseDetails
-        };
+        var command = ExerciseLinkRequestMapper.ToGetLinksCommand(exerciseId, linkType, includeExerciseDetails);
         
         var result = await exerciseLinkService.GetLinksAsync(command);
         
@@ -138,7 +82,8 @@ public class ExerciseLinksController(
         logger.LogInformation("Getting suggested links for {ExerciseId}, count: {Count}", 
             exerciseId, count);
         
-        var result = await exerciseLinkService.GetSuggestedLinksAsync(exerciseId, count);
+        var parsedExerciseId = ExerciseId.ParseOrEmpty(exerciseId);
+        var result = await exerciseLinkService.GetSuggestedLinksAsync(parsedExerciseId, count);
         
         // For GET operations, always return 200 OK per search operation error handling pattern
         return Ok(result.Data);
@@ -160,21 +105,10 @@ public class ExerciseLinksController(
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> UpdateLink(string exerciseId, string linkId, [FromBody] UpdateExerciseLinkDto dto)
     {
-        if (!ModelState.IsValid)
-        {
-            return BadRequest(ModelState);
-        }
-
         logger.LogInformation("Updating exercise link {LinkId} for exercise {ExerciseId}", 
             linkId, exerciseId);
         
-        var command = new UpdateExerciseLinkCommand
-        {
-            ExerciseId = exerciseId,
-            LinkId = linkId,
-            DisplayOrder = dto.DisplayOrder,
-            IsActive = dto.IsActive
-        };
+        var command = ExerciseLinkRequestMapper.ToUpdateCommand(exerciseId, linkId, dto);
         
         var result = await exerciseLinkService.UpdateLinkAsync(command);
         
@@ -208,12 +142,13 @@ public class ExerciseLinksController(
         logger.LogInformation("Deleting exercise link {LinkId} for exercise {ExerciseId} with deleteReverse: {DeleteReverse}", 
             linkId, exerciseId, deleteReverse);
         
-        var result = await exerciseLinkService.DeleteLinkAsync(exerciseId, linkId, deleteReverse);
+        var parsedExerciseId = ExerciseId.ParseOrEmpty(exerciseId);
+        var parsedLinkId = ExerciseLinkId.ParseOrEmpty(linkId);
+        var result = await exerciseLinkService.DeleteLinkAsync(parsedExerciseId, parsedLinkId, deleteReverse);
         
         return result switch
         {
             { IsSuccess: true, Data.Value: true } => NoContent(),
-            { IsSuccess: true, Data.Value: false } => NotFound(),
             { PrimaryErrorCode: ServiceErrorCode.NotFound } => NotFound(),
             { StructuredErrors: var errors } => BadRequest(new { errors })
         };

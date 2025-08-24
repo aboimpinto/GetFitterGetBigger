@@ -21,7 +21,8 @@ public class ExerciseLinkQueryDataService(
 {
     public async Task<ServiceResult<ExerciseLinksResponseDto>> GetLinksAsync(GetExerciseLinksCommand command)
     {
-        var exerciseId = ExerciseId.ParseOrEmpty(command.ExerciseId);
+        // ID is already parsed in the command
+        var exerciseId = command.ExerciseId;
         if (exerciseId.IsEmpty)
         {
             return ServiceResult<ExerciseLinksResponseDto>.Success(ExerciseLinksResponseDto.Empty);
@@ -48,7 +49,7 @@ public class ExerciseLinkQueryDataService(
         
         var response = new ExerciseLinksResponseDto
         {
-            ExerciseId = command.ExerciseId,
+            ExerciseId = command.ExerciseId.ToString(),
             Links = linkDtos
         };
         
@@ -61,19 +62,9 @@ public class ExerciseLinkQueryDataService(
         var repository = unitOfWork.GetRepository<IExerciseLinkRepository>();
         
         var link = await repository.GetByIdAsync(id);
-        var dto = link.IsEmpty ? ExerciseLinkDto.Empty : link.ToDto();
+        var dto = link.ToDto(); // ToDto() handles Empty internally
         
         return ServiceResult<ExerciseLinkDto>.Success(dto);
-    }
-    
-    public async Task<ServiceResult<ExerciseLink>> GetEntityByIdAsync(ExerciseLinkId id)
-    {
-        using var unitOfWork = unitOfWorkProvider.CreateReadOnly();
-        var repository = unitOfWork.GetRepository<IExerciseLinkRepository>();
-        
-        var link = await repository.GetByIdAsync(id);
-        
-        return ServiceResult<ExerciseLink>.Success(link);
     }
     
     public async Task<ServiceResult<BooleanResultDto>> ExistsAsync(ExerciseId sourceId, ExerciseId targetId, string linkType)
@@ -108,10 +99,10 @@ public class ExerciseLinkQueryDataService(
         return ServiceResult<int>.Success(count);
     }
     
-    public async Task<ServiceResult<List<ExerciseLinkDto>>> GetSuggestedLinksAsync(string exerciseId, int count)
+    public async Task<ServiceResult<List<ExerciseLinkDto>>> GetSuggestedLinksAsync(ExerciseId exerciseId, int count)
     {
-        var parsedExerciseId = ExerciseId.ParseOrEmpty(exerciseId);
-        if (parsedExerciseId.IsEmpty)
+        // ID is already parsed at controller level
+        if (exerciseId.IsEmpty)
         {
             return ServiceResult<List<ExerciseLinkDto>>.Success(new List<ExerciseLinkDto>());
         }

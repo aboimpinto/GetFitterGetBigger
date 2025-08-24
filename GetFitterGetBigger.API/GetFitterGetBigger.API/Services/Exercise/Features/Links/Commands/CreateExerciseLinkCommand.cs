@@ -1,4 +1,5 @@
 using GetFitterGetBigger.API.Models.Enums;
+using GetFitterGetBigger.API.Models.SpecializedIds;
 
 namespace GetFitterGetBigger.API.Services.Exercise.Features.Links.Commands;
 
@@ -10,12 +11,12 @@ public record CreateExerciseLinkCommand
     /// <summary>
     /// The ID of the source exercise
     /// </summary>
-    public string SourceExerciseId { get; init; } = string.Empty;
+    public ExerciseId SourceExerciseId { get; init; } = ExerciseId.Empty;
     
     /// <summary>
     /// The ID of the target exercise to link
     /// </summary>
-    public string TargetExerciseId { get; init; } = string.Empty;
+    public ExerciseId TargetExerciseId { get; init; } = ExerciseId.Empty;
     
     /// <summary>
     /// The type of link (supports both string and enum)
@@ -45,8 +46,8 @@ public record CreateExerciseLinkCommand
     /// <param name="linkType">The enum-based link type</param>
     /// <param name="displayOrder">The display order for this link</param>
     public CreateExerciseLinkCommand(
-        string sourceExerciseId,
-        string targetExerciseId,
+        ExerciseId sourceExerciseId,
+        ExerciseId targetExerciseId,
         ExerciseLinkType linkType,
         int displayOrder)
     {

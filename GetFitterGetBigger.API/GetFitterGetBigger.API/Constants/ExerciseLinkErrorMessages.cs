@@ -25,6 +25,7 @@ public static class ExerciseLinkErrorMessages
     public const string LinkDoesNotBelongToExercise = "Link does not belong to the specified exercise";
     
     // Validation
+    public const string ValidationFailed = "Validation failed";
     public const string LinkTypeRequired = "Link type is required";
     public const string InvalidLinkType = "Link type must be either 'Warmup' or 'Cooldown'";
     public const string InvalidLinkTypeEnum = "Link type must be WARMUP, COOLDOWN, WORKOUT, or ALTERNATIVE";

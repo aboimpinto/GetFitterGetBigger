@@ -16,10 +16,22 @@ namespace GetFitterGetBigger.API.Services.Exercise.Features.Links.DataServices;
 public class ExerciseLinkCommandDataService(
     IUnitOfWorkProvider<FitnessDbContext> unitOfWorkProvider) : IExerciseLinkCommandDataService
 {
-    public async Task<ServiceResult<ExerciseLinkDto>> CreateAsync(ExerciseLink exerciseLink)
+    public async Task<ServiceResult<ExerciseLinkDto>> CreateAsync(ExerciseLinkDto linkDto)
     {
         using var unitOfWork = unitOfWorkProvider.CreateWritable();
         var repository = unitOfWork.GetRepository<IExerciseLinkRepository>();
+        
+        // Parse IDs from the DTO
+        var sourceId = ExerciseId.ParseOrEmpty(linkDto.SourceExerciseId);
+        var targetId = ExerciseId.ParseOrEmpty(linkDto.TargetExerciseId);
+        
+        // Create the entity internally
+        var exerciseLink = ExerciseLink.Handler.CreateNew(
+            sourceId,
+            targetId,
+            linkDto.LinkType,
+            linkDto.DisplayOrder
+        );
         
         var createdLink = await repository.AddAsync(exerciseLink);
         await unitOfWork.CommitAsync();
@@ -29,15 +41,25 @@ public class ExerciseLinkCommandDataService(
         return ServiceResult<ExerciseLinkDto>.Success(dto);
     }
     
-    public async Task<ServiceResult<ExerciseLinkDto>> UpdateAsync(ExerciseLink exerciseLink)
+    public async Task<ServiceResult<ExerciseLinkDto>> UpdateAsync(
+        ExerciseLinkId linkId,
+        Func<ExerciseLink, ExerciseLink> updateAction)
     {
+        // TRUST THE INFRASTRUCTURE! All validation has been done at the service layer
         using var unitOfWork = unitOfWorkProvider.CreateWritable();
         var repository = unitOfWork.GetRepository<IExerciseLinkRepository>();
         
-        var updatedLink = await repository.UpdateAsync(exerciseLink);
+        // Get the existing entity (we trust it exists) - SINGLE DATABASE CALL
+        var existingLink = await repository.GetByIdAsync(linkId);
+        
+        // Apply the transformation function provided by the service
+        var updatedLink = updateAction(existingLink);
+        
+        // Save the updated entity
+        var result = await repository.UpdateAsync(updatedLink);
         await unitOfWork.CommitAsync();
         
-        var dto = updatedLink.ToDto();
+        var dto = result.ToDto();
         
         return ServiceResult<ExerciseLinkDto>.Success(dto);
     }
@@ -54,18 +76,39 @@ public class ExerciseLinkCommandDataService(
     }
     
     public async Task<ServiceResult<ExerciseLinkDto>> CreateBidirectionalAsync(
-        ExerciseLink primaryLink, 
-        ExerciseLink? reverseLink = null)
+        ExerciseLinkDto primaryLinkDto, 
+        ExerciseLinkDto? reverseLinkDto = null)
     {
         using var unitOfWork = unitOfWorkProvider.CreateWritable();
         var repository = unitOfWork.GetRepository<IExerciseLinkRepository>();
+        
+        // Create the primary link entity from DTO
+        var primarySourceId = ExerciseId.ParseOrEmpty(primaryLinkDto.SourceExerciseId);
+        var primaryTargetId = ExerciseId.ParseOrEmpty(primaryLinkDto.TargetExerciseId);
+        
+        var primaryLink = ExerciseLink.Handler.CreateNew(
+            primarySourceId,
+            primaryTargetId,
+            primaryLinkDto.LinkType,
+            primaryLinkDto.DisplayOrder
+        );
         
         // Create the primary link
         var createdPrimaryLink = await repository.AddAsync(primaryLink);
         
         // Create the reverse link if provided
-        if (reverseLink != null)
+        if (reverseLinkDto != null)
         {
+            var reverseSourceId = ExerciseId.ParseOrEmpty(reverseLinkDto.SourceExerciseId);
+            var reverseTargetId = ExerciseId.ParseOrEmpty(reverseLinkDto.TargetExerciseId);
+            
+            var reverseLink = ExerciseLink.Handler.CreateNew(
+                reverseSourceId,
+                reverseTargetId,
+                reverseLinkDto.LinkType,
+                reverseLinkDto.DisplayOrder
+            );
+            
             await repository.AddAsync(reverseLink);
         }
         

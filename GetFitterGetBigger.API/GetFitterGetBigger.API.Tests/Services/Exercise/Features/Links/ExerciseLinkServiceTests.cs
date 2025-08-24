@@ -11,6 +11,7 @@ using GetFitterGetBigger.API.Services.Results;
 using GetFitterGetBigger.API.Services.Implementations.Extensions;
 using GetFitterGetBigger.API.Tests.Extensions;
 using GetFitterGetBigger.API.Tests.TestBuilders.DTOs;
+using Microsoft.Extensions.Logging;
 using Moq;
 using Moq.AutoMock;
 
@@ -28,6 +29,12 @@ public class ExerciseLinkServiceTests
         var queryDataServiceMock = autoMocker.GetMock<IExerciseLinkQueryDataService>();
         var commandDataServiceMock = autoMocker.GetMock<IExerciseLinkCommandDataService>();
         var exerciseServiceMock = autoMocker.GetMock<API.Services.Exercise.IExerciseService>();
+        
+        // Setup ILoggerFactory to create proper logger instances
+        var loggerFactoryMock = autoMocker.GetMock<ILoggerFactory>();
+        loggerFactoryMock.Setup(x => x.CreateLogger(It.IsAny<string>()))
+            .Returns(Mock.Of<ILogger>());
+        
         var testee = autoMocker.CreateInstance<ExerciseLinkService>();
         
         var sourceId = ExerciseId.New();
@@ -63,8 +70,8 @@ public class ExerciseLinkServiceTests
         
         // Act
         var result = await testee.CreateLinkAsync(
-            sourceId.ToString(), 
-            targetId.ToString(), 
+            sourceId, 
+            targetId, 
             linkType);
         
         // Assert
@@ -75,13 +82,13 @@ public class ExerciseLinkServiceTests
         
         // Verify bidirectional creation was called with both links
         commandDataServiceMock.Verify(x => x.CreateBidirectionalAsync(
-            It.Is<ExerciseLink>(l => 
-                l.SourceExerciseId == sourceId && 
-                l.TargetExerciseId == targetId &&
+            It.Is<ExerciseLinkDto>(l => 
+                l.SourceExerciseId == sourceId.ToString() && 
+                l.TargetExerciseId == targetId.ToString() &&
                 l.LinkType == linkType.ToString()),
-            It.Is<ExerciseLink>(l => 
-                l.SourceExerciseId == targetId && 
-                l.TargetExerciseId == sourceId &&
+            It.Is<ExerciseLinkDto>(l => 
+                l.SourceExerciseId == targetId.ToString() && 
+                l.TargetExerciseId == sourceId.ToString() &&
                 l.LinkType == ExerciseLinkType.WORKOUT.ToString())),
             Times.Once);
     }
@@ -94,6 +101,12 @@ public class ExerciseLinkServiceTests
         var queryDataServiceMock = autoMocker.GetMock<IExerciseLinkQueryDataService>();
         var commandDataServiceMock = autoMocker.GetMock<IExerciseLinkCommandDataService>();
         var exerciseServiceMock = autoMocker.GetMock<GetFitterGetBigger.API.Services.Exercise.IExerciseService>();
+        
+        // Setup ILoggerFactory to create proper logger instances
+        var loggerFactoryMock = autoMocker.GetMock<ILoggerFactory>();
+        loggerFactoryMock.Setup(x => x.CreateLogger(It.IsAny<string>()))
+            .Returns(Mock.Of<ILogger>());
+        
         var testee = autoMocker.CreateInstance<ExerciseLinkService>();
         
         var sourceId = ExerciseId.New();
@@ -128,8 +141,8 @@ public class ExerciseLinkServiceTests
         
         // Act
         var result = await testee.CreateLinkAsync(
-            sourceId.ToString(), 
-            targetId.ToString(), 
+            sourceId, 
+            targetId, 
             linkType);
         
         // Assert
@@ -140,8 +153,8 @@ public class ExerciseLinkServiceTests
         
         // Verify reverse WORKOUT link was created
         commandDataServiceMock.Verify(x => x.CreateBidirectionalAsync(
-            It.IsAny<ExerciseLink>(),
-            It.Is<ExerciseLink>(l => l.LinkType == ExerciseLinkType.WORKOUT.ToString())),
+            It.IsAny<ExerciseLinkDto>(),
+            It.Is<ExerciseLinkDto>(l => l.LinkType == ExerciseLinkType.WORKOUT.ToString())),
             Times.Once);
     }
 
@@ -153,6 +166,12 @@ public class ExerciseLinkServiceTests
         var queryDataServiceMock = autoMocker.GetMock<IExerciseLinkQueryDataService>();
         var commandDataServiceMock = autoMocker.GetMock<IExerciseLinkCommandDataService>();
         var exerciseServiceMock = autoMocker.GetMock<GetFitterGetBigger.API.Services.Exercise.IExerciseService>();
+        
+        // Setup ILoggerFactory to create proper logger instances
+        var loggerFactoryMock = autoMocker.GetMock<ILoggerFactory>();
+        loggerFactoryMock.Setup(x => x.CreateLogger(It.IsAny<string>()))
+            .Returns(Mock.Of<ILogger>());
+        
         var testee = autoMocker.CreateInstance<ExerciseLinkService>();
         
         var sourceId = ExerciseId.New();
@@ -188,8 +207,8 @@ public class ExerciseLinkServiceTests
         
         // Act
         var result = await testee.CreateLinkAsync(
-            sourceId.ToString(), 
-            targetId.ToString(), 
+            sourceId, 
+            targetId, 
             linkType);
         
         // Assert
@@ -198,11 +217,11 @@ public class ExerciseLinkServiceTests
         
         // Verify both ALTERNATIVE links were created (bidirectional)
         commandDataServiceMock.Verify(x => x.CreateBidirectionalAsync(
-            It.Is<ExerciseLink>(l => 
-                l.SourceExerciseId == sourceId && 
+            It.Is<ExerciseLinkDto>(l => 
+                l.SourceExerciseId == sourceId.ToString() && 
                 l.LinkType == ExerciseLinkType.ALTERNATIVE.ToString()),
-            It.Is<ExerciseLink>(l => 
-                l.SourceExerciseId == targetId && 
+            It.Is<ExerciseLinkDto>(l => 
+                l.SourceExerciseId == targetId.ToString() && 
                 l.LinkType == ExerciseLinkType.ALTERNATIVE.ToString())),
             Times.Once);
     }
@@ -212,6 +231,9 @@ public class ExerciseLinkServiceTests
     {
         // Arrange - Complete test isolation
         var autoMocker = new AutoMocker();
+        
+        // AutoMocker will automatically provide a mock for ILoggerFactory
+        
         var testee = autoMocker.CreateInstance<ExerciseLinkService>();
         
         var sourceId = ExerciseId.New();
@@ -220,8 +242,8 @@ public class ExerciseLinkServiceTests
         
         // Act
         var result = await testee.CreateLinkAsync(
-            sourceId.ToString(), 
-            targetId.ToString(), 
+            sourceId, 
+            targetId, 
             linkType);
         
         // Assert
@@ -236,6 +258,9 @@ public class ExerciseLinkServiceTests
         // Arrange - Complete test isolation
         var autoMocker = new AutoMocker();
         var exerciseServiceMock = autoMocker.GetMock<GetFitterGetBigger.API.Services.Exercise.IExerciseService>();
+        
+        // AutoMocker will automatically provide a mock for ILoggerFactory
+        
         var testee = autoMocker.CreateInstance<ExerciseLinkService>();
         
         var sourceId = ExerciseId.New();
@@ -257,8 +282,8 @@ public class ExerciseLinkServiceTests
         
         // Act
         var result = await testee.CreateLinkAsync(
-            sourceId.ToString(), 
-            targetId.ToString(), 
+            sourceId, 
+            targetId, 
             linkType);
         
         // Assert
@@ -273,6 +298,9 @@ public class ExerciseLinkServiceTests
         // Arrange - Complete test isolation
         var autoMocker = new AutoMocker();
         var exerciseServiceMock = autoMocker.GetMock<GetFitterGetBigger.API.Services.Exercise.IExerciseService>();
+        
+        // AutoMocker will automatically provide a mock for ILoggerFactory
+        
         var testee = autoMocker.CreateInstance<ExerciseLinkService>();
         
         var sourceId = ExerciseId.New();
@@ -294,8 +322,8 @@ public class ExerciseLinkServiceTests
         
         // Act
         var result = await testee.CreateLinkAsync(
-            sourceId.ToString(), 
-            targetId.ToString(), 
+            sourceId, 
+            targetId, 
             linkType);
         
         // Assert
@@ -329,7 +357,7 @@ public class ExerciseLinkServiceTests
             .SetupSuccessfulBidirectionalCreation(expectedDto);
         
         // Act
-        var result = await commandDataServiceMock.Object.CreateBidirectionalAsync(primaryLink, reverseLink);
+        var result = await commandDataServiceMock.Object.CreateBidirectionalAsync(primaryLink.ToDto(), reverseLink.ToDto());
         
         // Assert
         result.Should().NotBeNull();
@@ -338,8 +366,8 @@ public class ExerciseLinkServiceTests
         
         // Verify the method was called exactly once with both links
         commandDataServiceMock.Verify(x => x.CreateBidirectionalAsync(
-            It.Is<ExerciseLink>(l => l.Id == primaryLink.Id),
-            It.Is<ExerciseLink>(l => l.Id == reverseLink.Id)),
+            It.Is<ExerciseLinkDto>(l => l.Id == primaryLink.Id.ToString()),
+            It.Is<ExerciseLinkDto>(l => l.Id == reverseLink.Id.ToString())),
             Times.Once);
     }
 
@@ -352,6 +380,12 @@ public class ExerciseLinkServiceTests
         var autoMocker = new AutoMocker();
         var queryDataServiceMock = autoMocker.GetMock<IExerciseLinkQueryDataService>();
         var commandDataServiceMock = autoMocker.GetMock<IExerciseLinkCommandDataService>();
+        
+        // Setup ILoggerFactory to create proper logger instances
+        var loggerFactoryMock = autoMocker.GetMock<ILoggerFactory>();
+        loggerFactoryMock.Setup(x => x.CreateLogger(It.IsAny<string>()))
+            .Returns(Mock.Of<ILogger>());
+        
         var testee = autoMocker.CreateInstance<ExerciseLinkService>();
         
         var exerciseId = ExerciseId.New();
@@ -388,7 +422,7 @@ public class ExerciseLinkServiceTests
             .ReturnsAsync(ServiceResult<BooleanResultDto>.Success(BooleanResultDto.Create(true)));
         
         // Act
-        var result = await testee.DeleteLinkAsync(exerciseId.ToString(), linkId.ToString(), deleteReverse: true);
+        var result = await testee.DeleteLinkAsync(exerciseId, linkId, deleteReverse: true);
         
         // Assert - just check that it worked, not the specific implementation details
         result.Should().NotBeNull();
@@ -402,6 +436,9 @@ public class ExerciseLinkServiceTests
         var autoMocker = new AutoMocker();
         var queryDataServiceMock = autoMocker.GetMock<IExerciseLinkQueryDataService>();
         var commandDataServiceMock = autoMocker.GetMock<IExerciseLinkCommandDataService>();
+        
+        // AutoMocker will automatically provide a mock for ILoggerFactory
+        
         var testee = autoMocker.CreateInstance<ExerciseLinkService>();
         
         var exerciseId = ExerciseId.New();
@@ -421,7 +458,7 @@ public class ExerciseLinkServiceTests
         commandDataServiceMock.SetupSuccessfulDelete(linkId);
         
         // Act
-        var result = await testee.DeleteLinkAsync(exerciseId.ToString(), linkId.ToString(), deleteReverse: false);
+        var result = await testee.DeleteLinkAsync(exerciseId, linkId, deleteReverse: false);
         
         // Assert
         result.Should().NotBeNull();
@@ -440,6 +477,9 @@ public class ExerciseLinkServiceTests
         var autoMocker = new AutoMocker();
         var queryDataServiceMock = autoMocker.GetMock<IExerciseLinkQueryDataService>();
         var commandDataServiceMock = autoMocker.GetMock<IExerciseLinkCommandDataService>();
+        
+        // AutoMocker will automatically provide a mock for ILoggerFactory
+        
         var testee = autoMocker.CreateInstance<ExerciseLinkService>();
         
         var exerciseId = ExerciseId.New();
@@ -462,7 +502,7 @@ public class ExerciseLinkServiceTests
         commandDataServiceMock.SetupSuccessfulDelete(linkId);
         
         // Act
-        var result = await testee.DeleteLinkAsync(exerciseId.ToString(), linkId.ToString(), deleteReverse: true);
+        var result = await testee.DeleteLinkAsync(exerciseId, linkId, deleteReverse: true);
         
         // Assert
         result.Should().NotBeNull();
@@ -479,13 +519,16 @@ public class ExerciseLinkServiceTests
     {
         // Arrange - Complete test isolation
         var autoMocker = new AutoMocker();
+        
+        // AutoMocker will automatically provide a mock for ILoggerFactory
+        
         var testee = autoMocker.CreateInstance<ExerciseLinkService>();
         
         var exerciseId = ExerciseId.New();
-        var invalidLinkId = "invalid-link-id";
+        var invalidLinkId = ExerciseLinkId.ParseOrEmpty("invalid-link-id");
         
         // Act
-        var result = await testee.DeleteLinkAsync(exerciseId.ToString(), invalidLinkId);
+        var result = await testee.DeleteLinkAsync(exerciseId, invalidLinkId);
         
         // Assert
         result.Should().NotBeNull();
@@ -499,6 +542,9 @@ public class ExerciseLinkServiceTests
         // Arrange - Complete test isolation
         var autoMocker = new AutoMocker();
         var queryDataServiceMock = autoMocker.GetMock<IExerciseLinkQueryDataService>();
+        
+        // AutoMocker will automatically provide a mock for ILoggerFactory
+        
         var testee = autoMocker.CreateInstance<ExerciseLinkService>();
         
         var exerciseId = ExerciseId.New();
@@ -507,7 +553,7 @@ public class ExerciseLinkServiceTests
         queryDataServiceMock.SetupExerciseLinkNotExists(linkId);
         
         // Act
-        var result = await testee.DeleteLinkAsync(exerciseId.ToString(), linkId.ToString());
+        var result = await testee.DeleteLinkAsync(exerciseId, linkId);
         
         // Assert
         result.Should().NotBeNull();
@@ -522,6 +568,9 @@ public class ExerciseLinkServiceTests
         var autoMocker = new AutoMocker();
         var queryDataServiceMock = autoMocker.GetMock<IExerciseLinkQueryDataService>();
         var commandDataServiceMock = autoMocker.GetMock<IExerciseLinkCommandDataService>();
+        
+        // AutoMocker will automatically provide a mock for ILoggerFactory
+        
         var testee = autoMocker.CreateInstance<ExerciseLinkService>();
         
         var exerciseId = ExerciseId.New();
@@ -542,7 +591,7 @@ public class ExerciseLinkServiceTests
         commandDataServiceMock.SetupFailedDelete(linkId);
         
         // Act
-        var result = await testee.DeleteLinkAsync(exerciseId.ToString(), linkId.ToString(), deleteReverse: true);
+        var result = await testee.DeleteLinkAsync(exerciseId, linkId, deleteReverse: true);
         
         // Assert
         result.Should().NotBeNull();

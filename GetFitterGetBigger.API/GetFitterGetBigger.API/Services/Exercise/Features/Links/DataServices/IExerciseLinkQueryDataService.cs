@@ -23,11 +23,6 @@ public interface IExerciseLinkQueryDataService
     Task<ServiceResult<ExerciseLinkDto>> GetByIdAsync(ExerciseLinkId id);
     
     /// <summary>
-    /// Gets a specific exercise link entity by ID for updates
-    /// </summary>
-    Task<ServiceResult<Models.Entities.ExerciseLink>> GetEntityByIdAsync(ExerciseLinkId id);
-    
-    /// <summary>
     /// Checks if a link already exists between two exercises with a specific type
     /// </summary>
     Task<ServiceResult<BooleanResultDto>> ExistsAsync(ExerciseId sourceId, ExerciseId targetId, string linkType);
@@ -45,7 +40,7 @@ public interface IExerciseLinkQueryDataService
     /// <summary>
     /// Gets suggested links based on common usage patterns
     /// </summary>
-    Task<ServiceResult<List<ExerciseLinkDto>>> GetSuggestedLinksAsync(string exerciseId, int count);
+    Task<ServiceResult<List<ExerciseLinkDto>>> GetSuggestedLinksAsync(ExerciseId exerciseId, int count);
     
     // ===== ENHANCED BIDIRECTIONAL QUERY METHODS =====
     

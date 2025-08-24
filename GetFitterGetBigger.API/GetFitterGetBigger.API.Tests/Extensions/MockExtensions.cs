@@ -75,8 +75,8 @@ public static class MockExtensions
         ExerciseLinkDto expectedResult)
     {
         mock.Setup(x => x.CreateBidirectionalAsync(
-                It.IsAny<ExerciseLink>(),
-                It.IsAny<ExerciseLink>()))
+                It.IsAny<ExerciseLinkDto>(),
+                It.IsAny<ExerciseLinkDto>()))
             .ReturnsAsync(ServiceResult<ExerciseLinkDto>.Success(expectedResult));
         return mock;
     }
@@ -89,8 +89,8 @@ public static class MockExtensions
         ServiceError error)
     {
         mock.Setup(x => x.CreateBidirectionalAsync(
-                It.IsAny<ExerciseLink>(),
-                It.IsAny<ExerciseLink>()))
+                It.IsAny<ExerciseLinkDto>(),
+                It.IsAny<ExerciseLinkDto>()))
             .ReturnsAsync(ServiceResult<ExerciseLinkDto>.Failure(ExerciseLinkDto.Empty, error));
         return mock;
     }

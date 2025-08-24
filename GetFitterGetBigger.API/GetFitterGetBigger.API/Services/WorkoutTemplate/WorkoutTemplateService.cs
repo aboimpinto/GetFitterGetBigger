@@ -37,9 +37,7 @@ public class WorkoutTemplateService(
     {
         return await ServiceValidate.For<WorkoutTemplateDto>()
             .EnsureNotEmpty(id, WorkoutTemplateErrorMessages.InvalidIdFormat)
-            .MatchAsync(
-                whenValid: async () => await _queryDataService.GetByIdWithDetailsAsync(id)
-            );
+            .MatchAsync(async () => await _queryDataService.GetByIdWithDetailsAsync(id));
     }
 
     public async Task<ServiceResult<PagedResponse<WorkoutTemplateDto>>> SearchAsync(
@@ -181,7 +179,7 @@ public class WorkoutTemplateService(
                 async () => await IsDraftStateAvailableAsync(),
                 ServiceError.InternalError(WorkoutTemplateErrorMessages.DraftStateNotFound))
             // Single operation when ALL validations pass
-            .MatchAsync(async () => await CreateWorkoutTemplateEntityAsync(command));
+            .WhenValidAsync(async () => await CreateWorkoutTemplateEntityAsync(command));
     }
     
     private async Task<ServiceResult<WorkoutTemplateDto>> CreateWorkoutTemplateEntityAsync(CreateWorkoutTemplateCommand command)
@@ -231,8 +229,7 @@ public class WorkoutTemplateService(
             .EnsureNameIsUniqueAsync(
                 async () => await IsNameUniqueForUpdateAsync(command.Name!, id),
                 "WorkoutTemplate", command.Name!)
-            .MatchAsync(async () => await UpdateWorkoutTemplateEntityAsync(id, command)
-            );
+            .WhenValidAsync(async () => await UpdateWorkoutTemplateEntityAsync(id, command));
     }
     
     private async Task<bool> IsNameUniqueAsync(string name)
@@ -288,7 +285,7 @@ public class WorkoutTemplateService(
             .EnsureExistsAsync(
                 async () => (await _queryDataService.ExistsAsync(id)).Data.Value,
                 "WorkoutTemplate")
-            .MatchAsync(async () => await _commandDataService.ChangeStateAsync(id, newStateId));
+            .WhenValidAsync(async () => await _commandDataService.ChangeStateAsync(id, newStateId));
     }
 
     public async Task<ServiceResult<WorkoutTemplateDto>> DuplicateAsync(WorkoutTemplateId id, string newName)
@@ -304,7 +301,7 @@ public class WorkoutTemplateService(
             .EnsureExistsAsync(
                 async () => (await _queryDataService.ExistsAsync(id)).Data.Value,
                 "WorkoutTemplate")
-            .MatchAsync(async () => await _commandDataService.SoftDeleteAsync(id));
+            .WhenValidAsync(async () => await _commandDataService.SoftDeleteAsync(id));
     }
 
     public async Task<ServiceResult<BooleanResultDto>> DeleteAsync(WorkoutTemplateId id)
@@ -317,21 +314,21 @@ public class WorkoutTemplateService(
             .EnsureAsync(
                 async () => await IsWorkoutTemplateDeletableAsync(id),
                 ServiceError.ValidationFailed(WorkoutTemplateErrorMessages.CannotDeleteWithExecutionLogs))
-            .MatchAsync(async () => await _commandDataService.DeleteAsync(id));
+            .WhenValidAsync(async () => await _commandDataService.DeleteAsync(id));
     }
 
     public async Task<ServiceResult<BooleanResultDto>> ExistsAsync(WorkoutTemplateId id)
     {
         return await ServiceValidate.Build<BooleanResultDto>()
             .EnsureNotEmpty(id, WorkoutTemplateErrorMessages.InvalidIdFormat)
-            .MatchAsync(async () => await _queryDataService.ExistsAsync(id));
+            .WhenValidAsync(async () => await _queryDataService.ExistsAsync(id));
     }
 
     public async Task<ServiceResult<BooleanResultDto>> ExistsByNameAsync(string name)
     {
         return await ServiceValidate.Build<BooleanResultDto>()
             .EnsureNotWhiteSpace(name, WorkoutTemplateErrorMessages.NameCannotBeEmpty)
-            .MatchAsync(async () => await _queryDataService.ExistsByNameAsync(name));
+            .WhenValidAsync(async () => await _queryDataService.ExistsByNameAsync(name));
     }
 
     public async Task<ServiceResult<IEnumerable<ExerciseDto>>> GetSuggestedExercisesAsync(

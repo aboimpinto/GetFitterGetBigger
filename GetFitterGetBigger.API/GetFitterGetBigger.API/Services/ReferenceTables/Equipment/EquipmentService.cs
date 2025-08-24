@@ -86,9 +86,7 @@ public class EquipmentService(
                 async () => await IsNameUniqueAsync(command!.Name),
                 "Equipment",
                 command?.Name ?? string.Empty)
-            .MatchAsync(
-                whenValid: async () => await _dataService.CreateAsync(command!)
-            );
+            .WhenValidAsync(async () => await _dataService.CreateAsync(command!));
     }
 
     /// <inheritdoc/>
@@ -105,9 +103,7 @@ public class EquipmentService(
                 async () => await IsNameUniqueForUpdateAsync(command!.Name, id),
                 "Equipment",
                 command?.Name ?? string.Empty)
-            .MatchAsync(
-                whenValid: async () => await _dataService.UpdateAsync(id, command!)
-            );
+            .WhenValidAsync(async () => await _dataService.UpdateAsync(id, command!));
     }
 
     /// <inheritdoc/>
@@ -121,9 +117,7 @@ public class EquipmentService(
             .EnsureAsync(
                 async () => await CanDeleteInternalAsync(id),
                 new ServiceError(ServiceErrorCode.DependencyExists, EquipmentErrorMessages.BusinessRules.CannotDeleteInUse))
-            .MatchAsync(
-                whenValid: async () => await _dataService.DeleteAsync(id)
-            );
+            .WhenValidAsync(async () => await _dataService.DeleteAsync(id));
     }
 
     // Private helper methods for validation
