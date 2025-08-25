@@ -122,41 +122,93 @@ public static class WorkoutTemplateRepositoryExtensions
         this EntityEntry<WorkoutTemplate> entry,
         IExerciseRepository exerciseRepository)
     {
-        // Ensure exercises collection is loaded first
+        await EnsureExercisesCollectionIsLoaded(entry);
+        await LoadExerciseDetailsForAllTemplateExercises(entry, exerciseRepository);
+    }
+
+    /// <summary>
+    /// Ensures the exercises collection is loaded for the workout template
+    /// </summary>
+    private static async Task EnsureExercisesCollectionIsLoaded(EntityEntry<WorkoutTemplate> entry)
+    {
         if (!entry.Collection(w => w.Exercises).IsLoaded)
         {
             await entry.LoadExercisesAsync();
         }
-        
-        // Load each exercise with full details using the repository
-        // GetByIdAsync in ExerciseRepository already loads all nested properties
+    }
+
+    /// <summary>
+    /// Loads exercise details for all template exercises that have valid exercise IDs
+    /// </summary>
+    private static async Task LoadExerciseDetailsForAllTemplateExercises(
+        EntityEntry<WorkoutTemplate> entry, 
+        IExerciseRepository exerciseRepository)
+    {
         foreach (var templateExercise in entry.Entity.Exercises)
         {
-            if (!templateExercise.ExerciseId.IsEmpty)
-            {
-                var exercise = await exerciseRepository.GetByIdAsync(templateExercise.ExerciseId);
-                
-                // Since GetByIdAsync returns a fully loaded exercise with all navigation properties,
-                // we need to attach it to the context properly
-                if (!exercise.IsEmpty)
-                {
-                    // Detach any existing tracked instance
-                    var tracked = entry.Context.ChangeTracker.Entries<Exercise>()
-                        .FirstOrDefault(e => e.Entity.Id == exercise.Id);
-                    
-                    if (tracked != null)
-                    {
-                        tracked.State = EntityState.Detached;
-                    }
-                    
-                    // Attach the fully loaded exercise
-                    entry.Context.Attach(exercise);
-                    
-                    // Update the reference in WorkoutTemplateExercise
-                    var wteEntry = entry.Context.Entry(templateExercise);
-                    wteEntry.Reference(te => te.Exercise).CurrentValue = exercise;
-                }
-            }
+            await LoadExerciseDetailsForTemplateExercise(entry, templateExercise, exerciseRepository);
         }
+    }
+
+    /// <summary>
+    /// Loads exercise details for a single template exercise
+    /// </summary>
+    private static async Task LoadExerciseDetailsForTemplateExercise(
+        EntityEntry<WorkoutTemplate> entry,
+        WorkoutTemplateExercise templateExercise,
+        IExerciseRepository exerciseRepository)
+    {
+        if (templateExercise.ExerciseId.IsEmpty)
+        {
+            return;
+        }
+
+        var exercise = await exerciseRepository.GetByIdAsync(templateExercise.ExerciseId);
+        if (exercise.IsEmpty)
+        {
+            return;
+        }
+
+        await AttachExerciseToContext(entry, templateExercise, exercise);
+    }
+
+    /// <summary>
+    /// Attaches the loaded exercise to the EF Core context and updates the template exercise reference
+    /// </summary>
+    private static Task AttachExerciseToContext(
+        EntityEntry<WorkoutTemplate> entry,
+        WorkoutTemplateExercise templateExercise,
+        Exercise exercise)
+    {
+        DetachExistingTrackedExercise(entry, exercise);
+        entry.Context.Attach(exercise);
+        UpdateTemplateExerciseReference(entry, templateExercise, exercise);
+        return Task.CompletedTask;
+    }
+
+    /// <summary>
+    /// Detaches any existing tracked instance of the exercise from the change tracker
+    /// </summary>
+    private static void DetachExistingTrackedExercise(EntityEntry<WorkoutTemplate> entry, Exercise exercise)
+    {
+        var tracked = entry.Context.ChangeTracker.Entries<Exercise>()
+            .FirstOrDefault(e => e.Entity.Id == exercise.Id);
+        
+        if (tracked != null)
+        {
+            tracked.State = EntityState.Detached;
+        }
+    }
+
+    /// <summary>
+    /// Updates the Exercise reference in the WorkoutTemplateExercise
+    /// </summary>
+    private static void UpdateTemplateExerciseReference(
+        EntityEntry<WorkoutTemplate> entry,
+        WorkoutTemplateExercise templateExercise,
+        Exercise exercise)
+    {
+        var wteEntry = entry.Context.Entry(templateExercise);
+        wteEntry.Reference(te => te.Exercise).CurrentValue = exercise;
     }
 }

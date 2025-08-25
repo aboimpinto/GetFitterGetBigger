@@ -230,6 +230,28 @@
 - **NEW**: Feature file test isolation patterns
 - **NEW**: Non-cumulative query counting pattern (Reset & Recount)
 
+#### CRAP Score Reduction Strategy
+**CRAP (Change Risk Anti-Patterns) Score** combines Cyclomatic Complexity and Code Coverage to measure maintainability risk.
+
+**Formula**: `CRAP Score = Complexity² × (1 - Coverage)³ + Complexity`
+
+**Action Guidelines**:
+1. **CRAP Score > 30**: HIGH RISK - Immediate action required
+2. **CRAP Score 21-30**: Medium risk - Plan refactoring
+3. **CRAP Score < 21**: Acceptable
+
+**Reduction Strategy**:
+- **If Complexity ≤ 10**: Add tests FIRST (exponential impact on score)
+- **If Complexity > 10**: Refactor FIRST, then add tests
+- **Real Example**: WorkoutTemplateExerciseService reduced CRAP score from >100 to <10 by increasing coverage from 1% to 93.9%
+
+**Why Test Coverage First (for reasonable complexity)**:
+- Coverage has CUBIC impact: `(1 - Coverage)³`
+- Method with complexity 5:
+  - 0% coverage = CRAP score 30
+  - 80% coverage = CRAP score 6
+  - 95% coverage = CRAP score 5.03
+
 ### Data Access Patterns
 
 #### [Repository Base Class Architecture](./Overview/RepositoryBaseClassArchitecture.md)
@@ -1010,6 +1032,8 @@ var testee = autoMocker.CreateInstance<MyService>(); // AutoMocker provides logg
 
 | Scenario | Pattern to Use | Documentation |
 |----------|---------------|---------------|
+| High CRAP Score (>30) | Add test coverage first (if complexity ≤ 10) | See CRAP Score Reduction Strategy above |
+| High Complexity (>10) | Refactor first, then test | See CRAP Score Reduction Strategy above |
 | Redundant validation across layers | Trust the Validation Chain | [TrustTheValidationChain.md](./CodeQualityGuidelines/TrustTheValidationChain.md) |
 | Service method return type | ServiceResult<T> | [ServiceResultPattern.md](./CodeQualityGuidelines/ServiceResultPattern.md) |
 | Input validation (all sync) | ServiceValidate.For<T>() | [ServiceValidatePattern.md](./CodeQualityGuidelines/ServiceValidatePattern.md) |

@@ -34,4 +34,15 @@ public record WorkoutTemplateExerciseListDto
     /// Total estimated duration in minutes
     /// </summary>
     public int TotalEstimatedDurationMinutes { get; init; }
+
+    /// <summary>
+    /// All exercises in a single flat list
+    /// </summary>
+    public List<WorkoutTemplateExerciseDto> Exercises => 
+        WarmupExercises.Concat(MainExercises).Concat(CooldownExercises).ToList();
+
+    /// <summary>
+    /// Empty instance for failed operations
+    /// </summary>
+    public static WorkoutTemplateExerciseListDto Empty => new();
 }

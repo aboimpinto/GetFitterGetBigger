@@ -150,7 +150,7 @@ public class ExerciseDtoBuilder
         Equipment = _equipment ?? new List<ReferenceDataDto>(),
         BodyParts = _bodyParts ?? new List<ReferenceDataDto>(),
         MovementPatterns = _movementPatterns ?? new List<ReferenceDataDto>(),
-        Difficulty = _difficulty ?? new ReferenceDataDto(),
+        Difficulty = _difficulty ?? ReferenceDataDto.Empty,
         KineticChain = _kineticChain,
         ExerciseWeightType = _exerciseWeightType
     };

@@ -561,75 +561,85 @@ public class ServiceValidationBuilder<T>
         Func<Task<ServiceResult<T>>> whenValid,
         Func<IReadOnlyList<ServiceError>, ServiceResult<T>> whenInvalid)
     {
-        // First check synchronous validations
-        if (_validation.HasErrors)
+        // Check synchronous validations first
+        var syncValidationResult = CheckSynchronousValidations(whenInvalid);
+        if (syncValidationResult != null)
         {
-            // Use the ServiceError if available, otherwise convert string errors to ValidationFailed
-            if (_validation.HasServiceError)
-            {
-                var failureResult = _validation.CreateFailureWithEmpty(default(T)!);
-                return whenInvalid(failureResult.StructuredErrors);
-            }
-            else
-            {
-                var syncServiceErrors = _validation.ValidationErrors
-                    .Select(msg => ServiceError.ValidationFailed(msg))
-                    .ToList();
-                return whenInvalid(syncServiceErrors);
-            }
+            return syncValidationResult;
         }
 
-        // Run async string validations
-        var asyncStringErrors = new List<string>();
-        foreach (var asyncValidation in _asyncValidations)
-        {
-            var (isValid, error) = await asyncValidation();
-            if (!isValid && error != null)
-            {
-                asyncStringErrors.Add(error);
-            }
-        }
-
-        // Run async ServiceError validations  
-        var asyncServiceErrors = new List<ServiceError>();
-        foreach (var asyncValidation in _asyncServiceErrorValidations)
-        {
-            var (isValid, error) = await asyncValidation();
-            if (!isValid && error != null)
-            {
-                asyncServiceErrors.Add(error);
-            }
-        }
-
-        // Combine all errors
-        var allServiceErrors = asyncStringErrors
-            .Select(msg => ServiceError.ValidationFailed(msg))
-            .Concat(asyncServiceErrors)
-            .ToList();
-
-        if (allServiceErrors.Any())
-        {
-            return whenInvalid(allServiceErrors);
-        }
-
-        return await whenValid();
+        // Process all async validations
+        var asyncErrors = await ProcessAllAsyncValidations();
+        
+        // Return result based on validation outcome
+        return asyncErrors.Any() 
+            ? whenInvalid(asyncErrors) 
+            : await whenValid();
     }
-    
+
     /// <summary>
-    /// Converts the validation result to a ValidationResult after executing all async validations
+    /// Checks synchronous validations and returns appropriate result if there are errors
     /// </summary>
-    /// <returns>A ValidationResult containing any validation errors</returns>
-    public async Task<ValidationResult> ToValidationResultAsync()
+    /// <param name="whenInvalid">Function to call when validation fails</param>
+    /// <returns>ServiceResult if there are sync errors, null if none</returns>
+    private ServiceResult<T>? CheckSynchronousValidations(
+        Func<IReadOnlyList<ServiceError>, ServiceResult<T>> whenInvalid)
     {
-        // First check synchronous validations
-        if (_validation.HasErrors)
+        if (!_validation.HasErrors)
         {
-            return new ValidationResult { Errors = _validation.ValidationErrors.ToList() };
+            return null;
         }
 
-        // Then run async validations
+        return _validation.HasServiceError 
+            ? HandleServiceErrorValidations(whenInvalid)
+            : HandleStringErrorValidations(whenInvalid);
+    }
+
+    /// <summary>
+    /// Handles synchronous validations that have ServiceError
+    /// </summary>
+    /// <param name="whenInvalid">Function to call when validation fails</param>
+    /// <returns>ServiceResult with structured errors</returns>
+    private ServiceResult<T> HandleServiceErrorValidations(
+        Func<IReadOnlyList<ServiceError>, ServiceResult<T>> whenInvalid)
+    {
+        var failureResult = _validation.CreateFailureWithEmpty(default(T)!);
+        return whenInvalid(failureResult.StructuredErrors);
+    }
+
+    /// <summary>
+    /// Handles synchronous validations that have string errors
+    /// </summary>
+    /// <param name="whenInvalid">Function to call when validation fails</param>
+    /// <returns>ServiceResult with converted string errors</returns>
+    private ServiceResult<T> HandleStringErrorValidations(
+        Func<IReadOnlyList<ServiceError>, ServiceResult<T>> whenInvalid)
+    {
+        var syncServiceErrors = _validation.ValidationErrors
+            .Select(msg => ServiceError.ValidationFailed(msg))
+            .ToList();
+        return whenInvalid(syncServiceErrors);
+    }
+
+    /// <summary>
+    /// Processes all async validations and returns combined errors
+    /// </summary>
+    /// <returns>List of all ServiceErrors from async validations</returns>
+    private async Task<List<ServiceError>> ProcessAllAsyncValidations()
+    {
+        var stringErrors = await ProcessAsyncStringValidations();
+        var serviceErrors = await ProcessAsyncServiceErrorValidations();
+        
+        return CombineAsyncErrors(stringErrors, serviceErrors);
+    }
+
+    /// <summary>
+    /// Processes async string validations and returns errors
+    /// </summary>
+    /// <returns>List of error messages from string validations</returns>
+    private async Task<List<string>> ProcessAsyncStringValidations()
+    {
         var errors = new List<string>();
-        ServiceError? firstServiceError = null;
         
         foreach (var asyncValidation in _asyncValidations)
         {
@@ -639,34 +649,186 @@ public class ServiceValidationBuilder<T>
                 errors.Add(error);
             }
         }
+        
+        return errors;
+    }
 
-        // Run async ServiceError validations  
+    /// <summary>
+    /// Processes async ServiceError validations and returns errors
+    /// </summary>
+    /// <returns>List of ServiceErrors from async validations</returns>
+    private async Task<List<ServiceError>> ProcessAsyncServiceErrorValidations()
+    {
+        var errors = new List<ServiceError>();
+        
+        foreach (var asyncValidation in _asyncServiceErrorValidations)
+        {
+            var (isValid, error) = await asyncValidation();
+            if (!isValid && error != null)
+            {
+                errors.Add(error);
+            }
+        }
+        
+        return errors;
+    }
+
+    /// <summary>
+    /// Combines string errors and service errors into a unified ServiceError list
+    /// </summary>
+    /// <param name="stringErrors">Errors from string validations</param>
+    /// <param name="serviceErrors">Errors from ServiceError validations</param>
+    /// <returns>Combined list of ServiceErrors</returns>
+    private static List<ServiceError> CombineAsyncErrors(
+        List<string> stringErrors, 
+        List<ServiceError> serviceErrors)
+    {
+        return stringErrors
+            .Select(msg => ServiceError.ValidationFailed(msg))
+            .Concat(serviceErrors)
+            .ToList();
+    }
+    
+    /// <summary>
+    /// Converts the validation result to a ValidationResult after executing all async validations
+    /// </summary>
+    /// <returns>A ValidationResult containing any validation errors</returns>
+    public async Task<ValidationResult> ToValidationResultAsync()
+    {
+        // First check synchronous validations
+        if (HasSyncValidationErrors())
+        {
+            return CreateSyncValidationFailureResult();
+        }
+
+        // Run all async validations
+        var asyncValidationResult = await ProcessAsyncValidationsAsync();
+        
+        return asyncValidationResult.HasErrors 
+            ? CreateAsyncValidationFailureResult(asyncValidationResult)
+            : ValidationResult.Success();
+    }
+
+    /// <summary>
+    /// Checks if there are synchronous validation errors
+    /// </summary>
+    /// <returns>True if there are sync validation errors</returns>
+    private bool HasSyncValidationErrors()
+    {
+        return _validation.HasErrors;
+    }
+
+    /// <summary>
+    /// Creates a ValidationResult for synchronous validation failures
+    /// </summary>
+    /// <returns>ValidationResult with sync errors</returns>
+    private ValidationResult CreateSyncValidationFailureResult()
+    {
+        return new ValidationResult { Errors = _validation.ValidationErrors.ToList() };
+    }
+
+    /// <summary>
+    /// Processes all async validations and returns combined results
+    /// </summary>
+    /// <returns>Combined async validation results</returns>
+    private async Task<AsyncValidationResult> ProcessAsyncValidationsAsync()
+    {
+        var stringErrors = await ProcessAsyncStringValidationsAsync();
+        var serviceErrorResult = await ProcessAsyncServiceErrorValidationsAsync();
+        
+        return new AsyncValidationResult
+        {
+            StringErrors = stringErrors,
+            ServiceErrors = serviceErrorResult.ServiceErrors,
+            FirstServiceError = serviceErrorResult.FirstServiceError
+        };
+    }
+
+    /// <summary>
+    /// Processes async string validations
+    /// </summary>
+    /// <returns>List of string errors</returns>
+    private async Task<List<string>> ProcessAsyncStringValidationsAsync()
+    {
+        var errors = new List<string>();
+        
+        foreach (var asyncValidation in _asyncValidations)
+        {
+            var (isValid, error) = await asyncValidation();
+            if (!isValid && error != null)
+            {
+                errors.Add(error);
+            }
+        }
+        
+        return errors;
+    }
+
+    /// <summary>
+    /// Processes async ServiceError validations
+    /// </summary>
+    /// <returns>ServiceError validation results</returns>
+    private async Task<AsyncServiceErrorResult> ProcessAsyncServiceErrorValidationsAsync()
+    {
+        var errors = new List<string>();
+        ServiceError? firstServiceError = null;
+        
         foreach (var asyncValidation in _asyncServiceErrorValidations)
         {
             var (isValid, error) = await asyncValidation();
             if (!isValid && error != null)
             {
                 errors.Add(error.Message);
-                // Capture the first ServiceError to preserve the error code
                 firstServiceError ??= error;
             }
         }
-
-        // If we have errors, return a failure with the first ServiceError (if any)
-        if (errors.Any())
+        
+        return new AsyncServiceErrorResult
         {
-            // If we have a ServiceError, create a new one with all error messages
-            if (firstServiceError != null)
-            {
-                var combinedMessage = errors.Count == 1 
-                    ? firstServiceError.Message 
-                    : string.Join("; ", errors);
-                var combinedError = new ServiceError(firstServiceError.Code, combinedMessage);
-                return ValidationResult.Failure(combinedError);
-            }
-            return ValidationResult.Failure(errors.ToArray());
-        }
+            ServiceErrors = errors,
+            FirstServiceError = firstServiceError
+        };
+    }
 
-        return ValidationResult.Success();
+    /// <summary>
+    /// Creates a ValidationResult for async validation failures
+    /// </summary>
+    /// <param name="asyncResult">The async validation results</param>
+    /// <returns>ValidationResult with async errors</returns>
+    private ValidationResult CreateAsyncValidationFailureResult(AsyncValidationResult asyncResult)
+    {
+        var allErrors = asyncResult.StringErrors.Concat(asyncResult.ServiceErrors).ToList();
+        
+        if (asyncResult.FirstServiceError != null)
+        {
+            var combinedMessage = allErrors.Count == 1 
+                ? asyncResult.FirstServiceError.Message 
+                : string.Join("; ", allErrors);
+            var combinedError = new ServiceError(asyncResult.FirstServiceError.Code, combinedMessage);
+            return ValidationResult.Failure(combinedError);
+        }
+        
+        return ValidationResult.Failure(allErrors.ToArray());
+    }
+
+    /// <summary>
+    /// Helper class to hold async validation results
+    /// </summary>
+    private class AsyncValidationResult
+    {
+        public List<string> StringErrors { get; set; } = new();
+        public List<string> ServiceErrors { get; set; } = new();
+        public ServiceError? FirstServiceError { get; set; }
+        
+        public bool HasErrors => StringErrors.Any() || ServiceErrors.Any();
+    }
+
+    /// <summary>
+    /// Helper class to hold async ServiceError validation results
+    /// </summary>
+    private class AsyncServiceErrorResult
+    {
+        public List<string> ServiceErrors { get; set; } = new();
+        public ServiceError? FirstServiceError { get; set; }
     }
 }

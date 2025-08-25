@@ -59,6 +59,60 @@ When propagating API documentation:
 - Navigation property loading issues
 - Quick debugging checklist
 
+### Understanding and Reducing CRAP Score
+
+**CRAP Score** (Change Risk Anti-Patterns) measures code maintainability by combining:
+- **Cyclomatic Complexity**: How complex the code logic is
+- **Code Coverage**: How well tested the code is
+
+#### Strategy for Reducing CRAP Score:
+
+**1. When CRAP Score is High (>30):**
+   - **First Priority**: Add test coverage
+   - Adding tests is the fastest way to reduce CRAP score
+   - Example: WorkoutTemplateExerciseService went from high CRAP score to acceptable just by increasing coverage from 1% to 93.9%
+
+**2. When Cyclomatic Complexity is Very High (>10):**
+   - **First Priority**: Refactor to reduce complexity
+   - Extract methods, use pattern matching, remove nested ifs
+   - **Then**: Add comprehensive test coverage
+
+**3. Optimal Approach:**
+   ```
+   CRAP Score = Complexity² × (1 - Coverage)³ + Complexity
+   
+   If Complexity > 10: Refactor first, then test
+   If Complexity ≤ 10: Test first (biggest impact)
+   ```
+
+**Key Insight**: Test coverage has exponential impact on CRAP score. A method with complexity 5 and 0% coverage has CRAP score of 30, but with 80% coverage drops to 6!
+
+### Test Coverage Reports
+
+To generate a comprehensive test coverage report for the project, use the **test-coverage-reporter** agent instead of running commands manually:
+
+```
+Use the test-coverage-reporter agent to generate a test coverage report
+```
+
+This agent will:
+- Clean previous test results
+- Run all tests with coverage collection
+- Generate HTML and Markdown reports
+- Provide actionable coverage insights
+
+**Manual Command Reference** (if needed):
+```bash
+# Clean and run tests with coverage
+dotnet clean
+dotnet test --collect:"XPlat Code Coverage" --results-directory ./TestResults /p:CollectCoverage=true /p:CoverletOutputFormat=cobertura
+
+# Generate HTML report (requires ReportGenerator tool)
+reportgenerator -reports:"TestResults/*/coverage.cobertura.xml" -targetdir:"TestResults/CoverageReport" -reporttypes:Html
+```
+
+The coverage report will be available at `TestResults/CoverageReport/index.html`
+
 ## Memory Bank Structure
 
 The `/memory-bank/` directory contains all project knowledge and processes:

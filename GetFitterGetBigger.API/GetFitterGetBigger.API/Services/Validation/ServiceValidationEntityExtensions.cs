@@ -30,20 +30,97 @@ public static class ServiceValidationEntityExtensions
     {
         var validation = await validationTask;
         
-        // If validation already has errors, don't execute the load
-        if (validation.HasErrors)
-            return new ServiceValidationWithData<TResult, TEntity>(validation, default);
+        // Skip entity loading if validation already has errors
+        if (ShouldSkipEntityLoading(validation))
+            return CreateValidationWithoutData<TResult, TEntity>(validation);
         
-        var result = await loadEntityFunc();
+        // Attempt to load the entity
+        var loadResult = await loadEntityFunc();
         
-        // Check if load failed or returned empty
-        if (!result.IsSuccess || result.Data?.IsEmpty != false)
+        // Process the load result and return appropriate validation state
+        return ProcessEntityLoadResult(validation, loadResult, errorMessage);
+    }
+
+    /// <summary>
+    /// Determines if entity loading should be skipped due to existing validation errors
+    /// </summary>
+    /// <typeparam name="TResult">The result DTO type</typeparam>
+    /// <param name="validation">The validation to check</param>
+    /// <returns>True if entity loading should be skipped</returns>
+    private static bool ShouldSkipEntityLoading<TResult>(ServiceValidation<TResult> validation)
+        where TResult : class
+    {
+        return validation.HasErrors;
+    }
+
+    /// <summary>
+    /// Creates a ServiceValidationWithData without entity data
+    /// </summary>
+    /// <typeparam name="TResult">The result DTO type</typeparam>
+    /// <typeparam name="TEntity">The entity DTO type</typeparam>
+    /// <param name="validation">The validation instance</param>
+    /// <returns>ServiceValidationWithData with no entity data</returns>
+    private static ServiceValidationWithData<TResult, TEntity> CreateValidationWithoutData<TResult, TEntity>(
+        ServiceValidation<TResult> validation)
+        where TResult : class, IEmptyDto<TResult>
+        where TEntity : class, IEmptyDto<TEntity>
+    {
+        return new ServiceValidationWithData<TResult, TEntity>(validation, default);
+    }
+
+    /// <summary>
+    /// Processes the entity load result and creates appropriate validation response
+    /// </summary>
+    /// <typeparam name="TResult">The result DTO type</typeparam>
+    /// <typeparam name="TEntity">The entity DTO type</typeparam>
+    /// <param name="validation">The validation instance</param>
+    /// <param name="loadResult">The result from loading the entity</param>
+    /// <param name="errorMessage">Error message if entity load fails</param>
+    /// <returns>ServiceValidationWithData based on load result</returns>
+    private static ServiceValidationWithData<TResult, TEntity> ProcessEntityLoadResult<TResult, TEntity>(
+        ServiceValidation<TResult> validation,
+        ServiceResult<TEntity> loadResult,
+        string errorMessage)
+        where TResult : class, IEmptyDto<TResult>
+        where TEntity : class, IEmptyDto<TEntity>
+    {
+        if (IsEntityLoadSuccessful(loadResult))
         {
-            validation.Ensure(() => false, errorMessage);
-            return new ServiceValidationWithData<TResult, TEntity>(validation, default);
+            return CreateValidationWithData(validation, loadResult.Data!);
         }
-        
-        return new ServiceValidationWithData<TResult, TEntity>(validation, result.Data);
+
+        // Entity load failed or returned empty - add validation error
+        validation.Ensure(() => false, errorMessage);
+        return CreateValidationWithoutData<TResult, TEntity>(validation);
+    }
+
+    /// <summary>
+    /// Determines if the entity load was successful and returned valid data
+    /// </summary>
+    /// <typeparam name="TEntity">The entity DTO type</typeparam>
+    /// <param name="loadResult">The result from loading the entity</param>
+    /// <returns>True if load was successful and data is not empty</returns>
+    private static bool IsEntityLoadSuccessful<TEntity>(ServiceResult<TEntity> loadResult)
+        where TEntity : class, IEmptyDto<TEntity>
+    {
+        return loadResult.IsSuccess && loadResult.Data?.IsEmpty == false;
+    }
+
+    /// <summary>
+    /// Creates a ServiceValidationWithData with valid entity data
+    /// </summary>
+    /// <typeparam name="TResult">The result DTO type</typeparam>
+    /// <typeparam name="TEntity">The entity DTO type</typeparam>
+    /// <param name="validation">The validation instance</param>
+    /// <param name="entityData">The loaded entity data</param>
+    /// <returns>ServiceValidationWithData with entity data</returns>
+    private static ServiceValidationWithData<TResult, TEntity> CreateValidationWithData<TResult, TEntity>(
+        ServiceValidation<TResult> validation,
+        TEntity entityData)
+        where TResult : class, IEmptyDto<TResult>
+        where TEntity : class, IEmptyDto<TEntity>
+    {
+        return new ServiceValidationWithData<TResult, TEntity>(validation, entityData);
     }
     
     /// <summary>

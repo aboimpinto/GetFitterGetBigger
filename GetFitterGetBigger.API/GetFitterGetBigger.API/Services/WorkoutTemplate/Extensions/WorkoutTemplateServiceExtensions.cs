@@ -51,10 +51,42 @@ public static class WorkoutTemplateServiceExtensions
         if (command == null)
             return false;
 
-        return !string.IsNullOrWhiteSpace(command.Name) &&
-               !command.CategoryId.IsEmpty &&
-               !command.DifficultyId.IsEmpty &&
-               command.EstimatedDurationMinutes is >= 5 and <= 300;
+        return IsNameValidForCreate(command.Name) &&
+               AreReferenceIdsValid(command.CategoryId, command.DifficultyId) &&
+               IsDurationValidForCreate(command.EstimatedDurationMinutes);
+    }
+
+    /// <summary>
+    /// Validates that the name field is valid for create operations.
+    /// For creation, name is required and must meet length requirements.
+    /// </summary>
+    /// <param name="name">The name to validate</param>
+    /// <returns>True if name is valid for create</returns>
+    private static bool IsNameValidForCreate(string? name)
+    {
+        return !string.IsNullOrWhiteSpace(name) && name.HasValidNameLength();
+    }
+
+    /// <summary>
+    /// Validates that both reference IDs are not empty.
+    /// </summary>
+    /// <param name="categoryId">The category ID to validate</param>
+    /// <param name="difficultyId">The difficulty ID to validate</param>
+    /// <returns>True if both IDs are valid</returns>
+    private static bool AreReferenceIdsValid(WorkoutCategoryId categoryId, DifficultyLevelId difficultyId)
+    {
+        return !categoryId.IsEmpty && !difficultyId.IsEmpty;
+    }
+
+    /// <summary>
+    /// Validates that the duration field is valid for create operations.
+    /// For creation, duration is required and must meet valid range.
+    /// </summary>
+    /// <param name="duration">The duration to validate</param>
+    /// <returns>True if duration is valid for create</returns>
+    private static bool IsDurationValidForCreate(int duration)
+    {
+        return duration.IsValidDuration();
     }
 
     /// <summary>
@@ -67,17 +99,48 @@ public static class WorkoutTemplateServiceExtensions
         if (command == null)
             return false;
 
-        // For update, we allow partial updates, so we only validate if fields are provided
-        var isNameValid = string.IsNullOrWhiteSpace(command.Name) || 
-                         (command.Name.Length >= 3 && command.Name.Length <= 100);
-                         
-        var isDurationValid = !command.EstimatedDurationMinutes.HasValue || 
-                             (command.EstimatedDurationMinutes >= 5 && command.EstimatedDurationMinutes <= 300);
-                             
-        var isDescriptionValid = string.IsNullOrEmpty(command.Description) || 
-                                command.Description.Length <= 1000;
+        return IsNameValidForUpdate(command.Name) &&
+               IsDurationValidForUpdate(command.EstimatedDurationMinutes) &&
+               IsDescriptionValidForUpdate(command.Description);
+    }
 
-        return isNameValid && isDurationValid && isDescriptionValid;
+    /// <summary>
+    /// Validates that the name field is valid for update operations.
+    /// For updates, name can be null/empty (no change) or must meet length requirements.
+    /// </summary>
+    /// <param name="name">The name to validate</param>
+    /// <returns>True if name is valid for update</returns>
+    private static bool IsNameValidForUpdate(string? name)
+    {
+        if (string.IsNullOrWhiteSpace(name))
+            return true; // Allow null/empty for partial updates
+
+        return name.HasValidNameLength();
+    }
+
+    /// <summary>
+    /// Validates that the duration field is valid for update operations.
+    /// For updates, duration can be null (no change) or must meet valid range.
+    /// </summary>
+    /// <param name="duration">The duration to validate</param>
+    /// <returns>True if duration is valid for update</returns>
+    private static bool IsDurationValidForUpdate(int? duration)
+    {
+        if (!duration.HasValue)
+            return true; // Allow null for partial updates
+
+        return duration.Value.IsValidDuration();
+    }
+
+    /// <summary>
+    /// Validates that the description field is valid for update operations.
+    /// For updates, description can be null/empty (no change) or must meet length requirements.
+    /// </summary>
+    /// <param name="description">The description to validate</param>
+    /// <returns>True if description is valid for update</returns>
+    private static bool IsDescriptionValidForUpdate(string? description)
+    {
+        return description.HasValidDescriptionLength();
     }
 
     /// <summary>

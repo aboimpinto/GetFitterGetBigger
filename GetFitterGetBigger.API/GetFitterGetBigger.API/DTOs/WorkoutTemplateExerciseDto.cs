@@ -44,4 +44,9 @@ public record WorkoutTemplateExerciseDto
     /// Last modified timestamp
     /// </summary>
     public DateTime UpdatedAt { get; init; }
+
+    /// <summary>
+    /// Empty instance for failed operations
+    /// </summary>
+    public static WorkoutTemplateExerciseDto Empty => new();
 }
