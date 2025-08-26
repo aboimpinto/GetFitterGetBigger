@@ -15,42 +15,20 @@ namespace GetFitterGetBigger.API.Services.Exercise.Features.Links;
 /// <summary>
 /// Service implementation for managing exercise links
 /// </summary>
-public class ExerciseLinkService : IExerciseLinkService
+public class ExerciseLinkService(
+    IExerciseLinkQueryDataService queryDataService,
+    IExerciseLinkCommandDataService commandDataService,
+    IExerciseService exerciseService,
+    IBidirectionalLinkHandler bidirectionalLinkHandler,
+    ILinkValidationHandler linkValidationHandler) : IExerciseLinkService
 {
-    private readonly IExerciseLinkQueryDataService queryDataService;
-    private readonly IExerciseLinkCommandDataService commandDataService;
-    private readonly IExerciseService exerciseService;
-    private readonly ILogger<ExerciseLinkService> logger;
-    private readonly BidirectionalLinkHandler _bidirectionalLinkHandler;
-    private readonly CircularReferenceValidationHandler _circularReferenceHandler;
-    private readonly LinkValidationHandler _linkValidationHandler;
-    
-    public ExerciseLinkService(
-        IExerciseLinkQueryDataService queryDataService,
-        IExerciseLinkCommandDataService commandDataService,
-        IExerciseService exerciseService,
-        ILoggerFactory loggerFactory)
-    {
-        this.queryDataService = queryDataService;
-        this.commandDataService = commandDataService;
-        this.exerciseService = exerciseService;
-        this.logger = loggerFactory.CreateLogger<ExerciseLinkService>();
-        
-        _bidirectionalLinkHandler = new BidirectionalLinkHandler(
-            queryDataService, 
-            commandDataService, 
-            loggerFactory.CreateLogger<BidirectionalLinkHandler>());
-        
-        _circularReferenceHandler = new CircularReferenceValidationHandler(
-            queryDataService,
-            loggerFactory.CreateLogger<CircularReferenceValidationHandler>());
-        
-        _linkValidationHandler = new LinkValidationHandler(
-            queryDataService,
-            loggerFactory.CreateLogger<LinkValidationHandler>());
-    }
+    private readonly IExerciseLinkQueryDataService _queryDataService = queryDataService;
+    private readonly IExerciseLinkCommandDataService _commandDataService = commandDataService;
+    private readonly IExerciseService _exerciseService = exerciseService;
+    private readonly IBidirectionalLinkHandler _bidirectionalLinkHandler = bidirectionalLinkHandler;
+    private readonly ILinkValidationHandler _linkValidationHandler = linkValidationHandler;
     /// <summary>
-    /// Creates a new link between exercises using enum LinkType (enhanced functionality)
+    /// Creates a new link between exercises using enum LinkType
     /// DisplayOrder is calculated server-side based on existing links
     /// </summary>
     public async Task<ServiceResult<ExerciseLinkDto>> CreateLinkAsync(
@@ -66,15 +44,20 @@ public class ExerciseLinkService : IExerciseLinkService
                 () => LinkValidationHandler.IsValidLinkType(linkType),
                 ExerciseLinkErrorMessages.InvalidLinkTypeEnum)
             .EnsureLinkTypeIsNotWorkout(linkType, ExerciseLinkErrorMessages.WorkoutLinksAutoCreated)
+            // REMOVED: Bidirectional uniqueness validation moved to transaction-aware layer
+            // The validation is now performed within CreateBidirectionalAsync to address 
+            // transaction isolation issues where validation couldn't see uncommitted changes
             .AsExerciseLinkValidation()
             .EnsureSourceExerciseExists(
-                exerciseService,
+                this._exerciseService,
                 sourceExerciseId,
                 ExerciseLinkErrorMessages.SourceExerciseNotFound)
             .EnsureSourceExerciseIsNotRest(
                 ExerciseLinkErrorMessages.RestExercisesCannotHaveLinks)
+            .EnsureSourceExerciseIsWorkoutType(
+                ExerciseLinkErrorMessages.OnlyWorkoutExercisesCanCreateLinks)
             .EnsureTargetExerciseExists(
-                exerciseService,
+                this._exerciseService,
                 targetExerciseId,
                 ExerciseLinkErrorMessages.TargetExerciseNotFound)
             .EnsureTargetExerciseIsNotRest(
@@ -82,53 +65,13 @@ public class ExerciseLinkService : IExerciseLinkService
             .EnsureExercisesAreCompatibleForLinkType(
                 linkType,
                 GetLinkTypeCompatibilityError(linkType))
-            .MatchAsyncWithExercises(
-                whenValid: async () => await _bidirectionalLinkHandler.CreateBidirectionalLinkAsync(sourceExerciseId, targetExerciseId, linkType));
-    }
-
-    /// <summary>
-    /// Creates a new link between exercises using traditional command (backward compatibility)
-    /// </summary>
-    public async Task<ServiceResult<ExerciseLinkDto>> CreateLinkAsync(CreateExerciseLinkCommand command)
-    {
-        return await ServiceValidate.Build<ExerciseLinkDto>()
-            .EnsureNotEmpty(command.SourceExerciseId, ExerciseLinkErrorMessages.InvalidSourceExerciseId)
-            .EnsureNotEmpty(command.TargetExerciseId, ExerciseLinkErrorMessages.InvalidTargetExerciseId)
-            .EnsureExercisesAreDifferent(command.SourceExerciseId, command.TargetExerciseId, ExerciseLinkErrorMessages.CannotLinkToSelf)
-            .EnsureNotWhiteSpace(command.LinkType, ExerciseLinkErrorMessages.LinkTypeRequired)
-            .Ensure(
-                () => LinkValidationHandler.IsValidLinkType(command.LinkType),
-                ExerciseLinkErrorMessages.InvalidLinkType)
-            .EnsureDisplayOrderIsNotNegative(command.DisplayOrder, ExerciseLinkErrorMessages.DisplayOrderMustBeNonNegative)
-            .AsExerciseLinkValidation()
-            .EnsureSourceExerciseExists(
-                exerciseService,
-                command.SourceExerciseId,
-                ExerciseLinkErrorMessages.SourceExerciseNotFound)
-            .EnsureSourceExerciseIsWorkoutType(
-                ExerciseLinkErrorMessages.SourceMustBeWorkout)
-            .EnsureSourceExerciseIsNotRest(
-                ExerciseLinkErrorMessages.RestExercisesCannotHaveLinks)
-            .EnsureTargetExerciseExists(
-                exerciseService,
-                command.TargetExerciseId,
-                ExerciseLinkErrorMessages.TargetExerciseNotFound)
-            .EnsureTargetExerciseMatchesLinkType(
-                command.LinkType,
-                ExerciseLinkErrorMessages.TargetMustMatchLinkType)
-            .EnsureTargetExerciseIsNotRest(
-                ExerciseLinkErrorMessages.RestExercisesCannotBeLinked)
-            .EnsureAsync(
-                async () => await _linkValidationHandler.IsLinkUniqueAsync(command.SourceExerciseId, command.TargetExerciseId, command.LinkType),
-                ExerciseLinkErrorMessages.LinkAlreadyExists)
-            .EnsureAsync(
-                async () => await _circularReferenceHandler.IsNoCircularReferenceAsync(command.SourceExerciseId, command.TargetExerciseId),
-                ExerciseLinkErrorMessages.CircularReferenceDetected)
-            .EnsureAsync(
-                async () => await _linkValidationHandler.IsUnderMaximumLinksAsync(command.SourceExerciseId, command.LinkType),
+            .EnsureUnderMaximumLinks(
+                this._linkValidationHandler,
+                sourceExerciseId,
+                linkType,
                 ExerciseLinkErrorMessages.MaximumLinksReached)
             .MatchAsyncWithExercises(
-                whenValid: async () => await CreateLinkInternalAsync(command));
+                whenValid: async () => await this._bidirectionalLinkHandler.CreateBidirectionalLinkAsync(sourceExerciseId, targetExerciseId, linkType));
     }
     
     /// <summary>
@@ -139,7 +82,7 @@ public class ExerciseLinkService : IExerciseLinkService
         return await ServiceValidate.Build<ExerciseLinksResponseDto>()
             .EnsureNotEmpty(command.ExerciseId, ExerciseLinkErrorMessages.InvalidSourceExerciseId)
             .MatchAsync(
-                whenValid: async () => await queryDataService.GetLinksAsync(command),
+                whenValid: async () => await this._queryDataService.GetLinksAsync(command),
                 whenInvalid: errors => ServiceResult<ExerciseLinksResponseDto>.Failure(
                     ExerciseLinksResponseDto.Empty,
                     errors.FirstOrDefault() ?? ServiceError.ValidationFailed(ExerciseLinkErrorMessages.ValidationFailed))
@@ -156,10 +99,10 @@ public class ExerciseLinkService : IExerciseLinkService
             .EnsureNotEmpty(command.LinkId, ExerciseLinkErrorMessages.InvalidLinkId)
             .EnsureDisplayOrderIsNotNegative(command.DisplayOrder, ExerciseLinkErrorMessages.DisplayOrderMustBeNonNegative)
             .EnsureAsync(
-                async () => await _linkValidationHandler.DoesLinkExistAsync(command.LinkId),
+                async () => await this._linkValidationHandler.DoesLinkExistAsync(command.LinkId),
                 ServiceError.NotFound("ExerciseLink", command.LinkId.ToString()))
             .EnsureAsync(
-                async () => await _linkValidationHandler.DoesLinkBelongToExerciseAsync(command.ExerciseId, command.LinkId),
+                async () => await this._linkValidationHandler.DoesLinkBelongToExerciseAsync(command.ExerciseId, command.LinkId),
                 ExerciseLinkErrorMessages.LinkDoesNotBelongToExercise)
             .MatchAsync(
                 whenValid: async () => await UpdateLinkInternalAsync(command),
@@ -178,13 +121,13 @@ public class ExerciseLinkService : IExerciseLinkService
             .EnsureNotEmpty(exerciseId, ExerciseLinkErrorMessages.InvalidSourceExerciseId)
             .EnsureNotEmpty(linkId, ExerciseLinkErrorMessages.InvalidLinkId)
             .EnsureAsync(
-                async () => await _linkValidationHandler.DoesLinkExistAsync(linkId),
+                async () => await this._linkValidationHandler.DoesLinkExistAsync(linkId),
                 ServiceError.NotFound("ExerciseLink", linkId.ToString()))
             .EnsureAsync(
-                async () => await _linkValidationHandler.DoesLinkBelongToExerciseAsync(exerciseId, linkId),
+                async () => await this._linkValidationHandler.DoesLinkBelongToExerciseAsync(exerciseId, linkId),
                 ServiceError.ValidationFailed(ExerciseLinkErrorMessages.LinkDoesNotBelongToExercise))
             .MatchAsync(
-                whenValid: async () => await _bidirectionalLinkHandler.DeleteBidirectionalLinkAsync(linkId, deleteReverse),
+                whenValid: async () => await this._bidirectionalLinkHandler.DeleteBidirectionalLinkAsync(linkId, deleteReverse),
                 whenInvalid: errors => ServiceResult<BooleanResultDto>.Failure(
                     BooleanResultDto.Create(false),
                     errors.FirstOrDefault() ?? ServiceError.ValidationFailed(ExerciseLinkErrorMessages.ValidationFailed))
@@ -200,7 +143,7 @@ public class ExerciseLinkService : IExerciseLinkService
             .EnsureNotEmpty(exerciseId, ExerciseLinkErrorMessages.InvalidSourceExerciseId)
             .EnsureCountIsInRange(count, 1, 20, ExerciseLinkErrorMessages.CountMustBeBetween1And20)
             .MatchAsync(
-                whenValid: async () => await queryDataService.GetSuggestedLinksAsync(exerciseId, count),
+                whenValid: async () => await this._queryDataService.GetSuggestedLinksAsync(exerciseId, count),
                 whenInvalid: errors => ServiceResult<List<ExerciseLinkDto>>.Failure(
                     [],
                     errors.FirstOrDefault() ?? ServiceError.ValidationFailed(ExerciseLinkErrorMessages.InvalidSourceExerciseId))
@@ -230,27 +173,11 @@ public class ExerciseLinkService : IExerciseLinkService
             _ => ExerciseLinkErrorMessages.InvalidLinkTypeEnum
         };
     
-    private async Task<ServiceResult<ExerciseLinkDto>> CreateLinkInternalAsync(CreateExerciseLinkCommand command)
-    {
-        // Create a DTO from the command
-        var linkDto = new ExerciseLinkDto
-        {
-            Id = string.Empty, // Will be generated by the database
-            SourceExerciseId = command.SourceExerciseId.ToString(),
-            TargetExerciseId = command.TargetExerciseId.ToString(),
-            LinkType = command.LinkType,
-            DisplayOrder = command.DisplayOrder,
-            IsActive = true
-        };
-        
-        return await commandDataService.CreateAsync(linkDto);
-    }
-    
     private async Task<ServiceResult<ExerciseLinkDto>> UpdateLinkInternalAsync(UpdateExerciseLinkCommand command)
     {
         // TRUST THE INFRASTRUCTURE! The link existence has already been validated in UpdateLinkAsync
         // Pass a transformation function to update only the fields we need - SINGLE DATABASE CALL
-        return await commandDataService.UpdateAsync(
+        return await this._commandDataService.UpdateAsync(
             command.LinkId,
             existingLink => ExerciseLink.Handler.Create(
                 existingLink.Id,
@@ -264,4 +191,8 @@ public class ExerciseLinkService : IExerciseLinkService
             )
         );
     }
+    
+    // REMOVED: IsBidirectionalLinkUniqueWithFallbackAsync method
+    // The bidirectional link validation has been moved to the transaction-aware layer 
+    // in CreateBidirectionalAsync to resolve transaction isolation issues.
 }

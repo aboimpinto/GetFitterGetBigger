@@ -19,22 +19,17 @@ public class ExerciseLinkMigrationTests
     {
         // Test the migration mapping logic that would occur in the database
         
-        // Arrange - simulate existing string-based links
+        // Arrange - simulate string-based links with enum values
         var warmupMappings = new[]
         {
-            ("Warmup", ExerciseLinkType.WARMUP, 0),
-            ("Cooldown", ExerciseLinkType.COOLDOWN, 1)
+            ("WARMUP", ExerciseLinkType.WARMUP, 0),
+            ("COOLDOWN", ExerciseLinkType.COOLDOWN, 1)
         };
 
         foreach (var (stringValue, expectedEnum, expectedInt) in warmupMappings)
         {
-            // Act - simulate what the migration does
-            var actualEnum = stringValue switch
-            {
-                "Warmup" => ExerciseLinkType.WARMUP,
-                "Cooldown" => ExerciseLinkType.COOLDOWN,
-                _ => throw new ArgumentException($"Unknown link type: {stringValue}")
-            };
+            // Act - test enum parsing from string values
+            var actualEnum = Enum.Parse<ExerciseLinkType>(stringValue);
 
             // Assert - verify mapping is correct
             Assert.Equal(expectedEnum, actualEnum);
@@ -45,15 +40,17 @@ public class ExerciseLinkMigrationTests
     [Fact]
     public void Migration_Preserves_String_Property_Values()
     {
-        // Arrange - create links using string-based method (pre-migration scenario)
-        var warmupLink = ExerciseLink.Handler.CreateNew(_sourceExerciseId, _targetExerciseId, "Warmup", 1);
-        var cooldownLink = ExerciseLink.Handler.CreateNew(_sourceExerciseId, _targetExerciseId, "Cooldown", 1);
+        // Arrange - create links using string-based method with proper enum values
+        var warmupLink = ExerciseLink.Handler.CreateNew(_sourceExerciseId, _targetExerciseId, "WARMUP", 1);
+        var cooldownLink = ExerciseLink.Handler.CreateNew(_sourceExerciseId, _targetExerciseId, "COOLDOWN", 1);
 
-        // Act & Assert - string values should be preserved
-        Assert.Equal("Warmup", warmupLink.LinkType);
-        Assert.Equal("Cooldown", cooldownLink.LinkType);
+        // Act & Assert - string values should be preserved and enum should be set
+        Assert.Equal("WARMUP", warmupLink.LinkType);
+        Assert.Equal("COOLDOWN", cooldownLink.LinkType);
         
-        // Computed property should work correctly even without enum set
+        // Enum should be set from the string values
+        Assert.Equal(ExerciseLinkType.WARMUP, warmupLink.LinkTypeEnum);
+        Assert.Equal(ExerciseLinkType.COOLDOWN, cooldownLink.LinkTypeEnum);
         Assert.Equal(ExerciseLinkType.WARMUP, warmupLink.ActualLinkType);
         Assert.Equal(ExerciseLinkType.COOLDOWN, cooldownLink.ActualLinkType);
     }
@@ -84,7 +81,7 @@ public class ExerciseLinkMigrationTests
             ExerciseLinkId.New(),
             _sourceExerciseId,
             _targetExerciseId,
-            "Warmup",
+            "WARMUP",
             null, // No enum set yet
             1,
             true,
@@ -96,7 +93,7 @@ public class ExerciseLinkMigrationTests
             ExerciseLinkId.New(),
             _sourceExerciseId,
             _targetExerciseId,
-            "Warmup",
+            "WARMUP",
             ExerciseLinkType.WARMUP, // Enum set by migration
             1,
             true,
@@ -145,15 +142,15 @@ public class ExerciseLinkMigrationTests
     [Fact]
     public void Legacy_String_API_Should_Continue_Working()
     {
-        // Arrange & Act - use old string-based API
-        var warmupLink = ExerciseLink.Handler.CreateNew(_sourceExerciseId, _targetExerciseId, "Warmup", 1);
-        var cooldownLink = ExerciseLink.Handler.CreateNew(_sourceExerciseId, _targetExerciseId, "Cooldown", 1);
+        // Arrange & Act - use string-based API with proper enum values
+        var warmupLink = ExerciseLink.Handler.CreateNew(_sourceExerciseId, _targetExerciseId, "WARMUP", 1);
+        var cooldownLink = ExerciseLink.Handler.CreateNew(_sourceExerciseId, _targetExerciseId, "COOLDOWN", 1);
 
-        // Assert - should work exactly as before
-        Assert.Equal("Warmup", warmupLink.LinkType);
-        Assert.Equal("Cooldown", cooldownLink.LinkType);
-        Assert.Null(warmupLink.LinkTypeEnum);
-        Assert.Null(cooldownLink.LinkTypeEnum);
+        // Assert - should work with enum values properly set
+        Assert.Equal("WARMUP", warmupLink.LinkType);
+        Assert.Equal("COOLDOWN", cooldownLink.LinkType);
+        Assert.Equal(ExerciseLinkType.WARMUP, warmupLink.LinkTypeEnum);
+        Assert.Equal(ExerciseLinkType.COOLDOWN, cooldownLink.LinkTypeEnum);
         
         // But computed property should still work
         Assert.Equal(ExerciseLinkType.WARMUP, warmupLink.ActualLinkType);
@@ -189,7 +186,7 @@ public class ExerciseLinkMigrationTests
             ExerciseLinkId.New(),
             _sourceExerciseId,
             _targetExerciseId,
-            "Warmup",
+            "WARMUP",
             5,
             true,
             originalCreatedAt,
@@ -223,19 +220,14 @@ public class ExerciseLinkMigrationTests
     }
 
     [Theory]
-    [InlineData("Warmup", ExerciseLinkType.WARMUP)]
-    [InlineData("Cooldown", ExerciseLinkType.COOLDOWN)]
+    [InlineData("WARMUP", ExerciseLinkType.WARMUP)]
+    [InlineData("COOLDOWN", ExerciseLinkType.COOLDOWN)]
     public void Migration_Mapping_Should_Be_Bidirectional(string stringValue, ExerciseLinkType enumValue)
     {
         // Test that the migration mapping works in both directions
         
         // Act & Assert - string to enum
-        var enumFromString = stringValue switch
-        {
-            "Warmup" => ExerciseLinkType.WARMUP,
-            "Cooldown" => ExerciseLinkType.COOLDOWN,
-            _ => throw new ArgumentException()
-        };
+        var enumFromString = Enum.Parse<ExerciseLinkType>(stringValue);
         Assert.Equal(enumValue, enumFromString);
         
         // Act & Assert - enum to string

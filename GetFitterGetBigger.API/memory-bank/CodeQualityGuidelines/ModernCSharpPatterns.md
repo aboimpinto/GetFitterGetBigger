@@ -108,6 +108,8 @@ public class BodyPartReferenceService(
 2. **Field Assignment** - Only create fields for parameters you actually use in the class
 3. **Base Class Parameters** - Pass directly to base constructor when inherited
 4. **Naming Convention** - Use camelCase for parameters, _camelCase for fields
+5. **Field Access** - ALWAYS use `this._fieldName` when accessing instance fields
+6. **Consistency** - ALL fields must use underscore prefix, NO exceptions
 
 ## When to Use Primary Constructors
 

@@ -2,6 +2,7 @@ using GetFitterGetBigger.API.DTOs;
 using GetFitterGetBigger.API.DTOs.Interfaces;
 using GetFitterGetBigger.API.Models.Enums;
 using GetFitterGetBigger.API.Models.SpecializedIds;
+using GetFitterGetBigger.API.Services.Exercise.Features.Links.Handlers;
 using GetFitterGetBigger.API.Services.Results;
 using GetFitterGetBigger.API.Services.Validation;
 
@@ -204,6 +205,29 @@ public static class ExerciseLinkValidationExtensions
     }
     
     /// <summary>
+    /// Validates that the source exercise hasn't reached the maximum number of links for a specific type.
+    /// Uses the source exercise ID that was loaded during validation (1 DB call for count).
+    /// </summary>
+    public static async Task<ServiceValidationWithExercises<T>> EnsureUnderMaximumLinks<T>(
+        this Task<ServiceValidationWithExercises<T>> validationTask,
+        ILinkValidationHandler validationHandler,
+        ExerciseId sourceId,
+        ExerciseLinkType linkType,
+        string errorMessage)
+        where T : class, IEmptyDto<T>
+    {
+        var validation = await validationTask;
+        
+        // Skip if validation already has errors
+        if (validation.HasErrors)
+            return validation;
+        
+        var isUnderLimit = await validationHandler.IsUnderMaximumLinksAsync(sourceId, linkType.ToString());
+        validation.Validation.Ensure(() => isUnderLimit, errorMessage);
+        return validation;
+    }
+
+    /// <summary>
     /// Adds a standard async validation that doesn't depend on loaded exercises.
     /// This allows continuing to use existing validation logic alongside exercise-specific validations.
     /// </summary>
@@ -291,17 +315,20 @@ public static class ExerciseLinkValidationExtensions
         if (sourceIsRest || targetIsRest)
             return false;
         
-        var targetIsWorkout = targetExercise.ExerciseTypes.Any(et => 
-            string.Equals(et.Value, "Workout", StringComparison.OrdinalIgnoreCase));
+        var targetIsWarmup = targetExercise.ExerciseTypes.Any(et => 
+            string.Equals(et.Value, "Warmup", StringComparison.OrdinalIgnoreCase));
+        var targetIsCooldown = targetExercise.ExerciseTypes.Any(et => 
+            string.Equals(et.Value, "Cooldown", StringComparison.OrdinalIgnoreCase));
         
-        // Implement compatibility matrix from feature requirements
+        // Implement compatibility matrix based on user requirements:
+        // When editing a WORKOUT and adding a WARMUP, the link type is WARMUP pointing TO the warmup exercise
         return linkType switch
         {
-            // WARMUP can only link to WORKOUT exercises
-            ExerciseLinkType.WARMUP => targetIsWorkout,
+            // WARMUP links point TO exercises with Warmup exercise type
+            ExerciseLinkType.WARMUP => targetIsWarmup,
             
-            // COOLDOWN can only link to WORKOUT exercises
-            ExerciseLinkType.COOLDOWN => targetIsWorkout,
+            // COOLDOWN links point TO exercises with Cooldown exercise type
+            ExerciseLinkType.COOLDOWN => targetIsCooldown,
             
             // ALTERNATIVE can link to any non-REST exercise (already checked above)
             ExerciseLinkType.ALTERNATIVE => true,

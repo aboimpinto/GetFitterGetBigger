@@ -467,7 +467,7 @@ public class FitnessDbContext : DbContext
             
         modelBuilder.Entity<ExerciseLink>()
             .Property(el => el.LinkType)
-            .HasMaxLength(10)
+            .HasMaxLength(20)
             .IsRequired();
             
         // Configure relationships

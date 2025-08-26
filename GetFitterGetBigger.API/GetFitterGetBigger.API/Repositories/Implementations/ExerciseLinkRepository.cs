@@ -177,17 +177,53 @@ public class ExerciseLinkRepository : RepositoryBase<FitnessDbContext>, IExercis
     
     /// <summary>
     /// Checks if bidirectional links exist between two exercises for the specified type
+    /// This checks both forward and reverse directions with proper bidirectional type mapping
     /// </summary>
     public async Task<bool> ExistsBidirectionalAsync(ExerciseId sourceId, ExerciseId targetId, ExerciseLinkType linkType)
     {
-        return await Context.ExerciseLinks
-            .AnyAsync(el => el.IsActive &&
-                           ((el.LinkTypeEnum != null && el.LinkTypeEnum == linkType) ||
-                            (el.LinkTypeEnum == null && 
-                             ((linkType == ExerciseLinkType.WARMUP && el.LinkType == "Warmup") ||
-                              (linkType == ExerciseLinkType.COOLDOWN && el.LinkType == "Cooldown")))) &&
-                           ((el.SourceExerciseId == sourceId && el.TargetExerciseId == targetId) ||
-                            (el.SourceExerciseId == targetId && el.TargetExerciseId == sourceId)));
+        // For ALTERNATIVE type, we need to check both directions with ALTERNATIVE
+        if (linkType == ExerciseLinkType.ALTERNATIVE)
+        {
+            // Check if either A→B or B→A exists with ALTERNATIVE type
+            var exists = await Context.ExerciseLinks
+                .AnyAsync(el => el.IsActive &&
+                              ((el.SourceExerciseId == sourceId && el.TargetExerciseId == targetId) ||
+                               (el.SourceExerciseId == targetId && el.TargetExerciseId == sourceId)) &&
+                              (el.LinkType == "ALTERNATIVE" || el.LinkTypeEnum == ExerciseLinkType.ALTERNATIVE));
+            return exists;
+        }
+        
+        // Check forward link: source → target with specified linkType
+        var forwardExists = await ExistsAsync(sourceId, targetId, linkType);
+        if (forwardExists)
+        {
+            return true;
+        }
+        
+        // For WARMUP/COOLDOWN, check if the reverse WORKOUT link exists
+        var reverseLinkType = GetReverseLinkType(linkType);
+        if (reverseLinkType.HasValue)
+        {
+            var reverseExists = await ExistsAsync(targetId, sourceId, reverseLinkType.Value);
+            return reverseExists;
+        }
+        
+        return false;
+    }
+    
+    /// <summary>
+    /// Maps link types to their bidirectional reverse types
+    /// </summary>
+    private static ExerciseLinkType? GetReverseLinkType(ExerciseLinkType linkType)
+    {
+        return linkType switch
+        {
+            ExerciseLinkType.WARMUP => ExerciseLinkType.WORKOUT,
+            ExerciseLinkType.COOLDOWN => ExerciseLinkType.WORKOUT,
+            ExerciseLinkType.ALTERNATIVE => ExerciseLinkType.ALTERNATIVE, // ALTERNATIVE is bidirectional with itself
+            ExerciseLinkType.WORKOUT => null, // WORKOUT links are only created as reverse, never as primary
+            _ => null
+        };
     }
     
     /// <summary>
@@ -222,14 +258,32 @@ public class ExerciseLinkRepository : RepositoryBase<FitnessDbContext>, IExercis
     /// </summary>
     public async Task<bool> ExistsAsync(ExerciseId sourceId, ExerciseId targetId, ExerciseLinkType linkType)
     {
+        // For ALTERNATIVE type, use the database constraint logic - check string match
+        if (linkType == ExerciseLinkType.ALTERNATIVE)
+        {
+            return await Context.ExerciseLinks
+                .AnyAsync(el => el.SourceExerciseId == sourceId && 
+                               el.TargetExerciseId == targetId && 
+                               el.IsActive &&
+                               el.LinkType == "ALTERNATIVE");
+        }
+        
+        // For other types, use the original logic
+        var linkTypeString = linkType.ToString();
+        var legacyString = linkType switch
+        {
+            ExerciseLinkType.WARMUP => "Warmup",
+            ExerciseLinkType.COOLDOWN => "Cooldown", 
+            _ => linkTypeString
+        };
+
         return await Context.ExerciseLinks
             .AnyAsync(el => el.SourceExerciseId == sourceId && 
                            el.TargetExerciseId == targetId && 
-                           ((el.LinkTypeEnum != null && el.LinkTypeEnum == linkType) ||
-                            (el.LinkTypeEnum == null && 
-                             ((linkType == ExerciseLinkType.WARMUP && el.LinkType == "Warmup") ||
-                              (linkType == ExerciseLinkType.COOLDOWN && el.LinkType == "Cooldown")))) &&
-                           el.IsActive);
+                           el.IsActive &&
+                           (el.LinkTypeEnum == linkType ||
+                            el.LinkType == linkTypeString ||
+                            el.LinkType == legacyString));
     }
     
     /// <summary>

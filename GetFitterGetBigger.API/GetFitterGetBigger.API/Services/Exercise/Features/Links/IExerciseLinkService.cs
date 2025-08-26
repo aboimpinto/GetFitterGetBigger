@@ -12,7 +12,7 @@ namespace GetFitterGetBigger.API.Services.Exercise.Features.Links;
 public interface IExerciseLinkService
 {
     /// <summary>
-    /// Creates a new link between exercises using enum LinkType (enhanced functionality)
+    /// Creates a new link between exercises using enum LinkType
     /// DisplayOrder is calculated server-side based on existing links
     /// </summary>
     /// <param name="sourceExerciseId">The source exercise ID</param>
@@ -23,13 +23,6 @@ public interface IExerciseLinkService
         ExerciseId sourceExerciseId,
         ExerciseId targetExerciseId,
         ExerciseLinkType linkType);
-    
-    /// <summary>
-    /// Creates a new link between exercises using traditional command (backward compatibility)
-    /// </summary>
-    /// <param name="command">The link creation command</param>
-    /// <returns>The created exercise link</returns>
-    Task<ServiceResult<ExerciseLinkDto>> CreateLinkAsync(CreateExerciseLinkCommand command);
     
     /// <summary>
     /// Gets all links for a specific exercise

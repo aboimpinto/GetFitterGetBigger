@@ -1,6 +1,8 @@
+using GetFitterGetBigger.API.Constants;
 using GetFitterGetBigger.API.DTOs;
 using GetFitterGetBigger.API.Models;
 using GetFitterGetBigger.API.Models.Entities;
+using GetFitterGetBigger.API.Models.Enums;
 using GetFitterGetBigger.API.Models.SpecializedIds;
 using GetFitterGetBigger.API.Repositories.Interfaces;
 using GetFitterGetBigger.API.Services.Exercise.Features.Links.Extensions;
@@ -82,14 +84,30 @@ public class ExerciseLinkCommandDataService(
         using var unitOfWork = unitOfWorkProvider.CreateWritable();
         var repository = unitOfWork.GetRepository<IExerciseLinkRepository>();
         
-        // Create the primary link entity from DTO
+        // Parse primary link data
         var primarySourceId = ExerciseId.ParseOrEmpty(primaryLinkDto.SourceExerciseId);
         var primaryTargetId = ExerciseId.ParseOrEmpty(primaryLinkDto.TargetExerciseId);
+        var primaryLinkTypeString = ConvertLinkTypeToEnumString(primaryLinkDto.LinkType);
+        
+        // TRANSACTION-AWARE DUPLICATE CHECK: Check within the same transaction
+        // This addresses the transaction isolation issue where validation in separate 
+        // transactions cannot see uncommitted changes
+        if (Enum.TryParse<ExerciseLinkType>(primaryLinkTypeString, out var primaryLinkType))
+        {
+            var isDuplicate = await repository.ExistsBidirectionalAsync(primarySourceId, primaryTargetId, primaryLinkType);
+            
+            if (isDuplicate)
+            {
+                // Return a structured error that matches the validation pattern
+                var error = ServiceError.ValidationFailed(ExerciseLinkErrorMessages.BidirectionalLinkExists);
+                return ServiceResult<ExerciseLinkDto>.Failure(ExerciseLinkDto.Empty, error);
+            }
+        }
         
         var primaryLink = ExerciseLink.Handler.CreateNew(
             primarySourceId,
             primaryTargetId,
-            primaryLinkDto.LinkType,
+            primaryLinkTypeString,
             primaryLinkDto.DisplayOrder
         );
         
@@ -102,10 +120,13 @@ public class ExerciseLinkCommandDataService(
             var reverseSourceId = ExerciseId.ParseOrEmpty(reverseLinkDto.SourceExerciseId);
             var reverseTargetId = ExerciseId.ParseOrEmpty(reverseLinkDto.TargetExerciseId);
             
+            // Convert legacy link type strings to enum-compatible strings
+            var reverseLinkTypeString = ConvertLinkTypeToEnumString(reverseLinkDto.LinkType);
+            
             var reverseLink = ExerciseLink.Handler.CreateNew(
                 reverseSourceId,
                 reverseTargetId,
-                reverseLinkDto.LinkType,
+                reverseLinkTypeString,
                 reverseLinkDto.DisplayOrder
             );
             
@@ -118,5 +139,22 @@ public class ExerciseLinkCommandDataService(
         // Return the primary link as DTO
         var dto = createdPrimaryLink.ToDto();
         return ServiceResult<ExerciseLinkDto>.Success(dto);
+    }
+    
+    /// <summary>
+    /// Converts legacy link type strings to enum-compatible strings
+    /// </summary>
+    private static string ConvertLinkTypeToEnumString(string linkType)
+    {
+        return linkType switch
+        {
+            "Warmup" => "WARMUP",
+            "Cooldown" => "COOLDOWN", 
+            "WARMUP" => "WARMUP",
+            "COOLDOWN" => "COOLDOWN",
+            "WORKOUT" => "WORKOUT",
+            "ALTERNATIVE" => "ALTERNATIVE",
+            _ => linkType // Pass through any other values
+        };
     }
 }

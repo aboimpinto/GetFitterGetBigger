@@ -205,6 +205,10 @@ public interface IExerciseLinkService
 
 - No duplicate links (same source, target, and type)
 - Self-linking is allowed (exercise can link to itself for valid use cases)
+- Circular references are ALLOWED as they represent valid real-world scenarios
+  - Example: Burpee (as warmup) → Burpee (as workout) is valid
+  - This represents different intensities/contexts of the same exercise
+  - The bidirectional nature and different link types prevent problematic infinite loops
 
 ### Database Changes
 

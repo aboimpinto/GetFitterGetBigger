@@ -35,6 +35,8 @@
 │ 25. VALIDATE ONCE, TRUST FOREVER - No redundant checks        │
 │ 26. Each layer validates its responsibility, then TRUSTS      │
 │ 27. NEVER test logging - it's an implementation detail        │
+│ 28. ALL private fields use _ prefix, access with this.        │
+│ 29. Primary constructors for ALL DI services - NO exceptions  │
 └─────────────────────────────────────────────────────────────────┘
 ```
 

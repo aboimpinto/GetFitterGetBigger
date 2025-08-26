@@ -1,4 +1,3 @@
-using GetFitterGetBigger.API.Constants;
 using GetFitterGetBigger.API.DTOs;
 using GetFitterGetBigger.API.Models.Enums;
 using GetFitterGetBigger.API.Models.SpecializedIds;
@@ -13,7 +12,7 @@ namespace GetFitterGetBigger.API.Services.Exercise.Features.Links.Handlers;
 public class BidirectionalLinkHandler(
     IExerciseLinkQueryDataService queryDataService,
     IExerciseLinkCommandDataService commandDataService,
-    ILogger<BidirectionalLinkHandler> logger)
+    ILogger<BidirectionalLinkHandler> logger) : IBidirectionalLinkHandler
 {
     /// <summary>
     /// Creates bidirectional links between exercises

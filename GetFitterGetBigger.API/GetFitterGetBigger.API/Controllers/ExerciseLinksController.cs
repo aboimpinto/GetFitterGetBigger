@@ -1,9 +1,7 @@
 using GetFitterGetBigger.API.DTOs;
 using GetFitterGetBigger.API.Mappers;
-using GetFitterGetBigger.API.Models.Enums;
 using GetFitterGetBigger.API.Models.SpecializedIds;
 using GetFitterGetBigger.API.Services.Exercise.Features.Links;
-using GetFitterGetBigger.API.Services.Exercise.Features.Links.Commands;
 using GetFitterGetBigger.API.Services.Results;
 using Microsoft.AspNetCore.Mvc;
 
@@ -32,8 +30,13 @@ public class ExerciseLinksController(
     [ProducesResponseType(typeof(BidirectionalLinkResponseDto), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(ExerciseLinkDto), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public async Task<IActionResult> CreateLink(string exerciseId, [FromBody] CreateExerciseLinkDto dto) =>
-        await exerciseLinkService.CreateLinkAsync(dto.ToCommand(exerciseId)) switch
+    public async Task<IActionResult> CreateLink(string exerciseId, [FromBody] CreateExerciseLinkDto dto)
+    {
+        var command = dto.ToCommand(exerciseId);
+        return await exerciseLinkService.CreateLinkAsync(
+            command.SourceExerciseId,
+            command.TargetExerciseId,
+            command.ActualLinkType) switch
         {
             { IsSuccess: true, Data: var data } => CreatedAtAction(
                 nameof(GetLinks), 
@@ -41,6 +44,7 @@ public class ExerciseLinksController(
                 data),
             { StructuredErrors: var errors } => BadRequest(new { errors })
         };
+    }
 
     /// <summary>
     /// Gets all links for an exercise

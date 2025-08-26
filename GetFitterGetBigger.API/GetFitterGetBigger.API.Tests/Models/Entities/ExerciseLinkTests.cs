@@ -50,7 +50,7 @@ public class ExerciseLinkTests
         var exerciseLink = ExerciseLink.Handler.CreateNew(
             _sourceExerciseId,
             _targetExerciseId,
-            "Warmup",
+            "WARMUP",
             1);
 
         // Act & Assert
@@ -62,10 +62,10 @@ public class ExerciseLinkTests
     #region ActualLinkType Computed Property Tests
 
     [Theory]
-    [InlineData("Warmup", null, ExerciseLinkType.WARMUP)]
-    [InlineData("Cooldown", null, ExerciseLinkType.COOLDOWN)]
-    [InlineData("Warmup", ExerciseLinkType.ALTERNATIVE, ExerciseLinkType.ALTERNATIVE)]
-    [InlineData("Cooldown", ExerciseLinkType.WORKOUT, ExerciseLinkType.WORKOUT)]
+    [InlineData("WARMUP", null, ExerciseLinkType.WARMUP)]
+    [InlineData("COOLDOWN", null, ExerciseLinkType.COOLDOWN)]
+    [InlineData("WARMUP", ExerciseLinkType.ALTERNATIVE, ExerciseLinkType.ALTERNATIVE)]
+    [InlineData("COOLDOWN", ExerciseLinkType.WORKOUT, ExerciseLinkType.WORKOUT)]
     public void ActualLinkType_Should_Return_Correct_Value(
         string linkType, 
         ExerciseLinkType? linkTypeEnum, 
@@ -98,7 +98,7 @@ public class ExerciseLinkTests
             ExerciseLinkId.New(),
             _sourceExerciseId,
             _targetExerciseId,
-            "Warmup", // String says WARMUP
+            "WARMUP", // String says WARMUP
             ExerciseLinkType.ALTERNATIVE, // But enum says ALTERNATIVE
             1,
             true,
@@ -117,8 +117,8 @@ public class ExerciseLinkTests
     #region Handler.CreateNew String-based Tests (Backward Compatibility)
 
     [Theory]
-    [InlineData("Warmup")]
-    [InlineData("Cooldown")]
+    [InlineData("WARMUP")]
+    [InlineData("COOLDOWN")]
     public void Handler_CreateNew_String_Should_Create_Valid_ExerciseLink(string linkType)
     {
         // Act
@@ -134,7 +134,7 @@ public class ExerciseLinkTests
         Assert.Equal(_sourceExerciseId, exerciseLink.SourceExerciseId);
         Assert.Equal(_targetExerciseId, exerciseLink.TargetExerciseId);
         Assert.Equal(linkType, exerciseLink.LinkType);
-        Assert.Null(exerciseLink.LinkTypeEnum); // Should be null for string-based creation
+        Assert.NotNull(exerciseLink.LinkTypeEnum); // Should be set from the string value
         Assert.Equal(1, exerciseLink.DisplayOrder);
         Assert.True(exerciseLink.IsActive);
         Assert.True(exerciseLink.CreatedAt > DateTime.MinValue);
@@ -145,7 +145,7 @@ public class ExerciseLinkTests
     [InlineData("")]
     [InlineData("   ")]
     [InlineData("Invalid")]
-    [InlineData("WARMUP")]
+    [InlineData("Warmup")]
     [InlineData("warmup")]
     public void Handler_CreateNew_String_Should_Throw_For_Invalid_LinkType(string linkType)
     {
@@ -159,7 +159,7 @@ public class ExerciseLinkTests
     {
         // Act & Assert
         Assert.Throws<ArgumentException>(() =>
-            ExerciseLink.Handler.CreateNew(default, _targetExerciseId, "Warmup", 1));
+            ExerciseLink.Handler.CreateNew(default, _targetExerciseId, "WARMUP", 1));
     }
 
     [Fact]
@@ -167,7 +167,7 @@ public class ExerciseLinkTests
     {
         // Act & Assert
         Assert.Throws<ArgumentException>(() =>
-            ExerciseLink.Handler.CreateNew(_sourceExerciseId, default, "Warmup", 1));
+            ExerciseLink.Handler.CreateNew(_sourceExerciseId, default, "WARMUP", 1));
     }
 
     [Fact]
@@ -175,7 +175,7 @@ public class ExerciseLinkTests
     {
         // Act & Assert
         Assert.Throws<ArgumentException>(() =>
-            ExerciseLink.Handler.CreateNew(_sourceExerciseId, _targetExerciseId, "Warmup", -1));
+            ExerciseLink.Handler.CreateNew(_sourceExerciseId, _targetExerciseId, "WARMUP", -1));
     }
 
     #endregion
@@ -262,7 +262,7 @@ public class ExerciseLinkTests
             id,
             _sourceExerciseId,
             _targetExerciseId,
-            "Warmup",
+            "WARMUP",
             2,
             true,
             createdAt,
@@ -272,7 +272,7 @@ public class ExerciseLinkTests
         Assert.Equal(id, exerciseLink.Id);
         Assert.Equal(_sourceExerciseId, exerciseLink.SourceExerciseId);
         Assert.Equal(_targetExerciseId, exerciseLink.TargetExerciseId);
-        Assert.Equal("Warmup", exerciseLink.LinkType);
+        Assert.Equal("WARMUP", exerciseLink.LinkType);
         Assert.Null(exerciseLink.LinkTypeEnum);
         Assert.Equal(ExerciseLinkType.WARMUP, exerciseLink.ActualLinkType); // Computed from string
         Assert.Equal(2, exerciseLink.DisplayOrder);
@@ -294,7 +294,7 @@ public class ExerciseLinkTests
             id,
             _sourceExerciseId,
             _targetExerciseId,
-            "Warmup",
+            "WARMUP",
             ExerciseLinkType.ALTERNATIVE,
             2,
             false,
@@ -305,7 +305,7 @@ public class ExerciseLinkTests
         Assert.Equal(id, exerciseLink.Id);
         Assert.Equal(_sourceExerciseId, exerciseLink.SourceExerciseId);
         Assert.Equal(_targetExerciseId, exerciseLink.TargetExerciseId);
-        Assert.Equal("Warmup", exerciseLink.LinkType);
+        Assert.Equal("WARMUP", exerciseLink.LinkType);
         Assert.Equal(ExerciseLinkType.ALTERNATIVE, exerciseLink.LinkTypeEnum);
         Assert.Equal(ExerciseLinkType.ALTERNATIVE, exerciseLink.ActualLinkType); // Enum takes precedence
         Assert.Equal(2, exerciseLink.DisplayOrder);
@@ -321,15 +321,15 @@ public class ExerciseLinkTests
     [Fact]
     public void String_Based_Creation_Should_Work_With_ActualLinkType()
     {
-        // Arrange & Act - Create using old string-based method
-        var warmupLink = ExerciseLink.Handler.CreateNew(_sourceExerciseId, _targetExerciseId, "Warmup", 1);
-        var cooldownLink = ExerciseLink.Handler.CreateNew(_sourceExerciseId, _targetExerciseId, "Cooldown", 1);
+        // Arrange & Act - Create using string-based method with enum values
+        var warmupLink = ExerciseLink.Handler.CreateNew(_sourceExerciseId, _targetExerciseId, "WARMUP", 1);
+        var cooldownLink = ExerciseLink.Handler.CreateNew(_sourceExerciseId, _targetExerciseId, "COOLDOWN", 1);
 
         // Assert - ActualLinkType should work correctly
         Assert.Equal(ExerciseLinkType.WARMUP, warmupLink.ActualLinkType);
         Assert.Equal(ExerciseLinkType.COOLDOWN, cooldownLink.ActualLinkType);
-        Assert.Null(warmupLink.LinkTypeEnum);
-        Assert.Null(cooldownLink.LinkTypeEnum);
+        Assert.Equal(ExerciseLinkType.WARMUP, warmupLink.LinkTypeEnum);
+        Assert.Equal(ExerciseLinkType.COOLDOWN, cooldownLink.LinkTypeEnum);
     }
 
     [Fact]
@@ -356,15 +356,15 @@ public class ExerciseLinkTests
             ExerciseLinkId.New(),
             _sourceExerciseId,
             _targetExerciseId,
-            "Warmup", // Old string value
-            ExerciseLinkType.ALTERNATIVE, // New enum value (different from string)
+            "WARMUP", // String value for enum WARMUP
+            ExerciseLinkType.ALTERNATIVE, // Enum value takes precedence
             1,
             true,
             DateTime.UtcNow,
             DateTime.UtcNow);
 
         // Act & Assert - Enum should take precedence
-        Assert.Equal("Warmup", exerciseLink.LinkType); // Original string preserved
+        Assert.Equal("WARMUP", exerciseLink.LinkType); // Original string preserved
         Assert.Equal(ExerciseLinkType.ALTERNATIVE, exerciseLink.LinkTypeEnum); // Enum set
         Assert.Equal(ExerciseLinkType.ALTERNATIVE, exerciseLink.ActualLinkType); // Computed uses enum
     }

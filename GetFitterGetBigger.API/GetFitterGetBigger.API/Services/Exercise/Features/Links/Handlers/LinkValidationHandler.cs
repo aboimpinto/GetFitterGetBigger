@@ -11,7 +11,7 @@ namespace GetFitterGetBigger.API.Services.Exercise.Features.Links.Handlers;
 /// </summary>
 public class LinkValidationHandler(
     IExerciseLinkQueryDataService queryDataService,
-    ILogger<LinkValidationHandler> logger)
+    ILogger<LinkValidationHandler> logger) : ILinkValidationHandler
 {
     private const int MaximumLinksPerType = 10;
     
@@ -39,6 +39,18 @@ public class LinkValidationHandler(
     {
         var result = await queryDataService.ExistsAsync(source, target, linkType);
         return IsLinkUniqueInternal(result);
+    }
+    
+    /// <summary>
+    /// Checks if a bidirectional link between two exercises is unique (no forward or reverse link exists)
+    /// </summary>
+    public async Task<bool> IsBidirectionalLinkUniqueAsync(ExerciseId source, ExerciseId target, ExerciseLinkType linkType)
+    {
+        // Use the dedicated bidirectional exists method which properly handles all bidirectional logic
+        var existsResult = await queryDataService.ExistsBidirectionalAsync(source, target, linkType);
+        
+        // Return true if unique (doesn't exist)
+        return IsLinkUniqueInternal(existsResult);
     }
     
     /// <summary>

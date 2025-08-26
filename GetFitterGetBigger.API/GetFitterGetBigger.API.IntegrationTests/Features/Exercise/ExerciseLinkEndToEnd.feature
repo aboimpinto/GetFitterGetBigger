@@ -75,7 +75,7 @@ Feature: Exercise Link End-to-End Workflows
     When I get all links for exercise "Deadlift"
     Then I should receive 2 exercise links
     When I get all links for exercise "Romanian Deadlift"
-    Then I should receive 1 exercise link
+    Then I should receive 2 exercise links
     
     # Add cooldown and verify final state
     When I create an exercise link from "Deadlift" to "Hamstring Stretch" with link type "Cooldown" and display order 1

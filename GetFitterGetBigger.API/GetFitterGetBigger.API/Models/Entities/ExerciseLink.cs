@@ -1,6 +1,4 @@
-using System;
 using GetFitterGetBigger.API.Models.Enums;
-using GetFitterGetBigger.API.Models.Interfaces;
 using GetFitterGetBigger.API.Models.SpecializedIds;
 
 namespace GetFitterGetBigger.API.Models.Entities;
@@ -23,8 +21,24 @@ public record ExerciseLink : IEmptyEntity<ExerciseLink>
     public ExerciseLinkType? LinkTypeEnum { get; init; }
     
     // Computed property for unified access during migration period
-    public ExerciseLinkType ActualLinkType => LinkTypeEnum ?? 
-        (LinkType == "Warmup" ? ExerciseLinkType.WARMUP : ExerciseLinkType.COOLDOWN);
+    public ExerciseLinkType ActualLinkType
+    {
+        get
+        {
+            // If the new enum property has a value, use it
+            if (LinkTypeEnum.HasValue)
+                return LinkTypeEnum.Value;
+            
+            // Otherwise, convert the legacy string value to the enum
+            return LinkType switch
+            {
+                "Warmup" => ExerciseLinkType.WARMUP,
+                "Cooldown" => ExerciseLinkType.COOLDOWN,
+                _ when Enum.TryParse<ExerciseLinkType>(LinkType, out var parsed) => parsed,
+                _ => ExerciseLinkType.COOLDOWN // Default fallback
+            };
+        }
+    }
     
     public int DisplayOrder { get; init; }
     public bool IsActive { get; init; } = true;
@@ -57,7 +71,7 @@ public record ExerciseLink : IEmptyEntity<ExerciseLink>
     public static class Handler
     {
         /// <summary>
-        /// Creates a new ExerciseLink using string LinkType (backward compatibility)
+        /// Creates a new ExerciseLink using string LinkType (accepts enum values as strings: WARMUP, COOLDOWN, WORKOUT, ALTERNATIVE)
         /// </summary>
         public static ExerciseLink CreateNew(
             ExerciseId sourceExerciseId,
@@ -81,9 +95,10 @@ public record ExerciseLink : IEmptyEntity<ExerciseLink>
                 throw new ArgumentException("Link type cannot be empty", nameof(linkType));
             }
             
-            if (linkType != "Warmup" && linkType != "Cooldown")
+            // Validate against enum values (as strings)
+            if (!Enum.TryParse<ExerciseLinkType>(linkType, out _))
             {
-                throw new ArgumentException("Link type must be either 'Warmup' or 'Cooldown'", nameof(linkType));
+                throw new ArgumentException("Link type must be one of: WARMUP, COOLDOWN, WORKOUT, ALTERNATIVE", nameof(linkType));
             }
             
             if (displayOrder < 0)
@@ -92,13 +107,15 @@ public record ExerciseLink : IEmptyEntity<ExerciseLink>
             }
             
             var now = DateTime.UtcNow;
+            var linkTypeEnum = Enum.Parse<ExerciseLinkType>(linkType);
+            
             return new ExerciseLink
             {
                 Id = ExerciseLinkId.New(),
                 SourceExerciseId = sourceExerciseId,
                 TargetExerciseId = targetExerciseId,
                 LinkType = linkType,
-                LinkTypeEnum = null, // Will use computed property
+                LinkTypeEnum = linkTypeEnum, // Set the enum value for new system
                 DisplayOrder = displayOrder,
                 IsActive = true,
                 CreatedAt = now,
