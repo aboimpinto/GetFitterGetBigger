@@ -1,7 +1,7 @@
 namespace GetFitterGetBigger.Admin.Models.Dtos;
 
 /// <summary>
-/// Represents a link between exercises (warmup or cooldown relationship)
+/// Represents a link between exercises (warmup, cooldown, or alternative relationship)
 /// </summary>
 public class ExerciseLinkDto
 {
@@ -12,7 +12,7 @@ public class ExerciseLinkDto
     public string Id { get; set; } = string.Empty;
 
     /// <summary>
-    /// The ID of the source exercise (must be a Workout type)
+    /// The ID of the source exercise
     /// Format: "exercise-{guid}"
     /// </summary>
     public string SourceExerciseId { get; set; } = string.Empty;
@@ -29,12 +29,13 @@ public class ExerciseLinkDto
     public string TargetExerciseName { get; set; } = string.Empty;
 
     /// <summary>
-    /// The type of link - either "Warmup" or "Cooldown"
+    /// The type of link - "Warmup", "Cooldown", or "Alternative"
     /// </summary>
     public string LinkType { get; set; } = string.Empty;
 
     /// <summary>
     /// The display order for this link (1-based, min: 1)
+    /// Note: Only applicable to Warmup and Cooldown links. Alternative links are not sequenced.
     /// </summary>
     public int DisplayOrder { get; set; }
 

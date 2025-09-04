@@ -13,5 +13,10 @@ public enum ExerciseLinkType
     /// <summary>
     /// Cooldown exercise link
     /// </summary>
-    Cooldown
+    Cooldown,
+
+    /// <summary>
+    /// Alternative exercise link (bidirectional relationship)
+    /// </summary>
+    Alternative
 }

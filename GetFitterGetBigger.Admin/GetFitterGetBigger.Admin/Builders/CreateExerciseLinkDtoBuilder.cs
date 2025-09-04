@@ -10,7 +10,7 @@ namespace GetFitterGetBigger.Admin.Builders
     {
         private string _targetExerciseId = Guid.NewGuid().ToString();
         private string _linkType = "Warmup";
-        private int _displayOrder = 0;
+        private int? _displayOrder = 1;
 
         public CreateExerciseLinkDtoBuilder WithTargetExerciseId(string targetExerciseId)
         {
@@ -36,7 +36,14 @@ namespace GetFitterGetBigger.Admin.Builders
             return this;
         }
 
-        public CreateExerciseLinkDtoBuilder WithDisplayOrder(int displayOrder)
+        public CreateExerciseLinkDtoBuilder AsAlternative()
+        {
+            _linkType = "Alternative";
+            _displayOrder = null; // Alternative links don't need display order
+            return this;
+        }
+
+        public CreateExerciseLinkDtoBuilder WithDisplayOrder(int? displayOrder)
         {
             _displayOrder = displayOrder;
             return this;

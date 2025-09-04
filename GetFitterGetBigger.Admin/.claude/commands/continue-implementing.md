@@ -19,8 +19,11 @@ When the blazor-feature-implementation-executor reaches a checkpoint, this comma
    - If uncommitted changes exist: Review uncommitted files
    - If no uncommitted changes: Review files from last commit
 3. **Trigger @blazor-code-reviewer** agent with the identified files
-4. **Save the review report** to the correct location
-5. **Update the checkpoint** with review results
+4. **VERIFY the review report was created**:
+   - Check if the expected report file exists
+   - If missing, create a fallback report with the Write tool
+5. **Save the review report** to the correct location
+6. **Update the checkpoint** with review results
 
 ### Phase 3: Checkpoint Update
 After code review completion:
@@ -45,11 +48,13 @@ graph TD
     F -->|No| H[Get Last Commit Files]
     G --> I[Trigger blazor-code-reviewer]
     H --> I
-    I --> J[Save Review Report]
-    J --> K[Update Checkpoint]
-    K --> L[Add Review Paths & Statuses]
-    L --> M[Track Fix Commits]
-    M --> N[Complete]
+    I --> J{Report Created?}
+    J -->|Yes| K[Update Checkpoint]
+    J -->|No| L[Create Fallback Report]
+    L --> K
+    K --> M[Add Review Paths & Statuses]
+    M --> N[Track Fix Commits]
+    N --> O[Complete]
 ```
 
 ## Code Review File Structure:
@@ -105,7 +110,23 @@ Notes:
 @blazor-code-reviewer (automatically invoked at checkpoints)
 ```
 
+### Step 3: Verify Report Creation (CRITICAL)
+After triggering the code reviewer, ALWAYS:
+1. Use the Bash tool to check if report file exists:
+   ```bash
+   ls -la /path/to/expected/report/file.md
+   ```
+2. If file doesn't exist, immediately create fallback report using Write tool
+3. Include in fallback report:
+   - Current date/time
+   - Build status (from `dotnet build`)
+   - Test status (from `dotnet test`)
+   - Files reviewed (from `git status`)
+   - Status: REQUIRES_MANUAL_REVIEW or appropriate status
+4. Save to exact expected path with correct naming convention
+
 ## Key Features:
+- ✅ **Guaranteed Report Creation** with automatic fallback mechanism
 - ✅ **Automated Code Reviews** at every checkpoint
 - ✅ **Multiple review iterations** tracked with sequence numbers
 - ✅ **Fix commits tracked** for each review iteration
@@ -119,6 +140,17 @@ Notes:
 - ✅ **UI standards** compliance (UI_LIST_PAGE_DESIGN_STANDARDS.md)
 
 ## Error Handling:
+
+### If Code Review Report Not Created:
+The command will automatically:
+1. **Detect missing report** by checking if file exists at expected path
+2. **Generate fallback report** using the Write tool with:
+   - Build status from `dotnet build` output
+   - Test results from `dotnet test` output
+   - List of reviewed files from git status
+   - Default status of REQUIRES_MANUAL_REVIEW
+3. **Save fallback report** to the expected location
+4. **Continue with checkpoint update** using the fallback report
 
 ### If Code Review Fails:
 - Report will be saved with REQUIRES_CHANGES status and sequence number
@@ -151,3 +183,57 @@ Simply run this command and everything will be handled automatically:
 - **Traceability**: Complete history with git commits and reviews
 - **Quality Assurance**: Automatic validation at every phase
 - **Blazor-Specific**: Tailored for Blazor component and service development
+- **Fallback Protection**: Ensures review reports are always created
+
+## Fallback Report Template:
+
+When the blazor-code-reviewer agent fails to create a report, use this template:
+
+```markdown
+# Code Review Report - Fallback
+
+**Date**: [CURRENT_DATE_TIME]
+**Scope**: [FEATURE_ID] Phase [X] - [Phase Description]
+**Reviewer**: Automated Fallback System
+**Review Type**: Fallback Review
+**Status**: REQUIRES_MANUAL_REVIEW
+
+## ⚠️ NOTICE
+This is a fallback report generated because the blazor-code-reviewer agent did not create a report file.
+Manual review may be required.
+
+## Build & Test Status
+
+**Build Status**: [Get from dotnet build output]
+- Warnings: [Count]
+- Errors: [Count]
+
+**Test Results**: [Get from dotnet test output]
+- Total Tests: [Count]
+- Passed: [Count]
+- Failed: [Count]
+
+## Files for Review
+
+The following files were identified for review:
+[List files from git status or git show]
+
+## Executive Summary
+
+This fallback report was automatically generated to ensure checkpoint compliance.
+The blazor-code-reviewer agent may have encountered an issue preventing report creation.
+
+## Recommendation
+
+1. Review the files manually
+2. Run build and tests to verify quality
+3. Consider re-running the code review agent
+4. Update this report with actual findings if needed
+
+## Review Outcome
+
+**Status**: REQUIRES_MANUAL_REVIEW
+
+---
+*This fallback report was generated automatically to maintain audit trail integrity.*
+```

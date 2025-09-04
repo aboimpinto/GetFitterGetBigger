@@ -1,9 +1,11 @@
 using GetFitterGetBigger.Admin.Models.Dtos;
+using GetFitterGetBigger.Admin.Models.Results;
 
 namespace GetFitterGetBigger.Admin.Services
 {
     /// <summary>
     /// Service for managing the state of exercise links throughout the application
+    /// Supports warmup, cooldown, and alternative relationships with context switching
     /// </summary>
     public interface IExerciseLinkStateService
     {
@@ -86,9 +88,25 @@ namespace GetFitterGetBigger.Admin.Services
         bool IncludeExerciseDetails { get; set; }
 
         /// <summary>
-        /// Current link type filter (null for all, "Warmup", or "Cooldown")
+        /// Current link type filter (null for all, "Warmup", "Cooldown", or "Alternative")
         /// </summary>
         string? LinkTypeFilter { get; set; }
+
+        // Context management for multi-type exercises
+        /// <summary>
+        /// Active context for multi-type exercises ("Workout", "Warmup", or "Cooldown")
+        /// </summary>
+        string ActiveContext { get; set; }
+
+        /// <summary>
+        /// Whether the current exercise has multiple contexts (multi-type)
+        /// </summary>
+        bool HasMultipleContexts { get; }
+
+        /// <summary>
+        /// Available contexts for the current exercise
+        /// </summary>
+        IEnumerable<string> AvailableContexts { get; }
 
         // Computed properties
         /// <summary>
@@ -121,6 +139,26 @@ namespace GetFitterGetBigger.Admin.Services
         /// </summary>
         bool HasMaxCooldownLinks { get; }
 
+        /// <summary>
+        /// Gets the alternative links from current links
+        /// </summary>
+        IEnumerable<ExerciseLinkDto> AlternativeLinks { get; }
+
+        /// <summary>
+        /// Gets the count of alternative links
+        /// </summary>
+        int AlternativeLinkCount { get; }
+
+        /// <summary>
+        /// Gets the workout links (reverse relationships) - workouts using this as warmup/cooldown
+        /// </summary>
+        IEnumerable<ExerciseLinkDto> WorkoutLinks { get; }
+
+        /// <summary>
+        /// Gets the count of workout links (reverse relationships)
+        /// </summary>
+        int WorkoutLinkCount { get; }
+
         // Methods
         /// <summary>
         /// Initialize the state service for a specific exercise
@@ -138,9 +176,24 @@ namespace GetFitterGetBigger.Admin.Services
         Task LoadSuggestedLinksAsync(int count = 5);
 
         /// <summary>
+        /// Load alternative links for the current exercise
+        /// </summary>
+        Task LoadAlternativeLinksAsync();
+
+        /// <summary>
+        /// Load workout links (reverse relationships) - workouts using this exercise as warmup/cooldown
+        /// </summary>
+        Task LoadWorkoutLinksAsync();
+
+        /// <summary>
         /// Create a new exercise link
         /// </summary>
         Task CreateLinkAsync(CreateExerciseLinkDto createDto);
+
+        /// <summary>
+        /// Create a bidirectional exercise link (for alternative relationships)
+        /// </summary>
+        Task CreateBidirectionalLinkAsync(CreateExerciseLinkDto createDto);
 
         /// <summary>
         /// Update an existing exercise link
@@ -153,6 +206,11 @@ namespace GetFitterGetBigger.Admin.Services
         Task DeleteLinkAsync(string linkId);
 
         /// <summary>
+        /// Delete a bidirectional exercise link (removes both directions)
+        /// </summary>
+        Task DeleteBidirectionalLinkAsync(string linkId);
+
+        /// <summary>
         /// Reorder links by updating their display order
         /// </summary>
         Task ReorderLinksAsync(string linkType, Dictionary<string, int> linkIdToOrderMap);
@@ -161,6 +219,11 @@ namespace GetFitterGetBigger.Admin.Services
         /// Update multiple links at once (for bulk operations)
         /// </summary>
         Task UpdateMultipleLinksAsync(List<UpdateExerciseLinkDto> updates);
+
+        /// <summary>
+        /// Switch the active context for multi-type exercises
+        /// </summary>
+        Task SwitchContextAsync(string contextType);
 
         /// <summary>
         /// Clear the current exercise context and all links
@@ -186,5 +249,14 @@ namespace GetFitterGetBigger.Admin.Services
         /// Set an error message
         /// </summary>
         void SetError(string errorMessage);
+
+        /// <summary>
+        /// Validate link compatibility for alternative exercises
+        /// </summary>
+        /// <param name="sourceExercise">Source exercise</param>
+        /// <param name="targetExercise">Target exercise</param>
+        /// <param name="linkType">Type of link being created</param>
+        /// <returns>Service result indicating validation success/failure with message</returns>
+        ServiceResult<bool> ValidateLinkCompatibility(ExerciseDto sourceExercise, ExerciseDto targetExercise, string linkType);
     }
 }

@@ -19,16 +19,16 @@ public class CreateExerciseLinkDto
     public string TargetExerciseId { get; set; } = string.Empty;
 
     /// <summary>
-    /// Type of link - must be either "Warmup" or "Cooldown" (required)
+    /// Type of link - must be "Warmup", "Cooldown", or "Alternative" (required)
     /// </summary>
     [Required(ErrorMessage = "Link type is required")]
-    [RegularExpression("^(Warmup|Cooldown)$", ErrorMessage = "Link type must be either 'Warmup' or 'Cooldown'")]
+    [RegularExpression("^(Warmup|Cooldown|Alternative)$", ErrorMessage = "Link type must be 'Warmup', 'Cooldown', or 'Alternative'")]
     public string LinkType { get; set; } = string.Empty;
 
     /// <summary>
-    /// Order in which to display this link (1-based, min: 1) (required)
+    /// Order in which to display this link (1-based, min: 1)
+    /// Required for Warmup and Cooldown links. Ignored for Alternative links (calculated server-side).
     /// </summary>
-    [Required(ErrorMessage = "Display order is required")]
     [Range(1, int.MaxValue, ErrorMessage = "Display order must be at least 1")]
-    public int DisplayOrder { get; set; }
+    public int? DisplayOrder { get; set; }
 }

@@ -61,9 +61,22 @@ namespace GetFitterGetBigger.Admin.Builders
             return this;
         }
 
+        public ExerciseLinkDtoBuilder AsAlternative()
+        {
+            _linkType = "Alternative";
+            _displayOrder = 0; // Alternative links don't use display order
+            return this;
+        }
+
         public ExerciseLinkDtoBuilder WithDisplayOrder(int displayOrder)
         {
             _displayOrder = displayOrder;
+            return this;
+        }
+
+        public ExerciseLinkDtoBuilder WithDisplayOrder(int? displayOrder)
+        {
+            _displayOrder = displayOrder ?? 0;
             return this;
         }
 

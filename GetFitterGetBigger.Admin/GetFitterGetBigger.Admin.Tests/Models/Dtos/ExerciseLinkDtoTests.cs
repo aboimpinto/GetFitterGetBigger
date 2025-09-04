@@ -156,6 +156,7 @@ public class ExerciseLinkDtoTests
     [Theory]
     [InlineData("Warmup")]
     [InlineData("Cooldown")]
+    [InlineData("Alternative")]
     public void ExerciseLinkDto_ShouldHandleValidLinkTypes(string linkType)
     {
         // Arrange
@@ -189,5 +190,78 @@ public class ExerciseLinkDtoTests
         // Assert
         json.Should().Contain("\"targetExercise\":");
         json.Should().Contain("\"Air Squat\"");
+    }
+
+    [Fact]
+    public void ExerciseLinkDto_AlternativeType_ShouldSerializeWithoutRequiredDisplayOrder()
+    {
+        // Arrange
+        var dto = new ExerciseLinkDto
+        {
+            Id = "exerciselink-550e8400-e29b-41d4-a716-446655440000",
+            SourceExerciseId = "exercise-123e4567-e89b-12d3-a456-426614174001",
+            TargetExerciseId = "exercise-123e4567-e89b-12d3-a456-426614174000",
+            TargetExerciseName = "Push-ups Alternative",
+            LinkType = "Alternative",
+            DisplayOrder = 0, // Alternative links don't use display order
+            IsActive = true,
+            CreatedAt = new DateTime(2025, 9, 4, 10, 30, 0, DateTimeKind.Utc),
+            UpdatedAt = new DateTime(2025, 9, 4, 10, 30, 0, DateTimeKind.Utc)
+        };
+
+        // Act
+        var json = JsonSerializer.Serialize(dto, _jsonOptions);
+
+        // Assert
+        json.Should().Contain("\"linkType\":\"Alternative\"");
+        json.Should().Contain("\"displayOrder\":0");
+    }
+
+    [Fact]
+    public void CreateExerciseLinkDto_Alternative_ShouldAllowNullDisplayOrder()
+    {
+        // Arrange
+        var dto = new CreateExerciseLinkDto
+        {
+            TargetExerciseId = "exercise-123e4567-e89b-12d3-a456-426614174000",
+            LinkType = "Alternative",
+            DisplayOrder = null // Alternative links don't need display order
+        };
+
+        // Act
+        var json = JsonSerializer.Serialize(dto, _jsonOptions);
+
+        // Assert
+        json.Should().Contain("\"targetExerciseId\":");
+        json.Should().Contain("\"linkType\":\"Alternative\"");
+        json.Should().Contain("\"displayOrder\":null");
+    }
+
+    [Fact]
+    public void ExerciseLinkDto_ShouldDeserializeAlternativeType()
+    {
+        // Arrange
+        var json = """
+        {
+            "id": "exerciselink-550e8400-e29b-41d4-a716-446655440000",
+            "sourceExerciseId": "exercise-123e4567-e89b-12d3-a456-426614174001",
+            "targetExerciseId": "exercise-123e4567-e89b-12d3-a456-426614174000",
+            "targetExerciseName": "Dumbbell Press",
+            "linkType": "Alternative",
+            "displayOrder": 0,
+            "isActive": true,
+            "createdAt": "2025-09-04T10:30:00Z",
+            "updatedAt": "2025-09-04T10:30:00Z"
+        }
+        """;
+
+        // Act
+        var dto = JsonSerializer.Deserialize<ExerciseLinkDto>(json, _jsonOptions);
+
+        // Assert
+        dto.Should().NotBeNull();
+        dto!.LinkType.Should().Be("Alternative");
+        dto.DisplayOrder.Should().Be(0);
+        dto.TargetExerciseName.Should().Be("Dumbbell Press");
     }
 }

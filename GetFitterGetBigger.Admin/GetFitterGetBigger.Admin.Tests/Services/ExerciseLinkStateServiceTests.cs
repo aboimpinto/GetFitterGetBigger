@@ -544,6 +544,355 @@ namespace GetFitterGetBigger.Admin.Tests.Services
 
         #endregion
 
+        #region Alternative Links Tests
+
+        [Fact]
+        public async Task LoadAlternativeLinksAsync_WithNoExercise_ReturnsEarly()
+        {
+            // Act
+            await _stateService.LoadAlternativeLinksAsync();
+
+            // Assert
+            _stateService.AlternativeLinks.Should().BeEmpty();
+            _exerciseLinkServiceMock.Verify(x => x.GetLinksAsync(It.IsAny<string>(), "Alternative", It.IsAny<bool>()), Times.Never);
+        }
+
+        [Fact]
+        public async Task LoadAlternativeLinksAsync_Success_LoadsAlternativeLinks()
+        {
+            // Arrange
+            var exerciseId = Guid.NewGuid().ToString();
+            await _stateService.InitializeForExerciseAsync(exerciseId, "Test");
+
+            var alternativeLinks = new ExerciseLinksResponseDtoBuilder()
+                .WithExerciseId(exerciseId)
+                .WithLinks(
+                    new ExerciseLinkDtoBuilder().AsAlternative().Build(),
+                    new ExerciseLinkDtoBuilder().AsAlternative().Build()
+                )
+                .Build();
+
+            _exerciseLinkServiceMock
+                .Setup(x => x.GetLinksAsync(exerciseId, "Alternative", true))
+                .ReturnsAsync(alternativeLinks);
+
+            // Act
+            await _stateService.LoadAlternativeLinksAsync();
+
+            // Assert
+            _stateService.AlternativeLinks.Should().HaveCount(2);
+            _stateService.AlternativeLinkCount.Should().Be(2);
+        }
+
+        [Fact]
+        public async Task CreateLinkAsync_AlternativeType_DoesNotCheckMaxLinks()
+        {
+            // Arrange
+            var exerciseId = Guid.NewGuid().ToString();
+            await _stateService.InitializeForExerciseAsync(exerciseId, "Test");
+
+            var createDto = new CreateExerciseLinkDtoBuilder()
+                .WithLinkType("Alternative")
+                .WithTargetExerciseId(Guid.NewGuid().ToString())
+                .Build();
+
+            _exerciseLinkServiceMock
+                .Setup(x => x.CreateLinkAsync(exerciseId, It.IsAny<CreateExerciseLinkDto>()))
+                .ReturnsAsync(new ExerciseLinkDtoBuilder().AsAlternative().Build());
+
+            var alternativeLinksResponse = new ExerciseLinksResponseDtoBuilder()
+                .WithExerciseId(exerciseId)
+                .WithLinks(new ExerciseLinkDtoBuilder().AsAlternative().Build())
+                .Build();
+
+            _exerciseLinkServiceMock
+                .Setup(x => x.GetLinksAsync(exerciseId, "Alternative", true))
+                .ReturnsAsync(alternativeLinksResponse);
+
+            // Act
+            await _stateService.CreateLinkAsync(createDto);
+
+            // Assert
+            _stateService.ErrorMessage.Should().BeNull(); // No max limit error for alternatives
+            _stateService.SuccessMessage.Should().Be("Alternative link created successfully");
+            _exerciseLinkServiceMock.Verify(x => x.CreateLinkAsync(exerciseId, createDto), Times.Once);
+        }
+
+        [Fact]
+        public async Task CreateBidirectionalLinkAsync_WithNonAlternativeType_SetsError()
+        {
+            // Arrange
+            var exerciseId = Guid.NewGuid().ToString();
+            await _stateService.InitializeForExerciseAsync(exerciseId, "Test");
+
+            var createDto = new CreateExerciseLinkDtoBuilder().AsWarmup().Build();
+
+            // Act
+            await _stateService.CreateBidirectionalLinkAsync(createDto);
+
+            // Assert
+            _stateService.ErrorMessage.Should().Be("Bidirectional links are only supported for Alternative relationships");
+            _exerciseLinkServiceMock.Verify(x => x.CreateLinkAsync(It.IsAny<string>(), It.IsAny<CreateExerciseLinkDto>()), Times.Never);
+        }
+
+        [Fact]
+        public async Task CreateBidirectionalLinkAsync_Success_CreatesLinkAndReloads()
+        {
+            // Arrange
+            var exerciseId = Guid.NewGuid().ToString();
+            await _stateService.InitializeForExerciseAsync(exerciseId, "Test");
+
+            var createDto = new CreateExerciseLinkDtoBuilder()
+                .WithLinkType("Alternative")
+                .WithTargetExerciseId(Guid.NewGuid().ToString())
+                .Build();
+
+            _exerciseLinkServiceMock
+                .Setup(x => x.CreateLinkAsync(exerciseId, It.IsAny<CreateExerciseLinkDto>()))
+                .ReturnsAsync(new ExerciseLinkDtoBuilder().AsAlternative().Build());
+
+            var alternativeLinksResponse = new ExerciseLinksResponseDtoBuilder()
+                .WithExerciseId(exerciseId)
+                .WithLinks(new ExerciseLinkDtoBuilder().AsAlternative().Build())
+                .Build();
+
+            _exerciseLinkServiceMock
+                .Setup(x => x.GetLinksAsync(exerciseId, "Alternative", true))
+                .ReturnsAsync(alternativeLinksResponse);
+
+            // Act
+            await _stateService.CreateBidirectionalLinkAsync(createDto);
+
+            // Assert
+            _stateService.SuccessMessage.Should().Be("Alternative link created (bidirectional)");
+            _stateService.ScreenReaderAnnouncement.Should().Be("Alternative exercise link has been created for both exercises");
+            _stateService.ErrorMessage.Should().BeNull();
+            _exerciseLinkServiceMock.Verify(x => x.CreateLinkAsync(exerciseId, createDto), Times.Once);
+            _exerciseLinkServiceMock.Verify(x => x.GetLinksAsync(exerciseId, "Alternative", true), Times.Once);
+        }
+
+        [Fact]
+        public async Task DeleteBidirectionalLinkAsync_Success_RemovesLinkAndReloads()
+        {
+            // Arrange
+            var exerciseId = Guid.NewGuid().ToString();
+            await _stateService.InitializeForExerciseAsync(exerciseId, "Test");
+
+            var linkId = Guid.NewGuid().ToString();
+            var alternativeLink = new ExerciseLinkDtoBuilder()
+                .AsAlternative()
+                .WithId(linkId)
+                .Build();
+
+            // Manually add a link to the alternative collection for testing
+            var alternativeLinksResponse = new ExerciseLinksResponseDtoBuilder()
+                .WithExerciseId(exerciseId)
+                .WithLinks(alternativeLink)
+                .Build();
+
+            _exerciseLinkServiceMock
+                .Setup(x => x.GetLinksAsync(exerciseId, "Alternative", true))
+                .ReturnsAsync(alternativeLinksResponse);
+
+            await _stateService.LoadAlternativeLinksAsync();
+
+            _exerciseLinkServiceMock
+                .Setup(x => x.DeleteLinkAsync(exerciseId, linkId))
+                .Returns(Task.CompletedTask);
+
+            _exerciseLinkServiceMock
+                .Setup(x => x.GetLinksAsync(exerciseId, "Alternative", true))
+                .ReturnsAsync(new ExerciseLinksResponseDtoBuilder().WithExerciseId(exerciseId).Build());
+
+            // Act
+            await _stateService.DeleteBidirectionalLinkAsync(linkId);
+
+            // Assert
+            _stateService.SuccessMessage.Should().Be("Alternative link removed (bidirectional)");
+            _stateService.ScreenReaderAnnouncement.Should().Be("Alternative exercise link has been removed from both exercises");
+            _stateService.ErrorMessage.Should().BeNull();
+            _exerciseLinkServiceMock.Verify(x => x.DeleteLinkAsync(exerciseId, linkId), Times.Once);
+        }
+
+        #endregion
+
+        #region Context Management Tests
+
+        [Fact]
+        public async Task InitializeForExerciseAsync_WithExerciseDto_SetsContextCorrectly()
+        {
+            // Arrange
+            var exercise = new ExerciseDtoBuilder()
+                .WithId(Guid.NewGuid().ToString())
+                .WithName("Multi-Type Exercise")
+                .WithExerciseTypes(("Workout", "Workout exercise type"), ("Warmup", "Warmup exercise type"))
+                .Build();
+
+            var expectedLinks = new ExerciseLinksResponseDtoBuilder()
+                .WithExerciseId(exercise.Id)
+                .WithExerciseName(exercise.Name)
+                .Build();
+
+            _exerciseLinkServiceMock
+                .Setup(x => x.GetLinksAsync(exercise.Id, null, true))
+                .ReturnsAsync(expectedLinks);
+
+            // Act
+            await _stateService.InitializeForExerciseAsync(exercise);
+
+            // Assert
+            _stateService.CurrentExerciseId.Should().Be(exercise.Id);
+            _stateService.CurrentExerciseName.Should().Be(exercise.Name);
+            _stateService.HasMultipleContexts.Should().BeTrue();
+            _stateService.AvailableContexts.Should().Contain(new[] { "Workout", "Warmup" });
+            _stateService.ActiveContext.Should().Be("Workout"); // First available context
+        }
+
+        [Fact]
+        public async Task SwitchContextAsync_WithInvalidContext_SetsError()
+        {
+            // Arrange
+            var exercise = new ExerciseDtoBuilder()
+                .WithExerciseTypes(("Workout", "Workout exercise type"))
+                .Build();
+            
+            await _stateService.InitializeForExerciseAsync(exercise);
+
+            // Act
+            await _stateService.SwitchContextAsync("Warmup");
+
+            // Assert
+            _stateService.ErrorMessage.Should().Be("Invalid context type: Warmup");
+        }
+
+        [Fact]
+        public async Task SwitchContextAsync_ToWorkoutContext_LoadsWorkoutAndAlternativeLinks()
+        {
+            // Arrange
+            var exercise = new ExerciseDtoBuilder()
+                .WithId(Guid.NewGuid().ToString())
+                .WithExerciseTypes(("Workout", "Workout exercise type"), ("Warmup", "Warmup exercise type"))
+                .Build();
+
+            await _stateService.InitializeForExerciseAsync(exercise);
+
+            var workoutLinks = new ExerciseLinksResponseDtoBuilder()
+                .WithExerciseId(exercise.Id)
+                .WithLinks(new ExerciseLinkDtoBuilder().AsWarmup().Build())
+                .Build();
+
+            var alternativeLinks = new ExerciseLinksResponseDtoBuilder()
+                .WithExerciseId(exercise.Id)
+                .WithLinks(new ExerciseLinkDtoBuilder().AsAlternative().Build())
+                .Build();
+
+            _exerciseLinkServiceMock
+                .Setup(x => x.GetLinksAsync(exercise.Id, null, true))
+                .ReturnsAsync(workoutLinks);
+
+            _exerciseLinkServiceMock
+                .Setup(x => x.GetLinksAsync(exercise.Id, "Alternative", true))
+                .ReturnsAsync(alternativeLinks);
+
+            // Act
+            await _stateService.SwitchContextAsync("Workout");
+
+            // Assert
+            _stateService.ActiveContext.Should().Be("Workout");
+            _stateService.ScreenReaderAnnouncement.Should().Be("Switched to Workout context");
+            _exerciseLinkServiceMock.Verify(x => x.GetLinksAsync(exercise.Id, null, true), Times.AtLeastOnce);
+            _exerciseLinkServiceMock.Verify(x => x.GetLinksAsync(exercise.Id, "Alternative", true), Times.Once);
+        }
+
+        #endregion
+
+        #region Validation Tests
+
+        [Fact]
+        public void ValidateLinkCompatibility_SelfReference_ReturnsFailure()
+        {
+            // Arrange
+            var exercise = new ExerciseDtoBuilder()
+                .WithId("same-id")
+                .WithName("Test Exercise")
+                .Build();
+
+            // Act
+            var result = _stateService.ValidateLinkCompatibility(exercise, exercise, "Alternative");
+
+            // Assert
+            result.IsSuccess.Should().BeFalse();
+            result.Errors.Should().ContainSingle()
+                .Which.Message.Should().Be("An exercise cannot be linked to itself");
+        }
+
+        [Fact]
+        public void ValidateLinkCompatibility_AlternativeWithNoSharedTypes_ReturnsFailure()
+        {
+            // Arrange
+            var sourceExercise = new ExerciseDtoBuilder()
+                .WithId("source-id")
+                .WithExerciseTypes(("Workout", "Workout exercise type"))
+                .Build();
+
+            var targetExercise = new ExerciseDtoBuilder()
+                .WithId("target-id")
+                .WithExerciseTypes(("Warmup", "Warmup exercise type"))
+                .Build();
+
+            // Act
+            var result = _stateService.ValidateLinkCompatibility(sourceExercise, targetExercise, "Alternative");
+
+            // Assert
+            result.IsSuccess.Should().BeFalse();
+            result.Errors.Should().ContainSingle()
+                .Which.Message.Should().Be("Alternative exercises must share at least one exercise type");
+        }
+
+        [Fact]
+        public void ValidateLinkCompatibility_AlternativeWithSharedTypes_ReturnsSuccess()
+        {
+            // Arrange
+            var sourceExercise = new ExerciseDtoBuilder()
+                .WithId("source-id")
+                .WithExerciseTypes(("Workout", "Workout exercise type"), ("Warmup", "Warmup exercise type"))
+                .Build();
+
+            var targetExercise = new ExerciseDtoBuilder()
+                .WithId("target-id")
+                .WithExerciseTypes(("Workout", "Workout exercise type"))
+                .Build();
+
+            // Act
+            var result = _stateService.ValidateLinkCompatibility(sourceExercise, targetExercise, "Alternative");
+
+            // Assert
+            result.IsSuccess.Should().BeTrue();
+        }
+
+        [Fact]
+        public void ValidateLinkCompatibility_NonAlternativeTypes_ReturnsSuccess()
+        {
+            // Arrange
+            var sourceExercise = new ExerciseDtoBuilder()
+                .WithId("source-id")
+                .WithExerciseTypes(("Workout", "Workout exercise type"))
+                .Build();
+
+            var targetExercise = new ExerciseDtoBuilder()
+                .WithId("target-id")
+                .WithExerciseTypes(("Warmup", "Warmup exercise type"))
+                .Build();
+
+            // Act
+            var result = _stateService.ValidateLinkCompatibility(sourceExercise, targetExercise, "Warmup");
+
+            // Assert
+            result.IsSuccess.Should().BeTrue(); // No type compatibility requirement for warmup/cooldown
+        }
+
+        #endregion
+
         #region State Change Notification Tests
 
         [Fact]

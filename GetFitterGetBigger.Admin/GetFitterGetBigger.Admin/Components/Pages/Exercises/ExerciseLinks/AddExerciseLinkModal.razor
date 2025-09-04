@@ -30,31 +30,62 @@
 
                         @* Info about what exercises will be shown *@
                         <div class="mb-4">
-                            <div class="rounded-md bg-blue-50 p-4">
-                                <div class="flex">
-                                    <div class="flex-shrink-0">
-                                        <svg class="h-5 w-5 text-blue-400" viewBox="0 0 20 20" fill="currentColor">
-                                            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
-                                        </svg>
-                                    </div>
-                                    <div class="ml-3">
-                                        <p class="text-sm text-blue-700">
-                                            @if (LinkType == "Warmup")
-                                            {
-                                                <span>Showing exercises that can be used as warmup exercises.</span>
-                                            }
-                                            else if (LinkType == "Cooldown")
-                                            {
-                                                <span>Showing exercises that can be used as cooldown exercises.</span>
-                                            }
-                                            else
-                                            {
-                                                <span>Showing exercises that can be linked.</span>
-                                            }
-                                        </p>
+                            @if (LinkType == "Alternative" && SourceExercise != null)
+                            {
+                                <div class="rounded-md bg-purple-50 p-4">
+                                    <div class="flex">
+                                        <div class="flex-shrink-0">
+                                            <svg class="h-5 w-5 text-purple-400" fill="currentColor" viewBox="0 0 20 20">
+                                                <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd" />
+                                            </svg>
+                                        </div>
+                                        <div class="ml-3">
+                                            <p class="text-sm text-purple-800">
+                                                💡 Showing exercises compatible with @SourceExercise.Name
+                                            </p>
+                                            <div class="mt-2 flex flex-wrap gap-1">
+                                                @if (SourceExercise.ExerciseTypes?.Any() == true)
+                                                {
+                                                    @foreach (var type in SourceExercise.ExerciseTypes)
+                                                    {
+                                                        <span class="px-2 py-1 bg-purple-100 text-purple-700 rounded text-xs">
+                                                            @type.Value
+                                                        </span>
+                                                    }
+                                                }
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
+                            }
+                            else
+                            {
+                                <div class="rounded-md bg-blue-50 p-4">
+                                    <div class="flex">
+                                        <div class="flex-shrink-0">
+                                            <svg class="h-5 w-5 text-blue-400" viewBox="0 0 20 20" fill="currentColor">
+                                                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+                                            </svg>
+                                        </div>
+                                        <div class="ml-3">
+                                            <p class="text-sm text-blue-700">
+                                                @if (LinkType == "Warmup")
+                                                {
+                                                    <span>Showing exercises that can be used as warmup exercises.</span>
+                                                }
+                                                else if (LinkType == "Cooldown")
+                                                {
+                                                    <span>Showing exercises that can be used as cooldown exercises.</span>
+                                                }
+                                                else
+                                                {
+                                                    <span>Showing exercises that can be linked.</span>
+                                                }
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
                         </div>
 
                         @* Search Button *@
@@ -109,6 +140,25 @@
                                                             @if (exercise.ExerciseTypes?.Any() == true)
                                                             {
                                                                 <p>Types: @string.Join(", ", exercise.ExerciseTypes.Select(t => t.Value))</p>
+                                                            }
+                                                            @if (LinkType == "Alternative" && SourceExercise != null)
+                                                            {
+                                                                var compatibilityScore = GetCompatibilityScore(exercise);
+                                                                <p class="text-purple-600 font-medium">
+                                                                    Compatibility: @compatibilityScore% match
+                                                                    @if (compatibilityScore >= 80)
+                                                                    {
+                                                                        <span class="ml-1 text-green-600">⭐ Excellent</span>
+                                                                    }
+                                                                    else if (compatibilityScore >= 60)
+                                                                    {
+                                                                        <span class="ml-1 text-purple-600">✓ Good</span>
+                                                                    }
+                                                                    else if (compatibilityScore >= 40)
+                                                                    {
+                                                                        <span class="ml-1 text-orange-600">~ Fair</span>
+                                                                    }
+                                                                </p>
                                                             }
                                                             @if (IsAlreadyLinked(exercise.Id))
                                                             {
@@ -204,6 +254,7 @@
     [Parameter, EditorRequired] public IEnumerable<ExerciseTypeDto> ExerciseTypes { get; set; } = null!;
     [Parameter] public EventCallback<ExerciseListDto> OnAdd { get; set; }
     [Parameter] public EventCallback OnCancel { get; set; }
+    [Parameter] public ExerciseDto? SourceExercise { get; set; } // For alternative exercise compatibility
 
     private string _searchQuery = string.Empty;
     // Removed _selectedExerciseType as it's no longer needed
@@ -290,6 +341,17 @@
                     ?.Where(e => e.ExerciseTypes?.Any(t => t.Value == "Cooldown") == true)
                     .ToList() ?? new List<ExerciseListDto>();
                 Console.WriteLine($"[AddExerciseLinkModal] SearchExercises - After Cooldown filter: {_searchResults.Count} (was {beforeTypeFilter})");
+            }
+            else if (LinkType == "Alternative" && SourceExercise != null)
+            {
+                // For alternatives, show exercises that share at least one exercise type with source
+                var sourceTypes = SourceExercise.ExerciseTypes?.Select(t => t.Value).ToHashSet() ?? new HashSet<string>();
+                _searchResults = _searchResults
+                    ?.Where(e => e.Id != SourceExercise.Id && // Don't include the source exercise itself
+                             e.ExerciseTypes?.Any(t => sourceTypes.Contains(t.Value)) == true)
+                    .OrderByDescending(e => GetCompatibilityScore(e))
+                    .ToList() ?? new List<ExerciseListDto>();
+                Console.WriteLine($"[AddExerciseLinkModal] SearchExercises - After Alternative filter: {_searchResults.Count} (was {beforeTypeFilter})");
             }
             else
             {
@@ -414,11 +476,25 @@
         }
         else if (_selectedExerciseId == exerciseId)
         {
-            return $"{baseClasses} border-blue-500 bg-blue-50";
+            if (LinkType == "Alternative")
+            {
+                return $"{baseClasses} border-purple-500 bg-purple-50";
+            }
+            else
+            {
+                return $"{baseClasses} border-blue-500 bg-blue-50";
+            }
         }
         else
         {
-            return $"{baseClasses} border-gray-300 hover:border-blue-300 hover:bg-gray-50";
+            if (LinkType == "Alternative")
+            {
+                return $"{baseClasses} border-gray-300 hover:border-purple-300 hover:bg-purple-50";
+            }
+            else
+            {
+                return $"{baseClasses} border-gray-300 hover:border-blue-300 hover:bg-gray-50";
+            }
         }
     }
 
@@ -431,5 +507,52 @@
                 SelectExercise(exercise);
                 break;
         }
+    }
+
+    private int GetCompatibilityScore(ExerciseListDto exercise)
+    {
+        if (LinkType != "Alternative" || SourceExercise == null)
+            return 0;
+
+        var sourceTypes = SourceExercise.ExerciseTypes?.Select(t => t.Value).ToHashSet() ?? new HashSet<string>();
+        var targetTypes = exercise.ExerciseTypes?.Select(t => t.Value).ToHashSet() ?? new HashSet<string>();
+        
+        if (sourceTypes.Count == 0 || targetTypes.Count == 0)
+            return 0;
+
+        // Calculate type overlap percentage
+        var commonTypes = sourceTypes.Intersect(targetTypes).Count();
+        var totalUniqueTypes = sourceTypes.Union(targetTypes).Count();
+        var typeScore = (int)((double)commonTypes / totalUniqueTypes * 100);
+
+        // Calculate muscle group overlap (basic implementation)
+        var sourceMuscles = SourceExercise.MuscleGroups?.Where(mg => mg.Role?.Value == "Primary")
+                                                        .Select(mg => mg.MuscleGroup?.Value)
+                                                        .Where(v => !string.IsNullOrEmpty(v))
+                                                        .ToHashSet() ?? new HashSet<string>();
+
+        var targetMuscles = exercise.MuscleGroups?.Where(mg => mg.Role?.Value == "Primary")
+                                                  .Select(mg => mg.MuscleGroup?.Value)
+                                                  .Where(v => !string.IsNullOrEmpty(v))
+                                                  .ToHashSet() ?? new HashSet<string>();
+
+        var muscleScore = 0;
+        if (sourceMuscles.Count > 0 && targetMuscles.Count > 0)
+        {
+            var commonMuscles = sourceMuscles.Intersect(targetMuscles).Count();
+            var totalUniqueMuscles = sourceMuscles.Union(targetMuscles).Count();
+            muscleScore = (int)((double)commonMuscles / totalUniqueMuscles * 100);
+        }
+
+        // Difficulty similarity boost
+        var difficultyScore = 0;
+        if (SourceExercise.Difficulty?.Value == exercise.Difficulty?.Value)
+        {
+            difficultyScore = 20; // 20% boost for same difficulty
+        }
+
+        // Weighted final score: 60% types, 30% muscles, 10% difficulty
+        var finalScore = (int)(typeScore * 0.6 + muscleScore * 0.3 + difficultyScore * 0.1);
+        return Math.Max(0, Math.Min(100, finalScore)); // Clamp between 0-100
     }
 }
