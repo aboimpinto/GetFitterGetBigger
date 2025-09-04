@@ -41,8 +41,15 @@ public class ExerciseLinkMigrationTests
     public void Migration_Preserves_String_Property_Values()
     {
         // Arrange - create links using string-based method with proper enum values
-        var warmupLink = ExerciseLink.Handler.CreateNew(_sourceExerciseId, _targetExerciseId, "WARMUP", 1);
-        var cooldownLink = ExerciseLink.Handler.CreateNew(_sourceExerciseId, _targetExerciseId, "COOLDOWN", 1);
+        var warmupResult = ExerciseLink.Handler.CreateNew(_sourceExerciseId, _targetExerciseId, "WARMUP", 1);
+        var cooldownResult = ExerciseLink.Handler.CreateNew(_sourceExerciseId, _targetExerciseId, "COOLDOWN", 1);
+
+        // Assert - should be successful
+        Assert.True(warmupResult.IsSuccess);
+        Assert.True(cooldownResult.IsSuccess);
+        
+        var warmupLink = warmupResult.Value;
+        var cooldownLink = cooldownResult.Value;
 
         // Act & Assert - string values should be preserved and enum should be set
         Assert.Equal("WARMUP", warmupLink.LinkType);
@@ -59,11 +66,15 @@ public class ExerciseLinkMigrationTests
     public void Post_Migration_Enum_Creation_Should_Set_Both_Properties()
     {
         // Arrange & Act - create links using enum-based method (post-migration scenario)
-        var alternativeLink = ExerciseLink.Handler.CreateNew(
+        var result = ExerciseLink.Handler.CreateNew(
             _sourceExerciseId, 
             _targetExerciseId, 
             ExerciseLinkType.ALTERNATIVE, 
             1);
+
+        // Assert - should be successful
+        Assert.True(result.IsSuccess);
+        var alternativeLink = result.Value;
 
         // Assert - both properties should be set correctly
         Assert.Equal("ALTERNATIVE", alternativeLink.LinkType);
@@ -113,17 +124,24 @@ public class ExerciseLinkMigrationTests
     public void New_Enum_Values_Should_Work_Post_Migration()
     {
         // Arrange & Act - test new enum values that didn't exist pre-migration
-        var workoutLink = ExerciseLink.Handler.CreateNew(
+        var workoutResult = ExerciseLink.Handler.CreateNew(
             _sourceExerciseId, 
             _targetExerciseId, 
             ExerciseLinkType.WORKOUT, 
             1);
             
-        var alternativeLink = ExerciseLink.Handler.CreateNew(
+        var alternativeResult = ExerciseLink.Handler.CreateNew(
             _sourceExerciseId, 
             _targetExerciseId, 
             ExerciseLinkType.ALTERNATIVE, 
             1);
+
+        // Assert - should be successful
+        Assert.True(workoutResult.IsSuccess);
+        Assert.True(alternativeResult.IsSuccess);
+        
+        var workoutLink = workoutResult.Value;
+        var alternativeLink = alternativeResult.Value;
 
         // Assert - new enum values should work correctly
         Assert.Equal("WORKOUT", workoutLink.LinkType);
@@ -143,8 +161,15 @@ public class ExerciseLinkMigrationTests
     public void Legacy_String_API_Should_Continue_Working()
     {
         // Arrange & Act - use string-based API with proper enum values
-        var warmupLink = ExerciseLink.Handler.CreateNew(_sourceExerciseId, _targetExerciseId, "WARMUP", 1);
-        var cooldownLink = ExerciseLink.Handler.CreateNew(_sourceExerciseId, _targetExerciseId, "COOLDOWN", 1);
+        var warmupResult = ExerciseLink.Handler.CreateNew(_sourceExerciseId, _targetExerciseId, "WARMUP", 1);
+        var cooldownResult = ExerciseLink.Handler.CreateNew(_sourceExerciseId, _targetExerciseId, "COOLDOWN", 1);
+
+        // Assert - should be successful
+        Assert.True(warmupResult.IsSuccess);
+        Assert.True(cooldownResult.IsSuccess);
+        
+        var warmupLink = warmupResult.Value;
+        var cooldownLink = cooldownResult.Value;
 
         // Assert - should work with enum values properly set
         Assert.Equal("WARMUP", warmupLink.LinkType);

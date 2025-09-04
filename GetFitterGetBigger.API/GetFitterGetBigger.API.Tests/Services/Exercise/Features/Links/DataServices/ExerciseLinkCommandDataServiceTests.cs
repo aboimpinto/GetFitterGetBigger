@@ -24,17 +24,23 @@ public class ExerciseLinkCommandDataServiceTests
         var sourceId = ExerciseId.New();
         var targetId = ExerciseId.New();
         
-        var primaryLink = ExerciseLink.Handler.CreateNew(
+        var primaryLinkResult = ExerciseLink.Handler.CreateNew(
             sourceId,
             targetId,
             ExerciseLinkType.WARMUP,
             1);
             
-        var reverseLink = ExerciseLink.Handler.CreateNew(
+        Assert.True(primaryLinkResult.IsSuccess);
+        var primaryLink = primaryLinkResult.Value;
+            
+        var reverseLinkResult = ExerciseLink.Handler.CreateNew(
             primaryLink.TargetExerciseId,
             primaryLink.SourceExerciseId,
             ExerciseLinkType.WORKOUT,
             1);
+        
+        Assert.True(reverseLinkResult.IsSuccess);
+        var reverseLink = reverseLinkResult.Value;
         
         var expectedDto = primaryLink.ToDto();
         

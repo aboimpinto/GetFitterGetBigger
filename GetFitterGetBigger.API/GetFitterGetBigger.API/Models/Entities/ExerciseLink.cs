@@ -1,5 +1,7 @@
 using GetFitterGetBigger.API.Models.Enums;
 using GetFitterGetBigger.API.Models.SpecializedIds;
+using GetFitterGetBigger.API.Models.Results;
+using GetFitterGetBigger.API.Constants;
 
 namespace GetFitterGetBigger.API.Models.Entities;
 
@@ -74,43 +76,43 @@ public record ExerciseLink : IEmptyEntity<ExerciseLink>
         /// <summary>
         /// Creates a new ExerciseLink using string LinkType (accepts enum values as strings: WARMUP, COOLDOWN, WORKOUT, ALTERNATIVE)
         /// </summary>
-        public static ExerciseLink CreateNew(
+        public static EntityResult<ExerciseLink> CreateNew(
             ExerciseId sourceExerciseId,
             ExerciseId targetExerciseId,
             string linkType,
             int displayOrder)
         {
-            // Validation logic
+            // Validation logic - return failures instead of throwing exceptions
             if (sourceExerciseId == default)
             {
-                throw new ArgumentException("Source exercise ID cannot be empty", nameof(sourceExerciseId));
+                return EntityResult<ExerciseLink>.Failure(ExerciseLinkErrorMessages.InvalidSourceExerciseId);
             }
             
             if (targetExerciseId == default)
             {
-                throw new ArgumentException("Target exercise ID cannot be empty", nameof(targetExerciseId));
+                return EntityResult<ExerciseLink>.Failure(ExerciseLinkErrorMessages.InvalidTargetExerciseId);
             }
             
             if (string.IsNullOrWhiteSpace(linkType))
             {
-                throw new ArgumentException("Link type cannot be empty", nameof(linkType));
+                return EntityResult<ExerciseLink>.Failure(ExerciseLinkErrorMessages.LinkTypeRequired);
             }
             
             // Validate against enum values (as strings)
             if (!Enum.TryParse<ExerciseLinkType>(linkType, out _))
             {
-                throw new ArgumentException("Link type must be one of: WARMUP, COOLDOWN, WORKOUT, ALTERNATIVE", nameof(linkType));
+                return EntityResult<ExerciseLink>.Failure(ExerciseLinkErrorMessages.InvalidLinkTypeEnum);
             }
             
             if (displayOrder < 0)
             {
-                throw new ArgumentException("Display order cannot be negative", nameof(displayOrder));
+                return EntityResult<ExerciseLink>.Failure(ExerciseLinkErrorMessages.DisplayOrderMustBeNonNegative);
             }
             
             var now = DateTime.UtcNow;
             var linkTypeEnum = Enum.Parse<ExerciseLinkType>(linkType);
             
-            return new ExerciseLink
+            var exerciseLink = new ExerciseLink
             {
                 Id = ExerciseLinkId.New(),
                 SourceExerciseId = sourceExerciseId,
@@ -122,40 +124,42 @@ public record ExerciseLink : IEmptyEntity<ExerciseLink>
                 CreatedAt = now,
                 UpdatedAt = now
             };
+            
+            return EntityResult<ExerciseLink>.Success(exerciseLink);
         }
 
         /// <summary>
         /// Creates a new ExerciseLink using enum LinkType (enhanced functionality)
         /// </summary>
-        public static ExerciseLink CreateNew(
+        public static EntityResult<ExerciseLink> CreateNew(
             ExerciseId sourceExerciseId,
             ExerciseId targetExerciseId,
             ExerciseLinkType linkType,
             int displayOrder)
         {
-            // Validation logic
+            // Validation logic - return failures instead of throwing exceptions
             if (sourceExerciseId == default)
             {
-                throw new ArgumentException("Source exercise ID cannot be empty", nameof(sourceExerciseId));
+                return EntityResult<ExerciseLink>.Failure(ExerciseLinkErrorMessages.InvalidSourceExerciseId);
             }
             
             if (targetExerciseId == default)
             {
-                throw new ArgumentException("Target exercise ID cannot be empty", nameof(targetExerciseId));
+                return EntityResult<ExerciseLink>.Failure(ExerciseLinkErrorMessages.InvalidTargetExerciseId);
             }
             
             if (!Enum.IsDefined(typeof(ExerciseLinkType), linkType))
             {
-                throw new ArgumentException("Link type must be a valid ExerciseLinkType value", nameof(linkType));
+                return EntityResult<ExerciseLink>.Failure(ExerciseLinkErrorMessages.InvalidLinkTypeEnum);
             }
             
             if (displayOrder < 0)
             {
-                throw new ArgumentException("Display order cannot be negative", nameof(displayOrder));
+                return EntityResult<ExerciseLink>.Failure(ExerciseLinkErrorMessages.DisplayOrderMustBeNonNegative);
             }
             
             var now = DateTime.UtcNow;
-            return new ExerciseLink
+            var exerciseLink = new ExerciseLink
             {
                 Id = ExerciseLinkId.New(),
                 SourceExerciseId = sourceExerciseId,
@@ -167,6 +171,8 @@ public record ExerciseLink : IEmptyEntity<ExerciseLink>
                 CreatedAt = now,
                 UpdatedAt = now
             };
+            
+            return EntityResult<ExerciseLink>.Success(exerciseLink);
         }
         
         /// <summary>

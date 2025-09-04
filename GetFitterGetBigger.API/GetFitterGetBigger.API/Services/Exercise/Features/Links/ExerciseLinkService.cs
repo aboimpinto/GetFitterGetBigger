@@ -106,7 +106,7 @@ public class ExerciseLinkService(
                 whenValid: async () => await UpdateLinkInternalAsync(command),
                 whenInvalid: errors => ServiceResult<ExerciseLinkDto>.Failure(
                     ExerciseLinkDto.Empty,
-                    errors.FirstOrDefault() ?? ExerciseLinkErrorMessages.ValidationFailed)
+                    errors.FirstOrDefault() ?? ServiceError.ValidationFailed(ExerciseLinkErrorMessages.ValidationFailed))
             );
     }
     
@@ -123,12 +123,12 @@ public class ExerciseLinkService(
                 ServiceError.NotFound("ExerciseLink", linkId.ToString()))
             .EnsureAsync(
                 async () => await this._linkValidationHandler.DoesLinkBelongToExerciseAsync(exerciseId, linkId),
-                ExerciseLinkErrorMessages.LinkDoesNotBelongToExercise)
+                ServiceError.ValidationFailed(ExerciseLinkErrorMessages.LinkDoesNotBelongToExercise))
             .MatchAsync(
                 whenValid: async () => await this._bidirectionalLinkHandler.DeleteBidirectionalLinkAsync(linkId, deleteReverse),
                 whenInvalid: errors => ServiceResult<BooleanResultDto>.Failure(
                     BooleanResultDto.Create(false),
-                    errors.FirstOrDefault() ?? ExerciseLinkErrorMessages.ValidationFailed)
+                    errors.FirstOrDefault() ?? ServiceError.ValidationFailed(ExerciseLinkErrorMessages.ValidationFailed))
             );
     }
     

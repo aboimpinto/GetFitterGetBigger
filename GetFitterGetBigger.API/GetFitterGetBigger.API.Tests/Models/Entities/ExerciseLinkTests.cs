@@ -47,14 +47,15 @@ public class ExerciseLinkTests
     public void IsEmpty_Should_Return_False_For_Valid_ExerciseLink()
     {
         // Arrange
-        var exerciseLink = ExerciseLink.Handler.CreateNew(
+        var result = ExerciseLink.Handler.CreateNew(
             _sourceExerciseId,
             _targetExerciseId,
             "WARMUP",
             1);
 
         // Act & Assert
-        Assert.False(exerciseLink.IsEmpty);
+        Assert.True(result.IsSuccess);
+        Assert.False(result.Value.IsEmpty);
     }
 
     #endregion
@@ -122,13 +123,16 @@ public class ExerciseLinkTests
     public void Handler_CreateNew_String_Should_Create_Valid_ExerciseLink(string linkType)
     {
         // Act
-        var exerciseLink = ExerciseLink.Handler.CreateNew(
+        var result = ExerciseLink.Handler.CreateNew(
             _sourceExerciseId,
             _targetExerciseId,
             linkType,
             1);
 
         // Assert
+        Assert.True(result.IsSuccess);
+        var exerciseLink = result.Value;
+        
         Assert.False(exerciseLink.IsEmpty);
         Assert.NotEqual(ExerciseLinkId.Empty, exerciseLink.Id);
         Assert.Equal(_sourceExerciseId, exerciseLink.SourceExerciseId);
@@ -147,35 +151,51 @@ public class ExerciseLinkTests
     [InlineData("Invalid")]
     [InlineData("Warmup")]
     [InlineData("warmup")]
-    public void Handler_CreateNew_String_Should_Throw_For_Invalid_LinkType(string linkType)
+    public void Handler_CreateNew_String_Should_Return_Failure_For_Invalid_LinkType(string linkType)
     {
-        // Act & Assert
-        Assert.Throws<ArgumentException>(() =>
-            ExerciseLink.Handler.CreateNew(_sourceExerciseId, _targetExerciseId, linkType, 1));
+        // Act
+        var result = ExerciseLink.Handler.CreateNew(_sourceExerciseId, _targetExerciseId, linkType, 1);
+        
+        // Assert
+        Assert.True(result.IsFailure);
+        Assert.False(string.IsNullOrEmpty(result.FirstError));
+        Assert.True(result.Value.IsEmpty); // Should return Empty entity on failure
     }
 
     [Fact]
-    public void Handler_CreateNew_String_Should_Throw_For_Empty_SourceExerciseId()
+    public void Handler_CreateNew_String_Should_Return_Failure_For_Empty_SourceExerciseId()
     {
-        // Act & Assert
-        Assert.Throws<ArgumentException>(() =>
-            ExerciseLink.Handler.CreateNew(default, _targetExerciseId, "WARMUP", 1));
+        // Act
+        var result = ExerciseLink.Handler.CreateNew(default, _targetExerciseId, "WARMUP", 1);
+        
+        // Assert
+        Assert.True(result.IsFailure);
+        Assert.False(string.IsNullOrEmpty(result.FirstError));
+        Assert.True(result.Value.IsEmpty);
     }
 
     [Fact]
-    public void Handler_CreateNew_String_Should_Throw_For_Empty_TargetExerciseId()
+    public void Handler_CreateNew_String_Should_Return_Failure_For_Empty_TargetExerciseId()
     {
-        // Act & Assert
-        Assert.Throws<ArgumentException>(() =>
-            ExerciseLink.Handler.CreateNew(_sourceExerciseId, default, "WARMUP", 1));
+        // Act
+        var result = ExerciseLink.Handler.CreateNew(_sourceExerciseId, default, "WARMUP", 1);
+        
+        // Assert
+        Assert.True(result.IsFailure);
+        Assert.False(string.IsNullOrEmpty(result.FirstError));
+        Assert.True(result.Value.IsEmpty);
     }
 
     [Fact]
-    public void Handler_CreateNew_String_Should_Throw_For_Negative_DisplayOrder()
+    public void Handler_CreateNew_String_Should_Return_Failure_For_Negative_DisplayOrder()
     {
-        // Act & Assert
-        Assert.Throws<ArgumentException>(() =>
-            ExerciseLink.Handler.CreateNew(_sourceExerciseId, _targetExerciseId, "WARMUP", -1));
+        // Act
+        var result = ExerciseLink.Handler.CreateNew(_sourceExerciseId, _targetExerciseId, "WARMUP", -1);
+        
+        // Assert
+        Assert.True(result.IsFailure);
+        Assert.False(string.IsNullOrEmpty(result.FirstError));
+        Assert.True(result.Value.IsEmpty);
     }
 
     #endregion
@@ -190,13 +210,16 @@ public class ExerciseLinkTests
     public void Handler_CreateNew_Enum_Should_Create_Valid_ExerciseLink(ExerciseLinkType linkType, string expectedStringValue)
     {
         // Act
-        var exerciseLink = ExerciseLink.Handler.CreateNew(
+        var result = ExerciseLink.Handler.CreateNew(
             _sourceExerciseId,
             _targetExerciseId,
             linkType,
             1);
 
         // Assert
+        Assert.True(result.IsSuccess);
+        var exerciseLink = result.Value;
+        
         Assert.False(exerciseLink.IsEmpty);
         Assert.NotEqual(ExerciseLinkId.Empty, exerciseLink.Id);
         Assert.Equal(_sourceExerciseId, exerciseLink.SourceExerciseId);
@@ -211,38 +234,54 @@ public class ExerciseLinkTests
     }
 
     [Fact]
-    public void Handler_CreateNew_Enum_Should_Throw_For_Invalid_Enum()
+    public void Handler_CreateNew_Enum_Should_Return_Failure_For_Invalid_Enum()
     {
         // Arrange - cast invalid int to enum
         var invalidEnum = (ExerciseLinkType)999;
 
-        // Act & Assert
-        Assert.Throws<ArgumentException>(() =>
-            ExerciseLink.Handler.CreateNew(_sourceExerciseId, _targetExerciseId, invalidEnum, 1));
+        // Act
+        var result = ExerciseLink.Handler.CreateNew(_sourceExerciseId, _targetExerciseId, invalidEnum, 1);
+        
+        // Assert
+        Assert.True(result.IsFailure);
+        Assert.False(string.IsNullOrEmpty(result.FirstError));
+        Assert.True(result.Value.IsEmpty);
     }
 
     [Fact]
-    public void Handler_CreateNew_Enum_Should_Throw_For_Empty_SourceExerciseId()
+    public void Handler_CreateNew_Enum_Should_Return_Failure_For_Empty_SourceExerciseId()
     {
-        // Act & Assert
-        Assert.Throws<ArgumentException>(() =>
-            ExerciseLink.Handler.CreateNew(default, _targetExerciseId, ExerciseLinkType.WARMUP, 1));
+        // Act
+        var result = ExerciseLink.Handler.CreateNew(default, _targetExerciseId, ExerciseLinkType.WARMUP, 1);
+        
+        // Assert
+        Assert.True(result.IsFailure);
+        Assert.False(string.IsNullOrEmpty(result.FirstError));
+        Assert.True(result.Value.IsEmpty);
     }
 
     [Fact]
-    public void Handler_CreateNew_Enum_Should_Throw_For_Empty_TargetExerciseId()
+    public void Handler_CreateNew_Enum_Should_Return_Failure_For_Empty_TargetExerciseId()
     {
-        // Act & Assert
-        Assert.Throws<ArgumentException>(() =>
-            ExerciseLink.Handler.CreateNew(_sourceExerciseId, default, ExerciseLinkType.WARMUP, 1));
+        // Act
+        var result = ExerciseLink.Handler.CreateNew(_sourceExerciseId, default, ExerciseLinkType.WARMUP, 1);
+        
+        // Assert
+        Assert.True(result.IsFailure);
+        Assert.False(string.IsNullOrEmpty(result.FirstError));
+        Assert.True(result.Value.IsEmpty);
     }
 
     [Fact]
-    public void Handler_CreateNew_Enum_Should_Throw_For_Negative_DisplayOrder()
+    public void Handler_CreateNew_Enum_Should_Return_Failure_For_Negative_DisplayOrder()
     {
-        // Act & Assert
-        Assert.Throws<ArgumentException>(() =>
-            ExerciseLink.Handler.CreateNew(_sourceExerciseId, _targetExerciseId, ExerciseLinkType.WARMUP, -1));
+        // Act
+        var result = ExerciseLink.Handler.CreateNew(_sourceExerciseId, _targetExerciseId, ExerciseLinkType.WARMUP, -1);
+        
+        // Assert
+        Assert.True(result.IsFailure);
+        Assert.False(string.IsNullOrEmpty(result.FirstError));
+        Assert.True(result.Value.IsEmpty);
     }
 
     #endregion
@@ -322,8 +361,15 @@ public class ExerciseLinkTests
     public void String_Based_Creation_Should_Work_With_ActualLinkType()
     {
         // Arrange & Act - Create using string-based method with enum values
-        var warmupLink = ExerciseLink.Handler.CreateNew(_sourceExerciseId, _targetExerciseId, "WARMUP", 1);
-        var cooldownLink = ExerciseLink.Handler.CreateNew(_sourceExerciseId, _targetExerciseId, "COOLDOWN", 1);
+        var warmupResult = ExerciseLink.Handler.CreateNew(_sourceExerciseId, _targetExerciseId, "WARMUP", 1);
+        var cooldownResult = ExerciseLink.Handler.CreateNew(_sourceExerciseId, _targetExerciseId, "COOLDOWN", 1);
+
+        // Assert - Should be successful
+        Assert.True(warmupResult.IsSuccess);
+        Assert.True(cooldownResult.IsSuccess);
+        
+        var warmupLink = warmupResult.Value;
+        var cooldownLink = cooldownResult.Value;
 
         // Assert - ActualLinkType should work correctly
         Assert.Equal(ExerciseLinkType.WARMUP, warmupLink.ActualLinkType);
@@ -336,12 +382,16 @@ public class ExerciseLinkTests
     public void Enum_Based_Creation_Should_Set_Both_Properties()
     {
         // Arrange & Act - Create using new enum-based method
-        var exerciseLink = ExerciseLink.Handler.CreateNew(
+        var result = ExerciseLink.Handler.CreateNew(
             _sourceExerciseId, 
             _targetExerciseId, 
             ExerciseLinkType.ALTERNATIVE, 
             1);
 
+        // Assert - Result should be successful
+        Assert.True(result.IsSuccess);
+        
+        var exerciseLink = result.Value;
         // Assert - Both properties should be set
         Assert.Equal("ALTERNATIVE", exerciseLink.LinkType);
         Assert.Equal(ExerciseLinkType.ALTERNATIVE, exerciseLink.LinkTypeEnum);

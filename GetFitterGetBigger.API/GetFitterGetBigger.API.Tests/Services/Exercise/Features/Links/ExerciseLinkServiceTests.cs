@@ -22,7 +22,7 @@ public class ExerciseLinkServiceTests
     {
         // Arrange - Complete test isolation
         var autoMocker = new AutoMocker();
-        var exerciseServiceMock = autoMocker.GetMock<API.Services.Exercise.IExerciseService>();
+        var queryDataServiceMock = autoMocker.GetMock<API.Services.Exercise.Features.Links.DataServices.IExerciseLinkQueryDataService>();
         var bidirectionalLinkHandlerMock = autoMocker.GetMock<IBidirectionalLinkHandler>();
         var linkValidationHandlerMock = autoMocker.GetMock<ILinkValidationHandler>();
         
@@ -42,10 +42,13 @@ public class ExerciseLinkServiceTests
             .WithId(targetId)
             .Build();
         
-        // Fluent mock setup
-        exerciseServiceMock
-            .SetupExerciseById(sourceId, sourceExerciseDto)
-            .SetupExerciseById(targetId, targetExerciseDto);
+        // Mock the query data service for exercise validation
+        queryDataServiceMock
+            .Setup(x => x.GetAndValidateExerciseAsync(sourceId))
+            .ReturnsAsync(ServiceResult<ExerciseDto>.Success(sourceExerciseDto));
+        queryDataServiceMock
+            .Setup(x => x.GetAndValidateExerciseAsync(targetId))
+            .ReturnsAsync(ServiceResult<ExerciseDto>.Success(targetExerciseDto));
         
         // Mock validation handler for successful validation
         linkValidationHandlerMock
@@ -92,7 +95,7 @@ public class ExerciseLinkServiceTests
     {
         // Arrange - Complete test isolation
         var autoMocker = new AutoMocker();
-        var exerciseServiceMock = autoMocker.GetMock<GetFitterGetBigger.API.Services.Exercise.IExerciseService>();
+        var queryDataServiceMock = autoMocker.GetMock<API.Services.Exercise.Features.Links.DataServices.IExerciseLinkQueryDataService>();
         var bidirectionalLinkHandlerMock = autoMocker.GetMock<IBidirectionalLinkHandler>();
         var linkValidationHandlerMock = autoMocker.GetMock<ILinkValidationHandler>();
         
@@ -113,9 +116,12 @@ public class ExerciseLinkServiceTests
             .Build();
         
         // Fluent mock setup
-        exerciseServiceMock
-            .SetupExerciseById(sourceId, sourceExerciseDto)
-            .SetupExerciseById(targetId, targetExerciseDto);
+        queryDataServiceMock
+            .Setup(x => x.GetAndValidateExerciseAsync(sourceId))
+            .ReturnsAsync(ServiceResult<ExerciseDto>.Success(sourceExerciseDto));
+        queryDataServiceMock
+            .Setup(x => x.GetAndValidateExerciseAsync(targetId))
+            .ReturnsAsync(ServiceResult<ExerciseDto>.Success(targetExerciseDto));
         
         // Mock validation handler for successful validation
         linkValidationHandlerMock
@@ -162,7 +168,7 @@ public class ExerciseLinkServiceTests
     {
         // Arrange - Complete test isolation
         var autoMocker = new AutoMocker();
-        var exerciseServiceMock = autoMocker.GetMock<GetFitterGetBigger.API.Services.Exercise.IExerciseService>();
+        var queryDataServiceMock = autoMocker.GetMock<API.Services.Exercise.Features.Links.DataServices.IExerciseLinkQueryDataService>();
         var bidirectionalLinkHandlerMock = autoMocker.GetMock<IBidirectionalLinkHandler>();
         var linkValidationHandlerMock = autoMocker.GetMock<ILinkValidationHandler>();
         
@@ -184,9 +190,12 @@ public class ExerciseLinkServiceTests
             .Build();
         
         // Fluent mock setup
-        exerciseServiceMock
-            .SetupExerciseById(sourceId, sourceExerciseDto)
-            .SetupExerciseById(targetId, targetExerciseDto);
+        queryDataServiceMock
+            .Setup(x => x.GetAndValidateExerciseAsync(sourceId))
+            .ReturnsAsync(ServiceResult<ExerciseDto>.Success(sourceExerciseDto));
+        queryDataServiceMock
+            .Setup(x => x.GetAndValidateExerciseAsync(targetId))
+            .ReturnsAsync(ServiceResult<ExerciseDto>.Success(targetExerciseDto));
         
         // Mock validation handler for successful validation
         linkValidationHandlerMock
@@ -254,7 +263,7 @@ public class ExerciseLinkServiceTests
     {
         // Arrange - Only need exercise service for validation
         var autoMocker = new AutoMocker();
-        var exerciseServiceMock = autoMocker.GetMock<GetFitterGetBigger.API.Services.Exercise.IExerciseService>();
+        var queryDataServiceMock = autoMocker.GetMock<API.Services.Exercise.Features.Links.DataServices.IExerciseLinkQueryDataService>();
         var testee = autoMocker.CreateInstance<ExerciseLinkService>();
         
         var sourceId = ExerciseId.New();
@@ -270,9 +279,12 @@ public class ExerciseLinkServiceTests
             .WithId(targetId)
             .Build();
         
-        exerciseServiceMock
-            .SetupExerciseById(sourceId, sourceExerciseDto)
-            .SetupExerciseById(targetId, targetExerciseDto);
+        queryDataServiceMock
+            .Setup(x => x.GetAndValidateExerciseAsync(sourceId))
+            .ReturnsAsync(ServiceResult<ExerciseDto>.Success(sourceExerciseDto));
+        queryDataServiceMock
+            .Setup(x => x.GetAndValidateExerciseAsync(targetId))
+            .ReturnsAsync(ServiceResult<ExerciseDto>.Success(targetExerciseDto));
         
         // Act
         var result = await testee.CreateLinkAsync(
@@ -291,7 +303,7 @@ public class ExerciseLinkServiceTests
     {
         // Arrange - Only need exercise service for validation
         var autoMocker = new AutoMocker();
-        var exerciseServiceMock = autoMocker.GetMock<GetFitterGetBigger.API.Services.Exercise.IExerciseService>();
+        var queryDataServiceMock = autoMocker.GetMock<API.Services.Exercise.Features.Links.DataServices.IExerciseLinkQueryDataService>();
         var testee = autoMocker.CreateInstance<ExerciseLinkService>();
         
         var sourceId = ExerciseId.New();
@@ -307,9 +319,12 @@ public class ExerciseLinkServiceTests
             .WithId(targetId)
             .Build();
         
-        exerciseServiceMock
-            .SetupExerciseById(sourceId, sourceExerciseDto)
-            .SetupExerciseById(targetId, targetExerciseDto);
+        queryDataServiceMock
+            .Setup(x => x.GetAndValidateExerciseAsync(sourceId))
+            .ReturnsAsync(ServiceResult<ExerciseDto>.Success(sourceExerciseDto));
+        queryDataServiceMock
+            .Setup(x => x.GetAndValidateExerciseAsync(targetId))
+            .ReturnsAsync(ServiceResult<ExerciseDto>.Success(targetExerciseDto));
         
         // Act
         var result = await testee.CreateLinkAsync(
@@ -478,6 +493,11 @@ public class ExerciseLinkServiceTests
         linkValidationHandlerMock
             .Setup(x => x.DoesLinkExistAsync(linkId))
             .ReturnsAsync(false);
+            
+        // Setup second validation to return false as well (would happen in reality when link doesn't exist)
+        linkValidationHandlerMock
+            .Setup(x => x.DoesLinkBelongToExerciseAsync(exerciseId, linkId))
+            .ReturnsAsync(false);
         
         // Act
         var result = await testee.DeleteLinkAsync(exerciseId, linkId);
@@ -486,6 +506,7 @@ public class ExerciseLinkServiceTests
         result.Should().NotBeNull();
         result.IsSuccess.Should().BeFalse();
         result.Errors.Should().NotBeEmpty();
+        result.PrimaryErrorCode.Should().Be(ServiceErrorCode.NotFound);
     }
 
     [Fact]

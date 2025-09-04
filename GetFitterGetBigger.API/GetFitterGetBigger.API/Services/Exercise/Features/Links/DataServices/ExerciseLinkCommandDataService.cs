@@ -28,14 +28,21 @@ public class ExerciseLinkCommandDataService(
         var targetId = ExerciseId.ParseOrEmpty(linkDto.TargetExerciseId);
         
         // Create the entity internally
-        var exerciseLink = ExerciseLink.Handler.CreateNew(
+        var entityResult = ExerciseLink.Handler.CreateNew(
             sourceId,
             targetId,
             linkDto.LinkType,
             linkDto.DisplayOrder
         );
         
-        var createdLink = await repository.AddAsync(exerciseLink);
+        if (entityResult.IsFailure)
+        {
+            return ServiceResult<ExerciseLinkDto>.Failure(
+                ExerciseLinkDto.Empty, 
+                ServiceError.ValidationFailed(entityResult.FirstError));
+        }
+        
+        var createdLink = await repository.AddAsync(entityResult.Value);
         await unitOfWork.CommitAsync();
         
         var dto = createdLink.ToDto();
@@ -104,15 +111,22 @@ public class ExerciseLinkCommandDataService(
             }
         }
         
-        var primaryLink = ExerciseLink.Handler.CreateNew(
+        var primaryLinkResult = ExerciseLink.Handler.CreateNew(
             primarySourceId,
             primaryTargetId,
             primaryLinkTypeString,
             primaryLinkDto.DisplayOrder
         );
         
+        if (primaryLinkResult.IsFailure)
+        {
+            return ServiceResult<ExerciseLinkDto>.Failure(
+                ExerciseLinkDto.Empty, 
+                ServiceError.ValidationFailed(primaryLinkResult.FirstError));
+        }
+        
         // Create the primary link
-        var createdPrimaryLink = await repository.AddAsync(primaryLink);
+        var createdPrimaryLink = await repository.AddAsync(primaryLinkResult.Value);
         
         // Create the reverse link if provided
         if (reverseLinkDto != null)
@@ -123,14 +137,21 @@ public class ExerciseLinkCommandDataService(
             // Convert legacy link type strings to enum-compatible strings
             var reverseLinkTypeString = ConvertLinkTypeToEnumString(reverseLinkDto.LinkType);
             
-            var reverseLink = ExerciseLink.Handler.CreateNew(
+            var reverseLinkResult = ExerciseLink.Handler.CreateNew(
                 reverseSourceId,
                 reverseTargetId,
                 reverseLinkTypeString,
                 reverseLinkDto.DisplayOrder
             );
             
-            await repository.AddAsync(reverseLink);
+            if (reverseLinkResult.IsFailure)
+            {
+                return ServiceResult<ExerciseLinkDto>.Failure(
+                    ExerciseLinkDto.Empty, 
+                    ServiceError.ValidationFailed(reverseLinkResult.FirstError));
+            }
+            
+            await repository.AddAsync(reverseLinkResult.Value);
         }
         
         // Commit both operations atomically
