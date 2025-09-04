@@ -230,14 +230,11 @@
                 </div>
             }
 
-            <!-- Linked Exercises (only for Workout type) -->
-            @if (exercise.ExerciseTypes.Any(t => t.Value == "Workout"))
-            {
-                <ExerciseLinkManager Exercise="@exercise"
-                                   StateService="@LinkStateService"
-                                   ExerciseService="@ExerciseService"
-                                   ExerciseTypes="@StateService.ExerciseTypes" />
-            }
+            <!-- Four-Way Exercise Linking (all exercise types supported) -->
+            <FourWayExerciseLinkManager Exercise="@exercise"
+                                       StateService="@LinkStateService"
+                                       ExerciseService="@ExerciseService"
+                                       ExerciseTypes="@StateService.ExerciseTypes" />
 
             <!-- Media -->
             @if (!string.IsNullOrWhiteSpace(exercise.ImageUrl) || !string.IsNullOrWhiteSpace(exercise.VideoUrl))

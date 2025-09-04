@@ -1,0 +1,347 @@
+@using GetFitterGetBigger.Admin.Models.Dtos
+@using GetFitterGetBigger.Admin.Services
+@implements IDisposable
+
+<div class="space-y-6 relative" data-testid="four-way-linked-exercises-list">
+    @if (StateService.IsSaving)
+    {
+        <div class="absolute inset-0 bg-white bg-opacity-75 z-10 flex items-center justify-center rounded-lg" data-testid="reorder-progress-overlay">
+            <div class="text-center">
+                <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mb-2"></div>
+                <p class="text-sm text-gray-600">Updating exercises...</p>
+            </div>
+        </div>
+    }
+    
+    @* Warmup Exercises Section *@
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200" data-testid="warmup-section" role="region" aria-label="Warmup exercises section">
+        <div class="px-3 sm:px-4 py-3 border-b border-gray-200 bg-orange-50">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                <div class="flex items-center gap-2">
+                    <svg class="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                              d="M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0120 13a7.975 7.975 0 01-2.343 5.657z" />
+                    </svg>
+                    <h3 class="text-base sm:text-lg font-medium text-gray-900" id="warmup-exercises-heading">Warmup Exercises</h3>
+                    <span class="text-xs sm:text-sm text-gray-600" data-testid="warmup-count">
+                        @StateService.WarmupLinkCount / @MaxLinksPerType
+                    </span>
+                </div>
+                
+                @if (!Disabled && StateService.WarmupLinkCount < MaxLinksPerType)
+                {
+                    <button type="button"
+                            @onclick="HandleAddWarmup"
+                            class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-orange-700 bg-orange-100 rounded-md hover:bg-orange-200 transition-colors"
+                            data-testid="add-warmup-button"
+                            aria-label="Add warmup exercise">
+                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                        </svg>
+                        Add Warmup
+                    </button>
+                }
+            </div>
+        </div>
+        
+        <div class="p-3 sm:p-4">
+            @if (StateService.WarmupLinks.Any())
+            {
+                <div class="space-y-2"
+                     data-testid="warmup-links-container"
+                     role="list"
+                     aria-labelledby="warmup-exercises-heading"
+                     aria-live="polite"
+                     aria-relevant="additions removals"
+                     aria-busy="@StateService.IsSaving">
+                    @{
+                        var warmupLinksList = StateService.WarmupLinks.ToList();
+                    }
+                    @for (int i = 0; i < warmupLinksList.Count; i++)
+                    {
+                        var link = warmupLinksList[i];
+                        var index = i;
+                        <ExerciseLinkCard Link="link"
+                                         Disabled="@Disabled"
+                                         CanMoveUp="@(index > 0)"
+                                         CanMoveDown="@(index < warmupLinksList.Count - 1)"
+                                         OnRemove="@HandleRemoveLink"
+                                         OnMoveUp="@_warmupMoveUpHandler"
+                                         OnMoveDown="@_warmupMoveDownHandler"
+                                         OnViewExercise="@HandleViewExercise" />
+                    }
+                </div>
+            }
+            else
+            {
+                <div class="text-center py-8 text-gray-500" data-testid="warmup-empty-state">
+                    <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                              d="M12 4v16m8-8H4" />
+                    </svg>
+                    <p class="mt-2">No warmup exercises linked yet.</p>
+                    @if (!Disabled)
+                    {
+                        <p class="text-sm">Click "Add Warmup" to link exercises.</p>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+
+    @* Cooldown Exercises Section *@
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200" data-testid="cooldown-section" role="region" aria-label="Cooldown exercises section">
+        <div class="px-3 sm:px-4 py-3 border-b border-gray-200 bg-blue-50">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                <div class="flex items-center gap-2">
+                    <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                              d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z" />
+                    </svg>
+                    <h3 class="text-base sm:text-lg font-medium text-gray-900" id="cooldown-exercises-heading">Cooldown Exercises</h3>
+                    <span class="text-xs sm:text-sm text-gray-600" data-testid="cooldown-count">
+                        @StateService.CooldownLinkCount / @MaxLinksPerType
+                    </span>
+                </div>
+                
+                @if (!Disabled && StateService.CooldownLinkCount < MaxLinksPerType)
+                {
+                    <button type="button"
+                            @onclick="HandleAddCooldown"
+                            class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-blue-700 bg-blue-100 rounded-md hover:bg-blue-200 transition-colors"
+                            data-testid="add-cooldown-button"
+                            aria-label="Add cooldown exercise">
+                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                        </svg>
+                        Add Cooldown
+                    </button>
+                }
+            </div>
+        </div>
+        
+        <div class="p-3 sm:p-4">
+            @if (StateService.CooldownLinks.Any())
+            {
+                <div class="space-y-2"
+                     data-testid="cooldown-links-container"
+                     role="list"
+                     aria-labelledby="cooldown-exercises-heading"
+                     aria-live="polite"
+                     aria-relevant="additions removals"
+                     aria-busy="@StateService.IsSaving">
+                    @{
+                        var cooldownLinksList = StateService.CooldownLinks.ToList();
+                    }
+                    @for (int i = 0; i < cooldownLinksList.Count; i++)
+                    {
+                        var link = cooldownLinksList[i];
+                        var index = i;
+                        <ExerciseLinkCard Link="link"
+                                         Disabled="@Disabled"
+                                         CanMoveUp="@(index > 0)"
+                                         CanMoveDown="@(index < cooldownLinksList.Count - 1)"
+                                         OnRemove="@HandleRemoveLink"
+                                         OnMoveUp="@_cooldownMoveUpHandler"
+                                         OnMoveDown="@_cooldownMoveDownHandler"
+                                         OnViewExercise="@HandleViewExercise" />
+                    }
+                </div>
+            }
+            else
+            {
+                <div class="text-center py-8 text-gray-500" data-testid="cooldown-empty-state">
+                    <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                              d="M12 4v16m8-8H4" />
+                    </svg>
+                    <p class="mt-2">No cooldown exercises linked yet.</p>
+                    @if (!Disabled)
+                    {
+                        <p class="text-sm">Click "Add Cooldown" to link exercises.</p>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+
+    @* Alternative Exercises Section *@
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200" data-testid="alternative-section" role="region" aria-label="Alternative exercises section">
+        <div class="px-3 sm:px-4 py-3 border-b border-gray-200 bg-purple-50">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                <div class="flex items-center gap-2">
+                    <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                              d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z" />
+                    </svg>
+                    <h3 class="text-base sm:text-lg font-medium text-gray-900" id="alternative-exercises-heading">Alternative Exercises</h3>
+                    <span class="text-xs sm:text-sm text-gray-600" data-testid="alternative-count">
+                        @StateService.AlternativeLinkCount
+                    </span>
+                </div>
+                
+                @if (!Disabled)
+                {
+                    <button type="button"
+                            @onclick="HandleAddAlternative"
+                            class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-purple-700 bg-purple-100 rounded-md hover:bg-purple-200 transition-colors"
+                            data-testid="add-alternative-button"
+                            aria-label="Add alternative exercise">
+                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                        </svg>
+                        Add Alternative
+                    </button>
+                }
+            </div>
+        </div>
+        
+        <div class="p-3 sm:p-4">
+            @if (StateService.AlternativeLinks.Any())
+            {
+                <div class="space-y-2"
+                     data-testid="alternative-links-container"
+                     role="list"
+                     aria-labelledby="alternative-exercises-heading"
+                     aria-live="polite"
+                     aria-relevant="additions removals">
+                    @foreach (var link in StateService.AlternativeLinks)
+                    {
+                        <AlternativeExerciseCard Link="link"
+                                               Disabled="@Disabled"
+                                               OnRemove="@HandleRemoveLink"
+                                               OnViewExercise="@HandleViewExercise" />
+                    }
+                </div>
+            }
+            else
+            {
+                <div class="text-center py-8 text-gray-500" data-testid="alternative-empty-state">
+                    <svg class="mx-auto h-12 w-12 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                              d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z" />
+                    </svg>
+                    <p class="mt-2">No alternative exercises linked yet.</p>
+                    @if (!Disabled)
+                    {
+                        <p class="text-sm">Click "Add Alternative" to link compatible exercises.</p>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter, EditorRequired] public IExerciseLinkStateService StateService { get; set; } = null!;
+    [Parameter] public bool Disabled { get; set; } = false;
+    [Parameter] public EventCallback<string> OnAddLink { get; set; }
+    [Parameter] public EventCallback<ExerciseLinkDto> OnRemoveLink { get; set; }
+    [Parameter] public EventCallback<(string linkType, Dictionary<string, int> reorderMap)> OnReorderLinks { get; set; }
+    [Parameter] public EventCallback<ExerciseLinkDto> OnViewExercise { get; set; }
+    
+    private const int MaxLinksPerType = 10;
+    private EventCallback<ExerciseLinkDto> _warmupMoveUpHandler;
+    private EventCallback<ExerciseLinkDto> _warmupMoveDownHandler;
+    private EventCallback<ExerciseLinkDto> _cooldownMoveUpHandler;
+    private EventCallback<ExerciseLinkDto> _cooldownMoveDownHandler;
+
+    protected override void OnInitialized()
+    {
+        StateService.OnChange += StateHasChanged;
+        
+        // Create event handlers once to avoid issues with parameter binding
+        _warmupMoveUpHandler = EventCallback.Factory.Create<ExerciseLinkDto>(this, link => HandleMoveUp(link, "Warmup"));
+        _warmupMoveDownHandler = EventCallback.Factory.Create<ExerciseLinkDto>(this, link => HandleMoveDown(link, "Warmup"));
+        _cooldownMoveUpHandler = EventCallback.Factory.Create<ExerciseLinkDto>(this, link => HandleMoveUp(link, "Cooldown"));
+        _cooldownMoveDownHandler = EventCallback.Factory.Create<ExerciseLinkDto>(this, link => HandleMoveDown(link, "Cooldown"));
+    }
+
+    private async Task HandleRemoveLink(ExerciseLinkDto link)
+    {
+        if (!Disabled && OnRemoveLink.HasDelegate)
+        {
+            await OnRemoveLink.InvokeAsync(link);
+        }
+    }
+
+    private async Task HandleViewExercise(ExerciseLinkDto link)
+    {
+        if (OnViewExercise.HasDelegate)
+        {
+            await OnViewExercise.InvokeAsync(link);
+        }
+    }
+
+    private async Task HandleMoveUp(ExerciseLinkDto link, string linkType)
+    {
+        if (Disabled || !OnReorderLinks.HasDelegate) return;
+
+        var links = linkType == "Warmup" 
+            ? StateService.WarmupLinks.ToList() 
+            : StateService.CooldownLinks.ToList();
+
+        var currentIndex = links.FindIndex(l => l.Id == link.Id);
+        if (currentIndex <= 0) return;
+
+        // Swap with the item above
+        var temp = links[currentIndex];
+        links[currentIndex] = links[currentIndex - 1];
+        links[currentIndex - 1] = temp;
+
+        // Create reorder map
+        var reorderMap = new Dictionary<string, int>();
+        for (int i = 0; i < links.Count; i++)
+        {
+            reorderMap[links[i].Id] = i;
+        }
+
+        await OnReorderLinks.InvokeAsync((linkType, reorderMap));
+    }
+
+    private async Task HandleMoveDown(ExerciseLinkDto link, string linkType)
+    {
+        if (Disabled || !OnReorderLinks.HasDelegate) return;
+
+        var links = linkType == "Warmup" 
+            ? StateService.WarmupLinks.ToList() 
+            : StateService.CooldownLinks.ToList();
+
+        var currentIndex = links.FindIndex(l => l.Id == link.Id);
+        if (currentIndex < 0 || currentIndex >= links.Count - 1) return;
+
+        // Swap with the item below
+        var temp = links[currentIndex];
+        links[currentIndex] = links[currentIndex + 1];
+        links[currentIndex + 1] = temp;
+
+        // Create reorder map
+        var reorderMap = new Dictionary<string, int>();
+        for (int i = 0; i < links.Count; i++)
+        {
+            reorderMap[links[i].Id] = i;
+        }
+
+        await OnReorderLinks.InvokeAsync((linkType, reorderMap));
+    }
+
+    private async Task HandleAddWarmup()
+    {
+        await OnAddLink.InvokeAsync("Warmup");
+    }
+
+    private async Task HandleAddCooldown()
+    {
+        await OnAddLink.InvokeAsync("Cooldown");
+    }
+
+    private async Task HandleAddAlternative()
+    {
+        await OnAddLink.InvokeAsync("Alternative");
+    }
+
+    public void Dispose()
+    {
+        StateService.OnChange -= StateHasChanged;
+    }
+}

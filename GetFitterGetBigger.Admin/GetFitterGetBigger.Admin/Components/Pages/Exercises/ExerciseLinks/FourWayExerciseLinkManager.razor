@@ -1,0 +1,405 @@
+@using GetFitterGetBigger.Admin.Models.Dtos
+@using GetFitterGetBigger.Admin.Services
+@implements IDisposable
+
+<div class="mt-6" data-testid="four-way-exercise-link-manager">
+    @if (ShowComponent)
+    {
+        @* REST Exercise Restriction *@
+        @if (IsRestExercise)
+        {
+            <div class="bg-gray-50 border border-gray-200 rounded-lg p-6 text-center">
+                <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                          d="M12 3v18m-9-9h18" />
+                </svg>
+                <h3 class="mt-2 text-sm font-medium text-gray-900">REST Exercise</h3>
+                <p class="mt-1 text-sm text-gray-500">REST exercises cannot have relationships with other exercises.</p>
+            </div>
+        }
+        else
+        {
+            <div class="bg-white shadow-lg rounded-lg overflow-hidden">
+                @* Header with Context Indicator *@
+                <div class="px-4 sm:px-6 py-3 sm:py-4 bg-gray-50 border-b border-gray-200">
+                    <h2 class="text-lg sm:text-xl font-semibold text-gray-900 flex items-center gap-2">
+                        <svg class="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                  d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                        </svg>
+                        Four-Way Exercise Linking
+                    </h2>
+                    <p class="mt-1 text-xs sm:text-sm text-gray-600">
+                        @if (HasMultipleContexts)
+                        {
+                            <span>Manage relationships across multiple exercise contexts</span>
+                        }
+                        else
+                        {
+                            <span>Connect warmup, cooldown, and alternative exercises</span>
+                        }
+                    </p>
+                </div>
+
+                @* Context Selector for Multi-Type Exercises *@
+                @if (HasMultipleContexts)
+                {
+                    <div class="px-4 sm:px-6 py-4 bg-gray-25 border-b border-gray-200">
+                        <ExerciseContextSelector Contexts="@AvailableContexts"
+                                               ActiveContext="@StateService.ActiveContext"
+                                               OnContextChange="@HandleContextSwitch"
+                                               Disabled="@(StateService.IsLoading || StateService.IsProcessingLink)" />
+                    </div>
+                }
+
+                @* Content Area *@
+                <div class="p-4 sm:p-6">
+                    @if (StateService.IsLoading)
+                    {
+                        <div class="flex justify-center py-8" data-testid="loading-spinner">
+                            <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+                        </div>
+                    }
+                    else if (!string.IsNullOrEmpty(StateService.ErrorMessage))
+                    {
+                        <div class="rounded-md bg-red-50 p-4" data-testid="error-message">
+                            <div class="flex">
+                                <div class="flex-shrink-0">
+                                    <svg class="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                                    </svg>
+                                </div>
+                                <div class="ml-3">
+                                    <h3 class="text-sm font-medium text-red-800">Error loading exercise links</h3>
+                                    <p class="mt-1 text-sm text-red-700">@StateService.ErrorMessage</p>
+                                    <button type="button"
+                                            @onclick="async () => await StateService.LoadLinksAsync()"
+                                            class="mt-2 text-sm font-medium text-red-600 hover:text-red-500">
+                                        Try again
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                    else
+                    {
+                        @* Context-Specific Content *@
+                        @if (StateService.ActiveContext == "Workout")
+                        {
+                            @* Workout Context View - Shows warmups, cooldowns, and alternatives *@
+                            <div class="space-y-6" data-testid="workout-context-view">
+                                <FourWayLinkedExercisesList StateService="@StateService"
+                                                           Disabled="@(StateService.IsSaving || StateService.IsDeleting)"
+                                                           OnAddLink="@HandleAddLink"
+                                                           OnRemoveLink="@HandleRemoveLink"
+                                                           OnReorderLinks="@HandleReorderLinks"
+                                                           OnViewExercise="@HandleViewExercise" />
+                            </div>
+                        }
+                        else if (StateService.ActiveContext == "Warmup")
+                        {
+                            @* Warmup Context View - Shows workouts using this + alternative warmups *@
+                            <div class="space-y-6" data-testid="warmup-context-view">
+                                @* Read-only workouts using this warmup *@
+                                <div class="bg-white rounded-lg shadow-sm border border-gray-200" data-testid="workout-links-section">
+                                    <div class="px-3 sm:px-4 py-3 border-b border-gray-200 bg-emerald-50">
+                                        <div class="flex items-center gap-2">
+                                            <svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                                      d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                                            </svg>
+                                            <h3 class="text-base sm:text-lg font-medium text-gray-900">Workouts Using This Warmup</h3>
+                                            <span class="text-xs sm:text-sm text-gray-600">@StateService.WorkoutLinkCount</span>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="p-3 sm:p-4">
+                                        @if (StateService.WorkoutLinks.Any())
+                                        {
+                                            <div class="space-y-2" data-testid="workout-links-container">
+                                                @foreach (var link in StateService.WorkoutLinks)
+                                                {
+                                                    <ExerciseLinkCard Link="link" 
+                                                                     Disabled="true" 
+                                                                     CanMoveUp="false" 
+                                                                     CanMoveDown="false"
+                                                                     OnViewExercise="@HandleViewExercise" />
+                                                }
+                                            </div>
+                                        }
+                                        else
+                                        {
+                                            <div class="text-center py-8 text-gray-500" data-testid="workout-links-empty-state">
+                                                <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                                                </svg>
+                                                <p class="mt-2">No workouts are using this as a warmup exercise yet.</p>
+                                            </div>
+                                        }
+                                    </div>
+                                </div>
+
+                                @* Alternative warmups section *@
+                                <div class="bg-white rounded-lg shadow-sm border border-gray-200" data-testid="alternative-warmups-section">
+                                    <div class="px-3 sm:px-4 py-3 border-b border-gray-200 bg-purple-50">
+                                        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                                            <div class="flex items-center gap-2">
+                                                <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                                          d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z" />
+                                                </svg>
+                                                <h3 class="text-base sm:text-lg font-medium text-gray-900">Alternative Warmups</h3>
+                                                <span class="text-xs sm:text-sm text-gray-600">@StateService.AlternativeLinkCount</span>
+                                            </div>
+                                            
+                                            @if (!StateService.IsSaving && !StateService.IsDeleting)
+                                            {
+                                                <button type="button"
+                                                        @onclick='() => HandleAddLink("Alternative")'
+                                                        class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-purple-700 bg-purple-100 rounded-md hover:bg-purple-200 transition-colors"
+                                                        data-testid="add-alternative-warmup-button">
+                                                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                                                    </svg>
+                                                    Add Alternative
+                                                </button>
+                                            }
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="p-3 sm:p-4">
+                                        @if (StateService.AlternativeLinks.Any())
+                                        {
+                                            <div class="space-y-2" data-testid="alternative-links-container">
+                                                @foreach (var link in StateService.AlternativeLinks)
+                                                {
+                                                    <AlternativeExerciseCard Link="link"
+                                                                           Disabled="@(StateService.IsSaving || StateService.IsDeleting)"
+                                                                           OnRemove="@HandleRemoveLink"
+                                                                           OnViewExercise="@HandleViewExercise" />
+                                                }
+                                            </div>
+                                        }
+                                        else
+                                        {
+                                            <div class="text-center py-8 text-gray-500" data-testid="alternatives-empty-state">
+                                                <svg class="mx-auto h-12 w-12 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z" />
+                                                </svg>
+                                                <p class="mt-2">No alternative warmup exercises linked yet.</p>
+                                                <p class="text-sm">Click "Add Alternative" to link compatible exercises.</p>
+                                            </div>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                        else if (StateService.ActiveContext == "Cooldown")
+                        {
+                            @* Cooldown Context View - Shows workouts using this + alternative cooldowns *@
+                            <div class="space-y-6" data-testid="cooldown-context-view">
+                                @* Read-only workouts using this cooldown *@
+                                <div class="bg-white rounded-lg shadow-sm border border-gray-200" data-testid="workout-links-section">
+                                    <div class="px-3 sm:px-4 py-3 border-b border-gray-200 bg-emerald-50">
+                                        <div class="flex items-center gap-2">
+                                            <svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                                      d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                                            </svg>
+                                            <h3 class="text-base sm:text-lg font-medium text-gray-900">Workouts Using This Cooldown</h3>
+                                            <span class="text-xs sm:text-sm text-gray-600">@StateService.WorkoutLinkCount</span>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="p-3 sm:p-4">
+                                        @if (StateService.WorkoutLinks.Any())
+                                        {
+                                            <div class="space-y-2" data-testid="workout-links-container">
+                                                @foreach (var link in StateService.WorkoutLinks)
+                                                {
+                                                    <ExerciseLinkCard Link="link" 
+                                                                     Disabled="true" 
+                                                                     CanMoveUp="false" 
+                                                                     CanMoveDown="false"
+                                                                     OnViewExercise="@HandleViewExercise" />
+                                                }
+                                            </div>
+                                        }
+                                        else
+                                        {
+                                            <div class="text-center py-8 text-gray-500" data-testid="workout-links-empty-state">
+                                                <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                                                </svg>
+                                                <p class="mt-2">No workouts are using this as a cooldown exercise yet.</p>
+                                            </div>
+                                        }
+                                    </div>
+                                </div>
+
+                                @* Alternative cooldowns section *@
+                                <div class="bg-white rounded-lg shadow-sm border border-gray-200" data-testid="alternative-cooldowns-section">
+                                    <div class="px-3 sm:px-4 py-3 border-b border-gray-200 bg-purple-50">
+                                        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                                            <div class="flex items-center gap-2">
+                                                <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                                          d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z" />
+                                                </svg>
+                                                <h3 class="text-base sm:text-lg font-medium text-gray-900">Alternative Cooldowns</h3>
+                                                <span class="text-xs sm:text-sm text-gray-600">@StateService.AlternativeLinkCount</span>
+                                            </div>
+                                            
+                                            @if (!StateService.IsSaving && !StateService.IsDeleting)
+                                            {
+                                                <button type="button"
+                                                        @onclick='() => HandleAddLink("Alternative")'
+                                                        class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-purple-700 bg-purple-100 rounded-md hover:bg-purple-200 transition-colors"
+                                                        data-testid="add-alternative-cooldown-button">
+                                                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                                                    </svg>
+                                                    Add Alternative
+                                                </button>
+                                            }
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="p-3 sm:p-4">
+                                        @if (StateService.AlternativeLinks.Any())
+                                        {
+                                            <div class="space-y-2" data-testid="alternative-links-container">
+                                                @foreach (var link in StateService.AlternativeLinks)
+                                                {
+                                                    <AlternativeExerciseCard Link="link"
+                                                                           Disabled="@(StateService.IsSaving || StateService.IsDeleting)"
+                                                                           OnRemove="@HandleRemoveLink"
+                                                                           OnViewExercise="@HandleViewExercise" />
+                                                }
+                                            </div>
+                                        }
+                                        else
+                                        {
+                                            <div class="text-center py-8 text-gray-500" data-testid="alternatives-empty-state">
+                                                <svg class="mx-auto h-12 w-12 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z" />
+                                                </svg>
+                                                <p class="mt-2">No alternative cooldown exercises linked yet.</p>
+                                                <p class="text-sm">Click "Add Alternative" to link compatible exercises.</p>
+                                            </div>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    }
+                </div>
+            </div>
+        }
+
+        @* Success Notification *@
+        @if (!string.IsNullOrEmpty(_successMessage))
+        {
+            <div class="fixed bottom-4 right-4 left-4 sm:left-auto max-w-sm z-50" data-testid="success-notification">
+                <div class="rounded-lg bg-green-50 p-4 shadow-lg">
+                    <div class="flex">
+                        <div class="flex-shrink-0">
+                            <svg class="h-5 w-5 text-green-400" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                            </svg>
+                        </div>
+                        <div class="ml-3">
+                            <p class="text-sm font-medium text-green-800">@_successMessage</p>
+                        </div>
+                        <div class="ml-auto pl-3">
+                            <button @onclick="() => _successMessage = null"
+                                    class="inline-flex rounded-md bg-green-50 p-1.5 text-green-500 hover:bg-green-100">
+                                <span class="sr-only">Dismiss</span>
+                                <svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+
+        @* Add Exercise Link Modal - Enhanced for Alternative Exercises *@
+        <AddExerciseLinkModal IsOpen="@_showAddModal"
+                             LinkType="@_addLinkType"
+                             SourceExercise="@Exercise"
+                             ExerciseService="@ExerciseService"
+                             ExistingLinks="@(StateService.CurrentLinks?.Links ?? Enumerable.Empty<ExerciseLinkDto>())"
+                             ExerciseTypes="@ExerciseTypes"
+                             OnAdd="@HandleExerciseSelected"
+                             OnCancel="@(() => _showAddModal = false)" />
+
+        @* Delete Confirmation Dialog *@
+        @if (_linkToDelete != null)
+        {
+            <div class="relative z-50" data-testid="delete-confirmation-dialog" role="dialog" aria-modal="true">
+                <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"></div>
+                <div class="fixed inset-0 z-10 overflow-y-auto">
+                    <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+                        <div class="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg">
+                            <div class="bg-white px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
+                                <div class="sm:flex sm:items-start">
+                                    <div class="mx-auto flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-red-100 sm:mx-0 sm:h-10 sm:w-10">
+                                        <svg class="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+                                        </svg>
+                                    </div>
+                                    <div class="mt-3 text-center sm:ml-4 sm:mt-0 sm:text-left">
+                                        <h3 class="text-base font-semibold leading-6 text-gray-900">Remove Exercise Link</h3>
+                                        <div class="mt-2">
+                                            <p class="text-sm text-gray-500">
+                                                Are you sure you want to remove "@(_linkToDelete.TargetExercise?.Name ?? $"Exercise {_linkToDelete.TargetExerciseId}")" 
+                                                from the @_linkToDelete.LinkType.ToLower() exercises? 
+                                                @if (_linkToDelete.LinkType == "Alternative")
+                                                {
+                                                    <span>This will remove the bidirectional relationship.</span>
+                                                }
+                                                else
+                                                {
+                                                    <span>This action cannot be undone.</span>
+                                                }
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="bg-gray-50 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6">
+                                <button type="button"
+                                        @ref="_deleteConfirmButton"
+                                        @onclick="ConfirmDelete"
+                                        disabled="@StateService.IsDeleting"
+                                        class="inline-flex w-full justify-center rounded-md bg-red-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-red-500 sm:ml-3 sm:w-auto disabled:opacity-50 disabled:cursor-not-allowed"
+                                        data-testid="confirm-delete-button">
+                                    @if (StateService.IsDeleting)
+                                    {
+                                        <span>Removing...</span>
+                                    }
+                                    else
+                                    {
+                                        <span>Remove</span>
+                                    }
+                                </button>
+                                <button type="button"
+                                        @onclick="CancelDelete"
+                                        disabled="@StateService.IsDeleting"
+                                        class="mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:mt-0 sm:w-auto disabled:opacity-50 disabled:cursor-not-allowed"
+                                        data-testid="cancel-delete-button">
+                                    Cancel
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+
+        @* Screen Reader Announcements *@
+        <AriaLiveRegion Message="@StateService.ScreenReaderAnnouncement" AriaLive="assertive" />
+    }
+</div>

@@ -1,0 +1,424 @@
+using Bunit;
+using GetFitterGetBigger.Admin.Components.Pages.Exercises.ExerciseLinks;
+using GetFitterGetBigger.Admin.Models.Dtos;
+using GetFitterGetBigger.Admin.Services;
+using Microsoft.Extensions.DependencyInjection;
+using Moq;
+using Xunit;
+
+namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises.ExerciseLinks
+{
+    /// <summary>
+    /// Tests for FourWayLinkedExercisesList component
+    /// </summary>
+    public class FourWayLinkedExercisesListTests : TestContext
+    {
+        private readonly Mock<IExerciseLinkStateService> _mockStateService;
+
+        public FourWayLinkedExercisesListTests()
+        {
+            _mockStateService = new Mock<IExerciseLinkStateService>();
+
+            Services.AddSingleton(_mockStateService.Object);
+
+            // Setup default state service behavior
+            _mockStateService.Setup(s => s.IsSaving).Returns(false);
+            _mockStateService.Setup(s => s.WarmupLinks).Returns(new List<ExerciseLinkDto>());
+            _mockStateService.Setup(s => s.CooldownLinks).Returns(new List<ExerciseLinkDto>());
+            _mockStateService.Setup(s => s.AlternativeLinks).Returns(new List<ExerciseLinkDto>());
+            _mockStateService.Setup(s => s.WarmupLinkCount).Returns(0);
+            _mockStateService.Setup(s => s.CooldownLinkCount).Returns(0);
+            _mockStateService.Setup(s => s.AlternativeLinkCount).Returns(0);
+        }
+
+        [Fact]
+        public void Component_Should_Render_All_Three_Sections()
+        {
+            // Arrange & Act
+            var component = RenderComponent<FourWayLinkedExercisesList>(parameters => parameters
+                .Add(p => p.StateService, _mockStateService.Object));
+
+            // Assert
+            var warmupSection = component.Find("[data-testid='warmup-section']");
+            var cooldownSection = component.Find("[data-testid='cooldown-section']");
+            var alternativeSection = component.Find("[data-testid='alternative-section']");
+
+            Assert.NotNull(warmupSection);
+            Assert.NotNull(cooldownSection);
+            Assert.NotNull(alternativeSection);
+        }
+
+        [Fact]
+        public void Component_Should_Show_Proper_Section_Headers()
+        {
+            // Arrange & Act
+            var component = RenderComponent<FourWayLinkedExercisesList>(parameters => parameters
+                .Add(p => p.StateService, _mockStateService.Object));
+
+            // Assert
+            var warmupHeader = component.Find("#warmup-exercises-heading");
+            var cooldownHeader = component.Find("#cooldown-exercises-heading");
+            var alternativeHeader = component.Find("#alternative-exercises-heading");
+
+            Assert.Contains("Warmup Exercises", warmupHeader.TextContent);
+            Assert.Contains("Cooldown Exercises", cooldownHeader.TextContent);
+            Assert.Contains("Alternative Exercises", alternativeHeader.TextContent);
+        }
+
+        [Fact]
+        public void Component_Should_Show_Link_Counts()
+        {
+            // Arrange
+            _mockStateService.Setup(s => s.WarmupLinkCount).Returns(3);
+            _mockStateService.Setup(s => s.CooldownLinkCount).Returns(2);
+            _mockStateService.Setup(s => s.AlternativeLinkCount).Returns(5);
+
+            // Act
+            var component = RenderComponent<FourWayLinkedExercisesList>(parameters => parameters
+                .Add(p => p.StateService, _mockStateService.Object));
+
+            // Assert
+            var warmupCount = component.Find("[data-testid='warmup-count']");
+            var cooldownCount = component.Find("[data-testid='cooldown-count']");
+            var alternativeCount = component.Find("[data-testid='alternative-count']");
+
+            Assert.Contains("3 / 10", warmupCount.TextContent);
+            Assert.Contains("2 / 10", cooldownCount.TextContent);
+            Assert.Contains("5", alternativeCount.TextContent); // No limit for alternatives
+        }
+
+        [Fact]
+        public void Component_Should_Show_Add_Buttons_When_Not_Disabled()
+        {
+            // Arrange & Act
+            var component = RenderComponent<FourWayLinkedExercisesList>(parameters => parameters
+                .Add(p => p.StateService, _mockStateService.Object)
+                .Add(p => p.Disabled, false));
+
+            // Assert
+            var addWarmupButton = component.Find("[data-testid='add-warmup-button']");
+            var addCooldownButton = component.Find("[data-testid='add-cooldown-button']");
+            var addAlternativeButton = component.Find("[data-testid='add-alternative-button']");
+
+            Assert.NotNull(addWarmupButton);
+            Assert.NotNull(addCooldownButton);
+            Assert.NotNull(addAlternativeButton);
+
+            Assert.Contains("Add Warmup", addWarmupButton.TextContent);
+            Assert.Contains("Add Cooldown", addCooldownButton.TextContent);
+            Assert.Contains("Add Alternative", addAlternativeButton.TextContent);
+        }
+
+        [Fact]
+        public void Component_Should_Hide_Add_Warmup_Button_When_Max_Reached()
+        {
+            // Arrange
+            _mockStateService.Setup(s => s.WarmupLinkCount).Returns(10); // Max reached
+
+            // Act
+            var component = RenderComponent<FourWayLinkedExercisesList>(parameters => parameters
+                .Add(p => p.StateService, _mockStateService.Object));
+
+            // Assert
+            var addWarmupButtons = component.FindAll("[data-testid='add-warmup-button']");
+            Assert.Empty(addWarmupButtons);
+        }
+
+        [Fact]
+        public void Component_Should_Hide_Add_Cooldown_Button_When_Max_Reached()
+        {
+            // Arrange
+            _mockStateService.Setup(s => s.CooldownLinkCount).Returns(10); // Max reached
+
+            // Act
+            var component = RenderComponent<FourWayLinkedExercisesList>(parameters => parameters
+                .Add(p => p.StateService, _mockStateService.Object));
+
+            // Assert
+            var addCooldownButtons = component.FindAll("[data-testid='add-cooldown-button']");
+            Assert.Empty(addCooldownButtons);
+        }
+
+        [Fact]
+        public void Component_Should_Always_Show_Add_Alternative_Button()
+        {
+            // Arrange - Even with many alternatives, button should still show
+            _mockStateService.Setup(s => s.AlternativeLinkCount).Returns(50);
+
+            // Act
+            var component = RenderComponent<FourWayLinkedExercisesList>(parameters => parameters
+                .Add(p => p.StateService, _mockStateService.Object));
+
+            // Assert
+            var addAlternativeButton = component.Find("[data-testid='add-alternative-button']");
+            Assert.NotNull(addAlternativeButton);
+        }
+
+        [Fact]
+        public void Component_Should_Show_Empty_States()
+        {
+            // Arrange & Act
+            var component = RenderComponent<FourWayLinkedExercisesList>(parameters => parameters
+                .Add(p => p.StateService, _mockStateService.Object));
+
+            // Assert
+            var warmupEmptyState = component.Find("[data-testid='warmup-empty-state']");
+            var cooldownEmptyState = component.Find("[data-testid='cooldown-empty-state']");
+            var alternativeEmptyState = component.Find("[data-testid='alternative-empty-state']");
+
+            Assert.Contains("No warmup exercises linked yet", warmupEmptyState.TextContent);
+            Assert.Contains("No cooldown exercises linked yet", cooldownEmptyState.TextContent);
+            Assert.Contains("No alternative exercises linked yet", alternativeEmptyState.TextContent);
+        }
+
+        [Fact]
+        public void Component_Should_Display_Warmup_Links()
+        {
+            // Arrange
+            var warmupLinks = new List<ExerciseLinkDto>
+            {
+                new ExerciseLinkDto
+                {
+                    Id = "1",
+                    LinkType = "Warmup",
+                    TargetExercise = new ExerciseDto { Id = "1", Name = "Jumping Jacks" },
+                    DisplayOrder = 0,
+                    IsActive = true,
+                    CreatedAt = DateTime.UtcNow
+                }
+            };
+
+            _mockStateService.Setup(s => s.WarmupLinks).Returns(warmupLinks);
+            _mockStateService.Setup(s => s.WarmupLinkCount).Returns(1);
+
+            // Act
+            var component = RenderComponent<FourWayLinkedExercisesList>(parameters => parameters
+                .Add(p => p.StateService, _mockStateService.Object));
+
+            // Assert
+            var warmupContainer = component.Find("[data-testid='warmup-links-container']");
+            Assert.NotNull(warmupContainer);
+            
+            var warmupEmptyStates = component.FindAll("[data-testid='warmup-empty-state']");
+            Assert.Empty(warmupEmptyStates); // Should not show empty state when links exist
+        }
+
+        [Fact]
+        public void Component_Should_Display_Cooldown_Links()
+        {
+            // Arrange
+            var cooldownLinks = new List<ExerciseLinkDto>
+            {
+                new ExerciseLinkDto
+                {
+                    Id = "2",
+                    LinkType = "Cooldown",
+                    TargetExercise = new ExerciseDto { Id = "2", Name = "Stretching" },
+                    DisplayOrder = 0,
+                    IsActive = true,
+                    CreatedAt = DateTime.UtcNow
+                }
+            };
+
+            _mockStateService.Setup(s => s.CooldownLinks).Returns(cooldownLinks);
+            _mockStateService.Setup(s => s.CooldownLinkCount).Returns(1);
+
+            // Act
+            var component = RenderComponent<FourWayLinkedExercisesList>(parameters => parameters
+                .Add(p => p.StateService, _mockStateService.Object));
+
+            // Assert
+            var cooldownContainer = component.Find("[data-testid='cooldown-links-container']");
+            Assert.NotNull(cooldownContainer);
+            
+            var cooldownEmptyStates = component.FindAll("[data-testid='cooldown-empty-state']");
+            Assert.Empty(cooldownEmptyStates);
+        }
+
+        [Fact]
+        public void Component_Should_Display_Alternative_Links()
+        {
+            // Arrange
+            var alternativeLinks = new List<ExerciseLinkDto>
+            {
+                new ExerciseLinkDto
+                {
+                    Id = "3",
+                    LinkType = "Alternative",
+                    TargetExercise = new ExerciseDto { Id = "3", Name = "Push-ups Variation" },
+                    DisplayOrder = 0,
+                    IsActive = true,
+                    CreatedAt = DateTime.UtcNow
+                }
+            };
+
+            _mockStateService.Setup(s => s.AlternativeLinks).Returns(alternativeLinks);
+            _mockStateService.Setup(s => s.AlternativeLinkCount).Returns(1);
+
+            // Act
+            var component = RenderComponent<FourWayLinkedExercisesList>(parameters => parameters
+                .Add(p => p.StateService, _mockStateService.Object));
+
+            // Assert
+            var alternativeContainer = component.Find("[data-testid='alternative-links-container']");
+            Assert.NotNull(alternativeContainer);
+            
+            var alternativeEmptyStates = component.FindAll("[data-testid='alternative-empty-state']");
+            Assert.Empty(alternativeEmptyStates);
+        }
+
+        [Fact]
+        public async Task Component_Should_Handle_Add_Warmup_Click()
+        {
+            // Arrange
+            var onAddLinkCalled = false;
+            var addLinkType = "";
+
+            var component = RenderComponent<FourWayLinkedExercisesList>(parameters => parameters
+                .Add(p => p.StateService, _mockStateService.Object)
+                .Add(p => p.OnAddLink, EventCallback.Factory.Create<string>(this, type =>
+                {
+                    onAddLinkCalled = true;
+                    addLinkType = type;
+                })));
+
+            // Act
+            var addWarmupButton = component.Find("[data-testid='add-warmup-button']");
+            await addWarmupButton.ClickAsync();
+
+            // Assert
+            Assert.True(onAddLinkCalled);
+            Assert.Equal("Warmup", addLinkType);
+        }
+
+        [Fact]
+        public async Task Component_Should_Handle_Add_Cooldown_Click()
+        {
+            // Arrange
+            var onAddLinkCalled = false;
+            var addLinkType = "";
+
+            var component = RenderComponent<FourWayLinkedExercisesList>(parameters => parameters
+                .Add(p => p.StateService, _mockStateService.Object)
+                .Add(p => p.OnAddLink, EventCallback.Factory.Create<string>(this, type =>
+                {
+                    onAddLinkCalled = true;
+                    addLinkType = type;
+                })));
+
+            // Act
+            var addCooldownButton = component.Find("[data-testid='add-cooldown-button']");
+            await addCooldownButton.ClickAsync();
+
+            // Assert
+            Assert.True(onAddLinkCalled);
+            Assert.Equal("Cooldown", addLinkType);
+        }
+
+        [Fact]
+        public async Task Component_Should_Handle_Add_Alternative_Click()
+        {
+            // Arrange
+            var onAddLinkCalled = false;
+            var addLinkType = "";
+
+            var component = RenderComponent<FourWayLinkedExercisesList>(parameters => parameters
+                .Add(p => p.StateService, _mockStateService.Object)
+                .Add(p => p.OnAddLink, EventCallback.Factory.Create<string>(this, type =>
+                {
+                    onAddLinkCalled = true;
+                    addLinkType = type;
+                })));
+
+            // Act
+            var addAlternativeButton = component.Find("[data-testid='add-alternative-button']");
+            await addAlternativeButton.ClickAsync();
+
+            // Assert
+            Assert.True(onAddLinkCalled);
+            Assert.Equal("Alternative", addLinkType);
+        }
+
+        [Fact]
+        public void Component_Should_Show_Saving_Overlay()
+        {
+            // Arrange
+            _mockStateService.Setup(s => s.IsSaving).Returns(true);
+
+            // Act
+            var component = RenderComponent<FourWayLinkedExercisesList>(parameters => parameters
+                .Add(p => p.StateService, _mockStateService.Object));
+
+            // Assert
+            var savingOverlay = component.Find("[data-testid='reorder-progress-overlay']");
+            Assert.NotNull(savingOverlay);
+            Assert.Contains("Updating exercises", savingOverlay.TextContent);
+        }
+
+        [Fact]
+        public void Component_Should_Have_Proper_Color_Themes()
+        {
+            // Arrange & Act
+            var component = RenderComponent<FourWayLinkedExercisesList>(parameters => parameters
+                .Add(p => p.StateService, _mockStateService.Object));
+
+            // Assert
+            var warmupSection = component.Find("[data-testid='warmup-section'] .bg-orange-50");
+            var cooldownSection = component.Find("[data-testid='cooldown-section'] .bg-blue-50");
+            var alternativeSection = component.Find("[data-testid='alternative-section'] .bg-purple-50");
+
+            Assert.NotNull(warmupSection); // Orange theme for warmup
+            Assert.NotNull(cooldownSection); // Blue theme for cooldown
+            Assert.NotNull(alternativeSection); // Purple theme for alternative
+        }
+
+        [Fact]
+        public void Component_Should_Have_Proper_ARIA_Attributes()
+        {
+            // Arrange & Act
+            var component = RenderComponent<FourWayLinkedExercisesList>(parameters => parameters
+                .Add(p => p.StateService, _mockStateService.Object));
+
+            // Assert
+            var warmupSection = component.Find("[data-testid='warmup-section']");
+            var cooldownSection = component.Find("[data-testid='cooldown-section']");
+            var alternativeSection = component.Find("[data-testid='alternative-section']");
+
+            Assert.Equal("region", warmupSection.GetAttribute("role"));
+            Assert.Equal("region", cooldownSection.GetAttribute("role"));
+            Assert.Equal("region", alternativeSection.GetAttribute("role"));
+
+            Assert.Contains("Warmup exercises section", warmupSection.GetAttribute("aria-label"));
+            Assert.Contains("Cooldown exercises section", cooldownSection.GetAttribute("aria-label"));
+            Assert.Contains("Alternative exercises section", alternativeSection.GetAttribute("aria-label"));
+        }
+
+        [Fact]
+        public void Component_Should_Dispose_Properly()
+        {
+            // Arrange
+            var component = RenderComponent<FourWayLinkedExercisesList>(parameters => parameters
+                .Add(p => p.StateService, _mockStateService.Object));
+
+            // Act
+            component.Dispose();
+
+            // Assert
+            Assert.True(component.HasExistingContinuousRenderingContext == false);
+        }
+
+        [Fact]
+        public void Component_Should_Subscribe_To_State_Changes()
+        {
+            // Arrange
+            var component = RenderComponent<FourWayLinkedExercisesList>(parameters => parameters
+                .Add(p => p.StateService, _mockStateService.Object));
+
+            // Act - Trigger state change
+            _mockStateService.Raise(s => s.OnChange += null);
+
+            // Assert - Component should handle state changes without errors
+            Assert.NotNull(component.Instance);
+        }
+    }
+}

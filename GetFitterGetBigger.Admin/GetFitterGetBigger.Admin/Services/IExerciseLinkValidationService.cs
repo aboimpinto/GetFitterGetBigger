@@ -5,9 +5,14 @@ namespace GetFitterGetBigger.Admin.Services;
 public interface IExerciseLinkValidationService
 {
     /// <summary>
-    /// Validates if an exercise can have links (must be of type Workout)
+    /// Validates if an exercise can have links (expanded for four-way linking)
     /// </summary>
     ValidationResult ValidateExerciseTypeCompatibility(ExerciseDto exercise);
+
+    /// <summary>
+    /// Validates if two exercises can be linked as alternatives (must share exercise types)
+    /// </summary>
+    ValidationResult ValidateAlternativeExerciseCompatibility(ExerciseDto sourceExercise, ExerciseDto targetExercise);
 
     /// <summary>
     /// Validates if adding a link would create a circular reference
