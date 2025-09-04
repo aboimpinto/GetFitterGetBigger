@@ -35,7 +35,8 @@ public record ExerciseLink : IEmptyEntity<ExerciseLink>
                 "Warmup" => ExerciseLinkType.WARMUP,
                 "Cooldown" => ExerciseLinkType.COOLDOWN,
                 _ when Enum.TryParse<ExerciseLinkType>(LinkType, out var parsed) => parsed,
-                _ => ExerciseLinkType.COOLDOWN // Default fallback
+                // Default to COOLDOWN for unknown types (maintains backward compatibility)
+                _ => ExerciseLinkType.COOLDOWN 
             };
         }
     }

@@ -6,6 +6,7 @@ using GetFitterGetBigger.API.Models.SpecializedIds;
 using GetFitterGetBigger.API.Repositories.Interfaces;
 using GetFitterGetBigger.API.Services.Exercise.Features.Links.Commands;
 using GetFitterGetBigger.API.Services.Exercise.Features.Links.Extensions;
+using GetFitterGetBigger.API.Services.Implementations.Extensions;
 using GetFitterGetBigger.API.Services.Results;
 using Olimpo.EntityFramework.Persistency;
 
@@ -16,8 +17,7 @@ namespace GetFitterGetBigger.API.Services.Exercise.Features.Links.DataServices;
 /// Encapsulates all database queries and entity-to-DTO mapping.
 /// </summary>
 public class ExerciseLinkQueryDataService(
-    IUnitOfWorkProvider<FitnessDbContext> unitOfWorkProvider,
-    IExerciseService exerciseService) : IExerciseLinkQueryDataService
+    IUnitOfWorkProvider<FitnessDbContext> unitOfWorkProvider) : IExerciseLinkQueryDataService
 {
     public async Task<ServiceResult<ExerciseLinksResponseDto>> GetLinksAsync(GetExerciseLinksCommand command)
     {
@@ -40,7 +40,8 @@ public class ExerciseLinkQueryDataService(
             
             if (command.IncludeExerciseDetails && link.TargetExercise != null)
             {
-                var exerciseResult = await exerciseService.GetByIdAsync(link.TargetExerciseId);
+                // Use local method to load exercise details
+                var exerciseResult = await GetAndValidateExerciseAsync(link.TargetExerciseId);
                 dto.TargetExercise = exerciseResult.Data;
             }
             
@@ -189,5 +190,29 @@ public class ExerciseLinkQueryDataService(
         var dtos = links.Select(link => link.ToDto()).ToList();
         
         return ServiceResult<List<ExerciseLinkDto>>.Success(dtos);
+    }
+    
+    public async Task<ServiceResult<ExerciseDto>> GetAndValidateExerciseAsync(ExerciseId exerciseId)
+    {
+        if (exerciseId.IsEmpty)
+        {
+            return ServiceResult<ExerciseDto>.Success(ExerciseDto.Empty);
+        }
+        
+        using var unitOfWork = unitOfWorkProvider.CreateReadOnly();
+        var exerciseRepository = unitOfWork.GetRepository<IExerciseRepository>();
+        
+        // Load the exercise with all related data
+        var exercise = await exerciseRepository.GetByIdAsync(exerciseId);
+        
+        // Check if exercise exists and is active
+        if (exercise.IsEmpty || !exercise.IsActive)
+        {
+            return ServiceResult<ExerciseDto>.Success(ExerciseDto.Empty);
+        }
+        
+        // Convert to DTO and return
+        var dto = exercise.ToDto();
+        return ServiceResult<ExerciseDto>.Success(dto);
     }
 }

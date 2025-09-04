@@ -54,4 +54,31 @@ public static class ExerciseLinkRequestMapper
             IsActive = dto?.IsActive ?? true
         };
     }
+    
+    /// <summary>
+    /// Maps GetSuggestedLinksCommand from controller parameters
+    /// Parses string ID to specialized ID type at the web boundary
+    /// </summary>
+    public static GetSuggestedLinksCommand ToGetSuggestedLinksCommand(string exerciseId, int count)
+    {
+        return new GetSuggestedLinksCommand
+        {
+            ExerciseId = ExerciseId.ParseOrEmpty(exerciseId ?? string.Empty),
+            Count = count
+        };
+    }
+    
+    /// <summary>
+    /// Maps DeleteExerciseLinkCommand from controller parameters
+    /// Parses string IDs to specialized ID types at the web boundary
+    /// </summary>
+    public static DeleteExerciseLinkCommand ToDeleteCommand(string exerciseId, string linkId, bool deleteReverse)
+    {
+        return new DeleteExerciseLinkCommand
+        {
+            ExerciseId = ExerciseId.ParseOrEmpty(exerciseId ?? string.Empty),
+            LinkId = ExerciseLinkId.ParseOrEmpty(linkId ?? string.Empty),
+            DeleteReverse = deleteReverse
+        };
+    }
 }

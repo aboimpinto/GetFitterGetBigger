@@ -84,4 +84,12 @@ public interface IExerciseLinkQueryDataService
     Task<ServiceResult<List<ExerciseLinkDto>>> GetBySourceAndTypeAsync(
         ExerciseId sourceId, 
         ExerciseLinkType linkType);
+    
+    // ===== EXERCISE VALIDATION METHODS (To comply with Single Repository Rule) =====
+    
+    /// <summary>
+    /// Validates and retrieves an exercise by ID for link validation purposes
+    /// Returns the exercise DTO if valid and active, Empty otherwise
+    /// </summary>
+    Task<ServiceResult<ExerciseDto>> GetAndValidateExerciseAsync(ExerciseId exerciseId);
 }

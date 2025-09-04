@@ -23,8 +23,11 @@ public static class ServiceValidationBuilderExtensions
         string errorMessage)
         where TId : ISpecializedIdBase
     {
-        return builder.Ensure(() => !sourceId.Equals(targetId), errorMessage);
+        return builder.Ensure(() => AreDifferentIds(sourceId, targetId), errorMessage);
     }
+    
+    private static bool AreDifferentIds<TId>(TId sourceId, TId targetId) where TId : ISpecializedIdBase
+        => !sourceId.Equals(targetId);
     
     /// <summary>
     /// Ensures two Exercise IDs are different
@@ -147,9 +150,12 @@ public static class ServiceValidationBuilderExtensions
         where TEnum : struct, Enum
     {
         return builder.Ensure(
-            () => !value.Equals(notAllowedValue),
+            () => IsEnumValueDifferent(value, notAllowedValue),
             errorMessage);
     }
+    
+    private static bool IsEnumValueDifferent<TEnum>(TEnum value, TEnum notAllowedValue) where TEnum : struct, Enum
+        => !value.Equals(notAllowedValue);
     
     #endregion
     

@@ -18,13 +18,11 @@ namespace GetFitterGetBigger.API.Services.Exercise.Features.Links;
 public class ExerciseLinkService(
     IExerciseLinkQueryDataService queryDataService,
     IExerciseLinkCommandDataService commandDataService,
-    IExerciseService exerciseService,
     IBidirectionalLinkHandler bidirectionalLinkHandler,
     ILinkValidationHandler linkValidationHandler) : IExerciseLinkService
 {
     private readonly IExerciseLinkQueryDataService _queryDataService = queryDataService;
     private readonly IExerciseLinkCommandDataService _commandDataService = commandDataService;
-    private readonly IExerciseService _exerciseService = exerciseService;
     private readonly IBidirectionalLinkHandler _bidirectionalLinkHandler = bidirectionalLinkHandler;
     private readonly ILinkValidationHandler _linkValidationHandler = linkValidationHandler;
     /// <summary>
@@ -49,7 +47,7 @@ public class ExerciseLinkService(
             // transaction isolation issues where validation couldn't see uncommitted changes
             .AsExerciseLinkValidation()
             .EnsureSourceExerciseExists(
-                this._exerciseService,
+                this._queryDataService,
                 sourceExerciseId,
                 ExerciseLinkErrorMessages.SourceExerciseNotFound)
             .EnsureSourceExerciseIsNotRest(
@@ -57,7 +55,7 @@ public class ExerciseLinkService(
             .EnsureSourceExerciseIsWorkoutType(
                 ExerciseLinkErrorMessages.OnlyWorkoutExercisesCanCreateLinks)
             .EnsureTargetExerciseExists(
-                this._exerciseService,
+                this._queryDataService,
                 targetExerciseId,
                 ExerciseLinkErrorMessages.TargetExerciseNotFound)
             .EnsureTargetExerciseIsNotRest(
@@ -85,7 +83,7 @@ public class ExerciseLinkService(
                 whenValid: async () => await this._queryDataService.GetLinksAsync(command),
                 whenInvalid: errors => ServiceResult<ExerciseLinksResponseDto>.Failure(
                     ExerciseLinksResponseDto.Empty,
-                    errors.FirstOrDefault() ?? ServiceError.ValidationFailed(ExerciseLinkErrorMessages.ValidationFailed))
+                    errors.FirstOrDefault() ?? ExerciseLinkErrorMessages.ValidationFailed)
             );
     }
     
@@ -108,7 +106,7 @@ public class ExerciseLinkService(
                 whenValid: async () => await UpdateLinkInternalAsync(command),
                 whenInvalid: errors => ServiceResult<ExerciseLinkDto>.Failure(
                     ExerciseLinkDto.Empty,
-                    errors.FirstOrDefault() ?? ServiceError.ValidationFailed(ExerciseLinkErrorMessages.ValidationFailed))
+                    errors.FirstOrDefault() ?? ExerciseLinkErrorMessages.ValidationFailed)
             );
     }
     
@@ -125,12 +123,12 @@ public class ExerciseLinkService(
                 ServiceError.NotFound("ExerciseLink", linkId.ToString()))
             .EnsureAsync(
                 async () => await this._linkValidationHandler.DoesLinkBelongToExerciseAsync(exerciseId, linkId),
-                ServiceError.ValidationFailed(ExerciseLinkErrorMessages.LinkDoesNotBelongToExercise))
+                ExerciseLinkErrorMessages.LinkDoesNotBelongToExercise)
             .MatchAsync(
                 whenValid: async () => await this._bidirectionalLinkHandler.DeleteBidirectionalLinkAsync(linkId, deleteReverse),
                 whenInvalid: errors => ServiceResult<BooleanResultDto>.Failure(
                     BooleanResultDto.Create(false),
-                    errors.FirstOrDefault() ?? ServiceError.ValidationFailed(ExerciseLinkErrorMessages.ValidationFailed))
+                    errors.FirstOrDefault() ?? ExerciseLinkErrorMessages.ValidationFailed)
             );
     }
     
@@ -146,7 +144,7 @@ public class ExerciseLinkService(
                 whenValid: async () => await this._queryDataService.GetSuggestedLinksAsync(exerciseId, count),
                 whenInvalid: errors => ServiceResult<List<ExerciseLinkDto>>.Failure(
                     [],
-                    errors.FirstOrDefault() ?? ServiceError.ValidationFailed(ExerciseLinkErrorMessages.InvalidSourceExerciseId))
+                    errors.FirstOrDefault() ?? ExerciseLinkErrorMessages.InvalidSourceExerciseId)
             );
     }
     

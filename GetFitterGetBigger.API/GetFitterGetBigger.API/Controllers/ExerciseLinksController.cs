@@ -1,6 +1,5 @@
 using GetFitterGetBigger.API.DTOs;
 using GetFitterGetBigger.API.Mappers;
-using GetFitterGetBigger.API.Models.SpecializedIds;
 using GetFitterGetBigger.API.Services.Exercise.Features.Links;
 using GetFitterGetBigger.API.Services.Results;
 using Microsoft.AspNetCore.Mvc;
@@ -15,8 +14,7 @@ namespace GetFitterGetBigger.API.Controllers;
 [Produces("application/json")]
 [Tags("Exercise Links")]
 public class ExerciseLinksController(
-    IExerciseLinkService exerciseLinkService,
-    ILogger<ExerciseLinksController> logger) : ControllerBase
+    IExerciseLinkService exerciseLinkService) : ControllerBase
 {
     /// <summary>
     /// Creates a new exercise link with enhanced four-way linking support
@@ -61,9 +59,6 @@ public class ExerciseLinksController(
         [FromQuery] string? linkType = null,
         [FromQuery] bool includeExerciseDetails = false)
     {
-        logger.LogInformation("Getting exercise links for {ExerciseId} with type filter: {LinkType}", 
-            exerciseId, linkType);
-        
         var command = ExerciseLinkRequestMapper.ToGetLinksCommand(exerciseId, linkType, includeExerciseDetails);
         
         var result = await exerciseLinkService.GetLinksAsync(command);
@@ -83,11 +78,8 @@ public class ExerciseLinksController(
     [ProducesResponseType(typeof(List<ExerciseLinkDto>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetSuggestedLinks(string exerciseId, [FromQuery] int count = 5)
     {
-        logger.LogInformation("Getting suggested links for {ExerciseId}, count: {Count}", 
-            exerciseId, count);
-        
-        var parsedExerciseId = ExerciseId.ParseOrEmpty(exerciseId);
-        var result = await exerciseLinkService.GetSuggestedLinksAsync(parsedExerciseId, count);
+        var command = ExerciseLinkRequestMapper.ToGetSuggestedLinksCommand(exerciseId, count);
+        var result = await exerciseLinkService.GetSuggestedLinksAsync(command.ExerciseId, command.Count);
         
         // For GET operations, always return 200 OK per search operation error handling pattern
         return Ok(result.Data);
@@ -109,9 +101,6 @@ public class ExerciseLinksController(
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> UpdateLink(string exerciseId, string linkId, [FromBody] UpdateExerciseLinkDto dto)
     {
-        logger.LogInformation("Updating exercise link {LinkId} for exercise {ExerciseId}", 
-            linkId, exerciseId);
-        
         var command = ExerciseLinkRequestMapper.ToUpdateCommand(exerciseId, linkId, dto);
         
         var result = await exerciseLinkService.UpdateLinkAsync(command);
@@ -143,12 +132,8 @@ public class ExerciseLinksController(
         string linkId, 
         [FromQuery] bool deleteReverse = true)
     {
-        logger.LogInformation("Deleting exercise link {LinkId} for exercise {ExerciseId} with deleteReverse: {DeleteReverse}", 
-            linkId, exerciseId, deleteReverse);
-        
-        var parsedExerciseId = ExerciseId.ParseOrEmpty(exerciseId);
-        var parsedLinkId = ExerciseLinkId.ParseOrEmpty(linkId);
-        var result = await exerciseLinkService.DeleteLinkAsync(parsedExerciseId, parsedLinkId, deleteReverse);
+        var command = ExerciseLinkRequestMapper.ToDeleteCommand(exerciseId, linkId, deleteReverse);
+        var result = await exerciseLinkService.DeleteLinkAsync(command.ExerciseId, command.LinkId, command.DeleteReverse);
         
         return result switch
         {

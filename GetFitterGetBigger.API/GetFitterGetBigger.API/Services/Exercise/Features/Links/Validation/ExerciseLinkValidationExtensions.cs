@@ -2,6 +2,7 @@ using GetFitterGetBigger.API.DTOs;
 using GetFitterGetBigger.API.DTOs.Interfaces;
 using GetFitterGetBigger.API.Models.Enums;
 using GetFitterGetBigger.API.Models.SpecializedIds;
+using GetFitterGetBigger.API.Services.Exercise.Features.Links.DataServices;
 using GetFitterGetBigger.API.Services.Exercise.Features.Links.Handlers;
 using GetFitterGetBigger.API.Services.Results;
 using GetFitterGetBigger.API.Services.Validation;
@@ -31,7 +32,7 @@ public static class ExerciseLinkValidationExtensions
     /// </summary>
     public static async Task<ServiceValidationWithExercises<T>> EnsureSourceExerciseExists<T>(
         this ServiceValidationWithExercises<T> validation,
-        IExerciseService exerciseService,
+        IExerciseLinkQueryDataService queryDataService,
         ExerciseId sourceId,
         string errorMessage)
         where T : class, IEmptyDto<T>
@@ -41,7 +42,7 @@ public static class ExerciseLinkValidationExtensions
             return validation;
         
         // Load the source exercise (1 DB call)
-        var result = await exerciseService.GetByIdAsync(sourceId);
+        var result = await queryDataService.GetAndValidateExerciseAsync(sourceId);
         
         // Check if load failed or returned empty/inactive
         if (!result.IsSuccess || result.Data?.IsEmpty != false || !result.Data.IsActive)
@@ -60,7 +61,7 @@ public static class ExerciseLinkValidationExtensions
     /// </summary>
     public static async Task<ServiceValidationWithExercises<T>> EnsureTargetExerciseExists<T>(
         this Task<ServiceValidationWithExercises<T>> validationTask,
-        IExerciseService exerciseService,
+        IExerciseLinkQueryDataService queryDataService,
         ExerciseId targetId,
         string errorMessage)
         where T : class, IEmptyDto<T>
@@ -72,7 +73,7 @@ public static class ExerciseLinkValidationExtensions
             return validation;
         
         // Load the target exercise (1 DB call)
-        var result = await exerciseService.GetByIdAsync(targetId);
+        var result = await queryDataService.GetAndValidateExerciseAsync(targetId);
         
         // Check if load failed or returned empty/inactive
         if (!result.IsSuccess || result.Data?.IsEmpty != false || !result.Data.IsActive)
@@ -100,11 +101,11 @@ public static class ExerciseLinkValidationExtensions
         if (validation.HasErrors || validation.SourceExercise == null)
             return validation;
         
-        // Check if source is REST type
-        var isRest = validation.SourceExercise.ExerciseTypes.Any(et => 
-            string.Equals(et.Value, "Rest", StringComparison.OrdinalIgnoreCase));
+        // Check if source is NOT REST type
+        var isNotRest = validation.SourceExercise.ExerciseTypes.All(et => 
+            !string.Equals(et.Value, "Rest", StringComparison.OrdinalIgnoreCase));
         
-        validation.Validation.Ensure(() => !isRest, errorMessage);
+        validation.Validation.Ensure(() => isNotRest, errorMessage);
         return validation;
     }
     
@@ -146,11 +147,11 @@ public static class ExerciseLinkValidationExtensions
         if (validation.HasErrors || validation.TargetExercise == null)
             return validation;
         
-        // Check if target is REST type
-        var isRest = validation.TargetExercise.ExerciseTypes.Any(et => 
-            string.Equals(et.Value, "Rest", StringComparison.OrdinalIgnoreCase));
+        // Check if target is NOT REST type
+        var isNotRest = validation.TargetExercise.ExerciseTypes.All(et => 
+            !string.Equals(et.Value, "Rest", StringComparison.OrdinalIgnoreCase));
         
-        validation.Validation.Ensure(() => !isRest, errorMessage);
+        validation.Validation.Ensure(() => isNotRest, errorMessage);
         return validation;
     }
     
