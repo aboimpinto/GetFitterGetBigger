@@ -88,3 +88,10 @@ When creating temporary files during work sessions (plans, summaries, analysis):
 - This directory is gitignored and won't be committed
 - See `memory-bank/AI-ASSISTANT-TEMP-FILES-PATTERN.md` for details
 - Never create temporary documentation files in test or source directories
+
+## Creating AI Agents
+
+When creating new AI agents for the project:
+- **IMPORTANT**: Always read the official Claude Code sub-agents documentation first: https://docs.anthropic.com/en/docs/claude-code/sub-agents
+- Follow the documented patterns and best practices for agent creation
+- Ensure agents are properly configured with appropriate tools and responsibilities
