@@ -1,0 +1,144 @@
+@using GetFitterGetBigger.Admin.Models.Dtos
+
+<div role="tablist" 
+     aria-label="Exercise contexts" 
+     class="mb-4 border-b border-gray-200"
+     data-testid="context-selector">
+    @foreach (var context in Contexts)
+    {
+        <button role="tab" 
+                @onclick="() => SwitchContext(context)"
+                @onkeydown="@(e => HandleKeyDown(e, context))"
+                aria-selected="@(context == ActiveContext ? "true" : "false")"
+                aria-controls="@GetPanelId(context)"
+                class="@GetTabClasses(context)"
+                data-testid="@GetContextTestId(context)"
+                disabled="@Disabled">
+            @GetContextLabel(context)
+        </button>
+    }
+</div>
+
+@code {
+    [Parameter, EditorRequired] public IEnumerable<string> Contexts { get; set; } = null!;
+    [Parameter, EditorRequired] public string ActiveContext { get; set; } = null!;
+    [Parameter] public bool Disabled { get; set; } = false;
+    [Parameter] public EventCallback<string> OnContextChange { get; set; }
+
+    private async Task SwitchContext(string context)
+    {
+        if (!Disabled && context != ActiveContext && OnContextChange.HasDelegate)
+        {
+            await OnContextChange.InvokeAsync(context);
+        }
+    }
+
+    private async Task HandleKeyDown(KeyboardEventArgs e, string context)
+    {
+        if (Disabled) return;
+
+        switch (e.Key)
+        {
+            case "Enter":
+            case " ":
+                await SwitchContext(context);
+                break;
+            case "ArrowLeft":
+                await MoveToPreviousTab();
+                break;
+            case "ArrowRight":
+                await MoveToNextTab();
+                break;
+            case "Home":
+                await MoveToFirstTab();
+                break;
+            case "End":
+                await MoveToLastTab();
+                break;
+        }
+    }
+
+    private async Task MoveToPreviousTab()
+    {
+        var contextsList = Contexts.ToList();
+        var currentIndex = contextsList.IndexOf(ActiveContext);
+        if (currentIndex > 0)
+        {
+            await SwitchContext(contextsList[currentIndex - 1]);
+        }
+    }
+
+    private async Task MoveToNextTab()
+    {
+        var contextsList = Contexts.ToList();
+        var currentIndex = contextsList.IndexOf(ActiveContext);
+        if (currentIndex >= 0 && currentIndex < contextsList.Count - 1)
+        {
+            await SwitchContext(contextsList[currentIndex + 1]);
+        }
+    }
+
+    private async Task MoveToFirstTab()
+    {
+        var firstContext = Contexts.FirstOrDefault();
+        if (!string.IsNullOrEmpty(firstContext))
+        {
+            await SwitchContext(firstContext);
+        }
+    }
+
+    private async Task MoveToLastTab()
+    {
+        var lastContext = Contexts.LastOrDefault();
+        if (!string.IsNullOrEmpty(lastContext))
+        {
+            await SwitchContext(lastContext);
+        }
+    }
+
+    private string GetTabClasses(string context)
+    {
+        var baseClasses = "inline-flex items-center px-4 py-2 text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2";
+        
+        if (Disabled)
+        {
+            baseClasses += " cursor-not-allowed opacity-50";
+        }
+        else
+        {
+            baseClasses += " cursor-pointer";
+        }
+
+        if (context == ActiveContext)
+        {
+            // Active tab styling with bottom border
+            return $"{baseClasses} text-blue-600 bg-blue-50 border-b-2 border-blue-600";
+        }
+        else
+        {
+            // Inactive tab styling
+            return $"{baseClasses} text-gray-600 bg-white border-b-2 border-transparent hover:text-gray-800 hover:bg-gray-50";
+        }
+    }
+
+    private string GetContextLabel(string context)
+    {
+        return context switch
+        {
+            "Workout" => "As Workout Exercise",
+            "Warmup" => "As Warmup Exercise",
+            "Cooldown" => "As Cooldown Exercise",
+            _ => $"As {context} Exercise"
+        };
+    }
+
+    private string GetPanelId(string context)
+    {
+        return $"context-panel-{context.ToLower()}";
+    }
+
+    private string GetContextTestId(string context)
+    {
+        return $"context-tab-{context.ToLower()}";
+    }
+}
