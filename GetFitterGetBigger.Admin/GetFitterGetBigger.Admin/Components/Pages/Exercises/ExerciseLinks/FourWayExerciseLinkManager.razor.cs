@@ -196,6 +196,20 @@ namespace GetFitterGetBigger.Admin.Components.Pages.Exercises.ExerciseLinks
                 LinkType = linkTypeForApi
             };
 
+            // Set DisplayOrder for Warmup and Cooldown links
+            if (_addLinkType == "Warmup" || _addLinkType == "Cooldown")
+            {
+                // Calculate the next display order based on existing links
+                var existingLinks = StateService.CurrentLinks?.Links?
+                    .Where(l => l.LinkType == _addLinkType)
+                    .OrderBy(l => l.DisplayOrder)
+                    .ToList() ?? new List<ExerciseLinkDto>();
+
+                createDto.DisplayOrder = existingLinks.Any() 
+                    ? existingLinks.Max(l => l.DisplayOrder) + 1 
+                    : 1;
+            }
+
             // Use bidirectional creation for alternative links
             if (_addLinkType == "Alternative")
             {

@@ -250,7 +250,21 @@
             LinkType = _addLinkType
         };
 
-        Console.WriteLine($"[ExerciseLinkManager] Creating link with DTO: SourceExerciseId={createDto.SourceExerciseId}, TargetExerciseId={createDto.TargetExerciseId}, LinkType={createDto.LinkType}");
+        // Set DisplayOrder for Warmup and Cooldown links
+        if (_addLinkType == "Warmup" || _addLinkType == "Cooldown")
+        {
+            // Calculate the next display order based on existing links
+            var existingLinks = StateService.CurrentLinks?.Links?
+                .Where(l => l.LinkType == _addLinkType)
+                .OrderBy(l => l.DisplayOrder)
+                .ToList() ?? new List<ExerciseLinkDto>();
+
+            createDto.DisplayOrder = existingLinks.Any() 
+                ? existingLinks.Max(l => l.DisplayOrder) + 1 
+                : 1;
+        }
+
+        Console.WriteLine($"[ExerciseLinkManager] Creating link with DTO: SourceExerciseId={createDto.SourceExerciseId}, TargetExerciseId={createDto.TargetExerciseId}, LinkType={createDto.LinkType}, DisplayOrder={createDto.DisplayOrder}");
 
         await StateService.CreateLinkAsync(createDto);
         
