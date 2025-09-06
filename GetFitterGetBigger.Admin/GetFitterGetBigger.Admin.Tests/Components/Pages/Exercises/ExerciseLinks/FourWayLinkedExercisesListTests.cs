@@ -31,9 +31,11 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises.ExerciseLink
             _mockStateService.Setup(s => s.WarmupLinks).Returns(new List<ExerciseLinkDto>());
             _mockStateService.Setup(s => s.CooldownLinks).Returns(new List<ExerciseLinkDto>());
             _mockStateService.Setup(s => s.AlternativeLinks).Returns(new List<ExerciseLinkDto>());
+            _mockStateService.Setup(s => s.WorkoutLinks).Returns(new List<ExerciseLinkDto>());
             _mockStateService.Setup(s => s.WarmupLinkCount).Returns(0);
             _mockStateService.Setup(s => s.CooldownLinkCount).Returns(0);
             _mockStateService.Setup(s => s.AlternativeLinkCount).Returns(0);
+            _mockStateService.Setup(s => s.WorkoutLinkCount).Returns(0);
             
             // Setup default validation service behavior - Allow all link types in Workout context
             _mockValidationService.Setup(v => v.CanAddLinkType("Workout", "Warmup"))
@@ -68,16 +70,18 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises.ExerciseLink
         {
             // Arrange & Act
             var component = RenderComponent<FourWayLinkedExercisesList>(parameters => parameters
-                .Add(p => p.StateService, _mockStateService.Object));
+                .Add(p => p.StateService, _mockStateService.Object)
+                .Add(p => p.ValidationService, _mockValidationService.Object)
+                .Add(p => p.CurrentContext, "Workout"));
 
             // Assert
             var warmupHeader = component.Find("#warmup-exercises-heading");
             var cooldownHeader = component.Find("#cooldown-exercises-heading");
             var alternativeHeader = component.Find("#alternative-exercises-heading");
 
-            Assert.Contains("Warmup Exercises", warmupHeader.TextContent);
-            Assert.Contains("Cooldown Exercises", cooldownHeader.TextContent);
-            Assert.Contains("Alternative Exercises", alternativeHeader.TextContent);
+            Assert.Contains("Warmup", warmupHeader.TextContent);
+            Assert.Contains("Cooldown", cooldownHeader.TextContent);
+            Assert.Contains("Alternative", alternativeHeader.TextContent);
         }
 
         [Fact]
@@ -90,7 +94,9 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises.ExerciseLink
 
             // Act
             var component = RenderComponent<FourWayLinkedExercisesList>(parameters => parameters
-                .Add(p => p.StateService, _mockStateService.Object));
+                .Add(p => p.StateService, _mockStateService.Object)
+                .Add(p => p.ValidationService, _mockValidationService.Object)
+                .Add(p => p.CurrentContext, "Workout"));
 
             // Assert - No more capacity limits, just show counts
             var warmupCount = component.Find("[data-testid='warmup-count']");
@@ -111,6 +117,8 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises.ExerciseLink
             // Arrange & Act
             var component = RenderComponent<FourWayLinkedExercisesList>(parameters => parameters
                 .Add(p => p.StateService, _mockStateService.Object)
+                .Add(p => p.ValidationService, _mockValidationService.Object)
+                .Add(p => p.CurrentContext, "Workout")
                 .Add(p => p.Disabled, false));
 
             // Assert
@@ -122,9 +130,9 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises.ExerciseLink
             Assert.NotNull(addCooldownButton);
             Assert.NotNull(addAlternativeButton);
 
-            Assert.Contains("Add Warmup", addWarmupButton.TextContent);
-            Assert.Contains("Add Cooldown", addCooldownButton.TextContent);
-            Assert.Contains("Add Alternative", addAlternativeButton.TextContent);
+            Assert.Contains("Add", addWarmupButton.TextContent);
+            Assert.Contains("Add", addCooldownButton.TextContent);
+            Assert.Contains("Add", addAlternativeButton.TextContent);
         }
 
         [Fact]
@@ -135,7 +143,9 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises.ExerciseLink
 
             // Act
             var component = RenderComponent<FourWayLinkedExercisesList>(parameters => parameters
-                .Add(p => p.StateService, _mockStateService.Object));
+                .Add(p => p.StateService, _mockStateService.Object)
+                .Add(p => p.ValidationService, _mockValidationService.Object)
+                .Add(p => p.CurrentContext, "Workout"));
 
             // Assert - Button should always be available (no limits)
             var addWarmupButtons = component.FindAll("[data-testid='add-warmup-button']");
@@ -150,7 +160,9 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises.ExerciseLink
 
             // Act
             var component = RenderComponent<FourWayLinkedExercisesList>(parameters => parameters
-                .Add(p => p.StateService, _mockStateService.Object));
+                .Add(p => p.StateService, _mockStateService.Object)
+                .Add(p => p.ValidationService, _mockValidationService.Object)
+                .Add(p => p.CurrentContext, "Workout"));
 
             // Assert - Button should always be available (no limits)
             var addCooldownButtons = component.FindAll("[data-testid='add-cooldown-button']");
@@ -165,7 +177,9 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises.ExerciseLink
 
             // Act
             var component = RenderComponent<FourWayLinkedExercisesList>(parameters => parameters
-                .Add(p => p.StateService, _mockStateService.Object));
+                .Add(p => p.StateService, _mockStateService.Object)
+                .Add(p => p.ValidationService, _mockValidationService.Object)
+                .Add(p => p.CurrentContext, "Workout"));
 
             // Assert
             var addAlternativeButton = component.Find("[data-testid='add-alternative-button']");
@@ -177,16 +191,18 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises.ExerciseLink
         {
             // Arrange & Act
             var component = RenderComponent<FourWayLinkedExercisesList>(parameters => parameters
-                .Add(p => p.StateService, _mockStateService.Object));
+                .Add(p => p.StateService, _mockStateService.Object)
+                .Add(p => p.ValidationService, _mockValidationService.Object)
+                .Add(p => p.CurrentContext, "Workout"));
 
             // Assert
             var warmupEmptyState = component.Find("[data-testid='warmup-empty-state']");
             var cooldownEmptyState = component.Find("[data-testid='cooldown-empty-state']");
             var alternativeEmptyState = component.Find("[data-testid='alternative-empty-state']");
 
-            Assert.Contains("No warmup exercises linked yet", warmupEmptyState.TextContent);
-            Assert.Contains("No cooldown exercises linked yet", cooldownEmptyState.TextContent);
-            Assert.Contains("No alternative exercises linked yet", alternativeEmptyState.TextContent);
+            Assert.Contains("No warmup exercises linked", warmupEmptyState.TextContent);
+            Assert.Contains("No cooldown exercises linked", cooldownEmptyState.TextContent);
+            Assert.Contains("No alternative exercises linked", alternativeEmptyState.TextContent);
         }
 
         [Fact]
@@ -211,7 +227,9 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises.ExerciseLink
 
             // Act
             var component = RenderComponent<FourWayLinkedExercisesList>(parameters => parameters
-                .Add(p => p.StateService, _mockStateService.Object));
+                .Add(p => p.StateService, _mockStateService.Object)
+                .Add(p => p.ValidationService, _mockValidationService.Object)
+                .Add(p => p.CurrentContext, "Workout"));
 
             // Assert
             var warmupContainer = component.Find("[data-testid='warmup-links-container']");
@@ -243,7 +261,9 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises.ExerciseLink
 
             // Act
             var component = RenderComponent<FourWayLinkedExercisesList>(parameters => parameters
-                .Add(p => p.StateService, _mockStateService.Object));
+                .Add(p => p.StateService, _mockStateService.Object)
+                .Add(p => p.ValidationService, _mockValidationService.Object)
+                .Add(p => p.CurrentContext, "Workout"));
 
             // Assert
             var cooldownContainer = component.Find("[data-testid='cooldown-links-container']");
@@ -275,7 +295,9 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises.ExerciseLink
 
             // Act
             var component = RenderComponent<FourWayLinkedExercisesList>(parameters => parameters
-                .Add(p => p.StateService, _mockStateService.Object));
+                .Add(p => p.StateService, _mockStateService.Object)
+                .Add(p => p.ValidationService, _mockValidationService.Object)
+                .Add(p => p.CurrentContext, "Workout"));
 
             // Assert
             var alternativeContainer = component.Find("[data-testid='alternative-links-container']");
@@ -365,7 +387,9 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises.ExerciseLink
 
             // Act
             var component = RenderComponent<FourWayLinkedExercisesList>(parameters => parameters
-                .Add(p => p.StateService, _mockStateService.Object));
+                .Add(p => p.StateService, _mockStateService.Object)
+                .Add(p => p.ValidationService, _mockValidationService.Object)
+                .Add(p => p.CurrentContext, "Workout"));
 
             // Assert
             var savingOverlay = component.Find("[data-testid='reorder-progress-overlay']");
@@ -378,7 +402,9 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises.ExerciseLink
         {
             // Arrange & Act
             var component = RenderComponent<FourWayLinkedExercisesList>(parameters => parameters
-                .Add(p => p.StateService, _mockStateService.Object));
+                .Add(p => p.StateService, _mockStateService.Object)
+                .Add(p => p.ValidationService, _mockValidationService.Object)
+                .Add(p => p.CurrentContext, "Workout"));
 
             // Assert
             var warmupSection = component.Find("[data-testid='warmup-section'] .bg-orange-50");
@@ -395,7 +421,9 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises.ExerciseLink
         {
             // Arrange & Act
             var component = RenderComponent<FourWayLinkedExercisesList>(parameters => parameters
-                .Add(p => p.StateService, _mockStateService.Object));
+                .Add(p => p.StateService, _mockStateService.Object)
+                .Add(p => p.ValidationService, _mockValidationService.Object)
+                .Add(p => p.CurrentContext, "Workout"));
 
             // Assert
             var warmupSection = component.Find("[data-testid='warmup-section']");
@@ -416,7 +444,9 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises.ExerciseLink
         {
             // Arrange
             var component = RenderComponent<FourWayLinkedExercisesList>(parameters => parameters
-                .Add(p => p.StateService, _mockStateService.Object));
+                .Add(p => p.StateService, _mockStateService.Object)
+                .Add(p => p.ValidationService, _mockValidationService.Object)
+                .Add(p => p.CurrentContext, "Workout"));
 
             // Act
             component.Dispose();
@@ -431,7 +461,9 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises.ExerciseLink
         {
             // Arrange
             var component = RenderComponent<FourWayLinkedExercisesList>(parameters => parameters
-                .Add(p => p.StateService, _mockStateService.Object));
+                .Add(p => p.StateService, _mockStateService.Object)
+                .Add(p => p.ValidationService, _mockValidationService.Object)
+                .Add(p => p.CurrentContext, "Workout"));
 
             // Verify subscription
             _mockStateService.VerifyAdd(x => x.OnChange += It.IsAny<Action>(), Times.Once);
@@ -467,6 +499,8 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises.ExerciseLink
                 .Returns(ValidationResult.Failure("Warmup exercises can only link to Workout and Alternative exercises", "WARMUP_LINK_RESTRICTION"));
             _mockValidationService.Setup(v => v.CanAddLinkType("Warmup", "Cooldown"))
                 .Returns(ValidationResult.Failure("Warmup exercises can only link to Workout and Alternative exercises", "WARMUP_LINK_RESTRICTION"));
+            _mockValidationService.Setup(v => v.CanAddLinkType("Warmup", "Workout"))
+                .Returns(ValidationResult.Success());
             _mockValidationService.Setup(v => v.CanAddLinkType("Warmup", "Alternative"))
                 .Returns(ValidationResult.Success());
 
@@ -477,20 +511,14 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises.ExerciseLink
                 .Add(p => p.CurrentContext, "Warmup"));
 
             // Assert
-            // Should show restricted messages for warmup/cooldown sections
-            var warmupRestricted = component.Find("[data-testid='warmup-section-restricted']");
-            var cooldownRestricted = component.Find("[data-testid='cooldown-section-restricted']");
-            
-            Assert.NotNull(warmupRestricted);
-            Assert.NotNull(cooldownRestricted);
-            Assert.Contains("Warmup section not available for Warmup exercises", warmupRestricted.TextContent);
-            Assert.Contains("Cooldown section not available for Warmup exercises", cooldownRestricted.TextContent);
-
-            // Should show alternative section normally
+            // Should show workout and alternative sections only
+            var workoutSection = component.Find("[data-testid='workout-section']");
             var alternativeSection = component.Find("[data-testid='alternative-section']");
+            
+            Assert.NotNull(workoutSection);
             Assert.NotNull(alternativeSection);
 
-            // Should not show actual warmup/cooldown sections
+            // Should not show warmup/cooldown sections
             var warmupSections = component.FindAll("[data-testid='warmup-section']");
             var cooldownSections = component.FindAll("[data-testid='cooldown-section']");
             Assert.Empty(warmupSections);
@@ -505,6 +533,8 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises.ExerciseLink
                 .Returns(ValidationResult.Failure("Cooldown exercises can only link to Workout and Alternative exercises", "COOLDOWN_LINK_RESTRICTION"));
             _mockValidationService.Setup(v => v.CanAddLinkType("Cooldown", "Cooldown"))
                 .Returns(ValidationResult.Failure("Cooldown exercises can only link to Workout and Alternative exercises", "COOLDOWN_LINK_RESTRICTION"));
+            _mockValidationService.Setup(v => v.CanAddLinkType("Cooldown", "Workout"))
+                .Returns(ValidationResult.Success());
             _mockValidationService.Setup(v => v.CanAddLinkType("Cooldown", "Alternative"))
                 .Returns(ValidationResult.Success());
 
@@ -515,20 +545,14 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises.ExerciseLink
                 .Add(p => p.CurrentContext, "Cooldown"));
 
             // Assert
-            // Should show restricted messages for warmup/cooldown sections
-            var warmupRestricted = component.Find("[data-testid='warmup-section-restricted']");
-            var cooldownRestricted = component.Find("[data-testid='cooldown-section-restricted']");
-            
-            Assert.NotNull(warmupRestricted);
-            Assert.NotNull(cooldownRestricted);
-            Assert.Contains("Warmup section not available for Cooldown exercises", warmupRestricted.TextContent);
-            Assert.Contains("Cooldown section not available for Cooldown exercises", cooldownRestricted.TextContent);
-
-            // Should show alternative section normally
+            // Should show workout and alternative sections only
+            var workoutSection = component.Find("[data-testid='workout-section']");
             var alternativeSection = component.Find("[data-testid='alternative-section']");
+            
+            Assert.NotNull(workoutSection);
             Assert.NotNull(alternativeSection);
 
-            // Should not show actual warmup/cooldown sections
+            // Should not show warmup/cooldown sections
             var warmupSections = component.FindAll("[data-testid='warmup-section']");
             var cooldownSections = component.FindAll("[data-testid='cooldown-section']");
             Assert.Empty(warmupSections);
@@ -536,13 +560,15 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises.ExerciseLink
         }
 
         [Fact]
-        public void Component_Should_Show_Helpful_Restriction_Messages()
+        public void Component_Should_Show_Sections_Based_On_Context()
         {
             // Arrange - Setup validation service for warmup context restrictions
             _mockValidationService.Setup(v => v.CanAddLinkType("Warmup", "Warmup"))
                 .Returns(ValidationResult.Failure("Restricted", "WARMUP_LINK_RESTRICTION"));
             _mockValidationService.Setup(v => v.CanAddLinkType("Warmup", "Cooldown"))
                 .Returns(ValidationResult.Failure("Restricted", "WARMUP_LINK_RESTRICTION"));
+            _mockValidationService.Setup(v => v.CanAddLinkType("Warmup", "Workout"))
+                .Returns(ValidationResult.Success());
             _mockValidationService.Setup(v => v.CanAddLinkType("Warmup", "Alternative"))
                 .Returns(ValidationResult.Success());
 
@@ -552,13 +578,13 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises.ExerciseLink
                 .Add(p => p.ValidationService, _mockValidationService.Object)
                 .Add(p => p.CurrentContext, "Warmup"));
 
-            // Assert
-            var warmupRestricted = component.Find("[data-testid='warmup-section-restricted']");
-            var cooldownRestricted = component.Find("[data-testid='cooldown-section-restricted']");
+            // Assert - Only allowed sections should be visible
+            var sections = component.FindAll("[data-testid$='-section']");
+            Assert.Equal(2, sections.Count); // Should have workout and alternative sections only
             
-            // Check that helpful messages explain what's allowed
-            Assert.Contains("Warmup exercises can only link to Workout and Alternative exercises", warmupRestricted.TextContent);
-            Assert.Contains("Warmup exercises can only link to Workout and Alternative exercises", cooldownRestricted.TextContent);
+            // Verify the correct sections are shown
+            Assert.NotNull(component.Find("[data-testid='workout-section']"));
+            Assert.NotNull(component.Find("[data-testid='alternative-section']"));
         }
 
         [Theory]
@@ -571,6 +597,8 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises.ExerciseLink
                 .Returns(ValidationResult.Failure($"{context} exercises cannot add warmup links", "RESTRICTION"));
             _mockValidationService.Setup(v => v.CanAddLinkType(context, "Cooldown"))
                 .Returns(ValidationResult.Failure($"{context} exercises cannot add cooldown links", "RESTRICTION"));
+            _mockValidationService.Setup(v => v.CanAddLinkType(context, "Workout"))
+                .Returns(ValidationResult.Success());
             _mockValidationService.Setup(v => v.CanAddLinkType(context, "Alternative"))
                 .Returns(ValidationResult.Success());
 
@@ -580,10 +608,10 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises.ExerciseLink
                 .Add(p => p.ValidationService, _mockValidationService.Object)
                 .Add(p => p.CurrentContext, context));
 
-            // Assert - Validation service should be called for restricted link types
-            // Note: Alternative section is always shown, so it doesn't check CanAddLinkType
+            // Assert - Validation service should be called for all link types to determine visibility
             _mockValidationService.Verify(v => v.CanAddLinkType(context, "Warmup"), Times.AtLeastOnce);
             _mockValidationService.Verify(v => v.CanAddLinkType(context, "Cooldown"), Times.AtLeastOnce);
+            _mockValidationService.Verify(v => v.CanAddLinkType(context, "Workout"), Times.AtLeastOnce);
         }
 
         [Fact]
@@ -594,6 +622,8 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises.ExerciseLink
                 .Returns(ValidationResult.Success());
             _mockValidationService.Setup(v => v.CanAddLinkType("Workout", "Cooldown"))
                 .Returns(ValidationResult.Success());
+            _mockValidationService.Setup(v => v.CanAddLinkType("Workout", "Workout"))
+                .Returns(ValidationResult.Failure("Workout exercises cannot add workout links", "RESTRICTION"));
             _mockValidationService.Setup(v => v.CanAddLinkType("Workout", "Alternative"))
                 .Returns(ValidationResult.Success());
 
