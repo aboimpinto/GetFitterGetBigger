@@ -43,6 +43,10 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises.ExerciseLink
             {
                 Links = new List<ExerciseLinkDto>()
             });
+            
+            // Setup default validation service behavior - allow all link types by default
+            _mockValidationService.Setup(v => v.CanAddLinkType(It.IsAny<string>(), It.IsAny<string>()))
+                .Returns(ValidationResult.Success());
         }
 
         [Fact]

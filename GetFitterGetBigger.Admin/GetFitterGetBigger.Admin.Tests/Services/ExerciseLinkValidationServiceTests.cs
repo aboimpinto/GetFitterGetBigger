@@ -395,4 +395,174 @@ public class ExerciseLinkValidationServiceTests
     }
 
     #endregion
+
+    #region CanAddLinkType Tests
+
+    [Theory]
+    [InlineData("Workout", "Warmup", true)]
+    [InlineData("Workout", "Cooldown", true)]
+    [InlineData("Workout", "Alternative", true)]
+    [InlineData("workout", "warmup", true)] // Case insensitive
+    [InlineData("WORKOUT", "COOLDOWN", true)] // Mixed case
+    public void CanAddLinkType_ReturnsSuccess_WhenWorkoutContext(string context, string linkType, bool shouldBeValid)
+    {
+        // Act
+        var result = _validationService.CanAddLinkType(context, linkType);
+
+        // Assert
+        Assert.True(result.IsValid == shouldBeValid);
+        if (shouldBeValid)
+        {
+            Assert.Null(result.ErrorMessage);
+            Assert.Null(result.ErrorCode);
+        }
+    }
+
+    [Theory]
+    [InlineData("Warmup", "Workout", true)]
+    [InlineData("Warmup", "Alternative", true)]
+    [InlineData("warmup", "workout", true)] // Case insensitive
+    [InlineData("WARMUP", "ALTERNATIVE", true)] // Mixed case
+    public void CanAddLinkType_ReturnsSuccess_WhenWarmupContextWithAllowedTypes(string context, string linkType, bool shouldBeValid)
+    {
+        // Act
+        var result = _validationService.CanAddLinkType(context, linkType);
+
+        // Assert
+        Assert.True(result.IsValid == shouldBeValid);
+        if (shouldBeValid)
+        {
+            Assert.Null(result.ErrorMessage);
+            Assert.Null(result.ErrorCode);
+        }
+    }
+
+    [Theory]
+    [InlineData("Warmup", "Warmup")]
+    [InlineData("Warmup", "Cooldown")]
+    [InlineData("warmup", "cooldown")] // Case insensitive
+    public void CanAddLinkType_ReturnsFailure_WhenWarmupContextWithRestrictedTypes(string context, string linkType)
+    {
+        // Act
+        var result = _validationService.CanAddLinkType(context, linkType);
+
+        // Assert
+        Assert.False(result.IsValid);
+        Assert.Contains("Warmup exercises can only link to Workout and Alternative exercises", result.ErrorMessage);
+        Assert.Equal("WARMUP_LINK_RESTRICTION", result.ErrorCode);
+    }
+
+    [Theory]
+    [InlineData("Cooldown", "Workout", true)]
+    [InlineData("Cooldown", "Alternative", true)]
+    [InlineData("cooldown", "workout", true)] // Case insensitive
+    [InlineData("COOLDOWN", "ALTERNATIVE", true)] // Mixed case
+    public void CanAddLinkType_ReturnsSuccess_WhenCooldownContextWithAllowedTypes(string context, string linkType, bool shouldBeValid)
+    {
+        // Act
+        var result = _validationService.CanAddLinkType(context, linkType);
+
+        // Assert
+        Assert.True(result.IsValid == shouldBeValid);
+        if (shouldBeValid)
+        {
+            Assert.Null(result.ErrorMessage);
+            Assert.Null(result.ErrorCode);
+        }
+    }
+
+    [Theory]
+    [InlineData("Cooldown", "Warmup")]
+    [InlineData("Cooldown", "Cooldown")]
+    [InlineData("cooldown", "warmup")] // Case insensitive
+    public void CanAddLinkType_ReturnsFailure_WhenCooldownContextWithRestrictedTypes(string context, string linkType)
+    {
+        // Act
+        var result = _validationService.CanAddLinkType(context, linkType);
+
+        // Assert
+        Assert.False(result.IsValid);
+        Assert.Contains("Cooldown exercises can only link to Workout and Alternative exercises", result.ErrorMessage);
+        Assert.Equal("COOLDOWN_LINK_RESTRICTION", result.ErrorCode);
+    }
+
+    [Fact]
+    public void CanAddLinkType_ReturnsFailure_WhenContextIsNull()
+    {
+        // Act
+        var result = _validationService.CanAddLinkType(null!, "Warmup");
+
+        // Assert
+        Assert.False(result.IsValid);
+        Assert.Equal("Exercise context cannot be null or empty", result.ErrorMessage);
+        Assert.Equal("INVALID_CONTEXT", result.ErrorCode);
+    }
+
+    [Fact]
+    public void CanAddLinkType_ReturnsFailure_WhenContextIsEmpty()
+    {
+        // Act
+        var result = _validationService.CanAddLinkType("", "Warmup");
+
+        // Assert
+        Assert.False(result.IsValid);
+        Assert.Equal("Exercise context cannot be null or empty", result.ErrorMessage);
+        Assert.Equal("INVALID_CONTEXT", result.ErrorCode);
+    }
+
+    [Fact]
+    public void CanAddLinkType_ReturnsFailure_WhenLinkTypeIsNull()
+    {
+        // Act
+        var result = _validationService.CanAddLinkType("Workout", null!);
+
+        // Assert
+        Assert.False(result.IsValid);
+        Assert.Equal("Link type cannot be null or empty", result.ErrorMessage);
+        Assert.Equal("INVALID_LINK_TYPE", result.ErrorCode);
+    }
+
+    [Fact]
+    public void CanAddLinkType_ReturnsFailure_WhenLinkTypeIsEmpty()
+    {
+        // Act
+        var result = _validationService.CanAddLinkType("Workout", "");
+
+        // Assert
+        Assert.False(result.IsValid);
+        Assert.Equal("Link type cannot be null or empty", result.ErrorMessage);
+        Assert.Equal("INVALID_LINK_TYPE", result.ErrorCode);
+    }
+
+    [Theory]
+    [InlineData("UnknownContext")]
+    [InlineData("InvalidType")]
+    [InlineData("Rest")] // REST exercises shouldn't reach this point, but test unknown contexts
+    public void CanAddLinkType_ReturnsFailure_WhenUnknownContext(string context)
+    {
+        // Act
+        var result = _validationService.CanAddLinkType(context, "Warmup");
+
+        // Assert
+        Assert.False(result.IsValid);
+        Assert.Contains($"Unknown exercise context '{context}'", result.ErrorMessage);
+        Assert.Equal("UNKNOWN_CONTEXT", result.ErrorCode);
+    }
+
+    [Theory]
+    [InlineData("Workout", "InvalidType")]
+    [InlineData("Workout", "Rest")]
+    [InlineData("Workout", "Strength")]
+    public void CanAddLinkType_ReturnsFailure_WhenWorkoutContextWithInvalidTypes(string context, string linkType)
+    {
+        // Act
+        var result = _validationService.CanAddLinkType(context, linkType);
+
+        // Assert
+        Assert.False(result.IsValid);
+        Assert.Contains($"Invalid link type '{linkType}' for Workout exercises", result.ErrorMessage);
+        Assert.Equal("WORKOUT_INVALID_LINK_TYPE", result.ErrorCode);
+    }
+
+    #endregion
 }

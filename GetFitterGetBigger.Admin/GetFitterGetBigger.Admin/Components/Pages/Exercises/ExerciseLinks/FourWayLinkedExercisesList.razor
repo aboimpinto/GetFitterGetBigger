@@ -13,8 +13,10 @@
         </div>
     }
     
-    @* Warmup Exercises Section *@
-    <div class="bg-white rounded-lg shadow-sm border border-gray-200" data-testid="warmup-section" role="region" aria-label="Warmup exercises section">
+    @* Warmup Exercises Section - Only show if allowed in current context *@
+    @if (CanAddLinkType("Warmup"))
+    {
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200" data-testid="warmup-section" role="region" aria-label="Warmup exercises section">
         <div class="px-3 sm:px-4 py-3 border-b border-gray-200 bg-orange-50">
             <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                 <div class="flex items-center gap-2">
@@ -87,10 +89,26 @@
                 </div>
             }
         </div>
-    </div>
+        </div>
+    }
+    else
+    {
+        @* Show restriction message for warmup section *@
+        <div class="bg-gray-50 border border-gray-200 rounded-lg p-4 text-center" data-testid="warmup-section-restricted">
+            <div class="flex items-center justify-center gap-2 text-gray-500">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728L5.636 5.636m12.728 12.728L5.636 5.636" />
+                </svg>
+                <span class="text-sm">Warmup section not available for @CurrentContext exercises</span>
+            </div>
+            <p class="text-xs text-gray-400 mt-1">@CurrentContext exercises can only link to @(GetAllowedLinkTypes(CurrentContext))</p>
+        </div>
+    }
 
-    @* Cooldown Exercises Section *@
-    <div class="bg-white rounded-lg shadow-sm border border-gray-200" data-testid="cooldown-section" role="region" aria-label="Cooldown exercises section">
+    @* Cooldown Exercises Section - Only show if allowed in current context *@
+    @if (CanAddLinkType("Cooldown"))
+    {
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200" data-testid="cooldown-section" role="region" aria-label="Cooldown exercises section">
         <div class="px-3 sm:px-4 py-3 border-b border-gray-200 bg-blue-50">
             <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                 <div class="flex items-center gap-2">
@@ -163,9 +181,23 @@
                 </div>
             }
         </div>
-    </div>
+        </div>
+    }
+    else
+    {
+        @* Show restriction message for cooldown section *@
+        <div class="bg-gray-50 border border-gray-200 rounded-lg p-4 text-center" data-testid="cooldown-section-restricted">
+            <div class="flex items-center justify-center gap-2 text-gray-500">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728L5.636 5.636m12.728 12.728L5.636 5.636" />
+                </svg>
+                <span class="text-sm">Cooldown section not available for @CurrentContext exercises</span>
+            </div>
+            <p class="text-xs text-gray-400 mt-1">@CurrentContext exercises can only link to @(GetAllowedLinkTypes(CurrentContext))</p>
+        </div>
+    }
 
-    @* Alternative Exercises Section *@
+    @* Alternative Exercises Section - Always available *@
     <div class="bg-white rounded-lg shadow-sm border border-gray-200" data-testid="alternative-section" role="region" aria-label="Alternative exercises section">
         <div class="px-3 sm:px-4 py-3 border-b border-gray-200 bg-purple-50">
             <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
@@ -234,7 +266,9 @@
 
 @code {
     [Parameter, EditorRequired] public IExerciseLinkStateService StateService { get; set; } = null!;
+    [Parameter] public IExerciseLinkValidationService? ValidationService { get; set; }
     [Parameter] public bool Disabled { get; set; } = false;
+    [Parameter] public string CurrentContext { get; set; } = "Workout";
     [Parameter] public EventCallback<string> OnAddLink { get; set; }
     [Parameter] public EventCallback<ExerciseLinkDto> OnRemoveLink { get; set; }
     [Parameter] public EventCallback<(string linkType, Dictionary<string, int> reorderMap)> OnReorderLinks { get; set; }
@@ -244,6 +278,36 @@
     private EventCallback<ExerciseLinkDto> _warmupMoveDownHandler;
     private EventCallback<ExerciseLinkDto> _cooldownMoveUpHandler;
     private EventCallback<ExerciseLinkDto> _cooldownMoveDownHandler;
+    
+    /// <summary>
+    /// Check if a specific link type can be added in the current context
+    /// </summary>
+    private bool CanAddLinkType(string linkType)
+    {
+        // If validation service is not provided, allow all link types (backward compatibility)
+        if (ValidationService == null)
+            return true;
+        
+        // If CurrentContext is null or empty, default to "Workout" for backward compatibility
+        var context = string.IsNullOrEmpty(CurrentContext) ? "Workout" : CurrentContext;
+            
+        var validationResult = ValidationService.CanAddLinkType(context, linkType);
+        return validationResult.IsValid;
+    }
+    
+    /// <summary>
+    /// Get allowed link types for the current context as a user-friendly string
+    /// </summary>
+    private string GetAllowedLinkTypes(string context)
+    {
+        return context.ToLower() switch
+        {
+            "warmup" => "Workout and Alternative exercises",
+            "cooldown" => "Workout and Alternative exercises", 
+            "workout" => "Warmup, Cooldown, and Alternative exercises",
+            _ => "compatible exercises"
+        };
+    }
 
     protected override void OnInitialized()
     {

@@ -16,12 +16,15 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises.ExerciseLink
     public class FourWayLinkedExercisesListTests : TestContext
     {
         private readonly Mock<IExerciseLinkStateService> _mockStateService;
+        private readonly Mock<IExerciseLinkValidationService> _mockValidationService;
 
         public FourWayLinkedExercisesListTests()
         {
             _mockStateService = new Mock<IExerciseLinkStateService>();
+            _mockValidationService = new Mock<IExerciseLinkValidationService>();
 
             Services.AddSingleton(_mockStateService.Object);
+            Services.AddSingleton(_mockValidationService.Object);
 
             // Setup default state service behavior
             _mockStateService.Setup(s => s.IsSaving).Returns(false);
@@ -31,14 +34,24 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises.ExerciseLink
             _mockStateService.Setup(s => s.WarmupLinkCount).Returns(0);
             _mockStateService.Setup(s => s.CooldownLinkCount).Returns(0);
             _mockStateService.Setup(s => s.AlternativeLinkCount).Returns(0);
+            
+            // Setup default validation service behavior - Allow all link types in Workout context
+            _mockValidationService.Setup(v => v.CanAddLinkType("Workout", "Warmup"))
+                .Returns(ValidationResult.Success());
+            _mockValidationService.Setup(v => v.CanAddLinkType("Workout", "Cooldown"))
+                .Returns(ValidationResult.Success());
+            _mockValidationService.Setup(v => v.CanAddLinkType("Workout", "Alternative"))
+                .Returns(ValidationResult.Success());
         }
 
         [Fact]
-        public void Component_Should_Render_All_Three_Sections()
+        public void Component_Should_Render_All_Three_Sections_In_Workout_Context()
         {
             // Arrange & Act
             var component = RenderComponent<FourWayLinkedExercisesList>(parameters => parameters
-                .Add(p => p.StateService, _mockStateService.Object));
+                .Add(p => p.StateService, _mockStateService.Object)
+                .Add(p => p.ValidationService, _mockValidationService.Object)
+                .Add(p => p.CurrentContext, "Workout"));
 
             // Assert
             var warmupSection = component.Find("[data-testid='warmup-section']");
@@ -443,5 +456,167 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises.ExerciseLink
                 Assert.Contains("3", alternativeCount.TextContent);
             });
         }
+
+        #region Link Type Restriction Tests
+
+        [Fact]
+        public void Component_Should_Show_Only_Alternative_Section_In_Warmup_Context()
+        {
+            // Arrange - Setup validation service for warmup context restrictions
+            _mockValidationService.Setup(v => v.CanAddLinkType("Warmup", "Warmup"))
+                .Returns(ValidationResult.Failure("Warmup exercises can only link to Workout and Alternative exercises", "WARMUP_LINK_RESTRICTION"));
+            _mockValidationService.Setup(v => v.CanAddLinkType("Warmup", "Cooldown"))
+                .Returns(ValidationResult.Failure("Warmup exercises can only link to Workout and Alternative exercises", "WARMUP_LINK_RESTRICTION"));
+            _mockValidationService.Setup(v => v.CanAddLinkType("Warmup", "Alternative"))
+                .Returns(ValidationResult.Success());
+
+            // Act
+            var component = RenderComponent<FourWayLinkedExercisesList>(parameters => parameters
+                .Add(p => p.StateService, _mockStateService.Object)
+                .Add(p => p.ValidationService, _mockValidationService.Object)
+                .Add(p => p.CurrentContext, "Warmup"));
+
+            // Assert
+            // Should show restricted messages for warmup/cooldown sections
+            var warmupRestricted = component.Find("[data-testid='warmup-section-restricted']");
+            var cooldownRestricted = component.Find("[data-testid='cooldown-section-restricted']");
+            
+            Assert.NotNull(warmupRestricted);
+            Assert.NotNull(cooldownRestricted);
+            Assert.Contains("Warmup section not available for Warmup exercises", warmupRestricted.TextContent);
+            Assert.Contains("Cooldown section not available for Warmup exercises", cooldownRestricted.TextContent);
+
+            // Should show alternative section normally
+            var alternativeSection = component.Find("[data-testid='alternative-section']");
+            Assert.NotNull(alternativeSection);
+
+            // Should not show actual warmup/cooldown sections
+            var warmupSections = component.FindAll("[data-testid='warmup-section']");
+            var cooldownSections = component.FindAll("[data-testid='cooldown-section']");
+            Assert.Empty(warmupSections);
+            Assert.Empty(cooldownSections);
+        }
+
+        [Fact]
+        public void Component_Should_Show_Only_Alternative_Section_In_Cooldown_Context()
+        {
+            // Arrange - Setup validation service for cooldown context restrictions
+            _mockValidationService.Setup(v => v.CanAddLinkType("Cooldown", "Warmup"))
+                .Returns(ValidationResult.Failure("Cooldown exercises can only link to Workout and Alternative exercises", "COOLDOWN_LINK_RESTRICTION"));
+            _mockValidationService.Setup(v => v.CanAddLinkType("Cooldown", "Cooldown"))
+                .Returns(ValidationResult.Failure("Cooldown exercises can only link to Workout and Alternative exercises", "COOLDOWN_LINK_RESTRICTION"));
+            _mockValidationService.Setup(v => v.CanAddLinkType("Cooldown", "Alternative"))
+                .Returns(ValidationResult.Success());
+
+            // Act
+            var component = RenderComponent<FourWayLinkedExercisesList>(parameters => parameters
+                .Add(p => p.StateService, _mockStateService.Object)
+                .Add(p => p.ValidationService, _mockValidationService.Object)
+                .Add(p => p.CurrentContext, "Cooldown"));
+
+            // Assert
+            // Should show restricted messages for warmup/cooldown sections
+            var warmupRestricted = component.Find("[data-testid='warmup-section-restricted']");
+            var cooldownRestricted = component.Find("[data-testid='cooldown-section-restricted']");
+            
+            Assert.NotNull(warmupRestricted);
+            Assert.NotNull(cooldownRestricted);
+            Assert.Contains("Warmup section not available for Cooldown exercises", warmupRestricted.TextContent);
+            Assert.Contains("Cooldown section not available for Cooldown exercises", cooldownRestricted.TextContent);
+
+            // Should show alternative section normally
+            var alternativeSection = component.Find("[data-testid='alternative-section']");
+            Assert.NotNull(alternativeSection);
+
+            // Should not show actual warmup/cooldown sections
+            var warmupSections = component.FindAll("[data-testid='warmup-section']");
+            var cooldownSections = component.FindAll("[data-testid='cooldown-section']");
+            Assert.Empty(warmupSections);
+            Assert.Empty(cooldownSections);
+        }
+
+        [Fact]
+        public void Component_Should_Show_Helpful_Restriction_Messages()
+        {
+            // Arrange - Setup validation service for warmup context restrictions
+            _mockValidationService.Setup(v => v.CanAddLinkType("Warmup", "Warmup"))
+                .Returns(ValidationResult.Failure("Restricted", "WARMUP_LINK_RESTRICTION"));
+            _mockValidationService.Setup(v => v.CanAddLinkType("Warmup", "Cooldown"))
+                .Returns(ValidationResult.Failure("Restricted", "WARMUP_LINK_RESTRICTION"));
+            _mockValidationService.Setup(v => v.CanAddLinkType("Warmup", "Alternative"))
+                .Returns(ValidationResult.Success());
+
+            // Act
+            var component = RenderComponent<FourWayLinkedExercisesList>(parameters => parameters
+                .Add(p => p.StateService, _mockStateService.Object)
+                .Add(p => p.ValidationService, _mockValidationService.Object)
+                .Add(p => p.CurrentContext, "Warmup"));
+
+            // Assert
+            var warmupRestricted = component.Find("[data-testid='warmup-section-restricted']");
+            var cooldownRestricted = component.Find("[data-testid='cooldown-section-restricted']");
+            
+            // Check that helpful messages explain what's allowed
+            Assert.Contains("Warmup exercises can only link to Workout and Alternative exercises", warmupRestricted.TextContent);
+            Assert.Contains("Warmup exercises can only link to Workout and Alternative exercises", cooldownRestricted.TextContent);
+        }
+
+        [Theory]
+        [InlineData("Warmup")]
+        [InlineData("Cooldown")]
+        public void Component_Should_Validate_Link_Types_Based_On_Context(string context)
+        {
+            // Arrange - Setup validation service to restrict warmup/cooldown link types
+            _mockValidationService.Setup(v => v.CanAddLinkType(context, "Warmup"))
+                .Returns(ValidationResult.Failure($"{context} exercises cannot add warmup links", "RESTRICTION"));
+            _mockValidationService.Setup(v => v.CanAddLinkType(context, "Cooldown"))
+                .Returns(ValidationResult.Failure($"{context} exercises cannot add cooldown links", "RESTRICTION"));
+            _mockValidationService.Setup(v => v.CanAddLinkType(context, "Alternative"))
+                .Returns(ValidationResult.Success());
+
+            // Act
+            var component = RenderComponent<FourWayLinkedExercisesList>(parameters => parameters
+                .Add(p => p.StateService, _mockStateService.Object)
+                .Add(p => p.ValidationService, _mockValidationService.Object)
+                .Add(p => p.CurrentContext, context));
+
+            // Assert - Validation service should be called for restricted link types
+            // Note: Alternative section is always shown, so it doesn't check CanAddLinkType
+            _mockValidationService.Verify(v => v.CanAddLinkType(context, "Warmup"), Times.AtLeastOnce);
+            _mockValidationService.Verify(v => v.CanAddLinkType(context, "Cooldown"), Times.AtLeastOnce);
+        }
+
+        [Fact]
+        public void Component_Should_Show_All_Sections_When_All_Link_Types_Are_Allowed()
+        {
+            // Arrange - Setup validation service to allow all link types (like Workout context)
+            _mockValidationService.Setup(v => v.CanAddLinkType("Workout", "Warmup"))
+                .Returns(ValidationResult.Success());
+            _mockValidationService.Setup(v => v.CanAddLinkType("Workout", "Cooldown"))
+                .Returns(ValidationResult.Success());
+            _mockValidationService.Setup(v => v.CanAddLinkType("Workout", "Alternative"))
+                .Returns(ValidationResult.Success());
+
+            // Act
+            var component = RenderComponent<FourWayLinkedExercisesList>(parameters => parameters
+                .Add(p => p.StateService, _mockStateService.Object)
+                .Add(p => p.ValidationService, _mockValidationService.Object)
+                .Add(p => p.CurrentContext, "Workout"));
+
+            // Assert
+            var warmupSection = component.Find("[data-testid='warmup-section']");
+            var cooldownSection = component.Find("[data-testid='cooldown-section']");
+            var alternativeSection = component.Find("[data-testid='alternative-section']");
+
+            Assert.NotNull(warmupSection);
+            Assert.NotNull(cooldownSection);
+            Assert.NotNull(alternativeSection);
+
+            // Should not show any restricted messages
+            var restrictedMessages = component.FindAll("[data-testid$='-section-restricted']");
+            Assert.Empty(restrictedMessages);
+        }
+
+        #endregion
     }
 }

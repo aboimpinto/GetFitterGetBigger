@@ -1,7 +1,7 @@
 # Four-Way Exercise Linking System Implementation Tasks
 
 ## Feature Branch: `feature/exercise-link-four-way-enhancements`
-## Estimated Total Time: 33h45m (Original: 32h45m, Optimized: 29h15m, Added Phase 8: +4h30m)
+## Estimated Total Time: 34h30m (Original: 32h45m, Optimized: 29h15m, Added Phase 6: +4h30m, Phase 9: +45m)
 ## Actual Total Time: [To be calculated at completion]
 
 ## Pre-Implementation Checklist
@@ -1144,7 +1144,7 @@ Code Reviews:
 - Review #1: `/memory-bank/features/2-IN_PROGRESS/FEAT-022-four-way-linking/Phase_5_API_Integration/code-reviews/Code-Review-Phase-5-API-Integration-2025-01-27-02-50-APPROVED-001.md` - [APPROVED]
 
 Git Commits:
-- Uncommitted changes (to be committed after review approval)
+- `fbb43658` - fix(admin): set DisplayOrder for Warmup/Cooldown exercise links
 
 Status: ✅ Phase 5 COMPLETE - APPROVED FOR PRODUCTION
 
@@ -1153,13 +1153,157 @@ Notes:
 - Sophisticated retry logic with selective error handling
 - Intelligent caching with differentiated expiration times
 - Enterprise-grade API integration setting project standards
-- Ready to proceed with Phase 6: Testing & Polish
+- DisplayOrder properly set for sequenced link types
+- Ready to proceed with Phase 6: Exercise Link Type Restrictions
 
 ---
 
-## Phase 6: Testing & Polish - Estimated: 5h30m (Original Est: 6h)
+## Phase 6: Exercise Link Type Restrictions - Estimated: 4h30m
+**EXTRA WORK - Added after Phase 5 completion based on user testing feedback**
 
-### Task 6.1: Comprehensive component integration testing
+### Task 6.1: Implement exercise type-based link restrictions
+`[Complete]` (Est: 1h45m, Actual: 2h00m) - Completed: 2025-09-06 16:30
+
+**Implementation Notes:**
+- **Validation Service**: Enhanced `IExerciseLinkValidationService` with `CanAddLinkType(context, linkType)` method
+- **Business Rules**: Implemented proper restrictions: Warmup/Cooldown → only Workout & Alternative; Workout → all types
+- **Component Conditional Rendering**: Updated `FourWayLinkedExercisesList` with context-aware section visibility
+- **Backward Compatibility**: ValidationService parameter is optional to maintain existing functionality
+- **User Experience**: Restriction messages explain what link types are allowed in each context
+- **Testing**: Comprehensive bUnit tests (29 new tests) covering all restriction scenarios
+- **Manager Integration**: Added validation check in `FourWayExerciseLinkManager.HandleAddLink()` before showing modal
+
+**Key Files Modified:**
+- `Services/IExerciseLinkValidationService.cs` - Added CanAddLinkType method
+- `Services/ExerciseLinkValidationService.cs` - Implemented restriction logic
+- `Components/.../FourWayLinkedExercisesList.razor` - Conditional rendering with restriction messages
+- `Components/.../FourWayExerciseLinkManager.razor.cs` - Added validation in HandleAddLink method
+- `Tests/Services/ExerciseLinkValidationServiceTests.cs` - Added 15 new validation tests
+- `Tests/Components/.../FourWayLinkedExercisesListTests.cs` - Added 5 new restriction tests
+
+**Discovered Issue:**
+During user testing, it was identified that the system allows inappropriate link types based on exercise types. For example:
+- A Warmup exercise can currently add other Warmup exercises, which doesn't make logical sense
+- A Cooldown exercise can add other Cooldown exercises, creating circular relationships
+
+**Business Logic Requirements:**
+Based on exercise type context, restrict available link types as follows:
+- **Warmup exercises** → Can only add: Workout and Alternative links
+- **Cooldown exercises** → Can only add: Workout and Alternative links  
+- **Workout exercises** → Can add: Warmup, Cooldown, and Alternative links
+- **Multi-type exercises** → Show all options when in a context that allows them
+
+**Implementation Steps:**
+1. Update `FourWayLinkedExercisesList.razor` to conditionally show/hide sections
+2. Modify link type availability based on current exercise context
+3. Add validation in `ExerciseLinkValidationService` to enforce restrictions
+4. Update UI to clearly communicate why certain options are unavailable
+
+**Component Changes:**
+- `FourWayLinkedExercisesList.razor` - Add conditional rendering logic
+- `FourWayExerciseLinkManager.razor.cs` - Implement restriction logic
+- `ExerciseLinkValidationService.cs` - Add server-side validation
+
+### Task 6.2: Update validation services for type restrictions
+`[Complete]` (Est: 1h15m, Actual: Included in Task 6.1) - Completed: 2025-09-06 16:30
+
+**Objective:**
+Enhance validation services to prevent invalid link type combinations at the service layer.
+
+**Implementation Focus:**
+- Add validation rules in `ExerciseLinkValidationService`
+- Implement `CanAddLinkType(exerciseType, linkType)` method
+- Return user-friendly error messages for restricted operations
+- Ensure API calls are blocked if restrictions are violated
+
+**Validation Rules:**
+```csharp
+public bool CanAddLinkType(string exerciseContext, string linkType)
+{
+    return exerciseContext switch
+    {
+        "Warmup" => linkType is "Workout" or "Alternative",
+        "Cooldown" => linkType is "Workout" or "Alternative",
+        "Workout" => linkType is "Warmup" or "Cooldown" or "Alternative",
+        _ => false
+    };
+}
+```
+
+### Task 6.3: Create comprehensive tests for link restrictions
+`[Complete]` (Est: 1h00m, Actual: 30m) - Completed: 2025-09-06 12:05
+
+**Test Coverage Required:**
+- Unit tests for validation service restriction logic
+- bUnit tests for conditional UI rendering
+- Integration tests for end-to-end restriction enforcement
+- Edge case testing for multi-type exercises
+
+**Test Scenarios:**
+1. Warmup exercise cannot add Warmup or Cooldown links
+2. Cooldown exercise cannot add Warmup or Cooldown links
+3. Workout exercise can add all link types
+4. Multi-type exercise respects current context restrictions
+5. Validation prevents bypassing UI restrictions via direct API calls
+
+**Test Files:**
+- `Tests/Services/ExerciseLinkValidationServiceTests.cs` - Add restriction tests
+- `Tests/Components/FourWayLinkedExercisesListTests.cs` - UI visibility tests
+- `Tests/Components/FourWayExerciseLinkManagerTests.cs` - Context restriction tests
+
+### Task 6.4: Update UI to communicate restrictions
+`[Complete]` (Est: 30m, Actual: Included in Task 6.1) - Completed: 2025-09-06 12:00
+
+**UI Enhancements:**
+- Add tooltips explaining why certain sections are hidden
+- Show informational messages when sections are disabled
+- Update empty states to reflect restriction context
+- Ensure accessibility with proper ARIA labels
+
+**Example UI Messages:**
+- "Warmup exercises can only link to workouts or alternatives"
+- "This section is not available for [ExerciseType] exercises"
+- Icon indicators for restricted sections with explanatory tooltips
+
+---
+
+## CHECKPOINT: Phase 6 Complete - Exercise Link Type Restrictions
+`[Pending]` - Date: [TO BE COMPLETED]
+
+Build Report:
+- Admin Project: [STATUS] [X errors, Y warnings]
+- Test Project (bUnit): [STATUS] [X errors, Y warnings]
+
+Implementation Summary:
+- **Link Restrictions**: Warmup/Cooldown exercises properly restricted from circular relationships
+- **Validation Layer**: Server-side validation prevents invalid link type combinations
+- **UI Communication**: Clear messaging explains why certain options are unavailable
+- **Test Coverage**: Comprehensive tests ensure restrictions cannot be bypassed
+
+Restriction Logic Implemented:
+- ✅ Warmup → Only Workout and Alternative links allowed
+- ✅ Cooldown → Only Workout and Alternative links allowed
+- ✅ Workout → All link types allowed (Warmup, Cooldown, Alternative)
+- ✅ Multi-type exercises respect context-specific restrictions
+
+Code Review: `/memory-bank/features/2-IN_PROGRESS/FEAT-022-four-way-linking/code-reviews/Phase_6_Restrictions/Code-Review-Phase-6-Restrictions-YYYY-MM-DD-HH-MM-[STATUS].md` - [[STATUS]]
+
+Git Commit: `[COMMIT_HASH]` - fix(admin): implement exercise link type restrictions based on context
+
+Status: [STATUS] Phase 6
+
+Notes: 
+- Extra phase added based on user testing feedback
+- Prevents illogical link combinations (e.g., Warmup → Warmup)
+- Improves UX by hiding unavailable options with clear explanations
+- Maintains backward compatibility with existing links
+- Ready to proceed with Phase 7: Testing & Polish
+
+---
+
+## Phase 7: Testing & Polish - Estimated: 5h30m (Original Est: 6h)
+
+### Task 7.1: Comprehensive component integration testing
 `[Pending]` (Est: 1h45m)
 
 **Implementation Notes:**
@@ -1186,7 +1330,7 @@ Notes:
 
 **Location:** `Tests/Components/ExerciseLinks/FourWayLinkingIntegrationTests.cs`
 
-### Task 6.2: Accessibility compliance testing
+### Task 7.2: Accessibility compliance testing
 `[Pending]` (Est: 1h15m)
 
 **Implementation Notes:**
@@ -1224,7 +1368,7 @@ Notes:
 
 **Testing:** Automated accessibility testing with focus on keyboard navigation
 
-### Task 6.3: Performance optimization for large datasets
+### Task 7.3: Performance optimization for large datasets
 `[Pending]` (Est: 50m)
 
 **Implementation Notes:**
@@ -1247,7 +1391,7 @@ Notes:
 - Context switching in < 200ms
 - Alternative list scrolling stays responsive with 500+ items
 
-### Task 6.4: Manual testing preparation and user acceptance
+### Task 7.4: Manual testing preparation and user acceptance
 `[Pending]` (Est: 1h20m)
 
 **Implementation Notes:**
@@ -1288,7 +1432,7 @@ Notes:
 
 ---
 
-## CHECKPOINT: Phase 6 Complete - Testing & Polish
+## CHECKPOINT: Phase 7 Complete - Testing & Polish
 `[Pending]` - Date: [TO BE COMPLETED]
 
 Build Report:
@@ -1302,23 +1446,23 @@ Testing & Quality Assurance:
 - **Manual Testing**: Comprehensive test scenarios prepared for user acceptance
 - **Browser Compatibility**: Cross-browser testing completed successfully
 
-Code Review: `/memory-bank/features/2-IN_PROGRESS/FEAT-022-four-way-linking/code-reviews/Phase_6_Testing/Code-Review-Phase-6-Testing-YYYY-MM-DD-HH-MM-[STATUS].md` - [[STATUS]]
+Code Review: `/memory-bank/features/2-IN_PROGRESS/FEAT-022-four-way-linking/code-reviews/Phase_7_Testing/Code-Review-Phase-7-Testing-YYYY-MM-DD-HH-MM-[STATUS].md` - [[STATUS]]
 
 Git Commit: `[COMMIT_HASH]` - [commit message summary]
 
-Status: [STATUS] Phase 6
+Status: [STATUS] Phase 7
 
 Notes: 
 - All Blazor components properly tested with bUnit framework
 - Performance optimizations implemented for large datasets
 - Accessibility compliance ensures inclusive user experience
-- Ready for Phase 7: Documentation & Deployment
+- Ready for Phase 8: Documentation & Deployment
 
 ---
 
-## Phase 7: Documentation & Deployment - Estimated: 1h20m (Original Est: 1h30m)
+## Phase 8: Documentation & Deployment - Estimated: 1h20m (Original Est: 1h30m)
 
-### Task 7.1: Update component documentation
+### Task 8.1: Update component documentation
 `[Pending]` (Est: 25m)
 
 **Implementation Notes:**
@@ -1335,7 +1479,7 @@ Notes:
 - Add alternative linking examples
 - Update troubleshooting guide
 
-### Task 7.2: Create feature quick reference
+### Task 8.2: Create feature quick reference
 `[Pending]` (Est: 25m)
 
 **Implementation Notes:**
@@ -1352,7 +1496,7 @@ Notes:
 - Maximum link limits
 - Keyboard shortcuts and accessibility features
 
-### Task 7.3: Deployment readiness check
+### Task 8.3: Deployment readiness check
 `[Pending]` (Est: 30m)
 
 **Implementation Notes:**
@@ -1372,7 +1516,7 @@ Notes:
 
 ---
 
-## CHECKPOINT: Phase 7 Complete - Documentation & Deployment
+## CHECKPOINT: Phase 8 Complete - Documentation & Deployment
 `[Pending]` - Date: [TO BE COMPLETED]
 
 Build Report:
@@ -1386,11 +1530,11 @@ Documentation & Deployment:
 - **API Integration**: FEAT-030 endpoint integration verified in production
 - **Performance**: Production bundle optimized and tested
 
-Code Review: `/memory-bank/features/2-IN_PROGRESS/FEAT-022-four-way-linking/code-reviews/Phase_7_Docs/Code-Review-Phase-7-Docs-YYYY-MM-DD-HH-MM-[STATUS].md` - [[STATUS]]
+Code Review: `/memory-bank/features/2-IN_PROGRESS/FEAT-022-four-way-linking/code-reviews/Phase_8_Docs/Code-Review-Phase-8-Docs-YYYY-MM-DD-HH-MM-[STATUS].md` - [[STATUS]]
 
 Git Commit: `[COMMIT_HASH]` - [commit message summary]
 
-Status: [STATUS] Phase 7
+Status: [STATUS] Phase 8
 
 Notes: 
 - Blazor component documentation complete with practical examples
@@ -1400,132 +1544,7 @@ Notes:
 
 ---
 
-## Phase 8: Exercise Link Type Restrictions - Estimated: 4h30m
-**EXTRA WORK - Added after Phase 5 completion based on user testing feedback**
-
-### Task 8.1: Implement exercise type-based link restrictions
-`[TODO]` (Est: 1h45m)
-
-**Discovered Issue:**
-During user testing, it was identified that the system allows inappropriate link types based on exercise types. For example:
-- A Warmup exercise can currently add other Warmup exercises, which doesn't make logical sense
-- A Cooldown exercise can add other Cooldown exercises, creating circular relationships
-
-**Business Logic Requirements:**
-Based on exercise type context, restrict available link types as follows:
-- **Warmup exercises** → Can only add: Workout and Alternative links
-- **Cooldown exercises** → Can only add: Workout and Alternative links  
-- **Workout exercises** → Can add: Warmup, Cooldown, and Alternative links
-- **Multi-type exercises** → Show all options when in a context that allows them
-
-**Implementation Steps:**
-1. Update `FourWayLinkedExercisesList.razor` to conditionally show/hide sections
-2. Modify link type availability based on current exercise context
-3. Add validation in `ExerciseLinkValidationService` to enforce restrictions
-4. Update UI to clearly communicate why certain options are unavailable
-
-**Component Changes:**
-- `FourWayLinkedExercisesList.razor` - Add conditional rendering logic
-- `FourWayExerciseLinkManager.razor.cs` - Implement restriction logic
-- `ExerciseLinkValidationService.cs` - Add server-side validation
-
-### Task 8.2: Update validation services for type restrictions
-`[TODO]` (Est: 1h15m)
-
-**Objective:**
-Enhance validation services to prevent invalid link type combinations at the service layer.
-
-**Implementation Focus:**
-- Add validation rules in `ExerciseLinkValidationService`
-- Implement `CanAddLinkType(exerciseType, linkType)` method
-- Return user-friendly error messages for restricted operations
-- Ensure API calls are blocked if restrictions are violated
-
-**Validation Rules:**
-```csharp
-public bool CanAddLinkType(string exerciseContext, string linkType)
-{
-    return exerciseContext switch
-    {
-        "Warmup" => linkType is "Workout" or "Alternative",
-        "Cooldown" => linkType is "Workout" or "Alternative",
-        "Workout" => linkType is "Warmup" or "Cooldown" or "Alternative",
-        _ => false
-    };
-}
-```
-
-### Task 8.3: Create comprehensive tests for link restrictions
-`[TODO]` (Est: 1h00m)
-
-**Test Coverage Required:**
-- Unit tests for validation service restriction logic
-- bUnit tests for conditional UI rendering
-- Integration tests for end-to-end restriction enforcement
-- Edge case testing for multi-type exercises
-
-**Test Scenarios:**
-1. Warmup exercise cannot add Warmup or Cooldown links
-2. Cooldown exercise cannot add Warmup or Cooldown links
-3. Workout exercise can add all link types
-4. Multi-type exercise respects current context restrictions
-5. Validation prevents bypassing UI restrictions via direct API calls
-
-**Test Files:**
-- `Tests/Services/ExerciseLinkValidationServiceTests.cs` - Add restriction tests
-- `Tests/Components/FourWayLinkedExercisesListTests.cs` - UI visibility tests
-- `Tests/Components/FourWayExerciseLinkManagerTests.cs` - Context restriction tests
-
-### Task 8.4: Update UI to communicate restrictions
-`[TODO]` (Est: 30m)
-
-**UI Enhancements:**
-- Add tooltips explaining why certain sections are hidden
-- Show informational messages when sections are disabled
-- Update empty states to reflect restriction context
-- Ensure accessibility with proper ARIA labels
-
-**Example UI Messages:**
-- "Warmup exercises can only link to workouts or alternatives"
-- "This section is not available for [ExerciseType] exercises"
-- Icon indicators for restricted sections with explanatory tooltips
-
----
-
-## CHECKPOINT: Phase 8 Complete - Exercise Link Type Restrictions
-`[Pending]` - Date: [TO BE COMPLETED]
-
-Build Report:
-- Admin Project: [STATUS] [X errors, Y warnings]
-- Test Project (bUnit): [STATUS] [X errors, Y warnings]
-
-Implementation Summary:
-- **Link Restrictions**: Warmup/Cooldown exercises properly restricted from circular relationships
-- **Validation Layer**: Server-side validation prevents invalid link type combinations
-- **UI Communication**: Clear messaging explains why certain options are unavailable
-- **Test Coverage**: Comprehensive tests ensure restrictions cannot be bypassed
-
-Restriction Logic Implemented:
-- ✅ Warmup → Only Workout and Alternative links allowed
-- ✅ Cooldown → Only Workout and Alternative links allowed
-- ✅ Workout → All link types allowed (Warmup, Cooldown, Alternative)
-- ✅ Multi-type exercises respect context-specific restrictions
-
-Code Review: `/memory-bank/features/2-IN_PROGRESS/FEAT-022-four-way-linking/code-reviews/Phase_8_Restrictions/Code-Review-Phase-8-Restrictions-YYYY-MM-DD-HH-MM-[STATUS].md` - [[STATUS]]
-
-Git Commit: `[COMMIT_HASH]` - fix(admin): implement exercise link type restrictions based on context
-
-Status: [STATUS] Phase 8
-
-Notes: 
-- Extra phase added based on user testing feedback
-- Prevents illogical link combinations (e.g., Warmup → Warmup)
-- Improves UX by hiding unavailable options with clear explanations
-- Maintains backward compatibility with existing links
-
----
-
-## Manual Testing & User Acceptance
+## Phase 9: Manual Testing & User Acceptance
 
 ### Task 9.1: Manual testing by user
 `[ReadyForTesting]` (Est: 45m)
@@ -1629,7 +1648,7 @@ Notes:
 ---
 
 ## Time Tracking Summary
-- **Total Estimated Time:** 33h45m (Original: 32h45m, Added Phase 8: +4h30m)
+- **Total Estimated Time:** 34h30m (Original: 32h45m, Added Phase 6: +4h30m, Phase 9: +45m)
 - **Time Optimization:** 3h30m reduction through Blazor-specific optimizations (before Phase 8)
 - **Total Actual Time:** [To be calculated from task durations]
 - **AI Assistance Impact:** [% reduction in time]
@@ -1642,9 +1661,10 @@ Notes:
 - **Phase 3 - Base Components:** 7h15m (reduced from 8h)
 - **Phase 4 - Feature Components:** 7h45m (reduced from 8h30m)
 - **Phase 5 - API Integration:** 3h45m (reduced from 4h15m)
-- **Phase 6 - Testing & Polish:** 5h30m (reduced from 6h)
-- **Phase 7 - Documentation & Deployment:** 1h20m (reduced from 1h30m)
-- **Phase 8 - Exercise Link Type Restrictions:** 4h30m (EXTRA - Added based on user feedback)
+- **Phase 6 - Exercise Link Type Restrictions:** 4h30m (EXTRA - Added based on user feedback)
+- **Phase 7 - Testing & Polish:** 5h30m (reduced from 6h)
+- **Phase 8 - Documentation & Deployment:** 1h20m (reduced from 1h30m)
+- **Phase 9 - Manual Testing & User Acceptance:** 45m (final validation)
 
 ## Critical Success Factors
 

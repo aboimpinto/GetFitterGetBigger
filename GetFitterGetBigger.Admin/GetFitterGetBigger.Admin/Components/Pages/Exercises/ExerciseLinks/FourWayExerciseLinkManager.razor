@@ -89,6 +89,8 @@
                             @* Workout Context View - Shows warmups, cooldowns, and alternatives *@
                             <div class="space-y-6" data-testid="workout-context-view">
                                 <FourWayLinkedExercisesList StateService="@StateService"
+                                                           ValidationService="@ValidationService"
+                                                           CurrentContext="@StateService.ActiveContext"
                                                            Disabled="@(StateService.IsSaving || StateService.IsDeleting)"
                                                            OnAddLink="@HandleAddLink"
                                                            OnRemoveLink="@HandleRemoveLink"

@@ -29,6 +29,12 @@ public interface IExerciseLinkValidationService
     /// Performs all validations for creating a new link
     /// </summary>
     Task<ValidationResult> ValidateCreateLink(ExerciseDto sourceExercise, string targetExerciseId, ExerciseLinkType linkType, IEnumerable<ExerciseLinkDto> existingLinks);
+
+    /// <summary>
+    /// Validates if a specific link type can be added based on the source exercise's current context
+    /// Implements business rules: Warmup/Cooldown exercises can only add Workout and Alternative links
+    /// </summary>
+    ValidationResult CanAddLinkType(string exerciseContext, string linkType);
 }
 
 public class ValidationResult

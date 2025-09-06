@@ -138,10 +138,19 @@ namespace GetFitterGetBigger.Admin.Components.Pages.Exercises.ExerciseLinks
         }
 
         /// <summary>
-        /// Handle adding new exercise links
+        /// Handle adding new exercise links - Check restrictions first
         /// </summary>
         private void HandleAddLink(string linkType)
         {
+            // Check if this link type can be added in the current context
+            var validationResult = ValidationService.CanAddLinkType(StateService.ActiveContext ?? "Workout", linkType);
+            
+            if (!validationResult.IsValid)
+            {
+                StateService.SetError(validationResult.ErrorMessage ?? $"Cannot add {linkType} links in {StateService.ActiveContext} context");
+                return;
+            }
+            
             _addLinkType = linkType;
             _showAddModal = true;
         }

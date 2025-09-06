@@ -217,4 +217,47 @@ public class ExerciseLinkValidationService : IExerciseLinkValidationService
 
         return ValidationResult.Success();
     }
+
+    public ValidationResult CanAddLinkType(string exerciseContext, string linkType)
+    {
+        if (string.IsNullOrEmpty(exerciseContext))
+        {
+            return ValidationResult.Failure("Exercise context cannot be null or empty", "INVALID_CONTEXT");
+        }
+
+        if (string.IsNullOrEmpty(linkType))
+        {
+            return ValidationResult.Failure("Link type cannot be null or empty", "INVALID_LINK_TYPE");
+        }
+
+        // Normalize inputs
+        var context = exerciseContext.ToLower();
+        var type = linkType.ToLower();
+
+        // Business rules for link type restrictions
+        return context switch
+        {
+            "warmup" => type is "workout" or "alternative" 
+                ? ValidationResult.Success() 
+                : ValidationResult.Failure(
+                    $"Warmup exercises can only link to Workout and Alternative exercises. Cannot add {linkType} links.",
+                    "WARMUP_LINK_RESTRICTION"),
+            
+            "cooldown" => type is "workout" or "alternative"
+                ? ValidationResult.Success()
+                : ValidationResult.Failure(
+                    $"Cooldown exercises can only link to Workout and Alternative exercises. Cannot add {linkType} links.",
+                    "COOLDOWN_LINK_RESTRICTION"),
+            
+            "workout" => type is "warmup" or "cooldown" or "alternative"
+                ? ValidationResult.Success()
+                : ValidationResult.Failure(
+                    $"Invalid link type '{linkType}' for Workout exercises. Allowed types: Warmup, Cooldown, Alternative.",
+                    "WORKOUT_INVALID_LINK_TYPE"),
+            
+            _ => ValidationResult.Failure(
+                $"Unknown exercise context '{exerciseContext}'. Valid contexts: Workout, Warmup, Cooldown.",
+                "UNKNOWN_CONTEXT")
+        };
+    }
 }

@@ -58,6 +58,10 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
                 .WithExerciseTypes(("Warmup", "Warmup exercise"))
                 .Build();
 
+            // Setup default validation service behavior - allow all link types by default
+            _validationServiceMock.Setup(v => v.CanAddLinkType(It.IsAny<string>(), It.IsAny<string>()))
+                .Returns(ValidationResult.Success());
+
             // Setup default state service behavior
             _exerciseStateServiceMock.SetupGet(x => x.ExerciseTypes).Returns(_exerciseTypes);
             _exerciseStateServiceMock.SetupGet(x => x.IsLoadingExercise).Returns(false);
