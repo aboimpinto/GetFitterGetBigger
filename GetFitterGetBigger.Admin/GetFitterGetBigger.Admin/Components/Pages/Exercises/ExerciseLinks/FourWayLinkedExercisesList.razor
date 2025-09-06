@@ -15,10 +15,13 @@
     
     @{
         // Determine which sections to show based on current context
+        // The logic is: we show sections for link types that CAN be added to the current exercise
+        // For example, a Warmup exercise can link to Workout and Alternative exercises,
+        // so we show those sections when viewing a Warmup exercise
         var showWarmup = CanAddLinkType("Warmup");
         var showCooldown = CanAddLinkType("Cooldown");
         var showWorkout = CanAddLinkType("Workout");
-        var showAlternative = true; // Alternative is always allowed
+        var showAlternative = CanAddLinkType("Alternative");
         
         // Calculate grid columns based on visible sections
         var visibleSections = 0;
@@ -27,19 +30,24 @@
         if (showWorkout) visibleSections++;
         if (showAlternative) visibleSections++;
         
-        var gridClass = visibleSections switch
+        // Use flexbox for more reliable side-by-side layout
+        var containerStyle = "display: flex !important; gap: 1rem !important; width: 100% !important; flex-wrap: wrap !important;";
+        var itemStyle = visibleSections switch
         {
-            2 => "grid grid-cols-2 gap-4",
-            3 => "grid grid-cols-3 gap-4",
-            _ => "grid grid-cols-1 gap-4"
+            2 => "flex: 1 1 calc(50% - 0.5rem) !important; max-width: calc(50% - 0.5rem) !important;",
+            3 => "flex: 1 1 calc(33.333% - 0.667rem) !important; max-width: calc(33.333% - 0.667rem) !important;",
+            _ => "flex: 1 1 100% !important; max-width: 100% !important;"
         };
+        
+        // Debug output
+        Console.WriteLine($"[FourWayLinkedExercisesList] Visible sections: {visibleSections} (Warmup={showWarmup}, Cooldown={showCooldown}, Workout={showWorkout}, Alternative={showAlternative})");
     }
     
-    <div class="@gridClass">
+    <div style="@containerStyle">
         @* Warmup Exercises Section *@
         @if (showWarmup)
         {
-            <div class="bg-white rounded-lg shadow-sm border border-gray-200 min-h-[300px]" data-testid="warmup-section" role="region" aria-label="Warmup exercises section">
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 min-h-[300px]" style="@itemStyle" data-testid="warmup-section" role="region" aria-label="Warmup exercises section">
                 <div class="px-3 sm:px-4 py-3 border-b border-gray-200 bg-orange-50">
                     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                         <div class="flex items-center gap-2">
@@ -109,7 +117,7 @@
         @* Cooldown Exercises Section *@
         @if (showCooldown)
         {
-            <div class="bg-white rounded-lg shadow-sm border border-gray-200 min-h-[300px]" data-testid="cooldown-section" role="region" aria-label="Cooldown exercises section">
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 min-h-[300px]" style="@itemStyle" data-testid="cooldown-section" role="region" aria-label="Cooldown exercises section">
                 <div class="px-3 sm:px-4 py-3 border-b border-gray-200 bg-blue-50">
                     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                         <div class="flex items-center gap-2">
@@ -179,7 +187,7 @@
         @* Workout Exercises Section *@
         @if (showWorkout)
         {
-            <div class="bg-white rounded-lg shadow-sm border border-gray-200 min-h-[300px]" data-testid="workout-section" role="region" aria-label="Workout exercises section">
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 min-h-[300px]" style="@itemStyle" data-testid="workout-section" role="region" aria-label="Workout exercises section">
                 <div class="px-3 sm:px-4 py-3 border-b border-gray-200 bg-green-50">
                     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                         <div class="flex items-center gap-2">
@@ -236,7 +244,7 @@
         @* Alternative Exercises Section - Always visible *@
         @if (showAlternative)
         {
-            <div class="bg-white rounded-lg shadow-sm border border-gray-200 min-h-[300px]" data-testid="alternative-section" role="region" aria-label="Alternative exercises section">
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 min-h-[300px]" style="@itemStyle" data-testid="alternative-section" role="region" aria-label="Alternative exercises section">
                 <div class="px-3 sm:px-4 py-3 border-b border-gray-200 bg-purple-50">
                     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                         <div class="flex items-center gap-2">
@@ -314,13 +322,15 @@
     {
         // If validation service is not provided, allow all link types (backward compatibility)
         if (ValidationService == null)
+        {
             return true;
+        }
         
         // If CurrentContext is null or empty, default to "Workout" for backward compatibility
         var context = string.IsNullOrEmpty(CurrentContext) ? "Workout" : CurrentContext;
-            
+        
         var validationResult = ValidationService.CanAddLinkType(context, linkType);
-        return validationResult?.IsValid ?? false; // Default to false if null - be restrictive
+        return validationResult?.IsValid ?? false;
     }
 
     protected override void OnInitialized()

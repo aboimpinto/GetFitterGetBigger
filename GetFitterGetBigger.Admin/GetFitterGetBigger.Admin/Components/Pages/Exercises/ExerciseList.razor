@@ -127,7 +127,7 @@
                         <tr class="hover:bg-gray-50">
                             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                                 <div class="flex items-center gap-2">
-                                    <a @onclick="() => NavigateToEdit(exercise.Id)" @onclick:preventDefault="true" href="#" class="hover:text-blue-600 cursor-pointer">@exercise.Name</a>
+                                    <a href="@($"/exercises/{exercise.Id}")" class="hover:text-blue-600 cursor-pointer">@exercise.Name</a>
                                     @if (exercise.HasLinks)
                                     {
                                         <div class="flex items-center gap-1 relative group" data-testid="link-indicator">
@@ -233,8 +233,8 @@
                                 }
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                <a @onclick="() => NavigateToView(exercise.Id)" @onclick:preventDefault="true" href="#" class="text-blue-600 hover:text-blue-900 mr-3 cursor-pointer">View</a>
-                                <a @onclick="() => NavigateToEdit(exercise.Id)" @onclick:preventDefault="true" href="#" class="text-indigo-600 hover:text-indigo-900 cursor-pointer">Edit</a>
+                                <a href="@($"/exercises/{exercise.Id}")" class="text-blue-600 hover:text-blue-900 mr-3 cursor-pointer">View</a>
+                                <a href="@($"/exercises/{exercise.Id}/edit")" class="text-indigo-600 hover:text-indigo-900 cursor-pointer">Edit</a>
                             </td>
                         </tr>
                     }
@@ -318,7 +318,8 @@
             await WeightTypeStateService.LoadWeightTypesAsync();
         }
         
-        // Check if we have a stored page to return to
+        // Always try to load with stored page first
+        // This ensures browser back navigation works correctly
         if (StateService.HasStoredPage)
         {
             await StateService.LoadExercisesWithStoredPageAsync();
@@ -331,10 +332,31 @@
             filterIsActive = StateService.CurrentFilter.IsActive?.ToString().ToLower() ?? "";
             filterHasLinks = StateService.CurrentFilter.HasLinks?.ToString().ToLower() ?? "";
         }
+        else if (StateService.CurrentPage == null)
+        {
+            // Only initialize if we don't have any data loaded
+            // This prevents re-initialization on browser back navigation
+            await StateService.InitializeAsync();
+        }
         else
         {
-            // Clear state when navigating from elsewhere (not from exercise forms)
-            await StateService.InitializeAsync();
+            // We have data but no stored page - just restore filter UI values
+            filterName = StateService.CurrentFilter.Name ?? "";
+            filterDifficulty = StateService.CurrentFilter.DifficultyId ?? "";
+            filterMuscleGroup = StateService.CurrentFilter.MuscleGroupIds?.FirstOrDefault() ?? "";
+            filterWeightType = StateService.CurrentFilter.WeightTypeIds?.FirstOrDefault() ?? "";
+            filterIsActive = StateService.CurrentFilter.IsActive?.ToString().ToLower() ?? "";
+            filterHasLinks = StateService.CurrentFilter.HasLinks?.ToString().ToLower() ?? "";
+        }
+    }
+    
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && StateService.CurrentPage != null)
+        {
+            // Store the page state after first render when we have data
+            // This ensures we can return to this exact state
+            StateService.StoreReturnPage();
         }
     }
 
@@ -408,7 +430,7 @@
     private void NavigateToView(string id)
     {
         StateService.StoreReturnPage();
-        Navigation.NavigateTo($"/exercises/{id}");
+        Navigation.NavigateTo($"/exercises/{id}", forceLoad: false);
     }
 
     private void NavigateToEdit(string id)

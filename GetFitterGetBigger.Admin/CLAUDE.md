@@ -23,6 +23,15 @@ Note: When in the main repository folder, only documentation work is performed.
 - Common pitfalls and debugging strategies
 - Quick reference for both tech stacks
 
+## Navigation Guidelines
+
+**IMPORTANT**: When implementing navigation in Blazor components, always follow the **memory-bank/patterns/BLAZOR-NAVIGATION-BEST-PRACTICES.md** guide. This document contains:
+- When to use standard HTML links vs NavigationManager
+- Browser history management best practices
+- State persistence across navigation
+- Common navigation pitfalls and solutions
+- Testing navigation patterns
+
 Key requirements for all component tests:
 1. Add `data-testid` attributes to interactive elements (Blazor) or use semantic queries (React)
 2. Use `internal` visibility for testable methods/fields in Blazor components

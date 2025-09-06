@@ -164,6 +164,12 @@ namespace GetFitterGetBigger.Admin.Services
         /// Initialize the state service for a specific exercise
         /// </summary>
         Task InitializeForExerciseAsync(string exerciseId, string exerciseName);
+        
+        /// <summary>
+        /// Initialize the state service for a specific exercise with full exercise data
+        /// This overload sets the context based on exercise types
+        /// </summary>
+        Task InitializeForExerciseAsync(ExerciseDto exercise);
 
         /// <summary>
         /// Load links for the current exercise

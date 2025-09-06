@@ -50,14 +50,8 @@ namespace GetFitterGetBigger.Admin.Components.Pages.Exercises.ExerciseLinks
             if (ShowComponent && !IsRestExercise)
             {
                 StateService.OnChange += HandleStateChange;
-                await StateService.InitializeForExerciseAsync(Exercise.Id, Exercise.Name);
-                
-                // Set initial context based on exercise types
-                var contexts = GetExerciseContexts().ToList();
-                if (contexts.Any() && string.IsNullOrEmpty(StateService.ActiveContext))
-                {
-                    await StateService.SwitchContextAsync(contexts.First());
-                }
+                // Use the new overload that takes the full Exercise object to properly set context
+                await StateService.InitializeForExerciseAsync(Exercise);
             }
         }
 
@@ -68,14 +62,8 @@ namespace GetFitterGetBigger.Admin.Components.Pages.Exercises.ExerciseLinks
                 !string.IsNullOrEmpty(StateService.CurrentExerciseId) && 
                 StateService.CurrentExerciseId != Exercise.Id)
             {
-                await StateService.InitializeForExerciseAsync(Exercise.Id, Exercise.Name);
-                
-                // Reset context for new exercise
-                var contexts = GetExerciseContexts().ToList();
-                if (contexts.Any())
-                {
-                    await StateService.SwitchContextAsync(contexts.First());
-                }
+                // Use the new overload that takes the full Exercise object to properly set context
+                await StateService.InitializeForExerciseAsync(Exercise);
             }
         }
 

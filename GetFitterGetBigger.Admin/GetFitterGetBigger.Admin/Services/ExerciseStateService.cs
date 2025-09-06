@@ -267,7 +267,8 @@ namespace GetFitterGetBigger.Admin.Services
             if (_storedFilter != null)
             {
                 var filter = _storedFilter;
-                _storedFilter = null; // Clear after use
+                // Don't clear the filter - keep it for browser back navigation
+                // It will be cleared when explicitly navigating away from exercises
                 await LoadExercisesAsync(filter);
             }
             else
