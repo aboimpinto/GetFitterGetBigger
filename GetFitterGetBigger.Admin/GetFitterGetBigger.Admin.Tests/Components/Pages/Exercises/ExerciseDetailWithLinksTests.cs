@@ -58,6 +58,10 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
                 .WithExerciseTypes(("Warmup", "Warmup exercise"))
                 .Build();
 
+            // Setup default validation service behavior - allow all link types by default
+            _validationServiceMock.Setup(v => v.CanAddLinkType(It.IsAny<string>(), It.IsAny<string>()))
+                .Returns(ValidationResult.Success());
+
             // Setup default state service behavior
             _exerciseStateServiceMock.SetupGet(x => x.ExerciseTypes).Returns(_exerciseTypes);
             _exerciseStateServiceMock.SetupGet(x => x.IsLoadingExercise).Returns(false);
@@ -77,6 +81,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
             Services.AddSingleton(_exerciseStateServiceMock.Object);
             Services.AddSingleton(_linkStateServiceMock.Object);
             Services.AddSingleton(_exerciseServiceMock.Object);
+            Services.AddSingleton(_validationServiceMock.Object);
             Services.AddSingleton(_navigationManagerMock.Object);
 
             // Act
@@ -84,28 +89,32 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
                 .Add(p => p.Id, "ex1"));
 
             // Assert
-            component.FindComponent<ExerciseLinkManager>().Should().NotBeNull();
-            component.Markup.Should().Contain("Linked Exercises");
+            component.FindComponent<FourWayExerciseLinkManager>().Should().NotBeNull();
+            // Verify component exists through data-testid, not magic strings
+            component.Find("[data-testid='four-way-exercise-link-manager']").Should().NotBeNull();
         }
 
         [Fact]
-        public void ExerciseDetail_HidesExerciseLinkManager_ForNonWorkoutType()
+        public void ExerciseDetail_ShowsExerciseLinkManager_ForAllExerciseTypes()
         {
             // Arrange
             _exerciseStateServiceMock.SetupGet(x => x.SelectedExercise).Returns(_nonWorkoutExercise);
+            SetupLinkStateWithNoLinks();
 
             Services.AddSingleton(_exerciseStateServiceMock.Object);
             Services.AddSingleton(_linkStateServiceMock.Object);
             Services.AddSingleton(_exerciseServiceMock.Object);
+            Services.AddSingleton(_validationServiceMock.Object);
             Services.AddSingleton(_navigationManagerMock.Object);
 
             // Act
             var component = RenderComponent<ExerciseDetail>(parameters => parameters
                 .Add(p => p.Id, "ex2"));
 
-            // Assert
-            component.FindAll("div[data-testid='exercise-link-manager']").Should().BeEmpty();
-            component.Markup.Should().NotContain("Linked Exercises");
+            // Assert - Now all exercise types show the FourWayExerciseLinkManager
+            component.FindComponent<FourWayExerciseLinkManager>().Should().NotBeNull();
+            // Verify component exists through data-testid, not magic strings
+            component.Find("[data-testid='four-way-exercise-link-manager']").Should().NotBeNull();
         }
 
         [Fact]
@@ -118,6 +127,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
             Services.AddSingleton(_exerciseStateServiceMock.Object);
             Services.AddSingleton(_linkStateServiceMock.Object);
             Services.AddSingleton(_exerciseServiceMock.Object);
+            Services.AddSingleton(_validationServiceMock.Object);
             Services.AddSingleton(_navigationManagerMock.Object);
 
             // Act
@@ -128,7 +138,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
             await Task.Delay(50);
 
             // Assert
-            _linkStateServiceMock.Verify(x => x.InitializeForExerciseAsync("ex1", "Barbell Squat"), Times.Once);
+            _linkStateServiceMock.Verify(x => x.InitializeForExerciseAsync(It.IsAny<ExerciseDto>()), Times.Once);
         }
 
         [Fact]
@@ -154,6 +164,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
             Services.AddSingleton(_exerciseStateServiceMock.Object);
             Services.AddSingleton(_linkStateServiceMock.Object);
             Services.AddSingleton(_exerciseServiceMock.Object);
+            Services.AddSingleton(_validationServiceMock.Object);
             Services.AddSingleton(_navigationManagerMock.Object);
 
             // Act
@@ -161,12 +172,15 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
                 .Add(p => p.Id, "ex1"));
 
             // Assert
-            component.Markup.Should().Contain("Warmup Exercises");
-            component.Markup.Should().Contain("1 / 10"); // Warmup count
-            component.Markup.Should().Contain("Leg Swings");
-            component.Markup.Should().Contain("Cooldown Exercises");
-            component.Markup.Should().Contain("1 / 10"); // Cooldown count
-            component.Markup.Should().Contain("Quad Stretch");
+            // Verify sections exist through data-testid
+            component.Find("[data-testid='warmup-section']").Should().NotBeNull();
+            component.Find("[data-testid='cooldown-section']").Should().NotBeNull();
+            
+            // Verify links are present through structure
+            var warmupLinks = component.FindAll("[data-testid='warmup-links-container'] [role='listitem']");
+            var cooldownLinks = component.FindAll("[data-testid='cooldown-links-container'] [role='listitem']");
+            warmupLinks.Should().HaveCountGreaterThan(0);
+            cooldownLinks.Should().HaveCountGreaterThan(0);
         }
 
         [Fact]
@@ -179,6 +193,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
             Services.AddSingleton(_exerciseStateServiceMock.Object);
             Services.AddSingleton(_linkStateServiceMock.Object);
             Services.AddSingleton(_exerciseServiceMock.Object);
+            Services.AddSingleton(_validationServiceMock.Object);
             Services.AddSingleton(_navigationManagerMock.Object);
 
             // Act
@@ -186,8 +201,9 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
                 .Add(p => p.Id, "ex1"));
 
             // Assert
-            component.Markup.Should().Contain("No warmup exercises linked yet");
-            component.Markup.Should().Contain("No cooldown exercises linked yet");
+            // Verify empty state is shown through data-testid
+            component.Find("[data-testid='warmup-empty-state']").Should().NotBeNull();
+            component.Find("[data-testid='cooldown-empty-state']").Should().NotBeNull();
         }
 
         [Fact]
@@ -202,6 +218,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
             Services.AddSingleton(_exerciseStateServiceMock.Object);
             Services.AddSingleton(_linkStateServiceMock.Object);
             Services.AddSingleton(_exerciseServiceMock.Object);
+            Services.AddSingleton(_validationServiceMock.Object);
             Services.AddSingleton(_navigationManagerMock.Object);
 
             // Act
@@ -222,6 +239,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
             Services.AddSingleton(_exerciseStateServiceMock.Object);
             Services.AddSingleton(_linkStateServiceMock.Object);
             Services.AddSingleton(_exerciseServiceMock.Object);
+            Services.AddSingleton(_validationServiceMock.Object);
             Services.AddSingleton(_navigationManagerMock.Object);
 
             // Act
@@ -234,13 +252,13 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
         }
 
         [Fact]
-        public void ExerciseDetail_HidesAddButton_WhenAtMaxCapacity()
+        public void ExerciseDetail_ShowsAddButtons_WithoutCapacityLimits()
         {
             // Arrange
             _exerciseStateServiceMock.SetupGet(x => x.SelectedExercise).Returns(_workoutExercise);
 
-            // Create 10 warmup links (max capacity)
-            var warmupLinks = Enumerable.Range(0, 10)
+            // Create 15 warmup links (previously would be over max capacity, now unlimited)
+            var warmupLinks = Enumerable.Range(0, 15)
                 .Select(i => new ExerciseLinkDtoBuilder()
                     .WithId($"warmup-{i}")
                     .AsWarmup()
@@ -252,16 +270,18 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
             Services.AddSingleton(_exerciseStateServiceMock.Object);
             Services.AddSingleton(_linkStateServiceMock.Object);
             Services.AddSingleton(_exerciseServiceMock.Object);
+            Services.AddSingleton(_validationServiceMock.Object);
             Services.AddSingleton(_navigationManagerMock.Object);
 
             // Act
             var component = RenderComponent<ExerciseDetail>(parameters => parameters
                 .Add(p => p.Id, "ex1"));
 
-            // Assert
-            component.FindAll("[data-testid='add-warmup-button']").Should().BeEmpty();
-            component.Markup.Should().Contain("10 / 10"); // Max warmup count
-            component.Find("[data-testid='add-cooldown-button']").Should().NotBeNull(); // Cooldown still available
+            // Assert - Add buttons should still be available (no capacity limits)
+            component.Find("[data-testid='add-warmup-button']").Should().NotBeNull();
+            component.Find("[data-testid='add-cooldown-button']").Should().NotBeNull();
+            // Should not contain capacity indicators like "15 / 10"
+            component.Markup.Should().NotContain(" / ");
         }
 
         [Fact]
@@ -274,13 +294,15 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
             Services.AddSingleton(_exerciseStateServiceMock.Object);
             Services.AddSingleton(_linkStateServiceMock.Object);
             Services.AddSingleton(_exerciseServiceMock.Object);
+            Services.AddSingleton(_validationServiceMock.Object);
             Services.AddSingleton(_navigationManagerMock.Object);
 
             var component = RenderComponent<ExerciseDetail>(parameters => parameters
                 .Add(p => p.Id, "ex1"));
 
-            // Initial state - no links
-            component.Markup.Should().Contain("0 / 10");
+            // Initial state - no links (no capacity display)
+            // Verify empty state is shown through data-testid
+            component.Find("[data-testid='warmup-empty-state']").Should().NotBeNull();
 
             // Act - Simulate adding a link by updating state
             var newLink = new ExerciseLinkDtoBuilder()
@@ -297,7 +319,8 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
             // Assert
             component.WaitForAssertion(() =>
             {
-                component.Markup.Should().Contain("1 / 10");
+                // Should show the linked exercise without capacity display
+                component.Markup.Should().NotContain("No warmup exercises linked yet");
             });
         }
 
@@ -318,15 +341,16 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
             Services.AddSingleton(_exerciseStateServiceMock.Object);
             Services.AddSingleton(_linkStateServiceMock.Object);
             Services.AddSingleton(_exerciseServiceMock.Object);
+            Services.AddSingleton(_validationServiceMock.Object);
             Services.AddSingleton(_navigationManagerMock.Object);
 
             // Act
             var component = RenderComponent<ExerciseDetail>(parameters => parameters
                 .Add(p => p.Id, "ex1"));
 
-            // Assert - Should show existing link without re-initializing
-            component.Markup.Should().Contain("1 / 10");
-            _linkStateServiceMock.Verify(x => x.InitializeForExerciseAsync(It.IsAny<string>(), It.IsAny<string>()), Times.Once);
+            // Assert - Should show existing link without re-initializing (no capacity display)
+            component.Markup.Should().NotContain("No warmup exercises linked yet");
+            _linkStateServiceMock.Verify(x => x.InitializeForExerciseAsync(It.IsAny<ExerciseDto>()), Times.Once);
         }
 
         private void SetupLinkStateWithNoLinks()
@@ -335,8 +359,11 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
             _linkStateServiceMock.SetupGet(x => x.ErrorMessage).Returns((string?)null);
             _linkStateServiceMock.SetupGet(x => x.WarmupLinks).Returns(Enumerable.Empty<ExerciseLinkDto>());
             _linkStateServiceMock.SetupGet(x => x.CooldownLinks).Returns(Enumerable.Empty<ExerciseLinkDto>());
+            _linkStateServiceMock.SetupGet(x => x.AlternativeLinks).Returns(Enumerable.Empty<ExerciseLinkDto>());
             _linkStateServiceMock.SetupGet(x => x.WarmupLinkCount).Returns(0);
             _linkStateServiceMock.SetupGet(x => x.CooldownLinkCount).Returns(0);
+            _linkStateServiceMock.SetupGet(x => x.AlternativeLinkCount).Returns(0);
+            _linkStateServiceMock.SetupGet(x => x.ActiveContext).Returns("Workout");
             _linkStateServiceMock.SetupGet(x => x.CurrentLinks).Returns(new ExerciseLinksResponseDto
             {
                 ExerciseId = "ex1",
@@ -351,8 +378,11 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
             _linkStateServiceMock.SetupGet(x => x.ErrorMessage).Returns((string?)null);
             _linkStateServiceMock.SetupGet(x => x.WarmupLinks).Returns(warmupLinks);
             _linkStateServiceMock.SetupGet(x => x.CooldownLinks).Returns(cooldownLinks);
+            _linkStateServiceMock.SetupGet(x => x.AlternativeLinks).Returns(Enumerable.Empty<ExerciseLinkDto>());
             _linkStateServiceMock.SetupGet(x => x.WarmupLinkCount).Returns(warmupLinks.Count);
             _linkStateServiceMock.SetupGet(x => x.CooldownLinkCount).Returns(cooldownLinks.Count);
+            _linkStateServiceMock.SetupGet(x => x.AlternativeLinkCount).Returns(0);
+            _linkStateServiceMock.SetupGet(x => x.ActiveContext).Returns("Workout");
 
             var allLinks = new List<ExerciseLinkDto>();
             allLinks.AddRange(warmupLinks);

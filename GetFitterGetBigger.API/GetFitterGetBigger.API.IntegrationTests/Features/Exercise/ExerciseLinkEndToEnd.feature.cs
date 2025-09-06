@@ -200,7 +200,7 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.Exercise
                 await testRunner.WhenAsync("I get all links for exercise \"Deadlift\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
                 await testRunner.ThenAsync("I should receive 2 exercise links", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
                 await testRunner.WhenAsync("I get all links for exercise \"Romanian Deadlift\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
-                await testRunner.ThenAsync("I should receive 1 exercise link", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
+                await testRunner.ThenAsync("I should receive 2 exercise links", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
                 await testRunner.WhenAsync("I create an exercise link from \"Deadlift\" to \"Hamstring Stretch\" with link type \"" +
                         "Cooldown\" and display order 1", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
                 await testRunner.ThenAsync("the exercise link should be created successfully", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");

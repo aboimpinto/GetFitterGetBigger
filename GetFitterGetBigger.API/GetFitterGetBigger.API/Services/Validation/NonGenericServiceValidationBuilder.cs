@@ -112,14 +112,54 @@ public class NonGenericServiceValidationBuilder
     public async Task<ValidationResult> ToValidationResultAsync()
     {
         // First check synchronous validations
-        var syncResult = _validation.ToResult();
+        var syncResult = CheckSyncValidations();
         if (!syncResult.IsValid)
         {
             return syncResult;
         }
 
-        // Then run async validations
+        // Run all async validations
+        var asyncResult = await ProcessAllAsyncValidationsAsync();
+        
+        return asyncResult.HasErrors 
+            ? CreateFailureResult(asyncResult)
+            : ValidationResult.Success();
+    }
+
+    /// <summary>
+    /// Checks synchronous validations
+    /// </summary>
+    /// <returns>ValidationResult from sync validations</returns>
+    private ValidationResult CheckSyncValidations()
+    {
+        return _validation.ToResult();
+    }
+
+    /// <summary>
+    /// Processes all async validations and returns combined results
+    /// </summary>
+    /// <returns>Combined async validation results</returns>
+    private async Task<NonGenericAsyncValidationResult> ProcessAllAsyncValidationsAsync()
+    {
+        var stringErrors = await ProcessStringValidationsAsync();
+        var serviceErrorData = await ProcessServiceErrorValidationsAsync();
+        
+        return new NonGenericAsyncValidationResult
+        {
+            StringErrors = stringErrors,
+            ServiceErrorMessages = serviceErrorData.Messages,
+            FirstServiceError = serviceErrorData.FirstError
+        };
+    }
+
+    /// <summary>
+    /// Processes async string validations
+    /// </summary>
+    /// <returns>List of string errors</returns>
+    private async Task<List<string>> ProcessStringValidationsAsync()
+    {
         var errors = new List<string>();
+        
         foreach (var asyncValidation in _asyncValidations)
         {
             var (isValid, error) = await asyncValidation();
@@ -128,26 +168,68 @@ public class NonGenericServiceValidationBuilder
                 errors.Add(error);
             }
         }
+        
+        return errors;
+    }
 
-        // Run async ServiceError validations  
-        ServiceError? serviceError = null;
+    /// <summary>
+    /// Processes async ServiceError validations
+    /// </summary>
+    /// <returns>ServiceError validation data</returns>
+    private async Task<ServiceErrorValidationData> ProcessServiceErrorValidationsAsync()
+    {
+        var messages = new List<string>();
+        ServiceError? firstError = null;
+        
         foreach (var asyncValidation in _asyncServiceErrorValidations)
         {
             var (isValid, error) = await asyncValidation();
             if (!isValid && error != null)
             {
-                errors.Add(error.Message);
-                serviceError ??= error; // Keep the first ServiceError
+                messages.Add(error.Message);
+                firstError ??= error;
             }
         }
-
-        if (errors.Any())
-        {
-            return serviceError != null 
-                ? ValidationResult.Failure(serviceError)
-                : ValidationResult.Failure(errors.ToArray());
-        }
         
-        return ValidationResult.Success();
+        return new ServiceErrorValidationData
+        {
+            Messages = messages,
+            FirstError = firstError
+        };
+    }
+
+    /// <summary>
+    /// Creates a failure ValidationResult from async validation results
+    /// </summary>
+    /// <param name="asyncResult">The async validation results</param>
+    /// <returns>ValidationResult failure</returns>
+    private ValidationResult CreateFailureResult(NonGenericAsyncValidationResult asyncResult)
+    {
+        var allErrors = asyncResult.StringErrors.Concat(asyncResult.ServiceErrorMessages).ToList();
+        
+        return asyncResult.FirstServiceError != null 
+            ? ValidationResult.Failure(asyncResult.FirstServiceError)
+            : ValidationResult.Failure(allErrors.ToArray());
+    }
+
+    /// <summary>
+    /// Helper class to hold async validation results
+    /// </summary>
+    private class NonGenericAsyncValidationResult
+    {
+        public List<string> StringErrors { get; set; } = new();
+        public List<string> ServiceErrorMessages { get; set; } = new();
+        public ServiceError? FirstServiceError { get; set; }
+        
+        public bool HasErrors => StringErrors.Any() || ServiceErrorMessages.Any();
+    }
+
+    /// <summary>
+    /// Helper class to hold ServiceError validation data
+    /// </summary>
+    private class ServiceErrorValidationData
+    {
+        public List<string> Messages { get; set; } = new();
+        public ServiceError? FirstError { get; set; }
     }
 }

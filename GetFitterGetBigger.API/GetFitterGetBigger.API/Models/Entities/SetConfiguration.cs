@@ -132,24 +132,37 @@ public record SetConfiguration : IEmptyEntity<SetConfiguration>
         public static (int min, int max) ParseRepsRange(string repsRange)
         {
             if (string.IsNullOrEmpty(repsRange))
-            {
                 return (0, 0);
-            }
+                
+            return repsRange.Contains('-') 
+                ? ParseRangeValue(repsRange)
+                : ParseSingleValue(repsRange);
+        }
+        
+        /// <summary>
+        /// Parses a range value in format "min-max"
+        /// </summary>
+        private static (int min, int max) ParseRangeValue(string repsRange)
+        {
+            var parts = repsRange.Split('-', StringSplitOptions.RemoveEmptyEntries);
             
-            if (repsRange.Contains('-'))
-            {
-                var parts = repsRange.Split('-');
-                if (parts.Length == 2 && int.TryParse(parts[0], out var min) && int.TryParse(parts[1], out var max))
-                {
-                    return (min, max);
-                }
-            }
-            else if (int.TryParse(repsRange, out var singleValue))
-            {
-                return (singleValue, singleValue);
-            }
+            if (parts.Length != 2)
+                return (0, 0);
+                
+            var isMinValid = int.TryParse(parts[0], out var min);
+            var isMaxValid = int.TryParse(parts[1], out var max);
             
-            return (0, 0);
+            return isMinValid && isMaxValid ? (min, max) : (0, 0);
+        }
+        
+        /// <summary>
+        /// Parses a single value (returns same value for min and max)
+        /// </summary>
+        private static (int min, int max) ParseSingleValue(string repsRange)
+        {
+            return int.TryParse(repsRange, out var value) 
+                ? (value, value) 
+                : (0, 0);
         }
     }
 }

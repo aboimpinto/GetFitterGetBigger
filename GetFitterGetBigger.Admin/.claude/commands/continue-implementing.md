@@ -1,202 +1,239 @@
-Continue implementing the current feature with intelligent context awareness and task-specific guidelines.
+Triggers the blazor-feature-implementation-executor agent to continue implementing the current in-progress Blazor feature, with automatic code review generation and checkpoint updates.
 
-## Intelligent Continuation Process
+## What this command does:
 
-1. **Health Check** (MANDATORY FIRST STEP):
-   - Run `dotnet clean && dotnet build`
-   - Run `dotnet test`
-   - **If all passes**: Continue silently without reporting
-   - **If issues found**:
-     - List all errors/warnings clearly
-     - Ask user: "Health check failed. Do you want to fix these issues before continuing? (yes/no)"
-     - **If YES**: Create a Boy Scout task at the beginning of current phase to fix issues
-     - **If NO**: Document in feature-tasks.md that user was prompted and chose to continue
+### Phase 1: Feature Implementation
+Delegates to the @blazor-feature-implementation-executor agent which will:
 
-2. **Context Discovery**:
-   - Identify current feature in `/memory-bank/features/2-IN_PROGRESS/`
-   - Read feature-tasks.md to find current position
-   - Check git status for uncommitted changes
-   - Review previous checkpoint feedback if any
+1. **Identify** the current feature in /memory-bank/features/2-IN_PROGRESS/
+2. **Find** the next uncompleted task or checkpoint in feature-tasks.md
+3. **Execute** Blazor implementation following CODE_QUALITY_STANDARDS.md and ADMIN-CODE_QUALITY_STANDARDS.md
+4. **Test** comprehensively with bUnit
+5. **Stop** at checkpoints for validation
 
-3. **Task Analysis**:
-   - Find next uncompleted task (status: [ReadyToDevelop])
-   - Detect task type using patterns from implementation-guidelines-map.md
-   - Load relevant guidelines for the specific task type
-   - Check if approaching a checkpoint
+### Phase 2: Automatic Code Review (at checkpoints)
+When the blazor-feature-implementation-executor reaches a checkpoint, this command will:
 
-4. **Context-Specific Setup**:
-   - For each task type, automatically reference relevant documentation
-   - Provide examples from well-tested existing code
-   - Highlight specific requirements for that task type
+1. **Detect checkpoint completion** from the agent's response
+2. **Determine review scope**:
+   - If uncommitted changes exist: Review uncommitted files
+   - If no uncommitted changes: Review files from last commit
+3. **Trigger @blazor-code-reviewer** agent with the identified files
+4. **VERIFY the review report was created**:
+   - Check if the expected report file exists
+   - If missing, create a fallback report with the Write tool
+5. **Save the review report** to the correct location
+6. **Update the checkpoint** with review results
 
-## Dynamic Guidelines Loading
+### Phase 3: Checkpoint Update
+After code review completion:
 
-The command will analyze the current task and provide:
+1. **Extract review status** (APPROVED/APPROVED_WITH_NOTES/REQUIRES_CHANGES)
+2. **Update feature-tasks.md** checkpoint with:
+   - Code review file paths (all iterations)
+   - Review statuses
+   - Git commit hashes for fixes
+3. **Follow template** from `/memory-bank/Templates/FeatureCheckpointTemplate.md`
 
-### 📁 API Service Layer Tasks
-**When task contains**: "Service", "API integration", "API calls"
-**Auto-load**:
-- @memory-bank/COMPREHENSIVE-TESTING-GUIDE.md#api-service-testing-xunit
-- Service patterns from ExerciseService (81% coverage)
-- HTTP mocking setup examples
-- Error handling patterns
+## Implementation Flow:
 
-### 🧩 Component Tasks
-**When task contains**: "component", "View", "Form", "Panel"
-**Auto-load**:
-- @memory-bank/COMPREHENSIVE-TESTING-GUIDE.md#blazor-component-testing-bunit
-- Component testability checklist
-- data-testid attribute requirements
-- Examples from ExerciseWeightTypeBadge (100% coverage)
+```mermaid
+graph TD
+    A[Start: continue-implementation] --> B[Trigger blazor-feature-implementation-executor]
+    B --> C{Checkpoint Reached?}
+    C -->|No| D[Continue Implementation]
+    C -->|Yes| E[Check Git Status]
+    E --> F{Uncommitted Changes?}
+    F -->|Yes| G[Get Uncommitted Files]
+    F -->|No| H[Get Last Commit Files]
+    G --> I[Trigger blazor-code-reviewer]
+    H --> I
+    I --> J{Report Created?}
+    J -->|Yes| K[Update Checkpoint]
+    J -->|No| L[Create Fallback Report]
+    L --> K
+    K --> M[Add Review Paths & Statuses]
+    M --> N[Track Fix Commits]
+    N --> O[Complete]
+```
 
-### 📊 State Management Tasks
-**When task contains**: "StateService", "state management"
-**Auto-load**:
-- @memory-bank/COMPREHENSIVE-TESTING-GUIDE.md#state-service-testing
-- Optimistic update patterns
-- Error persistence examples
-- ExerciseWeightTypeStateService patterns
+## Code Review File Structure:
+```
+/memory-bank/features/2-IN_PROGRESS/FEAT-XXX-[feature-name]/
+├── code-reviews/
+│   ├── Phase_1_[Name]/
+│   │   ├── Code-Review-Phase-1-[Name]-YYYY-MM-DD-HH-MM-[STATUS]-001.md
+│   │   └── Code-Review-Phase-1-[Name]-YYYY-MM-DD-HH-MM-[STATUS]-002.md
+│   ├── Phase_2_[Name]/
+│   │   └── Code-Review-Phase-2-[Name]-YYYY-MM-DD-HH-MM-[STATUS]-001.md
+│   └── Phase_N_[Name]/
+│       └── Code-Review-Phase-N-[Name]-YYYY-MM-DD-HH-MM-[STATUS]-001.md
+```
 
-### 🧪 Testing Tasks
-**When task contains**: "test", "unit test", "integration test"
-**Auto-load**:
-- Specific testing guide section based on test type
-- Coverage goals (80%+ for new code)
-- Test patterns from high-coverage components
-- Boy Scout Rule reminders
+## Checkpoint Update Format:
+```markdown
+## CHECKPOINT: Phase X Complete - [Description]
+`[COMPLETE]` - Date: YYYY-MM-DD HH:MM
 
-### 🛑 Checkpoint Tasks
-**When line starts with**: "## CHECKPOINT" or "CHECKPOINT:"
-**Auto-load**:
-- @memory-bank/FEATURE_CHECKPOINT_TEMPLATE.md
-- @memory-bank/CODE_REVIEW_PROCESS.md
-- Build verification commands
-- Code review folder structure
+Build Report:
+- Admin Project: ✅ 0 errors, 0 warnings
+- Test Project: ✅ 0 errors, 0 warnings
 
-### 🎨 UI/UX Tasks
-**When task contains**: "loading", "responsive", "accessibility"
-**Auto-load**:
-- UI patterns from completed features
-- Tailwind CSS conventions
-- Accessibility checklist
-- Responsive design guidelines
+[Implementation Summary]
 
-## Execution Flow
+Code Reviews:
+- Review #1: `/memory-bank/features/2-IN_PROGRESS/FEAT-XXX/code-reviews/Phase_X_[Name]/Code-Review-Phase-X-[Name]-YYYY-MM-DD-HH-MM-[STATUS]-001.md` - [[STATUS]]
+  - Fix Commit: `[HASH1]` - Address review findings #1
+- Review #2: `/memory-bank/features/2-IN_PROGRESS/FEAT-XXX/code-reviews/Phase_X_[Name]/Code-Review-Phase-X-[Name]-YYYY-MM-DD-HH-MM-[STATUS]-002.md` - [[STATUS]]
 
-1. **Initial Health Check** (MANDATORY):
+Git Commits:
+- `[HASH0]` - Initial implementation
+- `[HASH1]` - Fix review findings #1
+- `[HASH2]` - Final polish
+
+Status: ✅ Phase X COMPLETE
+Notes: 
+- [Key accomplishments]
+- [Review findings if applicable]
+- Ready to proceed to Phase [X+1]
+```
+
+## Agent Invocation:
+
+### Step 1: Execute Implementation
+```
+@blazor-feature-implementation-executor
+```
+
+### Step 2: Automatic Code Review (triggered by this command)
+```
+@blazor-code-reviewer (automatically invoked at checkpoints)
+```
+
+### Step 3: Verify Report Creation (CRITICAL)
+After triggering the code reviewer, ALWAYS:
+1. Use the Bash tool to check if report file exists:
    ```bash
-   dotnet clean && dotnet build  # Check for errors/warnings
-   dotnet test                   # All tests must pass
+   ls -la /path/to/expected/report/file.md
    ```
-   - If passes: Continue without reporting
-   - If fails: Prompt user for fix decision
-   - Document decision in feature-tasks.md if user chooses to continue
+2. If file doesn't exist, immediately create fallback report using Write tool
+3. Include in fallback report:
+   - Current date/time
+   - Build status (from `dotnet build`)
+   - Test status (from `dotnet test`)
+   - Files reviewed (from `git status`)
+   - Status: REQUIRES_MANUAL_REVIEW or appropriate status
+4. Save to exact expected path with correct naming convention
 
-2. **Task Implementation**:
-   - Update status to [InProgress: Started: YYYY-MM-DD HH:MM]
-   - Follow loaded guidelines specific to task type
-   - Implement with continuous build/test verification
+## Key Features:
+- ✅ **Guaranteed Report Creation** with automatic fallback mechanism
+- ✅ **Automated Code Reviews** at every checkpoint
+- ✅ **Multiple review iterations** tracked with sequence numbers
+- ✅ **Fix commits tracked** for each review iteration
+- ✅ **Git Commit Hash** enforcement for traceability
+- ✅ **Checkpoint template compliance** following standards
+- ✅ **APPROVED_WITH_NOTES** handling (requires user confirmation)
+- ✅ **Quality Gates** (0 errors, 0 warnings, all tests passing)
+- ✅ **Task Tracking** via TodoWrite integration
+- ✅ **No Task Left Behind** policy
+- ✅ **Blazor standards** enforcement (CODE_QUALITY_STANDARDS.md, ADMIN-CODE_QUALITY_STANDARDS.md)
+- ✅ **UI standards** compliance (UI_LIST_PAGE_DESIGN_STANDARDS.md)
 
-3. **Task Completion**:
-   - Run final build/test verification
-   - Commit with descriptive message
-   - Update task with [Implemented: <hash> | Started/Finished times]
-   - Check if next item is a checkpoint
+## Error Handling:
 
-4. **Checkpoint Handling**:
-   - STOP implementation
-   - Create code review in correct folder structure
-   - Update checkpoint status
-   - Wait for user approval before continuing
+### If Code Review Report Not Created:
+The command will automatically:
+1. **Detect missing report** by checking if file exists at expected path
+2. **Generate fallback report** using the Write tool with:
+   - Build status from `dotnet build` output
+   - Test results from `dotnet test` output
+   - List of reviewed files from git status
+   - Default status of REQUIRES_MANUAL_REVIEW
+3. **Save fallback report** to the expected location
+4. **Continue with checkpoint update** using the fallback report
 
-## Smart Features
+### If Code Review Fails:
+- Report will be saved with REQUIRES_CHANGES status and sequence number
+- Checkpoint will be updated with issues found
+- User will be prompted to fix issues
+- After fixes, new review will be generated with incremented sequence number
+- All fix commits will be tracked
 
-### Pattern Recognition:
-- Automatically detects when you're implementing vs testing
-- Knows when to stop for checkpoints
-- Identifies when approaching phase boundaries
+### If No Feature in Progress:
+The agent will:
+- Check /memory-bank/features/1-READY_TO_DEVELOP/
+- Inform user if no active feature found
+- Suggest using /start-implementing for new features
 
-### Contextual Help:
-- Shows only relevant guidelines for current task
-- Provides specific code examples
-- Highlights common pitfalls for that task type
+## Usage:
+Simply run this command and everything will be handled automatically:
+1. Implementation continues/starts
+2. Code review generated at checkpoints
+3. Multiple review iterations tracked with sequence numbers
+4. Fix commits tracked for each review
+5. Reports saved to files
+6. Checkpoints updated with complete review history
+7. Clear status provided to user
 
-### Progress Tracking:
-- Shows completed vs remaining tasks
-- Calculates time spent vs estimates
-- Identifies if falling behind schedule
+## Benefits:
+- **Fully Automated**: No manual intervention needed for code reviews
+- **Complete Audit Trail**: All review iterations and fix commits tracked
+- **Guaranteed File Creation**: Review reports always saved to disk
+- **Checkpoint Compliance**: Always follows the standard template
+- **Traceability**: Complete history with git commits and reviews
+- **Quality Assurance**: Automatic validation at every phase
+- **Blazor-Specific**: Tailored for Blazor component and service development
+- **Fallback Protection**: Ensures review reports are always created
 
-## Special Scenarios
+## Fallback Report Template:
 
-### No In-Progress Feature:
-- Check 1-READY_TO_DEVELOP folder
-- Suggest using /start-implementing
-- Show available features to start
-
-### Blocked Task:
-- Mark as [BLOCKED: reason]
-- Skip to next available task
-- Create issue documentation
-
-### Missing Guidelines:
-- Flag with ⚠️ warning
-- Use general best practices
-- Request pattern documentation
-
-## Commands Reference
-
-Always check:
-- @.claude/commands/implementation-guidelines-map.md for task mappings
-- @memory-bank/FEATURE_IMPLEMENTATION_PROCESS.md for overall flow
-- @memory-bank/CODE_QUALITY_STANDARDS.md for universal standards
-
-Stop at every checkpoint for mandatory review before proceeding to next phase.
-
-## Health Check Documentation Format
-
-When health check fails and user chooses to continue, add to feature-tasks.md:
-
-```markdown
-### Health Check Warning - [Date/Time]
-**Build/Test Status**: Failed
-**Issues Found**:
-- [List all errors/warnings]
-
-**User Decision**: Chose to continue without fixing
-**Reason**: [If provided by user]
-```
-
-## Boy Scout Task Format
-
-When user chooses to fix issues first, add before current phase tasks:
+When the blazor-code-reviewer agent fails to create a report, use this template:
 
 ```markdown
-- **Boy Scout Task:** Fix health check issues [ReadyToDevelop] (Est: 30m)
-  - Fix build errors: [list]
-  - Fix build warnings: [list]  
-  - Fix failing tests: [list]
+# Code Review Report - Fallback
+
+**Date**: [CURRENT_DATE_TIME]
+**Scope**: [FEATURE_ID] Phase [X] - [Phase Description]
+**Reviewer**: Automated Fallback System
+**Review Type**: Fallback Review
+**Status**: REQUIRES_MANUAL_REVIEW
+
+## ⚠️ NOTICE
+This is a fallback report generated because the blazor-code-reviewer agent did not create a report file.
+Manual review may be required.
+
+## Build & Test Status
+
+**Build Status**: [Get from dotnet build output]
+- Warnings: [Count]
+- Errors: [Count]
+
+**Test Results**: [Get from dotnet test output]
+- Total Tests: [Count]
+- Passed: [Count]
+- Failed: [Count]
+
+## Files for Review
+
+The following files were identified for review:
+[List files from git status or git show]
+
+## Executive Summary
+
+This fallback report was automatically generated to ensure checkpoint compliance.
+The blazor-code-reviewer agent may have encountered an issue preventing report creation.
+
+## Recommendation
+
+1. Review the files manually
+2. Run build and tests to verify quality
+3. Consider re-running the code review agent
+4. Update this report with actual findings if needed
+
+## Review Outcome
+
+**Status**: REQUIRES_MANUAL_REVIEW
+
+---
+*This fallback report was generated automatically to maintain audit trail integrity.*
 ```
-
-## Task Tracking Format
-
-### Task Status Format:
-```markdown
-# Before starting:
-- **Task X.Y:** Description [ReadyToDevelop] (Est: 2h)
-
-# When starting:
-- **Task X.Y:** Description [InProgress: Started: 2025-07-24 10:30] (Est: 2h)
-
-# When completed:
-- **Task X.Y:** Description [Completed: Started: 2025-07-24 10:30, Finished: 2025-07-24 11:45] (Est: 2h, Actual: 1h 15m)
-  - Git commit: `abc123f` - feat: implement feature X
-```
-
-### Checkpoint Update Format:
-After completing all tasks in a phase, update checkpoint with:
-- Build status (must run `dotnet clean && dotnet build`)
-- Test status (must run `dotnet test`)
-- List all git commits for the phase
-- Time tracking summary
-- Set status to PENDING until reviewed
-- Run `/review-implemented-feature` to verify and approve

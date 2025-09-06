@@ -562,6 +562,10 @@ public void ProcessUser(string? userId)
 - Project-specific standards:
   - `API-CODE_QUALITY_STANDARDS.md` - API-specific standards
   - `ADMIN-CODE_QUALITY_STANDARDS.md` - Admin Blazor-specific standards
+  - `patterns/BLAZOR-NAVIGATION-BEST-PRACTICES.md` - Blazor navigation patterns and best practices
+  - `patterns/blazor-shouldrender-optimization-pattern.md` - ShouldRender optimization techniques for Blazor components
+  - `patterns/comprehensive-blazor-testing-patterns.md` - Comprehensive testing patterns for Blazor applications
+  - `guides/accessibility-automation-guide.md` - Automated accessibility testing implementation guide
 
 ---
 

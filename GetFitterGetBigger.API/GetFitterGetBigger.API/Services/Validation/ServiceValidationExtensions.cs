@@ -59,41 +59,6 @@ public static class ServiceValidationExtensions
         return whenValid();
     }
     
-    /// <summary>
-    /// Validates using a method that returns ValidationResult.
-    /// This allows delegating validation logic to specialized methods that already return
-    /// ValidationResult with appropriate error messages.
-    /// </summary>
-    /// <typeparam name="T">The DTO type that implements IEmptyDto</typeparam>
-    /// <param name="validation">The validation instance</param>
-    /// <param name="validationFunc">Function that performs validation and returns ValidationResult</param>
-    /// <returns>The validation instance for chaining</returns>
-    public static ServiceValidation<T> ValidateWith<T>(
-        this ServiceValidation<T> validation,
-        Func<ValidationResult> validationFunc)
-        where T : class, IEmptyDto<T>
-    {
-        var result = validationFunc();
-        
-        if (!result.IsValid)
-        {
-            // If there's a ServiceError, use it
-            if (result.ServiceError != null)
-            {
-                validation.Ensure(() => false, result.ServiceError);
-            }
-            // Otherwise use the error messages
-            else if (result.Errors.Any())
-            {
-                foreach (var error in result.Errors)
-                {
-                    validation.Ensure(() => false, error);
-                }
-            }
-        }
-        
-        return validation;
-    }
 
     /// <summary>
     /// Validates a ServiceResult and adds any errors to the validation chain.
@@ -108,35 +73,7 @@ public static class ServiceValidationExtensions
         Func<Task<ServiceResult<BooleanResultDto>>> serviceResultFunc)
         where T : class, IEmptyDto<T>
     {
-        // If validation already has errors, don't execute the service call
-        if (validation.HasErrors)
-        {
-            return validation;
-        }
-
-        var result = await serviceResultFunc();
-        
-        if (!result.IsSuccess)
-        {
-            // Add all the errors from the ServiceResult to our validation chain
-            // Prefer structured errors if available
-            if (result.StructuredErrors != null && result.StructuredErrors.Any())
-            {
-                foreach (var error in result.StructuredErrors)
-                {
-                    validation.Ensure(() => false, error);
-                }
-            }
-            else
-            {
-                foreach (var error in result.Errors)
-                {
-                    validation.Ensure(() => false, error);
-                }
-            }
-        }
-        
-        return validation;
+        return await ProcessServiceResultValidationAsync(validation, serviceResultFunc, null);
     }
 
     /// <summary>
@@ -155,39 +92,7 @@ public static class ServiceValidationExtensions
         Action<TData> dataHandler)
         where T : class, IEmptyDto<T>
     {
-        // If validation already has errors, don't execute the service call
-        if (validation.HasErrors)
-        {
-            return validation;
-        }
-
-        var result = await serviceResultFunc();
-        
-        if (!result.IsSuccess)
-        {
-            // Add all the errors from the ServiceResult to our validation chain
-            // Prefer structured errors if available
-            if (result.StructuredErrors != null && result.StructuredErrors.Any())
-            {
-                foreach (var error in result.StructuredErrors)
-                {
-                    validation.Ensure(() => false, error);
-                }
-            }
-            else
-            {
-                foreach (var error in result.Errors)
-                {
-                    validation.Ensure(() => false, error);
-                }
-            }
-        }
-        else if (dataHandler != null)
-        {
-            dataHandler(result.Data);
-        }
-        
-        return validation;
+        return await ProcessServiceResultValidationAsync(validation, serviceResultFunc, dataHandler);
     }
 
     /// <summary>
@@ -218,36 +123,7 @@ public static class ServiceValidationExtensions
         where T : class, IEmptyDto<T>
     {
         var validation = await validationTask;
-        
-        // If validation already has errors, don't execute the service call
-        if (validation.HasErrors)
-        {
-            return validation;
-        }
-
-        var result = await serviceResultFunc();
-        
-        if (!result.IsSuccess)
-        {
-            // Add all the errors from the ServiceResult to our validation chain
-            // Prefer structured errors if available
-            if (result.StructuredErrors != null && result.StructuredErrors.Any())
-            {
-                foreach (var error in result.StructuredErrors)
-                {
-                    validation.Ensure(() => false, error);
-                }
-            }
-            else
-            {
-                foreach (var error in result.Errors)
-                {
-                    validation.Ensure(() => false, error);
-                }
-            }
-        }
-        
-        return validation;
+        return await ProcessServiceResultValidationAsync(validation, serviceResultFunc, (Action<BooleanResultDto>?)null);
     }
 
     /// <summary>
@@ -311,26 +187,116 @@ public static class ServiceValidationExtensions
         
         if (!result.IsSuccess)
         {
-            // Add all the errors from the ServiceResult to our validation chain
-            // Prefer structured errors if available
-            if (result.StructuredErrors != null && result.StructuredErrors.Any())
-            {
-                foreach (var error in result.StructuredErrors)
-                {
-                    validation.Ensure(() => false, error);
-                }
-            }
-            else
-            {
-                foreach (var error in result.Errors)
-                {
-                    validation.Ensure(() => false, error);
-                }
-            }
+            AddServiceResultErrorsToValidation(validation, result);
             return new ServiceValidationWithData<T, TData>(validation, default);
         }
         
         return new ServiceValidationWithData<T, TData>(validation, result.Data);
+    }
+
+    /// <summary>
+    /// Common helper method to process ServiceResult validation for various overloads.
+    /// Reduces code duplication and complexity in public extension methods.
+    /// </summary>
+    /// <typeparam name="T">The DTO type that implements IEmptyDto</typeparam>
+    /// <typeparam name="TData">The type of data in the ServiceResult</typeparam>
+    /// <param name="validation">The validation instance</param>
+    /// <param name="serviceResultFunc">Function that returns a ServiceResult</param>
+    /// <param name="dataHandler">Optional action to handle successful data</param>
+    /// <returns>The validation instance for chaining</returns>
+    private static async Task<ServiceValidation<T>> ProcessServiceResultValidationAsync<T, TData>(
+        ServiceValidation<T> validation,
+        Func<Task<ServiceResult<TData>>> serviceResultFunc,
+        Action<TData>? dataHandler)
+        where T : class, IEmptyDto<T>
+    {
+        // If validation already has errors, don't execute the service call
+        if (validation.HasErrors)
+        {
+            return validation;
+        }
+
+        var result = await serviceResultFunc();
+        
+        if (!result.IsSuccess)
+        {
+            AddServiceResultErrorsToValidation(validation, result);
+        }
+        else if (dataHandler != null)
+        {
+            dataHandler(result.Data);
+        }
+        
+        return validation;
+    }
+
+    /// <summary>
+    /// Helper method to add ServiceResult errors to validation.
+    /// Centralizes the logic for handling both structured and string errors.
+    /// </summary>
+    /// <typeparam name="T">The DTO type that implements IEmptyDto</typeparam>
+    /// <typeparam name="TData">The type of data in the ServiceResult</typeparam>
+    /// <param name="validation">The validation instance</param>
+    /// <param name="result">The ServiceResult with errors</param>
+    private static void AddServiceResultErrorsToValidation<T, TData>(
+        ServiceValidation<T> validation,
+        ServiceResult<TData> result)
+        where T : class, IEmptyDto<T>
+    {
+        if (HasStructuredErrors(result))
+        {
+            AddStructuredErrorsToValidation(validation, result);
+            return;
+        }
+
+        AddStringErrorsToValidation(validation, result);
+    }
+
+    /// <summary>
+    /// Checks if the service result has structured errors.
+    /// </summary>
+    /// <typeparam name="TData">The type of data in the ServiceResult</typeparam>
+    /// <param name="result">The service result to check</param>
+    /// <returns>True if there are structured errors</returns>
+    private static bool HasStructuredErrors<TData>(ServiceResult<TData> result)
+    {
+        return result.StructuredErrors != null && result.StructuredErrors.Any();
+    }
+
+    /// <summary>
+    /// Adds structured errors from service result to validation.
+    /// </summary>
+    /// <typeparam name="T">The DTO type that implements IEmptyDto</typeparam>
+    /// <typeparam name="TData">The type of data in the ServiceResult</typeparam>
+    /// <param name="validation">The validation instance</param>
+    /// <param name="result">The service result with structured errors</param>
+    private static void AddStructuredErrorsToValidation<T, TData>(
+        ServiceValidation<T> validation,
+        ServiceResult<TData> result)
+        where T : class, IEmptyDto<T>
+    {
+        foreach (var error in result.StructuredErrors!)
+        {
+            validation.Ensure(() => false, error);
+        }
+    }
+
+    /// <summary>
+    /// Adds string errors from service result to validation.
+    /// </summary>
+    /// <typeparam name="T">The DTO type that implements IEmptyDto</typeparam>
+    /// <typeparam name="TData">The type of data in the ServiceResult</typeparam>
+    /// <param name="validation">The validation instance</param>
+    /// <param name="result">The service result with string errors</param>
+    private static void AddStringErrorsToValidation<T, TData>(
+        ServiceValidation<T> validation,
+        ServiceResult<TData> result)
+        where T : class, IEmptyDto<T>
+    {
+        foreach (var error in result.Errors)
+        {
+            validation.Ensure(() => false, error);
+        }
     }
 
     /// <summary>

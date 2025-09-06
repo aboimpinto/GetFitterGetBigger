@@ -134,6 +134,7 @@ builder.Services.AddSingleton<ICacheHelperService, CacheHelperService>();
 builder.Services.AddHttpClient<IExerciseLinkService, ExerciseLinkService>(client =>
 {
     client.BaseAddress = new Uri(builder.Configuration["ApiBaseUrl"] ?? "http://localhost:5214");
+    client.Timeout = TimeSpan.FromSeconds(30); // 30-second timeout for link operations
 });
 
 // Add ExerciseLinkStateService
@@ -183,6 +184,10 @@ builder.Services.AddScoped<ILocalStorageService, LocalStorageService>();
 
 // Add ToastService
 builder.Services.AddScoped<IToastService, ToastService>();
+
+// Add Performance Monitoring Service
+// Using NoOp implementation for development - replace with actual implementation for production
+builder.Services.AddSingleton<IPerformanceMonitoringService, NoOpPerformanceMonitoringService>();
 
 var app = builder.Build();
 

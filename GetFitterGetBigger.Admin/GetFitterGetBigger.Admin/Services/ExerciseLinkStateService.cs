@@ -1,15 +1,17 @@
 using GetFitterGetBigger.Admin.Models.Dtos;
+using GetFitterGetBigger.Admin.Models.Errors;
+using GetFitterGetBigger.Admin.Models.Results;
 using GetFitterGetBigger.Admin.Services.Exceptions;
 
 namespace GetFitterGetBigger.Admin.Services
 {
     /// <summary>
     /// Implementation of the exercise link state management service
+    /// Supports warmup, cooldown, and alternative relationships with context switching
     /// </summary>
     public class ExerciseLinkStateService : IExerciseLinkStateService
     {
         private readonly IExerciseLinkService _exerciseLinkService;
-        private const int MaxLinksPerType = 10;
 
         public event Action? OnChange;
 
@@ -36,17 +38,67 @@ namespace GetFitterGetBigger.Admin.Services
         public bool IncludeExerciseDetails { get; set; } = true;
         public string? LinkTypeFilter { get; set; }
 
+        // Context management for multi-type exercises
+        private string _activeContext = "Workout";
+        private ExerciseDto? _currentExercise;
+        public string ActiveContext 
+        { 
+            get => _activeContext;
+            set
+            {
+                if (_activeContext != value)
+                {
+                    _activeContext = value;
+                    NotifyStateChanged();
+                }
+            }
+        }
+
+        public bool HasMultipleContexts => _currentExercise?.ExerciseTypes?.Count() > 1;
+
+        public IEnumerable<string> AvailableContexts
+        {
+            get
+            {
+                if (_currentExercise?.ExerciseTypes == null) return new List<string> { "Workout" };
+
+                var contexts = new List<string>();
+                var types = _currentExercise.ExerciseTypes.Select(t => t.Value).ToList();
+
+                // Prioritize Workout as the primary context, then supplementary contexts
+                if (types.Contains("Workout")) contexts.Add("Workout");
+                if (types.Contains("Warmup")) contexts.Add("Warmup");
+                if (types.Contains("Cooldown")) contexts.Add("Cooldown");
+
+                return contexts.Any() ? contexts : new List<string> { "Workout" };
+            }
+        }
+
+        // Additional link collections
+        private List<ExerciseLinkDto> _alternativeLinks = new();
+        private List<ExerciseLinkDto> _workoutLinks = new();
+#pragma warning disable CS0414 // Field is assigned but its value is never used - intended for future UI loading states
+        private bool _isLoadingAlternatives;
+        private bool _isLoadingWorkoutLinks;
+#pragma warning restore CS0414
+
         // Computed properties
         public IEnumerable<ExerciseLinkDto> WarmupLinks =>
-            CurrentLinks?.Links.Where(l => l.LinkType == "Warmup").OrderBy(l => l.DisplayOrder) ?? Enumerable.Empty<ExerciseLinkDto>();
+            CurrentLinks?.Links.Where(l => string.Equals(l.LinkType, "Warmup", StringComparison.OrdinalIgnoreCase)).OrderBy(l => l.DisplayOrder) ?? Enumerable.Empty<ExerciseLinkDto>();
 
         public IEnumerable<ExerciseLinkDto> CooldownLinks =>
-            CurrentLinks?.Links.Where(l => l.LinkType == "Cooldown").OrderBy(l => l.DisplayOrder) ?? Enumerable.Empty<ExerciseLinkDto>();
+            CurrentLinks?.Links.Where(l => string.Equals(l.LinkType, "Cooldown", StringComparison.OrdinalIgnoreCase)).OrderBy(l => l.DisplayOrder) ?? Enumerable.Empty<ExerciseLinkDto>();
 
         public int WarmupLinkCount => WarmupLinks.Count();
         public int CooldownLinkCount => CooldownLinks.Count();
-        public bool HasMaxWarmupLinks => WarmupLinkCount >= MaxLinksPerType;
-        public bool HasMaxCooldownLinks => CooldownLinkCount >= MaxLinksPerType;
+        public bool HasMaxWarmupLinks => false; // No limits on links
+        public bool HasMaxCooldownLinks => false; // No limits on links
+
+        public IEnumerable<ExerciseLinkDto> AlternativeLinks => _alternativeLinks;
+        public int AlternativeLinkCount => _alternativeLinks.Count;
+
+        public IEnumerable<ExerciseLinkDto> WorkoutLinks => _workoutLinks;
+        public int WorkoutLinkCount => _workoutLinks.Count;
 
         public ExerciseLinkStateService(IExerciseLinkService exerciseLinkService)
         {
@@ -59,6 +111,29 @@ namespace GetFitterGetBigger.Admin.Services
             CurrentExerciseName = exerciseName;
             CurrentLinks = null;
             SuggestedLinks = null;
+            _alternativeLinks.Clear();
+            _workoutLinks.Clear();
+            _activeContext = "Workout"; // Reset to default context
+            ClearMessages();
+
+            await LoadLinksAsync();
+        }
+
+        // New overload to initialize with exercise data for context detection
+        public async Task InitializeForExerciseAsync(ExerciseDto exercise)
+        {
+            _currentExercise = exercise;
+            CurrentExerciseId = exercise.Id;
+            CurrentExerciseName = exercise.Name;
+            CurrentLinks = null;
+            SuggestedLinks = null;
+            _alternativeLinks.Clear();
+            _workoutLinks.Clear();
+            
+            // Set initial context based on exercise types
+            var availableContexts = AvailableContexts.ToList();
+            _activeContext = availableContexts.FirstOrDefault() ?? "Workout";
+            
             ClearMessages();
 
             await LoadLinksAsync();
@@ -100,7 +175,26 @@ namespace GetFitterGetBigger.Admin.Services
                 CurrentLinks = await _exerciseLinkService.GetLinksAsync(
                     CurrentExerciseId,
                     LinkTypeFilter,
-                    IncludeExerciseDetails);
+                    IncludeExerciseDetails,
+                    includeReverse: true); // Include reverse links for bidirectional relationships (Alternative links)
+                
+                // Extract Alternative and Workout links from the main response into separate collections
+                if (CurrentLinks?.Links != null)
+                {
+                    // Extract Alternative links
+                    _alternativeLinks.Clear();
+                    var alternativeLinks = CurrentLinks.Links
+                        .Where(l => string.Equals(l.LinkType, "Alternative", StringComparison.OrdinalIgnoreCase))
+                        .ToList();
+                    _alternativeLinks.AddRange(alternativeLinks);
+                    
+                    // Extract Workout links (for Warmup/Cooldown exercises showing which workouts use them)
+                    _workoutLinks.Clear();
+                    var workoutLinks = CurrentLinks.Links
+                        .Where(l => string.Equals(l.LinkType, "Workout", StringComparison.OrdinalIgnoreCase))
+                        .ToList();
+                    _workoutLinks.AddRange(workoutLinks);
+                }
             }
             catch (ExerciseNotFoundException)
             {
@@ -122,6 +216,14 @@ namespace GetFitterGetBigger.Admin.Services
             }
         }
 
+        /// <summary>
+        /// Loads suggested exercise links based on AI/ML recommendations or business rules.
+        /// </summary>
+        /// <param name="count">The maximum number of suggestions to retrieve (default: 5)</param>
+        /// <remarks>
+        /// This method silently fails if suggestions cannot be loaded, as they are not critical
+        /// to the core functionality. Suggestions enhance user experience but are not required.
+        /// </remarks>
         public async Task LoadSuggestedLinksAsync(int count = 5)
         {
             if (string.IsNullOrEmpty(CurrentExerciseId))
@@ -148,6 +250,102 @@ namespace GetFitterGetBigger.Admin.Services
             }
         }
 
+        /// <summary>
+        /// Loads alternative exercise links for the current exercise.
+        /// </summary>
+        /// <remarks>
+        /// Alternative links represent exercises that can be substituted for the current exercise.
+        /// This method includes reverse links to show bidirectional alternative relationships.
+        /// The method silently fails to avoid disrupting the user experience if alternatives cannot be loaded.
+        /// </remarks>
+        public async Task LoadAlternativeLinksAsync()
+        {
+            if (string.IsNullOrEmpty(CurrentExerciseId))
+            {
+                return;
+            }
+
+            try
+            {
+                _isLoadingAlternatives = true;
+                NotifyStateChanged();
+
+                var alternativeLinks = await _exerciseLinkService.GetLinksAsync(
+                    CurrentExerciseId, 
+                    "Alternative", 
+                    IncludeExerciseDetails,
+                    includeReverse: true); // Include reverse alternative links
+                    
+                _alternativeLinks.Clear();
+                if (alternativeLinks?.Links != null)
+                {
+                    _alternativeLinks.AddRange(alternativeLinks.Links);
+                }
+            }
+            catch (Exception)
+            {
+                // Silently fail for alternative links loading
+                _alternativeLinks.Clear();
+            }
+            finally
+            {
+                _isLoadingAlternatives = false;
+                NotifyStateChanged();
+            }
+        }
+
+        /// <summary>
+        /// Loads workout exercises that use the current exercise as a warmup or cooldown.
+        /// </summary>
+        /// <remarks>
+        /// This method is primarily used when viewing warmup or cooldown exercises to show
+        /// which workout exercises reference them. It helps users understand the relationships
+        /// from both directions (workout->warmup/cooldown and warmup/cooldown->workout).
+        /// </remarks>
+        public async Task LoadWorkoutLinksAsync()
+        {
+            if (string.IsNullOrEmpty(CurrentExerciseId))
+            {
+                return;
+            }
+
+            try
+            {
+                _isLoadingWorkoutLinks = true;
+                NotifyStateChanged();
+
+                // Load reverse relationships - workouts using this exercise as warmup/cooldown
+                // Use the new includeReverse parameter to get reverse relationships
+                _workoutLinks.Clear();
+                
+                // For warmup context, get workouts that use this exercise as warmup
+                // For cooldown context, get workouts that use this exercise as cooldown
+                var linkTypeForReverse = _activeContext == "Warmup" ? "Warmup" : "Cooldown";
+                var workoutLinks = await _exerciseLinkService.GetLinksAsync(
+                    CurrentExerciseId, 
+                    linkTypeForReverse, 
+                    IncludeExerciseDetails,
+                    includeReverse: true);
+                    
+                if (workoutLinks?.Links != null)
+                {
+                    // Add only the reverse relationships (where this exercise is the target)
+                    var reverseLinks = workoutLinks.Links.Where(l => l.TargetExerciseId == CurrentExerciseId);
+                    _workoutLinks.AddRange(reverseLinks);
+                }
+            }
+            catch (Exception)
+            {
+                // Silently fail for workout links loading
+                _workoutLinks.Clear();
+            }
+            finally
+            {
+                _isLoadingWorkoutLinks = false;
+                NotifyStateChanged();
+            }
+        }
+
         public async Task CreateLinkAsync(CreateExerciseLinkDto createDto)
         {
             Console.WriteLine($"[ExerciseLinkStateService] CreateLinkAsync called");
@@ -162,24 +360,7 @@ namespace GetFitterGetBigger.Admin.Services
                 return;
             }
 
-            // Check max links before attempting to create
-            Console.WriteLine($"[ExerciseLinkStateService] Checking max links - WarmupLinkCount: {WarmupLinkCount}, CooldownLinkCount: {CooldownLinkCount}, MaxLinksPerType: {MaxLinksPerType}");
-
-            if (createDto.LinkType == "Warmup" && HasMaxWarmupLinks)
-            {
-                Console.WriteLine($"[ExerciseLinkStateService] Error: Maximum warmup links reached");
-                ErrorMessage = $"Maximum {MaxLinksPerType} warmup links allowed";
-                NotifyStateChanged();
-                return;
-            }
-
-            if (createDto.LinkType == "Cooldown" && HasMaxCooldownLinks)
-            {
-                Console.WriteLine($"[ExerciseLinkStateService] Error: Maximum cooldown links reached");
-                ErrorMessage = $"Maximum {MaxLinksPerType} cooldown links allowed";
-                NotifyStateChanged();
-                return;
-            }
+            // No limits on the number of links - removed check
 
             try
             {
@@ -188,32 +369,41 @@ namespace GetFitterGetBigger.Admin.Services
                 ClearMessages();
                 NotifyStateChanged();
 
-                // Optimistic update - add to local state immediately
-                if (CurrentLinks != null)
+                // Optimistic update - add to appropriate collection
+                var optimisticLink = new ExerciseLinkDto
                 {
-                    var optimisticLink = new ExerciseLinkDto
-                    {
-                        Id = Guid.NewGuid().ToString(), // Temporary ID
-                        SourceExerciseId = CurrentExerciseId,
-                        TargetExerciseId = createDto.TargetExerciseId,
-                        LinkType = createDto.LinkType,
-                        DisplayOrder = createDto.DisplayOrder,
-                        IsActive = true,
-                        CreatedAt = DateTime.UtcNow,
-                        UpdatedAt = DateTime.UtcNow
-                    };
+                    Id = Guid.NewGuid().ToString(), // Temporary ID
+                    SourceExerciseId = CurrentExerciseId,
+                    TargetExerciseId = createDto.TargetExerciseId,
+                    LinkType = createDto.LinkType,
+                    DisplayOrder = createDto.DisplayOrder ?? 0,
+                    IsActive = true,
+                    CreatedAt = DateTime.UtcNow,
+                    UpdatedAt = DateTime.UtcNow
+                };
 
-                    Console.WriteLine($"[ExerciseLinkStateService] Adding optimistic link with ID: {optimisticLink.Id}");
+                Console.WriteLine($"[ExerciseLinkStateService] Adding optimistic link with ID: {optimisticLink.Id}");
+
+                if (string.Equals(createDto.LinkType, "Alternative", StringComparison.OrdinalIgnoreCase))
+                {
+                    _alternativeLinks.Add(optimisticLink);
+                }
+                else if (CurrentLinks != null)
+                {
                     CurrentLinks.Links.Add(optimisticLink);
                     CurrentLinks.TotalCount++;
-                    NotifyStateChanged();
                 }
+                
+                NotifyStateChanged();
 
                 Console.WriteLine($"[ExerciseLinkStateService] Calling ExerciseLinkService.CreateLinkAsync");
-                await _exerciseLinkService.CreateLinkAsync(CurrentExerciseId, createDto);
+                // Use the source exercise ID for the API call
+                // This is important for inverse relationships where we're creating a link on a different exercise
+                await _exerciseLinkService.CreateLinkAsync(createDto.SourceExerciseId ?? CurrentExerciseId, createDto);
 
                 Console.WriteLine($"[ExerciseLinkStateService] Link created successfully, reloading links");
-                // Reload to get the actual server state
+                
+                // Reload all links (LoadLinksAsync will extract Alternative links)
                 await LoadLinksAsync();
 
                 SuccessMessage = $"{createDto.LinkType} link created successfully";
@@ -229,11 +419,95 @@ namespace GetFitterGetBigger.Admin.Services
                 }
                 ErrorMessage = ErrorMessageFormatter.FormatExerciseLinkError(ex);
                 Console.WriteLine($"[ExerciseLinkStateService] Formatted error message: {ErrorMessage}");
-                await LoadLinksAsync(preserveErrorMessage: true); // Revert optimistic update
+                
+                // Revert optimistic update - always use LoadLinksAsync to get all link types
+                await LoadLinksAsync(preserveErrorMessage: true);
             }
             finally
             {
                 Console.WriteLine($"[ExerciseLinkStateService] CreateLinkAsync cleanup");
+                IsProcessingLink = false;
+                NotifyStateChanged();
+            }
+        }
+
+        /// <summary>
+        /// Creates a bidirectional exercise link, establishing the relationship in both directions.
+        /// </summary>
+        /// <param name="createDto">The data transfer object containing link creation details</param>
+        /// <remarks>
+        /// This method is specifically for Alternative links which require bidirectional relationships.
+        /// It creates both A->B and B->A links in a single operation. If either link creation fails,
+        /// the entire operation is rolled back to maintain data consistency.
+        /// </remarks>
+        public async Task CreateBidirectionalLinkAsync(CreateExerciseLinkDto createDto)
+        {
+            if (string.IsNullOrEmpty(CurrentExerciseId))
+            {
+                ErrorMessage = "No exercise selected";
+                NotifyStateChanged();
+                return;
+            }
+
+            // Bidirectional links are typically for Alternative type relationships
+            if (!string.Equals(createDto.LinkType, "Alternative", StringComparison.OrdinalIgnoreCase))
+            {
+                ErrorMessage = "Bidirectional links are only supported for Alternative relationships";
+                NotifyStateChanged();
+                return;
+            }
+
+            try
+            {
+                IsProcessingLink = true;
+                ClearMessages();
+                NotifyStateChanged();
+
+                // Optimistic update - add bidirectional links
+                var forwardLink = new ExerciseLinkDto
+                {
+                    Id = Guid.NewGuid().ToString(),
+                    SourceExerciseId = CurrentExerciseId,
+                    TargetExerciseId = createDto.TargetExerciseId,
+                    LinkType = createDto.LinkType,
+                    DisplayOrder = 0, // Alternative links don't use display order
+                    IsActive = true,
+                    CreatedAt = DateTime.UtcNow,
+                    UpdatedAt = DateTime.UtcNow
+                };
+
+                var reverseLink = new ExerciseLinkDto
+                {
+                    Id = Guid.NewGuid().ToString(),
+                    SourceExerciseId = createDto.TargetExerciseId,
+                    TargetExerciseId = CurrentExerciseId,
+                    LinkType = createDto.LinkType,
+                    DisplayOrder = 0,
+                    IsActive = true,
+                    CreatedAt = DateTime.UtcNow,
+                    UpdatedAt = DateTime.UtcNow
+                };
+
+                _alternativeLinks.Add(forwardLink);
+                NotifyStateChanged();
+
+                // API call - use bidirectional method to create both directions
+                // Use the source exercise ID for the API call
+                await _exerciseLinkService.CreateBidirectionalLinkAsync(createDto.SourceExerciseId ?? CurrentExerciseId, createDto);
+
+                // Reload to get actual server state (LoadLinksAsync will extract Alternative links)
+                await LoadLinksAsync();
+
+                SuccessMessage = "Alternative link created (bidirectional)";
+                ScreenReaderAnnouncement = "Alternative exercise link has been created for both exercises";
+            }
+            catch (Exception ex)
+            {
+                ErrorMessage = ErrorMessageFormatter.FormatExerciseLinkError(ex);
+                await LoadLinksAsync(preserveErrorMessage: true); // Revert optimistic update
+            }
+            finally
+            {
                 IsProcessingLink = false;
                 NotifyStateChanged();
             }
@@ -332,6 +606,110 @@ namespace GetFitterGetBigger.Admin.Services
             {
                 IsProcessingLink = false;
                 IsDeleting = false;
+                NotifyStateChanged();
+            }
+        }
+
+        /// <summary>
+        /// Deletes a bidirectional exercise link, removing the relationship from both directions.
+        /// </summary>
+        /// <param name="linkId">The unique identifier of the link to delete</param>
+        /// <remarks>
+        /// This method handles deletion of Alternative links which exist bidirectionally.
+        /// It ensures both A->B and B->A links are removed together. The operation uses
+        /// optimistic updates for better UX, reverting changes if the deletion fails.
+        /// </remarks>
+        public async Task DeleteBidirectionalLinkAsync(string linkId)
+        {
+            if (string.IsNullOrEmpty(CurrentExerciseId))
+            {
+                ErrorMessage = "No exercise selected";
+                NotifyStateChanged();
+                return;
+            }
+
+            try
+            {
+                IsProcessingLink = true;
+                IsDeleting = true;
+                ClearMessages();
+                NotifyStateChanged();
+
+                // Find the link to delete from alternative links
+                var linkToDelete = _alternativeLinks.FirstOrDefault(l => l.Id == linkId);
+                var linkType = linkToDelete?.LinkType ?? "Link";
+
+                // Optimistic update - remove from local state immediately
+                if (linkToDelete != null)
+                {
+                    _alternativeLinks.Remove(linkToDelete);
+                    NotifyStateChanged();
+                }
+
+                // API call - use bidirectional method to delete both directions
+                await _exerciseLinkService.DeleteBidirectionalLinkAsync(CurrentExerciseId, linkId, true);
+
+                // Reload to get the actual server state (LoadLinksAsync will extract Alternative links)
+                await LoadLinksAsync();
+
+                SuccessMessage = $"{linkType} link removed (bidirectional)";
+                ScreenReaderAnnouncement = $"{linkType} exercise link has been removed from both exercises";
+            }
+            catch (Exception ex)
+            {
+                ErrorMessage = ErrorMessageFormatter.FormatExerciseLinkError(ex);
+                await LoadLinksAsync(preserveErrorMessage: true); // Revert optimistic update
+            }
+            finally
+            {
+                IsProcessingLink = false;
+                IsDeleting = false;
+                NotifyStateChanged();
+            }
+        }
+
+        /// <summary>
+        /// Switches the active context for multi-type exercises.
+        /// </summary>
+        /// <param name="contextType">The context to switch to ("Workout", "Warmup", or "Cooldown")</param>
+        /// <remarks>
+        /// This method is used for exercises that can serve multiple purposes. For example,
+        /// an exercise might be both a standalone workout and a warmup. Switching context
+        /// changes which relationships are displayed and which operations are available.
+        /// The method automatically reloads relevant links for the new context.
+        /// </remarks>
+        public async Task SwitchContextAsync(string contextType)
+        {
+            if (!AvailableContexts.Contains(contextType))
+            {
+                ErrorMessage = $"Invalid context type: {contextType}";
+                NotifyStateChanged();
+                return;
+            }
+
+            try
+            {
+                ClearMessages();
+                ActiveContext = contextType;
+
+                // Load appropriate links for the new context
+                switch (contextType)
+                {
+                    case "Workout":
+                        await LoadLinksAsync(); // This will also extract Alternative links
+                        break;
+                    case "Warmup":
+                    case "Cooldown":
+                        await LoadLinksAsync(); // This will also extract Alternative links
+                        await LoadWorkoutLinksAsync(); // Load reverse relationships
+                        break;
+                }
+
+                ScreenReaderAnnouncement = $"Switched to {contextType} context";
+            }
+            catch (Exception ex)
+            {
+                ErrorMessage = $"Failed to switch context: {ex.Message}";
                 NotifyStateChanged();
             }
         }
@@ -442,9 +820,13 @@ namespace GetFitterGetBigger.Admin.Services
         {
             CurrentExerciseId = null;
             CurrentExerciseName = null;
+            _currentExercise = null;
             CurrentLinks = null;
             SuggestedLinks = null;
+            _alternativeLinks.Clear();
+            _workoutLinks.Clear();
             LinkTypeFilter = null;
+            _activeContext = "Workout";
             ClearMessages();
             NotifyStateChanged();
         }
@@ -475,6 +857,51 @@ namespace GetFitterGetBigger.Admin.Services
             SuccessMessage = null;
             ScreenReaderAnnouncement = $"Error: {errorMessage}";
             NotifyStateChanged();
+        }
+
+        public ServiceResult<bool> ValidateLinkCompatibility(ExerciseDto sourceExercise, ExerciseDto targetExercise, string linkType)
+        {
+            // Rule: Cannot self-reference
+            if (sourceExercise.Id == targetExercise.Id)
+            {
+                return ServiceResult<bool>.Failure(
+                    new ServiceError(ServiceErrorCode.ValidationInvalid, "An exercise cannot be linked to itself"));
+            }
+
+            // Rule for Alternative links: Must share at least one exercise type
+            if (linkType == "Alternative")
+            {
+                var sourceTypes = sourceExercise.ExerciseTypes?.Select(t => t.Value) ?? Enumerable.Empty<string>();
+                var targetTypes = targetExercise.ExerciseTypes?.Select(t => t.Value) ?? Enumerable.Empty<string>();
+
+                if (!sourceTypes.Intersect(targetTypes).Any())
+                {
+                    return ServiceResult<bool>.Failure(
+                        new ServiceError(ServiceErrorCode.ValidationInvalid, 
+                            "Alternative exercises must share at least one exercise type"));
+                }
+            }
+
+            // Rule: Check for existing link
+            bool hasExistingLink = false;
+            if (linkType == "Alternative")
+            {
+                hasExistingLink = _alternativeLinks.Any(l => l.TargetExerciseId == targetExercise.Id);
+            }
+            else if (CurrentLinks != null)
+            {
+                hasExistingLink = CurrentLinks.Links.Any(l => 
+                    l.TargetExerciseId == targetExercise.Id && l.LinkType == linkType);
+            }
+
+            if (hasExistingLink)
+            {
+                return ServiceResult<bool>.Failure(
+                    new ServiceError(ServiceErrorCode.DuplicateName, 
+                        $"A {linkType.ToLower()} link to this exercise already exists"));
+            }
+
+            return ServiceResult<bool>.Success(true);
         }
 
         private void NotifyStateChanged() => OnChange?.Invoke();

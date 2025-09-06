@@ -88,10 +88,10 @@ public class WorkoutTemplateExerciseBuilder
         return this;
     }
     
-    public WorkoutTemplateExerciseBuilder WithExercise(Exercise exercise)
+    public WorkoutTemplateExerciseBuilder WithExercise(Exercise? exercise)
     {
         _exercise = exercise;
-        _exerciseId = exercise.Id;
+        _exerciseId = exercise?.Id ?? ExerciseId.Empty;
         return this;
     }
 

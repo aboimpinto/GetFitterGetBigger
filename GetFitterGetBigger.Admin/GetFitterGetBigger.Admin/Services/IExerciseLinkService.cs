@@ -3,26 +3,37 @@ using GetFitterGetBigger.Admin.Models.Dtos;
 namespace GetFitterGetBigger.Admin.Services;
 
 /// <summary>
-/// Service interface for managing exercise links (warmup and cooldown relationships)
+/// Service interface for managing exercise links (warmup, cooldown, and alternative relationships)
 /// </summary>
 public interface IExerciseLinkService
 {
     /// <summary>
     /// Creates a new link between a source exercise and a target exercise
+    /// For Alternative links, also creates the reverse bidirectional relationship automatically
     /// </summary>
-    /// <param name="exerciseId">The source exercise ID (must be a Workout type)</param>
+    /// <param name="exerciseId">The source exercise ID</param>
     /// <param name="createLinkDto">The link creation data</param>
     /// <returns>The created exercise link</returns>
     Task<ExerciseLinkDto> CreateLinkAsync(string exerciseId, CreateExerciseLinkDto createLinkDto);
 
     /// <summary>
+    /// Creates a bidirectional link between exercises (used for Alternative links)
+    /// This method ensures both directions of the relationship are created
+    /// </summary>
+    /// <param name="exerciseId">The source exercise ID</param>
+    /// <param name="createLinkDto">The link creation data</param>
+    /// <returns>The created exercise link</returns>
+    Task<ExerciseLinkDto> CreateBidirectionalLinkAsync(string exerciseId, CreateExerciseLinkDto createLinkDto);
+
+    /// <summary>
     /// Gets all links for a specific exercise, optionally filtered by link type
     /// </summary>
     /// <param name="exerciseId">The source exercise ID</param>
-    /// <param name="linkType">Optional filter by link type ("Warmup" or "Cooldown")</param>
+    /// <param name="linkType">Optional filter by link type ("Warmup", "Cooldown", or "Alternative")</param>
     /// <param name="includeExerciseDetails">Whether to include full exercise data for targets</param>
+    /// <param name="includeReverse">Whether to include reverse relationships (for Alternative links)</param>
     /// <returns>Response containing the exercise links</returns>
-    Task<ExerciseLinksResponseDto> GetLinksAsync(string exerciseId, string? linkType = null, bool includeExerciseDetails = false);
+    Task<ExerciseLinksResponseDto> GetLinksAsync(string exerciseId, string? linkType = null, bool includeExerciseDetails = false, bool includeReverse = false);
 
     /// <summary>
     /// Gets suggested exercises that could be linked based on common usage patterns
@@ -47,4 +58,13 @@ public interface IExerciseLinkService
     /// <param name="exerciseId">The source exercise ID</param>
     /// <param name="linkId">The link ID to delete</param>
     Task DeleteLinkAsync(string exerciseId, string linkId);
+
+    /// <summary>
+    /// Deletes a bidirectional link between exercises (used for Alternative links)
+    /// This method ensures both directions of the relationship are removed
+    /// </summary>
+    /// <param name="exerciseId">The source exercise ID</param>
+    /// <param name="linkId">The link ID to delete</param>
+    /// <param name="deleteReverse">Whether to delete the reverse relationship as well (default: true for Alternative links)</param>
+    Task DeleteBidirectionalLinkAsync(string exerciseId, string linkId, bool deleteReverse = true);
 }

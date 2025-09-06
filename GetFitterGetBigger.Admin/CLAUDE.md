@@ -23,6 +23,15 @@ Note: When in the main repository folder, only documentation work is performed.
 - Common pitfalls and debugging strategies
 - Quick reference for both tech stacks
 
+## Navigation Guidelines
+
+**IMPORTANT**: When implementing navigation in Blazor components, always follow the **memory-bank/patterns/BLAZOR-NAVIGATION-BEST-PRACTICES.md** guide. This document contains:
+- When to use standard HTML links vs NavigationManager
+- Browser history management best practices
+- State persistence across navigation
+- Common navigation pitfalls and solutions
+- Testing navigation patterns
+
 Key requirements for all component tests:
 1. Add `data-testid` attributes to interactive elements (Blazor) or use semantic queries (React)
 2. Use `internal` visibility for testable methods/fields in Blazor components
@@ -88,3 +97,17 @@ When creating temporary files during work sessions (plans, summaries, analysis):
 - This directory is gitignored and won't be committed
 - See `memory-bank/AI-ASSISTANT-TEMP-FILES-PATTERN.md` for details
 - Never create temporary documentation files in test or source directories
+
+## Creating AI Agents
+
+When creating new AI agents for the project:
+- **IMPORTANT**: Always read the official Claude Code sub-agents documentation first: https://docs.anthropic.com/en/docs/claude-code/sub-agents
+- Follow the documented patterns and best practices for agent creation
+- Ensure agents are properly configured with appropriate tools and responsibilities
+
+## Creating Slash Commands
+
+When creating new slash commands for the project:
+- **IMPORTANT**: Always read the official Claude Code slash commands documentation first: https://docs.anthropic.com/en/docs/claude-code/slash-commands
+- Follow the documented patterns and best practices for slash command creation
+- Ensure commands are properly configured with clear descriptions and appropriate functionality

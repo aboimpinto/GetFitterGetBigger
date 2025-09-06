@@ -9,6 +9,7 @@ using GetFitterGetBigger.API.Services.ReferenceTables.ExerciseType;
 using GetFitterGetBigger.API.Services.Results;
 using Moq;
 using Moq.AutoMock;
+using ExerciseEntity = GetFitterGetBigger.API.Models.Entities.Exercise;
 
 namespace GetFitterGetBigger.API.Tests.Services.Extensions;
 
@@ -69,7 +70,7 @@ public static class AutoMockerExerciseDataServiceExtensions
         ExerciseDto returnValue)
     {
         mocker.GetMock<IExerciseCommandDataService>()
-            .Setup(x => x.CreateAsync(It.IsAny<Exercise>(), null))
+            .Setup(x => x.CreateAsync(It.IsAny<ExerciseEntity>(), null))
             .ReturnsAsync(ServiceResult<ExerciseDto>.Success(returnValue));
 
         return mocker;
@@ -82,7 +83,7 @@ public static class AutoMockerExerciseDataServiceExtensions
         mocker.GetMock<IExerciseCommandDataService>()
             .Setup(x => x.UpdateAsync(
                 It.IsAny<ExerciseId>(),
-                It.IsAny<Func<Exercise, Exercise>>(),
+                It.IsAny<Func<ExerciseEntity, ExerciseEntity>>(),
                 null))
             .ReturnsAsync(ServiceResult<ExerciseDto>.Success(returnValue));
 

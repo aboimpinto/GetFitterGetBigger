@@ -5,6 +5,7 @@ using GetFitterGetBigger.Admin.Models.Dtos;
 using GetFitterGetBigger.Admin.Services;
 using GetFitterGetBigger.Admin.Builders;
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Web;
 using Moq;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,6 +13,9 @@ using System.Threading.Tasks;
 
 namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises.ExerciseLinks
 {
+    /// <summary>
+    /// Tests for the AddExerciseLinkModal component including accessibility and interaction patterns
+    /// </summary>
     public class AddExerciseLinkModalTests : TestContext
     {
         private readonly Mock<IExerciseService> _exerciseServiceMock;
@@ -39,9 +43,9 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises.ExerciseLink
                 .Add(p => p.ExistingLinks, new List<ExerciseLinkDto>())
                 .Add(p => p.ExerciseTypes, _exerciseTypes));
 
-            // Assert
-            var modal = component.Find("[data-testid='add-link-modal']");
-            modal.GetAttribute("class").Should().Contain("hidden");
+            // Assert - Modal is not rendered at all when closed (not just hidden)
+            var modalElements = component.FindAll("[data-testid='add-link-modal']");
+            modalElements.Should().BeEmpty("Modal should not be rendered when IsOpen is false");
         }
 
         [Fact]
@@ -515,5 +519,162 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises.ExerciseLink
                 capturedExercise!.Id.Should().Be("1");
             });
         }
+
+        #region Accessibility Tests
+
+        [Fact]
+        public void AddExerciseLinkModal_HasProperAriaAttributes()
+        {
+            // Arrange & Act
+            var component = RenderComponent<AddExerciseLinkModal>(parameters => parameters
+                .Add(p => p.IsOpen, true)
+                .Add(p => p.LinkType, "Alternative")
+                .Add(p => p.ExerciseService, _exerciseServiceMock.Object)
+                .Add(p => p.ExistingLinks, new List<ExerciseLinkDto>())
+                .Add(p => p.ExerciseTypes, _exerciseTypes));
+
+            // Assert - Check ARIA attributes on modal
+            var modal = component.Find("[role='dialog']");
+            modal.Should().NotBeNull();
+            modal.GetAttribute("aria-modal").Should().Be("true");
+            modal.GetAttribute("aria-labelledby").Should().Be("modal-title");
+            modal.GetAttribute("aria-describedby").Should().Be("modal-description");
+
+            // Check that backdrop has aria-hidden
+            var backdrop = component.Find(".fixed.inset-0.bg-gray-500");
+            backdrop.GetAttribute("aria-hidden").Should().Be("true");
+
+            // Check that search input has proper ARIA attributes
+            var searchInput = component.Find("[data-testid='search-input']");
+            searchInput.GetAttribute("aria-label").Should().Be("Search for exercises by name");
+            searchInput.GetAttribute("aria-autocomplete").Should().Be("list");
+        }
+
+        [Fact]
+        public void AddExerciseLinkModal_HasScreenReaderDescription()
+        {
+            // Arrange & Act
+            var component = RenderComponent<AddExerciseLinkModal>(parameters => parameters
+                .Add(p => p.IsOpen, true)
+                .Add(p => p.LinkType, "Warmup")
+                .Add(p => p.ExerciseService, _exerciseServiceMock.Object)
+                .Add(p => p.ExistingLinks, new List<ExerciseLinkDto>())
+                .Add(p => p.ExerciseTypes, _exerciseTypes));
+
+            // Assert - Check screen reader only description exists
+            var description = component.Find("#modal-description");
+            description.Should().NotBeNull();
+            description.GetAttribute("class").Should().Contain("sr-only");
+            description.TextContent.Should().Contain("Select an exercise to add as a warmup exercise");
+        }
+
+        [Fact]
+        public async Task AddExerciseLinkModal_BackdropClick_ClosesModal()
+        {
+            // Arrange
+            var onCancelCalled = false;
+            var component = RenderComponent<AddExerciseLinkModal>(parameters => parameters
+                .Add(p => p.IsOpen, true)
+                .Add(p => p.LinkType, "Warmup")
+                .Add(p => p.ExerciseService, _exerciseServiceMock.Object)
+                .Add(p => p.ExistingLinks, new List<ExerciseLinkDto>())
+                .Add(p => p.ExerciseTypes, _exerciseTypes)
+                .Add(p => p.OnCancel, EventCallback.Factory.Create(this, () => onCancelCalled = true)));
+
+            // Act - Click on backdrop
+            var backdrop = component.Find(".fixed.inset-0.bg-gray-500");
+            await backdrop.ClickAsync(new MouseEventArgs());
+
+            // Assert
+            onCancelCalled.Should().BeTrue("OnCancel should be called when backdrop is clicked");
+        }
+
+        [Fact]
+        public async Task AddExerciseLinkModal_EscapeKey_ClosesModal()
+        {
+            // Arrange
+            var onCancelCalled = false;
+            var component = RenderComponent<AddExerciseLinkModal>(parameters => parameters
+                .Add(p => p.IsOpen, true)
+                .Add(p => p.LinkType, "Cooldown")
+                .Add(p => p.ExerciseService, _exerciseServiceMock.Object)
+                .Add(p => p.ExistingLinks, new List<ExerciseLinkDto>())
+                .Add(p => p.ExerciseTypes, _exerciseTypes)
+                .Add(p => p.OnCancel, EventCallback.Factory.Create(this, () => onCancelCalled = true)));
+
+            // Act - Press Escape key on modal
+            var modal = component.Find("[role='dialog']");
+            await modal.KeyDownAsync(new KeyboardEventArgs { Key = "Escape" });
+
+            // Assert
+            onCancelCalled.Should().BeTrue("OnCancel should be called when Escape key is pressed");
+        }
+
+        [Fact]
+        public async Task AddExerciseLinkModal_SearchInputFocus_OnOpen()
+        {
+            // Arrange
+            var component = RenderComponent<AddExerciseLinkModal>(parameters => parameters
+                .Add(p => p.IsOpen, true)
+                .Add(p => p.LinkType, "Warmup")
+                .Add(p => p.ExerciseService, _exerciseServiceMock.Object)
+                .Add(p => p.ExistingLinks, new List<ExerciseLinkDto>())
+                .Add(p => p.ExerciseTypes, _exerciseTypes));
+
+            // Wait for OnAfterRenderAsync to complete
+            await component.InvokeAsync(() => Task.Delay(50));
+
+            // Assert - Verify search input exists and would receive focus
+            var searchInput = component.Find("[data-testid='search-input']");
+            searchInput.Should().NotBeNull();
+            // Note: bUnit limitation - cannot directly test focus state,
+            // but we verify the element exists and FocusAsync would be called
+        }
+
+        [Fact]
+        public void AddExerciseLinkModal_NotRendered_WhenClosed()
+        {
+            // Arrange & Act
+            var component = RenderComponent<AddExerciseLinkModal>(parameters => parameters
+                .Add(p => p.IsOpen, false)
+                .Add(p => p.LinkType, "Warmup")
+                .Add(p => p.ExerciseService, _exerciseServiceMock.Object)
+                .Add(p => p.ExistingLinks, new List<ExerciseLinkDto>())
+                .Add(p => p.ExerciseTypes, _exerciseTypes));
+
+            // Assert - Modal should not exist in DOM when IsOpen is false
+            var modals = component.FindAll("[role='dialog']");
+            modals.Should().BeEmpty("Modal should not be rendered when IsOpen is false");
+        }
+
+        [Fact]
+        public void AddExerciseLinkModal_ModalTitle_MatchesLinkType()
+        {
+            // Test different link types
+            var linkTypes = new[] { "Warmup", "Cooldown", "Alternative" };
+
+            foreach (var linkType in linkTypes)
+            {
+                // Arrange & Act
+                var component = RenderComponent<AddExerciseLinkModal>(parameters => parameters
+                    .Add(p => p.IsOpen, true)
+                    .Add(p => p.LinkType, linkType)
+                    .Add(p => p.ExerciseService, _exerciseServiceMock.Object)
+                    .Add(p => p.ExistingLinks, new List<ExerciseLinkDto>())
+                    .Add(p => p.ExerciseTypes, _exerciseTypes));
+
+                // Assert
+                var title = component.Find("#modal-title");
+                title.TextContent.Should().Contain($"Add {linkType} Exercise");
+
+                // Check screen reader description also matches
+                var description = component.Find("#modal-description");
+                description.TextContent.Should().Contain($"Select an exercise to add as a {linkType.ToLower()} exercise");
+
+                component.Dispose();
+            }
+        }
+
+        #endregion
     }
 }

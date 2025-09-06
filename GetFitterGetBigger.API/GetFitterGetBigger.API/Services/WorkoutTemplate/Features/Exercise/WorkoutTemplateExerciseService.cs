@@ -134,23 +134,80 @@ public class WorkoutTemplateExerciseService : IWorkoutTemplateExerciseService
     
     private ServiceResult<WorkoutTemplateExerciseDto> IsAddExerciseCommandValid(AddExerciseToTemplateCommand command)
     {
-        var result = (command.WorkoutTemplateId.IsEmpty, command.ExerciseId.IsEmpty, 
-                     string.IsNullOrWhiteSpace(command.Zone), command.UserId.IsEmpty) switch
+        // Validate basic command parameters first
+        var basicValidation = ValidateAddExerciseBasicParameters(command);
+        if (!basicValidation.IsSuccess)
         {
-            (true, _, _, _) or (_, true, _, _) or (_, _, true, _) or (_, _, _, true) => 
-                ServiceResult<WorkoutTemplateExerciseDto>.Failure(
-                    new WorkoutTemplateExerciseDto(),
-                    ServiceError.ValidationFailed(WorkoutTemplateExerciseErrorMessages.InvalidCommandParameters)),
-            _ => IsValidZone(command.Zone) switch
-            {
-                false => ServiceResult<WorkoutTemplateExerciseDto>.Failure(
-                    new WorkoutTemplateExerciseDto(),
-                    ServiceError.ValidationFailed(string.Format(WorkoutTemplateExerciseErrorMessages.InvalidZoneWarmupMainCooldown, command.Zone))),
-                true => ServiceResult<WorkoutTemplateExerciseDto>.Success(new WorkoutTemplateExerciseDto()) // Dummy success
-            }
-        };
-        
-        return result;
+            return basicValidation;
+        }
+
+        // Then validate zone if basic parameters are valid
+        return ValidateAddExerciseZone(command.Zone);
+    }
+
+    /// <summary>
+    /// Validates the basic parameters of the add exercise command
+    /// </summary>
+    /// <param name="command">The command to validate</param>
+    /// <returns>Success if all basic parameters are valid, failure otherwise</returns>
+    private ServiceResult<WorkoutTemplateExerciseDto> ValidateAddExerciseBasicParameters(AddExerciseToTemplateCommand command)
+    {
+        if (HasInvalidAddExerciseParameters(command))
+        {
+            return CreateAddExerciseValidationFailure(WorkoutTemplateExerciseErrorMessages.InvalidCommandParameters);
+        }
+
+        return CreateAddExerciseValidationSuccess();
+    }
+
+    /// <summary>
+    /// Checks if the add exercise command has any invalid basic parameters
+    /// </summary>
+    /// <param name="command">The command to check</param>
+    /// <returns>True if any basic parameter is invalid</returns>
+    private static bool HasInvalidAddExerciseParameters(AddExerciseToTemplateCommand command)
+    {
+        return command.WorkoutTemplateId.IsEmpty ||
+               command.ExerciseId.IsEmpty ||
+               string.IsNullOrWhiteSpace(command.Zone) ||
+               command.UserId.IsEmpty;
+    }
+
+    /// <summary>
+    /// Validates the zone parameter for the add exercise command
+    /// </summary>
+    /// <param name="zone">The zone to validate</param>
+    /// <returns>Success if zone is valid, failure otherwise</returns>
+    private ServiceResult<WorkoutTemplateExerciseDto> ValidateAddExerciseZone(string zone)
+    {
+        if (!IsValidZone(zone))
+        {
+            var errorMessage = string.Format(WorkoutTemplateExerciseErrorMessages.InvalidZoneWarmupMainCooldown, zone);
+            return CreateAddExerciseValidationFailure(errorMessage);
+        }
+
+        return CreateAddExerciseValidationSuccess();
+    }
+
+    /// <summary>
+    /// Creates a validation failure result for add exercise operations
+    /// </summary>
+    /// <param name="errorMessage">The error message</param>
+    /// <returns>ServiceResult indicating validation failure</returns>
+    private static ServiceResult<WorkoutTemplateExerciseDto> CreateAddExerciseValidationFailure(string errorMessage)
+    {
+        return ServiceResult<WorkoutTemplateExerciseDto>.Failure(
+            new WorkoutTemplateExerciseDto(),
+            ServiceError.ValidationFailed(errorMessage));
+    }
+
+    /// <summary>
+    /// Creates a validation success result for add exercise operations
+    /// </summary>
+    /// <returns>ServiceResult indicating validation success</returns>
+    private static ServiceResult<WorkoutTemplateExerciseDto> CreateAddExerciseValidationSuccess()
+    {
+        return ServiceResult<WorkoutTemplateExerciseDto>.Success(new WorkoutTemplateExerciseDto());
     }
     
     private async Task<ServiceResult<WorkoutTemplateExerciseDto>> ProcessAddExerciseAsync(AddExerciseToTemplateCommand command)
@@ -435,23 +492,45 @@ public class WorkoutTemplateExerciseService : IWorkoutTemplateExerciseService
     
     private ServiceResult<BooleanResultDto> IsReorderCommandValid(ReorderTemplateExercisesCommand command)
     {
-        var result = (command.WorkoutTemplateId.IsEmpty, string.IsNullOrWhiteSpace(command.Zone),
-                     command.ExerciseIds == null || command.ExerciseIds.Count == 0, command.UserId.IsEmpty) switch
-        {
-            (true, _, _, _) or (_, true, _, _) or (_, _, true, _) or (_, _, _, true) => 
-                ServiceResult<BooleanResultDto>.Failure(
-                    BooleanResultDto.Empty,
-                    ServiceError.ValidationFailed(WorkoutTemplateExerciseErrorMessages.InvalidCommandParameters)),
-            _ => IsValidZone(command.Zone) switch
-            {
-                false => ServiceResult<BooleanResultDto>.Failure(
-                    BooleanResultDto.Empty,
-                    ServiceError.ValidationFailed(string.Format(WorkoutTemplateExerciseErrorMessages.InvalidZone, command.Zone))),
-                true => ServiceResult<BooleanResultDto>.Success(BooleanResultDto.Create(true)) // Dummy success
-            }
-        };
+        var basicValidation = ValidateBasicParameters(command);
+        if (!basicValidation.IsSuccess)
+            return basicValidation;
         
-        return result;
+        return ValidateZone(command.Zone);
+    }
+    
+    /// <summary>
+    /// Validates the basic parameters of the reorder command
+    /// </summary>
+    private ServiceResult<BooleanResultDto> ValidateBasicParameters(ReorderTemplateExercisesCommand command)
+    {
+        return HasInvalidBasicParameters(command)
+            ? ServiceResult<BooleanResultDto>.Failure(
+                BooleanResultDto.Empty,
+                ServiceError.ValidationFailed(WorkoutTemplateExerciseErrorMessages.InvalidCommandParameters))
+            : ServiceResult<BooleanResultDto>.Success(BooleanResultDto.Create(true));
+    }
+    
+    /// <summary>
+    /// Checks if any of the basic parameters are invalid
+    /// </summary>
+    private static bool HasInvalidBasicParameters(ReorderTemplateExercisesCommand command) =>
+        command.WorkoutTemplateId.IsEmpty ||
+        string.IsNullOrWhiteSpace(command.Zone) ||
+        command.ExerciseIds == null ||
+        command.ExerciseIds.Count == 0 ||
+        command.UserId.IsEmpty;
+    
+    /// <summary>
+    /// Validates the zone parameter
+    /// </summary>
+    private ServiceResult<BooleanResultDto> ValidateZone(string zone)
+    {
+        return IsValidZone(zone)
+            ? ServiceResult<BooleanResultDto>.Success(BooleanResultDto.Create(true))
+            : ServiceResult<BooleanResultDto>.Failure(
+                BooleanResultDto.Empty,
+                ServiceError.ValidationFailed(string.Format(WorkoutTemplateExerciseErrorMessages.InvalidZone, zone)));
     }
     
     private async Task<ServiceResult<BooleanResultDto>> ProcessReorderExercisesAsync(ReorderTemplateExercisesCommand command)

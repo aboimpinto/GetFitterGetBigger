@@ -429,8 +429,11 @@ namespace GetFitterGetBigger.API.Migrations
 
                     b.Property<string>("LinkType")
                         .IsRequired()
-                        .HasMaxLength(10)
-                        .HasColumnType("character varying(10)");
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<int?>("LinkTypeEnum")
+                        .HasColumnType("integer");
 
                     b.Property<Guid>("SourceExerciseId")
                         .HasColumnType("uuid");

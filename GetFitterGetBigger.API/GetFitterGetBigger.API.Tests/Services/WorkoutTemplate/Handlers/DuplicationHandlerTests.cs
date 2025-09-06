@@ -231,8 +231,7 @@ public class DuplicationHandlerTests
         result.Should().NotBeNull();
         result.IsSuccess.Should().BeFalse();
         result.PrimaryErrorCode.Should().Be(ServiceErrorCode.ValidationFailed);
-        result.Data.Should().NotBeNull();
-        result.Data.IsEmpty.Should().BeTrue();
+        result.Data.Should().BeNull();
         
         // Should not call any data services
         automocker.GetMock<IWorkoutTemplateQueryDataService>()
@@ -255,8 +254,7 @@ public class DuplicationHandlerTests
         result.Should().NotBeNull();
         result.IsSuccess.Should().BeFalse();
         result.PrimaryErrorCode.Should().Be(ServiceErrorCode.ValidationFailed);
-        result.Data.Should().NotBeNull();
-        result.Data.IsEmpty.Should().BeTrue();
+        result.Data.Should().BeNull();
         
         // Should not call any data services
         automocker.GetMock<IWorkoutTemplateQueryDataService>()
@@ -279,8 +277,7 @@ public class DuplicationHandlerTests
         result.Should().NotBeNull();
         result.IsSuccess.Should().BeFalse();
         result.PrimaryErrorCode.Should().Be(ServiceErrorCode.ValidationFailed);
-        result.Data.Should().NotBeNull();
-        result.Data.IsEmpty.Should().BeTrue();
+        result.Data.Should().BeNull();
     }
 
     [Fact]
@@ -300,8 +297,7 @@ public class DuplicationHandlerTests
         result.Should().NotBeNull();
         result.IsSuccess.Should().BeFalse();
         result.PrimaryErrorCode.Should().Be(ServiceErrorCode.ValidationFailed);
-        result.Data.Should().NotBeNull();
-        result.Data.IsEmpty.Should().BeTrue();
+        result.Data.Should().BeNull();
     }
 
     #endregion
@@ -333,7 +329,6 @@ public class DuplicationHandlerTests
         result.Should().NotBeNull();
         result.IsSuccess.Should().BeFalse();
         result.PrimaryErrorCode.Should().Be(ServiceErrorCode.NotFound);
-        result.Data.Should().NotBeNull();
         result.Data.IsEmpty.Should().BeTrue();
     }
 
@@ -358,8 +353,7 @@ public class DuplicationHandlerTests
         result.Should().NotBeNull();
         result.IsSuccess.Should().BeFalse();
         result.PrimaryErrorCode.Should().Be(ServiceErrorCode.ValidationFailed);
-        result.Data.Should().NotBeNull();
-        result.Data.IsEmpty.Should().BeTrue();
+        result.Data.Should().BeNull();
         
         // Should not fetch the original template
         automocker.GetMock<IWorkoutTemplateQueryDataService>()

@@ -183,9 +183,10 @@ public static class ExerciseQueryExtensions
         this IQueryable<ExerciseEntity> query,
         bool descending = false)
     {
+        // Sort by the underlying GUID value since DifficultyLevelId doesn't implement IComparable
         return descending 
-            ? query.OrderByDescending(e => e.DifficultyId)
-            : query.OrderBy(e => e.DifficultyId);
+            ? query.OrderByDescending(e => e.DifficultyId.ToGuid())
+            : query.OrderBy(e => e.DifficultyId.ToGuid());
     }
     
     /// <summary>

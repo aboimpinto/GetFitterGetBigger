@@ -104,29 +104,80 @@ public record WorkoutCategory : ReferenceDataBase, IPureReference, IEmptyEntity<
             int? displayOrder = null,
             bool? isActive = null)
         {
-            var newValue = value ?? category.Value;
-            var newIcon = icon ?? category.Icon;
-            var newColor = color ?? category.Color;
-            var newDisplayOrder = displayOrder ?? category.DisplayOrder;
+            return ValidateUpdateParameters(value, icon, color, displayOrder)
+                .OnSuccess(() => CreateUpdatedCategory(category, value, description, icon, color, primaryMuscleGroups, displayOrder, isActive));
+        }
+        
+        /// <summary>
+        /// Validates the parameters provided for update. Only validates non-null parameters.
+        /// Null parameters are treated as "keep original value".
+        /// </summary>
+        private static EntityValidation<WorkoutCategory> ValidateUpdateParameters(
+            string? value,
+            string? icon,
+            string? color,
+            int? displayOrder)
+        {
+            var validation = Validate.For<WorkoutCategory>();
             
-            return Validate.For<WorkoutCategory>()
-                .EnsureNotEmpty(newValue, WorkoutCategoryErrorMessages.ValueCannotBeEmpty)
-                .EnsureMaxLength(newValue, 100, WorkoutCategoryErrorMessages.ValueExceedsMaxLength)
-                .EnsureNotEmpty(newIcon, WorkoutCategoryErrorMessages.IconIsRequired)
-                .EnsureMaxLength(newIcon, 50, WorkoutCategoryErrorMessages.IconExceedsMaxLength)
-                .EnsureNotEmpty(newColor, WorkoutCategoryErrorMessages.ColorIsRequired)
-                .Ensure(() => HexColorRegex.IsMatch(newColor), WorkoutCategoryErrorMessages.InvalidHexColorCode)
-                .EnsureMinValue(newDisplayOrder, 0, WorkoutCategoryErrorMessages.DisplayOrderMustBeNonNegative)
-                .OnSuccess(() => category with
+            // Only validate parameters that are explicitly provided (not null)
+            if (value != null)
+            {
+                validation = validation
+                    .Ensure(() => !string.IsNullOrWhiteSpace(value), WorkoutCategoryErrorMessages.ValueCannotBeEmpty)
+                    .EnsureMaxLength(value, 100, WorkoutCategoryErrorMessages.ValueExceedsMaxLength);
+            }
+            
+            if (icon != null)
+            {
+                validation = validation
+                    .Ensure(() => !string.IsNullOrWhiteSpace(icon), WorkoutCategoryErrorMessages.IconIsRequired)
+                    .EnsureMaxLength(icon, 50, WorkoutCategoryErrorMessages.IconExceedsMaxLength);
+            }
+            
+            if (color != null)
+            {
+                validation = validation
+                    .Ensure(() => !string.IsNullOrWhiteSpace(color), WorkoutCategoryErrorMessages.ColorIsRequired);
+                    
+                // Only validate hex format if color is not empty/whitespace
+                if (!string.IsNullOrWhiteSpace(color))
                 {
-                    Value = newValue,
-                    Description = description is null ? category.Description : description,
-                    Icon = newIcon,
-                    Color = newColor,
-                    PrimaryMuscleGroups = primaryMuscleGroups is null ? category.PrimaryMuscleGroups : primaryMuscleGroups,
-                    DisplayOrder = newDisplayOrder,
-                    IsActive = isActive is null ? category.IsActive : isActive.Value
-                });
+                    validation = validation.Ensure(() => HexColorRegex.IsMatch(color), WorkoutCategoryErrorMessages.InvalidHexColorCode);
+                }
+            }
+            
+            if (displayOrder.HasValue)
+            {
+                validation = validation.EnsureMinValue(displayOrder.Value, 0, WorkoutCategoryErrorMessages.DisplayOrderMustBeNonNegative);
+            }
+            
+            return validation;
+        }
+        
+        /// <summary>
+        /// Creates the updated WorkoutCategory with all new values, using provided values or keeping originals
+        /// </summary>
+        private static WorkoutCategory CreateUpdatedCategory(
+            WorkoutCategory category,
+            string? value,
+            string? description, 
+            string? icon,
+            string? color,
+            string? primaryMuscleGroups, 
+            int? displayOrder,
+            bool? isActive)
+        {
+            return category with
+            {
+                Value = value ?? category.Value,
+                Description = description ?? category.Description,
+                Icon = icon ?? category.Icon,
+                Color = color ?? category.Color,
+                PrimaryMuscleGroups = primaryMuscleGroups ?? category.PrimaryMuscleGroups,
+                DisplayOrder = displayOrder ?? category.DisplayOrder,
+                IsActive = isActive ?? category.IsActive
+            };
         }
             
         public static EntityResult<WorkoutCategory> Deactivate(WorkoutCategory category) =>

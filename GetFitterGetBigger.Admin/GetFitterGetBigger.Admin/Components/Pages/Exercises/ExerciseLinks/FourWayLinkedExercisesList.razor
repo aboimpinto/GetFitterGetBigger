@@ -1,0 +1,430 @@
+@using GetFitterGetBigger.Admin.Models.Dtos
+@using GetFitterGetBigger.Admin.Services
+@implements IDisposable
+
+<div class="relative" data-testid="four-way-linked-exercises-list">
+    @if (StateService.IsSaving)
+    {
+        <div class="absolute inset-0 bg-white bg-opacity-90 backdrop-blur-sm z-10 flex items-center justify-center rounded-lg transition-all duration-300" data-testid="reorder-progress-overlay">
+            <div class="text-center p-6 bg-white rounded-lg shadow-lg border border-gray-200">
+                <div class="relative mb-4">
+                    <div class="absolute inset-0 rounded-full bg-blue-200 opacity-25 animate-ping"></div>
+                    <div class="relative inline-block animate-spin rounded-full h-10 w-10 border-4 border-blue-600 border-r-transparent"></div>
+                </div>
+                <p class="text-sm font-medium text-gray-700">Updating exercises relationships...</p>
+                <p class="text-xs text-gray-500 mt-1">This may take a moment</p>
+            </div>
+        </div>
+    }
+    
+    @{
+        // Determine which sections to show based on current context
+        // The logic is: we show sections for link types that CAN be added to the current exercise
+        // For example, a Warmup exercise can link to Workout and Alternative exercises,
+        // so we show those sections when viewing a Warmup exercise
+        var showWarmup = CanAddLinkType("Warmup");
+        var showCooldown = CanAddLinkType("Cooldown");
+        var showWorkout = CanAddLinkType("Workout");
+        var showAlternative = CanAddLinkType("Alternative");
+        
+        // Calculate grid columns based on visible sections
+        var visibleSections = 0;
+        if (showWarmup) visibleSections++;
+        if (showCooldown) visibleSections++;
+        if (showWorkout) visibleSections++;
+        if (showAlternative) visibleSections++;
+        
+        // Enhanced flexbox layout with smooth transitions
+        var containerStyle = "display: flex !important; gap: 1.5rem !important; width: 100% !important; flex-wrap: wrap !important; transition: all 0.3s ease-in-out !important;";
+        var itemStyle = visibleSections switch
+        {
+            2 => "flex: 1 1 calc(50% - 0.75rem) !important; max-width: calc(50% - 0.75rem) !important; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;",
+            3 => "flex: 1 1 calc(33.333% - 1rem) !important; max-width: calc(33.333% - 1rem) !important; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;",
+            _ => "flex: 1 1 100% !important; max-width: 100% !important; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;"
+        };
+        
+        // Debug output
+        Console.WriteLine($"[FourWayLinkedExercisesList] Visible sections: {visibleSections} (Warmup={showWarmup}, Cooldown={showCooldown}, Workout={showWorkout}, Alternative={showAlternative})");
+    }
+    
+    <div style="@containerStyle">
+        @* Warmup Exercises Section *@
+        @if (showWarmup)
+        {
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 min-h-[300px] hover:shadow-md transition-all duration-200 transform hover:scale-[1.01]" style="@itemStyle" data-testid="warmup-section" role="region" aria-label="Warmup exercises section">
+                <div class="px-3 sm:px-4 py-3 border-b border-gray-200 bg-gradient-to-r from-orange-50 to-orange-100">
+                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                        <div class="flex items-center gap-2">
+                            <svg class="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                      d="M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0120 13a7.975 7.975 0 01-2.343 5.657z" />
+                            </svg>
+                            <h3 class="text-base sm:text-lg font-medium text-gray-900" id="warmup-exercises-heading">Warmup</h3>
+                            <span class="text-xs sm:text-sm text-gray-600" data-testid="warmup-count">
+                                @StateService.WarmupLinkCount
+                            </span>
+                        </div>
+                        
+                        @if (!Disabled)
+                        {
+                            <button type="button"
+                                    @onclick="HandleAddWarmup"
+                                    class="inline-flex items-center px-4 py-2 text-sm font-medium text-orange-700 bg-orange-100 rounded-lg hover:bg-orange-200 hover:shadow-sm hover:scale-105 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 transition-all duration-200 transform"
+                                    data-testid="add-warmup-button"
+                                    aria-label="Add warmup exercise">
+                                <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                                </svg>
+                                Add Warmup
+                            </button>
+                        }
+                    </div>
+                </div>
+                
+                <div class="p-3 sm:p-4">
+                    @if (StateService.WarmupLinks.Any())
+                    {
+                        <div class="space-y-2"
+                             data-testid="warmup-links-container"
+                             role="list"
+                             aria-labelledby="warmup-exercises-heading"
+                             aria-live="polite"
+                             aria-relevant="additions removals"
+                             aria-busy="@StateService.IsSaving">
+                            @{
+                                var warmupLinksList = StateService.WarmupLinks.ToList();
+                            }
+                            @for (int i = 0; i < warmupLinksList.Count; i++)
+                            {
+                                var link = warmupLinksList[i];
+                                var isFirst = i == 0;
+                                var isLast = i == warmupLinksList.Count - 1;
+                                <ExerciseLinkCard Link="@link"
+                                                OnRemove="@(async () => await OnRemoveLink.InvokeAsync(link))"
+                                                OnViewExercise="@(async () => await OnViewExercise.InvokeAsync(link))"
+                                                OnMoveUp="@(isFirst ? EventCallback<ExerciseLinkDto>.Empty : _warmupMoveUpHandler)"
+                                                OnMoveDown="@(isLast ? EventCallback<ExerciseLinkDto>.Empty : _warmupMoveDownHandler)"
+                                                CanMoveUp="@(!isFirst)"
+                                                CanMoveDown="@(!isLast)"
+                                                Disabled="@(Disabled || StateService.IsSaving || StateService.IsDeleting)" />
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <p class="text-sm text-gray-500 text-center py-4" data-testid="warmup-empty-state">No warmup exercises linked</p>
+                    }
+                </div>
+            </div>
+        }
+        
+        @* Cooldown Exercises Section *@
+        @if (showCooldown)
+        {
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 min-h-[300px] hover:shadow-md transition-all duration-200 transform hover:scale-[1.01]" style="@itemStyle" data-testid="cooldown-section" role="region" aria-label="Cooldown exercises section">
+                <div class="px-3 sm:px-4 py-3 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-blue-100">
+                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                        <div class="flex items-center gap-2">
+                            <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                      d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z" />
+                            </svg>
+                            <h3 class="text-base sm:text-lg font-medium text-gray-900" id="cooldown-exercises-heading">Cooldown</h3>
+                            <span class="text-xs sm:text-sm text-gray-600" data-testid="cooldown-count">
+                                @StateService.CooldownLinkCount
+                            </span>
+                        </div>
+                        
+                        @if (!Disabled)
+                        {
+                            <button type="button"
+                                    @onclick="HandleAddCooldown"
+                                    class="inline-flex items-center px-4 py-2 text-sm font-medium text-blue-700 bg-blue-100 rounded-lg hover:bg-blue-200 hover:shadow-sm hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200 transform"
+                                    data-testid="add-cooldown-button"
+                                    aria-label="Add cooldown exercise">
+                                <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                                </svg>
+                                Add Cooldown
+                            </button>
+                        }
+                    </div>
+                </div>
+                
+                <div class="p-3 sm:p-4">
+                    @if (StateService.CooldownLinks.Any())
+                    {
+                        <div class="space-y-2"
+                             data-testid="cooldown-links-container"
+                             role="list"
+                             aria-labelledby="cooldown-exercises-heading"
+                             aria-live="polite"
+                             aria-relevant="additions removals"
+                             aria-busy="@StateService.IsSaving">
+                            @{
+                                var cooldownLinksList = StateService.CooldownLinks.ToList();
+                            }
+                            @for (int i = 0; i < cooldownLinksList.Count; i++)
+                            {
+                                var link = cooldownLinksList[i];
+                                var isFirst = i == 0;
+                                var isLast = i == cooldownLinksList.Count - 1;
+                                <ExerciseLinkCard Link="@link"
+                                                OnRemove="@(async () => await OnRemoveLink.InvokeAsync(link))"
+                                                OnViewExercise="@(async () => await OnViewExercise.InvokeAsync(link))"
+                                                OnMoveUp="@(isFirst ? EventCallback<ExerciseLinkDto>.Empty : _cooldownMoveUpHandler)"
+                                                OnMoveDown="@(isLast ? EventCallback<ExerciseLinkDto>.Empty : _cooldownMoveDownHandler)"
+                                                CanMoveUp="@(!isFirst)"
+                                                CanMoveDown="@(!isLast)"
+                                                Disabled="@(Disabled || StateService.IsSaving || StateService.IsDeleting)" />
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <p class="text-sm text-gray-500 text-center py-4" data-testid="cooldown-empty-state">No cooldown exercises linked</p>
+                    }
+                </div>
+            </div>
+        }
+        
+        @* Workout Exercises Section *@
+        @if (showWorkout)
+        {
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 min-h-[300px] hover:shadow-md transition-all duration-200 transform hover:scale-[1.01]" style="@itemStyle" data-testid="workout-section" role="region" aria-label="Workout exercises section">
+                <div class="px-3 sm:px-4 py-3 border-b border-gray-200 bg-gradient-to-r from-green-50 to-green-100">
+                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                        <div class="flex items-center gap-2">
+                            <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                      d="M13 10V3L4 14h7v7l9-11h-7z" />
+                            </svg>
+                            <h3 class="text-base sm:text-lg font-medium text-gray-900" id="workout-exercises-heading">Workout</h3>
+                            <span class="text-xs sm:text-sm text-gray-600" data-testid="workout-count">
+                                @StateService.WorkoutLinkCount
+                            </span>
+                        </div>
+                        
+                        @if (!Disabled)
+                        {
+                            <button type="button"
+                                    @onclick="HandleAddWorkout"
+                                    class="inline-flex items-center px-4 py-2 text-sm font-medium text-green-700 bg-green-100 rounded-lg hover:bg-green-200 hover:shadow-sm hover:scale-105 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-all duration-200 transform"
+                                    data-testid="add-workout-button"
+                                    aria-label="Add workout exercise">
+                                <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                                </svg>
+                                Add Workout
+                            </button>
+                        }
+                    </div>
+                </div>
+                
+                <div class="p-3 sm:p-4">
+                    @if (StateService.WorkoutLinks.Any())
+                    {
+                        <div class="space-y-2"
+                             data-testid="workout-links-container"
+                             role="list"
+                             aria-labelledby="workout-exercises-heading">
+                            @foreach (var link in StateService.WorkoutLinks)
+                            {
+                                <ExerciseLinkCard Link="@link"
+                                                OnRemove="@(async () => await OnRemoveLink.InvokeAsync(link))"
+                                                OnViewExercise="@(async () => await OnViewExercise.InvokeAsync(link))"
+                                                Disabled="@(Disabled || StateService.IsSaving || StateService.IsDeleting)" />
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <p class="text-sm text-gray-500 text-center py-4" data-testid="workout-empty-state">No workout exercises linked</p>
+                    }
+                </div>
+            </div>
+        }
+        
+        @* Alternative Exercises Section - Always visible *@
+        @if (showAlternative)
+        {
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 min-h-[300px] hover:shadow-md transition-all duration-200 transform hover:scale-[1.01]" style="@itemStyle" data-testid="alternative-section" role="region" aria-label="Alternative exercises section">
+                <div class="px-3 sm:px-4 py-3 border-b border-gray-200 bg-gradient-to-r from-purple-50 to-purple-100">
+                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                        <div class="flex items-center gap-2">
+                            <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                      d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                            </svg>
+                            <h3 class="text-base sm:text-lg font-medium text-gray-900" id="alternative-exercises-heading">Alternative</h3>
+                            <span class="text-xs sm:text-sm text-gray-600" data-testid="alternative-count">
+                                @StateService.AlternativeLinkCount
+                            </span>
+                        </div>
+                        
+                        @if (!Disabled)
+                        {
+                            <button type="button"
+                                    @onclick="HandleAddAlternative"
+                                    class="inline-flex items-center px-4 py-2 text-sm font-medium text-purple-700 bg-purple-100 rounded-lg hover:bg-purple-200 hover:shadow-sm hover:scale-105 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 transition-all duration-200 transform"
+                                    data-testid="add-alternative-button"
+                                    aria-label="Add alternative exercise">
+                                <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                                </svg>
+                                Add Alternative
+                            </button>
+                        }
+                    </div>
+                </div>
+                
+                <div class="p-3 sm:p-4">
+                    @if (StateService.AlternativeLinks.Any())
+                    {
+                        <div class="space-y-2"
+                             data-testid="alternative-links-container"
+                             role="list"
+                             aria-labelledby="alternative-exercises-heading">
+                            @foreach (var link in StateService.AlternativeLinks)
+                            {
+                                <ExerciseLinkCard Link="@link"
+                                                OnRemove="@(async () => await OnRemoveLink.InvokeAsync(link))"
+                                                OnViewExercise="@(async () => await OnViewExercise.InvokeAsync(link))"
+                                                Disabled="@(Disabled || StateService.IsSaving || StateService.IsDeleting)" />
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <p class="text-sm text-gray-500 text-center py-4" data-testid="alternative-empty-state">No alternative exercises linked</p>
+                    }
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter, EditorRequired] public IExerciseLinkStateService StateService { get; set; } = null!;
+    [Parameter] public IExerciseLinkValidationService? ValidationService { get; set; }
+    [Parameter] public bool Disabled { get; set; } = false;
+    [Parameter] public string CurrentContext { get; set; } = "Workout";
+    [Parameter] public EventCallback<string> OnAddLink { get; set; }
+    [Parameter] public EventCallback<ExerciseLinkDto> OnRemoveLink { get; set; }
+    [Parameter] public EventCallback<(string linkType, Dictionary<string, int> reorderMap)> OnReorderLinks { get; set; }
+    [Parameter] public EventCallback<ExerciseLinkDto> OnViewExercise { get; set; }
+
+    // TODO: Performance Telemetry Implementation
+    // Future enhancement: Track component render performance with large datasets
+    // Metrics to capture:
+    // - Initial render time with multiple links
+    // - Re-render frequency during state changes
+    // - ShouldRender optimization effectiveness
+    // - Virtual scrolling performance (when implemented)
+    // Implementation approach:
+    // - Inject IPerformanceMonitoringService
+    // - Track: _telemetryService?.TrackRenderCycle("FourWayLinkedExercisesList", elapsedMs)
+    // - Monitor link count impact on performance
+    // - Track user interaction patterns (add/remove/reorder frequency)
+    
+    private EventCallback<ExerciseLinkDto> _warmupMoveUpHandler;
+    private EventCallback<ExerciseLinkDto> _warmupMoveDownHandler;
+    private EventCallback<ExerciseLinkDto> _cooldownMoveUpHandler;
+    private EventCallback<ExerciseLinkDto> _cooldownMoveDownHandler;
+    
+    /// <summary>
+    /// Check if a specific link type can be added in the current context
+    /// </summary>
+    private bool CanAddLinkType(string linkType)
+    {
+        // If validation service is not provided, allow all link types (backward compatibility)
+        if (ValidationService == null)
+        {
+            return true;
+        }
+        
+        // If CurrentContext is null or empty, default to "Workout" for backward compatibility
+        var context = string.IsNullOrEmpty(CurrentContext) ? "Workout" : CurrentContext;
+        
+        var validationResult = ValidationService.CanAddLinkType(context, linkType);
+        return validationResult?.IsValid ?? false;
+    }
+
+    protected override void OnInitialized()
+    {
+        StateService.OnChange += StateHasChanged;
+        
+        // Initialize move handlers for warmup
+        _warmupMoveUpHandler = EventCallback.Factory.Create<ExerciseLinkDto>(this, async (link) =>
+        {
+            await MoveLink(link, StateService.WarmupLinks.ToList(), "Warmup", -1);
+        });
+        
+        _warmupMoveDownHandler = EventCallback.Factory.Create<ExerciseLinkDto>(this, async (link) =>
+        {
+            await MoveLink(link, StateService.WarmupLinks.ToList(), "Warmup", 1);
+        });
+        
+        // Initialize move handlers for cooldown
+        _cooldownMoveUpHandler = EventCallback.Factory.Create<ExerciseLinkDto>(this, async (link) =>
+        {
+            await MoveLink(link, StateService.CooldownLinks.ToList(), "Cooldown", -1);
+        });
+        
+        _cooldownMoveDownHandler = EventCallback.Factory.Create<ExerciseLinkDto>(this, async (link) =>
+        {
+            await MoveLink(link, StateService.CooldownLinks.ToList(), "Cooldown", 1);
+        });
+    }
+    
+    private async Task MoveLink(ExerciseLinkDto link, List<ExerciseLinkDto> links, string linkType, int direction)
+    {
+        var currentIndex = links.IndexOf(link);
+        if (currentIndex == -1) return;
+        
+        var newIndex = currentIndex + direction;
+        if (newIndex < 0 || newIndex >= links.Count) return;
+        
+        // Create reorder map
+        var reorderMap = new Dictionary<string, int>();
+        
+        // Swap the two items
+        var temp = links[currentIndex];
+        links[currentIndex] = links[newIndex];
+        links[newIndex] = temp;
+        
+        // Build the reorder map with new display orders
+        for (int i = 0; i < links.Count; i++)
+        {
+            reorderMap[links[i].TargetExerciseId] = i + 1;
+        }
+        
+        // Invoke the reorder callback
+        await OnReorderLinks.InvokeAsync((linkType, reorderMap));
+    }
+    
+    private async Task HandleAddWarmup()
+    {
+        await OnAddLink.InvokeAsync("Warmup");
+    }
+    
+    private async Task HandleAddCooldown()
+    {
+        await OnAddLink.InvokeAsync("Cooldown");
+    }
+    
+    private async Task HandleAddWorkout()
+    {
+        await OnAddLink.InvokeAsync("Workout");
+    }
+    
+    private async Task HandleAddAlternative()
+    {
+        await OnAddLink.InvokeAsync("Alternative");
+    }
+    
+    public void Dispose()
+    {
+        StateService.OnChange -= StateHasChanged;
+    }
+}

@@ -5,7 +5,6 @@ namespace GetFitterGetBigger.Admin.Services;
 public class ExerciseLinkValidationService : IExerciseLinkValidationService
 {
     private readonly IExerciseLinkService _exerciseLinkService;
-    private const int MaxLinksPerType = 10;
 
     public ExerciseLinkValidationService(IExerciseLinkService exerciseLinkService)
     {
@@ -19,14 +18,76 @@ public class ExerciseLinkValidationService : IExerciseLinkValidationService
             return ValidationResult.Failure("Exercise cannot be null", "EXERCISE_NULL");
         }
 
-        // Only Workout type exercises can have links
-        var hasWorkoutType = exercise.ExerciseTypes?.Any(t => t.Value?.ToLower() == "workout") ?? false;
-        if (!hasWorkoutType)
+        // REST exercises cannot have any links
+        var hasRestType = exercise.ExerciseTypes?.Any(t => t.Value?.ToLower() == "rest") ?? false;
+        if (hasRestType)
+        {
+            return ValidationResult.Failure(
+                "REST exercises cannot have relationships with other exercises",
+                "REST_EXERCISE_NO_LINKS"
+            );
+        }
+
+        // Four-way linking: exercises with any valid type can have links
+        var hasValidTypes = exercise.ExerciseTypes?.Any(t => 
+            t.Value?.ToLower() == "workout" || 
+            t.Value?.ToLower() == "warmup" || 
+            t.Value?.ToLower() == "cooldown") ?? false;
+        
+        if (!hasValidTypes)
         {
             var types = string.Join(", ", exercise.ExerciseTypes?.Select(t => t.Value) ?? new[] { "Unknown" });
             return ValidationResult.Failure(
-                $"Only exercises of type 'Workout' can have links. This exercise has types: {types}",
+                $"Only exercises of type 'Workout', 'Warmup', or 'Cooldown' can have links. This exercise has types: {types}",
                 "INVALID_EXERCISE_TYPE"
+            );
+        }
+
+        return ValidationResult.Success();
+    }
+
+    public ValidationResult ValidateAlternativeExerciseCompatibility(ExerciseDto sourceExercise, ExerciseDto targetExercise)
+    {
+        if (sourceExercise == null)
+        {
+            return ValidationResult.Failure("Source exercise cannot be null", "SOURCE_EXERCISE_NULL");
+        }
+
+        if (targetExercise == null)
+        {
+            return ValidationResult.Failure("Target exercise cannot be null", "TARGET_EXERCISE_NULL");
+        }
+
+        // Self-reference check
+        if (sourceExercise.Id == targetExercise.Id)
+        {
+            return ValidationResult.Failure("An exercise cannot be an alternative to itself", "SELF_REFERENCE");
+        }
+
+        // Both exercises must have exercise types
+        var sourceTypes = sourceExercise.ExerciseTypes?.Select(t => t.Value?.ToLower()).Where(v => !string.IsNullOrEmpty(v)).ToList();
+        var targetTypes = targetExercise.ExerciseTypes?.Select(t => t.Value?.ToLower()).Where(v => !string.IsNullOrEmpty(v)).ToList();
+
+        if (sourceTypes == null || !sourceTypes.Any())
+        {
+            return ValidationResult.Failure("Source exercise must have at least one exercise type", "MISSING_SOURCE_TYPES");
+        }
+
+        if (targetTypes == null || !targetTypes.Any())
+        {
+            return ValidationResult.Failure("Target exercise must have at least one exercise type", "MISSING_TARGET_TYPES");
+        }
+
+        // Alternative exercises must share at least one exercise type
+        var commonTypes = sourceTypes.Intersect(targetTypes).ToList();
+        if (!commonTypes.Any())
+        {
+            var sourceTypeNames = string.Join(", ", sourceExercise.ExerciseTypes?.Select(t => t.Value) ?? new[] { "Unknown" });
+            var targetTypeNames = string.Join(", ", targetExercise.ExerciseTypes?.Select(t => t.Value) ?? new[] { "Unknown" });
+            
+            return ValidationResult.Failure(
+                $"Alternative exercises must share at least one exercise type. Source types: {sourceTypeNames}. Target types: {targetTypeNames}.",
+                "NO_SHARED_TYPES"
             );
         }
 
@@ -72,19 +133,6 @@ public class ExerciseLinkValidationService : IExerciseLinkValidationService
         }
     }
 
-    public ValidationResult ValidateMaximumLinks(int currentLinkCount, ExerciseLinkType linkType)
-    {
-        if (currentLinkCount >= MaxLinksPerType)
-        {
-            var linkTypeText = linkType == ExerciseLinkType.Warmup ? "warmup" : "cooldown";
-            return ValidationResult.Failure(
-                $"Maximum number of {linkTypeText} links ({MaxLinksPerType}) has been reached",
-                "MAX_LINKS_REACHED"
-            );
-        }
-
-        return ValidationResult.Success();
-    }
 
     public ValidationResult ValidateDuplicateLink(IEnumerable<ExerciseLinkDto> existingLinks, string targetExerciseId, ExerciseLinkType linkType)
     {
@@ -100,7 +148,14 @@ public class ExerciseLinkValidationService : IExerciseLinkValidationService
 
         if (duplicateExists)
         {
-            var linkTypeText = linkType == ExerciseLinkType.Warmup ? "warmup" : "cooldown";
+            var linkTypeText = linkType switch
+            {
+                ExerciseLinkType.Warmup => "warmup",
+                ExerciseLinkType.Cooldown => "cooldown",
+                ExerciseLinkType.Alternative => "alternative",
+                _ => "linked"
+            };
+            
             return ValidationResult.Failure(
                 $"This exercise is already linked as a {linkTypeText} exercise",
                 "DUPLICATE_LINK"
@@ -123,13 +178,28 @@ public class ExerciseLinkValidationService : IExerciseLinkValidationService
             return typeResult;
         }
 
-        // Validate maximum links
-        var linksOfType = existingLinks?.Count(link => link.LinkType == linkType.ToString() && link.IsActive) ?? 0;
-        var maxResult = ValidateMaximumLinks(linksOfType, linkType);
-        if (!maxResult.IsValid)
+        // For alternative links, we need the target exercise to validate compatibility
+        if (linkType == ExerciseLinkType.Alternative)
         {
-            return maxResult;
+            try
+            {
+                // Get the target exercise details for alternative link validation
+                // Note: This would need to be injected as IExerciseService
+                // For now, we'll do basic validation and let the API handle detailed validation
+                
+                // Basic self-reference check
+                if (sourceExercise.Id == targetExerciseId)
+                {
+                    return ValidationResult.Failure("An exercise cannot be an alternative to itself", "SELF_REFERENCE");
+                }
+            }
+            catch (Exception)
+            {
+                // If we can't validate alternative compatibility, let the API handle it
+                return ValidationResult.Success();
+            }
         }
+
 
         // Validate duplicate link
         var duplicateResult = ValidateDuplicateLink(existingLinks ?? Enumerable.Empty<ExerciseLinkDto>(), targetExerciseId, linkType);
@@ -146,5 +216,48 @@ public class ExerciseLinkValidationService : IExerciseLinkValidationService
         }
 
         return ValidationResult.Success();
+    }
+
+    public ValidationResult CanAddLinkType(string exerciseContext, string linkType)
+    {
+        if (string.IsNullOrEmpty(exerciseContext))
+        {
+            return ValidationResult.Failure("Exercise context cannot be null or empty", "INVALID_CONTEXT");
+        }
+
+        if (string.IsNullOrEmpty(linkType))
+        {
+            return ValidationResult.Failure("Link type cannot be null or empty", "INVALID_LINK_TYPE");
+        }
+
+        // Normalize inputs
+        var context = exerciseContext.ToLower();
+        var type = linkType.ToLower();
+
+        // Business rules for link type restrictions
+        return context switch
+        {
+            "warmup" => type is "workout" or "alternative" 
+                ? ValidationResult.Success() 
+                : ValidationResult.Failure(
+                    $"Warmup exercises can only link to Workout and Alternative exercises. Cannot add {linkType} links.",
+                    "WARMUP_LINK_RESTRICTION"),
+            
+            "cooldown" => type is "workout" or "alternative"
+                ? ValidationResult.Success()
+                : ValidationResult.Failure(
+                    $"Cooldown exercises can only link to Workout and Alternative exercises. Cannot add {linkType} links.",
+                    "COOLDOWN_LINK_RESTRICTION"),
+            
+            "workout" => type is "warmup" or "cooldown" or "alternative"
+                ? ValidationResult.Success()
+                : ValidationResult.Failure(
+                    $"Invalid link type '{linkType}' for Workout exercises. Allowed types: Warmup, Cooldown, Alternative.",
+                    "WORKOUT_INVALID_LINK_TYPE"),
+            
+            _ => ValidationResult.Failure(
+                $"Unknown exercise context '{exerciseContext}'. Valid contexts: Workout, Warmup, Cooldown.",
+                "UNKNOWN_CONTEXT")
+        };
     }
 }

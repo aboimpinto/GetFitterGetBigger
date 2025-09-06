@@ -199,6 +199,29 @@ public class ExerciseBuilder
         return this;
     }
     
+    /// <summary>
+    /// Convenience method to add exercise types by string name (for testing purposes)
+    /// Creates ExerciseTypeId from string and associates with the exercise being built
+    /// </summary>
+    public ExerciseBuilder WithExerciseTypes(params string[] exerciseTypeNames)
+    {
+        foreach (var typeName in exerciseTypeNames)
+        {
+            // For testing purposes, create a mock ExerciseTypeId based on the string
+            // In real scenarios, you'd look up the actual ExerciseTypeId from the database
+            var exerciseTypeId = ExerciseTypeId.ParseOrEmpty(typeName);
+            if (exerciseTypeId.IsEmpty)
+            {
+                // If parsing fails, create a new ID for testing
+                exerciseTypeId = ExerciseTypeId.New();
+            }
+            
+            var exerciseType = ExerciseExerciseType.Handler.Create(_id, exerciseTypeId);
+            _exerciseExerciseTypes.Add(exerciseType);
+        }
+        return this;
+    }
+    
     public ExerciseBuilder WithMuscleGroup(ExerciseMuscleGroup muscleGroup)
     {
         _exerciseMuscleGroups.Add(muscleGroup);

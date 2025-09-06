@@ -255,7 +255,7 @@
 
     @* Save button - responsive positioning *@
     <div class="fixed bottom-8 right-4 z-50 xl:right-[calc(50%-41rem)]">
-        <button type="button" @onclick="TriggerFormSubmit" disabled="@IsSaving"
+        <button type="button" @onclick="TriggerFormSubmit" disabled="@(IsSaving || !IsValid)"
                 class="flex flex-col items-center group"
                 data-testid="floating-save-button">
             <div class="w-14 h-14 @(IsSaving ? "bg-blue-400" : "bg-blue-600 hover:bg-blue-700") rounded-full flex items-center justify-center shadow-lg transition-colors @(IsSaving ? "cursor-not-allowed" : "")">
@@ -315,7 +315,8 @@
                     <button type="button"
                             @onclick="SaveAndNavigate"
                             data-testid="save-navigate-button"
-                            class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm">
+                            disabled="@(!IsValid)"
+                            class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm disabled:bg-gray-400 disabled:cursor-not-allowed disabled:hover:bg-gray-400">
                         Save & Continue
                     </button>
                     <button type="button"

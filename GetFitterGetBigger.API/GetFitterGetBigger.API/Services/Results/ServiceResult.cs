@@ -49,7 +49,7 @@ public record ServiceResult<T>
         Data = emptyData,
         IsSuccess = false,
         Errors = errors.ToList(),
-        StructuredErrors = new List<ServiceError>()
+        StructuredErrors = errors.Select(e => ServiceError.ValidationFailed(e)).ToList()
     };
     
     /// <summary>
@@ -60,7 +60,7 @@ public record ServiceResult<T>
         Data = emptyData,
         IsSuccess = false,
         Errors = errors,
-        StructuredErrors = new List<ServiceError>()
+        StructuredErrors = errors.Select(e => ServiceError.ValidationFailed(e)).ToList()
     };
     
     /// <summary>

@@ -340,10 +340,30 @@ namespace GetFitterGetBigger.Admin.Tests.Services
             // Arrange
             var exerciseId = Guid.NewGuid().ToString();
             var linkId = Guid.NewGuid().ToString();
+            var targetExerciseId = Guid.NewGuid().ToString();
             var updateDto = new UpdateExerciseLinkDtoBuilder()
                 .WithDisplayOrder(2)
                 .AsActive()
                 .Build();
+
+            // Setup response for GET request to fetch link details (for cache invalidation)
+            var linksResponse = new ExerciseLinksResponseDto
+            {
+                ExerciseId = exerciseId,
+                ExerciseName = "Test Exercise",
+                Links = new List<ExerciseLinkDto>
+                {
+                    new ExerciseLinkDto
+                    {
+                        Id = linkId,
+                        SourceExerciseId = exerciseId,
+                        TargetExerciseId = targetExerciseId,
+                        LinkType = "Warmup"
+                    }
+                },
+                TotalCount = 1
+            };
+            _httpMessageHandler.SetupResponse(HttpStatusCode.OK, linksResponse);
 
             var updatedLink = new ExerciseLinkDtoBuilder()
                 .WithId(linkId)
@@ -351,6 +371,7 @@ namespace GetFitterGetBigger.Admin.Tests.Services
                 .WithDisplayOrder(updateDto.DisplayOrder)
                 .Build();
 
+            // Setup response for PUT request
             _httpMessageHandler.SetupResponse(HttpStatusCode.OK, updatedLink);
 
             // Act
@@ -361,12 +382,14 @@ namespace GetFitterGetBigger.Admin.Tests.Services
             result.Id.Should().Be(linkId);
             result.DisplayOrder.Should().Be(updateDto.DisplayOrder);
 
+            // Verify both GET (for cache invalidation) and PUT requests were made
             _httpMessageHandler.VerifyRequest(request =>
-            {
-                request.Method.Should().Be(HttpMethod.Put);
-                request.RequestUri!.PathAndQuery.Should().Be($"/api/exercises/{exerciseId}/links/{linkId}");
-                return true;
-            });
+                request.Method == HttpMethod.Get && 
+                request.RequestUri!.PathAndQuery.Contains($"/api/exercises/{exerciseId}/links"));
+            
+            _httpMessageHandler.VerifyRequest(request =>
+                request.Method == HttpMethod.Put && 
+                request.RequestUri!.PathAndQuery == $"/api/exercises/{exerciseId}/links/{linkId}");
         }
 
         [Fact]
@@ -377,6 +400,18 @@ namespace GetFitterGetBigger.Admin.Tests.Services
             var linkId = Guid.NewGuid().ToString();
             var updateDto = new UpdateExerciseLinkDtoBuilder().Build();
 
+            // Setup response for GET request to fetch link details (for cache invalidation)
+            // This returns OK but with no matching link ID (simulating link not found in the list)
+            var linksResponse = new ExerciseLinksResponseDto
+            {
+                ExerciseId = exerciseId,
+                ExerciseName = "Test Exercise",
+                Links = new List<ExerciseLinkDto>(), // Empty list - no links found
+                TotalCount = 0
+            };
+            _httpMessageHandler.SetupResponse(HttpStatusCode.OK, linksResponse);
+            
+            // Setup response for PUT request
             _httpMessageHandler.SetupResponse(HttpStatusCode.NotFound, new { error = "Link not found" });
 
             // Act & Assert
@@ -392,18 +427,41 @@ namespace GetFitterGetBigger.Admin.Tests.Services
             var exerciseId = Guid.NewGuid().ToString();
             var linkId = Guid.NewGuid().ToString();
 
+            // Setup response for GET request to fetch link details (for cache invalidation)
+            var linksResponse = new ExerciseLinksResponseDto
+            {
+                ExerciseId = exerciseId,
+                ExerciseName = "Test Exercise",
+                Links = new List<ExerciseLinkDto>
+                {
+                    new ExerciseLinkDto
+                    {
+                        Id = linkId,
+                        SourceExerciseId = exerciseId,
+                        TargetExerciseId = "target-exercise-id",
+                        LinkType = "Warmup"
+                    }
+                },
+                TotalCount = 1
+            };
+            _httpMessageHandler.SetupResponse(HttpStatusCode.OK, linksResponse);
+            
+            // Setup response for DELETE request
             _httpMessageHandler.SetupResponse(HttpStatusCode.NoContent);
 
             // Act
             await _exerciseLinkService.DeleteLinkAsync(exerciseId, linkId);
 
             // Assert
+            // Verify GET request was made first (to fetch link details for cache invalidation)
             _httpMessageHandler.VerifyRequest(request =>
-            {
-                request.Method.Should().Be(HttpMethod.Delete);
-                request.RequestUri!.PathAndQuery.Should().Be($"/api/exercises/{exerciseId}/links/{linkId}");
-                return true;
-            });
+                request.Method == HttpMethod.Get && 
+                request.RequestUri!.PathAndQuery.Contains($"/api/exercises/{exerciseId}/links"));
+            
+            // Verify DELETE request was made
+            _httpMessageHandler.VerifyRequest(request =>
+                request.Method == HttpMethod.Delete && 
+                request.RequestUri!.PathAndQuery == $"/api/exercises/{exerciseId}/links/{linkId}");
         }
 
         [Fact]
@@ -413,6 +471,17 @@ namespace GetFitterGetBigger.Admin.Tests.Services
             var exerciseId = Guid.NewGuid().ToString();
             var linkId = Guid.NewGuid().ToString();
 
+            // Setup response for GET request to fetch link details (link won't be found but we continue)
+            var emptyLinksResponse = new ExerciseLinksResponseDto
+            {
+                ExerciseId = exerciseId,
+                ExerciseName = "Test Exercise",
+                Links = new List<ExerciseLinkDto>(), // No links found
+                TotalCount = 0
+            };
+            _httpMessageHandler.SetupResponse(HttpStatusCode.OK, emptyLinksResponse);
+            
+            // Setup response for DELETE request - returns NotFound
             _httpMessageHandler.SetupResponse(HttpStatusCode.NotFound, new { error = "Link not found" });
 
             // Act & Assert
@@ -420,9 +489,200 @@ namespace GetFitterGetBigger.Admin.Tests.Services
                 () => _exerciseLinkService.DeleteLinkAsync(exerciseId, linkId));
         }
 
+        [Fact]
+        public async Task CreateBidirectionalLinkAsync_WithAlternativeLink_CreatesBidirectionalLink()
+        {
+            // Arrange
+            var exerciseId = Guid.NewGuid().ToString();
+            var createDto = new CreateExerciseLinkDtoBuilder()
+                .WithTargetExerciseId(Guid.NewGuid().ToString())
+                .AsAlternative()
+                .Build();
 
+            var expectedLink = new ExerciseLinkDtoBuilder()
+                .WithSourceExerciseId(exerciseId)
+                .WithTargetExerciseId(createDto.TargetExerciseId)
+                .WithTargetExerciseName("Alternative Exercise")
+                .WithLinkType("Alternative")
+                .Build();
 
+            _httpMessageHandler.SetupResponse(HttpStatusCode.Created, expectedLink);
 
+            // Act
+            var result = await _exerciseLinkService.CreateBidirectionalLinkAsync(exerciseId, createDto);
+
+            // Assert
+            result.Should().NotBeNull();
+            result.SourceExerciseId.Should().Be(exerciseId);
+            result.TargetExerciseId.Should().Be(createDto.TargetExerciseId);
+            result.LinkType.Should().Be("Alternative");
+
+            _httpMessageHandler.VerifyRequest(request =>
+            {
+                request.Method.Should().Be(HttpMethod.Post);
+                request.RequestUri!.PathAndQuery.Should().Be($"/api/exercises/{exerciseId}/links?createBidirectional=true");
+                return true;
+            });
+        }
+
+        [Fact]
+        public async Task CreateBidirectionalLinkAsync_WhenAlternativeIncompatible_ThrowsInvalidExerciseLinkException()
+        {
+            // Arrange
+            var exerciseId = Guid.NewGuid().ToString();
+            var createDto = new CreateExerciseLinkDtoBuilder()
+                .WithTargetExerciseId(Guid.NewGuid().ToString())
+                .AsAlternative()
+                .Build();
+
+            _httpMessageHandler.SetupResponse(HttpStatusCode.BadRequest, 
+                new { error = "Alternative exercises must share at least one exercise type" });
+
+            // Act & Assert
+            var exception = await Assert.ThrowsAsync<InvalidExerciseLinkException>(
+                () => _exerciseLinkService.CreateBidirectionalLinkAsync(exerciseId, createDto));
+
+            exception.Message.Should().Contain("Alternative exercises must share at least one exercise type");
+        }
+
+        [Fact]
+        public async Task CreateBidirectionalLinkAsync_WhenServiceUnavailable_ThrowsExerciseLinkApiException()
+        {
+            // Arrange
+            var exerciseId = Guid.NewGuid().ToString();
+            var createDto = new CreateExerciseLinkDtoBuilder()
+                .WithTargetExerciseId(Guid.NewGuid().ToString())
+                .AsAlternative()
+                .Build();
+
+            // Setup multiple ServiceUnavailable responses for retry attempts
+            _httpMessageHandler
+                .SetupResponse(HttpStatusCode.ServiceUnavailable)
+                .SetupResponse(HttpStatusCode.ServiceUnavailable)
+                .SetupResponse(HttpStatusCode.ServiceUnavailable);
+
+            // Act & Assert
+            var exception = await Assert.ThrowsAsync<ExerciseLinkApiException>(
+                () => _exerciseLinkService.CreateBidirectionalLinkAsync(exerciseId, createDto));
+
+            exception.StatusCode.Should().Be(HttpStatusCode.ServiceUnavailable);
+        }
+
+        [Fact]
+        public async Task CreateBidirectionalLinkAsync_WhenTimeout_ThrowsExerciseLinkApiException()
+        {
+            // Arrange
+            var exerciseId = Guid.NewGuid().ToString();
+            var createDto = new CreateExerciseLinkDtoBuilder()
+                .WithTargetExerciseId(Guid.NewGuid().ToString())
+                .AsAlternative()
+                .Build();
+
+            // Setup multiple RequestTimeout responses for retry attempts  
+            _httpMessageHandler
+                .SetupResponse(HttpStatusCode.RequestTimeout)
+                .SetupResponse(HttpStatusCode.RequestTimeout)
+                .SetupResponse(HttpStatusCode.RequestTimeout);
+
+            // Act & Assert
+            var exception = await Assert.ThrowsAsync<ExerciseLinkApiException>(
+                () => _exerciseLinkService.CreateBidirectionalLinkAsync(exerciseId, createDto));
+
+            exception.StatusCode.Should().Be(HttpStatusCode.RequestTimeout);
+        }
+
+        [Fact]
+        public async Task DeleteBidirectionalLinkAsync_WithValidId_DeletesBidirectionalLink()
+        {
+            // Arrange
+            var exerciseId = Guid.NewGuid().ToString();
+            var linkId = Guid.NewGuid().ToString();
+            var targetExerciseId = Guid.NewGuid().ToString();
+
+            // Setup response for GET request to fetch link details (for cache invalidation)
+            var linksResponse = new ExerciseLinksResponseDto
+            {
+                ExerciseId = exerciseId,
+                ExerciseName = "Test Exercise",
+                Links = new List<ExerciseLinkDto>
+                {
+                    new ExerciseLinkDto
+                    {
+                        Id = linkId,
+                        SourceExerciseId = exerciseId,
+                        TargetExerciseId = targetExerciseId,
+                        LinkType = "Alternative"
+                    }
+                },
+                TotalCount = 1
+            };
+            _httpMessageHandler.SetupResponse(HttpStatusCode.OK, linksResponse);
+            
+            // Setup response for DELETE request
+            _httpMessageHandler.SetupResponse(HttpStatusCode.NoContent);
+
+            // Act
+            await _exerciseLinkService.DeleteBidirectionalLinkAsync(exerciseId, linkId, true);
+
+            // Assert
+            // Verify GET request was made first (to fetch link details for cache invalidation)
+            _httpMessageHandler.VerifyRequest(request =>
+                request.Method == HttpMethod.Get && 
+                request.RequestUri!.PathAndQuery.Contains($"/api/exercises/{exerciseId}/links"));
+            
+            // Verify DELETE request was made with deleteReverse parameter
+            _httpMessageHandler.VerifyRequest(request =>
+                request.Method == HttpMethod.Delete && 
+                request.RequestUri!.PathAndQuery == $"/api/exercises/{exerciseId}/links/{linkId}?deleteReverse=True");
+        }
+
+        [Fact]
+        public async Task GetLinksAsync_WithIncludeReverse_IncludesReverseParameter()
+        {
+            // Arrange
+            var exerciseId = Guid.NewGuid().ToString();
+            var responseDto = new ExerciseLinksResponseDto 
+            { 
+                Links = new List<ExerciseLinkDto>(), 
+                TotalCount = 0 
+            };
+
+            _httpMessageHandler.SetupResponse(HttpStatusCode.OK, responseDto);
+
+            // Act
+            await _exerciseLinkService.GetLinksAsync(exerciseId, "Alternative", true, true);
+
+            // Assert
+            _httpMessageHandler.VerifyRequest(request =>
+            {
+                request.Method.Should().Be(HttpMethod.Get);
+                request.RequestUri!.PathAndQuery.Should().Be($"/api/exercises/{exerciseId}/links?linkType=Alternative&includeExerciseDetails=true&includeReverse=true");
+                return true;
+            });
+        }
+
+        [Fact]
+        public async Task GetLinksAsync_AlternativeLinksAreCachedFor15Minutes()
+        {
+            // Arrange
+            var exerciseId = Guid.NewGuid().ToString();
+            var responseDto = new ExerciseLinksResponseDto 
+            { 
+                Links = new List<ExerciseLinkDto>(), 
+                TotalCount = 0 
+            };
+
+            _httpMessageHandler.SetupResponse(HttpStatusCode.OK, responseDto);
+
+            // Act - First call
+            await _exerciseLinkService.GetLinksAsync(exerciseId, "Alternative", true, false);
+            
+            // Act - Second call (should use cache)
+            await _exerciseLinkService.GetLinksAsync(exerciseId, "Alternative", true, false);
+
+            // Assert
+            _httpMessageHandler.VerifyCallCount(1); // Should only call API once due to caching
+        }
 
         // Helper class for testing network failures
         private class FaultyHttpMessageHandler : HttpMessageHandler

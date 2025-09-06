@@ -1,3 +1,4 @@
+using GetFitterGetBigger.API.DTOs.Interfaces;
 using GetFitterGetBigger.API.Utilities;
 using Xunit;
 
@@ -122,4 +123,143 @@ public class CacheKeyGeneratorTests
         Assert.StartsWith("ReferenceTable:", pattern);
         Assert.EndsWith($"{tableName}:", pattern);
     }
+
+    #region Generate Method Tests (High Crap Score method - Complexity: 12)
+
+    [Fact]
+    public void Generate_WithNoParameters_ReturnsBaseKey()
+    {
+        // Act
+        var result = CacheKeyGenerator.Generate<TestDto>("getByName");
+
+        // Assert
+        Assert.Equal("ReferenceTable:Tests:getByName", result);
+    }
+
+    [Fact]
+    public void Generate_WithSingleParameter_CombinesCorrectly()
+    {
+        // Act
+        var result = CacheKeyGenerator.Generate<TestDto>("getByValue", "TestValue");
+
+        // Assert
+        Assert.Equal("ReferenceTable:Tests:getByValue:testvalue", result);
+    }
+
+    [Fact]
+    public void Generate_WithMultipleParameters_JoinsWithColons()
+    {
+        // Act
+        var result = CacheKeyGenerator.Generate<TestDto>("getByComposite", "Param1", "Param2", "Param3");
+
+        // Assert
+        Assert.Equal("ReferenceTable:Tests:getByComposite:param1:param2:param3", result);
+    }
+
+    [Fact]
+    public void Generate_WithMixedParameterTypes_ConvertsAllToString()
+    {
+        // Act
+        var result = CacheKeyGenerator.Generate<TestDto>("getByMixed", 123, true, "Text");
+
+        // Assert
+        Assert.Equal("ReferenceTable:Tests:getByMixed:123:true:text", result);
+    }
+
+    [Fact]
+    public void Generate_WithNullParameters_HandlesNullsAsEmpty()
+    {
+        // Act
+        var result = CacheKeyGenerator.Generate<TestDto>("getByNulls", "Valid", null!, "Another");
+
+        // Assert
+        Assert.Equal("ReferenceTable:Tests:getByNulls:valid::another", result);
+    }
+
+    [Fact]
+    public void Generate_WithEmptyParametersArray_ReturnsBaseKey()
+    {
+        // Act
+        var result = CacheKeyGenerator.Generate<TestDto>("operation", new object[0]);
+
+        // Assert
+        Assert.Equal("ReferenceTable:Tests:operation", result);
+    }
+
+    [Fact]
+    public void Generate_NormalizesToLowercase_EnsuresConsistentKeys()
+    {
+        // Act
+        var result1 = CacheKeyGenerator.Generate<TestDto>("getByName", "VALUE");
+        var result2 = CacheKeyGenerator.Generate<TestDto>("getByName", "Value");
+        var result3 = CacheKeyGenerator.Generate<TestDto>("getByName", "value");
+
+        // Assert - All should be identical
+        Assert.Equal("ReferenceTable:Tests:getByName:value", result1);
+        Assert.Equal("ReferenceTable:Tests:getByName:value", result2);
+        Assert.Equal("ReferenceTable:Tests:getByName:value", result3);
+        Assert.Equal(result1, result2);
+        Assert.Equal(result2, result3);
+    }
+
+    [Fact]
+    public void Generate_WithComplexObjects_UsesToStringMethod()
+    {
+        // Arrange
+        var complexObject = new { Id = 123, Name = "Test" };
+
+        // Act
+        var result = CacheKeyGenerator.Generate<TestDto>("getByObject", complexObject);
+
+        // Assert - Should use the ToString() representation (lowercased)
+        Assert.Equal("ReferenceTable:Tests:getByObject:{ id = 123, name = test }", result);
+    }
+
+    [Theory]
+    [InlineData("operation1", "ReferenceTable:Tests:operation1")]
+    [InlineData("getAll", "ReferenceTable:Tests:getAll")]
+    [InlineData("byId", "ReferenceTable:Tests:byId")]
+    public void Generate_WithDifferentOperations_BuildsCorrectBaseKeys(string operation, string expected)
+    {
+        // Act
+        var result = CacheKeyGenerator.Generate<TestDto>(operation);
+
+        // Assert
+        Assert.Equal(expected, result);
+    }
+
+    [Fact]
+    public void Generate_ConsistentWithExplicitMethods_ProducesSameResults()
+    {
+        // This test ensures the refactored Generate method produces the same results
+        // as the equivalent explicit methods for consistency
+
+        // Test GetAll equivalence
+        var generateAll = CacheKeyGenerator.GenerateForAll<TestDto>();
+        var explicitAll = CacheKeyGenerator.GetAllKey("Tests");
+        Assert.Equal(explicitAll, generateAll);
+
+        // Test GetById equivalence
+        var generateById = CacheKeyGenerator.GenerateForId<TestDto>("test-id");
+        var explicitById = CacheKeyGenerator.GetByIdKey("Tests", "test-id");
+        Assert.Equal(explicitById, generateById);
+
+        // Test GetByValue equivalence
+        var generateByValue = CacheKeyGenerator.GenerateForValue<TestDto>("test-value");
+        var explicitByValue = CacheKeyGenerator.GetByValueKey("Tests", "test-value");
+        Assert.Equal(explicitByValue, generateByValue);
+    }
+
+    #endregion
+
+    #region Test DTOs
+
+    // Test DTO that should pluralize to "Tests"
+    private class TestDto : IEmptyDto<TestDto>
+    {
+        public static TestDto Empty => new();
+        public bool IsEmpty => true;
+    }
+
+    #endregion
 }

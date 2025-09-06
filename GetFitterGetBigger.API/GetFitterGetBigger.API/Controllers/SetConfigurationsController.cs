@@ -110,10 +110,34 @@ public class SetConfigurationsController(
     [ProducesResponseType(StatusCodes.Status409Conflict)]
     public async Task<IActionResult> CreateSetConfiguration(string templateId, string exerciseId, [FromBody] CreateSetConfigurationDto request)
     {
+        LogCreateSetConfigurationRequest(exerciseId, templateId);
+
+        var command = BuildCreateSetConfigurationCommand(exerciseId, request);
+        var result = await _setConfigurationService.CreateAsync(command);
+
+        return ProcessCreateSetConfigurationResult(result, templateId, exerciseId);
+    }
+
+    /// <summary>
+    /// Logs the create set configuration request
+    /// </summary>
+    /// <param name="exerciseId">The exercise ID</param>
+    /// <param name="templateId">The template ID</param>
+    private void LogCreateSetConfigurationRequest(string exerciseId, string templateId)
+    {
         _logger.LogInformation("Creating set configuration for exercise {ExerciseId} in template {TemplateId}", 
             exerciseId, templateId);
+    }
 
-        var command = new CreateSetConfigurationCommand
+    /// <summary>
+    /// Builds the CreateSetConfigurationCommand from the request parameters
+    /// </summary>
+    /// <param name="exerciseId">The exercise ID</param>
+    /// <param name="request">The request DTO</param>
+    /// <returns>The constructed command</returns>
+    private static CreateSetConfigurationCommand BuildCreateSetConfigurationCommand(string exerciseId, CreateSetConfigurationDto request)
+    {
+        return new CreateSetConfigurationCommand
         {
             WorkoutTemplateExerciseId = WorkoutTemplateExerciseId.ParseOrEmpty(exerciseId),
             SetNumber = request.SetNumber,
@@ -122,17 +146,78 @@ public class SetConfigurationsController(
             TargetTimeSeconds = request.TargetTimeSeconds,
             RestSeconds = request.RestSeconds
         };
+    }
 
-        var result = await _setConfigurationService.CreateAsync(command);
-
-        return result switch
+    /// <summary>
+    /// Processes the result from the service and returns appropriate HTTP response
+    /// </summary>
+    /// <param name="result">The service result</param>
+    /// <param name="templateId">The template ID for response routing</param>
+    /// <param name="exerciseId">The exercise ID for response routing</param>
+    /// <returns>The appropriate HTTP action result</returns>
+    private IActionResult ProcessCreateSetConfigurationResult(
+        ServiceResult<SetConfigurationDto> result, 
+        string templateId, 
+        string exerciseId)
+    {
+        if (result.IsSuccess)
         {
-            { IsSuccess: true } => CreatedAtAction(nameof(GetSetConfiguration), 
-                new { templateId, exerciseId, setId = result.Data.Id }, result.Data),
-            { PrimaryErrorCode: ServiceErrorCode.NotFound } => NotFound(),
-            { PrimaryErrorCode: ServiceErrorCode.AlreadyExists, StructuredErrors: var errors } => Conflict(new { errors }),
-            { StructuredErrors: var errors } => BadRequest(new { errors })
+            return CreateSuccessResponse(result, templateId, exerciseId);
+        }
+
+        return CreateErrorResponse(result);
+    }
+
+    /// <summary>
+    /// Creates the success response for set configuration creation
+    /// </summary>
+    /// <param name="result">The successful service result</param>
+    /// <param name="templateId">The template ID for response routing</param>
+    /// <param name="exerciseId">The exercise ID for response routing</param>
+    /// <returns>HTTP 201 Created response</returns>
+    private IActionResult CreateSuccessResponse(
+        ServiceResult<SetConfigurationDto> result, 
+        string templateId, 
+        string exerciseId)
+    {
+        return CreatedAtAction(nameof(GetSetConfiguration), 
+            new { templateId, exerciseId, setId = result.Data.Id }, 
+            result.Data);
+    }
+
+    /// <summary>
+    /// Creates the appropriate error response based on the service error
+    /// </summary>
+    /// <param name="result">The failed service result</param>
+    /// <returns>The appropriate HTTP error response</returns>
+    private IActionResult CreateErrorResponse(ServiceResult<SetConfigurationDto> result)
+    {
+        return result.PrimaryErrorCode switch
+        {
+            ServiceErrorCode.NotFound => NotFound(),
+            ServiceErrorCode.AlreadyExists => CreateConflictResponse(result),
+            _ => CreateBadRequestResponse(result)
         };
+    }
+
+    /// <summary>
+    /// Creates a conflict response with structured errors
+    /// </summary>
+    /// <param name="result">The service result with errors</param>
+    /// <returns>HTTP 409 Conflict response</returns>
+    private IActionResult CreateConflictResponse(ServiceResult<SetConfigurationDto> result)
+    {
+        return Conflict(new { errors = result.StructuredErrors });
+    }
+
+    /// <summary>
+    /// Creates a bad request response with structured errors
+    /// </summary>
+    /// <param name="result">The service result with errors</param>
+    /// <returns>HTTP 400 Bad Request response</returns>
+    private IActionResult CreateBadRequestResponse(ServiceResult<SetConfigurationDto> result)
+    {
+        return BadRequest(new { errors = result.StructuredErrors });
     }
 
     /// <summary>

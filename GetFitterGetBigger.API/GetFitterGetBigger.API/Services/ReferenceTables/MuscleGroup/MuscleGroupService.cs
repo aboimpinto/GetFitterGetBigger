@@ -130,9 +130,7 @@ public class MuscleGroupService(
             .EnsureNameIsUniqueAsync(
                 async () => await IsNameUniqueAsync(command.Name),
                 "MuscleGroup", command.Name)
-            .MatchAsync(
-                whenValid: async () => await _dataService.CreateAsync(command)
-            );
+            .WhenValidAsync(async () => await _dataService.CreateAsync(command));
     }
 
     /// <inheritdoc/>
@@ -148,9 +146,7 @@ public class MuscleGroupService(
             .EnsureNameIsUniqueAsync(
                 async () => await IsNameUniqueForUpdateAsync(command.Name, id),
                 "MuscleGroup", command.Name)
-            .MatchAsync(
-                whenValid: async () => await _dataService.UpdateAsync(id, command)
-            );
+            .WhenValidAsync(async () => await _dataService.UpdateAsync(id, command));
     }
 
     /// <inheritdoc/>
@@ -164,9 +160,7 @@ public class MuscleGroupService(
             .EnsureAsync(
                 async () => await CanDeleteInternalAsync(id),
                 new ServiceError(ServiceErrorCode.DependencyExists, MuscleGroupErrorMessages.BusinessRules.CannotDeleteInUse))
-            .MatchAsync(
-                whenValid: async () => await _dataService.DeleteAsync(id)
-            );
+            .WhenValidAsync(async () => await _dataService.DeleteAsync(id));
     }
 
     // Private helper methods for validation

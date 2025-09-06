@@ -17,6 +17,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
         private readonly Mock<IExerciseLinkStateService> _linkStateServiceMock;
         private readonly Mock<IExerciseService> _exerciseServiceMock;
         private readonly Mock<IExerciseWeightTypeStateService> _weightTypeStateServiceMock;
+        private readonly Mock<IExerciseLinkValidationService> _exerciseLinkValidationServiceMock;
         private readonly Mock<NavigationManager> _navigationManagerMock;
 
         public ExerciseDetailWeightTypeTests()
@@ -25,12 +26,14 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
             _linkStateServiceMock = new Mock<IExerciseLinkStateService>();
             _exerciseServiceMock = new Mock<IExerciseService>();
             _weightTypeStateServiceMock = new Mock<IExerciseWeightTypeStateService>();
+            _exerciseLinkValidationServiceMock = new Mock<IExerciseLinkValidationService>();
             _navigationManagerMock = new Mock<NavigationManager>();
 
             Services.AddSingleton(_exerciseStateServiceMock.Object);
             Services.AddSingleton(_linkStateServiceMock.Object);
             Services.AddSingleton(_exerciseServiceMock.Object);
             Services.AddSingleton(_weightTypeStateServiceMock.Object);
+            Services.AddSingleton(_exerciseLinkValidationServiceMock.Object);
             Services.AddSingleton(_navigationManagerMock.Object);
         }
 

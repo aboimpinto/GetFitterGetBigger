@@ -1,5 +1,6 @@
 using GetFitterGetBigger.API.Models;
 using GetFitterGetBigger.API.Models.Entities;
+using GetFitterGetBigger.API.Models.Enums;
 using GetFitterGetBigger.API.Models.SpecializedIds;
 using GetFitterGetBigger.API.Repositories.Interfaces;
 using Microsoft.EntityFrameworkCore;
@@ -150,5 +151,157 @@ public class ExerciseLinkRepository : RepositoryBase<FitnessDbContext>, IExercis
         Context.ExerciseLinks.Remove(exerciseLink);
         
         return true;
+    }
+    
+    // ===== ENHANCED BIDIRECTIONAL REPOSITORY METHODS IMPLEMENTATION =====
+    
+    /// <summary>
+    /// Gets bidirectional links for an exercise (both source and target links of specified type)
+    /// </summary>
+    public async Task<IEnumerable<ExerciseLink>> GetBidirectionalLinksAsync(ExerciseId exerciseId, ExerciseLinkType linkType)
+    {
+        return await Context.ExerciseLinks
+            .Include(el => el.SourceExercise)
+            .Include(el => el.TargetExercise)
+            .Where(el => el.IsActive && 
+                        (el.SourceExerciseId == exerciseId || el.TargetExerciseId == exerciseId) &&
+                        ((el.LinkTypeEnum != null && el.LinkTypeEnum == linkType) ||
+                         (el.LinkTypeEnum == null && 
+                          ((linkType == ExerciseLinkType.WARMUP && el.LinkType == "Warmup") ||
+                           (linkType == ExerciseLinkType.COOLDOWN && el.LinkType == "Cooldown")))))
+            .OrderBy(el => el.LinkTypeEnum ?? (el.LinkType == "Warmup" ? ExerciseLinkType.WARMUP : ExerciseLinkType.COOLDOWN))
+            .ThenBy(el => el.DisplayOrder)
+            .AsNoTracking()
+            .ToListAsync();
+    }
+    
+    /// <summary>
+    /// Checks if bidirectional links exist between two exercises for the specified type
+    /// This checks both forward and reverse directions with proper bidirectional type mapping
+    /// </summary>
+    public async Task<bool> ExistsBidirectionalAsync(ExerciseId sourceId, ExerciseId targetId, ExerciseLinkType linkType)
+    {
+        // For ALTERNATIVE type, we need to check both directions with ALTERNATIVE
+        if (linkType == ExerciseLinkType.ALTERNATIVE)
+        {
+            // Check if either A→B or B→A exists with ALTERNATIVE type
+            var exists = await Context.ExerciseLinks
+                .AnyAsync(el => el.IsActive &&
+                              ((el.SourceExerciseId == sourceId && el.TargetExerciseId == targetId) ||
+                               (el.SourceExerciseId == targetId && el.TargetExerciseId == sourceId)) &&
+                              (el.LinkType == "ALTERNATIVE" || el.LinkTypeEnum == ExerciseLinkType.ALTERNATIVE));
+            return exists;
+        }
+        
+        // Check forward link: source → target with specified linkType
+        var forwardExists = await ExistsAsync(sourceId, targetId, linkType);
+        if (forwardExists)
+        {
+            return true;
+        }
+        
+        // For WARMUP/COOLDOWN, check if the reverse WORKOUT link exists
+        var reverseLinkType = GetReverseLinkType(linkType);
+        if (reverseLinkType.HasValue)
+        {
+            var reverseExists = await ExistsAsync(targetId, sourceId, reverseLinkType.Value);
+            return reverseExists;
+        }
+        
+        return false;
+    }
+    
+    /// <summary>
+    /// Maps link types to their bidirectional reverse types
+    /// </summary>
+    private static ExerciseLinkType? GetReverseLinkType(ExerciseLinkType linkType)
+    {
+        return linkType switch
+        {
+            ExerciseLinkType.WARMUP => ExerciseLinkType.WORKOUT,
+            ExerciseLinkType.COOLDOWN => ExerciseLinkType.WORKOUT,
+            ExerciseLinkType.ALTERNATIVE => ExerciseLinkType.ALTERNATIVE, // ALTERNATIVE is bidirectional with itself
+            ExerciseLinkType.WORKOUT => null, // WORKOUT links are only created as reverse, never as primary
+            _ => null
+        };
+    }
+    
+    /// <summary>
+    /// Gets links by source exercise using enum-based filtering
+    /// </summary>
+    public async Task<IEnumerable<ExerciseLink>> GetBySourceExerciseAsync(ExerciseId sourceId, ExerciseLinkType? linkType = null)
+    {
+        var query = Context.ExerciseLinks
+            .Include(el => el.SourceExercise)
+            .Include(el => el.TargetExercise)
+            .Where(el => el.SourceExerciseId == sourceId && el.IsActive);
+            
+        if (linkType.HasValue)
+        {
+            // Use database-translatable fields instead of computed property
+            query = query.Where(el => 
+                (el.LinkTypeEnum != null && el.LinkTypeEnum == linkType.Value) ||
+                (el.LinkTypeEnum == null && 
+                 ((linkType.Value == ExerciseLinkType.WARMUP && el.LinkType == "Warmup") ||
+                  (linkType.Value == ExerciseLinkType.COOLDOWN && el.LinkType == "Cooldown"))));
+        }
+        
+        return await query
+            .OrderBy(el => el.LinkTypeEnum ?? (el.LinkType == "Warmup" ? ExerciseLinkType.WARMUP : ExerciseLinkType.COOLDOWN))
+            .ThenBy(el => el.DisplayOrder)
+            .AsNoTracking()
+            .ToListAsync();
+    }
+    
+    /// <summary>
+    /// Checks if a link exists using enum-based type matching
+    /// </summary>
+    public async Task<bool> ExistsAsync(ExerciseId sourceId, ExerciseId targetId, ExerciseLinkType linkType)
+    {
+        // For ALTERNATIVE type, use the database constraint logic - check string match
+        if (linkType == ExerciseLinkType.ALTERNATIVE)
+        {
+            return await Context.ExerciseLinks
+                .AnyAsync(el => el.SourceExerciseId == sourceId && 
+                               el.TargetExerciseId == targetId && 
+                               el.IsActive &&
+                               el.LinkType == "ALTERNATIVE");
+        }
+        
+        // For other types, use the original logic
+        var linkTypeString = linkType.ToString();
+        var legacyString = linkType switch
+        {
+            ExerciseLinkType.WARMUP => "Warmup",
+            ExerciseLinkType.COOLDOWN => "Cooldown", 
+            _ => linkTypeString
+        };
+
+        return await Context.ExerciseLinks
+            .AnyAsync(el => el.SourceExerciseId == sourceId && 
+                           el.TargetExerciseId == targetId && 
+                           el.IsActive &&
+                           (el.LinkTypeEnum == linkType ||
+                            el.LinkType == linkTypeString ||
+                            el.LinkType == legacyString));
+    }
+    
+    /// <summary>
+    /// Gets links by source exercise and type for display order calculation
+    /// </summary>
+    public async Task<IEnumerable<ExerciseLink>> GetBySourceAndTypeAsync(ExerciseId sourceId, ExerciseLinkType linkType)
+    {
+        return await Context.ExerciseLinks
+            .Include(el => el.SourceExercise)
+            .Include(el => el.TargetExercise)
+            .Where(el => el.SourceExerciseId == sourceId && 
+                        ((el.LinkTypeEnum != null && el.LinkTypeEnum == linkType) ||
+                         (el.LinkTypeEnum == null && 
+                          ((linkType == ExerciseLinkType.WARMUP && el.LinkType == "Warmup") ||
+                           (linkType == ExerciseLinkType.COOLDOWN && el.LinkType == "Cooldown")))) &&
+                        el.IsActive)
+            .OrderBy(el => el.DisplayOrder)
+            .AsNoTracking()
+            .ToListAsync();
     }
 }

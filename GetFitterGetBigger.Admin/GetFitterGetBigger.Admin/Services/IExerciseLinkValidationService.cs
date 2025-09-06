@@ -5,19 +5,20 @@ namespace GetFitterGetBigger.Admin.Services;
 public interface IExerciseLinkValidationService
 {
     /// <summary>
-    /// Validates if an exercise can have links (must be of type Workout)
+    /// Validates if an exercise can have links (expanded for four-way linking)
     /// </summary>
     ValidationResult ValidateExerciseTypeCompatibility(ExerciseDto exercise);
+
+    /// <summary>
+    /// Validates if two exercises can be linked as alternatives (must share exercise types)
+    /// </summary>
+    ValidationResult ValidateAlternativeExerciseCompatibility(ExerciseDto sourceExercise, ExerciseDto targetExercise);
 
     /// <summary>
     /// Validates if adding a link would create a circular reference
     /// </summary>
     Task<ValidationResult> ValidateCircularReference(string sourceExerciseId, string targetExerciseId, ExerciseLinkType linkType);
 
-    /// <summary>
-    /// Validates if the maximum number of links has been reached
-    /// </summary>
-    ValidationResult ValidateMaximumLinks(int currentLinkCount, ExerciseLinkType linkType);
 
     /// <summary>
     /// Validates if a link already exists between the exercises
@@ -28,6 +29,12 @@ public interface IExerciseLinkValidationService
     /// Performs all validations for creating a new link
     /// </summary>
     Task<ValidationResult> ValidateCreateLink(ExerciseDto sourceExercise, string targetExerciseId, ExerciseLinkType linkType, IEnumerable<ExerciseLinkDto> existingLinks);
+
+    /// <summary>
+    /// Validates if a specific link type can be added based on the source exercise's current context
+    /// Implements business rules: Warmup/Cooldown exercises can only add Workout and Alternative links
+    /// </summary>
+    ValidationResult CanAddLinkType(string exerciseContext, string linkType);
 }
 
 public class ValidationResult

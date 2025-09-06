@@ -17,7 +17,8 @@ public static class ExerciseLinkErrorMessages
     public const string SourceMustBeWorkout = "Source exercise must be of type 'Workout'";
     public const string TargetMustMatchLinkType = "Target exercise must match the specified link type";
     public const string RestExercisesCannotHaveLinks = "REST exercises cannot have links";
-    public const string RestExercisesCannotBeLinked = "REST exercises cannot be linked";
+    public const string RestExercisesCannotBeLinked = "cannot be created to REST exercises";
+    public const string OnlyWorkoutExercisesCanCreateLinks = "This exercise type cannot create the specified link type";
     public const string LinkAlreadyExists = "A link of this type already exists between these exercises";
     public const string CircularReferenceDetected = "This link would create a circular reference";
     public const string MaximumLinksReached = "Maximum number of links of this type (10) has been reached";
@@ -25,8 +26,19 @@ public static class ExerciseLinkErrorMessages
     public const string LinkDoesNotBelongToExercise = "Link does not belong to the specified exercise";
     
     // Validation
+    public const string ValidationFailed = "Validation failed";
     public const string LinkTypeRequired = "Link type is required";
     public const string InvalidLinkType = "Link type must be either 'Warmup' or 'Cooldown'";
+    public const string InvalidLinkTypeEnum = "Link type must be WARMUP, COOLDOWN, WORKOUT, or ALTERNATIVE";
     public const string DisplayOrderMustBeNonNegative = "Display order must be a non-negative number";
     public const string CountMustBeBetween1And20 = "Count must be between 1 and 20";
+    
+    // Enhanced validation for new link types
+    public const string WorkoutLinksAutoCreated = "WORKOUT links are automatically created as reverse links";
+    public const string InvalidLinkTypeForRestExercise = "REST exercises cannot have any link types";
+    public const string BidirectionalLinkExists = "bidirectional link already exists";
+    public const string WarmupMustLinkToWorkout = "WARMUP links can only be created to exercises with Warmup exercise type";
+    public const string CooldownMustLinkToWorkout = "COOLDOWN links can only be created to exercises with Cooldown exercise type";
+    public const string AlternativeCannotLinkToRest = "ALTERNATIVE links cannot be created to REST exercises";
+    public const string BidirectionalCreationFailed = "Failed to create bidirectional link - reverse link creation failed";
 }

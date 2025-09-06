@@ -1,15 +1,29 @@
 @using GetFitterGetBigger.Admin.Models.Dtos
 @using GetFitterGetBigger.Admin.Services
 
-<div class="@GetModalClasses()" @onclick="HandleBackdropClick" data-testid="add-link-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
-    <div class="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-2xl"
-         @onclick:stopPropagation="true">
+@if (IsOpen)
+{
+    <div class="relative z-50" data-testid="add-link-modal" role="dialog" aria-modal="true" 
+         aria-labelledby="modal-title" aria-describedby="modal-description"
+         @onkeydown="HandleKeyDown">
+        @* Backdrop *@
+        <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" 
+             @onclick="HandleBackdropClick" aria-hidden="true"></div>
+
+        @* Modal Container *@
+        <div class="fixed inset-0 z-10 overflow-y-auto">
+            <div class="flex min-h-full items-center justify-center p-4 text-center sm:p-0">
+                <div class="relative transform overflow-hidden rounded-xl bg-white text-left shadow-2xl transition-all duration-300 sm:my-8 sm:w-full sm:max-w-2xl border border-gray-200"
+                     @onclick:stopPropagation="true">
         <div class="bg-white px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
             <div class="sm:flex sm:items-start">
                 <div class="mt-3 text-center sm:ml-4 sm:mt-0 sm:text-left w-full">
                     <h3 class="text-lg font-semibold leading-6 text-gray-900" data-testid="modal-title" id="modal-title">
                         Add @LinkType Exercise
                     </h3>
+                    <p id="modal-description" class="sr-only">
+                        Select an exercise to add as a @LinkType.ToLower() exercise. Use arrow keys to navigate and Enter to select.
+                    </p>
                     
                     <div class="mt-4">
                         @* Search Input *@
@@ -25,36 +39,69 @@
                                    @onkeyup="@(async (e) => { if (e.Key == "Enter") await SearchExercises(); })"
                                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
                                    placeholder="Search by name..."
+                                   aria-label="Search for exercises by name"
+                                   aria-autocomplete="list"
                                    data-testid="search-input" />
                         </div>
 
                         @* Info about what exercises will be shown *@
                         <div class="mb-4">
-                            <div class="rounded-md bg-blue-50 p-4">
-                                <div class="flex">
-                                    <div class="flex-shrink-0">
-                                        <svg class="h-5 w-5 text-blue-400" viewBox="0 0 20 20" fill="currentColor">
-                                            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
-                                        </svg>
-                                    </div>
-                                    <div class="ml-3">
-                                        <p class="text-sm text-blue-700">
-                                            @if (LinkType == "Warmup")
-                                            {
-                                                <span>Showing exercises that can be used as warmup exercises.</span>
-                                            }
-                                            else if (LinkType == "Cooldown")
-                                            {
-                                                <span>Showing exercises that can be used as cooldown exercises.</span>
-                                            }
-                                            else
-                                            {
-                                                <span>Showing exercises that can be linked.</span>
-                                            }
-                                        </p>
+                            @if (LinkType == "Alternative" && SourceExercise != null)
+                            {
+                                <div class="rounded-md bg-purple-50 p-4">
+                                    <div class="flex">
+                                        <div class="flex-shrink-0">
+                                            <svg class="h-5 w-5 text-purple-400" fill="currentColor" viewBox="0 0 20 20">
+                                                <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd" />
+                                            </svg>
+                                        </div>
+                                        <div class="ml-3">
+                                            <p class="text-sm text-purple-800">
+                                                💡 Showing exercises compatible with @SourceExercise.Name
+                                            </p>
+                                            <div class="mt-2 flex flex-wrap gap-1">
+                                                @if (SourceExercise.ExerciseTypes?.Any() == true)
+                                                {
+                                                    @foreach (var type in SourceExercise.ExerciseTypes)
+                                                    {
+                                                        <span class="px-2 py-1 bg-purple-100 text-purple-700 rounded text-xs">
+                                                            @type.Value
+                                                        </span>
+                                                    }
+                                                }
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
+                            }
+                            else
+                            {
+                                <div class="rounded-md bg-blue-50 p-4">
+                                    <div class="flex">
+                                        <div class="flex-shrink-0">
+                                            <svg class="h-5 w-5 text-blue-400" viewBox="0 0 20 20" fill="currentColor">
+                                                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+                                            </svg>
+                                        </div>
+                                        <div class="ml-3">
+                                            <p class="text-sm text-blue-700">
+                                                @if (LinkType == "Warmup")
+                                                {
+                                                    <span>Showing exercises that can be used as warmup exercises.</span>
+                                                }
+                                                else if (LinkType == "Cooldown")
+                                                {
+                                                    <span>Showing exercises that can be used as cooldown exercises.</span>
+                                                }
+                                                else
+                                                {
+                                                    <span>Showing exercises that can be linked.</span>
+                                                }
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
                         </div>
 
                         @* Search Button *@
@@ -109,6 +156,25 @@
                                                             @if (exercise.ExerciseTypes?.Any() == true)
                                                             {
                                                                 <p>Types: @string.Join(", ", exercise.ExerciseTypes.Select(t => t.Value))</p>
+                                                            }
+                                                            @if (LinkType == "Alternative" && SourceExercise != null)
+                                                            {
+                                                                var compatibilityScore = GetCompatibilityScore(exercise);
+                                                                <p class="text-purple-600 font-medium">
+                                                                    Compatibility: @compatibilityScore% match
+                                                                    @if (compatibilityScore >= 80)
+                                                                    {
+                                                                        <span class="ml-1 text-green-600">⭐ Excellent</span>
+                                                                    }
+                                                                    else if (compatibilityScore >= 60)
+                                                                    {
+                                                                        <span class="ml-1 text-purple-600">✓ Good</span>
+                                                                    }
+                                                                    else if (compatibilityScore >= 40)
+                                                                    {
+                                                                        <span class="ml-1 text-orange-600">~ Fair</span>
+                                                                    }
+                                                                </p>
                                                             }
                                                             @if (IsAlreadyLinked(exercise.Id))
                                                             {
@@ -193,8 +259,11 @@
                 Cancel
             </button>
         </div>
+                </div>
+            </div>
+        </div>
     </div>
-</div>
+}
 
 @code {
     [Parameter, EditorRequired] public bool IsOpen { get; set; }
@@ -204,6 +273,7 @@
     [Parameter, EditorRequired] public IEnumerable<ExerciseTypeDto> ExerciseTypes { get; set; } = null!;
     [Parameter] public EventCallback<ExerciseListDto> OnAdd { get; set; }
     [Parameter] public EventCallback OnCancel { get; set; }
+    [Parameter] public ExerciseDto? SourceExercise { get; set; } // For alternative exercise compatibility
 
     private string _searchQuery = string.Empty;
     // Removed _selectedExerciseType as it's no longer needed
@@ -240,8 +310,7 @@
             _errorMessage = null;
             StateHasChanged();
 
-            Console.WriteLine($"[AddExerciseLinkModal] SearchExercises - LinkType: {LinkType}");
-            Console.WriteLine($"[AddExerciseLinkModal] SearchExercises - SearchQuery: '{_searchQuery}'");
+            // Search for exercises based on the link type and search query
 
             var filter = new ExerciseFilterDto
             {
@@ -256,24 +325,11 @@
             
             _searchResults = result.Items;
             
-            Console.WriteLine($"[AddExerciseLinkModal] SearchExercises - Initial results count: {_searchResults?.Count ?? 0}");
-            
-            if (_searchResults?.Any() == true)
-            {
-                Console.WriteLine($"[AddExerciseLinkModal] SearchExercises - First 3 exercises from API:");
-                foreach (var exercise in _searchResults.Take(3))
-                {
-                    var types = exercise.ExerciseTypes?.Select(t => $"{t.Value} (ID: {t.Id})") ?? new[] { "No types" };
-                    Console.WriteLine($"  - {exercise.Name} (ID: {exercise.Id}) - Types: {string.Join(", ", types)}");
-                }
-            }
+            // Process search results
 
             // No manual exercise type filtering needed - we filter by LinkType below
 
             // Filter to only show exercises that can be used for the specified link type
-            Console.WriteLine($"[AddExerciseLinkModal] SearchExercises - Looking for exercises that can be used as {LinkType}");
-            
-            var beforeTypeFilter = _searchResults?.Count ?? 0;
             
             if (LinkType == "Warmup")
             {
@@ -281,7 +337,7 @@
                 _searchResults = _searchResults
                     ?.Where(e => e.ExerciseTypes?.Any(t => t.Value == "Warmup") == true)
                     .ToList() ?? new List<ExerciseListDto>();
-                Console.WriteLine($"[AddExerciseLinkModal] SearchExercises - After Warmup filter: {_searchResults.Count} (was {beforeTypeFilter})");
+                // Filtered to Warmup exercises
             }
             else if (LinkType == "Cooldown")
             {
@@ -289,7 +345,18 @@
                 _searchResults = _searchResults
                     ?.Where(e => e.ExerciseTypes?.Any(t => t.Value == "Cooldown") == true)
                     .ToList() ?? new List<ExerciseListDto>();
-                Console.WriteLine($"[AddExerciseLinkModal] SearchExercises - After Cooldown filter: {_searchResults.Count} (was {beforeTypeFilter})");
+                // Filtered to Cooldown exercises
+            }
+            else if (LinkType == "Alternative" && SourceExercise != null)
+            {
+                // For alternatives, show exercises that share at least one exercise type with source
+                var sourceTypes = SourceExercise.ExerciseTypes?.Select(t => t.Value).ToHashSet() ?? new HashSet<string>();
+                _searchResults = _searchResults
+                    ?.Where(e => e.Id != SourceExercise.Id && // Don't include the source exercise itself
+                             e.ExerciseTypes?.Any(t => sourceTypes.Contains(t.Value)) == true)
+                    .OrderByDescending(e => GetCompatibilityScore(e))
+                    .ToList() ?? new List<ExerciseListDto>();
+                // Filtered to compatible Alternative exercises
             }
             else
             {
@@ -297,28 +364,13 @@
                 _searchResults = _searchResults
                     ?.Where(e => e.ExerciseTypes?.Any(t => t.Value == "Workout") == true)
                     .ToList() ?? new List<ExerciseListDto>();
-                Console.WriteLine($"[AddExerciseLinkModal] SearchExercises - After Workout filter: {_searchResults.Count} (was {beforeTypeFilter})");
+                // Filtered to Workout exercises
             }
-            
-            Console.WriteLine($"[AddExerciseLinkModal] SearchExercises - Final results count: {_searchResults.Count}");
-            
-            if (_searchResults?.Any() == true)
-            {
-                Console.WriteLine($"[AddExerciseLinkModal] SearchExercises - Final results (showing first 3):");
-                foreach (var exercise in _searchResults.Take(3))
-                {
-                    var types = exercise.ExerciseTypes?.Select(t => $"{t.Value} (ID: {t.Id})") ?? new[] { "No types" };
-                    Console.WriteLine($"  - {exercise.Name} (ID: {exercise.Id}) - Types: {string.Join(", ", types)}");
-                }
-            }
+            // Search complete
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"[AddExerciseLinkModal] SearchExercises - Exception: {ex.GetType().Name}: {ex.Message}");
-            if (ex.InnerException != null)
-            {
-                Console.WriteLine($"[AddExerciseLinkModal] SearchExercises - Inner Exception: {ex.InnerException.Message}");
-            }
+            // Log error internally but don't expose details to UI
             _errorMessage = $"Failed to search exercises: {ex.Message}";
             _searchResults = new List<ExerciseListDto>();
         }
@@ -397,11 +449,12 @@
         _errorMessage = null;
     }
 
-    private string GetModalClasses()
+    private async Task HandleKeyDown(KeyboardEventArgs e)
     {
-        return IsOpen 
-            ? "relative z-50" 
-            : "hidden";
+        if (e.Key == "Escape")
+        {
+            await HandleCancel();
+        }
     }
 
     private string GetExerciseCardClasses(string exerciseId)
@@ -414,11 +467,25 @@
         }
         else if (_selectedExerciseId == exerciseId)
         {
-            return $"{baseClasses} border-blue-500 bg-blue-50";
+            if (LinkType == "Alternative")
+            {
+                return $"{baseClasses} border-purple-500 bg-purple-50";
+            }
+            else
+            {
+                return $"{baseClasses} border-blue-500 bg-blue-50";
+            }
         }
         else
         {
-            return $"{baseClasses} border-gray-300 hover:border-blue-300 hover:bg-gray-50";
+            if (LinkType == "Alternative")
+            {
+                return $"{baseClasses} border-gray-300 hover:border-purple-300 hover:bg-purple-50";
+            }
+            else
+            {
+                return $"{baseClasses} border-gray-300 hover:border-blue-300 hover:bg-gray-50";
+            }
         }
     }
 
@@ -431,5 +498,91 @@
                 SelectExercise(exercise);
                 break;
         }
+    }
+
+    private int GetCompatibilityScore(ExerciseListDto exercise)
+    {
+        if (LinkType != "Alternative" || SourceExercise == null)
+            return 0;
+
+        var sourceTypes = SourceExercise.ExerciseTypes?.Select(t => t.Value).ToHashSet() ?? new HashSet<string>();
+        var targetTypes = exercise.ExerciseTypes?.Select(t => t.Value).ToHashSet() ?? new HashSet<string>();
+        
+        if (sourceTypes.Count == 0 || targetTypes.Count == 0)
+            return 0;
+
+        // Calculate type overlap percentage
+        var commonTypes = sourceTypes.Intersect(targetTypes).Count();
+        var totalUniqueTypes = sourceTypes.Union(targetTypes).Count();
+        var typeScore = (int)((double)commonTypes / totalUniqueTypes * 100);
+
+        // Calculate muscle group overlap (basic implementation)
+        var sourceMuscles = SourceExercise.MuscleGroups?.Where(mg => mg.Role?.Value == "Primary")
+                                                        .Select(mg => mg.MuscleGroup?.Value)
+                                                        .Where(v => !string.IsNullOrEmpty(v))
+                                                        .Cast<string>()
+                                                        .ToHashSet() ?? new HashSet<string>();
+
+        var targetMuscles = exercise.MuscleGroups?.Where(mg => mg.Role?.Value == "Primary")
+                                                  .Select(mg => mg.MuscleGroup?.Value)
+                                                  .Where(v => !string.IsNullOrEmpty(v))
+                                                  .Cast<string>()
+                                                  .ToHashSet() ?? new HashSet<string>();
+
+        var muscleScore = 0;
+        if (sourceMuscles.Count > 0 && targetMuscles.Count > 0)
+        {
+            var commonMuscles = sourceMuscles.Intersect(targetMuscles).Count();
+            var totalUniqueMuscles = sourceMuscles.Union(targetMuscles).Count();
+            muscleScore = (int)((double)commonMuscles / totalUniqueMuscles * 100);
+        }
+
+        // Difficulty similarity boost
+        var difficultyScore = 0;
+        if (SourceExercise.Difficulty?.Value == exercise.Difficulty?.Value)
+        {
+            difficultyScore = 20; // 20% boost for same difficulty
+        }
+
+            // Weighted final score: 60% types, 30% muscles, 10% difficulty
+        var finalScore = (int)(typeScore * 0.6 + muscleScore * 0.3 + difficultyScore * 0.1);
+        return Math.Max(0, Math.Min(100, finalScore)); // Clamp between 0-100
+    }
+
+    private string GetModalSubtitle()
+    {
+        return LinkType switch
+        {
+            "Alternative" => "Find exercises with compatible types for variety",
+            "Warmup" => "Select exercises to prepare for the main workout",
+            "Cooldown" => "Choose exercises to help with recovery",
+            "Workout" => "Add related workout exercises",
+            _ => "Select an exercise to link"
+        };
+    }
+
+    private string GetUserFriendlyErrorMessage(string errorMessage)
+    {
+        if (string.IsNullOrEmpty(errorMessage))
+            return "An unexpected error occurred.";
+
+        // Convert technical error messages to user-friendly ones
+        if (errorMessage.Contains("timeout") || errorMessage.Contains("Timeout"))
+            return "The request timed out. Please check your connection and try again.";
+        
+        if (errorMessage.Contains("network") || errorMessage.Contains("Network"))
+            return "Network error occurred. Please check your internet connection.";
+        
+        if (errorMessage.Contains("unauthorized") || errorMessage.Contains("Unauthorized"))
+            return "You don't have permission to perform this action.";
+        
+        if (errorMessage.Contains("not found") || errorMessage.Contains("NotFound"))
+            return "The requested exercise could not be found.";
+        
+        if (errorMessage.Contains("validation") || errorMessage.Contains("Validation"))
+            return "The exercise selection didn't meet the requirements. Please try a different exercise.";
+        
+        // Return a generic user-friendly message for other errors
+        return "Something went wrong. Please try again, and if the problem persists, contact support.";
     }
 }

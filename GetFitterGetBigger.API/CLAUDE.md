@@ -12,6 +12,45 @@ When working in the API project folder, the AI assistant can perform **full impl
 
 Note: When in the main repository folder, only documentation work is performed.
 
+## Claude Code Agent and Command Documentation
+
+### Creating Agents
+**IMPORTANT**: Before creating any new agent, ALWAYS read the official documentation first:
+- **Official Agent Documentation**: https://docs.anthropic.com/en/docs/claude-code/sub-agents
+
+This documentation contains:
+- How to create and configure sub-agents
+- Best practices for agent design
+- Available agent capabilities and limitations
+- Examples of effective agent implementations
+
+### Creating Slash Commands
+**IMPORTANT**: Before creating any new slash command, ALWAYS read the official documentation first:
+- **Official Slash Commands Documentation**: https://docs.anthropic.com/en/docs/claude-code/slash-commands#custom-slash-commands
+
+This documentation covers:
+- How to define custom slash commands
+- Command syntax and parameters
+- Integration with Claude Code workflow
+- Best practices for command implementation
+
+### Available Custom Agents and Commands
+
+#### feature-code-reviewer Agent
+**Purpose**: Performs comprehensive code review against CODE_QUALITY_STANDARDS.md
+- Reviews ALL commits in a feature
+- Checks 28 Golden Rules and all patterns
+- Generates detailed violation reports with solutions
+- Calculates approval rates per file and overall
+
+#### /review-feature Command
+**Usage**: `/review-feature FEAT-XXX`
+- Triggers feature-code-reviewer agent for specified feature
+- Generates timestamped report in feature folder
+- Updates feature-tasks.md with review results
+- Can be run anytime during feature development
+- Report always goes to Final Code Review checkpoint
+
 ## Git Commit Messages
 
 When creating git commits, use the following signature format at the end of the commit message:
@@ -58,6 +97,60 @@ When propagating API documentation:
 - Missing mock setups
 - Navigation property loading issues
 - Quick debugging checklist
+
+### Understanding and Reducing CRAP Score
+
+**CRAP Score** (Change Risk Anti-Patterns) measures code maintainability by combining:
+- **Cyclomatic Complexity**: How complex the code logic is
+- **Code Coverage**: How well tested the code is
+
+#### Strategy for Reducing CRAP Score:
+
+**1. When CRAP Score is High (>30):**
+   - **First Priority**: Add test coverage
+   - Adding tests is the fastest way to reduce CRAP score
+   - Example: WorkoutTemplateExerciseService went from high CRAP score to acceptable just by increasing coverage from 1% to 93.9%
+
+**2. When Cyclomatic Complexity is Very High (>10):**
+   - **First Priority**: Refactor to reduce complexity
+   - Extract methods, use pattern matching, remove nested ifs
+   - **Then**: Add comprehensive test coverage
+
+**3. Optimal Approach:**
+   ```
+   CRAP Score = Complexity² × (1 - Coverage)³ + Complexity
+   
+   If Complexity > 10: Refactor first, then test
+   If Complexity ≤ 10: Test first (biggest impact)
+   ```
+
+**Key Insight**: Test coverage has exponential impact on CRAP score. A method with complexity 5 and 0% coverage has CRAP score of 30, but with 80% coverage drops to 6!
+
+### Test Coverage Reports
+
+To generate a comprehensive test coverage report for the project, use the **test-coverage-reporter** agent instead of running commands manually:
+
+```
+Use the test-coverage-reporter agent to generate a test coverage report
+```
+
+This agent will:
+- Clean previous test results
+- Run all tests with coverage collection
+- Generate HTML and Markdown reports
+- Provide actionable coverage insights
+
+**Manual Command Reference** (if needed):
+```bash
+# Clean and run tests with coverage
+dotnet clean
+dotnet test --collect:"XPlat Code Coverage" --results-directory ./TestResults /p:CollectCoverage=true /p:CoverletOutputFormat=cobertura
+
+# Generate HTML report (requires ReportGenerator tool)
+reportgenerator -reports:"TestResults/*/coverage.cobertura.xml" -targetdir:"TestResults/CoverageReport" -reporttypes:Html
+```
+
+The coverage report will be available at `TestResults/CoverageReport/index.html`
 
 ## Memory Bank Structure
 

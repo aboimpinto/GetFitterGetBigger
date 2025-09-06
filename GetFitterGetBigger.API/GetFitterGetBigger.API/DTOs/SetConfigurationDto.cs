@@ -49,4 +49,19 @@ public record SetConfigurationDto
     /// Last modified timestamp
     /// </summary>
     public DateTime UpdatedAt { get; init; }
+
+    /// <summary>
+    /// The workout template exercise ID this set belongs to
+    /// </summary>
+    public string WorkoutTemplateExerciseId { get; init; } = string.Empty;
+
+    /// <summary>
+    /// Target time in seconds (alternate property name for consistency)
+    /// </summary>
+    public int? TargetTimeSeconds => TargetTime;
+
+    /// <summary>
+    /// Empty instance for failed operations
+    /// </summary>
+    public static SetConfigurationDto Empty => new();
 }

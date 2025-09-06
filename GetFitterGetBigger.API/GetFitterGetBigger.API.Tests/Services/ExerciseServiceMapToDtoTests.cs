@@ -19,6 +19,7 @@ using Moq;
 using Moq.AutoMock;
 using Olimpo.EntityFramework.Persistency;
 using Xunit;
+using ExerciseEntity = GetFitterGetBigger.API.Models.Entities.Exercise;
 
 namespace GetFitterGetBigger.API.Tests.Services;
 
@@ -36,7 +37,7 @@ public class ExerciseServiceMapToDtoTests
         var difficulty = DifficultyLevel.Handler.Create(difficultyId, "Intermediate", "Medium difficulty", 3).Value;
         var kineticChain = KineticChainType.Handler.Create(kineticChainId, "Open Chain", "Open kinetic chain movement", 1).Value;
         
-        var exercise = Exercise.Handler.CreateNew(
+        var exercise = ExerciseEntity.Handler.CreateNew(
             "Test Exercise",
             "Test Description",
             null,
@@ -46,8 +47,8 @@ public class ExerciseServiceMapToDtoTests
             kineticChainId);
             
         // Use reflection to set navigation properties for testing
-        typeof(Exercise).GetProperty(nameof(Exercise.Difficulty))!.SetValue(exercise, difficulty);
-        typeof(Exercise).GetProperty(nameof(Exercise.KineticChain))!.SetValue(exercise, kineticChain);
+        typeof(ExerciseEntity).GetProperty(nameof(ExerciseEntity.Difficulty))!.SetValue(exercise, difficulty);
+        typeof(ExerciseEntity).GetProperty(nameof(ExerciseEntity.KineticChain))!.SetValue(exercise, kineticChain);
         
         // Arrange
         var automocker = new AutoMocker();
@@ -90,7 +91,7 @@ public class ExerciseServiceMapToDtoTests
         
         var difficulty = DifficultyLevel.Handler.Create(difficultyId, "Beginner", "Easy difficulty", 1).Value;
         
-        var exercise = Exercise.Handler.CreateNew(
+        var exercise = ExerciseEntity.Handler.CreateNew(
             "Rest Exercise",
             "Rest period",
             null,
@@ -100,7 +101,7 @@ public class ExerciseServiceMapToDtoTests
             null); // No kinetic chain
             
         // Use reflection to set navigation properties for testing
-        typeof(Exercise).GetProperty(nameof(Exercise.Difficulty))!.SetValue(exercise, difficulty);
+        typeof(ExerciseEntity).GetProperty(nameof(ExerciseEntity.Difficulty))!.SetValue(exercise, difficulty);
         
         // Arrange
         var automocker = new AutoMocker();
@@ -131,7 +132,7 @@ public class ExerciseServiceMapToDtoTests
     {
         // Arrange
         var exerciseId = ExerciseId.New();
-        var exercise = Exercise.Handler.CreateNew(
+        var exercise = ExerciseEntity.Handler.CreateNew(
             "Test Exercise",
             "Description",
             "http://video.url",
@@ -192,7 +193,7 @@ public class ExerciseServiceMapToDtoTests
     {
         // Arrange
         var exerciseId = ExerciseId.New();
-        var exercise = Exercise.Handler.CreateNew(
+        var exercise = ExerciseEntity.Handler.CreateNew(
             "Test Exercise",
             "Description",
             null,
@@ -248,7 +249,7 @@ public class ExerciseServiceMapToDtoTests
     {
         // Arrange
         var exerciseId = ExerciseId.New();
-        var exercise = Exercise.Handler.CreateNew(
+        var exercise = ExerciseEntity.Handler.CreateNew(
             "Test Exercise",
             "Description",
             null,
@@ -278,7 +279,7 @@ public class ExerciseServiceMapToDtoTests
     public async Task GetPagedAsync_WithCoachNotesAndTypes_MapsAllCorrectly()
     {
         // Arrange
-        var exercise1 = Exercise.Handler.CreateNew(
+        var exercise1 = ExerciseEntity.Handler.CreateNew(
             "Exercise 1",
             "Description 1",
             null,
@@ -286,7 +287,7 @@ public class ExerciseServiceMapToDtoTests
             false,
             DifficultyLevelId.New());
         
-        var exercise2 = Exercise.Handler.CreateNew(
+        var exercise2 = ExerciseEntity.Handler.CreateNew(
             "Exercise 2",
             "Description 2",
             null,
@@ -364,7 +365,7 @@ public class ExerciseServiceMapToDtoTests
     {
         // Arrange
         var exerciseId = ExerciseId.New();
-        var exercise = Exercise.Handler.CreateNew(
+        var exercise = ExerciseEntity.Handler.CreateNew(
             "Test Exercise",
             "Description",
             null,

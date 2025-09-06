@@ -59,8 +59,8 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises.ExerciseLink
                 .Add(p => p.StateService, _stateServiceMock.Object));
 
             // Assert
-            component.Find("[data-testid='warmup-count']").TextContent.Should().Contain("2 / 10");
-            component.Find("[data-testid='cooldown-count']").TextContent.Should().Contain("1 / 10");
+            component.Find("[data-testid='warmup-count']").TextContent.Should().Contain("2");
+            component.Find("[data-testid='cooldown-count']").TextContent.Should().Contain("1");
         }
 
         [Fact]
@@ -126,10 +126,10 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises.ExerciseLink
         }
 
         [Fact]
-        public void LinkedExercisesList_HidesAddButtonWhenAtMaxCapacity()
+        public void LinkedExercisesList_AlwaysShowsAddButtons_NoCapacityLimit()
         {
-            // Arrange
-            var warmupLinks = Enumerable.Range(0, 10)
+            // Arrange - Many links (previously would hide button)
+            var warmupLinks = Enumerable.Range(0, 20)
                 .Select(i => new ExerciseLinkDtoBuilder().WithId($"warmup-{i}").AsWarmup().Build())
                 .ToList();
 
@@ -140,8 +140,8 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises.ExerciseLink
                 .Add(p => p.StateService, _stateServiceMock.Object)
                 .Add(p => p.OnAddLink, EventCallback.Factory.Create<string>(this, _ => { })));
 
-            // Assert
-            component.FindAll("[data-testid='add-warmup-button']").Should().BeEmpty();
+            // Assert - Buttons always visible (no capacity limit)
+            component.Find("[data-testid='add-warmup-button']").Should().NotBeNull();
             component.Find("[data-testid='add-cooldown-button']").Should().NotBeNull();
         }
 
@@ -235,7 +235,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises.ExerciseLink
 
             // Assert - Component should re-render with new state
             component.WaitForAssertion(() =>
-                component.Find("[data-testid='warmup-count']").TextContent.Should().Contain("1 / 10"));
+                component.Find("[data-testid='warmup-count']").TextContent.Should().Contain("1"));
         }
 
         [Fact]

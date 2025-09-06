@@ -55,8 +55,12 @@ public class ExerciseLinkService : IExerciseLinkService
 
             Console.WriteLine($"[ExerciseLinkService] Link created successfully with ID: {result?.Id}");
 
-            // Invalidate cache for the exercise links
+            // Invalidate cache for both source and target exercises
+            // This ensures reverse links are properly reflected
             InvalidateExerciseLinksCache(exerciseId);
+            InvalidateExerciseLinksCache(createLinkDto.TargetExerciseId);
+            
+            Console.WriteLine($"[ExerciseLinkService] Cache invalidated for both exercises: {exerciseId} and {createLinkDto.TargetExerciseId}");
 
             return result ?? throw new ExerciseLinkServiceException("Failed to deserialize created exercise link response");
         }
@@ -86,21 +90,95 @@ public class ExerciseLinkService : IExerciseLinkService
         }
     }
 
-    public async Task<ExerciseLinksResponseDto> GetLinksAsync(string exerciseId, string? linkType = null, bool includeExerciseDetails = false)
+    public async Task<ExerciseLinkDto> CreateBidirectionalLinkAsync(string exerciseId, CreateExerciseLinkDto createLinkDto)
     {
         try
         {
-            var cacheKey = $"exercise_links_{exerciseId}_{linkType}_{includeExerciseDetails}";
+            // For bidirectional links (Alternative type), use the endpoint that handles both directions
+            var requestUrl = $"api/exercises/{exerciseId}/links?createBidirectional=true";
 
-            if (!_cache.TryGetValue(cacheKey, out ExerciseLinksResponseDto? links))
+            Console.WriteLine($"[ExerciseLinkService] CreateBidirectionalLinkAsync called");
+            Console.WriteLine($"[ExerciseLinkService] Request URL: {requestUrl}");
+            Console.WriteLine($"[ExerciseLinkService] ExerciseId: {exerciseId}");
+            Console.WriteLine($"[ExerciseLinkService] CreateLinkDto: SourceExerciseId={createLinkDto.SourceExerciseId}, TargetExerciseId={createLinkDto.TargetExerciseId}, LinkType={createLinkDto.LinkType}, DisplayOrder={createLinkDto.DisplayOrder}");
+
+            var json = JsonSerializer.Serialize(createLinkDto, _jsonOptions);
+            Console.WriteLine($"[ExerciseLinkService] Request JSON: {json}");
+
+            var result = await ExecuteWithRetryAsync(async () =>
             {
-                var queryParams = BuildLinksQueryString(linkType, includeExerciseDetails);
-                var requestUrl = $"api/exercises/{exerciseId}/links{queryParams}";
+                var response = await _httpClient.PostAsJsonAsync(requestUrl, createLinkDto, _jsonOptions);
 
-                var response = await _httpClient.GetAsync(requestUrl);
+                Console.WriteLine($"[ExerciseLinkService] Response Status: {response.StatusCode}");
 
                 if (!response.IsSuccessStatusCode)
                 {
+                    var errorContent = await response.Content.ReadAsStringAsync();
+                    Console.WriteLine($"[ExerciseLinkService] Error Response Body: {errorContent}");
+                    await HandleErrorResponseAsync(response, exerciseId, createLinkDto.TargetExerciseId);
+                }
+
+                return await response.Content.ReadFromJsonAsync<ExerciseLinkDto>(_jsonOptions);
+            });
+
+            Console.WriteLine($"[ExerciseLinkService] Bidirectional link created successfully with ID: {result?.Id}");
+
+            // Invalidate cache for both source and target exercises
+            InvalidateExerciseLinksCache(exerciseId);
+            InvalidateExerciseLinksCache(createLinkDto.TargetExerciseId);
+
+            return result ?? throw new ExerciseLinkServiceException("Failed to deserialize created bidirectional exercise link response");
+        }
+        catch (HttpRequestException ex)
+        {
+            Console.WriteLine($"[ExerciseLinkService] HttpRequestException: {ex.Message}");
+            throw new ExerciseLinkApiException($"Network error while creating bidirectional exercise link: {ex.Message}", HttpStatusCode.ServiceUnavailable, ex);
+        }
+        catch (TaskCanceledException ex)
+        {
+            Console.WriteLine($"[ExerciseLinkService] TaskCanceledException: {ex.Message}");
+            throw new ExerciseLinkApiException("Request timeout while creating bidirectional exercise link", HttpStatusCode.RequestTimeout, ex);
+        }
+        catch (ExerciseLinkServiceException ex)
+        {
+            Console.WriteLine($"[ExerciseLinkService] ExerciseLinkServiceException: {ex.Message}");
+            throw; // Re-throw our custom exceptions
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[ExerciseLinkService] Unexpected Exception: {ex.GetType().Name}: {ex.Message}");
+            if (ex.InnerException != null)
+            {
+                Console.WriteLine($"[ExerciseLinkService] Inner Exception: {ex.InnerException.Message}");
+            }
+            throw new ExerciseLinkServiceException($"Unexpected error while creating bidirectional exercise link: {ex.Message}", ex);
+        }
+    }
+
+    public async Task<ExerciseLinksResponseDto> GetLinksAsync(string exerciseId, string? linkType = null, bool includeExerciseDetails = false, bool includeReverse = false)
+    {
+        try
+        {
+            var cacheKey = $"exercise_links_{exerciseId}_{linkType}_{includeExerciseDetails}_{includeReverse}";
+
+            if (!_cache.TryGetValue(cacheKey, out ExerciseLinksResponseDto? links))
+            {
+                var queryParams = BuildLinksQueryString(linkType, includeExerciseDetails, includeReverse);
+                var requestUrl = $"api/exercises/{exerciseId}/links{queryParams}";
+
+                Console.WriteLine($"[ExerciseLinkService] GetLinksAsync called");
+                Console.WriteLine($"[ExerciseLinkService] Request URL: {requestUrl}");
+                Console.WriteLine($"[ExerciseLinkService] ExerciseId: {exerciseId}, LinkType: {linkType}, IncludeDetails: {includeExerciseDetails}, IncludeReverse: {includeReverse}");
+
+                var response = await _httpClient.GetAsync(requestUrl);
+
+                Console.WriteLine($"[ExerciseLinkService] Response Status: {response.StatusCode}");
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    var errorContent = await response.Content.ReadAsStringAsync();
+                    Console.WriteLine($"[ExerciseLinkService] Error Response Body: {errorContent}");
+                    
                     if (response.StatusCode == HttpStatusCode.NotFound)
                     {
                         throw new ExerciseNotFoundException(exerciseId);
@@ -108,12 +186,44 @@ public class ExerciseLinkService : IExerciseLinkService
                     await HandleErrorResponseAsync(response, exerciseId);
                 }
 
-                links = await response.Content.ReadFromJsonAsync<ExerciseLinksResponseDto>(_jsonOptions);
+                // First read as string to log the raw response
+                var json = await response.Content.ReadAsStringAsync();
+                Console.WriteLine($"[ExerciseLinkService] GetLinksAsync - Raw JSON response:");
+                Console.WriteLine(json);
+
+                // Then deserialize
+                links = JsonSerializer.Deserialize<ExerciseLinksResponseDto>(json, _jsonOptions);
 
                 if (links != null)
                 {
-                    // Cache for 1 hour as specified in requirements
-                    _cache.Set(cacheKey, links, TimeSpan.FromHours(1));
+                    Console.WriteLine($"[ExerciseLinkService] GetLinksAsync - Parsed response:");
+                    Console.WriteLine($"  - Exercise: {links.ExerciseName} (ID: {links.ExerciseId})");
+                    Console.WriteLine($"  - Total Links: {links.TotalCount}");
+                    Console.WriteLine($"  - Links Count: {links.Links?.Count ?? 0}");
+                    
+                    if (links.Links?.Any() == true)
+                    {
+                        foreach (var link in links.Links)
+                        {
+                            Console.WriteLine($"    - Link: {link.LinkType} to {link.TargetExerciseId}, DisplayOrder: {link.DisplayOrder}");
+                            if (link.TargetExercise != null)
+                            {
+                                Console.WriteLine($"      Exercise Name: {link.TargetExercise.Name}");
+                            }
+                        }
+                    }
+                    else
+                    {
+                        Console.WriteLine($"  - No links found in response");
+                    }
+                    // Use different cache durations based on link type
+                    // Alternative links: 15 minutes (more dynamic)
+                    // Warmup/Cooldown links: 1 hour (more stable)
+                    var cacheDuration = linkType?.Equals("Alternative", StringComparison.OrdinalIgnoreCase) == true 
+                        ? TimeSpan.FromMinutes(15) 
+                        : TimeSpan.FromHours(1);
+                        
+                    _cache.Set(cacheKey, links, cacheDuration);
                 }
             }
 
@@ -192,6 +302,20 @@ public class ExerciseLinkService : IExerciseLinkService
     {
         try
         {
+            // First, get the link details to find the target exercise ID for cache invalidation
+            string? targetExerciseId = null;
+            try
+            {
+                var linksResponse = await GetLinksAsync(exerciseId, includeExerciseDetails: true);
+                var linkToUpdate = linksResponse.Links?.FirstOrDefault(l => l.Id == linkId);
+                targetExerciseId = linkToUpdate?.TargetExerciseId;
+            }
+            catch
+            {
+                // If we can't get the link details, continue with update anyway
+                // The cache invalidation will only be partial
+            }
+
             var requestUrl = $"api/exercises/{exerciseId}/links/{linkId}";
 
             var response = await _httpClient.PutAsJsonAsync(requestUrl, updateLinkDto, _jsonOptions);
@@ -207,8 +331,13 @@ public class ExerciseLinkService : IExerciseLinkService
 
             var result = await response.Content.ReadFromJsonAsync<ExerciseLinkDto>(_jsonOptions);
 
-            // Invalidate cache for the exercise links
+            // Invalidate cache for both source and target exercises
             InvalidateExerciseLinksCache(exerciseId);
+            if (!string.IsNullOrEmpty(targetExerciseId))
+            {
+                InvalidateExerciseLinksCache(targetExerciseId);
+                Console.WriteLine($"[ExerciseLinkService] Cache invalidated for both exercises after update: {exerciseId} and {targetExerciseId}");
+            }
 
             return result ?? throw new ExerciseLinkServiceException("Failed to deserialize updated exercise link response");
         }
@@ -234,6 +363,21 @@ public class ExerciseLinkService : IExerciseLinkService
     {
         try
         {
+            // First, get the link details to find the target exercise ID
+            // This is needed to invalidate both caches properly
+            string? targetExerciseId = null;
+            try
+            {
+                var linksResponse = await GetLinksAsync(exerciseId, includeExerciseDetails: true);
+                var linkToDelete = linksResponse.Links?.FirstOrDefault(l => l.Id == linkId);
+                targetExerciseId = linkToDelete?.TargetExerciseId;
+            }
+            catch
+            {
+                // If we can't get the link details, continue with deletion anyway
+                // The cache invalidation will only be partial
+            }
+
             var requestUrl = $"api/exercises/{exerciseId}/links/{linkId}";
 
             var response = await _httpClient.DeleteAsync(requestUrl);
@@ -247,8 +391,15 @@ public class ExerciseLinkService : IExerciseLinkService
                 await HandleErrorResponseAsync(response, exerciseId, linkId);
             }
 
-            // Invalidate cache for the exercise links
+            // Invalidate cache for both source and target exercises
             InvalidateExerciseLinksCache(exerciseId);
+            
+            // Also invalidate the target exercise cache if we found it
+            // This ensures reverse links are properly cleared
+            if (!string.IsNullOrEmpty(targetExerciseId))
+            {
+                InvalidateExerciseLinksCache(targetExerciseId);
+            }
         }
         catch (HttpRequestException ex)
         {
@@ -268,7 +419,95 @@ public class ExerciseLinkService : IExerciseLinkService
         }
     }
 
-    private string BuildLinksQueryString(string? linkType, bool includeExerciseDetails)
+    public async Task DeleteBidirectionalLinkAsync(string exerciseId, string linkId, bool deleteReverse = true)
+    {
+        try
+        {
+            // First, get the link details to find the target exercise ID
+            // This is critical for bidirectional links to clear both caches
+            string? targetExerciseId = null;
+            try
+            {
+                var linksResponse = await GetLinksAsync(exerciseId, includeExerciseDetails: true);
+                var linkToDelete = linksResponse.Links?.FirstOrDefault(l => l.Id == linkId);
+                targetExerciseId = linkToDelete?.TargetExerciseId;
+                
+                Console.WriteLine($"[ExerciseLinkService] Found target exercise ID for bidirectional deletion: {targetExerciseId}");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[ExerciseLinkService] Could not retrieve target exercise ID: {ex.Message}");
+                // If we can't get the link details, continue with deletion anyway
+                // The cache invalidation will only be partial
+            }
+
+            // For bidirectional links (Alternative type), use the endpoint that handles both directions
+            var requestUrl = $"api/exercises/{exerciseId}/links/{linkId}?deleteReverse={deleteReverse}";
+
+            Console.WriteLine($"[ExerciseLinkService] DeleteBidirectionalLinkAsync called");
+            Console.WriteLine($"[ExerciseLinkService] Request URL: {requestUrl}");
+            Console.WriteLine($"[ExerciseLinkService] ExerciseId: {exerciseId}, LinkId: {linkId}, DeleteReverse: {deleteReverse}");
+
+            var response = await _httpClient.DeleteAsync(requestUrl);
+
+            Console.WriteLine($"[ExerciseLinkService] Response Status: {response.StatusCode}");
+
+            if (!response.IsSuccessStatusCode)
+            {
+                if (response.StatusCode == HttpStatusCode.NotFound)
+                {
+                    throw new ExerciseLinkNotFoundException(exerciseId, linkId);
+                }
+
+                var errorContent = await response.Content.ReadAsStringAsync();
+                Console.WriteLine($"[ExerciseLinkService] Error Response Body: {errorContent}");
+                await HandleErrorResponseAsync(response, exerciseId, linkId);
+            }
+
+            Console.WriteLine($"[ExerciseLinkService] Bidirectional link deleted successfully");
+
+            // For bidirectional deletion, invalidate cache for both exercises
+            InvalidateExerciseLinksCache(exerciseId);
+            
+            // Also invalidate the target exercise cache if we found it
+            // This is essential for Alternative links where both sides need to be updated
+            if (!string.IsNullOrEmpty(targetExerciseId))
+            {
+                Console.WriteLine($"[ExerciseLinkService] Invalidating cache for target exercise: {targetExerciseId}");
+                InvalidateExerciseLinksCache(targetExerciseId);
+            }
+            else
+            {
+                Console.WriteLine($"[ExerciseLinkService] Warning: Could not invalidate target exercise cache - ID not found");
+            }
+        }
+        catch (HttpRequestException ex)
+        {
+            Console.WriteLine($"[ExerciseLinkService] HttpRequestException: {ex.Message}");
+            throw new ExerciseLinkApiException($"Network error while deleting bidirectional exercise link: {ex.Message}", HttpStatusCode.ServiceUnavailable, ex);
+        }
+        catch (TaskCanceledException ex)
+        {
+            Console.WriteLine($"[ExerciseLinkService] TaskCanceledException: {ex.Message}");
+            throw new ExerciseLinkApiException("Request timeout while deleting bidirectional exercise link", HttpStatusCode.RequestTimeout, ex);
+        }
+        catch (ExerciseLinkServiceException)
+        {
+            Console.WriteLine($"[ExerciseLinkService] ExerciseLinkServiceException occurred");
+            throw; // Re-throw our custom exceptions
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[ExerciseLinkService] Unexpected Exception: {ex.GetType().Name}: {ex.Message}");
+            if (ex.InnerException != null)
+            {
+                Console.WriteLine($"[ExerciseLinkService] Inner Exception: {ex.InnerException.Message}");
+            }
+            throw new ExerciseLinkServiceException($"Unexpected error while deleting bidirectional exercise link: {ex.Message}", ex);
+        }
+    }
+
+    private string BuildLinksQueryString(string? linkType, bool includeExerciseDetails, bool includeReverse = false)
     {
         var queryParams = new List<string>();
 
@@ -280,6 +519,11 @@ public class ExerciseLinkService : IExerciseLinkService
         if (includeExerciseDetails)
         {
             queryParams.Add("includeExerciseDetails=true");
+        }
+
+        if (includeReverse)
+        {
+            queryParams.Add("includeReverse=true");
         }
 
         return queryParams.Count > 0 ? "?" + string.Join("&", queryParams) : "";
@@ -308,7 +552,11 @@ public class ExerciseLinkService : IExerciseLinkService
                 }
                 if (errorContent.Contains("invalid", StringComparison.OrdinalIgnoreCase) && errorContent.Contains("type", StringComparison.OrdinalIgnoreCase))
                 {
-                    throw new InvalidExerciseLinkException("Invalid exercise type for linking. Only Workout exercises can have links");
+                    throw new InvalidExerciseLinkException("Invalid exercise type for linking. Alternative exercises must share at least one exercise type");
+                }
+                if (errorContent.Contains("incompatible", StringComparison.OrdinalIgnoreCase) && errorContent.Contains("alternative", StringComparison.OrdinalIgnoreCase))
+                {
+                    throw new InvalidExerciseLinkException("Alternative exercises must share at least one exercise type (Workout, Warmup, or Cooldown)");
                 }
                 throw new InvalidExerciseLinkException($"Bad request: {errorContent}");
 
@@ -339,17 +587,95 @@ public class ExerciseLinkService : IExerciseLinkService
         }
     }
 
+    /// <summary>
+    /// Executes an async operation with retry logic for transient failures
+    /// </summary>
+    /// <typeparam name="T">Return type</typeparam>
+    /// <param name="operation">Operation to execute</param>
+    /// <param name="maxRetries">Maximum number of retries (default: 2)</param>
+    /// <returns>Operation result</returns>
+    private async Task<T> ExecuteWithRetryAsync<T>(Func<Task<T>> operation, int maxRetries = 2)
+    {
+        var retryDelay = 1000; // Start with 1-second delay
+        
+        for (var attempt = 0; attempt <= maxRetries; attempt++)
+        {
+            try
+            {
+                return await operation();
+            }
+            catch (HttpRequestException ex) when (attempt < maxRetries)
+            {
+                Console.WriteLine($"[ExerciseLinkService] Retry attempt {attempt + 1}/{maxRetries + 1} after HttpRequestException: {ex.Message}");
+                await Task.Delay(retryDelay);
+                retryDelay *= 2; // Exponential backoff
+                continue;
+            }
+            catch (TaskCanceledException ex) when (ex.Message.Contains("timeout", StringComparison.OrdinalIgnoreCase) && attempt < maxRetries)
+            {
+                Console.WriteLine($"[ExerciseLinkService] Retry attempt {attempt + 1}/{maxRetries + 1} after timeout: {ex.Message}");
+                await Task.Delay(retryDelay);
+                retryDelay *= 2;
+                continue;
+            }
+            catch (ExerciseLinkApiException ex) when (ex.StatusCode.HasValue && IsTransientError(ex.StatusCode.Value) && attempt < maxRetries)
+            {
+                Console.WriteLine($"[ExerciseLinkService] Retry attempt {attempt + 1}/{maxRetries + 1} after API error {ex.StatusCode}: {ex.Message}");
+                await Task.Delay(retryDelay);
+                retryDelay *= 2;
+                continue;
+            }
+        }
+
+        // This should never be reached due to the exception handling above, but satisfies the compiler
+        throw new InvalidOperationException("Retry logic failed unexpectedly");
+    }
+
+    /// <summary>
+    /// Determines if an HTTP status code represents a transient error that should be retried
+    /// </summary>
+    /// <param name="statusCode">HTTP status code</param>
+    /// <returns>True if the error is transient and should be retried</returns>
+    private static bool IsTransientError(HttpStatusCode statusCode)
+    {
+        return statusCode == HttpStatusCode.ServiceUnavailable ||
+               statusCode == HttpStatusCode.RequestTimeout ||
+               statusCode == HttpStatusCode.TooManyRequests ||
+               statusCode >= HttpStatusCode.InternalServerError;
+    }
+
     private void InvalidateExerciseLinksCache(string exerciseId)
     {
-        // Remove all cached entries for this exercise's links
+        // Remove all cached entries for this exercise's links, including the new includeReverse combinations
         var cacheKeys = new[]
         {
+            // Old format compatibility (without includeReverse)
             $"exercise_links_{exerciseId}__False",
             $"exercise_links_{exerciseId}__True",
             $"exercise_links_{exerciseId}_Warmup_False",
             $"exercise_links_{exerciseId}_Warmup_True",
             $"exercise_links_{exerciseId}_Cooldown_False",
             $"exercise_links_{exerciseId}_Cooldown_True",
+            
+            // New format with includeReverse parameter
+            $"exercise_links_{exerciseId}__False_False",
+            $"exercise_links_{exerciseId}__False_True",
+            $"exercise_links_{exerciseId}__True_False",
+            $"exercise_links_{exerciseId}__True_True",
+            $"exercise_links_{exerciseId}_Warmup_False_False",
+            $"exercise_links_{exerciseId}_Warmup_False_True",
+            $"exercise_links_{exerciseId}_Warmup_True_False",
+            $"exercise_links_{exerciseId}_Warmup_True_True",
+            $"exercise_links_{exerciseId}_Cooldown_False_False",
+            $"exercise_links_{exerciseId}_Cooldown_False_True",
+            $"exercise_links_{exerciseId}_Cooldown_True_False",
+            $"exercise_links_{exerciseId}_Cooldown_True_True",
+            $"exercise_links_{exerciseId}_Alternative_False_False",
+            $"exercise_links_{exerciseId}_Alternative_False_True",
+            $"exercise_links_{exerciseId}_Alternative_True_False",
+            $"exercise_links_{exerciseId}_Alternative_True_True",
+            
+            // Suggested links cache
             $"suggested_links_{exerciseId}_5",
             $"suggested_links_{exerciseId}_10",
             $"suggested_links_{exerciseId}_20"

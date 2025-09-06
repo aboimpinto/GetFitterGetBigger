@@ -1,184 +1,258 @@
-Start implementing a feature by intelligently analyzing the context and providing relevant guidelines.
+# Start Implementing Command - Admin Blazor Project
 
-## Process Flow
+Start implementing a Blazor feature from the READY_TO_DEVELOP folder by orchestrating validation agents.
 
-1. **Feature Selection**:
-   - Check `/memory-bank/features/1-READY_TO_DEVELOP/` for available features
-   - If multiple features exist, ask user which to implement
-   - Move selected feature to `2-IN_PROGRESS` folder
-   - Update feature-status.md
+## Usage
 
-2. **Baseline Health Check Verification** (MANDATORY):
-   - Read feature-tasks.md and check for "Baseline Health Check Report" section
-   - If NO baseline health check exists:
-     - **STOP IMMEDIATELY** and inform user
-     - Run baseline health check using format below
-     - Add results to top of feature-tasks.md
-     - Cannot proceed without APPROVED health check
-   - If baseline health check exists but shows failures:
-     - **STOP IMMEDIATELY** and inform user
-     - Fix all issues before proceeding
-     - Re-run health check and update report
-   - Only proceed if "Approval to Proceed: ✅" is present
+`/start-implementing [FEAT-XXX or feature selection]`
 
-3. **Initial Setup** (After Approved Health Check):
-   - Create feature branch as specified in tasks file
-   - Verify branch creation and clean working directory
-   - Load implementation tracking document if exists
+## Overview
 
-4. **Task Analysis**:
-   - Identify the first uncompleted task in feature-tasks.md
-   - Detect task type based on patterns
-   - Load relevant guidelines from implementation-guidelines-map.md
+This command orchestrates two specialized agents to validate and prepare Blazor features for implementation:
+1. **feature-pre-validator**: Validates feature readiness with zero-tolerance for missing UI documentation
+2. **feature-post-validator**: Enhances documentation with Blazor patterns and transitions to IN_PROGRESS
 
-5. **Context-Aware Guidance**:
-   Based on detected task type, provide:
-   - Specific documentation references
-   - Code examples from high-coverage components
-   - Testing requirements and patterns
-   - Common pitfalls to avoid
+## Critical Validation Focus (Blazor-Specific)
 
-## Task Type Detection & Guidelines
+**UI Documentation Requirements:**
+- ✅ Wireframes/screenshots for EVERY screen
+- ✅ ALL user interactions documented
+- ✅ ALL form validations specified
+- ✅ State management patterns clear
+- ✅ API contracts with full DTOs
 
-### For API Service Tasks:
-- Review @memory-bank/COMPREHENSIVE-TESTING-GUIDE.md#api-service-testing-xunit
-- Check existing service patterns (e.g., ExerciseService)
-- Set up HTTP mocking for tests
-- Plan for error handling and retry logic
+**If ANY of these are missing, the feature will be REJECTED!**
 
-### For Component Tasks:
-- Review @memory-bank/COMPREHENSIVE-TESTING-GUIDE.md#blazor-component-testing-bunit
-- Add data-testid attributes from the start
-- Make methods internal for testability
-- Plan both UI interaction and logic tests
+## Implementation Guides
 
-### For State Management Tasks:
-- Review @memory-bank/COMPREHENSIVE-TESTING-GUIDE.md#state-service-testing
-- Study ExerciseWeightTypeStateService pattern
-- Plan optimistic updates with rollback
-- Ensure error message persistence
+**Use these while coding:**
+- `/memory-bank/UI_LIST_PAGE_DESIGN_STANDARDS.md` - List/grid view standards
+- `/memory-bank/UI_FORM_PAGE_DESIGN_STANDARDS.md` - Form design patterns
+- `/memory-bank/COMPREHENSIVE-TESTING-GUIDE.md` - bUnit testing patterns
+- `/memory-bank/CODE_QUALITY_STANDARDS.md` - Quality standards to follow
 
-### For Testing Tasks:
-- Review specific testing section based on what's being tested
-- Aim for 80%+ coverage on new code
-- Use established patterns from well-tested components
-- Follow Boy Scout Rule for existing code
+## Execution Process
 
-### For Checkpoint Tasks:
-- Stop implementation
-- Run full build and test suite
-- Create code review following @memory-bank/CODE_REVIEW_PROCESS.md
-- Cannot proceed until review status is APPROVED
+### Step 1: Feature Selection
+1. List features in `/memory-bank/features/1-READY_TO_DEVELOP/`
+2. Select the specified feature or let user choose if none specified
+3. Verify feature ID format (FEAT-XXX)
 
-## Implementation Steps
+### Step 2: Pre-Validation Agent
 
-0. **VERIFY BASELINE HEALTH CHECK** - Must have "Approval to Proceed: ✅"
-1. **Update task status** to [InProgress: Started: YYYY-MM-DD HH:MM]
-2. **Implement the feature** following loaded guidelines
-3. **Write tests immediately** (if applicable to task)
-4. **Verify build and tests** pass
-5. **Commit changes** and record commit hash
-6. **Update task completion**:
-   - Change status to [Completed: Started: YYYY-MM-DD HH:MM, Finished: YYYY-MM-DD HH:MM]
-   - Add actual time vs estimated time
-   - Add git commit hash reference
-7. **Update checkpoint** when phase complete:
-   - Add all commit hashes and messages
-   - Run `dotnet clean && dotnet build && dotnet test`
-   - Update build/test results
-   - Change checkpoint status only after verification
-8. **Stop at checkpoints** for review using `/review-implemented-feature`
+**Trigger the `feature-pre-validator` agent:**
 
-## Key Principles
-
-- Clean build between every task
-- Tests immediately follow implementation
-- No broken builds committed
-- Follow existing patterns
-- Ask for clarification on ambiguous requirements
-
-## Baseline Health Check Format
-
-### Required Format for feature-tasks.md:
 ```markdown
-## Baseline Health Check Report
-**Date/Time**: YYYY-MM-DD HH:MM:SS
-**Branch**: feature/[branch-name]
-
-### Build Status
-- **Build Result**: [Succeeded/Failed]
-- **Warning Count**: [number]
-- **Warning Details**: [list warnings or "None"]
-
-### Test Status
-- **Total Tests**: [number]
-- **Passed**: [number]
-- **Failed**: [number]
-- **Skipped/Ignored**: [number]
-- **Test Execution Time**: [time]
-
-### Code Analysis Status
-- **Errors**: [number]
-- **Warnings**: [number]
-
-### Decision to Proceed
-- [ ] All tests passing
-- [ ] Build successful
-- [ ] No code analysis errors
-- [ ] Warnings documented and approved
-
-**Approval to Proceed**: ✅ Ready to proceed with implementation
+Task: feature-pre-validator
+Input: Feature ID (e.g., FEAT-022)
+Purpose: Validate that ALL UI documentation, interactions, validations, and API contracts are complete
 ```
 
-### Health Check Commands:
-1. **Run build**: `dotnet build`
-2. **Run tests**: `dotnet test`
-3. **Check for warnings**: Review build output
-4. **Update report**: Add results to feature-tasks.md
+**Expected Validations:**
+- Build health (0 errors, 0 warnings)
+- Test health (100% pass rate)
+- Wireframes for every screen
+- Interactions for every component
+- Validations for every form field
+- State management patterns
+- API endpoint documentation
+- Blazor component structure
 
-## Special Handling
+**On Success (APPROVED):**
+- Save report to: `/memory-bank/features/1-READY_TO_DEVELOP/[FEAT-ID]/pre-validation-report-APPROVED-[YYYY-MM-DD-HH-MM].md`
+- Display approval summary
+- Proceed to Step 3
 
-### When NO Baseline Health Check Exists:
-- **STOP** - Do not proceed with any implementation
-- Inform user: "⚠️ BASELINE HEALTH CHECK REQUIRED"
-- Run health check commands
-- Add report to TOP of feature-tasks.md
-- Get approval before proceeding
+**On Failure (REJECTED):**
+- Save report to: `/memory-bank/features/1-READY_TO_DEVELOP/[FEAT-ID]/pre-validation-report-REJECTED-[YYYY-MM-DD-HH-MM].md`
+- **STOP execution immediately**
+- Display detailed rejection reasons:
+  - List missing wireframes
+  - List undefined interactions
+  - List fields without validation
+  - List incomplete API documentation
+- Suggest actions:
+  - "Add wireframes for [screens]"
+  - "Document interactions for [components]"
+  - "Specify validations for [fields]"
+  - "Complete API contracts for [endpoints]"
+- Recommend running `/refine-feature` or requesting UX documentation
 
-### When Health Check Shows Failures:
-- **STOP** - Do not proceed with implementation
-- List all failures clearly
-- Suggest fixes based on error types
-- Re-run health check after fixes
-- Update report with new results
+### Step 3: User Approval Gate
 
-### When Guidelines Not Found:
-- Note: "⚠️ No existing pattern found for [concept]"
-- Ask user for guidance
-- Document new pattern for future use
+**IMPORTANT**: After pre-validation APPROVED, ask user for confirmation:
 
-Always reference @.claude/commands/implementation-guidelines-map.md for detailed task-type mappings.
-
-## Task Tracking Format
-
-### Task Status Format:
 ```markdown
-# Before starting:
-- **Task X.Y:** Description [ReadyToDevelop] (Est: 2h)
+## Pre-Validation APPROVED ✅
 
-# When starting:
-- **Task X.Y:** Description [InProgress: Started: 2025-07-24 10:30] (Est: 2h)
+The feature [FEAT-XXX] has passed pre-validation checks:
+- All UI documentation present
+- All interactions documented
+- All validations specified
+- Build and tests passing
 
-# When completed:
-- **Task X.Y:** Description [Completed: Started: 2025-07-24 10:30, Finished: 2025-07-24 11:45] (Est: 2h, Actual: 1h 15m)
-  - Git commit: `abc123f` - feat: implement feature X
+**Report saved to:** [path]
+
+Would you like to proceed with post-validation to transition to IN_PROGRESS?
+[Type 'yes' to continue or 'no' to stop]
 ```
 
-### Checkpoint Update Format:
-After completing all tasks in a phase, update checkpoint with:
-- Build status (must run `dotnet clean && dotnet build`)
-- Test status (must run `dotnet test`)
-- List all git commits for the phase
-- Time tracking summary
-- Set status to PENDING until reviewed
-- Run `/review-implemented-feature` to verify and approve
+**User Response Handling:**
+- If "yes" or approval: Continue to Step 4
+- If "no" or rejection: Stop process, feature remains in READY_TO_DEVELOP
+- If unclear: Ask for clarification
+
+### Step 4: Post-Validation Agent
+
+**Trigger the `feature-post-validator` agent:**
+
+```markdown
+Task: feature-post-validator
+Input 1: Feature ID
+Input 2: Pre-validation report content (the APPROVED report)
+Context: "The feature [FEAT-ID] has been pre-validated with APPROVED status. Please proceed with post-validation tasks."
+```
+
+**Expected Tasks:**
+1. Enhance feature-tasks.md with:
+   - Time estimates for Blazor components
+   - Component lifecycle guidance
+   - State management patterns
+   - Form handling approaches
+   - API integration patterns
+   - bUnit testing strategies
+2. Add checkpoint sections per phase
+3. Create/verify feature branch
+4. Move folder to `/memory-bank/features/2-IN_PROGRESS/`
+5. Execute baseline health check
+6. Generate comprehensive report
+
+**On Success (READY):**
+- Feature is now in IN_PROGRESS
+- Save report to: `/memory-bank/features/2-IN_PROGRESS/[FEAT-ID]/post-validation-report-READY-[YYYY-MM-DD-HH-MM].md`
+- Display success message with:
+  - Total time estimates added
+  - Blazor patterns referenced
+  - Branch name created/verified
+  - Health check results
+- Show next steps for implementation
+
+**On Failure (BLOCKED):**
+- Save report to: `/memory-bank/features/1-READY_TO_DEVELOP/[FEAT-ID]/post-validation-report-BLOCKED-[YYYY-MM-DD-HH-MM].md`
+- Feature remains in READY_TO_DEVELOP
+- Display blocking issues:
+  - Build errors/warnings
+  - Test failures
+  - File system issues
+- Provide remediation steps
+
+## Implementation Approach
+
+Once successfully transitioned to IN_PROGRESS:
+
+### Blazor Component Development Order:
+1. **Models & DTOs** - Define data structures
+2. **State Services** - Implement IStateService interfaces
+3. **Base Components** - Build reusable components
+4. **Pages** - Implement full page components
+5. **Forms** - Add validation and submission logic
+6. **API Integration** - Connect to backend services
+7. **Tests** - Write bUnit tests for all components
+
+### Development Practices:
+- Follow UI standards for every component
+- Add data-testid attributes for testing
+- Implement loading and error states
+- Handle all edge cases in forms
+- Write tests alongside implementation
+- Commit after each completed component
+- Run tests frequently
+- Stop at checkpoints for review
+
+## Error Handling
+
+### Missing UI Documentation
+**Most Common Rejection Reason!**
+- Feature lacks wireframes
+- Interactions not documented
+- Validations not specified
+- Request UX team support
+- Use ux-researcher and ux-storyteller agents if needed
+
+### Pre-Validation Failures
+- Document specific validation failures
+- Keep detailed list of missing items
+- Feature stays in READY_TO_DEVELOP
+- Clear actionable feedback provided
+
+### Post-Validation Failures
+- Document blocking issues
+- Rollback any partial changes
+- Provide clear remediation steps
+- Feature remains in current state
+
+### Agent Communication
+- All reports saved with timestamps
+- Full audit trail maintained
+- Reports used for context passing between agents
+
+## Common Issues and Solutions
+
+### Issue: "Missing wireframes for component X"
+**Solution:** Request UX documentation or use ux-storyteller agent to create wireframes
+
+### Issue: "Undefined interaction for button Y"
+**Solution:** Document what happens when button is clicked, including:
+- Navigation target
+- API calls triggered
+- State changes
+- Success/error feedback
+
+### Issue: "No validation rules for field Z"
+**Solution:** Specify:
+- Required/optional status
+- Data type and format
+- Min/max length or values
+- Error messages for each validation
+
+### Issue: "API endpoint documentation incomplete"
+**Solution:** Document:
+- Full endpoint URL and HTTP method
+- Request body structure with all fields
+- Response structure for success and errors
+- Status codes and their meanings
+
+## Report Naming Convention
+
+All reports are timestamped and categorized:
+- `pre-validation-report-[STATUS]-[YYYY-MM-DD-HH-MM].md`
+- `post-validation-report-[STATUS]-[YYYY-MM-DD-HH-MM].md`
+
+Where STATUS is:
+- APPROVED / REJECTED (for pre-validation)
+- READY / BLOCKED (for post-validation)
+
+## Notes
+
+- Only one feature should be in 2-IN_PROGRESS at a time
+- Pre-validator has ZERO tolerance for missing UI documentation
+- All validation reports are saved for audit and learning
+- User approval required between pre and post validation
+- Focus on Blazor-specific patterns and standards
+- Always check for wireframes, interactions, and validations
+
+## Quick Reference
+
+**Command Flow:**
+1. `/start-implementing FEAT-022`
+2. Pre-validator runs → Report saved
+3. If APPROVED → User confirmation requested
+4. If user approves → Post-validator runs
+5. Feature transitions to IN_PROGRESS
+6. Ready for Blazor development
+
+**Key Files Generated:**
+- Pre-validation report (always)
+- Post-validation report (if pre-validation approved)
+- Enhanced feature-tasks.md (in IN_PROGRESS)
+- Checkpoint templates added (per phase)

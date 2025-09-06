@@ -23,11 +23,11 @@
                     </svg>
                     <h3 class="text-base sm:text-lg font-medium text-gray-900" id="warmup-exercises-heading">Warmup Exercises</h3>
                     <span class="text-xs sm:text-sm text-gray-600" data-testid="warmup-count">
-                        @StateService.WarmupLinkCount / @MaxLinksPerType
+                        @StateService.WarmupLinkCount
                     </span>
                 </div>
                 
-                @if (!Disabled && StateService.WarmupLinkCount < MaxLinksPerType)
+                @if (!Disabled)
                 {
                     <button type="button"
                             @onclick="HandleAddWarmup"
@@ -97,11 +97,11 @@
                     </svg>
                     <h3 class="text-base sm:text-lg font-medium text-gray-900" id="cooldown-exercises-heading">Cooldown Exercises</h3>
                     <span class="text-xs sm:text-sm text-gray-600" data-testid="cooldown-count">
-                        @StateService.CooldownLinkCount / @MaxLinksPerType
+                        @StateService.CooldownLinkCount
                     </span>
                 </div>
                 
-                @if (!Disabled && StateService.CooldownLinkCount < MaxLinksPerType)
+                @if (!Disabled)
                 {
                     <button type="button"
                             @onclick="HandleAddCooldown"
@@ -169,7 +169,6 @@
     [Parameter] public EventCallback<ExerciseLinkDto> OnRemoveLink { get; set; }
     [Parameter] public EventCallback<(string linkType, Dictionary<string, int> reorderMap)> OnReorderLinks { get; set; }
     
-    private const int MaxLinksPerType = 10;
     private EventCallback<ExerciseLinkDto> _warmupMoveUpHandler;
     private EventCallback<ExerciseLinkDto> _warmupMoveDownHandler;
     private EventCallback<ExerciseLinkDto> _cooldownMoveUpHandler;

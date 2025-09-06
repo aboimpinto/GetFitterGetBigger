@@ -25,6 +25,12 @@ public static class ErrorMessageFormatter
             InvalidExerciseLinkException invEx when invEx.Message.Contains("exercise type", StringComparison.OrdinalIgnoreCase) =>
                 "Only exercises of type 'Workout' can have warmup or cooldown links. Please select a different exercise or change the exercise type.",
 
+            InvalidExerciseLinkException invEx when invEx.Message.Contains("Alternative exercises must share", StringComparison.OrdinalIgnoreCase) =>
+                "Alternative exercises must share at least one exercise type (Workout, Warmup, or Cooldown). Please select an exercise with a compatible type.",
+
+            InvalidExerciseLinkException invEx when invEx.Message.Contains("incompatible", StringComparison.OrdinalIgnoreCase) =>
+                "These exercises are not compatible for alternative linking. Alternative exercises must share at least one exercise type.",
+
             InvalidExerciseLinkException invEx =>
                 $"This link is not valid: {invEx.Message}",
 

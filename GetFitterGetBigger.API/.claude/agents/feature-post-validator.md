@@ -83,12 +83,13 @@ Add implementation notes for each task referencing:
 
 #### 2.3 Checkpoint Sections
 - **Requirement**: EACH phase must have a properly formatted checkpoint section
-- **Template**: Use FeatureCheckpointTemplate.md structure
+- **Template**: Use `/memory-bank/DevelopmentGuidelines/Templates/FeatureCheckpointTemplate.md` structure
 - **Content**: Include placeholders for:
   - Build Report (API, Unit Tests, Integration Tests)
-  - Code Review location
-  - Git Commit hash
+  - Code Review location with proper folder structure
+  - Git Commit hash (MANDATORY field)
   - Status tracking (In Progress, Completed, Issues)
+- **Critical**: Validate that git commit hash field exists in every checkpoint
 
 ### 3. Branch Management
 
@@ -143,7 +144,9 @@ Update the report section in `feature-tasks.md` with:
 - ✅ Pre-validation report shows APPROVED
 - ✅ All time estimates added to tasks
 - ✅ Implementation guidance enhanced
-- ✅ Checkpoint sections properly formatted
+- ✅ Checkpoint sections properly formatted following FeatureCheckpointTemplate.md
+- ✅ All checkpoints include mandatory git commit hash field
+- ✅ Code review paths follow proper folder structure and naming convention
 - ✅ Feature branch created/verified
 - ✅ Folder successfully moved to IN_PROGRESS
 - ✅ Build health check passes (0 errors, 0 warnings)
@@ -207,39 +210,23 @@ For each task, add notes following this pattern:
 
 ### Checkpoint Template Structure
 
-```markdown
-## Phase [N] Checkpoint - [Phase Name]
+**IMPORTANT**: All checkpoints must follow the standardized template from:
+`/memory-bank/DevelopmentGuidelines/Templates/FeatureCheckpointTemplate.md`
 
-### Build Report
-- [ ] API Build: ✅ Success / ❌ Failed
-- [ ] Unit Tests Build: ✅ Success / ❌ Failed  
-- [ ] Integration Tests Build: ✅ Success / ❌ Failed
-- **Errors**: [Count] - [Details if any]
-- **Warnings**: [Count] - [Details if any]
+**Key Template Requirements:**
+- **Git Commit Hash**: MANDATORY field that must be filled after each commit
+- **Code Review Path**: Must use proper folder structure:
+  `/memory-bank/features/2-IN_PROGRESS/FEAT-XXX-[feature-name]/code-reviews/[Phase_Name]/Code-Review-[Phase-Name]-YYYY-MM-DD-HH-MM-[STATUS].md`
+- **Build Reports**: Separate status for API, Unit Tests, Integration Tests
+- **Status Values**: APPROVED, APPROVED_WITH_NOTES, REQUIRES_CHANGES
 
-### Test Report
-- [ ] Unit Tests: [Passed]/[Total] - ✅ All Pass / ❌ [Failed Count] Failed
-- [ ] Integration Tests: [Passed]/[Total] - ✅ All Pass / ❌ [Failed Count] Failed
-- **Execution Time**: [Duration]
+**Validation Criteria:**
+- ✅ Git commit hash field exists and is properly formatted
+- ✅ Code review path follows exact naming convention
+- ✅ All build reports include error/warning counts
+- ✅ Phase status is clearly indicated
 
-### Code Review
-- **Location**: [Branch/Commit Reference]
-- **Status**: [ ] Not Started / [ ] In Progress / [ ] Completed
-- **Reviewer**: [Name/Role]
-
-### Git Commit
-- **Hash**: [Commit Hash]
-- **Message**: [Commit Message]
-- **Files Changed**: [Count]
-
-### Phase Status
-- [ ] In Progress
-- [ ] Completed
-- [ ] Blocked - [Blocker Description]
-
-**Phase Completion Date**: [Date when phase completed]
-**Total Time Spent**: [Actual time] vs [Estimated time]
-```
+**Critical Validation**: Any checkpoint missing git commit hash field should be flagged as INCOMPLETE
 
 ## Error Handling
 

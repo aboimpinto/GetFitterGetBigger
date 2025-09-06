@@ -95,13 +95,65 @@ public static class CacheKeyGenerator
     public static string Generate<TDto>(string operation, params object[] parameters)
     {
         var entityName = ExtractEntityNameFromType<TDto>();
-        var paramString = parameters.Length > 0 
-            ? string.Join(":", parameters.Select(p => p?.ToString()?.ToLowerInvariant() ?? ""))
-            : "";
+        var baseKey = BuildBaseKey(entityName, operation);
+        var paramString = BuildParameterString(parameters);
         
-        // Use consistent prefix for all reference data
-        var baseKey = $"{ReferenceTablePrefix}:{entityName}:{operation}";
-        
+        return CombineKeyComponents(baseKey, paramString);
+    }
+
+    /// <summary>
+    /// Builds the base cache key from entity name and operation.
+    /// </summary>
+    /// <param name="entityName">The entity name</param>
+    /// <param name="operation">The operation identifier</param>
+    /// <returns>The base cache key</returns>
+    private static string BuildBaseKey(string entityName, string operation)
+    {
+        return $"{ReferenceTablePrefix}:{entityName}:{operation}";
+    }
+
+    /// <summary>
+    /// Builds a parameter string from the provided parameters.
+    /// </summary>
+    /// <param name="parameters">The parameters to process</param>
+    /// <returns>A colon-separated parameter string, or empty if no parameters</returns>
+    private static string BuildParameterString(object[] parameters)
+    {
+        if (!HasParameters(parameters))
+            return string.Empty;
+
+        var normalizedParameters = NormalizeParameters(parameters);
+        return string.Join(":", normalizedParameters);
+    }
+
+    /// <summary>
+    /// Checks if parameters array has any elements.
+    /// </summary>
+    /// <param name="parameters">The parameters to check</param>
+    /// <returns>True if parameters exist</returns>
+    private static bool HasParameters(object[] parameters)
+    {
+        return parameters.Length > 0;
+    }
+
+    /// <summary>
+    /// Normalizes parameters to lowercase strings for consistent cache keys.
+    /// </summary>
+    /// <param name="parameters">The parameters to normalize</param>
+    /// <returns>Collection of normalized parameter strings</returns>
+    private static IEnumerable<string> NormalizeParameters(object[] parameters)
+    {
+        return parameters.Select(p => p?.ToString()?.ToLowerInvariant() ?? string.Empty);
+    }
+
+    /// <summary>
+    /// Combines base key with parameter string.
+    /// </summary>
+    /// <param name="baseKey">The base cache key</param>
+    /// <param name="paramString">The parameter string</param>
+    /// <returns>The combined cache key</returns>
+    private static string CombineKeyComponents(string baseKey, string paramString)
+    {
         return string.IsNullOrEmpty(paramString) 
             ? baseKey
             : $"{baseKey}:{paramString}";

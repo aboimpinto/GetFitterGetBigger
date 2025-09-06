@@ -156,7 +156,31 @@ public class EquipmentService : IEquipmentService
 }
 ```
 
-### 3. **Form Handling**
+### 3. **Navigation Patterns**
+Follow proper navigation patterns for predictable browser behavior:
+
+**Key Principles:**
+- Use standard HTML links (`<a href>`) for user-initiated navigation
+- Reserve `NavigationManager.NavigateTo()` for programmatic navigation
+- Maintain proper browser history for back/forward navigation
+- See `patterns/BLAZOR-NAVIGATION-BEST-PRACTICES.md` for complete guidelines
+
+```csharp
+// ✅ GOOD - Standard link for user navigation
+<a href="@($"/exercises/{exercise.Id}")" class="link-class">View Exercise</a>
+
+// ✅ GOOD - Programmatic navigation after operation
+private async Task HandleValidSubmit()
+{
+    var result = await Service.SaveAsync(model);
+    if (result.IsSuccess)
+    {
+        NavigationManager.NavigateTo("/exercises");
+    }
+}
+```
+
+### 4. **Form Handling**
 Use proper form validation and submission patterns:
 
 ```csharp
@@ -478,6 +502,10 @@ public void EquipmentList_RendersCorrectly_WithData()
 
 - Universal: `CODE_QUALITY_STANDARDS.md`
 - Process: `CODE_REVIEW_PROCESS.md`
+- Navigation: `patterns/BLAZOR-NAVIGATION-BEST-PRACTICES.md`
+- Performance: `patterns/blazor-shouldrender-optimization-pattern.md`
+- Testing: `patterns/comprehensive-blazor-testing-patterns.md`
+- Accessibility: `guides/accessibility-automation-guide.md`
 - Blazor Docs: https://docs.microsoft.com/blazor
 
 ---

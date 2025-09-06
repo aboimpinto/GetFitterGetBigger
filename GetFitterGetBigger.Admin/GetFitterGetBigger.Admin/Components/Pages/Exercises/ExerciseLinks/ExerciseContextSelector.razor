@@ -1,0 +1,222 @@
+@using GetFitterGetBigger.Admin.Models.Dtos
+@implements IDisposable
+
+<div role="tablist" 
+     aria-label="Exercise contexts" 
+     class="mb-6 border-b border-gray-200 bg-gradient-to-r from-gray-50 to-gray-100 rounded-t-lg p-1"
+     data-testid="context-selector">
+    <div class="flex items-center justify-start gap-1 p-1">
+        @foreach (var context in Contexts)
+        {
+            <button role="tab" 
+                    @onclick="() => SwitchContext(context)"
+                    @onkeydown="@(e => HandleKeyDown(e, context))"
+                    aria-selected="@(context == ActiveContext ? "true" : "false")"
+                    aria-controls="@GetPanelId(context)"
+                    class="@GetTabClasses(context)"
+                    data-testid="@GetContextTestId(context)"
+                    disabled="@Disabled">
+                <div class="flex items-center gap-2">
+                    @* Context Icon *@
+                    @if (context == "Workout")
+                    {
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                        </svg>
+                    }
+                    else if (context == "Warmup")
+                    {
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0120 13a7.975 7.975 0 01-2.343 5.657z" />
+                        </svg>
+                    }
+                    else if (context == "Cooldown")
+                    {
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z" />
+                        </svg>
+                    }
+                    
+                    <span>@GetContextLabel(context)</span>
+                    
+                    @* Active indicator *@
+                    @if (context == ActiveContext)
+                    {
+                        <div class="w-2 h-2 bg-blue-600 rounded-full animate-pulse"></div>
+                    }
+                </div>
+            </button>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter, EditorRequired] public IEnumerable<string> Contexts { get; set; } = null!;
+    [Parameter, EditorRequired] public string ActiveContext { get; set; } = null!;
+    [Parameter] public bool Disabled { get; set; } = false;
+    [Parameter] public EventCallback<string> OnContextChange { get; set; }
+    [Parameter] public int DebounceDelayMs { get; set; } = 0; // Default to no debouncing for backward compatibility
+
+    // Debouncing implementation
+    private CancellationTokenSource? _debounceCts;
+    private const int DefaultDebounceDelayMs = 300;
+
+    // TODO: Performance Telemetry Implementation
+    // Future enhancement: Track context switching performance and user patterns
+    // Metrics to capture:
+    // - Context switch frequency and patterns
+    // - Time between context switches (user decision time)
+    // - Most frequently accessed contexts
+    // Implementation approach:
+    // - Inject IPerformanceMonitoringService
+    // - Track: _telemetryService?.TrackMetric("context_switch", 1, new Dictionary<string, string> { ["from"] = ActiveContext, ["to"] = context })
+    // - Monitor keyboard navigation vs click patterns
+
+    private async Task SwitchContext(string context)
+    {
+        if (!Disabled && context != ActiveContext && OnContextChange.HasDelegate)
+        {
+            // If debouncing is disabled (DebounceDelayMs == 0), invoke immediately
+            if (DebounceDelayMs == 0)
+            {
+                await OnContextChange.InvokeAsync(context);
+                return;
+            }
+
+            // Cancel any pending context switch
+            _debounceCts?.Cancel();
+            _debounceCts?.Dispose();
+            _debounceCts = new CancellationTokenSource();
+
+            try
+            {
+                // Apply debounce delay before switching context
+                var delay = DebounceDelayMs > 0 ? DebounceDelayMs : DefaultDebounceDelayMs;
+                await Task.Delay(delay, _debounceCts.Token);
+                
+                // If not cancelled, proceed with context change
+                await OnContextChange.InvokeAsync(context);
+            }
+            catch (TaskCanceledException)
+            {
+                // Context switch was cancelled due to new selection - this is expected behavior
+            }
+        }
+    }
+
+    private async Task HandleKeyDown(KeyboardEventArgs e, string context)
+    {
+        if (Disabled) return;
+
+        switch (e.Key)
+        {
+            case "Enter":
+            case " ":
+                await SwitchContext(context);
+                break;
+            case "ArrowLeft":
+                await MoveToPreviousTab();
+                break;
+            case "ArrowRight":
+                await MoveToNextTab();
+                break;
+            case "Home":
+                await MoveToFirstTab();
+                break;
+            case "End":
+                await MoveToLastTab();
+                break;
+        }
+    }
+
+    private async Task MoveToPreviousTab()
+    {
+        var contextsList = Contexts.ToList();
+        var currentIndex = contextsList.IndexOf(ActiveContext);
+        if (currentIndex > 0)
+        {
+            await SwitchContext(contextsList[currentIndex - 1]);
+        }
+    }
+
+    private async Task MoveToNextTab()
+    {
+        var contextsList = Contexts.ToList();
+        var currentIndex = contextsList.IndexOf(ActiveContext);
+        if (currentIndex >= 0 && currentIndex < contextsList.Count - 1)
+        {
+            await SwitchContext(contextsList[currentIndex + 1]);
+        }
+    }
+
+    private async Task MoveToFirstTab()
+    {
+        var firstContext = Contexts.FirstOrDefault();
+        if (!string.IsNullOrEmpty(firstContext))
+        {
+            await SwitchContext(firstContext);
+        }
+    }
+
+    private async Task MoveToLastTab()
+    {
+        var lastContext = Contexts.LastOrDefault();
+        if (!string.IsNullOrEmpty(lastContext))
+        {
+            await SwitchContext(lastContext);
+        }
+    }
+
+    private string GetTabClasses(string context)
+    {
+        var baseClasses = "relative inline-flex items-center px-6 py-3 text-sm font-medium transition-all duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded-t-lg";
+        
+        if (Disabled)
+        {
+            baseClasses += " cursor-not-allowed opacity-50";
+        }
+        else
+        {
+            baseClasses += " cursor-pointer transform hover:scale-105";
+        }
+
+        if (context == ActiveContext)
+        {
+            // Active tab styling with enhanced visual feedback
+            return $"{baseClasses} text-blue-600 bg-gradient-to-b from-blue-50 to-blue-100 border-b-2 border-blue-600 shadow-sm font-semibold";
+        }
+        else
+        {
+            // Inactive tab styling with smooth hover effects
+            return $"{baseClasses} text-gray-600 bg-white border-b-2 border-transparent hover:text-blue-600 hover:bg-blue-50 hover:border-blue-300 hover:shadow-sm";
+        }
+    }
+
+    private string GetContextLabel(string context)
+    {
+        return context switch
+        {
+            "Workout" => "As Workout Exercise",
+            "Warmup" => "As Warmup Exercise",
+            "Cooldown" => "As Cooldown Exercise",
+            _ => $"As {context} Exercise"
+        };
+    }
+
+    private string GetPanelId(string context)
+    {
+        return $"context-panel-{context.ToLower()}";
+    }
+
+    private string GetContextTestId(string context)
+    {
+        return $"context-tab-{context.ToLower()}";
+    }
+
+    public void Dispose()
+    {
+        // Clean up debouncing resources
+        _debounceCts?.Cancel();
+        _debounceCts?.Dispose();
+    }
+}

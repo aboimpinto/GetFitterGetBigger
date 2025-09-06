@@ -1,6 +1,7 @@
 using GetFitterGetBigger.API.DTOs;
 using GetFitterGetBigger.API.Models;
 using GetFitterGetBigger.API.Models.Entities;
+using GetFitterGetBigger.API.Services.Implementations.Extensions;
 using WorkoutTemplateEntity = GetFitterGetBigger.API.Models.Entities.WorkoutTemplate;
 
 namespace GetFitterGetBigger.API.Services.WorkoutTemplate.Extensions;
@@ -47,12 +48,7 @@ public static class WorkoutTemplateExtensions
         return new()
         {
             Id = exercise.Id.ToString(),
-            Exercise = exercise.Exercise != null ? new ExerciseDto 
-            { 
-                Id = exercise.Exercise.Id.ToString(),
-                Name = exercise.Exercise.Name,
-                Description = exercise.Exercise.Description
-            } : ExerciseDto.Empty,
+            Exercise = exercise.Exercise?.ToDto() ?? ExerciseDto.Empty,
             Zone = exercise.Zone.ToString(),
             SequenceOrder = exercise.SequenceOrder,
             Notes = exercise.Notes,
@@ -92,33 +88,72 @@ public static class WorkoutTemplateExtensions
         if (entity == null)
             return ReferenceDataDto.Empty;
 
-        // Use reflection to check for IsEmpty property
+        if (IsEntityEmpty(entity))
+            return ReferenceDataDto.Empty;
+
         var entityType = entity.GetType();
-        var isEmptyProperty = entityType.GetProperty("IsEmpty");
-        if (isEmptyProperty != null)
-        {
-            var isEmpty = (bool)isEmptyProperty.GetValue(entity)!;
-            if (isEmpty)
-                return ReferenceDataDto.Empty;
-        }
-
-        // Get Id property
-        var idProperty = entityType.GetProperty("Id");
-        var idValue = idProperty?.GetValue(entity)?.ToString() ?? string.Empty;
-
-        // Try to get Value or Name property
-        var valueProperty = entityType.GetProperty("Value") ?? entityType.GetProperty("Name");
-        var valueString = valueProperty?.GetValue(entity) as string ?? string.Empty;
-
-        // Get Description property if it exists
-        var descriptionProperty = entityType.GetProperty("Description");
-        var descriptionString = descriptionProperty?.GetValue(entity) as string;
+        var id = ExtractIdValue(entity, entityType);
+        var value = ExtractValueOrName(entity, entityType);
+        var description = ExtractDescription(entity, entityType);
 
         return new ReferenceDataDto
         {
-            Id = idValue,
-            Value = valueString,
-            Description = descriptionString
+            Id = id,
+            Value = value,
+            Description = description
         };
+    }
+
+    /// <summary>
+    /// Checks if the entity is considered empty using reflection
+    /// </summary>
+    /// <param name="entity">The entity to check</param>
+    /// <returns>True if the entity is empty, false otherwise</returns>
+    private static bool IsEntityEmpty(object entity)
+    {
+        var entityType = entity.GetType();
+        var isEmptyProperty = entityType.GetProperty("IsEmpty");
+        
+        if (isEmptyProperty == null)
+            return false;
+
+        var isEmpty = (bool)isEmptyProperty.GetValue(entity)!;
+        return isEmpty;
+    }
+
+    /// <summary>
+    /// Extracts the ID value from the entity
+    /// </summary>
+    /// <param name="entity">The entity to extract from</param>
+    /// <param name="entityType">The type of the entity</param>
+    /// <returns>The ID value as string</returns>
+    private static string ExtractIdValue(object entity, Type entityType)
+    {
+        var idProperty = entityType.GetProperty("Id");
+        return idProperty?.GetValue(entity)?.ToString() ?? string.Empty;
+    }
+
+    /// <summary>
+    /// Extracts the Value or Name property from the entity
+    /// </summary>
+    /// <param name="entity">The entity to extract from</param>
+    /// <param name="entityType">The type of the entity</param>
+    /// <returns>The value or name as string</returns>
+    private static string ExtractValueOrName(object entity, Type entityType)
+    {
+        var valueProperty = entityType.GetProperty("Value") ?? entityType.GetProperty("Name");
+        return valueProperty?.GetValue(entity) as string ?? string.Empty;
+    }
+
+    /// <summary>
+    /// Extracts the Description property from the entity if it exists
+    /// </summary>
+    /// <param name="entity">The entity to extract from</param>
+    /// <param name="entityType">The type of the entity</param>
+    /// <returns>The description as string or null if not found</returns>
+    private static string? ExtractDescription(object entity, Type entityType)
+    {
+        var descriptionProperty = entityType.GetProperty("Description");
+        return descriptionProperty?.GetValue(entity) as string;
     }
 }
