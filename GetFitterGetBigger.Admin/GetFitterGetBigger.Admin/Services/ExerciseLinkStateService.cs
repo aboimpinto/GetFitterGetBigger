@@ -175,16 +175,25 @@ namespace GetFitterGetBigger.Admin.Services
                 CurrentLinks = await _exerciseLinkService.GetLinksAsync(
                     CurrentExerciseId,
                     LinkTypeFilter,
-                    IncludeExerciseDetails);
+                    IncludeExerciseDetails,
+                    includeReverse: true); // Include reverse links for bidirectional relationships (Alternative links)
                 
-                // Extract Alternative links from the main response into the separate collection
+                // Extract Alternative and Workout links from the main response into separate collections
                 if (CurrentLinks?.Links != null)
                 {
+                    // Extract Alternative links
                     _alternativeLinks.Clear();
                     var alternativeLinks = CurrentLinks.Links
                         .Where(l => string.Equals(l.LinkType, "Alternative", StringComparison.OrdinalIgnoreCase))
                         .ToList();
                     _alternativeLinks.AddRange(alternativeLinks);
+                    
+                    // Extract Workout links (for Warmup/Cooldown exercises showing which workouts use them)
+                    _workoutLinks.Clear();
+                    var workoutLinks = CurrentLinks.Links
+                        .Where(l => string.Equals(l.LinkType, "Workout", StringComparison.OrdinalIgnoreCase))
+                        .ToList();
+                    _workoutLinks.AddRange(workoutLinks);
                 }
             }
             catch (ExerciseNotFoundException)
