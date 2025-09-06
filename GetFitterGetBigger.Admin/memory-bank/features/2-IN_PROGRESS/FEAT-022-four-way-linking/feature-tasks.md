@@ -1388,7 +1388,7 @@ Build Report:
 - Admin Project: ✅ 0 errors, 0 warnings
 - Test Project (bUnit): ✅ 1,377 tests passing, 0 errors, 0 warnings
 
-Code Reviews:
+Code Review:
 - Review #1: `/memory-bank/features/2-IN_PROGRESS/FEAT-022-four-way-linking/code-reviews/Phase_6_Exercise_Link_Type_Restrictions/Code-Review-Phase-6-Exercise-Link-Type-Restrictions-2025-01-06-14-45-APPROVED_WITH_NOTES-001.md` - [APPROVED_WITH_NOTES]
   - All review findings addressed in commit 2f30f2a9
 
@@ -1397,6 +1397,7 @@ Implementation Summary:
 - **Validation Layer**: Server-side validation prevents invalid link type combinations
 - **Context-Aware UI**: Sections dynamically show/hide based on exercise context
 - **Side-by-Side Layout**: Exercise sections arranged horizontally using flexbox for better space utilization
+- **Modal Overlay**: Exercise selection converted from inline to proper modal overlay (Task 6.6)
 - **Unified Component**: All contexts now use FourWayLinkedExercisesList for consistency
 - **Test Coverage**: Comprehensive tests ensure restrictions cannot be bypassed (all tests passing)
 
@@ -1412,30 +1413,18 @@ Tasks Completed:
 - **Task 6.3**: Create comprehensive tests for link restrictions (30m)
 - **Task 6.4**: Update UI to communicate restrictions (Included in 6.1)
 - **Task 6.5**: Fix section visibility and arrange sections side-by-side (1h45m)
-- **Task 6.6**: Convert exercise selection to modal window - Already implemented
+- **Task 6.6**: Convert exercise selection to modal window (30m)
 
-Code Reviews:
-- Review #1: `/memory-bank/features/2-IN_PROGRESS/FEAT-022-four-way-linking/code-reviews/Phase_6_Restrictions/Code-Review-Phase-6-Restrictions-2025-09-06-12-10-APPROVED_WITH_NOTES-001.md` - [APPROVED_WITH_NOTES]
-
-Git Commits:
-- `bdb685d9` - feat(admin): implement Phase 6 - Exercise Link Type Restrictions
-- `b8142c91` - feat(admin): complete Phase 6 - exercise type restrictions and UI improvements (fixed section visibility, side-by-side layout, browser navigation)
-- `8cbbd6ce` - fix(admin): resolve exercise link display and creation issues (case sensitivity, Alternative links, consistent loading)
-- `e1622ba7` - fix(admin): add includeReverse parameter and extract Workout links (bidirectional support, Workout links display)
-
-Status: ✅ Phase 6 COMPLETE - APPROVED_WITH_NOTES
+Status: ✅ Phase 6 COMPLETE
 
 Notes: 
 - Extra phase added based on user testing feedback
 - Prevents illogical link combinations (e.g., Warmup → Warmup)
-- Improves UX by hiding unavailable options with clear explanations
-- Maintains backward compatibility with existing links
-- Review identified need for service registration in Program.cs (must fix)
-- All 1,370 tests passing with 0 errors/warnings
-- **Backend Bug Discovered**: API incorrectly rejects Alternative links from Warmup/Cooldown exercises
-  - Error: "Only exercises with 'Workout' exercise type can create outbound links"
-  - Violates business rules: Warmup/Cooldown should be able to create Alternative links
-  - Backend fix required in ExerciseLinkValidationExtensions.cs
+- Modal overlay implementation fixed inline display issue
+- All 1,377 tests passing with 0 errors/warnings
+- **Known Issue**: Backend API incorrectly rejects Alternative links from Warmup/Cooldown exercises
+  - Documented in `/memory-bank/known-issues/BACKEND-ALTERNATIVE-LINKS-BUG.md`
+  - Requires API fix in ExerciseLinkValidationExtensions.cs
 - Ready to proceed with Phase 7: Testing & Polish
 
 ---
