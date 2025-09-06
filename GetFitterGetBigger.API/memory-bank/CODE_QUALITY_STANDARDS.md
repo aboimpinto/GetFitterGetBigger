@@ -475,6 +475,118 @@ return await ServiceValidate.Build<bool>()
 
 > "Better to spend 2 hours changing 20 files manually than 6 hours fixing 6000+ errors from a script gone wrong."
 
+### Nested Conditionals and Loops With If Statements
+**NEVER use nested if statements or loops filled with conditionals!** This is a clear job for ServiceValidator pattern or extension methods.
+
+#### The Problem: Foreach Loops with Nested Ifs
+When you have a foreach loop with multiple if statements and early returns, it violates the single exit point principle and makes code hard to follow.
+
+```csharp
+// ❌ ANTI-PATTERN - Foreach with nested conditions and multiple exit points
+foreach (var linkType in possibleReverseLinkTypes)
+{
+    var linksResult = await queryDataService.GetBySourceExerciseWithEnumAsync(
+        workoutExerciseId, linkType);
+    
+    if (!linksResult.IsSuccess || linksResult.Data == null)
+    {
+        continue;  // Multiple flow control points
+    }
+    
+    var reverseLink = linksResult.Data.FirstOrDefault(
+        link => link.TargetExerciseId == originalSourceId);
+    
+    if (reverseLink != null)
+    {
+        logger.LogInformation("Found reverse link");  // Conditional logging
+        return ServiceResult<ExerciseLinkDto>.Success(reverseLink);  // Early return
+    }
+}
+
+// ✅ CORRECT - Clean extension method with single exit point
+var reverseLink = await queryDataService.FindFirstMatchingReverseLinkAsync(
+    workoutExerciseId,
+    ExerciseLinkType.WORKOUT.GetPossibleReverseTypes(),
+    originalSourceId,
+    logger);
+
+return reverseLink.ToServiceResult();
+```
+
+#### The Solution: Extension Methods Pattern
+Create focused extension methods that encapsulate the conditional logic:
+
+```csharp
+// Extension method handles all the complexity internally
+public static async Task<ExerciseLinkDto> FindFirstMatchingReverseLinkAsync(
+    this IExerciseLinkQueryDataService queryDataService,
+    ExerciseId targetId,
+    IEnumerable<ExerciseLinkType> possibleTypes,
+    string originalSourceId,
+    ILogger logger)
+{
+    foreach (var linkType in possibleTypes)
+    {
+        var reverseLink = await queryDataService.TryFindReverseLinkAsync(
+            targetId, linkType, originalSourceId, logger);
+        
+        if (reverseLink != null)
+            return reverseLink;
+    }
+    
+    // Logging pushed down to operation level
+    logger.LogWarning("No reverse link found");
+    return ExerciseLinkDto.Empty;
+}
+```
+
+#### When You See Nested Ifs - It's ServiceValidator Time!
+If you find yourself writing nested if statements for validation, STOP! Use ServiceValidator:
+
+```csharp
+// ❌ ANTI-PATTERN - Nested validation ifs
+if (command != null)
+{
+    if (!string.IsNullOrEmpty(command.Email))
+    {
+        if (IsValidEmail(command.Email))
+        {
+            // Do the work
+        }
+        else
+            return Error("Invalid email");
+    }
+    else
+        return Error("Email required");
+}
+else
+    return Error("Command required");
+
+// ✅ CORRECT - ServiceValidator chain
+return await ServiceValidate.For<Result>()
+    .EnsureNotNull(command, "Command required")
+    .ThenEnsureNotWhiteSpace(command.Email, "Email required")
+    .ThenEnsureEmailIsValid(command.Email, "Invalid email")
+    .MatchAsync(whenValid: async () => await DoWorkAsync());
+```
+
+#### Key Lessons from BidirectionalLinkHandler Refactoring
+
+1. **44 lines → 7 lines**: The `FindReverseWorkoutLinkAsync` method was reduced by 84% through proper patterns
+2. **Extension Methods Save the Day**: Creating focused extension methods eliminates complex control flow
+3. **Logging Belongs at Operation Level**: Don't clutter service methods with conditional logging
+4. **Pattern Matching Over If-Else**: Use switch expressions for cleaner branching
+5. **Single Exit Point Always**: Every method should have exactly one return statement
+
+**Red Flags to Watch For:**
+- `continue` statements in loops → Extract to extension method
+- Multiple `if` checks in sequence → Use ServiceValidator chain
+- Early returns in loops → Violates single exit principle
+- Conditional logging → Push down to operation level
+- Nested if statements → Clear ServiceValidator opportunity
+
+**The Golden Rule**: If you're writing nested conditionals or loops with multiple if statements, STOP and refactor using extension methods or ServiceValidator pattern.
+
 ### Complex If-Statement Chains in Queries
 **AVOID complex conditional query building!** Use Fluent Query Extensions instead.
 
@@ -1036,6 +1148,9 @@ var testee = autoMocker.CreateInstance<MyService>(); // AutoMocker provides logg
 |----------|---------------|---------------|
 | High CRAP Score (>30) | Add test coverage first (if complexity ≤ 10) | See CRAP Score Reduction Strategy above |
 | High Complexity (>10) | Refactor first, then test | See CRAP Score Reduction Strategy above |
+| Nested if statements | ServiceValidator pattern or Extension methods | See Nested Conditionals section above |
+| Foreach with multiple ifs | Extract to extension method | See Nested Conditionals section above |
+| Loops with conditionals and early returns | Extension methods with single exit | See Nested Conditionals section above |
 | Redundant validation across layers | Trust the Validation Chain | [TrustTheValidationChain.md](./CodeQualityGuidelines/TrustTheValidationChain.md) |
 | Service method return type | ServiceResult<T> | [ServiceResultPattern.md](./CodeQualityGuidelines/ServiceResultPattern.md) |
 | Input validation (all sync) | ServiceValidate.For<T>() | [ServiceValidatePattern.md](./CodeQualityGuidelines/ServiceValidatePattern.md) |
@@ -1078,6 +1193,8 @@ Before approving any PR, verify:
 - [ ] No null returns (Empty pattern used)
 - [ ] ServiceValidate used for validation
 - [ ] Single exit points in all methods
+- [ ] **NO nested if statements** (use ServiceValidator or extension methods)
+- [ ] **NO foreach loops with multiple ifs** (extract to extension methods)
 - [ ] **Single operation only in MatchAsync.whenValid** (no if statements or multiple returns)
 - [ ] **All validations chained in ServiceValidate** (not inside MatchAsync)
 - [ ] **NO redundant entity loading** (each entity loaded ONCE per request)

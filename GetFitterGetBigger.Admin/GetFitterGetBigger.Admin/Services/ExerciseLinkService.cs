@@ -55,8 +55,12 @@ public class ExerciseLinkService : IExerciseLinkService
 
             Console.WriteLine($"[ExerciseLinkService] Link created successfully with ID: {result?.Id}");
 
-            // Invalidate cache for the exercise links
+            // Invalidate cache for both source and target exercises
+            // This ensures reverse links are properly reflected
             InvalidateExerciseLinksCache(exerciseId);
+            InvalidateExerciseLinksCache(createLinkDto.TargetExerciseId);
+            
+            Console.WriteLine($"[ExerciseLinkService] Cache invalidated for both exercises: {exerciseId} and {createLinkDto.TargetExerciseId}");
 
             return result ?? throw new ExerciseLinkServiceException("Failed to deserialize created exercise link response");
         }
@@ -298,6 +302,20 @@ public class ExerciseLinkService : IExerciseLinkService
     {
         try
         {
+            // First, get the link details to find the target exercise ID for cache invalidation
+            string? targetExerciseId = null;
+            try
+            {
+                var linksResponse = await GetLinksAsync(exerciseId, includeExerciseDetails: true);
+                var linkToUpdate = linksResponse.Links?.FirstOrDefault(l => l.Id == linkId);
+                targetExerciseId = linkToUpdate?.TargetExerciseId;
+            }
+            catch
+            {
+                // If we can't get the link details, continue with update anyway
+                // The cache invalidation will only be partial
+            }
+
             var requestUrl = $"api/exercises/{exerciseId}/links/{linkId}";
 
             var response = await _httpClient.PutAsJsonAsync(requestUrl, updateLinkDto, _jsonOptions);
@@ -313,8 +331,13 @@ public class ExerciseLinkService : IExerciseLinkService
 
             var result = await response.Content.ReadFromJsonAsync<ExerciseLinkDto>(_jsonOptions);
 
-            // Invalidate cache for the exercise links
+            // Invalidate cache for both source and target exercises
             InvalidateExerciseLinksCache(exerciseId);
+            if (!string.IsNullOrEmpty(targetExerciseId))
+            {
+                InvalidateExerciseLinksCache(targetExerciseId);
+                Console.WriteLine($"[ExerciseLinkService] Cache invalidated for both exercises after update: {exerciseId} and {targetExerciseId}");
+            }
 
             return result ?? throw new ExerciseLinkServiceException("Failed to deserialize updated exercise link response");
         }
@@ -340,6 +363,21 @@ public class ExerciseLinkService : IExerciseLinkService
     {
         try
         {
+            // First, get the link details to find the target exercise ID
+            // This is needed to invalidate both caches properly
+            string? targetExerciseId = null;
+            try
+            {
+                var linksResponse = await GetLinksAsync(exerciseId, includeExerciseDetails: true);
+                var linkToDelete = linksResponse.Links?.FirstOrDefault(l => l.Id == linkId);
+                targetExerciseId = linkToDelete?.TargetExerciseId;
+            }
+            catch
+            {
+                // If we can't get the link details, continue with deletion anyway
+                // The cache invalidation will only be partial
+            }
+
             var requestUrl = $"api/exercises/{exerciseId}/links/{linkId}";
 
             var response = await _httpClient.DeleteAsync(requestUrl);
@@ -353,8 +391,15 @@ public class ExerciseLinkService : IExerciseLinkService
                 await HandleErrorResponseAsync(response, exerciseId, linkId);
             }
 
-            // Invalidate cache for the exercise links
+            // Invalidate cache for both source and target exercises
             InvalidateExerciseLinksCache(exerciseId);
+            
+            // Also invalidate the target exercise cache if we found it
+            // This ensures reverse links are properly cleared
+            if (!string.IsNullOrEmpty(targetExerciseId))
+            {
+                InvalidateExerciseLinksCache(targetExerciseId);
+            }
         }
         catch (HttpRequestException ex)
         {
@@ -378,6 +423,24 @@ public class ExerciseLinkService : IExerciseLinkService
     {
         try
         {
+            // First, get the link details to find the target exercise ID
+            // This is critical for bidirectional links to clear both caches
+            string? targetExerciseId = null;
+            try
+            {
+                var linksResponse = await GetLinksAsync(exerciseId, includeExerciseDetails: true);
+                var linkToDelete = linksResponse.Links?.FirstOrDefault(l => l.Id == linkId);
+                targetExerciseId = linkToDelete?.TargetExerciseId;
+                
+                Console.WriteLine($"[ExerciseLinkService] Found target exercise ID for bidirectional deletion: {targetExerciseId}");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[ExerciseLinkService] Could not retrieve target exercise ID: {ex.Message}");
+                // If we can't get the link details, continue with deletion anyway
+                // The cache invalidation will only be partial
+            }
+
             // For bidirectional links (Alternative type), use the endpoint that handles both directions
             var requestUrl = $"api/exercises/{exerciseId}/links/{linkId}?deleteReverse={deleteReverse}";
 
@@ -403,10 +466,20 @@ public class ExerciseLinkService : IExerciseLinkService
 
             Console.WriteLine($"[ExerciseLinkService] Bidirectional link deleted successfully");
 
-            // For bidirectional deletion, we need to invalidate cache for both exercises
-            // The target exercise ID would need to be retrieved from the link data or passed separately
-            // For now, just invalidate the source exercise cache
+            // For bidirectional deletion, invalidate cache for both exercises
             InvalidateExerciseLinksCache(exerciseId);
+            
+            // Also invalidate the target exercise cache if we found it
+            // This is essential for Alternative links where both sides need to be updated
+            if (!string.IsNullOrEmpty(targetExerciseId))
+            {
+                Console.WriteLine($"[ExerciseLinkService] Invalidating cache for target exercise: {targetExerciseId}");
+                InvalidateExerciseLinksCache(targetExerciseId);
+            }
+            else
+            {
+                Console.WriteLine($"[ExerciseLinkService] Warning: Could not invalidate target exercise cache - ID not found");
+            }
         }
         catch (HttpRequestException ex)
         {

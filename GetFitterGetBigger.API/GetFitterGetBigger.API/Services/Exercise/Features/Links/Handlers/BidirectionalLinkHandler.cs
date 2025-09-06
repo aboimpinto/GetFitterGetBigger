@@ -102,38 +102,31 @@ public class BidirectionalLinkHandler(
     {
         var reverseLinkResult = await FindReverseLinkAsync(primaryLink);
         
-        // Delete reverse link if found
-        var deletionTask = reverseLinkResult switch
-        {
-            { IsSuccess: true, Data: { IsEmpty: false } } => 
-                commandDataService.DeleteAsync(ExerciseLinkId.ParseOrEmpty(reverseLinkResult.Data.Id)),
-            _ => Task.FromResult(ServiceResult<BooleanResultDto>.Success(BooleanResultDto.Create(true)))
-        };
-        
-        await deletionTask;
-        
-        if (reverseLinkResult.IsSuccess && !reverseLinkResult.Data.IsEmpty)
-        {
-            logger.LogInformation(
-                "Deleted reverse link: {ReverseId}",
-                reverseLinkResult.Data.Id);
-        }
-        
-        return ServiceResult<BooleanResultDto>.Success(BooleanResultDto.Create(true));
+        // Use extension method for clean deletion with logging pushed down
+        return await commandDataService.DeleteIfExistsAsync(reverseLinkResult, logger);
     }
     
     private async Task<ServiceResult<ExerciseLinkDto>> FindReverseLinkAsync(ExerciseLinkDto originalLink)
     {
         // Parse all needed data upfront
         var originalLinkType = DetermineActualLinkType(originalLink);
-        var reverseLinkType = GetReverseExerciseLinkType(originalLinkType);
         var targetId = ExerciseId.ParseOrEmpty(originalLink.TargetExerciseId);
+        var sourceId = originalLink.SourceExerciseId;
+        
+        // Special handling for WORKOUT links - they are reverse links from WARMUP/COOLDOWN
+        // We need to find what type of link points back to us
+        if (originalLinkType == ExerciseLinkType.WORKOUT)
+        {
+            return await FindReverseWorkoutLinkAsync(targetId, sourceId);
+        }
+        
+        var reverseLinkType = GetReverseExerciseLinkType(originalLinkType);
         
         // Single exit point using pattern matching
         return reverseLinkType.HasValue switch
         {
             false => ServiceResult<ExerciseLinkDto>.Success(ExerciseLinkDto.Empty), // No reverse link expected
-            true => await LoadAndFindReverseLinkAsync(targetId, reverseLinkType.Value, originalLink.SourceExerciseId)
+            true => await LoadAndFindReverseLinkAsync(targetId, reverseLinkType.Value, sourceId)
         };
     }
     
@@ -158,6 +151,24 @@ public class BidirectionalLinkHandler(
     }
     
     /// <summary>
+    /// Special handler for finding reverse links when deleting WORKOUT type links.
+    /// WORKOUT links are created as reverse links from WARMUP/COOLDOWN, so we need to find which one.
+    /// </summary>
+    private async Task<ServiceResult<ExerciseLinkDto>> FindReverseWorkoutLinkAsync(
+        ExerciseId workoutExerciseId, 
+        string originalSourceId)
+    {
+        // Use extension methods for clean, single-exit-point pattern
+        var reverseLink = await queryDataService.FindFirstMatchingReverseLinkAsync(
+            workoutExerciseId,
+            ExerciseLinkType.WORKOUT.GetPossibleReverseTypes(),
+            originalSourceId,
+            logger);
+        
+        return reverseLink.ToServiceResult();
+    }
+    
+    /// <summary>
     /// Determines the actual link type from a DTO
     /// </summary>
     public static ExerciseLinkType DetermineActualLinkType(ExerciseLinkDto link)
@@ -178,7 +189,8 @@ public class BidirectionalLinkHandler(
     }
     
     /// <summary>
-    /// Gets the reverse link type for bidirectional relationships
+    /// Gets the reverse link type for bidirectional relationships during creation.
+    /// Note: For deletion of WORKOUT links, special handling is required (see FindReverseWorkoutLinkAsync).
     /// </summary>
     public static ExerciseLinkType? GetReverseExerciseLinkType(ExerciseLinkType linkType)
     {
@@ -188,7 +200,8 @@ public class BidirectionalLinkHandler(
             ExerciseLinkType.WARMUP => ExerciseLinkType.WORKOUT,
             ExerciseLinkType.COOLDOWN => ExerciseLinkType.WORKOUT,
             ExerciseLinkType.ALTERNATIVE => ExerciseLinkType.ALTERNATIVE, // ALTERNATIVE is bidirectional with itself
-            ExerciseLinkType.WORKOUT => null, // WORKOUT links are only created as reverse, never as primary
+            ExerciseLinkType.WORKOUT => null, // WORKOUT links are created as reverse links from WARMUP/COOLDOWN
+                                               // For deletion, use FindReverseWorkoutLinkAsync to find the actual reverse
             _ => null
         };
     }

@@ -397,7 +397,9 @@ namespace GetFitterGetBigger.Admin.Services
                 NotifyStateChanged();
 
                 Console.WriteLine($"[ExerciseLinkStateService] Calling ExerciseLinkService.CreateLinkAsync");
-                await _exerciseLinkService.CreateLinkAsync(CurrentExerciseId, createDto);
+                // Use the source exercise ID for the API call
+                // This is important for inverse relationships where we're creating a link on a different exercise
+                await _exerciseLinkService.CreateLinkAsync(createDto.SourceExerciseId ?? CurrentExerciseId, createDto);
 
                 Console.WriteLine($"[ExerciseLinkStateService] Link created successfully, reloading links");
                 
@@ -490,7 +492,8 @@ namespace GetFitterGetBigger.Admin.Services
                 NotifyStateChanged();
 
                 // API call - use bidirectional method to create both directions
-                await _exerciseLinkService.CreateBidirectionalLinkAsync(CurrentExerciseId, createDto);
+                // Use the source exercise ID for the API call
+                await _exerciseLinkService.CreateBidirectionalLinkAsync(createDto.SourceExerciseId ?? CurrentExerciseId, createDto);
 
                 // Reload to get actual server state (LoadLinksAsync will extract Alternative links)
                 await LoadLinksAsync();

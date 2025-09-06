@@ -340,10 +340,30 @@ namespace GetFitterGetBigger.Admin.Tests.Services
             // Arrange
             var exerciseId = Guid.NewGuid().ToString();
             var linkId = Guid.NewGuid().ToString();
+            var targetExerciseId = Guid.NewGuid().ToString();
             var updateDto = new UpdateExerciseLinkDtoBuilder()
                 .WithDisplayOrder(2)
                 .AsActive()
                 .Build();
+
+            // Setup response for GET request to fetch link details (for cache invalidation)
+            var linksResponse = new ExerciseLinksResponseDto
+            {
+                ExerciseId = exerciseId,
+                ExerciseName = "Test Exercise",
+                Links = new List<ExerciseLinkDto>
+                {
+                    new ExerciseLinkDto
+                    {
+                        Id = linkId,
+                        SourceExerciseId = exerciseId,
+                        TargetExerciseId = targetExerciseId,
+                        LinkType = "Warmup"
+                    }
+                },
+                TotalCount = 1
+            };
+            _httpMessageHandler.SetupResponse(HttpStatusCode.OK, linksResponse);
 
             var updatedLink = new ExerciseLinkDtoBuilder()
                 .WithId(linkId)
@@ -351,6 +371,7 @@ namespace GetFitterGetBigger.Admin.Tests.Services
                 .WithDisplayOrder(updateDto.DisplayOrder)
                 .Build();
 
+            // Setup response for PUT request
             _httpMessageHandler.SetupResponse(HttpStatusCode.OK, updatedLink);
 
             // Act
@@ -361,12 +382,14 @@ namespace GetFitterGetBigger.Admin.Tests.Services
             result.Id.Should().Be(linkId);
             result.DisplayOrder.Should().Be(updateDto.DisplayOrder);
 
+            // Verify both GET (for cache invalidation) and PUT requests were made
             _httpMessageHandler.VerifyRequest(request =>
-            {
-                request.Method.Should().Be(HttpMethod.Put);
-                request.RequestUri!.PathAndQuery.Should().Be($"/api/exercises/{exerciseId}/links/{linkId}");
-                return true;
-            });
+                request.Method == HttpMethod.Get && 
+                request.RequestUri!.PathAndQuery.Contains($"/api/exercises/{exerciseId}/links"));
+            
+            _httpMessageHandler.VerifyRequest(request =>
+                request.Method == HttpMethod.Put && 
+                request.RequestUri!.PathAndQuery == $"/api/exercises/{exerciseId}/links/{linkId}");
         }
 
         [Fact]
@@ -377,6 +400,18 @@ namespace GetFitterGetBigger.Admin.Tests.Services
             var linkId = Guid.NewGuid().ToString();
             var updateDto = new UpdateExerciseLinkDtoBuilder().Build();
 
+            // Setup response for GET request to fetch link details (for cache invalidation)
+            // This returns OK but with no matching link ID (simulating link not found in the list)
+            var linksResponse = new ExerciseLinksResponseDto
+            {
+                ExerciseId = exerciseId,
+                ExerciseName = "Test Exercise",
+                Links = new List<ExerciseLinkDto>(), // Empty list - no links found
+                TotalCount = 0
+            };
+            _httpMessageHandler.SetupResponse(HttpStatusCode.OK, linksResponse);
+            
+            // Setup response for PUT request
             _httpMessageHandler.SetupResponse(HttpStatusCode.NotFound, new { error = "Link not found" });
 
             // Act & Assert
@@ -392,18 +427,41 @@ namespace GetFitterGetBigger.Admin.Tests.Services
             var exerciseId = Guid.NewGuid().ToString();
             var linkId = Guid.NewGuid().ToString();
 
+            // Setup response for GET request to fetch link details (for cache invalidation)
+            var linksResponse = new ExerciseLinksResponseDto
+            {
+                ExerciseId = exerciseId,
+                ExerciseName = "Test Exercise",
+                Links = new List<ExerciseLinkDto>
+                {
+                    new ExerciseLinkDto
+                    {
+                        Id = linkId,
+                        SourceExerciseId = exerciseId,
+                        TargetExerciseId = "target-exercise-id",
+                        LinkType = "Warmup"
+                    }
+                },
+                TotalCount = 1
+            };
+            _httpMessageHandler.SetupResponse(HttpStatusCode.OK, linksResponse);
+            
+            // Setup response for DELETE request
             _httpMessageHandler.SetupResponse(HttpStatusCode.NoContent);
 
             // Act
             await _exerciseLinkService.DeleteLinkAsync(exerciseId, linkId);
 
             // Assert
+            // Verify GET request was made first (to fetch link details for cache invalidation)
             _httpMessageHandler.VerifyRequest(request =>
-            {
-                request.Method.Should().Be(HttpMethod.Delete);
-                request.RequestUri!.PathAndQuery.Should().Be($"/api/exercises/{exerciseId}/links/{linkId}");
-                return true;
-            });
+                request.Method == HttpMethod.Get && 
+                request.RequestUri!.PathAndQuery.Contains($"/api/exercises/{exerciseId}/links"));
+            
+            // Verify DELETE request was made
+            _httpMessageHandler.VerifyRequest(request =>
+                request.Method == HttpMethod.Delete && 
+                request.RequestUri!.PathAndQuery == $"/api/exercises/{exerciseId}/links/{linkId}");
         }
 
         [Fact]
@@ -413,6 +471,17 @@ namespace GetFitterGetBigger.Admin.Tests.Services
             var exerciseId = Guid.NewGuid().ToString();
             var linkId = Guid.NewGuid().ToString();
 
+            // Setup response for GET request to fetch link details (link won't be found but we continue)
+            var emptyLinksResponse = new ExerciseLinksResponseDto
+            {
+                ExerciseId = exerciseId,
+                ExerciseName = "Test Exercise",
+                Links = new List<ExerciseLinkDto>(), // No links found
+                TotalCount = 0
+            };
+            _httpMessageHandler.SetupResponse(HttpStatusCode.OK, emptyLinksResponse);
+            
+            // Setup response for DELETE request - returns NotFound
             _httpMessageHandler.SetupResponse(HttpStatusCode.NotFound, new { error = "Link not found" });
 
             // Act & Assert
@@ -528,19 +597,43 @@ namespace GetFitterGetBigger.Admin.Tests.Services
             // Arrange
             var exerciseId = Guid.NewGuid().ToString();
             var linkId = Guid.NewGuid().ToString();
+            var targetExerciseId = Guid.NewGuid().ToString();
 
+            // Setup response for GET request to fetch link details (for cache invalidation)
+            var linksResponse = new ExerciseLinksResponseDto
+            {
+                ExerciseId = exerciseId,
+                ExerciseName = "Test Exercise",
+                Links = new List<ExerciseLinkDto>
+                {
+                    new ExerciseLinkDto
+                    {
+                        Id = linkId,
+                        SourceExerciseId = exerciseId,
+                        TargetExerciseId = targetExerciseId,
+                        LinkType = "Alternative"
+                    }
+                },
+                TotalCount = 1
+            };
+            _httpMessageHandler.SetupResponse(HttpStatusCode.OK, linksResponse);
+            
+            // Setup response for DELETE request
             _httpMessageHandler.SetupResponse(HttpStatusCode.NoContent);
 
             // Act
             await _exerciseLinkService.DeleteBidirectionalLinkAsync(exerciseId, linkId, true);
 
             // Assert
+            // Verify GET request was made first (to fetch link details for cache invalidation)
             _httpMessageHandler.VerifyRequest(request =>
-            {
-                request.Method.Should().Be(HttpMethod.Delete);
-                request.RequestUri!.PathAndQuery.Should().Be($"/api/exercises/{exerciseId}/links/{linkId}?deleteReverse=True");
-                return true;
-            });
+                request.Method == HttpMethod.Get && 
+                request.RequestUri!.PathAndQuery.Contains($"/api/exercises/{exerciseId}/links"));
+            
+            // Verify DELETE request was made with deleteReverse parameter
+            _httpMessageHandler.VerifyRequest(request =>
+                request.Method == HttpMethod.Delete && 
+                request.RequestUri!.PathAndQuery == $"/api/exercises/{exerciseId}/links/{linkId}?deleteReverse=True");
         }
 
         [Fact]

@@ -202,6 +202,14 @@ namespace GetFitterGetBigger.Admin.Components.Pages.Exercises.ExerciseLinks
                 linkTypeForValidation = "Alternative";
                 linkTypeForApi = "ALTERNATIVE"; // API requires uppercase for ALTERNATIVE
             }
+            else if (_addLinkType == "Workout")
+            {
+                // When adding a Workout link from Warmup/Cooldown context,
+                // we're actually creating the inverse relationship
+                // (e.g., from Warmup context, we create a Warmup link on the Workout)
+                linkTypeForValidation = StateService.ActiveContext ?? "Warmup";
+                linkTypeForApi = linkTypeForValidation; // Warmup/Cooldown work with title case
+            }
             else
             {
                 linkTypeForValidation = _addLinkType;
@@ -229,19 +237,24 @@ namespace GetFitterGetBigger.Admin.Components.Pages.Exercises.ExerciseLinks
                 return;
             }
             
+            // When adding a "Workout" link, we need to swap source and target
+            // because we're creating the inverse relationship
             var createDto = new CreateExerciseLinkDto
             {
-                SourceExerciseId = Exercise.Id,
-                TargetExerciseId = exercise.Id,
+                SourceExerciseId = _addLinkType == "Workout" ? exercise.Id : Exercise.Id,
+                TargetExerciseId = _addLinkType == "Workout" ? Exercise.Id : exercise.Id,
                 LinkType = linkTypeForApi
             };
 
             // Set DisplayOrder for all link types
-            if (_addLinkType == "Warmup" || _addLinkType == "Cooldown")
+            if (_addLinkType == "Warmup" || _addLinkType == "Cooldown" || _addLinkType == "Workout")
             {
+                // For "Workout" links, we need to check the actual link type being created
+                var linkTypeToCheck = _addLinkType == "Workout" ? linkTypeForApi : _addLinkType;
+                
                 // Calculate the next display order based on existing links
                 var existingLinks = StateService.CurrentLinks?.Links?
-                    .Where(l => l.LinkType == _addLinkType)
+                    .Where(l => l.LinkType == linkTypeToCheck)
                     .OrderBy(l => l.DisplayOrder)
                     .ToList() ?? new List<ExerciseLinkDto>();
 
@@ -290,13 +303,23 @@ namespace GetFitterGetBigger.Admin.Components.Pages.Exercises.ExerciseLinks
             {
                 var exerciseName = _linkToDelete.TargetExercise?.Name ?? $"Exercise {_linkToDelete.TargetExerciseId}";
                 
-                // Use bidirectional deletion for alternative links
-                if (_linkToDelete.LinkType == "Alternative")
+                // Use bidirectional deletion for all link types since backend creates reverse links automatically
+                // Alternative links are always bidirectional
+                // Warmup/Cooldown/Workout links also have auto-generated reverse links that need to be cleaned up
+                if (_linkToDelete.LinkType.Equals("Alternative", StringComparison.OrdinalIgnoreCase) ||
+                    _linkToDelete.LinkType.Equals("ALTERNATIVE", StringComparison.OrdinalIgnoreCase) ||
+                    _linkToDelete.LinkType.Equals("Warmup", StringComparison.OrdinalIgnoreCase) ||
+                    _linkToDelete.LinkType.Equals("WARMUP", StringComparison.OrdinalIgnoreCase) ||
+                    _linkToDelete.LinkType.Equals("Cooldown", StringComparison.OrdinalIgnoreCase) ||
+                    _linkToDelete.LinkType.Equals("COOLDOWN", StringComparison.OrdinalIgnoreCase) ||
+                    _linkToDelete.LinkType.Equals("Workout", StringComparison.OrdinalIgnoreCase) ||
+                    _linkToDelete.LinkType.Equals("WORKOUT", StringComparison.OrdinalIgnoreCase))
                 {
                     await StateService.DeleteBidirectionalLinkAsync(_linkToDelete.Id);
                 }
                 else
                 {
+                    // Fallback for any other link types (shouldn't happen but keeps backward compatibility)
                     await StateService.DeleteLinkAsync(_linkToDelete.Id);
                 }
                 
