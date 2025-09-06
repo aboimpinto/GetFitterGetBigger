@@ -1360,6 +1360,7 @@ Code Reviews:
 Git Commits:
 - `bdb685d9` - feat(admin): implement Phase 6 - Exercise Link Type Restrictions
 - `b8142c91` - feat(admin): complete Phase 6 - exercise type restrictions and UI improvements (fixed section visibility, side-by-side layout, browser navigation)
+- `8cbbd6ce` - fix(admin): resolve exercise link display and creation issues (case sensitivity, Alternative links, consistent loading)
 
 Status: ✅ Phase 6 COMPLETE - APPROVED_WITH_NOTES
 
