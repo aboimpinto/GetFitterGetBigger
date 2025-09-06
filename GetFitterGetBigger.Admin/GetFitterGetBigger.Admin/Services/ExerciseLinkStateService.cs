@@ -84,10 +84,10 @@ namespace GetFitterGetBigger.Admin.Services
 
         // Computed properties
         public IEnumerable<ExerciseLinkDto> WarmupLinks =>
-            CurrentLinks?.Links.Where(l => l.LinkType == "Warmup").OrderBy(l => l.DisplayOrder) ?? Enumerable.Empty<ExerciseLinkDto>();
+            CurrentLinks?.Links.Where(l => string.Equals(l.LinkType, "Warmup", StringComparison.OrdinalIgnoreCase)).OrderBy(l => l.DisplayOrder) ?? Enumerable.Empty<ExerciseLinkDto>();
 
         public IEnumerable<ExerciseLinkDto> CooldownLinks =>
-            CurrentLinks?.Links.Where(l => l.LinkType == "Cooldown").OrderBy(l => l.DisplayOrder) ?? Enumerable.Empty<ExerciseLinkDto>();
+            CurrentLinks?.Links.Where(l => string.Equals(l.LinkType, "Cooldown", StringComparison.OrdinalIgnoreCase)).OrderBy(l => l.DisplayOrder) ?? Enumerable.Empty<ExerciseLinkDto>();
 
         public int WarmupLinkCount => WarmupLinks.Count();
         public int CooldownLinkCount => CooldownLinks.Count();
@@ -176,6 +176,16 @@ namespace GetFitterGetBigger.Admin.Services
                     CurrentExerciseId,
                     LinkTypeFilter,
                     IncludeExerciseDetails);
+                
+                // Extract Alternative links from the main response into the separate collection
+                if (CurrentLinks?.Links != null)
+                {
+                    _alternativeLinks.Clear();
+                    var alternativeLinks = CurrentLinks.Links
+                        .Where(l => string.Equals(l.LinkType, "Alternative", StringComparison.OrdinalIgnoreCase))
+                        .ToList();
+                    _alternativeLinks.AddRange(alternativeLinks);
+                }
             }
             catch (ExerciseNotFoundException)
             {
@@ -341,7 +351,7 @@ namespace GetFitterGetBigger.Admin.Services
 
                 Console.WriteLine($"[ExerciseLinkStateService] Adding optimistic link with ID: {optimisticLink.Id}");
 
-                if (createDto.LinkType == "Alternative")
+                if (string.Equals(createDto.LinkType, "Alternative", StringComparison.OrdinalIgnoreCase))
                 {
                     _alternativeLinks.Add(optimisticLink);
                 }
@@ -358,15 +368,8 @@ namespace GetFitterGetBigger.Admin.Services
 
                 Console.WriteLine($"[ExerciseLinkStateService] Link created successfully, reloading links");
                 
-                // Reload appropriate links based on type
-                if (createDto.LinkType == "Alternative")
-                {
-                    await LoadAlternativeLinksAsync();
-                }
-                else
-                {
-                    await LoadLinksAsync();
-                }
+                // Reload all links (LoadLinksAsync will extract Alternative links)
+                await LoadLinksAsync();
 
                 SuccessMessage = $"{createDto.LinkType} link created successfully";
                 ScreenReaderAnnouncement = $"{createDto.LinkType} exercise link has been added successfully";
@@ -382,15 +385,8 @@ namespace GetFitterGetBigger.Admin.Services
                 ErrorMessage = ErrorMessageFormatter.FormatExerciseLinkError(ex);
                 Console.WriteLine($"[ExerciseLinkStateService] Formatted error message: {ErrorMessage}");
                 
-                // Revert optimistic update based on link type
-                if (createDto.LinkType == "Alternative")
-                {
-                    await LoadAlternativeLinksAsync();
-                }
-                else
-                {
-                    await LoadLinksAsync(preserveErrorMessage: true);
-                }
+                // Revert optimistic update - always use LoadLinksAsync to get all link types
+                await LoadLinksAsync(preserveErrorMessage: true);
             }
             finally
             {
@@ -410,7 +406,7 @@ namespace GetFitterGetBigger.Admin.Services
             }
 
             // Bidirectional links are typically for Alternative type relationships
-            if (createDto.LinkType != "Alternative")
+            if (!string.Equals(createDto.LinkType, "Alternative", StringComparison.OrdinalIgnoreCase))
             {
                 ErrorMessage = "Bidirectional links are only supported for Alternative relationships";
                 NotifyStateChanged();
@@ -454,8 +450,8 @@ namespace GetFitterGetBigger.Admin.Services
                 // API call - use bidirectional method to create both directions
                 await _exerciseLinkService.CreateBidirectionalLinkAsync(CurrentExerciseId, createDto);
 
-                // Reload to get actual server state
-                await LoadAlternativeLinksAsync();
+                // Reload to get actual server state (LoadLinksAsync will extract Alternative links)
+                await LoadLinksAsync();
 
                 SuccessMessage = "Alternative link created (bidirectional)";
                 ScreenReaderAnnouncement = "Alternative exercise link has been created for both exercises";
@@ -463,7 +459,7 @@ namespace GetFitterGetBigger.Admin.Services
             catch (Exception ex)
             {
                 ErrorMessage = ErrorMessageFormatter.FormatExerciseLinkError(ex);
-                await LoadAlternativeLinksAsync(); // Revert optimistic update
+                await LoadLinksAsync(preserveErrorMessage: true); // Revert optimistic update
             }
             finally
             {
@@ -599,8 +595,8 @@ namespace GetFitterGetBigger.Admin.Services
                 // API call - use bidirectional method to delete both directions
                 await _exerciseLinkService.DeleteBidirectionalLinkAsync(CurrentExerciseId, linkId, true);
 
-                // Reload to get the actual server state
-                await LoadAlternativeLinksAsync();
+                // Reload to get the actual server state (LoadLinksAsync will extract Alternative links)
+                await LoadLinksAsync();
 
                 SuccessMessage = $"{linkType} link removed (bidirectional)";
                 ScreenReaderAnnouncement = $"{linkType} exercise link has been removed from both exercises";
@@ -608,7 +604,7 @@ namespace GetFitterGetBigger.Admin.Services
             catch (Exception ex)
             {
                 ErrorMessage = ErrorMessageFormatter.FormatExerciseLinkError(ex);
-                await LoadAlternativeLinksAsync(); // Revert optimistic update
+                await LoadLinksAsync(preserveErrorMessage: true); // Revert optimistic update
             }
             finally
             {
@@ -636,13 +632,12 @@ namespace GetFitterGetBigger.Admin.Services
                 switch (contextType)
                 {
                     case "Workout":
-                        await LoadLinksAsync();
-                        await LoadAlternativeLinksAsync();
+                        await LoadLinksAsync(); // This will also extract Alternative links
                         break;
                     case "Warmup":
                     case "Cooldown":
+                        await LoadLinksAsync(); // This will also extract Alternative links
                         await LoadWorkoutLinksAsync(); // Load reverse relationships
-                        await LoadAlternativeLinksAsync();
                         break;
                 }
 

@@ -162,10 +162,19 @@ public class ExerciseLinkService : IExerciseLinkService
                 var queryParams = BuildLinksQueryString(linkType, includeExerciseDetails, includeReverse);
                 var requestUrl = $"api/exercises/{exerciseId}/links{queryParams}";
 
+                Console.WriteLine($"[ExerciseLinkService] GetLinksAsync called");
+                Console.WriteLine($"[ExerciseLinkService] Request URL: {requestUrl}");
+                Console.WriteLine($"[ExerciseLinkService] ExerciseId: {exerciseId}, LinkType: {linkType}, IncludeDetails: {includeExerciseDetails}, IncludeReverse: {includeReverse}");
+
                 var response = await _httpClient.GetAsync(requestUrl);
+
+                Console.WriteLine($"[ExerciseLinkService] Response Status: {response.StatusCode}");
 
                 if (!response.IsSuccessStatusCode)
                 {
+                    var errorContent = await response.Content.ReadAsStringAsync();
+                    Console.WriteLine($"[ExerciseLinkService] Error Response Body: {errorContent}");
+                    
                     if (response.StatusCode == HttpStatusCode.NotFound)
                     {
                         throw new ExerciseNotFoundException(exerciseId);
@@ -173,10 +182,36 @@ public class ExerciseLinkService : IExerciseLinkService
                     await HandleErrorResponseAsync(response, exerciseId);
                 }
 
-                links = await response.Content.ReadFromJsonAsync<ExerciseLinksResponseDto>(_jsonOptions);
+                // First read as string to log the raw response
+                var json = await response.Content.ReadAsStringAsync();
+                Console.WriteLine($"[ExerciseLinkService] GetLinksAsync - Raw JSON response:");
+                Console.WriteLine(json);
+
+                // Then deserialize
+                links = JsonSerializer.Deserialize<ExerciseLinksResponseDto>(json, _jsonOptions);
 
                 if (links != null)
                 {
+                    Console.WriteLine($"[ExerciseLinkService] GetLinksAsync - Parsed response:");
+                    Console.WriteLine($"  - Exercise: {links.ExerciseName} (ID: {links.ExerciseId})");
+                    Console.WriteLine($"  - Total Links: {links.TotalCount}");
+                    Console.WriteLine($"  - Links Count: {links.Links?.Count ?? 0}");
+                    
+                    if (links.Links?.Any() == true)
+                    {
+                        foreach (var link in links.Links)
+                        {
+                            Console.WriteLine($"    - Link: {link.LinkType} to {link.TargetExerciseId}, DisplayOrder: {link.DisplayOrder}");
+                            if (link.TargetExercise != null)
+                            {
+                                Console.WriteLine($"      Exercise Name: {link.TargetExercise.Name}");
+                            }
+                        }
+                    }
+                    else
+                    {
+                        Console.WriteLine($"  - No links found in response");
+                    }
                     // Use different cache durations based on link type
                     // Alternative links: 15 minutes (more dynamic)
                     // Warmup/Cooldown links: 1 hour (more stable)

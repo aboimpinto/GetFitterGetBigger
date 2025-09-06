@@ -157,12 +157,12 @@ namespace GetFitterGetBigger.Admin.Components.Pages.Exercises.ExerciseLinks
             if (_addLinkType == "Alternative")
             {
                 linkTypeForValidation = "Alternative";
-                linkTypeForApi = "Alternative";
+                linkTypeForApi = "ALTERNATIVE"; // API requires uppercase for ALTERNATIVE
             }
             else
             {
                 linkTypeForValidation = _addLinkType;
-                linkTypeForApi = _addLinkType;
+                linkTypeForApi = _addLinkType; // Warmup/Cooldown work with title case
             }
             
             // Validate before creating the link
@@ -193,7 +193,7 @@ namespace GetFitterGetBigger.Admin.Components.Pages.Exercises.ExerciseLinks
                 LinkType = linkTypeForApi
             };
 
-            // Set DisplayOrder for Warmup and Cooldown links
+            // Set DisplayOrder for all link types
             if (_addLinkType == "Warmup" || _addLinkType == "Cooldown")
             {
                 // Calculate the next display order based on existing links
@@ -205,6 +205,11 @@ namespace GetFitterGetBigger.Admin.Components.Pages.Exercises.ExerciseLinks
                 createDto.DisplayOrder = existingLinks.Any() 
                     ? existingLinks.Max(l => l.DisplayOrder) + 1 
                     : 1;
+            }
+            else
+            {
+                // Alternative links don't use display order, but API requires a value
+                createDto.DisplayOrder = 0;
             }
 
             // Use bidirectional creation for alternative links
