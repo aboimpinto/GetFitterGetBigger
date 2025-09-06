@@ -320,7 +320,7 @@
         var context = string.IsNullOrEmpty(CurrentContext) ? "Workout" : CurrentContext;
             
         var validationResult = ValidationService.CanAddLinkType(context, linkType);
-        return validationResult?.IsValid ?? true; // Default to true if null
+        return validationResult?.IsValid ?? false; // Default to false if null - be restrictive
     }
 
     protected override void OnInitialized()
