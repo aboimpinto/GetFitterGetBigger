@@ -82,7 +82,8 @@ def find_current_checkpoint(feature_tasks_path):
             if task_match:
                 # Look for COMPLETE marker in next few lines
                 for j in range(i, min(i + 5, len(lines))):
-                    if "✅ COMPLETE" in lines[j] or "`[COMPLETE]`" in lines[j]:
+                    line_lower = lines[j].lower()
+                    if "✅ complete" in line_lower or "`[complete]`" in line_lower:
                         last_completed_task_phase = current_phase
                         break
     
@@ -109,17 +110,22 @@ def update_checkpoint_with_commit(feature_tasks_path, commit_hash, message, chec
     git_commits_line = None
     
     # Search for existing Git Commits section within this checkpoint
-    for i in range(checkpoint_line, min(checkpoint_line + 50, len(lines))):
+    # Look from checkpoint line downward until we hit the next major section
+    for i in range(checkpoint_line, len(lines)):
+        # Stop at next checkpoint or phase
+        if i != checkpoint_line and (lines[i].startswith("## CHECKPOINT:") or 
+                                     lines[i].startswith("## Phase ") or
+                                     lines[i].startswith("---")):
+            break
+        
+        # Found Git Commits section
         if lines[i].startswith("Git Commit"):
             git_commits_line = i
             break
-        if lines[i].startswith("## CHECKPOINT:") and i != checkpoint_line:
-            # Hit next checkpoint, stop searching
-            break
+        
+        # Found Status line - insert before it
         if lines[i].startswith("Status:"):
-            # Insert before Status line
             insert_line = i
-            break
     
     # Format the new commit entry
     new_commit_entry = f"- `{commit_hash}` - {message}\n"
@@ -128,37 +134,62 @@ def update_checkpoint_with_commit(feature_tasks_path, commit_hash, message, chec
         # Git Commits section exists
         # Check if it's single line or multi-line format
         if "Git Commit:" in lines[git_commits_line]:
-            # Convert single line to multi-line format
-            lines[git_commits_line] = "Git Commits:\n"
-            # Check if there's an existing commit on the same line
-            existing = re.search(r"`([a-f0-9]+)`\s*-\s*(.+)", lines[git_commits_line])
-            if existing:
-                lines.insert(git_commits_line + 1, f"- `{existing.group(1)}` - {existing.group(2)}\n")
+            # Single commit format - convert to multi-line
+            # Check if there's an inline commit
+            existing_match = re.search(r"`([a-f0-9]+)`\s*-\s*(.+)", lines[git_commits_line])
+            if existing_match:
+                # Convert single line with commit to multi-line
+                lines[git_commits_line] = "Git Commits:\n"
+                lines.insert(git_commits_line + 1, f"- `{existing_match.group(1)}` - {existing_match.group(2).strip()}\n")
                 lines.insert(git_commits_line + 2, new_commit_entry)
             else:
+                # Just "Git Commit:" with no commit yet
+                lines[git_commits_line] = "Git Commits:\n"
                 lines.insert(git_commits_line + 1, new_commit_entry)
         else:
-            # Multi-line format, add to list
+            # Multi-line format "Git Commits:" - add to the list
             # Find insertion point (after last commit entry)
             insert_at = git_commits_line + 1
-            while insert_at < len(lines) and lines[insert_at].startswith("- `"):
+            while insert_at < len(lines):
+                # Stop if we hit a non-commit line (not starting with "- `")
+                if not lines[insert_at].strip().startswith("- `"):
+                    # But skip empty lines between commits
+                    if lines[insert_at].strip() == "":
+                        insert_at += 1
+                        continue
+                    break
                 insert_at += 1
+            
+            # Insert the new commit at the right position
             lines.insert(insert_at, new_commit_entry)
     else:
-        # No Git Commits section, create one
+        # No Git Commits section exists, create one
         if insert_line:
+            # Insert before Status line with proper spacing
             lines.insert(insert_line, "\nGit Commits:\n")
-            lines.insert(insert_line + 1, new_commit_entry)
-            lines.insert(insert_line + 2, "\n")
+            lines.insert(insert_line + 2, new_commit_entry)
+            lines.insert(insert_line + 3, "\n")
         else:
-            # Couldn't find a good place, append to checkpoint
-            # Find end of checkpoint
+            # Couldn't find Status line, look for a good place
+            # Find where this checkpoint section ends
             end_line = checkpoint_line + 1
-            while end_line < len(lines) and not lines[end_line].startswith("## "):
+            while end_line < len(lines):
+                # Stop at next section marker
+                if lines[end_line].startswith("---") or \
+                   lines[end_line].startswith("## "):
+                    break
+                # Found Notes section - insert before it
+                if lines[end_line].startswith("Notes:"):
+                    lines.insert(end_line, "\nGit Commits:\n")
+                    lines.insert(end_line + 2, new_commit_entry)
+                    lines.insert(end_line + 3, "\n")
+                    break
                 end_line += 1
-            lines.insert(end_line - 1, "\nGit Commits:\n")
-            lines.insert(end_line, new_commit_entry)
-            lines.insert(end_line + 1, "\n")
+            else:
+                # Fallback: insert at the end of checkpoint
+                lines.insert(end_line - 1, "\nGit Commits:\n")
+                lines.insert(end_line, new_commit_entry)
+                lines.insert(end_line + 1, "\n")
     
     # Write updated content
     with open(feature_tasks_path, 'w') as f:
