@@ -1,9 +1,18 @@
 @using GetFitterGetBigger.Admin.Models.Dtos
 @using GetFitterGetBigger.Admin.Services
 
-<div class="@GetModalClasses()" @onclick="HandleBackdropClick" data-testid="add-link-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
-    <div class="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-2xl"
-         @onclick:stopPropagation="true">
+@if (IsOpen)
+{
+    Console.WriteLine($"[AddExerciseLinkModal] Rendering modal - IsOpen: {IsOpen}, LinkType: {LinkType}");
+    <div class="relative z-50" data-testid="add-link-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+        @* Backdrop *@
+        <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" @onclick="HandleBackdropClick"></div>
+
+        @* Modal Container *@
+        <div class="fixed inset-0 z-10 overflow-y-auto">
+            <div class="flex min-h-full items-center justify-center p-4 text-center sm:p-0">
+                <div class="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-2xl"
+                     @onclick:stopPropagation="true">
         <div class="bg-white px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
             <div class="sm:flex sm:items-start">
                 <div class="mt-3 text-center sm:ml-4 sm:mt-0 sm:text-left w-full">
@@ -243,8 +252,11 @@
                 Cancel
             </button>
         </div>
+                </div>
+            </div>
+        </div>
     </div>
-</div>
+}
 
 @code {
     [Parameter, EditorRequired] public bool IsOpen { get; set; }
@@ -459,12 +471,6 @@
         _errorMessage = null;
     }
 
-    private string GetModalClasses()
-    {
-        return IsOpen 
-            ? "relative z-50" 
-            : "hidden";
-    }
 
     private string GetExerciseCardClasses(string exerciseId)
     {

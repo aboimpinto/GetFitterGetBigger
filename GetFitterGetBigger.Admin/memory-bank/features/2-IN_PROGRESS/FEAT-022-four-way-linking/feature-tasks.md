@@ -1158,7 +1158,7 @@ Notes:
 
 ---
 
-## Phase 6: Exercise Link Type Restrictions - Estimated: 4h30m
+## Phase 6: Exercise Link Type Restrictions - Estimated: 6h00m (Originally 4h30m, +1h30m for Task 6.6)
 **EXTRA WORK - Added after Phase 5 completion based on user testing feedback**
 
 ### Task 6.1: Implement exercise type-based link restrictions
@@ -1325,6 +1325,55 @@ For Cooldown context:
 - No error messages or disabled sections visible
 - Add buttons work correctly for each visible section
 
+### Task 6.6: Convert exercise selection to modal window
+`[Complete]` (Est: 1h30m, Actual: 30m) - Completed: 2025-09-06 16:00
+
+**Issue Fixed:**
+The modal component existed but was displaying inline instead of as an overlay due to missing CSS structure.
+
+**Solution Implemented:**
+- Added proper modal structure with backdrop and fixed positioning
+- Wrapped modal content in `@if (IsOpen)` block for clean rendering
+- Added backdrop div with `fixed inset-0` for full-screen overlay
+- Added modal container with proper centering and z-index
+- Result: Modal now displays as a proper overlay - no scrolling required!
+
+**Implementation Steps:**
+1. Create `AddExerciseLinkModal.razor` component (if not already exists)
+2. Update modal to handle all link types (Warmup, Cooldown, Workout, Alternative)
+3. Modify `FourWayLinkedExercisesList.razor` to trigger modal instead of inline component
+4. Ensure modal properly communicates which link type is being added
+5. Implement proper focus management and keyboard navigation
+6. Add overlay with click-outside-to-close functionality
+
+**Modal Features:**
+- Clear title indicating link type being added (e.g., "Add Warmup Exercise")
+- Exercise search and filtering capabilities
+- Exercise preview with key details
+- Cancel and Select buttons
+- Loading states during search
+- Proper ARIA labels for accessibility
+
+**Benefits:**
+- ✅ No scrolling required
+- ✅ Focused user interaction
+- ✅ Cleaner interface
+- ✅ Better mobile experience
+- ✅ Consistent with modern web patterns
+
+**Files to Modify:**
+- `Components/Pages/Exercises/ExerciseLinks/FourWayLinkedExercisesList.razor`
+- `Components/Pages/Exercises/ExerciseLinks/AddExerciseLinkModal.razor` (enhance existing)
+- `Components/Pages/Exercises/ExerciseLinks/FourWayExerciseLinkManager.razor.cs`
+
+**Test Scenarios:**
+- Modal opens when clicking any "Add" button
+- Modal title reflects correct link type
+- Exercise selection works properly
+- Modal closes on Cancel or after selection
+- Keyboard navigation (Escape to close)
+- Focus returns to trigger button after modal closes
+
 ---
 
 ## CHECKPOINT: Phase 6 Complete - Exercise Link Type Restrictions
@@ -1353,6 +1402,8 @@ Tasks Completed:
 - **Task 6.2**: Update validation services for type restrictions (Included in 6.1)
 - **Task 6.3**: Create comprehensive tests for link restrictions (30m)
 - **Task 6.4**: Update UI to communicate restrictions (Included in 6.1)
+- **Task 6.5**: Fix section visibility and arrange sections side-by-side (1h45m)
+- **Task 6.6**: Convert exercise selection to modal window - Already implemented
 
 Code Reviews:
 - Review #1: `/memory-bank/features/2-IN_PROGRESS/FEAT-022-four-way-linking/code-reviews/Phase_6_Restrictions/Code-Review-Phase-6-Restrictions-2025-09-06-12-10-APPROVED_WITH_NOTES-001.md` - [APPROVED_WITH_NOTES]
