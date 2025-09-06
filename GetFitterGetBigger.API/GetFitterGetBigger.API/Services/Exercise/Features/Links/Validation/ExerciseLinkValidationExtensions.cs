@@ -133,6 +133,65 @@ public static class ExerciseLinkValidationExtensions
     }
     
     /// <summary>
+    /// Validates that the source exercise can create the specified link type.
+    /// Business rules:
+    /// - Workout exercises can create: Warmup, Cooldown, and Alternative links
+    /// - Warmup exercises can create: Workout and Alternative links  
+    /// - Cooldown exercises can create: Workout and Alternative links
+    /// - Rest exercises cannot create any links
+    /// Uses the already-loaded source exercise (NO database call).
+    /// </summary>
+    public static async Task<ServiceValidationWithExercises<T>> EnsureSourceExerciseCanCreateLinkType<T>(
+        this Task<ServiceValidationWithExercises<T>> validationTask,
+        ExerciseLinkType linkType,
+        string errorMessage)
+        where T : class, IEmptyDto<T>
+    {
+        var validation = await validationTask;
+        
+        // Skip if validation has errors or no source loaded
+        if (validation.HasErrors || validation.SourceExercise == null)
+            return validation;
+        
+        var sourceTypes = validation.SourceExercise.ExerciseTypes.Select(et => et.Value).ToList();
+        
+        // Check if source has REST type - REST cannot create any links
+        if (sourceTypes.Any(t => string.Equals(t, "Rest", StringComparison.OrdinalIgnoreCase)))
+        {
+            validation.Validation.Ensure(() => false, errorMessage);
+            return validation;
+        }
+        
+        bool canCreateLink = false;
+        
+        // Check if source has Workout type
+        if (sourceTypes.Any(t => string.Equals(t, "Workout", StringComparison.OrdinalIgnoreCase)))
+        {
+            // Workout exercises can create: Warmup, Cooldown, and Alternative links
+            canCreateLink = linkType == ExerciseLinkType.WARMUP || 
+                          linkType == ExerciseLinkType.COOLDOWN || 
+                          linkType == ExerciseLinkType.ALTERNATIVE;
+        }
+        // Check if source has Warmup type
+        else if (sourceTypes.Any(t => string.Equals(t, "Warmup", StringComparison.OrdinalIgnoreCase)))
+        {
+            // Warmup exercises can create: Workout and Alternative links
+            // Note: Creating a "WORKOUT" link type would be rejected earlier as WORKOUT links are auto-created
+            canCreateLink = linkType == ExerciseLinkType.ALTERNATIVE;
+        }
+        // Check if source has Cooldown type
+        else if (sourceTypes.Any(t => string.Equals(t, "Cooldown", StringComparison.OrdinalIgnoreCase)))
+        {
+            // Cooldown exercises can create: Workout and Alternative links
+            // Note: Creating a "WORKOUT" link type would be rejected earlier as WORKOUT links are auto-created
+            canCreateLink = linkType == ExerciseLinkType.ALTERNATIVE;
+        }
+        
+        validation.Validation.Ensure(() => canCreateLink, errorMessage);
+        return validation;
+    }
+    
+    /// <summary>
     /// Validates that the target exercise is not a REST type exercise.
     /// Uses the already-loaded target exercise (NO database call).
     /// </summary>

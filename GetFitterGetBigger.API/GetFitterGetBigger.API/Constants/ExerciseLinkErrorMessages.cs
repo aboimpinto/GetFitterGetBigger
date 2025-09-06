@@ -18,7 +18,7 @@ public static class ExerciseLinkErrorMessages
     public const string TargetMustMatchLinkType = "Target exercise must match the specified link type";
     public const string RestExercisesCannotHaveLinks = "REST exercises cannot have links";
     public const string RestExercisesCannotBeLinked = "cannot be created to REST exercises";
-    public const string OnlyWorkoutExercisesCanCreateLinks = "Only exercises with 'Workout' exercise type can create outbound links";
+    public const string OnlyWorkoutExercisesCanCreateLinks = "This exercise type cannot create the specified link type";
     public const string LinkAlreadyExists = "A link of this type already exists between these exercises";
     public const string CircularReferenceDetected = "This link would create a circular reference";
     public const string MaximumLinksReached = "Maximum number of links of this type (10) has been reached";

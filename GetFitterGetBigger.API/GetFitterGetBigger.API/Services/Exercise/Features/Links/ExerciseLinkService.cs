@@ -52,7 +52,8 @@ public class ExerciseLinkService(
                 ExerciseLinkErrorMessages.SourceExerciseNotFound)
             .EnsureSourceExerciseIsNotRest(
                 ExerciseLinkErrorMessages.RestExercisesCannotHaveLinks)
-            .EnsureSourceExerciseIsWorkoutType(
+            .EnsureSourceExerciseCanCreateLinkType(
+                linkType,
                 ExerciseLinkErrorMessages.OnlyWorkoutExercisesCanCreateLinks)
             .EnsureTargetExerciseExists(
                 this._queryDataService,
