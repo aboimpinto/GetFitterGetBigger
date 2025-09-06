@@ -1329,7 +1329,6 @@ For Cooldown context:
 
 ## CHECKPOINT: Phase 6 Complete - Exercise Link Type Restrictions
 `[COMPLETE]` - Date: 2025-01-06 13:15
-**Commit**: `b8142c91`
 
 Build Report:
 - Admin Project: ✅ 0 errors, 0 warnings
@@ -1360,6 +1359,7 @@ Code Reviews:
 
 Git Commits:
 - `bdb685d9` - feat(admin): implement Phase 6 - Exercise Link Type Restrictions
+- `b8142c91` - feat(admin): complete Phase 6 - exercise type restrictions and UI improvements (fixed section visibility, side-by-side layout, browser navigation)
 
 Status: ✅ Phase 6 COMPLETE - APPROVED_WITH_NOTES
 
