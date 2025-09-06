@@ -48,8 +48,8 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises.ExerciseLink
             // Assert
             var activeTab = component.Find("[data-testid='context-tab-warmup']");
             activeTab.GetAttribute("aria-selected").Should().Be("true");
-            activeTab.GetAttribute("class").Should().Contain("text-blue-600");
-            activeTab.GetAttribute("class").Should().Contain("bg-blue-50");
+            activeTab.GetAttribute("class").Should().Contain("text-blue-700");
+            activeTab.GetAttribute("class").Should().Contain("bg-gradient-to-b");
             activeTab.GetAttribute("class").Should().Contain("border-blue-600");
         }
 

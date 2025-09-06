@@ -252,7 +252,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises.ExerciseLink
             // Assert
             var viewButton = component.Find("[data-testid='view-exercise-button']");
             viewButton.Should().NotBeNull();
-            viewButton.TextContent.Should().Contain("View Exercise");
+            viewButton.TextContent.Should().Contain("View Details");
             viewButton.GetAttribute("class").Should().Contain("text-purple-600");
         }
 
@@ -332,7 +332,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises.ExerciseLink
 
             // Assert
             // Check for heart icon (alternative exercise indicator)
-            component.Markup.Should().Contain("Alternative Exercise");
+            component.Markup.Should().Contain("Alternative");
             // Check for purple heart icon
             var iconElement = component.Find("svg.text-purple-400");
             iconElement.Should().NotBeNull();

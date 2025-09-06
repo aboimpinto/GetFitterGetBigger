@@ -5,10 +5,14 @@
 <div class="relative" data-testid="four-way-linked-exercises-list">
     @if (StateService.IsSaving)
     {
-        <div class="absolute inset-0 bg-white bg-opacity-75 z-10 flex items-center justify-center rounded-lg" data-testid="reorder-progress-overlay">
-            <div class="text-center">
-                <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mb-2"></div>
-                <p class="text-sm text-gray-600">Updating exercises...</p>
+        <div class="absolute inset-0 bg-white bg-opacity-90 backdrop-blur-sm z-10 flex items-center justify-center rounded-lg transition-all duration-300" data-testid="reorder-progress-overlay">
+            <div class="text-center p-6 bg-white rounded-lg shadow-lg border border-gray-200">
+                <div class="relative mb-4">
+                    <div class="absolute inset-0 rounded-full bg-blue-200 opacity-25 animate-ping"></div>
+                    <div class="relative inline-block animate-spin rounded-full h-10 w-10 border-4 border-blue-600 border-r-transparent"></div>
+                </div>
+                <p class="text-sm font-medium text-gray-700">Updating exercise relationships...</p>
+                <p class="text-xs text-gray-500 mt-1">This may take a moment</p>
             </div>
         </div>
     }
@@ -30,13 +34,13 @@
         if (showWorkout) visibleSections++;
         if (showAlternative) visibleSections++;
         
-        // Use flexbox for more reliable side-by-side layout
-        var containerStyle = "display: flex !important; gap: 1rem !important; width: 100% !important; flex-wrap: wrap !important;";
+        // Enhanced flexbox layout with smooth transitions
+        var containerStyle = "display: flex !important; gap: 1.5rem !important; width: 100% !important; flex-wrap: wrap !important; transition: all 0.3s ease-in-out !important;";
         var itemStyle = visibleSections switch
         {
-            2 => "flex: 1 1 calc(50% - 0.5rem) !important; max-width: calc(50% - 0.5rem) !important;",
-            3 => "flex: 1 1 calc(33.333% - 0.667rem) !important; max-width: calc(33.333% - 0.667rem) !important;",
-            _ => "flex: 1 1 100% !important; max-width: 100% !important;"
+            2 => "flex: 1 1 calc(50% - 0.75rem) !important; max-width: calc(50% - 0.75rem) !important; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;",
+            3 => "flex: 1 1 calc(33.333% - 1rem) !important; max-width: calc(33.333% - 1rem) !important; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;",
+            _ => "flex: 1 1 100% !important; max-width: 100% !important; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;"
         };
         
         // Debug output
@@ -47,8 +51,8 @@
         @* Warmup Exercises Section *@
         @if (showWarmup)
         {
-            <div class="bg-white rounded-lg shadow-sm border border-gray-200 min-h-[300px]" style="@itemStyle" data-testid="warmup-section" role="region" aria-label="Warmup exercises section">
-                <div class="px-3 sm:px-4 py-3 border-b border-gray-200 bg-orange-50">
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 min-h-[300px] hover:shadow-md transition-all duration-200 transform hover:scale-[1.01]" style="@itemStyle" data-testid="warmup-section" role="region" aria-label="Warmup exercises section">
+                <div class="px-3 sm:px-4 py-3 border-b border-gray-200 bg-gradient-to-r from-orange-50 to-orange-100">
                     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                         <div class="flex items-center gap-2">
                             <svg class="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -65,13 +69,13 @@
                         {
                             <button type="button"
                                     @onclick="HandleAddWarmup"
-                                    class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-orange-700 bg-orange-100 rounded-md hover:bg-orange-200 transition-colors"
+                                    class="inline-flex items-center px-4 py-2 text-sm font-medium text-orange-700 bg-orange-100 rounded-lg hover:bg-orange-200 hover:shadow-sm hover:scale-105 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 transition-all duration-200 transform"
                                     data-testid="add-warmup-button"
                                     aria-label="Add warmup exercise">
-                                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
                                 </svg>
-                                Add
+                                Add Warmup
                             </button>
                         }
                     </div>
@@ -117,8 +121,8 @@
         @* Cooldown Exercises Section *@
         @if (showCooldown)
         {
-            <div class="bg-white rounded-lg shadow-sm border border-gray-200 min-h-[300px]" style="@itemStyle" data-testid="cooldown-section" role="region" aria-label="Cooldown exercises section">
-                <div class="px-3 sm:px-4 py-3 border-b border-gray-200 bg-blue-50">
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 min-h-[300px] hover:shadow-md transition-all duration-200 transform hover:scale-[1.01]" style="@itemStyle" data-testid="cooldown-section" role="region" aria-label="Cooldown exercises section">
+                <div class="px-3 sm:px-4 py-3 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-blue-100">
                     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                         <div class="flex items-center gap-2">
                             <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -135,13 +139,13 @@
                         {
                             <button type="button"
                                     @onclick="HandleAddCooldown"
-                                    class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-blue-700 bg-blue-100 rounded-md hover:bg-blue-200 transition-colors"
+                                    class="inline-flex items-center px-4 py-2 text-sm font-medium text-blue-700 bg-blue-100 rounded-lg hover:bg-blue-200 hover:shadow-sm hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200 transform"
                                     data-testid="add-cooldown-button"
                                     aria-label="Add cooldown exercise">
-                                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
                                 </svg>
-                                Add
+                                Add Cooldown
                             </button>
                         }
                     </div>
@@ -187,8 +191,8 @@
         @* Workout Exercises Section *@
         @if (showWorkout)
         {
-            <div class="bg-white rounded-lg shadow-sm border border-gray-200 min-h-[300px]" style="@itemStyle" data-testid="workout-section" role="region" aria-label="Workout exercises section">
-                <div class="px-3 sm:px-4 py-3 border-b border-gray-200 bg-green-50">
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 min-h-[300px] hover:shadow-md transition-all duration-200 transform hover:scale-[1.01]" style="@itemStyle" data-testid="workout-section" role="region" aria-label="Workout exercises section">
+                <div class="px-3 sm:px-4 py-3 border-b border-gray-200 bg-gradient-to-r from-green-50 to-green-100">
                     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                         <div class="flex items-center gap-2">
                             <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -205,13 +209,13 @@
                         {
                             <button type="button"
                                     @onclick="HandleAddWorkout"
-                                    class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-green-700 bg-green-100 rounded-md hover:bg-green-200 transition-colors"
+                                    class="inline-flex items-center px-4 py-2 text-sm font-medium text-green-700 bg-green-100 rounded-lg hover:bg-green-200 hover:shadow-sm hover:scale-105 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-all duration-200 transform"
                                     data-testid="add-workout-button"
                                     aria-label="Add workout exercise">
-                                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
                                 </svg>
-                                Add
+                                Add Workout
                             </button>
                         }
                     </div>
@@ -244,8 +248,8 @@
         @* Alternative Exercises Section - Always visible *@
         @if (showAlternative)
         {
-            <div class="bg-white rounded-lg shadow-sm border border-gray-200 min-h-[300px]" style="@itemStyle" data-testid="alternative-section" role="region" aria-label="Alternative exercises section">
-                <div class="px-3 sm:px-4 py-3 border-b border-gray-200 bg-purple-50">
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 min-h-[300px] hover:shadow-md transition-all duration-200 transform hover:scale-[1.01]" style="@itemStyle" data-testid="alternative-section" role="region" aria-label="Alternative exercises section">
+                <div class="px-3 sm:px-4 py-3 border-b border-gray-200 bg-gradient-to-r from-purple-50 to-purple-100">
                     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                         <div class="flex items-center gap-2">
                             <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -262,13 +266,13 @@
                         {
                             <button type="button"
                                     @onclick="HandleAddAlternative"
-                                    class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-purple-700 bg-purple-100 rounded-md hover:bg-purple-200 transition-colors"
+                                    class="inline-flex items-center px-4 py-2 text-sm font-medium text-purple-700 bg-purple-100 rounded-lg hover:bg-purple-200 hover:shadow-sm hover:scale-105 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 transition-all duration-200 transform"
                                     data-testid="add-alternative-button"
                                     aria-label="Add alternative exercise">
-                                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
                                 </svg>
-                                Add
+                                Add Alternative
                             </button>
                         }
                     </div>
