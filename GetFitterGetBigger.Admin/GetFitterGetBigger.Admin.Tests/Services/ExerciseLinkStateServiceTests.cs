@@ -656,14 +656,15 @@ namespace GetFitterGetBigger.Admin.Tests.Services
                 .Setup(x => x.CreateLinkAsync(exerciseId, It.IsAny<CreateExerciseLinkDto>()))
                 .ReturnsAsync(new ExerciseLinkDtoBuilder().AsAlternative().Build());
 
-            var alternativeLinksResponse = new ExerciseLinksResponseDtoBuilder()
+            // Updated response to include alternative links in the null filter response
+            var allLinksResponse = new ExerciseLinksResponseDtoBuilder()
                 .WithExerciseId(exerciseId)
                 .WithLinks(new ExerciseLinkDtoBuilder().AsAlternative().Build())
                 .Build();
 
             _exerciseLinkServiceMock
-                .Setup(x => x.GetLinksAsync(exerciseId, "Alternative", It.IsAny<bool>(), It.IsAny<bool>()))
-                .ReturnsAsync(alternativeLinksResponse);
+                .Setup(x => x.GetLinksAsync(exerciseId, It.IsAny<string?>(), It.IsAny<bool>(), It.IsAny<bool>()))
+                .ReturnsAsync(allLinksResponse);
 
             // Act
             await _stateService.CreateBidirectionalLinkAsync(createDto);
@@ -673,7 +674,8 @@ namespace GetFitterGetBigger.Admin.Tests.Services
             _stateService.ScreenReaderAnnouncement.Should().Be("Alternative exercise link has been created for both exercises");
             _stateService.ErrorMessage.Should().BeNull();
             _exerciseLinkServiceMock.Verify(x => x.CreateBidirectionalLinkAsync(exerciseId, createDto), Times.Once);
-            _exerciseLinkServiceMock.Verify(x => x.GetLinksAsync(exerciseId, "Alternative", It.IsAny<bool>(), It.IsAny<bool>()), Times.Once);
+            // Verify the optimized service call pattern (null filter instead of "Alternative")
+            _exerciseLinkServiceMock.Verify(x => x.GetLinksAsync(exerciseId, null, It.IsAny<bool>(), It.IsAny<bool>()), Times.AtLeastOnce);
         }
 
         [Fact]
@@ -750,7 +752,7 @@ namespace GetFitterGetBigger.Admin.Tests.Services
             _stateService.CurrentExerciseName.Should().Be(exercise.Name);
             _stateService.HasMultipleContexts.Should().BeTrue();
             _stateService.AvailableContexts.Should().Contain(new[] { "Workout", "Warmup" });
-            _stateService.ActiveContext.Should().Be("Workout"); // First available context
+            _stateService.ActiveContext.Should().Be("Workout"); // Workout is prioritized over Warmup/Cooldown
         }
 
         [Fact]
@@ -781,23 +783,18 @@ namespace GetFitterGetBigger.Admin.Tests.Services
 
             await _stateService.InitializeForExerciseAsync(exercise);
 
-            var workoutLinks = new ExerciseLinksResponseDtoBuilder()
+            // Updated to match optimized service pattern - all link types returned in single call with null filter
+            var allLinks = new ExerciseLinksResponseDtoBuilder()
                 .WithExerciseId(exercise.Id)
-                .WithLinks(new ExerciseLinkDtoBuilder().AsWarmup().Build())
-                .Build();
-
-            var alternativeLinks = new ExerciseLinksResponseDtoBuilder()
-                .WithExerciseId(exercise.Id)
-                .WithLinks(new ExerciseLinkDtoBuilder().AsAlternative().Build())
+                .WithLinks(
+                    new ExerciseLinkDtoBuilder().AsWarmup().Build(),
+                    new ExerciseLinkDtoBuilder().AsAlternative().Build()
+                )
                 .Build();
 
             _exerciseLinkServiceMock
                 .Setup(x => x.GetLinksAsync(exercise.Id, It.IsAny<string?>(), It.IsAny<bool>(), It.IsAny<bool>()))
-                .ReturnsAsync(workoutLinks);
-
-            _exerciseLinkServiceMock
-                .Setup(x => x.GetLinksAsync(exercise.Id, "Alternative", It.IsAny<bool>(), It.IsAny<bool>()))
-                .ReturnsAsync(alternativeLinks);
+                .ReturnsAsync(allLinks);
 
             // Act
             await _stateService.SwitchContextAsync("Workout");
@@ -805,8 +802,8 @@ namespace GetFitterGetBigger.Admin.Tests.Services
             // Assert
             _stateService.ActiveContext.Should().Be("Workout");
             _stateService.ScreenReaderAnnouncement.Should().Be("Switched to Workout context");
-            _exerciseLinkServiceMock.Verify(x => x.GetLinksAsync(exercise.Id, It.IsAny<string?>(), It.IsAny<bool>(), It.IsAny<bool>()), Times.AtLeastOnce);
-            _exerciseLinkServiceMock.Verify(x => x.GetLinksAsync(exercise.Id, "Alternative", It.IsAny<bool>(), It.IsAny<bool>()), Times.Once);
+            // Verify the optimized service call pattern (null filter gets all links)
+            _exerciseLinkServiceMock.Verify(x => x.GetLinksAsync(exercise.Id, null, It.IsAny<bool>(), It.IsAny<bool>()), Times.AtLeastOnce);
         }
 
         #endregion

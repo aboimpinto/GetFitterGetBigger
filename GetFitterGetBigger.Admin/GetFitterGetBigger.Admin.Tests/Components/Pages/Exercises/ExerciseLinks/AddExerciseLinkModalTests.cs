@@ -43,9 +43,9 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises.ExerciseLink
                 .Add(p => p.ExistingLinks, new List<ExerciseLinkDto>())
                 .Add(p => p.ExerciseTypes, _exerciseTypes));
 
-            // Assert
-            var modal = component.Find("[data-testid='add-link-modal']");
-            modal.GetAttribute("class").Should().Contain("hidden");
+            // Assert - Modal is not rendered at all when closed (not just hidden)
+            var modalElements = component.FindAll("[data-testid='add-link-modal']");
+            modalElements.Should().BeEmpty("Modal should not be rendered when IsOpen is false");
         }
 
         [Fact]

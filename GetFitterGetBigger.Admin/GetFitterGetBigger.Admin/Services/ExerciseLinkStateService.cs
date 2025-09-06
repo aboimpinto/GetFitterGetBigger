@@ -65,10 +65,10 @@ namespace GetFitterGetBigger.Admin.Services
                 var contexts = new List<string>();
                 var types = _currentExercise.ExerciseTypes.Select(t => t.Value).ToList();
 
-                // Prioritize more specific contexts (Warmup/Cooldown) over general (Workout)
+                // Prioritize Workout as the primary context, then supplementary contexts
+                if (types.Contains("Workout")) contexts.Add("Workout");
                 if (types.Contains("Warmup")) contexts.Add("Warmup");
                 if (types.Contains("Cooldown")) contexts.Add("Cooldown");
-                if (types.Contains("Workout")) contexts.Add("Workout");
 
                 return contexts.Any() ? contexts : new List<string> { "Workout" };
             }

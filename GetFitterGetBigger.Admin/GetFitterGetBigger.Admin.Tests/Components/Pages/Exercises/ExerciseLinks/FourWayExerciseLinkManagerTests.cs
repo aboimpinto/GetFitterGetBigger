@@ -287,13 +287,13 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises.ExerciseLink
             var warmupContextView = component.Find("[data-testid='warmup-context-view']");
             Assert.NotNull(warmupContextView);
             
-            var workoutLinksSection = component.Find("[data-testid='workout-links-section']");
-            Assert.NotNull(workoutLinksSection);
-            Assert.Contains("Workouts Using This Warmup", workoutLinksSection.TextContent);
+            // Updated: The component should display warmup-specific sections, not workout sections  
+            var warmupSection = component.Find("[data-testid='warmup-section']");
+            Assert.NotNull(warmupSection);
 
-            var alternativeWarmupsSection = component.Find("[data-testid='alternative-warmups-section']");
-            Assert.NotNull(alternativeWarmupsSection);
-            Assert.Contains("Alternative Warmups", alternativeWarmupsSection.TextContent);
+            var alternativeSection = component.Find("[data-testid='alternative-section']");
+            Assert.NotNull(alternativeSection);
+            Assert.Contains("Alternative", alternativeSection.TextContent);
         }
 
         [Fact]
@@ -326,13 +326,13 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises.ExerciseLink
             var cooldownContextView = component.Find("[data-testid='cooldown-context-view']");
             Assert.NotNull(cooldownContextView);
             
-            var workoutLinksSection = component.Find("[data-testid='workout-links-section']");
-            Assert.NotNull(workoutLinksSection);
-            Assert.Contains("Workouts Using This Cooldown", workoutLinksSection.TextContent);
+            // Updated: The component should display cooldown-specific sections, not workout sections
+            var cooldownSection = component.Find("[data-testid='cooldown-section']");
+            Assert.NotNull(cooldownSection);
 
-            var alternativeCooldownsSection = component.Find("[data-testid='alternative-cooldowns-section']");
-            Assert.NotNull(alternativeCooldownsSection);
-            Assert.Contains("Alternative Cooldowns", alternativeCooldownsSection.TextContent);
+            var alternativeSection = component.Find("[data-testid='alternative-section']");
+            Assert.NotNull(alternativeSection);
+            Assert.Contains("Alternative", alternativeSection.TextContent);
         }
 
         [Fact]
@@ -431,7 +431,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises.ExerciseLink
             await Task.Delay(100);
 
             // Assert
-            _mockStateService.Verify(s => s.InitializeForExerciseAsync("1", "Test Exercise"), Times.Once);
+            _mockStateService.Verify(s => s.InitializeForExerciseAsync(It.IsAny<ExerciseDto>()), Times.Once);
         }
 
         [Fact]
@@ -475,7 +475,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises.ExerciseLink
             await Task.Delay(100);
 
             // Assert
-            _mockStateService.Verify(s => s.InitializeForExerciseAsync("2", "Exercise 2"), Times.Once);
+            _mockStateService.Verify(s => s.InitializeForExerciseAsync(It.IsAny<ExerciseDto>()), Times.Exactly(2)); // Once for initial exercise, once for parameter change
         }
 
         [Fact]

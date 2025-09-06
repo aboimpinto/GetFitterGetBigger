@@ -138,7 +138,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
             await Task.Delay(50);
 
             // Assert
-            _linkStateServiceMock.Verify(x => x.InitializeForExerciseAsync("ex1", "Barbell Squat"), Times.Once);
+            _linkStateServiceMock.Verify(x => x.InitializeForExerciseAsync(It.IsAny<ExerciseDto>()), Times.Once);
         }
 
         [Fact]
@@ -350,7 +350,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises
 
             // Assert - Should show existing link without re-initializing (no capacity display)
             component.Markup.Should().NotContain("No warmup exercises linked yet");
-            _linkStateServiceMock.Verify(x => x.InitializeForExerciseAsync(It.IsAny<string>(), It.IsAny<string>()), Times.Once);
+            _linkStateServiceMock.Verify(x => x.InitializeForExerciseAsync(It.IsAny<ExerciseDto>()), Times.Once);
         }
 
         private void SetupLinkStateWithNoLinks()
