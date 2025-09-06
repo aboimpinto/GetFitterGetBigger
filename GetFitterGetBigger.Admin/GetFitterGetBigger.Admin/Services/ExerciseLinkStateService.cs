@@ -12,7 +12,6 @@ namespace GetFitterGetBigger.Admin.Services
     public class ExerciseLinkStateService : IExerciseLinkStateService
     {
         private readonly IExerciseLinkService _exerciseLinkService;
-        private const int MaxLinksPerType = 10;
 
         public event Action? OnChange;
 
@@ -77,8 +76,10 @@ namespace GetFitterGetBigger.Admin.Services
         // Additional link collections
         private List<ExerciseLinkDto> _alternativeLinks = new();
         private List<ExerciseLinkDto> _workoutLinks = new();
+#pragma warning disable CS0414 // Field is assigned but its value is never used - intended for future UI loading states
         private bool _isLoadingAlternatives;
         private bool _isLoadingWorkoutLinks;
+#pragma warning restore CS0414
 
         // Computed properties
         public IEnumerable<ExerciseLinkDto> WarmupLinks =>
@@ -89,8 +90,8 @@ namespace GetFitterGetBigger.Admin.Services
 
         public int WarmupLinkCount => WarmupLinks.Count();
         public int CooldownLinkCount => CooldownLinks.Count();
-        public bool HasMaxWarmupLinks => WarmupLinkCount >= MaxLinksPerType;
-        public bool HasMaxCooldownLinks => CooldownLinkCount >= MaxLinksPerType;
+        public bool HasMaxWarmupLinks => false; // No limits on links
+        public bool HasMaxCooldownLinks => false; // No limits on links
 
         public IEnumerable<ExerciseLinkDto> AlternativeLinks => _alternativeLinks;
         public int AlternativeLinkCount => _alternativeLinks.Count;
@@ -236,7 +237,8 @@ namespace GetFitterGetBigger.Admin.Services
                 var alternativeLinks = await _exerciseLinkService.GetLinksAsync(
                     CurrentExerciseId, 
                     "Alternative", 
-                    IncludeExerciseDetails);
+                    IncludeExerciseDetails,
+                    includeReverse: true); // Include reverse alternative links
                     
                 _alternativeLinks.Clear();
                 if (alternativeLinks?.Links != null)
@@ -256,11 +258,11 @@ namespace GetFitterGetBigger.Admin.Services
             }
         }
 
-        public Task LoadWorkoutLinksAsync()
+        public async Task LoadWorkoutLinksAsync()
         {
             if (string.IsNullOrEmpty(CurrentExerciseId))
             {
-                return Task.CompletedTask;
+                return;
             }
 
             try
@@ -269,15 +271,24 @@ namespace GetFitterGetBigger.Admin.Services
                 NotifyStateChanged();
 
                 // Load reverse relationships - workouts using this exercise as warmup/cooldown
-                // This would require a new API endpoint to get reverse relationships
-                // For now, we'll simulate this with an empty list
+                // Use the new includeReverse parameter to get reverse relationships
                 _workoutLinks.Clear();
-                // TODO: Implement reverse relationship loading when API supports it
-                // var workoutLinks = await _exerciseLinkService.GetReverseLinksAsync(CurrentExerciseId, IncludeExerciseDetails);
-                // if (workoutLinks?.Links != null)
-                // {
-                //     _workoutLinks.AddRange(workoutLinks.Links);
-                // }
+                
+                // For warmup context, get workouts that use this exercise as warmup
+                // For cooldown context, get workouts that use this exercise as cooldown
+                var linkTypeForReverse = _activeContext == "Warmup" ? "Warmup" : "Cooldown";
+                var workoutLinks = await _exerciseLinkService.GetLinksAsync(
+                    CurrentExerciseId, 
+                    linkTypeForReverse, 
+                    IncludeExerciseDetails,
+                    includeReverse: true);
+                    
+                if (workoutLinks?.Links != null)
+                {
+                    // Add only the reverse relationships (where this exercise is the target)
+                    var reverseLinks = workoutLinks.Links.Where(l => l.TargetExerciseId == CurrentExerciseId);
+                    _workoutLinks.AddRange(reverseLinks);
+                }
             }
             catch (Exception)
             {
@@ -289,8 +300,6 @@ namespace GetFitterGetBigger.Admin.Services
                 _isLoadingWorkoutLinks = false;
                 NotifyStateChanged();
             }
-
-            return Task.CompletedTask;
         }
 
         public async Task CreateLinkAsync(CreateExerciseLinkDto createDto)
@@ -307,26 +316,7 @@ namespace GetFitterGetBigger.Admin.Services
                 return;
             }
 
-            // Check max links before attempting to create (only for warmup/cooldown)
-            Console.WriteLine($"[ExerciseLinkStateService] Checking max links - WarmupLinkCount: {WarmupLinkCount}, CooldownLinkCount: {CooldownLinkCount}, MaxLinksPerType: {MaxLinksPerType}");
-
-            if (createDto.LinkType == "Warmup" && HasMaxWarmupLinks)
-            {
-                Console.WriteLine($"[ExerciseLinkStateService] Error: Maximum warmup links reached");
-                ErrorMessage = $"Maximum {MaxLinksPerType} warmup links allowed";
-                NotifyStateChanged();
-                return;
-            }
-
-            if (createDto.LinkType == "Cooldown" && HasMaxCooldownLinks)
-            {
-                Console.WriteLine($"[ExerciseLinkStateService] Error: Maximum cooldown links reached");
-                ErrorMessage = $"Maximum {MaxLinksPerType} cooldown links allowed";
-                NotifyStateChanged();
-                return;
-            }
-
-            // Note: Alternative links have no maximum limit
+            // No limits on the number of links - removed check
 
             try
             {
@@ -460,8 +450,8 @@ namespace GetFitterGetBigger.Admin.Services
                 _alternativeLinks.Add(forwardLink);
                 NotifyStateChanged();
 
-                // API call - assuming it creates both directions
-                await _exerciseLinkService.CreateLinkAsync(CurrentExerciseId, createDto);
+                // API call - use bidirectional method to create both directions
+                await _exerciseLinkService.CreateBidirectionalLinkAsync(CurrentExerciseId, createDto);
 
                 // Reload to get actual server state
                 await LoadAlternativeLinksAsync();
@@ -605,8 +595,8 @@ namespace GetFitterGetBigger.Admin.Services
                     NotifyStateChanged();
                 }
 
-                // API call - assuming it deletes both directions
-                await _exerciseLinkService.DeleteLinkAsync(CurrentExerciseId, linkId);
+                // API call - use bidirectional method to delete both directions
+                await _exerciseLinkService.DeleteBidirectionalLinkAsync(CurrentExerciseId, linkId, true);
 
                 // Reload to get the actual server state
                 await LoadAlternativeLinksAsync();

@@ -5,7 +5,6 @@ namespace GetFitterGetBigger.Admin.Services;
 public class ExerciseLinkValidationService : IExerciseLinkValidationService
 {
     private readonly IExerciseLinkService _exerciseLinkService;
-    private const int MaxLinksPerType = 10;
 
     public ExerciseLinkValidationService(IExerciseLinkService exerciseLinkService)
     {
@@ -134,25 +133,6 @@ public class ExerciseLinkValidationService : IExerciseLinkValidationService
         }
     }
 
-    public ValidationResult ValidateMaximumLinks(int currentLinkCount, ExerciseLinkType linkType)
-    {
-        // Alternative exercises have no maximum limit
-        if (linkType == ExerciseLinkType.Alternative)
-        {
-            return ValidationResult.Success();
-        }
-
-        if (currentLinkCount >= MaxLinksPerType)
-        {
-            var linkTypeText = linkType == ExerciseLinkType.Warmup ? "warmup" : "cooldown";
-            return ValidationResult.Failure(
-                $"Maximum number of {linkTypeText} links ({MaxLinksPerType}) has been reached",
-                "MAX_LINKS_REACHED"
-            );
-        }
-
-        return ValidationResult.Success();
-    }
 
     public ValidationResult ValidateDuplicateLink(IEnumerable<ExerciseLinkDto> existingLinks, string targetExerciseId, ExerciseLinkType linkType)
     {
@@ -220,13 +200,6 @@ public class ExerciseLinkValidationService : IExerciseLinkValidationService
             }
         }
 
-        // Validate maximum links
-        var linksOfType = existingLinks?.Count(link => link.LinkType == linkType.ToString() && link.IsActive) ?? 0;
-        var maxResult = ValidateMaximumLinks(linksOfType, linkType);
-        if (!maxResult.IsValid)
-        {
-            return maxResult;
-        }
 
         // Validate duplicate link
         var duplicateResult = ValidateDuplicateLink(existingLinks ?? Enumerable.Empty<ExerciseLinkDto>(), targetExerciseId, linkType);

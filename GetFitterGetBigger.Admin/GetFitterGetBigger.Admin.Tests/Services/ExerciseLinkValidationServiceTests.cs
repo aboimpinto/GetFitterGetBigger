@@ -40,8 +40,8 @@ public class ExerciseLinkValidationServiceTests
             Name = "Test Exercise",
             ExerciseTypes = new List<ExerciseTypeDto>
             {
-                new() { Id = "type-1", Value = "Warmup" },
-                new() { Id = "type-2", Value = "Cooldown" }
+                new() { Id = "type-1", Value = "Strength" },
+                new() { Id = "type-2", Value = "Cardio" }
             }
         };
 
@@ -50,8 +50,8 @@ public class ExerciseLinkValidationServiceTests
 
         // Assert
         Assert.False(result.IsValid);
-        Assert.Contains("Only exercises of type 'Workout' can have links", result.ErrorMessage);
-        Assert.Contains("Warmup, Cooldown", result.ErrorMessage);
+        Assert.Contains("Only exercises of type 'Workout', 'Warmup', or 'Cooldown' can have links", result.ErrorMessage);
+        Assert.Contains("Strength, Cardio", result.ErrorMessage);
         Assert.Equal("INVALID_EXERCISE_TYPE", result.ErrorCode);
     }
 
@@ -152,7 +152,7 @@ public class ExerciseLinkValidationServiceTests
             }
         };
 
-        _mockLinkService.Setup(x => x.GetLinksAsync("exercise-2", null, false))
+        _mockLinkService.Setup(x => x.GetLinksAsync("exercise-2", It.IsAny<string?>(), It.IsAny<bool>(), It.IsAny<bool>()))
             .ReturnsAsync(targetLinks);
 
         // Act
@@ -176,7 +176,7 @@ public class ExerciseLinkValidationServiceTests
             }
         };
 
-        _mockLinkService.Setup(x => x.GetLinksAsync("exercise-2", null, false))
+        _mockLinkService.Setup(x => x.GetLinksAsync("exercise-2", It.IsAny<string?>(), It.IsAny<bool>(), It.IsAny<bool>()))
             .ReturnsAsync(targetLinks);
 
         // Act
@@ -190,7 +190,7 @@ public class ExerciseLinkValidationServiceTests
     public async Task ValidateCircularReference_ReturnsSuccess_WhenApiCallFails()
     {
         // Arrange
-        _mockLinkService.Setup(x => x.GetLinksAsync("exercise-2", null, false))
+        _mockLinkService.Setup(x => x.GetLinksAsync("exercise-2", It.IsAny<string?>(), It.IsAny<bool>(), It.IsAny<bool>()))
             .ThrowsAsync(new Exception("API Error"));
 
         // Act
@@ -202,53 +202,6 @@ public class ExerciseLinkValidationServiceTests
 
     #endregion
 
-    #region ValidateMaximumLinks Tests
-
-    [Fact]
-    public void ValidateMaximumLinks_ReturnsFailure_WhenAtMaximumWarmupLinks()
-    {
-        // Act
-        var result = _validationService.ValidateMaximumLinks(10, ExerciseLinkType.Warmup);
-
-        // Assert
-        Assert.False(result.IsValid);
-        Assert.Equal("Maximum number of warmup links (10) has been reached", result.ErrorMessage);
-        Assert.Equal("MAX_LINKS_REACHED", result.ErrorCode);
-    }
-
-    [Fact]
-    public void ValidateMaximumLinks_ReturnsFailure_WhenAtMaximumCooldownLinks()
-    {
-        // Act
-        var result = _validationService.ValidateMaximumLinks(10, ExerciseLinkType.Cooldown);
-
-        // Assert
-        Assert.False(result.IsValid);
-        Assert.Equal("Maximum number of cooldown links (10) has been reached", result.ErrorMessage);
-        Assert.Equal("MAX_LINKS_REACHED", result.ErrorCode);
-    }
-
-    [Fact]
-    public void ValidateMaximumLinks_ReturnsSuccess_WhenBelowMaximum()
-    {
-        // Act
-        var result = _validationService.ValidateMaximumLinks(9, ExerciseLinkType.Warmup);
-
-        // Assert
-        Assert.True(result.IsValid);
-    }
-
-    [Fact]
-    public void ValidateMaximumLinks_ReturnsFailure_WhenAboveMaximum()
-    {
-        // Act
-        var result = _validationService.ValidateMaximumLinks(11, ExerciseLinkType.Warmup);
-
-        // Assert
-        Assert.False(result.IsValid);
-    }
-
-    #endregion
 
     #region ValidateDuplicateLink Tests
 
@@ -342,7 +295,7 @@ public class ExerciseLinkValidationServiceTests
         var exercise = new ExerciseDto
         {
             Id = "exercise-1",
-            ExerciseTypes = new List<ExerciseTypeDto> { new() { Value = "Cooldown" } }
+            ExerciseTypes = new List<ExerciseTypeDto> { new() { Value = "Strength" } }
         };
 
         // Act
@@ -353,30 +306,6 @@ public class ExerciseLinkValidationServiceTests
         Assert.Equal("INVALID_EXERCISE_TYPE", result.ErrorCode);
     }
 
-    [Fact]
-    public async Task ValidateCreateLink_ReturnsFailure_WhenMaxLinksReached()
-    {
-        // Arrange
-        var exercise = new ExerciseDto
-        {
-            Id = "exercise-1",
-            ExerciseTypes = new List<ExerciseTypeDto> { new() { Value = "Workout" } }
-        };
-
-        var existingLinks = Enumerable.Range(1, 10).Select(i => new ExerciseLinkDto
-        {
-            TargetExerciseId = $"exercise-{i}",
-            LinkType = "Warmup",
-            IsActive = true
-        }).ToList();
-
-        // Act
-        var result = await _validationService.ValidateCreateLink(exercise, "exercise-11", ExerciseLinkType.Warmup, existingLinks);
-
-        // Assert
-        Assert.False(result.IsValid);
-        Assert.Equal("MAX_LINKS_REACHED", result.ErrorCode);
-    }
 
     [Fact]
     public async Task ValidateCreateLink_ReturnsFailure_WhenDuplicateExists()
@@ -419,7 +348,7 @@ public class ExerciseLinkValidationServiceTests
             }
         };
 
-        _mockLinkService.Setup(x => x.GetLinksAsync("exercise-2", null, false))
+        _mockLinkService.Setup(x => x.GetLinksAsync("exercise-2", It.IsAny<string?>(), It.IsAny<bool>(), It.IsAny<bool>()))
             .ReturnsAsync(targetLinks);
 
         // Act
@@ -453,7 +382,7 @@ public class ExerciseLinkValidationServiceTests
             }
         };
 
-        _mockLinkService.Setup(x => x.GetLinksAsync("exercise-2", null, false))
+        _mockLinkService.Setup(x => x.GetLinksAsync("exercise-2", It.IsAny<string?>(), It.IsAny<bool>(), It.IsAny<bool>()))
             .ReturnsAsync(targetLinks);
 
         // Act

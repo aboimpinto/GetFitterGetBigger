@@ -63,5 +63,22 @@ namespace GetFitterGetBigger.Admin.Tests.Helpers
                 throw new InvalidOperationException($"Expected no requests but found {_requests.Count}");
             }
         }
+
+        public void VerifyCallCount(int expectedCount)
+        {
+            if (_requests.Count != expectedCount)
+            {
+                throw new InvalidOperationException($"Expected {expectedCount} requests but found {_requests.Count}");
+            }
+        }
+
+        public MockHttpMessageHandler SetupSequentialResponses(params HttpResponseMessage[] responses)
+        {
+            foreach (var response in responses)
+            {
+                _responses.Enqueue(response);
+            }
+            return this;
+        }
     }
 }

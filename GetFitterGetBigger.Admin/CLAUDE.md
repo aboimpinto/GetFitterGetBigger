@@ -95,3 +95,10 @@ When creating new AI agents for the project:
 - **IMPORTANT**: Always read the official Claude Code sub-agents documentation first: https://docs.anthropic.com/en/docs/claude-code/sub-agents
 - Follow the documented patterns and best practices for agent creation
 - Ensure agents are properly configured with appropriate tools and responsibilities
+
+## Creating Slash Commands
+
+When creating new slash commands for the project:
+- **IMPORTANT**: Always read the official Claude Code slash commands documentation first: https://docs.anthropic.com/en/docs/claude-code/slash-commands
+- Follow the documented patterns and best practices for slash command creation
+- Ensure commands are properly configured with clear descriptions and appropriate functionality

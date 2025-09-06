@@ -19,10 +19,6 @@ public interface IExerciseLinkValidationService
     /// </summary>
     Task<ValidationResult> ValidateCircularReference(string sourceExerciseId, string targetExerciseId, ExerciseLinkType linkType);
 
-    /// <summary>
-    /// Validates if the maximum number of links has been reached
-    /// </summary>
-    ValidationResult ValidateMaximumLinks(int currentLinkCount, ExerciseLinkType linkType);
 
     /// <summary>
     /// Validates if a link already exists between the exercises

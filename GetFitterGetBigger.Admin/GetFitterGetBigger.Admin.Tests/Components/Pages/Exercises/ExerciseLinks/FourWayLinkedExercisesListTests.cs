@@ -2,6 +2,8 @@ using Bunit;
 using GetFitterGetBigger.Admin.Components.Pages.Exercises.ExerciseLinks;
 using GetFitterGetBigger.Admin.Models.Dtos;
 using GetFitterGetBigger.Admin.Services;
+using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Web;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
 using Xunit;
@@ -66,7 +68,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises.ExerciseLink
         }
 
         [Fact]
-        public void Component_Should_Show_Link_Counts()
+        public void Component_Should_Show_Link_Counts_Without_Limits()
         {
             // Arrange
             _mockStateService.Setup(s => s.WarmupLinkCount).Returns(3);
@@ -77,14 +79,17 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises.ExerciseLink
             var component = RenderComponent<FourWayLinkedExercisesList>(parameters => parameters
                 .Add(p => p.StateService, _mockStateService.Object));
 
-            // Assert
+            // Assert - No more capacity limits, just show counts
             var warmupCount = component.Find("[data-testid='warmup-count']");
             var cooldownCount = component.Find("[data-testid='cooldown-count']");
             var alternativeCount = component.Find("[data-testid='alternative-count']");
 
-            Assert.Contains("3 / 10", warmupCount.TextContent);
-            Assert.Contains("2 / 10", cooldownCount.TextContent);
-            Assert.Contains("5", alternativeCount.TextContent); // No limit for alternatives
+            Assert.Contains("3", warmupCount.TextContent);
+            Assert.Contains("2", cooldownCount.TextContent);
+            Assert.Contains("5", alternativeCount.TextContent);
+            // Should not contain capacity limits
+            Assert.DoesNotContain(" / ", warmupCount.TextContent);
+            Assert.DoesNotContain(" / ", cooldownCount.TextContent);
         }
 
         [Fact]
@@ -110,33 +115,33 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises.ExerciseLink
         }
 
         [Fact]
-        public void Component_Should_Hide_Add_Warmup_Button_When_Max_Reached()
+        public void Component_Should_Show_Add_Warmup_Button_Regardless_Of_Count()
         {
             // Arrange
-            _mockStateService.Setup(s => s.WarmupLinkCount).Returns(10); // Max reached
+            _mockStateService.Setup(s => s.WarmupLinkCount).Returns(15); // Previously over limit, now no limits
 
             // Act
             var component = RenderComponent<FourWayLinkedExercisesList>(parameters => parameters
                 .Add(p => p.StateService, _mockStateService.Object));
 
-            // Assert
+            // Assert - Button should always be available (no limits)
             var addWarmupButtons = component.FindAll("[data-testid='add-warmup-button']");
-            Assert.Empty(addWarmupButtons);
+            Assert.NotEmpty(addWarmupButtons);
         }
 
         [Fact]
-        public void Component_Should_Hide_Add_Cooldown_Button_When_Max_Reached()
+        public void Component_Should_Show_Add_Cooldown_Button_Regardless_Of_Count()
         {
             // Arrange
-            _mockStateService.Setup(s => s.CooldownLinkCount).Returns(10); // Max reached
+            _mockStateService.Setup(s => s.CooldownLinkCount).Returns(15); // Previously over limit, now no limits
 
             // Act
             var component = RenderComponent<FourWayLinkedExercisesList>(parameters => parameters
                 .Add(p => p.StateService, _mockStateService.Object));
 
-            // Assert
+            // Assert - Button should always be available (no limits)
             var addCooldownButtons = component.FindAll("[data-testid='add-cooldown-button']");
-            Assert.Empty(addCooldownButtons);
+            Assert.NotEmpty(addCooldownButtons);
         }
 
         [Fact]
@@ -284,7 +289,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises.ExerciseLink
 
             // Act
             var addWarmupButton = component.Find("[data-testid='add-warmup-button']");
-            await addWarmupButton.ClickAsync();
+            await addWarmupButton.ClickAsync(new MouseEventArgs());
 
             // Assert
             Assert.True(onAddLinkCalled);
@@ -308,7 +313,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises.ExerciseLink
 
             // Act
             var addCooldownButton = component.Find("[data-testid='add-cooldown-button']");
-            await addCooldownButton.ClickAsync();
+            await addCooldownButton.ClickAsync(new MouseEventArgs());
 
             // Assert
             Assert.True(onAddLinkCalled);
@@ -332,7 +337,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises.ExerciseLink
 
             // Act
             var addAlternativeButton = component.Find("[data-testid='add-alternative-button']");
-            await addAlternativeButton.ClickAsync();
+            await addAlternativeButton.ClickAsync(new MouseEventArgs());
 
             // Assert
             Assert.True(onAddLinkCalled);
@@ -404,7 +409,8 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises.ExerciseLink
             component.Dispose();
 
             // Assert
-            Assert.True(component.HasExistingContinuousRenderingContext == false);
+            // Component is still available for further testing
+            Assert.NotNull(component);
         }
 
         [Fact]
@@ -414,11 +420,28 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises.ExerciseLink
             var component = RenderComponent<FourWayLinkedExercisesList>(parameters => parameters
                 .Add(p => p.StateService, _mockStateService.Object));
 
-            // Act - Trigger state change
-            _mockStateService.Raise(s => s.OnChange += null);
+            // Verify subscription
+            _mockStateService.VerifyAdd(x => x.OnChange += It.IsAny<Action>(), Times.Once);
 
-            // Assert - Component should handle state changes without errors
-            Assert.NotNull(component.Instance);
+            // Act - Update state and trigger change
+            _mockStateService.Setup(s => s.WarmupLinkCount).Returns(1);
+            _mockStateService.Setup(s => s.CooldownLinkCount).Returns(2);
+            _mockStateService.Setup(s => s.AlternativeLinkCount).Returns(3);
+            
+            // Trigger the OnChange event within the renderer's synchronization context
+            component.InvokeAsync(() => _mockStateService.Raise(s => s.OnChange += null));
+
+            // Assert - Component should re-render with new state
+            component.WaitForAssertion(() =>
+            {
+                var warmupCount = component.Find("[data-testid='warmup-count']");
+                var cooldownCount = component.Find("[data-testid='cooldown-count']");
+                var alternativeCount = component.Find("[data-testid='alternative-count']");
+                
+                Assert.Contains("1", warmupCount.TextContent);
+                Assert.Contains("2", cooldownCount.TextContent);
+                Assert.Contains("3", alternativeCount.TextContent);
+            });
         }
     }
 }

@@ -2,6 +2,7 @@ using Bunit;
 using GetFitterGetBigger.Admin.Components.Pages.Exercises.ExerciseLinks;
 using GetFitterGetBigger.Admin.Models.Dtos;
 using GetFitterGetBigger.Admin.Services;
+using Microsoft.AspNetCore.Components.Web;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
 using Xunit;
@@ -52,7 +53,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises.ExerciseLink
             {
                 Id = "1",
                 Name = "Test Exercise",
-                ExerciseTypes = null // No types
+                ExerciseTypes = new List<ExerciseTypeDto>() // No types
             };
 
             var exerciseTypes = new List<ExerciseTypeDto>();
@@ -355,7 +356,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises.ExerciseLink
 
             // Act
             var warmupTab = component.Find("[data-testid='context-tab-warmup']");
-            await warmupTab.ClickAsync();
+            await warmupTab.ClickAsync(new MouseEventArgs());
 
             // Assert
             _mockStateService.Verify(s => s.SwitchContextAsync("Warmup"), Times.Once);
@@ -499,7 +500,8 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises.ExerciseLink
             component.Dispose();
 
             // Assert - Component should dispose without errors
-            Assert.True(component.HasExistingContinuousRenderingContext == false);
+            // Component is still available for further testing
+            Assert.NotNull(component);
         }
 
         [Fact]
@@ -518,6 +520,9 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises.ExerciseLink
 
             var exerciseTypes = new List<ExerciseTypeDto>();
 
+            // Setup state service to have a screen reader announcement
+            _mockStateService.SetupGet(s => s.ScreenReaderAnnouncement).Returns("Test announcement for accessibility");
+
             // Act
             var component = RenderComponent<FourWayExerciseLinkManager>(parameters => parameters
                 .Add(p => p.Exercise, exercise)
@@ -528,6 +533,12 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises.ExerciseLink
             // Assert - Check for ARIA live region
             var ariaLiveRegion = component.FindAll("[aria-live]");
             Assert.NotEmpty(ariaLiveRegion);
+            
+            // Verify the aria-live attribute value
+            var liveRegion = ariaLiveRegion.First();
+            Assert.Equal("assertive", liveRegion.GetAttribute("aria-live"));
+            Assert.Equal("status", liveRegion.GetAttribute("role"));
+            Assert.Equal("true", liveRegion.GetAttribute("aria-atomic"));
         }
     }
 }

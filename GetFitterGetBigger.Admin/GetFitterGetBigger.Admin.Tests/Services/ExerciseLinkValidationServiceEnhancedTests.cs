@@ -236,37 +236,8 @@ namespace GetFitterGetBigger.Admin.Tests.Services
             Assert.True(result.IsValid);
         }
 
-        [Fact]
-        public void ValidateMaximumLinks_Should_Allow_Alternative_Links_Without_Limit()
-        {
-            // Act
-            var result = _service.ValidateMaximumLinks(50, ExerciseLinkType.Alternative);
 
-            // Assert
-            Assert.True(result.IsValid);
-        }
 
-        [Fact]
-        public void ValidateMaximumLinks_Should_Reject_Warmup_Over_Limit()
-        {
-            // Act
-            var result = _service.ValidateMaximumLinks(10, ExerciseLinkType.Warmup);
-
-            // Assert
-            Assert.False(result.IsValid);
-            Assert.Contains("Maximum number of warmup links (10) has been reached", result.ErrorMessage);
-        }
-
-        [Fact]
-        public void ValidateMaximumLinks_Should_Reject_Cooldown_Over_Limit()
-        {
-            // Act
-            var result = _service.ValidateMaximumLinks(10, ExerciseLinkType.Cooldown);
-
-            // Assert
-            Assert.False(result.IsValid);
-            Assert.Contains("Maximum number of cooldown links (10) has been reached", result.ErrorMessage);
-        }
 
         [Fact]
         public void ValidateDuplicateLink_Should_Detect_Alternative_Duplicate()
@@ -355,7 +326,7 @@ namespace GetFitterGetBigger.Admin.Tests.Services
             var existingLinks = new List<ExerciseLinkDto>();
 
             // Setup mock to avoid circular reference check failure
-            _mockExerciseLinkService.Setup(s => s.GetLinksAsync("target-id"))
+            _mockExerciseLinkService.Setup(s => s.GetLinksAsync("target-id", It.IsAny<string?>(), It.IsAny<bool>(), It.IsAny<bool>()))
                 .ReturnsAsync(new ExerciseLinksResponseDto
                 {
                     Links = new List<ExerciseLinkDto>()

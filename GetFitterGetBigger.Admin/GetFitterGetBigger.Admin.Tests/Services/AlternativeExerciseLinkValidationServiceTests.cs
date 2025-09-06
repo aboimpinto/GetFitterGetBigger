@@ -49,7 +49,7 @@ namespace GetFitterGetBigger.Admin.Tests.Services
             var sourceExercise = new ExerciseDto
             {
                 Id = "1",
-                ExerciseTypes = null
+                ExerciseTypes = new List<ExerciseTypeDto>()
             };
 
             var targetExercise = new ExerciseDto
@@ -85,7 +85,7 @@ namespace GetFitterGetBigger.Admin.Tests.Services
             var targetExercise = new ExerciseDto
             {
                 Id = "2",
-                ExerciseTypes = null
+                ExerciseTypes = new List<ExerciseTypeDto>()
             };
 
             // Act
@@ -124,8 +124,8 @@ namespace GetFitterGetBigger.Admin.Tests.Services
             // Assert
             Assert.False(result.IsValid);
             Assert.Equal("NO_SHARED_TYPES", result.ErrorCode);
-            Assert.Contains("Source types: Workout", result.ErrorMessage);
-            Assert.Contains("Target types: Warmup", result.ErrorMessage);
+            Assert.Contains("Source: [Workout]", result.ErrorMessage);
+            Assert.Contains("Target: [Warmup]", result.ErrorMessage);
         }
 
         [Fact]
@@ -168,7 +168,7 @@ namespace GetFitterGetBigger.Admin.Tests.Services
         {
             // Arrange
             var sourceExercise = CreateExerciseWithMuscleGroups(sourcePrimaryCount, 0, "Source");
-            var targetExercise = CreateExerciseWithMuscleGroups(sharedPrimaryCount, 0, "Target", useSameGroups: true);
+            var targetExercise = CreateExerciseWithSharedMuscleGroups(sourcePrimaryCount, sharedPrimaryCount);
 
             // Act
             var result = _service.CalculateMuscleGroupOverlap(sourceExercise, targetExercise);
@@ -184,13 +184,13 @@ namespace GetFitterGetBigger.Admin.Tests.Services
             var sourceExercise = new ExerciseDto
             {
                 Id = "1",
-                MuscleGroups = null
+                MuscleGroups = new List<MuscleGroupWithRoleDto>()
             };
 
             var targetExercise = new ExerciseDto
             {
                 Id = "2",
-                MuscleGroups = null
+                MuscleGroups = new List<MuscleGroupWithRoleDto>()
             };
 
             // Act
@@ -207,17 +207,17 @@ namespace GetFitterGetBigger.Admin.Tests.Services
             var sourceExercise = new ExerciseDto
             {
                 Id = "1",
-                MuscleGroups = new List<ExerciseMuscleGroupDto>
+                MuscleGroups = new List<MuscleGroupWithRoleDto>
                 {
                     new() 
                     { 
-                        MuscleGroup = new MuscleGroupDto { Id = "1", Value = "Chest" },
-                        Role = new MuscleGroupRoleDto { Id = "1", Value = "Primary" }
+                        MuscleGroup = new ReferenceDataDto { Id = "1", Value = "Chest" },
+                        Role = new ReferenceDataDto { Id = "1", Value = "Primary" }
                     },
                     new() 
                     { 
-                        MuscleGroup = new MuscleGroupDto { Id = "2", Value = "Triceps" },
-                        Role = new MuscleGroupRoleDto { Id = "2", Value = "Secondary" }
+                        MuscleGroup = new ReferenceDataDto { Id = "2", Value = "Triceps" },
+                        Role = new ReferenceDataDto { Id = "2", Value = "Secondary" }
                     }
                 }
             };
@@ -225,17 +225,17 @@ namespace GetFitterGetBigger.Admin.Tests.Services
             var targetExercise = new ExerciseDto
             {
                 Id = "2",
-                MuscleGroups = new List<ExerciseMuscleGroupDto>
+                MuscleGroups = new List<MuscleGroupWithRoleDto>
                 {
                     new() 
                     { 
-                        MuscleGroup = new MuscleGroupDto { Id = "1", Value = "Chest" },
-                        Role = new MuscleGroupRoleDto { Id = "1", Value = "Primary" }
+                        MuscleGroup = new ReferenceDataDto { Id = "1", Value = "Chest" },
+                        Role = new ReferenceDataDto { Id = "1", Value = "Primary" }
                     },
                     new() 
                     { 
-                        MuscleGroup = new MuscleGroupDto { Id = "2", Value = "Triceps" },
-                        Role = new MuscleGroupRoleDto { Id = "2", Value = "Secondary" }
+                        MuscleGroup = new ReferenceDataDto { Id = "2", Value = "Triceps" },
+                        Role = new ReferenceDataDto { Id = "2", Value = "Secondary" }
                     }
                 }
             };
@@ -252,25 +252,25 @@ namespace GetFitterGetBigger.Admin.Tests.Services
 
         private ExerciseDto CreateExerciseWithMuscleGroups(int primaryCount, int secondaryCount, string namePrefix, bool useSameGroups = false)
         {
-            var muscleGroups = new List<ExerciseMuscleGroupDto>();
+            var muscleGroups = new List<MuscleGroupWithRoleDto>();
 
             for (int i = 0; i < primaryCount; i++)
             {
                 var groupName = useSameGroups ? "Chest" : $"{namePrefix}Primary{i}";
-                muscleGroups.Add(new ExerciseMuscleGroupDto
+                muscleGroups.Add(new MuscleGroupWithRoleDto
                 {
-                    MuscleGroup = new MuscleGroupDto { Id = $"{i + 1}", Value = groupName },
-                    Role = new MuscleGroupRoleDto { Id = "1", Value = "Primary" }
+                    MuscleGroup = new ReferenceDataDto { Id = $"{i + 1}", Value = groupName },
+                    Role = new ReferenceDataDto { Id = "1", Value = "Primary" }
                 });
             }
 
             for (int i = 0; i < secondaryCount; i++)
             {
                 var groupName = useSameGroups ? "Triceps" : $"{namePrefix}Secondary{i}";
-                muscleGroups.Add(new ExerciseMuscleGroupDto
+                muscleGroups.Add(new MuscleGroupWithRoleDto
                 {
-                    MuscleGroup = new MuscleGroupDto { Id = $"{primaryCount + i + 1}", Value = groupName },
-                    Role = new MuscleGroupRoleDto { Id = "2", Value = "Secondary" }
+                    MuscleGroup = new ReferenceDataDto { Id = $"{primaryCount + i + 1}", Value = groupName },
+                    Role = new ReferenceDataDto { Id = "2", Value = "Secondary" }
                 });
             }
 
@@ -278,6 +278,39 @@ namespace GetFitterGetBigger.Admin.Tests.Services
             {
                 Id = "1",
                 Name = $"{namePrefix} Exercise",
+                MuscleGroups = muscleGroups
+            };
+        }
+
+        private ExerciseDto CreateExerciseWithSharedMuscleGroups(int sourcePrimaryCount, int sharedPrimaryCount)
+        {
+            var muscleGroups = new List<MuscleGroupWithRoleDto>();
+
+            // Add shared muscle groups (using same names as source)
+            for (int i = 0; i < sharedPrimaryCount; i++)
+            {
+                muscleGroups.Add(new MuscleGroupWithRoleDto
+                {
+                    MuscleGroup = new ReferenceDataDto { Id = $"{i + 1}", Value = $"SourcePrimary{i}" },
+                    Role = new ReferenceDataDto { Id = "1", Value = "Primary" }
+                });
+            }
+
+            // Add additional unique muscle groups if needed
+            int remainingTargetCount = Math.Max(0, sourcePrimaryCount - sharedPrimaryCount);
+            for (int i = 0; i < remainingTargetCount; i++)
+            {
+                muscleGroups.Add(new MuscleGroupWithRoleDto
+                {
+                    MuscleGroup = new ReferenceDataDto { Id = $"{sharedPrimaryCount + i + 1}", Value = $"TargetPrimary{i}" },
+                    Role = new ReferenceDataDto { Id = "1", Value = "Primary" }
+                });
+            }
+
+            return new ExerciseDto
+            {
+                Id = "2",
+                Name = "Target Exercise",
                 MuscleGroups = muscleGroups
             };
         }

@@ -529,11 +529,13 @@
         var sourceMuscles = SourceExercise.MuscleGroups?.Where(mg => mg.Role?.Value == "Primary")
                                                         .Select(mg => mg.MuscleGroup?.Value)
                                                         .Where(v => !string.IsNullOrEmpty(v))
+                                                        .Cast<string>()
                                                         .ToHashSet() ?? new HashSet<string>();
 
         var targetMuscles = exercise.MuscleGroups?.Where(mg => mg.Role?.Value == "Primary")
                                                   .Select(mg => mg.MuscleGroup?.Value)
                                                   .Where(v => !string.IsNullOrEmpty(v))
+                                                  .Cast<string>()
                                                   .ToHashSet() ?? new HashSet<string>();
 
         var muscleScore = 0;

@@ -40,7 +40,7 @@ namespace GetFitterGetBigger.Admin.Tests.Services
                 .Build();
 
             _exerciseLinkServiceMock
-                .Setup(x => x.GetLinksAsync(exerciseId, null, true))
+                .Setup(x => x.GetLinksAsync(exerciseId, It.IsAny<string?>(), It.IsAny<bool>(), It.IsAny<bool>()))
                 .ReturnsAsync(expectedLinks);
 
             // Act
@@ -70,7 +70,7 @@ namespace GetFitterGetBigger.Admin.Tests.Services
             _stateService.ErrorMessage.Should().Be("No exercise selected");
             _stateService.IsLoadingLinks.Should().BeFalse();
             _stateChangeCount.Should().BeGreaterThan(0);
-            _exerciseLinkServiceMock.Verify(x => x.GetLinksAsync(It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<bool>()), Times.Never);
+            _exerciseLinkServiceMock.Verify(x => x.GetLinksAsync(It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<bool>(), It.IsAny<bool>()), Times.Never);
         }
 
         [Fact]
@@ -90,7 +90,7 @@ namespace GetFitterGetBigger.Admin.Tests.Services
                 .Build();
 
             _exerciseLinkServiceMock
-                .Setup(x => x.GetLinksAsync(exerciseId, null, true))
+                .Setup(x => x.GetLinksAsync(exerciseId, It.IsAny<string?>(), It.IsAny<bool>(), It.IsAny<bool>()))
                 .ReturnsAsync(expectedLinks);
 
             // Act
@@ -112,7 +112,7 @@ namespace GetFitterGetBigger.Admin.Tests.Services
             await _stateService.InitializeForExerciseAsync(exerciseId, "Test");
 
             _exerciseLinkServiceMock
-                .Setup(x => x.GetLinksAsync(exerciseId, null, true))
+                .Setup(x => x.GetLinksAsync(exerciseId, It.IsAny<string?>(), It.IsAny<bool>(), It.IsAny<bool>()))
                 .ThrowsAsync(new ExerciseNotFoundException(exerciseId));
 
             // Act
@@ -144,7 +144,7 @@ namespace GetFitterGetBigger.Admin.Tests.Services
                 .Build();
 
             _exerciseLinkServiceMock
-                .Setup(x => x.GetLinksAsync(exerciseId, null, true))
+                .Setup(x => x.GetLinksAsync(exerciseId, It.IsAny<string?>(), It.IsAny<bool>(), It.IsAny<bool>()))
                 .ReturnsAsync(expectedLinks);
 
             // Act
@@ -160,20 +160,20 @@ namespace GetFitterGetBigger.Admin.Tests.Services
         }
 
         [Fact]
-        public async Task HasMaxLinks_ReturnsTrueWhenMaxReached()
+        public async Task HasMaxLinks_AlwaysReturnsFalse_NoLimits()
         {
             // Arrange
             var exerciseId = Guid.NewGuid().ToString();
             var links = new List<ExerciseLinkDto>();
 
-            // Add 10 warmup links
-            for (int i = 0; i < 10; i++)
+            // Add many warmup links (previously would hit limit)
+            for (int i = 0; i < 20; i++)
             {
                 links.Add(new ExerciseLinkDtoBuilder().AsWarmup().WithDisplayOrder(i).Build());
             }
 
-            // Add 10 cooldown links
-            for (int i = 0; i < 10; i++)
+            // Add many cooldown links (previously would hit limit)
+            for (int i = 0; i < 20; i++)
             {
                 links.Add(new ExerciseLinkDtoBuilder().AsCooldown().WithDisplayOrder(i).Build());
             }
@@ -184,15 +184,15 @@ namespace GetFitterGetBigger.Admin.Tests.Services
                 .Build();
 
             _exerciseLinkServiceMock
-                .Setup(x => x.GetLinksAsync(exerciseId, null, true))
+                .Setup(x => x.GetLinksAsync(exerciseId, It.IsAny<string?>(), It.IsAny<bool>(), It.IsAny<bool>()))
                 .ReturnsAsync(expectedLinks);
 
             // Act
             await _stateService.InitializeForExerciseAsync(exerciseId, "Test");
 
-            // Assert
-            _stateService.HasMaxWarmupLinks.Should().BeTrue();
-            _stateService.HasMaxCooldownLinks.Should().BeTrue();
+            // Assert - No limits anymore, always returns false
+            _stateService.HasMaxWarmupLinks.Should().BeFalse();
+            _stateService.HasMaxCooldownLinks.Should().BeFalse();
         }
 
         #endregion
@@ -210,18 +210,18 @@ namespace GetFitterGetBigger.Admin.Tests.Services
 
             // Assert
             _stateService.ErrorMessage.Should().Be("No exercise selected");
-            _exerciseLinkServiceMock.Verify(x => x.CreateLinkAsync(It.IsAny<string>(), It.IsAny<CreateExerciseLinkDto>()), Times.Never);
+            _exerciseLinkServiceMock.Verify(x => x.CreateBidirectionalLinkAsync(It.IsAny<string>(), It.IsAny<CreateExerciseLinkDto>()), Times.Never);
         }
 
         [Fact]
-        public async Task CreateLinkAsync_WithMaxWarmupLinks_SetsErrorMessage()
+        public async Task CreateLinkAsync_WithManyExistingLinks_StillAllowsMore()
         {
             // Arrange
             var exerciseId = Guid.NewGuid().ToString();
             var links = new List<ExerciseLinkDto>();
 
-            // Add 10 warmup links to reach max
-            for (int i = 0; i < 10; i++)
+            // Add many warmup links (no limit anymore)
+            for (int i = 0; i < 20; i++)
             {
                 links.Add(new ExerciseLinkDtoBuilder().AsWarmup().WithDisplayOrder(i).Build());
             }
@@ -232,19 +232,24 @@ namespace GetFitterGetBigger.Admin.Tests.Services
                 .Build();
 
             _exerciseLinkServiceMock
-                .Setup(x => x.GetLinksAsync(exerciseId, null, true))
+                .Setup(x => x.GetLinksAsync(exerciseId, It.IsAny<string?>(), It.IsAny<bool>(), It.IsAny<bool>()))
                 .ReturnsAsync(expectedLinks);
 
             await _stateService.InitializeForExerciseAsync(exerciseId, "Test");
 
             var createDto = new CreateExerciseLinkDtoBuilder().AsWarmup().Build();
+            var createdLink = new ExerciseLinkDtoBuilder().AsWarmup().Build();
+
+            _exerciseLinkServiceMock
+                .Setup(x => x.CreateLinkAsync(exerciseId, It.IsAny<CreateExerciseLinkDto>()))
+                .ReturnsAsync(createdLink);
 
             // Act
             await _stateService.CreateLinkAsync(createDto);
 
-            // Assert
-            _stateService.ErrorMessage.Should().Be("Maximum 10 warmup links allowed");
-            _exerciseLinkServiceMock.Verify(x => x.CreateLinkAsync(It.IsAny<string>(), It.IsAny<CreateExerciseLinkDto>()), Times.Never);
+            // Assert - Should succeed even with many existing links
+            _stateService.ErrorMessage.Should().BeNull();
+            _exerciseLinkServiceMock.Verify(x => x.CreateLinkAsync(exerciseId, It.IsAny<CreateExerciseLinkDto>()), Times.Once);
         }
 
         [Fact]
@@ -266,7 +271,7 @@ namespace GetFitterGetBigger.Admin.Tests.Services
                 .Build();
 
             _exerciseLinkServiceMock
-                .SetupSequence(x => x.GetLinksAsync(exerciseId, null, true))
+                .SetupSequence(x => x.GetLinksAsync(exerciseId, It.IsAny<string?>(), It.IsAny<bool>(), It.IsAny<bool>()))
                 .ReturnsAsync(initialLinks)
                 .ReturnsAsync(updatedLinks);
 
@@ -305,7 +310,7 @@ namespace GetFitterGetBigger.Admin.Tests.Services
                 .Build();
 
             _exerciseLinkServiceMock
-                .SetupSequence(x => x.GetLinksAsync(exerciseId, null, true))
+                .SetupSequence(x => x.GetLinksAsync(exerciseId, It.IsAny<string?>(), It.IsAny<bool>(), It.IsAny<bool>()))
                 .ReturnsAsync(initialLinks)
                 .ReturnsAsync(reloadedLinks); // For reload after error
 
@@ -349,7 +354,7 @@ namespace GetFitterGetBigger.Admin.Tests.Services
                 .Build();
 
             _exerciseLinkServiceMock
-                .Setup(x => x.GetLinksAsync(exerciseId, null, true))
+                .Setup(x => x.GetLinksAsync(exerciseId, It.IsAny<string?>(), It.IsAny<bool>(), It.IsAny<bool>()))
                 .ReturnsAsync(initialLinks);
 
             _exerciseLinkServiceMock
@@ -393,7 +398,7 @@ namespace GetFitterGetBigger.Admin.Tests.Services
                 .Build();
 
             _exerciseLinkServiceMock
-                .SetupSequence(x => x.GetLinksAsync(exerciseId, null, true))
+                .SetupSequence(x => x.GetLinksAsync(exerciseId, It.IsAny<string?>(), It.IsAny<bool>(), It.IsAny<bool>()))
                 .ReturnsAsync(initialLinks)
                 .ReturnsAsync(emptyLinks);
 
@@ -431,7 +436,7 @@ namespace GetFitterGetBigger.Admin.Tests.Services
                 .Build();
 
             _exerciseLinkServiceMock
-                .Setup(x => x.GetLinksAsync(exerciseId, null, true))
+                .Setup(x => x.GetLinksAsync(exerciseId, It.IsAny<string?>(), It.IsAny<bool>(), It.IsAny<bool>()))
                 .ReturnsAsync(initialLinks);
 
             await _stateService.InitializeForExerciseAsync(exerciseId, "Test");
@@ -554,7 +559,7 @@ namespace GetFitterGetBigger.Admin.Tests.Services
 
             // Assert
             _stateService.AlternativeLinks.Should().BeEmpty();
-            _exerciseLinkServiceMock.Verify(x => x.GetLinksAsync(It.IsAny<string>(), "Alternative", It.IsAny<bool>()), Times.Never);
+            _exerciseLinkServiceMock.Verify(x => x.GetLinksAsync(It.IsAny<string>(), "Alternative", It.IsAny<bool>(), It.IsAny<bool>()), Times.Never);
         }
 
         [Fact]
@@ -573,7 +578,7 @@ namespace GetFitterGetBigger.Admin.Tests.Services
                 .Build();
 
             _exerciseLinkServiceMock
-                .Setup(x => x.GetLinksAsync(exerciseId, "Alternative", true))
+                .Setup(x => x.GetLinksAsync(exerciseId, "Alternative", It.IsAny<bool>(), It.IsAny<bool>()))
                 .ReturnsAsync(alternativeLinks);
 
             // Act
@@ -606,7 +611,7 @@ namespace GetFitterGetBigger.Admin.Tests.Services
                 .Build();
 
             _exerciseLinkServiceMock
-                .Setup(x => x.GetLinksAsync(exerciseId, "Alternative", true))
+                .Setup(x => x.GetLinksAsync(exerciseId, "Alternative", It.IsAny<bool>(), It.IsAny<bool>()))
                 .ReturnsAsync(alternativeLinksResponse);
 
             // Act
@@ -632,7 +637,7 @@ namespace GetFitterGetBigger.Admin.Tests.Services
 
             // Assert
             _stateService.ErrorMessage.Should().Be("Bidirectional links are only supported for Alternative relationships");
-            _exerciseLinkServiceMock.Verify(x => x.CreateLinkAsync(It.IsAny<string>(), It.IsAny<CreateExerciseLinkDto>()), Times.Never);
+            _exerciseLinkServiceMock.Verify(x => x.CreateBidirectionalLinkAsync(It.IsAny<string>(), It.IsAny<CreateExerciseLinkDto>()), Times.Never);
         }
 
         [Fact]
@@ -657,7 +662,7 @@ namespace GetFitterGetBigger.Admin.Tests.Services
                 .Build();
 
             _exerciseLinkServiceMock
-                .Setup(x => x.GetLinksAsync(exerciseId, "Alternative", true))
+                .Setup(x => x.GetLinksAsync(exerciseId, "Alternative", It.IsAny<bool>(), It.IsAny<bool>()))
                 .ReturnsAsync(alternativeLinksResponse);
 
             // Act
@@ -667,8 +672,8 @@ namespace GetFitterGetBigger.Admin.Tests.Services
             _stateService.SuccessMessage.Should().Be("Alternative link created (bidirectional)");
             _stateService.ScreenReaderAnnouncement.Should().Be("Alternative exercise link has been created for both exercises");
             _stateService.ErrorMessage.Should().BeNull();
-            _exerciseLinkServiceMock.Verify(x => x.CreateLinkAsync(exerciseId, createDto), Times.Once);
-            _exerciseLinkServiceMock.Verify(x => x.GetLinksAsync(exerciseId, "Alternative", true), Times.Once);
+            _exerciseLinkServiceMock.Verify(x => x.CreateBidirectionalLinkAsync(exerciseId, createDto), Times.Once);
+            _exerciseLinkServiceMock.Verify(x => x.GetLinksAsync(exerciseId, "Alternative", It.IsAny<bool>(), It.IsAny<bool>()), Times.Once);
         }
 
         [Fact]
@@ -691,7 +696,7 @@ namespace GetFitterGetBigger.Admin.Tests.Services
                 .Build();
 
             _exerciseLinkServiceMock
-                .Setup(x => x.GetLinksAsync(exerciseId, "Alternative", true))
+                .Setup(x => x.GetLinksAsync(exerciseId, "Alternative", It.IsAny<bool>(), It.IsAny<bool>()))
                 .ReturnsAsync(alternativeLinksResponse);
 
             await _stateService.LoadAlternativeLinksAsync();
@@ -701,7 +706,7 @@ namespace GetFitterGetBigger.Admin.Tests.Services
                 .Returns(Task.CompletedTask);
 
             _exerciseLinkServiceMock
-                .Setup(x => x.GetLinksAsync(exerciseId, "Alternative", true))
+                .Setup(x => x.GetLinksAsync(exerciseId, "Alternative", It.IsAny<bool>(), It.IsAny<bool>()))
                 .ReturnsAsync(new ExerciseLinksResponseDtoBuilder().WithExerciseId(exerciseId).Build());
 
             // Act
@@ -711,7 +716,7 @@ namespace GetFitterGetBigger.Admin.Tests.Services
             _stateService.SuccessMessage.Should().Be("Alternative link removed (bidirectional)");
             _stateService.ScreenReaderAnnouncement.Should().Be("Alternative exercise link has been removed from both exercises");
             _stateService.ErrorMessage.Should().BeNull();
-            _exerciseLinkServiceMock.Verify(x => x.DeleteLinkAsync(exerciseId, linkId), Times.Once);
+            _exerciseLinkServiceMock.Verify(x => x.DeleteBidirectionalLinkAsync(exerciseId, linkId, true), Times.Once);
         }
 
         #endregion
@@ -734,7 +739,7 @@ namespace GetFitterGetBigger.Admin.Tests.Services
                 .Build();
 
             _exerciseLinkServiceMock
-                .Setup(x => x.GetLinksAsync(exercise.Id, null, true))
+                .Setup(x => x.GetLinksAsync(exercise.Id, It.IsAny<string?>(), It.IsAny<bool>(), It.IsAny<bool>()))
                 .ReturnsAsync(expectedLinks);
 
             // Act
@@ -787,11 +792,11 @@ namespace GetFitterGetBigger.Admin.Tests.Services
                 .Build();
 
             _exerciseLinkServiceMock
-                .Setup(x => x.GetLinksAsync(exercise.Id, null, true))
+                .Setup(x => x.GetLinksAsync(exercise.Id, It.IsAny<string?>(), It.IsAny<bool>(), It.IsAny<bool>()))
                 .ReturnsAsync(workoutLinks);
 
             _exerciseLinkServiceMock
-                .Setup(x => x.GetLinksAsync(exercise.Id, "Alternative", true))
+                .Setup(x => x.GetLinksAsync(exercise.Id, "Alternative", It.IsAny<bool>(), It.IsAny<bool>()))
                 .ReturnsAsync(alternativeLinks);
 
             // Act
@@ -800,8 +805,8 @@ namespace GetFitterGetBigger.Admin.Tests.Services
             // Assert
             _stateService.ActiveContext.Should().Be("Workout");
             _stateService.ScreenReaderAnnouncement.Should().Be("Switched to Workout context");
-            _exerciseLinkServiceMock.Verify(x => x.GetLinksAsync(exercise.Id, null, true), Times.AtLeastOnce);
-            _exerciseLinkServiceMock.Verify(x => x.GetLinksAsync(exercise.Id, "Alternative", true), Times.Once);
+            _exerciseLinkServiceMock.Verify(x => x.GetLinksAsync(exercise.Id, It.IsAny<string?>(), It.IsAny<bool>(), It.IsAny<bool>()), Times.AtLeastOnce);
+            _exerciseLinkServiceMock.Verify(x => x.GetLinksAsync(exercise.Id, "Alternative", It.IsAny<bool>(), It.IsAny<bool>()), Times.Once);
         }
 
         #endregion

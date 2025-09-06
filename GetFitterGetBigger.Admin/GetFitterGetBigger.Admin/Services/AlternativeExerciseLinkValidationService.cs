@@ -47,11 +47,13 @@ namespace GetFitterGetBigger.Admin.Services
             var sourceTypes = sourceExercise.ExerciseTypes?
                 .Select(t => t.Value?.ToLower())
                 .Where(v => !string.IsNullOrEmpty(v))
+                .Cast<string>()
                 .ToHashSet() ?? new HashSet<string>();
 
             var targetTypes = targetExercise.ExerciseTypes?
                 .Select(t => t.Value?.ToLower())
                 .Where(v => !string.IsNullOrEmpty(v))
+                .Cast<string>()
                 .ToHashSet() ?? new HashSet<string>();
 
             if (!sourceTypes.Any())
