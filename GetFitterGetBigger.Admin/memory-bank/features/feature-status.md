@@ -26,6 +26,7 @@ This file serves as a central dashboard for tracking the status of all features 
 | Exercise Weight Type | COMPLETED | High | FEAT-019 | 2025-07-12 | [Details](3-COMPLETED/FEAT-019-exercise-weight-type/feature-description.md) |
 | Workout Reference Data | COMPLETED | High | FEAT-020 | 2025-07-21 | [Details](3-COMPLETED/FEAT-020-workout-reference-data/feature-description.md) |
 | Workout Template UI | READY TO DEVELOP | High | FEAT-021 | 2025-07-24 | [Details](1-READY_TO_DEVELOP/FEAT-021-workout-template-ui/feature-description.md) |
+| Four-Way Exercise Linking | COMPLETED | High | FEAT-022 | 2025-09-07 | [Details](3-COMPLETED/FEAT-022-four-way-linking/COMPLETION-REPORT.md) |
 
 ## Status Definitions
 
