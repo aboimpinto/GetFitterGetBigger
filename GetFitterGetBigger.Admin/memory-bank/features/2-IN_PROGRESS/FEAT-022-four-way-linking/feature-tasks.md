@@ -1379,7 +1379,11 @@ The modal component existed but was displaying inline instead of as an overlay d
 ## CHECKPOINT: Phase 6 Complete - Exercise Link Type Restrictions
 `[COMPLETE]` - Date: 2025-01-06 13:15
 
-Git Commits:
+Git Commits (chronological order):
+- bdb685d9 - feat(admin): implement Phase 6 - Exercise Link Type Restrictions
+- b8142c91 - feat(admin): complete Phase 6 - exercise type restrictions and UI improvements
+- 8cbbd6ce - fix(admin): resolve exercise link display and creation issues (case sensitivity, Alternative links)
+- e1622ba7 - fix(admin): add includeReverse parameter and extract Workout links
 - 7d7b511a - fix(admin): convert exercise link selector from inline to modal overlay
 - 2f30f2a9 - fix(admin): address Phase 6 code review findings
 - 071ad4dc - fix(admin): resolve all failing tests after Phase 6 improvements
