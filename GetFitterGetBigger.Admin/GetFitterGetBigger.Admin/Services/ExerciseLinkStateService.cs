@@ -216,6 +216,14 @@ namespace GetFitterGetBigger.Admin.Services
             }
         }
 
+        /// <summary>
+        /// Loads suggested exercise links based on AI/ML recommendations or business rules.
+        /// </summary>
+        /// <param name="count">The maximum number of suggestions to retrieve (default: 5)</param>
+        /// <remarks>
+        /// This method silently fails if suggestions cannot be loaded, as they are not critical
+        /// to the core functionality. Suggestions enhance user experience but are not required.
+        /// </remarks>
         public async Task LoadSuggestedLinksAsync(int count = 5)
         {
             if (string.IsNullOrEmpty(CurrentExerciseId))
@@ -242,6 +250,14 @@ namespace GetFitterGetBigger.Admin.Services
             }
         }
 
+        /// <summary>
+        /// Loads alternative exercise links for the current exercise.
+        /// </summary>
+        /// <remarks>
+        /// Alternative links represent exercises that can be substituted for the current exercise.
+        /// This method includes reverse links to show bidirectional alternative relationships.
+        /// The method silently fails to avoid disrupting the user experience if alternatives cannot be loaded.
+        /// </remarks>
         public async Task LoadAlternativeLinksAsync()
         {
             if (string.IsNullOrEmpty(CurrentExerciseId))
@@ -278,6 +294,14 @@ namespace GetFitterGetBigger.Admin.Services
             }
         }
 
+        /// <summary>
+        /// Loads workout exercises that use the current exercise as a warmup or cooldown.
+        /// </summary>
+        /// <remarks>
+        /// This method is primarily used when viewing warmup or cooldown exercises to show
+        /// which workout exercises reference them. It helps users understand the relationships
+        /// from both directions (workout->warmup/cooldown and warmup/cooldown->workout).
+        /// </remarks>
         public async Task LoadWorkoutLinksAsync()
         {
             if (string.IsNullOrEmpty(CurrentExerciseId))
@@ -405,6 +429,15 @@ namespace GetFitterGetBigger.Admin.Services
             }
         }
 
+        /// <summary>
+        /// Creates a bidirectional exercise link, establishing the relationship in both directions.
+        /// </summary>
+        /// <param name="createDto">The data transfer object containing link creation details</param>
+        /// <remarks>
+        /// This method is specifically for Alternative links which require bidirectional relationships.
+        /// It creates both A->B and B->A links in a single operation. If either link creation fails,
+        /// the entire operation is rolled back to maintain data consistency.
+        /// </remarks>
         public async Task CreateBidirectionalLinkAsync(CreateExerciseLinkDto createDto)
         {
             if (string.IsNullOrEmpty(CurrentExerciseId))
@@ -574,6 +607,15 @@ namespace GetFitterGetBigger.Admin.Services
             }
         }
 
+        /// <summary>
+        /// Deletes a bidirectional exercise link, removing the relationship from both directions.
+        /// </summary>
+        /// <param name="linkId">The unique identifier of the link to delete</param>
+        /// <remarks>
+        /// This method handles deletion of Alternative links which exist bidirectionally.
+        /// It ensures both A->B and B->A links are removed together. The operation uses
+        /// optimistic updates for better UX, reverting changes if the deletion fails.
+        /// </remarks>
         public async Task DeleteBidirectionalLinkAsync(string linkId)
         {
             if (string.IsNullOrEmpty(CurrentExerciseId))
@@ -623,6 +665,16 @@ namespace GetFitterGetBigger.Admin.Services
             }
         }
 
+        /// <summary>
+        /// Switches the active context for multi-type exercises.
+        /// </summary>
+        /// <param name="contextType">The context to switch to ("Workout", "Warmup", or "Cooldown")</param>
+        /// <remarks>
+        /// This method is used for exercises that can serve multiple purposes. For example,
+        /// an exercise might be both a standalone workout and a warmup. Switching context
+        /// changes which relationships are displayed and which operations are available.
+        /// The method automatically reloads relevant links for the new context.
+        /// </remarks>
         public async Task SwitchContextAsync(string contextType)
         {
             if (!AvailableContexts.Contains(contextType))

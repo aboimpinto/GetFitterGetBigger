@@ -130,21 +130,17 @@ namespace GetFitterGetBigger.Admin.Components.Pages.Exercises.ExerciseLinks
         /// </summary>
         private void HandleAddLink(string linkType)
         {
-            Console.WriteLine($"[FourWayExerciseLinkManager] HandleAddLink called with linkType: {linkType}");
-            
             // Check if this link type can be added in the current context
             var validationResult = ValidationService.CanAddLinkType(StateService.ActiveContext ?? "Workout", linkType);
             
             if (!validationResult.IsValid)
             {
-                Console.WriteLine($"[FourWayExerciseLinkManager] Validation failed: {validationResult.ErrorMessage}");
                 StateService.SetError(validationResult.ErrorMessage ?? $"Cannot add {linkType} links in {StateService.ActiveContext} context");
                 return;
             }
             
             _addLinkType = linkType;
             _showAddModal = true;
-            Console.WriteLine($"[FourWayExerciseLinkManager] Modal should be shown now. _showAddModal = {_showAddModal}, _addLinkType = {_addLinkType}");
             StateHasChanged(); // Force UI update to show modal
         }
 
