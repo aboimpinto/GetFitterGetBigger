@@ -1,4 +1,5 @@
 @using GetFitterGetBigger.Admin.Models.Dtos
+@implements IDisposable
 
 <div role="tablist" 
      aria-label="Exercise contexts" 
@@ -54,12 +55,52 @@
     [Parameter, EditorRequired] public string ActiveContext { get; set; } = null!;
     [Parameter] public bool Disabled { get; set; } = false;
     [Parameter] public EventCallback<string> OnContextChange { get; set; }
+    [Parameter] public int DebounceDelayMs { get; set; } = 0; // Default to no debouncing for backward compatibility
+
+    // Debouncing implementation
+    private CancellationTokenSource? _debounceCts;
+    private const int DefaultDebounceDelayMs = 300;
+
+    // TODO: Performance Telemetry Implementation
+    // Future enhancement: Track context switching performance and user patterns
+    // Metrics to capture:
+    // - Context switch frequency and patterns
+    // - Time between context switches (user decision time)
+    // - Most frequently accessed contexts
+    // Implementation approach:
+    // - Inject IPerformanceMonitoringService
+    // - Track: _telemetryService?.TrackMetric("context_switch", 1, new Dictionary<string, string> { ["from"] = ActiveContext, ["to"] = context })
+    // - Monitor keyboard navigation vs click patterns
 
     private async Task SwitchContext(string context)
     {
         if (!Disabled && context != ActiveContext && OnContextChange.HasDelegate)
         {
-            await OnContextChange.InvokeAsync(context);
+            // If debouncing is disabled (DebounceDelayMs == 0), invoke immediately
+            if (DebounceDelayMs == 0)
+            {
+                await OnContextChange.InvokeAsync(context);
+                return;
+            }
+
+            // Cancel any pending context switch
+            _debounceCts?.Cancel();
+            _debounceCts?.Dispose();
+            _debounceCts = new CancellationTokenSource();
+
+            try
+            {
+                // Apply debounce delay before switching context
+                var delay = DebounceDelayMs > 0 ? DebounceDelayMs : DefaultDebounceDelayMs;
+                await Task.Delay(delay, _debounceCts.Token);
+                
+                // If not cancelled, proceed with context change
+                await OnContextChange.InvokeAsync(context);
+            }
+            catch (TaskCanceledException)
+            {
+                // Context switch was cancelled due to new selection - this is expected behavior
+            }
         }
     }
 
@@ -170,5 +211,12 @@
     private string GetContextTestId(string context)
     {
         return $"context-tab-{context.ToLower()}";
+    }
+
+    public void Dispose()
+    {
+        // Clean up debouncing resources
+        _debounceCts?.Cancel();
+        _debounceCts?.Dispose();
     }
 }

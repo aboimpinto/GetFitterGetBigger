@@ -313,6 +313,19 @@
     [Parameter] public EventCallback<ExerciseLinkDto> OnRemoveLink { get; set; }
     [Parameter] public EventCallback<(string linkType, Dictionary<string, int> reorderMap)> OnReorderLinks { get; set; }
     [Parameter] public EventCallback<ExerciseLinkDto> OnViewExercise { get; set; }
+
+    // TODO: Performance Telemetry Implementation
+    // Future enhancement: Track component render performance with large datasets
+    // Metrics to capture:
+    // - Initial render time with multiple links
+    // - Re-render frequency during state changes
+    // - ShouldRender optimization effectiveness
+    // - Virtual scrolling performance (when implemented)
+    // Implementation approach:
+    // - Inject IPerformanceMonitoringService
+    // - Track: _telemetryService?.TrackRenderCycle("FourWayLinkedExercisesList", elapsedMs)
+    // - Monitor link count impact on performance
+    // - Track user interaction patterns (add/remove/reorder frequency)
     
     private EventCallback<ExerciseLinkDto> _warmupMoveUpHandler;
     private EventCallback<ExerciseLinkDto> _warmupMoveDownHandler;

@@ -503,6 +503,9 @@ public void EquipmentList_RendersCorrectly_WithData()
 - Universal: `CODE_QUALITY_STANDARDS.md`
 - Process: `CODE_REVIEW_PROCESS.md`
 - Navigation: `patterns/BLAZOR-NAVIGATION-BEST-PRACTICES.md`
+- Performance: `patterns/blazor-shouldrender-optimization-pattern.md`
+- Testing: `patterns/comprehensive-blazor-testing-patterns.md`
+- Accessibility: `guides/accessibility-automation-guide.md`
 - Blazor Docs: https://docs.microsoft.com/blazor
 
 ---

@@ -185,6 +185,10 @@ builder.Services.AddScoped<ILocalStorageService, LocalStorageService>();
 // Add ToastService
 builder.Services.AddScoped<IToastService, ToastService>();
 
+// Add Performance Monitoring Service
+// Using NoOp implementation for development - replace with actual implementation for production
+builder.Services.AddSingleton<IPerformanceMonitoringService, NoOpPerformanceMonitoringService>();
+
 var app = builder.Build();
 
 // Clear all caches on startup to avoid cache collision issues
