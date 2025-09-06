@@ -25,6 +25,13 @@ namespace GetFitterGetBigger.Admin.Components.Pages.Exercises.ExerciseLinks
         private System.Threading.Timer? _successMessageTimer;
         private ElementReference _deleteConfirmButton;
         
+        // Performance optimization - track render-affecting state
+        private string? _lastRenderedExerciseId;
+        private string? _lastRenderedActiveContext;
+        private bool _lastRenderedIsLoading;
+        private bool _lastRenderedIsProcessing;
+        private string? _lastRenderedErrorMessage;
+        
         /// <summary>
         /// Show component for any exercise with types (removes "Workout" only restriction)
         /// </summary>
@@ -44,6 +51,41 @@ namespace GetFitterGetBigger.Admin.Components.Pages.Exercises.ExerciseLinks
         /// Get available contexts for this exercise
         /// </summary>
         private IEnumerable<string> AvailableContexts => GetExerciseContexts();
+
+        /// <summary>
+        /// Performance optimization: Only render when render-affecting state has changed
+        /// Task 7.3: Optimize unnecessary re-renders
+        /// </summary>
+        protected override bool ShouldRender()
+        {
+            // Check if any render-affecting state has changed
+            var currentExerciseId = Exercise.Id;
+            var currentActiveContext = StateService.ActiveContext;
+            var currentIsLoading = StateService.IsLoading;
+            var currentIsProcessing = StateService.IsProcessingLink || StateService.IsSaving || StateService.IsDeleting;
+            var currentErrorMessage = StateService.ErrorMessage;
+
+            var shouldRender = _lastRenderedExerciseId != currentExerciseId ||
+                              _lastRenderedActiveContext != currentActiveContext ||
+                              _lastRenderedIsLoading != currentIsLoading ||
+                              _lastRenderedIsProcessing != currentIsProcessing ||
+                              _lastRenderedErrorMessage != currentErrorMessage ||
+                              _linkToDelete != null || // Always render when showing delete dialog
+                              !string.IsNullOrEmpty(_successMessage) || // Always render when showing success message
+                              _showAddModal; // Always render when showing modal
+
+            // Update tracking state if we're going to render
+            if (shouldRender)
+            {
+                _lastRenderedExerciseId = currentExerciseId;
+                _lastRenderedActiveContext = currentActiveContext;
+                _lastRenderedIsLoading = currentIsLoading;
+                _lastRenderedIsProcessing = currentIsProcessing;
+                _lastRenderedErrorMessage = currentErrorMessage;
+            }
+
+            return shouldRender;
+        }
 
         protected override async Task OnInitializedAsync()
         {
