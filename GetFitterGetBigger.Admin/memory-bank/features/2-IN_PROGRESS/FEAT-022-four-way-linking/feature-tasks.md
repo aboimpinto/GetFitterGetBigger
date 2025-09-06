@@ -1361,6 +1361,7 @@ Git Commits:
 - `bdb685d9` - feat(admin): implement Phase 6 - Exercise Link Type Restrictions
 - `b8142c91` - feat(admin): complete Phase 6 - exercise type restrictions and UI improvements (fixed section visibility, side-by-side layout, browser navigation)
 - `8cbbd6ce` - fix(admin): resolve exercise link display and creation issues (case sensitivity, Alternative links, consistent loading)
+- `e1622ba7` - fix(admin): add includeReverse parameter and extract Workout links (bidirectional support, Workout links display)
 
 Status: ✅ Phase 6 COMPLETE - APPROVED_WITH_NOTES
 
@@ -1371,6 +1372,10 @@ Notes:
 - Maintains backward compatibility with existing links
 - Review identified need for service registration in Program.cs (must fix)
 - All 1,370 tests passing with 0 errors/warnings
+- **Backend Bug Discovered**: API incorrectly rejects Alternative links from Warmup/Cooldown exercises
+  - Error: "Only exercises with 'Workout' exercise type can create outbound links"
+  - Violates business rules: Warmup/Cooldown should be able to create Alternative links
+  - Backend fix required in ExerciseLinkValidationExtensions.cs
 - Ready to proceed with Phase 7: Testing & Polish
 
 ---
