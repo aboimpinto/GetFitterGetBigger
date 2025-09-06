@@ -1378,6 +1378,7 @@ The modal component existed but was displaying inline instead of as an overlay d
 
 ## CHECKPOINT: Phase 6 Complete - Exercise Link Type Restrictions
 `[COMPLETE]` - Date: 2025-01-06 13:15
+Git Commit: 7d7b511a - fix(admin): convert exercise link selector from inline to modal overlay
 
 Build Report:
 - Admin Project: ✅ 0 errors, 0 warnings
