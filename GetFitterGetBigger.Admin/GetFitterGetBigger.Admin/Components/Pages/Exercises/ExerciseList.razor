@@ -350,7 +350,7 @@
         }
     }
     
-    protected override async Task OnAfterRenderAsync(bool firstRender)
+    protected override Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender && StateService.CurrentPage != null)
         {
@@ -358,6 +358,7 @@
             // This ensures we can return to this exact state
             StateService.StoreReturnPage();
         }
+        return Task.CompletedTask;
     }
 
     private async Task ApplyFilter()

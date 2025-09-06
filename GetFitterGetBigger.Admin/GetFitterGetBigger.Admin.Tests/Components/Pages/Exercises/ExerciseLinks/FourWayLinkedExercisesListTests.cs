@@ -406,14 +406,14 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises.ExerciseLink
                 .Add(p => p.ValidationService, _mockValidationService.Object)
                 .Add(p => p.CurrentContext, "Workout"));
 
-            // Assert
-            var warmupSection = component.Find("[data-testid='warmup-section'] .bg-orange-50");
-            var cooldownSection = component.Find("[data-testid='cooldown-section'] .bg-blue-50");
-            var alternativeSection = component.Find("[data-testid='alternative-section'] .bg-purple-50");
+            // Assert - Check for gradient themes (not single color backgrounds)
+            var warmupSection = component.Find("[data-testid='warmup-section'] .from-orange-50");
+            var cooldownSection = component.Find("[data-testid='cooldown-section'] .from-blue-50");
+            var alternativeSection = component.Find("[data-testid='alternative-section'] .from-purple-50");
 
-            Assert.NotNull(warmupSection); // Orange theme for warmup
-            Assert.NotNull(cooldownSection); // Blue theme for cooldown
-            Assert.NotNull(alternativeSection); // Purple theme for alternative
+            Assert.NotNull(warmupSection); // Orange gradient theme for warmup
+            Assert.NotNull(cooldownSection); // Blue gradient theme for cooldown
+            Assert.NotNull(alternativeSection); // Purple gradient theme for alternative
         }
 
         [Fact]

@@ -379,7 +379,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises.ExerciseLink
             {
                 var classes = tab.GetAttribute("class");
                 // Should have focus ring classes for visual indication
-                (classes.Contains("focus:outline") || classes.Contains("focus:ring")).Should().BeTrue();
+                (classes?.Contains("focus:outline") == true || classes?.Contains("focus:ring") == true).Should().BeTrue();
             }
         }
 
@@ -405,7 +405,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises.ExerciseLink
             {
                 var classes = element.GetAttribute("class");
                 // Should have disabled styling
-                (classes.Contains("opacity") || classes.Contains("cursor-not-allowed")).Should().BeTrue();
+                (classes?.Contains("opacity") == true || classes?.Contains("cursor-not-allowed") == true).Should().BeTrue();
             }
         }
 
@@ -458,7 +458,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises.ExerciseLink
 
             var errorMessage = errorMessages.First();
             // Error should be in red theme with sufficient contrast
-            var classes = errorMessage.GetAttribute("class");
+            var classes = errorMessage.GetAttribute("class") ?? "";
             (classes.Contains("bg-red") && classes.Contains("50")).Should().BeTrue();
         }
 
@@ -550,7 +550,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises.ExerciseLink
                 
                 // Note: This is a simplified check. In a real accessibility audit, 
                 // you would use tools like axe-core to verify actual contrast ratios
-                (classes.Contains("text-") && classes.Contains("bg-")).Should().BeTrue();
+                (classes?.Contains("text-") == true && classes?.Contains("bg-") == true).Should().BeTrue();
             }
         }
 
@@ -649,7 +649,7 @@ namespace GetFitterGetBigger.Admin.Tests.Components.Pages.Exercises.ExerciseLink
             var headings = component.FindAll("h2, h3, h4, h5, h6");
             foreach (var heading in headings)
             {
-                var classes = heading.GetAttribute("class");
+                var classes = heading.GetAttribute("class") ?? "";
                 // Should have appropriate text sizes that scale down properly
                 var hasResponsiveText = classes.Contains("text-") && 
                     (classes.Contains("lg") || classes.Contains("xl") || classes.Contains("sm"));
