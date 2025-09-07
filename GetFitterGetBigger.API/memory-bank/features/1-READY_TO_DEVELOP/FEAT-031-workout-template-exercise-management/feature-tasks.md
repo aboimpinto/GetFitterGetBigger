@@ -259,12 +259,14 @@ And each exercise should include ExecutionProtocol-appropriate metadata
 **Implementation:**
 - Create EF Core migration to update ExecutionProtocol data
 - Update existing "Standard" entry to "Reps and Sets" with Code "REPS_AND_SETS"
-```sql
-UPDATE ExecutionProtocol 
-SET Value = 'Reps and Sets', 
-    Code = 'REPS_AND_SETS',
-    Description = 'Traditional workout with fixed sets and repetitions'
-WHERE ExecutionProtocolId = '30000003-3000-4000-8000-300000000001';
+```csharp
+// NOTE: Do NOT use raw SQL. Use EF Core migration's UpdateData method:
+migrationBuilder.UpdateData(
+    table: "ExecutionProtocol",
+    keyColumn: "ExecutionProtocolId",
+    keyValue: new Guid("30000003-3000-4000-8000-300000000001"),
+    columns: new[] { "Value", "Code", "Description" },
+    values: new object[] { "Reps and Sets", "REPS_AND_SETS", "Traditional workout with fixed sets and repetitions" });
 ```
 
 **Testing:**
@@ -293,12 +295,19 @@ public record WorkoutTemplate : IEmptyEntity<WorkoutTemplate>
 }
 ```
 
-**Database Migration:**
-```sql
-ALTER TABLE WorkoutTemplate ADD
-    ExecutionProtocolId UNIQUEIDENTIFIER NOT NULL 
-        FOREIGN KEY REFERENCES ExecutionProtocol(ExecutionProtocolId),
-    ExecutionProtocolConfig NVARCHAR(MAX) NULL;
+**Entity Modification & Migration:**
+```csharp
+// 1. Modify WorkoutTemplate entity to add new properties:
+public ExecutionProtocolId ExecutionProtocolId { get; init; }
+public string? ExecutionProtocolConfig { get; init; } // JSON for protocol-specific settings
+public ExecutionProtocol? ExecutionProtocol { get; init; } // Navigation property
+
+// 2. Configure in DbContext for PostgreSQL JSON:
+modelBuilder.Entity<WorkoutTemplate>()
+    .Property(e => e.ExecutionProtocolConfig)
+    .HasColumnType("jsonb"); // PostgreSQL JSON type
+
+// 3. Generate migration: dotnet ef migrations add AddExecutionProtocolToWorkoutTemplate
 ```
 
 **Unit Tests:**
@@ -401,29 +410,68 @@ public record WorkoutTemplateExercise : IEmptyEntity<WorkoutTemplateExercise>
 }
 ```
 
-**Database Schema:**
-```sql
--- Drop existing unused tables
-DROP TABLE IF EXISTS WorkoutTemplateExercise;
-DROP TABLE IF EXISTS SetConfiguration;
+**Entity Creation & EF Core Configuration:**
+```csharp
+// NOTE: Do NOT use raw SQL. Use EF Core Entities and Migrations!
 
--- Create new table
-CREATE TABLE WorkoutTemplateExercise (
-    Id UNIQUEIDENTIFIER PRIMARY KEY,
-    WorkoutTemplateId INT NOT NULL FOREIGN KEY REFERENCES WorkoutTemplate(Id),
-    ExerciseId INT NOT NULL FOREIGN KEY REFERENCES Exercise(Id),
-    Phase NVARCHAR(20) NOT NULL CHECK (Phase IN ('Warmup', 'Workout', 'Cooldown')),
-    RoundNumber INT NOT NULL CHECK (RoundNumber > 0),
-    OrderInRound INT NOT NULL CHECK (OrderInRound > 0),
-    Metadata NVARCHAR(MAX) NOT NULL, -- JSON structure
-    CreatedAt DATETIME2 NOT NULL DEFAULT GETUTCDATE(),
-    UpdatedAt DATETIME2 NOT NULL DEFAULT GETUTCDATE()
-);
+// 1. Create new entity in /Models/Entities/WorkoutTemplateExercise.cs
+public record WorkoutTemplateExercise : IEmptyEntity<WorkoutTemplateExercise>
+{
+    public WorkoutTemplateExerciseId Id { get; init; }
+    public WorkoutTemplateId WorkoutTemplateId { get; init; }
+    public ExerciseId ExerciseId { get; init; }
+    public string Phase { get; init; } // "Warmup", "Workout", "Cooldown"
+    public int RoundNumber { get; init; }
+    public int OrderInRound { get; init; }
+    public string Metadata { get; init; } // JSON string
+    public DateTime CreatedAt { get; init; }
+    public DateTime UpdatedAt { get; init; }
+    
+    // Navigation properties
+    public WorkoutTemplate? WorkoutTemplate { get; init; }
+    public Exercise? Exercise { get; init; }
+    
+    // Handler pattern implementation (following existing patterns)
+    public static class Handler 
+    {
+        // CreateNew, Create, Update methods following Entity Handler pattern
+    }
+}
 
--- Indexes for performance
-CREATE INDEX IX_WorkoutTemplate ON WorkoutTemplateExercise (WorkoutTemplateId, Phase, RoundNumber, OrderInRound);
-CREATE INDEX IX_Exercise ON WorkoutTemplateExercise (ExerciseId);
-CREATE INDEX IX_Round ON WorkoutTemplateExercise (WorkoutTemplateId, Phase, RoundNumber);
+// 2. Configure in FitnessDbContext.OnModelCreating():
+modelBuilder.Entity<WorkoutTemplateExercise>(entity =>
+{
+    entity.HasKey(e => e.Id);
+    
+    entity.Property(e => e.Phase)
+        .HasMaxLength(20)
+        .IsRequired();
+    
+    entity.Property(e => e.Metadata)
+        .HasColumnType("jsonb") // PostgreSQL JSON type
+        .IsRequired();
+    
+    entity.HasIndex(e => new { e.WorkoutTemplateId, e.Phase, e.RoundNumber, e.OrderInRound })
+        .HasDatabaseName("IX_WorkoutTemplate");
+    
+    entity.HasIndex(e => e.ExerciseId)
+        .HasDatabaseName("IX_Exercise");
+    
+    entity.HasIndex(e => new { e.WorkoutTemplateId, e.Phase, e.RoundNumber })
+        .HasDatabaseName("IX_Round");
+    
+    // Foreign key relationships
+    entity.HasOne(e => e.WorkoutTemplate)
+        .WithMany()
+        .HasForeignKey(e => e.WorkoutTemplateId);
+    
+    entity.HasOne(e => e.Exercise)
+        .WithMany()
+        .HasForeignKey(e => e.ExerciseId);
+});
+
+// 3. Generate migration: dotnet ef migrations add CreateWorkoutTemplateExerciseTable
+// 4. The old tables will be dropped automatically if they exist
 ```
 
 **Unit Tests:**
@@ -485,10 +533,10 @@ protected override void OnModelCreating(ModelBuilder modelBuilder)
         .Property(wte => wte.Phase)
         .HasMaxLength(20);
         
-    // JSON metadata column
+    // JSON metadata column for PostgreSQL
     modelBuilder.Entity<WorkoutTemplateExercise>()
         .Property(wte => wte.Metadata)
-        .HasColumnType("NVARCHAR(MAX)");
+        .HasColumnType("jsonb"); // PostgreSQL JSON type
     
     // Indexes
     modelBuilder.Entity<WorkoutTemplateExercise>()
@@ -812,18 +860,18 @@ public class WorkoutTemplateExerciseService : IWorkoutTemplateExerciseService
     public async Task<ServiceResult<AddExerciseResultDto>> AddExerciseAsync(WorkoutTemplateId templateId, AddExerciseDto dto)
     {
         return await ServiceValidate.Build<AddExerciseResultDto>()
-            .EnsureNotEmpty(templateId, WorkoutTemplateExerciseErrorMessages.InvalidTemplateId)
+            .EnsureNotEmpty(templateId, WorkoutTemplateExerciseErrorMessages.WorkoutTemplateNotFound)
             .EnsureNotEmpty(dto.ExerciseId, WorkoutTemplateExerciseErrorMessages.InvalidExerciseId)
-            .EnsureNotEmpty(dto.Phase, WorkoutTemplateExerciseErrorMessages.InvalidPhase)
-            .Ensure(() => IsValidPhase(dto.Phase), WorkoutTemplateExerciseErrorMessages.MustBeWarmupWorkoutCooldown)
-            .EnsureMinValue(dto.RoundNumber, 1, WorkoutTemplateExerciseErrorMessages.RoundNumberMustBePositive)
-            .EnsureNotEmpty(dto.Metadata, WorkoutTemplateExerciseErrorMessages.MetadataRequired)
+            .EnsureNotEmpty(dto.Phase, WorkoutTemplateExerciseErrorMessages.InvalidZone)
+            .Ensure(() => IsValidPhase(dto.Phase), WorkoutTemplateExerciseErrorMessages.InvalidZoneWarmupMainCooldown)
+            .EnsureMinValue(dto.RoundNumber, 1, "Round number must be at least 1")
+            .EnsureNotEmpty(dto.Metadata, "Metadata is required for exercise configuration")
             .EnsureAsync(
                 async () => await IsTemplateInDraftStateAsync(templateId),
-                WorkoutTemplateExerciseErrorMessages.TemplateNotInDraftState)
+                WorkoutTemplateExerciseErrorMessages.CanOnlyAddExercisesToDraftTemplates)
             .EnsureAsync(
                 async () => await IsExerciseActiveAsync(dto.ExerciseId),
-                WorkoutTemplateExerciseErrorMessages.ExerciseNotActiveOrNotFound)
+                WorkoutTemplateExerciseErrorMessages.ExerciseNotFound)
             .MatchAsync(
                 whenValid: async () => await ProcessAddExerciseWithAutoLinkingAsync(templateId, dto),
                 whenInvalid: errors => ServiceResult<AddExerciseResultDto>.Failure(
@@ -886,7 +934,16 @@ public class WorkoutTemplateExerciseService : IWorkoutTemplateExerciseService
         using var readOnlyUow = _unitOfWorkProvider.CreateReadOnly();
         
         // Query linked exercises (warmup/cooldown)
-        var linkedExercises = await _exerciseLinkDataService.GetLinkedExercisesAsync(workoutExerciseId);
+        // Note: GetLinkedExercisesAsync doesn't exist, use GetBySourceExerciseAsync for each type
+        var warmupLinks = await _exerciseLinkDataService.GetBySourceExerciseAsync(workoutExerciseId, ExerciseLinkType.WARMUP.ToString());
+        var cooldownLinks = await _exerciseLinkDataService.GetBySourceExerciseAsync(workoutExerciseId, ExerciseLinkType.COOLDOWN.ToString());
+        
+        // Combine results
+        var allLinks = new List<ExerciseLinkDto>();
+        if (warmupLinks.IsSuccess) allLinks.AddRange(warmupLinks.Data);
+        if (cooldownLinks.IsSuccess) allLinks.AddRange(cooldownLinks.Data);
+        
+        var linkedExercises = ServiceResult<List<ExerciseLinkDto>>.Success(allLinks);
         
         if (!linkedExercises.IsSuccess || !linkedExercises.Data.Any())
             return addedExercises;
@@ -977,7 +1034,7 @@ public async Task<ServiceResult<RemoveExerciseResultDto>> RemoveExerciseAsync(Wo
             WorkoutTemplateExerciseErrorMessages.TemplateNotInDraftState)
         .EnsureAsync(
             async () => await DoesExerciseExistInTemplateAsync(exerciseId, templateId),
-            WorkoutTemplateExerciseErrorMessages.ExerciseNotFoundInTemplate)
+            WorkoutTemplateExerciseErrorMessages.TemplateExerciseNotFound)
         .MatchAsync(
             whenValid: async () => await ProcessRemoveExerciseWithCleanupAsync(templateId, exerciseId));
 }
@@ -1025,7 +1082,16 @@ private async Task<List<WorkoutTemplateExercise>> FindOrphanedExercisesAsync(
     // Use ReadOnlyUnitOfWork for querying ExerciseLinks
     using var readOnlyUow = _unitOfWorkProvider.CreateReadOnly();
     
-    var linkedExercises = await _exerciseLinkDataService.GetLinkedExercisesAsync(removedWorkoutExerciseId);
+    // Get all linked exercises for the removed workout exercise
+    var warmupLinks = await _exerciseLinkDataService.GetBySourceExerciseAsync(removedWorkoutExerciseId, ExerciseLinkType.WARMUP.ToString());
+    var cooldownLinks = await _exerciseLinkDataService.GetBySourceExerciseAsync(removedWorkoutExerciseId, ExerciseLinkType.COOLDOWN.ToString());
+    
+    // Combine results
+    var allLinks = new List<ExerciseLinkDto>();
+    if (warmupLinks.IsSuccess) allLinks.AddRange(warmupLinks.Data);
+    if (cooldownLinks.IsSuccess) allLinks.AddRange(cooldownLinks.Data);
+    
+    var linkedExercises = ServiceResult<List<ExerciseLinkDto>>.Success(allLinks);
     
     if (!linkedExercises.IsSuccess) return orphanedExercises;
 
@@ -1037,7 +1103,11 @@ private async Task<List<WorkoutTemplateExercise>> FindOrphanedExercisesAsync(
 
         foreach (var otherWorkout in otherWorkoutExercises.Where(e => e.ExerciseId != removedWorkoutExerciseId))
         {
-            var otherLinks = await _exerciseLinkDataService.GetLinkedExercisesAsync(otherWorkout.ExerciseId);
+            // Check if other workout exercises link to this warmup/cooldown
+            // Use the specific link type to check for dependencies
+            var otherLinks = await _exerciseLinkDataService.GetBySourceExerciseAsync(
+                otherWorkout.ExerciseId, 
+                linkedExercise.LinkType.ToString());
             
             if (otherLinks.IsSuccess && otherLinks.Data.Any(l => l.TargetExerciseId == linkedExercise.TargetExerciseId))
             {
@@ -1456,6 +1526,13 @@ public async Task<IActionResult> CopyRound(
 ### Task 6.1: Create comprehensive BDD integration tests
 `[Pending]` (Est: 2h)
 
+**IMPORTANT: Test Builder Pattern**
+- ALL test data creation MUST use Test Builder pattern
+- Do NOT use `new()` constructors directly in tests
+- Create builders for: WorkoutTemplate, WorkoutTemplateExercise, Exercise, ExerciseLink
+- Builders provide readable, maintainable test setup
+- Example: `new WorkoutTemplateBuilder().WithName("Test").WithProtocol("REPS_AND_SETS").Build()`
+
 **Implementation:**
 - Create `/GetFitterGetBigger.API.IntegrationTests/Features/WorkoutTemplate/WorkoutTemplateExerciseManagement.feature`
 - Implement all BDD scenarios defined in the planning phase:
@@ -1468,6 +1545,8 @@ public class WorkoutTemplateExerciseManagementFeature : IntegrationTestBase
     public async Task Add_Workout_Exercise_Should_Auto_Add_Linked_Exercises()
     {
         // Given
+        // NOTE: These helper methods need to be implemented using Test Builders pattern
+        // Do NOT use new() constructors directly - use builders for readable tests
         var template = await CreateTestWorkoutTemplateAsync("Leg Burning I", "REPS_AND_SETS");
         var workoutExercise = await CreateTestExerciseAsync("Barbell Squat", ExerciseType.WORKOUT);
         var warmupExercise = await CreateTestExerciseAsync("High Knees", ExerciseType.WARMUP);
@@ -1649,9 +1728,15 @@ public class WorkoutTemplateExerciseManagementAcceptanceTests
 ### Task 7.1: Update error messages and constants
 `[Pending]` (Est: 30m)
 
+**IMPORTANT: This file already exists!**
+- The file `/GetFitterGetBigger.API/Constants/ErrorMessages/WorkoutTemplateExerciseErrorMessages.cs` ALREADY EXISTS
+- ADD new constants to the existing file, do NOT create a new one
+- Use the EXISTING constant names where they match the intent
+- Only add NEW constants for concepts that don't exist yet
+
 **Implementation:**
-- Create `/GetFitterGetBigger.API/Constants/ErrorMessages/WorkoutTemplateExerciseErrorMessages.cs`
-- Follow error message patterns from existing constants:
+- Update existing `/GetFitterGetBigger.API/Constants/ErrorMessages/WorkoutTemplateExerciseErrorMessages.cs`
+- Add any missing constants that are needed:
 
 ```csharp
 public static class WorkoutTemplateExerciseErrorMessages
