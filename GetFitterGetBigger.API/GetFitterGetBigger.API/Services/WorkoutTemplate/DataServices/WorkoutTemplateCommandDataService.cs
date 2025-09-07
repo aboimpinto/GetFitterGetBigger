@@ -5,6 +5,7 @@ using GetFitterGetBigger.API.Models.SpecializedIds;
 using GetFitterGetBigger.API.Repositories.Interfaces;
 using GetFitterGetBigger.API.Services.Infrastructure;
 using GetFitterGetBigger.API.Services.Results;
+using GetFitterGetBigger.API.Services.Validation;
 using GetFitterGetBigger.API.Services.WorkoutTemplate.Extensions;
 using Olimpo.EntityFramework.Persistency;
 using WorkoutTemplateEntity = GetFitterGetBigger.API.Models.Entities.WorkoutTemplate;
@@ -290,41 +291,58 @@ GetFitterGetBigger.API.Models.Entities.WorkoutZone.Main, // Default to Main zone
         var unitOfWork = GetUnitOfWorkFromScope(scope);
         var repository = unitOfWork.GetRepository<IWorkoutTemplateRepository>();
         
-        var source = await repository.GetByIdWithDetailsAsync(sourceId);
-        if (source.IsEmpty)
-        {
-            return ServiceResult<WorkoutTemplateDto>.Success(WorkoutTemplateDto.Empty);
-        }
-        
-        // Create duplicate using entity factory method
-        var duplicateResult = WorkoutTemplateEntity.Handler.CreateNew(
-            newName,
-            source.Description,
-            source.CategoryId,
-            source.DifficultyId,
-            source.EstimatedDurationMinutes,
-            source.Tags?.ToList(),
-            source.IsPublic,
-            WorkoutStateConstants.DraftId,
-            source.ExecutionProtocolId
-        );
-        
-        if (!duplicateResult.IsSuccess)
-        {
-            return ServiceResult<WorkoutTemplateDto>.Failure(WorkoutTemplateDto.Empty, ServiceError.ValidationFailed("Failed to create duplicate"));
-        }
-        
-        var duplicate = duplicateResult.Value;
-        // Note: Objectives and Exercises will need to be handled separately after entity creation
-        
-        await repository.AddAsync(duplicate);
-        // Don't commit here - let the scope owner commit
-        
-        // Reload with full details
-        var created = await repository.GetByIdWithDetailsAsync(duplicate.Id);
-        var dto = created.ToDto();
-        
-        return ServiceResult<WorkoutTemplateDto>.Success(dto);
+        // Use ServiceValidate pattern for single exit point
+        // Note: We use Build<T> here even without validations to maintain single exit point
+        return await ServiceValidate.Build<WorkoutTemplateDto>()
+            .MatchAsync(
+                async () =>
+                {
+                    // Load source template
+                    var source = await repository.GetByIdWithDetailsAsync(sourceId);
+                    
+                    // Handle empty source - return success with empty DTO
+                    if (source.IsEmpty)
+                    {
+                        return ServiceResult<WorkoutTemplateDto>.Success(WorkoutTemplateDto.Empty);
+                    }
+                    
+                    // Create duplicate using entity factory method
+                    var duplicateResult = WorkoutTemplateEntity.Handler.CreateNew(
+                        newName,
+                        source.Description,
+                        source.CategoryId,
+                        source.DifficultyId,
+                        source.EstimatedDurationMinutes,
+                        source.Tags?.ToList(),
+                        source.IsPublic,
+                        WorkoutStateConstants.DraftId,
+                        source.ExecutionProtocolId
+                    );
+                    
+                    // Handle entity creation failure
+                    if (!duplicateResult.IsSuccess)
+                    {
+                        return ServiceResult<WorkoutTemplateDto>.Failure(
+                            WorkoutTemplateDto.Empty, 
+                            ServiceError.ValidationFailed($"Failed to create duplicate: {duplicateResult.Error?.Message ?? "Unknown error"}"));
+                    }
+                    
+                    var duplicate = duplicateResult.Value;
+                    // Note: Objectives and Exercises will need to be handled separately after entity creation
+                    
+                    // Add to repository
+                    await repository.AddAsync(duplicate);
+                    // Don't commit here - let the scope owner commit
+                    
+                    // Reload with full details
+                    var created = await repository.GetByIdWithDetailsAsync(duplicate.Id);
+                    var dto = created.ToDto();
+                    
+                    return ServiceResult<WorkoutTemplateDto>.Success(dto);
+                },
+                errors => ServiceResult<WorkoutTemplateDto>.Failure(
+                    WorkoutTemplateDto.Empty,
+                    errors.First()));
     }
     
     private async Task<ServiceResult<BooleanResultDto>> DeleteWithoutScopeAsync(
