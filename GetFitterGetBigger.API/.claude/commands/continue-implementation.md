@@ -6,7 +6,7 @@ Triggers the feature-implementation-executor agent to continue implementing the 
 Delegates to the @feature-implementation-executor agent which will:
 
 1. **Identify** the current feature in /memory-bank/features/2-IN_PROGRESS/
-2. **Find** the next uncompleted task or checkpoint in feature-tasks.md
+2. **Find** the next uncompleted task or checkpoint in feature-tasks.md or phase files
 3. **Execute** implementation following CODE_QUALITY_STANDARDS.md
 4. **Test** comprehensively with proper coverage
 5. **Stop** at checkpoints for validation
@@ -51,9 +51,15 @@ graph TD
     L --> M[Complete]
 ```
 
-## Code Review File Structure:
+## Feature File Structure:
 ```
 /memory-bank/features/2-IN_PROGRESS/FEAT-XXX-[feature-name]/
+├── feature-tasks.md         # Main file with phase overview and links
+├── Phases/                   # Phase breakdown directory
+│   ├── Phase 1: Planning & Analysis.md
+│   ├── Phase 2: Models & Database.md
+│   ├── Phase 3: Repository Layer.md
+│   └── Phase N: [Phase Name].md
 ├── code-reviews/
 │   ├── Phase_1_[Name]/
 │   │   └── Code-Review-Phase-1-[Name]-YYYY-MM-DD-HH-MM-[STATUS].md
@@ -85,6 +91,27 @@ Notes:
 - [Review findings if applicable]
 - Ready to proceed to Phase [X+1]
 ```
+
+## Phase File Support:
+
+### Feature-tasks.md Structure:
+The main feature-tasks.md file now contains:
+- Feature overview and metadata
+- Phase summary table with links to phase files
+- Overall progress tracking
+
+### Phase Files:
+Each phase is extracted to `/Phases/Phase N: [Phase Name].md` containing:
+- All tasks for that specific phase
+- Checkpoint for the phase
+- Detailed implementation steps
+
+### Agent Behavior:
+The feature-implementation-executor agent will:
+1. Check feature-tasks.md for phase structure
+2. If phases are in separate files, navigate to current phase file
+3. Execute tasks from the appropriate phase file
+4. Update both phase file and main feature-tasks.md
 
 ## Agent Invocation:
 
