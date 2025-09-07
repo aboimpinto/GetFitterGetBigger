@@ -1,3 +1,4 @@
+using GetFitterGetBigger.API.Constants;
 using GetFitterGetBigger.API.DTOs;
 using GetFitterGetBigger.API.Models;
 using GetFitterGetBigger.API.Models.SpecializedIds;
@@ -69,7 +70,7 @@ public class WorkoutTemplateCommandDataService(
         WorkoutTemplateId id,
         ITransactionScope? scope = null)
     {
-        var result = await ChangeStateAsync(id, WorkoutStateId.ParseOrEmpty("workoutstate-11111111-1111-1111-1111-111111111112"), scope); // Use proper archived state ID
+        var result = await ChangeStateAsync(id, WorkoutStateConstants.ArchivedId, scope);
         return ServiceResult<BooleanResultDto>.Success(BooleanResultDto.Create(result.IsSuccess));
     }
     
@@ -304,7 +305,7 @@ GetFitterGetBigger.API.Models.Entities.WorkoutZone.Main, // Default to Main zone
             source.EstimatedDurationMinutes,
             source.Tags?.ToList(),
             source.IsPublic,
-            WorkoutStateId.ParseOrEmpty("workoutstate-11111111-1111-1111-1111-111111111111"),
+            WorkoutStateConstants.DraftId,
             source.ExecutionProtocolId
         );
         
