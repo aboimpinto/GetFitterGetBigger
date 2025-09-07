@@ -163,13 +163,17 @@ public class SetConfigurationService : ISetConfigurationService
             return ServiceResult<BooleanResultDto>.Success(BooleanResultDto.Create(false));
             
         return await ServiceValidate.Build<BooleanResultDto>()
-            .WhenValidAsync(async () =>
-            {
-                using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
-                var repository = unitOfWork.GetRepository<ISetConfigurationRepository>();
-                var setConfiguration = await repository.GetByIdAsync(id);
-                return ServiceResult<BooleanResultDto>.Success(BooleanResultDto.Create(setConfiguration != null && !setConfiguration.IsEmpty));
-            });
+            .MatchAsync(
+                whenValid: async () =>
+                {
+                    using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
+                    var repository = unitOfWork.GetRepository<ISetConfigurationRepository>();
+                    var setConfiguration = await repository.GetByIdAsync(id);
+                    return ServiceResult<BooleanResultDto>.Success(BooleanResultDto.Create(setConfiguration != null && !setConfiguration.IsEmpty));
+                },
+                whenInvalid: (errors) => ServiceResult<BooleanResultDto>.Failure(
+                    BooleanResultDto.Empty,
+                    errors.FirstOrDefault() ?? ServiceError.ValidationFailed("Unknown error")));
     }
 
     public async Task<ServiceResult<BooleanResultDto>> ExistsAsync(WorkoutTemplateExerciseId workoutTemplateExerciseId, int setNumber)
@@ -181,13 +185,17 @@ public class SetConfigurationService : ISetConfigurationService
             return ServiceResult<BooleanResultDto>.Success(BooleanResultDto.Create(false));
             
         return await ServiceValidate.Build<BooleanResultDto>()
-            .WhenValidAsync(async () =>
-            {
-                using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
-                var repository = unitOfWork.GetRepository<ISetConfigurationRepository>();
-                var exists = await repository.ExistsAsync(workoutTemplateExerciseId, setNumber);
-                return ServiceResult<BooleanResultDto>.Success(BooleanResultDto.Create(exists));
-            });
+            .MatchAsync(
+                whenValid: async () =>
+                {
+                    using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
+                    var repository = unitOfWork.GetRepository<ISetConfigurationRepository>();
+                    var exists = await repository.ExistsAsync(workoutTemplateExerciseId, setNumber);
+                    return ServiceResult<BooleanResultDto>.Success(BooleanResultDto.Create(exists));
+                },
+                whenInvalid: (errors) => ServiceResult<BooleanResultDto>.Failure(
+                    BooleanResultDto.Empty,
+                    errors.FirstOrDefault() ?? ServiceError.ValidationFailed("Unknown error")));
     }
 
     // Private helper methods

@@ -54,13 +54,16 @@ When the user types `/review-feature FEAT-XXX [options]`, you should:
    - If not found in expected location, check agent output and save it yourself
    - Verify fix tasks were added to feature-tasks.md if violations found
 
-6. **Update Feature Tasks**:
-   - Open the feature-tasks.md file in the feature folder
-   - If initial review: Add report link in Final Code Review checkpoint
+6. **Update Feature Tasks or Phase Checkpoint**:
+   - Check if feature has `Phases/` directory:
+     - If yes: Find active phase document and update its checkpoint
+     - Look for `## CHECKPOINT:` section in the phase document
+     - Update the phase checkpoint, NOT feature-tasks.md
+   - If no phases: Update feature-tasks.md as before
+   - If initial review: Add report link in Code Review checkpoint
    - If incremental: Update existing checkpoint with new iteration
-   - If violations found: Verify "Code Review" phase exists at END of file
-     - Should be ONE phase for ALL reviews, not multiple phases
-     - Each review adds a subsection with date and report name
+   - If violations found: Verify "Code Review" section exists
+     - Each review adds a numbered entry with status and summary
    - Add review commit hash for tracking
 
 7. **Provide Enhanced Summary to User**:

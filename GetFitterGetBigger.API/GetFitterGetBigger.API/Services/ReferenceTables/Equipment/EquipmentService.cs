@@ -86,7 +86,11 @@ public class EquipmentService(
                 async () => await IsNameUniqueAsync(command!.Name),
                 "Equipment",
                 command?.Name ?? string.Empty)
-            .WhenValidAsync(async () => await _dataService.CreateAsync(command!));
+            .MatchAsync(
+                whenValid: async () => await _dataService.CreateAsync(command!),
+                whenInvalid: (errors) => ServiceResult<EquipmentDto>.Failure(
+                    EquipmentDto.Empty,
+                    errors.FirstOrDefault() ?? ServiceError.ValidationFailed("Unknown error")));
     }
 
     /// <inheritdoc/>
@@ -103,7 +107,11 @@ public class EquipmentService(
                 async () => await IsNameUniqueForUpdateAsync(command!.Name, id),
                 "Equipment",
                 command?.Name ?? string.Empty)
-            .WhenValidAsync(async () => await _dataService.UpdateAsync(id, command!));
+            .MatchAsync(
+                whenValid: async () => await _dataService.UpdateAsync(id, command!),
+                whenInvalid: (errors) => ServiceResult<EquipmentDto>.Failure(
+                    EquipmentDto.Empty,
+                    errors.FirstOrDefault() ?? ServiceError.ValidationFailed("Unknown error")));
     }
 
     /// <inheritdoc/>
@@ -117,7 +125,11 @@ public class EquipmentService(
             .EnsureAsync(
                 async () => await CanDeleteInternalAsync(id),
                 new ServiceError(ServiceErrorCode.DependencyExists, EquipmentErrorMessages.BusinessRules.CannotDeleteInUse))
-            .WhenValidAsync(async () => await _dataService.DeleteAsync(id));
+            .MatchAsync(
+                whenValid: async () => await _dataService.DeleteAsync(id),
+                whenInvalid: (errors) => ServiceResult<BooleanResultDto>.Failure(
+                    BooleanResultDto.Empty,
+                    errors.FirstOrDefault() ?? ServiceError.ValidationFailed("Unknown error")));
     }
 
     // Private helper methods for validation

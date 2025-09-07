@@ -38,10 +38,7 @@ public class WorkoutTemplateService(
         return await ServiceValidate.For<WorkoutTemplateDto>()
             .EnsureNotEmpty(id, WorkoutTemplateErrorMessages.InvalidIdFormat)
             .MatchAsync(
-                whenValid: async () => await _queryDataService.GetByIdWithDetailsAsync(id),
-                whenInvalid: (errors) => ServiceResult<WorkoutTemplateDto>.Failure(
-                    WorkoutTemplateDto.Empty,
-                    errors.FirstOrDefault() ?? ServiceError.ValidationFailed("Unknown error")));
+                whenValid: async () => await _queryDataService.GetByIdWithDetailsAsync(id));
     }
 
     public async Task<ServiceResult<PagedResponse<WorkoutTemplateDto>>> SearchAsync(

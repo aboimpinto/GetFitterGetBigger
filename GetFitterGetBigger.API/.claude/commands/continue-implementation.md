@@ -22,7 +22,7 @@ When the feature-implementation-executor reaches a checkpoint, this command will
 4. **Save the review report** to the correct location
 5. **Update the checkpoint** with review results
 
-### Phase 3: Checkpoint Update
+### Phase 3: Checkpoint and Phase Transition Update
 After code review completion:
 
 1. **Extract review status** (APPROVED/APPROVED_WITH_NOTES/REQUIRES_CHANGES)
@@ -30,7 +30,11 @@ After code review completion:
    - Code review file path
    - Review status
    - Git commit hash (if available)
-3. **Follow template** from `/memory-bank/DevelopmentGuidelines/Templates/FeatureCheckpointTemplate.md`
+3. **Update Phase Overview Table**:
+   - Mark current phase as "✅ Complete" with actual time
+   - Mark next phase as "⏳ In Progress" (if exists)
+   - Update task completion count for the phase
+4. **Follow template** from `/memory-bank/DevelopmentGuidelines/Templates/FeatureCheckpointTemplate.md`
 
 ## Implementation Flow:
 

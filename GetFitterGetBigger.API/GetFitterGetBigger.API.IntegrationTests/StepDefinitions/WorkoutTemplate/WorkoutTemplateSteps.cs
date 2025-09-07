@@ -38,8 +38,11 @@ public class WorkoutTemplateSteps
     [Given(@"the following workout states exist:")]
     public async Task GivenTheFollowingWorkoutStatesExist(Table table)
     {
-        // Workout states are seeded by the database, this is for documentation
-        await Task.CompletedTask;
+        await _fixture.ExecuteDbContextAsync(async context =>
+        {
+            var seeder = new TestDatabaseSeeder(context);
+            await seeder.SeedWorkoutStatesAsync();
+        });
     }
 
     [Given(@"the following workout categories exist:")]

@@ -291,6 +291,14 @@ public class WorkoutTemplateValidationSteps
     public async Task ThenANewTemplateShouldBeCreatedInDRAFTState()
     {
         _lastResponse.Should().NotBeNull();
+        
+        // Debug: if conflict, check the error response
+        if (_lastResponse!.StatusCode == HttpStatusCode.Conflict)
+        {
+            var errorContent = await _lastResponse.Content.ReadAsStringAsync();
+            throw new InvalidOperationException($"Duplication failed with conflict. Response: {errorContent}");
+        }
+        
         _lastResponse!.StatusCode.Should().Be(HttpStatusCode.Created);
         
         _duplicatedTemplate = await _lastResponse.Content.ReadFromJsonAsync<WorkoutTemplateDto>();

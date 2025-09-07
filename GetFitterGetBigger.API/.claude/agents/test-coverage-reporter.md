@@ -171,3 +171,35 @@ Generated: [Date]
 2. Cover error handling paths in controllers
 3. Test edge cases in validation logic
 ```
+
+## Saving Reports to Memory Bank
+
+### When Working with Features
+If running coverage for a specific feature:
+
+1. **Detect Phase Structure**:
+   - Check if feature has `Phases/` directory
+   - If yes, identify active phase from phase files
+   - Create report location: `test-coverage/Phase_X_[PhaseName]/`
+
+2. **Save Coverage Report**:
+   - Filename: `Test-Coverage-Phase-X-[PhaseName]-YYYY-MM-DD-HH-mm.md`
+   - Location: `/memory-bank/features/[STATUS]/[FEAT-XXX]/test-coverage/Phase_X_[PhaseName]/`
+   - Include both markdown summary and link to HTML report
+
+3. **Update Phase Checkpoint**:
+   - If phases exist: Update checkpoint in `Phases/Phase X: [Name].md`
+   - Look for `## CHECKPOINT:` section
+   - Add coverage report to checkpoint:
+   ```markdown
+   **Test Coverage Reports:**
+   1. **Coverage Report**: `/path/to/coverage-report.md`
+      - Line Coverage: XX%
+      - Branch Coverage: XX%
+      - Critical Gaps: [number] identified
+   ```
+
+### For General Project Coverage
+If not feature-specific:
+- Save to `/memory-bank/test-coverage/coverage-report-YYYY-MM-DD.md`
+- Include executive summary and link to full HTML report

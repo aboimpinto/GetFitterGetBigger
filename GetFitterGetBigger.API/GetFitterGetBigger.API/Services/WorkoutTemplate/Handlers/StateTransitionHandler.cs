@@ -34,7 +34,11 @@ public class StateTransitionHandler(
             .EnsureExistsAsync(
                 async () => await WorkoutStateExistsAsync(newStateId),
                 "WorkoutState")
-            .WhenValidAsync(async () => await PerformStateChangeAsync(templateId, newStateId));
+            .MatchAsync(
+                whenValid: async () => await PerformStateChangeAsync(templateId, newStateId),
+                whenInvalid: (errors) => ServiceResult<WorkoutTemplateDto>.Failure(
+                    WorkoutTemplateDto.Empty,
+                    errors.FirstOrDefault() ?? ServiceError.ValidationFailed("Unknown error")));
     }
 
     private async Task<ServiceResult<WorkoutTemplateDto>> PerformStateChangeAsync(
@@ -51,7 +55,8 @@ public class StateTransitionHandler(
             .EnsureAsync(
                 async () => await IsValidStateTransitionAsync(existingTemplate, newStateId),
                 WorkoutTemplateErrorMessages.InvalidStateTransition)
-            .WhenValidAsync(async () =>
+            .MatchAsync(
+                whenValid: async () =>
                 {
                     // Update the state - create new record instance with updated values
                     var updatedTemplate = existingTemplate with 
@@ -68,7 +73,10 @@ public class StateTransitionHandler(
                         templateId, existingTemplate.WorkoutStateId, newStateId);
 
                     return ServiceResult<WorkoutTemplateDto>.Success(savedTemplate.ToDto());
-                });
+                },
+                whenInvalid: (errors) => ServiceResult<WorkoutTemplateDto>.Failure(
+                    WorkoutTemplateDto.Empty,
+                    errors.FirstOrDefault() ?? ServiceError.ValidationFailed("Unknown error")));
     }
 
     private async Task<bool> IsValidStateTransitionAsync(

@@ -65,4 +65,15 @@ public class PagedResponse<T>
     public PagedResponse()
     {
     }
+    
+    /// <summary>
+    /// Empty paged response instance following the Empty pattern
+    /// </summary>
+    public static PagedResponse<T> Empty => new()
+    {
+        Items = new List<T>(),
+        CurrentPage = 0,
+        PageSize = 0,
+        TotalCount = 0
+    };
 }

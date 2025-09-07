@@ -44,10 +44,17 @@ else:
 
 ## Review Process
 
-### Step 1: Load Standards
+### Step 1: Load Standards and Analyze Feature Structure
 - Read /memory-bank/CODE_QUALITY_STANDARDS.md completely
 - Understand ALL golden rules and patterns
 - Note critical anti-patterns to check for
+- **Phase Detection**:
+  - Check if `Phases/` directory exists in the feature folder
+  - If yes: Identify the active phase by:
+    - Looking for files matching `Phase X: [Name].md` pattern
+    - Finding checkpoint sections with `[IN_PROGRESS]` or recent dates
+    - Note the phase number and name for report organization
+  - This determines where reports will be saved and checkpoints updated
 
 ### Step 2: Extract Commits and Build File Map
 - Read the feature-tasks.md file from the feature folder
@@ -273,32 +280,52 @@ If violations were found:
 6. IMPORTANT: Always use ONE "Code Review" phase for ALL reviews, adding subsections for each review iteration
 
 ### Step 9: Save Report and Update Tracking
+
+#### 9.1: Determine Report Location and Filename
+- First, identify the current phase:
+  1. Check if `Phases/` directory exists in feature folder
+  2. If exists, find the active phase by looking for files with "Phase X:" pattern
+  3. Determine which phase is active (look for `[IN_PROGRESS]` or recent activity)
+  4. Create phase-specific subfolder: `code-reviews/Phase_X_[PhaseName]/`
+  5. Example: `code-reviews/Phase_2_Models_Database/`
 - Determine report filename:
-  1. Start with base name: `code-review-report-[YYYY-MM-DD]`
-  2. Check if file with this name already exists in feature folder
-  3. If exists, add sequence number: `code-review-report-[YYYY-MM-DD]-001.md`
-  4. If that exists, increment: `code-review-report-[YYYY-MM-DD]-002.md`
-  5. Continue incrementing until finding an available filename
-  Example: If `code-review-report-2025-01-04.md` and `code-review-report-2025-01-04-001.md` exist, use `code-review-report-2025-01-04-002.md`
-- Save report with determined filename
-- If incremental review, note this is an update/iteration in the report header
-- Update feature-tasks.md or Phase checkpoint:
-  - Look for existing "Code Review Reports" section in the checkpoint
-  - If no review reports exist yet, create the section
-  - ADD the new report to the LIST (DO NOT REPLACE existing reports):
+  1. For phase-based structure: `Code-Review-Phase-X-[PhaseName]-YYYY-MM-DD-HH-mm-[STATUS].md`
+  2. STATUS can be: `APPROVED`, `REQUIRES_CHANGES`, or `REJECTED`
+  3. Example: `Code-Review-Phase-2-Models-Database-2025-09-07-15-30-REQUIRES_CHANGES.md`
+  4. For non-phase structure: Use existing pattern `code-review-report-YYYY-MM-DD-XXX.md`
+
+#### 9.2: Save the Report
+- Save report in the appropriate location:
+  - If phases exist: `/memory-bank/features/[STATUS]/[FEAT-XXX]/code-reviews/Phase_X_[PhaseName]/`
+  - If no phases: `/memory-bank/features/[STATUS]/[FEAT-XXX]/code-reviews/`
+- Include phase information in report header if applicable
+
+#### 9.3: Update the Appropriate Checkpoint
+- **CRITICAL**: Determine where to update the checkpoint:
+  1. If `Phases/` directory exists:
+     - Open the active phase document (e.g., `Phases/Phase 2: Models & Database.md`)
+     - Look for `## CHECKPOINT:` section
+     - Update the checkpoint in the PHASE document, NOT feature-tasks.md
+  2. If no phases structure:
+     - Update feature-tasks.md as before
+     
+- Update the checkpoint with review information:
+  - Find or create "**Code Review Reports:**" section in the checkpoint
+  - ADD the new report to the LIST (DO NOT REPLACE):
     ```markdown
     **Code Review Reports:**
-    1. **Review 1**: [path/to/first-review.md]
-       - Status: [status]
-       - Issues: [summary]
-    2. **Review 2**: [path/to/second-review.md]  
-       - Status: [status]
-       - Issues: [summary]
+    1. **Initial Review**: `/path/to/review-1.md`
+       - Status: REQUIRES_CHANGES (78% quality score)
+       - Issues: Magic strings, ServiceResult violations
+       
+    2. **Second Review**: `/path/to/review-2.md`
+       - Status: APPROVED (91% approval rate)
+       - Critical Issues: 0 (All resolved)
+       - Result: CLEARED FOR PHASE PROGRESSION
     ```
-  - Each review gets a sequential number
-  - Preserve ALL previous review entries
-  - Note review iteration number
-  - Add git commit hash for this review
+  - Include key metrics: approval rate, critical issues count, status
+  - Note if this blocks or clears phase progression
+  - Add commit hash reviewed
   - Mark review task as complete if all passes
 
 ## Important Notes

@@ -55,11 +55,11 @@ public static class ExecutionProtocolConstants
     // ID constants for database references
     
     /// <summary>
-    /// REPS_AND_SETS ID (30000003-3000-4000-8000-300000000001).
+    /// REPS_AND_SETS ID (executionprotocol-30000003-3000-4000-8000-300000000001).
     /// Traditional workout with fixed sets and repetitions.
     /// This is the default ExecutionProtocol for new WorkoutTemplates.
     /// </summary>
-    public const string RepsAndSetsIdString = "30000003-3000-4000-8000-300000000001";
+    public const string RepsAndSetsIdString = "executionprotocol-30000003-3000-4000-8000-300000000001";
     
     /// <summary>
     /// REPS_AND_SETS ID as ExecutionProtocolId.
@@ -69,10 +69,10 @@ public static class ExecutionProtocolConstants
         ExecutionProtocolId.ParseOrEmpty(RepsAndSetsIdString);
     
     /// <summary>
-    /// SUPERSET ID (30000003-3000-4000-8000-300000000002).
+    /// SUPERSET ID (executionprotocol-30000003-3000-4000-8000-300000000002).
     /// Two exercises performed back-to-back without rest.
     /// </summary>
-    public const string SupersetIdString = "30000003-3000-4000-8000-300000000002";
+    public const string SupersetIdString = "executionprotocol-30000003-3000-4000-8000-300000000002";
     
     /// <summary>
     /// SUPERSET ID as ExecutionProtocolId.
@@ -82,10 +82,10 @@ public static class ExecutionProtocolConstants
         ExecutionProtocolId.ParseOrEmpty(SupersetIdString);
     
     /// <summary>
-    /// DROP_SET ID (30000003-3000-4000-8000-300000000003).
+    /// DROP_SET ID (executionprotocol-30000003-3000-4000-8000-300000000003).
     /// Reducing weight after reaching failure.
     /// </summary>
-    public const string DropSetIdString = "30000003-3000-4000-8000-300000000003";
+    public const string DropSetIdString = "executionprotocol-30000003-3000-4000-8000-300000000003";
     
     /// <summary>
     /// DROP_SET ID as ExecutionProtocolId.
@@ -95,10 +95,10 @@ public static class ExecutionProtocolConstants
         ExecutionProtocolId.ParseOrEmpty(DropSetIdString);
     
     /// <summary>
-    /// AMRAP ID (30000003-3000-4000-8000-300000000004).
+    /// AMRAP ID (executionprotocol-30000003-3000-4000-8000-300000000004).
     /// As Many Reps As Possible in a given time.
     /// </summary>
-    public const string AmrapIdString = "30000003-3000-4000-8000-300000000004";
+    public const string AmrapIdString = "executionprotocol-30000003-3000-4000-8000-300000000004";
     
     /// <summary>
     /// AMRAP ID as ExecutionProtocolId.

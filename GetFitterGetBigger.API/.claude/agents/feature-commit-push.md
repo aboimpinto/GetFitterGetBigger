@@ -22,7 +22,11 @@ You are an agent that automates the git commit, push, and feature checkpoint upd
    - If user provided feature name in the prompt, use that
 
 2. **Find Active Checkpoint**:
-   - Read the feature's `feature-tasks.md` file
+   - Check if feature has `Phases/` directory:
+     - If yes: Find active phase file (look for `[IN_PROGRESS]` in checkpoint)
+     - Read the phase document (e.g., `Phases/Phase 2: Models & Database.md`)
+     - Locate the `## CHECKPOINT:` section in the phase document
+   - If no phases: Read the feature's `feature-tasks.md` file
    - Find the last task marked as `[x] COMPLETED`
    - The checkpoint immediately after this task is the active one
    - If user specified a checkpoint, use that instead
@@ -55,12 +59,16 @@ You are an agent that automates the git commit, push, and feature checkpoint upd
 6. **Update Feature Checkpoint**:
    - Get the commit hash with `git rev-parse HEAD`
    - Get the short hash with `git rev-parse --short HEAD`
-   - Update the active checkpoint in `feature-tasks.md` with:
+   - **CRITICAL**: Update the correct checkpoint location:
+     - If phases exist: Update checkpoint in the phase document (NOT feature-tasks.md)
+     - If no phases: Update checkpoint in feature-tasks.md
+   - Add commit information to checkpoint:
      ```
      **Git Commits:**
      - `<short-hash>`: <one-sentence summary of what was done>
      ```
    - If checkpoint already has commits, append to the list
+   - For phase checkpoints, also update the status if needed (e.g., `[COMPLETE]`)
 
 ### Input Parameters
 

@@ -264,12 +264,14 @@ Before marking task complete:
    `[Complete]` (Est: Xh, Actual: Yh) - Completed: YYYY-MM-DD HH:MM
    ```
 
-2. Update phase status in main `feature-tasks.md`:
+2. Update phase status in main `feature-tasks.md` Phase Overview table:
    ```markdown
-   ## Phase N: [Phase Name]
-   **Status:** `[InProgress]` - X/Y tasks complete
-   **File:** [Phase N: Phase Name.md](./Phases/Phase%20N:%20Phase%20Name.md)
+   | Phase | Name | Status | Tasks | Estimated | Actual | File |
+   |-------|------|--------|-------|-----------|--------|------|
+   | N | [Name] | ⏳ In Progress | X/Y | 4h 0m | Xh Ym+ | [...] |
    ```
+   
+   **Important**: Update the Tasks column (X/Y) to reflect completed vs total tasks
 
 **For Single File Structure:**
 Update task directly in feature-tasks.md:
@@ -349,7 +351,33 @@ When reaching a checkpoint:
    Authored-By: Paulo Aboim Pinto <aboimpinto@gmail.com>"
    ```
 
-3. **Update Checkpoint with Review Results**:
+3. **Update Phase Overview Table in feature-tasks.md**:
+   
+   When checkpoint is APPROVED and phase is complete:
+   ```markdown
+   ## Phase Transition Updates
+   
+   1. Update current phase in table:
+      - Status: ✅ Complete
+      - Tasks: X/X (all complete)
+      - Actual: [Calculate total hours]
+   
+   2. Update next phase in table (if exists):
+      - Status: ⏳ In Progress
+      - Tasks: 0/Y
+   
+   3. Update total progress percentage
+   ```
+   
+   Example:
+   ```markdown
+   | Phase | Name | Status | Tasks | Estimated | Actual | File |
+   |-------|------|--------|-------|-----------|--------|------|
+   | 2 | Models & Database | ✅ Complete | 4/4 | 4h 0m | 3h 30m | [...] |
+   | 3 | Repository Layer | ⏳ In Progress | 0/2 | 3h 0m | - | [...] |
+   ```
+
+4. **Update Checkpoint with Review Results**:
    
    **Location:**
    - If using phase files: Update in `/Phases/Phase N: [Phase Name].md`
@@ -500,6 +528,62 @@ When a task is blocked:
    ```
 
 3. Skip to next unblocked task if available
+
+## Phase Transition Process
+
+When completing a phase checkpoint (APPROVED status):
+
+### 1. Complete Current Phase in Overview Table
+Update the phase row in feature-tasks.md:
+```markdown
+| 2 | Models & Database | ✅ Complete | 4/4 | 4h 0m | 3h 30m | [Phase 2: Models & Database.md](./Phases/Phase%202:%20Models%20&%20Database.md) |
+```
+- Change Status from "⏳ In Progress" to "✅ Complete"
+- Ensure Tasks shows all complete (e.g., "4/4")
+- Update Actual time with total hours spent
+
+### 2. Start Next Phase in Overview Table
+Update the next phase row:
+```markdown
+| 3 | Repository Layer | ⏳ In Progress | 0/2 | 3h 0m | - | [Phase 3: Repository Layer.md](./Phases/Phase%203:%20Repository%20Layer.md) |
+```
+- Change Status from "🔄 Pending" to "⏳ In Progress"
+- Keep Tasks at "0/X" (no tasks complete yet)
+- Keep Actual as "-" (no time spent yet)
+
+### 3. Update Current Status Section
+```markdown
+## 📝 Current Status
+
+### Active Phase: Phase 3 - Repository Layer
+- **Current Task**: Ready to begin implementation
+- **Blockers**: None
+- **Next Steps**: Begin Phase 3 repository implementation tasks
+```
+
+### 4. Update Recent Achievements
+Add the completed phase to achievements:
+```markdown
+### Recent Achievements
+✅ Phase 1 completed with comprehensive codebase analysis
+✅ Phase 2 completed with all critical violations fixed
+✅ [New achievements from current phase]
+```
+
+### 5. Update Code Review Status
+Add or update the phase review status:
+```markdown
+### Code Review Status
+- **Phase 1**: ✅ APPROVED (97% quality score)
+- **Phase 2**: ✅ APPROVED (97/100 quality score, 100% Golden Rules compliance)
+- **Phase 3**: 🔄 Pending
+```
+
+### 6. Update Total Progress
+Calculate and update:
+```markdown
+**Total Progress**: X/20 tasks complete (Y%)
+```
 
 ## Success Criteria
 

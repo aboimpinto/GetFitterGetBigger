@@ -130,7 +130,11 @@ public class MuscleGroupService(
             .EnsureNameIsUniqueAsync(
                 async () => await IsNameUniqueAsync(command.Name),
                 "MuscleGroup", command.Name)
-            .WhenValidAsync(async () => await _dataService.CreateAsync(command));
+            .MatchAsync(
+                whenValid: async () => await _dataService.CreateAsync(command),
+                whenInvalid: (errors) => ServiceResult<MuscleGroupDto>.Failure(
+                    MuscleGroupDto.Empty,
+                    errors.FirstOrDefault() ?? ServiceError.ValidationFailed("Unknown error")));
     }
 
     /// <inheritdoc/>
@@ -146,7 +150,11 @@ public class MuscleGroupService(
             .EnsureNameIsUniqueAsync(
                 async () => await IsNameUniqueForUpdateAsync(command.Name, id),
                 "MuscleGroup", command.Name)
-            .WhenValidAsync(async () => await _dataService.UpdateAsync(id, command));
+            .MatchAsync(
+                whenValid: async () => await _dataService.UpdateAsync(id, command),
+                whenInvalid: (errors) => ServiceResult<MuscleGroupDto>.Failure(
+                    MuscleGroupDto.Empty,
+                    errors.FirstOrDefault() ?? ServiceError.ValidationFailed("Unknown error")));
     }
 
     /// <inheritdoc/>
@@ -160,7 +168,11 @@ public class MuscleGroupService(
             .EnsureAsync(
                 async () => await CanDeleteInternalAsync(id),
                 new ServiceError(ServiceErrorCode.DependencyExists, MuscleGroupErrorMessages.BusinessRules.CannotDeleteInUse))
-            .WhenValidAsync(async () => await _dataService.DeleteAsync(id));
+            .MatchAsync(
+                whenValid: async () => await _dataService.DeleteAsync(id),
+                whenInvalid: (errors) => ServiceResult<BooleanResultDto>.Failure(
+                    BooleanResultDto.Empty,
+                    errors.FirstOrDefault() ?? ServiceError.ValidationFailed("Unknown error")));
     }
 
     // Private helper methods for validation

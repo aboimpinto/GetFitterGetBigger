@@ -38,7 +38,11 @@ public class ExerciseService(
             .EnsureAsync(
                 async () => (await _queryDataService.ExistsAsync(id)).Data.Value,
                 ServiceError.NotFound("Exercise", id.ToString()))
-            .WhenValidAsync(async () => await _queryDataService.GetByIdAsync(id));
+            .MatchAsync(
+                whenValid: async () => await _queryDataService.GetByIdAsync(id),
+                whenInvalid: (errors) => ServiceResult<ExerciseDto>.Failure(
+                    ExerciseDto.Empty,
+                    errors.FirstOrDefault() ?? ServiceError.ValidationFailed("Unknown error")));
     }
     
     public async Task<ServiceResult<ExerciseDto>> CreateAsync(CreateExerciseCommand command)
@@ -67,7 +71,11 @@ public class ExerciseService(
                 async () => await _typeValidationHandler.AreMuscleGroupsValidAsync(
                     command.ExerciseTypeIds, command.MuscleGroups),
                 ExerciseErrorMessages.InvalidMuscleGroupsForExerciseType)
-            .WhenValidAsync(async () => await CreateExerciseInternalAsync(command));
+            .MatchAsync(
+                whenValid: async () => await CreateExerciseInternalAsync(command),
+                whenInvalid: (errors) => ServiceResult<ExerciseDto>.Failure(
+                    ExerciseDto.Empty,
+                    errors.FirstOrDefault() ?? ServiceError.ValidationFailed("Unknown error")));
     }
     
     private async Task<ServiceResult<ExerciseDto>> CreateExerciseInternalAsync(CreateExerciseCommand command)
@@ -123,7 +131,11 @@ public class ExerciseService(
                 async () => await _typeValidationHandler.AreMuscleGroupsValidAsync(
                     command.ExerciseTypeIds, command.MuscleGroups),
                 ExerciseErrorMessages.InvalidMuscleGroupsForExerciseType)
-            .WhenValidAsync(async () => await UpdateExerciseInternalAsync(id, command));
+            .MatchAsync(
+                whenValid: async () => await UpdateExerciseInternalAsync(id, command),
+                whenInvalid: (errors) => ServiceResult<ExerciseDto>.Failure(
+                    ExerciseDto.Empty,
+                    errors.FirstOrDefault() ?? ServiceError.ValidationFailed("Unknown error")));
     }
     
     private async Task<ServiceResult<ExerciseDto>> UpdateExerciseInternalAsync(ExerciseId id, UpdateExerciseCommand command)

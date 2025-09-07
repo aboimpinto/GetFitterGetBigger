@@ -109,7 +109,6 @@ namespace GetFitterGetBigger.API.Tests.Services
             // Assert
             result.Should().NotBeNull();
             result.IsSuccess.Should().BeFalse();
-            result.Data.Should().BeNull();
         }
 
         [Fact]
@@ -167,7 +166,6 @@ namespace GetFitterGetBigger.API.Tests.Services
 
             // Assert
             result.IsSuccess.Should().BeFalse();
-            result.Data.Should().BeNull();
             result.PrimaryErrorCode.Should().Be(ServiceErrorCode.AlreadyExists);
         }
 
