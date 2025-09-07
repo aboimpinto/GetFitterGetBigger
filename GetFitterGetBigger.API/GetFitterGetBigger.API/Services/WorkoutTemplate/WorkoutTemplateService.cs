@@ -37,7 +37,11 @@ public class WorkoutTemplateService(
     {
         return await ServiceValidate.For<WorkoutTemplateDto>()
             .EnsureNotEmpty(id, WorkoutTemplateErrorMessages.InvalidIdFormat)
-            .MatchAsync(async () => await _queryDataService.GetByIdWithDetailsAsync(id));
+            .MatchAsync(
+                whenValid: async () => await _queryDataService.GetByIdWithDetailsAsync(id),
+                whenInvalid: (errors) => ServiceResult<WorkoutTemplateDto>.Failure(
+                    WorkoutTemplateDto.Empty,
+                    errors.FirstOrDefault() ?? ServiceError.ValidationFailed("Unknown error")));
     }
 
     public async Task<ServiceResult<PagedResponse<WorkoutTemplateDto>>> SearchAsync(
@@ -55,9 +59,13 @@ public class WorkoutTemplateService(
         return await ServiceValidate.Build<PagedResponse<WorkoutTemplateDto>>()
             .EnsureNumberBetween(page, 1, int.MaxValue, WorkoutTemplateErrorMessages.PageNumberInvalid)
             .EnsureNumberBetween(pageSize, 1, 100, WorkoutTemplateErrorMessages.PageSizeInvalid)
-            .WhenValidAsync(async () => await SearchWithBusinessLogicAsync(
-                page, pageSize, namePattern, categoryId, objectiveId, 
-                difficultyId, stateId, sortBy, sortOrder));
+            .MatchAsync(
+                whenValid: async () => await SearchWithBusinessLogicAsync(
+                    page, pageSize, namePattern, categoryId, objectiveId, 
+                    difficultyId, stateId, sortBy, sortOrder),
+                whenInvalid: (errors) => ServiceResult<PagedResponse<WorkoutTemplateDto>>.Failure(
+                    PagedResponse<WorkoutTemplateDto>.Empty,
+                    errors.FirstOrDefault() ?? ServiceError.ValidationFailed("Unknown error")));
     }
 
     private async Task<ServiceResult<PagedResponse<WorkoutTemplateDto>>> SearchWithBusinessLogicAsync(
@@ -179,7 +187,11 @@ public class WorkoutTemplateService(
                 async () => await IsDraftStateAvailableAsync(),
                 ServiceError.InternalError(WorkoutTemplateErrorMessages.DraftStateNotFound))
             // Single operation when ALL validations pass
-            .WhenValidAsync(async () => await CreateWorkoutTemplateEntityAsync(command));
+            .MatchAsync(
+                whenValid: async () => await CreateWorkoutTemplateEntityAsync(command),
+                whenInvalid: (errors) => ServiceResult<WorkoutTemplateDto>.Failure(
+                    WorkoutTemplateDto.Empty,
+                    errors.FirstOrDefault() ?? ServiceError.ValidationFailed("Unknown error")));
     }
     
     private async Task<ServiceResult<WorkoutTemplateDto>> CreateWorkoutTemplateEntityAsync(CreateWorkoutTemplateCommand command)
@@ -188,8 +200,8 @@ public class WorkoutTemplateService(
         var draftStateResult = await _workoutStateService.GetByValueAsync(WorkoutStateConstants.Draft);
         var defaultWorkoutStateId = WorkoutStateId.ParseOrEmpty(draftStateResult.Data.Id);
         
-        // Use default REPS_AND_SETS ExecutionProtocol (ID from feature tasks)
-        var defaultExecutionProtocolId = ExecutionProtocolId.From(Guid.Parse("30000003-3000-4000-8000-300000000001"));
+        // Use default REPS_AND_SETS ExecutionProtocol
+        var defaultExecutionProtocolId = ExecutionProtocolConstants.RepsAndSetsId;
         
         // Create entity (validation happens at entity level)
         var entityResult = WorkoutTemplateEntity.Handler.CreateNew(
@@ -233,7 +245,11 @@ public class WorkoutTemplateService(
             .EnsureNameIsUniqueAsync(
                 async () => await IsNameUniqueForUpdateAsync(command.Name!, id),
                 "WorkoutTemplate", command.Name!)
-            .WhenValidAsync(async () => await UpdateWorkoutTemplateEntityAsync(id, command));
+            .MatchAsync(
+                whenValid: async () => await UpdateWorkoutTemplateEntityAsync(id, command),
+                whenInvalid: (errors) => ServiceResult<WorkoutTemplateDto>.Failure(
+                    WorkoutTemplateDto.Empty,
+                    errors.FirstOrDefault() ?? ServiceError.ValidationFailed("Unknown error")));
     }
     
     private async Task<bool> IsNameUniqueAsync(string name)
@@ -289,7 +305,11 @@ public class WorkoutTemplateService(
             .EnsureExistsAsync(
                 async () => (await _queryDataService.ExistsAsync(id)).Data.Value,
                 "WorkoutTemplate")
-            .WhenValidAsync(async () => await _commandDataService.ChangeStateAsync(id, newStateId));
+            .MatchAsync(
+                whenValid: async () => await _commandDataService.ChangeStateAsync(id, newStateId),
+                whenInvalid: (errors) => ServiceResult<WorkoutTemplateDto>.Failure(
+                    WorkoutTemplateDto.Empty,
+                    errors.FirstOrDefault() ?? ServiceError.ValidationFailed("Unknown error")));
     }
 
     public async Task<ServiceResult<WorkoutTemplateDto>> DuplicateAsync(WorkoutTemplateId id, string newName)
@@ -305,7 +325,11 @@ public class WorkoutTemplateService(
             .EnsureExistsAsync(
                 async () => (await _queryDataService.ExistsAsync(id)).Data.Value,
                 "WorkoutTemplate")
-            .WhenValidAsync(async () => await _commandDataService.SoftDeleteAsync(id));
+            .MatchAsync(
+                whenValid: async () => await _commandDataService.SoftDeleteAsync(id),
+                whenInvalid: (errors) => ServiceResult<BooleanResultDto>.Failure(
+                    BooleanResultDto.Empty,
+                    errors.FirstOrDefault() ?? ServiceError.ValidationFailed("Unknown error")));
     }
 
     public async Task<ServiceResult<BooleanResultDto>> DeleteAsync(WorkoutTemplateId id)
@@ -318,21 +342,33 @@ public class WorkoutTemplateService(
             .EnsureAsync(
                 async () => await IsWorkoutTemplateDeletableAsync(id),
                 ServiceError.ValidationFailed(WorkoutTemplateErrorMessages.CannotDeleteWithExecutionLogs))
-            .WhenValidAsync(async () => await _commandDataService.DeleteAsync(id));
+            .MatchAsync(
+                whenValid: async () => await _commandDataService.DeleteAsync(id),
+                whenInvalid: (errors) => ServiceResult<BooleanResultDto>.Failure(
+                    BooleanResultDto.Empty,
+                    errors.FirstOrDefault() ?? ServiceError.ValidationFailed("Unknown error")));
     }
 
     public async Task<ServiceResult<BooleanResultDto>> ExistsAsync(WorkoutTemplateId id)
     {
         return await ServiceValidate.Build<BooleanResultDto>()
             .EnsureNotEmpty(id, WorkoutTemplateErrorMessages.InvalidIdFormat)
-            .WhenValidAsync(async () => await _queryDataService.ExistsAsync(id));
+            .MatchAsync(
+                whenValid: async () => await _queryDataService.ExistsAsync(id),
+                whenInvalid: (errors) => ServiceResult<BooleanResultDto>.Failure(
+                    BooleanResultDto.Empty,
+                    errors.FirstOrDefault() ?? ServiceError.ValidationFailed("Unknown error")));
     }
 
     public async Task<ServiceResult<BooleanResultDto>> ExistsByNameAsync(string name)
     {
         return await ServiceValidate.Build<BooleanResultDto>()
             .EnsureNotWhiteSpace(name, WorkoutTemplateErrorMessages.NameCannotBeEmpty)
-            .WhenValidAsync(async () => await _queryDataService.ExistsByNameAsync(name));
+            .MatchAsync(
+                whenValid: async () => await _queryDataService.ExistsByNameAsync(name),
+                whenInvalid: (errors) => ServiceResult<BooleanResultDto>.Failure(
+                    BooleanResultDto.Empty,
+                    errors.FirstOrDefault() ?? ServiceError.ValidationFailed("Unknown error")));
     }
 
     public async Task<ServiceResult<IEnumerable<ExerciseDto>>> GetSuggestedExercisesAsync(
@@ -343,12 +379,16 @@ public class WorkoutTemplateService(
         return await ServiceValidate.Build<IEnumerable<ExerciseDto>>()
             .EnsureNotEmpty(categoryId, WorkoutTemplateErrorMessages.CategoryIdRequired)
             .EnsureNumberBetween(maxSuggestions, 1, 50, WorkoutTemplateErrorMessages.MaxSuggestionsRange)
-            .WhenValidAsync(async () => 
-            {
-                // Delegate to suggestion handler
-                return await _suggestionHandler.GetSuggestedExercisesAsync(
-                    categoryId, existingExerciseIds, maxSuggestions);
-            });
+            .MatchAsync(
+                whenValid: async () => 
+                {
+                    // Delegate to suggestion handler
+                    return await _suggestionHandler.GetSuggestedExercisesAsync(
+                        categoryId, existingExerciseIds, maxSuggestions);
+                },
+                whenInvalid: (errors) => ServiceResult<IEnumerable<ExerciseDto>>.Failure(
+                    Enumerable.Empty<ExerciseDto>(), 
+                    errors.FirstOrDefault() ?? ServiceError.ValidationFailed("Unknown error")));
     }
 
     public async Task<ServiceResult<IEnumerable<EquipmentDto>>> GetRequiredEquipmentAsync(WorkoutTemplateId id)
@@ -358,10 +398,14 @@ public class WorkoutTemplateService(
             .EnsureExistsAsync(
                 async () => (await _queryDataService.ExistsAsync(id)).Data.Value,
                 "WorkoutTemplate")
-            .WhenValidAsync(async () => 
-            {
-                // Delegate to equipment requirements service
-                return await _equipmentRequirementsService.GetRequiredEquipmentAsync(id);
-            });
+            .MatchAsync(
+                whenValid: async () => 
+                {
+                    // Delegate to equipment requirements service
+                    return await _equipmentRequirementsService.GetRequiredEquipmentAsync(id);
+                },
+                whenInvalid: (errors) => ServiceResult<IEnumerable<EquipmentDto>>.Failure(
+                    Enumerable.Empty<EquipmentDto>(), 
+                    errors.FirstOrDefault() ?? ServiceError.ValidationFailed("Unknown error")));
     }
 }

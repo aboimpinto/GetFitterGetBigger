@@ -32,9 +32,9 @@
 ## 📝 Current Status
 
 ### Active Phase: Phase 2 - Models & Database
-- **Current Task**: Task 2.3 - Create new WorkoutTemplateExercise entity design
-- **Blockers**: Code review issues from Task 2.2 need to be resolved (Golden Rules violations)
-- **Next Steps**: Fix violations, then proceed with Task 2.3
+- **Current Task**: BLOCKED - Critical code review violations
+- **Blockers**: ❌ CRITICAL - Build failing with 15 errors, ServiceValidate pattern violations
+- **Next Steps**: Fix all critical violations before proceeding (see Code Review section)
 
 ### Recent Achievements
 ✅ Phase 1 completed with comprehensive codebase analysis  
@@ -44,7 +44,7 @@
 
 ### Code Review Status
 - **Phase 1**: APPROVED (97% quality score)
-- **Phase 2**: REQUIRES_CHANGES (78% quality score - Golden Rules violations)
+- **Phase 2**: ❌ BLOCKED (62% quality score - Build failing, 5 critical violations)
 
 ## 🎯 Phase Details
 
@@ -259,7 +259,47 @@ And each exercise should include ExecutionProtocol-appropriate metadata
 - **JSON**: Use PostgreSQL JSON support for flexible metadata storage
 - **PERFORMANCE**: Proper indexing and AsNoTracking() for query optimization
 
+## Code Review
+_All code review violations and fixes are tracked here_
+
+### Review: 2025-09-07 - phase-2-review-2025-09-07 ✅ COMPLETED
+- [x] **CRITICAL**: Fix WhenValidAsync Empty pattern violation in ServiceValidationBuilderExtensions.cs:376
+- [x] **CRITICAL**: Replace WhenValidAsync() with MatchAsync() in WorkoutTemplateService.cs (10 instances)  
+- [x] **CRITICAL**: Replace WhenValidAsync() with MatchAsync() in DuplicationHandler.cs:36-55
+- [x] **CRITICAL**: Move complex nested validation logic from MatchAsync to main ServiceValidate chain (DuplicationHandler.cs:44-55)
+- [x] **CRITICAL**: Remove entity conversion anti-pattern from DuplicationHandler.cs:142-182 (ConvertToEntityAsync method)
+- [x] **CRITICAL**: Replace reflection-based ToReferenceDataDto with strongly-typed extension methods (WorkoutTemplateExtensions.cs:88-160)
+- [x] **HIGH**: Fix hardcoded DateTime.UtcNow in DTO mappings (WorkoutTemplateExtensions.cs:58-59, 81-82) - User noted entities don't have those properties (acknowledged)
+- [ ] **MEDIUM**: Refactor complex search logic into SearchHandler class (WorkoutTemplateService.cs:63-160) - Future improvement
+- [ ] **MEDIUM**: Improve documentation style in ExecutionProtocolConstants.cs (minor issue) - Future improvement  
+- [x] **CRITICAL FIXES VERIFIED**: All violations resolved in follow-up review
+- [x] **Re-run code review after fixes**: APPROVED (91% approval rate, 0 critical violations)
+
+### Review: 2025-09-07 - Follow-up Post-Fix Review ✅ APPROVED
+**Report**: [code-review-report-2025-09-07-001.md](./code-reviews/Phase_2_Models_Database/code-review-report-2025-09-07-001.md)
+**Status**: ✅ APPROVED (91% approval rate, 0 critical violations)
+**Quality Improvement**: +19% approval rate improvement (72% → 91%)
+**Critical Issues**: 8 → 0 (All resolved 🎉)
+**Phase 2 Status**: ✅ CLEARED FOR PHASE 3 PROGRESSION
+
+### Review: 2025-09-07 - Current State Review ❌ BLOCKED
+**Report**: [code-review-report-2025-09-07-002.md](./code-reviews/Phase_2_Models_Database/code-review-report-2025-09-07-002.md)
+**Status**: ❌ BLOCKED (62% approval rate, 5 critical violations, 15 build errors)
+**Build Status**: FAILING - ServiceValidate pattern violations
+**Critical Issues**: 5 critical violations causing build failures
+**Commits Reviewed**: 81c3d9ba, bf5865fe, d991daee, ebe620b8
+**Files Reviewed**: 4 files (3 modified, 1 new)
+
+**CRITICAL VIOLATIONS - MUST FIX**:
+- [ ] Fix incorrect MatchAsync signatures in WorkoutTemplateService.cs (11 instances)
+- [ ] Fix PagedResponse<WorkoutTemplateDto>.Empty reference (line 67)
+- [ ] Remove all WhenValidAsync calls from other services (15 build errors)
+- [ ] Replace magic strings with constants (multiple files)
+- [ ] Implement proper Empty pattern for DTOs
+
+**Phase 2 Status**: ❌ BLOCKED FOR PHASE 3 PROGRESSION
+
 ---
 
-**Feature Status**: IN_PROGRESS - Phase 2 Active
-**Current Focus**: Resolving code review issues and continuing with Task 2.3
+**Feature Status**: BLOCKED - Phase 2 Critical Issues
+**Current Focus**: URGENT - Fix 5 critical violations causing 15 build errors before proceeding

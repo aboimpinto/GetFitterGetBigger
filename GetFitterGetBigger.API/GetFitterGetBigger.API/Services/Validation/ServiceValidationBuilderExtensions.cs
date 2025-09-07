@@ -354,27 +354,8 @@ public static class ServiceValidationBuilderExtensions
             errorMessage);
     }
     
-    #endregion
-    
-    #region Execution Extensions
-    
-    /// <summary>
-    /// Executes the provided function when all validations pass.
-    /// This is a convenience method that simplifies the common pattern of using MatchAsync 
-    /// with only a whenValid function, automatically handling the failure case.
-    /// </summary>
-    /// <typeparam name="T">The type of data the service operation will return</typeparam>
-    /// <param name="builder">The validation builder instance</param>
-    /// <param name="whenValid">Function to execute when all validations pass</param>
-    /// <returns>The result from the whenValid function or a failure result</returns>
-    public static async Task<ServiceResult<T>> WhenValidAsync<T>(
-        this ServiceValidationBuilder<T> builder,
-        Func<Task<ServiceResult<T>>> whenValid)
-    {
-        return await builder.MatchAsync(
-            whenValid: whenValid,
-            whenInvalid: (IReadOnlyList<ServiceError> errors) => ServiceResult<T>.Failure(default(T)!, errors.FirstOrDefault() ?? ServiceError.ValidationFailed("Unknown error")));
-    }
+    // WhenValidAsync extension method removed - use MatchAsync directly
+    // This prevents Empty pattern violations from default(T)!
     
     #endregion
 }

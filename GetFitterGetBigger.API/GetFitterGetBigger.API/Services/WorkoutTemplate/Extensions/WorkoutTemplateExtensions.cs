@@ -45,7 +45,7 @@ public static class WorkoutTemplateExtensions
     public static WorkoutTemplateExerciseDto ToDto(this WorkoutTemplateExercise exercise)
     {
         if (exercise.IsEmpty)
-            return new WorkoutTemplateExerciseDto();
+            return WorkoutTemplateExerciseDto.Empty;
 
         return new()
         {
@@ -66,7 +66,7 @@ public static class WorkoutTemplateExtensions
     public static SetConfigurationDto ToDto(this SetConfiguration config)
     {
         if (config.IsEmpty)
-            return new SetConfigurationDto();
+            return SetConfigurationDto.Empty;
 
         return new()
         {
@@ -83,79 +83,82 @@ public static class WorkoutTemplateExtensions
     }
 
     /// <summary>
-    /// Maps any reference data entity to ReferenceDataDto using reflection
+    /// Maps WorkoutCategory entity to ReferenceDataDto
     /// </summary>
-    public static ReferenceDataDto ToReferenceDataDto(this object? entity)
+    public static ReferenceDataDto ToReferenceDataDto(this WorkoutCategory? entity)
     {
-        if (entity == null)
+        if (entity == null || entity.IsEmpty)
             return ReferenceDataDto.Empty;
-
-        if (IsEntityEmpty(entity))
-            return ReferenceDataDto.Empty;
-
-        var entityType = entity.GetType();
-        var id = ExtractIdValue(entity, entityType);
-        var value = ExtractValueOrName(entity, entityType);
-        var description = ExtractDescription(entity, entityType);
 
         return new ReferenceDataDto
         {
-            Id = id,
-            Value = value,
-            Description = description
+            Id = entity.Id.ToString(),
+            Value = entity.Value,
+            Description = entity.Description
         };
     }
 
     /// <summary>
-    /// Checks if the entity is considered empty using reflection
+    /// Maps DifficultyLevel entity to ReferenceDataDto
     /// </summary>
-    /// <param name="entity">The entity to check</param>
-    /// <returns>True if the entity is empty, false otherwise</returns>
-    private static bool IsEntityEmpty(object entity)
+    public static ReferenceDataDto ToReferenceDataDto(this DifficultyLevel? entity)
     {
-        var entityType = entity.GetType();
-        var isEmptyProperty = entityType.GetProperty("IsEmpty");
-        
-        if (isEmptyProperty == null)
-            return false;
+        if (entity == null || entity.IsEmpty)
+            return ReferenceDataDto.Empty;
 
-        var isEmpty = (bool)isEmptyProperty.GetValue(entity)!;
-        return isEmpty;
+        return new ReferenceDataDto
+        {
+            Id = entity.Id.ToString(),
+            Value = entity.Value,
+            Description = entity.Description
+        };
     }
 
     /// <summary>
-    /// Extracts the ID value from the entity
+    /// Maps WorkoutState entity to ReferenceDataDto
     /// </summary>
-    /// <param name="entity">The entity to extract from</param>
-    /// <param name="entityType">The type of the entity</param>
-    /// <returns>The ID value as string</returns>
-    private static string ExtractIdValue(object entity, Type entityType)
+    public static ReferenceDataDto ToReferenceDataDto(this WorkoutState? entity)
     {
-        var idProperty = entityType.GetProperty("Id");
-        return idProperty?.GetValue(entity)?.ToString() ?? string.Empty;
+        if (entity == null || entity.IsEmpty)
+            return ReferenceDataDto.Empty;
+
+        return new ReferenceDataDto
+        {
+            Id = entity.Id.ToString(),
+            Value = entity.Value,
+            Description = entity.Description
+        };
     }
 
     /// <summary>
-    /// Extracts the Value or Name property from the entity
+    /// Maps ExecutionProtocol entity to ReferenceDataDto
     /// </summary>
-    /// <param name="entity">The entity to extract from</param>
-    /// <param name="entityType">The type of the entity</param>
-    /// <returns>The value or name as string</returns>
-    private static string ExtractValueOrName(object entity, Type entityType)
+    public static ReferenceDataDto ToReferenceDataDto(this ExecutionProtocol? entity)
     {
-        var valueProperty = entityType.GetProperty("Value") ?? entityType.GetProperty("Name");
-        return valueProperty?.GetValue(entity) as string ?? string.Empty;
+        if (entity == null || entity.IsEmpty)
+            return ReferenceDataDto.Empty;
+
+        return new ReferenceDataDto
+        {
+            Id = entity.Id.ToString(),
+            Value = entity.Value,
+            Description = entity.Description
+        };
     }
 
     /// <summary>
-    /// Extracts the Description property from the entity if it exists
+    /// Maps WorkoutObjective entity to ReferenceDataDto
     /// </summary>
-    /// <param name="entity">The entity to extract from</param>
-    /// <param name="entityType">The type of the entity</param>
-    /// <returns>The description as string or null if not found</returns>
-    private static string? ExtractDescription(object entity, Type entityType)
+    public static ReferenceDataDto ToReferenceDataDto(this WorkoutObjective? entity)
     {
-        var descriptionProperty = entityType.GetProperty("Description");
-        return descriptionProperty?.GetValue(entity) as string;
+        if (entity == null || entity.IsEmpty)
+            return ReferenceDataDto.Empty;
+
+        return new ReferenceDataDto
+        {
+            Id = entity.Id.ToString(),
+            Value = entity.Value,
+            Description = entity.Description
+        };
     }
 }

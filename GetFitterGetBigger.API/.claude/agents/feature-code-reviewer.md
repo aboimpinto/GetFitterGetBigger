@@ -282,8 +282,21 @@ If violations were found:
   Example: If `code-review-report-2025-01-04.md` and `code-review-report-2025-01-04-001.md` exist, use `code-review-report-2025-01-04-002.md`
 - Save report with determined filename
 - If incremental review, note this is an update/iteration in the report header
-- Update feature-tasks.md:
-  - Add report link in Final Code Review checkpoint
+- Update feature-tasks.md or Phase checkpoint:
+  - Look for existing "Code Review Reports" section in the checkpoint
+  - If no review reports exist yet, create the section
+  - ADD the new report to the LIST (DO NOT REPLACE existing reports):
+    ```markdown
+    **Code Review Reports:**
+    1. **Review 1**: [path/to/first-review.md]
+       - Status: [status]
+       - Issues: [summary]
+    2. **Review 2**: [path/to/second-review.md]  
+       - Status: [status]
+       - Issues: [summary]
+    ```
+  - Each review gets a sequential number
+  - Preserve ALL previous review entries
   - Note review iteration number
   - Add git commit hash for this review
   - Mark review task as complete if all passes
@@ -300,6 +313,8 @@ If violations were found:
 - Support incremental reviews for continuous improvement
 - Check build and test status before deep review
 - Consider test coverage for changed production code
+- **CRITICAL**: NEVER replace existing code review reports in checkpoints - always ADD to the list
+- **CRITICAL**: Preserve ALL previous review entries when updating checkpoints
 
 ## Output
 Return:

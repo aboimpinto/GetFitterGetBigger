@@ -66,6 +66,11 @@ This documentation covers:
 - Checks 28 Golden Rules and all patterns
 - Generates detailed violation reports with solutions
 - Calculates approval rates per file and overall
+- **IMPORTANT**: Code review reports must be saved in the appropriate phase folder:
+  - Location: `memory-bank/features/2-IN_PROGRESS/FEAT-XXX/code-reviews/Phase_X_[PhaseName]/`
+  - Naming: `Code-Review-Phase-X-[PhaseName]-YYYY-MM-DD-HH-mm-[STATUS].md`
+  - Status: `APPROVED`, `REQUIRES_CHANGES`, or `REJECTED`
+  - The checkpoint in the current phase's feature-tasks.md must be updated with the review results
 
 #### feature-commit-push Agent
 **Purpose**: Commits, pushes, and updates feature checkpoint with commit hash
@@ -78,10 +83,11 @@ This documentation covers:
 #### /review-feature Command
 **Usage**: `/review-feature FEAT-XXX`
 - Triggers feature-code-reviewer agent for specified feature
-- Generates timestamped report in feature folder
-- Updates feature-tasks.md with review results
+- Generates timestamped report in appropriate phase folder
+- Updates feature-tasks.md with review results at current phase checkpoint
 - Can be run anytime during feature development
-- Report always goes to Final Code Review checkpoint
+- Report location: `code-reviews/Phase_X_[PhaseName]/`
+- Checkpoint update: Adds review status and file path to current phase checkpoint
 
 #### /commit-feature Command
 **Usage**: `/commit-feature [feature] [checkpoint] [highlights]`
