@@ -347,5 +347,6 @@ protected override void OnModelCreating(ModelBuilder modelBuilder)
 **Git Commit**: 
 - `ebe620b8` - feat(workout-template): integrate ExecutionProtocol into WorkoutTemplate entity
 - `d991dae` - fix(validation): resolve build errors and failing tests in chained validation
+- `bf5865fe` - refactor(tooling): restructure FEAT-031 task management into phase-based system
 
 **Status**: ⏳ Phase 2 IN PROGRESS - Requires fixes for code review issues
