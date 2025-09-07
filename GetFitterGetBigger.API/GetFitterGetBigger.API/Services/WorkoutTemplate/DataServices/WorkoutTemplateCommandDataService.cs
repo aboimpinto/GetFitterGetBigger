@@ -324,7 +324,7 @@ GetFitterGetBigger.API.Models.Entities.WorkoutZone.Main, // Default to Main zone
                     {
                         return ServiceResult<WorkoutTemplateDto>.Failure(
                             WorkoutTemplateDto.Empty, 
-                            ServiceError.ValidationFailed($"Failed to create duplicate: {duplicateResult.FirstError}"));
+                            ServiceError.ValidationFailed($"Failed to create duplicate: {duplicateResult.Error?.Message ?? "Unknown error"}"));
                     }
                     
                     var duplicate = duplicateResult.Value;
@@ -340,7 +340,7 @@ GetFitterGetBigger.API.Models.Entities.WorkoutZone.Main, // Default to Main zone
                     
                     return ServiceResult<WorkoutTemplateDto>.Success(dto);
                 },
-                (IReadOnlyList<ServiceError> errors) => ServiceResult<WorkoutTemplateDto>.Failure(
+                errors => ServiceResult<WorkoutTemplateDto>.Failure(
                     WorkoutTemplateDto.Empty,
                     errors.First()));
     }
