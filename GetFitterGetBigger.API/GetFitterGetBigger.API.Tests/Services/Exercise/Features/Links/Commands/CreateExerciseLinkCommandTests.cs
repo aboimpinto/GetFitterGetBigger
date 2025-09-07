@@ -159,7 +159,7 @@ public class CreateExerciseLinkCommandTests
         // Arrange
         var command = new CreateExerciseLinkCommand
         {
-            LinkType = linkType,
+            LinkType = linkType!,
             LinkTypeEnum = null
         };
 
