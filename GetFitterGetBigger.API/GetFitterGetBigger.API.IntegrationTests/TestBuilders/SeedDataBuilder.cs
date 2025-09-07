@@ -619,7 +619,7 @@ public class SeedDataBuilder
     {
         var executionProtocolsToCheck = new[]
         {
-            (StandardIds.StandardProtocolId, "Standard", "Standard protocol with balanced rep and time components", "STANDARD", true, true, "60-90 seconds between sets", "Moderate to High", 1, true),
+            (StandardIds.StandardProtocolId, "Reps and Sets", "Traditional workout with fixed sets and repetitions", "REPS_AND_SETS", true, true, "60-90 seconds between sets", "Moderate to High", 1, true),
             (StandardIds.SupersetProtocolId, "Superset", "Perform exercises back-to-back without rest", "SUPERSET", false, true, "Rest after completing both exercises", "High", 2, true),
             (StandardIds.DropSetProtocolId, "Drop Set", "Reduce weight after reaching failure", "DROP_SET", false, true, "Minimal rest between drops", "Very High", 3, true),
             (StandardIds.AMRAPProtocolId, "AMRAP", "As Many Reps As Possible in given time", "AMRAP", true, false, "Fixed rest periods", "High", 4, true),
@@ -637,6 +637,10 @@ public class SeedDataBuilder
                 if (executionProtocolResult.IsSuccess)
                 {
                     await _context.ExecutionProtocols.AddAsync(executionProtocolResult.Value);
+                }
+                else
+                {
+                    Console.WriteLine($"Failed to create ExecutionProtocol {code}: {string.Join(", ", executionProtocolResult.Errors)}");
                 }
             }
         }

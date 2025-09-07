@@ -112,8 +112,9 @@ public class IntegrationTestWebApplicationFactory : WebApplicationFactory<Progra
                 // Run migrations instead of EnsureCreated for PostgreSQL
                 db.Database.Migrate();
                 
-                // Note: Reference data is already seeded by migrations through HasData in OnModelCreating
-                // We only need to seed additional test-specific data if needed
+                // Seed reference data for integration tests
+                // ExecutionProtocols and other reference data must be available
+                SeedReferenceData(db);
             }
         }
         catch (Exception ex)
@@ -136,14 +137,12 @@ public class IntegrationTestWebApplicationFactory : WebApplicationFactory<Progra
         // Use the centralized SeedDataBuilder for consistent test data
         var seedBuilder = new SeedDataBuilder(context);
         
-        // Only seed if no data exists
-        if (!context.BodyParts.Any())
-        {
-            seedBuilder
-                .WithAllReferenceDataAsync()
-                .GetAwaiter()
-                .GetResult();
-        }
+        // Always ensure all reference data exists
+        // ExecutionProtocols and other critical reference data must exist for tests
+        seedBuilder
+            .WithAllReferenceDataAsync()
+            .GetAwaiter()
+            .GetResult();
     }
     
     /// <summary>

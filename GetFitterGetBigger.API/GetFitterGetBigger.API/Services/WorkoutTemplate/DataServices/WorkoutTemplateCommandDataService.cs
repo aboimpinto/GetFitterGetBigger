@@ -210,7 +210,15 @@ GetFitterGetBigger.API.Models.Entities.WorkoutZone.Main, // Default to Main zone
         WorkoutTemplateEntity entity,
         ITransactionScope scope)
     {
-        var unitOfWork = GetUnitOfWorkFromScope(scope);
+        // Validate scope
+        if (scope.IsReadOnly)
+        {
+            return ServiceResult<WorkoutTemplateDto>.Failure(
+                WorkoutTemplateDto.Empty,
+                ServiceError.ValidationFailed("Cannot perform write operations with a read-only transaction scope"));
+        }
+        
+        var unitOfWork = ((WritableTransactionScope)scope).UnitOfWork;
         var repository = unitOfWork.GetRepository<IWorkoutTemplateRepository>();
         
         await repository.AddAsync(entity);
@@ -245,7 +253,15 @@ GetFitterGetBigger.API.Models.Entities.WorkoutZone.Main, // Default to Main zone
         Func<WorkoutTemplateEntity, WorkoutTemplateEntity> updateAction,
         ITransactionScope scope)
     {
-        var unitOfWork = GetUnitOfWorkFromScope(scope);
+        // Validate scope
+        if (scope.IsReadOnly)
+        {
+            return ServiceResult<WorkoutTemplateDto>.Failure(
+                WorkoutTemplateDto.Empty,
+                ServiceError.ValidationFailed("Cannot perform write operations with a read-only transaction scope"));
+        }
+        
+        var unitOfWork = ((WritableTransactionScope)scope).UnitOfWork;
         var repository = unitOfWork.GetRepository<IWorkoutTemplateRepository>();
         
         var entity = await repository.GetByIdWithDetailsAsync(id);
@@ -289,7 +305,15 @@ GetFitterGetBigger.API.Models.Entities.WorkoutZone.Main, // Default to Main zone
         UserId createdById,
         ITransactionScope scope)
     {
-        var unitOfWork = GetUnitOfWorkFromScope(scope);
+        // Validate scope
+        if (scope.IsReadOnly)
+        {
+            return ServiceResult<WorkoutTemplateDto>.Failure(
+                WorkoutTemplateDto.Empty,
+                ServiceError.ValidationFailed("Cannot perform write operations with a read-only transaction scope"));
+        }
+        
+        var unitOfWork = ((WritableTransactionScope)scope).UnitOfWork;
         var repository = unitOfWork.GetRepository<IWorkoutTemplateRepository>();
         
         // Load the source entity
@@ -340,10 +364,19 @@ GetFitterGetBigger.API.Models.Entities.WorkoutZone.Main, // Default to Main zone
         WorkoutTemplateId id,
         ITransactionScope scope)
     {
-        var unitOfWork = GetUnitOfWorkFromScope(scope);
-        var repository = unitOfWork.GetRepository<IWorkoutTemplateRepository>();
+        // Validate scope and perform deletion in a single flow with single exit point
+        if (scope.IsReadOnly)
+        {
+            return ServiceResult<BooleanResultDto>.Failure(
+                BooleanResultDto.Create(false),
+                ServiceError.ValidationFailed("Cannot perform write operations with a read-only transaction scope"));
+        }
         
+        var unitOfWork = ((WritableTransactionScope)scope).UnitOfWork;
+        var repository = unitOfWork.GetRepository<IWorkoutTemplateRepository>();
         var entity = await repository.GetByIdAsync(id);
+        
+        // If entity is empty, return false (soft failure - not an error)
         if (entity.IsEmpty)
         {
             return ServiceResult<BooleanResultDto>.Success(BooleanResultDto.Create(false));
@@ -353,15 +386,5 @@ GetFitterGetBigger.API.Models.Entities.WorkoutZone.Main, // Default to Main zone
         // Don't commit here - let the scope owner commit
         
         return ServiceResult<BooleanResultDto>.Success(BooleanResultDto.Create(true));
-    }
-    
-    private IWritableUnitOfWork<FitnessDbContext> GetUnitOfWorkFromScope(ITransactionScope scope)
-    {
-        if (scope.IsReadOnly)
-        {
-            throw new InvalidOperationException("Cannot perform write operations with a read-only transaction scope");
-        }
-        
-        return ((WritableTransactionScope)scope).UnitOfWork;
     }
 }

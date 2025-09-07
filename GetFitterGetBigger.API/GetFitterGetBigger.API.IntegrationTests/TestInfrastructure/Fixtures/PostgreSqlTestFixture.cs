@@ -79,7 +79,8 @@ public class PostgreSqlTestFixture : IAsyncLifetime, IDisposable
                 !context.ExerciseTypes.Any() ||
                 !context.DifficultyLevels.Any() ||
                 !context.KineticChainTypes.Any() ||
-                !context.ExerciseWeightTypes.Any())
+                !context.ExerciseWeightTypes.Any() ||
+                !context.ExecutionProtocols.Any())
             {
                 var seeder = new TestDatabaseSeeder(context);
                 await seeder.SeedReferenceDataAsync();

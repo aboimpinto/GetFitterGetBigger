@@ -13,7 +13,7 @@ namespace GetFitterGetBigger.API.Services.Validation;
 public class ChainedServiceValidationBuilder<TData, TResult>
 {
     private readonly ServiceValidationBuilder<TResult> _innerBuilder;
-    private readonly Func<Task<(object data, bool isValid, ServiceError? error)>> _pipeline;
+    private readonly Func<Task<(object? data, bool isValid, ServiceError? error)>> _pipeline;
     
     internal ChainedServiceValidationBuilder(
         ServiceValidationBuilder<TResult> innerBuilder,
@@ -27,7 +27,7 @@ public class ChainedServiceValidationBuilder<TData, TResult>
     
     private ChainedServiceValidationBuilder(
         ServiceValidationBuilder<TResult> innerBuilder,
-        Func<Task<(object data, bool isValid, ServiceError? error)>> pipeline)
+        Func<Task<(object? data, bool isValid, ServiceError? error)>> pipeline)
     {
         _innerBuilder = innerBuilder;
         _pipeline = pipeline;
@@ -42,7 +42,7 @@ public class ChainedServiceValidationBuilder<TData, TResult>
         string operationDescription)
         where TNewData : class, IEmptyEntity<TNewData>
     {
-        async Task<(object data, bool isValid, ServiceError? error)> NewPipeline()
+        async Task<(object? data, bool isValid, ServiceError? error)> NewPipeline()
         {
             var (prevData, prevValid, prevError) = await _pipeline();
             
@@ -51,7 +51,13 @@ public class ChainedServiceValidationBuilder<TData, TResult>
                 return (default(TNewData)!, false, prevError);
             }
             
-            var result = transformFunc((TData)prevData);
+            if (prevData is not TData typedData)
+            {
+                var error = ServiceError.ValidationFailed($"{operationDescription}: Invalid data state");
+                return (default(TNewData)!, false, error);
+            }
+            
+            var result = transformFunc(typedData);
             if (!result.IsSuccess)
             {
                 var error = ServiceError.ValidationFailed($"{operationDescription}: {result.FirstError}");
@@ -72,7 +78,7 @@ public class ChainedServiceValidationBuilder<TData, TResult>
         Func<TData, Task> operation,
         string operationDescription)
     {
-        async Task<(object data, bool isValid, ServiceError? error)> NewPipeline()
+        async Task<(object? data, bool isValid, ServiceError? error)> NewPipeline()
         {
             var (prevData, prevValid, prevError) = await _pipeline();
             
@@ -83,7 +89,13 @@ public class ChainedServiceValidationBuilder<TData, TResult>
             
             try
             {
-                await operation((TData)prevData);
+                if (prevData is not TData typedData)
+                {
+                    var error = ServiceError.ValidationFailed($"{operationDescription}: Invalid data state");
+                    return (prevData, false, error);
+                }
+                
+                await operation(typedData);
                 return (prevData, true, null);
             }
             catch (Exception ex)
@@ -104,7 +116,7 @@ public class ChainedServiceValidationBuilder<TData, TResult>
         Func<TData, Task<TNewData>> transformFunc,
         string operationDescription)
     {
-        async Task<(object data, bool isValid, ServiceError? error)> NewPipeline()
+        async Task<(object? data, bool isValid, ServiceError? error)> NewPipeline()
         {
             var (prevData, prevValid, prevError) = await _pipeline();
             
@@ -115,7 +127,13 @@ public class ChainedServiceValidationBuilder<TData, TResult>
             
             try
             {
-                var newData = await transformFunc((TData)prevData);
+                if (prevData is not TData typedData)
+                {
+                    var error = ServiceError.ValidationFailed($"{operationDescription}: Invalid data state");
+                    return (default(TNewData)!, false, error);
+                }
+                
+                var newData = await transformFunc(typedData);
                 return (newData!, true, null);
             }
             catch (Exception ex)
@@ -144,7 +162,14 @@ public class ChainedServiceValidationBuilder<TData, TResult>
         
         // Use the inner builder's validation results
         return await _innerBuilder.MatchAsync(
-            async () => await Task.FromResult(whenValid((TData)data)),
+            async () => 
+            {
+                if (data is not TData typedData)
+                {
+                    return whenInvalid(ServiceError.ValidationFailed("Invalid data state"));
+                }
+                return await Task.FromResult(whenValid(typedData));
+            },
             errors => whenInvalid(errors.First()));
     }
     
@@ -164,7 +189,14 @@ public class ChainedServiceValidationBuilder<TData, TResult>
         
         // Use the inner builder's validation results
         return await _innerBuilder.MatchAsync(
-            async () => await whenValid((TData)data),
+            async () => 
+            {
+                if (data is not TData typedData)
+                {
+                    return whenInvalid(ServiceError.ValidationFailed("Invalid data state"));
+                }
+                return await whenValid(typedData);
+            },
             errors => whenInvalid(errors.First()));
     }
 }

@@ -89,9 +89,9 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.ReferenceData
                         "IsActive"});
             table1.AddRow(new string[] {
                         "executionprotocol-30000003-3000-4000-8000-300000000001",
-                        "Standard",
-                        "Standard protocol with balanced rep and time components",
-                        "STANDARD",
+                        "Reps and Sets",
+                        "Traditional workout with fixed sets and repetitions",
+                        "REPS_AND_SETS",
                         "true",
                         "true",
                         "60-90 seconds between sets",
@@ -253,13 +253,13 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.ReferenceData
                             "executionprotocol-30000003-3000-4000-8000-300000000001"});
                 table3.AddRow(new string[] {
                             "value",
-                            "Standard"});
+                            "Reps and Sets"});
                 table3.AddRow(new string[] {
                             "description",
-                            "Standard protocol with balanced rep and time components"});
+                            "Traditional workout with fixed sets and repetitions"});
                 table3.AddRow(new string[] {
                             "code",
-                            "STANDARD"});
+                            "REPS_AND_SETS"});
                 table3.AddRow(new string[] {
                             "timeBase",
                             "true"});
@@ -348,8 +348,8 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.ReferenceData
             {
                 await this.ScenarioStartAsync();
                 await this.FeatureBackgroundAsync();
-                await testRunner.WhenAsync("I send a GET request to \"/api/ReferenceTables/ExecutionProtocols/ByCode/STANDARD\"" +
-                        "", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
+                await testRunner.WhenAsync("I send a GET request to \"/api/ReferenceTables/ExecutionProtocols/ByCode/REPS_AND_" +
+                        "SETS\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
                 await testRunner.ThenAsync("the response status should be 200", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
                 TechTalk.SpecFlow.Table table4 = new TechTalk.SpecFlow.Table(new string[] {
                             "Field",
@@ -359,10 +359,10 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.ReferenceData
                             "executionprotocol-30000003-3000-4000-8000-300000000001"});
                 table4.AddRow(new string[] {
                             "value",
-                            "Standard"});
+                            "Reps and Sets"});
                 table4.AddRow(new string[] {
                             "code",
-                            "STANDARD"});
+                            "REPS_AND_SETS"});
                 table4.AddRow(new string[] {
                             "isActive",
                             "true"});
@@ -388,15 +388,15 @@ namespace GetFitterGetBigger.API.IntegrationTests.Features.ReferenceData
             {
                 await this.ScenarioStartAsync();
                 await this.FeatureBackgroundAsync();
-                await testRunner.WhenAsync("I send a GET request to \"/api/ReferenceTables/ExecutionProtocols/ByCode/standard\"" +
-                        "", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
+                await testRunner.WhenAsync("I send a GET request to \"/api/ReferenceTables/ExecutionProtocols/ByCode/reps_and_" +
+                        "sets\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
                 await testRunner.ThenAsync("the response status should be 200", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
                 TechTalk.SpecFlow.Table table5 = new TechTalk.SpecFlow.Table(new string[] {
                             "Field",
                             "Value"});
                 table5.AddRow(new string[] {
                             "code",
-                            "STANDARD"});
+                            "REPS_AND_SETS"});
                 await testRunner.AndAsync("the response should contain an execution protocol with:", ((string)(null)), table5, "And ");
             }
             await this.ScenarioCleanupAsync();

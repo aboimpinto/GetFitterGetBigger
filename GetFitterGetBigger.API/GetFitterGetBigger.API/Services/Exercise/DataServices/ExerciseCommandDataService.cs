@@ -5,6 +5,7 @@ using GetFitterGetBigger.API.Repositories.Interfaces;
 using GetFitterGetBigger.API.Services.Implementations.Extensions;
 using GetFitterGetBigger.API.Services.Infrastructure;
 using GetFitterGetBigger.API.Services.Results;
+using GetFitterGetBigger.API.Services.Validation;
 using Olimpo.EntityFramework.Persistency;
 using ExerciseEntity = GetFitterGetBigger.API.Models.Entities.Exercise;
 
@@ -76,16 +77,20 @@ public class ExerciseCommandDataService(
         ExerciseEntity entity,
         ITransactionScope scope)
     {
-        var unitOfWork = GetUnitOfWorkFromScope(scope);
-        var repository = unitOfWork.GetRepository<IExerciseRepository>();
+        // Validate scope
+        if (scope.IsReadOnly)
+        {
+            return ServiceResult<ExerciseDto>.Failure(
+                ExerciseDto.Empty,
+                ServiceError.ValidationFailed("Cannot perform write operations with a read-only transaction scope"));
+        }
         
+        var unitOfWork = ((WritableTransactionScope)scope).UnitOfWork;
+        var repository = unitOfWork.GetRepository<IExerciseRepository>();
         var createdExercise = await repository.AddAsync(entity);
         // Don't commit here - let the scope owner commit
         
-        // Return the DTO
-        var dto = createdExercise.ToDto();
-        
-        return ServiceResult<ExerciseDto>.Success(dto);
+        return ServiceResult<ExerciseDto>.Success(createdExercise.ToDto());
     }
     
     private async Task<ServiceResult<ExerciseDto>> UpdateWithoutScopeAsync(
@@ -110,14 +115,23 @@ public class ExerciseCommandDataService(
         Func<ExerciseEntity, ExerciseEntity> updateAction,
         ITransactionScope scope)
     {
-        var unitOfWork = GetUnitOfWorkFromScope(scope);
-        var repository = unitOfWork.GetRepository<IExerciseRepository>();
+        // Validate scope
+        if (scope.IsReadOnly)
+        {
+            return ServiceResult<ExerciseDto>.Failure(
+                ExerciseDto.Empty,
+                ServiceError.ValidationFailed("Cannot perform write operations with a read-only transaction scope"));
+        }
         
+        var unitOfWork = ((WritableTransactionScope)scope).UnitOfWork;
+        var repository = unitOfWork.GetRepository<IExerciseRepository>();
         var entity = await repository.GetByIdAsync(id);
+        
+        // Check if entity exists
         if (entity.IsEmpty)
         {
             return ServiceResult<ExerciseDto>.Failure(
-                ExerciseDto.Empty, 
+                ExerciseDto.Empty,
                 ServiceError.NotFound("Exercise", id.ToString()));
         }
         
@@ -153,7 +167,15 @@ public class ExerciseCommandDataService(
         ExerciseId id,
         ITransactionScope scope)
     {
-        var unitOfWork = GetUnitOfWorkFromScope(scope);
+        // Validate scope
+        if (scope.IsReadOnly)
+        {
+            return ServiceResult<BooleanResultDto>.Failure(
+                BooleanResultDto.Create(false),
+                ServiceError.ValidationFailed("Cannot perform write operations with a read-only transaction scope"));
+        }
+        
+        var unitOfWork = ((WritableTransactionScope)scope).UnitOfWork;
         var repository = unitOfWork.GetRepository<IExerciseRepository>();
         
         // Use repository method for soft delete to avoid relationship clearing
@@ -183,10 +205,19 @@ public class ExerciseCommandDataService(
         ExerciseId id,
         ITransactionScope scope)
     {
-        var unitOfWork = GetUnitOfWorkFromScope(scope);
-        var repository = unitOfWork.GetRepository<IExerciseRepository>();
+        // Validate scope
+        if (scope.IsReadOnly)
+        {
+            return ServiceResult<BooleanResultDto>.Failure(
+                BooleanResultDto.Create(false),
+                ServiceError.ValidationFailed("Cannot perform write operations with a read-only transaction scope"));
+        }
         
+        var unitOfWork = ((WritableTransactionScope)scope).UnitOfWork;
+        var repository = unitOfWork.GetRepository<IExerciseRepository>();
         var entity = await repository.GetByIdAsync(id);
+        
+        // If entity is empty, return false (soft failure - not an error)
         if (entity.IsEmpty)
         {
             return ServiceResult<BooleanResultDto>.Success(BooleanResultDto.Create(false));
@@ -196,15 +227,5 @@ public class ExerciseCommandDataService(
         // Don't commit here - let the scope owner commit
         
         return ServiceResult<BooleanResultDto>.Success(BooleanResultDto.Create(true));
-    }
-    
-    private IWritableUnitOfWork<FitnessDbContext> GetUnitOfWorkFromScope(ITransactionScope scope)
-    {
-        if (scope.IsReadOnly)
-        {
-            throw new InvalidOperationException("Cannot perform write operations with a read-only transaction scope");
-        }
-        
-        return ((WritableTransactionScope)scope).UnitOfWork;
     }
 }

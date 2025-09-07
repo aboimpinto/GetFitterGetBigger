@@ -6,7 +6,7 @@ Feature: Execution Protocols Reference Data
   Background:
     Given the following execution protocols exist in the database:
       | ExecutionProtocolId                           | Value      | Description                                    | Code       | TimeBase | RepBase | RestPattern                      | IntensityLevel | DisplayOrder | IsActive |
-      | executionprotocol-30000003-3000-4000-8000-300000000001 | Standard   | Standard protocol with balanced rep and time components | STANDARD   | true     | true    | 60-90 seconds between sets       | Moderate to High | 1            | true     |
+      | executionprotocol-30000003-3000-4000-8000-300000000001 | Reps and Sets | Traditional workout with fixed sets and repetitions | REPS_AND_SETS | true     | true    | 60-90 seconds between sets       | Moderate to High | 1            | true     |
       | executionprotocol-30000003-3000-4000-8000-300000000002 | Superset   | Perform exercises back-to-back without rest    | SUPERSET   | false    | true    | Rest after completing both exercises | High           | 2            | true     |
       | executionprotocol-30000003-3000-4000-8000-300000000003 | Drop Set   | Reduce weight after reaching failure           | DROP_SET   | false    | true    | Minimal rest between drops       | Very High      | 3            | true     |
       | executionprotocol-30000003-3000-4000-8000-300000000004 | AMRAP      | As Many Reps As Possible in given time        | AMRAP      | true     | false   | Fixed rest periods               | High           | 4            | true     |
@@ -36,9 +36,9 @@ Feature: Execution Protocols Reference Data
     And the response should contain an execution protocol with:
       | Field              | Value                                                  |
       | executionProtocolId | executionprotocol-30000003-3000-4000-8000-300000000001 |
-      | value              | Standard                                               |
-      | description        | Standard protocol with balanced rep and time components |
-      | code               | STANDARD                                               |
+      | value              | Reps and Sets                                          |
+      | description        | Traditional workout with fixed sets and repetitions    |
+      | code               | REPS_AND_SETS                                          |
       | timeBase           | true                                                   |
       | repBase            | true                                                   |
       | restPattern        | 60-90 seconds between sets                             |
@@ -55,21 +55,21 @@ Feature: Execution Protocols Reference Data
     Then the response status should be 400
 
   Scenario: Get execution protocol by valid code
-    When I send a GET request to "/api/ReferenceTables/ExecutionProtocols/ByCode/STANDARD"
+    When I send a GET request to "/api/ReferenceTables/ExecutionProtocols/ByCode/REPS_AND_SETS"
     Then the response status should be 200
     And the response should contain an execution protocol with:
       | Field              | Value                                                  |
       | executionProtocolId | executionprotocol-30000003-3000-4000-8000-300000000001 |
-      | value              | Standard                                               |
-      | code               | STANDARD                                               |
+      | value              | Reps and Sets                                          |
+      | code               | REPS_AND_SETS                                          |
       | isActive           | true                                                   |
 
   Scenario: Get execution protocol by code - case insensitive
-    When I send a GET request to "/api/ReferenceTables/ExecutionProtocols/ByCode/standard"
+    When I send a GET request to "/api/ReferenceTables/ExecutionProtocols/ByCode/reps_and_sets"
     Then the response status should be 200
     And the response should contain an execution protocol with:
       | Field | Value    |
-      | code  | STANDARD |
+      | code  | REPS_AND_SETS |
 
   Scenario: Get execution protocol by non-existent code
     When I send a GET request to "/api/ReferenceTables/ExecutionProtocols/ByCode/NONEXISTENT"

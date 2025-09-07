@@ -67,6 +67,14 @@ This documentation covers:
 - Generates detailed violation reports with solutions
 - Calculates approval rates per file and overall
 
+#### feature-commit-push Agent
+**Purpose**: Commits, pushes, and updates feature checkpoint with commit hash
+- Analyzes changes and creates meaningful commit messages
+- Pushes to remote repository
+- Finds active checkpoint in current feature
+- Updates checkpoint with commit hash and summary
+- Handles user-provided highlights for commit message
+
 #### /review-feature Command
 **Usage**: `/review-feature FEAT-XXX`
 - Triggers feature-code-reviewer agent for specified feature
@@ -74,6 +82,17 @@ This documentation covers:
 - Updates feature-tasks.md with review results
 - Can be run anytime during feature development
 - Report always goes to Final Code Review checkpoint
+
+#### /commit-feature Command
+**Usage**: `/commit-feature [feature] [checkpoint] [highlights]`
+- Triggers feature-commit-push agent
+- Commits and pushes current changes
+- Updates feature checkpoint with commit hash
+- Auto-detects feature and checkpoint if not provided
+- Examples:
+  - `/commit-feature` - Auto-detect everything
+  - `/commit-feature FEAT-030` - Specify feature only
+  - `/commit-feature FEAT-030 "Phase 3" "fixed validation"` - Full specification
 
 ## Git Commit Messages
 

@@ -43,8 +43,10 @@ public class WorkoutTemplateCaseInsensitiveSearchSteps
             // Use DRAFT state to ensure templates are visible in queries (not ARCHIVED)
             var state = await context.Set<WorkoutState>()
                 .FirstOrDefaultAsync(s => s.Value == "DRAFT");
+            var executionProtocol = await context.Set<ExecutionProtocol>()
+                .FirstOrDefaultAsync(p => p.Value == "Reps and Sets");
             
-            if (category == null || difficulty == null || state == null)
+            if (category == null || difficulty == null || state == null || executionProtocol == null)
             {
                 throw new InvalidOperationException("Reference data not found. Ensure database is properly seeded.");
             }
@@ -65,7 +67,8 @@ public class WorkoutTemplateCaseInsensitiveSearchSteps
                     duration,
                     tags,
                     false,
-                    state.WorkoutStateId);
+                    state.WorkoutStateId,
+                    executionProtocol.ExecutionProtocolId);
                 
                 if (template.IsSuccess)
                 {
@@ -92,8 +95,10 @@ public class WorkoutTemplateCaseInsensitiveSearchSteps
             // Use DRAFT state to ensure templates are visible in queries (not ARCHIVED)
             var state = await context.Set<WorkoutState>()
                 .FirstOrDefaultAsync(s => s.Value == "DRAFT");
+            var executionProtocol = await context.Set<ExecutionProtocol>()
+                .FirstOrDefaultAsync(p => p.Value == "Reps and Sets");
             
-            if (category == null || difficulty == null || state == null)
+            if (category == null || difficulty == null || state == null || executionProtocol == null)
             {
                 throw new InvalidOperationException("Reference data not found.");
             }
@@ -114,7 +119,8 @@ public class WorkoutTemplateCaseInsensitiveSearchSteps
                     duration,
                     tags,
                     false,
-                    state.WorkoutStateId);
+                    state.WorkoutStateId,
+                    executionProtocol.ExecutionProtocolId);
                 
                 if (template.IsSuccess)
                 {

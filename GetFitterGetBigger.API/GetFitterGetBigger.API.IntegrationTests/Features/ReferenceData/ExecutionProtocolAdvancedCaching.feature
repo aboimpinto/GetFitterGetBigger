@@ -33,31 +33,31 @@ Feature: Execution Protocol Advanced Caching
   @caching @reference-data
   Scenario: Get by value should also use cache
     Given I send a GET request to "/api/ReferenceTables/ExecutionProtocols"
-    And the response contains an item with value "Standard"
+    And the response contains an item with value "Reps and Sets"
     And I reset the database query counter
     # First call should hit the database
-    When I send a GET request to "/api/ReferenceTables/ExecutionProtocols/ByValue/Standard"
+    When I send a GET request to "/api/ReferenceTables/ExecutionProtocols/ByValue/Reps and Sets"
     Then the response status should be 200
     And the database query count should be 1
     # Reset counter to clearly show second call uses cache
     Given I reset the database query counter
     # Second call should use cache and NOT hit the database
-    When I send a GET request to "/api/ReferenceTables/ExecutionProtocols/ByValue/Standard"
+    When I send a GET request to "/api/ReferenceTables/ExecutionProtocols/ByValue/Reps and Sets"
     Then the response status should be 200
     And the database query count should be 0
 
   @caching @reference-data
   Scenario: Get by code should also use cache
     Given I send a GET request to "/api/ReferenceTables/ExecutionProtocols"
-    And the response contains an item with code "STANDARD"
+    And the response contains an item with code "REPS_AND_SETS"
     And I reset the database query counter
     # First call should hit the database
-    When I send a GET request to "/api/ReferenceTables/ExecutionProtocols/ByCode/STANDARD"
+    When I send a GET request to "/api/ReferenceTables/ExecutionProtocols/ByCode/REPS_AND_SETS"
     Then the response status should be 200
     And the database query count should be 1
     # Reset counter to clearly show second call uses cache
     Given I reset the database query counter
     # Second call should use cache and NOT hit the database
-    When I send a GET request to "/api/ReferenceTables/ExecutionProtocols/ByCode/STANDARD"
+    When I send a GET request to "/api/ReferenceTables/ExecutionProtocols/ByCode/REPS_AND_SETS"
     Then the response status should be 200
     And the database query count should be 0

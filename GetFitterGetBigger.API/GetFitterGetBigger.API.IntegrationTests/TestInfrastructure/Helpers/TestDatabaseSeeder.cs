@@ -123,6 +123,7 @@ public class TestDatabaseSeeder
     public async Task SeedExecutionProtocolsAsync()
     {
         await _seedBuilder.WithExecutionProtocolsAsync();
+        await _context.SaveChangesAsync(); // Ensure changes are saved
     }
     
     /// <summary>
@@ -201,6 +202,7 @@ public class TestDatabaseSeeder
         var categoryId = await GetOrCreateTestCategoryId();
         var difficultyId = await GetOrCreateTestDifficultyId();
         var stateId = await GetOrCreateTestWorkoutStateId();
+        var executionProtocolId = await GetOrCreateTestExecutionProtocolId();
         
         var now = DateTime.UtcNow;
         var templateResult = API.Models.Entities.WorkoutTemplate.Handler.Create(
@@ -213,6 +215,8 @@ public class TestDatabaseSeeder
             new List<string> { "test" },
             true,
             stateId,
+            executionProtocolId,
+            null,
             now,
             now);
         
@@ -290,5 +294,32 @@ public class TestDatabaseSeeder
         }
         
         return state.WorkoutStateId;
+    }
+    
+    private async Task<ExecutionProtocolId> GetOrCreateTestExecutionProtocolId()
+    {
+        // First check if Reps and Sets protocol exists
+        var protocol = await _context.ExecutionProtocols.FirstOrDefaultAsync(p => p.Value == "Reps and Sets");
+        
+        if (protocol == null)
+        {
+            // Try to seed all execution protocols
+            await SeedExecutionProtocolsAsync();
+            protocol = await _context.ExecutionProtocols.FirstOrDefaultAsync(p => p.Value == "Reps and Sets");
+        }
+        
+        if (protocol == null)
+        {
+            // If still not found, use known StandardId from SeedDataBuilder
+            var standardProtocolId = ExecutionProtocolId.From(Guid.Parse("30000003-3000-4000-8000-300000000001"));
+            protocol = await _context.ExecutionProtocols.FirstOrDefaultAsync(p => p.ExecutionProtocolId == standardProtocolId);
+        }
+        
+        if (protocol == null)
+        {
+            throw new InvalidOperationException("Failed to find or create Reps and Sets execution protocol. Database may not be properly initialized with reference data.");
+        }
+        
+        return protocol.ExecutionProtocolId;
     }
 }
