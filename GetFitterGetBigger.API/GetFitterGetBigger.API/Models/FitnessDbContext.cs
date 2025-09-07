@@ -355,6 +355,12 @@ public class FitnessDbContext : DbContext
                 id => (Guid)id,
                 guid => WorkoutStateId.From(guid));
                 
+        modelBuilder.Entity<WorkoutTemplate>()
+            .Property(wt => wt.ExecutionProtocolId)
+            .HasConversion(
+                id => (Guid)id,
+                guid => ExecutionProtocolId.From(guid));
+                
         modelBuilder.Entity<WorkoutTemplateExercise>()
             .Property(wte => wte.WorkoutTemplateId)
             .HasConversion(
@@ -861,6 +867,10 @@ public class FitnessDbContext : DbContext
             .HasMaxLength(500);
             
         modelBuilder.Entity<WorkoutTemplate>()
+            .Property(wt => wt.ExecutionProtocolConfig)
+            .HasColumnType("jsonb");
+            
+        modelBuilder.Entity<WorkoutTemplate>()
             .HasIndex(wt => wt.Name)
             .HasDatabaseName("IX_WorkoutTemplate_Name");
             
@@ -922,6 +932,11 @@ public class FitnessDbContext : DbContext
             .HasOne(wt => wt.WorkoutState)
             .WithMany()
             .HasForeignKey(wt => wt.WorkoutStateId);
+            
+        modelBuilder.Entity<WorkoutTemplate>()
+            .HasOne(wt => wt.ExecutionProtocol)
+            .WithMany()
+            .HasForeignKey(wt => wt.ExecutionProtocolId);
             
         // WorkoutTemplate to WorkoutTemplateExercise (one-to-many)
         modelBuilder.Entity<WorkoutTemplateExercise>()

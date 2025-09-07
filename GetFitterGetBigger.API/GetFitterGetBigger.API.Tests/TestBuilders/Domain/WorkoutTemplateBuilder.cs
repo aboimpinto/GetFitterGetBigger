@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using GetFitterGetBigger.API.Models.Entities;
 using GetFitterGetBigger.API.Models.SpecializedIds;
+using GetFitterGetBigger.API.Tests.TestBuilders;
 
 namespace GetFitterGetBigger.API.Tests.TestBuilders.Domain;
 
@@ -17,6 +18,8 @@ public class WorkoutTemplateBuilder
     private List<string> _tags = new List<string> { "test", "workout" };
     private bool _isPublic = true;
     private WorkoutStateId _workoutStateId = WorkoutStateId.New();
+    private ExecutionProtocolId _executionProtocolId = ExecutionProtocolId.ParseOrEmpty(TestIds.ExecutionProtocolIds.Standard);
+    private string? _executionProtocolConfig = null;
     private DateTime _createdAt = DateTime.UtcNow;
     private DateTime _updatedAt = DateTime.UtcNow;
     
@@ -195,6 +198,24 @@ public class WorkoutTemplateBuilder
         return this;
     }
 
+    public WorkoutTemplateBuilder WithExecutionProtocolId(ExecutionProtocolId executionProtocolId)
+    {
+        _executionProtocolId = executionProtocolId;
+        return this;
+    }
+
+    public WorkoutTemplateBuilder WithExecutionProtocolId(string executionProtocolId)
+    {
+        _executionProtocolId = ExecutionProtocolId.ParseOrEmpty(executionProtocolId);
+        return this;
+    }
+
+    public WorkoutTemplateBuilder WithExecutionProtocolConfig(string? config)
+    {
+        _executionProtocolConfig = config;
+        return this;
+    }
+
     // Timestamps
     public WorkoutTemplateBuilder WithCreatedAt(DateTime createdAt)
     {
@@ -256,7 +277,9 @@ public class WorkoutTemplateBuilder
             _estimatedDurationMinutes,
             _tags,
             _isPublic,
-            _workoutStateId);
+            _workoutStateId,
+            _executionProtocolId,
+            _executionProtocolConfig);
         
         return result switch
         {

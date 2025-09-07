@@ -151,6 +151,9 @@ public class DuplicationHandler(
         var stateId = WorkoutStateId.ParseOrEmpty(dto.WorkoutState.Id);
         
         // Use the Handler to create a properly validated entity
+        // For existing DTOs that don't have ExecutionProtocol, default to REPS_AND_SETS
+        var executionProtocolId = ExecutionProtocolId.From(Guid.Parse("30000003-3000-4000-8000-300000000001"));
+        
         var createResult = WorkoutTemplateEntity.Handler.Create(
             templateId,
             dto.Name,
@@ -161,6 +164,8 @@ public class DuplicationHandler(
             dto.Tags,
             dto.IsPublic,
             stateId,
+            executionProtocolId,
+            dto.ExecutionProtocolConfig,
             dto.CreatedAt,
             dto.UpdatedAt
         );

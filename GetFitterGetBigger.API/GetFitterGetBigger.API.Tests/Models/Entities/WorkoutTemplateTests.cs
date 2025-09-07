@@ -24,7 +24,8 @@ public class WorkoutTemplateTests
 
         // Act
         var result = WorkoutTemplate.Handler.CreateNew(
-            name, description, categoryId, difficultyId, duration, tags, true, workoutStateId);
+            name, description, categoryId, difficultyId, duration, tags, true, workoutStateId, 
+            ExecutionProtocolId.ParseOrEmpty(TestIds.ExecutionProtocolIds.Standard));
 
         // Assert
         Assert.True(result.IsSuccess);
@@ -49,7 +50,8 @@ public class WorkoutTemplateTests
         var workoutStateId = WorkoutStateId.ParseOrEmpty(TestIds.WorkoutStateIds.Draft);
 
         // Act
-        var result = WorkoutTemplate.Handler.CreateNew("", null, categoryId, difficultyId, 60, null, true, workoutStateId);
+        var result = WorkoutTemplate.Handler.CreateNew("", null, categoryId, difficultyId, 60, null, true, workoutStateId, 
+            ExecutionProtocolId.ParseOrEmpty(TestIds.ExecutionProtocolIds.Standard));
         
         // Assert
         Assert.True(result.IsFailure);
@@ -65,7 +67,8 @@ public class WorkoutTemplateTests
         var workoutStateId = WorkoutStateId.ParseOrEmpty(TestIds.WorkoutStateIds.Draft);
 
         // Act
-        var result = WorkoutTemplate.Handler.CreateNew("AB", null, categoryId, difficultyId, 60, null, true, workoutStateId);
+        var result = WorkoutTemplate.Handler.CreateNew("AB", null, categoryId, difficultyId, 60, null, true, workoutStateId, 
+            ExecutionProtocolId.ParseOrEmpty(TestIds.ExecutionProtocolIds.Standard));
         
         // Assert
         Assert.True(result.IsFailure);
@@ -82,7 +85,8 @@ public class WorkoutTemplateTests
         var workoutStateId = WorkoutStateId.ParseOrEmpty(TestIds.WorkoutStateIds.Draft);
 
         // Act
-        var result = WorkoutTemplate.Handler.CreateNew(longName, null, categoryId, difficultyId, 60, null, true, workoutStateId);
+        var result = WorkoutTemplate.Handler.CreateNew(longName, null, categoryId, difficultyId, 60, null, true, workoutStateId, 
+            ExecutionProtocolId.ParseOrEmpty(TestIds.ExecutionProtocolIds.Standard));
         
         // Assert
         Assert.True(result.IsFailure);
@@ -98,7 +102,8 @@ public class WorkoutTemplateTests
         var workoutStateId = WorkoutStateId.ParseOrEmpty(TestIds.WorkoutStateIds.Draft);
 
         // Act
-        var result = WorkoutTemplate.Handler.CreateNew("Valid Name", null, categoryId, difficultyId, 4, null, true, workoutStateId);
+        var result = WorkoutTemplate.Handler.CreateNew("Valid Name", null, categoryId, difficultyId, 4, null, true, workoutStateId, 
+            ExecutionProtocolId.ParseOrEmpty(TestIds.ExecutionProtocolIds.Standard));
         
         // Assert
         Assert.True(result.IsFailure);
@@ -114,7 +119,8 @@ public class WorkoutTemplateTests
         var workoutStateId = WorkoutStateId.ParseOrEmpty(TestIds.WorkoutStateIds.Draft);
 
         // Act
-        var result = WorkoutTemplate.Handler.CreateNew("Valid Name", null, categoryId, difficultyId, 301, null, true, workoutStateId);
+        var result = WorkoutTemplate.Handler.CreateNew("Valid Name", null, categoryId, difficultyId, 301, null, true, workoutStateId, 
+            ExecutionProtocolId.ParseOrEmpty(TestIds.ExecutionProtocolIds.Standard));
         
         // Assert
         Assert.True(result.IsFailure);
@@ -130,7 +136,8 @@ public class WorkoutTemplateTests
         var workoutStateId = WorkoutStateId.ParseOrEmpty(TestIds.WorkoutStateIds.Draft);
         
         var original = WorkoutTemplate.Handler.CreateNew(
-            "Original Name", "Original Description", categoryId, difficultyId, 60, null, true, workoutStateId).Unwrap();
+            "Original Name", "Original Description", categoryId, difficultyId, 60, null, true, workoutStateId, 
+            ExecutionProtocolId.ParseOrEmpty(TestIds.ExecutionProtocolIds.Standard)).Unwrap();
         
         var newName = "Updated Name";
         var newDescription = "Updated Description";
@@ -161,7 +168,8 @@ public class WorkoutTemplateTests
         var productionStateId = WorkoutStateId.ParseOrEmpty(TestIds.WorkoutStateIds.Production);
         
         var template = WorkoutTemplate.Handler.CreateNew(
-            "Test Template", null, categoryId, difficultyId, 60, null, true, draftStateId).Unwrap();
+            "Test Template", null, categoryId, difficultyId, 60, null, true, draftStateId, 
+            ExecutionProtocolId.ParseOrEmpty(TestIds.ExecutionProtocolIds.Standard)).Unwrap();
 
         // Act
         var result = WorkoutTemplate.Handler.ChangeState(template, productionStateId);
@@ -206,7 +214,8 @@ public class WorkoutTemplateTests
 
         // Act
         var result = WorkoutTemplate.Handler.CreateNew(
-            "Test Template", null, categoryId, difficultyId, 60, tags, true, workoutStateId);
+            "Test Template", null, categoryId, difficultyId, 60, tags, true, workoutStateId, 
+            ExecutionProtocolId.ParseOrEmpty(TestIds.ExecutionProtocolIds.Standard));
 
         // Assert
         Assert.True(result.IsSuccess);

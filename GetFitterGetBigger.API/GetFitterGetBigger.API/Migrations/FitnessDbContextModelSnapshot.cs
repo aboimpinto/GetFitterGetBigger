@@ -1209,6 +1209,12 @@ namespace GetFitterGetBigger.API.Migrations
                     b.Property<int>("EstimatedDurationMinutes")
                         .HasColumnType("integer");
 
+                    b.Property<string>("ExecutionProtocolConfig")
+                        .HasColumnType("jsonb");
+
+                    b.Property<Guid>("ExecutionProtocolId")
+                        .HasColumnType("uuid");
+
                     b.Property<bool>("IsPublic")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("boolean")
@@ -1237,6 +1243,8 @@ namespace GetFitterGetBigger.API.Migrations
                         .HasDatabaseName("IX_WorkoutTemplate_CreatedAt");
 
                     b.HasIndex("DifficultyId");
+
+                    b.HasIndex("ExecutionProtocolId");
 
                     b.HasIndex("Name")
                         .HasDatabaseName("IX_WorkoutTemplate_Name");
@@ -1583,6 +1591,12 @@ namespace GetFitterGetBigger.API.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("GetFitterGetBigger.API.Models.Entities.ExecutionProtocol", "ExecutionProtocol")
+                        .WithMany()
+                        .HasForeignKey("ExecutionProtocolId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.HasOne("GetFitterGetBigger.API.Models.Entities.WorkoutState", "WorkoutState")
                         .WithMany()
                         .HasForeignKey("WorkoutStateId")
@@ -1592,6 +1606,8 @@ namespace GetFitterGetBigger.API.Migrations
                     b.Navigation("Category");
 
                     b.Navigation("Difficulty");
+
+                    b.Navigation("ExecutionProtocol");
 
                     b.Navigation("WorkoutState");
                 });

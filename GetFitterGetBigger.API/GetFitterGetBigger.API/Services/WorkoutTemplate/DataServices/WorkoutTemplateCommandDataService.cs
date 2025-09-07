@@ -304,7 +304,8 @@ GetFitterGetBigger.API.Models.Entities.WorkoutZone.Main, // Default to Main zone
             source.EstimatedDurationMinutes,
             source.Tags?.ToList(),
             source.IsPublic,
-            WorkoutStateId.ParseOrEmpty("workoutstate-11111111-1111-1111-1111-111111111111")
+            WorkoutStateId.ParseOrEmpty("workoutstate-11111111-1111-1111-1111-111111111111"),
+            source.ExecutionProtocolId
         );
         
         if (!duplicateResult.IsSuccess)

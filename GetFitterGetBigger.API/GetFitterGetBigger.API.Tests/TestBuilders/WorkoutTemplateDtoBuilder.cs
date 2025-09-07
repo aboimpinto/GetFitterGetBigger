@@ -29,6 +29,13 @@ public class WorkoutTemplateDtoBuilder
         Value = "Draft",
         Description = "Draft state"
     };
+    private ReferenceDataDto _executionProtocol = new()
+    {
+        Id = "executionprotocol-30000003-3000-4000-8000-300000000001",
+        Value = "Reps and Sets",
+        Description = "Traditional workout with fixed sets and repetitions"
+    };
+    private string? _executionProtocolConfig = null;
     private List<ReferenceDataDto> _objectives = new();
     private DateTime _createdAt = DateTime.UtcNow;
     private DateTime _updatedAt = DateTime.UtcNow;
@@ -99,6 +106,29 @@ public class WorkoutTemplateDtoBuilder
         return this;
     }
     
+    public WorkoutTemplateDtoBuilder WithExecutionProtocol(ReferenceDataDto executionProtocol)
+    {
+        _executionProtocol = executionProtocol;
+        return this;
+    }
+    
+    public WorkoutTemplateDtoBuilder WithExecutionProtocolId(string executionProtocolId)
+    {
+        _executionProtocol = new ReferenceDataDto
+        {
+            Id = executionProtocolId,
+            Value = "Protocol",
+            Description = "Protocol"
+        };
+        return this;
+    }
+    
+    public WorkoutTemplateDtoBuilder WithExecutionProtocolConfig(string? config)
+    {
+        _executionProtocolConfig = config;
+        return this;
+    }
+    
     public WorkoutTemplateDtoBuilder WithObjectives(List<ReferenceDataDto> objectives)
     {
         _objectives = objectives;
@@ -136,6 +166,8 @@ public class WorkoutTemplateDtoBuilder
             Tags = _tags,
             IsPublic = _isPublic,
             WorkoutState = _workoutState,
+            ExecutionProtocol = _executionProtocol,
+            ExecutionProtocolConfig = _executionProtocolConfig,
             Objectives = _objectives,
             CreatedAt = _createdAt,
             UpdatedAt = _updatedAt,

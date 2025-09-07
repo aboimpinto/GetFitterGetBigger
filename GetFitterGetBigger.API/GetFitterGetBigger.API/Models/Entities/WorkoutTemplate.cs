@@ -23,6 +23,8 @@ public record WorkoutTemplate : IEmptyEntity<WorkoutTemplate>
     public List<string> Tags { get; init; } = new();
     public bool IsPublic { get; init; }
     public WorkoutStateId WorkoutStateId { get; init; }
+    public ExecutionProtocolId ExecutionProtocolId { get; init; }
+    public string? ExecutionProtocolConfig { get; init; } // JSON for protocol-specific settings
     public DateTime CreatedAt { get; init; }
     public DateTime UpdatedAt { get; init; }
     
@@ -30,6 +32,7 @@ public record WorkoutTemplate : IEmptyEntity<WorkoutTemplate>
     public WorkoutCategory Category { get; init; } = null!;
     public DifficultyLevel Difficulty { get; init; } = null!;
     public WorkoutState WorkoutState { get; init; } = null!;
+    public ExecutionProtocol ExecutionProtocol { get; init; } = null!;
     public ICollection<WorkoutTemplateExercise> Exercises { get; init; } = new List<WorkoutTemplateExercise>();
     public ICollection<WorkoutTemplateObjective> Objectives { get; init; } = new List<WorkoutTemplateObjective>();
     
@@ -54,12 +57,15 @@ public record WorkoutTemplate : IEmptyEntity<WorkoutTemplate>
         Tags = new List<string>(),
         IsPublic = false,
         WorkoutStateId = WorkoutStateId.Empty,
+        ExecutionProtocolId = ExecutionProtocolId.Empty,
+        ExecutionProtocolConfig = null,
         CreatedAt = DateTime.UtcNow,
         UpdatedAt = DateTime.UtcNow,
         // Initialize navigation properties to Empty instances
         Category = WorkoutCategory.Empty,
         Difficulty = DifficultyLevel.Empty,
-        WorkoutState = WorkoutState.Empty
+        WorkoutState = WorkoutState.Empty,
+        ExecutionProtocol = ExecutionProtocol.Empty
     };
     
     public static class Handler
@@ -72,7 +78,9 @@ public record WorkoutTemplate : IEmptyEntity<WorkoutTemplate>
             int estimatedDurationMinutes,
             List<string>? tags,
             bool isPublic,
-            WorkoutStateId workoutStateId)
+            WorkoutStateId workoutStateId,
+            ExecutionProtocolId executionProtocolId,
+            string? executionProtocolConfig = null)
         {
             return Create(
                 WorkoutTemplateId.New(),
@@ -84,6 +92,8 @@ public record WorkoutTemplate : IEmptyEntity<WorkoutTemplate>
                 tags,
                 isPublic,
                 workoutStateId,
+                executionProtocolId,
+                executionProtocolConfig,
                 DateTime.UtcNow,
                 DateTime.UtcNow
             );
@@ -99,13 +109,15 @@ public record WorkoutTemplate : IEmptyEntity<WorkoutTemplate>
             List<string>? tags,
             bool isPublic,
             WorkoutStateId workoutStateId,
+            ExecutionProtocolId executionProtocolId,
+            string? executionProtocolConfig,
             DateTime createdAt,
             DateTime updatedAt)
         {
             var validatedTags = ValidateTags(tags);
             
             return ValidateWorkoutTemplate(name, description, categoryId, difficultyId, 
-                estimatedDurationMinutes, workoutStateId)
+                estimatedDurationMinutes, workoutStateId, executionProtocolId)
                 .OnSuccess(() => new WorkoutTemplate
                 {
                     Id = id,
@@ -117,6 +129,8 @@ public record WorkoutTemplate : IEmptyEntity<WorkoutTemplate>
                     Tags = validatedTags,
                     IsPublic = isPublic,
                     WorkoutStateId = workoutStateId,
+                    ExecutionProtocolId = executionProtocolId,
+                    ExecutionProtocolConfig = executionProtocolConfig?.Trim(),
                     CreatedAt = createdAt,
                     UpdatedAt = updatedAt
                 });
@@ -131,7 +145,8 @@ public record WorkoutTemplate : IEmptyEntity<WorkoutTemplate>
             WorkoutCategoryId categoryId,
             DifficultyLevelId difficultyId,
             int estimatedDurationMinutes,
-            WorkoutStateId workoutStateId)
+            WorkoutStateId workoutStateId,
+            ExecutionProtocolId executionProtocolId)
         {
             return Validate.For<WorkoutTemplate>()
                 .EnsureNotWhiteSpace(name, "Name cannot be empty")
@@ -141,7 +156,8 @@ public record WorkoutTemplate : IEmptyEntity<WorkoutTemplate>
                 .EnsureRange(estimatedDurationMinutes, 5, 300, "Estimated duration must be between 5 and 300 minutes")
                 .Ensure(() => !categoryId.IsEmpty, "Category ID cannot be empty")
                 .Ensure(() => !difficultyId.IsEmpty, "Difficulty ID cannot be empty")
-                .Ensure(() => !workoutStateId.IsEmpty, "Workout state ID cannot be empty");
+                .Ensure(() => !workoutStateId.IsEmpty, "Workout state ID cannot be empty")
+                .Ensure(() => !executionProtocolId.IsEmpty, "Execution protocol ID cannot be empty");
         }
         
         /// <summary>
@@ -164,7 +180,9 @@ public record WorkoutTemplate : IEmptyEntity<WorkoutTemplate>
             int? estimatedDurationMinutes = null,
             List<string>? tags = null,
             bool? isPublic = null,
-            WorkoutStateId? workoutStateId = null)
+            WorkoutStateId? workoutStateId = null,
+            ExecutionProtocolId? executionProtocolId = null,
+            string? executionProtocolConfig = null)
         {
             // Use current values if not provided
             var newName = name ?? template.Name;
@@ -174,13 +192,15 @@ public record WorkoutTemplate : IEmptyEntity<WorkoutTemplate>
             var newDuration = estimatedDurationMinutes ?? template.EstimatedDurationMinutes;
             var newIsPublic = isPublic ?? template.IsPublic;
             var newWorkoutStateId = workoutStateId ?? template.WorkoutStateId;
+            var newExecutionProtocolId = executionProtocolId ?? template.ExecutionProtocolId;
+            var newExecutionProtocolConfig = executionProtocolConfig ?? template.ExecutionProtocolConfig;
             
             // Validate and normalize tags
             var validatedTags = tags != null ? ValidateTags(tags) : template.Tags;
             
             // Use shared validation for all fields
             return ValidateWorkoutTemplate(newName, newDescription, newCategoryId, newDifficultyId, 
-                newDuration, newWorkoutStateId)
+                newDuration, newWorkoutStateId, newExecutionProtocolId)
                 .OnSuccess(() => template with
                 {
                     Name = newName.Trim(),
@@ -191,6 +211,8 @@ public record WorkoutTemplate : IEmptyEntity<WorkoutTemplate>
                     Tags = validatedTags,
                     IsPublic = newIsPublic,
                     WorkoutStateId = newWorkoutStateId,
+                    ExecutionProtocolId = newExecutionProtocolId,
+                    ExecutionProtocolConfig = newExecutionProtocolConfig?.Trim(),
                     UpdatedAt = DateTime.UtcNow
                 });
         }
@@ -211,7 +233,8 @@ public record WorkoutTemplate : IEmptyEntity<WorkoutTemplate>
             string newName)
         {
             return ValidateWorkoutTemplate(newName, originalTemplate.Description, originalTemplate.CategoryId, 
-                originalTemplate.DifficultyId, originalTemplate.EstimatedDurationMinutes, originalTemplate.WorkoutStateId)
+                originalTemplate.DifficultyId, originalTemplate.EstimatedDurationMinutes, originalTemplate.WorkoutStateId,
+                originalTemplate.ExecutionProtocolId)
                 .OnSuccess(() => new WorkoutTemplate
                 {
                     Id = WorkoutTemplateId.New(),
@@ -223,6 +246,8 @@ public record WorkoutTemplate : IEmptyEntity<WorkoutTemplate>
                     Tags = originalTemplate.Tags.ToList(), // Create new list to avoid reference sharing
                     IsPublic = originalTemplate.IsPublic,
                     WorkoutStateId = originalTemplate.WorkoutStateId,
+                    ExecutionProtocolId = originalTemplate.ExecutionProtocolId,
+                    ExecutionProtocolConfig = originalTemplate.ExecutionProtocolConfig,
                     CreatedAt = DateTime.UtcNow,
                     UpdatedAt = DateTime.UtcNow
                 });

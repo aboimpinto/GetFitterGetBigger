@@ -30,6 +30,8 @@ public static class WorkoutTemplateExtensions
             Tags = workoutTemplate.Tags.ToList(),
             IsPublic = workoutTemplate.IsPublic,
             WorkoutState = workoutTemplate.WorkoutState.ToReferenceDataDto(),
+            ExecutionProtocol = workoutTemplate.ExecutionProtocol.ToReferenceDataDto(),
+            ExecutionProtocolConfig = workoutTemplate.ExecutionProtocolConfig,
             Objectives = workoutTemplate.Objectives?.Select(o => o.WorkoutObjective.ToReferenceDataDto()).ToList() ?? [],
             Exercises = workoutTemplate.Exercises?.Select(e => e.ToDto()).ToList() ?? [],
             CreatedAt = workoutTemplate.CreatedAt,

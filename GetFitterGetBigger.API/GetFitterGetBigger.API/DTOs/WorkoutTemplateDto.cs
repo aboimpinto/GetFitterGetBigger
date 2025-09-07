@@ -59,6 +59,17 @@ public record WorkoutTemplateDto : IEmptyDto<WorkoutTemplateDto>
     public required ReferenceDataDto WorkoutState { get; init; }
 
     /// <summary>
+    /// The execution protocol for this workout template
+    /// </summary>
+    public required ReferenceDataDto ExecutionProtocol { get; init; }
+
+    /// <summary>
+    /// Protocol-specific configuration in JSON format
+    /// <example>{"restBetweenSets": 60, "restBetweenRounds": 180}</example>
+    /// </summary>
+    public string? ExecutionProtocolConfig { get; init; }
+
+    /// <summary>
     /// The workout objectives associated with this template
     /// </summary>
     public List<ReferenceDataDto> Objectives { get; init; } = new();
@@ -99,6 +110,8 @@ public record WorkoutTemplateDto : IEmptyDto<WorkoutTemplateDto>
         Tags = new List<string>(),
         IsPublic = false,
         WorkoutState = ReferenceDataDto.Empty,
+        ExecutionProtocol = ReferenceDataDto.Empty,
+        ExecutionProtocolConfig = null,
         Objectives = new List<ReferenceDataDto>(),
         Exercises = new List<WorkoutTemplateExerciseDto>(),
         CreatedAt = DateTime.MinValue,

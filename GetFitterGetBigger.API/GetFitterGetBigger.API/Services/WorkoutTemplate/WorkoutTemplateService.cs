@@ -188,6 +188,9 @@ public class WorkoutTemplateService(
         var draftStateResult = await _workoutStateService.GetByValueAsync(WorkoutStateConstants.Draft);
         var defaultWorkoutStateId = WorkoutStateId.ParseOrEmpty(draftStateResult.Data.Id);
         
+        // Use default REPS_AND_SETS ExecutionProtocol (ID from feature tasks)
+        var defaultExecutionProtocolId = ExecutionProtocolId.From(Guid.Parse("30000003-3000-4000-8000-300000000001"));
+        
         // Create entity (validation happens at entity level)
         var entityResult = WorkoutTemplateEntity.Handler.CreateNew(
             command.Name,
@@ -197,7 +200,8 @@ public class WorkoutTemplateService(
             command.EstimatedDurationMinutes,
             command.Tags,
             command.IsPublic,
-            defaultWorkoutStateId);
+            defaultWorkoutStateId,
+            defaultExecutionProtocolId);
 
         return entityResult.IsSuccess switch
         {
