@@ -629,7 +629,8 @@ public class WorkoutTemplateServiceTests
         // Mock all the dependencies that DuplicationHandler needs
         automocker.SetupWorkoutTemplateQueryDataService_GetByIdWithDetails(originalTemplateDto);
         automocker.SetupWorkoutTemplateQueryDataService_ExistsByName(newName, false);
-        automocker.SetupWorkoutTemplateCommandDataService_Create(duplicatedDto);
+        automocker.SetupWorkoutTemplateQueryDataService_Exists(sourceId, true); // Template exists for duplication
+        automocker.SetupWorkoutTemplateCommandDataService_Duplicate(duplicatedDto);
         
         // Act
         var result = await testee.DuplicateAsync(sourceId, newName);

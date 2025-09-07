@@ -242,7 +242,7 @@ public class WorkoutTemplateExtensionsTests
     public void ToReferenceDataDto_WhenEntityIsNull_ShouldReturnEmptyDto()
     {
         // Arrange
-        object? entity = null;
+        WorkoutCategory? entity = null;
 
         // Act
         var result = entity.ToReferenceDataDto();
@@ -284,11 +284,12 @@ public class WorkoutTemplateExtensionsTests
     }
 
     [Fact]
-    public void ToReferenceDataDto_WhenEntityHasNameInsteadOfValue_ShouldMapCorrectly()
+    public void ToReferenceDataDto_WhenDifficultyLevelEntity_ShouldMapCorrectly()
     {
-        // Arrange - Using an entity with "Name" property instead of "Value"
-        var entity = MuscleGroupTestBuilder.Chest()
-            .WithName("Chest")
+        // Arrange - Using DifficultyLevel entity
+        var entity = DifficultyLevelTestBuilder.Beginner()
+            .WithValue("Beginner")
+            .WithDescription("Suitable for beginners")
             .Build();
 
         // Act
@@ -297,23 +298,27 @@ public class WorkoutTemplateExtensionsTests
         // Assert
         result.Should().NotBe(ReferenceDataDto.Empty);
         result.Id.Should().Be(entity.Id.ToString());
-        result.Value.Should().Be("Chest");
-        result.Description.Should().BeNull(); // MuscleGroup doesn't have Description property
+        result.Value.Should().Be("Beginner");
+        result.Description.Should().Be("Suitable for beginners");
     }
 
     [Fact]
-    public void ToReferenceDataDto_WhenEntityHasNoDescription_ShouldMapWithNullDescription()
+    public void ToReferenceDataDto_WhenWorkoutStateEntity_ShouldMapCorrectly()
     {
         // Arrange
-        var entity = new { Id = "123", Value = "Test Value" };
+        var entity = WorkoutStateTestBuilder.Draft()
+            .WithValue("Draft")
+            .WithDescription("Draft state")
+            .Build();
 
         // Act
         var result = entity.ToReferenceDataDto();
 
         // Assert
-        result.Id.Should().Be("123");
-        result.Value.Should().Be("Test Value");
-        result.Description.Should().BeNull();
+        result.Should().NotBe(ReferenceDataDto.Empty);
+        result.Id.Should().Be(entity.Id.ToString());
+        result.Value.Should().Be("Draft");
+        result.Description.Should().Be("Draft state");
     }
 
     #endregion
@@ -321,93 +326,92 @@ public class WorkoutTemplateExtensionsTests
     #region ToReferenceDataDto Edge Cases
 
     [Fact]
-    public void ToReferenceDataDto_WhenEntityHasNoIdProperty_ShouldReturnEmptyId()
+    public void ToReferenceDataDto_WhenExecutionProtocolEntity_ShouldMapCorrectly()
     {
         // Arrange
-        var entity = new { Value = "Test Value", Description = "Test Description" };
+        var entity = ExecutionProtocolTestBuilder.Standard()
+            .WithValue("STANDARD_PROTOCOL")
+            .WithDescription("Standard execution protocol")
+            .Build();
 
         // Act
         var result = entity.ToReferenceDataDto();
 
         // Assert
-        result.Id.Should().Be(string.Empty);
-        result.Value.Should().Be("Test Value");
-        result.Description.Should().Be("Test Description");
+        result.Should().NotBe(ReferenceDataDto.Empty);
+        result.Id.Should().Be(entity.Id.ToString());
+        result.Value.Should().Be("STANDARD_PROTOCOL");
+        result.Description.Should().Be("Standard execution protocol");
     }
 
     [Fact]
-    public void ToReferenceDataDto_WhenEntityHasNoValueOrNameProperty_ShouldReturnEmptyValue()
+    public void ToReferenceDataDto_WhenWorkoutObjectiveEntity_ShouldMapCorrectly()
     {
         // Arrange
-        var entity = new { Id = "123", Description = "Test Description" };
+        var entity = WorkoutObjectiveTestBuilder.MuscularStrength()
+            .WithValue("MUSCULAR_STRENGTH")
+            .WithDescription("Muscular strength objective")
+            .Build();
 
         // Act
         var result = entity.ToReferenceDataDto();
 
         // Assert
-        result.Id.Should().Be("123");
-        result.Value.Should().Be(string.Empty);
-        result.Description.Should().Be("Test Description");
+        result.Should().NotBe(ReferenceDataDto.Empty);
+        result.Id.Should().Be(entity.Id.ToString());
+        result.Value.Should().Be("MUSCULAR_STRENGTH");
+        result.Description.Should().Be("Muscular strength objective");
     }
 
     [Fact]
-    public void ToReferenceDataDto_WhenEntityHasNonStringProperties_ShouldHandleGracefully()
+    public void ToReferenceDataDto_WhenWorkoutCategoryWithNullDescription_ShouldHandleGracefully()
     {
         // Arrange
-        var entity = new 
-        { 
-            Id = 123, 
-            Value = 456, 
-            Description = new object(),
-            IsEmpty = false 
-        };
+        var entity = WorkoutCategoryTestBuilder.UpperBodyPush()
+            .WithValue("Upper Body Push")
+            .WithDescription(null)
+            .Build();
 
         // Act
         var result = entity.ToReferenceDataDto();
 
         // Assert
-        result.Id.Should().Be("123");
-        result.Value.Should().Be(string.Empty); // Non-string Value should be empty
-        result.Description.Should().BeNull(); // Non-string Description should be null
+        result.Should().NotBe(ReferenceDataDto.Empty);
+        result.Id.Should().Be(entity.Id.ToString());
+        result.Value.Should().Be("Upper Body Push");
+        result.Description.Should().BeNull();
     }
 
     [Fact]
-    public void ToReferenceDataDto_WhenEntityHasNoIsEmptyProperty_ShouldProcessNormally()
+    public void ToReferenceDataDto_WhenDifficultyLevelWithAllProperties_ShouldMapAllFields()
     {
         // Arrange
-        var entity = new { Id = "123", Value = "Test", Description = "Desc" };
+        var entity = DifficultyLevelTestBuilder.Advanced()
+            .WithValue("Advanced")
+            .WithDescription("Advanced difficulty level")
+            .Build();
 
         // Act
         var result = entity.ToReferenceDataDto();
 
         // Assert
-        result.Id.Should().Be("123");
-        result.Value.Should().Be("Test");
-        result.Description.Should().Be("Desc");
+        result.Should().NotBe(ReferenceDataDto.Empty);
+        result.Id.Should().Be(entity.Id.ToString());
+        result.Value.Should().Be("Advanced");
+        result.Description.Should().Be("Advanced difficulty level");
     }
 
-    [Theory]
-    [InlineData(true)]
-    [InlineData(false)]
-    public void ToReferenceDataDto_WhenEntityHasIsEmptyProperty_ShouldRespectIsEmptyValue(bool isEmpty)
+    [Fact]
+    public void ToReferenceDataDto_WhenWorkoutStateEmpty_ShouldReturnEmptyDto()
     {
         // Arrange
-        var entity = new { Id = "123", Value = "Test", Description = "Desc", IsEmpty = isEmpty };
+        var entity = WorkoutState.Empty;
 
         // Act
         var result = entity.ToReferenceDataDto();
 
         // Assert
-        if (isEmpty)
-        {
-            result.Should().Be(ReferenceDataDto.Empty);
-        }
-        else
-        {
-            result.Id.Should().Be("123");
-            result.Value.Should().Be("Test");
-            result.Description.Should().Be("Desc");
-        }
+        result.Should().Be(ReferenceDataDto.Empty);
     }
 
     #endregion

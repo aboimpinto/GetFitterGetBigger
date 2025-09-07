@@ -32,19 +32,19 @@ public static class WorkoutStateConstants
     /// Used for new templates and duplicates.
     /// </summary>
     public static readonly WorkoutStateId DraftId = 
-        WorkoutStateId.ParseOrEmpty("02000001-0000-0000-0000-000000000001");
+        WorkoutStateId.ParseOrEmpty("workoutstate-02000001-0000-0000-0000-000000000001");
     
     /// <summary>
     /// PRODUCTION ID - Active template for use (02000001-0000-0000-0000-000000000002).
     /// Templates in active use by clients.
     /// </summary>
     public static readonly WorkoutStateId ProductionId = 
-        WorkoutStateId.ParseOrEmpty("02000001-0000-0000-0000-000000000002");
+        WorkoutStateId.ParseOrEmpty("workoutstate-02000001-0000-0000-0000-000000000002");
     
     /// <summary>
     /// ARCHIVED ID - Retired template (02000001-0000-0000-0000-000000000003).
     /// Used for soft-deleted templates.
     /// </summary>
     public static readonly WorkoutStateId ArchivedId = 
-        WorkoutStateId.ParseOrEmpty("02000001-0000-0000-0000-000000000003");
+        WorkoutStateId.ParseOrEmpty("workoutstate-02000001-0000-0000-0000-000000000003");
 }

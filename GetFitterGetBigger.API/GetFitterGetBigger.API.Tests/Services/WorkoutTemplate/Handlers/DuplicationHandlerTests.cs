@@ -50,9 +50,14 @@ public class DuplicationHandlerTests
             .Setup(x => x.ExistsByNameAsync("Copy of Original"))
             .ReturnsAsync(ServiceResult<BooleanResultDto>.Success(new BooleanResultDto { Value = false }));
         
+        // Setup original template exists (needed for validation chain)
+        automocker.GetMock<IWorkoutTemplateQueryDataService>()
+            .Setup(x => x.ExistsAsync(originalId))
+            .ReturnsAsync(ServiceResult<BooleanResultDto>.Success(new BooleanResultDto { Value = true }));
+        
         // Setup command data service
         automocker.GetMock<IWorkoutTemplateCommandDataService>()
-            .Setup(x => x.CreateAsync(It.IsAny<WorkoutTemplateEntity>(), null))
+            .Setup(x => x.DuplicateAsync(It.IsAny<WorkoutTemplateId>(), It.IsAny<string>(), It.IsAny<UserId>(), It.IsAny<ITransactionScope?>()))
             .ReturnsAsync(ServiceResult<WorkoutTemplateDto>.Success(duplicatedTemplate));
 
         // Act
@@ -65,7 +70,7 @@ public class DuplicationHandlerTests
         result.Data.Description.Should().Be("Original Description");
         
         automocker.GetMock<IWorkoutTemplateCommandDataService>()
-            .Verify(x => x.CreateAsync(It.IsAny<WorkoutTemplateEntity>(), null), Times.Once);
+            .Verify(x => x.DuplicateAsync(It.IsAny<WorkoutTemplateId>(), It.IsAny<string>(), It.IsAny<UserId>(), It.IsAny<ITransactionScope?>()), Times.Once);
     }
 
     [Fact]
@@ -114,16 +119,16 @@ public class DuplicationHandlerTests
             .Setup(x => x.ExistsByNameAsync("Copy"))
             .ReturnsAsync(ServiceResult<BooleanResultDto>.Success(new BooleanResultDto { Value = false }));
         
+        // Setup original template exists (needed for validation chain)
+        automocker.GetMock<IWorkoutTemplateQueryDataService>()
+            .Setup(x => x.ExistsAsync(originalId))
+            .ReturnsAsync(ServiceResult<BooleanResultDto>.Success(new BooleanResultDto { Value = true }));
+        
         // Setup command data service
         automocker.GetMock<IWorkoutTemplateCommandDataService>()
-            .Setup(x => x.CreateAsync(It.IsAny<WorkoutTemplateEntity>(), null))
+            .Setup(x => x.DuplicateAsync(It.IsAny<WorkoutTemplateId>(), It.IsAny<string>(), It.IsAny<UserId>(), It.IsAny<ITransactionScope?>()))
             .ReturnsAsync(ServiceResult<WorkoutTemplateDto>.Success(duplicatedTemplate));
         
-        // Setup exercise command data service
-        automocker.GetMock<IWorkoutTemplateExerciseCommandDataService>()
-            .Setup(x => x.CreateAsync(It.IsAny<WorkoutTemplateExercise>(), null))
-            .ReturnsAsync(ServiceResult<WorkoutTemplateExerciseDto>.Success(exerciseDto));
-
         // Act
         var result = await testee.DuplicateAsync(originalId, "Copy");
 
@@ -132,8 +137,9 @@ public class DuplicationHandlerTests
         result.IsSuccess.Should().BeTrue();
         result.Data.Should().NotBeNull();
         
-        automocker.GetMock<IWorkoutTemplateExerciseCommandDataService>()
-            .Verify(x => x.CreateAsync(It.IsAny<WorkoutTemplateExercise>(), null), Times.Once);
+        // Verify that DuplicateAsync was called (it handles exercise duplication internally)
+        automocker.GetMock<IWorkoutTemplateCommandDataService>()
+            .Verify(x => x.DuplicateAsync(It.IsAny<WorkoutTemplateId>(), It.IsAny<string>(), It.IsAny<UserId>(), It.IsAny<ITransactionScope?>()), Times.Once);
     }
 
     [Fact]
@@ -193,24 +199,26 @@ public class DuplicationHandlerTests
             .Setup(x => x.ExistsByNameAsync("Copy"))
             .ReturnsAsync(ServiceResult<BooleanResultDto>.Success(new BooleanResultDto { Value = false }));
         
+        // Setup original template exists (needed for validation chain)
+        automocker.GetMock<IWorkoutTemplateQueryDataService>()
+            .Setup(x => x.ExistsAsync(originalId))
+            .ReturnsAsync(ServiceResult<BooleanResultDto>.Success(new BooleanResultDto { Value = true }));
+        
         automocker.GetMock<IWorkoutTemplateCommandDataService>()
-            .Setup(x => x.CreateAsync(It.IsAny<WorkoutTemplateEntity>(), null))
+            .Setup(x => x.DuplicateAsync(It.IsAny<WorkoutTemplateId>(), It.IsAny<string>(), It.IsAny<UserId>(), It.IsAny<ITransactionScope?>()))
             .ReturnsAsync(ServiceResult<WorkoutTemplateDto>.Success(duplicatedTemplate));
         
-        automocker.GetMock<IWorkoutTemplateExerciseCommandDataService>()
-            .Setup(x => x.CreateAsync(It.IsAny<WorkoutTemplateExercise>(), null))
-            .ReturnsAsync((WorkoutTemplateExercise ex, ITransactionScope? scope) => 
-                ServiceResult<WorkoutTemplateExerciseDto>.Success(new WorkoutTemplateExerciseDto()));
-
         // Act
         var result = await testee.DuplicateAsync(originalId, "Copy");
 
         // Assert
         result.Should().NotBeNull();
         result.IsSuccess.Should().BeTrue();
+        result.Data.Should().NotBeNull();
         
-        automocker.GetMock<IWorkoutTemplateExerciseCommandDataService>()
-            .Verify(x => x.CreateAsync(It.IsAny<WorkoutTemplateExercise>(), null), Times.Exactly(3));
+        // Verify that DuplicateAsync was called (it handles all exercise duplication internally)
+        automocker.GetMock<IWorkoutTemplateCommandDataService>()
+            .Verify(x => x.DuplicateAsync(It.IsAny<WorkoutTemplateId>(), It.IsAny<string>(), It.IsAny<UserId>(), It.IsAny<ITransactionScope?>()), Times.Once);
     }
 
     #endregion
@@ -231,7 +239,8 @@ public class DuplicationHandlerTests
         result.Should().NotBeNull();
         result.IsSuccess.Should().BeFalse();
         result.PrimaryErrorCode.Should().Be(ServiceErrorCode.ValidationFailed);
-        result.Data.Should().BeNull();
+        result.Data.Should().NotBeNull();
+        result.Data.IsEmpty.Should().BeTrue();
         
         // Should not call any data services
         automocker.GetMock<IWorkoutTemplateQueryDataService>()
@@ -254,7 +263,8 @@ public class DuplicationHandlerTests
         result.Should().NotBeNull();
         result.IsSuccess.Should().BeFalse();
         result.PrimaryErrorCode.Should().Be(ServiceErrorCode.ValidationFailed);
-        result.Data.Should().BeNull();
+        result.Data.Should().NotBeNull();
+        result.Data.IsEmpty.Should().BeTrue();
         
         // Should not call any data services
         automocker.GetMock<IWorkoutTemplateQueryDataService>()
@@ -277,7 +287,8 @@ public class DuplicationHandlerTests
         result.Should().NotBeNull();
         result.IsSuccess.Should().BeFalse();
         result.PrimaryErrorCode.Should().Be(ServiceErrorCode.ValidationFailed);
-        result.Data.Should().BeNull();
+        result.Data.Should().NotBeNull();
+        result.Data.IsEmpty.Should().BeTrue();
     }
 
     [Fact]
@@ -297,7 +308,8 @@ public class DuplicationHandlerTests
         result.Should().NotBeNull();
         result.IsSuccess.Should().BeFalse();
         result.PrimaryErrorCode.Should().Be(ServiceErrorCode.ValidationFailed);
-        result.Data.Should().BeNull();
+        result.Data.Should().NotBeNull();
+        result.Data.IsEmpty.Should().BeTrue();
     }
 
     #endregion
@@ -313,13 +325,14 @@ public class DuplicationHandlerTests
         
         var originalId = WorkoutTemplateId.New();
         
-        // Setup query to return empty
-        automocker.GetMock<IWorkoutTemplateQueryDataService>()
-            .Setup(x => x.GetByIdWithDetailsAsync(originalId))
-            .ReturnsAsync(ServiceResult<WorkoutTemplateDto>.Success(WorkoutTemplateDto.Empty));
-        
+        // Setup name is unique (so we get to the exists check)
         automocker.GetMock<IWorkoutTemplateQueryDataService>()
             .Setup(x => x.ExistsByNameAsync("New Name"))
+            .ReturnsAsync(ServiceResult<BooleanResultDto>.Success(new BooleanResultDto { Value = false }));
+        
+        // Setup original template does not exist - this will cause NotFound error
+        automocker.GetMock<IWorkoutTemplateQueryDataService>()
+            .Setup(x => x.ExistsAsync(originalId))
             .ReturnsAsync(ServiceResult<BooleanResultDto>.Success(new BooleanResultDto { Value = false }));
 
         // Act
@@ -343,7 +356,12 @@ public class DuplicationHandlerTests
         
         // Setup name already exists
         automocker.GetMock<IWorkoutTemplateQueryDataService>()
-            .Setup(x => x.ExistsByNameAsync("Existing Name"))
+            .Setup(x => x.ExistsByNameAsync(It.IsAny<string>()))
+            .ReturnsAsync(ServiceResult<BooleanResultDto>.Success(new BooleanResultDto { Value = true }));
+
+        // Setup original template exists (needed for validation chain)
+        automocker.GetMock<IWorkoutTemplateQueryDataService>()
+            .Setup(x => x.ExistsAsync(originalId))
             .ReturnsAsync(ServiceResult<BooleanResultDto>.Success(new BooleanResultDto { Value = true }));
 
         // Act
@@ -353,7 +371,6 @@ public class DuplicationHandlerTests
         result.Should().NotBeNull();
         result.IsSuccess.Should().BeFalse();
         result.PrimaryErrorCode.Should().Be(ServiceErrorCode.ValidationFailed);
-        result.Data.Should().BeNull();
         
         // Should not fetch the original template
         automocker.GetMock<IWorkoutTemplateQueryDataService>()
