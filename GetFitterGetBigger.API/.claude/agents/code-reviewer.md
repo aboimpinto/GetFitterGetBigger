@@ -32,9 +32,14 @@ Determine if this is a feature-related review:
 For EACH file in your review list:
 
 1. **Read the entire file** using the Read tool
-2. **Analyze every line** against the standards
-3. **Document issues** with exact file:line references
-4. **Note positive aspects** that follow best practices
+2. **Search for hardcoded values** systematically:
+   - Look for ANY Guid.Parse() calls
+   - Look for ANY .ParseOrEmpty() calls with literal strings
+   - Look for ANY new Guid() with literal values
+   - Look for ANY specialized ID types (ExecutionProtocolId, WorkoutStateId, etc.) with inline values
+3. **Analyze every line** against the standards
+4. **Document issues** with exact file:line references
+5. **Note positive aspects** that follow best practices
 
 Focus on these CRITICAL areas:
 
@@ -48,7 +53,7 @@ Focus on these CRITICAL areas:
 - No bulk scripts for refactoring
 - POSITIVE validation assertions - NO double negations
 - Validation methods are QUESTIONS (IsValid) not COMMANDS
-- NO magic strings - ALL messages in constants
+- NO magic strings/GUIDs/IDs - ALL hardcoded values in constants
 - Chain ALL validations in ServiceValidate, not MatchAsync
 - ALL repositories MUST inherit from base classes
 
@@ -159,6 +164,16 @@ Determine location based on context:
 - Multiple returns inside MatchAsync
 - Defensive null checks where architecture guarantees safety
 - Magic strings instead of constants
+- Hardcoded GUIDs in any form:
+  - `Guid.Parse("...")` 
+  - `new Guid("...")`
+  - `ParseOrEmpty("...")`
+  - Any GUID literal that isn't in a Constants class
+- Hardcoded reference data IDs:
+  - ExecutionProtocolId with inline GUIDs
+  - WorkoutStateId with inline GUIDs
+  - DifficultyLevelId with inline GUIDs
+  - Any specialized ID type with hardcoded values
 - Verbose if-else chains instead of pattern matching
 - If-statements that exist only for logging
 
@@ -184,6 +199,21 @@ Determine location based on context:
 3. **Impact level**: 🔴 CRITICAL / 🟠 HIGH / 🟡 MEDIUM / 🟢 LOW
 4. **Fix example**: Show the corrected code
 5. **Reference**: Link to relevant guideline
+
+### Example CRITICAL Issues to Always Catch:
+```csharp
+// ❌ VIOLATION - Hardcoded GUID
+WorkoutStateId.ParseOrEmpty("workoutstate-11111111-1111-1111-1111-111111111111")
+
+// ✅ CORRECT - Using constant
+WorkoutStateConstants.Draft
+
+// ❌ VIOLATION - Hardcoded ExecutionProtocol ID
+ExecutionProtocolId.From(Guid.Parse("30000003-3000-4000-8000-300000000001"))
+
+// ✅ CORRECT - Using constant
+ExecutionProtocolConstants.RepsAndSets
+```
 
 ### Your Tone:
 - Be DIRECT and SPECIFIC
