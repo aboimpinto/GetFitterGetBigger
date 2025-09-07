@@ -7,15 +7,14 @@ namespace GetFitterGetBigger.API.Services.Validation;
 
 /// <summary>
 /// A chained validation builder that allows data transformations through a pipeline.
-/// Each step only executes if all previous validations pass.
+/// All operations are deferred until MatchAsync is called to maintain fluent interface.
+/// This allows mixing sync and async operations in a single fluent chain.
 /// </summary>
 public class ChainedServiceValidationBuilder<TData, TResult>
 {
     private readonly ServiceValidationBuilder<TResult> _innerBuilder;
-    private readonly TData _data;
-    private readonly bool _isValid;
-    private readonly ServiceError? _error;
-
+    private readonly Func<Task<(object data, bool isValid, ServiceError? error)>> _pipeline;
+    
     internal ChainedServiceValidationBuilder(
         ServiceValidationBuilder<TResult> innerBuilder,
         TData data,
@@ -23,155 +22,149 @@ public class ChainedServiceValidationBuilder<TData, TResult>
         ServiceError? error = null)
     {
         _innerBuilder = innerBuilder;
-        _data = data;
-        _isValid = isValid;
-        _error = error;
+        _pipeline = () => Task.FromResult((data as object, isValid, error));
     }
-
-    /// <summary>
-    /// Gets the current data in the pipeline.
-    /// </summary>
-    public TData Data => _data;
-
-    /// <summary>
-    /// Gets whether the chain is still valid.
-    /// </summary>
-    public bool IsValid => _isValid;
-
+    
+    private ChainedServiceValidationBuilder(
+        ServiceValidationBuilder<TResult> innerBuilder,
+        Func<Task<(object data, bool isValid, ServiceError? error)>> pipeline)
+    {
+        _innerBuilder = innerBuilder;
+        _pipeline = pipeline;
+    }
+    
     /// <summary>
     /// Transforms the current data using an EntityResult-returning function.
-    /// Only executes if all previous steps were valid.
+    /// The operation is deferred until MatchAsync is called.
     /// </summary>
     public ChainedServiceValidationBuilder<TNewData, TResult> ThenCreate<TNewData>(
         Func<TData, EntityResult<TNewData>> transformFunc,
         string operationDescription)
         where TNewData : class, IEmptyEntity<TNewData>
     {
-        if (!_isValid)
+        async Task<(object data, bool isValid, ServiceError? error)> NewPipeline()
         {
-            // Pass through the error state
-            return new ChainedServiceValidationBuilder<TNewData, TResult>(
-                _innerBuilder,
-                default!,
-                false,
-                _error);
+            var (prevData, prevValid, prevError) = await _pipeline();
+            
+            if (!prevValid)
+            {
+                return (default(TNewData)!, false, prevError);
+            }
+            
+            var result = transformFunc((TData)prevData);
+            if (!result.IsSuccess)
+            {
+                var error = ServiceError.ValidationFailed($"{operationDescription}: {result.FirstError}");
+                return (result.Value, false, error);
+            }
+            
+            return (result.Value, true, null);
         }
-
-        var result = transformFunc(_data);
-        if (!result.IsSuccess)
-        {
-            var error = ServiceError.ValidationFailed($"{operationDescription}: {result.FirstError}");
-            return new ChainedServiceValidationBuilder<TNewData, TResult>(
-                _innerBuilder,
-                result.Value,
-                false,
-                error);
-        }
-
-        return new ChainedServiceValidationBuilder<TNewData, TResult>(
-            _innerBuilder,
-            result.Value,
-            true);
+        
+        return new ChainedServiceValidationBuilder<TNewData, TResult>(_innerBuilder, NewPipeline);
     }
-
+    
     /// <summary>
     /// Performs an async operation on the current data.
-    /// The operation doesn't transform the data type.
+    /// The operation is deferred until MatchAsync is called.
     /// </summary>
-    public async Task<ChainedServiceValidationBuilder<TData, TResult>> ThenPerformAsync(
+    public ChainedServiceValidationBuilder<TData, TResult> ThenPerformAsync(
         Func<TData, Task> operation,
         string operationDescription)
     {
-        if (!_isValid)
+        async Task<(object data, bool isValid, ServiceError? error)> NewPipeline()
         {
-            return this;
+            var (prevData, prevValid, prevError) = await _pipeline();
+            
+            if (!prevValid)
+            {
+                return (prevData, false, prevError);
+            }
+            
+            try
+            {
+                await operation((TData)prevData);
+                return (prevData, true, null);
+            }
+            catch (Exception ex)
+            {
+                var error = ServiceError.ValidationFailed($"{operationDescription} failed: {ex.Message}");
+                return (prevData, false, error);
+            }
         }
-
-        try
-        {
-            await operation(_data);
-            return this;
-        }
-        catch (Exception ex)
-        {
-            var error = ServiceError.ValidationFailed($"{operationDescription} failed: {ex.Message}");
-            return new ChainedServiceValidationBuilder<TData, TResult>(
-                _innerBuilder,
-                _data,
-                false,
-                error);
-        }
+        
+        return new ChainedServiceValidationBuilder<TData, TResult>(_innerBuilder, NewPipeline);
     }
-
+    
     /// <summary>
     /// Transforms the current data asynchronously.
+    /// The operation is deferred until MatchAsync is called.
     /// </summary>
-    public async Task<ChainedServiceValidationBuilder<TNewData, TResult>> ThenTransformAsync<TNewData>(
+    public ChainedServiceValidationBuilder<TNewData, TResult> ThenTransformAsync<TNewData>(
         Func<TData, Task<TNewData>> transformFunc,
         string operationDescription)
     {
-        if (!_isValid)
+        async Task<(object data, bool isValid, ServiceError? error)> NewPipeline()
         {
-            // Pass through the error state
-            return new ChainedServiceValidationBuilder<TNewData, TResult>(
-                _innerBuilder,
-                default!,
-                false,
-                _error);
+            var (prevData, prevValid, prevError) = await _pipeline();
+            
+            if (!prevValid)
+            {
+                return (default(TNewData)!, false, prevError);
+            }
+            
+            try
+            {
+                var newData = await transformFunc((TData)prevData);
+                return (newData!, true, null);
+            }
+            catch (Exception ex)
+            {
+                var error = ServiceError.ValidationFailed($"{operationDescription} failed: {ex.Message}");
+                return (default(TNewData)!, false, error);
+            }
         }
-
-        try
-        {
-            var newData = await transformFunc(_data);
-            return new ChainedServiceValidationBuilder<TNewData, TResult>(
-                _innerBuilder,
-                newData,
-                true);
-        }
-        catch (Exception ex)
-        {
-            var error = ServiceError.ValidationFailed($"{operationDescription} failed: {ex.Message}");
-            return new ChainedServiceValidationBuilder<TNewData, TResult>(
-                _innerBuilder,
-                default!,
-                false,
-                error);
-        }
+        
+        return new ChainedServiceValidationBuilder<TNewData, TResult>(_innerBuilder, NewPipeline);
     }
-
+    
     /// <summary>
-    /// Completes the chain and returns the final result.
+    /// Executes the entire pipeline and returns the final result.
     /// </summary>
     public async Task<ServiceResult<TResult>> MatchAsync(
         Func<TData, ServiceResult<TResult>> whenValid,
         Func<ServiceError, ServiceResult<TResult>> whenInvalid)
     {
-        if (!_isValid && _error != null)
+        var (data, isValid, error) = await _pipeline();
+        
+        if (!isValid && error != null)
         {
-            return whenInvalid(_error);
+            return whenInvalid(error);
         }
-
+        
         // Use the inner builder's validation results
         return await _innerBuilder.MatchAsync(
-            async () => await Task.FromResult(whenValid(_data)),
+            async () => await Task.FromResult(whenValid((TData)data)),
             errors => whenInvalid(errors.First()));
     }
-
+    
     /// <summary>
-    /// Completes the chain and returns the final result (async version).
+    /// Executes the entire pipeline and returns the final result (async version).
     /// </summary>
     public async Task<ServiceResult<TResult>> MatchAsync(
         Func<TData, Task<ServiceResult<TResult>>> whenValid,
         Func<ServiceError, ServiceResult<TResult>> whenInvalid)
     {
-        if (!_isValid && _error != null)
+        var (data, isValid, error) = await _pipeline();
+        
+        if (!isValid && error != null)
         {
-            return whenInvalid(_error);
+            return whenInvalid(error);
         }
-
+        
         // Use the inner builder's validation results
         return await _innerBuilder.MatchAsync(
-            async () => await whenValid(_data),
+            async () => await whenValid((TData)data),
             errors => whenInvalid(errors.First()));
     }
 }
@@ -222,21 +215,23 @@ public static class ChainedValidationExtensions
 
     /// <summary>
     /// Adds an entity to the repository.
+    /// Deferred execution - returns immediately, executes in MatchAsync.
     /// </summary>
-    public static async Task<ChainedServiceValidationBuilder<TEntity, TResult>> ThenAddAsync<TEntity, TResult>(
+    public static ChainedServiceValidationBuilder<TEntity, TResult> ThenAddAsync<TEntity, TResult>(
         this ChainedServiceValidationBuilder<TEntity, TResult> chain,
         Func<TEntity, Task> addFunc)
     {
-        return await chain.ThenPerformAsync(addFunc, "Add to repository");
+        return chain.ThenPerformAsync(addFunc, "Add to repository");
     }
 
     /// <summary>
     /// Reloads an entity with full details.
+    /// Deferred execution - returns immediately, executes in MatchAsync.
     /// </summary>
-    public static async Task<ChainedServiceValidationBuilder<TEntity, TResult>> ThenReloadAsync<TEntity, TResult>(
+    public static ChainedServiceValidationBuilder<TEntity, TResult> ThenReloadAsync<TEntity, TResult>(
         this ChainedServiceValidationBuilder<TEntity, TResult> chain,
         Func<TEntity, Task<TEntity>> reloadFunc)
     {
-        return await chain.ThenTransformAsync(reloadFunc, "Reload entity");
+        return chain.ThenTransformAsync(reloadFunc, "Reload entity");
     }
 }

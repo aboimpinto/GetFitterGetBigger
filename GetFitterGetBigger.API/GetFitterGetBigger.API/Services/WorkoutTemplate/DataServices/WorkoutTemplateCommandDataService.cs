@@ -295,8 +295,8 @@ GetFitterGetBigger.API.Models.Entities.WorkoutZone.Main, // Default to Main zone
         // Load the source entity
         var source = await repository.GetByIdWithDetailsAsync(sourceId);
         
-        // Use chained validation pattern with single exit point
-        var chain = ServiceValidate.Build<WorkoutTemplateDto>()
+        // Use chained validation pattern with single exit point - now fully fluent!
+        return await ServiceValidate.Build<WorkoutTemplateDto>()
             .EnsureNotEmpty(
                 source, 
                 ServiceError.NotFound("WorkoutTemplate", sourceId.ToString()))
@@ -310,18 +310,14 @@ GetFitterGetBigger.API.Models.Entities.WorkoutZone.Main, // Default to Main zone
                     src.Tags?.ToList(),
                     src.IsPublic,
                     WorkoutStateConstants.DraftId,
-                    src.ExecutionProtocolId));
-        
-        // Continue the async chain
-        var chainAfterAdd = await chain.ThenAddAsync(async duplicate => 
-            await repository.AddAsync(duplicate));
-            
-        var chainAfterReload = await chainAfterAdd.ThenReloadAsync(async duplicate => 
-            await repository.GetByIdWithDetailsAsync(duplicate.Id));
-            
-        return await chainAfterReload.MatchAsync(
-            reloadedTemplate => ServiceResult<WorkoutTemplateDto>.Success(reloadedTemplate.ToDto()),
-            error => ServiceResult<WorkoutTemplateDto>.Failure(WorkoutTemplateDto.Empty, error));
+                    src.ExecutionProtocolId))
+            .ThenAddAsync(async duplicate => 
+                await repository.AddAsync(duplicate))
+            .ThenReloadAsync(async duplicate => 
+                await repository.GetByIdWithDetailsAsync(duplicate.Id))
+            .MatchAsync(
+                reloadedTemplate => ServiceResult<WorkoutTemplateDto>.Success(reloadedTemplate.ToDto()),
+                error => ServiceResult<WorkoutTemplateDto>.Failure(WorkoutTemplateDto.Empty, error));
     }
     
     private async Task<ServiceResult<BooleanResultDto>> DeleteWithoutScopeAsync(
