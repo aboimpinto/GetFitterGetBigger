@@ -2,6 +2,30 @@
 
 This document contains project-specific instructions for Claude AI when working on the GetFitterGetBigger project.
 
+## ⚠️ CRITICAL: Communication and Decision Making
+
+### 1. Always Discuss Alternative Solutions
+**After discussing a solution, if you find there is another way to solve it:**
+- **STOP and request attention from the user**
+- Present your new solution with clear pros and cons
+- Compare it with the original approach
+- Wait for user confirmation before proceeding
+- Never silently change approaches mid-implementation
+
+### 2. DO NOT MAKE ASSUMPTIONS - ASK!
+**Better to ask than develop in one direction and need to rollback the work:**
+- If you have ANY doubts about implementation details - **ASK**
+- If you're unsure about architectural decisions - **ASK**
+- If multiple approaches seem valid - **ASK** which one to use
+- If requirements are ambiguous - **ASK** for clarification
+- Never assume what the user wants - always confirm
+
+**Examples of when to ASK:**
+- "Should empty entities return Success or Failure?"
+- "Which pattern should I use for this validation?"
+- "Should this be async or sync?"
+- "Is this the correct ID format?"
+
 ## Role in API Project
 
 When working in the API project folder, the AI assistant can perform **full implementation work** including:
