@@ -1,9 +1,13 @@
-# FEAT-028: Comprehensive Workout Exercise Management
+# FEAT-028: Original Design (Historical Reference)
 
-## Overview
+**Note**: This document is preserved for historical reference. FEAT-028 has been superseded by FEAT-031 with an improved design approach.
+
+## Original Feature: FEAT-028: Comprehensive Workout Exercise Management
+
+### Overview
 This feature extends the WorkoutTemplate core functionality to support comprehensive exercise management within workouts, including complex workout structures like circuits, supersets, EMOM (Every Minute on the Minute), and progressive loading patterns.
 
-## Background
+### Background
 The current WorkoutTemplate implementation (FEAT-026) provides basic CRUD operations for workout templates but lacks the ability to:
 - Add and manage exercises within templates
 - Support different execution protocols (STANDARD, SUPERSET, DROP_SET, AMRAP)
@@ -11,9 +15,9 @@ The current WorkoutTemplate implementation (FEAT-026) provides basic CRUD operat
 - Create complex workout structures with rounds and circuits
 - Manage rest periods as part of the workout flow
 
-## Business Requirements
+### Business Requirements
 
-### Core Functionality
+#### Core Functionality
 1. **ExecutionProtocol Integration**
    - Integrate ExecutionProtocol at the WorkoutTemplate level
    - Different protocols determine how exercises are structured and performed
@@ -37,9 +41,9 @@ The current WorkoutTemplate implementation (FEAT-026) provides basic CRUD operat
    - Configure rest periods between rounds
    - Support nested structures (rounds within rounds)
 
-## Example Workout Structures
+### Example Workout Structures
 
-### Example 1: HIT Circuit (No Rest Between Rounds)
+#### Example 1: HIT Circuit (No Rest Between Rounds)
 ```
 ExecutionProtocol: CIRCUIT
 Rounds: 2
@@ -55,7 +59,7 @@ Configuration:
 - Total: 2 rounds × 3 exercises = 60 total reps
 ```
 
-### Example 2: Strength Training with Progressive Loading
+#### Example 2: Strength Training with Progressive Loading
 ```
 ExecutionProtocol: STANDARD
 
@@ -77,7 +81,7 @@ Configuration:
 - Mixed MetricTypes (TIME and REPETITIONS)
 ```
 
-### Example 3: EMOM (Every Minute on the Minute)
+#### Example 3: EMOM (Every Minute on the Minute)
 ```
 ExecutionProtocol: EMOM
 Duration: 20 minutes (4 rounds of 5-minute cycles)
@@ -95,9 +99,9 @@ Configuration:
 - Pattern repeats for total duration
 ```
 
-## Technical Requirements
+### Technical Requirements
 
-### Data Model Enhancements
+#### Data Model Enhancements
 1. **WorkoutTemplate Updates**
    - Add ExecutionProtocolId field
    - Add support for round/circuit configuration
@@ -118,7 +122,7 @@ Configuration:
    - Configurable rest durations
    - Rest between sets vs rest between rounds
 
-### API Endpoints
+#### API Endpoints
 1. **Exercise Management**
    - Already implemented in FEAT-026 but needs testing
    - Add validation based on ExecutionProtocol
@@ -128,7 +132,7 @@ Configuration:
    - PUT `/api/workout-templates/{id}/exercise-groups/{groupId}` - Update group
    - POST `/api/workout-templates/{id}/execution-protocol` - Set protocol
 
-### Business Rules
+#### Business Rules
 1. **ExecutionProtocol Constraints**
    - STANDARD: Traditional sets and reps, no grouping
    - SUPERSET: Exercises must be in groups of 2+
@@ -146,27 +150,74 @@ Configuration:
    - Main: Primary workout exercises
    - Cooldown: Stretching, recovery exercises
 
-## Dependencies
+### Dependencies
 - FEAT-026 (WorkoutTemplate Core) must be completed
 - Existing Exercise, MetricType, and ExecutionProtocol entities
 - ExerciseMetricSupport relationship
 
-## Success Criteria
+### Success Criteria
 1. Personal trainers can create workouts with complex structures
 2. All example workout types can be fully configured
 3. Exercise configuration adapts based on MetricType
 4. ExecutionProtocol drives the workout structure UI/UX
 5. Complete BDD test coverage for all scenarios
 
-## Implementation Priority
+### Implementation Priority
 1. ExecutionProtocol integration with WorkoutTemplate
 2. Basic exercise addition with MetricType validation
 3. ExerciseGroup entity for circuits/supersets
 4. Complex workout structure support
 5. BDD tests and integration tests
 
-## Notes
+### Notes
 - This feature significantly enhances the workout creation capabilities
 - UI/UX will need major updates to support these complex structures
 - Performance testing is critical with nested structures
 - Consider workout preview/simulation functionality
+
+## What Was Extracted for FEAT-031
+
+### Concepts Adopted
+1. **ExecutionProtocol** - Using existing entity instead of creating WorkoutType
+2. **MetricType for UI Validation** - Using to determine which input fields to show
+3. **Workout Examples** - Incorporated similar examples in technical design
+4. **Phase Organization** - Warmup, Workout (Main), Cooldown phases
+
+### Concepts Modified
+1. **ExerciseGroup Entity** → Replaced with round-based organization and metadata
+2. **Complex nested structures** → Simplified to rounds + JSON metadata
+3. **Multiple tables approach** → Single flexible table with JSON
+
+### Concepts Not Needed
+1. **ExerciseGroup entity** - Rounds and metadata handle grouping
+2. **SetConfiguration entity** - JSON metadata is more flexible
+3. **Complex zone restrictions** - Simplified phase approach
+
+## Key Improvements in FEAT-031
+
+1. **Simpler Architecture**
+   - Single WorkoutTemplateExercise table vs multiple entities
+   - JSON metadata provides infinite flexibility
+   - No schema changes needed for new workout types
+
+2. **Better Integration**
+   - Uses existing ExecutionProtocol
+   - Leverages ExerciseLinks for auto-add functionality
+   - MetricType for UI hints only, not data storage
+
+3. **More Flexible**
+   - Any workout type can be supported
+   - Easy to add new types without code changes
+   - Metadata adapts to any requirement
+
+## Lessons Learned
+
+1. **Start Simple** - A flexible JSON approach beats complex entity relationships
+2. **Use What Exists** - ExecutionProtocol and MetricType were already there
+3. **Think UI/Backend Separately** - MetricType for UI, JSON for storage
+4. **Rounds Are Powerful** - Most complexity can be expressed as rounds + metadata
+
+---
+
+*This document preserved from FEAT-028 submitted on July 25, 2024*
+*Superseded by FEAT-031 on January 7, 2025*

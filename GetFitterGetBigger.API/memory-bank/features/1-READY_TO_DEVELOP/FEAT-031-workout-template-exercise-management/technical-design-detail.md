@@ -6,55 +6,21 @@ This document provides the complete technical design for the Workout Template Ex
 
 ## Core Design Principles
 
-1. **WorkoutTemplate** defines the RULES and STRUCTURE
+1. **WorkoutTemplate** defines the RULES and STRUCTURE (via ExecutionProtocol)
 2. **WorkoutTemplateExercise** defines the CONTENT 
 3. **Metadata JSON** provides infinite flexibility
 4. **No schema changes** needed for new workout types
+5. **Integration with existing entities** (ExecutionProtocol, MetricType, ExerciseLinks)
 
 ## Database Schema
 
-### WorkoutType (Reference Table - Cached Forever)
-```sql
-CREATE TABLE WorkoutType (
-    Id INT PRIMARY KEY IDENTITY(1,1),
-    Name NVARCHAR(50) NOT NULL UNIQUE,
-    Code NVARCHAR(20) NOT NULL UNIQUE,
-    Description NVARCHAR(500),
-    ValidationRules NVARCHAR(MAX), -- JSON with type-specific rules
-    IsActive BIT NOT NULL DEFAULT 1,
-    CreatedAt DATETIME2 NOT NULL DEFAULT GETUTCDATE(),
-    UpdatedAt DATETIME2 NOT NULL DEFAULT GETUTCDATE()
-);
-```
+**Complete schema definition**: See [database-schema.md](./database-schema.md)
 
-### WorkoutTemplate (Modified)
-```sql
--- Add these columns to existing WorkoutTemplate table
-ALTER TABLE WorkoutTemplate ADD
-    WorkoutTypeId INT NOT NULL DEFAULT 1 FOREIGN KEY REFERENCES WorkoutType(Id),
-    WorkoutTypeConfig NVARCHAR(MAX) NULL; -- JSON configuration for workout type
-```
-
-### WorkoutTemplateExercise (New Design)
-```sql
-CREATE TABLE WorkoutTemplateExercise (
-    Id UNIQUEIDENTIFIER PRIMARY KEY DEFAULT NEWID(),
-    WorkoutTemplateId INT NOT NULL FOREIGN KEY REFERENCES WorkoutTemplate(Id),
-    ExerciseId INT NOT NULL FOREIGN KEY REFERENCES Exercise(Id),
-    Phase NVARCHAR(20) NOT NULL CHECK (Phase IN ('Warmup', 'Workout', 'Cooldown')),
-    RoundNumber INT NOT NULL CHECK (RoundNumber > 0),
-    OrderInRound INT NOT NULL CHECK (OrderInRound > 0),
-    Metadata NVARCHAR(MAX) NOT NULL, -- JSON structure
-    AddedAutomatically BIT NOT NULL DEFAULT 0,
-    SourceExerciseId UNIQUEIDENTIFIER NULL,
-    CreatedAt DATETIME2 NOT NULL DEFAULT GETUTCDATE(),
-    UpdatedAt DATETIME2 NOT NULL DEFAULT GETUTCDATE(),
-    
-    INDEX IX_WorkoutTemplate (WorkoutTemplateId, Phase, RoundNumber, OrderInRound),
-    INDEX IX_Exercise (ExerciseId),
-    INDEX IX_Source (SourceExerciseId)
-);
-```
+### Quick Reference
+- **ExecutionProtocol**: Using existing entity (migration required)
+- **WorkoutTemplate**: Add ExecutionProtocolId and ExecutionProtocolConfig
+- **WorkoutTemplateExercise**: New flexible table with JSON metadata
+- **First Task**: Rename "Standard" to "Reps and Sets" in ExecutionProtocol
 
 ## Complete Example: "Leg Burning I" Workout
 
@@ -62,8 +28,8 @@ CREATE TABLE WorkoutTemplateExercise (
 ```sql
 Id: 1001
 Name: 'Leg Burning I'
-WorkoutTypeId: 1 (Reps & Sets)
-WorkoutTypeConfig: NULL -- Reps & Sets doesn't need special config
+ExecutionProtocolId: '30000003-3000-4000-8000-300000000001' -- REPS_AND_SETS protocol
+ExecutionProtocolConfig: NULL -- REPS_AND_SETS doesn't need special config
 ```
 
 ### WorkoutTemplateExercise Table Rows
@@ -165,61 +131,34 @@ INSERT INTO WorkoutTemplateExercise VALUES
  '{"duration": 30, "unit": "seconds"}', 0, NULL);
 ```
 
-## Metadata Patterns by Exercise Type
+## Metadata Patterns
 
-### 1. Time-Based Exercises
-```json
-{
-  "duration": 30,
-  "unit": "seconds"  // or "minutes"
-}
-```
+**Complete metadata patterns**: See [metadata-patterns.md](./metadata-patterns.md)
 
-### 2. Reps-Only Exercises
-```json
-{
-  "reps": 10
-}
-```
+### Quick Reference
+- **Time-based**: `{"duration": 30, "unit": "seconds"}`
+- **Reps-only**: `{"reps": 10}`
+- **Weight + Reps**: `{"reps": 20, "weight": {"value": 10, "unit": "kg"}}`
+- **REST**: Duration only
+- **Advanced**: Supersets, tempo, drop sets, etc.
 
-### 3. Weight + Reps Exercises
-```json
-{
-  "reps": 20,
-  "weight": {
-    "value": 10,
-    "unit": "kg"  // or "lbs"
-  }
-}
-```
+## All Execution Protocols Supported
 
-### 4. Distance-Based Exercises (future)
-```json
-{
-  "distance": 400,
-  "unit": "meters",  // or "miles", "km"
-  "targetTime": 90,
-  "timeUnit": "seconds"
-}
-```
-
-## All Workout Types Supported
-
-### 1. Reps & Sets (Traditional)
+### 1. REPS_AND_SETS (Traditional Workout)
 ```sql
 -- WorkoutTemplate
-WorkoutTypeId: 1
-WorkoutTypeConfig: NULL  -- No special config needed
+ExecutionProtocolId: '30000003-3000-4000-8000-300000000001'
+ExecutionProtocolConfig: NULL  -- No special config needed
 
 -- WorkoutTemplateExercise
 -- As shown in the complete example above
 ```
 
-### 2. EMOM (Every Minute on the Minute)
+### 2. EMOM (Every Minute on the Minute) - Future
 ```sql
 -- WorkoutTemplate
-WorkoutTypeId: 2
-WorkoutTypeConfig: {
+ExecutionProtocolId: 'future-emom-guid'
+ExecutionProtocolConfig: {
   "interval": 60,
   "intervalUnit": "seconds",
   "totalDuration": 10,
@@ -234,11 +173,11 @@ Round 1-10: Each contains same exercises
 -- User must complete all within the minute, rest remainder
 ```
 
-### 3. Tabata
+### 3. TABATA - Future
 ```sql
 -- WorkoutTemplate
-WorkoutTypeId: 3
-WorkoutTypeConfig: {
+ExecutionProtocolId: 'future-tabata-guid'
+ExecutionProtocolConfig: {
   "workDuration": 20,
   "restDuration": 10,
   "rounds": 8,
@@ -256,8 +195,8 @@ Round 4: High Knees | Metadata: {}
 ### 4. AMRAP (As Many Reps/Rounds As Possible)
 ```sql
 -- WorkoutTemplate
-WorkoutTypeId: 4
-WorkoutTypeConfig: {
+ExecutionProtocolId: '30000003-3000-4000-8000-300000000004'
+ExecutionProtocolConfig: {
   "timeCap": 15,
   "unit": "minutes"
 }
@@ -270,27 +209,28 @@ Round 1:
 -- User repeats this round as many times as possible in 15 minutes
 ```
 
-### 5. Supersets
+### 5. SUPERSET
 ```sql
 -- Option A: As metadata flag
+ExecutionProtocolId: '30000003-3000-4000-8000-300000000002'
 Round 1:
   Exercise: Bench Press | Metadata: {"reps": 10, "weight": {"value": 60, "unit": "kg"}, "supersetGroup": "A"}
   Exercise: Bent Over Row | Metadata: {"reps": 10, "weight": {"value": 40, "unit": "kg"}, "supersetGroup": "A"}
   Exercise: Rest | Metadata: {"duration": 90, "unit": "seconds"}
 
--- Option B: As WorkoutType
-WorkoutTypeId: 5
-WorkoutTypeConfig: {
+-- Option B: With config
+ExecutionProtocolId: '30000003-3000-4000-8000-300000000002'
+ExecutionProtocolConfig: {
   "restBetweenSupersets": 90,
   "restUnit": "seconds"
 }
 ```
 
-### 6. Circuit Training
+### 6. CIRCUIT Training - Future
 ```sql
 -- WorkoutTemplate
-WorkoutTypeId: 6
-WorkoutTypeConfig: {
+ExecutionProtocolId: 'future-circuit-guid'
+ExecutionProtocolConfig: {
   "rounds": 3,
   "restBetweenRounds": 60,
   "restUnit": "seconds"
@@ -309,8 +249,8 @@ Round 1:
 ### 7. Pyramid Sets
 ```sql
 -- WorkoutTemplate
-WorkoutTypeId: 1  -- Just use Reps & Sets
-WorkoutTypeConfig: NULL
+ExecutionProtocolId: '30000003-3000-4000-8000-300000000001'  -- Use REPS_AND_SETS
+ExecutionProtocolConfig: NULL
 
 -- WorkoutTemplateExercise
 Round 1: Squats | Metadata: {"reps": 2, "weight": {"value": 100, "unit": "kg"}}
@@ -322,11 +262,11 @@ Round 6: Squats | Metadata: {"reps": 4, "weight": {"value": 90, "unit": "kg"}}
 Round 7: Squats | Metadata: {"reps": 2, "weight": {"value": 100, "unit": "kg"}}
 ```
 
-### 8. 21-15-9 (CrossFit)
+### 8. 21-15-9 (CrossFit) - Future Pattern
 ```sql
 -- WorkoutTemplate
-WorkoutTypeId: 7
-WorkoutTypeConfig: {
+ExecutionProtocolId: 'future-crossfit-guid'
+ExecutionProtocolConfig: {
   "pattern": "21-15-9",
   "forTime": true
 }
@@ -346,7 +286,7 @@ Round 3:
 ### 9. Cluster Sets
 ```sql
 -- WorkoutTemplate
-WorkoutTypeId: 1  -- Reps & Sets with special metadata
+ExecutionProtocolId: '30000003-3000-4000-8000-300000000001'  -- REPS_AND_SETS with special metadata
 
 -- WorkoutTemplateExercise
 Round 1:
@@ -356,10 +296,10 @@ Round 1:
   Exercise: Rest | Metadata: {"duration": 180, "unit": "seconds"}
 ```
 
-### 10. Drop Sets
+### 10. DROP_SET
 ```sql
 -- WorkoutTemplate
-WorkoutTypeId: 1  -- Reps & Sets with special metadata
+ExecutionProtocolId: '30000003-3000-4000-8000-300000000003'  -- DROP_SET protocol
 
 -- WorkoutTemplateExercise
 Round 1:
@@ -372,7 +312,7 @@ Round 1:
 ### 11. Time Under Tension
 ```sql
 -- WorkoutTemplate
-WorkoutTypeId: 1  -- Reps & Sets with tempo metadata
+ExecutionProtocolId: '30000003-3000-4000-8000-300000000001'  -- REPS_AND_SETS with tempo metadata
 
 -- WorkoutTemplateExercise
 Round 1:
@@ -388,11 +328,11 @@ Round 1:
   }
 ```
 
-### 12. Ladder Workouts
+### 12. LADDER Workouts - Future
 ```sql
 -- WorkoutTemplate
-WorkoutTypeId: 8
-WorkoutTypeConfig: {
+ExecutionProtocolId: 'future-ladder-guid'
+ExecutionProtocolConfig: {
   "type": "ascending",  // or "descending" or "pyramid"
   "start": 1,
   "end": 10,
@@ -500,7 +440,6 @@ INSERT WorkoutTemplateExercise VALUES
                   "duration": 20,
                   "unit": "seconds"
                 },
-                "addedAutomatically": false
               },
               {
                 "id": "a1b2c3d4-2222-2222-2222-222222222222",
@@ -511,7 +450,6 @@ INSERT WorkoutTemplateExercise VALUES
                 "metadata": {
                   "reps": 10
                 },
-                "addedAutomatically": false
               },
               {
                 "id": "a1b2c3d4-3333-3333-3333-333333333333",
@@ -522,7 +460,6 @@ INSERT WorkoutTemplateExercise VALUES
                 "metadata": {
                   "reps": 10
                 },
-                "addedAutomatically": false
               }
             ]
           },
@@ -552,7 +489,6 @@ INSERT WorkoutTemplateExercise VALUES
                     "unit": "kg"
                   }
                 },
-                "addedAutomatically": false
               },
               {
                 "id": "c1c2c3d4-2222-2222-2222-222222222222",
@@ -564,7 +500,6 @@ INSERT WorkoutTemplateExercise VALUES
                   "duration": 60,
                   "unit": "seconds"
                 },
-                "addedAutomatically": false
               }
             ]
           }
@@ -586,7 +521,6 @@ INSERT WorkoutTemplateExercise VALUES
                   "duration": 30,
                   "unit": "seconds"
                 },
-                "addedAutomatically": false
               },
               {
                 "id": "l1l2l3l4-2222-2222-2222-222222222222",
@@ -598,7 +532,6 @@ INSERT WorkoutTemplateExercise VALUES
                   "duration": 30,
                   "unit": "seconds"
                 },
-                "addedAutomatically": false
               }
             ]
           }
@@ -621,22 +554,22 @@ INSERT WorkoutTemplateExercise VALUES
 ## Implementation Priority
 
 ### Phase 1: Foundation
-1. Create WorkoutType table with initial data
-2. Add WorkoutTypeId and Config to WorkoutTemplate
-3. Create new WorkoutTemplateExercise table
+1. Add ExecutionProtocolId and ExecutionProtocolConfig to WorkoutTemplate
+2. Create new WorkoutTemplateExercise table
+3. Implement MetricType integration for UI hints
 4. Migrate existing data
 
-### Phase 2: Core Features (Reps & Sets)
-1. Implement Add Exercise with auto-linking
+### Phase 2: Core Features (STANDARD Protocol)
+1. Implement Add Exercise with auto-linking via ExerciseLinks
 2. Implement Remove Exercise with cleanup
 3. Implement Reorder functionality
 4. Implement Copy Round
 
-### Phase 3: Advanced Workout Types
-1. EMOM support
-2. Tabata support
-3. AMRAP support
-4. Circuit training
+### Phase 3: Advanced Execution Protocols
+1. Enhance AMRAP support (already exists)
+2. Add EMOM protocol (future)
+3. Add TABATA protocol (future)
+4. Add CIRCUIT protocol (future)
 
 ### Phase 4: Complex Features
 1. Supersets

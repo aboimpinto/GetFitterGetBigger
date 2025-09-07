@@ -9,7 +9,7 @@
 
 ## Description
 
-Complete redesign of the WorkoutTemplate exercise management system to support multiple workout types (Reps & Sets, EMOM, Tabata, etc.) with intelligent exercise linking, round-based organization, and automatic warmup/cooldown management.
+Complete redesign of the WorkoutTemplate exercise management system to support multiple execution protocols (REPS_AND_SETS, SUPERSET, AMRAP, etc.) with intelligent exercise linking, round-based organization, and automatic warmup/cooldown management. Integrates with existing ExecutionProtocol entity while using flexible JSON metadata for infinite extensibility.
 
 ## User Stories
 
@@ -28,10 +28,11 @@ Complete redesign of the WorkoutTemplate exercise management system to support m
 
 ## Acceptance Criteria
 
-### 1. WorkoutType Reference Table
-- [ ] Create WorkoutType reference table (cached forever)
-- [ ] Initial type: "Reps & Sets" with appropriate validation
-- [ ] Each type defines its own data structure and validation rules
+### 1. ExecutionProtocol Integration
+- [ ] Link WorkoutTemplate to existing ExecutionProtocol entity
+- [ ] Add ExecutionProtocolConfig field for protocol-specific settings
+- [ ] Support existing protocols: REPS_AND_SETS (renamed from STANDARD), SUPERSET, DROP_SET, AMRAP
+- [ ] Plan for future protocols: EMOM, TABATA, CIRCUIT, LADDER
 
 ### 2. Round-Based Organization
 - [ ] Support unlimited rounds per phase (warmup, workout, cooldown)
@@ -64,12 +65,13 @@ Complete redesign of the WorkoutTemplate exercise management system to support m
 
 ### 4. Data Structure Requirements
 
-#### For "Reps & Sets" WorkoutType:
+#### For REPS_AND_SETS ExecutionProtocol:
 - Support weight (based on ExerciseWeightTypes)
 - Support reps count
 - Support time duration
-- Support rest periods (REST exercise type)
+- Support rest periods (REST as special exercise)
 - All exercises must have metadata (no empty parameters)
+- No validation of exercise capabilities (handled by future FEAT-032)
 
 ### 5. Validation Rules
 - [ ] No exercise without metadata
@@ -77,27 +79,51 @@ Complete redesign of the WorkoutTemplate exercise management system to support m
 - [ ] Validate based on WorkoutType rules
 - [ ] Templates can be saved without exercises (draft state)
 
+## Business Rules
+
+### Template Lifecycle States
+1. **Draft**: Template can be fully edited, exercises added/removed/modified
+2. **Production**: Template is locked, only description and media can be updated
+3. **Archived**: Template cannot be modified, can still be referenced by historical data
+
+### Exercise Lifecycle Rules
+1. **Active Exercises**: Can be added to draft templates
+2. **Archived Exercises**: Cannot be added to new templates, but remain in existing ones
+3. **Soft Delete**: Exercises are never hard deleted, only marked as IsDeleted
+4. **Production Lock**: Once in production, exercise core properties cannot change
+
+### Round Management Rules
+1. **Empty Rounds**: Allowed during template customization
+2. **Round Limit**: No hard limit on number of rounds (UI may impose soft limits)
+3. **Round Renumbering**: When deleting a round, subsequent rounds are renumbered sequentially
+   - Example: Delete round 2 → round 3 becomes round 2, round 4 becomes round 3, etc.
+4. **Round Numbering**: Always sequential starting from 1, no gaps allowed
+
+### Permissions (Current Phase)
+- Single PT has full access to all templates
+- Future phases will introduce role-based permissions
+
 ## Technical Design
 
 ### Database Schema Approach
 
-**Option 1: Flexible Single Table** (Recommended)
+**Adopted Design: Flexible Single Table**
 ```sql
-WorkoutTemplateExercises
+WorkoutTemplateExercise
 - Id (GUID) - Unique identifier for each instance
 - WorkoutTemplateId
 - Phase (Warmup/Workout/Cooldown)
 - RoundNumber
 - OrderInRound
 - ExerciseId
-- Metadata (JSON) - Flexible structure per WorkoutType
+- Metadata (JSON) - Flexible structure per ExecutionProtocol
 - CreatedAt
 - UpdatedAt
 ```
 
-**Option 2: Multiple Tables per WorkoutType**
-- More complex but strongly typed
-- Requires new tables for each WorkoutType
+**Integration Points**:
+- ExecutionProtocol (existing) - Defines workout structure
+- ExerciseLinks (existing) - Manages warmup/cooldown relationships
 
 ### API Endpoints
 
@@ -137,7 +163,7 @@ GET /api/workout-templates/{templateId}/exercises
 {
   "templateId": "guid",
   "name": "Leg Burning I",
-  "workoutType": "Reps & Sets",
+  "executionProtocol": "REPS_AND_SETS",
   "phases": {
     "warmup": {
       "rounds": [
@@ -201,23 +227,25 @@ GET /api/workout-templates/{templateId}/exercises
 ## Implementation Strategy
 
 ### Phase 1: Foundation
-1. Create WorkoutType reference table
-2. Design and implement flexible exercise storage
-3. Implement basic CRUD operations
+1. **Rename "Standard" to "Reps and Sets" in ExecutionProtocol** (First task!)
+2. Add ExecutionProtocolId and Config to WorkoutTemplate
+3. Design and implement flexible exercise storage
+4. Implement basic CRUD operations
 
-### Phase 2: Core Features
-1. Add exercise with auto-linking
-2. Remove exercise with cleanup
+### Phase 2: Core Features (REPS_AND_SETS Protocol)
+1. Add exercise with auto-linking via ExerciseLinks
+2. Remove exercise with orphan cleanup
 3. Reorder functionality
 4. Round copying
 
 ### Phase 3: Validation & Polish
-1. Implement WorkoutType-specific validation
+1. Implement ExecutionProtocol-specific validation
 2. Add comprehensive error handling
 3. Optimize queries for performance
 
 ## Dependencies
-- ExerciseLinks table (existing)
+- ExecutionProtocol entity (existing, fully integrated)
+- ExerciseLinks table (existing, for auto-linking)
 - Exercise table (existing)
 - WorkoutTemplate table (existing)
 - Will require refactoring existing WorkoutTemplateExercise code
@@ -243,7 +271,10 @@ GET /api/workout-templates/{templateId}/exercises
 All design questions have been clarified and documented above.
 
 ## Notes
-- REST is treated as a special exercise type
+- REST is a normal exercise with ExerciseType = REST (not a hardcoded special ID)
 - All exercises must have metadata
-- Focus on "Reps & Sets" for initial implementation
-- Other WorkoutTypes (EMOM, Tabata) will follow same pattern
+- Focus on REPS_AND_SETS protocol for initial implementation
+- Leverage existing SUPERSET, DROP_SET, AMRAP protocols
+- Future protocols (EMOM, TABATA) will follow same pattern
+- Integration with ExecutionProtocol from FEAT-028
+- Exercise metric validation moved to separate FEAT-032
