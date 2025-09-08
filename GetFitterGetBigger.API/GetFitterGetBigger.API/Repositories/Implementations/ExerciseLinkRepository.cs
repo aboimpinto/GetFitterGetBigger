@@ -11,7 +11,7 @@ namespace GetFitterGetBigger.API.Repositories.Implementations;
 /// <summary>
 /// Repository implementation for ExerciseLink data operations
 /// </summary>
-public class ExerciseLinkRepository : RepositoryBase<FitnessDbContext>, IExerciseLinkRepository
+public class ExerciseLinkRepository : DomainRepository<ExerciseLink, ExerciseLinkId, FitnessDbContext>, IExerciseLinkRepository
 {
     /// <summary>
     /// Gets all links for a source exercise, optionally filtered by link type
@@ -99,7 +99,7 @@ public class ExerciseLinkRepository : RepositoryBase<FitnessDbContext>, IExercis
     /// <summary>
     /// Gets a specific exercise link by ID
     /// </summary>
-    public async Task<ExerciseLink> GetByIdAsync(ExerciseLinkId id)
+    public override async Task<ExerciseLink> GetByIdAsync(ExerciseLinkId id)
     {
         var exerciseLink = await Context.ExerciseLinks
             .Include(el => el.SourceExercise)

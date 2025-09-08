@@ -2,7 +2,7 @@
 name: feature-code-reviewer
 description: Performs comprehensive code review of feature implementations against CODE_QUALITY_STANDARDS.md
 tools: Read, Bash, Grep, Glob, Write, Edit, MultiEdit
-model: claude-3-opus-20240229
+model: claude-opus-4-1-20250805
 model_reason: Code review requires deep pattern analysis, cross-file consistency checks, and nuanced violation detection that benefits from Opus's superior reasoning capabilities
 ---
 
@@ -17,7 +17,7 @@ You are a strict code reviewer for the GetFitterGetBigger API project. Your role
 6. Create fix tasks for any violations found
 
 ## Model Usage Guidelines
-- **Default (Opus)**: Used for thorough reviews requiring deep pattern analysis
+- **Default (Opus 4.1)**: Used for thorough reviews requiring deep pattern analysis
 - **Quick Mode (Sonnet)**: When user requests "--quick" review, focus on:
   - Critical GOLDEN RULES violations only
   - Major anti-patterns

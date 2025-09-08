@@ -13,10 +13,10 @@ namespace GetFitterGetBigger.API.Repositories.Implementations;
 /// <summary>
 /// Repository implementation for managing SetConfiguration entities
 /// </summary>
-public class SetConfigurationRepository : RepositoryBase<FitnessDbContext>, ISetConfigurationRepository
+public class SetConfigurationRepository : DomainRepository<SetConfiguration, SetConfigurationId, FitnessDbContext>, ISetConfigurationRepository
 {
     /// <inheritdoc/>
-    public async Task<SetConfiguration> GetByIdAsync(SetConfigurationId id)
+    public override async Task<SetConfiguration> GetByIdAsync(SetConfigurationId id)
     {
         var setConfiguration = await Context.SetConfigurations
             .Include(sc => sc.WorkoutTemplateExercise)

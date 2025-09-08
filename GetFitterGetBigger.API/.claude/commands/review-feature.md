@@ -10,12 +10,12 @@ When the user types `/review-feature FEAT-XXX [options]`, you should:
    - `--incremental`: Review only new commits since last review
    - `--fix-only`: Only review files from Code Review Fixes phase
    - `--quick`: Use Sonnet model for faster (less thorough) review
-   - `--thorough`: Force Opus model for maximum accuracy (default)
-   - Default to full review with Opus if no flags provided
+   - `--thorough`: Force Opus 4.1 model for maximum accuracy (default)
+   - Default to full review with Opus 4.1 if no flags provided
    
    Examples:
-   - `/review-feature FEAT-030` - Full review with Opus
-   - `/review-feature FEAT-030 --incremental` - Incremental review with Opus
+   - `/review-feature FEAT-030` - Full review with Opus 4.1
+   - `/review-feature FEAT-030 --incremental` - Incremental review with Opus 4.1
    - `/review-feature FEAT-030 --quick` - Full review with Sonnet (faster)
    - `/review-feature FEAT-030 --incremental --quick` - Quick incremental review
 
@@ -34,7 +34,7 @@ When the user types `/review-feature FEAT-XXX [options]`, you should:
    - If `--quick` flag is used:
      - Override agent's default model by specifying in prompt:
        "Use Sonnet model for this quick review. Focus on critical violations."
-     - Note: The agent defaults to Opus for thorough reviews
+     - Note: The agent defaults to Opus 4.1 for thorough reviews
    - Provide clear instructions including:
      - Feature folder path
      - Review type (initial/incremental)
@@ -87,7 +87,7 @@ Example response formats:
 
 Review Summary:
 - Review Type: Initial
-- Review Model: Opus (Thorough)
+- Review Model: Opus 4.1 (Thorough)
 - Build Status: ✅ Passing
 - Test Status: ✅ Passing (98% coverage)
 - Files Reviewed: 12 unique files across 8 commits
@@ -117,7 +117,7 @@ Next Steps:
 
 Review Summary:
 - Review Type: Incremental (3 new commits since last review)
-- Review Model: Opus (Thorough)
+- Review Model: Opus 4.1 (Thorough)
 - Files Reviewed: 5 files modified in fix commits
 - Overall Approval Rate: 96% (↑ 11% improvement)
 - Critical Violations: 0 (✅ all fixed)
@@ -165,7 +165,7 @@ Critical Issue Found:
 
 Review Summary:
 - Review Type: Initial
-- Review Model: Opus (Thorough)
+- Review Model: Opus 4.1 (Thorough)
 - Build Status: ✅ Passing
 - Test Status: ✅ Passing (99.2% coverage)
 - Files Reviewed: 8 unique files across 5 commits
