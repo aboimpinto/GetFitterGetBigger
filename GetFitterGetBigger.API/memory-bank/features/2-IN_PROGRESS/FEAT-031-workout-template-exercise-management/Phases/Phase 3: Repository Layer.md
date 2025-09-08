@@ -153,7 +153,11 @@ public class WorkoutTemplateExerciseRepository : RepositoryBase<WorkoutTemplateE
 - Build: ✅ 0 errors, 1 warning (async method warning - acceptable)
 - Tests: ✅ All existing tests passing (1405 unit + 355 integration tests)
 - Performance: ✅ Query optimization with AsNoTracking() and proper patterns
-- Git Commit Hash: e3baff2e - feat(feat-031): complete Phase 3 with comprehensive code review achieving 100% compliance
+
+**Git Commit Hashes (Phase 3):**
+1. `91796bb9` - fix(feat-031): resolve Phase 3 critical architectural violations
+2. `e3baff2e` - feat(feat-031): complete Phase 3 with comprehensive code review achieving 100% compliance
+3. `4d30111c` - docs(feat-031): update Phase 3 checkpoint with commit hash and final review status
 
 **Implementation Summary:**
 - **IWorkoutTemplateExerciseRepository**: ✅ Complete interface with phase/round support and backward compatibility
@@ -198,6 +202,4 @@ All critical architectural violations identified in previous reviews have been s
 - ✅ DataService entity boundary violations fixed (Golden Rules #22-23)
 - ✅ WritableTransactionScope pattern properly implemented
 - ✅ All 1405 unit tests + 355 integration tests passing (100% success rate)
-
-**Git Commit Hash**: e3baff2e - feat(feat-031): complete Phase 3 with comprehensive code review achieving 100% compliance
 
