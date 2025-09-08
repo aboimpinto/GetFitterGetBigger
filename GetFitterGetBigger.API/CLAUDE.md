@@ -26,6 +26,66 @@ This document contains project-specific instructions for Claude AI when working 
 - "Should this be async or sync?"
 - "Is this the correct ID format?"
 
+## 🔴 CRITICAL: Code Review Integrity and Status Changes
+
+### NEVER Change Feature Status Without PROPERLY EXECUTED Review
+**This is a MANDATORY quality control requirement - NO EXCEPTIONS!**
+
+### 🚨 Code Reviews MUST Be Actually Executed - NOT Fabricated!
+
+**ABSOLUTELY FORBIDDEN Actions:**
+1. **❌ NEVER** create a "fake" APPROVED review without running actual validation
+2. **❌ NEVER** write "APPROVED" without analyzing the code
+3. **❌ NEVER** generate review reports without using proper review tools/agents
+4. **❌ NEVER** skip review execution and just create a file saying "looks good"
+5. **❌ NEVER** manually write review files - ALWAYS use review agents/tools
+
+**Every Code Review MUST:**
+- 🔍 **Actually analyze** all relevant files against CODE_QUALITY_STANDARDS.md
+- 📊 **Produce real metrics**: files reviewed, violations found, compliance %
+- 📍 **Show specific issues**: file paths, line numbers, violation descriptions
+- ⏰ **Include execution timestamp**: when the review was actually run
+- 📝 **List analyzed files**: prove which files were actually reviewed
+
+**How AI Must Execute Reviews:**
+1. **USE** the feature-code-reviewer agent or appropriate review tool
+2. **WAIT** for the tool to complete its analysis
+3. **READ** the generated report to verify it contains real analysis
+4. **VERIFY** the report has specific metrics and findings
+5. **ONLY THEN** use the review status for decisions
+
+**Verification Checklist - Is This a Real Review?**
+- ✅ Contains specific file paths that were analyzed
+- ✅ Shows violation counts and types (even if 0)
+- ✅ Includes compliance percentage calculations
+- ✅ Has concrete examples when violations found
+- ✅ Timestamp matches current session
+- ❌ Generic statements like "code looks good"
+- ❌ Missing specific metrics
+- ❌ No file list or analysis details
+
+**When a code review has status REQUIRES_CHANGES or REJECTED:**
+1. **❌ FORBIDDEN**: Marking feature/checkpoint as COMPLETED/PASSED without new APPROVED review
+2. **❌ FORBIDDEN**: "Partially" fixing issues and changing status
+3. **❌ FORBIDDEN**: Creating fake "APPROVED" review after fixes
+4. **❌ FORBIDDEN**: Any status change without ACTUAL review execution
+
+**MANDATORY Process After Failed Review:**
+1. **FIX** all identified issues completely
+2. **EXECUTE** a NEW code review using proper tools (not manually create!)
+3. **VERIFY** review was actually run (check for real metrics/analysis)
+4. **CONFIRM** review status is APPROVED based on actual validation
+5. **ONLY THEN** update feature/checkpoint status
+
+**AI Agents and Commands MUST:**
+- **ALWAYS** use review agents/tools for code reviews
+- **NEVER** fabricate review results or create fake reports
+- **NEVER** change status without executing actual review
+- **ALWAYS** provide evidence that review was properly executed
+- **ALWAYS** include real metrics and findings in reviews
+
+**Remember:** Code reviews are ACTUAL VALIDATIONS, not paperwork. An APPROVED review means the code was ACTUALLY ANALYZED and found compliant, not that someone just wrote "APPROVED" in a file.
+
 ## Role in API Project
 
 When working in the API project folder, the AI assistant can perform **full implementation work** including:

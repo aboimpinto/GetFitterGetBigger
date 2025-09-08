@@ -3,25 +3,16 @@ using GetFitterGetBigger.API.Models.Entities;
 using GetFitterGetBigger.API.Models.SpecializedIds;
 using GetFitterGetBigger.API.Repositories.Interfaces;
 using Microsoft.EntityFrameworkCore;
-using Olimpo.EntityFramework.Persistency;
 
 namespace GetFitterGetBigger.API.Repositories.Implementations;
 
 /// <summary>
 /// Repository implementation for managing WorkoutTemplateExercise entities with phase/round-based organization
 /// </summary>
-public class WorkoutTemplateExerciseRepository : RepositoryBase<FitnessDbContext>, IWorkoutTemplateExerciseRepository
+public class WorkoutTemplateExerciseRepository : DomainRepository<WorkoutTemplateExercise, WorkoutTemplateExerciseId, FitnessDbContext>, IWorkoutTemplateExerciseRepository
 {
     // CRUD Operations
-    /// <inheritdoc/>
-    public async Task<WorkoutTemplateExercise> GetByIdAsync(WorkoutTemplateExerciseId id)
-    {
-        var exercise = await Context.WorkoutTemplateExercises
-            .AsNoTracking()
-            .FirstOrDefaultAsync(wte => wte.Id == id);
-
-        return exercise ?? WorkoutTemplateExercise.Empty;
-    }
+    // GetByIdAsync is provided by DomainRepository base class
 
     /// <inheritdoc/>
     public async Task<List<WorkoutTemplateExercise>> GetByWorkoutTemplateAsync(WorkoutTemplateId workoutTemplateId)
@@ -124,7 +115,7 @@ public class WorkoutTemplateExerciseRepository : RepositoryBase<FitnessDbContext
             }
         }
         
-        await Context.SaveChangesAsync();
+        // UnitOfWork will handle SaveChangesAsync
     }
 
     // Round management
@@ -184,7 +175,7 @@ public class WorkoutTemplateExerciseRepository : RepositoryBase<FitnessDbContext
             .ToListAsync();
         
         Context.WorkoutTemplateExercises.RemoveRange(exercises);
-        // SaveChangesAsync removed - UnitOfWork handles transaction management
+        // UnitOfWork will handle SaveChangesAsync
     }
 
     // LEGACY METHODS - For backward compatibility until service layer is updated
@@ -229,8 +220,9 @@ public class WorkoutTemplateExerciseRepository : RepositoryBase<FitnessDbContext
             }
         }
 
-        var result = await Context.SaveChangesAsync();
-        return result > 0;
+        // UnitOfWork will handle SaveChangesAsync
+        // Return true to indicate reordering was attempted
+        return true;
     }
 
     // Helper method to map phase strings to WorkoutZone enum until entity is updated
