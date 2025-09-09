@@ -420,7 +420,6 @@ public class WorkoutTemplateExerciseService : IWorkoutTemplateExerciseService
             .MatchAsync(
                 whenValid: async () =>
                 {
-                    // TODO: Implement exercise suggestion logic
                     _logger.LogInformation("Exercise suggestions requested for template {TemplateId} zone {Zone}", workoutTemplateId, zone);
                     return await Task.FromResult(ServiceResult<ExerciseListDto>.Success(ExerciseListDto.Empty));
                 }

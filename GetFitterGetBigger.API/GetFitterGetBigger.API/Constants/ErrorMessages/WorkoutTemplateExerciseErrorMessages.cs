@@ -22,6 +22,8 @@ public static class WorkoutTemplateExerciseErrorMessages
     public static string InvalidUserId => "Invalid user ID";
     public static string InvalidTemplateIdOrZone => "Invalid template ID or zone";
     public static string InvalidTemplateIdOrExerciseList => "Invalid template ID or exercise list";
+    public static string MetadataCannotBeEmpty => "Metadata cannot be empty";
+    public static string InvalidExecutionProtocolId => "ExecutionProtocolId cannot be empty";
     
     // Zone Validation Messages
     public static string InvalidZoneWarmupMainCooldown => "Invalid zone: {0}. Must be Warmup, Main, or Cooldown";
