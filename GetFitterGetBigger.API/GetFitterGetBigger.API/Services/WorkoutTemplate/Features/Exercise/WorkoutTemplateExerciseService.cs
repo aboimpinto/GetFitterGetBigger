@@ -110,78 +110,75 @@ public class WorkoutTemplateExerciseService : IWorkoutTemplateExerciseService
     /// <inheritdoc />
     public async Task<ServiceResult<WorkoutTemplateExerciseDto>> AddExerciseAsync(AddExerciseToTemplateCommand command)
     {
-        return await ServiceValidate.Build<WorkoutTemplateExerciseDto>()
+        return await ServiceValidate.BuildTransactional<FitnessDbContext, WorkoutTemplateExerciseDto>(_unitOfWorkProvider)
+            // External validations - no context needed
             .EnsureNotEmpty(command.WorkoutTemplateId, WorkoutTemplateExerciseErrorMessages.InvalidWorkoutTemplateId)
             .EnsureNotEmpty(command.ExerciseId, WorkoutTemplateExerciseErrorMessages.InvalidExerciseId)
             .EnsureNotWhiteSpace(command.Zone, WorkoutTemplateExerciseErrorMessages.InvalidZone)
             .EnsureNotEmpty(command.UserId, WorkoutTemplateExerciseErrorMessages.InvalidUserId)
+            // First async validation breaks the chain - need to use Chained methods after this
             .EnsureAsync(async () => await IsValidWorkoutZoneAsync(command.Zone), 
                 string.Format(WorkoutTemplateExerciseErrorMessages.InvalidZoneWarmupMainCooldown, command.Zone))
-            .EnsureAsync(async () => await DoesTemplateExistAsync(command.WorkoutTemplateId), 
-                WorkoutTemplateExerciseErrorMessages.WorkoutTemplateNotFound)
-            .EnsureAsync(async () => await IsTemplateInDraftStateAsync(command.WorkoutTemplateId), 
+            .EnsureAsyncChained(async () => await DoesTemplateExistAsync(command.WorkoutTemplateId), 
+                ServiceError.NotFound(WorkoutTemplateExerciseErrorMessages.WorkoutTemplateNotFound))
+            .EnsureAsyncChained(async () => await IsTemplateInDraftStateAsync(command.WorkoutTemplateId), 
                 WorkoutTemplateExerciseErrorMessages.CanOnlyAddExercisesToDraftTemplates)
-            .EnsureAsync(async () => await IsExerciseActiveAsync(command.ExerciseId), 
-                WorkoutTemplateExerciseErrorMessages.ExerciseNotFound)
-            .MatchAsync(
-                whenValid: async () => await ExecuteAddExerciseWithChainingAsync(command),
-                whenInvalid: (IReadOnlyList<ServiceError> errors) => ServiceResult<WorkoutTemplateExerciseDto>.Failure(
-                    WorkoutTemplateExerciseDto.Empty,
-                    errors.First())
-            );
-    }
-    
-    private async Task<ServiceResult<WorkoutTemplateExerciseDto>> ExecuteAddExerciseWithChainingAsync(AddExerciseToTemplateCommand command)
-    {
-        using var unitOfWork = _unitOfWorkProvider.CreateWritable();
-        var exerciseTemplateRepo = unitOfWork.GetRepository<IWorkoutTemplateExerciseRepository>();
-        
-        // Calculate sequence order
-        var zone = Enum.Parse<WorkoutZone>(command.Zone);
-        var sequenceOrder = command.SequenceOrder ?? await exerciseTemplateRepo.GetMaxSequenceOrderAsync(command.WorkoutTemplateId, zone) + 1;
-        
-        // Create the workout template exercise entity
-        var createResult = WorkoutTemplateExercise.Handler.CreateNew(
-            command.WorkoutTemplateId, 
-            command.ExerciseId, 
-            zone, 
-            sequenceOrder, 
-            command.Notes);
-            
-        // Use the chained validation pattern similar to WorkoutTemplateCommandDataService
-        return await ServiceValidate.Build<WorkoutTemplateExerciseDto>()
-            .Ensure(
-                () => createResult.IsSuccess,
-                ServiceError.ValidationFailed(createResult.IsSuccess ? string.Empty : string.Join(", ", createResult.Errors)))
-            .MatchAsync(
-                whenValid: async () =>
+            .EnsureAsyncChained(async () => await IsExerciseActiveAsync(command.ExerciseId), 
+                ServiceError.NotFound(WorkoutTemplateExerciseErrorMessages.ExerciseNotFound))
+            // Step 1: Create writable repository
+            .ThenCreateWritableRepositoryChained<WorkoutTemplateExerciseDto, IWorkoutTemplateExerciseRepository>()
+            // Step 2: Calculate sequence order and create entity
+            .ThenLoadAsyncChained<WorkoutTemplateExerciseDto, WorkoutTemplateExercise>("NewExercise", async context =>
+            {
+                var repository = context.GetRepository<IWorkoutTemplateExerciseRepository>(isReadOnly: false);
+                var zone = Enum.Parse<WorkoutZone>(command.Zone);
+                var sequenceOrder = command.SequenceOrder ?? await repository.GetMaxSequenceOrderAsync(command.WorkoutTemplateId, zone) + 1;
+                
+                var createResult = WorkoutTemplateExercise.Handler.CreateNew(
+                    command.WorkoutTemplateId, 
+                    command.ExerciseId, 
+                    zone, 
+                    sequenceOrder, 
+                    command.Notes);
+                    
+                return createResult.IsSuccess ? createResult.Value : WorkoutTemplateExercise.Empty;
+            })
+            // Step 3: Ensure entity was created successfully
+            .ThenEnsureAsyncChained(
+                async context => await Task.FromResult(!context.Get<WorkoutTemplateExercise>("NewExercise").IsEmpty),
+                "Failed to create workout template exercise")
+            // Step 4: Add to repository
+            .ThenPerformAsyncChained(async context =>
+            {
+                var repository = context.GetRepository<IWorkoutTemplateExerciseRepository>(isReadOnly: false);
+                var newExercise = context.Get<WorkoutTemplateExercise>("NewExercise");
+                await repository.AddAsync(newExercise);
+                context.Store("CreatedId", newExercise.Id);
+            })
+            // Step 5: Handle auto-linking for main exercises
+            .ThenPerformIfAsyncChained(
+                context => 
                 {
-                    var workoutTemplateExercise = createResult.Value;
-                    
-                    // Add to repository
-                    await exerciseTemplateRepo.AddAsync(workoutTemplateExercise);
-                    
-                    // Handle auto-linking if main exercise
-                    if (zone == WorkoutZone.Main)
-                    {
-                        await _autoLinkingHandler.AddAutoLinkedExercisesAsync(
-                            exerciseTemplateRepo, 
-                            workoutTemplateExercise.WorkoutTemplateId, 
-                            workoutTemplateExercise.ExerciseId);
-                    }
-                    
-                    // Commit transaction
-                    await unitOfWork.CommitAsync();
-                    
-                    // Reload with details
-                    var created = await exerciseTemplateRepo.GetByIdWithDetailsAsync(workoutTemplateExercise.Id);
-                    
-                    return ServiceResult<WorkoutTemplateExerciseDto>.Success(created.ToDto());
+                    var newExercise = context.Get<WorkoutTemplateExercise>("NewExercise");
+                    return newExercise.Zone == WorkoutZone.Main;
                 },
-                whenInvalid: (IReadOnlyList<ServiceError> errors) => ServiceResult<WorkoutTemplateExerciseDto>.Failure(
-                    WorkoutTemplateExerciseDto.Empty, 
-                    errors.First())
-            );
+                async context =>
+                {
+                    var repository = context.GetRepository<IWorkoutTemplateExerciseRepository>(isReadOnly: false);
+                    var newExercise = context.Get<WorkoutTemplateExercise>("NewExercise");
+                    await _autoLinkingHandler.AddAutoLinkedExercisesAsync(
+                        repository, 
+                        newExercise.WorkoutTemplateId, 
+                        newExercise.ExerciseId);
+                })
+            // Step 6: Reload with details and return
+            .ThenExecuteAsyncChained(async context =>
+            {
+                var repository = context.GetRepository<IWorkoutTemplateExerciseRepository>(isReadOnly: false);
+                var createdId = context.Get<WorkoutTemplateExerciseId>("CreatedId");
+                var created = await repository.GetByIdWithDetailsAsync(createdId);
+                return created.ToDto();
+            });
     }
 
     /// <summary>
@@ -238,7 +235,7 @@ public class WorkoutTemplateExerciseService : IWorkoutTemplateExerciseService
                 ServiceError.NotFound(WorkoutTemplateExerciseErrorMessages.TemplateExerciseNotFound))
             .ThenEnsureAsyncChained(
                 async entity => await _validationHandler.IsTemplateInDraftStateAsync(entity.WorkoutTemplateId),
-                ServiceError.ValidationFailed(WorkoutTemplateExerciseErrorMessages.CanOnlyUpdateExercisesInDraftTemplates))
+                WorkoutTemplateExerciseErrorMessages.CanOnlyUpdateExercisesInDraftTemplates)
             .ThenTransformChained(
                 entity => WorkoutTemplateExercise.Handler.UpdateNotes(entity, command.Notes),
                 "Update exercise notes")
@@ -261,7 +258,7 @@ public class WorkoutTemplateExerciseService : IWorkoutTemplateExerciseService
                 ServiceError.NotFound(WorkoutTemplateExerciseErrorMessages.TemplateExerciseNotFound))
             .ThenEnsureAsyncChained(
                 async entity => await _validationHandler.IsTemplateInDraftStateAsync(entity.WorkoutTemplateId),
-                ServiceError.ValidationFailed(WorkoutTemplateExerciseErrorMessages.CanOnlyRemoveExercisesFromDraftTemplates))
+                WorkoutTemplateExerciseErrorMessages.CanOnlyRemoveExercisesFromDraftTemplates)
             .ThenPerformIfZone(
                 WorkoutZone.Main,
                 async (repo, entity) => await HandleOrphanedExercisesAsync(repo, entity),
@@ -296,24 +293,30 @@ public class WorkoutTemplateExerciseService : IWorkoutTemplateExerciseService
     /// <inheritdoc />
     public async Task<ServiceResult<BooleanResultDto>> ReorderExercisesAsync(ReorderTemplateExercisesCommand command)
     {
-        return await (await ServiceValidate.BuildTransactional<BooleanResultDto>(_unitOfWorkProvider)
+        return await ServiceValidate.BuildTransactional<FitnessDbContext, BooleanResultDto>(_unitOfWorkProvider)
+            // External validations
             .EnsureNotEmpty(command.WorkoutTemplateId, WorkoutTemplateExerciseErrorMessages.InvalidCommandParameters)
             .EnsureNotEmpty(command.UserId, WorkoutTemplateExerciseErrorMessages.InvalidCommandParameters)
             .EnsureNotWhiteSpace(command.Zone, WorkoutTemplateExerciseErrorMessages.InvalidCommandParameters)
             .Ensure(
                 () => command.ExerciseIds != null && command.ExerciseIds.Count > 0,
-                ServiceError.ValidationFailed(WorkoutTemplateExerciseErrorMessages.InvalidCommandParameters))
+                WorkoutTemplateExerciseErrorMessages.InvalidCommandParameters)
             .EnsureValidZone(command.Zone, WorkoutTemplateExerciseErrorMessages.InvalidZone)
+            // First async breaks the chain - use Chained methods after this
             .EnsureAsync(
                 async () => await _validationHandler.IsTemplateInDraftStateAsync(command.WorkoutTemplateId),
-                ServiceError.ValidationFailed(WorkoutTemplateExerciseErrorMessages.CanOnlyReorderExercisesInDraftTemplates)))
-            .ThenExecuteAsync<IWorkoutTemplateExerciseRepository>(async repo =>
+                WorkoutTemplateExerciseErrorMessages.CanOnlyReorderExercisesInDraftTemplates)
+            // Step 1: Create writable repository
+            .ThenCreateWritableRepositoryChained<BooleanResultDto, IWorkoutTemplateExerciseRepository>()
+            // Step 2: Execute reorder
+            .ThenExecuteAsyncChained(async context =>
             {
+                var repository = context.GetRepository<IWorkoutTemplateExerciseRepository>(isReadOnly: false);
                 var zone = Enum.Parse<WorkoutZone>(command.Zone);
-                await repo.ReorderExercisesAsync(
+                await repository.ReorderExercisesAsync(
                     command.WorkoutTemplateId, 
                     zone, 
-                    command.ExerciseIds.ToDictionary(id => id, id => command.ExerciseIds.IndexOf(id) + 1));
+                    command.ExerciseIds.ToDictionary(exerciseId => exerciseId, exerciseId => command.ExerciseIds.IndexOf(exerciseId) + 1));
                 return BooleanResultDto.Create(true);
             });
     }
@@ -332,7 +335,7 @@ public class WorkoutTemplateExerciseService : IWorkoutTemplateExerciseService
                 ServiceError.NotFound(WorkoutTemplateExerciseErrorMessages.TemplateExerciseNotFound))
             .ThenEnsureAsyncChained(
                 async entity => await _validationHandler.IsTemplateInDraftStateAsync(entity.WorkoutTemplateId),
-                ServiceError.ValidationFailed(WorkoutTemplateExerciseErrorMessages.CanOnlyChangeZonesInDraftTemplates))
+                WorkoutTemplateExerciseErrorMessages.CanOnlyChangeZonesInDraftTemplates)
             .ThenTransformWorkoutTemplateExerciseAsync(
                 async (repo, entity) =>
                 {
@@ -340,7 +343,7 @@ public class WorkoutTemplateExerciseService : IWorkoutTemplateExerciseService
                     var newSequenceOrder = command.NewSequenceOrder ?? 
                         await repo.GetMaxSequenceOrderAsync(entity.WorkoutTemplateId, newZone) + 1;
                     
-                    return WorkoutTemplateExercise.Handler.ChangeZone(entity, newZone, newSequenceOrder);
+                    return await Task.FromResult(WorkoutTemplateExercise.Handler.ChangeZone(entity, newZone, newSequenceOrder));
                 },
                 "Change exercise zone")
             .ThenReloadAsyncChained<WorkoutTemplateExercise, WorkoutTemplateExerciseDto, IWorkoutTemplateExerciseRepository, WorkoutTemplateExercise>(
@@ -409,41 +412,48 @@ public class WorkoutTemplateExerciseService : IWorkoutTemplateExerciseService
     }
 
     /// <inheritdoc />
-    public async Task<ServiceResult<List<ExerciseDto>>> GetExerciseSuggestionsAsync(WorkoutTemplateId workoutTemplateId, string zone, int maxSuggestions = 5)
+    public async Task<ServiceResult<ExerciseListDto>> GetExerciseSuggestionsAsync(WorkoutTemplateId workoutTemplateId, string zone, int maxSuggestions = 5)
     {
-        if (workoutTemplateId.IsEmpty || string.IsNullOrWhiteSpace(zone))
-            return ServiceResult<List<ExerciseDto>>.Failure([], ServiceError.ValidationFailed(WorkoutTemplateExerciseErrorMessages.InvalidTemplateIdOrZone));
-
-        // TODO: Implement exercise suggestion logic
-        _logger.LogInformation("Exercise suggestions requested for template {TemplateId} zone {Zone}", workoutTemplateId, zone);
-        return await Task.FromResult(ServiceResult<List<ExerciseDto>>.Success([]));
+        return await ServiceValidate.For<ExerciseListDto>()
+            .EnsureNotEmpty(workoutTemplateId, WorkoutTemplateExerciseErrorMessages.InvalidTemplateIdOrZone)
+            .EnsureNotWhiteSpace(zone, WorkoutTemplateExerciseErrorMessages.InvalidTemplateIdOrZone)
+            .MatchAsync(
+                whenValid: async () =>
+                {
+                    // TODO: Implement exercise suggestion logic
+                    _logger.LogInformation("Exercise suggestions requested for template {TemplateId} zone {Zone}", workoutTemplateId, zone);
+                    return await Task.FromResult(ServiceResult<ExerciseListDto>.Success(ExerciseListDto.Empty));
+                }
+            );
     }
 
     /// <inheritdoc />
     public async Task<ServiceResult<BooleanResultDto>> ValidateExercisesAsync(WorkoutTemplateId workoutTemplateId, List<ExerciseId> exerciseIds)
     {
-        return await ServiceValidate.Build<BooleanResultDto>()
-            .Ensure(
-                () => !workoutTemplateId.IsEmpty,
-                ServiceError.ValidationFailed(WorkoutTemplateExerciseErrorMessages.InvalidTemplateIdOrExerciseList))
+        return await ServiceValidate.For<BooleanResultDto>()
+            .EnsureNotEmpty(workoutTemplateId, WorkoutTemplateExerciseErrorMessages.InvalidTemplateIdOrExerciseList)
             .Ensure(
                 () => exerciseIds != null && exerciseIds.Count > 0,
-                ServiceError.ValidationFailed(WorkoutTemplateExerciseErrorMessages.InvalidTemplateIdOrExerciseList))
+                WorkoutTemplateExerciseErrorMessages.InvalidTemplateIdOrExerciseList)
             .EnsureAsync(
                 async () => await _validationHandler.DoesTemplateExistAsync(workoutTemplateId),
                 ServiceError.NotFound(WorkoutTemplateExerciseErrorMessages.WorkoutTemplateNotFound))
             .EnsureAsync(
-                async () => 
-                {
-                    using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
-                    var exerciseRepo = unitOfWork.GetRepository<IExerciseRepository>();
-                    return await exerciseRepo.AreAllExercisesValidAsync(exerciseIds);
-                },
+                async () => await AreAllExercisesValidAsync(exerciseIds),
                 ServiceError.NotFound("One or more exercises not found"))
             .MatchAsync(
-                whenValid: async () => await Task.FromResult(ServiceResult<BooleanResultDto>.Success(BooleanResultDto.Create(true))),
-                whenInvalid: (IReadOnlyList<ServiceError> errors) => ServiceResult<BooleanResultDto>.Failure(BooleanResultDto.Empty, errors.First())
+                whenValid: async () => await Task.FromResult(ServiceResult<BooleanResultDto>.Success(BooleanResultDto.Create(true)))
             );
+    }
+    
+    /// <summary>
+    /// Checks if all provided exercise IDs are valid
+    /// </summary>
+    private async Task<bool> AreAllExercisesValidAsync(List<ExerciseId> exerciseIds)
+    {
+        using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
+        var exerciseRepository = unitOfWork.GetRepository<IExerciseRepository>();
+        return await exerciseRepository.AreAllExercisesValidAsync(exerciseIds);
     }
 
     private static int CalculateEstimatedDuration(List<WorkoutTemplateExercise> exercises)

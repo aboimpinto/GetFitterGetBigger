@@ -43,6 +43,18 @@ internal static class WorkoutTemplateExerciseValidationExtensions
     }
     
     /// <summary>
+    /// Extension to chain EnsureAsync after an async operation (with ServiceError)
+    /// </summary>
+    public static async Task<TransactionalServiceValidationBuilder<FitnessDbContext, TResult>> EnsureAsyncChained<TResult>(
+        this Task<TransactionalServiceValidationBuilder<FitnessDbContext, TResult>> builderTask,
+        Func<Task<bool>> predicate,
+        ServiceError error)
+    {
+        var builder = await builderTask;
+        return await builder.EnsureAsync(predicate, error);
+    }
+    
+    /// <summary>
     /// Extension to chain EnsureAsync with NotFound error
     /// </summary>
     public static async Task<TransactionalServiceValidationBuilder<FitnessDbContext, TResult>> EnsureExistsAsyncChained<TResult>(
@@ -162,6 +174,20 @@ internal static class WorkoutTemplateExerciseValidationExtensions
     {
         var chain = await chainTask;
         return await chain.ThenEnsureAsync(predicate, error);
+    }
+    
+    /// <summary>
+    /// Extension to chain ThenEnsureAsync after an async operation (string overload)
+    /// Automatically wraps the error message in ServiceError.ValidationFailed
+    /// </summary>
+    public static async Task<TransactionalEntityChain<FitnessDbContext, TEntity, TResult>> ThenEnsureAsyncChained<TEntity, TResult>(
+        this Task<TransactionalEntityChain<FitnessDbContext, TEntity, TResult>> chainTask,
+        Func<TEntity, Task<bool>> predicate,
+        string errorMessage)
+        where TEntity : class
+    {
+        var chain = await chainTask;
+        return await chain.ThenEnsureAsync(predicate, ServiceError.ValidationFailed(errorMessage));
     }
     
     /// <summary>

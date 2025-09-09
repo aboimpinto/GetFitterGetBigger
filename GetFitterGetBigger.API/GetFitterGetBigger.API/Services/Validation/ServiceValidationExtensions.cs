@@ -332,6 +332,54 @@ public static class ServiceValidationExtensions
         
         return await whenNotEmpty(validationWithData.Data);
     }
+    
+    /// <summary>
+    /// Ensures a condition is met asynchronously on a Task&lt;ServiceValidation&gt; and provides a custom error if validation fails.
+    /// This allows chaining EnsureAsync calls after other async validation operations.
+    /// </summary>
+    /// <typeparam name="T">The DTO type that implements IEmptyDto</typeparam>
+    /// <param name="validationTask">The Task containing ServiceValidation instance</param>
+    /// <param name="predicate">The async condition to check - should return true if valid</param>
+    /// <param name="error">The ServiceError to add if the condition fails</param>
+    /// <returns>A Task with new ServiceValidation with the additional validation rule applied</returns>
+    public static async Task<ServiceValidation<T>> EnsureAsync<T>(
+        this Task<ServiceValidation<T>> validationTask,
+        Func<Task<bool>> predicate,
+        ServiceError error)
+        where T : class, IEmptyDto<T>
+    {
+        var validation = await validationTask;
+        
+        if (validation.HasErrors)
+            return validation;
+
+        try
+        {
+            var result = await predicate();
+            return result ? validation : validation.Ensure(() => false, error);
+        }
+        catch (Exception ex)
+        {
+            return validation.Ensure(() => false, ServiceError.InternalError($"Validation error: {ex.Message}"));
+        }
+    }
+    
+    /// <summary>
+    /// Continues a validation chain from an async operation and performs matching.
+    /// This allows keeping the fluent chain intact when using async validation operations.
+    /// </summary>
+    /// <typeparam name="T">The DTO type that implements IEmptyDto</typeparam>
+    /// <param name="validationTask">The async validation task</param>
+    /// <param name="whenValid">Function to execute when validation passes</param>
+    /// <returns>The result from either validation failure with T.Empty or the valid function</returns>
+    public static async Task<ServiceResult<T>> MatchAsync<T>(
+        this Task<ServiceValidation<T>> validationTask,
+        Func<Task<ServiceResult<T>>> whenValid)
+        where T : class, IEmptyDto<T>
+    {
+        var validation = await validationTask;
+        return await validation.MatchAsync(whenValid);
+    }
 }
 
 /// <summary>

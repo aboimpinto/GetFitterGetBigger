@@ -79,6 +79,22 @@ public class TransactionalServiceValidationBuilder<TContext, TResult> : IDisposa
     }
     
     /// <summary>
+    /// Validates a condition and adds error if validation fails.
+    /// Creates a ServiceError with ValidationFailed code using the provided error message.
+    /// </summary>
+    public TransactionalServiceValidationBuilder<TContext, TResult> Ensure(
+        Func<bool> predicate,
+        string errorMessage)
+    {
+        if (_isValid && !predicate())
+        {
+            _errors.Add(ServiceError.ValidationFailed(errorMessage));
+            _isValid = false;
+        }
+        return this;
+    }
+    
+    /// <summary>
     /// Validates a condition asynchronously and adds error if validation fails
     /// </summary>
     public async Task<TransactionalServiceValidationBuilder<TContext, TResult>> EnsureAsync(
@@ -88,6 +104,22 @@ public class TransactionalServiceValidationBuilder<TContext, TResult> : IDisposa
         if (_isValid && !await predicate())
         {
             _errors.Add(error);
+            _isValid = false;
+        }
+        return this;
+    }
+    
+    /// <summary>
+    /// Validates a condition asynchronously and adds error if validation fails.
+    /// Creates a ServiceError with ValidationFailed code using the provided error message.
+    /// </summary>
+    public async Task<TransactionalServiceValidationBuilder<TContext, TResult>> EnsureAsync(
+        Func<Task<bool>> predicate,
+        string errorMessage)
+    {
+        if (_isValid && !await predicate())
+        {
+            _errors.Add(ServiceError.ValidationFailed(errorMessage));
             _isValid = false;
         }
         return this;
@@ -244,6 +276,170 @@ public class TransactionalServiceValidationBuilder<TContext, TResult> : IDisposa
         }
     }
     
+    /// <summary>
+    /// Loads data asynchronously into the context
+    /// </summary>
+    public async Task<TransactionalServiceValidationBuilder<TContext, TResult>> ThenLoadAsync(
+        string storeAs,
+        Func<DynamicChainContext, Task<object>> loadFunc)
+    {
+        if (!_isValid)
+            return this;
+        
+        try
+        {
+            var result = await loadFunc(_context);
+            _context.Store(storeAs, result);
+            return this;
+        }
+        catch (Exception ex)
+        {
+            _errors.Add(ServiceError.InternalError($"Load operation failed: {ex.Message}"));
+            _isValid = false;
+            return this;
+        }
+    }
+    
+    /// <summary>
+    /// Performs an async action with the context
+    /// </summary>
+    public async Task<TransactionalServiceValidationBuilder<TContext, TResult>> ThenPerformAsync(
+        Func<DynamicChainContext, Task> action)
+    {
+        if (!_isValid)
+            return this;
+        
+        try
+        {
+            await action(_context);
+            return this;
+        }
+        catch (Exception ex)
+        {
+            _errors.Add(ServiceError.InternalError($"Perform operation failed: {ex.Message}"));
+            _isValid = false;
+            return this;
+        }
+    }
+    
+    /// <summary>
+    /// Conditionally performs an async action with the context
+    /// </summary>
+    public async Task<TransactionalServiceValidationBuilder<TContext, TResult>> ThenPerformIfAsync(
+        Func<DynamicChainContext, bool> condition,
+        Func<DynamicChainContext, Task> action)
+    {
+        if (!_isValid)
+            return this;
+        
+        try
+        {
+            if (condition(_context))
+            {
+                await action(_context);
+            }
+            return this;
+        }
+        catch (Exception ex)
+        {
+            _errors.Add(ServiceError.InternalError($"Conditional perform operation failed: {ex.Message}"));
+            _isValid = false;
+            return this;
+        }
+    }
+    
+    /// <summary>
+    /// Ensures a condition is met asynchronously with the context
+    /// </summary>
+    public async Task<TransactionalServiceValidationBuilder<TContext, TResult>> ThenEnsureAsync(
+        Func<DynamicChainContext, Task<bool>> predicate,
+        ServiceError error)
+    {
+        if (!_isValid)
+            return this;
+        
+        try
+        {
+            if (!await predicate(_context))
+            {
+                _errors.Add(error);
+                _isValid = false;
+            }
+            return this;
+        }
+        catch (Exception ex)
+        {
+            _errors.Add(ServiceError.InternalError($"Ensure operation failed: {ex.Message}"));
+            _isValid = false;
+            return this;
+        }
+    }
+    
+    /// <summary>
+    /// Ensures a condition is met asynchronously with the context.
+    /// Creates a ServiceError with ValidationFailed code using the provided error message.
+    /// </summary>
+    public async Task<TransactionalServiceValidationBuilder<TContext, TResult>> ThenEnsureAsync(
+        Func<DynamicChainContext, Task<bool>> predicate,
+        string errorMessage)
+    {
+        if (!_isValid)
+            return this;
+        
+        try
+        {
+            if (!await predicate(_context))
+            {
+                _errors.Add(ServiceError.ValidationFailed(errorMessage));
+                _isValid = false;
+            }
+            return this;
+        }
+        catch (Exception ex)
+        {
+            _errors.Add(ServiceError.InternalError($"Ensure operation failed: {ex.Message}"));
+            _isValid = false;
+            return this;
+        }
+    }
+    
+    /// <summary>
+    /// Executes a function with the context and returns the result
+    /// </summary>
+    public async Task<ServiceResult<TResult>> ThenExecuteAsync(
+        Func<DynamicChainContext, Task<TResult>> executeFunc)
+    {
+        if (!_isValid)
+        {
+            if (_unitOfWork != null)
+                await _unitOfWork.RollbackAsync();
+            return ServiceResult<TResult>.Failure(
+                default!,
+                _errors.FirstOrDefault() ?? ServiceError.ValidationFailed("Validation failed"));
+        }
+        
+        try
+        {
+            var result = await executeFunc(_context);
+            if (_unitOfWork != null)
+                await _unitOfWork.CommitAsync();
+            return ServiceResult<TResult>.Success(result);
+        }
+        catch (Exception ex)
+        {
+            if (_unitOfWork != null)
+                await _unitOfWork.RollbackAsync();
+            _errors.Add(ServiceError.InternalError($"Execute operation failed: {ex.Message}"));
+            return ServiceResult<TResult>.Failure(
+                default!,
+                _errors.FirstOrDefault() ?? ServiceError.InternalError("Execute operation failed"));
+        }
+        finally
+        {
+            Dispose();
+        }
+    }
+
     public void Dispose()
     {
         if (!_disposed)
@@ -305,6 +501,22 @@ public class TransactionalEntityChain<TContext, TEntity, TResult>
         if (_isValid && !await predicate(_entity))
         {
             _errors.Add(error);
+            _isValid = false;
+        }
+        return this;
+    }
+    
+    /// <summary>
+    /// Validates the entity asynchronously.
+    /// Creates a ServiceError with ValidationFailed code using the provided error message.
+    /// </summary>
+    public async Task<TransactionalEntityChain<TContext, TEntity, TResult>> ThenEnsureAsync(
+        Func<TEntity, Task<bool>> predicate,
+        string errorMessage)
+    {
+        if (_isValid && !await predicate(_entity))
+        {
+            _errors.Add(ServiceError.ValidationFailed(errorMessage));
             _isValid = false;
         }
         return this;
