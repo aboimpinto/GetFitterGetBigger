@@ -297,12 +297,18 @@ public class ExerciseBuilder
     {
         var exercise = Build();
         
-        // This would require either:
-        // 1. A new factory method in Exercise.Handler that accepts navigation properties
-        // 2. Using reflection to set init-only properties
-        // 3. Creating a test-specific derived type
-        // For now, tests should mock repository methods to return exercises with navigation properties
-        
-        return exercise;
+        // Use 'with' expression to set navigation properties since Exercise is a record
+        return exercise with
+        {
+            Difficulty = _difficulty,
+            KineticChain = _kineticChain,
+            ExerciseWeightType = _exerciseWeightType,
+            CoachNotes = _coachNotes,
+            ExerciseExerciseTypes = _exerciseExerciseTypes,
+            ExerciseMuscleGroups = _exerciseMuscleGroups,
+            ExerciseEquipment = _exerciseEquipment,
+            ExerciseBodyParts = _exerciseBodyParts,
+            ExerciseMovementPatterns = _exerciseMovementPatterns
+        };
     }
 }

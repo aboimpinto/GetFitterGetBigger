@@ -1,9 +1,11 @@
+using GetFitterGetBigger.API.DTOs.Interfaces;
+
 namespace GetFitterGetBigger.API.DTOs;
 
 /// <summary>
 /// DTO for workout template exercises grouped by zone
 /// </summary>
-public record WorkoutTemplateExerciseListDto
+public record WorkoutTemplateExerciseListDto : IEmptyDto<WorkoutTemplateExerciseListDto>
 {
     /// <summary>
     /// The workout template ID
@@ -40,6 +42,11 @@ public record WorkoutTemplateExerciseListDto
     /// </summary>
     public List<WorkoutTemplateExerciseDto> Exercises => 
         WarmupExercises.Concat(MainExercises).Concat(CooldownExercises).ToList();
+
+    /// <summary>
+    /// Indicates if this is an empty instance
+    /// </summary>
+    public bool IsEmpty => string.IsNullOrEmpty(WorkoutTemplateId);
 
     /// <summary>
     /// Empty instance for failed operations

@@ -1,4 +1,5 @@
 using GetFitterGetBigger.API.DTOs;
+using GetFitterGetBigger.API.DTOs.WorkoutTemplateExercise;
 using GetFitterGetBigger.API.Models.SpecializedIds;
 using GetFitterGetBigger.API.Services.Commands.WorkoutTemplateExercises;
 using GetFitterGetBigger.API.Services.Results;
@@ -6,85 +7,140 @@ using GetFitterGetBigger.API.Services.Results;
 namespace GetFitterGetBigger.API.Services.WorkoutTemplate.Features.Exercise;
 
 /// <summary>
-/// Service for managing exercises within workout templates
+/// Enhanced service for managing exercises within workout templates with phase/round organization
 /// </summary>
 public interface IWorkoutTemplateExerciseService
 {
     /// <summary>
-    /// Gets all exercises for a workout template
+    /// Adds an exercise to a workout template with auto-linking support
     /// </summary>
-    /// <param name="workoutTemplateId">The workout template ID</param>
-    /// <returns>List of exercises grouped by zone</returns>
-    Task<ServiceResult<WorkoutTemplateExerciseListDto>> GetByWorkoutTemplateAsync(WorkoutTemplateId workoutTemplateId);
+    /// <param name="templateId">The workout template ID</param>
+    /// <param name="dto">DTO containing exercise details</param>
+    /// <returns>Result containing all added exercises (main + auto-linked)</returns>
+    Task<ServiceResult<AddExerciseResultDto>> AddExerciseAsync(WorkoutTemplateId templateId, AddExerciseDto dto);
+
+    /// <summary>
+    /// Removes an exercise from a workout template with orphan cleanup
+    /// </summary>
+    /// <param name="templateId">The workout template ID</param>
+    /// <param name="exerciseId">The exercise ID to remove</param>
+    /// <returns>Result containing all removed exercises (main + orphaned)</returns>
+    Task<ServiceResult<RemoveExerciseResultDto>> RemoveExerciseAsync(WorkoutTemplateId templateId, WorkoutTemplateExerciseId exerciseId);
+
+    /// <summary>
+    /// Updates exercise metadata for ExecutionProtocol-specific configuration
+    /// </summary>
+    /// <param name="templateId">The workout template ID</param>
+    /// <param name="exerciseId">The exercise ID to update</param>
+    /// <param name="metadata">JSON metadata string</param>
+    /// <returns>The updated exercise configuration</returns>
+    Task<ServiceResult<UpdateMetadataResultDto>> UpdateExerciseMetadataAsync(WorkoutTemplateId templateId, WorkoutTemplateExerciseId exerciseId, string metadata);
+
+    /// <summary>
+    /// Reorders an exercise within a round
+    /// </summary>
+    /// <param name="templateId">The workout template ID</param>
+    /// <param name="exerciseId">The exercise ID to reorder</param>
+    /// <param name="newOrderInRound">The new order position within the round</param>
+    /// <returns>Result containing all reordered exercises</returns>
+    Task<ServiceResult<ReorderResultDto>> ReorderExerciseAsync(WorkoutTemplateId templateId, WorkoutTemplateExerciseId exerciseId, int newOrderInRound);
+
+    /// <summary>
+    /// Copies a complete round to another location with new GUIDs
+    /// </summary>
+    /// <param name="templateId">The workout template ID</param>
+    /// <param name="dto">DTO containing copy details</param>
+    /// <returns>Result containing all copied exercises with new GUIDs</returns>
+    Task<ServiceResult<CopyRoundResultDto>> CopyRoundAsync(WorkoutTemplateId templateId, CopyRoundDto dto);
+
+    /// <summary>
+    /// Gets all exercises for a workout template organized by phases and rounds
+    /// </summary>
+    /// <param name="templateId">The workout template ID</param>
+    /// <returns>Exercises organized by Warmup, Workout, Cooldown phases with rounds</returns>
+    Task<ServiceResult<WorkoutTemplateExercisesDto>> GetTemplateExercisesAsync(WorkoutTemplateId templateId);
 
     /// <summary>
     /// Gets a specific exercise configuration by ID
     /// </summary>
     /// <param name="exerciseId">The workout template exercise ID</param>
-    /// <returns>The exercise configuration with set configurations</returns>
-    Task<ServiceResult<WorkoutTemplateExerciseDto>> GetByIdAsync(WorkoutTemplateExerciseId exerciseId);
+    /// <returns>The exercise configuration with metadata</returns>
+    Task<ServiceResult<WorkoutTemplateExerciseDto>> GetExerciseByIdAsync(WorkoutTemplateExerciseId exerciseId);
 
     /// <summary>
-    /// Adds an exercise to a workout template
+    /// Validates exercise metadata against ExecutionProtocol requirements
+    /// </summary>
+    /// <param name="exerciseId">The exercise ID</param>
+    /// <param name="protocolId">The execution protocol ID</param>
+    /// <param name="metadata">JSON metadata to validate</param>
+    /// <returns>Validation result</returns>
+    Task<ServiceResult<BooleanResultDto>> ValidateExerciseMetadataAsync(ExerciseId exerciseId, ExecutionProtocolId protocolId, string metadata);
+
+    // Legacy methods - marked obsolete but maintained for backward compatibility
+    
+    /// <summary>
+    /// Gets all exercises for a workout template (legacy zone-based format)
+    /// </summary>
+    /// <param name="workoutTemplateId">The workout template ID</param>
+    /// <returns>List of exercises grouped by zone</returns>
+    [Obsolete("Use GetTemplateExercisesAsync instead. This will be removed in future versions.")]
+    Task<ServiceResult<WorkoutTemplateExerciseListDto>> GetByWorkoutTemplateAsync(WorkoutTemplateId workoutTemplateId);
+
+    /// <summary>
+    /// Gets a specific exercise configuration by ID (legacy format)
+    /// </summary>
+    /// <param name="exerciseId">The workout template exercise ID</param>
+    /// <returns>The exercise configuration with set configurations</returns>
+    [Obsolete("Use GetExerciseByIdAsync instead. This will be removed in future versions.")]
+    Task<ServiceResult<WorkoutTemplateExerciseDto>> GetByIdAsync(WorkoutTemplateExerciseId exerciseId);
+
+    // Additional legacy methods needed by existing controllers
+    
+    /// <summary>
+    /// Adds an exercise to a workout template (legacy command-based format)
     /// </summary>
     /// <param name="command">Command containing exercise details</param>
     /// <returns>The created exercise configuration</returns>
+    [Obsolete("Use AddExerciseAsync(templateId, dto) instead. This will be removed in future versions.")]
     Task<ServiceResult<WorkoutTemplateExerciseDto>> AddExerciseAsync(AddExerciseToTemplateCommand command);
 
     /// <summary>
-    /// Updates an exercise in a workout template
+    /// Updates an exercise in a workout template (legacy command-based format)
     /// </summary>
     /// <param name="command">Command containing updated exercise details</param>
     /// <returns>The updated exercise configuration</returns>
+    [Obsolete("Use UpdateExerciseMetadataAsync instead. This will be removed in future versions.")]
     Task<ServiceResult<WorkoutTemplateExerciseDto>> UpdateExerciseAsync(UpdateTemplateExerciseCommand command);
 
     /// <summary>
-    /// Removes an exercise from a workout template
+    /// Removes an exercise from a workout template (legacy single parameter format)
     /// </summary>
     /// <param name="workoutTemplateExerciseId">The exercise to remove</param>
     /// <returns>Success or error result</returns>
+    [Obsolete("Use RemoveExerciseAsync(templateId, exerciseId) instead. This will be removed in future versions.")]
     Task<ServiceResult<BooleanResultDto>> RemoveExerciseAsync(WorkoutTemplateExerciseId workoutTemplateExerciseId);
 
     /// <summary>
-    /// Reorders exercises within a zone
+    /// Reorders exercises within a zone (legacy command-based format)
     /// </summary>
     /// <param name="command">Command containing reordering details</param>
     /// <returns>Success or error result</returns>
+    [Obsolete("Use ReorderExerciseAsync instead. This will be removed in future versions.")]
     Task<ServiceResult<BooleanResultDto>> ReorderExercisesAsync(ReorderTemplateExercisesCommand command);
 
     /// <summary>
-    /// Changes the zone of an exercise
+    /// Changes the zone of an exercise (legacy command-based format)
     /// </summary>
     /// <param name="command">Command containing zone change details</param>
     /// <returns>The updated exercise configuration</returns>
+    [Obsolete("Use enhanced phase/round methods instead. This will be removed in future versions.")]
     Task<ServiceResult<WorkoutTemplateExerciseDto>> ChangeExerciseZoneAsync(ChangeExerciseZoneCommand command);
 
     /// <summary>
-    /// Duplicates exercises from one template to another
+    /// Duplicates exercises from one template to another (legacy command-based format)
     /// </summary>
     /// <param name="command">Command containing duplication details</param>
     /// <returns>Number of exercises duplicated</returns>
+    [Obsolete("Use enhanced phase/round methods instead. This will be removed in future versions.")]
     Task<ServiceResult<int>> DuplicateExercisesAsync(DuplicateTemplateExercisesCommand command);
-
-    /// <summary>
-    /// Gets suggested exercises based on template objectives and existing exercises
-    /// </summary>
-    /// <param name="workoutTemplateId">The workout template ID</param>
-    /// <param name="zone">The zone to get suggestions for</param>
-    /// <param name="maxSuggestions">Maximum number of suggestions</param>
-    /// <returns>List of suggested exercises</returns>
-    Task<ServiceResult<List<ExerciseDto>>> GetExerciseSuggestionsAsync(
-        WorkoutTemplateId workoutTemplateId, 
-        string zone, 
-        int maxSuggestions = 5);
-
-    /// <summary>
-    /// Validates if exercises can be added to a template
-    /// </summary>
-    /// <param name="workoutTemplateId">The workout template ID</param>
-    /// <param name="exerciseIds">List of exercise IDs to validate</param>
-    /// <returns>Validation result with any issues found</returns>
-    Task<ServiceResult<BooleanResultDto>> ValidateExercisesAsync(
-        WorkoutTemplateId workoutTemplateId, 
-        List<ExerciseId> exerciseIds);
 }

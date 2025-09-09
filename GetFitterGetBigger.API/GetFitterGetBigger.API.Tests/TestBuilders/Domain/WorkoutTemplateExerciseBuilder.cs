@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using GetFitterGetBigger.API.Models.Entities;
 using GetFitterGetBigger.API.Models.SpecializedIds;
 
@@ -137,6 +138,35 @@ public class WorkoutTemplateExerciseBuilder
         _notes = null;
         return this;
     }
+    
+    /// <summary>
+    /// Sets the phase - maps to zone for compatibility with tests
+    /// </summary>
+    public WorkoutTemplateExerciseBuilder WithPhase(string phase)
+    {
+        // Map phase string to WorkoutZone enum
+        _zone = phase?.ToLower() switch
+        {
+            "warmup" => WorkoutZone.Warmup,
+            "main" => WorkoutZone.Main,
+            "workout" => WorkoutZone.Main, // Workout phase maps to Main zone
+            "cooldown" => WorkoutZone.Cooldown,
+            _ => WorkoutZone.Main // Default to Main if unknown
+        };
+        
+        return this;
+    }
+    
+    /// <summary>
+    /// Sets the round number - this might be used for test setup but not directly in entity
+    /// For now, this is a no-op since the entity doesn't have a RoundNumber property
+    /// </summary>
+    public WorkoutTemplateExerciseBuilder WithRoundNumber(int roundNumber)
+    {
+        // The entity doesn't have a RoundNumber property, so this is just for test compatibility
+        // In the future, if RoundNumber becomes part of the entity, it can be stored here
+        return this;
+    }
 
     // Collections
     public WorkoutTemplateExerciseBuilder WithSetConfiguration(SetConfiguration configuration)
@@ -148,6 +178,12 @@ public class WorkoutTemplateExerciseBuilder
     public WorkoutTemplateExerciseBuilder WithSetConfigurations(params SetConfiguration[] configurations)
     {
         _configurations.AddRange(configurations);
+        return this;
+    }
+    
+    public WorkoutTemplateExerciseBuilder WithConfigurations(ICollection<SetConfiguration> configurations)
+    {
+        _configurations = configurations.ToList();
         return this;
     }
     

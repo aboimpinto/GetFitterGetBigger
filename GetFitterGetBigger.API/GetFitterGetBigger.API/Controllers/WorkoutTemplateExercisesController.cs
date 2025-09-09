@@ -1,4 +1,5 @@
 using GetFitterGetBigger.API.DTOs;
+using GetFitterGetBigger.API.Mappers;
 using GetFitterGetBigger.API.Models.SpecializedIds;
 using GetFitterGetBigger.API.Services.Commands.WorkoutTemplateExercises;
 using GetFitterGetBigger.API.Services.WorkoutTemplate.Features.Exercise;
@@ -107,15 +108,7 @@ public class WorkoutTemplateExercisesController(
         _logger.LogInformation("Adding exercise {ExerciseId} to workout template {TemplateId} in zone {Zone}", 
             request.ExerciseId, templateId, request.Zone);
 
-        var command = new AddExerciseToTemplateCommand
-        {
-            WorkoutTemplateId = WorkoutTemplateId.ParseOrEmpty(templateId),
-            ExerciseId = ExerciseId.ParseOrEmpty(request.ExerciseId),
-            Zone = request.Zone,
-            Notes = request.Notes,
-            SequenceOrder = request.SequenceOrder
-        };
-
+        var command = request.ToCommand(WorkoutTemplateId.ParseOrEmpty(templateId));
         var result = await _workoutTemplateExerciseService.AddExerciseAsync(command);
 
         return result switch

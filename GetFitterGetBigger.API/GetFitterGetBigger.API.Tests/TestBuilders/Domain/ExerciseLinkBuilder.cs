@@ -166,6 +166,17 @@ public class ExerciseLinkBuilder
         _updatedAt = updatedAt;
         return this;
     }
+    
+    // Convenience methods for backward compatibility with tests
+    public ExerciseLinkBuilder WithExerciseId(ExerciseId exerciseId)
+    {
+        return WithSourceExerciseId(exerciseId);
+    }
+    
+    public ExerciseLinkBuilder WithLinkedExerciseId(ExerciseId linkedExerciseId)
+    {
+        return WithTargetExerciseId(linkedExerciseId);
+    }
 
     /// <summary>
     /// Builds the ExerciseLink using the enhanced Handler method (with enum support)

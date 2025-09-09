@@ -120,10 +120,13 @@ This documentation covers:
 
 ### Available Custom Agents and Commands
 
-#### feature-code-reviewer Agent
+#### Key Agents
+
+##### feature-code-reviewer Agent
 **Purpose**: Performs comprehensive code review against CODE_QUALITY_STANDARDS.md
 - Reviews ALL commits in a feature
 - Checks 28 Golden Rules and all patterns
+- **NEW**: Checks architectural health (service size, handler usage, extensions)
 - Generates detailed violation reports with solutions
 - Calculates approval rates per file and overall
 - **IMPORTANT**: Code review reports must be saved in the appropriate phase folder:
@@ -132,7 +135,7 @@ This documentation covers:
   - Status: `APPROVED`, `REQUIRES_CHANGES`, or `REJECTED`
   - The checkpoint in the current phase's feature-tasks.md must be updated with the review results
 
-#### feature-commit-push Agent
+##### feature-commit-push Agent
 **Purpose**: Commits, pushes, and updates feature checkpoint with commit hash
 - Analyzes changes and creates meaningful commit messages
 - Pushes to remote repository
@@ -140,16 +143,143 @@ This documentation covers:
 - Updates checkpoint with commit hash and summary
 - Handles user-provided highlights for commit message
 
-#### /review-feature Command
+##### code-quality-analyzer Agent
+**Purpose**: Analyzes C# classes against GetFitterGetBigger API code quality standards
+- Checks against strict API patterns (ServiceResult, ServiceValidate, Empty pattern)
+- Validates Single Repository Rule compliance
+- Identifies modern C# feature usage violations
+- Creates detailed refactoring plans
+- Updates tests accordingly
+- Generates violation reports with specific solutions
+
+##### code-quality-fixer Agent
+**Purpose**: Automatically fixes code quality violations identified by code-quality-analyzer
+- Applies refactoring patterns from CODE_QUALITY_STANDARDS.md
+- Fixes ServiceValidate pattern violations
+- Implements Empty pattern correctly
+- Enforces Single Repository Rule
+- Modernizes C# feature usage
+
+##### code-reviewer Agent
+**Purpose**: Performs comprehensive code reviews against CODE_QUALITY_STANDARDS.md
+- Reviews uncommitted or specified files
+- Checks for violations against established patterns
+- Generates detailed review reports
+- Can be used for quick code quality checks
+
+##### csharp-build-error-fixer Agent
+**Purpose**: Identifies and fixes C# build errors and warnings
+- Runs 'dotnet clean && dotnet build' to identify issues
+- Analyzes whether errors are due to refactoring or regression
+- Adapts tests to refactored production code
+- Fixes actual code regressions
+- **IMPORTANT**: Asks for clarification when cause is unclear
+
+##### csharp-build-test-fixer Agent
+**Purpose**: Fixes C# build errors, warnings, and failing tests
+- Identifies build issues via 'dotnet clean && dotnet build'
+- Finds failing tests via 'dotnet test'
+- Systematically fixes both build and test issues
+- Useful after refactoring or making significant changes
+
+##### csharp-build-warnings-fixer Agent
+**Purpose**: Identifies and fixes C# build warnings
+- Runs 'dotnet clean && dotnet build' to find warnings
+- Reports on all warnings found
+- Fixes non-obsolete warnings
+- Reports but doesn't fix obsolete warnings (part of ongoing refactoring)
+
+##### feature-implementation-executor Agent
+**Purpose**: Executes feature implementation tasks systematically
+- Ensures checkpoint compliance
+- Enforces code quality standards throughout
+- Manages comprehensive testing
+- Validates checkpoints before proceeding to new phases
+- Ensures no task is left incomplete
+- Rigorously enforces CODE_QUALITY_STANDARDS.md
+
+##### feature-post-validator Agent (if applicable)
+**Purpose**: Post-implementation validation and verification
+- Validates completed feature implementations
+- Ensures all requirements are met
+- Verifies test coverage
+- Checks documentation completeness
+
+##### feature-pre-validator Agent
+**Purpose**: Validates features before transitioning to IN_PROGRESS
+- Performs strict validation of documentation completeness
+- Checks build health
+- Verifies test health
+- Validates task implementability
+- Acts as senior developer review before development starts
+
+##### feature-task-refiner Agent
+**Purpose**: Refines feature tasks from SUBMITTED to READY_TO_DEVELOP
+- Analyzes feature descriptions and supporting documents
+- Studies codebase for patterns
+- Generates comprehensive feature-tasks.md
+- Includes mandatory codebase study
+- Implements TDD approach
+- Creates checkpoints
+- Moves features to 1-READY_TO_DEVELOP when complete
+
+##### git-commit-push Agent
+**Purpose**: Handles complete git workflow for commits and pushes
+- Checks git status
+- Stages appropriate files
+- Creates meaningful commit messages
+- Pushes to correct branch
+- Handles entire git workflow end-to-end
+
+##### test-coverage-reporter Agent
+**Purpose**: Generates comprehensive test coverage reports
+- Runs tests with coverage analysis
+- Generates detailed HTML reports
+- Shows code coverage metrics
+- Provides actionable coverage insights
+- Identifies areas needing more test coverage
+
+##### unit-test-guardian Agent
+**Purpose**: Creates, refactors, or fixes unit tests to exemplary standards
+- Ensures every test follows 100% of project quality standards
+- Serves as reference implementation
+- Refactors existing tests to meet standards
+- Creates new tests with best practices
+- Fixes failing tests comprehensively
+
+#### Slash Commands for Development Workflow
+
+##### /analyze-architecture Command 🏗️ 
+**Usage**: `/analyze-architecture [ServiceName]`
+**Purpose**: Prevents monolithic services by analyzing architectural health
+- **When to use**:
+  - After implementing 2-3 methods in a service
+  - Before code review
+  - When service feels "too big"
+  - After refactoring to verify improvements
+- **What it checks**:
+  - Service size violations (>400 lines = failure)
+  - Missing handler patterns for complex logic
+  - Extension method opportunities
+  - Comparison with neighboring services
+- **Output**: Actionable refactoring plan with specific handlers/extensions to create
+- **Example**:
+  ```
+  /analyze-architecture WorkoutTemplateExerciseService
+  # Shows: 🔴 VIOLATION: 956 lines - Extract 3 handlers immediately
+  ```
+
+##### /review-feature Command
 **Usage**: `/review-feature FEAT-XXX`
 - Triggers feature-code-reviewer agent for specified feature
+- **Now includes architectural analysis**
 - Generates timestamped report in appropriate phase folder
 - Updates feature-tasks.md with review results at current phase checkpoint
 - Can be run anytime during feature development
 - Report location: `code-reviews/Phase_X_[PhaseName]/`
 - Checkpoint update: Adds review status and file path to current phase checkpoint
 
-#### /commit-feature Command
+##### /commit-feature Command
 **Usage**: `/commit-feature [feature] [checkpoint] [highlights]`
 - Triggers feature-commit-push agent
 - Commits and pushes current changes
@@ -159,6 +289,22 @@ This documentation covers:
   - `/commit-feature` - Auto-detect everything
   - `/commit-feature FEAT-030` - Specify feature only
   - `/commit-feature FEAT-030 "Phase 3" "fixed validation"` - Full specification
+
+##### /continue-implementation Command
+**Usage**: `/continue-implementation`
+- Continues implementing the current in-progress feature
+- **Now monitors service size during implementation**
+- Stops if service exceeds 400 lines
+- Suggests handler/extension extraction when needed
+- Triggers code review at checkpoints
+
+##### /refine-feature Command
+**Usage**: `/refine-feature FEAT-XXX`
+- Refines a feature from SUBMITTED to READY_TO_DEVELOP
+- **Now includes mandatory architecture planning task**
+- Identifies required handlers upfront
+- Specifies extension opportunities
+- Adds service size warnings to all tasks
 
 ## Git Commit Messages
 
@@ -381,6 +527,40 @@ IsNameUniqueAsync()
 
 // ✅ GOOD - Constant
 ExerciseErrorMessages.InvalidKineticChainForExerciseType
+```
+
+## ⚠️ CRITICAL: Service Architecture Rules
+
+### The 400-Line Service Rule
+**Services MUST NOT exceed 400 lines!** This is non-negotiable. A 956-line service is a failure, regardless of whether it "works."
+
+### Why This Matters:
+- **Maintainability**: Can't understand a 900+ line file quickly
+- **Testability**: Large services are hard to test properly
+- **Team Velocity**: Others can't modify what they can't understand
+- **Technical Debt**: Grows exponentially with service size
+
+### How to Prevent Monolithic Services:
+1. **Use `/analyze-architecture` regularly** - After every 2-3 methods
+2. **Extract handlers early** - Don't wait until 400 lines
+3. **Create extensions proactively** - Static helpers belong in extensions
+4. **Follow neighbors** - Look at WorkoutTemplateService.cs for patterns
+
+### Refactoring Triggers:
+- 🟢 < 300 lines: Healthy
+- 🟡 300-400 lines: Plan extraction NOW
+- 🔴 > 400 lines: STOP! Refactor immediately
+
+### Pattern to Follow:
+```
+/Services/Feature/
+├── IFeatureService.cs (interface)
+├── FeatureService.cs (<400 lines)
+├── Handlers/
+│   ├── ComplexLogicHandler.cs
+│   └── BusinessRulesHandler.cs
+└── Extensions/
+    └── FeatureExtensions.cs
 ```
 
 ## ⚠️ CRITICAL: No Try-Catch Anti-Pattern

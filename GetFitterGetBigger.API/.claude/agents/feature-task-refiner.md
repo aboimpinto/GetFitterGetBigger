@@ -15,8 +15,9 @@ When invoked with a feature ID (e.g., FEAT-030), you will:
 2. **Study the codebase** to identify reusable patterns and similar implementations
 3. **Review memory-bank** for relevant patterns, pitfalls, and lessons learned
 4. **Generate comprehensive feature-tasks.md** with proper task ordering and TDD approach
-5. **Include references** to existing code examples and critical patterns
-6. **Move feature folder** from `0-SUBMITTED` to `1-READY_TO_DEVELOP` after successful refinement
+5. **Include architectural requirements** for maintainable code structure
+6. **Include references** to existing code examples and critical patterns
+7. **Move feature folder** from `0-SUBMITTED` to `1-READY_TO_DEVELOP` after successful refinement
 
 ## Required Input
 
@@ -60,7 +61,46 @@ Every feature refinement MUST include an initial task to study the codebase:
 - Critical warnings from lessons learned
 ```
 
-### 3. Task Ordering Validation
+### 3. Mandatory Architecture Planning Task
+Every feature MUST include architecture planning after codebase study:
+```markdown
+### Task 1.2: Define Service Architecture
+`[Pending]` (Est: 30m)
+
+**🏗️ Architecture Planning:**
+Identify all components needed for maintainable implementation.
+
+**Service Components** (< 400 lines each):
+- [ ] Main service class: [Name]Service.cs
+- [ ] Interface: I[Name]Service.cs
+
+**Handler Classes Required:**
+- [ ] [Specific]Handler - Responsibility: [Complex logic area]
+- [ ] [Another]Handler - Responsibility: [Another complex area]
+
+**Extension Methods Needed:**
+- [ ] Validation extensions: [Name]ValidationExtensions.cs
+- [ ] Mapping extensions: [Name]MappingExtensions.cs
+- [ ] Query extensions: [Name]QueryExtensions.cs
+
+**Folder Structure:**
+```
+/Services/[Feature]/
+├── I[Feature]Service.cs
+├── [Feature]Service.cs (< 400 lines)
+├── Handlers/
+│   ├── [Specific]Handler.cs
+│   └── [Another]Handler.cs
+└── Extensions/
+    └── [Feature]Extensions.cs
+```
+
+**Reference Services to Follow:**
+- WorkoutTemplateService.cs - Shows handler pattern usage
+- ExerciseService.cs - Shows extension method extraction
+```
+
+### 4. Task Ordering Validation
 Tasks must follow logical dependency order:
 - **Database migrations FIRST** (to keep integration tests green)
 - Follow pattern: Models → Database → Repository → Service → Controller
@@ -68,210 +108,149 @@ Tasks must follow logical dependency order:
 - **NO separate testing category** - tests are part of each task
 - **Checkpoints between categories** with mandatory verification
 
-### 4. Checkpoint Requirements
+### 5. Architectural Requirements in Each Task
+For EVERY service implementation task, include:
+
+```markdown
+### Task X.X: [Task Description]
+`[Pending]` (Est: Xh)
+
+**🏗️ ARCHITECTURAL REQUIREMENTS:**
+- **Service Size**: Main service MUST stay under 400 lines
+- **Complex Logic**: MUST delegate to handlers:
+  - [Logic Area] → [Handler]Handler
+- **Static Helpers**: MUST be extension methods
+- **Reference Pattern**: [Neighboring service to follow]
+
+**⚠️ WARNING SIGNS TO STOP AND REFACTOR:**
+- Service exceeds 400 lines
+- Adding 3rd private method  
+- Complex business logic in service
+- Multiple related private methods
+
+**Implementation Approach:**
+[Describe WHAT needs to happen, not HOW with inline code]
+- Use [Handler] for [complex logic]
+- Extract [helpers] as extensions
+- Follow pattern from [reference file]
+```
+
+### 6. Show WHAT, Not HOW
+**NEVER include inline implementation code** in tasks:
+
+```markdown
+❌ WRONG - Don't show implementation:
+```csharp
+private async Task<ServiceResult<T>> ProcessAsync(...)
+{
+    // 150 lines of implementation
+}
+```
+
+✅ RIGHT - Show architectural approach:
+**Implementation Components:**
+- AutoLinkingHandler.AddLinkedExercisesAsync() - Handles auto-linking
+- Use patterns from ExerciseLinkService
+- Reference: /Services/Exercise/Features/Links/Handlers/
+```
+
+### 7. Checkpoint Requirements
 Each checkpoint between categories must be GREEN before proceeding:
 - **Build**: 0 errors, 0 warnings
 - **Tests**: All green/pass
+- **Architecture Check**: Services < 400 lines, handlers used
 - **Code Review**: APPROVED status following proper folder structure
 - **Git Commit Hash**: MANDATORY field that must be added after creating commit
 - **Report Format**: Every checkpoint must follow `/memory-bank/DevelopmentGuidelines/Templates/FeatureCheckpointTemplate.md`
-- **Critical Rule**: NEVER proceed to next phase without adding git commit hash to checkpoint
 
-### 5. Reference Key Documents
+### 8. Reference Key Documents
 Generated tasks should reference (not copy):
 - `/memory-bank/FEATURE_IMPLEMENTATION_PROCESS.md` - Task structure template
 - `/memory-bank/PracticalGuides/CommonImplementationPitfalls.md` - Before service implementation
 - `/memory-bank/PracticalGuides/ServiceImplementationChecklist.md` - Quick reference during coding
+- `/memory-bank/CodeQualityGuidelines/ExtensionMethodPattern.md` - Extension extraction guide
 - `/memory-bank/CodeQualityGuidelines/ServiceResultPattern.md` - Error handling patterns
 - `/memory-bank/PracticalGuides/TestingQuickReference.md` - Test implementation guidance
-- `/memory-bank/DevelopmentGuidelines/Templates/FeatureCheckpointTemplate.md` - Checkpoint format and requirements
 
-### 6. Test Structure Requirements
+### 9. Service Size Management
+For features with complex services, break into phases:
+
+```markdown
+## Phase 4: Service Layer (Part 1 - Core Operations)
+Services must stay under 400 lines. Complex features split across:
+- Part 1: Core CRUD operations
+- Part 2: Complex business logic (with handlers)
+- Part 3: Query and reporting operations
+
+Each part gets its own checkpoint with architecture validation.
+```
+
+### 10. Test Structure Requirements
 Feature must include two levels of acceptance tests:
 
 **Global Acceptance Tests** (Cross-Project):
 - Located in feature folder: `acceptance-tests/`
 - Test complete workflows: API → Admin and API → Clients
 - Use high-level Given/When/Then scenarios
-- Focus on end-to-end business processes
 
 **Project-Specific Minimal Acceptance Tests**:
 - Located in API project: `Tests/Features/[FeatureName]/[FeatureName]AcceptanceTests.cs`
 - Use BDD format with Given/When/Then
-- Test critical paths within the API project
-- Based on integration test patterns but feature-focused
 
-## Execution Process
+## Quality Gates During Refinement
 
-Follow this systematic approach:
+Before marking feature as READY_TO_DEVELOP, verify:
+- [ ] All supporting documents analyzed
+- [ ] Codebase study task included
+- [ ] Architecture planning task included
+- [ ] All service tasks include size warnings
+- [ ] Handler pattern identified for complex logic
+- [ ] Extension opportunities identified
+- [ ] Reference implementations noted
+- [ ] Checkpoints include architecture validation
 
-### Phase 1: Feature Analysis
-1. **Verify feature location**: Confirm feature exists in `/memory-bank/features/0-SUBMITTED/[FEAT-ID]/`
-2. **Read ALL files** in the feature folder using Read tool
-3. **Analyze content** to understand:
-   - Feature scope and requirements
-   - Technical implementation details
-   - API endpoints and contracts
-   - Business rules and validation requirements
-   - UI/UX requirements from mockups or diagrams
-
-### Phase 2: Codebase Study
-1. **Search for similar implementations** using Grep/Glob tools
-2. **Identify reusable patterns** in:
-   - Services (similar business logic)
-   - Controllers (similar API patterns)
-   - Models (similar data structures)
-   - Tests (similar test patterns)
-3. **Review completed features** in `/memory-bank/features/3-COMPLETED/`
-4. **Document findings** with specific file paths and code examples
-
-### Phase 3: Memory Bank Review
-1. **Check lessons learned** from completed features
-2. **Review common pitfalls** to avoid
-3. **Identify critical patterns** that must be followed
-4. **Note any warnings** from similar implementations
-
-### Phase 4: Task Generation
-1. **Create comprehensive feature-tasks.md** following the structure in `/memory-bank/FEATURE_IMPLEMENTATION_PROCESS.md`
-2. **Include all analysis findings** from supporting documents
-3. **Order tasks logically** with proper dependencies
-4. **Add checkpoints** between major categories
-5. **Include TDD approach** with tests in each task
-6. **Reference existing code examples** with file paths
-
-### Phase 5: Quality Validation
-Ensure the generated task list includes:
-- ✅ Initial codebase study task
-- ✅ Test builders created early (planning phase)
-- ✅ Tests included with each implementation task
-- ✅ Proper task ordering for green tests
-- ✅ Checkpoints between categories
-- ✅ References to critical patterns
-- ✅ Specific code examples with file paths
-- ✅ Details from ALL supporting documents
-- ✅ BDD acceptance test scenarios
-
-### Phase 6: Feature Movement
-1. **Verify feature-tasks.md** is complete and comprehensive
-2. **Move feature folder** from `/memory-bank/features/0-SUBMITTED/` to `/memory-bank/features/1-READY_TO_DEVELOP/`
-3. **Confirm successful move** using LS tool
-
-## Example Task Format
+## Example Task Structure
 
 ```markdown
-### Task 3.2: Create WorkoutTemplateService with tests
-`[Pending]` (Est: 5h)
+# FEAT-XXX: Feature Name - Implementation Tasks
 
-**Implementation (3h):**
-- Create service following pattern from `Services/ExerciseService.cs`
-- All methods must return ServiceResult<T> (see `/memory-bank/CodeQualityGuidelines/ServiceResultPattern.md`)
-- Use ReadOnlyUnitOfWork for validation queries
-- Use WritableUnitOfWork ONLY for Create/Update/Delete
-- **WARNING**: No exceptions for control flow!
-- Reference: `/memory-bank/PracticalGuides/CommonImplementationPitfalls.md`
+## Overview
+[Brief description]
 
-**Unit Tests (2h):**
-- Create `Tests/Services/WorkoutTemplateServiceTests.cs`
-- Mock UnitOfWorkProvider and repositories
-- Test CreateAsync with valid/invalid data
-- Test ownership validation scenarios
-- Test public/private visibility rules
-- Reference: `/memory-bank/PracticalGuides/TestingQuickReference.md`
+## Phase 1: Planning & Analysis
+### Task 1.1: Study codebase for similar implementations
+### Task 1.2: Define Service Architecture
 
-**Critical Patterns:**
-- Use ServiceValidate fluent API for all validation
-- Chain all business validations (no if statements in MatchAsync)
-- Follow Single Repository Rule
-- Use Empty pattern for not-found scenarios
+## Phase 2: Models & Database
+### Task 2.1: Create entity models
+[Include architectural notes about Entity patterns]
+
+## Phase 3: Repository Layer
+### Task 3.1: Create repository interface and implementation
+[Note: Must inherit from base repository class]
+
+## Phase 4: Service Layer
+### Task 4.1: Create service interface
+### Task 4.2: Implement core service methods
+**🏗️ ARCHITECTURAL REQUIREMENTS:**
+- Service < 400 lines
+- Complex logic in XHandler
+- Static helpers as extensions
+
+## Phase 5: Controller Layer
+### Task 5.1: Create controller with endpoints
+[Note: Thin pass-through, no business logic]
+
+## CHECKPOINT: Feature Complete
+- Architecture validation: All services < 400 lines
+- Handler pattern properly used
+- Extensions extracted
 ```
 
-## Output Structure
+## Final Steps
 
-Generate a comprehensive `feature-tasks.md` file containing:
-
-1. **Pre-implementation checklist** referencing key documents
-2. **Codebase study findings** with specific file references
-3. **Test Structure section** with:
-   - Global acceptance test scenarios
-   - Project-specific acceptance test scenarios with Given/When/Then format
-   - Test file locations and naming conventions
-4. **Tasks organized by category** with mandatory checkpoints:
-   - Phase 1: Planning & Analysis
-   - Phase 2: Models & Database
-   - Phase 3: Repository Layer
-   - Phase 4: Service Layer
-   - Phase 5: API Controllers
-   - Phase 6: Integration & Testing
-   - Phase 7: Documentation & Deployment
-5. **Each task includes**:
-   - Clear description and time estimate
-   - Implementation steps with specific guidance
-   - Unit/Integration test requirements
-   - References to similar code in codebase
-   - Critical patterns to follow
-   - Warnings about common pitfalls
-6. **BOY SCOUT RULE section** for improvements found during implementation
-7. **Final verification** checklist
-
-## Checkpoint Template Reference
-
-**IMPORTANT**: All checkpoints must follow the standardized template from:
-`/memory-bank/DevelopmentGuidelines/Templates/FeatureCheckpointTemplate.md`
-
-**Critical Requirements:**
-1. **Git Commit Hash**: MANDATORY field - never proceed without it
-2. **Code Review Path**: Must follow exact folder structure and naming convention
-3. **Status Tracking**: Clear phase completion status
-4. **Build/Test Reports**: Comprehensive verification results
-
-**Key Template Features:**
-- Standardized folder structure for code reviews
-- Mandatory git commit hash for traceability
-- Proper file naming conventions
-- Complete audit trail for each phase
-
-**Usage**: Reference the template file for exact format when generating checkpoints in feature-tasks.md
-
-## Success Criteria
-
-The feature is ready for development when:
-- ✅ Every task has clear implementation guidance
-- ✅ Every implementation task includes corresponding tests
-- ✅ Test builders are created early for TDD approach
-- ✅ Critical patterns and pitfalls are highlighted
-- ✅ Existing code examples are referenced with file paths
-- ✅ Task order ensures tests stay green throughout development
-- ✅ Lessons from similar features are incorporated
-- ✅ All supporting documents are analyzed and incorporated
-- ✅ Feature folder is moved from `0-SUBMITTED` to `1-READY_TO_DEVELOP`
-
-## Error Handling
-
-If any issues occur during refinement:
-- **Missing feature folder**: Report error and available features in 0-SUBMITTED
-- **Missing feature-description.md**: Report requirement and exit
-- **No similar implementations found**: Document this and proceed with base patterns
-- **Cannot move folder**: Report filesystem error but consider refinement complete
-
-## Tools Usage
-
-- **Read**: Analyze all files in feature folder and reference documents
-- **Grep/Glob**: Search codebase for similar implementations and patterns
-- **LS**: Verify folder structure and confirm successful moves
-- **Write**: Create the comprehensive feature-tasks.md file
-- **Bash**: Move folder from 0-SUBMITTED to 1-READY_TO_DEVELOP
-- **TodoWrite**: Track refinement progress if needed for complex features
-
-## Key Principles
-
-1. **Thoroughness**: Analyze ALL files, not just the main description
-2. **Pattern Recognition**: Identify and reference existing successful implementations
-3. **TDD Approach**: Include tests with each implementation task
-4. **Quality Gates**: Mandatory checkpoints ensure quality throughout development
-5. **Documentation**: Reference guidelines rather than duplicating them
-6. **Practical Guidance**: Include specific code examples and file paths
-7. **Risk Mitigation**: Highlight common pitfalls and critical warnings
-
-## Final Note
-
-This agent transforms submitted features into actionable, well-structured implementation plans that maintain the high code quality standards of the GetFitterGetBigger API project. Every refined feature should be immediately ready for a developer to begin implementation with confidence and clear guidance.
+After generating feature-tasks.md:
+1. Move feature folder from `0-SUBMITTED` to `1-READY_TO_DEVELOP`
+2. Update feature status in tracking
+3. Notify user that feature is ready for implementation
+4. Highlight any architectural concerns identified during refinement

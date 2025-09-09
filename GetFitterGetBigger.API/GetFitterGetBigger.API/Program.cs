@@ -8,6 +8,7 @@ using GetFitterGetBigger.API.Services.Interfaces;
 using GetFitterGetBigger.API.Services.Implementations;
 using GetFitterGetBigger.API.Services.WorkoutTemplate.Features.SetConfiguration;
 using GetFitterGetBigger.API.Services.WorkoutTemplate.Features.Exercise;
+using GetFitterGetBigger.API.Services.WorkoutTemplate.Features.Exercise.Handlers;
 using GetFitterGetBigger.API.Services.Authentication.DataServices;
 using GetFitterGetBigger.API.Services.Exercise;
 using GetFitterGetBigger.API.Services.Exercise.DataServices;
@@ -114,6 +115,12 @@ builder.Services.AddTransient<IWorkoutTemplateService, WorkoutTemplateService>()
 builder.Services.AddTransient<IEquipmentRequirementsService, EquipmentRequirementsService>();
 builder.Services.AddTransient<IWorkoutTemplateExerciseService, WorkoutTemplateExerciseService>();
 builder.Services.AddTransient<ISetConfigurationService, SetConfigurationService>();
+
+// WorkoutTemplateExercise Handlers - Extracted from monolithic service
+builder.Services.AddTransient<IAutoLinkingHandler, AutoLinkingHandler>();
+builder.Services.AddTransient<IReorderExerciseHandler, ReorderExerciseHandler>();
+builder.Services.AddTransient<ICopyRoundHandler, CopyRoundHandler>();
+builder.Services.AddTransient<IValidationHandler, ValidationHandler>();
 
 // WorkoutTemplate DataServices - Data Access Layer
 builder.Services.AddTransient<IWorkoutTemplateQueryDataService, WorkoutTemplateQueryDataService>();

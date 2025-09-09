@@ -18,6 +18,8 @@ public static class WorkoutTemplateExerciseErrorMessages
     
     // Validation Messages
     public static string InvalidExerciseId => "Invalid exercise ID";
+    public static string InvalidWorkoutTemplateId => "Invalid workout template ID";
+    public static string InvalidUserId => "Invalid user ID";
     public static string InvalidTemplateIdOrZone => "Invalid template ID or zone";
     public static string InvalidTemplateIdOrExerciseList => "Invalid template ID or exercise list";
     
@@ -36,4 +38,7 @@ public static class WorkoutTemplateExerciseErrorMessages
     public static string CanOnlyReorderExercisesInDraftTemplates => "Can only reorder exercises in templates in DRAFT state";
     public static string CanOnlyChangeZonesInDraftTemplates => "Can only change zones in templates in DRAFT state";
     public static string CanOnlyDuplicateExercisesToDraftTemplates => "Can only duplicate exercises to templates in DRAFT state";
+    
+    // Duplication Messages
+    public static string SourceTemplateHasNoExercisesToDuplicate => "Source template has no exercises to duplicate";
 }

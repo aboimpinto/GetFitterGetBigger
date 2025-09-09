@@ -5,7 +5,7 @@ namespace GetFitterGetBigger.API.Services.Validation;
 /// <summary>
 /// Provides a static entry point for creating service validation chains.
 /// </summary>
-public static class ServiceValidate
+public static partial class ServiceValidate
 {
     /// <summary>
     /// Starts a new validation chain for service operations.
