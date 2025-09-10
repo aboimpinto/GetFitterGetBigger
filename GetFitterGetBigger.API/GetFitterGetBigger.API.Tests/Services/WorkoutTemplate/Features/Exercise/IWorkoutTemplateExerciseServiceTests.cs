@@ -59,20 +59,16 @@ public class IWorkoutTemplateExerciseServiceTests
     }
 
     [Fact]
-    public void Interface_Should_HaveLegacyMethodsMarkedObsolete()
+    public void Interface_Should_HaveRequiredMethods()
     {
         // Arrange
         var interfaceType = typeof(IWorkoutTemplateExerciseService);
         
         // Act & Assert
-        var legacyGetByWorkoutTemplate = interfaceType.GetMethod(nameof(IWorkoutTemplateExerciseService.GetByWorkoutTemplateAsync));
-        legacyGetByWorkoutTemplate.Should().NotBeNull();
-        legacyGetByWorkoutTemplate!.GetCustomAttributes(typeof(ObsoleteAttribute), false)
-            .Should().HaveCount(1);
-            
-        var legacyGetById = interfaceType.GetMethod(nameof(IWorkoutTemplateExerciseService.GetByIdAsync));
-        legacyGetById.Should().NotBeNull();
-        legacyGetById!.GetCustomAttributes(typeof(ObsoleteAttribute), false)
-            .Should().HaveCount(1);
+        var getTemplateExercises = interfaceType.GetMethod(nameof(IWorkoutTemplateExerciseService.GetTemplateExercisesAsync));
+        getTemplateExercises.Should().NotBeNull();
+        
+        var getExerciseById = interfaceType.GetMethod(nameof(IWorkoutTemplateExerciseService.GetExerciseByIdAsync));
+        getExerciseById.Should().NotBeNull();
     }
 }

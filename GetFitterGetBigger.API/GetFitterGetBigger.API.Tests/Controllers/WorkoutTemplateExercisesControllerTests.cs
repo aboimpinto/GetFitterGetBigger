@@ -1,6 +1,7 @@
 using FluentAssertions;
 using GetFitterGetBigger.API.Controllers;
 using GetFitterGetBigger.API.DTOs;
+using GetFitterGetBigger.API.DTOs.WorkoutTemplateExercise;
 using GetFitterGetBigger.API.Models.SpecializedIds;
 using GetFitterGetBigger.API.Services.Commands.WorkoutTemplateExercises;
 using GetFitterGetBigger.API.Services.Results;
@@ -29,19 +30,27 @@ public class WorkoutTemplateExercisesControllerTests
         var templateId = WorkoutTemplateId.New();
         var templateIdString = templateId.ToString();
         
-        var expectedDto = new WorkoutTemplateExerciseListDto
-        {
-            WorkoutTemplateId = templateIdString,
-            MainExercises = new List<WorkoutTemplateExerciseDto>
-            {
-                WorkoutTemplateExerciseDtoBuilder.Create().WithId("exercise-1").Build(),
-                WorkoutTemplateExerciseDtoBuilder.Create().WithId("exercise-2").Build()
-            }
-        };
+        var expectedDto = new WorkoutTemplateExercisesDto(
+            templateId,
+            "Test Template",
+            ExecutionProtocolDto.Empty,
+            new WorkoutPhaseDto(
+                new List<RoundDto>
+                {
+                    new RoundDto(
+                        1,
+                        new List<WorkoutTemplateExerciseDto>
+                        {
+                            WorkoutTemplateExerciseDtoBuilder.Create().WithId("exercise-1").Build(),
+                            WorkoutTemplateExerciseDtoBuilder.Create().WithId("exercise-2").Build()
+                        })
+                }),
+            new WorkoutPhaseDto(new List<RoundDto>()),
+            new WorkoutPhaseDto(new List<RoundDto>()));
         
         autoMocker.GetMock<IWorkoutTemplateExerciseService>()
-            .Setup(x => x.GetByWorkoutTemplateAsync(templateId))
-            .ReturnsAsync(ServiceResult<WorkoutTemplateExerciseListDto>.Success(expectedDto));
+            .Setup(x => x.GetTemplateExercisesAsync(templateId))
+            .ReturnsAsync(ServiceResult<WorkoutTemplateExercisesDto>.Success(expectedDto));
 
         // Act
         var result = await controller.GetWorkoutTemplateExercises(templateIdString);
@@ -63,9 +72,9 @@ public class WorkoutTemplateExercisesControllerTests
         var templateIdString = templateId.ToString();
         
         autoMocker.GetMock<IWorkoutTemplateExerciseService>()
-            .Setup(x => x.GetByWorkoutTemplateAsync(templateId))
-            .ReturnsAsync(ServiceResult<WorkoutTemplateExerciseListDto>.Failure(
-                WorkoutTemplateExerciseListDto.Empty,
+            .Setup(x => x.GetTemplateExercisesAsync(templateId))
+            .ReturnsAsync(ServiceResult<WorkoutTemplateExercisesDto>.Failure(
+                WorkoutTemplateExercisesDto.Empty,
                 ServiceError.NotFound("WorkoutTemplate")));
 
         // Act
@@ -86,9 +95,9 @@ public class WorkoutTemplateExercisesControllerTests
         var templateIdString = templateId.ToString();
         
         autoMocker.GetMock<IWorkoutTemplateExerciseService>()
-            .Setup(x => x.GetByWorkoutTemplateAsync(templateId))
-            .ReturnsAsync(ServiceResult<WorkoutTemplateExerciseListDto>.Failure(
-                WorkoutTemplateExerciseListDto.Empty,
+            .Setup(x => x.GetTemplateExercisesAsync(templateId))
+            .ReturnsAsync(ServiceResult<WorkoutTemplateExercisesDto>.Failure(
+                WorkoutTemplateExercisesDto.Empty,
                 ServiceError.Unauthorized("Access denied")));
 
         // Act
@@ -114,9 +123,9 @@ public class WorkoutTemplateExercisesControllerTests
         };
         
         autoMocker.GetMock<IWorkoutTemplateExerciseService>()
-            .Setup(x => x.GetByWorkoutTemplateAsync(templateId))
-            .ReturnsAsync(ServiceResult<WorkoutTemplateExerciseListDto>.Failure(
-                WorkoutTemplateExerciseListDto.Empty,
+            .Setup(x => x.GetTemplateExercisesAsync(templateId))
+            .ReturnsAsync(ServiceResult<WorkoutTemplateExercisesDto>.Failure(
+                WorkoutTemplateExercisesDto.Empty,
                 expectedErrors));
 
         // Act
@@ -144,7 +153,7 @@ public class WorkoutTemplateExercisesControllerTests
             .Build();
         
         autoMocker.GetMock<IWorkoutTemplateExerciseService>()
-            .Setup(x => x.GetByIdAsync(exerciseId))
+            .Setup(x => x.GetExerciseByIdAsync(exerciseId))
             .ReturnsAsync(ServiceResult<WorkoutTemplateExerciseDto>.Success(expectedDto));
 
         // Act
@@ -168,7 +177,7 @@ public class WorkoutTemplateExercisesControllerTests
         var exerciseIdString = exerciseId.ToString();
         
         autoMocker.GetMock<IWorkoutTemplateExerciseService>()
-            .Setup(x => x.GetByIdAsync(exerciseId))
+            .Setup(x => x.GetExerciseByIdAsync(exerciseId))
             .ReturnsAsync(ServiceResult<WorkoutTemplateExerciseDto>.Failure(
                 WorkoutTemplateExerciseDto.Empty,
                 ServiceError.NotFound("WorkoutTemplateExercise")));
@@ -197,16 +206,21 @@ public class WorkoutTemplateExercisesControllerTests
             SequenceOrder = 1
         };
         
-        var expectedDto = WorkoutTemplateExerciseDtoBuilder.Create()
-            .WithId("workout-exercise-123")
-            .WithZone(request.Zone)
-            .WithNotes(request.Notes)
-            .WithSequenceOrder(request.SequenceOrder ?? 1)
-            .Build();
+        var expectedResultDto = new AddExerciseResultDto(
+            new List<WorkoutTemplateExerciseDto>
+            {
+                WorkoutTemplateExerciseDtoBuilder.Create()
+                    .WithId("workout-exercise-123")
+                    .WithPhase(request.Zone)
+                    .WithNotes(request.Notes)
+                    .WithOrderInRound(request.SequenceOrder ?? 1)
+                    .Build()
+            },
+            "Exercise added successfully");
         
         autoMocker.GetMock<IWorkoutTemplateExerciseService>()
-            .Setup(x => x.AddExerciseAsync(It.IsAny<AddExerciseToTemplateCommand>()))
-            .ReturnsAsync(ServiceResult<WorkoutTemplateExerciseDto>.Success(expectedDto));
+            .Setup(x => x.AddExerciseAsync(It.IsAny<WorkoutTemplateId>(), It.IsAny<AddExerciseDto>()))
+            .ReturnsAsync(ServiceResult<AddExerciseResultDto>.Success(expectedResultDto));
 
         // Act
         var result = await controller.AddExerciseToTemplate(templateId, request);
@@ -215,12 +229,12 @@ public class WorkoutTemplateExercisesControllerTests
         result.Should().BeOfType<CreatedAtActionResult>();
         var createdResult = (CreatedAtActionResult)result;
         createdResult.ActionName.Should().Be(nameof(WorkoutTemplateExercisesController.GetWorkoutTemplateExercise));
-        createdResult.Value.Should().BeEquivalentTo(expectedDto);
+        createdResult.Value.Should().BeEquivalentTo(expectedResultDto);
         
         // Verify the route values
         createdResult.RouteValues.Should().ContainKey("templateId");
         createdResult.RouteValues.Should().ContainKey("exerciseId");
-        createdResult.RouteValues["exerciseId"].Should().Be(expectedDto.Id);
+        createdResult.RouteValues["exerciseId"].Should().Be(expectedResultDto.AddedExercises.FirstOrDefault()?.Id ?? string.Empty);
     }
 
     [Fact]
@@ -238,9 +252,9 @@ public class WorkoutTemplateExercisesControllerTests
         };
         
         autoMocker.GetMock<IWorkoutTemplateExerciseService>()
-            .Setup(x => x.AddExerciseAsync(It.IsAny<AddExerciseToTemplateCommand>()))
-            .ReturnsAsync(ServiceResult<WorkoutTemplateExerciseDto>.Failure(
-                WorkoutTemplateExerciseDto.Empty,
+            .Setup(x => x.AddExerciseAsync(It.IsAny<WorkoutTemplateId>(), It.IsAny<AddExerciseDto>()))
+            .ReturnsAsync(ServiceResult<AddExerciseResultDto>.Failure(
+                AddExerciseResultDto.Empty,
                 ServiceError.NotFound("Exercise")));
 
         // Act
@@ -270,9 +284,9 @@ public class WorkoutTemplateExercisesControllerTests
         };
         
         autoMocker.GetMock<IWorkoutTemplateExerciseService>()
-            .Setup(x => x.AddExerciseAsync(It.IsAny<AddExerciseToTemplateCommand>()))
-            .ReturnsAsync(ServiceResult<WorkoutTemplateExerciseDto>.Failure(
-                WorkoutTemplateExerciseDto.Empty,
+            .Setup(x => x.AddExerciseAsync(It.IsAny<WorkoutTemplateId>(), It.IsAny<AddExerciseDto>()))
+            .ReturnsAsync(ServiceResult<AddExerciseResultDto>.Failure(
+                AddExerciseResultDto.Empty,
                 expectedErrors));
 
         // Act
@@ -304,9 +318,9 @@ public class WorkoutTemplateExercisesControllerTests
         };
         
         autoMocker.GetMock<IWorkoutTemplateExerciseService>()
-            .Setup(x => x.AddExerciseAsync(It.IsAny<AddExerciseToTemplateCommand>()))
-            .ReturnsAsync(ServiceResult<WorkoutTemplateExerciseDto>.Failure(
-                WorkoutTemplateExerciseDto.Empty,
+            .Setup(x => x.AddExerciseAsync(It.IsAny<WorkoutTemplateId>(), It.IsAny<AddExerciseDto>()))
+            .ReturnsAsync(ServiceResult<AddExerciseResultDto>.Failure(
+                AddExerciseResultDto.Empty,
                 expectedErrors));
 
         // Act
@@ -330,8 +344,13 @@ public class WorkoutTemplateExercisesControllerTests
         var exerciseIdString = exerciseId.ToString();
         
         autoMocker.GetMock<IWorkoutTemplateExerciseService>()
-            .Setup(x => x.RemoveExerciseAsync(exerciseId))
-            .ReturnsAsync(ServiceResult<BooleanResultDto>.Success(new BooleanResultDto { Value = true }));
+            .Setup(x => x.RemoveExerciseAsync(WorkoutTemplateId.ParseOrEmpty(templateId), exerciseId))
+            .ReturnsAsync(ServiceResult<RemoveExerciseResultDto>.Success(new RemoveExerciseResultDto(
+                new List<WorkoutTemplateExerciseDto>
+                {
+                    WorkoutTemplateExerciseDtoBuilder.Create().WithId(exerciseIdString).Build()
+                },
+                "Exercise removed successfully")));
 
         // Act
         var result = await controller.RemoveExerciseFromTemplate(templateId, exerciseIdString);
@@ -352,9 +371,9 @@ public class WorkoutTemplateExercisesControllerTests
         var exerciseIdString = exerciseId.ToString();
         
         autoMocker.GetMock<IWorkoutTemplateExerciseService>()
-            .Setup(x => x.RemoveExerciseAsync(exerciseId))
-            .ReturnsAsync(ServiceResult<BooleanResultDto>.Failure(
-                new BooleanResultDto { Value = false },
+            .Setup(x => x.RemoveExerciseAsync(WorkoutTemplateId.ParseOrEmpty(templateId), exerciseId))
+            .ReturnsAsync(ServiceResult<RemoveExerciseResultDto>.Failure(
+                RemoveExerciseResultDto.Empty,
                 ServiceError.NotFound("WorkoutTemplateExercise")));
 
         // Act
@@ -376,9 +395,9 @@ public class WorkoutTemplateExercisesControllerTests
         var exerciseIdString = exerciseId.ToString();
         
         autoMocker.GetMock<IWorkoutTemplateExerciseService>()
-            .Setup(x => x.RemoveExerciseAsync(exerciseId))
-            .ReturnsAsync(ServiceResult<BooleanResultDto>.Failure(
-                new BooleanResultDto { Value = false },
+            .Setup(x => x.RemoveExerciseAsync(WorkoutTemplateId.ParseOrEmpty(templateId), exerciseId))
+            .ReturnsAsync(ServiceResult<RemoveExerciseResultDto>.Failure(
+                RemoveExerciseResultDto.Empty,
                 ServiceError.Unauthorized("Access denied")));
 
         // Act
@@ -405,9 +424,9 @@ public class WorkoutTemplateExercisesControllerTests
         };
         
         autoMocker.GetMock<IWorkoutTemplateExerciseService>()
-            .Setup(x => x.RemoveExerciseAsync(exerciseId))
-            .ReturnsAsync(ServiceResult<BooleanResultDto>.Failure(
-                new BooleanResultDto { Value = false },
+            .Setup(x => x.RemoveExerciseAsync(WorkoutTemplateId.ParseOrEmpty(templateId), exerciseId))
+            .ReturnsAsync(ServiceResult<RemoveExerciseResultDto>.Failure(
+                RemoveExerciseResultDto.Empty,
                 expectedErrors));
 
         // Act
@@ -435,25 +454,28 @@ public class WorkoutTemplateExercisesControllerTests
             SequenceOrder = 2
         };
         
-        var expectedDto = WorkoutTemplateExerciseDtoBuilder.Create().Build();
+        var expectedResultDto = new AddExerciseResultDto(
+            new List<WorkoutTemplateExerciseDto> { WorkoutTemplateExerciseDtoBuilder.Create().Build() },
+            "Exercise added successfully");
         
-        AddExerciseToTemplateCommand? capturedCommand = null;
+        WorkoutTemplateId? capturedTemplateId = null;
+        AddExerciseDto? capturedDto = null;
         autoMocker.GetMock<IWorkoutTemplateExerciseService>()
-            .Setup(x => x.AddExerciseAsync(It.IsAny<AddExerciseToTemplateCommand>()))
-            .Callback<AddExerciseToTemplateCommand>(cmd => capturedCommand = cmd)
-            .ReturnsAsync(ServiceResult<WorkoutTemplateExerciseDto>.Success(expectedDto));
+            .Setup(x => x.AddExerciseAsync(It.IsAny<WorkoutTemplateId>(), It.IsAny<AddExerciseDto>()))
+            .Callback<WorkoutTemplateId, AddExerciseDto>((tId, dto) => { capturedTemplateId = tId; capturedDto = dto; })
+            .ReturnsAsync(ServiceResult<AddExerciseResultDto>.Success(expectedResultDto));
 
         // Act
         await controller.AddExerciseToTemplate(templateId, request);
 
         // Assert
-        capturedCommand.Should().NotBeNull();
-        // The controller parses the templateId string to create WorkoutTemplateId, so compare the parsed result
-        capturedCommand!.WorkoutTemplateId.Should().Be(WorkoutTemplateId.ParseOrEmpty(templateId));
-        capturedCommand!.ExerciseId.Should().Be(ExerciseId.ParseOrEmpty(request.ExerciseId));
-        capturedCommand!.Zone.Should().Be(request.Zone);
-        capturedCommand!.Notes.Should().Be(request.Notes);
-        capturedCommand!.SequenceOrder.Should().Be(request.SequenceOrder);
+        capturedTemplateId.Should().NotBeNull();
+        capturedDto.Should().NotBeNull();
+        capturedTemplateId.Should().Be(WorkoutTemplateId.ParseOrEmpty(templateId));
+        capturedDto!.ExerciseId.Should().Be(ExerciseId.ParseOrEmpty(request.ExerciseId));
+        capturedDto!.Phase.Should().Be(request.Zone);
+        capturedDto!.Metadata.Should().Be(request.Notes ?? string.Empty);
+        capturedDto!.RoundNumber.Should().Be(1);
     }
 
     [Fact]
@@ -471,11 +493,13 @@ public class WorkoutTemplateExercisesControllerTests
             Notes = "Focus on form"
         };
         
-        var expectedDto = WorkoutTemplateExerciseDtoBuilder.Create().Build();
+        var expectedResultDto = new AddExerciseResultDto(
+            new List<WorkoutTemplateExerciseDto> { WorkoutTemplateExerciseDtoBuilder.Create().Build() },
+            "Exercise added successfully");
         
         autoMocker.GetMock<IWorkoutTemplateExerciseService>()
-            .Setup(x => x.AddExerciseAsync(It.IsAny<AddExerciseToTemplateCommand>()))
-            .ReturnsAsync(ServiceResult<WorkoutTemplateExerciseDto>.Success(expectedDto));
+            .Setup(x => x.AddExerciseAsync(It.IsAny<WorkoutTemplateId>(), It.IsAny<AddExerciseDto>()))
+            .ReturnsAsync(ServiceResult<AddExerciseResultDto>.Success(expectedResultDto));
 
         // Act
         await controller.AddExerciseToTemplate(templateId, request);

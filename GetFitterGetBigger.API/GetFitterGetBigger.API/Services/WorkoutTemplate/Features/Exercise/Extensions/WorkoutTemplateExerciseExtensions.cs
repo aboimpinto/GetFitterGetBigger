@@ -13,24 +13,11 @@ public static class WorkoutTemplateExerciseExtensions
         {
             Id = entity.Id.ToString(),
             Exercise = entity.Exercise != null ? MapExerciseToDto(entity.Exercise) : ExerciseDto.Empty,
-            Zone = entity.Zone.ToString(),
-            SequenceOrder = entity.SequenceOrder,
+            Phase = entity.Zone.ToString(), // Map Zone to Phase for new enhanced DTO
+            RoundNumber = 1, // Default round number since entity doesn't have rounds yet
+            OrderInRound = entity.SequenceOrder, // Map SequenceOrder to OrderInRound
+            Metadata = "{}", // Default empty JSON metadata since entity doesn't have it yet
             Notes = entity.Notes,
-            SetConfigurations = entity.Configurations
-                .OrderBy(c => c.SetNumber)
-                .Select(c => new SetConfigurationDto
-                {
-                    Id = c.Id.ToString(),
-                    SetNumber = c.SetNumber,
-                    TargetReps = c.TargetReps,
-                    TargetWeight = c.TargetWeight,
-                    TargetTime = c.TargetTimeSeconds,
-                    RestSeconds = c.RestSeconds,
-                    Notes = null,
-                    CreatedAt = DateTime.UtcNow,
-                    UpdatedAt = DateTime.UtcNow
-                })
-                .ToList(),
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };

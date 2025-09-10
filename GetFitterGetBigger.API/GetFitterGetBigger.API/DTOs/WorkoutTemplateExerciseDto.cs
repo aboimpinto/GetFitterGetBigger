@@ -42,23 +42,6 @@ public record WorkoutTemplateExerciseDto : IEmptyDto<WorkoutTemplateExerciseDto>
     /// </summary>
     public string? Notes { get; init; }
 
-    /// <summary>
-    /// Set configurations for this exercise (legacy - being replaced by Metadata)
-    /// </summary>
-    [Obsolete("Use Metadata instead. This will be removed in future versions.")]
-    public List<SetConfigurationDto> SetConfigurations { get; init; } = new();
-
-    /// <summary>
-    /// The zone this exercise belongs to (legacy - use Phase instead)
-    /// </summary>
-    [Obsolete("Use Phase instead. This will be removed in future versions.")]
-    public string Zone { get; init; } = string.Empty;
-
-    /// <summary>
-    /// The sequence order within the zone (legacy - use OrderInRound instead)
-    /// </summary>
-    [Obsolete("Use OrderInRound instead. This will be removed in future versions.")]
-    public int SequenceOrder { get; init; }
 
     /// <summary>
     /// Created timestamp

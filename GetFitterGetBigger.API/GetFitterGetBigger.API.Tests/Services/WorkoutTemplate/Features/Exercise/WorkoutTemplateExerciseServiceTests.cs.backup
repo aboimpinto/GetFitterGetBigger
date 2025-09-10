@@ -35,7 +35,7 @@ public class WorkoutTemplateExerciseServiceTests
         var emptyId = WorkoutTemplateId.Empty;
 
         // Act
-        var result = await testee.GetByWorkoutTemplateAsync(emptyId);
+        var result = await testee.GetTemplateExercisesAsync(emptyId);
 
         // Assert
         result.IsSuccess.Should().BeFalse();
@@ -93,22 +93,25 @@ public class WorkoutTemplateExerciseServiceTests
         var testee = autoMocker.CreateInstance<WorkoutTemplateExerciseService>();
 
         // Act
-        var result = await testee.GetByWorkoutTemplateAsync(workoutTemplateId);
+        var result = await testee.GetTemplateExercisesAsync(workoutTemplateId);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
         result.Data.Should().NotBeNull();
-        result.Data.WorkoutTemplateId.Should().Be(workoutTemplateId.ToString());
+        result.Data.TemplateId.Should().Be(workoutTemplateId);
         
-        result.Data.WarmupExercises.Should().HaveCount(1);
-        result.Data.WarmupExercises[0].Zone.Should().Be(warmupZone);
+        result.Data.Warmup.Rounds.Should().HaveCount(1);
+        result.Data.Warmup.Rounds[0].Exercises.Should().HaveCount(1);
+        result.Data.Warmup.Rounds[0].Exercises[0].Phase.Should().Be("Warmup");
         
-        result.Data.MainExercises.Should().HaveCount(2);
-        result.Data.MainExercises[0].SequenceOrder.Should().Be(1);
-        result.Data.MainExercises[1].SequenceOrder.Should().Be(2);
+        result.Data.Workout.Rounds.Should().HaveCount(1);
+        result.Data.Workout.Rounds[0].Exercises.Should().HaveCount(2);
+        result.Data.Workout.Rounds[0].Exercises[0].OrderInRound.Should().Be(1);
+        result.Data.Workout.Rounds[0].Exercises[1].OrderInRound.Should().Be(2);
         
-        result.Data.CooldownExercises.Should().HaveCount(1);
-        result.Data.CooldownExercises[0].Zone.Should().Be(cooldownZone);
+        result.Data.Cooldown.Rounds.Should().HaveCount(1);
+        result.Data.Cooldown.Rounds[0].Exercises.Should().HaveCount(1);
+        result.Data.Cooldown.Rounds[0].Exercises[0].Phase.Should().Be("Cooldown");
     }
 
     #endregion
@@ -124,7 +127,7 @@ public class WorkoutTemplateExerciseServiceTests
         var emptyId = WorkoutTemplateExerciseId.Empty;
 
         // Act
-        var result = await testee.GetByIdAsync(emptyId);
+        var result = await testee.GetExerciseByIdAsync(emptyId);
 
         // Assert
         result.IsSuccess.Should().BeFalse();
@@ -153,7 +156,7 @@ public class WorkoutTemplateExerciseServiceTests
         var testee = autoMocker.CreateInstance<WorkoutTemplateExerciseService>();
 
         // Act
-        var result = await testee.GetByIdAsync(exerciseId);
+        var result = await testee.GetExerciseByIdAsync(exerciseId);
 
         // Assert
         result.IsSuccess.Should().BeFalse();
@@ -188,7 +191,7 @@ public class WorkoutTemplateExerciseServiceTests
         var testee = autoMocker.CreateInstance<WorkoutTemplateExerciseService>();
 
         // Act
-        var result = await testee.GetByIdAsync(exerciseId);
+        var result = await testee.GetExerciseByIdAsync(exerciseId);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
@@ -288,8 +291,8 @@ public class WorkoutTemplateExerciseServiceTests
 
         // Assert
         result.IsSuccess.Should().BeFalse();
-        // ServiceValidate pattern returns ValidationFailed for all validation failures including existence checks
-        result.PrimaryErrorCode.Should().Be(ServiceErrorCode.ValidationFailed);
+        // ServiceValidate pattern returns NotFound for existence checks with ServiceError.NotFound
+        result.PrimaryErrorCode.Should().Be(ServiceErrorCode.NotFound);
         result.Errors.Should().Contain(WorkoutTemplateExerciseErrorMessages.WorkoutTemplateNotFound);
     }
 
@@ -615,7 +618,7 @@ public class WorkoutTemplateExerciseServiceTests
 
         // Assert
         result.IsSuccess.Should().BeFalse();
-        result.PrimaryErrorCode.Should().Be(ServiceErrorCode.ValidationFailed);
+        result.PrimaryErrorCode.Should().Be(ServiceErrorCode.NotFound);
     }
 
     // Additional ValidateExercisesAsync tests would follow the same pattern...

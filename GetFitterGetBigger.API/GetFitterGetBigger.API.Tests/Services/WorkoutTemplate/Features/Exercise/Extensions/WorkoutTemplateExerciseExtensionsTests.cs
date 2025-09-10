@@ -78,8 +78,8 @@ public class WorkoutTemplateExerciseExtensionsTests
         // Assert
         result.Should().NotBeNull();
         result.Id.Should().Be(entity.Id.ToString());
-        result.Zone.Should().Be(mainZone);
-        result.SequenceOrder.Should().Be(sequenceOrder);
+        result.Phase.Should().Be(mainZone);
+        result.OrderInRound.Should().Be(sequenceOrder);
         result.Notes.Should().Be(testNotes);
         
         result.Exercise.Should().NotBeNull();
@@ -88,21 +88,14 @@ public class WorkoutTemplateExerciseExtensionsTests
         result.Exercise.Description.Should().Be(exerciseDescription);
         result.Exercise.Difficulty.Value.Should().Be(difficultyValue);
         
-        result.SetConfigurations.Should().HaveCount(2);
-        result.SetConfigurations[0].SetNumber.Should().Be(setNumber1);
-        result.SetConfigurations[0].TargetReps.Should().Be(targetReps1);
-        result.SetConfigurations[0].TargetWeight.Should().Be(targetWeight1);
-        result.SetConfigurations[1].SetNumber.Should().Be(setNumber2);
-        result.SetConfigurations[1].TargetReps.Should().Be(targetReps2);
-        result.SetConfigurations[1].TargetWeight.Should().Be(targetWeight2);
+        // SetConfigurations functionality was removed in refactoring - now using Metadata
+        result.Metadata.Should().Be("{}");
     }
 
     [Fact]
     public void ToDto_WhenExerciseIsNull_ShouldReturnEmptyExerciseDto()
     {
         // Arrange
-        const string warmupZone = "Warmup";
-        
         var entity = new WorkoutTemplateExerciseBuilder()
             .WithId(WorkoutTemplateExerciseId.New())
             .WithExercise(null)
@@ -134,35 +127,11 @@ public class WorkoutTemplateExerciseExtensionsTests
 
         // Assert
         result.Should().NotBeNull();
-        result.SetConfigurations.Should().NotBeNull();
-        result.SetConfigurations.Should().BeEmpty();
+        // SetConfigurations functionality was removed in refactoring - now using Metadata
+        result.Metadata.Should().Be("{}");
     }
 
-    [Fact]
-    public void ToDto_ShouldOrderSetConfigurationsBySetNumber()
-    {
-        // Arrange
-        const int setNumber1 = 1;
-        const int setNumber2 = 2;
-        const int setNumber3 = 3;
-        
-        var setConfig3 = new SetConfigurationBuilder().WithSetNumber(setNumber3).Build();
-        var setConfig1 = new SetConfigurationBuilder().WithSetNumber(setNumber1).Build();
-        var setConfig2 = new SetConfigurationBuilder().WithSetNumber(setNumber2).Build();
-        
-        var entity = new WorkoutTemplateExerciseBuilder()
-            .WithConfigurations([setConfig3, setConfig1, setConfig2])
-            .BuildWithNavigationProperties();
-
-        // Act
-        var result = entity.ToDto();
-
-        // Assert
-        result.SetConfigurations.Should().HaveCount(3);
-        result.SetConfigurations[0].SetNumber.Should().Be(setNumber1);
-        result.SetConfigurations[1].SetNumber.Should().Be(setNumber2);
-        result.SetConfigurations[2].SetNumber.Should().Be(setNumber3);
-    }
+    // ToDto_ShouldOrderSetConfigurationsBySetNumber test removed - SetConfigurations functionality was removed in refactoring
 
     #endregion
 
@@ -200,11 +169,11 @@ public class WorkoutTemplateExerciseExtensionsTests
         // Assert
         result.Should().HaveCount(2);
         
-        var warmupRound = result.FirstOrDefault(r => r.Exercises.Any(e => e.Zone == warmupZone));
+        var warmupRound = result.FirstOrDefault(r => r.Exercises.Any(e => e.Phase == warmupZone));
         warmupRound.Should().NotBeNull();
         warmupRound!.Exercises.Should().HaveCount(2);
         
-        var mainRound = result.FirstOrDefault(r => r.Exercises.Any(e => e.Zone == mainZone));
+        var mainRound = result.FirstOrDefault(r => r.Exercises.Any(e => e.Phase == mainZone));
         mainRound.Should().NotBeNull();
         mainRound!.Exercises.Should().HaveCount(1);
     }
@@ -339,12 +308,24 @@ public class WorkoutTemplateExerciseExtensionsTests
     [InlineData("Invalid")]
     [InlineData("")]
     [InlineData(" ")]
-    [InlineData(null)]
     [InlineData("Phase1")]
     public void IsValidPhase_WhenPhaseIsInvalid_ShouldReturnFalse(string phase)
     {
         // Act
         var result = phase.IsValidPhase();
+
+        // Assert
+        result.Should().BeFalse();
+    }
+
+    [Fact]
+    public void IsValidPhase_WhenPhaseIsNull_ShouldReturnFalse()
+    {
+        // Arrange
+        string? phase = null;
+
+        // Act
+        var result = phase!.IsValidPhase(); // Intentionally testing null
 
         // Assert
         result.Should().BeFalse();

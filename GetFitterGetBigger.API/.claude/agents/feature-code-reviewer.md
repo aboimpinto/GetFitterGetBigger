@@ -168,7 +168,26 @@ Before reviewing files:
 - Note any build errors or test failures
 - Check for documentation updates if new public APIs added
 
-### Step 5: Cross-File Consistency Checks
+### Step 5: Dead Code Analysis (Unreferenced Elements)
+Analyze for unreferenced methods, properties, and fields:
+- **For each service/handler class reviewed**:
+  - List all public methods, properties, and fields
+  - Search for references across the codebase using grep/ripgrep
+  - Flag methods only referenced in their own test files as potentially unused
+  - Check for interface methods that have no controller/service calls
+- **For DTOs and Models**:
+  - Identify properties never accessed outside their definition
+  - Flag obsolete/deprecated members still present
+- **For Extensions**:
+  - Find extension methods never called
+  - Identify helper methods only used internally
+- **Track**:
+  - Method/Property name
+  - File location (file:line)
+  - Reference count (excluding tests)
+  - Recommendation (Remove/Keep/Investigate)
+
+### Step 6: Cross-File Consistency Checks
 Perform holistic review across all changed files:
 - **Service-Test Alignment**: If a service was modified, verify tests were updated
 - **Controller-Service Alignment**: If service interface changed, verify controller updated
@@ -178,7 +197,7 @@ Perform holistic review across all changed files:
 - **Migration Requirements**: If database entities changed, check for migrations
 - **Breaking Changes**: Identify any breaking changes in public APIs
 
-### Step 6: Calculate Metrics
+### Step 7: Calculate Metrics
 For each file:
 - Count total rules applicable
 - Count violations found
@@ -191,7 +210,7 @@ For overall feature:
 - Total violations count (critical and minor)
 - Build and test status
 
-### Step 7: Generate Report
+### Step 8: Generate Report
 Create a detailed markdown report with:
 
 ```markdown
@@ -245,6 +264,32 @@ Report File: [Final determined filename]
 
 [Continue for all files and commits...]
 
+## Dead Code Analysis (Unreferenced Elements)
+
+### Unreferenced Methods
+| Method | Location | References (excl. tests) | Status |
+|--------|----------|--------------------------|--------|
+| `MethodName()` | Service.cs:123 | 0 | 🔴 Unused - Consider removal |
+| `HelperMethod()` | Handler.cs:45 | 1 (internal only) | 🟡 Internal use only |
+| `ObsoleteMethod()` | Service.cs:200 | 0 | 🔴 Marked obsolete - Remove |
+
+### Unreferenced Properties
+| Property | Location | References | Status |
+|----------|----------|------------|--------|
+| `UnusedProp` | Dto.cs:15 | 0 | 🔴 Never accessed |
+| `LegacyField` | Model.cs:30 | 2 (tests only) | 🟡 Only in tests |
+
+### Unreferenced Extension Methods
+| Extension | Location | Usage Count | Recommendation |
+|-----------|----------|-------------|----------------|
+| `ToObsoleteDto()` | Extensions.cs:89 | 0 | Remove |
+| `InternalHelper()` | Extensions.cs:120 | 1 (self) | Make private |
+
+### Summary
+- **Total Unreferenced Elements**: X
+- **Recommended for Removal**: Y
+- **Needs Investigation**: Z
+
 ## Critical Issues Summary
 [List all GOLDEN RULE violations with severity]
 
@@ -262,7 +307,7 @@ Report File: [Final determined filename]
 - Next Review: [Run after fixing violations]
 ```
 
-### Step 8: Create Fix Tasks (If Violations Found)
+### Step 9: Create Fix Tasks (If Violations Found)
 If violations were found:
 1. **Determine where to add tasks**:
    - If phases exist: Open the active phase file (e.g., `Phases/Phase 3: Repository Layer.md`)
@@ -295,9 +340,9 @@ If violations were found:
    - Priority (Critical/High/Medium/Low)
 6. IMPORTANT: Always use ONE "Code Review" phase for ALL reviews, adding subsections for each review iteration
 
-### Step 9: Save Report and Update Tracking
+### Step 10: Save Report and Update Tracking
 
-#### 9.1: Determine Report Location and Filename
+#### 10.1: Determine Report Location and Filename
 - **IMPORTANT**: Phase detection should have been done in Step 1 with user confirmation
 - Use the confirmed phase information:
   1. For phase-based structure: Create phase-specific subfolder: `code-reviews/Phase_X_[PhaseName]/`
@@ -309,13 +354,13 @@ If violations were found:
   4. Example: `Code-Review-Phase-3-Repository-Layer-2025-01-08-15-30-REQUIRES_CHANGES.md`
   5. For non-phase structure: Use existing pattern `code-review-report-YYYY-MM-DD-XXX.md`
 
-#### 9.2: Save the Report
+#### 10.2: Save the Report
 - Save report in the appropriate location:
   - If phases exist: `/memory-bank/features/[STATUS]/[FEAT-XXX]/code-reviews/Phase_X_[PhaseName]/`
   - If no phases: `/memory-bank/features/[STATUS]/[FEAT-XXX]/code-reviews/`
 - Include phase information in report header if applicable
 
-#### 9.3: Update the Appropriate Checkpoint
+#### 10.3: Update the Appropriate Checkpoint
 - **CRITICAL**: Determine where to update the checkpoint:
   1. If `Phases/` directory exists:
      - Open the active phase document (e.g., `Phases/Phase 2: Models & Database.md`)

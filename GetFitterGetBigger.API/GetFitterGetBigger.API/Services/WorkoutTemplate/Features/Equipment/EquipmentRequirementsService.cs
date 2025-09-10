@@ -1,5 +1,6 @@
 using GetFitterGetBigger.API.Constants.ErrorMessages;
 using GetFitterGetBigger.API.DTOs;
+using GetFitterGetBigger.API.DTOs.WorkoutTemplateExercise;
 using GetFitterGetBigger.API.Models;
 using GetFitterGetBigger.API.Models.SpecializedIds;
 using GetFitterGetBigger.API.Repositories.Interfaces;
@@ -73,7 +74,7 @@ public class EquipmentRequirementsService(
     private async Task<ServiceResult<IEnumerable<EquipmentDto>>> LoadRequiredEquipmentAsync(WorkoutTemplateId id)
     {
         // Get all template exercises using WorkoutTemplateExerciseService
-        var templateExercisesResult = await workoutTemplateExerciseService.GetByWorkoutTemplateAsync(id);
+        var templateExercisesResult = await workoutTemplateExerciseService.GetTemplateExercisesAsync(id);
         
         var result = !templateExercisesResult.IsSuccess
             ? ServiceResult<IEnumerable<EquipmentDto>>.Failure([], templateExercisesResult.Errors)
@@ -82,11 +83,28 @@ public class EquipmentRequirementsService(
         return result;
     }
     
-    private async Task<ServiceResult<IEnumerable<EquipmentDto>>> ProcessTemplateExercisesAsync(WorkoutTemplateExerciseListDto sessionData)
+    private async Task<ServiceResult<IEnumerable<EquipmentDto>>> ProcessTemplateExercisesAsync(WorkoutTemplateExercisesDto exercisesData)
     {
-        var templateExercises = sessionData.WarmupExercises
-            .Concat(sessionData.MainExercises)
-            .Concat(sessionData.CooldownExercises);
+        // Extract all exercises from all phases and rounds
+        var templateExercises = new List<WorkoutTemplateExerciseDto>();
+        
+        // Add exercises from Warmup phase
+        foreach (var round in exercisesData.Warmup.Rounds)
+        {
+            templateExercises.AddRange(round.Exercises);
+        }
+        
+        // Add exercises from Workout phase  
+        foreach (var round in exercisesData.Workout.Rounds)
+        {
+            templateExercises.AddRange(round.Exercises);
+        }
+        
+        // Add exercises from Cooldown phase
+        foreach (var round in exercisesData.Cooldown.Rounds)
+        {
+            templateExercises.AddRange(round.Exercises);
+        }
             
         var result = !templateExercises.Any()
             ? ServiceResult<IEnumerable<EquipmentDto>>.Success([])

@@ -422,12 +422,22 @@ private async Task<List<WorkoutTemplateExercise>> FindOrphanedExercisesAsync(
 - Integration Tests: End-to-end service functionality
 
 **Code Review Status:**
-- Status: [To be added after review]
-- Report: [To be added after review]
+- **Initial Review**: `/memory-bank/features/2-IN_PROGRESS/FEAT-031-workout-template-exercise-management/code-reviews/Phase_4_Service_Layer/Code-Review-Phase-4-Service-Layer-2025-01-09-18-15-APPROVED_WITH_NOTES.md`
+  - Status: APPROVED_WITH_NOTES (3 minor issues: magic strings and TODO comment)
+- **Post-Fix Review**: `/memory-bank/features/2-IN_PROGRESS/FEAT-031-workout-template-exercise-management/code-reviews/Phase_4_Service_Layer/Code-Review-Phase-4-Service-Layer-2025-09-09-20-45-REQUIRES_CHANGES.md`
+  - Status: 🔴 **REQUIRES_CHANGES** (73% approval rate)
+  - Critical Issues: 8 violations found (build failures, primary constructor violation, stub implementations)
+  - Architecture Score: 95% (excellent handler pattern usage)
+  - Blocking Issues:
+    - 4 build errors in test extensions must be fixed
+    - Primary constructor Golden Rule #29 violation  
+    - Multiple stub method implementations
+  - Next Action: Fix critical issues and re-run code review
 
 **Git Commits (Phase 4):**
 - 2d291226: feat(feat-031): implement comprehensive transactional validation pattern and service architecture refactoring
 - 7ba4d325: feat(feat-031): complete Phase 4 service layer with advanced validation patterns and chained extensions
+- 43200c50: fix(feat-031): address Phase 4 code review minor issues (removed TODO, added error constants)
 
 **Phase 4 Achievements:**
 - Implemented advanced transactional validation builder pattern
@@ -435,3 +445,28 @@ private async Task<List<WorkoutTemplateExercise>> FindOrphanedExercisesAsync(
 - Enhanced service architecture with improved separation of concerns
 - Added fluent chained extensions for exercise operations
 - Established robust validation chains for business rule enforcement
+
+## Code Review Tasks
+_All code review violations and fixes are tracked here_
+
+### Review: 2025-09-09-20-45 - Code-Review-Phase-4-Service-Layer-REQUIRES_CHANGES
+
+**🔴 Critical Issues (Must Fix Before Approval):**
+- [ ] **Fix Build Errors**: Resolve 4 compilation errors in AutoMockerWorkoutTemplateExerciseServiceExtensions.cs
+  - Line 107: WorkoutTemplateExerciseId to string conversion
+  - Line 108: Missing WorkoutTemplateId property in DTO  
+  - Line 109: Missing ExerciseId property in DTO
+  - Line 157: BooleanResultDto constructor issue
+- [ ] **Implement Primary Constructor**: Convert WorkoutTemplateExerciseService to primary constructor (Golden Rule #29 violation)
+- [ ] **Complete Stub Methods**: Either implement or remove 6 stub methods returning hardcoded failures
+
+**🟡 High Priority Issues:**
+- [ ] **Remove Defensive Null Checks**: Fix ValidationHandler methods (lines 28, 37, 46, 57) - trust Empty pattern
+- [ ] **Interface Cleanup**: Move 9 obsolete methods to separate legacy interface 
+- [ ] **Fix Nullable Returns**: Use Empty pattern instead of null in AutoLinkingHandler (lines 129, 174)
+
+**🟢 Medium Priority Issues:**
+- [ ] **Remove Service Logging**: Move logging from GetExerciseSuggestionsAsync (line 423) to handler level
+- [ ] **Fix Double Negations**: Address remaining validation assertion issues
+
+**Re-Review Required**: After fixing critical issues, run code review again for approval

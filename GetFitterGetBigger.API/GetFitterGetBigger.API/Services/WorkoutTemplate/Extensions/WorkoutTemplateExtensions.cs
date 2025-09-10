@@ -51,10 +51,11 @@ public static class WorkoutTemplateExtensions
         {
             Id = exercise.Id.ToString(),
             Exercise = exercise.Exercise?.ToDto() ?? ExerciseDto.Empty,
-            Zone = exercise.Zone.ToString(),
-            SequenceOrder = exercise.SequenceOrder,
+            Phase = exercise.Zone.ToString(), // Map Zone to Phase for new enhanced DTO
+            RoundNumber = 1, // Default round number since entity doesn't have rounds yet
+            OrderInRound = exercise.SequenceOrder, // Map SequenceOrder to OrderInRound
+            Metadata = "{}", // Default empty JSON metadata since entity doesn't have it yet
             Notes = exercise.Notes,
-            SetConfigurations = exercise.Configurations?.Select(c => c.ToDto()).ToList() ?? [],
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };

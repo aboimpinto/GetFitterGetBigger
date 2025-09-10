@@ -152,32 +152,6 @@ public class WorkoutTemplateExerciseDtoTests
         dto.Metadata.Should().Be("{}");
         dto.Exercise.Should().NotBeNull();
         
-        // Legacy properties should still exist
-        dto.Zone.Should().Be(string.Empty);
-        dto.SequenceOrder.Should().Be(0);
-        dto.SetConfigurations.Should().NotBeNull().And.BeEmpty();
     }
 
-    [Fact]
-    public void WorkoutTemplateExerciseDto_Should_HaveLegacyPropertiesMarkedObsolete()
-    {
-        // Arrange
-        var dtoType = typeof(WorkoutTemplateExerciseDto);
-        
-        // Act & Assert
-        var zoneProperty = dtoType.GetProperty(nameof(WorkoutTemplateExerciseDto.Zone));
-        zoneProperty.Should().NotBeNull();
-        zoneProperty!.GetCustomAttributes(typeof(ObsoleteAttribute), false)
-            .Should().HaveCount(1);
-            
-        var sequenceOrderProperty = dtoType.GetProperty(nameof(WorkoutTemplateExerciseDto.SequenceOrder));
-        sequenceOrderProperty.Should().NotBeNull();
-        sequenceOrderProperty!.GetCustomAttributes(typeof(ObsoleteAttribute), false)
-            .Should().HaveCount(1);
-            
-        var setConfigurationsProperty = dtoType.GetProperty(nameof(WorkoutTemplateExerciseDto.SetConfigurations));
-        setConfigurationsProperty.Should().NotBeNull();
-        setConfigurationsProperty!.GetCustomAttributes(typeof(ObsoleteAttribute), false)
-            .Should().HaveCount(1);
-    }
 }

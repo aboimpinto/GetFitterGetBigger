@@ -25,7 +25,7 @@ public class ValidationHandler : IValidationHandler
         var repository = unitOfWork.GetRepository<IWorkoutTemplateRepository>();
         
         var template = await repository.GetByIdAsync(templateId);
-        return template != null && !template.IsEmpty && template.WorkoutState?.Value == "Draft";
+        return !template.IsEmpty && template.WorkoutState?.Value == "Draft";
     }
 
     public async Task<bool> IsExerciseActiveAsync(ExerciseId exerciseId)
@@ -34,7 +34,7 @@ public class ValidationHandler : IValidationHandler
         var repository = unitOfWork.GetRepository<IExerciseRepository>();
         
         var exercise = await repository.GetByIdAsync(exerciseId);
-        return exercise != null && !exercise.IsEmpty && exercise.IsActive;
+        return !exercise.IsEmpty && exercise.IsActive;
     }
 
     public async Task<bool> DoesTemplateExistAsync(WorkoutTemplateId templateId)
@@ -43,7 +43,7 @@ public class ValidationHandler : IValidationHandler
         var repository = unitOfWork.GetRepository<IWorkoutTemplateRepository>();
         
         var template = await repository.GetByIdAsync(templateId);
-        return template != null && !template.IsEmpty;
+        return !template.IsEmpty;
     }
 
     public async Task<bool> DoesExerciseExistInTemplateAsync(
@@ -54,7 +54,7 @@ public class ValidationHandler : IValidationHandler
         var repository = unitOfWork.GetRepository<IWorkoutTemplateExerciseRepository>();
         
         var exercise = await repository.GetByIdWithDetailsAsync(exerciseId);
-        return exercise != null && !exercise.IsEmpty && exercise.WorkoutTemplateId == templateId;
+        return !exercise.IsEmpty && exercise.WorkoutTemplateId == templateId;
     }
 
     public async Task<bool> DoesRoundExistAsync(

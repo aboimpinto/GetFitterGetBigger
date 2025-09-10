@@ -10,10 +10,11 @@ public class WorkoutTemplateExerciseDtoTestBuilder
 {
     private string _id = WorkoutTemplateExerciseId.New().ToString();
     private ExerciseDto _exercise = ExerciseDtoTestBuilder.Default().Build();
-    private string _zone = "Main";
-    private int _sequenceOrder = 1;
+    private string _phase = "Workout";
+    private int _roundNumber = 1;
+    private int _orderInRound = 1;
+    private string _metadata = "{}";
     private string? _notes = "Test notes";
-    private List<SetConfigurationDto> _setConfigurations = new();
     private DateTime _createdAt = DateTime.UtcNow;
     private DateTime _updatedAt = DateTime.UtcNow;
 
@@ -31,27 +32,33 @@ public class WorkoutTemplateExerciseDtoTestBuilder
         return this;
     }
 
-    public WorkoutTemplateExerciseDtoTestBuilder WithZone(string zone)
+    public WorkoutTemplateExerciseDtoTestBuilder WithPhase(string phase)
     {
-        _zone = zone;
+        _phase = phase;
         return this;
     }
 
-    public WorkoutTemplateExerciseDtoTestBuilder WithSequenceOrder(int sequenceOrder)
+    public WorkoutTemplateExerciseDtoTestBuilder WithRoundNumber(int roundNumber)
     {
-        _sequenceOrder = sequenceOrder;
+        _roundNumber = roundNumber;
+        return this;
+    }
+
+    public WorkoutTemplateExerciseDtoTestBuilder WithOrderInRound(int orderInRound)
+    {
+        _orderInRound = orderInRound;
+        return this;
+    }
+
+    public WorkoutTemplateExerciseDtoTestBuilder WithMetadata(string metadata)
+    {
+        _metadata = metadata;
         return this;
     }
 
     public WorkoutTemplateExerciseDtoTestBuilder WithNotes(string? notes)
     {
         _notes = notes;
-        return this;
-    }
-
-    public WorkoutTemplateExerciseDtoTestBuilder WithSetConfigurations(List<SetConfigurationDto> setConfigurations)
-    {
-        _setConfigurations = setConfigurations;
         return this;
     }
 
@@ -73,10 +80,11 @@ public class WorkoutTemplateExerciseDtoTestBuilder
         {
             Id = _id,
             Exercise = _exercise,
-            Zone = _zone,
-            SequenceOrder = _sequenceOrder,
+            Phase = _phase,
+            RoundNumber = _roundNumber,
+            OrderInRound = _orderInRound,
+            Metadata = _metadata,
             Notes = _notes,
-            SetConfigurations = _setConfigurations,
             CreatedAt = _createdAt,
             UpdatedAt = _updatedAt
         };

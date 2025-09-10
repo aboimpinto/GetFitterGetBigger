@@ -1,5 +1,6 @@
 using FluentAssertions;
 using GetFitterGetBigger.API.DTOs;
+using GetFitterGetBigger.API.DTOs.WorkoutTemplateExercise;
 using GetFitterGetBigger.API.Models;
 using GetFitterGetBigger.API.Models.SpecializedIds;
 using GetFitterGetBigger.API.Repositories.Interfaces;
@@ -63,16 +64,18 @@ public class EquipmentRequirementsServiceTests
         // Setup mocks
         autoMocker.SetupWorkoutTemplateExists(templateId, exists: true);
         
-        var emptyExerciseCollection = new WorkoutTemplateExerciseListDto
-        {
-            WarmupExercises = [],
-            MainExercises = [],
-            CooldownExercises = []
-        };
+        var emptyExerciseCollection = new WorkoutTemplateExercisesDto(
+            templateId,
+            "Test Template",
+            ExecutionProtocolDto.Empty,
+            WorkoutPhaseDto.Empty,
+            WorkoutPhaseDto.Empty,
+            WorkoutPhaseDto.Empty
+        );
         
         autoMocker.GetMock<IWorkoutTemplateExerciseService>()
-            .Setup(x => x.GetByWorkoutTemplateAsync(templateId))
-            .ReturnsAsync(ServiceResult<WorkoutTemplateExerciseListDto>.Success(emptyExerciseCollection));
+            .Setup(x => x.GetTemplateExercisesAsync(templateId))
+            .ReturnsAsync(ServiceResult<WorkoutTemplateExercisesDto>.Success(emptyExerciseCollection));
         
         // Act
         var result = await testee.GetRequiredEquipmentAsync(templateId);
@@ -96,26 +99,29 @@ public class EquipmentRequirementsServiceTests
         autoMocker.SetupWorkoutTemplateExists(templateId, exists: true);
         
         // Setup template exercises
-        var exerciseCollection = new WorkoutTemplateExerciseListDto
-        {
-            WarmupExercises = [],
-            MainExercises = 
-            [
-                new WorkoutTemplateExerciseDto 
-                { 
-                    Exercise = new ExerciseDto { Id = exerciseId1.ToString() }
-                },
-                new WorkoutTemplateExerciseDto 
-                { 
-                    Exercise = new ExerciseDto { Id = exerciseId2.ToString() }
-                }
-            ],
-            CooldownExercises = []
-        };
+        var workoutRound = new RoundDto(1, [
+            new WorkoutTemplateExerciseDto 
+            { 
+                Exercise = new ExerciseDto { Id = exerciseId1.ToString() }
+            },
+            new WorkoutTemplateExerciseDto 
+            { 
+                Exercise = new ExerciseDto { Id = exerciseId2.ToString() }
+            }
+        ]);
+        
+        var exerciseCollection = new WorkoutTemplateExercisesDto(
+            templateId,
+            "Test Template",
+            ExecutionProtocolDto.Empty,
+            WorkoutPhaseDto.Empty,
+            new WorkoutPhaseDto([workoutRound]),
+            WorkoutPhaseDto.Empty
+        );
         
         autoMocker.GetMock<IWorkoutTemplateExerciseService>()
-            .Setup(x => x.GetByWorkoutTemplateAsync(templateId))
-            .ReturnsAsync(ServiceResult<WorkoutTemplateExerciseListDto>.Success(exerciseCollection));
+            .Setup(x => x.GetTemplateExercisesAsync(templateId))
+            .ReturnsAsync(ServiceResult<WorkoutTemplateExercisesDto>.Success(exerciseCollection));
         
         // Setup exercises with equipment
         var exercise1 = new ExerciseDto
@@ -176,22 +182,25 @@ public class EquipmentRequirementsServiceTests
         
         // Setup required equipment
         var exerciseId = ExerciseId.ParseOrEmpty("exercise-00000000-0000-0000-0000-000000000001");
-        var exerciseCollection = new WorkoutTemplateExerciseListDto
-        {
-            WarmupExercises = [],
-            MainExercises = 
-            [
-                new WorkoutTemplateExerciseDto 
-                { 
-                    Exercise = new ExerciseDto { Id = exerciseId.ToString() }
-                }
-            ],
-            CooldownExercises = []
-        };
+        var workoutRound = new RoundDto(1, [
+            new WorkoutTemplateExerciseDto 
+            { 
+                Exercise = new ExerciseDto { Id = exerciseId.ToString() }
+            }
+        ]);
+        
+        var exerciseCollection = new WorkoutTemplateExercisesDto(
+            templateId,
+            "Test Template",
+            ExecutionProtocolDto.Empty,
+            WorkoutPhaseDto.Empty,
+            new WorkoutPhaseDto([workoutRound]),
+            WorkoutPhaseDto.Empty
+        );
         
         autoMocker.GetMock<IWorkoutTemplateExerciseService>()
-            .Setup(x => x.GetByWorkoutTemplateAsync(templateId))
-            .ReturnsAsync(ServiceResult<WorkoutTemplateExerciseListDto>.Success(exerciseCollection));
+            .Setup(x => x.GetTemplateExercisesAsync(templateId))
+            .ReturnsAsync(ServiceResult<WorkoutTemplateExercisesDto>.Success(exerciseCollection));
         
         var exercise = new ExerciseDto
         {
@@ -234,22 +243,25 @@ public class EquipmentRequirementsServiceTests
         
         // Setup required equipment
         var exerciseId = ExerciseId.ParseOrEmpty("exercise-00000000-0000-0000-0000-000000000001");
-        var exerciseCollection = new WorkoutTemplateExerciseListDto
-        {
-            WarmupExercises = [],
-            MainExercises = 
-            [
-                new WorkoutTemplateExerciseDto 
-                { 
-                    Exercise = new ExerciseDto { Id = exerciseId.ToString() }
-                }
-            ],
-            CooldownExercises = []
-        };
+        var workoutRound = new RoundDto(1, [
+            new WorkoutTemplateExerciseDto 
+            { 
+                Exercise = new ExerciseDto { Id = exerciseId.ToString() }
+            }
+        ]);
+        
+        var exerciseCollection = new WorkoutTemplateExercisesDto(
+            templateId,
+            "Test Template",
+            ExecutionProtocolDto.Empty,
+            WorkoutPhaseDto.Empty,
+            new WorkoutPhaseDto([workoutRound]),
+            WorkoutPhaseDto.Empty
+        );
         
         autoMocker.GetMock<IWorkoutTemplateExerciseService>()
-            .Setup(x => x.GetByWorkoutTemplateAsync(templateId))
-            .ReturnsAsync(ServiceResult<WorkoutTemplateExerciseListDto>.Success(exerciseCollection));
+            .Setup(x => x.GetTemplateExercisesAsync(templateId))
+            .ReturnsAsync(ServiceResult<WorkoutTemplateExercisesDto>.Success(exerciseCollection));
             
         var exercise = new ExerciseDto
         {
@@ -291,39 +303,45 @@ public class EquipmentRequirementsServiceTests
         // Setup unit of work for both templates  
         autoMocker.SetupMultipleWorkoutTemplateExists(templateIds);
             
-        var exerciseCollection1 = new WorkoutTemplateExerciseListDto
-        {
-            MainExercises = 
-            [
-                new WorkoutTemplateExerciseDto 
-                { 
-                    Exercise = new ExerciseDto { Id = "exercise-00000000-0000-0000-0000-000000000001" }
-                }
-            ],
-            WarmupExercises = [],
-            CooldownExercises = []
-        };
+        var workoutRound1 = new RoundDto(1, [
+            new WorkoutTemplateExerciseDto 
+            { 
+                Exercise = new ExerciseDto { Id = "exercise-00000000-0000-0000-0000-000000000001" }
+            }
+        ]);
+        
+        var exerciseCollection1 = new WorkoutTemplateExercisesDto(
+            templateIds[0],
+            "Test Template 1",
+            ExecutionProtocolDto.Empty,
+            WorkoutPhaseDto.Empty,
+            new WorkoutPhaseDto([workoutRound1]),
+            WorkoutPhaseDto.Empty
+        );
         
         autoMocker.GetMock<IWorkoutTemplateExerciseService>()
-            .Setup(x => x.GetByWorkoutTemplateAsync(templateIds[0]))
-            .ReturnsAsync(ServiceResult<WorkoutTemplateExerciseListDto>.Success(exerciseCollection1));
+            .Setup(x => x.GetTemplateExercisesAsync(templateIds[0]))
+            .ReturnsAsync(ServiceResult<WorkoutTemplateExercisesDto>.Success(exerciseCollection1));
         
-        var exerciseCollection2 = new WorkoutTemplateExerciseListDto
-        {
-            MainExercises = 
-            [
-                new WorkoutTemplateExerciseDto 
-                { 
-                    Exercise = new ExerciseDto { Id = "exercise-00000000-0000-0000-0000-000000000002" }
-                }
-            ],
-            WarmupExercises = [],
-            CooldownExercises = []
-        };
+        var workoutRound2 = new RoundDto(1, [
+            new WorkoutTemplateExerciseDto 
+            { 
+                Exercise = new ExerciseDto { Id = "exercise-00000000-0000-0000-0000-000000000002" }
+            }
+        ]);
+        
+        var exerciseCollection2 = new WorkoutTemplateExercisesDto(
+            templateIds[1],
+            "Test Template 2",
+            ExecutionProtocolDto.Empty,
+            WorkoutPhaseDto.Empty,
+            new WorkoutPhaseDto([workoutRound2]),
+            WorkoutPhaseDto.Empty
+        );
         
         autoMocker.GetMock<IWorkoutTemplateExerciseService>()
-            .Setup(x => x.GetByWorkoutTemplateAsync(templateIds[1]))
-            .ReturnsAsync(ServiceResult<WorkoutTemplateExerciseListDto>.Success(exerciseCollection2));
+            .Setup(x => x.GetTemplateExercisesAsync(templateIds[1]))
+            .ReturnsAsync(ServiceResult<WorkoutTemplateExercisesDto>.Success(exerciseCollection2));
         
         // Setup exercises
         var exercise1 = new ExerciseDto

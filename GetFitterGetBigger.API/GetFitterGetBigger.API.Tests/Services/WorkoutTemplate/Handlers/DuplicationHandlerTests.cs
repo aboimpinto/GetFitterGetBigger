@@ -94,8 +94,8 @@ public class DuplicationHandlerTests
                 CoachNotes = new List<CoachNoteDto>(),
                 IsActive = true
             },
-            Zone = "Main",
-            SequenceOrder = 1,
+            Phase = "Workout",
+            OrderInRound = 1,
             Notes = "Exercise Notes"
         };
         
@@ -157,24 +157,24 @@ public class DuplicationHandlerTests
             {
                 Id = "wtexercise-1",
                 Exercise = new ExerciseDto { Id = ExerciseId.New().ToString(), Name = "Exercise 1", Description = "Test", CoachNotes = new List<CoachNoteDto>(), IsActive = true },
-                Zone = "Warmup",
-                SequenceOrder = 1,
+                Phase = "Warmup",
+                OrderInRound = 1,
                 Notes = "Warmup exercise"
             },
             new()
             {
                 Id = "wtexercise-2",
                 Exercise = new ExerciseDto { Id = ExerciseId.New().ToString(), Name = "Exercise 2", Description = "Test", CoachNotes = new List<CoachNoteDto>(), IsActive = true },
-                Zone = "Main",
-                SequenceOrder = 2,
+                Phase = "Workout",
+                OrderInRound = 2,
                 Notes = "Main exercise"
             },
             new()
             {
                 Id = "wtexercise-3",
                 Exercise = new ExerciseDto { Id = ExerciseId.New().ToString(), Name = "Exercise 3", Description = "Test", CoachNotes = new List<CoachNoteDto>(), IsActive = true },
-                Zone = "Cooldown",
-                SequenceOrder = 3,
+                Phase = "Cooldown",
+                OrderInRound = 3,
                 Notes = "Cooldown exercise"
             }
         };

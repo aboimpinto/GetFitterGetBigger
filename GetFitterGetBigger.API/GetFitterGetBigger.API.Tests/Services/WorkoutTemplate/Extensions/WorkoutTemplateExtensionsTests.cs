@@ -121,7 +121,7 @@ public class WorkoutTemplateExtensionsTests
         // Assert
         result.Exercises.Should().HaveCount(1);
         result.Exercises.First().Exercise.Name.Should().Be("Push Up");
-        result.Exercises.First().SequenceOrder.Should().Be(1);
+        result.Exercises.First().OrderInRound.Should().Be(1);
     }
 
     #endregion
@@ -164,10 +164,11 @@ public class WorkoutTemplateExtensionsTests
         result.Id.Should().Be(workoutExercise.Id.ToString());
         result.Exercise.Should().NotBe(ExerciseDto.Empty);
         result.Exercise.Name.Should().Be("Bench Press");
-        result.Zone.Should().Be(WorkoutZone.Main.ToString());
-        result.SequenceOrder.Should().Be(2);
+        result.Phase.Should().Be(WorkoutZone.Main.ToString());
+        result.OrderInRound.Should().Be(2);
         result.Notes.Should().Be("Test notes");
-        result.SetConfigurations.Should().HaveCount(1);
+        // SetConfigurations functionality was removed in refactoring
+        result.Metadata.Should().Be("{}");
         result.CreatedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(5));
         result.UpdatedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(5));
     }
@@ -462,9 +463,8 @@ public class WorkoutTemplateExtensionsTests
         result.Objectives.First().Value.Should().Be("Build Muscle");
         result.Exercises.Should().HaveCount(1);
         result.Exercises.First().Exercise.Name.Should().Be("Squat");
-        result.Exercises.First().SetConfigurations.Should().HaveCount(1);
-        result.Exercises.First().SetConfigurations.First().SetNumber.Should().Be(3);
-        result.Exercises.First().SetConfigurations.First().TargetReps.Should().Be("12");
+        // SetConfigurations functionality was removed in refactoring
+        result.Exercises.First().Metadata.Should().Be("{}");
     }
 
     #endregion

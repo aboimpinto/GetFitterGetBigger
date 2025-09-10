@@ -1,4 +1,5 @@
 using GetFitterGetBigger.API.DTOs;
+using GetFitterGetBigger.API.DTOs.WorkoutTemplateExercise;
 using GetFitterGetBigger.API.Mappers;
 using GetFitterGetBigger.API.Models.SpecializedIds;
 using GetFitterGetBigger.API.Services.Commands.WorkoutTemplateExercises;
@@ -26,19 +27,19 @@ public class WorkoutTemplateExercisesController(
     /// Gets all exercises for a workout template
     /// </summary>
     /// <param name="templateId">The ID of the workout template</param>
-    /// <returns>List of exercises grouped by zone</returns>
+    /// <returns>Exercises organized by phases and rounds</returns>
     /// <response code="200">Returns the exercises for the workout template</response>
     /// <response code="404">If the workout template is not found</response>
     /// <response code="403">If not authorized to view the template</response>
     [HttpGet]
-    [ProducesResponseType(typeof(WorkoutTemplateExerciseListDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(WorkoutTemplateExercisesDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public async Task<IActionResult> GetWorkoutTemplateExercises(string templateId)
     {
         _logger.LogInformation("Getting exercises for workout template: {Id}", templateId);
 
-        var result = await _workoutTemplateExerciseService.GetByWorkoutTemplateAsync(WorkoutTemplateId.ParseOrEmpty(templateId));
+        var result = await _workoutTemplateExerciseService.GetTemplateExercisesAsync(WorkoutTemplateId.ParseOrEmpty(templateId));
 
         return result switch
         {
@@ -66,7 +67,7 @@ public class WorkoutTemplateExercisesController(
     {
         _logger.LogInformation("Getting exercise {ExerciseId} for workout template: {Id}", exerciseId, templateId);
 
-        var result = await _workoutTemplateExerciseService.GetByIdAsync(WorkoutTemplateExerciseId.ParseOrEmpty(exerciseId));
+        var result = await _workoutTemplateExerciseService.GetExerciseByIdAsync(WorkoutTemplateExerciseId.ParseOrEmpty(exerciseId));
 
         return result switch
         {
@@ -93,13 +94,13 @@ public class WorkoutTemplateExercisesController(
     /// </remarks>
     /// <param name="templateId">The ID of the workout template</param>
     /// <param name="request">The exercise addition request</param>
-    /// <returns>The created exercise configuration</returns>
-    /// <response code="201">Returns the newly added exercise configuration</response>
+    /// <returns>Result containing all added exercises (main + auto-linked)</returns>
+    /// <response code="201">Returns the result with newly added exercise configurations</response>
     /// <response code="400">If the request is invalid</response>
     /// <response code="404">If the workout template is not found</response>
     /// <response code="409">If the exercise already exists in the template</response>
     [HttpPost]
-    [ProducesResponseType(typeof(WorkoutTemplateExerciseDto), StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(AddExerciseResultDto), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
@@ -108,13 +109,23 @@ public class WorkoutTemplateExercisesController(
         _logger.LogInformation("Adding exercise {ExerciseId} to workout template {TemplateId} in zone {Zone}", 
             request.ExerciseId, templateId, request.Zone);
 
-        var command = request.ToCommand(WorkoutTemplateId.ParseOrEmpty(templateId));
-        var result = await _workoutTemplateExerciseService.AddExerciseAsync(command);
+        // Map legacy Zone to Phase and determine RoundNumber
+        var phase = request.Zone; // Zone maps directly to Phase for backward compatibility
+        var roundNumber = 1; // Default to round 1 for backward compatibility
+        var metadata = request.Notes ?? string.Empty; // Use notes as metadata for backward compatibility
+        
+        var dto = new AddExerciseDto(
+            ExerciseId.ParseOrEmpty(request.ExerciseId),
+            phase,
+            roundNumber,
+            metadata);
+            
+        var result = await _workoutTemplateExerciseService.AddExerciseAsync(WorkoutTemplateId.ParseOrEmpty(templateId), dto);
 
         return result switch
         {
             { IsSuccess: true } => CreatedAtAction(nameof(GetWorkoutTemplateExercise), 
-                new { templateId, exerciseId = result.Data.Id }, result.Data),
+                new { templateId, exerciseId = result.Data.AddedExercises.FirstOrDefault()?.Id ?? string.Empty }, result.Data),
             { PrimaryErrorCode: ServiceErrorCode.NotFound } => NotFound(),
             { PrimaryErrorCode: ServiceErrorCode.AlreadyExists, StructuredErrors: var errors } => Conflict(new { errors }),
             { StructuredErrors: var errors } => BadRequest(new { errors })
@@ -135,25 +146,24 @@ public class WorkoutTemplateExercisesController(
     /// <param name="templateId">The ID of the workout template</param>
     /// <param name="exerciseId">The ID of the workout template exercise</param>
     /// <param name="request">The exercise update request</param>
-    /// <returns>The updated exercise configuration</returns>
+    /// <returns>The updated exercise metadata result</returns>
     /// <response code="200">Returns the updated exercise configuration</response>
     /// <response code="400">If the request is invalid</response>
     /// <response code="404">If the exercise is not found</response>
     [HttpPut("{exerciseId}")]
-    [ProducesResponseType(typeof(WorkoutTemplateExerciseDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(UpdateMetadataResultDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> UpdateTemplateExercise(string templateId, string exerciseId, [FromBody] UpdateTemplateExerciseDto request)
     {
         _logger.LogInformation("Updating exercise {ExerciseId} in workout template {TemplateId}", exerciseId, templateId);
 
-        var command = new UpdateTemplateExerciseCommand
-        {
-            WorkoutTemplateExerciseId = WorkoutTemplateExerciseId.ParseOrEmpty(exerciseId),
-            Notes = request.Notes
-        };
-
-        var result = await _workoutTemplateExerciseService.UpdateExerciseAsync(command);
+        var metadata = request.Notes ?? string.Empty; // Use notes as metadata for backward compatibility
+        
+        var result = await _workoutTemplateExerciseService.UpdateExerciseMetadataAsync(
+            WorkoutTemplateId.ParseOrEmpty(templateId),
+            WorkoutTemplateExerciseId.ParseOrEmpty(exerciseId),
+            metadata);
 
         return result switch
         {
@@ -181,6 +191,7 @@ public class WorkoutTemplateExercisesController(
         _logger.LogInformation("Removing exercise {ExerciseId} from workout template {TemplateId}", exerciseId, templateId);
 
         var result = await _workoutTemplateExerciseService.RemoveExerciseAsync(
+            WorkoutTemplateId.ParseOrEmpty(templateId),
             WorkoutTemplateExerciseId.ParseOrEmpty(exerciseId));
 
         return result switch
@@ -196,6 +207,9 @@ public class WorkoutTemplateExercisesController(
     /// Changes the zone of an exercise within a workout template
     /// </summary>
     /// <remarks>
+    /// DEPRECATED: This method is deprecated. The enhanced API uses phases and rounds instead of zones.
+    /// To move an exercise to a different phase, remove it and add it back with the new phase specification.
+    /// 
     /// Sample request:
     /// 
     ///     PUT /api/workout-templates/workouttemplate-550e8400-e29b-41d4-a716-446655440000/exercises/workouttemplateexercise-550e8400-e29b-41d4-a716-446655440000/zone
@@ -207,34 +221,25 @@ public class WorkoutTemplateExercisesController(
     /// <param name="templateId">The ID of the workout template</param>
     /// <param name="exerciseId">The ID of the workout template exercise</param>
     /// <param name="request">The zone change request</param>
-    /// <returns>The updated exercise configuration</returns>
-    /// <response code="200">Returns the exercise with updated zone</response>
+    /// <returns>Error indicating this method is deprecated</returns>
+    /// <response code="410">This method is deprecated</response>
     /// <response code="400">If the request is invalid</response>
     /// <response code="404">If the exercise is not found</response>
     [HttpPut("{exerciseId}/zone")]
-    [ProducesResponseType(typeof(WorkoutTemplateExerciseDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status410Gone)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> ChangeExerciseZone(string templateId, string exerciseId, [FromBody] ChangeExerciseZoneDto request)
+    [Obsolete("This method is deprecated. Use the enhanced phase/round-based methods instead.")]
+    public IActionResult ChangeExerciseZone(string templateId, string exerciseId, [FromBody] ChangeExerciseZoneDto request)
     {
-        _logger.LogInformation("Changing zone of exercise {ExerciseId} in template {TemplateId} to {Zone}", 
-            exerciseId, templateId, request.Zone);
+        _logger.LogWarning("Deprecated ChangeExerciseZone method called for exercise {ExerciseId} in template {TemplateId}", 
+            exerciseId, templateId);
 
-        var command = new ChangeExerciseZoneCommand
-        {
-            WorkoutTemplateExerciseId = WorkoutTemplateExerciseId.ParseOrEmpty(exerciseId),
-            NewZone = request.Zone,
-            NewSequenceOrder = request.SequenceOrder
-        };
-
-        var result = await _workoutTemplateExerciseService.ChangeExerciseZoneAsync(command);
-
-        return result switch
-        {
-            { IsSuccess: true } => Ok(result.Data),
-            { PrimaryErrorCode: ServiceErrorCode.NotFound } => NotFound(),
-            { StructuredErrors: var errors } => BadRequest(new { errors })
-        };
+        return StatusCode(StatusCodes.Status410Gone, new { 
+            message = "This endpoint is deprecated. The enhanced API uses phases and rounds instead of zones.",
+            recommendation = "Remove the exercise and add it back with the new phase specification using the enhanced API methods.",
+            deprecatedSince = "Phase 4 Enhancement"
+        });
     }
 
     /// <summary>
@@ -273,23 +278,42 @@ public class WorkoutTemplateExercisesController(
         _logger.LogInformation("Reordering exercises in zone {Zone} for workout template {TemplateId}", 
             request.Zone, templateId);
 
-        var command = new ReorderTemplateExercisesCommand
+        // Process each exercise reorder request individually using the enhanced API
+        var failures = new List<object>();
+        var successCount = 0;
+        
+        foreach (var exerciseOrder in request.ExerciseOrders.OrderBy(o => o.SequenceOrder))
         {
-            WorkoutTemplateId = WorkoutTemplateId.ParseOrEmpty(templateId),
-            Zone = request.Zone,
-            ExerciseIds = request.ExerciseOrders
-                .OrderBy(o => o.SequenceOrder)
-                .Select(o => WorkoutTemplateExerciseId.ParseOrEmpty(o.ExerciseId))
-                .ToList()
-        };
-
-        var result = await _workoutTemplateExerciseService.ReorderExercisesAsync(command);
-
-        return result switch
+            var result = await _workoutTemplateExerciseService.ReorderExerciseAsync(
+                WorkoutTemplateId.ParseOrEmpty(templateId),
+                WorkoutTemplateExerciseId.ParseOrEmpty(exerciseOrder.ExerciseId),
+                exerciseOrder.SequenceOrder);
+                
+            if (result.IsSuccess)
+            {
+                successCount++;
+            }
+            else
+            {
+                failures.Add(new { 
+                    exerciseId = exerciseOrder.ExerciseId, 
+                    errors = result.StructuredErrors 
+                });
+            }
+        }
+        
+        if (failures.Any())
         {
-            { IsSuccess: true } => Ok(new { message = "Exercises reordered successfully" }),
-            { PrimaryErrorCode: ServiceErrorCode.NotFound } => NotFound(),
-            { StructuredErrors: var errors } => BadRequest(new { errors })
-        };
+            return BadRequest(new { 
+                message = $"Failed to reorder {failures.Count} exercises",
+                successCount,
+                failures 
+            });
+        }
+
+        return Ok(new { 
+            message = "Exercises reordered successfully",
+            successCount
+        });
     }
 }
