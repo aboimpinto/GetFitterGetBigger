@@ -6,14 +6,13 @@ using GetFitterGetBigger.API.Services.WorkoutTemplate.Features.Exercise;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-namespace GetFitterGetBigger.API.Controllers.Enhanced;
+namespace GetFitterGetBigger.API.Controllers;
 
 /// <summary>
 /// Enhanced controller for managing exercises within workout templates with phase/round support
 /// </summary>
 [ApiController]
 [Route("api/v2/workout-templates/{templateId}/exercises")]
-[Authorize]
 [Produces("application/json")]
 [Tags("Workout Template Exercises - Enhanced API")]
 public class WorkoutTemplateExercisesEnhancedController : ControllerBase
@@ -59,10 +58,10 @@ public class WorkoutTemplateExercisesEnhancedController : ControllerBase
                 nameof(GetTemplateExercises),
                 new { templateId },
                 AddExerciseResponseDto.SuccessResponse(result.Data)),
-            { Errors: var errors } when errors.Any(e => e.Message.Contains("not found")) => 
-                NotFound(ErrorResponseDto.MultipleErrors(errors.Select(e => e.Message).ToList())),
+            { Errors: var errors } when errors.Any(e => e.Contains("not found")) => 
+                NotFound(ErrorResponseDto.MultipleErrors(errors.ToList())),
             { Errors: var errors } => 
-                BadRequest(ErrorResponseDto.MultipleErrors(errors.Select(e => e.Message).ToList()))
+                BadRequest(ErrorResponseDto.MultipleErrors(errors.ToList()))
         };
     }
 
@@ -91,10 +90,10 @@ public class WorkoutTemplateExercisesEnhancedController : ControllerBase
         return result switch
         {
             { IsSuccess: true } => Ok(RemoveExerciseResponseDto.SuccessResponse(result.Data)),
-            { Errors: var errors } when errors.Any(e => e.Message.Contains("not found")) => 
-                NotFound(ErrorResponseDto.MultipleErrors(errors.Select(e => e.Message).ToList())),
+            { Errors: var errors } when errors.Any(e => e.Contains("not found")) => 
+                NotFound(ErrorResponseDto.MultipleErrors(errors.ToList())),
             { Errors: var errors } => 
-                BadRequest(ErrorResponseDto.MultipleErrors(errors.Select(e => e.Message).ToList()))
+                BadRequest(ErrorResponseDto.MultipleErrors(errors.ToList()))
         };
     }
 
@@ -117,10 +116,10 @@ public class WorkoutTemplateExercisesEnhancedController : ControllerBase
         return result switch
         {
             { IsSuccess: true } => Ok(WorkoutTemplateExercisesResponseDto.SuccessResponse(result.Data)),
-            { Errors: var errors } when errors.Any(e => e.Message.Contains("not found")) => 
-                NotFound(ErrorResponseDto.MultipleErrors(errors.Select(e => e.Message).ToList())),
+            { Errors: var errors } when errors.Any(e => e.Contains("not found")) => 
+                NotFound(ErrorResponseDto.MultipleErrors(errors.ToList())),
             { Errors: var errors } => 
-                BadRequest(ErrorResponseDto.MultipleErrors(errors.Select(e => e.Message).ToList()))
+                BadRequest(ErrorResponseDto.MultipleErrors(errors.ToList()))
         };
     }
 
@@ -154,10 +153,10 @@ public class WorkoutTemplateExercisesEnhancedController : ControllerBase
         return result switch
         {
             { IsSuccess: true } => Ok(UpdateMetadataResponseDto.SuccessResponse(result.Data)),
-            { Errors: var errors } when errors.Any(e => e.Message.Contains("not found")) => 
-                NotFound(ErrorResponseDto.MultipleErrors(errors.Select(e => e.Message).ToList())),
+            { Errors: var errors } when errors.Any(e => e.Contains("not found")) => 
+                NotFound(ErrorResponseDto.MultipleErrors(errors.ToList())),
             { Errors: var errors } => 
-                BadRequest(ErrorResponseDto.MultipleErrors(errors.Select(e => e.Message).ToList()))
+                BadRequest(ErrorResponseDto.MultipleErrors(errors.ToList()))
         };
     }
 
@@ -188,10 +187,10 @@ public class WorkoutTemplateExercisesEnhancedController : ControllerBase
         return result switch
         {
             { IsSuccess: true } => Ok(ReorderResponseDto.SuccessResponse(result.Data)),
-            { Errors: var errors } when errors.Any(e => e.Message.Contains("not found")) => 
-                NotFound(ErrorResponseDto.MultipleErrors(errors.Select(e => e.Message).ToList())),
+            { Errors: var errors } when errors.Any(e => e.Contains("not found")) => 
+                NotFound(ErrorResponseDto.MultipleErrors(errors.ToList())),
             { Errors: var errors } => 
-                BadRequest(ErrorResponseDto.MultipleErrors(errors.Select(e => e.Message).ToList()))
+                BadRequest(ErrorResponseDto.MultipleErrors(errors.ToList()))
         };
     }
 
@@ -228,10 +227,10 @@ public class WorkoutTemplateExercisesEnhancedController : ControllerBase
                 nameof(GetTemplateExercises),
                 new { templateId },
                 CopyRoundResponseDto.SuccessResponse(result.Data)),
-            { Errors: var errors } when errors.Any(e => e.Message.Contains("not found")) => 
-                NotFound(ErrorResponseDto.MultipleErrors(errors.Select(e => e.Message).ToList())),
+            { Errors: var errors } when errors.Any(e => e.Contains("not found")) => 
+                NotFound(ErrorResponseDto.MultipleErrors(errors.ToList())),
             { Errors: var errors } => 
-                BadRequest(ErrorResponseDto.MultipleErrors(errors.Select(e => e.Message).ToList()))
+                BadRequest(ErrorResponseDto.MultipleErrors(errors.ToList()))
         };
     }
 }

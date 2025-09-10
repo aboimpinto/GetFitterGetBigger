@@ -43,100 +43,78 @@ public class EnhancedMethodsHandler : IEnhancedMethodsHandler
     /// </summary>
     public async Task<ServiceResult<AddExerciseResultDto>> AddExerciseAsync(WorkoutTemplateId templateId, AddExerciseDto dto)
     {
-        return await ServiceValidate.BuildTransactional<FitnessDbContext, AddExerciseResultDto>(_unitOfWorkProvider)
-            // External validations
+        var builder = ServiceValidate.BuildTransactional<FitnessDbContext, AddExerciseResultDto>(_unitOfWorkProvider)
             .EnsureNotEmpty(templateId, WorkoutTemplateExerciseErrorMessages.InvalidWorkoutTemplateId)
             .EnsureNotEmpty(dto.ExerciseId, WorkoutTemplateExerciseErrorMessages.InvalidExerciseId)
             .EnsureNotWhiteSpace(dto.Phase, WorkoutTemplateExerciseErrorMessages.InvalidZone)
             .Ensure(() => dto.RoundNumber >= 1, "Round number must be at least 1")
-            .EnsureNotWhiteSpace(dto.Metadata, "Metadata is required for exercise configuration")
-            // Validate phase is valid (Warmup, Workout, Cooldown)
-            .EnsureAsync(async () => await IsValidPhaseAsync(dto.Phase), 
-                string.Format(WorkoutTemplateExerciseErrorMessages.InvalidZoneWarmupMainCooldown, dto.Phase))
-            // Template validations
-            .EnsureAsyncChained(async () => await _validationHandler.DoesTemplateExistAsync(templateId), 
-                ServiceError.NotFound(WorkoutTemplateExerciseErrorMessages.WorkoutTemplateNotFound))
-            .EnsureAsyncChained(async () => await _validationHandler.IsTemplateInDraftStateAsync(templateId), 
-                WorkoutTemplateExerciseErrorMessages.CanOnlyAddExercisesToDraftTemplates)
-            // Exercise validation
-            .EnsureAsyncChained(async () => await _validationHandler.IsExerciseActiveAsync(dto.ExerciseId), 
-                ServiceError.NotFound(WorkoutTemplateExerciseErrorMessages.ExerciseNotFound))
-            // Create writable repository
-            .ThenCreateWritableRepositoryChained<AddExerciseResultDto, IWorkoutTemplateExerciseRepository>()
-            // Calculate order and create entity
-            .ThenLoadAsyncChained<AddExerciseResultDto, WorkoutTemplateExercise>("NewExercise", async context =>
+            .EnsureNotWhiteSpace(dto.Metadata, "Metadata is required for exercise configuration");
+
+        // Apply async validations sequentially
+        builder = await builder.EnsureAsync(async () => await IsValidPhaseAsync(dto.Phase), 
+            string.Format(WorkoutTemplateExerciseErrorMessages.InvalidZoneWarmupMainCooldown, dto.Phase));
+
+        builder = await builder.EnsureAsync(async () => await _validationHandler.DoesTemplateExistAsync(templateId), 
+            ServiceError.NotFound(WorkoutTemplateExerciseErrorMessages.WorkoutTemplateNotFound));
+
+        builder = await builder.EnsureAsync(async () => await _validationHandler.IsTemplateInDraftStateAsync(templateId), 
+            WorkoutTemplateExerciseErrorMessages.CanOnlyAddExercisesToDraftTemplates);
+
+        builder = await builder.EnsureAsync(async () => await _validationHandler.IsExerciseActiveAsync(dto.ExerciseId), 
+            ServiceError.NotFound(WorkoutTemplateExerciseErrorMessages.ExerciseNotFound));
+
+        return await builder.ThenExecuteWithUnitOfWorkAsync(async unitOfWork =>
+        {
+            var repository = unitOfWork.GetRepository<IWorkoutTemplateExerciseRepository>();
+            
+            // Map Phase to Zone for backward compatibility
+            var zone = MapPhaseToZone(dto.Phase);
+            
+            // Calculate order in round - for now using SequenceOrder until full phase/round migration
+            var maxSequence = await repository.GetMaxSequenceOrderAsync(templateId, zone);
+            var sequenceOrder = maxSequence + 1;
+            
+            // Create the exercise with metadata instead of notes
+            var createResult = WorkoutTemplateExercise.Handler.CreateNew(
+                templateId, 
+                dto.ExerciseId, 
+                zone, 
+                sequenceOrder, 
+                dto.Metadata); // Using metadata instead of notes
+            
+            if (!createResult.IsSuccess)
             {
-                var repository = context.GetRepository<IWorkoutTemplateExerciseRepository>(isReadOnly: false);
-                
-                // Map Phase to Zone for backward compatibility
-                var zone = MapPhaseToZone(dto.Phase);
-                
-                // Calculate order in round - for now using SequenceOrder until full phase/round migration
-                var maxSequence = await repository.GetMaxSequenceOrderAsync(templateId, zone);
-                var sequenceOrder = maxSequence + 1;
-                
-                // Create the exercise with metadata instead of notes
-                var createResult = WorkoutTemplateExercise.Handler.CreateNew(
-                    templateId, 
-                    dto.ExerciseId, 
-                    zone, 
-                    sequenceOrder, 
-                    dto.Metadata); // Using metadata instead of notes
-                    
-                return createResult.IsSuccess ? createResult.Value : WorkoutTemplateExercise.Empty;
-            })
-            // Ensure entity was created successfully
-            .ThenEnsureAsyncChained(
-                async context => await Task.FromResult(!context.Get<WorkoutTemplateExercise>("NewExercise").IsEmpty),
-                "Failed to create workout template exercise")
-            // Add to repository
-            .ThenPerformAsyncChained(async context =>
-            {
-                var repository = context.GetRepository<IWorkoutTemplateExerciseRepository>(isReadOnly: false);
-                var newExercise = context.Get<WorkoutTemplateExercise>("NewExercise");
-                await repository.AddAsync(newExercise);
-                context.Store("CreatedId", newExercise.Id);
-                context.Store("AddedExercises", new List<WorkoutTemplateExercise> { newExercise });
-            })
+                throw new InvalidOperationException("Failed to create workout template exercise");
+            }
+            
+            var newExercise = createResult.Value;
+            await repository.AddAsync(newExercise);
+            
+            var addedExercises = new List<WorkoutTemplateExercise> { newExercise };
+            
             // Handle auto-linking for Workout phase exercises
-            .ThenPerformIfAsyncChained(
-                context => 
-                {
-                    var newExercise = context.Get<WorkoutTemplateExercise>("NewExercise");
-                    return newExercise.Zone == WorkoutZone.Main; // "Workout" phase maps to Main zone
-                },
-                async context =>
-                {
-                    var repository = context.GetRepository<IWorkoutTemplateExerciseRepository>(isReadOnly: false);
-                    var newExercise = context.Get<WorkoutTemplateExercise>("NewExercise");
-                    var linkedExercises = await _autoLinkingHandler.AddAutoLinkedExercisesAsync(
-                        repository, 
-                        newExercise.WorkoutTemplateId, 
-                        newExercise.ExerciseId);
-                    
-                    // Add linked exercises to the list
-                    var allAdded = context.Get<List<WorkoutTemplateExercise>>("AddedExercises");
-                    allAdded.AddRange(linkedExercises);
-                    context.Store("AddedExercises", allAdded);
-                })
-            // Return result with all added exercises
-            .ThenExecuteAsyncChained(async context =>
+            if (newExercise.Zone == WorkoutZone.Main)
             {
-                var repository = context.GetRepository<IWorkoutTemplateExerciseRepository>(isReadOnly: false);
-                var addedExercises = context.Get<List<WorkoutTemplateExercise>>("AddedExercises");
+                var linkedExercises = await _autoLinkingHandler.AddAutoLinkedExercisesAsync(
+                    repository, 
+                    newExercise.WorkoutTemplateId, 
+                    newExercise.ExerciseId);
                 
-                // Reload all exercises with details for proper DTOs
-                var detailedExercises = new List<WorkoutTemplateExerciseDto>();
-                foreach (var exercise in addedExercises)
-                {
-                    var detailed = await repository.GetByIdWithDetailsAsync(exercise.Id);
-                    detailedExercises.Add(detailed.ToDto());
-                }
-                
-                return new AddExerciseResultDto(
-                    detailedExercises,
-                    $"Successfully added {detailedExercises.Count} exercise(s) to the template");
-            });
+                addedExercises.AddRange(linkedExercises);
+            }
+            
+            // Reload all exercises with details for proper DTOs
+            var detailedExercises = new List<WorkoutTemplateExerciseDto>();
+            foreach (var exercise in addedExercises)
+            {
+                var detailed = await repository.GetByIdWithDetailsAsync(exercise.Id);
+                detailedExercises.Add(detailed.ToDto());
+            }
+            
+            return new AddExerciseResultDto(
+                detailedExercises,
+                $"Successfully added {detailedExercises.Count} exercise(s) to the template");
+        });
     }
 
     /// <inheritdoc />
@@ -226,43 +204,30 @@ public class EnhancedMethodsHandler : IEnhancedMethodsHandler
         return await ServiceValidate.BuildTransactional<FitnessDbContext, RemoveExerciseResultDto>(_unitOfWorkProvider)
             .EnsureNotEmpty(templateId, WorkoutTemplateExerciseErrorMessages.InvalidWorkoutTemplateId)
             .EnsureNotEmpty(exerciseId, WorkoutTemplateExerciseErrorMessages.InvalidExerciseId)
-            // Validate exercise exists first (async operation breaks the chain)
-            .EnsureAsync(
-                async () => await Task.FromResult(true), // Dummy async to start chain
-                "Starting removal process")
-            // Now we can use Chained methods
-            .ThenCreateWritableRepositoryChained<RemoveExerciseResultDto, IWorkoutTemplateExerciseRepository>()
-            // Load the exercise to remove
-            .ThenLoadAsyncChained<RemoveExerciseResultDto, WorkoutTemplateExercise>("ExerciseToRemove", async context =>
+            .ThenExecuteWithUnitOfWorkAsync(async unitOfWork =>
             {
-                var repository = context.GetRepository<IWorkoutTemplateExerciseRepository>(isReadOnly: false);
-                return await repository.GetByIdWithDetailsAsync(exerciseId);
-            })
-            // Ensure exercise exists
-            .ThenEnsureAsyncChained(
-                async context => await Task.FromResult(!context.Get<WorkoutTemplateExercise>("ExerciseToRemove").IsEmpty),
-                ServiceError.NotFound(WorkoutTemplateExerciseErrorMessages.TemplateExerciseNotFound))
-            // Ensure template is in draft state
-            .ThenEnsureAsyncChained(
-                async context => 
+                var repository = unitOfWork.GetRepository<IWorkoutTemplateExerciseRepository>();
+                
+                // Load the exercise to remove
+                var exerciseToRemove = await repository.GetByIdWithDetailsAsync(exerciseId);
+                
+                if (exerciseToRemove.IsEmpty)
                 {
-                    var exercise = context.Get<WorkoutTemplateExercise>("ExerciseToRemove");
-                    return await _validationHandler.IsTemplateInDraftStateAsync(exercise.WorkoutTemplateId);
-                },
-                WorkoutTemplateExerciseErrorMessages.CanOnlyRemoveExercisesFromDraftTemplates)
-            // Check if exercise belongs to the template
-            .ThenEnsureAsyncChained(
-                async context =>
+                    throw new InvalidOperationException(WorkoutTemplateExerciseErrorMessages.TemplateExerciseNotFound);
+                }
+                
+                // Validate template is in draft state
+                if (!await _validationHandler.IsTemplateInDraftStateAsync(exerciseToRemove.WorkoutTemplateId))
                 {
-                    var exercise = context.Get<WorkoutTemplateExercise>("ExerciseToRemove");
-                    return await Task.FromResult(exercise.WorkoutTemplateId == templateId);
-                },
-                "Exercise does not belong to the specified template")
-            // Handle orphaned exercises for Main zone exercises
-            .ThenPerformAsyncChained(async context =>
-            {
-                var repository = context.GetRepository<IWorkoutTemplateExerciseRepository>(isReadOnly: false);
-                var exerciseToRemove = context.Get<WorkoutTemplateExercise>("ExerciseToRemove");
+                    throw new InvalidOperationException(WorkoutTemplateExerciseErrorMessages.CanOnlyRemoveExercisesFromDraftTemplates);
+                }
+                
+                // Check if exercise belongs to the template
+                if (exerciseToRemove.WorkoutTemplateId != templateId)
+                {
+                    throw new InvalidOperationException("Exercise does not belong to the specified template");
+                }
+                
                 var removedExercises = new List<WorkoutTemplateExercise> { exerciseToRemove };
                 
                 // If it's a Main (Workout) exercise, find and remove orphaned warmup/cooldown exercises
@@ -290,17 +255,11 @@ public class EnhancedMethodsHandler : IEnhancedMethodsHandler
                     exerciseToRemove.WorkoutTemplateId, 
                     removedExercises);
                 
-                context.Store("RemovedExercises", removedExercises);
-            })
-            // Return result
-            .ThenExecuteAsyncChained(async context =>
-            {
-                var removedExercises = context.Get<List<WorkoutTemplateExercise>>("RemovedExercises");
                 var removedDtos = removedExercises.Select(e => e.ToDto()).ToList();
                 
-                return await Task.FromResult(new RemoveExerciseResultDto(
+                return new RemoveExerciseResultDto(
                     removedDtos,
-                    $"Successfully removed {removedDtos.Count} exercise(s) from the template"));
+                    $"Successfully removed {removedDtos.Count} exercise(s) from the template");
             });
     }
 

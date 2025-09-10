@@ -195,13 +195,12 @@ public class WorkoutTemplateExerciseRepository : DomainRepository<WorkoutTemplat
     /// <inheritdoc/>
     public async Task<int> GetMaxSequenceOrderAsync(WorkoutTemplateId workoutTemplateId, WorkoutZone zone)
     {
-        var maxOrder = await Context.WorkoutTemplateExercises
+        var exercises = await Context.WorkoutTemplateExercises
             .Where(wte => wte.WorkoutTemplateId == workoutTemplateId && wte.Zone == zone)
             .Select(wte => wte.SequenceOrder)
-            .DefaultIfEmpty(0)
-            .MaxAsync();
+            .ToListAsync();
 
-        return maxOrder;
+        return exercises.Any() ? exercises.Max() : 0;
     }
 
     /// <inheritdoc/>

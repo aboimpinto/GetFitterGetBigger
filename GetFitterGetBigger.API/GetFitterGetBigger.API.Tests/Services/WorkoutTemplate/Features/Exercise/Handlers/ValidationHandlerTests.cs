@@ -42,7 +42,7 @@ public class ValidationHandlerTests
             .Returns(autoMocker.GetMock<IWorkoutTemplateRepository>().Object);
             
         autoMocker.GetMock<IWorkoutTemplateRepository>()
-            .Setup(x => x.GetByIdAsync(templateId))
+            .Setup(x => x.GetByIdWithDetailsAsync(templateId))
             .ReturnsAsync(template);
 
         var testee = autoMocker.CreateInstance<ValidationHandler>();
@@ -77,7 +77,7 @@ public class ValidationHandlerTests
             .Returns(autoMocker.GetMock<IWorkoutTemplateRepository>().Object);
             
         autoMocker.GetMock<IWorkoutTemplateRepository>()
-            .Setup(x => x.GetByIdAsync(templateId))
+            .Setup(x => x.GetByIdWithDetailsAsync(templateId))
             .ReturnsAsync(template);
 
         var testee = autoMocker.CreateInstance<ValidationHandler>();
@@ -105,7 +105,7 @@ public class ValidationHandlerTests
             .Returns(autoMocker.GetMock<IWorkoutTemplateRepository>().Object);
             
         autoMocker.GetMock<IWorkoutTemplateRepository>()
-            .Setup(x => x.GetByIdAsync(templateId))
+            .Setup(x => x.GetByIdWithDetailsAsync(templateId))
             .ReturnsAsync(GetFitterGetBigger.API.Models.Entities.WorkoutTemplate.Empty);
 
         var testee = autoMocker.CreateInstance<ValidationHandler>();

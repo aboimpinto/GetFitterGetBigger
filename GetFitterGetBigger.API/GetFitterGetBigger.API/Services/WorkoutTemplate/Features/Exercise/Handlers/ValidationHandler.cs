@@ -24,8 +24,9 @@ public class ValidationHandler : IValidationHandler
         using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
         var repository = unitOfWork.GetRepository<IWorkoutTemplateRepository>();
         
-        var template = await repository.GetByIdAsync(templateId);
-        return !template.IsEmpty && template.WorkoutState?.Value == "Draft";
+        var template = await repository.GetByIdWithDetailsAsync(templateId);
+        return !template.IsEmpty && 
+               string.Equals(template.WorkoutState?.Value, "DRAFT", StringComparison.OrdinalIgnoreCase);
     }
 
     public async Task<bool> IsExerciseActiveAsync(ExerciseId exerciseId)
