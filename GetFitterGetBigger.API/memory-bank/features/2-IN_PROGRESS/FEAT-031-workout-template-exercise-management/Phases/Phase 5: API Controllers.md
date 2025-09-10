@@ -328,4 +328,4 @@ Build Report:
 - Report: `/memory-bank/features/2-IN_PROGRESS/FEAT-031-workout-template-exercise-management/code-reviews/Phase_5_API_Controllers/Code-Review-Phase-5-API-Controllers-2025-09-10-09-58-APPROVED.md`
 
 **Git Commits (Phase 5):**
-[To be added after commit]
+- `1d6f7373` - feat(feat-031): complete Phase 5 API controllers with v2 enhanced architecture

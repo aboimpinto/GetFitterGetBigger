@@ -18,69 +18,17 @@ namespace GetFitterGetBigger.API.Services.WorkoutTemplate.Features.Exercise;
 /// </summary>
 public class WorkoutTemplateExerciseService(
     IUnitOfWorkProvider<FitnessDbContext> unitOfWorkProvider,
-    IAutoLinkingHandler autoLinkingHandler,
     IReorderExerciseHandler reorderExerciseHandler,
     ICopyRoundHandler copyRoundHandler,
     IValidationHandler validationHandler,
-    IEnhancedMethodsHandler enhancedMethodsHandler,
-    ILogger<WorkoutTemplateExerciseService> logger) : IWorkoutTemplateExerciseService
+    IEnhancedMethodsHandler enhancedMethodsHandler) : IWorkoutTemplateExerciseService
 {
     private readonly IUnitOfWorkProvider<FitnessDbContext> _unitOfWorkProvider = unitOfWorkProvider;
-    private readonly IAutoLinkingHandler _autoLinkingHandler = autoLinkingHandler;
     private readonly IReorderExerciseHandler _reorderExerciseHandler = reorderExerciseHandler;
     private readonly ICopyRoundHandler _copyRoundHandler = copyRoundHandler;
     private readonly IValidationHandler _validationHandler = validationHandler;
     private readonly IEnhancedMethodsHandler _enhancedMethodsHandler = enhancedMethodsHandler;
-    private readonly ILogger<WorkoutTemplateExerciseService> _logger = logger;
 
-
-
-
-
-
-
-    /// <inheritdoc />
-    public async Task<ServiceResult<ExerciseListDto>> GetExerciseSuggestionsAsync(WorkoutTemplateId workoutTemplateId, string zone, int maxSuggestions = 5)
-    {
-        return await ServiceValidate.For<ExerciseListDto>()
-            .EnsureNotEmpty(workoutTemplateId, WorkoutTemplateExerciseErrorMessages.InvalidTemplateIdOrZone)
-            .EnsureNotWhiteSpace(zone, WorkoutTemplateExerciseErrorMessages.InvalidTemplateIdOrZone)
-            .MatchAsync(
-                whenValid: async () =>
-                {
-                    return await Task.FromResult(ServiceResult<ExerciseListDto>.Success(ExerciseListDto.Empty));
-                }
-            );
-    }
-
-    /// <inheritdoc />
-    public async Task<ServiceResult<BooleanResultDto>> ValidateExercisesAsync(WorkoutTemplateId workoutTemplateId, List<ExerciseId> exerciseIds)
-    {
-        return await ServiceValidate.For<BooleanResultDto>()
-            .EnsureNotEmpty(workoutTemplateId, WorkoutTemplateExerciseErrorMessages.InvalidTemplateIdOrExerciseList)
-            .Ensure(
-                () => exerciseIds != null && exerciseIds.Count > 0,
-                WorkoutTemplateExerciseErrorMessages.InvalidTemplateIdOrExerciseList)
-            .EnsureAsync(
-                async () => await _validationHandler.DoesTemplateExistAsync(workoutTemplateId),
-                ServiceError.NotFound(WorkoutTemplateExerciseErrorMessages.WorkoutTemplateNotFound))
-            .EnsureAsync(
-                async () => await AreAllExercisesValidAsync(exerciseIds),
-                ServiceError.NotFound("One or more exercises not found"))
-            .MatchAsync(
-                whenValid: async () => await Task.FromResult(ServiceResult<BooleanResultDto>.Success(BooleanResultDto.Create(true)))
-            );
-    }
-    
-    /// <summary>
-    /// Checks if all provided exercise IDs are valid
-    /// </summary>
-    private async Task<bool> AreAllExercisesValidAsync(List<ExerciseId> exerciseIds)
-    {
-        using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
-        var exerciseRepository = unitOfWork.GetRepository<IExerciseRepository>();
-        return await exerciseRepository.AreAllExercisesValidAsync(exerciseIds);
-    }
 
 
     // Enhanced interface methods - Restored from LegacyMethodsHandler and adapted to DTO pattern
@@ -124,7 +72,4 @@ public class WorkoutTemplateExerciseService(
             false => ServiceResult<WorkoutTemplateExerciseDto>.Success(exercise.ToDto())
         };
     }
-    
-    public Task<ServiceResult<BooleanResultDto>> ValidateExerciseMetadataAsync(ExerciseId exerciseId, ExecutionProtocolId protocolId, string metadata) 
-        => _enhancedMethodsHandler.ValidateExerciseMetadataAsync(exerciseId, protocolId, metadata);
 }

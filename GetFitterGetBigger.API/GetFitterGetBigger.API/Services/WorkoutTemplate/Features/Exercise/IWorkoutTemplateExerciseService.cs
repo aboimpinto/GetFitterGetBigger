@@ -66,30 +66,6 @@ public interface IWorkoutTemplateExerciseService
     /// <returns>The exercise configuration with metadata</returns>
     Task<ServiceResult<WorkoutTemplateExerciseDto>> GetExerciseByIdAsync(WorkoutTemplateExerciseId exerciseId);
 
-    /// <summary>
-    /// Validates exercise metadata against ExecutionProtocol requirements
-    /// </summary>
-    /// <param name="exerciseId">The exercise ID</param>
-    /// <param name="protocolId">The execution protocol ID</param>
-    /// <param name="metadata">JSON metadata to validate</param>
-    /// <returns>Validation result</returns>
-    Task<ServiceResult<BooleanResultDto>> ValidateExerciseMetadataAsync(ExerciseId exerciseId, ExecutionProtocolId protocolId, string metadata);
 
-    /// <summary>
-    /// Gets exercise suggestions for a specific workout template and zone
-    /// </summary>
-    /// <param name="workoutTemplateId">The workout template ID</param>
-    /// <param name="zone">The zone to get suggestions for</param>
-    /// <param name="maxSuggestions">Maximum number of suggestions to return</param>
-    /// <returns>List of suggested exercises</returns>
-    Task<ServiceResult<ExerciseListDto>> GetExerciseSuggestionsAsync(WorkoutTemplateId workoutTemplateId, string zone, int maxSuggestions = 5);
-
-    /// <summary>
-    /// Validates a list of exercises for a workout template
-    /// </summary>
-    /// <param name="workoutTemplateId">The workout template ID</param>
-    /// <param name="exerciseIds">List of exercise IDs to validate</param>
-    /// <returns>Validation result</returns>
-    Task<ServiceResult<BooleanResultDto>> ValidateExercisesAsync(WorkoutTemplateId workoutTemplateId, List<ExerciseId> exerciseIds);
 
 }

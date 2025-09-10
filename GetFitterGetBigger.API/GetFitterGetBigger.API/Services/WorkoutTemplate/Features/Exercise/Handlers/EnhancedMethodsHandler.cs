@@ -177,21 +177,6 @@ public class EnhancedMethodsHandler : IEnhancedMethodsHandler
     }
 
     /// <inheritdoc />
-    public async Task<ServiceResult<BooleanResultDto>> ValidateExerciseMetadataAsync(ExerciseId exerciseId, ExecutionProtocolId protocolId, string metadata)
-    {
-        // Basic JSON validation - more sophisticated validation can be added later
-        try
-        {
-            System.Text.Json.JsonDocument.Parse(metadata);
-            return await Task.FromResult(ServiceResult<BooleanResultDto>.Success(BooleanResultDto.Create(true)));
-        }
-        catch (System.Text.Json.JsonException)
-        {
-            return await Task.FromResult(ServiceResult<BooleanResultDto>.Success(BooleanResultDto.Create(false)));
-        }
-    }
-
-    /// <inheritdoc />
     public async Task<ServiceResult<WorkoutTemplateExercisesDto>> GetTemplateExercisesAsync(WorkoutTemplateId templateId)
     {
         using var unitOfWork = _unitOfWorkProvider.CreateReadOnly();
@@ -213,13 +198,13 @@ public class EnhancedMethodsHandler : IEnhancedMethodsHandler
         // For now, map current Zone-based system to Phase/Round structure
         // This is a transitional approach until entity migration
         var warmupPhase = new WorkoutPhaseDto(
-            new List<RoundDto> { new(1, MapExercisesByZone(exercises, WorkoutZone.Warmup)) });
+            [new(1, MapExercisesByZone(exercises, WorkoutZone.Warmup))]);
             
         var workoutPhase = new WorkoutPhaseDto(
-            new List<RoundDto> { new(1, MapExercisesByZone(exercises, WorkoutZone.Main)) });
+            [new(1, MapExercisesByZone(exercises, WorkoutZone.Main))]);
             
         var cooldownPhase = new WorkoutPhaseDto(
-            new List<RoundDto> { new(1, MapExercisesByZone(exercises, WorkoutZone.Cooldown)) });
+            [new(1, MapExercisesByZone(exercises, WorkoutZone.Cooldown))]);
 
         var result = new WorkoutTemplateExercisesDto(
             templateId,

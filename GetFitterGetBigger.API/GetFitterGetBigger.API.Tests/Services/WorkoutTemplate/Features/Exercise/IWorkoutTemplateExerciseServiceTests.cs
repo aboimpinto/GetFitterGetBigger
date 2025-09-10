@@ -52,10 +52,6 @@ public class IWorkoutTemplateExerciseServiceTests
         interfaceType.GetMethod(nameof(IWorkoutTemplateExerciseService.GetExerciseByIdAsync))
             .Should().NotBeNull()
             .And.Subject.ReturnType.Should().Be(typeof(Task<ServiceResult<WorkoutTemplateExerciseDto>>));
-            
-        interfaceType.GetMethod(nameof(IWorkoutTemplateExerciseService.ValidateExerciseMetadataAsync))
-            .Should().NotBeNull()
-            .And.Subject.ReturnType.Should().Be(typeof(Task<ServiceResult<BooleanResultDto>>));
     }
 
     [Fact]

@@ -39,9 +39,4 @@ public interface IEnhancedMethodsHandler
     /// Handles template exercise retrieval organized by phases and rounds
     /// </summary>
     Task<ServiceResult<WorkoutTemplateExercisesDto>> GetTemplateExercisesAsync(WorkoutTemplateId templateId);
-
-    /// <summary>
-    /// Handles exercise metadata validation
-    /// </summary>
-    Task<ServiceResult<BooleanResultDto>> ValidateExerciseMetadataAsync(ExerciseId exerciseId, ExecutionProtocolId protocolId, string metadata);
 }
