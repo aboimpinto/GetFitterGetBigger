@@ -329,3 +329,4 @@ Build Report:
 
 **Git Commits (Phase 5):**
 - `1d6f7373` - feat(feat-031): complete Phase 5 API controllers with v2 enhanced architecture
+- `2f277e37` - refactor(feat-031): remove dead code methods from WorkoutTemplateExerciseService
