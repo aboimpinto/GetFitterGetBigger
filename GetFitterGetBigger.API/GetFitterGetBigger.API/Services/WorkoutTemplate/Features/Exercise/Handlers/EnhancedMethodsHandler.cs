@@ -46,7 +46,7 @@ public class EnhancedMethodsHandler : IEnhancedMethodsHandler
         var builder = ServiceValidate.BuildTransactional<FitnessDbContext, AddExerciseResultDto>(_unitOfWorkProvider)
             .EnsureNotEmpty(templateId, WorkoutTemplateExerciseErrorMessages.InvalidWorkoutTemplateId)
             .EnsureNotEmpty(dto.ExerciseId, WorkoutTemplateExerciseErrorMessages.InvalidExerciseId)
-            .EnsureNotWhiteSpace(dto.Phase, WorkoutTemplateExerciseErrorMessages.InvalidZone)
+            .EnsureNotWhiteSpace(dto.Phase, WorkoutTemplateExerciseErrorMessages.InvalidPhase)
             .Ensure(() => dto.RoundNumber >= 1, "Round number must be at least 1")
             .EnsureNotWhiteSpace(dto.Metadata, "Metadata is required for exercise configuration");
 
