@@ -121,6 +121,7 @@ builder.Services.AddTransient<IAutoLinkingHandler, AutoLinkingHandler>();
 builder.Services.AddTransient<IReorderExerciseHandler, ReorderExerciseHandler>();
 builder.Services.AddTransient<ICopyRoundHandler, CopyRoundHandler>();
 builder.Services.AddTransient<IValidationHandler, ValidationHandler>();
+builder.Services.AddTransient<IEnhancedMethodsHandler, EnhancedMethodsHandler>();
 
 // WorkoutTemplate DataServices - Data Access Layer
 builder.Services.AddTransient<IWorkoutTemplateQueryDataService, WorkoutTemplateQueryDataService>();

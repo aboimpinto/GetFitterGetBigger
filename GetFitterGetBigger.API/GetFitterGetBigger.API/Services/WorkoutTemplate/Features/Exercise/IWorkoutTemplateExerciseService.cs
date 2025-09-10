@@ -1,7 +1,6 @@
 using GetFitterGetBigger.API.DTOs;
 using GetFitterGetBigger.API.DTOs.WorkoutTemplateExercise;
 using GetFitterGetBigger.API.Models.SpecializedIds;
-using GetFitterGetBigger.API.Services.Commands.WorkoutTemplateExercises;
 using GetFitterGetBigger.API.Services.Results;
 
 namespace GetFitterGetBigger.API.Services.WorkoutTemplate.Features.Exercise;

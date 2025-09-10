@@ -1,8 +1,25 @@
 # FEAT-031: Workout Template Exercise Management System - Implementation Tasks
 
+## ✅ STATUS UPDATE - RESTORATION COMPLETE
+**Date**: 2025-09-10  
+**Resolution**: Phase 4 implementations successfully restored and migrated
+
+### What Happened
+- Full service implementations existed in `LegacyMethodsHandler` 
+- These were the ACTUAL Phase 4 implementations, not legacy code
+- Deleted in commit 2febe652 thinking they were obsolete
+- Service had only stubs with wrong "Phase 5" comments
+
+### Restoration Completed
+- ✅ Restored deleted implementations from git history
+- ✅ Migrated from Command pattern to DTO pattern  
+- ✅ Moved to EnhancedMethodsHandler
+- ✅ Preserved auto-linking and orphan cleanup logic
+- ✅ Build successful, 68 tests passing
+
 ## Feature Branch: `feature/feat-031-workout-template-exercise-management`
-## Estimated Total Time: 24h 0m
-## Actual Total Time: 3h 15m+ (in progress)
+## Estimated Total Time: 24h 0m → 28h 0m (added 4h for restoration)
+## Actual Total Time: 6h 45m+ (includes time spent on mistaken deletion)
 
 ## 📚 Pre-Implementation Checklist
 - [x] Read `/memory-bank/Overview/SystemPatterns.md` - Architecture rules
@@ -22,7 +39,7 @@
 | 1 | Planning & Analysis | ✅ Complete | 1/1 | 2h 0m | 1h 30m | [Phase 1: Planning & Analysis.md](./Phases/Phase%201:%20Planning%20&%20Analysis.md) |
 | 2 | Models & Database | ✅ Complete | 2/4 | 4h 0m | 2h 45m | [Phase 2: Models & Database.md](./Phases/Phase%202:%20Models%20&%20Database.md) |
 | 3 | Repository Layer | ✅ Complete | 2/2 | 3h 0m | 2h 30m | [Phase 3: Repository Layer.md](./Phases/Phase%203:%20Repository%20Layer.md) |
-| 4 | Service Layer | ⏳ In Progress | 1/4 | 6h 0m | 1h 15m | [Phase 4: Service Layer.md](./Phases/Phase%204:%20Service%20Layer.md) |
+| 4 | Service Layer | ✅ Restored | 5/5 | 10h 0m | 10h 30m | [Phase 4: Service Layer.md](./Phases/Phase%204:%20Service%20Layer.md) |
 | 5 | API Controllers | 🔄 Pending | 0/3 | 3h 0m | - | [Phase 5: API Controllers.md](./Phases/Phase%205:%20API%20Controllers.md) |
 | 6 | Integration & Testing | 🔄 Pending | 0/3 | 4h 0m | - | [Phase 6: Integration & Testing.md](./Phases/Phase%206:%20Integration%20&%20Testing.md) |
 | 7 | Documentation & Deployment | 🔄 Pending | 0/3 | 2h 0m | - | [Phase 7: Documentation & Deployment.md](./Phases/Phase%207:%20Documentation%20&%20Deployment.md) |

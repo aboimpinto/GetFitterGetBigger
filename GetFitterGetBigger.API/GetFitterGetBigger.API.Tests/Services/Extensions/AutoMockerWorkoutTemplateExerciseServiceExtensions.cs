@@ -1,10 +1,4 @@
-using GetFitterGetBigger.API.DTOs;
-using GetFitterGetBigger.API.DTOs.WorkoutTemplateExercise;
-using GetFitterGetBigger.API.Models;
-using GetFitterGetBigger.API.Models.Entities;
 using GetFitterGetBigger.API.Models.SpecializedIds;
-using GetFitterGetBigger.API.Services.Commands.WorkoutTemplateExercises;
-using GetFitterGetBigger.API.Services.Results;
 using GetFitterGetBigger.API.Services.WorkoutTemplate.Features.Exercise.Handlers;
 using Moq;
 using Moq.AutoMock;
@@ -35,9 +29,6 @@ public static class AutoMockerWorkoutTemplateExerciseServiceExtensions
         validationHandlerMock
             .Setup(h => h.IsTemplateInDraftStateAsync(It.IsAny<WorkoutTemplateId>()))
             .ReturnsAsync(true);
-
-        // Setup LegacyMethodsHandler with default failure responses
-        var legacyMethodsHandlerMock = mocker.GetMock<ILegacyMethodsHandler>();
         
         // Setup EnhancedMethodsHandler
         mocker.GetMock<IEnhancedMethodsHandler>();
@@ -65,95 +56,6 @@ public static class AutoMockerWorkoutTemplateExerciseServiceExtensions
         mocker.GetMock<IValidationHandler>()
             .Setup(h => h.IsTemplateInDraftStateAsync(templateId))
             .ReturnsAsync(false);
-        
-        return mocker;
-    }
-
-    /// <summary>
-    /// Sets up LegacyMethodsHandler to return validation failure for AddExerciseAsync
-    /// </summary>
-    public static AutoMocker SetupAddExerciseValidationFailure(this AutoMocker mocker)
-    {
-        mocker.GetMock<ILegacyMethodsHandler>()
-            .Setup(h => h.AddExerciseAsync(It.IsAny<AddExerciseToTemplateCommand>()))
-            .ReturnsAsync(ServiceResult<WorkoutTemplateExerciseDto>.Failure(
-                WorkoutTemplateExerciseDto.Empty, 
-                ServiceError.ValidationFailed("Validation failed")));
-        
-        return mocker;
-    }
-
-    /// <summary>
-    /// Sets up LegacyMethodsHandler to return not found for AddExerciseAsync
-    /// </summary>
-    public static AutoMocker SetupAddExerciseNotFound(this AutoMocker mocker)
-    {
-        mocker.GetMock<ILegacyMethodsHandler>()
-            .Setup(h => h.AddExerciseAsync(It.IsAny<AddExerciseToTemplateCommand>()))
-            .ReturnsAsync(ServiceResult<WorkoutTemplateExerciseDto>.Failure(
-                WorkoutTemplateExerciseDto.Empty, 
-                ServiceError.NotFound("Template or exercise not found")));
-        
-        return mocker;
-    }
-
-    /// <summary>
-    /// Sets up LegacyMethodsHandler to return success for AddExerciseAsync
-    /// </summary>
-    public static AutoMocker SetupAddExerciseSuccess(this AutoMocker mocker)
-    {
-        var successDto = new WorkoutTemplateExerciseDto
-        {
-            Id = WorkoutTemplateExerciseId.From(Guid.NewGuid()).ToString(),
-            Exercise = new ExerciseDto { Id = ExerciseId.From(Guid.NewGuid()).ToString() },
-            Phase = "Main",
-            RoundNumber = 1,
-            OrderInRound = 1
-        };
-
-        mocker.GetMock<ILegacyMethodsHandler>()
-            .Setup(h => h.AddExerciseAsync(It.IsAny<AddExerciseToTemplateCommand>()))
-            .ReturnsAsync(ServiceResult<WorkoutTemplateExerciseDto>.Success(successDto));
-        
-        return mocker;
-    }
-
-    /// <summary>
-    /// Sets up LegacyMethodsHandler to return validation failure for RemoveExerciseAsync
-    /// </summary>
-    public static AutoMocker SetupRemoveExerciseValidationFailure(this AutoMocker mocker)
-    {
-        mocker.GetMock<ILegacyMethodsHandler>()
-            .Setup(h => h.RemoveExerciseAsync(It.IsAny<WorkoutTemplateExerciseId>()))
-            .ReturnsAsync(ServiceResult<BooleanResultDto>.Failure(
-                BooleanResultDto.Empty, 
-                ServiceError.ValidationFailed("Validation failed")));
-        
-        return mocker;
-    }
-
-    /// <summary>
-    /// Sets up LegacyMethodsHandler to return not found for RemoveExerciseAsync
-    /// </summary>
-    public static AutoMocker SetupRemoveExerciseNotFound(this AutoMocker mocker)
-    {
-        mocker.GetMock<ILegacyMethodsHandler>()
-            .Setup(h => h.RemoveExerciseAsync(It.IsAny<WorkoutTemplateExerciseId>()))
-            .ReturnsAsync(ServiceResult<BooleanResultDto>.Failure(
-                BooleanResultDto.Empty, 
-                ServiceError.NotFound("Exercise not found")));
-        
-        return mocker;
-    }
-
-    /// <summary>
-    /// Sets up LegacyMethodsHandler to return success for RemoveExerciseAsync
-    /// </summary>
-    public static AutoMocker SetupRemoveExerciseSuccess(this AutoMocker mocker)
-    {
-        mocker.GetMock<ILegacyMethodsHandler>()
-            .Setup(h => h.RemoveExerciseAsync(It.IsAny<WorkoutTemplateExerciseId>()))
-            .ReturnsAsync(ServiceResult<BooleanResultDto>.Success(BooleanResultDto.Create(true)));
         
         return mocker;
     }

@@ -5,7 +5,6 @@ using GetFitterGetBigger.API.Models;
 using GetFitterGetBigger.API.Models.Entities;
 using GetFitterGetBigger.API.Models.SpecializedIds;
 using GetFitterGetBigger.API.Repositories.Interfaces;
-using GetFitterGetBigger.API.Services.Commands.WorkoutTemplateExercises;
 using GetFitterGetBigger.API.Services.Results;
 using GetFitterGetBigger.API.Services.Validation;
 using GetFitterGetBigger.API.Services.WorkoutTemplate.Features.Exercise.Extensions;
@@ -23,6 +22,7 @@ public class WorkoutTemplateExerciseService(
     IReorderExerciseHandler reorderExerciseHandler,
     ICopyRoundHandler copyRoundHandler,
     IValidationHandler validationHandler,
+    IEnhancedMethodsHandler enhancedMethodsHandler,
     ILogger<WorkoutTemplateExerciseService> logger) : IWorkoutTemplateExerciseService
 {
     private readonly IUnitOfWorkProvider<FitnessDbContext> _unitOfWorkProvider = unitOfWorkProvider;
@@ -30,6 +30,7 @@ public class WorkoutTemplateExerciseService(
     private readonly IReorderExerciseHandler _reorderExerciseHandler = reorderExerciseHandler;
     private readonly ICopyRoundHandler _copyRoundHandler = copyRoundHandler;
     private readonly IValidationHandler _validationHandler = validationHandler;
+    private readonly IEnhancedMethodsHandler _enhancedMethodsHandler = enhancedMethodsHandler;
     private readonly ILogger<WorkoutTemplateExerciseService> _logger = logger;
 
 
@@ -82,15 +83,15 @@ public class WorkoutTemplateExerciseService(
     }
 
 
-    // Enhanced interface methods - Phase/Round support (To be implemented in Phase 5)
+    // Enhanced interface methods - Restored from LegacyMethodsHandler and adapted to DTO pattern
     public Task<ServiceResult<AddExerciseResultDto>> AddExerciseAsync(WorkoutTemplateId templateId, AddExerciseDto dto) 
-        => throw new NotImplementedException("Will be implemented in Phase 5");
+        => _enhancedMethodsHandler.AddExerciseAsync(templateId, dto);
     
     public Task<ServiceResult<RemoveExerciseResultDto>> RemoveExerciseAsync(WorkoutTemplateId templateId, WorkoutTemplateExerciseId exerciseId) 
-        => throw new NotImplementedException("Will be implemented in Phase 5");
+        => _enhancedMethodsHandler.RemoveExerciseAsync(templateId, exerciseId);
     
     public Task<ServiceResult<UpdateMetadataResultDto>> UpdateExerciseMetadataAsync(WorkoutTemplateId templateId, WorkoutTemplateExerciseId exerciseId, string metadata) 
-        => throw new NotImplementedException("Will be implemented in Phase 5");
+        => _enhancedMethodsHandler.UpdateExerciseMetadataAsync(templateId, exerciseId, metadata);
     
     public async Task<ServiceResult<ReorderResultDto>> ReorderExerciseAsync(WorkoutTemplateId templateId, WorkoutTemplateExerciseId exerciseId, int newOrderInRound) 
         => await _reorderExerciseHandler.ReorderExerciseAsync(templateId, exerciseId, newOrderInRound);
@@ -99,7 +100,7 @@ public class WorkoutTemplateExerciseService(
         => await _copyRoundHandler.CopyRoundAsync(templateId, dto);
     
     public Task<ServiceResult<WorkoutTemplateExercisesDto>> GetTemplateExercisesAsync(WorkoutTemplateId templateId) 
-        => throw new NotImplementedException("Will be implemented in Phase 5");
+        => _enhancedMethodsHandler.GetTemplateExercisesAsync(templateId);
     
     public async Task<ServiceResult<WorkoutTemplateExerciseDto>> GetExerciseByIdAsync(WorkoutTemplateExerciseId exerciseId)
     {
@@ -125,5 +126,5 @@ public class WorkoutTemplateExerciseService(
     }
     
     public Task<ServiceResult<BooleanResultDto>> ValidateExerciseMetadataAsync(ExerciseId exerciseId, ExecutionProtocolId protocolId, string metadata) 
-        => throw new NotImplementedException("Will be implemented in Phase 5");
+        => _enhancedMethodsHandler.ValidateExerciseMetadataAsync(exerciseId, protocolId, metadata);
 }

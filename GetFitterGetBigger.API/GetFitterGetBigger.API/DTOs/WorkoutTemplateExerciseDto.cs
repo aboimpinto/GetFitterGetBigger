@@ -42,7 +42,6 @@ public record WorkoutTemplateExerciseDto : IEmptyDto<WorkoutTemplateExerciseDto>
     /// </summary>
     public string? Notes { get; init; }
 
-
     /// <summary>
     /// Created timestamp
     /// </summary>
