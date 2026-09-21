@@ -1,0 +1,15 @@
+# Dark red concept generation brief
+
+7 September 2026. Generated using the built-in image-generation tool, editing `design-concept.png`. Output: `design-concept-dark-red.png`. The source palette is superseded; the product name remains provisional. Exact implementation colors live in [design-language.md](design-language.md).
+
+## Prompt
+
+Use case: ui-mockup / style-transfer.
+Edit target: the supplied fitness product design concept board. Create its polished DARK CHARCOAL AND RED replacement.
+Keep the overall composition: wide desktop admin exercise editor on the left, mobile progress screen on the right, board title above, three short explanatory captions below. Preserve the information hierarchy, readable English labels, exercise example, and correct numbers. Brand "repward" remains a provisional working name; do not rename it to GetFitness. Title "Bring your training. See your progress." Subtitle "Design direction 02 / Working name / Fictional data / September 2026".
+User direction: remove EVERY white, cream, pale-green or light background; dark surfaces throughout, red over black favorite combination. Use a dark charcoal board #101114, deepest graphite sidebar #131418, main surfaces #191B20, raised panels #23262D, subtle borders #363A43. Primary text #F4F4F5, secondary #B6BAC4. Red #D92D40 for filled primary buttons with white labels, bright red #FF5267 for active nav, links and chart stroke. Deep oxblood #321B23 for accent panels. No teal/green. No bright white inputs or backgrounds. Text should be highly legible.
+Aesthetic: confident athletic instrument panel, precise typography, prominent tabular performance numbers, purposeful red accents, restrained 10–14px corners, subtle surface layering. No neon glow, no gritty texture, no bodybuilding photos, no excessive gradients. Every main UI area must be dark. Focused selected sidebar row gets dark oxblood fill with red vertical indicator; active tab red underline. Crimson primary actions.
+Admin content: Barbell bench press. Published v2. Tabs Overview, Muscles, Preparation, Measurements, History. Fields Repetitions, Load in kg, load convention Total bar + plates. Client preview Set 1; Previous: 8 reps × 72.5 kg; fields 8 and 75; red Log button. Muscle preview for 3 completed working sets: Chest / Primary / 3 direct sets; Triceps / Secondary / 3 indirect sets; Front delts / Secondary / 3 indirect sets. Warm-up sets excluded. Create revision button.
+Phone content: Your progress. YOUR GOAL · BENCH PRESS. 8 reps at 80 kg. Latest: 8 reps at 75 kg. Baseline 70 kg and +5 kg; progress fill precisely halfway. Red chart best 8-rep set over four weeks: 70, 72.5, 72.5, 75; y labels 70,72.5,75 and clear unit kg. Your muscle work panel. Today / Train / Progress / Circle bottom navigation; Progress selected.
+Board footer: 01 / DEFINE, 02 / RECORD, 03 / UNDERSTAND with concise descriptive lines. Small label: Concept screens only. Fictional data.
+Output one high-resolution landscape board, flat front-on UI presentation, all panels fully visible.
